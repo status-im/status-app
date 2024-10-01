@@ -355,7 +355,8 @@ QtObject {
             messageStore: messageStore,
             pinnedMessagesModel: pinnedMessagesModel,
             messageToPin: messageToPin,
-            chatId: chatId
+            chatId: chatId,
+            isPinActionAvailable: store && store.oneToOneChatContact ? store.oneToOneChatContact.isContact : true
         })
     }
 
@@ -894,7 +895,10 @@ QtObject {
                 onClosed: destroy()
 
                 // Unfurling related requests:
-                onSetNeverAskAboutUnfurlingAgain: root.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+                onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+                onPinMessageRequested: messageId => messageStore.pinMessage(messageId)
+                onUnpinMessageRequested: messageId => messageStore.unpinMessage(messageId)
+                onJumpToMessageRequested: messageId => messageStore.messageModule.jumpToMessage(messageId)
             }
         },
 
