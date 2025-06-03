@@ -27,6 +27,10 @@ GridLayout {
             source: model.url
             asynchronous: true
 
+            // This property is important regarding memory consumption because
+            // it sets the maximum number of pixels stored for the loaded image
+            sourceSize: Qt.size(300, 300)
+
             Layout.columnSpan: {
                 if (model.index !== 0)
                     return 1

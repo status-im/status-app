@@ -88,7 +88,6 @@ Item {
 
     function generatePlaceholderContent(size = 12, minLength = 30, maxLength = 140,
                                         minCount = 1, maxCount = 15) {
-
         const array = []
 
         function getRandomInt(max) {
@@ -97,12 +96,10 @@ Item {
 
         for (let i = 0; i < size; i++) {
             const count = getRandomInt(maxCount - minCount) + minCount
-
             const subarray = []
 
-            for (let j = 0; j < count; j++) {
+            for (let j = 0; j < count; j++)
                 subarray.push(getRandomInt(maxLength - minLength) + minLength)
-            }
 
             array.push(subarray)
         }
@@ -127,60 +124,30 @@ Item {
         }
     }
 
-    Flickable {
+    ChatViewFlickable {
         id: flickable
 
-        ScrollBar.vertical: ScrollBar {
-            id: scrollbar
+        ScrollBar.vertical: ScrollBar {}
 
-            onPressedChanged: {
-                if (pressed)
-                    return
+        fakeConversationPlaceholder: FakeConversationColumn {
+            model: generatePlaceholderContent()
+        }
 
-                const isTopPlaceholderVisible = flickable.contentY < topPlaceholder.height
+        onMoreDownRequested: {
+            const shift = Math.min(40, lm.count - indexFilter.maximumIndex - 1)
 
-                if (isTopPlaceholderVisible) {
-                    const first = messagesRepeater.itemAt(0)
+            indexFilter.minimumIndex += shift
+            indexFilter.maximumIndex += shift
+        }
 
-                    const offset = first.y - flickable.contentY
+        onMoreUpRequested: {
+            const shift = Math.min(40, indexFilter.minimumIndex)
 
-                    flickable.contentY = Qt.binding(() => {
-                        return first.y - offset
-                    })
-
-                    const shift = Math.min(40, indexFilter.minimumIndex)
-
-                    indexFilter.minimumIndex -= shift
-                    indexFilter.maximumIndex -= shift
-                }
-
-                const isBottomPlaceholderVisible = bottomPlaceholder.visible
-                                                 && !isTopPlaceholderVisible && flickable.contentY + flickable.height >= bottomPlaceholder.y
-
-
-                if (isBottomPlaceholderVisible) {
-                    const last = messagesRepeater.itemAt(messagesRepeater.count - 1)
-
-                    const offset = flickable.contentY - last.y
-
-                    flickable.contentY = Qt.binding(() => {
-                        return last.y + offset
-                    })
-
-                    const shift = Math.min(40, lm.count - indexFilter.maximumIndex - 1)
-
-                    indexFilter.minimumIndex += shift
-                    indexFilter.maximumIndex += shift
-                }
-            }
+            indexFilter.minimumIndex -= shift
+            indexFilter.maximumIndex -= shift
         }
 
         anchors.fill: parent
-
-        contentY: contentHeight - height
-
-        contentWidth: root.width
-        contentHeight: content.height
 
         // scrolling behaviour
         maximumFlickVelocity: 50000
@@ -188,47 +155,21 @@ Item {
         boundsMovement: Flickable.StopAtBounds
         boundsBehavior: Flickable.DragAndOvershootBounds
 
-        ColumnLayout {
-            id: content
+        model: SortFilterProxyModel {
+            sourceModel: lm
 
-            width: root.width
+            filters: IndexFilter {
+                id: indexFilter
 
-            FakeConversationColumn {
-                id: topPlaceholder
-
-                visible: indexFilter.minimumIndex !== 0
-
-                model: generatePlaceholderContent()
+                minimumIndex: lm.count - 1 - root.numberOfMessagesInViewport
+                maximumIndex: lm.count - 1
             }
 
-            Repeater {
-                id: messagesRepeater
-
-                model: SortFilterProxyModel {
-                    sourceModel: lm
-
-                    filters: IndexFilter {
-                        id: indexFilter
-
-                        minimumIndex: lm.count - 1 - root.numberOfMessagesInViewport
-                        maximumIndex: lm.count - 1
-                    }
-
-                    onRowsInserted: console.log("inserted!")
-                }
-
-                delegate: MessageDelegate {
-                    Layout.fillWidth: true
-                }
-            }
-
-            FakeConversationColumn {
-                id: bottomPlaceholder
-
-                visible: indexFilter.maximumIndex !== lm.count - 1
-                model: generatePlaceholderContent()
-            }
+            onRowsInserted: console.log("inserted!")
         }
+
+        moreUpAvailable: indexFilter.minimumIndex !== 0
+        moreDownAvailable: indexFilter.maximumIndex !== lm.count - 1
     }
 
     RoundButton {
@@ -246,22 +187,10 @@ Item {
         flat: true
 
         onClicked: {
-            const maxVelocity = flickable.maximumFlickVelocity
-            const deceleration = flickable.flickDeceleration
-
-            flickable.contentY = Qt.binding(() => {
-                return 0//first.y - offset
-            })
-
             indexFilter.minimumIndex = lm.count - 1 - root.numberOfMessagesInViewport
             indexFilter.maximumIndex = lm.count - 1
 
-            flickable.maximumFlickVelocity = 2500 * 20
-            flickable.flickDeceleration = 1500
-            flickable.flick(0, -2500 * 20)
-
-            flickable.maximumFlickVelocity = maxVelocity
-            flickable.flickDeceleration = deceleration
+            flickable.moveDown()
         }
     }
 }
