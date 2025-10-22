@@ -46,6 +46,7 @@ report/
 reports/
 screenshots/
 logs/
+log/
 *.log
 result.xml
 junit.xml

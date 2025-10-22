@@ -8,7 +8,6 @@ from utils.element_state_checker import ElementStateChecker
 
 
 class App(BasePage):
-
     def __init__(self, driver):
         super().__init__(driver)
         self.locators = AppLocators()
@@ -98,34 +97,68 @@ class App(BasePage):
         return self.navigate_to("settings", timeout=4, max_attempts=2)
 
     def click_settings_left_nav(self) -> bool:
-        return self.safe_click(self.locators.LEFT_NAV_SETTINGS, timeout=4, max_attempts=2)
+        return self.safe_click(
+            self.locators.LEFT_NAV_SETTINGS, timeout=4, max_attempts=2
+        )
+
+    def wait_for_toast(
+        self,
+        expected_substring: Optional[str] = None,
+        timeout: float = 6.0,
+        poll_interval: float = 0.2,
+        stability: float = 0.0,
+    ) -> Optional[str]:
+        """Poll for a toast message and optionally match its content."""
+
+        deadline = time.time() + (timeout or 0)
+        last_seen: Optional[str] = None
+
+        while time.time() < deadline:
+            remaining = max(deadline - time.time(), 0.3)
+            desc = self.get_toast_content_desc(timeout=remaining)
+            if desc:
+                last_seen = desc
+                matches = (
+                    not expected_substring or expected_substring.lower() in desc.lower()
+                )
+                if matches:
+                    if stability > 0:
+                        stable_until = time.time() + stability
+                        while time.time() < stable_until:
+                            if not self.is_element_visible(
+                                self.locators.ANY_TOAST, timeout=0.1
+                            ):
+                                break
+                            time.sleep(0.05)
+                        else:
+                            self.logger.info(f"Toast detected text='{desc}'")
+                            try:
+                                save_page_source(
+                                    self.driver, self._screenshots_dir, "toast"
+                                )
+                            except Exception as e:
+                                self.logger.debug(f"Toast page source save failed: {e}")
+                            return desc
+                    else:
+                        self.logger.info(f"Toast detected text='{desc}'")
+                        try:
+                            save_page_source(
+                                self.driver, self._screenshots_dir, "toast"
+                            )
+                        except Exception as e:
+                            self.logger.debug(f"Toast page source save failed: {e}")
+                        return desc
+
+            time.sleep(min(poll_interval, max(deadline - time.time(), 0.1)))
+
+        if last_seen:
+            self.logger.debug(
+                "Toast detected but did not match expectation: '%s'", last_seen
+            )
+        return None
 
     def is_toast_present(self, timeout: Optional[int] = 3) -> bool:
-        present = self.is_element_visible(self.locators.ANY_TOAST, timeout=timeout)
-        if not present:
-            return False
-
-        try:
-            el = self.find_element_safe(self.locators.ANY_TOAST, timeout=1)
-            if el is not None:
-                text_value = ElementStateChecker.get_text_content(el)
-                try:
-                    desc_value = el.get_attribute("content-desc") or ""
-                except Exception:
-                    desc_value = ""
-                if text_value or desc_value:
-                    self.logger.info(
-                        f"Toast detected text='{text_value}' content-desc='{desc_value}'"
-                    )
-        except Exception as e:
-            self.logger.debug(f"Toast attribute read failed: {e}")
-
-        try:
-            _ = save_page_source(self.driver, self._screenshots_dir, "toast")
-        except Exception as e:
-            self.logger.debug(f"Toast page source save failed: {e}")
-
-        return True
+        return self.wait_for_toast(timeout=timeout or 3.0) is not None
 
     def get_toast_content_desc(self, timeout: Optional[int] = 3) -> Optional[str]:
         """Return toast's content-desc, polling until non-empty or timeout."""

@@ -34,7 +34,9 @@ class ChangePasswordModal(BasePage):
         restart_confirmed = False
 
         while time.time() < deadline:
-            modal_present = self.find_element_safe(self.locators.MODAL_CONTAINER, timeout=1)
+            modal_present = self.find_element_safe(
+                self.locators.MODAL_CONTAINER, timeout=1
+            )
             if not modal_present:
                 restart_confirmed = True
                 break
@@ -67,8 +69,16 @@ class ChangePasswordModal(BasePage):
 
         try:
             self.app_lifecycle.activate_app()
-        except Exception:
-            pass
+        except Exception as err:
+            self.logger.debug("App activation after password change failed: %s", err)
+
+        try:
+            from services.app_state_manager import AppStateManager
+
+            if not AppStateManager(self.driver).wait_for_app_ready(timeout=45):
+                self.logger.debug("App state manager did not confirm readiness in time")
+        except Exception as err:
+            self.logger.debug("App readiness wait failed: %s", err)
         return True
 
     def _wait_for_primary_button_enabled(self, timeout: int = 10) -> bool:

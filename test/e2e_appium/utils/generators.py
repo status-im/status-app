@@ -3,8 +3,14 @@ import random
 import secrets
 import string
 from typing import Optional
-from eth_account.hdaccount import Language, generate_mnemonic, Mnemonic
+
 from eth_account import Account
+from eth_account.hdaccount import Mnemonic
+
+
+_DEFAULT_MNEMONIC_LANGUAGE = "english"
+_ALLOWED_WORD_COUNTS = (12, 18, 24)
+_MNEMONIC_HELPER = Mnemonic(_DEFAULT_MNEMONIC_LANGUAGE)
 
 
 _SECURE_RANDOM = random.SystemRandom()
@@ -28,18 +34,12 @@ def generate_seed_phrase(word_count: Optional[int] = None) -> str:
         Valid BIP39 seed phrase as a string.
     """
     if word_count is None:
-        word_count = random.choice([12, 18, 24])
+        word_count = random.choice(_ALLOWED_WORD_COUNTS)
 
-    if word_count not in [12, 18, 24]:
+    if word_count not in _ALLOWED_WORD_COUNTS:
         raise ValueError("word_count must be 12, 18, or 24")
 
-    language = Language.ENGLISH
-    mnemonic_helper = Mnemonic(language)
-
-    words = ""
-    while not mnemonic_helper.is_mnemonic_valid(mnemonic=words):
-        words = generate_mnemonic(num_words=word_count, lang=language)
-    return words
+    return _MNEMONIC_HELPER.generate(num_words=word_count)
 
 
 def generate_12_word_seed_phrase() -> str:

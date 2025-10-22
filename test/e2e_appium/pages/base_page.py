@@ -23,7 +23,7 @@ class BasePage:
         self.gestures = Gestures(driver)
         self.app_lifecycle = AppLifecycleManager(driver)
         self.keyboard = KeyboardManager(driver)
-        env_name = os.getenv("CURRENT_TEST_ENVIRONMENT", "lambdatest")
+        env_name = os.getenv("CURRENT_TEST_ENVIRONMENT", "browserstack")
 
         try:
             switcher = EnvironmentSwitcher()
@@ -146,6 +146,7 @@ class BasePage:
             attempts = 0
             while attempts < max_attempts:
                 attempts += 1
+                element = None
                 try:
                     wait = self._create_wait(timeout, "element_click")
                     element = wait.until(EC.element_to_be_clickable(loc))
@@ -153,6 +154,12 @@ class BasePage:
                     log_element_action("click_element", f"{loc[0]}: {loc[1]}", True, 0)
                     return True
                 except Exception as e:
+                    if element is not None and self._gesture_tap_fallback(element, loc):
+                        log_element_action(
+                            "click_element", f"{loc[0]}: {loc[1]}", True, 0
+                        )
+                        return True
+
                     self.logger.debug(f"Click attempt {attempts} failed for {loc}: {e}")
                     if attempts >= max_attempts:
                         break
@@ -359,13 +366,33 @@ class BasePage:
             self.logger.debug(f"Coordinate tap failed: {e}")
             return False
 
-    def restart_app(self, app_package: str = "app.status.mobile") -> bool:
+    def _gesture_tap_fallback(self, element, locator) -> bool:
+        """Fallback tap using Appium gestures when native click fails."""
+        try:
+            if self.gestures.element_tap(element):
+                self.logger.debug(f"Gesture tap fallback succeeded for {locator}")
+                return True
+        except Exception as err:
+            self.logger.debug(f"Gesture tap fallback error for {locator}: {err}")
+
+        try:
+            rect = element.rect
+            center_x = int(rect["x"] + rect["width"] / 2)
+            center_y = int(rect["y"] + rect["height"] / 2)
+            if self.gestures.tap(center_x, center_y):
+                self.logger.debug(
+                    f"Coordinate tap fallback succeeded for {locator} at ({center_x}, {center_y})"
+                )
+                return True
+        except Exception as err:
+            self.logger.debug(f"Coordinate fallback error for {locator}: {err}")
+        return False
+
+    def restart_app(self, app_package: Optional[str] = None) -> bool:
         """Restart the app within the current session."""
         return self.app_lifecycle.restart_app(app_package)
 
-    def restart_app_with_data_cleared(
-        self, app_package: str = "app.status.mobile"
-    ) -> bool:
+    def restart_app_with_data_cleared(self, app_package: Optional[str] = None) -> bool:
         """Restart the app with all app data cleared (fresh app state)."""
         return self.app_lifecycle.restart_app_with_data_cleared(app_package)
 
@@ -385,8 +412,8 @@ class BasePage:
         return False
 
     def _wait_between_attempts(self, base_delay: float = 0.5) -> None:
-        env_name = os.getenv("CURRENT_TEST_ENVIRONMENT", "lambdatest").lower()
-        if env_name in ("lt", "lambdatest"):
+        env_name = os.getenv("CURRENT_TEST_ENVIRONMENT", "browserstack").lower()
+        if env_name in ("browserstack",):
             time.sleep(base_delay * 1.5)
         else:
             time.sleep(base_delay * 0.5)
