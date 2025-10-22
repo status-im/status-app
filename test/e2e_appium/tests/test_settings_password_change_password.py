@@ -2,14 +2,14 @@ import pytest
 
 from constants import AppSections
 from locators.onboarding.wallet.wallet_locators import WalletLocators
-from tests.base_test import BaseAppReadyTest, lambdatest_reporting
+from tests.base_test import BaseAppReadyTest, cloud_reporting
 from utils.generators import generate_secure_password
 
 
 class TestSettingsPasswordChange(BaseAppReadyTest):
     @pytest.mark.critical
     @pytest.mark.smoke
-    @lambdatest_reporting
+    @cloud_reporting
     def test_change_password_and_login(self):
         assert self.ctx.app.click_settings_left_nav(), "Failed to open Settings"
         assert self.ctx.settings.is_loaded(), "Settings not detected"
@@ -25,9 +25,7 @@ class TestSettingsPasswordChange(BaseAppReadyTest):
             pass
 
         modal = password_settings.change_password(old_password, new_password)
-        assert modal and modal.is_displayed(), (
-            "Change password modal did not appear"
-        )
+        assert modal and modal.is_displayed(), "Change password modal did not appear"
         assert modal.complete_reencrypt_and_restart(), (
             "Failed to complete password re-encryption flow"
         )
@@ -38,6 +36,7 @@ class TestSettingsPasswordChange(BaseAppReadyTest):
         assert self.ctx.welcome_back.perform_login(new_password), (
             "Unable to authenticate after restart with the new password"
         )
+
         locators = WalletLocators()
         assert self.ctx.app.is_element_visible(
             locators.WALLET_FOOTER_SEND_BUTTON, timeout=15

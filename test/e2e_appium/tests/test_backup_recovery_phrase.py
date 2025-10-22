@@ -1,14 +1,14 @@
 import os
 import pytest
 
-from tests.base_test import BaseAppReadyTest, lambdatest_reporting
+from tests.base_test import BaseAppReadyTest, cloud_reporting
 from utils.screenshot import save_page_source
 from pages.app import App
 
 
 class TestBackupRecoveryPhrase(BaseAppReadyTest):
     @pytest.mark.critical
-    @lambdatest_reporting
+    @cloud_reporting
     def test_sign_out_from_settings(self):
         # BaseAppReadyTest ensures authenticated home
 
@@ -33,7 +33,7 @@ class TestBackupRecoveryPhrase(BaseAppReadyTest):
         [pytest.param(True, id="delete")],
     )
     @pytest.mark.smoke
-    @lambdatest_reporting
+    @cloud_reporting
     def test_backup_recovery_phrase_flow(self, remove_phrase):
         # BaseAppReadyTest ensures home; open Settings (left-nav preferred)
         opened = self.ctx.app.click_settings_left_nav()
@@ -72,10 +72,12 @@ class TestBackupRecoveryPhrase(BaseAppReadyTest):
 
         # Verify toast appears and assert content-desc contains expected phrase (no fallbacks)
         app = App(self.driver)
-        assert app.is_toast_present(timeout=3), (
-            "Expected a toast to appear after backup completion"
+        keep_msg = app.wait_for_toast(
+            expected_substring="backed up your recovery phrase",
+            timeout=8,
+            stability=0.2,
         )
-        keep_msg = app.get_toast_content_desc(timeout=10) or ""
+        assert keep_msg, "Expected a toast to appear after backup completion"
         assert "backed up your recovery phrase" in keep_msg.lower()
 
         # Capture final state XML for reference
@@ -107,10 +109,12 @@ class TestBackupRecoveryPhrase(BaseAppReadyTest):
             )
 
             # Verify toast after delete via content-desc substring (no fallbacks) BEFORE checking entry removal
-            assert app.is_toast_present(timeout=5), (
-                "Expected a toast to appear after deletion"
+            delete_msg = app.wait_for_toast(
+                expected_substring="recovery phrase permanently removed",
+                timeout=8,
+                stability=0.2,
             )
-            delete_msg = app.get_toast_content_desc(timeout=5) or ""
+            assert delete_msg, "Expected a toast to appear after deletion"
             assert "recovery phrase permanently removed" in delete_msg.lower()
 
             # After toast, verify entry removal

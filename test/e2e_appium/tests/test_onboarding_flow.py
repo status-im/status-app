@@ -6,7 +6,7 @@ fixture-based tests and component validation tests.
 """
 
 import pytest
-from tests.base_test import BaseTest, lambdatest_reporting
+from tests.base_test import BaseTest, cloud_reporting
 
 
 class TestOnboardingFlow(BaseTest):
@@ -15,7 +15,7 @@ class TestOnboardingFlow(BaseTest):
     @pytest.mark.smoke
     @pytest.mark.onboarding
     @pytest.mark.e2e
-    @lambdatest_reporting
+    @cloud_reporting
     @pytest.mark.onboarding_config(
         custom_display_name="E2E_TestUser",
         skip_analytics=True,
@@ -55,7 +55,7 @@ class TestOnboardingFlow(BaseTest):
         self.logger.info("Complete onboarding flow test with fixture passed!")
 
     @pytest.mark.onboarding
-    @lambdatest_reporting
+    @cloud_reporting
     @pytest.mark.onboarding_config(custom_display_name="E2E_TestUser")
     def test_onboarding_lands_on_main_app(self, onboarded_app):
         app = onboarded_app

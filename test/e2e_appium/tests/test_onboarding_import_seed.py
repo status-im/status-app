@@ -1,6 +1,6 @@
 import pytest
 
-from tests.base_test import BaseTest, lambdatest_reporting
+from tests.base_test import BaseTest, cloud_reporting
 from pages.onboarding import (
     WelcomePage,
     AnalyticsPage,
@@ -17,13 +17,15 @@ from utils.generators import generate_seed_phrase, get_wallet_address_from_mnemo
 class TestOnboardingImportSeed(BaseTest):
     @pytest.mark.smoke
     @pytest.mark.onboarding
-    @lambdatest_reporting
+    @cloud_reporting
     def test_import_and_reimport_seed(self):
         seed_phrase = generate_seed_phrase()
         password = "TestPassword123!"
 
         welcome = WelcomePage(self.driver)
-        assert welcome.is_screen_displayed(timeout=30), "Welcome screen should be visible"
+        assert welcome.is_screen_displayed(timeout=30), (
+            "Welcome screen should be visible"
+        )
         assert welcome.click_create_profile(), "Failed to click Create profile"
 
         analytics = AnalyticsPage(self.driver)
@@ -32,10 +34,14 @@ class TestOnboardingImportSeed(BaseTest):
 
         create = CreateProfilePage(self.driver)
         assert create.is_screen_displayed(), "Create profile screen should be visible"
-        assert create.click_use_recovery_phrase(), "Failed to click Use a recovery phrase"
+        assert create.click_use_recovery_phrase(), (
+            "Failed to click Use a recovery phrase"
+        )
 
         seed_page = SeedPhraseInputPage(self.driver, flow_type="create")
-        assert seed_page.is_screen_displayed(), "Seed phrase input (create) should be visible"
+        assert seed_page.is_screen_displayed(), (
+            "Seed phrase input (create) should be visible"
+        )
         assert seed_page.import_seed_phrase(seed_phrase), "Failed to import seed phrase"
 
         password_page = PasswordPage(self.driver)
@@ -43,7 +49,9 @@ class TestOnboardingImportSeed(BaseTest):
         assert password_page.create_password(password), "Failed to create password"
 
         splash = SplashScreen(self.driver)
-        assert splash.wait_for_loading_completion(timeout=60), "App did not finish loading"
+        assert splash.wait_for_loading_completion(timeout=60), (
+            "App did not finish loading"
+        )
 
         wallet_locators = WalletLocators()
 
@@ -54,7 +62,9 @@ class TestOnboardingImportSeed(BaseTest):
             base.safe_click(wallet_locators.ACCOUNT_1_BY_TEXT)
 
         # Read the header address displayed (truncated) via wallet header button
-        header_el = base.find_element_safe(wallet_locators.WALLET_HEADER_ADDRESS, timeout=10)
+        header_el = base.find_element_safe(
+            wallet_locators.WALLET_HEADER_ADDRESS, timeout=10
+        )
         assert header_el is not None, "Wallet header address button not found"
         header_desc = header_el.get_attribute("content-desc") or ""
         assert header_desc, "Header content-desc is empty"
@@ -66,22 +76,11 @@ class TestOnboardingImportSeed(BaseTest):
         )
 
         base_page = base
-        restarted = False
-        try:
-            restarted = base_page.restart_app("app.status.mobile")
-        except Exception:
-            restarted = False
-
-        if not restarted:
-            try:
-                self.driver.terminate_app("app.status.mobile")
-                self.driver.start_activity(
-                    "app.status.mobile", "org.qtproject.qt.android.bindings.QtActivity"
-                )
-            except Exception:
-                pass
+        restarted = base_page.restart_app()
+        assert restarted, "Failed to restart app before re-importing seed"
 
         from locators.onboarding.returning_login_locators import ReturningLoginLocators
+
         base = base_page
         rel = ReturningLoginLocators()
 
@@ -107,22 +106,38 @@ class TestOnboardingImportSeed(BaseTest):
         assert opened, "Returning login user selector did not open"
 
         try:
-            base.safe_click(rel.CREATE_PROFILE_DROPDOWN_ITEM, timeout=10, max_attempts=2)
+            base.safe_click(
+                rel.CREATE_PROFILE_DROPDOWN_ITEM, timeout=10, max_attempts=2
+            )
         except Exception:
             el = base.find_element_safe(rel.CREATE_PROFILE_DROPDOWN_ITEM, timeout=3)
             assert el is not None, "Create profile item not found in dropdown"
-            assert base.gestures.element_tap(el), "Failed to tap Create profile dropdown item"
+            assert base.gestures.element_tap(el), (
+                "Failed to tap Create profile dropdown item"
+            )
 
         analytics = AnalyticsPage(self.driver)
-        assert analytics.is_screen_displayed(), "Analytics screen should be visible after choosing Create profile"
+        assert analytics.is_screen_displayed(), (
+            "Analytics screen should be visible after choosing Create profile"
+        )
         analytics.skip_analytics_sharing()
 
         create = CreateProfilePage(self.driver)
-        assert create.is_screen_displayed(), "Create profile screen should be visible (re-import path)"
-        assert create.click_use_recovery_phrase(), "Failed to click Use a recovery phrase (re-import path)"
+        assert create.is_screen_displayed(), (
+            "Create profile screen should be visible (re-import path)"
+        )
+        assert create.click_use_recovery_phrase(), (
+            "Failed to click Use a recovery phrase (re-import path)"
+        )
 
         seed_login = SeedPhraseInputPage(self.driver, flow_type="create")
-        assert seed_login.is_screen_displayed(), "Seed phrase screen should be visible (re-import path)"
-        assert seed_login.paste_seed_phrase_via_clipboard(seed_phrase), "Failed to paste seed phrase (re-import path)"
+        assert seed_login.is_screen_displayed(), (
+            "Seed phrase screen should be visible (re-import path)"
+        )
+        assert seed_login.paste_seed_phrase_via_clipboard(seed_phrase), (
+            "Failed to paste seed phrase (re-import path)"
+        )
 
-        assert not seed_login.is_continue_button_enabled(), "Continue should be disabled for already added seed phrase"
+        assert not seed_login.is_continue_button_enabled(), (
+            "Continue should be disabled for already added seed phrase"
+        )
