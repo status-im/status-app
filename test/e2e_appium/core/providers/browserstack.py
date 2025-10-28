@@ -29,9 +29,13 @@ class BrowserStackProvider(Provider):
                 "and BROWSERSTACK_ACCESS_KEY."
             )
         self.hub_url = env_config.get_provider_option("hub_url", self.HUB_URL)
-        self.project_name = env_config.get_provider_option(
+        project_name_option = env_config.get_provider_option(
             "project_name", "Status E2E Appium"
         )
+        if isinstance(project_name_option, str):
+            self.project_name = env_config.resolve_template(project_name_option)
+        else:
+            self.project_name = project_name_option
         self.sdk_options = env_config.get_provider_option("sdk", {})
 
     def create_driver(

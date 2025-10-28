@@ -53,9 +53,4 @@ timeouts:
 
 logging:
   level: "DEBUG"
-  enable_video_recording: false
 
-directories:
-  logs: "logs/local"
-  reports: "reports/local"
-  screenshots: "screenshots/local"

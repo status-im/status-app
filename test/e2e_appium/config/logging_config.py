@@ -247,9 +247,9 @@ def setup_logging(config: Optional[LoggingConfig] = None) -> Dict[str, Any]:
     if config is None:
         config = LoggingConfig()
 
-    # Create logs directory
+    # Create logs directory (create parents for nested per-run paths)
     logs_dir = Path(config.logs_dir)
-    logs_dir.mkdir(exist_ok=True)
+    logs_dir.mkdir(parents=True, exist_ok=True)
 
     # Clear any existing handlers
     root_logger = logging.getLogger()

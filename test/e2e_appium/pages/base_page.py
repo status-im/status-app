@@ -1,15 +1,14 @@
 import time
-import os
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Optional, List
 
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from config import log_element_action
-from core import EnvironmentSwitcher
+from config import get_config, log_element_action
 from utils.gestures import Gestures
 from utils.screenshot import save_screenshot, save_page_source
 from utils.app_lifecycle_manager import AppLifecycleManager
@@ -23,16 +22,16 @@ class BasePage:
         self.gestures = Gestures(driver)
         self.app_lifecycle = AppLifecycleManager(driver)
         self.keyboard = KeyboardManager(driver)
-        env_name = os.getenv("CURRENT_TEST_ENVIRONMENT", "browserstack")
-
         try:
-            switcher = EnvironmentSwitcher()
-            env_config = switcher.switch_to(env_name)
-            self.timeouts = env_config.timeouts
-            element_wait_timeout = self.timeouts["element_wait"]
-            self._screenshots_dir = env_config.directories.get(
-                "screenshots", "screenshots"
-            )
+            config = get_config()
+            self.timeouts = config.environment.timeouts
+            element_wait_timeout = self.timeouts.get("element_wait", 30)
+            self._screenshots_dir = config.screenshots_dir or "screenshots"
+            try:
+                Path(self._screenshots_dir).mkdir(parents=True, exist_ok=True)
+            except Exception:
+                # Do not block tests if directory creation fails
+                pass
         except Exception:
             self.timeouts = {
                 "element_wait": 30,

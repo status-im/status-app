@@ -8,10 +8,10 @@ from contextlib import contextmanager
 from appium.webdriver.webdriver import WebDriver
 
 from core.session_manager import SessionManager
-from core.config_manager import EnvironmentSwitcher
 from pages.onboarding import HomePage
 from pages.app import App
 from utils.exceptions import SessionManagementError
+from config import get_config
 from config.logging_config import get_logger
 from utils.gestures import Gestures
 from utils.screenshot import save_screenshot
@@ -180,9 +180,8 @@ class TestContext:
 
     def take_screenshot(self, name: Optional[str] = None) -> Optional[str]:
         try:
-            switcher = EnvironmentSwitcher()
-            env_config = switcher.switch_to(self.environment)
-            base_dir = env_config.directories.get("screenshots", "screenshots")
+            config = get_config()
+            base_dir = config.screenshots_dir or "screenshots"
         except Exception:
             base_dir = "screenshots"
         try:

@@ -7,6 +7,7 @@ provides flexible configuration options.
 """
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional, Dict, Any
 import pytest
 import time
@@ -23,6 +24,7 @@ from pages.onboarding import (
 )
 from utils.generators import generate_seed_phrase
 from models.user_model import User, UserProfile
+from config import get_config
 from config.logging_config import get_logger
 
 
@@ -66,6 +68,16 @@ class OnboardingFlow:
         self.driver = driver
         self.config = config or OnboardingConfig()
         self.logger = logger or get_logger("onboarding_flow")
+
+        if self.config.take_screenshots and not self.config.screenshot_path:
+            try:
+                resolved_dir = get_config().screenshots_dir
+                if resolved_dir:
+                    Path(resolved_dir).mkdir(parents=True, exist_ok=True)
+                    self.config.screenshot_path = resolved_dir
+            except Exception:
+                # Leave as None if config unavailable
+                pass
 
         # Initialize page objects
         self.welcome_page = WelcomePage(self.driver)
@@ -362,12 +374,20 @@ class OnboardingFlow:
 
     def _take_screenshot(self, name: str):
         """Take screenshot during flow execution"""
-        if self.config.screenshot_path:
+        try:
+            base_dir = self.config.screenshot_path
+            if not base_dir:
+                base_dir = get_config().screenshots_dir
+        except Exception:
+            base_dir = None
+
+        if base_dir:
             try:
+                Path(base_dir).mkdir(parents=True, exist_ok=True)
                 timestamp = datetime.now().strftime("%H%M%S")
                 screenshot_name = f"{name}_{timestamp}.png"
-                screenshot_path = f"{self.config.screenshot_path}/{screenshot_name}"
-                self.driver.save_screenshot(screenshot_path)
+                screenshot_path = Path(base_dir) / screenshot_name
+                self.driver.save_screenshot(str(screenshot_path))
                 self.logger.debug(f"📷 Screenshot saved: {screenshot_path}")
             except Exception as e:
                 self.logger.warning(f"⚠️ Failed to take screenshot '{name}': {e}")

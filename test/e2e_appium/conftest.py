@@ -4,9 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from .config import setup_logging, log_test_start, log_test_end
-from .config.logging_config import get_logger
-from .core import EnvironmentSwitcher
+from .config import get_config, setup_logging, log_test_start, log_test_end
+from .config.logging_config import get_logger, LoggingConfig
 from .utils.cloud_reporter import CloudResultReporter
 from .utils.screenshot import save_screenshot, save_page_source
 
@@ -23,33 +22,38 @@ _saved_failure_logs: List[Path] = []
 
 def pytest_configure(config):
     global _logging_setup
-    _logging_setup = setup_logging()
 
     # Normalize CLI --env to CURRENT_TEST_ENVIRONMENT so all components agree
     try:
         cli_env = getattr(config.option, "env", None)
         if cli_env:
             os.environ["CURRENT_TEST_ENVIRONMENT"] = cli_env
+            os.environ["TEST_ENVIRONMENT"] = cli_env
     except Exception:
         # Do not block test runs if normalization fails
         pass
 
-    # Use YAML-based configuration
-    switcher = EnvironmentSwitcher()
-    env_name = (
-        os.getenv("CURRENT_TEST_ENVIRONMENT") or switcher.auto_detect_environment()
-    )
-
     try:
-        env_config = switcher.switch_to(env_name)
+        config_obj = get_config(refresh=True)
 
-        # Use directories from YAML config
-        reports_dir = Path(env_config.directories.get("reports", "reports"))
-        enable_xml_report = env_config.logging.get("enable_xml_report", True)
-        enable_html_report = env_config.logging.get("enable_html_report", True)
+        reports_dir = Path(config_obj.reports_dir)
+        logs_dir = Path(config_obj.logs_dir)
+        enable_xml_report = config_obj.enable_xml_report
+        enable_html_report = config_obj.enable_html_report
+
+        logging_cfg = LoggingConfig(
+            logs_dir=str(logs_dir),
+            console_level=config_obj.logging_level,
+            file_level=config_obj.logging_level,
+        )
+        _logging_setup = setup_logging(logging_cfg)
 
         logger = get_logger("conftest")
-        logger.info("Using reports directory from %s config: %s", env_name, reports_dir)
+        logger.info(
+            "Using reports directory from %s config: %s",
+            config_obj.environment_name,
+            reports_dir,
+        )
 
     except Exception as e:
         # Simplified fallback using defaults
@@ -57,11 +61,13 @@ def pytest_configure(config):
         enable_xml_report = True
         enable_html_report = True
 
+        _logging_setup = setup_logging()
+
         logger = get_logger("conftest")
         logger.warning("Using default configuration: %s", e)
         logger.warning("Ensure YAML config files are properly set up")
 
-    reports_dir.mkdir(exist_ok=True)
+    reports_dir.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -178,16 +184,9 @@ def pytest_runtest_makereport(item, call):
             if driver:
                 # Resolve screenshots directory from environment config; fallback to 'screenshots'
                 try:
-                    env_switcher = EnvironmentSwitcher()
-                    env_name = (
-                        os.getenv("CURRENT_TEST_ENVIRONMENT")
-                        or env_switcher.auto_detect_environment()
-                    )
-                    env_config = env_switcher.switch_to(env_name)
-                    screenshots_dir = env_config.directories.get(
-                        "screenshots", "screenshots"
-                    )
-                    logs_dir = env_config.directories.get("logs", "logs")
+                    config_obj = get_config()
+                    screenshots_dir = config_obj.screenshots_dir or "screenshots"
+                    logs_dir = config_obj.logs_dir or "logs"
                 except Exception:
                     screenshots_dir = "screenshots"
                     logs_dir = "logs"

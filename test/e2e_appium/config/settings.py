@@ -1,7 +1,9 @@
 import os
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
 from core.config_manager import ConfigurationManager, EnvironmentSwitcher
 from core.environment import DeviceConfig, EnvironmentConfig
@@ -23,6 +25,7 @@ class TestConfig:
     logging_level: str
     concurrency: Dict[str, int]
     pytest_addopts: List[str]
+    run_id: str
     provider_options: Dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -43,6 +46,15 @@ class TestConfig:
 
 
 _CONFIG_CACHE: Optional[TestConfig] = None
+
+
+def _ensure_run_id() -> str:
+    run_id = os.getenv("E2E_RUN_ID")
+    if run_id:
+        return run_id
+    generated = f"local-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}-{uuid4().hex[:6]}"
+    os.environ["E2E_RUN_ID"] = generated
+    return generated
 
 
 def _select_device(env_config: EnvironmentConfig) -> DeviceConfig:
@@ -77,6 +89,7 @@ def _ensure_directories(*paths: str) -> None:
 
 
 def load_config() -> TestConfig:
+    run_id = _ensure_run_id()
     env_name = os.getenv("TEST_ENVIRONMENT")
     manager = ConfigurationManager()
     if not env_name:
@@ -89,9 +102,15 @@ def load_config() -> TestConfig:
         env_config.device_defaults.get("capabilities", {})
     )
 
-    reports_dir = env_config.directories.get("reports", "reports")
-    logs_dir = env_config.directories.get("logs", "logs")
-    screenshots_dir = env_config.directories.get("screenshots", "screenshots")
+    reports_dir = env_config.resolve_template(
+        env_config.directories.get("reports", "reports")
+    )
+    logs_dir = env_config.resolve_template(
+        env_config.directories.get("logs", "logs")
+    )
+    screenshots_dir = env_config.resolve_template(
+        env_config.directories.get("screenshots", "screenshots")
+    )
     _ensure_directories(reports_dir, logs_dir, screenshots_dir)
 
     execution = env_config.execution or {}
@@ -114,6 +133,7 @@ def load_config() -> TestConfig:
         logging_level=logging_config.get("level", "INFO"),
         concurrency=env_config.concurrency_limits(),
         pytest_addopts=pytest_addopts,
+        run_id=run_id,
         provider_options=env_config.provider.options,
     )
     return config

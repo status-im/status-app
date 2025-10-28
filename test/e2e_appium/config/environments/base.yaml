@@ -27,13 +27,11 @@ timeouts:
 
 logging:
   level: "INFO"
-  enable_screenshots: true
-  enable_video_recording: true
   enable_xml_report: true
   enable_html_report: true
   enable_junit_report: true
 
 directories:
-  logs: "logs"
-  reports: "reports"
-  screenshots: "screenshots"
+  reports: "reports/${E2E_RUN_ID:-local}"
+  logs: "reports/${E2E_RUN_ID:-local}/logs"
+  screenshots: "reports/${E2E_RUN_ID:-local}/screenshots"

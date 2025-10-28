@@ -13,10 +13,10 @@ provider:
     auth:
       username: "${BROWSERSTACK_USERNAME:-}"
       access_key: "${BROWSERSTACK_ACCESS_KEY:-}"
-    build_name_template: "Status_E2E_Mobile"
+    build_name_template: "${BROWSERSTACK_BUILD_NAME:-${BROWSERSTACK_BUILD_IDENTIFIER:-${GIT_COMMIT:-Status Mobile}}}"
     build_identifier_template: "${BROWSERSTACK_BUILD_IDENTIFIER:-${GIT_COMMIT:-local}}"
-    session_name_template: "${TEST_NAME:-Status Test}"
-    project_name: "Status E2E Appium"
+    session_name_template: "${TEST_NAME:-${PYTEST_CURRENT_TEST:-Status Test}}"
+    project_name: "${BROWSERSTACK_PROJECT_NAME:-Status E2E Appium}"
     hub_url: "https://hub-cloud.browserstack.com/wd/hub"
     max_parallel_sessions: 5
     sdk:
@@ -29,7 +29,13 @@ device_defaults:
     newCommandTimeout: 300
     bstack:options:
       deviceOrientation: "landscape"
-      "appiumVersion" : "2.19.0"
+      "appiumVersion": "2.19.0"
+      video: true
+      debug: false
+      networkLogs: false
+      appiumLogs: true
+      deviceLogs: true
+      appProfiling: false
     orientation: "LANDSCAPE"
     appium:unicodeKeyboard: true
     appium:resetKeyboard: true
@@ -76,7 +82,5 @@ execution:
 
 logging:
   level: "INFO"
-  enable_video_recording: true
-  enable_screenshots: true
   enable_xml_report: true
   enable_html_report: true
