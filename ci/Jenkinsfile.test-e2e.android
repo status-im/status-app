@@ -1,0 +1,277 @@
+#!/usr/bin/env groovy
+library 'status-jenkins-lib@v1.9.27'
+
+/* Options section can't access functions in objects. */
+def isPRBuild = utils.isPRBuild()
+def isNightlyBuild = utils.isNightlyBuild()
+
+pipeline {
+  agent {
+    dockerfile {
+      label 'linuxcontainer'
+      filename 'tests.Dockerfile'
+      dir 'ci'
+      args '--user jenkins'
+    }
+  }
+
+  parameters {
+    gitParameter(
+      name: 'GIT_REF',
+      description: 'Git branch to checkout.',
+      branchFilter: 'origin/(.*)',
+      branch: '',
+      defaultValue: 'master',
+      quickFilterEnabled: false,
+      selectedValue: 'DEFAULT',
+      sortMode: 'ASCENDING_SMART',
+      tagFilter: '*',
+      type: 'PT_BRANCH'
+    )
+    string(
+      name: 'BUILD_SOURCE',
+      description: 'URL to APK or Jenkins build (pkg/*.apk). Required when BROWSERSTACK_APP_ID is empty.',
+      defaultValue: ''
+    )
+    string(
+      name: 'BROWSERSTACK_APP_ID',
+      description: 'Existing BrowserStack app identifier (lt://...). Leave empty to upload from BUILD_SOURCE.',
+      defaultValue: ''
+    )
+    string(
+      name: 'DEVICE_ID',
+      description: 'BrowserStack device id to run on (leave empty to use the environment default).',
+      defaultValue: ''
+    )
+    string(
+      name: 'PYTEST_ARGS',
+      description: 'Pytest flags (e.g. "-m smoke" or "-m critical") and other args.',
+      defaultValue: '-n=5 -m smoke tests'
+    )
+  }
+
+  options {
+    timestamps()
+    timeout(time: 120, unit: 'MINUTES')
+    buildDiscarder(logRotator(
+      daysToKeepStr: '30',
+      numToKeepStr: '30',
+      artifactNumToKeepStr: '30',
+    ))
+    disableRestartFromStage()
+  }
+
+  environment {
+    VIRTUAL_ENV = "${env.WORKSPACE_TMP}/venv-appium"
+    PYTHONUNBUFFERED = "1"
+    BUILD_SOURCE = "${params.BUILD_SOURCE}"
+    BROWSERSTACK_APP_ID_PARAM = "${params.BROWSERSTACK_APP_ID}"
+    PYTEST_ARGS = "${params.PYTEST_ARGS}"
+    DEVICE_ID = "${params.DEVICE_ID}"
+  }
+
+  stages {
+    stage('Checkout Reference') {
+      steps {
+        script {
+          def branch = params.GIT_REF ?: 'origin/master'
+          checkout([
+            $class: 'GitSCM',
+            branches: [[name: branch]],
+            doGenerateSubmoduleConfigurations: false,
+            extensions: scm.extensions,
+            submoduleCfg: [],
+            userRemoteConfigs: scm.userRemoteConfigs
+          ])
+          env.GIT_COMMIT = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+          echo "Checked out ${branch} @ ${env.GIT_COMMIT}"
+        }
+      }
+    }
+
+    stage('Prep') {
+      steps {
+        script {
+          setBrowserStackProjectName()
+          updateGitHubStatus()
+        }
+      }
+    }
+
+    stage('Setup Python environment') {
+      steps {
+        dir('test/e2e_appium') {
+          sh """
+            set -euo pipefail
+            python3 -m venv ${VIRTUAL_ENV}
+            source ${VIRTUAL_ENV}/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
+          """
+        }
+      }
+    }
+
+    stage('Acquire APK') {
+      steps {
+        script {
+          if (env.BROWSERSTACK_APP_ID_PARAM?.trim()) {
+            env.BROWSERSTACK_APP_ID = env.BROWSERSTACK_APP_ID_PARAM.trim()
+            echo "Using provided BrowserStack app id: ${env.BROWSERSTACK_APP_ID}"
+          } else {
+            if (!env.BUILD_SOURCE?.trim()) {
+              error('Specify BUILD_SOURCE when BROWSERSTACK_APP_ID is empty.')
+            }
+            sh "mkdir -p pkg"
+            if (env.BUILD_SOURCE.startsWith('http')) {
+              sh """
+                set -euo pipefail
+                curl -L "${env.BUILD_SOURCE}" -o pkg/downloaded.apk
+              """
+            } else {
+              copyArtifacts(
+                projectName: env.BUILD_SOURCE,
+                filter: 'pkg/*.apk',
+                selector: lastWithArtifacts(),
+                target: 'pkg/'
+              )
+            }
+            def apkPath = utils.findFile('pkg/*.apk')
+            if (!apkPath) {
+              error("Unable to locate APK under pkg/. Ensure BUILD_SOURCE produces pkg/*.apk artifacts.")
+            }
+            env.APK_PATH = apkPath
+            echo "APK ready at ${env.APK_PATH}"
+          }
+        }
+      }
+    }
+
+    stage('Upload APK to BrowserStack') {
+      when {
+        expression { !env.BROWSERSTACK_APP_ID }
+      }
+      steps {
+        script {
+          withCredentials([
+            usernamePassword(
+              credentialsId: 'browserstack-status-desktop',
+              usernameVariable: 'BROWSERSTACK_USERNAME',
+              passwordVariable: 'BROWSERSTACK_ACCESS_KEY'
+            )
+          ]) {
+            def response = sh(
+              script: """
+                set -euo pipefail
+                APK_NAME=\$(basename "${env.APK_PATH}")
+                CUSTOM_ID=\$(printf '%s' "\${APK_NAME}" | tr -cs '[:alnum:]._-' '-' | cut -c1-80)
+                CUSTOM_ID="\${CUSTOM_ID}-${env.BUILD_NUMBER ?: System.currentTimeMillis()}"
+                curl -s -u "${BROWSERSTACK_USERNAME}:${BROWSERSTACK_ACCESS_KEY}" \\
+                  -X POST "https://api-cloud.browserstack.com/app-automate/upload" \\
+                  -F "file=@${env.APK_PATH}" \\
+                  -F "custom_id=\${CUSTOM_ID}" \\
+                | tee upload_response.json
+              """,
+              returnStdout: true
+            ).trim()
+            def result = readJSON text: response
+            def appUrl = result?.app_url
+            if (!appUrl) {
+              error("BrowserStack upload failed: ${response}")
+            }
+            env.BROWSERSTACK_APP_ID = appUrl
+            env.BROWSERSTACK_BUILD_NAME = result?.custom_id
+            env.BROWSERSTACK_BUILD_IDENTIFIER = env.BUILD_NUMBER
+            echo "BrowserStack app uploaded: ${env.BROWSERSTACK_APP_ID}"
+          }
+        }
+      }
+    }
+
+    stage('Run pytest suite') {
+      steps {
+        script {
+          dir('test/e2e_appium') {
+            if (!env.DEVICE_ID?.trim()) {
+              echo 'DEVICE_ID not set; using framework defaults.'
+            } else {
+              echo "Using DEVICE_ID: ${env.DEVICE_ID}"
+            }
+
+            def pytestCmd = "python -m pytest --env browserstack"
+            if (env.PYTEST_ARGS?.trim()) {
+              pytestCmd += " ${env.PYTEST_ARGS.trim()}"
+            }
+            
+            withCredentials([
+              usernamePassword(
+                credentialsId: 'browserstack-status-desktop',
+                usernameVariable: 'BROWSERSTACK_USERNAME',
+                passwordVariable: 'BROWSERSTACK_ACCESS_KEY'
+              )
+            ]) {
+              withEnv([
+                "BROWSERSTACK_USERNAME=${BROWSERSTACK_USERNAME}",
+                "BROWSERSTACK_ACCESS_KEY=${BROWSERSTACK_ACCESS_KEY}",
+                "BROWSERSTACK_APP_ID=${env.BROWSERSTACK_APP_ID}",
+                "BROWSERSTACK_BUILD_NAME=${env.BROWSERSTACK_BUILD_NAME ?: ''}",
+                "BROWSERSTACK_BUILD_IDENTIFIER=${env.BROWSERSTACK_BUILD_IDENTIFIER ?: ''}",
+                "BROWSERSTACK_PROJECT_NAME=${env.BROWSERSTACK_PROJECT_NAME ?: ''}",
+                "TEST_DEVICE_ID=${env.DEVICE_ID}"
+              ]) {
+                sh """
+                  set -euo pipefail
+                  source ${VIRTUAL_ENV}/bin/activate
+                  ${pytestCmd}
+                """
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      script {
+        github.notifyPR(true)
+      }
+    }
+    failure {
+      script {
+        github.notifyPR(false)
+      }
+    }
+    always {
+      script {
+        def runId = env.E2E_RUN_ID?.trim()
+        def reportsPattern = runId ? "test/e2e_appium/reports/${runId}/**/*.xml" : "test/e2e_appium/reports/**/*.xml"
+        junit allowEmptyResults: true, testResults: reportsPattern
+        def archivePattern = runId ? "test/e2e_appium/reports/${runId}/**/*" : "test/e2e_appium/reports/**/*"
+        archiveArtifacts artifacts: archivePattern, allowEmptyArchive: true
+      }
+      cleanWs(disableDeferredWipeout: true)
+    }
+  }
+}
+
+def updateGitHubStatus() {
+  if (params.BUILD_SOURCE ==~ /.*\/PR-[0-9]+\/?$/) {
+    github.statusUpdate(
+      context: 'jenkins/prs/tests/e2e-android',
+      commit: jenkins.getJobCommitByPath(params.BUILD_SOURCE),
+      repo_url: 'https://github.com/status-im/status-desktop'
+    )
+  }
+}
+
+def setBrowserStackProjectName() {
+  if (isNightlyBuild) {
+    env.BROWSERSTACK_PROJECT_NAME = 'Mobile E2E Nightly'
+  } else if (isPRBuild) {
+    env.BROWSERSTACK_PROJECT_NAME = 'Mobile E2E PRs'
+  } else {
+    env.BROWSERSTACK_PROJECT_NAME = ''
+  }
+}
