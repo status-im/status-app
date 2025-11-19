@@ -6,11 +6,14 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
 import StatusQ.Controls
+import StatusQ.Core.Utils
 
 import "private"
 
 Rectangle {
     id: root
+
+    Accessible.name: Utils.formatAccessibleName(root.title, objectName)
 
     property string itemId: ""
     property string titleId: ""
