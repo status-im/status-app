@@ -22,7 +22,7 @@ ToolBar {
     contentItem: RowLayout {
         spacing: 0
         StatusFlatButton {
-            Layout.leftMargin: 20
+            Layout.leftMargin: Theme.smallPadding*2
             objectName: "toolBarBackButton"
             icon.name: "arrow-left"
             visible: root.backButtonVisible

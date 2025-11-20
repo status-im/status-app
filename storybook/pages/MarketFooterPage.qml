@@ -16,7 +16,7 @@ SplitView {
             pageSize: Number(pageSizeInput.text)
             totalCount: Number(tokenCountInput.text)
             currentPage: 1
-            onSwitchPage: console.warn("switch page to ", pageNumber)
+            onSwitchPage: pageNumber => console.warn("switch page to ", pageNumber)
         }
     }
 
@@ -25,10 +25,9 @@ SplitView {
         Label {
             text: "Total Tokens Count"
         }
-        TextInput {
+        TextField {
             id: tokenCountInput
             Layout.preferredWidth: 100
-            Layout.preferredHeight: 100
             validator: IntValidator { bottom: 0 }
             text: "2671"
         }
@@ -36,10 +35,9 @@ SplitView {
         Label {
             text: "Page Size"
         }
-        TextInput {
+        TextField {
             id: pageSizeInput
             Layout.preferredWidth: 100
-            Layout.preferredHeight: 100
             validator: IntValidator { bottom: 0 }
             text: "100"
         }

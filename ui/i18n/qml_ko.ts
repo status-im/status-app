@@ -2026,10 +2026,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>POKT 및 Infura 장애. 토큰 잔액을 불러올 수 없습니다.</translation>
     </message>
     <message>
-        <source>POKT &amp; Infura down for &lt;a href=&apos;#&apos;&gt;multiple chains &lt;/a&gt;. Token balances for those chains cannot be retrieved.</source>
-        <translation>POKT 및 Infura가 &lt;a href=&apos;#&apos;&gt;여러 체인에서 &lt;/a&gt; 중단되었습니다. 해당 체인의 토큰 잔액을 가져올 수 없습니다.</translation>
-    </message>
-    <message>
         <source>POKT &amp; Infura down for %1. %1 token balances are as of %2.</source>
         <translation>POKT 및 Infura가 %1에 오류가 발생했습니다. %1 토큰 잔액은 %2 기준입니다.</translation>
     </message>
@@ -2148,6 +2144,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>%1 was removed from your trusted sites.</source>
         <translation>%1이(가) 신뢰할 수 있는 사이트에서 제거되었어요</translation>
+    </message>
+    <message>
+        <source>POKT &amp; Infura down for &lt;a href=&apos;#&apos;&gt;multiple chains&lt;/a&gt;. Token balances for those chains cannot be retrieved.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -8990,6 +8990,10 @@ L2 수수료: %2</translation>
         <source>Dismiss</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Ready to scan</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardConfirmation</name>
@@ -10496,24 +10500,12 @@ to load</source>
         <translation>Keycard 읽는 중...</translation>
     </message>
     <message>
-        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
-        <translation>이런, 이건 Keycard가 아니에요.&lt;br&gt;카드를 제거하고 Keycard를 삽입하세요.</translation>
-    </message>
-    <message>
-        <source>Wrong Keycard for this profile inserted</source>
-        <translation>이 프로필에 맞지 않는 Keycard가 삽입되었습니다</translation>
-    </message>
-    <message>
         <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</source>
         <translation>Keycard 감지 문제.&lt;br&gt;리더기와 Keycard를 제거했다가 다시 삽입하세요.</translation>
     </message>
     <message>
         <source>Keycard blocked</source>
         <translation>Keycard가 차단됨</translation>
-    </message>
-    <message>
-        <source>The inserted Keycard is empty.&lt;br&gt;Insert the correct Keycard for this profile.</source>
-        <translation>삽입한 Keycard가 비어 있습니다.&lt;br&gt;이 프로필에 맞는 올바른 Keycard를 삽입하세요.</translation>
     </message>
     <message numerus="yes">
         <source>PIN incorrect. %n attempt(s) remaining.</source>
@@ -10532,6 +10524,26 @@ to load</source>
     <message>
         <source>Enter Keycard PIN</source>
         <translation>Keycard PIN 입력</translation>
+    </message>
+    <message>
+        <source>Scan keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard for this profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max pairing slots reached.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11124,9 +11136,11 @@ to load</source>
 </context>
 <context>
     <name>MarketFooter</name>
-    <message>
-        <source>Showing %1 to %2 of %3 results</source>
-        <translation>총 %3개 결과 중 %1–%2 표시</translation>
+    <message numerus="yes">
+        <source>Showing %L1 to %L2 of %n result(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
     </message>
 </context>
 <context>

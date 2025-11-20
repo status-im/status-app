@@ -55,10 +55,7 @@ Control {
             verticalAlignment: Qt.AlignVCenter
             horizontalAlignment: Qt.AlignHCenter
 
-            text: qsTr("Showing %1 to %2 of %3 results").
-            arg(LocaleUtils.numberToLocaleString(d.startIndex)).
-            arg(LocaleUtils.numberToLocaleString(d.endIndex)).
-            arg(LocaleUtils.numberToLocaleString(root.totalCount))
+            text: qsTr("Showing %L1 to %L2 of %n result(s)", "", root.totalCount).arg(d.startIndex).arg(d.endIndex)
         }
 
         Paginator {
@@ -74,7 +71,7 @@ Control {
             totalCount: root.totalCount
             currentPage: root.currentPage
             compactMode: root.compactMode
-            onRequestPage: root.switchPage(pageNumber)
+            onRequestPage: pageNumber => root.switchPage(pageNumber)
         }
     }
 }

@@ -80,7 +80,7 @@ QtObject {
             if(chainIdsDown.length > 0) {
                 return qsTr("Pocket Network (POKT) & Infura are currently both unavailable for %1. %1 balances are as of %2.")
                 .arg(getChainIdsJointString(chainIdsDown))
-                .arg(LocaleUtils.formatDateTime(new Date(networkConnectionModule.blockchainNetworkConnection.lastCheckedAt*1000)))
+                .arg(LocaleUtils.formatDateTime(new Date(networkConnectionModule.blockchainNetworkConnection.lastCheckedAt*1000)), Locale.ShortFormat)
             }
         }
         return ""
@@ -102,7 +102,7 @@ QtObject {
         if(chainIdsDown.length > 0) {
             return qsTr("Pocket Network (POKT) & Infura are currently both unavailable for %1. %1 balances are as of %2.")
             .arg(getChainIdsJointString(chainIdsDown))
-            .arg(LocaleUtils.formatDateTime(new Date(networkConnectionModule.blockchainNetworkConnection.lastCheckedAt * 1000)))
+            .arg(LocaleUtils.formatDateTime(new Date(networkConnectionModule.blockchainNetworkConnection.lastCheckedAt * 1000)), Locale.ShortFormat)
         }
 
         return ""

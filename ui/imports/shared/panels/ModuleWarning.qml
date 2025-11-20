@@ -59,8 +59,11 @@ Item {
     signal linkActivated(string link)
 
     onActiveChanged: {
-        if (root.active && root.delay) {
-            showTimer.start();
+        if (root.active) {
+            if (root.delay)
+                showTimer.start()
+            else
+                showAnimation.start()
         }
     }
 
@@ -71,8 +74,9 @@ Item {
         property: "implicitHeight"
         from: 0
         to: 32
-        duration: 500
+        duration: ThemeUtils.AnimationDuration.Slow
         easing.type: Easing.OutCubic
+        alwaysRunToEnd: true
         onStarted: {
             root.visible = true;
             root.showStarted()
@@ -89,7 +93,7 @@ Item {
         property: "implicitHeight"
         from: 32
         to: 0
-        duration: 500
+        duration: ThemeUtils.AnimationDuration.Slow
         easing.type: Easing.OutCubic
         onStarted: {
             root.hideStarted()
@@ -112,8 +116,7 @@ Item {
 
     Timer {
         id: hideTimer
-        repeat: false
-        running: false
+        interval: 3000
         onTriggered: {
             root.active = false
         }
@@ -265,5 +268,13 @@ Item {
                 }
             }
         }
+    }
+
+    // divider
+    Rectangle {
+        anchors.bottom: parent.bottom
+        width: root.width
+        height: 1
+        color: Theme.palette.background
     }
 }

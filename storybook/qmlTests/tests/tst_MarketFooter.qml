@@ -20,7 +20,7 @@ Item {
             pageSize: 20
             totalCount: 1230
             currentPage: 1
-            onSwitchPage: currentPage = pageNumber
+            onSwitchPage: pageNumber => currentPage = pageNumber
         }
     }
 
@@ -56,10 +56,9 @@ Item {
             const endIndex = Math.min(paginator.currentPage * controlUnderTest.pageSize, controlUnderTest.totalCount)
 
             compare(infoText.x, 0)
-            compare(infoText.text, qsTr("Showing %1 to %2 of %3 results")
+            compare(infoText.text, qsTr("Showing %L1 to %L2 of %n result(s)", "", controlUnderTest.totalCount)
                     .arg(LocaleUtils.numberToLocaleString(startIndex))
-                    .arg(LocaleUtils.numberToLocaleString(endIndex))
-                    .arg(LocaleUtils.numberToLocaleString(controlUnderTest.totalCount)))
+                    .arg(LocaleUtils.numberToLocaleString(endIndex)))
         }
 
         function test_paginator() {

@@ -16,8 +16,6 @@ type
     nodeAddress*: string
     nodeId*: string
 
-  MailserverAvailableArgs* = ref object of Args
-
   MailserverSyncedArgs* = ref object of Args
     chatId*: string
     syncedFrom*: int64
@@ -31,7 +29,6 @@ type
 
 # Signals which may be emitted by this service:
 const SIGNAL_ACTIVE_MAILSERVER_CHANGED* = "activeMailserverChanged"
-const SIGNAL_MAILSERVER_AVAILABLE* = "mailserverAvailable"
 const SIGNAL_MAILSERVER_NOT_WORKING* = "mailserverNotWorking"
 const SIGNAL_MAILSERVER_SYNCED* = "mailserverSynced"
 const SIGNAL_MAILSERVER_HISTORY_REQUEST_STARTED* = "historyRequestStarted"

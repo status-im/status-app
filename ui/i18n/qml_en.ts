@@ -450,6 +450,16 @@
     </message>
 </context>
 <context>
+    <name>MarketFooter</name>
+    <message numerus="yes">
+        <source>Showing %L1 to %L2 of %n result(s)</source>
+        <translation>
+            <numerusform>Showing %L1 to %L2 of %n result</numerusform>
+            <numerusform>Showing %L1 to %L2 of %n results</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>MembersDropdown</name>
     <message numerus="yes">
         <source>Add %n member(s)</source>

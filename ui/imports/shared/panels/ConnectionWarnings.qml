@@ -14,37 +14,45 @@ Loader {
     property NetworkConnectionStore networkConnectionStore
     readonly property string jointChainIdString: networkConnectionStore.getChainIdsJointString(chainIdsDown)
     property string websiteDown
-    property int connectionState: -1
+    property int connectionState: Constants.ConnectionStatus.Retrying
     property var chainIdsDown: []
     property bool completelyDown: false
     property double lastCheckedAtUnix: -1
-    property string lastCheckedAt
+    readonly property string lastCheckedAt: LocaleUtils.formatDateTime(new Date(lastCheckedAtUnix*1000), Locale.ShortFormat)
     property bool withCache: false
     property string tooltipMessage
     property string toastText
 
-    function updateBanner() {
+    property bool relevantForCurrentSection: true
+    onRelevantForCurrentSectionChanged: updateBanner(false)
+
+    required property bool isOnline // strict online/offline check, doesn't care about the wallet services
+    onIsOnlineChanged: updateBanner()
+
+    function updateBanner(showOnlineBanners = true) {
+        // if offline or irrelevant, hide the item
+        if (!isOnline || !relevantForCurrentSection) {
+            if (!!item)
+                item.hide()
+            return
+        }
+
         root.active = true
         if (connectionState === Constants.ConnectionStatus.Failure)
             item.show()
-        else
+        else if (showOnlineBanners)
             item.showFor(3000)
     }
 
     sourceComponent: ModuleWarning {
-        QtObject {
-            id: d
-            readonly property bool isOnline: networkConnectionStore.isOnline
-            onIsOnlineChanged: if(!isOnline) hide()
-        }
-
+        delay: false
         onHideFinished: root.active = false
 
         text: root.toastText
-        type: connectionState === Constants.ConnectionStatus.Success ? ModuleWarning.Success : ModuleWarning.Danger
-        buttonText: connectionState === Constants.ConnectionStatus.Failure ? qsTr("Retry now") : ""
+        type: root.connectionState === Constants.ConnectionStatus.Success ? ModuleWarning.Success : ModuleWarning.Danger
+        buttonText: root.connectionState === Constants.ConnectionStatus.Failure ? qsTr("Retry now") : ""
 
-        onClicked: networkConnectionStore.retryConnection(websiteDown)
+        onClicked: root.networkConnectionStore.retryConnection(root.websiteDown)
         onCloseClicked: hide()
 
         onLinkActivated: {
@@ -59,14 +67,13 @@ Loader {
     }
 
     Connections {
-        target: networkConnectionStore.networkConnectionModuleInst
-        function onNetworkConnectionStatusUpdate(website: string, completelyDown: bool, connectionState: int, chainIds: string, lastCheckedAtUnix: double)  {
+        target: root.networkConnectionStore.networkConnectionModuleInst
+        function onNetworkConnectionStatusUpdate(website: string, completelyDown: bool, connectionState: int, chainIds: string, lastCheckedAtUnix: double) {
             if (website === websiteDown) {
                 root.connectionState = connectionState
                 root.chainIdsDown = chainIds.split(";")
                 root.completelyDown = completelyDown
                 root.lastCheckedAtUnix = lastCheckedAtUnix
-                root.lastCheckedAt = LocaleUtils.formatDateTime(new Date(lastCheckedAtUnix*1000))
                 root.updateBanner()
             }
         }

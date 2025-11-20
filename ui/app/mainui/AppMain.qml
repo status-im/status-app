@@ -219,7 +219,8 @@ Item {
         }
 
         function onMailserverNotWorking() {
-            mailserverConnectionBanner.show()
+            if (d.activeSectionType === Constants.appSection.chat || d.activeSectionType === Constants.appSection.community)
+                mailserverConnectionBanner.show()
         }
 
         function onActiveSectionChanged() {
@@ -830,7 +831,13 @@ Item {
     QtObject {
         id: d
 
+        // strict online/offline checker, doesn't care about the wallet services
+        readonly property var networkChecker: NetworkChecker {}
+
         readonly property int activeSectionType: appMain.rootStore.activeSectionType
+        readonly property bool isWalletRelatedSectionType: activeSectionType === Constants.appSection.wallet ||
+                                                           activeSectionType === Constants.appSection.swap || activeSectionType === Constants.appSection.market ||
+                                                           activeSectionType === Constants.appSection.dApp
         readonly property bool isBrowserEnabled: appMain.featureFlagsStore.browserEnabled &&
                                                  localAccountSensitiveSettings.isBrowserEnabled
 
@@ -1500,8 +1507,7 @@ Item {
             id: bannersLayout
 
             enabled: !localAppSettings.testEnvironment
-                     && d.activeSectionType !== Constants.appSection.homePage
-                     && !SQUtils.Utils.isMobile // Temp disable until we have proper way to handle banners on mobile
+                     && (d.activeSectionType !== Constants.appSection.homePage && d.activeSectionType !== Constants.appSection.loadingSection)
             visible: enabled
 
             Layout.fillWidth: true
@@ -1510,8 +1516,7 @@ Item {
             Layout.leftMargin: Qt.platform.os === SQUtils.Utils.mac ? appMain.SafeArea.margins.left : 0
             Layout.rightMargin: Qt.platform.os === SQUtils.Utils.mac ? appMain.SafeArea.margins.right : 0
 
-            Layout.maximumHeight: implicitHeight
-            spacing: 1
+            spacing: 0
 
             GlobalBanner {
                 Layout.fillWidth: true
@@ -1589,9 +1594,9 @@ Item {
             }
 
             ConnectionWarnings {
-                id: walletBlockchainConnectionBanner
                 objectName: "walletBlockchainConnectionBanner"
                 Layout.fillWidth: true
+                relevantForCurrentSection: d.isWalletRelatedSectionType || d.activeSectionType === Constants.appSection.browser
                 websiteDown: Constants.walletConnections.blockchains
                 withCache: networkConnectionStore.balanceCache
                 networkConnectionStore: appMain.networkConnectionStore
@@ -1604,19 +1609,14 @@ Item {
                         if(completelyDown) {
                             if(withCache)
                                 return qsTr("POKT & Infura down. Token balances are as of %1.").arg(lastCheckedAt)
-                            else
-                                return qsTr("POKT & Infura down. Token balances cannot be retrieved.")
+                            return qsTr("POKT & Infura down. Token balances cannot be retrieved.")
                         }
                         else if(chainIdsDown.length > 0) {
-                            if(chainIdsDown.length > 2) {
-                                return qsTr("POKT & Infura down for <a href='#'>multiple chains </a>. Token balances for those chains cannot be retrieved.")
-                            }
-                            else if(chainIdsDown.length === 1 && withCache) {
+                            if(chainIdsDown.length > 2)
+                                return qsTr("POKT & Infura down for <a href='#'>multiple chains</a>. Token balances for those chains cannot be retrieved.")
+                            if(chainIdsDown.length === 1 && withCache)
                                 return qsTr("POKT & Infura down for %1. %1 token balances are as of %2.").arg(jointChainIdString).arg(lastCheckedAt)
-                            }
-                            else {
-                                return qsTr("POKT & Infura down for %1. %1 token balances cannot be retrieved.").arg(jointChainIdString)
-                            }
+                            return qsTr("POKT & Infura down for %1. %1 token balances cannot be retrieved.").arg(jointChainIdString)
                         }
                         else
                             return ""
@@ -1626,20 +1626,20 @@ Item {
                         return ""
                     }
                 }
+                isOnline: d.networkChecker.isOnline
             }
 
             ConnectionWarnings {
-                id: walletCollectiblesConnectionBanner
                 objectName: "walletCollectiblesConnectionBanner"
                 Layout.fillWidth: true
+                relevantForCurrentSection: d.isWalletRelatedSectionType || d.activeSectionType === Constants.appSection.browser || d.activeSectionType === Constants.appSection.community
                 websiteDown: Constants.walletConnections.collectibles
                 withCache: lastCheckedAtUnix > 0
                 networkConnectionStore: appMain.networkConnectionStore
                 tooltipMessage: {
                     if(withCache)
                         return qsTr("Collectibles providers are currently unavailable for %1. Collectibles for those chains are as of %2.").arg(jointChainIdString).arg(lastCheckedAt)
-                    else
-                        return qsTr("Collectibles providers are currently unavailable for %1.").arg(jointChainIdString)
+                    return qsTr("Collectibles providers are currently unavailable for %1.").arg(jointChainIdString)
                 }
                 toastText: {
                     switch(connectionState) {
@@ -1649,27 +1649,23 @@ Item {
                         if(completelyDown) {
                             if(withCache)
                                 return qsTr("Collectibles providers down. Collectibles are as of %1.").arg(lastCheckedAt)
-                            else
-                                return qsTr("Collectibles providers down. Collectibles cannot be retrieved.")
+                            return qsTr("Collectibles providers down. Collectibles cannot be retrieved.")
                         }
                         else if(chainIdsDown.length > 0) {
                             if(chainIdsDown.length > 2) {
                                 if(withCache)
                                     return qsTr("Collectibles providers down for <a href='#'>multiple chains</a>. Collectibles for these chains are as of %1.".arg(lastCheckedAt))
-                                else
-                                    return qsTr("Collectibles providers down for <a href='#'>multiple chains</a>. Collectibles for these chains cannot be retrieved.")
+                                return qsTr("Collectibles providers down for <a href='#'>multiple chains</a>. Collectibles for these chains cannot be retrieved.")
                             }
                             else if(chainIdsDown.length === 1) {
                                 if(withCache)
                                     return qsTr("Collectibles providers down for %1. Collectibles for this chain are as of %2.").arg(jointChainIdString).arg(lastCheckedAt)
-                                else
-                                    return qsTr("Collectibles providers down for %1. Collectibles for this chain cannot be retrieved.").arg(jointChainIdString)
+                                return qsTr("Collectibles providers down for %1. Collectibles for this chain cannot be retrieved.").arg(jointChainIdString)
                             }
                             else {
                                 if(withCache)
                                     return qsTr("Collectibles providers down for %1. Collectibles for these chains are as of %2.").arg(jointChainIdString).arg(lastCheckedAt)
-                                else
-                                    return qsTr("Collectibles providers down for %1. Collectibles for these chains cannot be retrieved.").arg(jointChainIdString)
+                                return qsTr("Collectibles providers down for %1. Collectibles for these chains cannot be retrieved.").arg(jointChainIdString)
                             }
                         }
                         else
@@ -1680,12 +1676,13 @@ Item {
                         return ""
                     }
                 }
+                isOnline: d.networkChecker.isOnline
             }
 
             ConnectionWarnings {
-                id: walletMarketConnectionBanner
                 objectName: "walletMarketConnectionBanner"
                 Layout.fillWidth: true
+                relevantForCurrentSection: d.isWalletRelatedSectionType || d.activeSectionType === Constants.appSection.browser
                 websiteDown: Constants.walletConnections.market
                 withCache: networkConnectionStore.marketValuesCache
                 networkConnectionStore: appMain.networkConnectionStore
@@ -1694,12 +1691,9 @@ Item {
                     case Constants.ConnectionStatus.Success:
                         return qsTr("CryptoCompare and CoinGecko connection successful")
                     case Constants.ConnectionStatus.Failure: {
-                        if(withCache) {
+                        if(withCache)
                             return qsTr("CryptoCompare and CoinGecko down. Market values are as of %1.").arg(lastCheckedAt)
-                        }
-                        else {
-                            return qsTr("CryptoCompare and CoinGecko down. Market values cannot be retrieved.")
-                        }
+                        return qsTr("CryptoCompare and CoinGecko down. Market values cannot be retrieved.")
                     }
                     case Constants.ConnectionStatus.Retrying:
                         return qsTr("Retrying connection to CryptoCompare and CoinGecko...")
@@ -1707,6 +1701,7 @@ Item {
                         return ""
                     }
                 }
+                isOnline: d.networkChecker.isOnline
             }
         }
 
@@ -2501,6 +2496,13 @@ Item {
         sequence: "Ctrl+J"
         onActivated: d.openHomePage()
         enabled: appMain.featureFlagsStore.homePageEnabled
+    }
+
+    Shortcut {
+        context: Qt.ApplicationShortcut
+        sequences: ["Ctrl+,", StandardKey.Preferences]
+        onActivated: globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.profile,
+                                                                  Utils.getSettingsSubsectionForSection(d.activeSectionType))
     }
 
     Loader {

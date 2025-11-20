@@ -26,8 +26,8 @@ Rectangle {
     property string beneathTagsIcon: ""
     property color beneathTagsIconColor: Theme.palette.primaryColor1
     property string beneathTagsTitle: ""
-    property real leftPadding: 16
-    property real rightPadding: 16
+    property real leftPadding: Theme.padding
+    property real rightPadding: Theme.padding
     property bool highlighted: false
     property bool propagateTitleClicks: true
     property int type: StatusListItem.Type.Primary

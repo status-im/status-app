@@ -987,6 +987,28 @@ QtObject {
                          : Constants.contactType.nonContact
     }
 
+    function getSettingsSubsectionForSection(section) {
+        switch(section) {
+        case Constants.appSection.chat:
+            return Constants.settingsSubsection.messaging
+        case Constants.appSection.community:
+        case Constants.appSection.communitiesPortal:
+            return Constants.settingsSubsection.communitiesSettings
+        case Constants.appSection.wallet:
+        case Constants.appSection.swap:
+        case Constants.appSection.market:
+            return Constants.settingsSubsection.wallet
+        case Constants.appSection.browser:
+            return Constants.settingsSubsection.browser
+        case Constants.appSection.node:
+            return Constants.settingsSubsection.advanced
+        case Constants.appSection.activityCenter:
+            return Constants.settingsSubsection.notifications
+        default:
+            return Constants.settingsSubsection.profile // default
+        }
+    }
+
     // BACKEND DEPENDENT PART
     //
     // Methods and properties below are intended to be refactored in various

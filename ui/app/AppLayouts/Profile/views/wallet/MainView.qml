@@ -136,7 +136,6 @@ Column {
         title: qsTr("Account order")
         height: 64
         width: parent.width
-        highlighted: accountOrderBetaTag.hovered
         onClicked: goToAccountOrderView()
         components: [
             StatusIcon {
@@ -154,7 +153,6 @@ Column {
         title: qsTr("Manage Tokens")
         height: 64
         width: parent.width
-        highlighted: manageTokensBetaTag.hovered
         onClicked: goToManageTokensView()
         components: [
             StatusIcon {

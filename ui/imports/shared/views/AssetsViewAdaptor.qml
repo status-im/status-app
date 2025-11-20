@@ -106,8 +106,8 @@ QObject {
 
             readonly property bool marketDetailsAvailable: !hasCommunityId
             readonly property bool marketDetailsLoading: model.detailsLoading
-            readonly property real marketPrice: marketDetails.currencyPrice?.amount ?? 0
-            readonly property real marketChangePct24hour: marketDetails.changePct24hour ?? 0
+            readonly property real marketPrice: marketDetails?.currencyPrice?.amount ?? 0
+            readonly property real marketChangePct24hour: marketDetails?.changePct24hour ?? 0
 
             readonly property bool visible: {
                 if (!model.visible)

@@ -120,7 +120,7 @@ SplitView {
     property alias backButtonName: statusToolBar.backButtonName
 
     /*!
-        \qmlproperty alias StatusSectionLayout::headerContent
+        \qmlproperty Item StatusSectionLayout::headerContent
         This property holds a reference to the custom header content of
         the header component.
     */
@@ -175,8 +175,6 @@ SplitView {
             LayoutItemProxy {
                 id: headerBackgroundSlot
                 anchors.top: parent.top
-                // Needed cause I see a gap otherwise
-                anchors.topMargin: -3
                 width: parent.width
                 target: root.headerBackground
             }
@@ -200,7 +198,7 @@ SplitView {
                 width: parent.width
                 anchors.top: statusToolBar.bottom
                 anchors.bottom: footerSlot.top
-                anchors.bottomMargin: footerSlot.visible ? 8 : 0
+                anchors.bottomMargin: !!root.footer ? Theme.halfPadding : 0
                 target: root.centerPanel
             }
             LayoutItemProxy {

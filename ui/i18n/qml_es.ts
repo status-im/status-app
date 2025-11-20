@@ -2038,10 +2038,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>POKT e Infura caídos. No se pueden obtener los balances de tokens.</translation>
     </message>
     <message>
-        <source>POKT &amp; Infura down for &lt;a href=&apos;#&apos;&gt;multiple chains &lt;/a&gt;. Token balances for those chains cannot be retrieved.</source>
-        <translation>POKT e Infura caídos para &lt;a href=&apos;#&apos;&gt;múltiples cadenas&lt;/a&gt;. No se pueden obtener los balances de tokens para esas cadenas.</translation>
-    </message>
-    <message>
         <source>POKT &amp; Infura down for %1. %1 token balances are as of %2.</source>
         <translation>POKT e Infura caídos para %1. Los balances de tokens de %1 son del %2.</translation>
     </message>
@@ -2156,6 +2152,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <message>
         <source>%1 was successfully removed from your saved addresses</source>
         <translation>%1 fue eliminado exitosamente de tus direcciones guardadas</translation>
+    </message>
+    <message>
+        <source>POKT &amp; Infura down for &lt;a href=&apos;#&apos;&gt;multiple chains&lt;/a&gt;. Token balances for those chains cannot be retrieved.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -9026,6 +9026,10 @@ Tarifa L2: %2</translation>
         <source>Dismiss</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Ready to scan</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardConfirmation</name>
@@ -10523,24 +10527,12 @@ al cargar</translation>
         <translation>Leyendo Keycard...</translation>
     </message>
     <message>
-        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
-        <translation>Ups, esto no es un Keycard.&lt;br&gt;Retira la tarjeta e inserta un Keycard.</translation>
-    </message>
-    <message>
-        <source>Wrong Keycard for this profile inserted</source>
-        <translation>Se insertó la Keycard incorrecta para este perfil</translation>
-    </message>
-    <message>
         <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</source>
         <translation>Problema al detectar Keycard.&lt;br&gt;Retira y vuelve a insertar el lector y el Keycard.</translation>
     </message>
     <message>
         <source>Keycard blocked</source>
         <translation></translation>
-    </message>
-    <message>
-        <source>The inserted Keycard is empty.&lt;br&gt;Insert the correct Keycard for this profile.</source>
-        <translation>La Keycard insertada está vacía.&lt;br&gt;Inserta la Keycard correcta para este perfil.</translation>
     </message>
     <message numerus="yes">
         <source>PIN incorrect. %n attempt(s) remaining.</source>
@@ -10560,6 +10552,26 @@ al cargar</translation>
     <message>
         <source>Enter Keycard PIN</source>
         <translation></translation>
+    </message>
+    <message>
+        <source>Scan keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard for this profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max pairing slots reached.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11154,9 +11166,12 @@ al cargar</translation>
 </context>
 <context>
     <name>MarketFooter</name>
-    <message>
-        <source>Showing %1 to %2 of %3 results</source>
-        <translation>Mostrando %1 a %2 de %3 resultados</translation>
+    <message numerus="yes">
+        <source>Showing %L1 to %L2 of %n result(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
 </context>
 <context>

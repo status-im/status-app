@@ -65,7 +65,7 @@ LayoutChooser {
     */
     property Item centerPanel
     /*!
-        \qmlproperty Component StatusSectionLayout::rightPanel
+        \qmlproperty Item StatusSectionLayout::rightPanel
         This property holds the right panel of the component.
     */
     property Item rightPanel
@@ -80,7 +80,7 @@ LayoutChooser {
     */
     property Item footer
     /*!
-        \qmlproperty Component StatusAppLayout::headerBackground
+        \qmlproperty Item StatusAppLayout::headerBackground
         This property holds the headerBackground of the component.
     */
     property Item headerBackground
