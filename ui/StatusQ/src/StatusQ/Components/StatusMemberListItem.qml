@@ -42,6 +42,8 @@ import StatusQ.Core.Utils
 ItemDelegate {
     id: root
 
+    Accessible.name: Utils.formatAccessibleName(userName, objectName)
+
     /*!
        \qmlproperty string StatusMemberListItem::nickName
        This property holds the nick name of the member represented.

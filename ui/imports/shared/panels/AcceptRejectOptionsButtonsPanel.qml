@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 import StatusQ.Controls
 import StatusQ.Popups
 
@@ -31,6 +32,10 @@ Row {
         icon.name: "close-circle"
         icon.color: Theme.palette.dangerColor1
         backgroundHoverColor: Utils.setColorAlpha(Theme.palette.dangerColor1, 0.1)
+        Accessible.name: Utils.formatAccessibleName(
+            qsTr("Decline"),
+            "AcceptRejectOptions_Decline_Button"
+        )
         onClicked: root.declineClicked()
     }
 
@@ -43,6 +48,10 @@ Row {
         icon.name: "checkmark-circle"
         icon.color: Theme.palette.successColor1
         backgroundHoverColor: Utils.setColorAlpha(Theme.palette.successColor1, 0.1)
+        Accessible.name: Utils.formatAccessibleName(
+            qsTr("Accept"),
+            "AcceptRejectOptions_Accept_Button"
+        )
         onClicked: root.acceptClicked()
     }
 

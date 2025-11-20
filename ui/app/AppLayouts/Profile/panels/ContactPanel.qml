@@ -3,6 +3,7 @@ import QtQuick
 import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 
 import shared.controls.delegates
 
@@ -48,6 +49,10 @@ ContactListItemDelegate {
             icon.name: "close-circle"
             icon.color: Theme.palette.dangerColor1
             tooltip.text: qsTr("Reject")
+            Accessible.name: Utils.formatAccessibleName(
+                tooltip.text,
+                "ContactsView_PendingRequestDecline_Button"
+            )
             onClicked: root.rejectRequestRequested()
 
             StatusToolTip {
@@ -63,6 +68,10 @@ ContactListItemDelegate {
             icon.name: "checkmark-circle"
             icon.color: Theme.palette.successColor1
             tooltip.text: qsTr("Accept")
+            Accessible.name: Utils.formatAccessibleName(
+                tooltip.text,
+                "ContactsView_PendingRequestAccept_Button"
+            )
             onClicked: root.acceptContactRequested()
 
             StatusToolTip {
