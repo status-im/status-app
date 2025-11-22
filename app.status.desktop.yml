@@ -1,0 +1,100 @@
+app-id: app.status.desktop
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: nim_status_client_wrapped
+appstream-compose: false
+
+finish-args:
+  # Display
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --device=dri
+  # Network, Audio & Camera
+  - --share=network
+  - --socket=pulseaudio
+  # Hardware (smartcards, cameras)
+  - --device=all
+  # PipeWire (camera access on modern Linux)
+  - --filesystem=xdg-run/pipewire-0:ro
+  # Filesystem
+  - --filesystem=xdg-download
+  - --filesystem=xdg-documents
+  - --filesystem=xdg-pictures
+  - --filesystem=xdg-videos
+  - --filesystem=~/.status-im:create
+  # D-Bus
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --system-talk-name=org.freedesktop.UPower
+  # Environment
+  - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
+
+modules:
+  # libcanberra for GTK notification sounds
+  - name: libcanberra
+    buildsystem: autotools
+    config-opts:
+      - --disable-static
+      - --disable-gtk-doc
+      - --disable-oss
+      - --enable-pulse
+      - --disable-udev
+      - --disable-gtk
+      - --enable-gtk3
+      - --disable-lynx
+    sources:
+      - type: archive
+        url: https://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz
+        sha256: c2b671e67e0c288a69fc33dc1b6f1b534d07882c2aceed37004bf48c601afa72
+      - type: patch
+        path: flatpak/0001-gtk-Don-t-assume-all-GdkDisplays-are-GdkX11Displays-.patch
+
+  - name: pcsc-lite
+    buildsystem: meson
+    config-opts:
+      - -Dpolkit=false
+      - -Dlibsystemd=false
+      - -Dserial=false
+      - -Dipcdir=/tmp/pcscd/run
+      - -Dusbdropdir=/app/lib/pcsc/drivers
+    sources:
+      - type: archive
+        url: https://pcsclite.apdu.fr/files/pcsc-lite-2.2.3.tar.xz
+        sha256: cab1e62755713f62ce1b567954dbb0e9a7e668ffbc3bbad3ce85c53f8f4e00a4
+
+  # libusb for USB device access (required by CCID)
+  - name: libusb
+    buildsystem: autotools
+    config-opts:
+      - --disable-static
+      - --disable-udev
+    sources:
+      - type: archive
+        url: https://github.com/libusb/libusb/releases/download/v1.0.27/libusb-1.0.27.tar.bz2
+        sha256: ffaa41d741a8a3bee244ac8e54a72ea05bf2879663c098c82fc5757853441575
+
+  # CCID driver for USB smartcard readers (required for Keycard)
+  - name: ccid
+    buildsystem: meson
+    build-options:
+      env:
+        PKG_CONFIG_PATH: /app/lib64/pkgconfig:/app/lib/pkgconfig
+    config-opts:
+      - -Dserial=false
+      - -Dudev-rules=false
+    sources:
+      - type: archive
+        url: https://ccid.apdu.fr/files/ccid-1.7.0.tar.xz
+        sha256: 2a040141109c1652caf06b41d9ed580b3ce706d478ebafd323b9085eb04e45a1
+
+  - name: status-desktop
+    buildsystem: simple
+    build-commands:
+      - ./scripts/init_app_dir.sh flatpak
+
+    sources:
+      - type: dir
+        path: .

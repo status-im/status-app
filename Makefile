@@ -50,7 +50,11 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	storybook-build \
 	run-storybook \
 	run-storybook-tests \
-	update
+	update \
+	flatpak \
+	flatpak-install \
+	flatpak-run \
+	flatpak-clean
 
 ifeq ($(NIM_PARAMS),)
 # "variables.mk" was not included, so we update the submodules.
@@ -798,6 +802,29 @@ $(STATUS_CLIENT_TARBALL): $(STATUS_CLIENT_APPIMAGE)
 ifdef LINUX_GPG_PRIVATE_KEY_FILE
 	scripts/sign-linux-file.sh $(STATUS_CLIENT_TARBALL)
 endif
+
+# Flatpak build configuration (exported for scripts/build-flatpak.sh)
+export STATUS_CLIENT_FLATPAK ?= pkg/status-desktop.flatpak
+export FLATPAK_BUILD_DIR ?= tmp/flatpak-build
+export FLATPAK_REPO_DIR ?= tmp/flatpak-repo
+
+# Build flatpak using the CI script
+flatpak: $(STATUS_CLIENT_FLATPAK)
+$(STATUS_CLIENT_FLATPAK): nim_status_client
+	echo -e $(BUILD_MSG) "Flatpak"
+	scripts/build-flatpak.sh
+
+# Install locally for testing
+flatpak-install: $(STATUS_CLIENT_FLATPAK)
+	flatpak install --user -y --reinstall $(STATUS_CLIENT_FLATPAK)
+
+# Run the installed flatpak
+flatpak-run: flatpak-install
+	flatpak run app.status.desktop
+
+# Clean flatpak build artifacts
+flatpak-clean:
+	rm -rf $(FLATPAK_BUILD_DIR) $(FLATPAK_REPO_DIR) pkg/*.flatpak
 
 MACOS_OUTER_BUNDLE := tmp/macos/dist/Status.app
 MACOS_INNER_BUNDLE := $(MACOS_OUTER_BUNDLE)/Contents/Frameworks/QtWebEngineCore.framework/Versions/Current/Helpers/QtWebEngineProcess.app

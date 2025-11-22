@@ -1,0 +1,163 @@
+#!/usr/bin/env groovy
+library 'status-jenkins-lib@v1.9.42'
+
+/* Options section can't access functions in objects. */
+def isPRBuild = utils.isPRBuild()
+def isNightlyBuild = utils.isNightlyBuild()
+
+pipeline {
+  agent {
+    /* Image with Ubuntu 22.04 and QT 6.9.2 */
+    docker {
+      label 'linuxcontainer'
+      image 'harbor.status.im/status-im/status-desktop-build:1.0.11-qt6.9.2'
+      /* --privileged is required because flatpak-builder uses bubblewrap (bwrap) which needs
+       * pivot_root syscall. */
+      args '--entrypoint="" ' +
+           '--privileged ' +
+           '--device=/dev/fuse ' +
+           '--volume=/nix:/nix ' +
+           '--volume=/etc/nix:/etc/nix '
+    }
+  }
+
+  parameters {
+    booleanParam(
+      name: 'RELEASE',
+      description: 'Decides whether release credentials are used.',
+      defaultValue: params.RELEASE ?: false
+    )
+    booleanParam(
+      name: 'INCLUDE_DEBUG_SYMBOLS',
+      description: 'Decides whether binaries are built with debug symbols.',
+      defaultValue: params.INCLUDE_DEBUG_SYMBOLS ?: false
+    )
+    choice(
+      name: 'VERBOSE',
+      description: 'Level of verbosity based on nimbus-build-system setup.',
+      choices: ['0', '1', '2']
+    )
+    string(
+      name: 'NIMFLAGS',
+      description: 'Extra Nim flags. Examples: --verbosity:2 --passL:"-v" --passC:"-v"',
+      defaultValue: "--colors:off --nimcache:${env.WORKSPACE_TMP}/nimcache"
+    )
+    booleanParam(
+      name: 'USE_MOCKED_KEYCARD_LIB',
+      description: 'Decides whether the mocked status-keycard-go library is built.',
+      defaultValue: false
+    )
+  }
+
+  options {
+    timestamps()
+    /* Prevent Jenkins jobs from running forever */
+    timeout(time: 45, unit: 'MINUTES')
+    /* manage how many builds we keep */
+    buildDiscarder(logRotator(
+      numToKeepStr: '10',
+      daysToKeepStr: '30',
+      artifactNumToKeepStr: '1',
+      artifactDaysToKeepStr: '30'
+    ))
+    /* Allows combined build to copy */
+    copyArtifactPermission('/status-app/*')
+    /* Abort old PR builds. */
+    disableConcurrentBuilds(
+      abortPrevious: isPRBuild
+    )
+    disableRestartFromStage()
+  }
+
+  environment {
+    PLATFORM = "linux-flatpak/${getArch()}"
+    /* Improve make performance */
+    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
+    /* Avoid weird bugs caused by stale cache. */
+    QML_DISABLE_DISK_CACHE = "true"
+    /* nim-sds source directory */
+    NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
+    /* sets App Version in Settings */
+    VERSION = "${utils.getVersion()}"
+    /* Control output the filename */
+    APP_TYPE = "${utils.getAppType()}"
+    /* Flatpak output files */
+    STATUS_CLIENT_FLATPAK = "pkg/${utils.pkgFilename(ext: 'flatpak', arch: getArch(), version: env.VERSION, type: env.APP_TYPE)}"
+    /* Flatpak build directories */
+    FLATPAK_BUILD_DIR = "${env.WORKSPACE_TMP}/flatpak-build"
+    FLATPAK_REPO_DIR = "${env.WORKSPACE_TMP}/flatpak-repo"
+    /* prevent sharing cache dir across different jobs */
+    GO_GENERATE_FAST_DIR = "${env.WORKSPACE_TMP}/go-generate-fast"
+    SENTRY_PRODUCTION = "${utils.isReleaseBuild() ? 'true' : 'false'}"
+    /* Hack fix for params not being set in job on first run */
+    NIMFLAGS =               "${params.NIMFLAGS}"
+    RELEASE =                "${params.RELEASE}"
+    INCLUDE_DEBUG_SYMBOLS =  "${params.INCLUDE_DEBUG_SYMBOLS}"
+    VERBOSE =                "${params.VERBOSE}"
+    USE_MOCKED_KEYCARD_LIB = "${params.USE_MOCKED_KEYCARD_LIB}"
+    /* FIXME: figure out why NIMFLAGS are not respected */
+    XDG_CACHE_HOME = "${env.WORKSPACE_TMP}"
+  }
+
+  stages {
+    stage('Cleanup Workspace') {
+      steps {
+        sh './scripts/clean-git.sh'
+      }
+    }
+    stage('Fetch submodules') {
+      steps {
+        sh 'git submodule update --init --recursive'
+      }
+    }
+    stage('Deps') {
+      steps {
+        sh 'make update'
+        sh 'make deps'
+      }
+    }
+
+    stage('status-go') {
+      steps {
+        sh 'make status-go'
+      }
+    }
+
+    stage('Package') {
+      steps { script {
+        status.buildSigned(platform='linux', target='flatpak')
+      } }
+    }
+
+    stage('Parallel Upload') {
+      parallel {
+        stage('Upload') {
+          steps { script {
+            env.FLATPAK_URL = s5cmd.upload(env.STATUS_CLIENT_FLATPAK)
+            jenkins.setBuildDesc(Flatpak: env.FLATPAK_URL)
+          } }
+        }
+        stage('Archive') {
+          steps { script {
+            archiveArtifacts("${env.STATUS_CLIENT_FLATPAK}*")
+          } }
+        }
+      }
+    }
+  }
+  post {
+    success { script { github.notifyPR(true) } }
+    failure { script { github.notifyPR(false) } }
+    cleanup {
+      cleanWs(disableDeferredWipeout: true)
+      dir(env.WORKSPACE_TMP) { deleteDir() }
+    }
+  }
+}
+
+def getArch() {
+  def tokens = Thread.currentThread().getName().split('/')
+  for (def arch in ['x86_64', 'aarch64']) {
+    if (tokens.contains(arch)) { return arch }
+  }
+}

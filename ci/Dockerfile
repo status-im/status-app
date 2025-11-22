@@ -68,8 +68,9 @@ RUN apt update -yq && apt install -yq software-properties-common \
  && add-apt-repository -y ppa:git-core/ppa \
  && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
  && apt update -yq && apt full-upgrade -yq && apt install -yq --no-install-recommends --fix-missing  \
-    gnupg2 openssh-client ca-certificates locales sudo jq curl wget fuse s3cmd file unzip llvm tk-dev xz-utils \
+    gnupg2 openssh-client ca-certificates locales sudo jq curl wget fuse s3cmd file unzip llvm tk-dev xz-utils netbase \
     git make build-essential pkg-config extra-cmake-modules \
+    flatpak flatpak-builder elfutils appstream \
     libgl1-mesa-dev libsm6 libice6 libfontconfig1 libdbus-1-3 libssl-dev libz-dev \
     zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev unixodbc-dev libpq-dev \
     libncurses5-dev libncursesw5-dev libnss3 \
@@ -159,7 +160,12 @@ RUN sudo groupadd -g 1001 jenkins \
 USER jenkins
 ENV HOME="/home/jenkins"
 
-# Rust is needed for nwaku builds
+# Setup Flatpak for jenkins user (freedesktop runtime - we bundle Qt from /opt/qt)
+RUN flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo \
+ && flatpak install --user -y flathub org.freedesktop.Platform//24.08 \
+ && flatpak install --user -y flathub org.freedesktop.Sdk//24.08
+
+ # Rust is needed for nwaku builds
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="${HOME}/.cargo/bin:${PATH}"
 

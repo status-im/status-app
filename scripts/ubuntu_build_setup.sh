@@ -34,6 +34,14 @@ function install_release_dependencies {
       gstreamer1.0-alsa gstreamer1.0-pulseaudio
 }
 
+function install_flatpak_dependencies {
+  echo "Install flatpak dependencies"
+  apt install -yq flatpak flatpak-builder elfutils appstream
+  flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  flatpak install --user -y flathub org.freedesktop.Platform//24.08
+  flatpak install --user -y flathub org.freedesktop.Sdk//24.08
+}
+
 function install_runtime_dependencies {
   echo "Install runtime dependencies"
   # xvfb is needed in order run squish test into a headless server
@@ -101,6 +109,7 @@ if [ "$0" = "$BASH_SOURCE" ]; then
     check_version
     install_build_dependencies
     install_release_dependencies
+    install_flatpak_dependencies
     install_runtime_dependencies
     install_qt
     install_golang
