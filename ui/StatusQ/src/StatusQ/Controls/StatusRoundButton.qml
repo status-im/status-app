@@ -1,11 +1,15 @@
 import QtQuick
 import StatusQ.Core
+import StatusQ.Core.Utils
 import StatusQ.Core.Theme
 import StatusQ.Components
 
 
 Rectangle {
     id: statusRoundButton
+
+    Accessible.role: Accessible.Button
+    Accessible.name: Utils.formatAccessibleName("", objectName)
 
     property StatusAssetSettings icon: StatusAssetSettings {
         id: icon
