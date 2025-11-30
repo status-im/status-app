@@ -6,11 +6,16 @@ Page object for splash during onboarding.
 
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import (
+    TimeoutException,
+    WebDriverException,
+    NoSuchWindowException,
+    InvalidSessionIdException,
+)
 
 from ..base_page import BasePage
 from locators.onboarding.loading_screen_locators import LoadingScreenLocators
-from pages.onboarding.main_app_page import MainAppPage
+from locators.wallet.accounts_locators import WalletAccountsLocators
 
 
 class SplashScreen(BasePage):
@@ -34,16 +39,29 @@ class SplashScreen(BasePage):
             )
             self.logger.info("Loading completed - screen disappeared")
             return True
-        except TimeoutException:
+        except (NoSuchWindowException, InvalidSessionIdException) as e:
+            self.logger.error(
+                f"WebDriver session ended during loading wait: {type(e).__name__}: {e}"
+            )
+            return False
+        except WebDriverException as e:
             self.logger.warning(
-                f"Loading did not complete within {timeout} seconds; checking main app state"
+                f"WebDriver error during loading wait: {type(e).__name__}: {e}"
             )
             try:
-                # Fallback: detect main app container to avoid false negatives on cloud runs
-                main_app = MainAppPage(self.driver)
-                if main_app.is_main_app_loaded():
+                _ = self.driver.current_url
+            except (WebDriverException, InvalidSessionIdException, NoSuchWindowException):
+                self.logger.error("WebDriver session appears to be dead")
+                return False
+            return False
+        except TimeoutException:
+            self.logger.warning(
+                f"Loading did not complete within {timeout} seconds; checking wallet state"
+            )
+            try:
+                if self.is_element_visible(WalletAccountsLocators.ADD_ACCOUNT_BUTTON, timeout=5):
                     self.logger.info(
-                        "Main app container visible despite splash locator; continuing"
+                        "Wallet add account button visible despite splash locator; continuing"
                     )
                     return True
             except Exception:

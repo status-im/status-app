@@ -32,20 +32,25 @@ class PasswordPage(BasePage):
 
     def click_confirm_password_button(self) -> bool:
         self.logger.info("Clicking confirm password button")
-        
         self.hide_keyboard()
-        
-        try:
-            return self.safe_click(self.locators.CONFIRM_PASSWORD_BUTTON_BY_ID)
-        except RuntimeError:
-            self.logger.info("Trying fallback locator for confirm button")
-            return self.safe_click(self.locators.CONFIRM_PASSWORD_BUTTON)
+
+        button = self.find_element_safe(self.locators.CONFIRM_PASSWORD_BUTTON, timeout=10)
+        if not button:
+            self.logger.error("Confirm password button not found")
+            return False
+
+        return self.gestures.element_center_tap(button)
 
     def create_password(self, password: str) -> bool:
         self.logger.info("Creating password")
 
-        self.enter_password(password)
-        self.confirm_password(password)
+        if not self.enter_password(password):
+            self.logger.error("Failed to enter password")
+            return False
+
+        if not self.confirm_password(password):
+            self.logger.error("Failed to confirm password")
+            return False
 
         time.sleep(1)  # Brief wait for validation
 

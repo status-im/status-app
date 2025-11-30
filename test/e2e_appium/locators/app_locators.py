@@ -35,6 +35,19 @@ class AppLocators(BaseLocators):
         "//*[contains(@resource-id, 'homeContainer.homeGrid')]"
     )
 
+    # Profile menu
+    PROFILE_NAV_BUTTON = BaseLocators.xpath(
+        "//*[contains(@resource-id,'statusProfileNavBarTabButton')]"
+    )
+    COPY_PROFILE_LINK_ACTION = BaseLocators.xpath(
+        "//*[contains(@resource-id,'userStatusCopyLinkAction')]"
+    )
+
+    # Toolbar
+    TOOLBAR_BACK_BUTTON = BaseLocators.xpath(
+        "//android.widget.Button[@content-desc=' [tid:toolBarBackButton]']"
+    )
+
     # Toast notifications
     TOAST_MESSAGE = BaseLocators.id("QGuiApplication.mainWindow.statusToastMessage")
     ANY_TOAST = BaseLocators.xpath("//*[contains(@resource-id, 'statusToastMessage')]")

@@ -1,14 +1,23 @@
 import time
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
+from typing import NoReturn
 
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    InvalidElementStateException,
+    NoSuchElementException,
+    StaleElementReferenceException,
+    TimeoutException,
+)
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from config import get_config, log_element_action
+from utils.exceptions import ElementInteractionError
 from utils.gestures import Gestures
 from utils.screenshot import save_screenshot, save_page_source
 from utils.app_lifecycle_manager import AppLifecycleManager
@@ -19,7 +28,6 @@ from utils.element_state_checker import ElementStateChecker
 class BasePage:
     def __init__(self, driver):
         self.driver = driver
-        self.gestures = Gestures(driver)
         self.app_lifecycle = AppLifecycleManager(driver)
         self.keyboard = KeyboardManager(driver)
         try:
@@ -47,20 +55,28 @@ class BasePage:
         self.logger = logging.getLogger(
             self.__class__.__module__ + "." + self.__class__.__name__
         )
+        self.gestures = Gestures(driver, self.logger)
 
-    def take_screenshot(self, name: Optional[str] = None) -> Optional[str]:
+    def is_portrait_mode(self) -> bool:
+        try:
+            size = self.driver.get_window_size()
+            return size["height"] > size["width"]
+        except Exception:
+            return False
+
+    def take_screenshot(self, name: str | None = None) -> str | None:
         try:
             return save_screenshot(self.driver, self._screenshots_dir, name)
         except Exception:
             return None
 
-    def dump_page_source(self, name: Optional[str] = None) -> Optional[str]:
+    def dump_page_source(self, name: str | None = None) -> str | None:
         try:
             return save_page_source(self.driver, self._screenshots_dir, name)
         except Exception:
             return None
 
-    def wait_for_invisibility(self, locator, timeout: Optional[int] = None) -> bool:
+    def wait_for_invisibility(self, locator, timeout: int | None = None) -> bool:
         """Wait until the element located by locator becomes invisible or detached."""
         try:
             wait = self._create_wait(timeout, "element_find")
@@ -68,15 +84,20 @@ class BasePage:
         except Exception:
             return False
 
-    def _create_wait(self, timeout: Optional[int], config_key: str) -> WebDriverWait:
+    def _create_wait(self, timeout: int | None, config_key: str) -> WebDriverWait:
         """Create WebDriverWait with timeout from parameter or YAML config."""
         effective_timeout = timeout or self.timeouts.get(config_key, 30)
         return WebDriverWait(self.driver, effective_timeout)
 
-    def is_screen_displayed(self, timeout: Optional[int] = None):
+    def is_screen_displayed(self, timeout: int | None = None):
+        """Check if this page/screen is currently displayed.
+        
+        Subclasses must define IDENTITY_LOCATOR as a class attribute - this is
+        the locator that uniquely identifies the screen (e.g., a header element).
+        """
         return self.is_element_visible(self.IDENTITY_LOCATOR, timeout=timeout)
 
-    def find_element(self, locator, timeout: Optional[int] = None):
+    def find_element(self, locator, timeout: int | None = None):
         """Find element with configurable timeout.
 
         Args:
@@ -106,10 +127,10 @@ class BasePage:
     def is_element_visible(
         self,
         locator,
-        fallback_locators: Optional[List[tuple]] = None,
-        timeout: Optional[int] = None,
+        fallback_locators: list[tuple] | None = None,
+        timeout: int | None = None,
     ) -> bool:
-        locators_to_try: List[tuple] = [locator]
+        locators_to_try: list[tuple] = [locator]
         if fallback_locators:
             locators_to_try.extend(fallback_locators)
 
@@ -127,64 +148,64 @@ class BasePage:
 
     def safe_click(
         self,
-        locator,
-        timeout: Optional[int] = None,
-        fallback_locators: Optional[List[tuple]] = None,
+        locator: tuple,
+        *,
+        timeout: int | None = None,
+        fallback_locators: list[tuple] | None = None,
         max_attempts: int = 3,
     ) -> bool:
-        """Click an element with retries and optional fallback locators.
+        """Click element with retries and gesture fallback.
 
-        Raises:
-            RuntimeError: if click fails after retries and fallbacks.
+        Raises ElementInteractionError if all attempts exhausted.
         """
-        locators_to_try: List[tuple] = [locator]
-        if fallback_locators:
-            locators_to_try.extend(fallback_locators)
+        all_locators = [locator, *(fallback_locators or [])]
 
-        for loc in locators_to_try:
-            attempts = 0
-            while attempts < max_attempts:
-                attempts += 1
-                element = None
+        for loc in all_locators:
+            for attempt in range(1, max_attempts + 1):
                 try:
-                    wait = self._create_wait(timeout, "element_click")
-                    element = wait.until(EC.element_to_be_clickable(loc))
+                    element = self._wait_for_clickable(loc, timeout)
                     element.click()
-                    log_element_action("click_element", f"{loc[0]}: {loc[1]}", True, 0)
+                    self.logger.debug(f"Clicked: {loc[1]}")
                     return True
-                except Exception as e:
-                    if element is not None and self._gesture_tap_fallback(element, loc):
-                        log_element_action(
-                            "click_element", f"{loc[0]}: {loc[1]}", True, 0
-                        )
+                except (
+                    ElementClickInterceptedException,
+                    StaleElementReferenceException,
+                    InvalidElementStateException,
+                ) as e:
+                    self.logger.debug(f"Click failed ({e}); trying gesture fallback.")
+                    if self._gesture_tap_fallback(element, loc):
                         return True
+                except (TimeoutException, NoSuchElementException) as e:
+                    self.logger.debug(f"Element not ready ({loc[1]}): {e}")
 
-                    self.logger.debug(f"Click attempt {attempts} failed for {loc}: {e}")
-                    if attempts >= max_attempts:
-                        break
+                self.logger.debug(
+                    f"Click attempt {attempt}/{max_attempts} failed: {loc[1]}"
+                )
+                if attempt < max_attempts:
                     self._wait_between_attempts()
-        from utils.exceptions import ElementInteractionError
 
+            self.logger.debug(f"Exhausted all attempts for locator: {loc[1]}")
+
+        self._raise_click_failure(all_locators)
+
+    def _wait_for_clickable(self, locator: tuple, timeout: int | None = None):
+        """Wait for element to be clickable and return it."""
+        wait = self._create_wait(timeout, "element_click")
+        return wait.until(EC.element_to_be_clickable(locator))
+
+    def _raise_click_failure(self, locators: list[tuple]) -> NoReturn:
+        """Log failure details and raise ElementInteractionError."""
+        locator_desc = locators[0][1] if locators else "unknown"
         message = (
-            f"Failed to click element after trying {len(locators_to_try)} locator(s) "
-            f"with {max_attempts} attempt(s) each. Last locator: {locators_to_try[-1]}"
+            f"Failed to click element after trying {len(locators)} locator(s). "
+            f"First locator: {locators[0] if locators else 'none'}"
         )
         self.logger.error(message)
-        self.take_screenshot(f"click_failure_{locators_to_try[0][1]}")
-        self.dump_page_source(f"click_failure_{locators_to_try[0][1]}")
-        raise ElementInteractionError(message, str(locators_to_try[0]), "click")
+        self.take_screenshot(f"click_failure_{locator_desc}")
+        self.dump_page_source(f"click_failure_{locator_desc}")
+        raise ElementInteractionError(message, str(locators[0] if locators else ""), "click")
 
-    def safe_input(self, locator, text: str, timeout: Optional[int] = None) -> bool:
-        """Qt-safe input by delegating to qt_safe_input with retries."""
-        try:
-            return self.qt_safe_input(locator, text, timeout)
-        except Exception as e:
-            self.logger.error(
-                f"Failed to input text '{text}' to element {locator}: {e}"
-            )
-            return False
-
-    def find_element_safe(self, locator, timeout: Optional[int] = None):
+    def find_element_safe(self, locator, timeout: int | None = None):
         """Find element and return None instead of raising on failure."""
         try:
             wait = self._create_wait(timeout, "element_find")
@@ -204,7 +225,7 @@ class BasePage:
         self,
         locator,
         text: str,
-        timeout: Optional[int] = None,
+        timeout: int | None = None,
         max_retries: int = 3,
         verify: bool = True,
     ) -> bool:
@@ -222,19 +243,25 @@ class BasePage:
                 element = wait.until(EC.element_to_be_clickable(locator))
 
                 element.click()
-
-                self._wait_for_qt_field_ready(element)
+                if not self._wait_for_element_focused(element):
+                    #TODO: Check add account flow locators to see if this can be blocking
+                    self.logger.debug(
+                        f"Focus attribute not detected on attempt {attempt + 1}, proceeding anyway"
+                    )
 
                 element.clear()
 
-                self._wait_for_clear_completion(element)
 
-                self.driver.update_settings({"sendKeyStrategy": "oneByOne"})
+                self.driver.update_settings({
+                    "sendKeyStrategy": "oneByOne",
+                    "interKeyDelay": 50,
+                })
                 actions = ActionChains(self.driver)
                 actions.send_keys(text).perform()
 
                 if ElementStateChecker.is_password_field(element):
                     self.logger.debug("Password field detected - skipping verification")
+                    time.sleep(0.05 * len(text))
                     return True
 
                 if not verify:
@@ -255,7 +282,17 @@ class BasePage:
         self.logger.error(f"Qt input failed after {attempts_total} attempts")
         return False
 
-    def _wait_for_qt_field_ready(self, element, timeout: Optional[int] = None) -> bool:
+    def _wait_for_element_focused(self, element, timeout: float = 2.0) -> bool:
+        """Poll until element has focus attribute set to true."""
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            if ElementStateChecker.is_focused(element):
+                return True
+            time.sleep(0.05)
+        self.logger.debug("Element did not gain focus within timeout")
+        return False
+
+    def _wait_for_qt_field_ready(self, element, timeout: int | None = None) -> bool:
         """Wait for Qt field to be ready for input using polling using YAML element_wait timeout by default."""
 
         def field_is_ready(driver):
@@ -277,20 +314,6 @@ class BasePage:
             self.logger.warning("Qt field readiness timeout")
             return False
 
-    def _wait_until_focused(self, element, max_wait: float = 1.0) -> bool:
-        try:
-            start = time.time()
-            while time.time() - start < max_wait:
-                try:
-                    if ElementStateChecker.is_focused(element):
-                        return True
-                except Exception:
-                    pass
-                time.sleep(0.05)
-        except Exception:
-            pass
-        return False
-
     def _verify_input_success(self, element, expected_text: str) -> bool:
         try:
             # Android UIAutomator2 exposes entered value via 'text'
@@ -300,28 +323,6 @@ class BasePage:
             return len(actual_text) > 0
         except Exception:
             return True
-
-    def _wait_for_clear_completion(self, element, max_wait: float = 1.0) -> bool:
-        start_time = time.time()
-        while time.time() - start_time < max_wait:
-            try:
-                # For password fields, we can't check text, so use a minimal delay
-                # This is still better than a hardcoded sleep
-                if hasattr(element, "get_attribute"):
-                    text = element.get_attribute(
-                        "text"
-                    )  # Android UIAutomator2 uses 'text' not 'value'
-                    if text == "" or text is None:
-                        return True
-
-                # Small incremental wait
-                time.sleep(0.1)
-            except Exception:
-                # If we can't check, assume it's ready after minimal wait
-                time.sleep(0.2)
-                return True
-
-        return True  # Always return True to not block the flow
 
     def long_press_element(self, element, duration: int = 800) -> bool:
         """Perform long-press gesture on element to trigger context menu.
@@ -367,36 +368,26 @@ class BasePage:
 
     def _gesture_tap_fallback(self, element, locator) -> bool:
         """Fallback tap using Appium gestures when native click fails."""
-        try:
-            if self.gestures.element_tap(element):
-                self.logger.debug(f"Gesture tap fallback succeeded for {locator}")
-                return True
-        except Exception as err:
-            self.logger.debug(f"Gesture tap fallback error for {locator}: {err}")
+        if self.gestures.element_tap(element):
+            self.logger.debug(f"Gesture tap fallback succeeded for {locator}")
+            return True
 
-        try:
-            rect = element.rect
-            center_x = int(rect["x"] + rect["width"] / 2)
-            center_y = int(rect["y"] + rect["height"] / 2)
-            if self.gestures.tap(center_x, center_y):
-                self.logger.debug(
-                    f"Coordinate tap fallback succeeded for {locator} at ({center_x}, {center_y})"
-                )
-                return True
-        except Exception as err:
-            self.logger.debug(f"Coordinate fallback error for {locator}: {err}")
+        if self.gestures.element_center_tap(element):
+            self.logger.debug(f"Coordinate tap fallback succeeded for {locator}")
+            return True
+
         return False
 
-    def restart_app(self, app_package: Optional[str] = None) -> bool:
+    def restart_app(self, app_package: str | None = None) -> bool:
         """Restart the app within the current session."""
         return self.app_lifecycle.restart_app(app_package)
 
-    def restart_app_with_data_cleared(self, app_package: Optional[str] = None) -> bool:
+    def restart_app_with_data_cleared(self, app_package: str | None = None) -> bool:
         """Restart the app with all app data cleared (fresh app state)."""
         return self.app_lifecycle.restart_app_with_data_cleared(app_package)
 
     def wait_for_condition(
-        self, condition_func, timeout: Optional[int] = None, poll_interval: float = 0.1
+        self, condition_func, timeout: int | None = None, poll_interval: float = 0.1
     ) -> bool:
         effective_timeout = timeout or self.timeouts.get("element_wait", 30)
         deadline = time.time() + effective_timeout
@@ -423,5 +414,48 @@ class BasePage:
             if not element:
                 return False
             return ElementStateChecker.is_enabled(element)
+        except Exception:
+            return False
+
+    def _is_element_checked(self, locator) -> bool:
+        try:
+            element = self.find_element_safe(locator, timeout=1)
+            if not element:
+                return False
+            return ElementStateChecker.is_checked(element)
+        except Exception:
+            return False
+
+    def wait_for_element_enabled(self, locator, timeout: int | None = None) -> bool:
+        """Wait until element is present and enabled."""
+        effective_timeout = timeout or self.timeouts.get("element_wait", 10)
+
+        def _is_enabled(driver):
+            try:
+                el = driver.find_element(*locator)
+                return ElementStateChecker.is_enabled(el)
+            except (NoSuchElementException, StaleElementReferenceException):
+                return False
+
+        try:
+            WebDriverWait(self.driver, effective_timeout, poll_frequency=0.2).until(_is_enabled)
+            return True
+        except Exception:
+            return False
+
+    def wait_for_element_checked(self, locator, timeout: int | None = None) -> bool:
+        """Wait until element is present and checked."""
+        effective_timeout = timeout or self.timeouts.get("element_wait", 10)
+
+        def _is_checked(driver):
+            try:
+                el = driver.find_element(*locator)
+                return ElementStateChecker.is_checked(el)
+            except (NoSuchElementException, StaleElementReferenceException):
+                return False
+
+        try:
+            WebDriverWait(self.driver, effective_timeout, poll_frequency=0.2).until(_is_checked)
+            return True
         except Exception:
             return False

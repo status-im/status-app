@@ -11,9 +11,6 @@ class HomePage(BasePage):
     def is_home_loaded(self) -> bool:
         return self.is_element_visible(self.locators.HOME_CONTAINER)
 
-    def is_home_container_visible(self) -> bool:
-        return self.is_element_visible(self.locators.HOME_CONTAINER)
-
     def wait_for_home_load(self, timeout: int = 30) -> bool:
         return self.is_element_visible(self.locators.HOME_CONTAINER, timeout=timeout)
 

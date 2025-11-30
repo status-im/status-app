@@ -29,6 +29,13 @@ class BaseLocators:
         return (BaseLocators.BY_ANDROID_UIAUTOMATOR, value)
 
     @staticmethod
+    def resource_id_contains(value: str) -> tuple:
+        return (
+            BaseLocators.BY_XPATH,
+            f"//*[contains(@resource-id, '{value}')]",
+        )
+
+    @staticmethod
     def text_contains(text: str) -> tuple:
         return (BaseLocators.BY_XPATH, f"//*[contains(@text, '{text}')]")
 

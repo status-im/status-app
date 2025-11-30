@@ -47,7 +47,7 @@ class WelcomeBackPage(BasePage):
             except Exception:
                 pass
 
-            if not self._wait_for_button_enabled(timeout=10):
+            if not self.wait_for_element_enabled(self.locators.LOGIN_BUTTON, timeout=10):
                 self.logger.error("Login button never enabled on attempt %s", attempt)
                 return False
 
@@ -127,18 +127,6 @@ class WelcomeBackPage(BasePage):
             time.sleep(wait_between)
 
         self.logger.warning("Unable to focus password input on welcome back screen")
-        return False
-
-    def _wait_for_button_enabled(self, timeout: int = 10) -> bool:
-        deadline = time.time() + timeout
-        while time.time() < deadline:
-            try:
-                button = self.find_element(self.locators.LOGIN_BUTTON, timeout=2)
-                if str(button.get_attribute("enabled")).lower() == "true":
-                    return True
-            except Exception:
-                pass
-            time.sleep(0.3)
         return False
 
     def _wait_for_login_transition(self, timeout: int = 10) -> bool:

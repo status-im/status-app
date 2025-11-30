@@ -15,11 +15,9 @@ class PasswordScreenLocators(BaseLocators):
         "//*[contains(@resource-id, 'passwordViewNewPasswordConfirm')]"
     )
 
-    # Password creation button - stable content-desc
-    CONFIRM_PASSWORD_BUTTON = BaseLocators.accessibility_id("Confirm password")
-    # Fallback using resource-id
-    CONFIRM_PASSWORD_BUTTON_BY_ID = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'btnConfirmPassword')]"
+    # Password creation button - tid-aware content-desc
+    CONFIRM_PASSWORD_BUTTON = BaseLocators.content_desc_contains(
+        "[tid:btnConfirmPassword]"
     )
 
     ONBOARDING_CONTAINER = BaseLocators.id(

@@ -8,7 +8,7 @@ from .loading_page import SplashScreen
 from .home_page import HomePage
 from .seed_phrase_input_page import SeedPhraseInputPage
 from .welcome_back_page import WelcomeBackPage
-from .main_app_page import MainAppPage
+from .biometrics_page import BiometricsPage
 
 __all__ = [
     "WelcomePage",
@@ -19,5 +19,5 @@ __all__ = [
     "HomePage",
     "SeedPhraseInputPage",
     "WelcomeBackPage",
-    "MainAppPage",
+    "BiometricsPage",
 ]
