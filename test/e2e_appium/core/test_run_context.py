@@ -5,6 +5,7 @@ Creates and manages multiple TestContext instances for scenarios
 requiring more than one device (e.g., syncing or cross-user messaging).
 """
 
+import copy
 from typing import List, Optional, Dict, Any
 
 from config.logging_config import get_logger
@@ -53,7 +54,10 @@ class TestRunContext:
             selected_devices = [d for d in all_devices if has_tags(d)][:number]
 
         for i in range(number):
-            per_ctx_config = config or TestConfiguration(environment=environment)
+            if config:
+                per_ctx_config = copy.deepcopy(config)
+            else:
+                per_ctx_config = TestConfiguration(environment=environment)
             if i < len(selected_devices):
                 # Pass device override into TestContext via custom_config
                 per_ctx_config.device_override = selected_devices[i]
@@ -62,11 +66,11 @@ class TestRunContext:
         return cls(contexts)
 
     def cleanup(self) -> None:
-        for ctx in self.contexts:
+        for i, ctx in enumerate(self.contexts):
             try:
                 ctx.cleanup()
-            except Exception:
-                pass
+            except Exception as e:
+                self.logger.debug(f"Cleanup warning for context {i}: {e}")
 
     def report_all(
         self,

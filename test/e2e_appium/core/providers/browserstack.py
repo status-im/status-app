@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from datetime import datetime, timezone
 from typing import Dict, Optional
@@ -8,9 +9,14 @@ from appium import webdriver
 from appium.options.common import AppiumOptions
 from appium.webdriver.appium_connection import AppiumConnection
 from selenium.webdriver.remote.client_config import ClientConfig
+import requests
 
 from .base import Provider, SessionMetadata
 from ..environment import ConfigurationError, DeviceConfig
+from .browserstack_plan import BrowserStackPlanClient, BrowserStackPlanStatus
+
+
+logger = logging.getLogger(__name__)
 
 
 class BrowserStackProvider(Provider):
@@ -37,6 +43,12 @@ class BrowserStackProvider(Provider):
         else:
             self.project_name = project_name_option
         self.sdk_options = env_config.get_provider_option("sdk", {})
+        plan_cache_ttl = int(env_config.get_provider_option("plan_cache_ttl", 10))
+        self._plan_client: Optional[BrowserStackPlanClient] = BrowserStackPlanClient(
+            self.username,
+            self.access_key,
+            cache_ttl=plan_cache_ttl,
+        )
 
     def create_driver(
         self,
@@ -93,6 +105,54 @@ class BrowserStackProvider(Provider):
             driver,
             {"action": "setSessionStatus", "arguments": arguments},
         )
+
+    def get_plan_status(
+        self,
+        *,
+        force_refresh: bool = False,
+    ) -> Optional[BrowserStackPlanStatus]:
+        if not self._plan_client:
+            return None
+        return self._plan_client.get_plan_status(force_refresh=force_refresh)
+
+    def report_session_status_via_api(
+        self,
+        session_id: Optional[str],
+        status: str,
+        reason: Optional[str] = None,
+    ) -> None:
+        """Report BrowserStack session status via REST API.
+
+        This is useful when the WebDriver session has already been closed and
+        browserstack_executor can no longer be used.
+        """
+
+        if not session_id:
+            return
+
+        url = (
+            "https://api-cloud.browserstack.com/app-automate/sessions/"
+            f"{session_id}.json"
+        )
+        payload: Dict[str, str] = {"status": status}
+        if reason:
+            payload["reason"] = reason
+
+        try:
+            response = requests.put(
+                url,
+                json=payload,
+                auth=(self.username, self.access_key),
+                headers={"Content-Type": "application/json"},
+                timeout=10,
+            )
+            response.raise_for_status()
+        except requests.RequestException as exc:  # pragma: no cover - network call
+            logger.debug(
+                "Failed to update BrowserStack session %s via REST API: %s",
+                session_id,
+                exc,
+            )
 
     def _populate_metadata(
         self,

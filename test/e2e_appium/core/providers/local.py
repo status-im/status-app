@@ -36,7 +36,8 @@ class LocalProvider(Provider):
         options = AppiumOptions()
         options.load_capabilities(capabilities)
 
-        server_url = self.env_config.get_provider_option(
-            "server_url", "http://localhost:4723"
+        server_url = device.provider_overrides.get(
+            "server_url",
+            self.env_config.get_provider_option("server_url", "http://localhost:4723"),
         )
         return webdriver.Remote(server_url, options=options)

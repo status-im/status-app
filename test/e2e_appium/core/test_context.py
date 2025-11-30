@@ -19,7 +19,7 @@ from utils.performance_monitor import PerformanceMonitor
 from services import UserProfileService, AppStateManager, AppInitializationManager
 
 
-from .models import TestUser, TestConfiguration
+from .models import TestUser, TestConfiguration, DEFAULT_USER_PASSWORD
 from .user_manager import UserManager
 
 
@@ -57,13 +57,10 @@ class TestContext:
         # Lazy initialization flags
         self._initialized = False
 
-    class UserManager(UserManager):
-        pass
-
     @property
-    def user_manager(self) -> "TestContext.UserManager":
+    def user_manager(self) -> UserManager:
         if self.users is None:
-            self.users = TestContext.UserManager(self)
+            self.users = UserManager(self)
         return self.users
 
     def initialize(
@@ -94,11 +91,9 @@ class TestContext:
             self._app_state_manager = AppStateManager(self._driver)
             self._app_initialization = AppInitializationManager(self._driver)
 
-            activation_timeout = self._resolve_activation_timeout()
-
             # Initial app activation
             self._app_initialization.perform_initial_activation(
-                timeout=activation_timeout
+                timeout=self._session_manager.env_config.timeouts.get("activation", 15)
             )
 
             self._initialized = True
@@ -140,7 +135,7 @@ class TestContext:
             self._app_state_manager = AppStateManager(self._driver)
             self._app_initialization = AppInitializationManager(self._driver)
 
-            activation_timeout = self._resolve_activation_timeout()
+            activation_timeout = self._session_manager.env_config.timeouts.get("activation", 15) if self._session_manager else 15
 
             if test_name and self._session_manager:
                 self._session_manager.metadata.test_name = test_name
@@ -159,17 +154,6 @@ class TestContext:
                 f"Failed to attach to existing context: {e}"
             ) from e
 
-    def _resolve_activation_timeout(self) -> float:
-        try:
-            if self._session_manager and self._session_manager.env_config:
-                timeout = self._session_manager.env_config.timeouts.get(
-                    "activation", 15
-                )
-                return float(timeout)
-        except Exception:
-            pass
-        return 15.0
-
     @property
     def driver(self) -> WebDriver:
         if not self._driver:
@@ -180,11 +164,7 @@ class TestContext:
 
     def take_screenshot(self, name: Optional[str] = None) -> Optional[str]:
         try:
-            config = get_config()
-            base_dir = config.screenshots_dir or "screenshots"
-        except Exception:
-            base_dir = "screenshots"
-        try:
+            base_dir = getattr(get_config(), "screenshots_dir", None) or "screenshots"
             return save_screenshot(self.driver, base_dir, name)
         except Exception:
             return None
@@ -248,7 +228,7 @@ class TestContext:
         # Delegate to user service
         method = method or self.config.profile_method
         display_name = display_name or self.config.display_name
-        password = password or "StatusPassword123!"
+        password = password or DEFAULT_USER_PASSWORD
 
         user = self.user_service.create_profile(
             method=method,
@@ -268,7 +248,7 @@ class TestContext:
         if not self._initialized:
             raise SessionManagementError("TestContext not initialized")
 
-        password = password or "StatusPassword123!"
+        password = password or DEFAULT_USER_PASSWORD
 
         if not self.app_state.has_existing_profiles:
             raise SessionManagementError("No existing profiles detected")
@@ -448,7 +428,7 @@ class TestContext:
                 # Use current user's password
                 current_user = self.user_service.current_user
                 password = (
-                    current_user.password if current_user else "StatusPassword123!"
+                    current_user.password if current_user else DEFAULT_USER_PASSWORD
                 )
 
                 success = self.welcome_back.perform_login(password)

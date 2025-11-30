@@ -1,6 +1,9 @@
 Appium-Python-Client==5.2.4
 pytest==8.4.2
+pytest-asyncio==1.2.0
 pytest-html==4.1.1
+pytest-rerunfailures==16.1
+pytest-timeout==2.3.1
 pytest-xdist==3.8.0
 PyYAML==6.0.3
 jsonschema==4.25.1

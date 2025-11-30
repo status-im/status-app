@@ -2,11 +2,14 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 
+DEFAULT_USER_PASSWORD = "StatusPassword123!"
+
 @dataclass
 class TestUser:
     display_name: str
-    password: str = "StatusPassword123!"
-    seed_phrase: Optional[str] = None
+    password: str = DEFAULT_USER_PASSWORD
+    seed_phrase: Optional[List[str]] = None
+    wallet_address: Optional[str] = None
     source: str = "created"
 
     __test__ = False  # Prevent pytest from treating this helper as a test class
@@ -16,8 +19,29 @@ class TestUser:
             "display_name": self.display_name,
             "password": self.password,
             "seed_phrase": self.seed_phrase,
+            "wallet_address": self.wallet_address,
             "source": self.source,
         }
+
+    @classmethod
+    def from_onboarding_result(
+        cls,
+        payload: Dict[str, Any],
+        config,
+    ) -> "TestUser":
+        seed_phrase = payload.get("seed_phrase") or getattr(config, "seed_phrase", None) or []
+        if isinstance(seed_phrase, str):
+            seed_phrase = seed_phrase.split()
+
+        profile = payload.get("profile", {}) or {}
+
+        return cls(
+            display_name=payload.get("display_name") or profile.get("display_name", "Unknown"),
+            password=payload.get("password") or getattr(config, "custom_password", None) or DEFAULT_USER_PASSWORD,
+            seed_phrase=seed_phrase,
+            wallet_address=payload.get("wallet_address"),
+            source="onboarded",
+        )
 
 
 @dataclass

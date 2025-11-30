@@ -10,12 +10,12 @@ provider:
     server_url: "http://localhost:4723"
     app:
       source: "local_file"
-      path_template: "${LOCAL_APP_PATH:-./.sandbox/Status-tablet.apk}"
+      path_template: "${LOCAL_APP_PATH:-}"
 
 execution:
   concurrency:
-    max_sessions: 1
-    per_device_limit: 1
+    max_sessions: 2
+    per_device_limit: 2
   retry_failed_tests: 0
 
 devices:
@@ -31,10 +31,11 @@ devices:
         automationName: "UiAutomator2"
         newCommandTimeout: 300
         noReset: false
-        appPackage: "im.status.tablet"
-        appActivity: "org.qtproject.qt.android.bindings.QtActivity"
+        appium:udid: "${ANDROID_UDID:-emulator-5554}"
+        appPackage: "app.status.mobile"
+        appActivity: "app.status.mobile.StatusQtActivity"
         unicodeKeyboard: true
-        resetKeyboard: true
+        resetKeyboard: false
     - id: "android_tv_emulator"
       display_name: "Android TV Emulator"
       tags: ["emulator", "android", "tv"]
@@ -53,4 +54,3 @@ timeouts:
 
 logging:
   level: "DEBUG"
-

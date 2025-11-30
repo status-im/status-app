@@ -75,13 +75,6 @@ class EnvironmentConfig:
 
     def _validate_local(self) -> None:
         server_url = self.provider.options.get("server_url", "http://localhost:4723")
-        app_config = self.provider.options.get("app", {})
-        path_template = app_config.get("path_template")
-
-        resolved_path = self.resolve_path(path_template) if path_template else ""
-        if resolved_path:
-            if not Path(resolved_path).exists():
-                raise ConfigurationError(f"Local app not found: {resolved_path}")
 
         try:
             import requests
