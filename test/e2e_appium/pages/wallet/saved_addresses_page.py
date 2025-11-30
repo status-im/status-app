@@ -1,3 +1,4 @@
+import time
 from typing import Optional
 
 from ..base_page import BasePage
@@ -36,45 +37,54 @@ class SavedAddressesPage(BasePage):
             return self.is_element_visible(
                 self.locators.SAVED_ADDRESS_DETAILS_POPUP, timeout=6
             )
-        except Exception:
+        except Exception as e:
+            self.logger.debug(f"open_details failed for '{name}': {e}")
             return False
 
     def open_row_menu(self, name: str) -> bool:
-        # If details popup is already visible, do NOT click the row again (it can close the popup).
-        if self.is_element_visible(
-            self.locators.SAVED_ADDRESS_DETAILS_POPUP, timeout=2
-        ):
-            self.logger.debug(
-                "Details popup already visible. Dumping XML (pre-kebab-click)..."
-            )
-            self.dump_page_source(f"details_popup_open_{name}")
-        else:
-            # Open details popup by clicking the row once
-            try:
-                delegate = self.find_element(self.locators.row_by_name(name), timeout=4)
-                delegate.click()
-            except Exception:
-                return False
-            if not self.is_element_visible(
-                self.locators.SAVED_ADDRESS_DETAILS_POPUP, timeout=5
-            ):
-                return False
-            self.logger.debug(
-                "SavedAddress details popup is visible. Dumping XML (pre-kebab-click)..."
-            )
-            self.dump_page_source(f"details_popup_open_{name}")
-
         try:
             if self.safe_click(
-                self.locators.popup_menu_by_name(name), timeout=4, max_attempts=1
+                self.locators.row_menu_by_name(name), timeout=5, max_attempts=3
             ):
-                self.logger.debug(
-                    "Clicked popup kebab via name-specific locator. Dumping XML..."
-                )
-                self.dump_page_source(f"kebab_clicked_name_{name}")
                 return True
         except Exception:
+            self.logger.debug("Direct kebab tap failed for '%s'; falling back", name)
+
+        delegate = self.find_element_safe(self.locators.row_by_name(name), timeout=4)
+        if not delegate:
             return False
+
+        try:
+            delegate.click()
+        except Exception as e:
+            self.logger.debug(f"open_row_menu delegate click failed for '{name}': {e}")
+            return False
+
+        if not self.is_element_visible(
+            self.locators.SAVED_ADDRESS_DETAILS_POPUP, timeout=4
+        ):
+            return False
+
+        header = self.find_element_safe(
+            self.locators.popup_header_by_name(name), timeout=3
+        )
+        if header:
+            try:
+                header.click()
+                time.sleep(0.2)
+            except Exception:
+                self.logger.debug("Popup header tap failed for '%s'", name)
+
+        for locator in (
+            self.locators.row_menu_by_name(name),
+            self.locators.POPUP_MENU_BUTTON_GENERIC,
+        ):
+            try:
+                if self.safe_click(locator, timeout=4, max_attempts=2):
+                    return True
+            except Exception:
+                self.logger.debug("Popup kebab tap failed for '%s' using %s", name, locator)
+                continue
 
         return False
 

@@ -7,7 +7,8 @@ class ElementStateChecker:
     @staticmethod
     def is_enabled(element) -> bool:
         try:
-            return str(element.get_attribute("enabled")).lower() == "true"
+            value = element.get_attribute("enabled")
+            return value is not None and str(value).lower() == "true"
         except Exception:
             return False
 

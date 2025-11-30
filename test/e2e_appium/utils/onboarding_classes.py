@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Dict, Any
@@ -13,6 +14,7 @@ from pages.onboarding import (
 from models.user_model import User, UserProfile
 from utils.generators import generate_seed_phrase
 from utils.exceptions import ProfileCreationFlowError
+from core.models import DEFAULT_USER_PASSWORD
 
 
 @dataclass
@@ -21,7 +23,7 @@ class ProfileCreationConfig:
 
     use_seed_phrase: bool = False
     seed_phrase: Optional[str] = None
-    password: str = "StatusPassword123!"
+    password: str = DEFAULT_USER_PASSWORD
     display_name: str = "AutoTestUser"
     skip_analytics: bool = True
     validate_each_step: bool = True
@@ -87,6 +89,13 @@ class ProfileCreationFlow:
     def _execute_welcome_step(self):
         self.current_step = "welcome_screen"
         start_time = datetime.now()
+
+        # Initial tap to dismiss any overlay and activate the app
+        try:
+            self.driver.tap([(500, 300)])
+            time.sleep(1)
+        except Exception:
+            self.logger.debug("Initial tap attempt skipped")
 
         if not self.welcome_page.is_screen_displayed(timeout=30):
             raise ProfileCreationFlowError("Welcome screen should be displayed")

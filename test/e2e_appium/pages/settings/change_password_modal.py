@@ -1,9 +1,12 @@
 import time
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from ..base_page import BasePage
 from locators.settings.password_change_locators import ChangePasswordModalLocators
 from utils.element_state_checker import ElementStateChecker
+
+if TYPE_CHECKING:
+    from core.models import TestUser
 
 
 class ChangePasswordModal(BasePage):
@@ -20,8 +23,14 @@ class ChangePasswordModal(BasePage):
             timeout=timeout,
         )
 
-    def complete_reencrypt_and_restart(self, timeout: int = 90) -> bool:
+    def complete_reencrypt_and_restart(
+        self,
+        new_password: Optional[str] = None,
+        user: Optional["TestUser"] = None,
+        timeout: int = 90,
+    ) -> bool:
         if not self.safe_click(self.locators.PRIMARY_BUTTON, timeout=15):
+            self.logger.error("Primary restart button not clickable on change-password modal")
             return False
 
         try:
@@ -62,23 +71,20 @@ class ChangePasswordModal(BasePage):
                 time.sleep(0.5)
 
         if not restart_confirmed:
-            self.logger.warning(
-                "Change password modal remained visible after restart attempts"
-            )
+            self.logger.error("Change password modal remained visible after restart attempts")
             return False
 
-        try:
-            self.app_lifecycle.activate_app()
-        except Exception as err:
-            self.logger.debug("App activation after password change failed: %s", err)
+        if not self.app_lifecycle.wait_for_app_not_running(timeout=30):
+            self.logger.error("App never reached NOT_RUNNING state after tapping restart")
+            return False
 
-        try:
-            from services.app_state_manager import AppStateManager
+        if not self.app_lifecycle.activate_app_with_ui_ready():
+            self.logger.error("App activation with UI ready failed after password change")
+            return False
 
-            if not AppStateManager(self.driver).wait_for_app_ready(timeout=45):
-                self.logger.debug("App state manager did not confirm readiness in time")
-        except Exception as err:
-            self.logger.debug("App readiness wait failed: %s", err)
+        if user and new_password:
+            user.password = new_password
+
         return True
 
     def _wait_for_primary_button_enabled(self, timeout: int = 10) -> bool:

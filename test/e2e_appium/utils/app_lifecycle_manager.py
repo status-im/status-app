@@ -7,12 +7,21 @@ Extracted from BasePage to follow Single Responsibility Principle.
 
 import os
 import subprocess
+import time
 from typing import Optional, Tuple
 
 from config.logging_config import get_logger
 
 
 class AppLifecycleManager:
+    STATE_LABELS = {
+        0: "UNKNOWN",
+        1: "NOT_RUNNING",
+        2: "RUNNING_IN_BACKGROUND_SUSPENDED",
+        3: "RUNNING_IN_BACKGROUND",
+        4: "RUNNING_IN_FOREGROUND",
+    }
+
     def __init__(self, driver):
         self.driver = driver
         self.logger = get_logger("app_lifecycle")
@@ -44,10 +53,19 @@ class AppLifecycleManager:
             return False
 
         self.logger.info("Restarting app: %s", package)
-        success = self._restart_via_mobile_commands(package)
-        if not success:
-            self.logger.error("App restart failed after all attempts")
-        return success
+        if not self._restart_via_mobile_commands(package):
+            self.logger.error("App restart failed")
+            return False
+
+        try:
+            from services.app_initialization_manager import AppInitializationManager
+
+            AppInitializationManager(self.driver).perform_initial_activation()
+        except Exception as err:
+            self.logger.error("UI activation failed after restart: %s", err)
+            return False
+
+        return True
 
     def restart_app_with_data_cleared(self, app_package: Optional[str] = None) -> bool:
         """
@@ -157,9 +175,70 @@ class AppLifecycleManager:
             self.logger.error("Failed to activate app: %s", e)
             return False
 
+    def activate_app_with_ui_ready(
+        self,
+        app_package: Optional[str] = None,
+        activation_timeout: float = 15.0,
+    ) -> bool:
+        """
+        Activate app and perform initial activation to expose UI components.
+
+        Use after any restart where WelcomeScreen or WelcomeBackScreen is expected.
+        Combines activate_app() with the activation tap sequence.
+        """
+        if not self.activate_app(app_package):
+            return False
+
+        try:
+            from services.app_initialization_manager import AppInitializationManager
+
+            AppInitializationManager(self.driver).perform_initial_activation(
+                timeout=activation_timeout
+            )
+            return True
+        except Exception as err:
+            self.logger.error("UI activation failed after app activation: %s", err)
+            return False
+
     def _activate_app(self, package: str) -> None:
         self.driver.activate_app(package)
         self.logger.debug("App activated: %s", package)
+
+    def wait_for_app_not_running(
+        self,
+        app_package: Optional[str] = None,
+        timeout: int = 30,
+        poll_interval: float = 0.5,
+    ) -> bool:
+        """
+        Poll the driver until the AUT reports NOT_RUNNING via queryAppState.
+        """
+        package = self._resolve_package(app_package)
+        if not package:
+            return False
+
+        deadline = time.time() + timeout
+        last_state = None
+
+        while time.time() < deadline:
+            state = self._query_app_state(package)
+            if state is None:
+                time.sleep(poll_interval)
+                continue
+
+            last_state = state
+            if state == 1:
+                self.logger.debug("Confirmed %s is NOT_RUNNING before relaunch", package)
+                return True
+
+            time.sleep(poll_interval)
+
+        self.logger.warning(
+            "Timed out waiting for %s to stop. Last observed state: %s",
+            package,
+            self.STATE_LABELS.get(last_state, last_state),
+        )
+        return False
 
     def _restart_via_mobile_commands(self, app_package: str) -> bool:
         """Restart the app using Appium mobile: terminateApp / launchApp commands."""
@@ -240,9 +319,18 @@ class AppLifecycleManager:
             self.logger.warning(
                 "AUT package not found in capabilities; falling back to legacy default"
             )
-            package = "im.status.app"
+            package = "app.status.mobile"
 
         if activity:
             self.logger.debug(f"Detected AUT launch activity: {activity}")
 
         return package, activity
+
+    def _query_app_state(self, package: str) -> Optional[int]:
+        try:
+            if hasattr(self.driver, "query_app_state"):
+                return self.driver.query_app_state(package)
+            return self.driver.execute_script("mobile: queryAppState", {"appId": package})
+        except Exception as err:
+            self.logger.debug("query_app_state failed for %s: %s", package, err)
+            return None

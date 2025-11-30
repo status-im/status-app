@@ -2,46 +2,54 @@ import pytest
 
 from constants import AppSections
 from locators.onboarding.wallet.wallet_locators import WalletLocators
-from tests.base_test import BaseAppReadyTest, cloud_reporting
+from pages.app import App
+from pages.settings.settings_page import SettingsPage
+from pages.onboarding.welcome_back_page import WelcomeBackPage
 from utils.generators import generate_secure_password
+from utils.multi_device_helpers import StepMixin
 
 
-class TestSettingsPasswordChange(BaseAppReadyTest):
+class TestSettingsPasswordChange(StepMixin):
     @pytest.mark.critical
     @pytest.mark.smoke
-    @cloud_reporting
-    def test_change_password_and_login(self):
-        assert self.ctx.app.click_settings_left_nav(), "Failed to open Settings"
-        assert self.ctx.settings.is_loaded(), "Settings not detected"
+    async def test_change_password_and_login(self):
+        async with self.step(self.device, "Navigate to Settings"):
+            app = App(self.device.driver)
+            assert app.click_settings_left_nav(), "Failed to open Settings"
+            settings = SettingsPage(self.device.driver)
+            assert settings.is_loaded(), "Settings not detected"
 
-        password_settings = self.ctx.settings.open_password_settings()
-        assert password_settings, "Password settings not available"
+        async with self.step(self.device, "Open password settings"):
+            password_settings = settings.open_password_settings()
+            assert password_settings, "Password settings not available"
 
-        current_user = self.ctx.user_service.current_user
-        assert current_user, "No active user in context"
-        old_password = current_user.password
+        async with self.step(self.device, "Change password"):
+            old_password = self.device.user.password
+            while (new_password := generate_secure_password()) == old_password:
+                pass
 
-        while (new_password := generate_secure_password()) == old_password:
-            pass
+            modal = password_settings.change_password(old_password, new_password)
+            assert modal and modal.is_displayed(), "Change password modal did not appear"
 
-        modal = password_settings.change_password(old_password, new_password)
-        assert modal and modal.is_displayed(), "Change password modal did not appear"
-        assert modal.complete_reencrypt_and_restart(), (
-            "Failed to complete password re-encryption flow"
-        )
+            # Update user password for re-login
+            self.device.user.password = new_password
 
-        current_user.password = new_password
+            assert modal.complete_reencrypt_and_restart(new_password, self.device.user), (
+                "Failed to complete password re-encryption flow"
+            )
 
-        self.ctx.app_state_manager.detect_current_state()
-        assert self.ctx.welcome_back.perform_login(new_password), (
-            "Unable to authenticate after restart with the new password"
-        )
+        async with self.step(self.device, "Login with new password"):
+            welcome_back = WelcomeBackPage(self.device.driver)
+            assert welcome_back.perform_login(self.device.user.password), (
+                "Unable to authenticate after restart with the new password"
+            )
 
-        locators = WalletLocators()
-        assert self.ctx.app.is_element_visible(
-            locators.WALLET_FOOTER_SEND_BUTTON, timeout=15
-        ), "Wallet landing screen should be visible after login"
+        async with self.step(self.device, "Verify wallet visible"):
+            locators = WalletLocators()
+            assert app.is_element_visible(
+                locators.WALLET_FOOTER_SEND_BUTTON, timeout=15
+            ), "Wallet landing screen should be visible after login"
 
-        assert self.ctx.app.active_section() == AppSections.WALLET, (
-            "Wallet section should be active after navigation"
-        )
+            assert app.active_section() == AppSections.WALLET, (
+                "Wallet section should be active after navigation"
+            )

@@ -14,9 +14,8 @@ class PasswordChangeLocators(BaseLocators):
     CONFIRM_PASSWORD_INPUT = BaseLocators.xpath(
         "//*[contains(@resource-id, 'passwordViewNewPasswordConfirm')]"
     )
-    CHANGE_PASSWORD_BUTTON = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'changePasswordModalSubmitButton') or "
-        "contains(@content-desc, 'changePasswordModalSubmitButton')]"
+    CHANGE_PASSWORD_BUTTON = BaseLocators.content_desc_contains(
+        "[tid:changePasswordModalSubmitButton]"
     )
 
 

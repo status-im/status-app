@@ -29,14 +29,43 @@ class AppStateManager:
 
     def wait_for_app_ready(self, timeout: int = 30, poll_interval: float = 0.5) -> bool:
         deadline = time.time() + timeout
+        last_screen = None
+        last_requires_auth = None
+        last_home_loaded = None
         while time.time() < deadline:
             try:
                 self.detect_current_state()
-                if self.state.is_home_loaded or self.state.requires_authentication:
+                screen = self.state.current_screen
+                requires_auth = self.state.requires_authentication
+                home_loaded = self.state.is_home_loaded
+
+                if (
+                    screen != last_screen
+                    or requires_auth != last_requires_auth
+                    or home_loaded != last_home_loaded
+                ):
+                    self.logger.debug(
+                        "wait_for_app_ready poll: screen=%s requires_auth=%s home_loaded=%s",
+                        screen,
+                        requires_auth,
+                        home_loaded,
+                    )
+                    last_screen = screen
+                    last_requires_auth = requires_auth
+                    last_home_loaded = home_loaded
+
+                if home_loaded or requires_auth:
                     return True
-            except Exception:
-                pass
+            except Exception as err:
+                self.logger.debug("wait_for_app_ready poll raised: %s", err)
             time.sleep(poll_interval)
+        self.logger.warning(
+            "wait_for_app_ready timeout after %.1fs; last state screen=%s requires_auth=%s home_loaded=%s",
+            timeout,
+            last_screen,
+            last_requires_auth,
+            last_home_loaded,
+        )
         return False
 
     def _is_welcome_screen_displayed(self) -> bool:

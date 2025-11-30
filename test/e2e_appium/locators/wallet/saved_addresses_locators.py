@@ -6,65 +6,51 @@ class SavedAddressesLocators(BaseLocators):
         "[tid:savedAddressesBtn]"
     )
     SETTINGS_WALLET_MENU_ITEM = BaseLocators.content_desc_contains("[tid:5-MenuItem]")
-    SAVED_ADDRESSES_ITEM = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'savedAddressesItem') or contains(@content-desc, 'Saved Addresses')]"
+    SAVED_ADDRESSES_ITEM = BaseLocators.resource_id_contains(
+        "savedAddressesItem"
     )
-    ADD_NEW_SAVED_ADDRESS_BUTTON_SETTINGS = BaseLocators.xpath(
-        '//android.view.View.VirtualChild[@content-desc="Add new address [tid:addNewSavedAddressButton]"]'
+    ADD_NEW_SAVED_ADDRESS_BUTTON_SETTINGS = BaseLocators.content_desc_contains(
+        "[tid:addNewSavedAddressButton]"
     )
-    ADD_NEW_SAVED_ADDRESS_BUTTON_WALLET = BaseLocators.xpath(
-        '//android.view.View.VirtualChild[@content-desc="Add new address [tid:walletHeaderButton]"]'
+    ADD_NEW_SAVED_ADDRESS_BUTTON_WALLET = BaseLocators.content_desc_contains(
+        "[tid:walletHeaderButton]"
     )
-    SAVED_ADDRESS_ITEM_ANY = BaseLocators.xpath(
-        '//android.view.View.VirtualChild[@resource-id="savedAddressDelegate"]'
-    )
-    SAVED_ADDRESS_DETAILS_POPUP = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'SavedAddressActivityPopup')]"
+    SAVED_ADDRESS_ITEM_ANY = BaseLocators.resource_id_contains("savedAddressView_Delegate")
+    SAVED_ADDRESS_DETAILS_POPUP = BaseLocators.resource_id_contains(
+        "SavedAddressActivityPopup"
     )
     POPUP_MENU_BUTTON_GENERIC = BaseLocators.xpath(
         "//*[contains(@resource-id,'SavedAddressActivityPopup')]//*[contains(@resource-id, 'savedAddressView_Delegate_menuButton_')]"
     )
-    POPUP_MENU_BUTTON_TID = BaseLocators.content_desc_contains(
-        "tid:savedAddressMenuButton"
-    )
-
     @staticmethod
     def row_by_name(name: str) -> tuple:
-        return BaseLocators.xpath(
-            '//android.view.View.VirtualChild[@resource-id="savedAddressDelegate"]'
-            + f"//*[contains(@resource-id, 'savedAddressView_Delegate_{name}')]"
-        )
+        return BaseLocators.resource_id_contains(f"savedAddressView_Delegate_{name}")
 
     @staticmethod
     def row_menu_by_name(name: str) -> tuple:
-        return BaseLocators.xpath(
-            "//android.view.View.VirtualChild["
-            + f"contains(@resource-id, 'savedAddressView_Delegate_{name}') and "
-            + f"contains(@resource-id, 'savedAddressView_Delegate_menuButton_{name}')"
-            + "]"
+        return BaseLocators.content_desc_contains(
+            f"[tid:savedAddressView_Delegate_menuButton_{name}]"
         )
 
     @staticmethod
     def popup_menu_by_name(name: str) -> tuple:
-        return BaseLocators.xpath(
-            "//android.view.View.VirtualChild["
-            + "contains(@resource-id,'QGuiApplication.mainWindow.SavedAddressActivityPopup') and "
-            + f"contains(@resource-id, 'savedAddressView_Delegate_menuButton_{name}')"
-            + "]"
+        return BaseLocators.content_desc_contains(
+            f"[tid:savedAddressView_Delegate_menuButton_{name}]"
         )
 
-    NAME_INPUT = BaseLocators.xpath(
-        '//android.view.View.VirtualChild[@content-desc="Address name [tid:statusBaseInput]"]'
+    @staticmethod
+    def popup_header_by_name(name: str) -> tuple:
+        return BaseLocators.content_desc_contains(f"[tid:{name}]")
+
+    NAME_INPUT = BaseLocators.resource_id_contains("savedAddressNameInput")
+    ADDRESS_INPUT = BaseLocators.resource_id_contains(
+        "savedAddressAddressInputEdit"
     )
-    ADDRESS_INPUT = BaseLocators.xpath(
-        '//android.view.View.VirtualChild[@content-desc="Ethereum address [tid:statusBaseInput]"]'
-    )
-    SAVE_BUTTON = BaseLocators.xpath(
-        '//android.view.View.VirtualChild[@content-desc="Add address [tid:addSavedAddress]"]'
-    )
+    SAVE_BUTTON = BaseLocators.content_desc_contains("[tid:addSavedAddress]")
+    
     DELETE_SAVED_ADDRESS_ACTION = BaseLocators.xpath(
-        "//*[@resource-id and contains(@resource-id, 'deleteSavedAddress') or @content-desc='Remove saved address']"
+        "//*[contains(@content-desc,'Remove saved address') or contains(@resource-id,'deleteSavedAddress')]"
     )
     CONFIRM_DELETE_BUTTON = BaseLocators.xpath(
-        "//*[@resource-id and contains(@resource-id, 'RemoveSavedAddressPopup-ConfirmButton')]"
+        "//*[contains(@content-desc,'Remove saved address') or contains(@resource-id,'RemoveSavedAddressPopup-ConfirmButton')]"
     )

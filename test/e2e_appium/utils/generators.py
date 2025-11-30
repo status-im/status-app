@@ -6,11 +6,11 @@ from typing import Optional
 
 from eth_account import Account
 from eth_account.hdaccount import Mnemonic
+from eth_account.hdaccount.mnemonic import Language
 
 
-_DEFAULT_MNEMONIC_LANGUAGE = "english"
 _ALLOWED_WORD_COUNTS = (12, 18, 24)
-_MNEMONIC_HELPER = Mnemonic(_DEFAULT_MNEMONIC_LANGUAGE)
+_MNEMONIC_HELPER = Mnemonic(Language.ENGLISH)
 
 
 _SECURE_RANDOM = random.SystemRandom()
@@ -23,7 +23,7 @@ except Exception:
     )
 
 
-def generate_seed_phrase(word_count: Optional[int] = None) -> str:
+def generate_seed_phrase(word_count: Optional[int] = 12) -> str:
     """Generate a valid BIP39 seed phrase.
 
     Args:

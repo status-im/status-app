@@ -10,11 +10,13 @@ class SettingsLocators(BaseLocators):
     )
 
     # SettingsList.qml sets objectName: model.subsection + "-MenuItem"; backUpSeed subsection is 19
-    BACKUP_RECOVERY_MENU_ITEM = BaseLocators.content_desc_contains("[tid:19-MenuItem]")
+    BACKUP_RECOVERY_MENU_ITEM = BaseLocators.content_desc_contains("[tid:101-MenuItem]")
 
     PROFILE_MENU_ITEM = BaseLocators.xpath("//*[contains(@resource-id,'0-MenuItem')]")
     PASSWORD_MENU_ITEM = BaseLocators.content_desc_contains("[tid:1-MenuItem]")
     PASSWORD_MENU_ITEM_TEXT = BaseLocators.text_contains("Password")
+    MESSAGING_MENU_ITEM = BaseLocators.content_desc_contains("[tid:4-MenuItem]")
+    CONTACTS_MENU_ITEM = BaseLocators.content_desc_contains("[tid:2-MenuItem]")
 
     SIGN_OUT_AND_QUIT = BaseLocators.text_contains("Sign out & Quit")
     SIGN_OUT_AND_QUIT_ALT = BaseLocators.xpath(

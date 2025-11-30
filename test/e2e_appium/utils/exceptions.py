@@ -32,6 +32,12 @@ class SessionManagementError(Exception):
     pass
 
 
+class BrowserStackQueueError(SessionManagementError):
+    """Exception for BrowserStack queue exhaustion errors."""
+
+    pass
+
+
 class ElementInteractionError(Exception):
     """Exception for element interaction failures (clicks, input, etc.)."""
 
