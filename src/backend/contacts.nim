@@ -37,9 +37,10 @@ proc acceptLatestContactRequestForContact*(id: string): RpcResponse[JsonNode] =
     }]
   result = callPrivateRPC("acceptLatestContactRequestForContact".prefix, payload)
 
-proc acceptContactRequest*(id: string): RpcResponse[JsonNode] =
+proc acceptContactRequest*(id, contactId: string): RpcResponse[JsonNode] =
   let payload = %* [{
-      "id": id
+      "id": id,
+      "contactId": contactId
     }]
   result = callPrivateRPC("acceptContactRequest".prefix, payload)
 
@@ -49,9 +50,10 @@ proc dismissLatestContactRequestForContact*(id: string): RpcResponse[JsonNode] =
   }]
   result = callPrivateRPC("dismissLatestContactRequestForContact".prefix, payload)
 
-proc declineContactRequest*(id: string): RpcResponse[JsonNode] =
+proc declineContactRequest*(id, contactId: string): RpcResponse[JsonNode] =
   let payload = %*[{
-    "id": id
+    "id": id,
+    "contactId": contactId
   }]
   result = callPrivateRPC("declineContactRequest".prefix, payload)
 

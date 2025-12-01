@@ -446,7 +446,7 @@ QtObject:
       # NOTE: publicKey used for accepting last request
       let response =
         if contactRequestId.len > 0:
-          status_contacts.acceptContactRequest(contactRequestId)
+          status_contacts.acceptContactRequest(contactRequestId, publicKey)
         else:
           status_contacts.acceptLatestContactRequestForContact(publicKey)
 
@@ -469,7 +469,7 @@ QtObject:
       # NOTE: publicKey used for dismissing last request
       let response =
         if contactRequestId.len > 0:
-          status_contacts.declineContactRequest(contactRequestId)
+          status_contacts.declineContactRequest(contactRequestId, publicKey)
         else:
           status_contacts.dismissLatestContactRequestForContact(publicKey)
 
