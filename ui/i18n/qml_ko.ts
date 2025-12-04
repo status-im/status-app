@@ -310,6 +310,56 @@
     </message>
 </context>
 <context>
+    <name>ActivityCenterOptionsPanel</name>
+    <message>
+        <source>Mark all as read</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hide read notifications</source>
+        <translation type="unfinished">읽은 알림 숨기기</translation>
+    </message>
+    <message>
+        <source>Show read notifications</source>
+        <translation type="unfinished">읽음 알림 표시</translation>
+    </message>
+</context>
+<context>
+    <name>ActivityCenterPanel</name>
+    <message>
+        <source>Notifications</source>
+        <translation type="unfinished">알림</translation>
+    </message>
+    <message>
+        <source>Enable RSS to receive Status News notifications</source>
+        <translation type="unfinished">RSS를 활성화하여 Status 뉴스 알림 받기</translation>
+    </message>
+    <message>
+        <source>Enable Status News notifications</source>
+        <translation type="unfinished">Status 뉴스 알림 활성화</translation>
+    </message>
+    <message>
+        <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
+        <translation type="unfinished">RSS가 현재 개인정보 보호 및 보안 설정에서 비활성화되어 있습니다. RSS를 활성화하여 향후 기능 및 중요한 공지사항에 대한 Status 뉴스 알림을 받으세요.</translation>
+    </message>
+    <message>
+        <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
+        <translation type="unfinished">이 기능은 현재 비활성화되어 있습니다. Status 뉴스 알림을 활성화하여 예정된 기능과 중요한 공지사항에 대한 알림을 받으세요</translation>
+    </message>
+    <message>
+        <source>Enable RSS</source>
+        <translation type="unfinished">RSS 활성화</translation>
+    </message>
+    <message>
+        <source>You&apos;re all caught up</source>
+        <translation type="unfinished">모든 알림을 확인했습니다</translation>
+    </message>
+    <message>
+        <source>Your notifications will appear here</source>
+        <translation type="unfinished">알림이 여기에 표시됩니다</translation>
+    </message>
+</context>
+<context>
     <name>ActivityCenterPopupTopBarPanel</name>
     <message>
         <source>All</source>

@@ -14,6 +14,7 @@ LinkPreviewModel 1.0 LinkPreviewModel.qml
 LoginAccountsModel 1.0 LoginAccountsModel.qml
 MintedTokensModel 1.0 MintedTokensModel.qml
 ManageCollectiblesModel 1.0 ManageCollectiblesModel.qml
+NotificationsModel 1.0 NotificationsModel.qml
 ReactionsModels 1.0 ReactionsModels.qml
 RecipientModel 1.0 RecipientModel.qml
 TokenListsModel 1.0 TokenListsModel.qml

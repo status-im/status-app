@@ -310,6 +310,56 @@
     </message>
 </context>
 <context>
+    <name>ActivityCenterOptionsPanel</name>
+    <message>
+        <source>Mark all as read</source>
+        <translation>Marcar todo como leído</translation>
+    </message>
+    <message>
+        <source>Hide read notifications</source>
+        <translation>Ocultar notificaciones leídas</translation>
+    </message>
+    <message>
+        <source>Show read notifications</source>
+        <translation>Mostrar notificaciones leídas</translation>
+    </message>
+</context>
+<context>
+    <name>ActivityCenterPanel</name>
+    <message>
+        <source>Notifications</source>
+        <translation>Notificaciones</translation>
+    </message>
+    <message>
+        <source>Enable RSS to receive Status News notifications</source>
+        <translation type="unfinished">Habilitar RSS para recibir notificaciones de Status News</translation>
+    </message>
+    <message>
+        <source>Enable Status News notifications</source>
+        <translation type="unfinished">Habilitar notificaciones de Status News</translation>
+    </message>
+    <message>
+        <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
+        <translation type="unfinished">RSS está deshabilitado actualmente a través de tu configuración de Privacidad y Seguridad. Habilita RSS para recibir notificaciones de Status News sobre próximas funciones y anuncios importantes.</translation>
+    </message>
+    <message>
+        <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
+        <translation type="unfinished">Esta función está desactivada actualmente. Habilita las notificaciones de Status News para recibir notificaciones sobre próximas funciones y anuncios importantes</translation>
+    </message>
+    <message>
+        <source>Enable RSS</source>
+        <translation type="unfinished">Habilitar RSS</translation>
+    </message>
+    <message>
+        <source>You&apos;re all caught up</source>
+        <translation type="unfinished">Estás al día</translation>
+    </message>
+    <message>
+        <source>Your notifications will appear here</source>
+        <translation type="unfinished">Tus notificaciones aparecerán aquí</translation>
+    </message>
+</context>
+<context>
     <name>ActivityCenterPopupTopBarPanel</name>
     <message>
         <source>All</source>
@@ -2496,7 +2546,7 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
     </message>
     <message>
         <source>Choose a folder to store your backup files in.</source>
-        <translation type="unfinished"></translation>
+        <translation>Elige una carpeta para almacenar tus archivos de backup.</translation>
     </message>
 </context>
 <context>
@@ -2656,15 +2706,15 @@ Do you wish to override the security check and continue?</source>
     <name>BrowserPrivacyWall</name>
     <message>
         <source>Enable third-party services for browser features to work.</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilita servicios de terceros para que funcionen las funciones del navegador.</translation>
     </message>
     <message>
         <source>Dapp browser</source>
-        <translation type="unfinished"></translation>
+        <translation>Navegador Web/dApp</translation>
     </message>
     <message>
         <source>Browse decentralized apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Navega apps descentralizadas</translation>
     </message>
 </context>
 <context>

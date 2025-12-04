@@ -380,6 +380,67 @@
     </message>
   </context>
   <context>
+    <name>ActivityCenterOptionsPanel</name>
+    <message>
+      <source>Mark all as read</source>
+      <comment>ActivityCenterOptionsPanel</comment>
+      <translation>Mark all as read</translation>
+    </message>
+    <message>
+      <source>Hide read notifications</source>
+      <comment>ActivityCenterOptionsPanel</comment>
+      <translation>Hide read notifications</translation>
+    </message>
+    <message>
+      <source>Show read notifications</source>
+      <comment>ActivityCenterOptionsPanel</comment>
+      <translation>Show read notifications</translation>
+    </message>
+  </context>
+  <context>
+    <name>ActivityCenterPanel</name>
+    <message>
+      <source>Notifications</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Notifications</translation>
+    </message>
+    <message>
+      <source>Enable RSS to receive Status News notifications</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Enable RSS to receive Status News notifications</translation>
+    </message>
+    <message>
+      <source>Enable Status News notifications</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Enable Status News notifications</translation>
+    </message>
+    <message>
+      <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</translation>
+    </message>
+    <message>
+      <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</translation>
+    </message>
+    <message>
+      <source>Enable RSS</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Enable RSS</translation>
+    </message>
+    <message>
+      <source>You&#39;re all caught up</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>You&#39;re all caught up</translation>
+    </message>
+    <message>
+      <source>Your notifications will appear here</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Your notifications will appear here</translation>
+    </message>
+  </context>
+  <context>
     <name>ActivityCenterPopupTopBarPanel</name>
     <message>
       <source>All</source>

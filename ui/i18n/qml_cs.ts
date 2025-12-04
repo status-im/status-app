@@ -310,6 +310,56 @@
     </message>
 </context>
 <context>
+    <name>ActivityCenterOptionsPanel</name>
+    <message>
+        <source>Mark all as read</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hide read notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show read notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ActivityCenterPanel</name>
+    <message>
+        <source>Notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable RSS to receive Status News notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Status News notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable RSS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You&apos;re all caught up</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your notifications will appear here</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ActivityCenterPopupTopBarPanel</name>
     <message>
         <source>All</source>
