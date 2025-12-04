@@ -11,6 +11,7 @@ import StatusQ.Controls
 import StatusQ.Popups
 
 import AppLayouts.stores
+import AppLayouts.ActivityCenter.helpers
 
 Item {
     id: root
@@ -24,7 +25,7 @@ Item {
     property bool hideReadNotifications: false
     property int unreadNotificationsCount: 0
 
-    property int activeGroup: ActivityCenterStore.ActivityCenterGroup.All
+    property int activeGroup: ActivityCenterTypes.ActivityCenterGroup.All
 
     property alias errorText: errorText.text
 
@@ -49,15 +50,15 @@ Item {
 
                 Repeater {
                     // NOTE: some entries are hidden until implimentation
-                    model: [ { text: qsTr("All"), group: ActivityCenterStore.ActivityCenterGroup.All, visible: true, enabled: true },
-                             { text: qsTr("News"), group: ActivityCenterStore.ActivityCenterGroup.NewsMessage, visible: true, enabled: true },
-                             { text: qsTr("Admin"), group: ActivityCenterStore.ActivityCenterGroup.Admin, visible: root.hasAdmin, enabled: root.hasAdmin },
-                             { text: qsTr("Mentions"), group: ActivityCenterStore.ActivityCenterGroup.Mentions, visible: true, enabled: root.hasMentions },
-                             { text: qsTr("Replies"), group: ActivityCenterStore.ActivityCenterGroup.Replies, visible: true, enabled: root.hasReplies },
-                             { text: qsTr("Contact requests"), group: ActivityCenterStore.ActivityCenterGroup.ContactRequests, visible: true, enabled: root.hasContactRequests },
-                             { text: qsTr("Transactions"), group: ActivityCenterStore.ActivityCenterGroup.Transactions, visible: false, enabled: true },
-                             { text: qsTr("Membership"), group: ActivityCenterStore.ActivityCenterGroup.Membership, visible: true, enabled: root.hasMembership },
-                             { text: qsTr("System"), group: ActivityCenterStore.ActivityCenterGroup.System, visible: false, enabled: true } ]
+                    model: [ { text: qsTr("All"), group: ActivityCenterTypes.ActivityCenterGroup.All, visible: true, enabled: true },
+                             { text: qsTr("News"), group: ActivityCenterTypes.ActivityCenterGroup.NewsMessage, visible: true, enabled: true },
+                             { text: qsTr("Admin"), group: ActivityCenterTypes.ActivityCenterGroup.Admin, visible: root.hasAdmin, enabled: root.hasAdmin },
+                             { text: qsTr("Mentions"), group: ActivityCenterTypes.ActivityCenterGroup.Mentions, visible: true, enabled: root.hasMentions },
+                             { text: qsTr("Replies"), group: ActivityCenterTypes.ActivityCenterGroup.Replies, visible: true, enabled: root.hasReplies },
+                             { text: qsTr("Contact requests"), group: ActivityCenterTypes.ActivityCenterGroup.ContactRequests, visible: true, enabled: root.hasContactRequests },
+                             { text: qsTr("Transactions"), group: ActivityCenterTypes.ActivityCenterGroup.Transactions, visible: false, enabled: true },
+                             { text: qsTr("Membership"), group: ActivityCenterTypes.ActivityCenterGroup.Membership, visible: true, enabled: root.hasMembership },
+                             { text: qsTr("System"), group: ActivityCenterTypes.ActivityCenterGroup.System, visible: false, enabled: true } ]
 
                     StatusFlatButton {
                         objectName: "activityCenterGroupButton"
@@ -67,7 +68,7 @@ Item {
                         size: StatusBaseButton.Size.Small
                         highlighted: modelData.group === root.activeGroup
                         onClicked: root.groupTriggered(modelData.group)
-                        onEnabledChanged: if (!enabled && highlighted) root.groupTriggered(ActivityCenterStore.ActivityCenterGroup.All)
+                        onEnabledChanged: if (!enabled && highlighted) root.groupTriggered(ActivityCenterTypes.ActivityCenterGroup.All)
                         Layout.preferredWidth: visible ? implicitWidth : 0
                     }
                 }

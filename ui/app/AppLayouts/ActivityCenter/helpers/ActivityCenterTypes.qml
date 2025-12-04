@@ -50,4 +50,17 @@ QtObject {
         BackupSyncingFailure = 28, // Deprecated
         ActivityCenterNotificationTypeNews = 29
     }
+
+    enum ActivityCenterGroup {
+        All = 0,
+        Mentions = 1,
+        Replies = 2,
+        Membership = 3,
+        Admin = 4,
+        ContactRequests = 5,
+        IdentityVerification = 6,
+        Transactions = 7,
+        System = 8,
+        NewsMessage = 9
+    }
 }

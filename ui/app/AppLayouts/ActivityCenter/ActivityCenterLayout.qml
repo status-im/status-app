@@ -217,7 +217,7 @@ StatusSectionLayout {
             Layout.fillWidth: true
             Layout.margins: Theme.padding
 
-            active: activityCenterTopBar.activeGroup === ActivityCenterStore.ActivityCenterGroup.NewsMessage &&
+            active: activityCenterTopBar.activeGroup === ActivityCenterTypes.ActivityCenterGroup.NewsMessage &&
                     (newsDisabledBySettings || listView.count === 0)
             sourceComponent: newsDisabledBySettings ? newsDisabledPanel : newsEmptyPanel
         }
