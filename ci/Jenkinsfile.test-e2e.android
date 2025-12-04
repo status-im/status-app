@@ -12,21 +12,14 @@ pipeline {
   }
 
   parameters {
-    gitParameter(
+    string(
       name: 'GIT_REF',
       description: 'Git branch to checkout.',
-      branchFilter: 'origin/(.*)',
-      branch: '',
-      defaultValue: 'master',
-      quickFilterEnabled: false,
-      selectedValue: 'DEFAULT',
-      sortMode: 'ASCENDING_SMART',
-      tagFilter: '*',
-      type: 'PT_BRANCH'
+      defaultValue: 'master'
     )
     string(
       name: 'BUILD_SOURCE',
-      description: 'URL to APK or Jenkins build (pkg/*.apk). Required when BROWSERSTACK_APP_ID is empty.',
+      description: 'URL to APK OR path to Jenkins build.',
       defaultValue: ''
     )
     string(
@@ -88,48 +81,6 @@ pipeline {
       }
     }
 
-    stage('Use provided BrowserStack app') {
-      when {
-        expression { params.BROWSERSTACK_APP_ID?.trim() }
-      }
-      steps {
-        script {
-          env.BROWSERSTACK_APP_ID = params.BROWSERSTACK_APP_ID.trim()
-          echo "Using provided BrowserStack app id: ${env.BROWSERSTACK_APP_ID}"
-        }
-      }
-    }
-
-    stage('Download') {
-      when {
-        allOf {
-          expression { !params.BROWSERSTACK_APP_ID?.trim() }
-          expression { params.BUILD_SOURCE?.startsWith('http') }
-        }
-      }
-      steps { timeout(5) { script { dir('test/e2e_appium') {
-        if (!params.BUILD_SOURCE?.trim()) {
-          error('Specify BUILD_SOURCE when BROWSERSTACK_APP_ID is empty.')
-        }
-        sh 'mkdir -p ./pkg/'
-        fileOperations([
-          fileDownloadOperation(
-            url:            params.BUILD_SOURCE,
-            targetFileName: 'downloaded.apk',
-            targetLocation: './pkg/',
-            userName:       '',
-            password:       '',
-          )
-        ])
-        def apkPath = utils.findFile('test/e2e_appium/pkg/*.apk')
-        if (!apkPath) {
-          error("Unable to locate APK under pkg/. Ensure BUILD_SOURCE produces pkg/*.apk artifacts.")
-        }
-        env.APK_PATH = apkPath
-        echo "APK ready at ${env.APK_PATH}"
-      } } } }
-    }
-
     stage('Copy') {
       when {
         allOf {
@@ -138,30 +89,23 @@ pipeline {
         }
       }
       steps { timeout(5) { script { dir('test/e2e_appium') {
-        if (!params.BUILD_SOURCE?.trim()) {
-          error('Specify BUILD_SOURCE when BROWSERSTACK_APP_ID is empty.')
-        }
         copyArtifacts(
           projectName: params.BUILD_SOURCE,
           filter:      'pkg/*.apk',
           selector:    lastWithArtifacts(),
-          target:      './'
+          target:      './pkg/'
         )
-        def apkPath = utils.findFile('test/e2e_appium/pkg/*.apk')
-        if (!apkPath) {
-          error("Unable to locate APK under pkg/. Ensure BUILD_SOURCE produces pkg/*.apk artifacts.")
-        }
-        env.APK_PATH = apkPath
-        echo "APK ready at ${env.APK_PATH}"
       } } } }
     }
 
     stage('Upload APK to BrowserStack') {
       when {
-        expression { !env.BROWSERSTACK_APP_ID }
+        expression { !params.BROWSERSTACK_APP_ID?.trim() }
       }
       steps {
         script {
+          def autSource = params.BUILD_SOURCE?.startsWith('http') ? 
+            params.BUILD_SOURCE : utils.findFile('test/e2e_appium/pkg/*.apk')
           withCredentials([
             usernamePassword(
               credentialsId: 'browserstack-status-desktop',
@@ -170,18 +114,16 @@ pipeline {
             )
           ]) {
             def response = sh(
-              script: "./scripts/upload_browserstack_apk.sh",
+              script: "./scripts/upload_browserstack_apk.sh '${autSource}'",
               returnStdout: true
             ).trim()
             def result = readJSON text: response
-            def appUrl = result?.app_url
-            if (!appUrl) {
+            if (!result?.app_url) {
               error("BrowserStack upload failed: ${response}")
             }
-            env.BROWSERSTACK_APP_ID = appUrl
-            env.BROWSERSTACK_BUILD_NAME = result?.custom_id
+            env.BROWSERSTACK_APP_ID = result.app_url
+            env.BROWSERSTACK_BUILD_NAME = result.custom_id
             env.BROWSERSTACK_BUILD_IDENTIFIER = env.BUILD_NUMBER
-            echo "BrowserStack app uploaded: ${env.BROWSERSTACK_APP_ID}"
           }
         }
       }
@@ -190,9 +132,11 @@ pipeline {
     stage('Run pytest suite') {
       steps {
         script {
+          if (params.BROWSERSTACK_APP_ID?.trim()) {
+            env.BROWSERSTACK_APP_ID = params.BROWSERSTACK_APP_ID.trim()
+          }
+          env.E2E_RUN_ID = env.BUILD_TAG
           dir('test/e2e_appium') {
-            println("Using TEST_DEVICE_ID: ${env.TEST_DEVICE_ID}")
-            
             withCredentials([
               usernamePassword(
                 credentialsId: 'browserstack-status-desktop',
@@ -209,30 +153,18 @@ pipeline {
 
     stage('Publish test results') {
       steps {
-        script {
-          def runId = env.E2E_RUN_ID?.trim()
-          def reportsPattern = runId ? "test/e2e_appium/reports/${runId}/**/*.xml" : "test/e2e_appium/reports/**/*.xml"
-          junit allowEmptyResults: true, testResults: reportsPattern
-          def archivePattern = runId ? "test/e2e_appium/reports/${runId}/**/*" : "test/e2e_appium/reports/**/*"
-          archiveArtifacts artifacts: archivePattern, allowEmptyArchive: true
-        }
+        junit allowEmptyResults: true, testResults: "test/e2e_appium/reports/${env.BUILD_TAG}/pytest_results_*.xml"
+        archiveArtifacts artifacts: "test/e2e_appium/reports/${env.BUILD_TAG}/**/*", allowEmptyArchive: true
       }
     }
   }
 
   post {
-    success {
-      script {
-        github.notifyPR(true)
-      }
-    }
-    failure {
-      script {
-        github.notifyPR(false)
-      }
-    }
+    success { script { github.notifyPR(true) } }
+    failure { script { github.notifyPR(false) } }
     cleanup {
       cleanWs(disableDeferredWipeout: true)
+      dir(env.WORKSPACE_TMP) { deleteDir() }
     }
   }
 }
@@ -243,7 +175,6 @@ def setNewBuildName() {
     currentBuild.displayName = parent.getFullDisplayName().minus('status-desktop » ')
   }
 }
-
 def updateGitHubStatus() {
   if (params.BUILD_SOURCE ==~ /.*\/PR-[0-9]+\/?$/) {
     github.statusUpdate(
@@ -253,4 +184,3 @@ def updateGitHubStatus() {
     )
   }
 }
-
