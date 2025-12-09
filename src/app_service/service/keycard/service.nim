@@ -125,6 +125,9 @@ QtObject:
       return
 
     let flowType = typeObj.getStr
+    if flowType == "channel-state-changed":
+        return #nothing related to flows here
+
     let flowEvent = toKeycardEvent(eventObj)
     self.lastReceivedKeycardData = (flowType: flowType, flowEvent: flowEvent)
     self.events.emit(SIGNAL_KEYCARD_RESPONSE, KeycardLibArgs(flowType: flowType, flowEvent: flowEvent))
