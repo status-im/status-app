@@ -3,6 +3,7 @@ CommunityTokensStore 1.0 CommunityTokensStore.qml
 CurrenciesStore 1.0 CurrenciesStore.qml
 DAppsStore 1.0 DAppsStore.qml
 GifStore 1.0 GifStore.qml
+KeycardStateStore 1.0 KeycardStateStore.qml
 MetricsStore 1.0 MetricsStore.qml
 NetworkConnectionStore 1.0 NetworkConnectionStore.qml
 NetworksStore 1.0 NetworksStore.qml
