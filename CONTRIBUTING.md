@@ -4,6 +4,7 @@
 - [Contributing to the Status App](#contributing-to-the-status-app)
   - [Table of Contents](#table-of-contents)
   - [🛠️ Developing](#️-developing)
+    - [Internal guides](#internal-guides)
   - [🪲 Status App Community Testing](#-status-app-community-testing)
     - [Disclaimer](#disclaimer)
     - [**🛠️ Testing Instructions for Status Release Candidate Build**](#️-testing-instructions-for-status-release-candidate-build)
@@ -24,6 +25,13 @@
 - Read our [QML Architecture Guidelines](guidelines/QML_ARCHITECTURE_GUIDE.md).
 - Check out [good first issues](https://github.com/status-im/status-app/contribute) to get involved.
 - Join the [#feedback-desktop](https://status.app/cc/G-EAAORobqgnsUPSVCLaSJr855iXTIdQiY1Q0ckBe8dWWEBpUAs9s8DTjWEpvsmpE83Izx1JWQuZrWWKUoxiXCwdtB-wPBzyvv_n9a0F61xTaPZE7BEJDC7Ly_WcmQ4tHRAKnPfXE_JUtEX_3NhnXQN0eh4ue0D77dWvaDpDrSi0U0CaGLZ-pqD_iV0z9RMFE2LKulDZdwL40etJ8lxjyTFoxS0lUhdWKinIOk8qBmJJpCmsqMrSklEU#zQ3shZeEJqTC1xhGUjxuS4rtHSrhJ8vUYp64v6qWkLpvdy9L9) and [#feedback-mobile](https://status.app/cc/G-EAAOTgmsumqFvQZ-DSRkmf6xZuG-jQBrqnB6ytivISS1qeYURpfrzeMMePtpp7Inw_qy_cLdpZLJNUgOmfMHIZ4n2zSTr-n9u34C4yZa7c4JGLz9U6GIfjPqa0J0Ng2GC_Pu76QxgM-1v0z8V0PxxAf3fdHNbQXy-vfqWhK2iF0E6AaaJMh3sCmp_YpfFwR0DPmDIORPwdI_5ot4VZpkSb9FCkBwJO0xKNc5zI4oYpjfAhZVAyNWIHJs0D#zQ3shZeEJqTC1xhGUjxuS4rtHSrhJ8vUYp64v6qWkLpvdy9L9) channels on Status.
+
+### Internal guides
+
+These guides are meant to be used by internal contributors. If you're an external contributor, you can also read them to get a sense of how we work, but you do not have to apply those guidelines.
+
+- [Release Process Guide](/docs/internal/release-process.md)
+- Dev-Design-Product-QA Workflow (Comming soon)
 
 ## 🪲 Status App Community Testing
 
