@@ -195,6 +195,9 @@ QtObject:
   proc startKeycardFactoryReset(self: View) {.slot.} =
     self.delegate.startKeycardFactoryReset()
 
+  proc startKeycardDetection(self: View) {.slot.} =
+    self.delegate.startKeycardDetection()
+
   proc delete*(self: View) =
     self.QObject.delete
 

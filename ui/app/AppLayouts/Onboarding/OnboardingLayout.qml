@@ -200,6 +200,7 @@ Page {
         onExportKeysRequested: root.onboardingStore.exportRecoverKeys()
         onImportLocalBackupRequested: (importFilePath) => d.backupImportFileUrl = importFilePath
         onFinished: (flow) => d.finishFlow(flow)
+        onKeycardRequested: root.onboardingStore.startKeycardDetection()
 
         onBiometricsRequested: (profileId) => {
             const isKeycardProfile = SQUtils.ModelUtils.getByKey(

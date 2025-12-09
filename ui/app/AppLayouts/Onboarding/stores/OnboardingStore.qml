@@ -35,6 +35,10 @@ QtObject {
     readonly property int keycardRemainingPinAttempts: d.onboardingModuleInst.keycardRemainingPinAttempts
     readonly property int keycardRemainingPukAttempts: d.onboardingModuleInst.keycardRemainingPukAttempts
 
+    function startKeycardDetection() {
+        d.onboardingModuleInst.startKeycardDetection()
+    }
+
     function finishOnboardingFlow(flow: int, data: Object) { // -> string
         return d.onboardingModuleInst.finishOnboardingFlow(flow, JSON.stringify(data))
     }

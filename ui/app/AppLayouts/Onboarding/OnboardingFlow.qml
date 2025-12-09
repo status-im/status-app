@@ -72,6 +72,7 @@ OnboardingStackView {
     signal linkActivated(string link)
 
     signal finished(int flow)
+    signal keycardRequested()
 
     // Thirdparty services
     required property bool privacyModeFeatureEnabled
@@ -239,7 +240,7 @@ OnboardingStackView {
 
             onUnblockWithSeedphraseRequested: root.push(unblockWithSeedphraseFlow)
             onUnblockWithPukRequested: root.push(unblockWithPukFlow)
-
+            onKeycardRequested: root.keycardRequested()
             onVisibleChanged: {
                 if (!visible)
                     root.dismissBiometricsRequested()
@@ -277,7 +278,10 @@ OnboardingStackView {
                 root.push(useRecoveryPhraseFlow,
                           { type: UseRecoveryPhraseFlow.Type.NewProfile })
             }
-            onCreateProfileWithEmptyKeycardRequested: root.push(keycardCreateProfileFlow)
+            onCreateProfileWithEmptyKeycardRequested: {
+                root.keycardRequested()
+                root.push(keycardCreateProfileFlow)
+            }
         }
     }
 
@@ -290,7 +294,10 @@ OnboardingStackView {
             thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
             onLoginWithSyncingRequested: root.push(logInBySyncingFlow)
-            onLoginWithKeycardRequested: root.push(loginWithKeycardFlow)
+            onLoginWithKeycardRequested: {
+                root.keycardRequested()
+                root.push(loginWithKeycardFlow)
+            }
 
             onLoginWithSeedphraseRequested: {
                 d.flow = Onboarding.OnboardingFlow.LoginWithSeedphrase
