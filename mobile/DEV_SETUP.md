@@ -32,6 +32,22 @@ export QTDIR=$HOME/qt/6.9.2/ios
 make mobile-run
 ```
 
+Running the app requires a code sign identity. See [Signing](#signing)
+
+#### Keycard
+
+The keycard support is disabled by default in the mobile makefile for IOS. It requires a paid apple developer account to run the app with NFC enabled.
+
+To enable keycard use the `USE_STATUS_KEYCARD_QT=1` flag for the main Makefile and use a paid account by updating the `QMAKE_DEVELOPMENT_TEAM` flag and the bundle if (if the development team isn't Status).
+
+#### Signing
+
+By default the app isn't signed.
+
+To sign the app the `QMAKE_DEVELOPMENT_TEAM` flag needs to be provided. If the development team is not Status development team, then the app bundle id needs to be updated to a unique bundle id.
+
+#### 
+
 ### Android Development Setup
 
 #### Prerequisites - can be installed using the Android Studio

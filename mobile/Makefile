@@ -3,6 +3,18 @@
 
 STATUS_GO_LIB := $(LIB_PATH)/libstatus$(LIB_EXT)
 
+# FLAG_KEYCARD_ENABLED: Controls NFC/Keycard support
+# - iOS: Default 0 (disabled) - Build without NFC, works with free Apple Developer account
+# - Android: Default 1 (enabled) - NFC support doesn't require paid account on Android
+# - Set to 1: Build with NFC support (iOS requires paid Apple Developer account)
+# - Set to 0: Build without NFC support
+# Usage: make build-ios FLAG_KEYCARD_ENABLED=1
+ifeq ($(OS),android)
+  FLAG_KEYCARD_ENABLED ?= 1
+else
+  FLAG_KEYCARD_ENABLED ?= 0
+endif
+
 $(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
 
 # default rule
@@ -16,6 +28,7 @@ statusq: clean-statusq $(STATUS_Q_LIB)
 dotherside: clean-dotherside $(DOTHERSIDE_LIB)
 openssl: clean-openssl $(OPENSSL_LIB)
 qrcodegen: clean-qrcodegen $(QRCODEGEN_LIB)
+status-keycard-qt: clean-status-keycard-qt $(STATUS_KEYCARD_QT_LIB)
 nim-status-client: clean-nim-status-client $(NIM_STATUS_CLIENT_LIB)
 status-desktop-rcc: clean-status-desktop-rcc $(STATUS_DESKTOP_RCC)
 
@@ -62,6 +75,11 @@ $(QRCODEGEN_LIB): $(QRCODEGEN_FILES)
 	@QRCODEGEN=$(QRCODEGEN) $(QRCODEGEN_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "QRCodeGen built $(QRCODEGEN_LIB)"
 
+$(STATUS_KEYCARD_QT_LIB): $(STATUS_KEYCARD_QT_FILES) $(STATUS_KEYCARD_QT_SCRIPT) $(OPENSSL_LIB)
+	@echo "Building status-keycard-qt"
+	@STATUS_KEYCARD_QT=$(STATUS_KEYCARD_QT) KEYCARD_QT=$(KEYCARD_QT) $(STATUS_KEYCARD_QT_SCRIPT) $(HANDLE_OUTPUT)
+	@echo "status-keycard-qt built $(STATUS_KEYCARD_QT_LIB)"
+
 $(STATUS_DESKTOP_RCC): $(STATUS_DESKTOP_UI_FILES) compile-translations
 	@echo "Building Status Desktop rcc"
 	@make -C $(STATUS_DESKTOP) rcc $(HANDLE_OUTPUT)
@@ -69,16 +87,40 @@ $(STATUS_DESKTOP_RCC): $(STATUS_DESKTOP_UI_FILES) compile-translations
 
 $(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT) $(STATUS_DESKTOP_RCC) $(DOTHERSIDE_LIB) $(OPENSSL_LIB) $(STATUS_Q_LIB) $(STATUS_GO_LIB) $(QRCODEGEN_LIB)
 	@echo "Building Status Desktop Lib"
-	@STATUS_DESKTOP=$(STATUS_DESKTOP) LIB_SUFFIX=$(LIB_SUFFIX) LIB_EXT=$(LIB_EXT) USE_QML_SERVER=$(USE_QML_SERVER) $(NIM_STATUS_CLIENT_SCRIPT) $(HANDLE_OUTPUT)
+	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
+	LIB_SUFFIX=$(LIB_SUFFIX) \
+	LIB_EXT=$(LIB_EXT) \
+	USE_QML_SERVER=$(USE_QML_SERVER) \
+	BUNDLE_IDENTIFIER="$(BUNDLE_IDENTIFIER)" \
+	DEBUG=$(DEBUG) \
+	FLAG_DAPPS_ENABLED=$(FLAG_DAPPS_ENABLED) \
+	FLAG_CONNECTOR_ENABLED=$(FLAG_CONNECTOR_ENABLED) \
+	FLAG_KEYCARD_ENABLED=$(FLAG_KEYCARD_ENABLED) \
+	FLAG_SINGLE_STATUS_INSTANCE_ENABLED=$(FLAG_SINGLE_STATUS_INSTANCE_ENABLED) \
+	FLAG_BROWSER_ENABLED=$(FLAG_BROWSER_ENABLED) \
+	$(NIM_STATUS_CLIENT_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "Status Desktop Lib built $(NIM_STATUS_CLIENT_LIB)"
 
 # non-phony targets
-$(TARGET): $(APP_SCRIPT) $(STATUS_GO_LIB) $(STATUS_Q_LIB) $(DOTHERSIDE_LIB) $(OPENSSL_LIB) $(QRCODEGEN_LIB) $(NIM_STATUS_CLIENT_LIB) $(STATUS_DESKTOP_RCC) $(WRAPPER_APP_FILES)
+$(TARGET): $(APP_SCRIPT) $(STATUS_GO_LIB) $(STATUS_Q_LIB) $(DOTHERSIDE_LIB) $(OPENSSL_LIB) $(QRCODEGEN_LIB) $(STATUS_KEYCARD_QT_LIB) $(NIM_STATUS_CLIENT_LIB) $(STATUS_DESKTOP_RCC) $(WRAPPER_APP_FILES)
 	@echo "Building app"
 ifeq ($(OS),android)
-	@STATUS_DESKTOP=$(STATUS_DESKTOP) GRADLE_TARGETS="$(GRADLE_TARGETS)" BIN_DIR=$(BIN_PATH) BUILD_DIR=$(BUILD_PATH) QT_MAJOR=$(QT_MAJOR) $(APP_SCRIPT) $(HANDLE_OUTPUT)
+	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
+	GRADLE_TARGETS="$(GRADLE_TARGETS)" \
+	BUILD_TYPE=$(PACKAGE_TYPE) \
+	BIN_DIR=$(BIN_PATH) \
+	BUILD_DIR=$(BUILD_PATH) \
+	QT_MAJOR=$(QT_MAJOR) \
+	FLAG_KEYCARD_ENABLED=$(FLAG_KEYCARD_ENABLED) \
+	$(APP_SCRIPT) $(HANDLE_OUTPUT)
 else
-	@STATUS_DESKTOP=$(STATUS_DESKTOP) BIN_DIR=$(BIN_PATH) BUILD_DIR=$(BUILD_PATH) QT_MAJOR=$(QT_MAJOR) $(APP_SCRIPT) $(HANDLE_OUTPUT)
+	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
+	BIN_DIR=$(BIN_PATH) \
+	BUILD_DIR=$(BUILD_PATH) \
+	QT_MAJOR=$(QT_MAJOR) \
+	DEVELOPMENT_TEAM="$(DEVELOPMENT_TEAM)" \
+	FLAG_KEYCARD_ENABLED=$(FLAG_KEYCARD_ENABLED) \
+	$(APP_SCRIPT) $(HANDLE_OUTPUT)
 endif
 	@echo "Built $(TARGET)"
 
@@ -129,7 +171,7 @@ endif
 all: $(TARGET)
 
 .PHONY: clean
-clean: clean-statusq clean-dotherside clean-openssl clean-qrcodegen clean-nim-status-client clean-status-desktop-rcc
+clean: clean-statusq clean-dotherside clean-openssl clean-qrcodegen clean-status-keycard-qt clean-nim-status-client clean-status-desktop-rcc
 	@echo "Cleaning"
 	@rm -rf $(ROOT_DIR)/bin $(ROOT_DIR)/build $(ROOT_DIR)/lib
 
@@ -158,6 +200,13 @@ clean-openssl:
 clean-qrcodegen:
 	@rm -f $(QRCODEGEN_LIB)
 	@cd $(QRCODEGEN) && make clean
+
+# keycard-qt is now automatically built by status-keycard-qt via CMake FetchContent
+# Its build artifacts are cleaned as part of status-keycard-qt's build directory
+.PHONY: clean-status-keycard-qt
+clean-status-keycard-qt:
+	@rm -f $(STATUS_KEYCARD_QT_LIB)
+	@rm -rf $(STATUS_KEYCARD_QT)/build/$(OS)
 
 .PHONY: clean-nim-status-client
 clean-nim-status-client:

@@ -8,6 +8,7 @@ SDK=${SDK:-iphonesimulator}
 BUILD_DIR=${BUILD_DIR:-"$CWD/../build"}
 GRADLE_TARGETS=${GRADLE_TARGETS:-"assembleRelease"}
 BUILD_VARIANT=${BUILD_VARIANT:-"release"}
+FLAG_KEYCARD_ENABLED=${FLAG_KEYCARD_ENABLED:-1}
 
 QMAKE_BIN="${QMAKE:-qmake}"
 QMAKE_CONFIG=("CONFIG+=device" "CONFIG+=release")
@@ -27,6 +28,12 @@ BUILD_VERSION="${CHANGE_ID:+${CHANGE_ID}.}$(($(date +%s) / 60))"
 
 echo "Version: $VERSION, build: $BUILD_VERSION"
 
+# Configure qmake with keycard flag
+QMAKE_DEFINES=()
+if [[ "${FLAG_KEYCARD_ENABLED}" == "1" ]]; then
+  QMAKE_DEFINES=("DEFINES+=FLAG_KEYCARD_ENABLED")
+fi
+
 if [[ "${OS}" == "android" ]]; then
   [[ -z "${JAVA_HOME}" ]] && { echo "JAVA_HOME is not set"; exit 1; }
 
@@ -34,7 +41,7 @@ if [[ "${OS}" == "android" ]]; then
   export BUILD_VARIANT
 
   "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec android-clang \
-    ANDROID_ABIS="${ANDROID_ABI:-arm64-v8a}" VERSION="$VERSION" -after
+    ANDROID_ABIS="${ANDROID_ABI:-arm64-v8a}" VERSION="$VERSION" "${QMAKE_DEFINES[@]}" -after
 
   make -j"$(nproc)" apk_install_target
 
@@ -76,10 +83,35 @@ if [[ "${OS}" == "android" ]]; then
   echo "Build succeeded:$BUILT"
 
 else
-  "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec macx-ios-clang CONFIG+="$SDK" VERSION="$VERSION" -after
+  # Generate Info.plist based on FLAG_KEYCARD_ENABLED
+  echo "Generating Info.plist (FLAG_KEYCARD_ENABLED=${FLAG_KEYCARD_ENABLED})..."
+  if [[ "${FLAG_KEYCARD_ENABLED}" == "1" ]]; then
+    # Enable NFC/Keycard support - uncomment NFC sections
+    # Markers may be indented; match by substring (not anchors).
+    sed -e '/KEYCARD_NFC_START/d' \
+        -e '/KEYCARD_NFC_END/d' \
+        "$CWD/../ios/Info.plist.template" > "$BUILD_DIR/Info.plist"
+  else
+    # Disable NFC/Keycard support - remove NFC sections entirely
+    # Markers may be indented; match by substring (not anchors).
+    sed '/KEYCARD_NFC_START/,/KEYCARD_NFC_END/d' \
+        "$CWD/../ios/Info.plist.template" > "$BUILD_DIR/Info.plist"
+  fi
 
-  XCODE_FLAGS=(-configuration Release -sdk "$SDK" -arch "$ARCH" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CURRENT_PROJECT_VERSION="$BUILD_VERSION")
+  # By default the app is not signed.
+  # If `QMAKE_DEVELOPMENT_TEAM` is set, enable automatic signing with that Team ID.
+  TEAM_ID="${QMAKE_DEVELOPMENT_TEAM:-}"
+  XCODE_FLAGS=(-configuration Release -sdk "$SDK" -arch "$ARCH" CURRENT_PROJECT_VERSION="$BUILD_VERSION")
+  if [[ -n "${TEAM_ID}" ]]; then
+    XCODE_FLAGS+=(CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM="${TEAM_ID}" -allowProvisioningUpdates)
+  else
+    XCODE_FLAGS+=(CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO)
+  fi
+
   BIN_DIR=${BIN_DIR:-"$CWD/../bin/ios"}
+  mkdir -p "$BIN_DIR"
+
+  "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec macx-ios-clang CONFIG+="$SDK" VERSION="$VERSION" "${QMAKE_DEFINES[@]}" -after
 
   xcodebuild "${XCODE_FLAGS[@]}" -target "Qt Preprocess" | xcbeautify
   xcodebuild "${XCODE_FLAGS[@]}" -target "$OUTPUT_NAME" install DSTROOT="$BIN_DIR" INSTALL_PATH="/" TARGET_BUILD_DIR="$BIN_DIR" | xcbeautify

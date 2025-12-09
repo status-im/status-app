@@ -124,3 +124,6 @@
 [submodule "vendor/nim-unicodedb"]
 	path = vendor/nim-unicodedb
 	url = https://github.com/nitely/nim-unicodedb
+[submodule "vendor/status-keycard-qt"]
+	path = vendor/status-keycard-qt
+	url = https://github.com/status-im/status-keycard-qt

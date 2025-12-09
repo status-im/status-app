@@ -33,6 +33,7 @@ STATUS_GO?=$(STATUS_DESKTOP)/vendor/status-go
 DOTHERSIDE?=$(STATUS_DESKTOP)/vendor/DOtherSide
 OPENSSL?=$(ROOT_DIR)/vendors/openssl
 QRCODEGEN?=$(STATUS_DESKTOP)/vendor/QR-Code-generator/c
+STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/vendor/status-keycard-qt
 
 # compile macros
 TARGET_PREFIX := Status
@@ -59,6 +60,7 @@ STATUS_GO_FILES := $(shell find $(STATUS_GO) -type f \( -iname '*.go' \))
 DOTHERSIDE_FILES := $(shell find $(DOTHERSIDE) -type f \( -iname '*.cpp' -o -iname '*.h' \))
 OPENSSL_FILES := $(shell find $(OPENSSL) -type f \( -iname '*.c' -o -iname '*.h' \))
 QRCODEGEN_FILES := $(shell find $(QRCODEGEN) -type f \( -iname '*.c' -o -iname '*.h' \))
+STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
 WRAPPER_APP_FILES := $(shell find $(WRAPPER_APP) -type f)
 
 # script files
@@ -67,6 +69,7 @@ STATUS_GO_SCRIPT := $(SCRIPTS_PATH)/buildStatusGo.sh
 DOTHERSIDE_SCRIPT := $(SCRIPTS_PATH)/buildDOtherSide.sh
 OPENSSL_SCRIPT := $(SCRIPTS_PATH)/ios/buildOpenSSL.sh
 QRCODEGEN_SCRIPT := $(SCRIPTS_PATH)/buildQRCodeGen.sh
+STATUS_KEYCARD_QT_SCRIPT := $(SCRIPTS_PATH)/buildStatusKeycardQt.sh
 NIM_STATUS_CLIENT_SCRIPT := $(SCRIPTS_PATH)/buildNimStatusClient.sh
 APP_SCRIPT := $(SCRIPTS_PATH)/buildApp.sh
 RUN_SCRIPT := $(SCRIPTS_PATH)/$(OS)/run.sh
@@ -77,6 +80,7 @@ STATUS_Q_LIB := $(LIB_PATH)/libStatusQ$(LIB_SUFFIX)$(LIB_EXT)
 OPENSSL_LIB := $(LIB_PATH)/libssl_3$(LIB_EXT)
 QRCODEGEN_LIB := $(LIB_PATH)/libqrcodegen.a
 QZXING_LIB := $(LIB_PATH)/libqzxing.a
+STATUS_KEYCARD_QT_LIB := $(LIB_PATH)/libstatus-keycard-qt$(LIB_EXT)
 NIM_STATUS_CLIENT_LIB := $(LIB_PATH)/libnim_status_client$(LIB_EXT)
 STATUS_DESKTOP_RCC := $(STATUS_DESKTOP)/ui/resources.qrc
 ifeq ($(OS), ios)

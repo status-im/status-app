@@ -66,7 +66,18 @@
     <string>Log in securely to your account.</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
-    <key>NFCReaderUsageDescription</key>
-    <string>Status uses NFC to read and verify identity cards for secure authentication.</string>
+    <!-- Do not require paid apple accounts to build the app with NFC support -->
+    <!-- KEYCARD_NFC_START
+        <key>NFCReaderUsageDescription</key>
+        <string>Status uses NFC to read and verify identity cards for secure authentication.</string>
+        <key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+        <array>
+            <string>A0000008040001</string>
+            <string>A00000080400010101</string>
+            <string>A00000080400010301</string>
+            <string>A000000151000000</string>
+        </array>
+    KEYCARD_NFC_END -->
 </dict>
 </plist>
+

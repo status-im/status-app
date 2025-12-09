@@ -2,7 +2,9 @@
 set -ef pipefail
 
 ARCH=${ARCH:-"x86_64"}
-QTDIR=${QTDIR:-$(qmake -query QT_INSTALL_PREFIX)}
+# Use $QMAKE if set, otherwise fall back to system qmake
+QMAKE_BIN=${QMAKE:-qmake}
+QTDIR=${QTDIR:-$($QMAKE_BIN -query QT_INSTALL_PREFIX)}
 OS=${OS:-ios}
 ANDROID_NDK_ROOT=${ANDROID_NDK_ROOT:-""}
 
@@ -45,5 +47,10 @@ COMMON_CMAKE_CONFIG+=(
     -DCMAKE_FIND_ROOT_PATH:STRING="$QTDIR"
     -DCMAKE_BUILD_TYPE=Release
 )
+
+# Add Android-specific flags only for Android
+if [[ "$OS" == "android" ]]; then
+    COMMON_CMAKE_CONFIG+=(-DANDROID_PLATFORM=android-35)
+fi
 
 printf 'COMMON_CMAKE_CONFIG: %s\n' "${COMMON_CMAKE_CONFIG[@]}"
