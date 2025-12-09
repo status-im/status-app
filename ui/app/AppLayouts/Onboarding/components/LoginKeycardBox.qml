@@ -113,6 +113,7 @@ Control {
             objectName: "pinInput"
             validator: StatusIntValidator { bottom: 0; top: 999999 }
             visible: false
+            inputMethodHints: Qt.ImhDigitsOnly
 
             onPinInputChanged: {
                 if (pinInput.length === 6) {
@@ -235,6 +236,7 @@ Control {
             PropertyChanges {
                 target: pinInputField
                 visible: true
+                focus: true
             }
             PropertyChanges {
                 target: background
@@ -251,4 +253,9 @@ Control {
             }
         }
     ]
+
+    TapHandler {
+        enabled: pinInputField.visible
+        onTapped: pinInputField.forceFocus()
+    }
 }

@@ -10934,6 +10934,54 @@
     </message>
   </context>
   <context>
+    <name>KeycardChannelDrawer</name>
+    <message>
+      <source>Insert Keycard</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Insert Keycard</translation>
+    </message>
+    <message>
+      <source>Please tap your Keycard to the back of your device</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Please tap your Keycard to the back of your device</translation>
+    </message>
+    <message>
+      <source>Reading Keycard</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Reading Keycard</translation>
+    </message>
+    <message>
+      <source>Please keep your Keycard in place</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Please keep your Keycard in place</translation>
+    </message>
+    <message>
+      <source>Success</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Success</translation>
+    </message>
+    <message>
+      <source>Keycard operation completed successfully</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Keycard operation completed successfully</translation>
+    </message>
+    <message>
+      <source>Keycard Error</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Keycard Error</translation>
+    </message>
+    <message>
+      <source>An error occurred. Please try again.</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>An error occurred. Please try again.</translation>
+    </message>
+    <message>
+      <source>Dismiss</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Dismiss</translation>
+    </message>
+  </context>
+  <context>
     <name>KeycardConfirmation</name>
     <message>
       <source>Warning, this Keycard stores your main Status profile and&#xA;accounts. A factory reset will permanently delete it.</source>
