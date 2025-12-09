@@ -161,6 +161,7 @@ KeycardBasePage {
             anchors.horizontalCenter: parent.horizontalCenter
             pinLen: Constants.keycard.general.keycardPinLength
             validator: StatusIntValidator { bottom: 0; top: 999999 }
+            inputMethodHints: Qt.ImhDigitsOnly
             onPinInputChanged: {
                 if (pinInput.pinInput.length === pinInput.pinLen) {
                     root.authorizationRequested(pinInput.pinInput)
