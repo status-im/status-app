@@ -52,6 +52,7 @@ Window {
     readonly property UtilsStore utilsStore: UtilsStore {}
     readonly property LanguageStore languageStore: LanguageStore {}
     readonly property bool appThemeDark: Theme.style === Theme.Style.Dark
+    readonly property KeycardStateStore keycardStateStore: KeycardStateStore {}
     readonly property bool portraitLayout: height > width
     property bool biometricFlowPending: false
     
@@ -671,6 +672,15 @@ Window {
                     Global.addCentralizedMetricIfEnabled("usage_data_shared", {placement: metricsPopupLoader.item.placement})
                 }
             }
+        }
+    }
+
+    
+    Loader {
+        active: SQUtils.Utils.isAndroid
+        sourceComponent: KeycardChannelDrawer {
+            id: keycardChannelDrawer
+            currentState: applicationWindow.keycardStateStore.state
         }
     }
 

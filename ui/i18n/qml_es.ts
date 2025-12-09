@@ -8977,6 +8977,45 @@ Tarifa L2: %2</translation>
     </message>
 </context>
 <context>
+    <name>KeycardChannelDrawer</name>
+    <message>
+        <source>Insert Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please tap your Keycard to the back of your device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please keep your Keycard in place</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard operation completed successfully</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An error occurred. Please try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dismiss</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>KeycardConfirmation</name>
     <message>
         <source>Warning, this Keycard stores your main Status profile and
