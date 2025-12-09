@@ -446,6 +446,9 @@ method requestLocalBackup*[T](self: Module[T], backupImportFileUrl: string) =
 method requestDeleteBiometrics*[T](self: Module[T], account: string) =
   self.view.deleteBiometricsRequested(account)
 
+method startKeycardDetection*[T](self: Module[T]) =
+  self.controller.startKeycardDetection()
+
 proc runPostLoginTasks*[T](self: Module[T]) =
   let tasks = self.postLoginTasks
   for task in tasks:
