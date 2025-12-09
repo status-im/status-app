@@ -40,6 +40,7 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	tests-nim-linux \
 	status-go \
 	status-keycard-go \
+	status-keycard-qt \
 	statusq-sanity-checker \
 	run-statusq-sanity-checker \
 	statusq-tests \
@@ -248,6 +249,9 @@ NIMSDS_LIBDIR := $(NIM_SDS_SOURCE_DIR)/build
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
 NIM_EXTRA_PARAMS += --passL:"-L$(NIMSDS_LIBDIR)" --passL:"-lsds"
 STATUSGO_MAKE_PARAMS += NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)"
+# Keycard library selection: set to 1 to use status-keycard-qt (Qt/C++), 0 for status-keycard-go (Go)
+# Default: use status-keycard-go for now (stable), switch to 1 to test status-keycard-qt
+USE_STATUS_KEYCARD_QT ?= 0
 
 INCLUDE_DEBUG_SYMBOLS ?= false
 ifeq ($(INCLUDE_DEBUG_SYMBOLS),true)
@@ -501,6 +505,62 @@ $(STATUSKEYCARDGO): | deps
 		$(if $(filter 1 true,$(USE_MOCKED_KEYCARD_LIB)), build-mocked-lib, build-lib) \
 		$(STATUSKEYCARDGO_MAKE_PARAMS) $(HANDLE_OUTPUT)
 
+##
+##	status-keycard-qt (Qt/C++ based keycard library)
+##
+
+# Allow using local status-keycard-qt for development
+STATUS_KEYCARD_QT_DIR ?= vendor/status-keycard-qt
+KEYCARD_QT ?= ""
+
+# Determine build directory based on platform
+ifeq ($(mkspecs),macx)
+STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_DIR)/build/macos
+else ifeq ($(mkspecs),win32)
+STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_DIR)/build/windows
+else
+STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_DIR)/build/linux
+endif
+
+export STATUSKEYCARD_QT_LIB := $(STATUS_KEYCARD_QT_BUILD_DIR)/libstatus-keycard-qt.$(LIB_EXT)
+export STATUSKEYCARD_QT_LIBDIR := $(STATUS_KEYCARD_QT_BUILD_DIR)
+
+status-keycard-qt: $(STATUSKEYCARD_QT_LIB)
+$(STATUSKEYCARD_QT_LIB): | deps check-qt-dir
+	echo -e $(BUILD_MSG) "status-keycard-qt"
+	+ STATUS_KEYCARD_QT_DIR="$(STATUS_KEYCARD_QT_DIR)" \
+	  KEYCARD_QT_DIR="$(KEYCARD_QT_DIR)" \
+	  QMAKE="$(QMAKE)" \
+	  cmake -S "${STATUS_KEYCARD_QT_DIR}" -B "${STATUS_KEYCARD_QT_BUILD_DIR}" \
+		$(COMMON_CMAKE_CONFIG_PARAMS) \
+		-DBUILD_TESTING=OFF \
+		-DBUILD_EXAMPLES=OFF \
+		-DBUILD_SHARED_LIBS=ON \
+		-DKEYCARD_QT_SOURCE_DIR=${KEYCARD_QT} \
+		$(HANDLE_OUTPUT) 
+	cmake --build $(STATUS_KEYCARD_QT_BUILD_DIR) --target status-keycard-qt $(HANDLE_OUTPUT)
+
+status-keycard-qt-clean:
+	echo -e "\033[92mCleaning:\033[39m status-keycard-qt"
+	rm -rf $(STATUS_KEYCARD_QT_BUILD_DIR)
+
+##
+##	Keycard library selection
+##
+
+# Set the keycard library and paths based on USE_STATUS_KEYCARD_QT
+ifeq ($(USE_STATUS_KEYCARD_QT),1)
+  KEYCARD_LIB := $(STATUSKEYCARD_QT_LIB)
+  KEYCARD_LIBDIR := $(STATUSKEYCARD_QT_LIBDIR)
+  KEYCARD_LINKNAME := status-keycard-qt
+  KEYCARD_DYLIB_NAME := libstatus-keycard-qt.dylib
+else
+  KEYCARD_LIB := $(STATUSKEYCARDGO)
+  KEYCARD_LIBDIR := $(STATUSKEYCARDGO_LIBDIR)
+  KEYCARD_LINKNAME := keycard
+  KEYCARD_DYLIB_NAME := libkeycard.dylib
+endif
+
 QRCODEGEN := vendor/QR-Code-generator/c/libqrcodegen.a
 
 $(QRCODEGEN): | deps
@@ -611,7 +671,7 @@ $(NIM_STATUS_CLIENT): update-qmake-previous
 endif
 
 $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
-$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(STATUSKEYCARDGO) $(QRCODEGEN) rcc deps
+$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(KEYCARD_LIB) $(QRCODEGEN) rcc deps
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
 		--mm:refc \
@@ -619,8 +679,8 @@ $(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSG
 		--passL:"-lstatus" \
 		--passL:"-L$(STATUSQ_INSTALL_PATH)/StatusQ" \
 		--passL:"-lStatusQ" \
-		--passL:"-L$(STATUSKEYCARDGO_LIBDIR)" \
-		--passL:"-lkeycard" \
+		--passL:"-L$(KEYCARD_LIBDIR)" \
+		--passL:"-l$(KEYCARD_LINKNAME)" \
 		--passL:"$(QRCODEGEN)" \
 		--passL:"-lm" \
 		--parallelBuild:0 \
@@ -631,8 +691,8 @@ ifeq ($(mkspecs),macx)
 		@rpath/libstatus.dylib \
 		bin/nim_status_client
 	install_name_tool -change \
-		libkeycard.dylib \
-		@rpath/libkeycard.dylib \
+		$(KEYCARD_DYLIB_NAME) \
+		@rpath/$(KEYCARD_DYLIB_NAME) \
 		bin/nim_status_client
 endif
 
@@ -850,7 +910,7 @@ zip-windows: check-pkg-target-windows $(STATUS_CLIENT_7Z)
 clean-destdir:
 	rm -rf bin/*
 
-clean: | clean-common clean-destdir statusq-clean status-go-clean dotherside-clean storybook-clean clean-translations
+clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean dotherside-clean storybook-clean clean-translations
 	rm -rf bottles/* pkg/* tmp/* $(STATUSKEYCARDGO)
 	+ $(MAKE) -C vendor/QR-Code-generator/c/ --no-print-directory clean
 
@@ -868,12 +928,12 @@ run: $(RUN_TARGET)
 
 run-linux: nim_status_client
 	echo -e "\033[92mRunning:\033[39m bin/nim_status_client"
-	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(LIBWAKU_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARDGO_LIBDIR)":"$(STATUSQ_INSTALL_PATH)/StatusQ":"$(LD_LIBRARY_PATH)" \
+	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(LIBWAKU_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(KEYCARD_LIBDIR)":"$(STATUSQ_INSTALL_PATH)/StatusQ":"$(LD_LIBRARY_PATH)" \
 	./bin/nim_status_client $(ARGS)
 
 run-linux-gdb: nim_status_client
 	echo -e "\033[92mRunning:\033[39m bin/nim_status_client"
-	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(LIBWAKU_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARDGO_LIBDIR)":"$(STATUSQ_INSTALL_PATH)/StatusQ":"$(LD_LIBRARY_PATH)" \
+	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(LIBWAKU_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(KEYCARD_LIBDIR)":"$(STATUSQ_INSTALL_PATH)/StatusQ":"$(LD_LIBRARY_PATH)" \
 	gdb -ex=r ./bin/nim_status_client $(ARGS)
 
 run-macos: nim_status_client
@@ -884,12 +944,13 @@ run-macos: nim_status_client
 		ln -fs ../../../nim_status_client ./
 	fileicon set bin/nim_status_client status-dev.icns
 	echo -e "\033[92mRunning:\033[39m bin/StatusDev.app/Contents/MacOS/nim_status_client"
+	DYLD_LIBRARY_PATH="$(STATUSGO_LIBDIR)":"$(KEYCARD_LIBDIR)":"$(STATUSQ_INSTALL_PATH)/StatusQ":"$(DYLD_LIBRARY_PATH)" \
 	./bin/StatusDev.app/Contents/MacOS/nim_status_client $(ARGS)
 
 run-windows: STATUS_RC_FILE = status-dev.rc
 run-windows: compile_windows_resources nim_status_client
 	echo -e "\033[92mRunning:\033[39m bin/nim_status_client.exe"
-	PATH="$(DOTHERSIDE_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARDGO_LIBDIR)":"$(STATUSQ_INSTALL_PATH)/StatusQ":"$(PATH)" \
+	PATH="$(DOTHERSIDE_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(KEYCARD_LIBDIR)":"$(STATUSQ_INSTALL_PATH)/StatusQ":"$(PATH)" \
 	./bin/nim_status_client.exe $(ARGS)
 
 NIM_TEST_FILES := $(wildcard test/nim/*.nim)
@@ -908,11 +969,16 @@ endef
 export PATH := $(call qmkq,QT_INSTALL_BINS):$(call qmkq,QT_HOST_BINS):$(call qmkq,QT_HOST_LIBEXECS):$(PATH)
 export QTDIR := $(call qmkq,QT_INSTALL_PREFIX)
 
+#Force keycard support for mobile builds
+ifeq ($(USE_STATUS_KEYCARD_QT),1)
+	MOBILE_FLAGS += "FLAG_KEYCARD_ENABLED=1"
+endif
+
 mobile-run: deps-common
 	echo -e "\033[92mRunning:\033[39m mobile app"
-	$(MAKE) -C mobile run
+	$(MAKE) -C mobile run DEBUG=1 $(MOBILE_FLAGS)
 
-mobile-build: USE_SYSTEM_NIM=1
+mobile-build: USE_SYSTEM_NIM=1 $(MOBILE_FLAGS)
 mobile-build: | deps-common
 	echo -e "\033[92mBuilding:\033[39m mobile app ($(or $(PACKAGE_TYPE),default))"
 ifeq ($(PACKAGE_TYPE),aab)
