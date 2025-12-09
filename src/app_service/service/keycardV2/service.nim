@@ -21,6 +21,7 @@ const PUKLengthForStatusApp* = 12
 const KeycardLibCallsInterval = 500 # 0.5 seconds
 
 const SIGNAL_KEYCARD_STATE_UPDATED* = "keycardStateUpdated"
+const SIGNAL_KEYCARD_CHANNEL_STATE_UPDATED* = "keycardChannelStateUpdated"
 const SIGNAL_KEYCARD_SET_PIN_FAILURE* = "keycardSetPinFailure"
 const SIGNAL_KEYCARD_AUTHORIZE_FINISHED* = "keycardAuthorizeFinished"
 const SIGNAL_KEYCARD_LOAD_MNEMONIC_FAILURE* = "keycardLoadMnemonicFailure"
@@ -59,6 +60,9 @@ type
 
   KeycardExportedKeysArg* = ref object of Args
     exportedKeys*: KeycardExportedKeysDto
+
+  KeycardChannelStateArg* = ref object of Args
+    state*: string
 
 include utils
 include app_service/common/async_tasks
@@ -100,7 +104,6 @@ QtObject:
     if status_const.IS_MACOS and status_const.IS_INTEL:
       sleep 700
     self.initializeRPC()
-    self.asyncStart(status_const.KEYCARDPAIRINGDATAFILE)
     discard
 
   proc initializeRPC(self: Service) {.slot, featureGuard(KEYCARD_ENABLED).} =
@@ -110,10 +113,15 @@ QtObject:
     try:
       # Since only one service can register to signals, we pass the signal to the old service too
       var jsonSignal = signal.parseJson
-      if jsonSignal["type"].getStr == "status-changed":
+      let signalType = jsonSignal["type"].getStr
+      
+      if signalType == "status-changed":
         let keycardEvent = jsonSignal["event"].toKeycardEventDto()
-
         self.events.emit(SIGNAL_KEYCARD_STATE_UPDATED, KeycardEventArg(keycardEvent: keycardEvent))
+      elif signalType == "channel-state-changed":
+        let state = jsonSignal["event"]["state"].getStr
+        debug "keycardV2 service: emitting channel state update", state=state, signal=SIGNAL_KEYCARD_CHANNEL_STATE_UPDATED
+        self.events.emit(SIGNAL_KEYCARD_CHANNEL_STATE_UPDATED, KeycardChannelStateArg(state: state))
     except Exception as e:
       error "error receiving a keycard signal", err=e.msg, data = signal
 

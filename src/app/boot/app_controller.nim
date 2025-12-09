@@ -40,6 +40,7 @@ import app_service/service/market/service as market_service
 import app/modules/onboarding/module as onboarding_module
 import app/modules/onboarding/post_onboarding/[keycard_replacement_task, keycard_convert_account, save_biometrics_task]
 import app/modules/main/module as main_module
+import app/modules/keycard_channel/module as keycard_channel_module
 import app/core/notifications/notifications_manager
 import app/global/global_singleton
 import app/global/app_signals
@@ -105,6 +106,7 @@ type
     # Modules
     onboardingModule: onboarding_module.AccessInterface
     mainModule: main_module.AccessInterface
+    keycardChannelModule: keycard_channel_module.AccessInterface
 
 #################################################
 # Forward declaration section
@@ -233,6 +235,7 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   result.marketService = market_service.newService(statusFoundation.events, result.settingsService)
 
   # Modules
+  result.keycardChannelModule = keycard_channel_module.newModule(statusFoundation.events)
   result.onboardingModule = onboarding_module.newModule[AppController](
     result,
     statusFoundation.events,
@@ -299,6 +302,9 @@ proc delete*(self: AppController) =
     self.onboardingModule.delete
     self.onboardingModule = nil
   self.mainModule.delete
+  if not self.keycardChannelModule.isNil:
+    self.keycardChannelModule.delete
+    self.keycardChannelModule = nil
 
   self.appSettingsVariant.delete
   self.localAppSettingsVariant.delete
@@ -345,6 +351,9 @@ proc initializeQmlContext(self: AppController) =
   singletonInstance.engine.setRootContextProperty("localAccountSettings", self.localAccountSettingsVariant)
   singletonInstance.engine.setRootContextProperty("globalUtils", self.globalUtilsVariant)
   singletonInstance.engine.setRootContextProperty("metrics", self.metricsVariant)
+
+  # Load keycard channel module (available before login for Session API)
+  self.keycardChannelModule.load()
 
   singletonInstance.engine.load(newQUrl("qrc:///main.qml"))
 
