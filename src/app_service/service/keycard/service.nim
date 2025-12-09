@@ -151,8 +151,15 @@ QtObject:
     return seedPhrase
 
   proc updateLocalPayloadForCurrentFlow(self: Service, obj: JsonNode, cleanBefore = false) {.featureGuard(KEYCARD_ENABLED).}  =
+    # CRITICAL FIX: Check if obj is the same reference as setPayloadForCurrentFlow
+    # This happens when onTimeout calls startFlow(self.setPayloadForCurrentFlow)
+    # If we iterate and modify the same object, the iterator gets corrupted!
+    if cast[pointer](obj) == cast[pointer](self.setPayloadForCurrentFlow):
+      return
+    
     if cleanBefore:
       self.setPayloadForCurrentFlow = %* {}
+    
     for k, v in obj:
       self.setPayloadForCurrentFlow[k] = v
 

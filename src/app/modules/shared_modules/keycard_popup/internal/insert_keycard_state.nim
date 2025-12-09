@@ -43,6 +43,20 @@ method resolveKeycardNextState*(self: InsertKeycardState, keycardFlowType: strin
       return nil
   if keycardFlowType == ResponseTypeValueCardInserted:
     controller.setKeycardData(updatePredefinedKeycardData(controller.getKeycardData(), PredefinedKeycardData.WronglyInsertedCard, add = false))
+    
+    # Special handling for LoadAccount flow - return to the state we came from
+    # (RepeatPin or PinSet) to continue waiting for ENTER_MNEMONIC event
+    if (self.flowType == FlowType.SetupNewKeycard or
+        self.flowType == FlowType.SetupNewKeycardNewSeedPhrase or
+        self.flowType == FlowType.SetupNewKeycardOldSeedPhrase) and
+       controller.getCurrentKeycardServiceFlow() == KCSFlowType.LoadAccount and
+       not self.getBackState.isNil:
+          let backStateType = self.getBackState.stateType
+          if backStateType == StateType.RepeatPin or backStateType == StateType.PinSet:
+            # Return to the previous state to continue waiting for mnemonic entry
+            return self.getBackState
+    
+    # Default behavior for other flows
     if self.flowType == FlowType.SetupNewKeycard:
       return createState(StateType.KeycardInserted, self.flowType, self.getBackState)
     return createState(StateType.KeycardInserted, self.flowType, nil)

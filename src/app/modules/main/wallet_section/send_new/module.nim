@@ -189,7 +189,7 @@ method authenticateAndTransfer*(self: Module, uuid: string, fromAddr: string) =
     self.controller.authenticate()
 
 method onUserAuthenticated*(self: Module, password: string, pin: string) =
-  if password.len == 0:
+  if password.len == 0 and pin.len == 0:
     self.transactionWasSent(uuid = self.tmpSendTransactionDetails.uuid, chainId = 0, approvalTx = false, txHash = "", error = authenticationCanceled)
     self.clearTmpData()
   else:
