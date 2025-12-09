@@ -32,3 +32,27 @@ method executeCancelCommand*(self: PinSetState, controller: Controller) =
     self.flowType == FlowType.SetupNewKeycardOldSeedPhrase or
     self.flowType == FlowType.UnlockKeycard:
       controller.terminateCurrentFlow(lastStepInTheCurrentFlow = false)
+
+method resolveKeycardNextState*(self: PinSetState, keycardFlowType: string, keycardEvent: KeycardEvent, 
+  controller: Controller): State =
+  # Handle temporary card disconnection during LoadAccount flow (after card initialization)
+  # This can happen if the user hasn't tapped "Continue" yet and the card disconnects
+  if self.flowType == FlowType.SetupNewKeycard or
+    self.flowType == FlowType.SetupNewKeycardNewSeedPhrase or
+    self.flowType == FlowType.SetupNewKeycardOldSeedPhrase:
+      # INSERT_CARD during LoadAccount flow means card is reconnecting after initialization
+      if keycardFlowType == ResponseTypeValueInsertCard and 
+        keycardEvent.error.len > 0 and
+        keycardEvent.error == ErrorConnection and
+        controller.getCurrentKeycardServiceFlow() == KCSFlowType.LoadAccount:
+          # Don't cancel the flow - transition to InsertKeycard state and wait for reconnection
+          controller.reRunCurrentFlowLater()
+          return createState(StateType.InsertKeycard, self.flowType, self)
+      # CARD_INSERTED after temporary disconnection - stay in PinSet and continue
+      if keycardFlowType == ResponseTypeValueCardInserted and
+        controller.getCurrentKeycardServiceFlow() == KCSFlowType.LoadAccount:
+          # Card reconnected successfully, stay in PinSet
+          return nil
+  
+  # No specific handling needed - this state transitions via primary button
+  return nil

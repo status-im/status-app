@@ -42,6 +42,25 @@ method executeCancelCommand*(self: RepeatPinState, controller: Controller) =
      
 method resolveKeycardNextState*(self: RepeatPinState, keycardFlowType: string, keycardEvent: KeycardEvent, 
   controller: Controller): State =
+  # Handle temporary card disconnection during LoadAccount flow (after card initialization)
+  # This happens on Android/iOS when card is disconnected and needs to be re-detected
+  if self.flowType == FlowType.SetupNewKeycard or
+    self.flowType == FlowType.SetupNewKeycardNewSeedPhrase or
+    self.flowType == FlowType.SetupNewKeycardOldSeedPhrase:
+      # INSERT_CARD during LoadAccount flow means card is reconnecting after initialization
+      if keycardFlowType == ResponseTypeValueInsertCard and 
+        keycardEvent.error.len > 0 and
+        keycardEvent.error == ErrorConnection and
+        controller.getCurrentKeycardServiceFlow() == KCSFlowType.LoadAccount:
+          # Don't cancel the flow - transition to InsertKeycard state and wait for reconnection
+          controller.reRunCurrentFlowLater()
+          return createState(StateType.InsertKeycard, self.flowType, self)
+      # CARD_INSERTED after temporary disconnection - stay in RepeatPin and continue waiting
+      if keycardFlowType == ResponseTypeValueCardInserted and
+        controller.getCurrentKeycardServiceFlow() == KCSFlowType.LoadAccount:
+          # Card reconnected successfully, continue waiting for ENTER_MNEMONIC event
+          return nil
+  
   let state = ensureReaderAndCardPresence(self, keycardFlowType, keycardEvent, controller)
   if not state.isNil:
     return state
