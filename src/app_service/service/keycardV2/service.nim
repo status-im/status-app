@@ -262,6 +262,9 @@ QtObject:
     except Exception as e:
       error "error storing metadata", err=e.msg
 
+  proc startDetection*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
+    self.asyncStart(status_const.KEYCARDPAIRINGDATAFILE)
+
   proc delete*(self: Service) =
     self.QObject.delete
 

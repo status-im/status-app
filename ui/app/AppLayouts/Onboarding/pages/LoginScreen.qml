@@ -91,6 +91,7 @@ OnboardingPage {
     signal unblockWithSeedphraseRequested()
     signal unblockWithPukRequested()
     signal lostKeycardFlowRequested()
+    signal keycardRequested()
 
     QtObject {
         id: d
@@ -103,6 +104,12 @@ OnboardingPage {
 
         readonly property int loginModelCount: root.loginAccountsModel.ModelCount.count
         onLoginModelCountChanged: setSelectedLoginUser()
+
+        onCurrentProfileIsKeycardChanged: {
+            if (d.currentProfileIsKeycard) {
+                root.keycardRequested()
+            }
+        }
 
         function setSelectedLoginUser() {
             if (loginModelCount > 0) {
