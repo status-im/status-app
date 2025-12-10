@@ -52,7 +52,7 @@ A release is considered ready to be cut when all **Key** features are **Done**.
 
 A **Key** feature is a feature identified on the [Roadmap](https://github.com/status-im/status-app/blob/master/docs/roadmap.md) as the most important features for that release.
 
-A feature is considered **Done** when all issues of its Epic are closed. An Epic **must** include a testing issue, where one of the dev who worked on the issue meets with one of the designers and/or the Product Manager to demo the issue. Designers and/or the PM **should** open any issue they find on the new feature.
+A feature is considered **Done** when all issues of its Epic are closed. An Epic **must** include a testing issue, where one of the dev who worked on the issue meets with one of the designers and/or the Product Manager to demo the issue. Designers and/or the PM **should** open any issue they find on the new feature. Refer to the [Epic Delivery Workflow guide](/docs/internal/epic-delivery-workflow.md) for the full rundown.
 
 #### What happens to the other features not ready at the time of the release cut?
 
