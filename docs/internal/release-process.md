@@ -34,7 +34,7 @@ This guide is meant to explain the flow and rules of the release process, ie the
 
 9.  Fixes for issues identified during the RC phase **must** be worked on and committed on the release branch **first**.
 
-10. Once a fix has been applied to the release branch, it **must** be ported to the master branch.
+10. Once a fix has been applied to the release branch, it **must** be ported to the master branch by the author of the commit.
 
 11. A new RC build **can** be triggered every day, if there are new fixes in the release branch.
 
