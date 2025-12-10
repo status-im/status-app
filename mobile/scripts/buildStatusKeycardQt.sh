@@ -6,12 +6,12 @@ BASEDIR=$(dirname "$0")
 # Load common config variables
 source "${BASEDIR}/commonCmakeConfig.sh"
 
-STATUS_KEYCARD_QT=${STATUS_KEYCARD_QT:="/Users/alexjbanca/Repos/status-keycard-qt-status"}
-KEYCARD_QT=${KEYCARD_QT:="/Users/alexjbanca/Repos/keycard-qt-status"}
+STATUS_KEYCARD_QT=${STATUS_KEYCARD_QT:="../vendors/status-desktop"}
+KEYCARD_QT=${KEYCARD_QT:=""}
 LIB_DIR=${LIB_DIR}
 LIB_EXT=${LIB_EXT:=".a"}
 
-BUILD_DIR="${STATUS_KEYCARD_QT}/build/${OS}/${ARCH}"
+BUILD_DIR=${BUILD_DIR:="${STATUS_KEYCARD_QT}/build/${OS}/${ARCH}"}
 BUILD_SHARED_LIBS=ON
 
 if [[ "${LIB_EXT}" == ".a" ]]; then
