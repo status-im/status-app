@@ -27,8 +27,12 @@ Estimated release: Early February
 #### Features
 
 - [Mobile feature parity](https://github.com/status-im/status-desktop/issues/19530)
-  - In Progress ⏳
-  - Includes the features that are missing from out current Mobile app that the one had, like Push notifications, Keycard, etc.
+  - Includes:
+    - [Keycard support](https://github.com/status-im/status-app/issues/19531): In Progress ⏳🟩🟩🟩⬜⬜ 50%
+    - [Push Notifications](https://github.com/status-im/status-app/issues/19532)
+    - [Deep Links Support](https://github.com/status-im/status-app/issues/19533)
+    - [QR Code scanning](https://github.com/status-im/status-app/issues/19534)
+    - [UI Zoom setting](https://github.com/status-im/status-app/issues/18265)
 - [Mobile Dapp Browser](https://github.com/status-im/status-desktop/issues/19535)
   - In Progress ⏳
 - Polish [Desktop Dapp Browser](https://github.com/status-im/status-desktop/issues/19246)
@@ -37,7 +41,12 @@ Estimated release: Early February
 - [Privacy mode](https://github.com/status-im/status-desktop/issues/17619)
   - [FURPS](/docs/FURPS/privacy-mode.md)
   - In Progress ⏳ 🟩🟩🟩🟩⬜ 88%
+- [Improve Token List and Support custom tokens](https://github.com/status-im/status-desktop/issues/19517)
+  - In Progress ⏳
+  - Merged. Testing and fixing is in progress
 - [Chat Input Field UX Improvements](https://github.com/status-im/status-desktop/issues/19524)
+- [Activity Center revamp](https://github.com/status-im/status-app/issues/18516)
+  - In Progress ⏳ 🟩🟨⬜⬜⬜ 33%
 - [Unified Adaptive Navigation System](https://github.com/status-im/status-desktop/issues/19458)
 - [Standardized approach for Popups / Menus / Dropdowns](https://github.com/status-im/status-desktop/issues/19493)
 - [Color System Revamp](https://github.com/status-im/status-desktop/issues/19455) - Improved Dark Mode & Updated Palettes
@@ -45,9 +54,6 @@ Estimated release: Early February
 - [Memory and Performance improvements](https://github.com/status-im/status-desktop/issues/18296)
   - No provided FURPS at the moment as this is mostly about profiling and fixing issues found.
   - In Progress ⏳ 🟩🟩🟩⬜⬜ 64%
-- [Improve Token List and Support custom tokens](https://github.com/status-im/status-desktop/issues/19517)
-  - In Progress ⏳
-  - Merged. Testing and fixing is in progress
 - [Private Transactions POC](https://github.com/status-im/status-desktop/issues/19539)
 - [Backend refactor](https://github.com/status-im/status-go/issues/6435) 
   - Runs parallel to other features and doesn't need to be shipped to any particular milestones
