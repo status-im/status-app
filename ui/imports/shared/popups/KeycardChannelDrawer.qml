@@ -226,7 +226,7 @@ StatusDialog {
                 opacity: d.displayState === d.stateWaitingForCard ? 1 : 0
                 
                 iconSource: Assets.png("onboarding/carousel/keycard")
-                title: qsTr("Insert Keycard")
+                title: qsTr("Ready to scan")
                 description: qsTr("Please tap your Keycard to the back of your device")
                 
                 Behavior on opacity {
