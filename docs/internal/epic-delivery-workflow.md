@@ -54,6 +54,8 @@ This guide documents the optimal steps to create and work on Feature Epics in a 
     * UI components / Interactions / Edge states
     * Integration work
     * Non-visual logic affected by UI
+    * Automation test to be implemented by a QA engineer
+    * Design QA task
 * The Dev owner assigns subtasks within the team (if needed) and starts implementation.
 * It should have acceptance criteria
 
@@ -61,7 +63,6 @@ This guide documents the optimal steps to create and work on Feature Epics in a 
 ## 5. Design QA (Post-Implementation Review)
 
 * Once the implementation is complete, **Dev notifies Design**.
-* A **Design QA task** is created within the epic for tracking.
 * Designer reviews the built feature to ensure:
     * Visual fidelity
     * Correct interactions
