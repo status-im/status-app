@@ -778,5 +778,10 @@ Window {
 
     MobileUI {
         id: mobileUI
+
+        onDeepLinkActivated: url => {
+            console.info("Deep link activated:", url)
+            Global.openLinkWithConfirmation(url, StatusQUtils.StringUtils.extractDomainFromLink(url))
+        }
     }
 }
