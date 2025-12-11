@@ -124,19 +124,14 @@ StatusSectionLayout {
             id: activityCenterTopBar
 
             Layout.fillWidth: true
-            unreadNotificationsCount: activityCenterStore.unreadNotificationsCount
             hasAdmin: activityCenterStore.adminCount > 0
             hasReplies: activityCenterStore.repliesCount > 0
             hasMentions: activityCenterStore.mentionsCount > 0
             hasContactRequests: activityCenterStore.contactRequestsCount > 0
             hasMembership: activityCenterStore.membershipCount > 0
-            hideReadNotifications: activityCenterStore.activityCenterReadType === ActivityCenterStore.ActivityCenterReadType.Unread
             activeGroup: activityCenterStore.activeNotificationGroup
-            onGroupTriggered: activityCenterStore.setActiveNotificationGroup(group)
-            onMarkAllReadClicked: activityCenterStore.markAllActivityCenterNotificationsRead()
-            onShowHideReadNotifications: activityCenterStore.setActivityCenterReadType(hideReadNotifications ?
-                                                                                           ActivityCenterStore.ActivityCenterReadType.Unread :
-                                                                                           ActivityCenterStore.ActivityCenterReadType.All)
+
+            onSetActiveGroupRequested: activityCenterStore.setActiveNotificationGroup(group)
         }
 
         StatusListView {
