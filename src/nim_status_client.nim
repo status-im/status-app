@@ -213,6 +213,7 @@ proc mainProc() =
 
   let singleInstance = newSingleInstance(($keccak256.digest(DATADIR))[0..31], openUri)
   let urlSchemeEvent = newStatusUrlSchemeEventObject()
+  urlSchemeEvent.setInstance()
   # init url manager before app controller
   statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri)
 

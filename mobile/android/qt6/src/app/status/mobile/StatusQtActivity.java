@@ -13,6 +13,12 @@ public class StatusQtActivity extends QtActivity {
     private static final AtomicBoolean splashShouldHide = new AtomicBoolean(false);
     private static StatusQtActivity sInstance = null;
 
+    private static final AtomicBoolean userLoggedIn = new AtomicBoolean(false);
+    private static String savedDeepLink = null;
+
+    // JNI hook: implemented in native code to forward deep links to Qt
+    private static native void passDeepLinkToQt(String deepLink);
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,6 +30,8 @@ public class StatusQtActivity extends QtActivity {
         }
         // Set up shake detection (used for share-on-shake)
         ShakeDetector.start(this);
+
+        handleDeepLink(getIntent());
     }
 
     @Override
@@ -39,6 +47,13 @@ public class StatusQtActivity extends QtActivity {
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLink(intent);
+    }
+
+    @Override
     protected void onDestroy() {
         sInstance = null;
         super.onDestroy();
@@ -47,6 +62,24 @@ public class StatusQtActivity extends QtActivity {
     // Called from Qt via JNI when main window is visible
     public static void hideSplashScreen() {
         splashShouldHide.set(true);
+        userLoggedIn.set(true);
+        if (savedDeepLink != null) {
+            passDeepLinkToQt(savedDeepLink);
+            savedDeepLink = null;
+        }
+    }
+
+    private void handleDeepLink(Intent intent) {
+        if (intent == null) return;
+        String action = intent.getAction();
+        Uri data = intent.getData();
+        if (Intent.ACTION_VIEW.equals(action) && data != null) {
+            if (!userLoggedIn.get()) {
+                savedDeepLink = data.toString();
+                return;
+            }
+            passDeepLinkToQt(data.toString());
+        }
     }
 
     // Static method to open app settings

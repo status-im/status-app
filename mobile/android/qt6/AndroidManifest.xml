@@ -52,26 +52,33 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-          <meta-data
+            <meta-data
                 android:name="android.app.lib_name"
                 android:value="@string/lib_name" />
 
-          <meta-data
+            <meta-data
                 android:name="android.app.arguments"
                 android:value="" />
 
-          <!-- Required for Qt6 to properly detect and load native libraries -->
-          <meta-data
-                android:name="android.app.system_libs_prefix"
-                android:value="/system/lib64/" />
+            <!-- Required for Qt6 to properly detect and load native libraries -->
+            <meta-data
+                    android:name="android.app.system_libs_prefix"
+                    android:value="/system/lib64/" />
 
-          <meta-data
-                android:name="android.app.use_local_qt_libs"
-                android:value="1" />
+            <meta-data
+                    android:name="android.app.use_local_qt_libs"
+                    android:value="1" />
 
-          <meta-data
-                android:name="android.app.bundle_local_qt_libs"
-                android:value="1" />
+            <meta-data
+                    android:name="android.app.bundle_local_qt_libs"
+                    android:value="1" />
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="status-app" />
+            </intent-filter>
         </activity>
 
         <provider
