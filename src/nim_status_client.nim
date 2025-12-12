@@ -20,8 +20,8 @@ featureGuard KEYCARD_ENABLED:
   var keycardServiceQObjPointer: pointer
   var keycardServiceV2QObjPointer: pointer
 
-when defined(android):
-  import app/android/push_notifications
+when defined(android) or defined(ios):
+  import app/mobile/push_notifications
 
 when defined(macosx) and defined(arm64):
   import posix
@@ -255,9 +255,9 @@ proc mainProc() =
 
   statusq_registerQmlTypes()
   
-  # Initialize push notifications (Android only)
-  when defined(android):
-    initializeAndroidPushNotifications()
+  # Initialize push notifications (Android/iOS)
+  when defined(android) or defined(ios):
+    initializeMobilePushNotifications()
 
   app.installEventFilter(urlSchemeEvent)
 

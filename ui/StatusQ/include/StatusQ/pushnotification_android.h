@@ -12,8 +12,11 @@ extern "C" {
 #endif
 
 // C API for Nim integration
+#ifndef PUSH_NOTIFICATION_CALLBACKS_DEFINED
+#define PUSH_NOTIFICATION_CALLBACKS_DEFINED
 typedef void (*PushNotificationTokenCallback)(const char* token);
 typedef void (*PushNotificationReceivedCallback)(const char* encryptedMessage, const char* chatId, const char* publicKey);
+#endif
 
 /**
  * Initialize push notifications with callbacks

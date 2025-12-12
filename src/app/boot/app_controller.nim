@@ -48,8 +48,8 @@ import app/core/[main]
 
 import constants as main_constants
 
-when defined(android):
-  import app/android/push_notifications
+when defined(android) or defined(ios):
+  import app/mobile/push_notifications
 
 logScope:
   topics = "app-controller"
@@ -443,7 +443,7 @@ proc userLoggedIn*(self: AppController): string =
     self.generalService.startMessenger()
     
     # After messenger is started, register push notification token if available
-    when defined(android):
+    when defined(android) or defined(ios):
       discard registerPushNotificationToken()
     
     return ""

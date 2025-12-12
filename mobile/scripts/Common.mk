@@ -37,6 +37,7 @@ STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/vendor/status-keycard-qt
 
 # compile macros
 TARGET_PREFIX := Status
+TARGET_SUFFIX := $(shell if [[ "$(OS)" == "ios" && "$(BUILD_VARIANT)" == "pr" ]]; then echo "PR"; else echo ""; fi)
 
 # Default package type for Android builds
 PACKAGE_TYPE ?= apk
@@ -48,7 +49,7 @@ else
 EXTENSION := apk
 endif
 
-TARGET_NAME := $(TARGET_PREFIX).$(EXTENSION)
+TARGET_NAME := $(TARGET_PREFIX)$(TARGET_SUFFIX).$(EXTENSION)
 TARGET := $(BIN_PATH)/$(TARGET_NAME)
 
 # src files & obj files

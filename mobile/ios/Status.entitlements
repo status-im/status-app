@@ -2,15 +2,29 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- NFC Tag Reading Capability -->
-	<!-- Required for reading NFC tags (Keycard) on iOS -->
-	<key>com.apple.developer.nfc.readersession.formats</key>
-	<array>
-		<string>TAG</string>
-	</array>
+    <!-- Push Notifications Entitlement -->
+    <key>aps-environment</key>
+    <string>development</string>
+    
+    <!-- NFC Capability (for Keycard support) -->
+    <!-- NOTE: Requires PAID Apple Developer account -->
+    <key>com.apple.developer.nfc.readersession.formats</key>
+    <array>
+        <string>TAG</string>
+    </array>
+    
+    <!-- Keychain Sharing (if needed for shared credentials) -->
+    <key>keychain-access-groups</key>
+    <array>
+        <!-- Keep in sync with the app bundle id (e.g. app.status.mobile or app.status.mobile.pr) -->
+        <string>$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    </array>
+    
+    <!-- App Groups (if needed for shared data between app and extensions) -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <!-- Keep in sync with the app bundle id (e.g. group.app.status.mobile or group.app.status.mobile.pr) -->
+        <string>group.$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    </array>
 </dict>
 </plist>
-
-
-
-
