@@ -313,3 +313,18 @@ rpc(fetchMarketTokenPageAsync, "wallet"):
 
 rpc(unsubscribeFromLeaderboard, "wallet"):
   discard
+
+# Push Notifications  
+rpc(registerForPushNotifications, "wakuext"):
+  deviceToken: string
+  apnTopic: string
+  tokenType: int
+
+rpc(unregisterFromPushNotifications, "wakuext"):
+  discard
+
+rpc(enablePushNotificationsFromContactsOnly, "wakuext"):
+  discard
+
+rpc(disablePushNotificationsFromContactsOnly, "wakuext"):
+  discard

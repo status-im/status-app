@@ -20,6 +20,9 @@ featureGuard KEYCARD_ENABLED:
   var keycardServiceQObjPointer: pointer
   var keycardServiceV2QObjPointer: pointer
 
+when defined(android):
+  import app/android/push_notifications
+
 when defined(macosx) and defined(arm64):
   import posix
 
@@ -251,6 +254,10 @@ proc mainProc() =
   singletonInstance.engine.setRootContextProperty("featureFlagsRootContextProperty", newQVariant(singletonInstance.featureFlags()))
 
   statusq_registerQmlTypes()
+  
+  # Initialize push notifications (Android only)
+  when defined(android):
+    initializeAndroidPushNotifications()
 
   app.installEventFilter(urlSchemeEvent)
 

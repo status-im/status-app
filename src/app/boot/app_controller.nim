@@ -48,6 +48,9 @@ import app/core/[main]
 
 import constants as main_constants
 
+when defined(android):
+  import app/android/push_notifications
+
 logScope:
   topics = "app-controller"
 
@@ -438,6 +441,11 @@ proc load(self: AppController) =
 proc userLoggedIn*(self: AppController): string =
   try:
     self.generalService.startMessenger()
+    
+    # After messenger is started, register push notification token if available
+    when defined(android):
+      discard registerPushNotificationToken()
+    
     return ""
   except Exception as e:
     let errDescription = e.msg

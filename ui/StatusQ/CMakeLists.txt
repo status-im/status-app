@@ -186,6 +186,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/typesregistration.h
         include/StatusQ/undefinedfilter.h
         include/StatusQ/urlutils.h
+        include/StatusQ/pushnotification_android.h
         src/audioutils.cpp
         src/clipboardutils.cpp
         src/constantrole.cpp
@@ -250,6 +251,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE
         src/keychain_android.cpp
         src/safutils_android.cpp
+        src/pushnotification_android.cpp
     )
 else ()
     target_sources(StatusQ PRIVATE
