@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
 import StatusQ.Core
@@ -7,18 +8,16 @@ import StatusQ.Components
 import StatusQ.Popups
 import StatusQ.Controls
 
-Item {
+Control {
     id: root
 
     property alias content: contentLoader.sourceComponent
-    property color arrowsGradientColor: Theme.palette.statusAppLayout.backgroundColor
+    property color gradientColor: Theme.palette.statusAppLayout.backgroundColor
+    property bool showIcon: true
 
-    implicitHeight: contentLoader.height
-
-    StatusScrollView {
+    contentItem: StatusScrollView {
         id: roll
 
-        anchors.fill: parent
         padding: 0
         contentWidth: contentLoader.width
 
@@ -33,7 +32,8 @@ Item {
         anchors.left: parent.left
         height: parent.height
         visible: roll.flickable.contentX > 0
-        gradientColor: root.arrowsGradientColor
+        gradientColor: root.gradientColor
+        showIcon: root.showIcon
 
         onClicked: roll.flickable.flick(roll.width, 0)
     }
@@ -42,8 +42,9 @@ Item {
         anchors.right: parent.right
         height: parent.height
         visible: roll.flickable.contentX + roll.width < roll.contentWidth
-        gradientColor: root.arrowsGradientColor
+        gradientColor: root.gradientColor
         navigateForward: true
+        showIcon: root.showIcon
 
         onClicked: roll.flickable.flick(-roll.width, 0)
     }

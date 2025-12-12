@@ -9,16 +9,17 @@ Button {
 
     property color gradientColor: Theme.palette.statusAppLayout.backgroundColor
     property bool navigateForward: false
+    property bool showIcon: true
 
-    width: height * 2
+    implicitWidth: root.showIcon ? height * 2 : Theme.bigPadding
     padding: 0
     hoverEnabled: true
 
     background: Rectangle {
         gradient: Gradient {
             orientation: Gradient.Horizontal
-            GradientStop { position: navigateForward ? 0.0 : 1.0; color: "transparent" }
-            GradientStop { position: 0.5; color: root.gradientColor }
+            GradientStop { position: 0.0; color: navigateForward ? "transparent" : root.gradientColor }
+            GradientStop { position: 1.0; color: navigateForward ? root.gradientColor : "transparent" }
         }
     }
 
@@ -30,8 +31,8 @@ Button {
             width: parent.height
             height: width
             color: Theme.palette.primaryColor1
+            visible: root.showIcon
         }
-
 
         // otherwise there is no pointing hand cursor when button is hovered
         StatusMouseArea {

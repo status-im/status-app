@@ -402,7 +402,7 @@ Rectangle {
                 id: tagsListComponent
                 StatusRollArea {
                     implicitWidth: d.cardWidth
-                    arrowsGradientColor: d.cardColor
+                    gradientColor: d.cardColor
 
                     // TODO: Replace by `StatusListItemTagRow` - To be done!
                     content: Row {
