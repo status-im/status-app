@@ -5,5 +5,5 @@ import QtQml
 QtObject {
     id: root
 
-    property bool testMode: true
+    property bool testMode: @TEST_MODE@
 }
