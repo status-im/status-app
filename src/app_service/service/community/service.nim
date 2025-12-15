@@ -528,8 +528,10 @@ QtObject:
         self.communities[community.id] = community
         self.events.emit(SIGNAL_COMMUNITY_ADDED, CommunityArgs(community: community))
 
-        if (community.joined and community.isMember):
+        if community.joined and community.isMember:
           self.events.emit(SIGNAL_COMMUNITY_JOINED, CommunityArgs(community: community, fromUserAction: false))
+        elif community.spectated:
+          self.events.emit(SIGNAL_COMMUNITY_SPECTATED, CommunityArgs(community: community, fromUserAction: false, isPendingOwnershipRequest: false))
         return
 
       let prevCommunity = self.communities[community.id]
@@ -553,6 +555,12 @@ QtObject:
             self.updateMemberRole(chat.id, currOwner)
       except Exception:
         discard
+
+      # community was joined
+      if not prevCommunity.joined and community.joined:
+        self.events.emit(SIGNAL_COMMUNITY_JOINED, CommunityArgs(community: community, fromUserAction: false))
+      elif not prevCommunity.spectated and community.spectated:
+        self.events.emit(SIGNAL_COMMUNITY_SPECTATED, CommunityArgs(community: community, fromUserAction: false, isPendingOwnershipRequest: false))
 
       # ownership lost
       if prevCommunity.isOwner and not community.isOwner:
