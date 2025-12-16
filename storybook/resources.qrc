@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
+        <file>PageOverlay.qml</file>
+        <file>PageOverlayPanel.qml</file>
         <file>main.qml</file>
     </qresource>
 </RCC>
