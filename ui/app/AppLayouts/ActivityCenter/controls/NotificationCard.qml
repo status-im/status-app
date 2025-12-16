@@ -194,10 +194,10 @@ Control {
 
     // Card background and unread indicator.
     background: Rectangle {
-        id: bg
-        anchors.fill: parent
         radius: Theme.radius
-        color: root.selected || root.hovered ? Theme.palette.baseColor5 : StatusColors.transparent
+        color: StatusColors.transparent
+        border.width: 2
+        border.color: root.selected || (root.hovered && root.enabled) ? Theme.palette.primaryColor1 : StatusColors.transparent
 
          // Unread indicator dot (top-right).
         Rectangle {
@@ -294,9 +294,10 @@ Control {
 
     // Full-card click target
     MouseArea {
-        z: 1
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
+        hoverEnabled: false
+        enabled: root.enabled
 
         onClicked: root.clicked()
     }
