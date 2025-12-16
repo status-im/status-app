@@ -8,12 +8,12 @@ logScope:
 type
   ConnectorCallRPCTaskArg* = ref object of QObjectTaskArg
     requestId*: int
-    message*: string
+    message*: JsonNode
 
 proc connectorCallRPCTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[ConnectorCallRPCTaskArg](argEncoded)
   try:
-    let rpcResponse = status_go.connectorCallRPC(arg.message)
+    let rpcResponse = status_go.connectorCallRPC($arg.message)
     let responseJson = %* {
       "requestId": arg.requestId,
       "result": rpcResponse.result,

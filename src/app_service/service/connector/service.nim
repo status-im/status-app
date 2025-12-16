@@ -252,16 +252,23 @@ QtObject:
 
   proc connectorCallRPC*(self: Service, requestId: int, message: string) =
     try:
+      var messageJson: JsonNode
+      try:
+        messageJson = parseJson(message)
+      except JsonParsingError as e:
+        error "connectorCallRPC: invalid JSON message", requestId=requestId, error=e.msg, messagePreview=message[0..min(200, message.len-1)]
+        return
+
       let arg = ConnectorCallRPCTaskArg(
         tptr: connectorCallRPCTask,
         vptr: cast[uint](self.vptr),
         slot: "onConnectorCallRPCResolved",
         requestId: requestId,
-        message: message
+        message: messageJson
       )
       self.threadpool.start(arg)
-    except:
-      error "connectorCallRPC: starting async background task failed", requestId=requestId
+    except Exception as e:
+      error "connectorCallRPC: starting async background task failed", requestId=requestId, error=e.msg
 
   proc changeAccount*(self: Service, url: string, clientId: string, newAccount: string): bool =
     try:
