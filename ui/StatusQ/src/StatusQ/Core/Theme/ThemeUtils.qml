@@ -56,25 +56,38 @@ QtObject {
         }
     }
 
+    readonly property int fontSizeOffsetXS: -2
+    readonly property int fontSizeOffsetS: -1
+    readonly property int fontSizeOffsetM: 0
+    readonly property int fontSizeOffsetL: 1
+    readonly property int fontSizeOffsetXL: 2
+    readonly property int fontSizeOffsetXXL: 3
+
+    readonly property real paddingFactorXXS: 0.4
+    readonly property real paddingFactorXS: 0.6
+    readonly property real paddingFactorS: 0.8
+    readonly property real paddingFactorM: 1
+    readonly property real paddingFactorL: 1.2
+
     function setFontSize(target: QtObject, fontSize: int) {
         switch (fontSize) {
             case ThemeUtils.FontSizeXS:
-                target.Theme.fontSizeOffset = -2
+                target.Theme.fontSizeOffset = fontSizeOffsetXS
                 break
             case ThemeUtils.FontSizeS:
-                target.Theme.fontSizeOffset = -1
+                target.Theme.fontSizeOffset = fontSizeOffsetS
                 break
             case ThemeUtils.FontSizeM:
-                target.Theme.fontSizeOffset = 0
+                target.Theme.fontSizeOffset = fontSizeOffsetM
                 break
             case ThemeUtils.FontSizeL:
-                target.Theme.fontSizeOffset = 1
+                target.Theme.fontSizeOffset = fontSizeOffsetL
                 break
             case ThemeUtils.FontSizeXL:
-                target.Theme.fontSizeOffset = 2
+                target.Theme.fontSizeOffset = fontSizeOffsetXL
                 break
             case ThemeUtils.FontSizeXXL:
-                target.Theme.fontSizeOffset = 3
+                target.Theme.fontSizeOffset = fontSizeOffsetXXL
                 break
         }
     }
@@ -82,19 +95,19 @@ QtObject {
     function setPaddingFactor(target: QtObject, paddingFactor: int) {
         switch (paddingFactor) {
         case ThemeUtils.PaddingXXS:
-            target.Theme.padding = target.Theme.defaultPadding * 0.4
+            target.Theme.padding = target.Theme.defaultPadding * paddingFactorXXS
             break
         case ThemeUtils.PaddingXS:
-            target.Theme.padding = target.Theme.defaultPadding * 0.6
+            target.Theme.padding = target.Theme.defaultPadding * paddingFactorXS
             break
         case ThemeUtils.PaddingS:
-            target.Theme.padding = target.Theme.defaultPadding * 0.8
+            target.Theme.padding = target.Theme.defaultPadding * paddingFactorS
             break
         case ThemeUtils.PaddingM:
-            target.Theme.padding = target.Theme.defaultPadding
+            target.Theme.padding = target.Theme.defaultPadding * paddingFactorM
             break
         case ThemeUtils.PaddingL:
-            target.Theme.padding = target.Theme.defaultPadding * 1.2
+            target.Theme.padding = target.Theme.defaultPadding * paddingFactorL
             break
         }
     }
