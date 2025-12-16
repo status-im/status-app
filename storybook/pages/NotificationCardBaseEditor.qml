@@ -16,7 +16,8 @@ Control {
     property int maxCardWidth: 400
 
     background: Rectangle {
-        color: Theme.palette.directColor8
+        color: "lightgray"
+        opacity: 0.2
         radius: 8
     }
 
@@ -28,7 +29,7 @@ Control {
             Layout.topMargin: Theme.padding
             Layout.leftMargin: Theme.padding
             Layout.bottomMargin: Theme.padding
-            text: "LAYOUT AND TEXT SIZES"
+            text: "LAYOUT"
             font.weight: Font.Bold
         }
 
@@ -37,61 +38,6 @@ Control {
             Layout.leftMargin: Theme.padding
             text: "Show Tracer?"
             checked: true
-        }
-
-        Label {
-            text: "Text Size"
-            Layout.leftMargin: Theme.padding
-            font.weight: Font.Bold
-        }
-
-        RadioButton {
-            Layout.leftMargin: Theme.padding
-            text: "XS"
-            onCheckedChanged: {
-                ThemeUtils.setFontSize(Window.window, ThemeUtils.FontSize.FontSizeXS)
-            }
-        }
-
-        RadioButton {
-            Layout.leftMargin: Theme.padding
-            text: "S"
-            onCheckedChanged: {
-                ThemeUtils.setFontSize(Window.window, ThemeUtils.FontSize.FontSizeS)
-            }
-        }
-
-        RadioButton {
-            Layout.leftMargin: Theme.padding
-            text: "M"
-            checked: true
-            onCheckedChanged: {
-                ThemeUtils.setFontSize(Window.window, ThemeUtils.FontSize.FontSizeM)
-            }
-        }
-
-        RadioButton {
-            Layout.leftMargin: Theme.padding
-            text: "L"
-            onCheckedChanged: {
-                ThemeUtils.setFontSize(Window.window, ThemeUtils.FontSize.FontSizeL)
-            }
-        }
-
-        RadioButton {
-            Layout.leftMargin: Theme.padding
-            text: "XL"
-            onCheckedChanged: {
-                ThemeUtils.setFontSize(Window.window, ThemeUtils.FontSize.FontSizeXL)
-            }
-        }
-
-        RadioButton {
-            Layout.leftMargin: Theme.padding
-            text: "XXL"
-            onCheckedChanged: {
-                ThemeUtils.setFontSize(Window.window, ThemeUtils.FontSize.FontSizeXXL)
-            }
         }
 
         Label {

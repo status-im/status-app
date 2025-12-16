@@ -22,7 +22,8 @@ Control {
     property bool fullEditorVisible: true
 
     background: Rectangle {
-        color: Theme.palette.directColor8
+        color: "lightgray"
+        opacity: 0.2
         radius: 8
     }
 

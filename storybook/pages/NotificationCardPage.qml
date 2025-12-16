@@ -106,6 +106,8 @@ SplitView {
         clip: true
 
         Pane {
+            Theme.padding: Theme.defaultPadding
+
             ColumnLayout {
                 width: scroll.width
 
