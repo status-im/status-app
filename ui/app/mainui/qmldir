@@ -4,3 +4,5 @@ SplashScreen 1.0 SplashScreen.qml
 Popups 1.0 Popups.qml
 StatusTrayIcon 1.0 StatusTrayIcon.qml
 DropAreaPanel 1.0 panels/DropAreaPanel.qml
+PrimaryNavSidebar 1.0 panels/PrimaryNavSidebar.qml
+PrimaryNavSidebarButton 1.0 controls/PrimaryNavSidebarButton.qml

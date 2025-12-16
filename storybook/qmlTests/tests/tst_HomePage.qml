@@ -136,7 +136,7 @@ Item {
                             key: "1;0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8884", searchStr: "Fab"}, // Fab
                         {tag: "chat", sectionType: Constants.appSection.chat, key: "2;id1", searchStr: "Punx"}, // 1-1 chat
                         {tag: "group chat", sectionType: Constants.appSection.chat, key: "2;id5", searchStr: "Channel Y_3"}, // group chat
-                        {tag: "community", sectionType: Constants.appSection.community, key: "3;id15", searchStr: "Dribb"}, // Dribble
+                        {tag: "community", sectionType: Constants.appSection.community, key: "3;id106", searchStr: "Dribb"}, // Dribble
                         {tag: "dApp", sectionType: Constants.appSection.dApp, key: "999;https://dapp.test/2", searchStr: "dapp 2"}, // Test dApp 2
                         {tag: "settings", sectionType: Constants.appSection.profile, key: "4;1", searchStr: "passw"}, // Settings/Password
                     ]

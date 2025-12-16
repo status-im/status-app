@@ -133,8 +133,8 @@ Loader {
         anchors.rightMargin: -border.width
         anchors.bottomMargin: -border.width
         border.width: 3
-        implicitHeight: 15
-        implicitWidth: 15
+        height: 15
+        width: 15
         z: root.dZ
     }
 

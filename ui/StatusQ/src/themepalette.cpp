@@ -9,8 +9,9 @@ QColor alpha(QColor c, qreal alpha) {
     return c;
 }
 
-constexpr auto lightThemeName = "light";
-constexpr auto darkThemeName = "dark";
+using namespace Qt::StringLiterals;
+constexpr auto lightThemeName = "light"_L1;
+constexpr auto darkThemeName = "dark"_L1;
 
 } // unnamed namespace
 
@@ -52,6 +53,11 @@ void ThemePalette::buildArrays()
         customisationColors.orange,
         customisationColors.camel
     };
+}
+
+bool ThemePalette::isDark() const
+{
+    return name == darkThemeName;
 }
 
 std::unique_ptr<ThemePalette> createDarkThemePalette(QObject* parent)

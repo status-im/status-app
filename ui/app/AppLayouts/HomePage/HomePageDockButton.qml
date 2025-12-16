@@ -11,7 +11,7 @@ import utils
 
 ToolButton {
     id: root
-    
+
     /*required */property int sectionType // cf Constants.appSection.*
     property bool hasNotification
     property int notificationsCount

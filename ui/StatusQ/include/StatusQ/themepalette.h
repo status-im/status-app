@@ -164,6 +164,8 @@ class ThemePalette : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString name MEMBER name CONSTANT)
 
+    Q_PROPERTY(bool isDark READ isDark CONSTANT)
+
     // Base colors
     Q_PROPERTY(QColor baseColor1 MEMBER baseColor1 CONSTANT)
     Q_PROPERTY(QColor baseColor2 MEMBER baseColor2 CONSTANT)
@@ -287,6 +289,8 @@ public:
 
     Q_INVOKABLE QColor hoverColor(const QColor& normalColor) const;
     void buildArrays();
+
+    bool isDark() const;
 
     // Members
     QString name;

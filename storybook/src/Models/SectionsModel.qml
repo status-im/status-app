@@ -3,7 +3,33 @@ import QtQuick
 import utils
 
 ListModel {
+    id: root
+
+    function setActiveSection(id: string) {
+        const count = root.count
+        for (let i = 0; i < count; i++) {
+            const section = root.get(i)
+            setProperty(i, "active", section.id === id)
+        }
+    }
+
     Component.onCompleted: append([
+    {
+        id: "id0",
+        sectionType: Constants.appSection.homePage,
+        icon: "home",
+        image: "",
+        bannerImageData: "",
+        color: "mediumblue",
+        name: "Home",
+        description: "",
+        allMembers: [],
+        activeMembersCount: 0,
+        enabled: false,
+        hasNotification: false,
+        notificationsCount: 0,
+        active: false
+    },
     {
         id: "id1",
         sectionType: Constants.appSection.chat,
@@ -17,7 +43,8 @@ ListModel {
         activeMembersCount: 0,
         enabled: true,
         hasNotification: true,
-        notificationsCount: 442
+        notificationsCount: 442,
+        active: false
     },
     {
         id: "id2",
@@ -32,7 +59,8 @@ ListModel {
         activeMembersCount: 0,
         enabled: true,
         hasNotification: false,
-        notificationsCount: 0
+        notificationsCount: 0,
+        active: true
     },
     {
         id: "id10",
@@ -47,7 +75,8 @@ ListModel {
         activeMembersCount: 0,
         enabled: true,
         hasNotification: false,
-        notificationsCount: 0
+        notificationsCount: 0,
+        active: false
     },
     {
         id: "id3",
@@ -62,7 +91,8 @@ ListModel {
         activeMembersCount: 0,
         enabled: true,
         hasNotification: true,
-        notificationsCount: 0
+        notificationsCount: 0,
+        active: false
     },
     {
         id: "id4",
@@ -75,9 +105,26 @@ ListModel {
         description: "",
         allMembers: [],
         activeMembersCount: 0,
-        enabled: false,
+        enabled: true,
         hasNotification: false,
-        notificationsCount: 0
+        notificationsCount: 0,
+        active: false
+    },
+    {
+        id: "id42",
+        sectionType: Constants.appSection.activityCenter,
+        icon: "notification",
+        image: "",
+        bannerImageData: "",
+        color: "pink",
+        name: "Activity Center",
+        description: "",
+        allMembers: [],
+        activeMembersCount: 0,
+        enabled: true,
+        hasNotification: true,
+        notificationsCount: 42,
+        active: false
     },
     {
         id: "id5",
@@ -91,8 +138,9 @@ ListModel {
         allMembers: [],
         activeMembersCount: 0,
         enabled: true,
-        hasNotification: true,
-        notificationsCount: 42
+        hasNotification: false,
+        notificationsCount: 0,
+        active: false
     },
     {
         id: "id6",
@@ -107,7 +155,8 @@ ListModel {
         activeMembersCount: 0,
         enabled: true,
         hasNotification: false,
-        notificationsCount: 0
+        notificationsCount: 0,
+        active: false
     },
     {
         id: "id7",
@@ -122,7 +171,8 @@ ListModel {
         activeMembersCount: 0,
         enabled: true,
         hasNotification: false,
-        notificationsCount: 0
+        notificationsCount: 0,
+        active: false
     },
     {
         id: "id8",
@@ -137,10 +187,11 @@ ListModel {
         activeMembersCount: 0,
         enabled: true,
         hasNotification: true,
-        notificationsCount: 0
+        notificationsCount: 0,
+        active: false
     },
     {
-        id: "id9",
+        id: "id100",
         sectionType: Constants.appSection.community,
         icon: "",
         image: ModelsData.icons.status,
@@ -152,10 +203,12 @@ ListModel {
         activeMembersCount: 61,
         enabled: true,
         hasNotification: true,
-        notificationsCount: 3
+        notificationsCount: 3,
+        joined: true,
+        active: false
     },
     {
-        id: "id10",
+        id: "id101",
         sectionType: Constants.appSection.community,
         icon: "",
         image: ModelsData.icons.superRare,
@@ -167,10 +220,11 @@ ListModel {
         activeMembersCount: 4,
         enabled: true,
         hasNotification: true,
-        notificationsCount: 0
+        notificationsCount: 0,
+        active: false
     },
     {
-        id: "id11",
+        id: "id102",
         sectionType: Constants.appSection.community,
         icon: "",
         image: ModelsData.icons.coinbase,
@@ -184,10 +238,11 @@ ListModel {
         hasNotification: false,
         notificationsCount: 0,
         spectated: true,
-        joined: false
+        joined: false,
+        active: false
     },
     {
-        id: "id12",
+        id: "id103",
         sectionType: Constants.appSection.community,
         icon: "",
         image: ModelsData.icons.socks,
@@ -199,10 +254,11 @@ ListModel {
         activeMembersCount: 20,
         enabled: true,
         hasNotification: false,
-        notificationsCount: 33
+        notificationsCount: 33,
+        active: false
     },
     {
-        id: "id13",
+        id: "id104",
         sectionType: Constants.appSection.community,
         icon: "",
         image:  ModelsData.icons.rarible,
@@ -215,10 +271,11 @@ ListModel {
         enabled: true,
         hasNotification: false,
         notificationsCount: 33,
-        amIBanned: true
+        amIBanned: true,
+        active: false
     },
     {
-        id: "id14",
+        id: "id105",
         sectionType: Constants.appSection.community,
         icon: "",
         image: ModelsData.icons.spotify,
@@ -230,10 +287,11 @@ ListModel {
         activeMembersCount: 200,
         enabled: true,
         hasNotification: true,
-        notificationsCount: 0
+        notificationsCount: 0,
+        active: false
     },
     {
-        id: "id15",
+        id: "id106",
         sectionType: Constants.appSection.community,
         icon: "",
         image: ModelsData.icons.dribble,
@@ -245,10 +303,11 @@ ListModel {
         activeMembersCount: 0,
         enabled: true,
         hasNotification: true,
-        notificationsCount: 100
+        notificationsCount: 100,
+        active: false
     },
     {
-        id: "id16",
+        id: "id107",
         sectionType: Constants.appSection.community,
         icon: "",
         image: "",
@@ -260,7 +319,8 @@ ListModel {
         activeMembersCount: 0,
         enabled: true,
         hasNotification: false,
-        notificationsCount: 0
+        notificationsCount: 0,
+        active: false
     },
     ])
 }

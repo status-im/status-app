@@ -100,9 +100,9 @@ public:
     Q_INVOKABLE static QColor getColor(const QString& name, qreal alpha = -1);
     Q_INVOKABLE static QColor alphaColor(const QColor& color, qreal alpha);
 
-    static constexpr QColor black = QColor(0x00, 0x00, 0x00); // #000000
-    static constexpr QColor white = QColor(0xFF, 0xFF, 0xFF); // #FFFFFF
-    static constexpr QColor transparent = QColor(0x00, 0x00, 0x00, 0x00);
+    static constexpr QColor black = QColorConstants::Black; // #000000
+    static constexpr QColor white = QColorConstants::White; // #FFFFFF
+    static constexpr QColor transparent = QColorConstants::Transparent; // #00000000
 
     static constexpr QColor blue = QColor(0x43, 0x60, 0xDF); // #4360DF
     static constexpr QColor blue2 = QColor(0x29, 0x46, 0xC4); // #2946C4

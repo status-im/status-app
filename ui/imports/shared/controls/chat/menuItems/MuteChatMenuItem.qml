@@ -8,7 +8,7 @@ import StatusQ.Popups
 StatusMenu {
     property bool isCommunityChat: false
 
-    signal muteTriggered(interval: int)
+    signal muteTriggered(int interval)
 
     title: isCommunityChat ? qsTr("Mute Channel") : qsTr("Mute Chat")
 
