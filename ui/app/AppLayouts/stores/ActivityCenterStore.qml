@@ -5,12 +5,6 @@ import shared
 QtObject {
     id: root
 
-    enum ActivityCenterReadType {
-        Read = 1,
-        Unread = 2,
-        All = 3
-    }
-
     readonly property var activityCenterModuleInst: activityCenterModule
     readonly property var activityCenterNotifications: activityCenterModuleInst.activityNotificationsModel
 

@@ -63,4 +63,10 @@ QtObject {
         System = 8,
         NewsMessage = 9
     }
+
+    enum ActivityCenterReadType {
+        Read = 1,
+        Unread = 2, // All notifications have been seen
+        All = 3     // Means no notifications
+    }
 }

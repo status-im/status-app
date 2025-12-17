@@ -104,13 +104,13 @@ StatusSectionLayout {
             StatusFlatRoundButton {
                 id: hideReadNotificationsBtn
 
-                property bool hideReadNotifications: activityCenterStore.activityCenterReadType === ActivityCenterStore.ActivityCenterReadType.Unread
+                readonly property bool hideReadNotifications: activityCenterStore.activityCenterReadType === ActivityCenterTypes.ActivityCenterReadType.Unread
 
                 objectName: "hideReadNotificationsButton"
                 icon.name: hideReadNotifications ? "hide" : "show"
                 onClicked: activityCenterStore.setActivityCenterReadType(!hideReadNotifications ?
-                                                                             ActivityCenterStore.ActivityCenterReadType.Unread :
-                                                                             ActivityCenterStore.ActivityCenterReadType.All)
+                                                                             ActivityCenterTypes.ActivityCenterReadType.Unread :
+                                                                             ActivityCenterTypes.ActivityCenterReadType.All)
 
                 StatusToolTip {
                     visible: hideReadNotificationsBtn.hovered
@@ -754,7 +754,7 @@ StatusSectionLayout {
         StatusBaseText {
             // If the mode is unread only, it means the user has seen all notifications
             // If the mode is all, it means the user doesn't have any notifications
-            text: activityCenterStore.activityCenterReadType === ActivityCenterStore.ActivityCenterReadType.Unread ?
+            text: root.activityCenterReadType === ActivityCenterTypes.ActivityCenterReadType.Unread ?
                       qsTr("You're all caught up") :
                       qsTr("Your notifications will appear here")
             horizontalAlignment: Text.AlignHCenter
