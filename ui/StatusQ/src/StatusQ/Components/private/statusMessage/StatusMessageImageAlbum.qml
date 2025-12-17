@@ -45,7 +45,9 @@ RowLayout {
     QtObject {
         id: d
 
-        readonly property int totalAlbumItems: root.album.length
+        readonly property int totalAlbumItems: root.album && root.album.length !== undefined
+                                               ? root.album.length
+                                               : 0
     }
 
     spacing: 9
