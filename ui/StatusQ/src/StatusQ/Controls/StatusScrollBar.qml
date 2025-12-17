@@ -43,7 +43,7 @@ T.ScrollBar {
     implicitWidth: 14
     implicitHeight: 14
 
-    background: null
+    background: Item {}
 
     contentItem: Rectangle {
         color: Theme.palette.primaryColor2
