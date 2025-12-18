@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-library 'status-jenkins-lib@v1.9.33'
+library 'status-jenkins-lib@v1.9.34'
 
 /* Object to store public URLs for description. */
 urls = [:]
@@ -129,9 +129,14 @@ pipeline {
             'MacOS/aarch64', jenkins.Build('status-app/systems/macos/aarch64/package')
           )
         } } }
-        stage('iOS/aarch64') { steps { script {
+        stage('iOS/arm64') { steps { script {
           ios_aarch64 = getArtifacts(
             'iOS/aarch64', jenkins.Build('status-app/systems/ios/arm64/package')
+          )
+        } } }
+        stage('Android/arm64') { steps { script {
+          ios_aarch64 = getArtifacts(
+            'Android/arm64', jenkins.Build('status-app/systems/android/arm64/package')
           )
         } } }
       }

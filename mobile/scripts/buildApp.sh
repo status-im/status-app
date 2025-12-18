@@ -5,146 +5,75 @@ CWD=$(realpath "$(dirname "$0")")
 
 ARCH=${ARCH:-amd64}
 SDK=${SDK:-iphonesimulator}
-JAVA_HOME=${JAVA_HOME:-}
-BIN_DIR=${BIN_DIR:-"$CWD/../bin/ios"}
 BUILD_DIR=${BUILD_DIR:-"$CWD/../build"}
-ANDROID_ABI=${ANDROID_ABI:-"arm64-v8a"}
 BUILD_TYPE=${BUILD_TYPE:-"apk"}
-
-# BUILD_VARIANT controls bundle ID: "pr" = app.status.mobile.pr, "release" = app.status.mobile
-export BUILD_VARIANT=${BUILD_VARIANT:-"release"}
+BUILD_VARIANT=${BUILD_VARIANT:-"release"}
 
 QMAKE_BIN="${QMAKE:-qmake}"
-QMAKE_CONFIG="CONFIG+=device CONFIG+=release"
+QMAKE_CONFIG=("CONFIG+=device" "CONFIG+=release")
 
-PRO_FILE="$CWD/../wrapperApp/Status.pro"
+# Derive names from variant: pr -> StatusPR, release -> Status
+OUTPUT_NAME="Status"
+[[ "$BUILD_VARIANT" == "pr" ]] && OUTPUT_NAME="StatusPR"
 
-echo "Building wrapperApp for ${OS}, ${ANDROID_ABI}"
-echo "Using project file: $PRO_FILE"
+echo "Building $OUTPUT_NAME for ${OS}, variant: ${BUILD_VARIANT}"
 
 mkdir -p "${BUILD_DIR}"
 cd "${BUILD_DIR}"
 
 STATUS_DESKTOP=${STATUS_DESKTOP:-"../vendors/status-desktop"}
-DESKTOP_VERSION=$(eval cd "$STATUS_DESKTOP" && git describe --tags --dirty="-dirty" --always | cut -d- -f1 | cut -d. -f1-3 | sed 's/^v//')
+VERSION=$(cd "$STATUS_DESKTOP" && git describe --tags --always | cut -d- -f1 | cut -d. -f1-3 | sed 's/^v//')
+BUILD_VERSION="${CHANGE_ID:+${CHANGE_ID}.}$(($(date +%s) / 60))"
 
-TIMESTAMP=$(($(date +%s) * 1000 / 60000))
-
-if [[ -n "${CHANGE_ID:-}" ]]; then
-  BUILD_VERSION="${CHANGE_ID}.${TIMESTAMP}"
-else
-  BUILD_VERSION="${TIMESTAMP}"
-fi
-
-echo "Using version: $DESKTOP_VERSION; build version: $BUILD_VERSION"
+echo "Version: $VERSION, build: $BUILD_VERSION"
 
 if [[ "${OS}" == "android" ]]; then
-  if [[ -z "${JAVA_HOME}" ]]; then
-    echo "JAVA_HOME is not set. Please set JAVA_HOME to the path of your JDK 11 or later."
-    exit 1
-  fi
+  [[ -z "${JAVA_HOME}" ]] && { echo "JAVA_HOME is not set"; exit 1; }
 
-  echo "Building for Android 35"
-  ANDROID_PLATFORM=android-35
+  # Export BUILD_VARIANT for build.gradle to pick up
+  export BUILD_VARIANT
 
-  "$QMAKE_BIN" "$PRO_FILE" "$QMAKE_CONFIG" -spec android-clang ANDROID_ABIS="$ANDROID_ABI" APP_VARIANT="${APP_VARIANT}" VERSION="$DESKTOP_VERSION" -after
+  "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec android-clang \
+    ANDROID_ABIS="${ANDROID_ABI:-arm64-v8a}" VERSION="$VERSION" -after
 
-  # Build the app
   make -j"$(nproc)" apk_install_target
 
-  if [[ "$BUILD_TYPE" == "aab" ]]; then
-    if [[ -z "$KEYSTORE_PATH" || -z "$KEYSTORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$KEY_PASSWORD" ]]; then
-      echo "Error: AAB builds require signing credentials"
-      echo "Required: KEYSTORE_PATH, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD"
-      exit 1
-    fi
+  androiddeployqt \
+    --input "$BUILD_DIR/android-${OUTPUT_NAME}-deployment-settings.json" \
+    --output "$BUILD_DIR/android-build" \
+    --android-platform android-35 \
+    --verbose --aux-mode
 
-    if [[ ! -f "$KEYSTORE_PATH" ]]; then
-      echo "Error: Keystore file not found at $KEYSTORE_PATH"
-      exit 1
-    fi
+  # Copy custom Android files, preserve Qt-generated libs.xml
+  cp "$CWD/../android/qt${QT_MAJOR}"/{AndroidManifest.xml,build.gradle,settings.gradle,gradle.properties} "$BUILD_DIR/android-build/"
+  rsync -a --exclude='libs.xml' "$CWD/../android/qt${QT_MAJOR}/res/" "$BUILD_DIR/android-build/res/" 2>/dev/null || true
+  rsync -a "$CWD/../android/qt${QT_MAJOR}/src/" "$BUILD_DIR/android-build/src/" 2>/dev/null || true
 
-    echo "Building AAB..."
-    androiddeployqt \
-      --input "$BUILD_DIR/android-Status-deployment-settings.json" \
-      --output "$BUILD_DIR/android-build" \
-      --aab \
-      --release \
-      --android-platform "$ANDROID_PLATFORM"
+  cd "$BUILD_DIR/android-build"
 
-    OUTPUT_FILE="$BUILD_DIR/android-build/build/outputs/bundle/release/android-build-release.aab"
-    if [[ ! -f "$OUTPUT_FILE" ]]; then
-      echo "Error: Could not find generated AAB file at $OUTPUT_FILE"
-      exit 1
-    fi
+  # Build: aab -> bundle, apk -> assemble
+  TASK="assemble"; [[ "$BUILD_TYPE" == "aab" ]] && TASK="bundle"
+  gradle "${TASK}Release" --no-daemon
 
-    # Sign the AAB file (androiddeployqt --sign does not work for AAB files)
-    "$CWD/android/sign.sh" "$OUTPUT_FILE"
+  OUTPUT_FILE="build/outputs/apk/release/android-build-release.apk"
+  [[ "$BUILD_TYPE" == "aab" ]] && OUTPUT_FILE="build/outputs/bundle/release/android-build-release.aab"
+  [[ ! -f "$OUTPUT_FILE" ]] && { echo "Error: $OUTPUT_FILE not found"; exit 1; }
 
-    ANDROID_OUTPUT_DIR="bin/android/qt6"
-    BIN_DIR_ANDROID=${BIN_DIR:-"$CWD/$ANDROID_OUTPUT_DIR"}
-    mkdir -p "$BIN_DIR_ANDROID"
-    cp "$OUTPUT_FILE" "$BIN_DIR_ANDROID/Status.aab"
-    echo "Build succeeded. Signed AAB is available at $BIN_DIR_ANDROID/Status.aab"
-  else
-    # APK build
-    NEEDS_SIGNING="false"
-    if [[ -n "$KEYSTORE_PATH" && -n "$KEYSTORE_PASSWORD" && -n "$KEY_ALIAS" && -n "$KEY_PASSWORD" ]]; then
-      if [[ -f "$KEYSTORE_PATH" ]]; then
-        NEEDS_SIGNING="true"
-      fi
-    fi
+  BIN_DIR=${BIN_DIR:-"$CWD/../bin/android/qt6"}
+  mkdir -p "$BIN_DIR"
+  cp "$OUTPUT_FILE" "$BIN_DIR/${OUTPUT_NAME}.${BUILD_TYPE}"
+  echo "Build succeeded: $BIN_DIR/${OUTPUT_NAME}.${BUILD_TYPE}"
 
-    if [[ "$NEEDS_SIGNING" == "true" ]]; then
-      echo "Building signed APK..."
-      androiddeployqt \
-        --input "$BUILD_DIR/android-Status-deployment-settings.json" \
-        --output "$BUILD_DIR/android-build" \
-        --apk "$BUILD_DIR/android-build/Status.apk" \
-        --release \
-        --android-platform "$ANDROID_PLATFORM" \
-        --sign "$KEYSTORE_PATH" "$KEY_ALIAS" \
-        --storepass "$KEYSTORE_PASSWORD" \
-        --keypass "$KEY_PASSWORD"
-    else
-      echo "Building unsigned APK..."
-      androiddeployqt \
-        --input "$BUILD_DIR/android-Status-deployment-settings.json" \
-        --output "$BUILD_DIR/android-build" \
-        --apk "$BUILD_DIR/android-build/Status.apk" \
-        --android-platform "$ANDROID_PLATFORM"
-    fi
-
-    ANDROID_OUTPUT_DIR="bin/android/qt6"
-    BIN_DIR_ANDROID=${BIN_DIR:-"$CWD/$ANDROID_OUTPUT_DIR"}
-    mkdir -p "$BIN_DIR_ANDROID"
-    cp ./android-build/Status.apk "$BIN_DIR_ANDROID/Status.apk"
-
-    if [[ "$NEEDS_SIGNING" == "true" ]]; then
-      echo "Build succeeded. Signed APK is available at $BIN_DIR_ANDROID/Status.apk"
-    else
-      echo "Build succeeded. Unsigned APK is available at $BIN_DIR_ANDROID/Status.apk"
-    fi
-  fi
 else
-  "$QMAKE_BIN" "$PRO_FILE" "$QMAKE_CONFIG" -spec macx-ios-clang CONFIG+="$SDK" VERSION="$DESKTOP_VERSION" -after
+  "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec macx-ios-clang CONFIG+="$SDK" VERSION="$VERSION" -after
 
-  if [[ "$BUILD_VARIANT" == "pr" ]]; then
-    TARGET_NAME="StatusPR"
-  else
-    TARGET_NAME="Status"
-  fi
+  XCODE_FLAGS=(-configuration Release -sdk "$SDK" -arch "$ARCH" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CURRENT_PROJECT_VERSION="$BUILD_VERSION")
+  BIN_DIR=${BIN_DIR:-"$CWD/../bin/ios"}
 
-  # Compile resources
-  xcodebuild -configuration Release -target "Qt Preprocess" -sdk "$SDK" -arch "$ARCH" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CURRENT_PROJECT_VERSION=$BUILD_VERSION | xcbeautify
-  # Compile the app
-  xcodebuild -configuration Release -target "$TARGET_NAME" install -sdk "$SDK" -arch "$ARCH" DSTROOT="$BIN_DIR" INSTALL_PATH="/" TARGET_BUILD_DIR="$BIN_DIR" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO CURRENT_PROJECT_VERSION=$BUILD_VERSION | xcbeautify
+  xcodebuild "${XCODE_FLAGS[@]}" -target "Qt Preprocess" | xcbeautify
+  xcodebuild "${XCODE_FLAGS[@]}" -target "$OUTPUT_NAME" install DSTROOT="$BIN_DIR" INSTALL_PATH="/" TARGET_BUILD_DIR="$BIN_DIR" | xcbeautify
 
-  if [[ ! -e "${BIN_DIR}/${TARGET_NAME}.app/Info.plist" ]]; then
-    echo "Build failed -> ${BIN_DIR}/${TARGET_NAME}.app not found"
-    exit 1
-  fi
+  [[ ! -e "$BIN_DIR/${OUTPUT_NAME}.app/Info.plist" ]] && { echo "Build failed"; exit 1; }
 
-  # Note: iOS signing is handled by fastlane
-  echo "Build succeeded! unsigned app ready for fastlane signing"
+  echo "Build succeeded: $BIN_DIR/${OUTPUT_NAME}.app"
 fi

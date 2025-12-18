@@ -1,17 +1,18 @@
 #!/usr/bin/env groovy
-library 'status-jenkins-lib@v1.9.33'
+library 'status-jenkins-lib@v1.9.34'
 
 /* Options section can't access functions in objects. */
 def isPRBuild = utils.isPRBuild()
 def isNightlyBuild = utils.isNightlyBuild()
 def isReleaseBranch = (env.CHANGE_BRANCH ?: env.BRANCH_NAME)?.startsWith('release')
+def isReleaseBuild = utils.isReleaseBuild()
 
 pipeline {
   agent {
     /* Image with Ubuntu 22.04, QT 6.9.2, Android SDK/NDK, Go, and Nim */
     docker {
       label 'linuxcontainer'
-      image 'harbor.status.im/status-im/status-desktop-build:1.0.6-qt6.9.2-android'
+      image 'harbor.status.im/status-im/status-desktop-build:1.0.8-qt6.9.2-android'
       alwaysPull true
       args '--entrypoint="" ' +
            '--volume=/nix:/nix ' +
@@ -70,8 +71,16 @@ pipeline {
     QMAKE = "/opt/qt/${env.QT_VERSION}/android_arm64_v8a/bin/qmake"
     /* override package type if set, otherwise auto-select based on branch */
     PACKAGE_TYPE = "${params.PACKAGE_TYPE != 'auto' ? params.PACKAGE_TYPE : (isReleaseBranch ? 'aab' : 'apk')}"
+    /* BUILD_VARIANT controls package name and signing: pr = app.status.mobile.pr, release = app.status.mobile */
+    BUILD_VARIANT = "${isReleaseBuild ? 'release' : 'pr'}"
+    /* App name derived from BUILD_VARIANT */
+    STATUS_ANDROID_APP_NAME = "${['pr': 'StatusPR', 'release': 'Status'][env.BUILD_VARIANT]}"
     STATUS_ARTIFACT = "pkg/${utils.pkgFilename(ext: env.PACKAGE_TYPE, arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
-    STATUS_BINARY = "${WORKSPACE}/mobile/bin/android/qt6/Status.${env.PACKAGE_TYPE}"
+    STATUS_BINARY = "${WORKSPACE}/mobile/bin/android/qt6/${env.STATUS_ANDROID_APP_NAME}.${env.PACKAGE_TYPE}"
+    /* For release builds, also produce AAB (unless already building AAB) */
+    BUILD_AAB = "${isReleaseBuild && params.PACKAGE_TYPE != 'aab'}"
+    STATUS_AAB_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'aab', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
+    STATUS_AAB_BINARY = "${WORKSPACE}/mobile/bin/android/qt6/${env.STATUS_ANDROID_APP_NAME}.aab"
     NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
   }
 
@@ -97,11 +106,26 @@ pipeline {
       }
     }
 
+    stage('Build AAB') {
+      when { expression { env.BUILD_AAB == 'true' } }
+      steps {
+        script {
+          app.buildSignedAndroid(target='mobile-build PACKAGE_TYPE=aab', verbose=params.VERBOSE)
+        }
+      }
+    }
+
     stage('Package') {
       steps {
         sh 'mkdir -p pkg'
         sh "cp ${env.STATUS_BINARY} ${env.STATUS_ARTIFACT}"
         sh "ls -la ${env.STATUS_ARTIFACT}"
+        script {
+          if (env.BUILD_AAB == 'true') {
+            sh "cp ${env.STATUS_AAB_BINARY} ${env.STATUS_AAB_ARTIFACT}"
+            sh "ls -la ${env.STATUS_AAB_ARTIFACT}"
+          }
+        }
       }
     }
 
@@ -111,19 +135,40 @@ pipeline {
           steps {
             script {
               env.PKG_URL = s5cmd.upload(env.STATUS_ARTIFACT)
-              jenkins.setBuildDesc([(env.PACKAGE_TYPE.toUpperCase()): env.PKG_URL])
             }
           }
         }
-        stage('Archive') {
-          steps {
-            script {
-              archiveArtifacts env.STATUS_ARTIFACT
+
+        stage('Upload AAB') {
+          when { expression { env.BUILD_AAB == 'true' } }
+            steps {
+              script {
+                env.AAB_URL = s5cmd.upload(env.STATUS_AAB_ARTIFACT)
+              }
             }
-          }
-        }
-      }
+        }  
+      }  
     }
+
+    stage('Finalize') {
+      steps {
+        script {
+        /* Archive artifacts. */
+          def artifacts = [env.STATUS_ARTIFACT]
+            if (env.BUILD_AAB == 'true') {
+              artifacts << env.STATUS_AAB_ARTIFACT
+            }
+          archiveArtifacts artifacts.join(', ')
+
+          /* Set build description. */
+          def desc = [(env.PACKAGE_TYPE.toUpperCase()): env.PKG_URL]
+          if (env.AAB_URL) {
+            desc.AAB = env.AAB_URL
+          }
+          jenkins.setBuildDesc(desc)
+       }
+      }
+    } 
   }
 
   post {

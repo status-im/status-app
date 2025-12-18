@@ -31,6 +31,12 @@ dependencies {
     implementation 'androidx.documentfile:documentfile:1.0.1'
 }
 
+// Allow overriding qtAndroidDir via environment variable (for different Qt installations)
+def qtDir = System.getenv("QT_ANDROID_DIR") ?: qtAndroidDir
+
+// Build variant: 'pr' or 'release' (controls app ID and name)
+def buildVariant = System.getenv("BUILD_VARIANT") ?: "release"
+
 android {
     /*******************************************************
      * The following variables:
@@ -54,9 +60,9 @@ android {
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = [qtAndroidDir + '/src', 'src', 'java']
-            aidl.srcDirs = [qtAndroidDir + '/src', 'src', 'aidl']
-            res.srcDirs = [qtAndroidDir + '/res', 'res']
+            java.srcDirs = [qtDir + '/src', 'src', 'java']
+            aidl.srcDirs = [qtDir + '/src', 'src', 'aidl']
+            res.srcDirs = [qtDir + '/res', 'res']
             resources.srcDirs = ['resources']
             renderscript.srcDirs = ['src']
             assets.srcDirs = ['assets']
@@ -89,12 +95,28 @@ android {
         ndk.abiFilters = qtTargetAbiList.split(",")
         // Generate unique versionCode based on minutes since epoch
         versionCode = (System.currentTimeMillis() / 60000).toInteger()
+        // Set applicationId and app name based on build variant
+        applicationId = buildVariant == 'release' ? "app.status.mobile" : "app.status.mobile.pr"
+        resValue "string", "app_name", buildVariant == 'release' ? "Status" : "StatusPR"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(System.getenv("STATUS_APP_KEYSTORE_PATH") ?: "/nonexistent")
+            storePassword System.getenv("STATUS_APP_KEYSTORE_PASSWORD")
+            keyAlias System.getenv("STATUS_APP_KEY_ALIAS")
+            keyPassword System.getenv("STATUS_APP_KEY_PASSWORD")
+        }
     }
 
     buildTypes {
         release {
             debuggable = false
             minifyEnabled = false
+            def keystorePath = System.getenv("STATUS_APP_KEYSTORE_PATH")
+            if (keystorePath && file(keystorePath).exists()) {
+                signingConfig signingConfigs.release
+            }
         }
         debug {
             debuggable = true

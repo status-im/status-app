@@ -337,6 +337,7 @@ ENV ARCH=arm64
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     jq \
+    rsync \
     s3cmd \
     fuse \
     tk-dev \
@@ -394,6 +395,13 @@ RUN apt update -yq && apt install -yq software-properties-common \
     --slave /usr/bin/g++ g++ /usr/bin/g++-9 \
  && apt-get -qq clean
 
-ENV PATH="/root/go/bin:${PATH}"
+ARG GRADLE_VERSION=8.11.1
+RUN wget -q https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -O /tmp/gradle.zip \
+ && unzip -q /tmp/gradle.zip -d /opt \
+ && ln -s /opt/gradle-${GRADLE_VERSION} /opt/gradle \
+ && rm /tmp/gradle.zip
+
+ENV GRADLE_HOME=/opt/gradle
+ENV PATH="/opt/gradle/bin:/root/go/bin:${PATH}"
 
 LABEL description="Build image for the Status Android APK."
