@@ -154,45 +154,45 @@ StatusSectionLayout {
 
                 sourceComponent: {
                     switch (model.notificationType) {
-                    case ActivityCenterTypes.ActivityCenterNotificationType.Mention:
+                    case ActivityCenterTypes.NotificationType.Mention:
                         return mentionNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.Reply:
+                    case ActivityCenterTypes.NotificationType.Reply:
                         return replyNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.ContactRequest:
+                    case ActivityCenterTypes.NotificationType.ContactRequest:
                         return contactRequestNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.CommunityInvitation:
+                    case ActivityCenterTypes.NotificationType.CommunityInvitation:
                         return communityInvitationNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.CommunityMembershipRequest:
+                    case ActivityCenterTypes.NotificationType.CommunityMembershipRequest:
                         return membershipRequestNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.CommunityRequest:
+                    case ActivityCenterTypes.NotificationType.CommunityRequest:
                         return communityRequestNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.CommunityKicked:
+                    case ActivityCenterTypes.NotificationType.CommunityKicked:
                         return communityKickedNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.ContactRemoved:
+                    case ActivityCenterTypes.NotificationType.ContactRemoved:
                         return contactRemovedComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.NewKeypairAddedToPairedDevice:
+                    case ActivityCenterTypes.NotificationType.NewKeypairAddedToPairedDevice:
                         return newKeypairFromPairedDeviceComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.CommunityTokenReceived:
-                    case ActivityCenterTypes.ActivityCenterNotificationType.FirstCommunityTokenReceived:
+                    case ActivityCenterTypes.NotificationType.CommunityTokenReceived:
+                    case ActivityCenterTypes.NotificationType.FirstCommunityTokenReceived:
                         return communityTokenReceivedComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.OwnerTokenReceived:
-                    case ActivityCenterTypes.ActivityCenterNotificationType.OwnershipReceived:
-                    case ActivityCenterTypes.ActivityCenterNotificationType.OwnershipLost:
-                    case ActivityCenterTypes.ActivityCenterNotificationType.OwnershipFailed:
-                    case ActivityCenterTypes.ActivityCenterNotificationType.OwnershipDeclined:
+                    case ActivityCenterTypes.NotificationType.OwnerTokenReceived:
+                    case ActivityCenterTypes.NotificationType.OwnershipReceived:
+                    case ActivityCenterTypes.NotificationType.OwnershipLost:
+                    case ActivityCenterTypes.NotificationType.OwnershipFailed:
+                    case ActivityCenterTypes.NotificationType.OwnershipDeclined:
                         return ownerTokenReceivedNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.ShareAccounts:
+                    case ActivityCenterTypes.NotificationType.ShareAccounts:
                         return shareAccountsNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.CommunityBanned:
+                    case ActivityCenterTypes.NotificationType.CommunityBanned:
                         return communityBannedNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.CommunityUnbanned:
+                    case ActivityCenterTypes.NotificationType.CommunityUnbanned:
                         return communityUnbannedNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.NewPrivateGroupChat:
+                    case ActivityCenterTypes.NotificationType.NewPrivateGroupChat:
                         return groupChatInvitationNotificationComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.NewInstallationReceived:
-                    case ActivityCenterTypes.ActivityCenterNotificationType.NewInstallationCreated:
+                    case ActivityCenterTypes.NotificationType.NewInstallationReceived:
+                    case ActivityCenterTypes.NotificationType.NewInstallationCreated:
                         return newDeviceDetectedComponent
-                    case ActivityCenterTypes.ActivityCenterNotificationType.ActivityCenterNotificationTypeNews:
+                    case ActivityCenterTypes.NotificationType.ActivityCenterNotificationTypeNews:
                         return newsMessageComponent
                     default:
                         return null

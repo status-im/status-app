@@ -18,7 +18,7 @@ QtObject {
         Dismissed = 3
     }
 
-    enum ActivityCenterNotificationType {
+    enum NotificationType {
         NoType = 0,
         NewOneToOne = 1,
         NewPrivateGroupChat = 2,

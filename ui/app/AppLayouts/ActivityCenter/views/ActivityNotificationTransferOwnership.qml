@@ -31,19 +31,19 @@ ActivityNotificationBase {
         if(notification)
             switch(notification.notificationType){
 
-            case ActivityCenterTypes.ActivityCenterNotificationType.OwnerTokenReceived:
+            case ActivityCenterTypes.NotificationType.OwnerTokenReceived:
                 return ActivityNotificationTransferOwnership.OwnershipState.Pending
 
-            case ActivityCenterTypes.ActivityCenterNotificationType.OwnershipDeclined:
+            case ActivityCenterTypes.NotificationType.OwnershipDeclined:
                 return ActivityNotificationTransferOwnership.OwnershipState.Declined
 
-            case ActivityCenterTypes.ActivityCenterNotificationType.OwnershipReceived:
+            case ActivityCenterTypes.NotificationType.OwnershipReceived:
                 return ActivityNotificationTransferOwnership.OwnershipState.Succeeded
 
-            case ActivityCenterTypes.ActivityCenterNotificationType.OwnershipFailed:
+            case ActivityCenterTypes.NotificationType.OwnershipFailed:
                 return ActivityNotificationTransferOwnership.OwnershipState.Failed
 
-            case ActivityCenterTypes.ActivityCenterNotificationType.OwnershipLost:
+            case ActivityCenterTypes.NotificationType.OwnershipLost:
                 return ActivityNotificationTransferOwnership.OwnershipState.NoLongerControlNode
 
             }

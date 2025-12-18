@@ -45,15 +45,15 @@ ActivityNotificationBaseLayout {
             RadioButton {
                 text: "Received"
                 checked: true
-                onCheckedChanged: if(checked)  baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.ActivityCenterNotificationType.NewInstallationReceived
+                onCheckedChanged: if(checked)  baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.NotificationType.NewInstallationReceived
             }
 
             RadioButton {
                 text: "Created"
-                onCheckedChanged: if(checked)  baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.ActivityCenterNotificationType.NewInstallationCreated
+                onCheckedChanged: if(checked)  baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.NotificationType.NewInstallationCreated
             }
         }
-        Component.onCompleted: baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.ActivityCenterNotificationType.NewInstallationReceived
+        Component.onCompleted: baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.NotificationType.NewInstallationReceived
     }
 }
 // category: Activity Center

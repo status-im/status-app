@@ -2,6 +2,8 @@ import QtQuick
 
 import StatusQ.Core.Theme
 
+import AppLayouts.ActivityCenter.helpers
+
 // ***
 // This model provides examples of all notification types supported by the Status app,
 // showcasing the different visual states and UI variations for each notification card.
@@ -53,6 +55,8 @@ ListModel {
     readonly property var data: [
         {
             // MENTION IN 1:1 TYPE
+            notificationType: ActivityCenterTypes.NotificationType.Mention,
+
             // Card states related
             unread: false,
             selected: false,
@@ -77,6 +81,8 @@ ListModel {
         },
         {
             // REPLY 1:1 TYPE
+            notificationType: ActivityCenterTypes.NotificationType.Reply,
+
             // Card states related
             unread: true,
             selected: false,
@@ -100,6 +106,8 @@ ListModel {
         },
         {
             // CONTACT REQUEST TYPE
+            notificationType: ActivityCenterTypes.NotificationType.ContactRequest,
+
             // Card states related
             unread: true,
             selected: false,
@@ -126,6 +134,8 @@ ListModel {
         },
         {
             // CONTACT REMOVED TYPE
+            notificationType: ActivityCenterTypes.NotificationType.ContactRemoved,
+
             // Card states related
             unread: true,
             selected: false,
@@ -149,6 +159,8 @@ ListModel {
         },
         {
             // NEW PRIVATE GROUP CHAT TYPE
+            notificationType: ActivityCenterTypes.NotificationType.NewPrivateGroupChat,
+
             // Card states related
             unread: true,
             selected: false,
@@ -175,6 +187,8 @@ ListModel {
         },
         {
             // MENTION IN GROUP CHAT TYPE
+            notificationType: ActivityCenterTypes.NotificationType.Mention,
+
             // Card states related
             unread: false,
             selected: false,
@@ -201,6 +215,8 @@ ListModel {
         },
         {
             // REPLY IN GROUP CHAT TYPE
+            notificationType: ActivityCenterTypes.NotificationType.Reply,
+
             // Card states related
             unread: true,
             selected: false,
@@ -227,6 +243,8 @@ ListModel {
         },
         {
             // MENTION IN COMMUNITY TYPE
+            notificationType: ActivityCenterTypes.NotificationType.Mention,
+
             // Card states related
             unread: true,
             selected: false,
@@ -256,6 +274,8 @@ ListModel {
         },
         {
             // REPLY IN COMMUNITY TYPE
+            notificationType: ActivityCenterTypes.NotificationType.Reply,
+
             // Card states related
             unread: false,
             selected: false,
@@ -286,6 +306,8 @@ ListModel {
         },
         {
             // INVITATION TO COMMUNITY TYPE
+            notificationType: ActivityCenterTypes.NotificationType.CommunityInvitation,
+
             // Card states related
             unread: true,
             selected: false,
@@ -314,7 +336,9 @@ ListModel {
             timestamp: 1745799225000
         },
         {
-            // MEMBERSHIP REQUEST TO COMMUNITY TYPE
+            // MEMBERSHIP REQUEST TO COMMUNITY TYPE (Five states: `pending`, `accepted`, `declined, `acceptedPending`, `declinedPending`)
+            notificationType: ActivityCenterTypes.NotificationType.CommunityMembershipRequest,
+
             // Card states related
             unread: true,
             selected: false,
@@ -335,7 +359,9 @@ ListModel {
             timestamp: 1755799225000
         },
         {
-            // MEMBERSHIP REQUEST ACCEPTED TO COMMUNITY TYPE
+            // MEMBERSHIP REQUEST ACCEPTED TO COMMUNITY TYPE (Three states: `pending`, `accepted`, `declined`)
+            notificationType: ActivityCenterTypes.NotificationType.CommunityRequest,
+
             // Card states related
             unread: false,
             selected: false,
@@ -357,6 +383,8 @@ ListModel {
         },
         {
             // KICKED FROM COMMUNITY TYPE
+            notificationType: ActivityCenterTypes.NotificationType.CommunityKicked,
+
             // Card states related
             unread: false,
             selected: false,
@@ -377,7 +405,11 @@ ListModel {
             timestamp: 1766899225000
         },
         {
-            // COMMUNITY TOKEN RECEIVED TYPE
+            // COMMUNITY TOKEN RECEIVED TYPE:
+            // Assets and Collectibles are now treated the same way here.
+            // This notification will consistently trigger navigation to wallet transaction activity.
+            notificationType: ActivityCenterTypes.NotificationType.CommunityTokenReceived,
+
             // Card states related
             unread: true,
             selected: false,
@@ -399,6 +431,8 @@ ListModel {
         },
         {
             // FIRST COMMUNITY TOKEN RECEIVED TYPE
+            notificationType: ActivityCenterTypes.NotificationType.FirstCommunityTokenReceived,
+
             // Card states related
             unread: true,
             selected: false,
@@ -420,6 +454,8 @@ ListModel {
         },
         {
             // BANNED FROM COMMUNITY TYPE
+            notificationType: ActivityCenterTypes.NotificationType.CommunityBanned,
+
             // Card states related
             unread: true,
             selected: false,
@@ -441,6 +477,8 @@ ListModel {
         },
         {
             // UNBANNED FROM COMMUNITY TYPE
+            notificationType: ActivityCenterTypes.NotificationType.CommunityUnbanned,
+
             // Card states related
             unread: true,
             selected: false,
@@ -462,6 +500,8 @@ ListModel {
         },
         {
             // OWNER TOKEN RECEIVED TYPE
+            notificationType: ActivityCenterTypes.NotificationType.OwnerTokenReceived,
+
             // Card states related
             unread: true,
             selected: false,
@@ -483,6 +523,8 @@ ListModel {
         },
         {
             // OWNERSHIP RECEIVED TYPE
+            notificationType: ActivityCenterTypes.NotificationType.OwnershipReceived,
+
             // Card states related
             unread: true,
             selected: false,
@@ -504,6 +546,8 @@ ListModel {
         },
         {
             // OWNERSHIP LOST TYPE
+            notificationType: ActivityCenterTypes.NotificationType.OwnershipLost,
+
             // Card states related
             unread: false,
             selected: false,
@@ -525,6 +569,8 @@ ListModel {
         },
         {
             // OWNERSHIP TRANSFER FAILED TYPE
+            notificationType: ActivityCenterTypes.NotificationType.OwnershipFailed,
+
             // Card states related
             unread: false,
             selected: false,
@@ -546,6 +592,8 @@ ListModel {
         },
         {
             // OWNERSHIP TRANSFER DECLINED TYPE
+            notificationType: ActivityCenterTypes.NotificationType.OwnershipDeclined,
+
             // Card states related
             unread: true,
             selected: false,
@@ -567,6 +615,8 @@ ListModel {
         },
         {
             // SYSTEM - NEW INSTALLATION TYPE
+            notificationType: ActivityCenterTypes.NotificationType.NewInstallationReceived,
+
             // Card states related
             unread: true,
             selected: false,
@@ -586,70 +636,9 @@ ListModel {
             timestamp: 1759995225000
         },
         {
-            // SYSTEM - FETCHING BACKUP TYPE
-            // Card states related
-            unread: false,
-            selected: false,
-
-            // Avatar related
-            avatarSource: Assets.png("status-logo-icon"),
-            badgeIconName: "action-sync",
-            isCircularAvatar: false,
-
-
-            // Header row related
-            title: "Status",
-
-            // Content block related
-            content: "Backup syncing fetching",
-
-            // Timestamp related
-            timestamp: 1759895225000
-        },
-        {
-            // SYSTEM - BACKUP SYNCING PARTIAL FAIL TYPE
-            // Card states related
-            unread: false,
-            selected: false,
-
-            // Avatar related
-            avatarSource: Assets.png("status-logo-icon"),
-            badgeIconName: "action-sync-fail",
-            isCircularAvatar: false,
-
-
-            // Header row related
-            title: "Status",
-
-            // Content block related
-            content: "Backup sync partially failed",
-
-            // Timestamp related
-            timestamp: 1759795225000
-        },
-        {
-            // SYSTEM - BACKUP SYNCING FAILURE TYPE
-            // Card states related
-            unread: false,
-            selected: false,
-
-            // Avatar related
-            avatarSource: Assets.png("status-logo-icon"),
-            badgeIconName: "action-sync-fail",
-            isCircularAvatar: false,
-
-
-            // Header row related
-            title: "Status",
-
-            // Content block related
-            content: "Backup sync failed",
-
-            // Timestamp related
-            timestamp: 1759887225000
-        },
-        {
             // SYSTEM - NEWS ARTICLE TYPE
+            notificationType: ActivityCenterTypes.NotificationType.ActivityCenterNotificationTypeNews,
+
             // Card states related
             unread: true,
             selected: false,

@@ -25,10 +25,10 @@ ActivityNotificationBase {
     function setType(notification) {
         if (notification) {
             switch (notification.notificationType) {
-            case ActivityCenterTypes.ActivityCenterNotificationType.NewInstallationReceived:
+            case ActivityCenterTypes.NotificationType.NewInstallationReceived:
                 return ActivityNotificationNewDevice.InstallationType.Received
 
-            case ActivityCenterTypes.ActivityCenterNotificationType.NewInstallationCreated:
+            case ActivityCenterTypes.NotificationType.NewInstallationCreated:
                 return ActivityNotificationNewDevice.InstallationType.Created
             }
         }

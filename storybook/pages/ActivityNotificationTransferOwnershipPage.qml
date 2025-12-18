@@ -33,33 +33,33 @@ ActivityNotificationBaseLayout {
             RadioButton {
                 text: "Pending"
                 checked: true
-                onCheckedChanged: if(checked) baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.ActivityCenterNotificationType.OwnerTokenReceived
+                onCheckedChanged: if(checked) baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.NotificationType.OwnerTokenReceived
             }
 
             RadioButton {
                 text: "Declined"
-                onCheckedChanged: if(checked) baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.ActivityCenterNotificationType.OwnershipDeclined
+                onCheckedChanged: if(checked) baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.NotificationType.OwnershipDeclined
             }
 
             RadioButton {
                 text: "Succeded"
-                onCheckedChanged: if(checked) baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.ActivityCenterNotificationType.OwnershipReceived
+                onCheckedChanged: if(checked) baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.NotificationType.OwnershipReceived
             }
 
             RadioButton {
                 text: "Failed"
-                onCheckedChanged: if(checked) baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.ActivityCenterNotificationType.OwnershipFailed
+                onCheckedChanged: if(checked) baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.NotificationType.OwnershipFailed
             }
 
             RadioButton {
                 text: "No longer control node"
-                onCheckedChanged: if(checked) baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.ActivityCenterNotificationType.OwnershipLost
+                onCheckedChanged: if(checked) baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.NotificationType.OwnershipLost
             }
         }
 
     }
 
-    Component.onCompleted: baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.ActivityCenterNotificationType.OwnerTokenReceived
+    Component.onCompleted: baseEditor.notificationBaseMock.notificationType = ActivityCenterTypes.NotificationType.OwnerTokenReceived
 }
 // category: Activity Center
 // status: good
