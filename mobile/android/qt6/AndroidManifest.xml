@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="app.status.mobile"
-    android:installLocation="auto"
-    android:versionCode="-- %%INSERT_VERSION_CODE%% --"
-    android:versionName="-- %%INSERT_VERSION_NAME%% --">
+    android:installLocation="auto">
     <!-- non-dangerous permissions -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.NFC"/>
@@ -60,6 +58,19 @@
           <meta-data
                 android:name="android.app.arguments"
                 android:value="" />
+
+          <!-- Required for Qt6 to properly detect and load native libraries -->
+          <meta-data
+                android:name="android.app.system_libs_prefix"
+                android:value="/system/lib64/" />
+
+          <meta-data
+                android:name="android.app.use_local_qt_libs"
+                android:value="1" />
+
+          <meta-data
+                android:name="android.app.bundle_local_qt_libs"
+                android:value="1" />
         </activity>
 
         <provider

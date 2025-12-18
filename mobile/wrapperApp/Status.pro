@@ -2,6 +2,11 @@ TEMPLATE = app
 
 QT += quick gui qml webview svg widgets multimedia
 
+BUILD_VARIANT = $$(BUILD_VARIANT)
+TARGET = Status
+equals(BUILD_VARIANT, "pr"): TARGET = StatusPR
+message("Building $$BUILD_VARIANT variant: TARGET = $$TARGET")
+
 equals(QT_MAJOR_VERSION, 6) {
     message("qt 6 config!!")
     QT += core5compat core
@@ -50,19 +55,12 @@ ios {
     QMAKE_ASSET_CATALOGS += $$PWD/../ios/Images.xcassets
     QMAKE_IOS_LAUNCH_SCREEN = $$PWD/../ios/launch-image-universal.storyboard
 
-    # Bundle identifier configuration based on BUILD_VARIANT environment variable
-    # - PR builds (BUILD_VARIANT=pr): app.status.mobile.pr
-    # - Release/Local dev (BUILD_VARIANT unset or "release"): app.status.mobile
-    BUILD_VARIANT_ENV = $$(BUILD_VARIANT)
-    equals(BUILD_VARIANT_ENV, "pr") {
-        TARGET = StatusPR
+    # Bundle identifier: pr -> app.status.mobile.pr, release -> app.status.mobile
+    QMAKE_TARGET_BUNDLE_PREFIX = app.status
+    QMAKE_BUNDLE = mobile
+    equals(BUILD_VARIANT, "pr") {
         QMAKE_TARGET_BUNDLE_PREFIX = app.status.mobile
         QMAKE_BUNDLE = pr
-    } else {
-        # Default for local development and release builds
-        TARGET = Status
-        QMAKE_TARGET_BUNDLE_PREFIX = app.status
-        QMAKE_BUNDLE = mobile
     }
 
     LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lDOtherSideStatic -lstatusq -lstatus -lsds -lssl_3 -lcrypto_3 -lqzxing -lresolv -lqrcodegen

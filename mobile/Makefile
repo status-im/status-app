@@ -114,6 +114,17 @@ aab:
 	@exit 1
 endif
 
+.PHONY: apk-aab
+ifeq ($(OS),android)
+apk-aab:
+	@$(MAKE) PACKAGE_TYPE=apk-aab $(BIN_PATH)/Status.apk
+	@echo "✓ APK and AAB built successfully"
+else
+apk-aab:
+	@echo "Error: apk-aab target is only available for Android"
+	@exit 1
+endif
+
 .PHONY: ios-app
 ifeq ($(OS),ios)
 ios-app: $(TARGET)
