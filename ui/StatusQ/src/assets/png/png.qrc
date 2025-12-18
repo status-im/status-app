@@ -925,5 +925,9 @@
         <file>status-logo-icon.png</file>
         <file>status-preparing.png</file>
         <file>unfurling-image.png</file>
+        <file>activity_center/EmptyNotifications-Dark.png</file>
+        <file>activity_center/EmptyNotifications-Light.png</file>
+        <file>activity_center/NewsDisabled-Dark.png</file>
+        <file>activity_center/NewsDisabled-Light.png</file>
     </qresource>
 </RCC>

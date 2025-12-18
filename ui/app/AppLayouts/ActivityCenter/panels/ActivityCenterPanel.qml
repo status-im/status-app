@@ -211,16 +211,16 @@ Control {
             }
         }
 
-        // Placeholders in particular cases:
-        // This will be reworked on: https://github.com/status-im/status-app/issues/18905
         // Placeholder for the status news when their settings are disabled
         // OR Placeholder for the status news when they are all seen or there are no notifications
         Loader {
             id: placeholderLoader
 
 
+            Layout.topMargin: 2
+            Layout.bottomMargin: 2
             Layout.fillWidth: true
-            Layout.margins: Theme.padding
+            Layout.fillHeight: true
             visible: active
             active: d.isNewsPlaceholderActive || d.emptyNotificationsList
 
@@ -233,74 +233,116 @@ Control {
         }
     }
 
-    // This will be reworked on: https://github.com/status-im/status-app/issues/18905
     // If !root.newsEnabledViaRSS it means the panel is for enabling RSS notification
     // Otherwise, it means it is for enabling status news notifications in settings
     Component {
         id: newsPlaceholderPanel
 
-        ColumnLayout {
-            id: newsPanelLayout
+        Item {
+            anchors.fill: parent
 
-            anchors.centerIn: parent
-            width: 320
-            spacing: 12
+            ColumnLayout {
+                id: newsPanelLayout
 
-            StatusBaseText {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.maximumWidth: parent.width
+                anchors.centerIn: parent
+                width: parent.width - 2 * Theme.bigPadding
+                spacing: Theme.halfPadding
 
-                text: !root.newsEnabledViaRSS ? qsTr("Enable RSS to receive Status News notifications") :
-                                                qsTr("Enable Status News notifications")
-                font.weight: Font.Bold
-                lineHeight: 1.2
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.WordWrap
-            }
+                Image {
+                    Layout.alignment: Qt.AlignHCenter
 
-            StatusBaseText {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.maximumWidth: parent.width
+                    source: (Theme.style === Theme.Light) ? Assets.png("activity_center/NewsDisabled-Light") :
+                                                            Assets.png("activity_center/NewsDisabled-Dark")
+                    fillMode: Image.PreserveAspectFit
+                    mipmap: true
+                    cache: false
+                }
 
-                font.pixelSize: Theme.additionalTextSize
-                color: Theme.palette.baseColor1
-                text: !root.newsEnabledViaRSS ? qsTr("RSS is currently disabled via your Privacy & Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.") :
-                                                qsTr("This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements")
-                lineHeight: 1.2
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.WordWrap
-            }
+                StatusBaseText {
+                    Layout.fillWidth: true
 
-            StatusButton {
-                Layout.alignment: Qt.AlignHCenter
+                    horizontalAlignment: Text.AlignHCenter
+                    text: !root.newsEnabledViaRSS ? qsTr("Status News RSS is off") :
+                                                    qsTr("Status News notifications are off")
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: Theme.additionalTextSize
+                    font.weight: Font.Medium
+                }
 
-                text: !root.newsEnabledViaRSS ? qsTr("Enable RSS"):
-                                                qsTr("Enable Status News notifications")
-                font.pixelSize: Theme.additionalTextSize
+                StatusBaseText {
+                    Layout.fillWidth: true
 
-                onClicked: {
-                    if (!root.newsEnabledViaRSS) {
-                        root.enableNewsViaRSSRequested()
-                    } else {
-                        root.enableNewsRequested()
+                    horizontalAlignment: Text.AlignHCenter
+                    text: !root.newsEnabledViaRSS ? qsTr("Turn it on to get updates about new features and announcements. You can also enable this anytime in Privacy & Security settings.") :
+                                                    qsTr("Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.")
+
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: Theme.additionalTextSize
+                    font.weight: Font.Light
+                }
+
+                StatusButton {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.maximumWidth: parent.width
+
+                    text: !root.newsEnabledViaRSS ? qsTr("Enable RSS"):
+                                                    qsTr("Enable Status News notifications")
+                    font.pixelSize: Theme.additionalTextSize
+
+                    onClicked: {
+                        if (!root.newsEnabledViaRSS) {
+                            root.enableNewsViaRSSRequested()
+                        } else {
+                            root.enableNewsRequested()
+                        }
                     }
                 }
             }
         }
     }
 
-    // This will be reworked on: https://github.com/status-im/status-app/issues/18905
+    // This is used whenever the list of notifications is empty
     Component {
         id: emptyPlaceholderPanel
 
-        StatusBaseText {
-            // If the mode is unread only, it means the user has seen all notifications and is up to date
-            // If the mode is all, it means there are no notifications to show
-            text: root.readNotificationsStatus === ActivityCenterTypes.ActivityCenterReadType.Unread ?
-                      qsTr("You're all caught up") :
-                      qsTr("Your notifications will appear here")
-            horizontalAlignment: Text.AlignHCenter
-            color: Theme.palette.baseColor1
+        Item {
+            anchors.fill: parent
+
+            ColumnLayout {
+                anchors.centerIn: parent
+                width: parent.width - 2 * Theme.bigPadding
+                spacing: Theme.halfPadding
+
+                Image {
+                    Layout.alignment: Qt.AlignHCenter
+
+                    source: (Theme.style === Theme.Light) ? Assets.png("activity_center/EmptyNotifications-Light") :
+                                                            Assets.png("activity_center/EmptyNotifications-Dark")
+                    fillMode: Image.PreserveAspectFit
+                    mipmap: true
+                    cache: false
+                }
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+
+                    horizontalAlignment: Text.AlignHCenter
+                    text: qsTr("No notifications right now.")
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: Theme.additionalTextSize
+                    font.weight: Font.Medium
+                }
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+
+                    horizontalAlignment: Text.AlignHCenter
+                    text: qsTr("Check back later for updates.")
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: Theme.additionalTextSize
+                    font.weight: Font.Light
+                }
+            }
         }
     }
 }

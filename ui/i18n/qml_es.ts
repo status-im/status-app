@@ -331,32 +331,36 @@
         <translation>Notificaciones</translation>
     </message>
     <message>
-        <source>Enable RSS to receive Status News notifications</source>
-        <translation type="unfinished">Habilitar RSS para recibir notificaciones de Status News</translation>
-    </message>
-    <message>
         <source>Enable Status News notifications</source>
-        <translation type="unfinished">Habilitar notificaciones de Status News</translation>
-    </message>
-    <message>
-        <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
-        <translation type="unfinished">RSS está deshabilitado actualmente a través de tu configuración de Privacidad y Seguridad. Habilita RSS para recibir notificaciones de Status News sobre próximas funciones y anuncios importantes.</translation>
-    </message>
-    <message>
-        <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
-        <translation type="unfinished">Esta función está desactivada actualmente. Habilita las notificaciones de Status News para recibir notificaciones sobre próximas funciones y anuncios importantes</translation>
+        <translation>Habilitar notificaciones de Status News</translation>
     </message>
     <message>
         <source>Enable RSS</source>
-        <translation type="unfinished">Habilitar RSS</translation>
+        <translation>Habilitar RSS</translation>
     </message>
     <message>
-        <source>You&apos;re all caught up</source>
-        <translation type="unfinished">Estás al día</translation>
+        <source>No notifications right now.</source>
+        <translation>No hay notificaciones ahora mismo.</translation>
     </message>
     <message>
-        <source>Your notifications will appear here</source>
-        <translation type="unfinished">Tus notificaciones aparecerán aquí</translation>
+        <source>Check back later for updates.</source>
+        <translation>Vuelva más tarde para revisar actualizaciones.</translation>
+    </message>
+    <message>
+        <source>Turn it on to get updates about new features and announcements. You can also enable this anytime in Privacy &amp; Security settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status News RSS is off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status News notifications are off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

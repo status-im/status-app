@@ -405,24 +405,9 @@
       <translation>Notifications</translation>
     </message>
     <message>
-      <source>Enable RSS to receive Status News notifications</source>
-      <comment>ActivityCenterPanel</comment>
-      <translation>Enable RSS to receive Status News notifications</translation>
-    </message>
-    <message>
       <source>Enable Status News notifications</source>
       <comment>ActivityCenterPanel</comment>
       <translation>Enable Status News notifications</translation>
-    </message>
-    <message>
-      <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
-      <comment>ActivityCenterPanel</comment>
-      <translation>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</translation>
-    </message>
-    <message>
-      <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
-      <comment>ActivityCenterPanel</comment>
-      <translation>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</translation>
     </message>
     <message>
       <source>Enable RSS</source>
@@ -430,14 +415,34 @@
       <translation>Enable RSS</translation>
     </message>
     <message>
-      <source>You&#39;re all caught up</source>
+      <source>No notifications right now.</source>
       <comment>ActivityCenterPanel</comment>
-      <translation>You&#39;re all caught up</translation>
+      <translation>No notifications right now.</translation>
     </message>
     <message>
-      <source>Your notifications will appear here</source>
+      <source>Check back later for updates.</source>
       <comment>ActivityCenterPanel</comment>
-      <translation>Your notifications will appear here</translation>
+      <translation>Check back later for updates.</translation>
+    </message>
+    <message>
+      <source>Turn it on to get updates about new features and announcements. You can also enable this anytime in Privacy &amp; Security settings.</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Turn it on to get updates about new features and announcements. You can also enable this anytime in Privacy &amp; Security settings.</translation>
+    </message>
+    <message>
+      <source>Status News RSS is off</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Status News RSS is off</translation>
+    </message>
+    <message>
+      <source>Status News notifications are off</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Status News notifications are off</translation>
+    </message>
+    <message>
+      <source>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</translation>
     </message>
   </context>
   <context>

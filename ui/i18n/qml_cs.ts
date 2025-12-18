@@ -317,45 +317,49 @@
     </message>
     <message>
         <source>Hide read notifications</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Skrýt přečtená oznámení</translation>
     </message>
     <message>
         <source>Show read notifications</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Zobrazit přečtená oznámení</translation>
     </message>
 </context>
 <context>
     <name>ActivityCenterPanel</name>
     <message>
         <source>Notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable RSS to receive Status News notifications</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Oznámení</translation>
     </message>
     <message>
         <source>Enable Status News notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Povolit oznámení Status News</translation>
     </message>
     <message>
         <source>Enable RSS</source>
+        <translation type="unfinished">Povolit RSS</translation>
+    </message>
+    <message>
+        <source>No notifications right now.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You&apos;re all caught up</source>
+        <source>Check back later for updates.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Your notifications will appear here</source>
+        <source>Turn it on to get updates about new features and announcements. You can also enable this anytime in Privacy &amp; Security settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status News RSS is off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status News notifications are off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
