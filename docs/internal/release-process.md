@@ -12,10 +12,11 @@ This guide is meant to explain the flow and rules of the release process, ie the
 3. Only bug fixes **must** be provided to the release branch.
    
 4. Moreover, only **critical** bug fixes **should** be added to the [Release Board](https://github.com/orgs/status-im/projects/97/views/1) and committed to the release branch.
-   1. Critical bugs are issues that affect the **behaviour** of the features.
-   2. This includes regressions to previously working features (eg: removing an emoji reaction no longer works).
-   3. This also includes issues breaking new features, ie **not** according to the expected Acceptance Criteria (eg: Browser is expected to allow saving bookmarks and the feature does not work).
-
+   1. Critical bugs are issues that affect:
+      1. security
+      2. potential data or funds loss
+      3. crashes
+      4. full regressions
 5. One or more Testing days **should** be done by the entire Status team to find any regressions.
    1. The Status team **should** split in testing groups to help test features.
    2. Testing groups **should** contain people from different teams to spread the knowledge.
@@ -37,6 +38,10 @@ This guide is meant to explain the flow and rules of the release process, ie the
 10. Once a fix has been applied to the release branch, it **must** be ported to the master branch by the author of the commit.
 
 11. A new RC build **can** be triggered every day, if there are new fixes in the release branch.
+12. Releases and RCs **must** have unique semantic numbers in the `VERSION` file and `tag`.
+    1.  Release format: `2.36.0`
+    2.  RC format: `2.36.0-rc.1`
+13. The commit updating the `VERSION` file **must** have a `tag` matching the same version number on it.
 
 
 ## Frequently asked questions
@@ -53,7 +58,7 @@ A feature is considered **Done** when all issues of its Epic are closed. An Epic
 
 The remaining features listed on the [Roadmap](https://github.com/status-im/status-app/blob/master/docs/roadmap.md) on the same milestone, but that were not identified as **key**, will simply be pushed to the next milestone.
 
-All new features **must** implement a **feature flag**. Therefore, unfinished features **must not** affect master and the release.
+All new features **must** implement a **feature flag**. Therefore, unfinished features **must not** affect negatively the master and release branches.
 
 ### Why commit to the release branch first and not master?
 
