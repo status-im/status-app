@@ -26,6 +26,7 @@ QObject {
         readonly property var entry: itemData.item
 
         publicKey: root.publicKey
+        compressedPubKey:  entry.compressedPubKey ?? ""
         displayName: entry.displayName ?? ""
         ensName: entry.ensName ?? ""
         ensVerified: entry.isEnsVerified ?? false

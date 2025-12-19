@@ -124,6 +124,7 @@ SettingsContentBase {
 
         readonly property ContactDetails liveContactDetails: ContactDetails {
             publicKey: root.profileStore.pubKey
+            compressedPubKey: root.profileStore.compressedPubKey
             colorId: root.profileStore.colorId
             onlineStatus: root.profileStore.currentUserStatus
             isCurrentUser: true

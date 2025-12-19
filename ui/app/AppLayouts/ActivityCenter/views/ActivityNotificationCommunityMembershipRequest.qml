@@ -64,10 +64,8 @@ ActivityNotificationMessage {
         }
     }
 
-    contactDetails: notification ? Utils.getContactDetailsAsJson(notification.author, false) : null
-
     messageDetails.messageText: qsTr("Requested membership in your community <font color='%1'>%2</font>").arg(d.stateColorText).arg(d.stateText)
-    messageDetails.sender.profileImage.name: contactDetails ? contactDetails.thumbnailImage : ""
+    messageDetails.sender.profileImage.name: root.contactDetails ? root.contactDetails.thumbnailImage : ""
     messageDetails.sender.profileImage.assetSettings.isImage: true
     messageDetails.sender.profileImage.pubkey: notification ? notification.author : ""
     messageDetails.sender.profileImage.color:

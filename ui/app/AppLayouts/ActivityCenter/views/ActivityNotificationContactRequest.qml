@@ -71,7 +71,7 @@ ActivityNotificationMessage {
             pending: root.pending
             accepted: root.accepted
             dismissed: root.dismissed
-            blocked: contactDetails && contactDetails.isBlocked
+            blocked: root.contactDetails && root.contactDetails.isBlocked
             onAcceptClicked: root.acceptContactRequested(root.contactId, root.contactRequestId)
             onDeclineClicked: root.declineContactRequested(root.contactId, root.contactRequestId)
             onProfileClicked: root.openProfilePopup(root.contactId)

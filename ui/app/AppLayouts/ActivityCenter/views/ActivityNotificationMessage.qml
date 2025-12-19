@@ -6,6 +6,7 @@ import StatusQ.Core.Utils as CoreUtils
 import StatusQ.Core.Theme
 import StatusQ.Components
 
+import AppLayouts.Profile.helpers
 import shared.views.chat
 import utils
 
@@ -20,11 +21,23 @@ ActivityNotificationBase {
                                                                                     contactDetails.displayName, contactDetails.alias) : ""
     property string contentHeaderAreaText: ""
 
-    property var contactDetails: null
+    property var contactModelEntryLoader: Loader {
+        active: !!root.contactId
+
+        sourceComponent: ContactModelEntry {
+            publicKey: root.contactId
+            contactsModel: root.contactsModel
+            onPopulateContactDetailsRequested: root.populateContactDetailsRequested(root.contactId)
+        }
+    }
+
+    readonly property var contactDetails: contactModelEntryLoader.item ? contactModelEntryLoader.item.contactDetails : null
+
     property int maximumLineCount: 2
 
     signal messageClicked()
     signal openProfilePopup(string contactId)
+    signal populateContactDetailsRequested(string contactId)
 
     property StatusMessageDetails messageDetails: StatusMessageDetails {
         messageText: notification && notification.message ? notification.message.messageText : ""
@@ -52,20 +65,6 @@ ActivityNotificationBase {
 
     property Component messageSubheaderComponent: null
     property Component messageBadgeComponent: null
-
-    function updateContactDetails() {
-        contactDetails = notification ? Utils.getContactDetailsAsJson(contactId, false) : null
-    }
-
-    onContactIdChanged: root.updateContactDetails()
-
-    CoreUtils.ModelEntryChangeTracker {
-        model: root.contactsModel
-        role: "pubKey"
-        key: root.contactId
-
-        onItemChanged: root.updateContactDetails()
-    }
 
     avatarComponent:  Item {
         width: root.messageDetails.sender.profileImage.assetSettings.width
