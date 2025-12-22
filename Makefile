@@ -549,14 +549,14 @@ status-keycard-qt-clean:
 ifeq ($(USE_STATUS_KEYCARD_QT),1)
   KEYCARD_LIB := $(STATUSKEYCARD_QT_LIB)
   KEYCARD_LIBDIR := $(STATUSKEYCARD_QT_LIBDIR)
-  KEYCARD_LINKNAME := status-keycard-qt
-  KEYCARD_DYLIB_NAME := libstatus-keycard-qt.dylib
+
 else
   KEYCARD_LIB := $(STATUSKEYCARDGO)
   KEYCARD_LIBDIR := $(STATUSKEYCARDGO_LIBDIR)
-  KEYCARD_LINKNAME := keycard
-  KEYCARD_DYLIB_NAME := libkeycard.$(LIB_EXT)
 endif
+
+KEYCARD_DYLIB_NAME := $(notdir $(KEYCARD_LIB))
+KEYCARD_LINKNAME := $(patsubst lib%,%,$(basename $(KEYCARD_DYLIB_NAME)))
 
 QRCODEGEN := vendor/QR-Code-generator/c/libqrcodegen.a
 
