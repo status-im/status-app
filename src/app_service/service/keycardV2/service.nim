@@ -9,6 +9,7 @@ import ./dto, rpc
 featureGuard KEYCARD_ENABLED:
   import keycard_go
   import constants as status_const
+  import ../keycard/constants as keycard_constants
 
 export dto
 
@@ -115,10 +116,10 @@ QtObject:
       var jsonSignal = signal.parseJson
       let signalType = jsonSignal["type"].getStr
       
-      if signalType == "status-changed":
+      if signalType == keycard_constants.SignalKeycardStatusChanged:
         let keycardEvent = jsonSignal["event"].toKeycardEventDto()
         self.events.emit(SIGNAL_KEYCARD_STATE_UPDATED, KeycardEventArg(keycardEvent: keycardEvent))
-      elif signalType == "channel-state-changed":
+      elif signalType == keycard_constants.SignalKeycardChannelStateChanged:
         let state = jsonSignal["event"]["state"].getStr
         debug "keycardV2 service: emitting channel state update", state=state, signal=SIGNAL_KEYCARD_CHANNEL_STATE_UPDATED
         self.events.emit(SIGNAL_KEYCARD_CHANNEL_STATE_UPDATED, KeycardChannelStateArg(state: state))

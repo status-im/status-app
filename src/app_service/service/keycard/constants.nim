@@ -110,3 +110,6 @@ const ResponseParamMnemonicIdxs* = RequestParamMnemonicIdxs
 const ResponseParamTXSignature* = RequestParamTXSignature
 const ResponseParamExportedKey* = RequestParamExportedKey
 const ResponseParamMasterKeyAddress* = RequestParamMasterKeyAddress
+
+const SignalKeycardStatusChanged* = "status-changed"
+const SignalKeycardChannelStateChanged* = "channel-state-changed"
