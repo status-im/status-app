@@ -168,6 +168,12 @@ Item {
         signalName: "loginRequested"
     }
 
+    SignalSpy {
+        id: keycardRequestedSpy
+        target: controlUnderTest
+        signalName: "keycardRequested"
+    }
+
     property OnboardingLayout controlUnderTest: null
 
     StatusTestCase {
@@ -204,6 +210,7 @@ Item {
             dynamicSpy.cleanup()
             finishedSpy.clear()
             loginSpy.clear()
+            keycardRequestedSpy.clear()
         }
 
         function getCurrentPage(stack, pageClass) {
@@ -1355,6 +1362,152 @@ Item {
 
             // Verify visibility
             tryCompare(thirdPartyServices, "visible", true)
+        }
+
+        // TEST: Keycard requested signal emission tests
+        function test_keycardRequested_createProfileWithKeycard_data() {
+            return [{ tag: "create profile with keycard" }] // dummy to skip global data
+        }
+
+        function test_keycardRequested_createProfileWithKeycard() {
+            verify(!!controlUnderTest)
+
+            const stack = controlUnderTest.stack
+            verify(!!stack)
+
+            // PAGE 1: Welcome
+            let page = getCurrentPage(stack, WelcomePage)
+            waitForRendering(page)
+
+            const btnCreateProfile = findChild(controlUnderTest, "btnCreateProfile")
+            verify(!!btnCreateProfile)
+            mouseClick(btnCreateProfile)
+
+            // PAGE 2: Help us improve
+            page = getCurrentPage(stack, HelpUsImproveStatusPage)
+            const shareButton = findChild(controlUnderTest, "btnShare")
+            mouseClick(shareButton)
+
+            // PAGE 3: Create profile
+            page = getCurrentPage(stack, CreateProfilePage)
+            const btnCreateWithEmptyKeycard = findChild(controlUnderTest, "btnCreateWithEmptyKeycard")
+            verify(!!btnCreateWithEmptyKeycard)
+
+            // Verify keycardRequested signal is NOT yet emitted
+            compare(keycardRequestedSpy.count, 0)
+
+            // Click the button to create with keycard
+            mouseClick(btnCreateWithEmptyKeycard)
+
+            // Verify keycardRequested signal WAS emitted
+            tryCompare(keycardRequestedSpy, "count", 1)
+        }
+
+        function test_keycardRequested_loginWithKeycard_data() {
+            return [{ tag: "login with keycard" }] // dummy to skip global data
+        }
+
+        function test_keycardRequested_loginWithKeycard() {
+            verify(!!controlUnderTest)
+
+            const stack = controlUnderTest.stack
+            verify(!!stack)
+
+            // PAGE 1: Welcome
+            let page = getCurrentPage(stack, WelcomePage)
+            waitForRendering(page)
+
+            const btnLogin = findChild(controlUnderTest, "btnLogin")
+            verify(!!btnLogin)
+            mouseClick(btnLogin)
+
+            // PAGE 2: Help us improve
+            page = getCurrentPage(stack, HelpUsImproveStatusPage)
+            const shareButton = findChild(controlUnderTest, "btnShare")
+            mouseClick(shareButton)
+
+            // PAGE 3: Log in
+            page = getCurrentPage(stack, NewAccountLoginPage)
+            const btnWithKeycard = findChild(page, "btnWithKeycard")
+            verify(!!btnWithKeycard)
+
+            // Verify keycardRequested signal is NOT yet emitted
+            compare(keycardRequestedSpy.count, 0)
+
+            // Click the button to login with keycard
+            mouseClick(btnWithKeycard)
+
+            // Verify keycardRequested signal WAS emitted
+            tryCompare(keycardRequestedSpy, "count", 1)
+        }
+
+        function test_keycardRequested_selectKeycardProfileOnLoginScreen_data() {
+            return [{ tag: "select keycard profile" }] // dummy to skip global data
+        }
+
+        function test_keycardRequested_selectKeycardProfileOnLoginScreen() {
+            verify(!!controlUnderTest)
+            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+
+            const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
+
+            const userSelector = findChild(page, "loginUserSelector")
+            verify(!!userSelector)
+
+            // Initially select a password-based profile (uid_1)
+            userSelector.setSelection("uid_1")
+            tryCompare(userSelector, "selectedProfileKeyId", "uid_1")
+            tryCompare(userSelector, "keycardCreatedAccount", false)
+
+            // Clear any signals emitted during initial setup (LoginScreen may auto-select a profile)
+            keycardRequestedSpy.clear()
+
+            // Verify keycardRequested signal is NOT emitted for password profile (after clearing)
+            compare(keycardRequestedSpy.count, 0)
+
+            // Now select a keycard profile (uid_4)
+            userSelector.setSelection("uid_4")
+            tryCompare(userSelector, "selectedProfileKeyId", "uid_4")
+            tryCompare(userSelector, "keycardCreatedAccount", true)
+
+            // Verify keycardRequested signal WAS emitted when switching to keycard profile
+            tryCompare(keycardRequestedSpy, "count", 1)
+        }
+
+        function test_keycardRequested_notEmittedForPasswordFlow_data() {
+            return [{ tag: "password flow" }] // dummy to skip global data
+        }
+
+        function test_keycardRequested_notEmittedForPasswordFlow() {
+            verify(!!controlUnderTest)
+
+            const stack = controlUnderTest.stack
+            verify(!!stack)
+
+            // PAGE 1: Welcome
+            let page = getCurrentPage(stack, WelcomePage)
+            waitForRendering(page)
+
+            const btnCreateProfile = findChild(controlUnderTest, "btnCreateProfile")
+            verify(!!btnCreateProfile)
+            mouseClick(btnCreateProfile)
+
+            // PAGE 2: Help us improve
+            page = getCurrentPage(stack, HelpUsImproveStatusPage)
+            const shareButton = findChild(controlUnderTest, "btnShare")
+            mouseClick(shareButton)
+
+            // PAGE 3: Create profile
+            page = getCurrentPage(stack, CreateProfilePage)
+            const btnCreateWithPassword = findChild(controlUnderTest, "btnCreateWithPassword")
+            verify(!!btnCreateWithPassword)
+            mouseClick(btnCreateWithPassword)
+
+            // PAGE 4: Create password
+            page = getCurrentPage(stack, CreatePasswordPage)
+
+            // Verify keycardRequested signal was NOT emitted throughout the password flow
+            compare(keycardRequestedSpy.count, 0)
         }
     }
 }
