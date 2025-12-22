@@ -294,6 +294,26 @@ make run
 ```
 🎉
 
+### Build Configuration Options
+
+The following environment variables can be used to customize the build:
+
+- INCLUDE_DEBUG_SYMBOLS (0,1) - Configure nim to include the debug symbols for desktop platforms.
+- KDF_ITERATIONS (number) - Configure the KDF_ITERATIONS to use for the DB encryption
+- KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local keycard-qt folder. Defaults to a new clone of the latest master in the `status-keycard-qt` build folder.
+- MONITORING (true,false) - Enable/disable qml monitoring tools. The monitoring tools provide a suite of qml introspection tools to debug data transformations. Defaults to `false`
+- NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `$(GIT_ROOT)/../nim-sds`
+- PRODUCTION_PARAMETERS (string) - Configure the production arguments for nim compilation. Defaults to `-d:production`
+- QMAKE (path to executable) - Point the build system to a different qt installation. Defaults to env configuration
+- QML_DEBUG (true,false) - Enable qml debugger and profiler. Needs DOtherSide recompilation. Defaults to `false`
+- QML_DEBUG_PORT (number) - Configure the qml debugger port. Defaults to `49152`
+- QT_ARCH (string) - Configure the Qt architecture for macOS cross-compilation. Can be used to compile Intel builds on ARM64 OS. Defaults to `$(shell uname -m)`
+- REBUILD_NIM (true,false) - Force nim recompilation
+- REBUILD_UI (true,false) - Force qrc recompilation
+- STATUS_KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local status-keycard-qt folder. Defaults to `vendor/status-keycard-qt`
+- USE_STATUS_KEYCARD_QT (0,1) - Toggle to switch between `status-keycard-go` and `status-keycard-qt`. Defaults to `0`
+- VCINSTALLDIR (path) - Visual Studio compiler installation path. Defaults to `C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\`
+
 
 ## 🐞 Troubleshooting
 

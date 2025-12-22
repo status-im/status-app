@@ -510,16 +510,16 @@ $(STATUSKEYCARDGO): | deps
 ##
 
 # Allow using local status-keycard-qt for development
-STATUS_KEYCARD_QT_DIR ?= vendor/status-keycard-qt
-KEYCARD_QT ?= ""
+STATUS_KEYCARD_QT_SOURCE_DIR ?= vendor/status-keycard-qt
+KEYCARD_QT_SOURCE_DIR ?= ""
 
 # Determine build directory based on platform
 ifeq ($(mkspecs),macx)
-STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_DIR)/build/macos
+STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/build/macos
 else ifeq ($(mkspecs),win32)
-STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_DIR)/build/windows
+STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/build/windows
 else
-STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_DIR)/build/linux
+STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/build/linux
 endif
 
 export STATUSKEYCARD_QT_LIB := $(STATUS_KEYCARD_QT_BUILD_DIR)/libstatus-keycard-qt.$(LIB_EXT)
@@ -528,15 +528,12 @@ export STATUSKEYCARD_QT_LIBDIR := $(STATUS_KEYCARD_QT_BUILD_DIR)
 status-keycard-qt: $(STATUSKEYCARD_QT_LIB)
 $(STATUSKEYCARD_QT_LIB): | deps check-qt-dir
 	echo -e $(BUILD_MSG) "status-keycard-qt"
-	+ STATUS_KEYCARD_QT_DIR="$(STATUS_KEYCARD_QT_DIR)" \
-	  KEYCARD_QT_DIR="$(KEYCARD_QT_DIR)" \
-	  QMAKE="$(QMAKE)" \
-	  cmake -S "${STATUS_KEYCARD_QT_DIR}" -B "${STATUS_KEYCARD_QT_BUILD_DIR}" \
+	  cmake -S "${STATUS_KEYCARD_QT_SOURCE_DIR}" -B "${STATUS_KEYCARD_QT_BUILD_DIR}" \
 		$(COMMON_CMAKE_CONFIG_PARAMS) \
 		-DBUILD_TESTING=OFF \
 		-DBUILD_EXAMPLES=OFF \
 		-DBUILD_SHARED_LIBS=ON \
-		-DKEYCARD_QT_SOURCE_DIR=${KEYCARD_QT} \
+		-DKEYCARD_QT_SOURCE_DIR=${KEYCARD_QT_SOURCE_DIR} \
 		$(HANDLE_OUTPUT) 
 	cmake --build $(STATUS_KEYCARD_QT_BUILD_DIR) --target status-keycard-qt $(HANDLE_OUTPUT)
 
@@ -558,7 +555,7 @@ else
   KEYCARD_LIB := $(STATUSKEYCARDGO)
   KEYCARD_LIBDIR := $(STATUSKEYCARDGO_LIBDIR)
   KEYCARD_LINKNAME := keycard
-  KEYCARD_DYLIB_NAME := libkeycard.dylib
+  KEYCARD_DYLIB_NAME := libkeycard.$(LIB_EXT)
 endif
 
 QRCODEGEN := vendor/QR-Code-generator/c/libqrcodegen.a
