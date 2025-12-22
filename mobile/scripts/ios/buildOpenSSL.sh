@@ -56,7 +56,30 @@ mkdir -p ${SSL_BUILD_DIR}
 
 (
   cd ${SSL_BUILD_DIR}
-  ${OPENSSL}/Configure --release "$TARGET" $PLATFORM_CONFIG_ARGS
+  
+  # - no-module: Makes legacy provider built-in to libcrypto (not a separate module)
+  # - enable-legacy: Enables legacy algorithms including DES
+  # This is required for GlobalPlatform SCP02 which uses single-DES
+  # Reference: https://github.com/openssl/openssl/discussions/25793
+  
+  # Platform-specific config
+  if [[ "$OS" == "ios" ]]; then
+    # iOS uses static libraries (.a files)
+    SHARED_FLAG="no-shared"
+  else
+    # Android uses shared libraries (.so files)
+    SHARED_FLAG="shared"
+  fi
+  
+  ${OPENSSL}/Configure --release "$TARGET" $PLATFORM_CONFIG_ARGS \
+    no-module \
+    enable-legacy \
+    enable-des \
+    enable-md2 \
+    enable-rc5 \
+    $SHARED_FLAG \
+    no-tests \
+    no-ui-console
   # Rebuilding isn't working with the default target, so we need to clean and build again
   make clean
   make -j$(sysctl -n hw.ncpu) $PLATFORM_BUILD_ARGS build_libs
