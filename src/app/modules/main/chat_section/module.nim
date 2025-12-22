@@ -1057,11 +1057,19 @@ method onCommunityTokenPermissionUpdated*(self: Module, communityId: string, tok
   if self.showPermissionUpdateNotification(community, tokenPermission):
     singletonInstance.globalEvents.showCommunityTokenPermissionUpdatedNotification(communityId, "Community permission updated", "A token permission has been updated")
 
+method onCommunityTokenPermissionCreationOrUpdateSucceeded*(self: Module, communityId: string) =
+  self.view.setPermissionSaveInProgress(false)
+  self.view.permissionSavedSuccessfully()
+
 method onCommunityTokenPermissionCreationFailed*(self: Module, communityId: string) =
   singletonInstance.globalEvents.showCommunityTokenPermissionCreationFailedNotification(communityId, "Failed to create community permission", "Something went wrong")
+  self.view.setPermissionSaveInProgress(false)
+  self.view.setErrorSavingPermission("Failed to create permission. Please try again.")
 
 method onCommunityTokenPermissionUpdateFailed*(self: Module, communityId: string) =
   singletonInstance.globalEvents.showCommunityTokenPermissionUpdateFailedNotification(communityId, "Failed to update community permission", "Something went wrong")
+  self.view.setPermissionSaveInProgress(false)
+  self.view.setErrorSavingPermission("Failed to update permission. Please try again.")
 
 method onCommunityTokenPermissionDeletionFailed*(self: Module, communityId: string) =
   singletonInstance.globalEvents.showCommunityTokenPermissionDeletionFailedNotification(communityId, "Failed to delete community permission", "Something went wrong")

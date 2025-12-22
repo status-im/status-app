@@ -8144,6 +8144,11 @@
       <comment>EditPermissionView</comment>
       <translation>Create permission</translation>
     </message>
+    <message>
+      <source>There was an error saving the permission: %1</source>
+      <comment>EditPermissionView</comment>
+      <translation>There was an error saving the permission: %1</translation>
+    </message>
   </context>
   <context>
     <name>EditSlippagePanel</name>

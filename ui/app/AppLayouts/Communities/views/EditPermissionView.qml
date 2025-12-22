@@ -56,6 +56,9 @@ StatusScrollView {
     property bool showChannelSelector: true
     property bool ensCommunityPermissionsEnabled
 
+    property bool saveInProgress: false
+    property string errorSaving: ""
+
     // roles: type, key, name, amount, imageSource
     property var selectedHoldingsModel: ListModel {}
 
@@ -185,6 +188,7 @@ StatusScrollView {
     SequenceColumnLayout {
         id: sequenceColumnLayout
 
+        enabled: !root.saveInProgress
         width: root.availableWidth
         title: qsTr("Anyone")
 
@@ -452,9 +456,12 @@ StatusScrollView {
 
                 directParent: permissionsSelector.addButton
 
-                allowCommunityOptions: root.showChannelSelector
+                // Hide community options if we are in the Channel popup or if "Anyone is allowed to" is enabled
+                // since making everyone Admin doesn't make sense and anyone can join the community is the default.
+                allowCommunityOptions: root.showChannelSelector && d.dirtyValues.holdingsRequired
                 initialPermissionType: d.dirtyValues.permissionType
-                enableAdminPermission: root.communityDetails.owner
+                // Only owners can assign Admin permissions
+                enableAdminPermission: root.communityDetails.owner 
 
                 onDone: function(permissionType) {
                     if (d.dirtyValues.permissionType === permissionType) {
@@ -654,6 +661,20 @@ StatusScrollView {
             iconColor: textColor
         }
 
+        StatusWarningBox {
+            Layout.fillWidth: true
+            Layout.maximumWidth: root.preferredContentWidth
+            Layout.rightMargin: root.internalRightPadding
+
+            Layout.topMargin: Theme.padding
+            visible: root.errorSaving !== ""
+            icon: "close-circle"
+            text: qsTr("There was an error saving the permission: %1").arg(root.errorSaving)
+            borderColor: Theme.palette.baseColor1
+            textColor: Theme.palette.dangerColor1
+            iconColor: textColor
+        }
+
         StatusButton {
             Layout.preferredHeight: 44
             Layout.fillWidth: true
@@ -665,6 +686,7 @@ StatusScrollView {
             objectName: "createPermissionButton"
             text: qsTr("Create permission")
             enabled: root.saveEnabled
+            loading: root.saveInProgress
 
             onClicked: root.createPermissionClicked()
         }

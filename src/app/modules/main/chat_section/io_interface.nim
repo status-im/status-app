@@ -346,6 +346,9 @@ method setCommunityMetrics*(self: AccessInterface, metrics: CommunityMetricsDto)
 method onCommunityTokenPermissionCreated*(self: AccessInterface, communityId: string, tokenPermission: CommunityTokenPermissionDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onCommunityTokenPermissionCreationOrUpdateSucceeded*(self: AccessInterface, communityId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onCommunityTokenPermissionCreationFailed*(self: AccessInterface, communityId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

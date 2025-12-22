@@ -31,6 +31,8 @@ StackView {
     property bool showChannelSelector: true
     property bool ensCommunityPermissionsEnabled
     property alias initialPage: initialItem
+    property bool saveInProgress: false
+    property string errorSaving: ""
 
     // id, name, image, color, owner properties expected
     required property var communityDetails
@@ -46,6 +48,11 @@ StackView {
                                      var holdings, var channels, bool isPrivate)
     signal removePermissionRequested(string key)
     signal navigateToMintTokenSettings(bool isAssetType)
+
+    function permissionSavedSuccessfully() {
+        // Go back to the permissions list after successful save
+        root.pop(StackView.Immediate)
+    }
 
     function navigateBack() {
         if (depth === 2 && currentItem.toast.active)
@@ -218,6 +225,8 @@ StackView {
                 ensCommunityPermissionsEnabled: root.ensCommunityPermissionsEnabled
                 holdingsRequired: selectedHoldingsModel
                                   ? selectedHoldingsModel.count > 0 : false
+                saveInProgress: root.saveInProgress
+                errorSaving: root.errorSaving
 
                 permissionDuplicated: {
                     // dependencies
@@ -296,10 +305,6 @@ StackView {
                     root.createPermissionRequested(
                                 dirtyValues.permissionType, holdings, channels,
                                 dirtyValues.isPrivate)
-
-                    if (root.showChannelSelector) {
-                        root.pop(StackView.Immediate)
-                    }
                 }
 
                 onNavigateToMintTokenSettings: root.navigateToMintTokenSettings(isAssetType)

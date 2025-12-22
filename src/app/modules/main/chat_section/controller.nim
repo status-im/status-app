@@ -258,6 +258,11 @@ proc init*(self: Controller) =
       if (args.communityId == self.sectionId):
         self.delegate.onCategoryUnmuted(args.categoryId)
 
+    self.events.on(SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_OR_UPDATE_SUCCEEDED) do(e: Args):
+      let args = CommunityTokenPermissionArgs(e)
+      if (args.communityId == self.sectionId):
+        self.delegate.onCommunityTokenPermissionCreationOrUpdateSucceeded(args.communityId)
+
     self.events.on(SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_FAILED) do(e: Args):
       let args = CommunityTokenPermissionArgs(e)
       if (args.communityId == self.sectionId):

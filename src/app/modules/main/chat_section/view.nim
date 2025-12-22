@@ -35,7 +35,11 @@ QtObject:
       memberMessagesModelVariant: QVariant
       requestToJoinState: RequestToJoinState
       communityMemberReevaluationStatus: int
+      permissionSaveInProgress: bool
+      errorSavingPermission: string
 
+  proc setPermissionSaveInProgress*(self: View, value: bool)
+  proc setErrorSavingPermission*(self: View, value: string)
 
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface): View =
@@ -62,6 +66,8 @@ QtObject:
     result.memberMessagesModelVariant = newQVariant(result.memberMessagesModel)
     result.requestToJoinState = RequestToJoinState.None
     result.communityMemberReevaluationStatus = 0
+    result.permissionSaveInProgress = false
+    result.errorSavingPermission = ""
 
   proc load*(self: View) =
     self.delegate.viewDidLoad()
@@ -341,7 +347,8 @@ QtObject:
     read = getTokenPermissionsModel
 
   proc createOrEditCommunityTokenPermission*(self: View, permissionId: string, permissionType: int, tokenCriteriaJson: string, channelIDs: string, isPrivate: bool) {.slot.} =
-
+    self.setPermissionSaveInProgress(true)
+    self.setErrorSavingPermission("")
     let chatIDs = channelIDs.split(',')
     self.delegate.createOrEditCommunityTokenPermission(permissionId, permissionType, tokenCriteriaJson, chatIDs, isPrivate)
 
@@ -516,6 +523,36 @@ QtObject:
   proc markAllReadInCommunity*(self: View) {.slot.} =
     self.delegate.markAllReadInCommunity()
 
+  proc permissionSavedSuccessfully*(self: View) {.signal.}
+
+  proc permissionSaveInProgressChanged*(self: View) {.signal.}
+
+  proc getPermissionSaveInProgress*(self: View): bool {.slot.} =
+    return self.permissionSaveInProgress
+
+  proc setPermissionSaveInProgress*(self: View, value: bool) =
+    if self.permissionSaveInProgress == value:
+      return
+    self.permissionSaveInProgress = value
+    self.permissionSaveInProgressChanged()
+
+  QtProperty[bool] permissionSaveInProgress:
+    read = getPermissionSaveInProgress
+    notify = permissionSaveInProgressChanged
+
+  proc errorSavingPermissionChanged*(self: View) {.signal.}
+
+  proc setErrorSavingPermission*(self: View, value: string) =
+    if self.errorSavingPermission == value:
+      return
+    self.errorSavingPermission = value
+    self.errorSavingPermissionChanged()
+
+  proc getErrorSavingPermission*(self: View): string {.slot.} =
+    return self.errorSavingPermission
+  QtProperty[string] errorSavingPermission:
+    read = getErrorSavingPermission
+    notify = errorSavingPermissionChanged
+
   proc delete*(self: View) =
     self.QObject.delete
-

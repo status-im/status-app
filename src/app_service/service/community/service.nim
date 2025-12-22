@@ -231,6 +231,7 @@ const SIGNAL_DISCORD_CHANNEL_IMPORT_CANCELED* = "discordChannelImportCanceled"
 const SIGNAL_MEMBER_REEVALUATION_STATUS* = "communityMemberReevaluationStatus"
 
 const SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATED* = "communityTokenPermissionCreated"
+const SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_OR_UPDATE_SUCCEEDED* = "communityTokenPermissionCreationOrUpdateSucceeded"
 const SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_FAILED* = "communityTokenPermissionCreationFailed"
 const SIGNAL_COMMUNITY_TOKEN_PERMISSION_UPDATED* = "communityTokenPermissionUpdated"
 const SIGNAL_COMMUNITY_TOKEN_PERMISSION_UPDATE_FAILED* = "communityTokenPermissionUpdateFailed"
@@ -2221,8 +2222,8 @@ QtObject:
       error "Error canceling discord channel import", msg = e.msg
 
   proc createOrEditCommunityTokenPermission*(self: Service, communityId: string, tokenPermission: CommunityTokenPermissionDto) =
+    let editing = tokenPermission.id != ""
     try:
-      let editing = tokenPermission.id != ""
       var response: RpcResponse[JsonNode]
       if editing:
         response = status_go.editCommunityTokenPermission(communityId, tokenPermission.id, int(tokenPermission.`type`), Json.encode(tokenPermission.tokenCriteria), tokenPermission.chatIDs, tokenPermission.isPrivate)
@@ -2230,15 +2231,18 @@ QtObject:
         response = status_go.createCommunityTokenPermission(communityId, int(tokenPermission.`type`), Json.encode(tokenPermission.tokenCriteria), tokenPermission.chatIDs, tokenPermission.isPrivate)
 
       if response.result != nil and response.result.kind != JNull:
+        self.events.emit(SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_OR_UPDATE_SUCCEEDED, CommunityTokenPermissionArgs(communityId: communityId, tokenPermission: tokenPermission))
         return
+
+      raise newException(RpcException, "No result returned from create/edit community token permission")
+    except Exception as e:
+      error "Error creating/editing community token permission", msg = e.msg
 
       var signal = SIGNAL_COMMUNITY_TOKEN_PERMISSION_CREATION_FAILED
       if editing:
         signal = SIGNAL_COMMUNITY_TOKEN_PERMISSION_UPDATE_FAILED
 
       self.events.emit(signal, CommunityTokenPermissionArgs(communityId: communityId, tokenPermission: tokenPermission))
-    except Exception as e:
-      error "Error creating/editing community token permission", msg = e.msg
 
   proc deleteCommunityTokenPermission*(self: Service, communityId: string, permissionId: string) =
     try:

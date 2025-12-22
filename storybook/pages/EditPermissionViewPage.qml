@@ -28,6 +28,8 @@ SplitView {
             isPrivate: isPrivateCheckBox.checked
             permissionDuplicated: isPermissionDuplicatedCheckBox.checked
             permissionTypeLimitReached: isLimitReachedCheckBox.checked
+            saveInProgress: isSavingInProgressCheckBox.checked
+            errorSaving: errorSavingCheckBox.checked ? "Wrong permission data" : ""
 
             assetsModel: AssetsModel {}
             collectiblesModel: CollectiblesModel {}
@@ -102,6 +104,18 @@ SplitView {
                     id: isLimitReachedCheckBox
 
                     text: "Is limit reached"
+                }
+
+                CheckBox {
+                    id: isSavingInProgressCheckBox
+
+                    text: "Is saving in progress"
+                }
+
+                CheckBox {
+                    id: errorSavingCheckBox
+
+                    text: "Error saving"
                 }
             }
 

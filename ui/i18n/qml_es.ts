@@ -6680,6 +6680,10 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
         <source>Create permission</source>
         <translation>Crear permiso</translation>
     </message>
+    <message>
+        <source>There was an error saving the permission: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EditSlippagePanel</name>
