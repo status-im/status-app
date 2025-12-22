@@ -17,9 +17,10 @@ import shared.controls.chat.menuItems
 
 import utils
 
-import AppLayouts.Profile.stores as ProfileStores
+import AppLayouts.Profile.helpers
 
 import mainui
+import mainui.adaptors
 
 SplitView {
     id: root
@@ -62,18 +63,20 @@ SplitView {
         width: 800
         height: 640
         title: "PrimaryNavSidebar"
-        color: Theme.palette.baseColor4 // doesn't get the proper StatusQ palette w/o Theme.xxx
+        color: Theme.palette.statusAppLayout.backgroundColor
 
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 2
-            anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width : 2
+            anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width + Theme.halfPadding : 2
             Behavior on anchors.leftMargin {PropertyAnimation {duration: ThemeUtils.AnimationDuration.Fast}}
 
             WebView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.verticalStretchFactor: 2
                 url: "https://status.app"
+                visible: d.activeSectionType === Constants.appSection.browser
             }
 
             StatusButton {
@@ -105,27 +108,42 @@ SplitView {
                 wrapMode: Text.Wrap
                 text: "Sidebar position: %1".arg(sidebar.position)
             }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
         }
 
         PrimaryNavSidebar {
             id: sidebar
             height: parent.height
 
-            sectionsModel: d.sectionsModel
+            PrimaryNavSidebarAdaptor {
+                id: sidebarAdaptor
+                sectionsModel: d.sectionsModel
+                showEnabledSectionsOnly: ctrlShowEnabledSectionsOnly.checked
+                marketEnabled: ctrlMarketEnabled.checked
+                browserEnabled: ctrlBrowserEnabled.checked
+                nodeEnabled: ctrlNodeEnabled.checked
+            }
+
+            regularItemsModel: sidebarAdaptor.regularItemsModel
+            communityItemsModel: sidebarAdaptor.communityItemsModel
+            bottomItemsModel: sidebarAdaptor.bottomItemsModel
 
             acVisible: d.acVisible
             acHasUnseenNotifications: ctrlAcHasUnseenNotifications.checked // <- ActivityCenterStore.hasUnseenNotifications
             acUnreadNotificationsCount: ctrlAcUnreadNotificationsCount.value // <- ActivityCenterStore.unreadNotificationsCount
 
-            profileStore: ProfileStores.ProfileStore {
-                id: profileStore
-                readonly property string pubKey: "0xdeadbeef"
-                readonly property string compressedPubKey: "zxDeadBeef"
-                readonly property string name: "John Doe"
-                readonly property string icon: ModelsData.icons.rarible
-                readonly property int colorId: 7
-                readonly property bool usesDefaultName: false
-                property int currentUserStatus: Constants.currentUserStatus.automatic
+            selfContactDetails: ContactDetails {
+                publicKey: "0xdeadbeef"
+                compressedPubKey: "zxDeadBeef"
+                displayName: "John Doe"
+                icon: ModelsData.icons.rarible
+                colorId: 7
+                usesDefaultName: false
+                onlineStatus: Constants.currentUserStatus.automatic
             }
 
             getEmojiHashFn: function(pubKey) { // <- root.utilsStore.getEmojiHash(pubKey)
@@ -143,11 +161,8 @@ SplitView {
                     id: communityContextMenu
 
                     required property var model
-                    required property int index
 
                     readonly property bool isSpectator: model.spectated && !model.joined
-
-                    onClosed: destroy()
 
                     StatusAction {
                         text: qsTr("Invite People")
@@ -211,26 +226,22 @@ SplitView {
                 }
             }
 
-            showEnabledSectionsOnly: ctrlShowEnabledSectionsOnly.checked
-            marketEnabled: ctrlMarketEnabled.checked
-            browserEnabled: ctrlBrowserEnabled.checked
-            nodeEnabled: ctrlNodeEnabled.checked
             thirdpartyServicesEnabled: ctrlThirdPartyServices.checked
             showCreateCommunityBadge: ctrlShowCreateCommunityBadge.checked
             profileSectionHasNotification: ctrlSettingsHasNotification.checked
 
-            onItemActivated: function (sectionType, id) {
+            onItemActivated: function (sectionType, sectionId) {
                 logs.logEvent("onItemActivated", ["sectionType", "sectionId"], arguments)
-                sectionsModel.setActiveSection(id)
+                d.sectionsModel.setActiveSection(sectionId)
                 d.activeSectionType = sectionType
-                d.activeSectionId = id
+                d.activeSectionId = sectionId
             }
             onActivityCenterRequested: function (shouldShow) {
                 logs.logEvent("onActivityCenterRequested", ["shouldShow"], arguments)
                 d.acVisible = shouldShow
             }
             onSetCurrentUserStatusRequested: function (status) {
-                profileStore.currentUserStatus = status
+                selfContactDetails.onlineStatus = status
                 logs.logEvent("onSetCurrentUserStatusRequested", ["status"], arguments) // <- root.rootStore.setCurrentUserStatus(status)
             }
             onViewProfileRequested: logs.logEvent("onViewProfileRequested", ["pubKey"], arguments) // <- Global.openProfilePopup(pubKey)
@@ -310,5 +321,4 @@ SplitView {
 
 // category: Panels
 // status: good
-// https://www.figma.com/design/pJgiysu3rw8XvL4wS2Us7W/DS?node-id=4185-86833&t=lNokXnXl5AHjxHan-0
-// https://www.figma.com/design/pJgiysu3rw8XvL4wS2Us7W/DS?node-id=4185-86833&t=hN6bacud6gPREDcH-0
+// https://www.figma.com/design/pJgiysu3rw8XvL4wS2Us7W/DS?node-id=3948-44690&m=dev

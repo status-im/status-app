@@ -9,7 +9,6 @@
 
    \list
        \li \l{StatusAppLayout}
-       \li \l{StatusAppNavBar}
        \li \l{StatusAppTwoPanelLayout}
        \li \l{StatusAppThreePanelLayout}
    \endlist

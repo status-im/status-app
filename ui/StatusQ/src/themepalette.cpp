@@ -17,6 +17,9 @@ constexpr auto darkThemeName = "dark"_L1;
 
 ThemePalette::ThemePalette(QObject* parent)
     : QObject(parent)
+    , transparent(StatusColors::transparent)
+    , black(StatusColors::black)
+    , white(StatusColors::white)
 {
 }
 
@@ -163,7 +166,7 @@ std::unique_ptr<ThemePalette> createDarkThemePalette(QObject* parent)
     t->statusAppLayout.rightPanelBackgroundColor = t->baseColor3;
 
     // Status app nav bar
-    t->statusAppNavBar.backgroundColor = t->baseColor5;
+    t->statusAppNavBar.backgroundColor = t->baseColor2; // #373737
 
     // Status toast message
     t->statusToastMessage.backgroundColor = t->baseColor3;
@@ -359,7 +362,7 @@ std::unique_ptr<ThemePalette> createLightThemePalette(QObject* parent)
     t->statusAppLayout.rightPanelBackgroundColor = StatusColors::white;
 
     // Status app nav bar
-    t->statusAppNavBar.backgroundColor = t->baseColor2;
+    t->statusAppNavBar.backgroundColor = StatusColors::lightDesktopBlue10; // #ECEFFB
 
     // Status toast message
     t->statusToastMessage.backgroundColor = StatusColors::white;
@@ -418,7 +421,7 @@ std::unique_ptr<ThemePalette> createLightThemePalette(QObject* parent)
     t->privacyColors.primary = QColor(0xBE, 0xBB, 0xF9);
     t->privacyColors.secondary = QColor(0xD6, 0xD7, 0xF7);
     t->privacyColors.tertiary = QColor(0x20, 0x1C, 0x76);
-    t->privacyColors.tertiaryOpaque = alpha(QColor(0x20, 0x1C, 0x76), 0.3);
+    t->privacyColors.tertiaryOpaque = QColor(0x20, 0x1C, 0x76, 0.3*255);
     t->privacyColors.iconColor = QColor(0x64, 0x70, 0x84);
 
     // Customisation colors

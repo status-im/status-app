@@ -1,9 +1,10 @@
 import QtQuick
 import QtTest
 
-import AppLayouts.Profile.stores as ProfileStores
+import AppLayouts.Profile.helpers
 
 import mainui
+import mainui.adaptors
 import utils
 
 import Models
@@ -13,25 +14,39 @@ Item {
     width: 800
     height: 640
 
-    readonly property bool isLandscape: root.width > root.height
+    PrimaryNavSidebarAdaptor {
+        id: sidebarAdaptor
+        sectionsModel: SectionsModel {}
+        marketEnabled: false
+        browserEnabled: false
+        nodeEnabled: false
+
+        function reset() {
+            marketEnabled = false
+            browserEnabled = false
+            nodeEnabled = false
+            showEnabledSectionsOnly = true
+        }
+    }
 
     Component {
         id: componentUnderTest
         PrimaryNavSidebar {
             height: parent.height
-            visible: root.isLandscape
-            interactive: !root.isLandscape
 
-            profileStore: ProfileStores.ProfileStore {
-                readonly property string pubKey: "0xdeadbeef"
-                readonly property string compressedPubKey: "zxDeadBeef"
-                readonly property string name: "John Doe"
-                readonly property string icon: ModelsData.icons.rarible
-                readonly property int colorId: 5
-                readonly property bool usesDefaultName: false
-                property int currentUserStatus: Constants.currentUserStatus.automatic
+            selfContactDetails: ContactDetails {
+                publicKey: "0xdeadbeef"
+                compressedPubKey: "zxDeadBeef"
+                displayName: "John Doe"
+                icon: ModelsData.icons.rarible
+                colorId: 7
+                usesDefaultName: false
+                onlineStatus: Constants.currentUserStatus.automatic
             }
-            sectionsModel: SectionsModel {}
+
+            regularItemsModel: sidebarAdaptor.regularItemsModel
+            communityItemsModel: sidebarAdaptor.communityItemsModel
+            bottomItemsModel: sidebarAdaptor.bottomItemsModel
 
             getLinkToProfileFn: function(pubkey) {
                 return Constants.userLinkPrefix + pubkey
@@ -40,9 +55,6 @@ Item {
                 return ["👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮"]
             }
 
-            marketEnabled: false
-            browserEnabled: false
-            nodeEnabled: false
             profileSectionHasNotification: false
             showCreateCommunityBadge: false
             thirdpartyServicesEnabled: true
@@ -81,12 +93,13 @@ Item {
         function cleanup() {
             itemActivatedSpy.clear()
             activityCenterSpy.clear()
+            sidebarAdaptor.reset()
         }
 
         function test_basic_geometry() {
             verify(controlUnderTest.width > 0)
             verify(controlUnderTest.height > 0)
-            compare(controlUnderTest.implicitWidth, 76)
+            compare(controlUnderTest.implicitWidth, 68)
         }
 
         function test_drawer_properties() {
@@ -95,15 +108,36 @@ Item {
             verify(controlUnderTest.spacing > 0)
         }
 
-        function test_sections_model_binding() {
-            verify(!!controlUnderTest.sectionsModel)
-            verify(controlUnderTest.sectionsModel.count > 0)
+        function test_zzz_portrait_mobile_view() {
+            // switch to portrait/mobile mode
+            root.width = 640
+            root.height = 800
+            tryCompare(controlUnderTest, "visible", false)
+
+            // position the mouse over the handle
+            const handle = findChild(controlUnderTest, "rainbowHandle")
+            verify(!!handle)
+            mouseMove(handle)
+
+            // drag to reveal it
+            mouseDrag(handle, handle.width/2, handle.height/2, 80, 0)
+            tryCompare(controlUnderTest, "visible", true)
+            tryCompare(handle, "visible", false)
         }
 
-        function test_profile_store_binding() {
-            verify(!!controlUnderTest.profileStore)
-            compare(controlUnderTest.profileStore.name, "John Doe")
-            compare(controlUnderTest.profileStore.pubKey, "0xdeadbeef")
+        function test_sections_model_binding() {
+            verify(!!controlUnderTest.regularItemsModel)
+            verify(controlUnderTest.regularItemsModel.count > 0)
+            verify(!!controlUnderTest.communityItemsModel)
+            verify(controlUnderTest.communityItemsModel.count > 0)
+            verify(!!controlUnderTest.bottomItemsModel)
+            verify(controlUnderTest.bottomItemsModel.count > 0)
+        }
+
+        function test_self_contact_binding() {
+            verify(!!controlUnderTest.selfContactDetails)
+            compare(controlUnderTest.selfContactDetails.displayName, "John Doe")
+            compare(controlUnderTest.selfContactDetails.publicKey, "0xdeadbeef")
         }
 
         function test_profile_button_exists() {
@@ -123,8 +157,8 @@ Item {
 
             compare(acButton.checkable, true)
             compare(acButton.checked, false)
-            compare(acButton.hasNotification, true)
-            compare(acButton.notificationsCount, 5)
+            compare(acButton.showBadge, true)
+            compare(acButton.badgeCount, 5)
             verify(acButton.badgeVisible)
         }
 
@@ -169,34 +203,19 @@ Item {
             compare(itemActivatedSpy.signalArguments[0][1], "id1")
         }
 
-        function test_default_active_section() {
-            // Wallet should be active according to SectionsModel
-            const walletBtn = findChild(controlUnderTest.contentItem, "Wallet-navbar")
-            verify(!!walletBtn)
-            tryCompare(walletBtn, "sectionType", Constants.appSection.wallet)
-            tryCompare(walletBtn, "checked", true)
-
-            // Messages should not be active
-            const messagesBtn = findChild(controlUnderTest.contentItem, "Messages-navbar")
-            verify(!!messagesBtn)
-            tryCompare(messagesBtn, "checked", false)
-        }
-
         function test_active_section_changed() {
             // Wallet should be active according to SectionsModel
             const walletBtn = findChild(controlUnderTest.contentItem, "Wallet-navbar")
             verify(!!walletBtn)
-            tryCompare(walletBtn, "sectionType", Constants.appSection.wallet)
             tryCompare(walletBtn, "checked", true)
 
             // verify the Settings button is not checked
             const settingsBtn = findChild(controlUnderTest.contentItem, "Settings-navbar")
             verify(!!settingsBtn)
             tryCompare(settingsBtn, "checked", false)
-            tryCompare(settingsBtn, "sectionType", Constants.appSection.profile)
 
             // simulate changing the active section from outside (via mock model update)
-            controlUnderTest.sectionsModel.setActiveSection(settingsBtn.sectionId)
+            sidebarAdaptor.sectionsModel.setActiveSection("id3") // "id" of Constants.appSection.profile
 
             // verify that Settings is active, Wallet is not
             tryCompare(settingsBtn, "checked", true)
@@ -207,20 +226,20 @@ Item {
             // Messages has notifications according to SectionsModel
             const messagesBtn = findChild(controlUnderTest.contentItem, "Messages-navbar")
             verify(!!messagesBtn)
-            compare(messagesBtn.hasNotification, true)
-            compare(messagesBtn.notificationsCount, 442)
+            compare(messagesBtn.showBadge, true)
+            compare(messagesBtn.badgeCount, 442)
             verify(messagesBtn.badgeVisible)
 
             // Wallet has no notifications
             const walletBtn = findChild(controlUnderTest.contentItem, "Wallet-navbar")
             verify(!!walletBtn)
-            compare(walletBtn.hasNotification, false)
-            compare(walletBtn.notificationsCount, 0)
+            compare(walletBtn.showBadge, false)
+            compare(walletBtn.badgeCount, 0)
             verify(!walletBtn.badgeVisible)
         }
 
         function test_browser_section_enabled() {
-            controlUnderTest.browserEnabled = true
+            sidebarAdaptor.browserEnabled = true
 
             waitForRendering(controlUnderTest.contentItem)
 
@@ -230,7 +249,7 @@ Item {
         }
 
         function test_node_section_enabled() {
-            controlUnderTest.nodeEnabled = true
+            sidebarAdaptor.nodeEnabled = true
 
             waitForRendering(controlUnderTest.contentItem)
 
@@ -251,7 +270,7 @@ Item {
             tryCompare(swapBtn, "visible", true)
 
             // When marketEnabled is true, Market section should be present, Swap not
-            controlUnderTest.marketEnabled = true
+            sidebarAdaptor.marketEnabled = true
 
             waitForRendering(controlUnderTest.contentItem)
 
@@ -263,13 +282,13 @@ Item {
         }
 
         function test_show_enabled_sections_only() {
-            controlUnderTest.showEnabledSectionsOnly = true
+            sidebarAdaptor.showEnabledSectionsOnly = true
 
             // Home section is disabled in SectionsModel, should not be visible
             const homeBtn = findChild(controlUnderTest.contentItem, "Home-navbar")
             compare(homeBtn, null)
 
-            controlUnderTest.showEnabledSectionsOnly = false
+            sidebarAdaptor.showEnabledSectionsOnly = false
 
             waitForRendering(controlUnderTest.contentItem)
 
@@ -284,7 +303,7 @@ Item {
             verify(!!settingsBtn)
 
             // Settings button should show notification when profileSectionHasNotification is true
-            tryCompare(settingsBtn, "hasNotification", true)
+            tryCompare(settingsBtn, "showBadge", true)
             tryCompare(settingsBtn, "badgeVisible", true)
         }
 
@@ -296,7 +315,7 @@ Item {
 
             // Communities button should show badge gradient
             tryCompare(communitiesBtn, "showBadgeGradient", true)
-            tryCompare(communitiesBtn, "hasNotification", true)
+            tryCompare(communitiesBtn, "showBadge", true)
             tryCompare(communitiesBtn, "badgeVisible", true)
         }
 
@@ -317,7 +336,7 @@ Item {
             // Test interactive mode
             controlUnderTest.alwaysVisible = false
             compare(controlUnderTest.dim, true)
-            compare(controlUnderTest.modal, true)
+            compare(controlUnderTest.modal, false)
 
             // Test non-interactive mode
             controlUnderTest.alwaysVisible = true

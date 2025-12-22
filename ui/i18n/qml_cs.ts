@@ -1172,11 +1172,11 @@
     </message>
     <message>
         <source>URL</source>
-        <translation type="unfinished">URL</translation>
+        <translation>URL</translation>
     </message>
     <message>
         <source>URL already added</source>
-        <translation type="unfinished"></translation>
+        <translation>URL již přidáno</translation>
     </message>
 </context>
 <context>
@@ -1433,15 +1433,15 @@
     </message>
     <message>
         <source>Refetch transaction history</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovit historii transakcí</translation>
     </message>
     <message>
         <source>Refetch</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovit</translation>
     </message>
     <message>
         <source>Done</source>
-        <translation type="unfinished">Hotovo</translation>
+        <translation>Hotovo</translation>
     </message>
 </context>
 <context>
@@ -2267,7 +2267,7 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
     <message>
         <source>Swap</source>
-        <translation type="unfinished"></translation>
+        <translation>Směnit</translation>
     </message>
 </context>
 <context>
@@ -2707,7 +2707,7 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
         <source>Add Favourite</source>
-        <translation type="unfinished">Přidat oblíbené</translation>
+        <translation>Přidat oblíbené</translation>
     </message>
 </context>
 <context>
@@ -8244,18 +8244,18 @@ L2 poplatek: %2</translation>
     <name>GroupsModel</name>
     <message>
         <source>Popular assets on %1</source>
-        <translation type="unfinished">Populární aktiva na %1</translation>
+        <translation>Populární aktiva na %1</translation>
     </message>
 </context>
 <context>
     <name>HandlersManager</name>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Info</translation>
     </message>
     <message>
         <source>Swap is not available in the testnet mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>Směna není k dispozici v režimu testnet.</translation>
     </message>
 </context>
 <context>
@@ -8310,7 +8310,7 @@ L2 poplatek: %2</translation>
     </message>
     <message>
         <source>Skip sharing</source>
-        <translation type="unfinished"></translation>
+        <translation>Přeskočit sdílení</translation>
     </message>
 </context>
 <context>
@@ -8328,7 +8328,7 @@ L2 poplatek: %2</translation>
     <name>HistoryBetaTag</name>
     <message>
         <source>Activity is in beta. For any issues, go to Settings → Advanced → Refetch transaction history.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -11186,7 +11186,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Available if third-party services enabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Dostupné se službami třetích stran</translation>
     </message>
 </context>
 <context>
@@ -11645,7 +11645,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Receive community messages &amp; requests from non-contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Dostávat komunitní zprávy a výzvy od ne-kontaktů</translation>
     </message>
 </context>
 <context>
@@ -12081,7 +12081,7 @@ selhalo</translation>
     </message>
     <message>
         <source>URL already added</source>
-        <translation type="unfinished"></translation>
+        <translation>URL již přidáno</translation>
     </message>
 </context>
 <context>
@@ -13791,7 +13791,7 @@ selhalo</translation>
     <name>ProfileContextMenu</name>
     <message>
         <source>Mark as trusted</source>
-        <translation>Označit jako důvěryhodné</translation>
+        <translation>Označit jako důvěryhodný</translation>
     </message>
     <message>
         <source>Review contact request</source>
@@ -13823,7 +13823,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Mark as untrusted</source>
-        <translation>Označit jako nedůvěryhodné</translation>
+        <translation>Označit jako nedůvěryhodný</translation>
     </message>
     <message>
         <source>Remove untrusted mark</source>
@@ -13980,7 +13980,7 @@ selhalo</translation>
     <name>ProfileHeader</name>
     <message>
         <source>Bridged from Discord</source>
-        <translation>Přemostěno z Discordu</translation>
+        <translation>Propojeno z Discordu</translation>
     </message>
     <message>
         <source>Select different image</source>
@@ -15406,11 +15406,11 @@ selhalo</translation>
     <name>SendModalHandler</name>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Info</translation>
     </message>
     <message>
         <source>Token that you&apos;re trying to send is not supported.</source>
-        <translation type="unfinished"></translation>
+        <translation>Token, který se snažíte odeslat, není podporovaný.</translation>
     </message>
 </context>
 <context>
@@ -15545,7 +15545,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Preferences</source>
-        <translation>Preference</translation>
+        <translation>Předvolby</translation>
     </message>
     <message>
         <source>About &amp; Help</source>
@@ -16134,13 +16134,6 @@ selhalo</translation>
     <message>
         <source>Hang in there! Just a few more seconds!</source>
         <translation>Vydržte! Ještě pár sekund!</translation>
-    </message>
-</context>
-<context>
-    <name>StatusActivityCenterButton</name>
-    <message>
-        <source>Notifications</source>
-        <translation>Oznámení</translation>
     </message>
 </context>
 <context>
@@ -17136,11 +17129,11 @@ přístup k vaší webkameře</translation>
     </message>
     <message>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Info</translation>
     </message>
     <message>
         <source>Swap on %1 is not supported by ParaSwap.</source>
-        <translation type="unfinished"></translation>
+        <translation>Směna na %1 není podporována ParaSwap.</translation>
     </message>
 </context>
 <context>
@@ -17630,15 +17623,15 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Browser (browse web-pages, connect dApps)</source>
-        <translation type="unfinished"></translation>
+        <translation>Prohlížeč (procházet webové stránky, připojit dApps)</translation>
     </message>
     <message>
         <source>Sync with NTP (Network Time Protocol) servers</source>
-        <translation type="unfinished"></translation>
+        <translation>Synchronizovat s NTP (Network Time Protocol) servery</translation>
     </message>
     <message>
         <source>Missed messages if your device time isn’t synced to network time</source>
-        <translation type="unfinished"></translation>
+        <translation>Zmeškané zprávy, pokud čas vašeho zařízení není synchronizován se síťovým časem</translation>
     </message>
 </context>
 <context>
@@ -18088,11 +18081,11 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Send failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Odeslání selhalo</translation>
     </message>
     <message>
         <source>Sending</source>
-        <translation type="unfinished">Odesílání</translation>
+        <translation>Odesílání</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -18100,59 +18093,59 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Receive failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Příjem selhal</translation>
     </message>
     <message>
         <source>Receiving</source>
-        <translation type="unfinished"></translation>
+        <translation>Přijímání</translation>
     </message>
     <message>
         <source>Received</source>
-        <translation>Obdrženo</translation>
+        <translation>Přijato</translation>
     </message>
     <message>
         <source>Destroy failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Ničení selhalo</translation>
     </message>
     <message>
         <source>Destroying</source>
-        <translation type="unfinished"></translation>
+        <translation>Ničení</translation>
     </message>
     <message>
         <source>Destroyed</source>
-        <translation type="unfinished"></translation>
+        <translation>Zničeno</translation>
     </message>
     <message>
         <source>Swap failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Směna selhala</translation>
     </message>
     <message>
         <source>Swapping</source>
-        <translation type="unfinished"></translation>
+        <translation>Probíhá směna</translation>
     </message>
     <message>
         <source>Swapped</source>
-        <translation type="unfinished"></translation>
+        <translation>Směněno</translation>
     </message>
     <message>
         <source>Bridge failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Přemostění selhalo</translation>
     </message>
     <message>
         <source>Bridging</source>
-        <translation type="unfinished"></translation>
+        <translation>Přemosťování</translation>
     </message>
     <message>
         <source>Bridged</source>
-        <translation type="unfinished"></translation>
+        <translation>Přemostěno</translation>
     </message>
     <message>
         <source>Contract deployment failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Nasazení kontraktu selhalo</translation>
     </message>
     <message>
         <source>Deploying contract</source>
-        <translation type="unfinished"></translation>
+        <translation>Nasazování kontraktu</translation>
     </message>
     <message>
         <source>Contract deployed</source>
@@ -18164,11 +18157,11 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Minting collectible</source>
-        <translation type="unfinished"></translation>
+        <translation>Ražba sběratelského předmětu</translation>
     </message>
     <message>
         <source>Collectible minted</source>
-        <translation type="unfinished"></translation>
+        <translation>Sběratelský předmět vyražen</translation>
     </message>
     <message>
         <source>Token minting failed</source>
@@ -18184,19 +18177,19 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Failed to set spending cap</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepodařilo se nastavit limit útraty</translation>
     </message>
     <message>
         <source>Setting spending cap</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastavování limitu útraty</translation>
     </message>
     <message>
         <source>Spending cap set</source>
-        <translation type="unfinished"></translation>
+        <translation>Limit útraty nastaven</translation>
     </message>
     <message>
         <source>Interaction</source>
-        <translation type="unfinished"></translation>
+        <translation>Interakce</translation>
     </message>
     <message>
         <source>Retry</source>
@@ -18204,15 +18197,15 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Unknown NFT</source>
-        <translation type="unfinished"></translation>
+        <translation>Neznámé NFT</translation>
     </message>
     <message>
         <source>%1 from %2 in %3</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 od %2 v %3</translation>
     </message>
     <message>
         <source>%1 from %2</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 od %2</translation>
     </message>
 </context>
 <context>
@@ -18371,7 +18364,7 @@ The gas limit is a cap on how much work the transaction can do on the blockchain
     </message>
     <message>
         <source>Last transaction: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Poseldní transakce: %1</translation>
     </message>
     <message>
         <source>Transaction counter ensuring transactions from your account are processed in the correct order and can’t be replayed. Each new transaction increments the nonce by 1, ensuring uniqueness and preventing double-spending.
@@ -18446,7 +18439,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>TransferOwnershipPopup</name>
     <message>
         <source>Are you sure you want to transfer ownership of %1? All ownership rights you currently hold for %1 will be transferred to the new owner.</source>
-        <translation type="unfinished"></translation>
+        <translation>Opravdu chcete převést vlastnictví %1? Všechna vlastnická oprávnění pro %1, která aktuálně držíte, budou převedena na nového vlastníka.</translation>
     </message>
     <message>
         <source>To transfer ownership of %1:</source>
@@ -18454,11 +18447,11 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>1. Send the %1 Owner token (%2) to the new owner’s address</source>
-        <translation type="unfinished"></translation>
+        <translation>1. Odeslat %1 token vlastníka (%2) na adresu nového vlastníka</translation>
     </message>
     <message>
         <source>2. Ask the new owner to setup the control node for %1 on their desktop device</source>
-        <translation type="unfinished"></translation>
+        <translation>2. Požádat nevého vlastníka, aby nastavil řídící uzel pro %1 na svém zařízení</translation>
     </message>
     <message>
         <source>I acknowledge that...</source>
@@ -18960,7 +18953,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Bridge</source>
-        <translation>Most</translation>
+        <translation>Přemostit</translation>
     </message>
     <message>
         <source>Soulbound collectibles cannot be bridged to another wallet</source>
@@ -18972,7 +18965,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Swap</source>
-        <translation type="unfinished"></translation>
+        <translation>Směnit</translation>
     </message>
 </context>
 <context>
@@ -18994,35 +18987,35 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>WalletKeypairAccountMenu</name>
     <message>
         <source>Show encrypted QR on device</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazit zašifrovaný QR na zařízení</translation>
     </message>
     <message>
         <source>Stop using Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Přestat používat Keycard</translation>
     </message>
     <message>
         <source>Move key pair to a Keycard</source>
-        <translation type="unfinished"></translation>
+        <translation>Přesunout pár klíčů na Keycard</translation>
     </message>
     <message>
         <source>Import key pair from device via encrypted QR</source>
-        <translation type="unfinished"></translation>
+        <translation>Importovat pár klíčů ze zařízení pomocí šifrovaného QR</translation>
     </message>
     <message>
         <source>Import via entering private key</source>
-        <translation type="unfinished">Importovat zadáním soukromého klíče</translation>
+        <translation>Importovat zadáním soukromého klíče</translation>
     </message>
     <message>
         <source>Import via entering recovery phrase</source>
-        <translation type="unfinished">Importovat zadáním obnovovací fráze</translation>
+        <translation>Importovat zadáním obnovovací fráze</translation>
     </message>
     <message>
         <source>Rename key pair</source>
-        <translation type="unfinished">Přejmenovat pár klíčů</translation>
+        <translation>Přejmenovat pár klíčů</translation>
     </message>
     <message>
         <source>Remove key pair and derived accounts</source>
-        <translation type="unfinished">Odstranit pár klíčů a odvozené účty</translation>
+        <translation>Odstranit pár klíčů a odvozené účty</translation>
     </message>
 </context>
 <context>
@@ -19146,7 +19139,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Not enough ETH to pay gas fees</source>
-        <translation type="unfinished">Nedostatek ETH na zaplacení poplatků za plyn</translation>
+        <translation>Nedostatek ETH na zaplacení poplatků za plyn</translation>
     </message>
     <message>
         <source>amount in too low</source>

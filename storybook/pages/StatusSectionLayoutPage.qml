@@ -143,7 +143,6 @@ Page {
             centerPanel: centerPanelCheckBox.checked ? centerPanel : null
             rightPanel: rightPanel
             showRightPanel: rightPanelCheckBox.checked
-            navBar: navBarItem
             footer: footerItem
             headerContent: headerContent
             headerBackground: Control {

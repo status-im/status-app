@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Components.private // for StatusNewItemGradient
@@ -10,47 +11,60 @@ import StatusQ.Core.Theme
 ToolButton {
     id: root
 
-    property string sectionId
-    property int sectionType // cf Constants.appSection.*
-    property bool hasNotification
-    property int notificationsCount
+    property bool showBadge
+    property int badgeCount
     property string tooltipText
     property bool showBadgeGradient
-    property Component popupMenu
+    property bool thirdpartyServicesEnabled
+    property real bgRadius: width/2
 
     // mainly for testing
     readonly property bool badgeVisible: identicon.badge.visible
 
-    padding: Theme.halfPadding
-    opacity: /*down ? ThemeUtils.pressedOpacity :*/ enabled ? 1 : ThemeUtils.disabledOpacity // TODO pressed state ?
-    Behavior on opacity { NumberAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
+    signal contextMenuRequested(int x, int y)
 
-    implicitWidth: 40
-    implicitHeight: 40
+    padding: 8
+    opacity: enabled ? 1 : ThemeUtils.disabledOpacity
+
+    implicitWidth: 42
+    implicitHeight: 42
+
+    focusPolicy: SQUtils.Utils.isMobile ? Qt.NoFocus : Qt.StrongFocus
 
     icon.color: {
         if (checked || down || highlighted)
-            return "white"
+            return Theme.palette.indirectColor1
 
-        return Theme.palette.directColor1
+        if (!root.thirdpartyServicesEnabled)
+            return Theme.palette.privacyColors.tertiary
+
+        return Theme.palette.primaryColor1
     }
     Behavior on icon.color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
 
-    icon.width: 24 // TODO scalable
+    icon.width: 24
     icon.height: 24
+
+    font.family: Fonts.baseFont.family
+    font.pixelSize: Theme.additionalTextSize
 
     background: Rectangle {
         color: {
             if (root.checked)
                 return Theme.palette.primaryColor1
+
+            if (!root.thirdpartyServicesEnabled) {
+                if (root.hovered || root.highlighted)
+                    return StatusColors.alphaColor(StatusColors.white, 0.25)
+            }
+
             if (root.hovered || root.highlighted)
                 return Theme.palette.primaryColor2
 
-            return "transparent"
+            return Theme.palette.transparent
         }
 
-        Behavior on color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
-        radius: width/2
+        radius: root.bgRadius
     }
 
     contentItem: StatusSmartIdenticon {
@@ -67,28 +81,25 @@ ToolButton {
         asset.useAcronymForLetterIdenticon: false
         asset.color: root.icon.color
 
-        hoverEnabled: false
+        StatusNewItemGradient { id: newGradient }
 
         badge {
-            width: root.notificationsCount ? badge.implicitWidth : Theme.padding - badge.border.width // bigger dot
-            height: root.notificationsCount ? badge.implicitHeight : Theme.padding - badge.border.width
+            width: root.badgeCount ? badge.implicitWidth : 16 - badge.border.width // bigger dot
+            height: root.badgeCount ? badge.implicitHeight : 16 - badge.border.width
             border.width: 2
-            border.color: Theme.palette.isDark ? StatusColors.darkDesktopBlue10
-                                               : StatusColors.lightDesktopBlue10 // TODO follow container bg color
+            border.color: Theme.palette.statusAppNavBar.backgroundColor
             anchors.bottom: undefined // override StatusBadge
             anchors.bottomMargin: 0 // override StatusBadge
             anchors.right: identicon.right
-            anchors.rightMargin: badge.value ? -Theme.padding : -Theme.halfPadding
+            anchors.rightMargin: badge.value ? -16 : -8
             anchors.top: identicon.top
-            anchors.topMargin: badge.value ? -Theme.smallPadding : -Theme.halfPadding
+            anchors.topMargin: badge.value ? -10 : -8
 
-            visible: root.hasNotification
-            value: root.notificationsCount
+            visible: root.showBadge
+            value: root.badgeCount
             gradient: root.showBadgeGradient ? newGradient : undefined // gradient has precedence over a simple color
         }
     }
-
-    StatusNewItemGradient { id: newGradient }
 
     StatusToolTip {
         id: statusTooltip
@@ -104,16 +115,13 @@ ToolButton {
         cursorShape: hovered && root.hoverEnabled ? Qt.PointingHandCursor : undefined
     }
 
-    function openContextMenu(x, y) {
-        if (!root.popupMenu)
-            return
-        const menu = root.popupMenu.createObject(root, {model, index})
-        root.highlighted = Qt.binding(() => !!menu && menu.opened)
-        menu.popup(x, y)
+    // open the context menu at "x" where the tooltip opens, and top of the button (0)
+    ContextMenu.onRequested: {
         statusTooltip.hide()
+        root.contextMenuRequested(statusTooltip.x, 0)
     }
-
-    // open the context menu at "x" where the tooltip opens
-    ContextMenu.onRequested: pos => openContextMenu(statusTooltip.x, pos.y)
-    onPressAndHold: openContextMenu(statusTooltip.x, root.pressY)
+    onPressAndHold: {
+        statusTooltip.hide()
+        root.contextMenuRequested(statusTooltip.x, 0)
+    }
 }

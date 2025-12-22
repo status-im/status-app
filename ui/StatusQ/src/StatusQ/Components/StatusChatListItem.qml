@@ -57,7 +57,7 @@ Rectangle {
     implicitWidth: 288
     implicitHeight: 40
 
-    radius: 8
+    radius: Theme.radius
 
     color: {
         if (selected) {
@@ -84,7 +84,7 @@ Rectangle {
         StatusSmartIdenticon {
             id: identicon
             anchors.left: parent.left
-            anchors.leftMargin: 8
+            anchors.leftMargin: Theme.halfPadding
             anchors.verticalCenter: parent.verticalCenter
             asset: root.asset
             name: root.name
@@ -94,22 +94,22 @@ Rectangle {
                 color: onlineStatus === StatusChatListItem.OnlineStatus.Online ? Theme.palette.successColor1 : Theme.palette.baseColor1
                 border.width: 2
                 border.color: hoverHander.hovered ? Theme.palette.statusBadge.hoverBorderColor : root.color
-                implicitHeight: 9
-                implicitWidth: 9
+                height: 9
+                width: 9
             }
         }
 
         StatusIcon {
             id: statusIcon
             anchors.left: identicon.right
-            anchors.leftMargin: 8
+            anchors.leftMargin: Theme.halfPadding
             anchors.verticalCenter: parent.verticalCenter
 
             width: 16
             visible: root.type !== StatusChatListItem.Type.OneToOneChat
             opacity: {
                 if (root.muted && !hoverHander.hovered && !root.highlighted) {
-                    return 0.4
+                    return ThemeUtils.disabledOpacity
                 }
                 return root.hasUnreadMessages ||
                         root.notificationsCount > 0 ||
@@ -138,10 +138,10 @@ Rectangle {
         StatusBaseText {
             id: chatName
             anchors.left: statusIcon.visible ? statusIcon.right : identicon.right
-            anchors.leftMargin: statusIcon.visible ? 1 : 8
+            anchors.leftMargin: statusIcon.visible ? 1 : Theme.halfPadding
             anchors.right: mutedIcon.visible ? mutedIcon.left :
                                                statusBadge.visible ? statusBadgeContainer.left : parent.right
-            anchors.rightMargin: 6
+            anchors.rightMargin: Theme.halfPadding
             anchors.verticalCenter: parent.verticalCenter
 
             text: root.name
@@ -169,7 +169,7 @@ Rectangle {
         StatusIcon {
             id: mutedIcon
             anchors.right: statusBadge.visible ? statusBadgeContainer.left : parent.right
-            anchors.rightMargin: 8
+            anchors.rightMargin: Theme.halfPadding
             anchors.verticalCenter: parent.verticalCenter
             width: 14
             opacity: mutedIconSensor.containsMouse ? 1.0 : 0.2
@@ -194,7 +194,7 @@ Rectangle {
             width: 32
             height: parent.height
             anchors.right: parent.right
-            anchors.rightMargin: 8
+            anchors.rightMargin: Theme.halfPadding
             StatusBadge {
                 id: statusBadge
                 readonly property bool onlyUnread: !root.muted && root.notificationsCount === 0 && root.hasUnreadMessages

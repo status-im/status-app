@@ -64,11 +64,6 @@ SplitView {
     */
     property alias rightPanel: rightPanelProxy.target
     /*!
-        \qmlproperty Item StatusSectionLayout::navBar
-        This property holds the navigation bar of the component. Usually displayed next to the leftPanel.
-    */
-    property Item navBar
-    /*!
         \qmlproperty Item StatusSectionLayout::footer
         This property holds the footer of the component.
     */
@@ -139,18 +134,6 @@ SplitView {
         is pressed.
     */
     signal backButtonClicked()
-
-    Control {
-        id: navBarControl
-        SplitView.preferredWidth: (!!navBar) ? navBar.implicitWidth : 0
-        SplitView.fillHeight: (!!navBar)
-        background: Rectangle {
-            color: Theme.palette.baseColor4
-        }
-        contentItem: LayoutItemProxy {
-            target: root.navBar
-        }
-    }
 
     Control {
         SplitView.minimumWidth: (!!leftPanel) ? 304 : 0

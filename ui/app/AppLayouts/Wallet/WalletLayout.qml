@@ -32,8 +32,6 @@ import "popups/buy"
 Item {
     id: root
 
-    property Item navBar
-
     property WalletStores.RootStore walletRootStore
     property SharedStores.RootStore sharedRootStore
     property AppLayoutsStores.RootStore store
@@ -312,7 +310,6 @@ Item {
 
     StatusSectionLayout {
         id: walletSectionLayout
-        navBar: root.navBar
         anchors.fill: parent
         backButtonName: RootStore.backButtonName
         onBackButtonClicked: {

@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Controls
 import QtQuick.Layouts
 
@@ -10,11 +11,9 @@ import mainui
 
 import shared.controls
 
-import AppLayouts.Profile.stores as ProfileStores
+import AppLayouts.Profile.helpers
 
 import utils
-
-import SortFilterProxyModel
 
 Drawer {
     id: root
@@ -33,27 +32,24 @@ Drawer {
         enabled             [bool]   - whether the section should show in the UI
         active              [bool]   - whether the section is currently active
     **/
-    required property var sectionsModel
+    required property var regularItemsModel
+    required property var communityItemsModel
+    required property var bottomItemsModel
 
     // defaults to true in landscape (desktop/tablet) mode; can be overridden here
     property bool alwaysVisible: d.windowWidth > d.windowHeight
 
-    required property ProfileStores.ProfileStore profileStore
+    required property ContactDetails selfContactDetails
     property var getLinkToProfileFn: function(pubkey) { console.error("IMPLEMENT ME"); return "" }
     property var getEmojiHashFn: function(pubkey) { console.error("IMPLEMENT ME"); return "" }
 
-    property Component communityPopupMenu
+    property Component communityPopupMenu // required property var model
 
-    property bool showEnabledSectionsOnly: true
-
-    required property bool marketEnabled
-    required property bool browserEnabled
-    required property bool nodeEnabled
     required property bool profileSectionHasNotification
     required property bool showCreateCommunityBadge
     required property bool thirdpartyServicesEnabled
 
-    required property bool acVisible
+    required property bool acVisible // FIXME AC should not be a section
     required property bool acHasUnseenNotifications // ActivityCenterStore.hasUnseenNotifications
     required property int acUnreadNotificationsCount // ActivityCenterStore.unreadNotificationsCount
 
@@ -68,21 +64,21 @@ Drawer {
     visible: alwaysVisible
     interactive: !alwaysVisible
     dim: !alwaysVisible
-    modal: !alwaysVisible
+    modal: false // otherwise the handle blocks input
 
-    topPadding: Qt.platform.os === SQUtils.Utils.mac && Window.visibility !== Window.FullScreen ? Theme.padding * 3 // 48
-                                                                                                : Theme.halfPadding // 8
-    bottomPadding: Theme.halfPadding
-    leftPadding: Theme.halfPadding
-    rightPadding: Theme.halfPadding
+    topPadding: Qt.platform.os === SQUtils.Utils.mac && Window.visibility !== Window.FullScreen ? 48
+                                                                                                : 8
+    bottomPadding: 8
+    leftPadding: 8
+    rightPadding: 0
 
-    spacing: Theme.halfPadding // 8
+    spacing: 8
 
     background: Rectangle {
-        color: "transparent"
+        color: Theme.palette.transparent
     }
 
-    implicitWidth: 76 // by design; FIXME use a scalable value (60 + Theme.halfPadding + Theme.halfPadding)
+    implicitWidth: 68 // by design (60 + leftPadding + handle)
 
     QtObject {
         id: d
@@ -91,92 +87,17 @@ Drawer {
         readonly property int windowWidth: root.parent?.Window?.width ?? Screen.width
         readonly property int windowHeight: root.parent?.Window?.height ?? Screen.height
 
-        readonly property color containerBgColor: {
-            !root.thirdpartyServicesEnabled ? root.Theme.palette.privacyColors.primary :
-                                              root.Theme.palette.isDark ? root.StatusColors.darkDesktopBlue10
-                                                                        : root.StatusColors.lightDesktopBlue10 // FIXME correct container bg color
-        }
-        readonly property int containerBgRadius: root.Theme.padding // 16
+        readonly property color containerBgColor: root.thirdpartyServicesEnabled ? root.Theme.palette.statusAppNavBar.backgroundColor
+                                                                                 : root.Theme.palette.privacyColors.primary
+        readonly property int containerBgRadius: 16
 
-        // models
-        readonly property var sectionsModelInternal: SortFilterProxyModel {
-            sourceModel: root.sectionsModel
-            filters: [
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.loadingSection
-                    inverted: true
-                },
-                ValueFilter {
-                    roleName: "enabled"
-                    value: true
-                    enabled: root.showEnabledSectionsOnly
-                }
-            ]
-            sorters: [
-                RoleSorter { roleName: "sectionType" }
-            ]
-        }
-
-        readonly property var regularItemsModel: SortFilterProxyModel {
-            sourceModel: d.sectionsModelInternal
-            filters: AnyOf {
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.homePage
-                }
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.wallet
-                }
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.swap
-                    enabled: !root.marketEnabled
-                }
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.market
-                    enabled: root.marketEnabled
-                }
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.chat
-                }
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.browser
-                    enabled: root.browserEnabled
-                }
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.node
-                    enabled: root.nodeEnabled
-                }
-            }
-        }
-
-        readonly property var communityItemsModel: SortFilterProxyModel {
-            sourceModel: d.sectionsModelInternal
-            filters: [
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.community
-                }
-            ]
-        }
-
-        readonly property var bottomItemsModel: SortFilterProxyModel {
-            sourceModel: d.sectionsModelInternal
-            filters: AnyOf {
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.communitiesPortal
-                }
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.profile
-                }
+        // context menu guard
+        property var popupMenuInstance: null
+        readonly property var _conn: Connections {
+            target: d.popupMenuInstance ?? null
+            function onClosed() {
+                d.popupMenuInstance.destroy()
+                d.popupMenuInstance = null
             }
         }
     }
@@ -186,10 +107,12 @@ Drawer {
 
         // main section
         Control {
+            objectName: "primaryNavSideBarControl"
+
             Layout.fillWidth: true
             Layout.fillHeight: true
-            topPadding: Theme.smallPadding // 10
-            bottomPadding: Theme.smallPadding // 10
+            topPadding: 10
+            bottomPadding: 10
 
             background: Rectangle {
                 color: d.containerBgColor
@@ -201,31 +124,27 @@ Drawer {
                 SidebarListView {
                     Layout.fillHeight: true
                     Layout.maximumHeight: contentHeight
-                    model: d.regularItemsModel
+                    model: root.regularItemsModel
                     delegate: RegularSectionButton {}
                 }
+
+                // separator
+                SidebarSeparator {}
 
                 // communities
                 SidebarListView {
                     Layout.fillHeight: true
-                    model: d.communityItemsModel
-                    delegate: CommunitySectionButton {
-                        objectName: "CommunityNavBarButton"
-                    }
+                    model: root.communityItemsModel
+                    delegate: CommunitySectionButton {}
                 }
 
                 // separator
-                Rectangle {
-                    Layout.preferredWidth: Theme.padding
-                    Layout.preferredHeight: 1
-                    Layout.alignment: Qt.AlignHCenter
-                    color: Theme.palette.baseColor1
-                }
+                SidebarSeparator {}
 
                 // settings + community portal
                 SidebarListView {
                     Layout.preferredHeight: contentHeight
-                    model: d.bottomItemsModel
+                    model: root.bottomItemsModel
                     delegate: BottomSectionButton {}
                 }
 
@@ -233,13 +152,14 @@ Drawer {
                 ProfileButton {
                     objectName: "statusProfileNavBarTabButton"
                     Layout.alignment: Qt.AlignHCenter
-                    name: root.profileStore.name
-                    pubKey: root.profileStore.pubKey
-                    compressedPubKey: root.profileStore.compressedPubKey
-                    iconSource: root.profileStore.icon
-                    colorId: root.profileStore.colorId
-                    currentUserStatus: root.profileStore.currentUserStatus
-                    usesDefaultName: root.profileStore.usesDefaultName
+                    Layout.topMargin: root.spacing
+                    name: root.selfContactDetails.displayName
+                    pubKey: root.selfContactDetails.publicKey
+                    compressedPubKey: root.selfContactDetails.compressedPubKey
+                    iconSource: root.selfContactDetails.icon
+                    colorId: root.selfContactDetails.colorId
+                    currentUserStatus: root.selfContactDetails.onlineStatus
+                    usesDefaultName: root.selfContactDetails.usesDefaultName
 
                     getEmojiHashFn: root.getEmojiHashFn
                     getLinkToProfileFn: root.getLinkToProfileFn
@@ -251,60 +171,76 @@ Drawer {
         }
 
         // AC button
-        PrimaryNavSidebarButton {
+        Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: width
 
-            id: acButton
-            objectName: "Activity Center-navbar"
+            // prevent opacity multiplying; root has a "transparent" background!
+            color: d.containerBgColor
+            radius: d.containerBgRadius
 
-            checkable: true
-            checked: root.acVisible
+            PrimaryNavSidebarButton {
+                id: acButton
+                anchors.fill: parent
+                bgRadius: parent.radius
 
-            sectionType: Constants.appSection.activityCenter
-            icon.name: "notification"
+                objectName: "Activity Center-navbar"
 
-            hasNotification: root.acHasUnseenNotifications
-            notificationsCount: root.acUnreadNotificationsCount
+                checkable: true
+                checked: root.acVisible
 
-            background: Rectangle {
-                // prevent opacity multiplying; root has a "transparent" background!
-                color: d.containerBgColor
-                radius: d.containerBgRadius
-                Rectangle {
-                    anchors.fill: parent
-                    color: {
-                        if (acButton.checked)
-                            return Theme.palette.primaryColor1
-                        if (acButton.hovered)
-                            return Theme.palette.primaryColor2
-                        return "transparent"
-                    }
-                    Behavior on color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
-                    radius: parent.radius
-                }
+                icon.name: "notification"
+
+                showBadge: root.acHasUnseenNotifications
+                badgeCount: root.acUnreadNotificationsCount
+
+                thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+
+                onToggled: root.activityCenterRequested(checked)
             }
-
-            onToggled: root.activityCenterRequested(checked)
         }
+    }
+
+    // "rainbow" handle
+    // (parented to the Overlay, so that it functionally stays on top of the drawer,
+    // but visually sticking out from under, even when collapsed/invisible)
+    Rectangle {
+        objectName: "rainbowHandle"
+        height: 100
+        width: 16
+        radius: width
+        parent: root.Overlay.overlay
+        anchors.left: parent.left
+        anchors.leftMargin: (root.width * root.position) - width/2
+        anchors.verticalCenter: parent.verticalCenter
+        gradient: Gradient {
+            orientation: Gradient.Vertical
+            GradientStop {position: 0; color: "#7552FA"}
+            GradientStop {position: 0.2; color: "#6D9C9F"}
+            GradientStop {position: 0.4; color: "#F1AF40"}
+            GradientStop {position: 0.6; color: "#F7A440"}
+            GradientStop {position: 0.8; color: "#F87A4F"}
+        }
+        visible: root.position < 1
     }
 
     component RegularSectionButton: PrimaryNavSidebarButton {
         objectName: model.name + "-navbar"
         anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
 
-        sectionId: model.id
-        sectionType: model.sectionType
+        tooltipText: Utils.translatedSectionName(model.sectionType)
         checked: model.active
         icon.name: model.icon
         icon.source: model.image
         text: model.icon.length > 0 ? "" : model.name
-        tooltipText: Utils.translatedSectionName(sectionType, model.name) // FIXME Utils.translatedSectionName to take model.name as fallback for community name
 
-        hasNotification: model.hasNotification
-        notificationsCount: model.notificationsCount
+        showBadge: model.hasNotification
+        badgeCount: model.notificationsCount
+
+        thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
         onClicked: {
+            d.popupMenuInstance?.close()
             root.itemActivated(model.sectionType, model.id)
             if (root.interactive)
                 root.close()
@@ -312,12 +248,49 @@ Drawer {
     }
 
     component CommunitySectionButton: RegularSectionButton {
-        tooltipText: model.name
-        popupMenu: root.communityPopupMenu
+        id: communityNavBarButton
+        objectName: "CommunityNavBarButton"
 
+        tooltipText: model.name
+
+        // different bg with a border instead of solid bg color when checked
+        background: Rectangle {
+            color: {
+                if (!communityNavBarButton.thirdpartyServicesEnabled) {
+                    if (communityNavBarButton.hovered || communityNavBarButton.highlighted)
+                        return StatusColors.alphaColor(StatusColors.white, 0.25)
+                }
+
+                if (communityNavBarButton.hovered || communityNavBarButton.highlighted)
+                    return Theme.palette.primaryColor2
+
+                return Theme.palette.transparent
+            }
+
+            border.width: 2
+            border.color: communityNavBarButton.checked ? Theme.palette.primaryColor1 : Theme.palette.transparent
+
+            radius: communityNavBarButton.bgRadius
+        }
+
+        // context menu
+        function openCommunityContextMenu(x, y) {
+            if (!root.communityPopupMenu)
+                return
+
+            if (!!d.popupMenuInstance)
+                d.popupMenuInstance.close() // will run destruction/cleanup
+
+            d.popupMenuInstance = root.communityPopupMenu.createObject(this, {model})
+            this.highlighted = Qt.binding(() => !!d.popupMenuInstance && d.popupMenuInstance.opened && d.popupMenuInstance.parent === this)
+            d.popupMenuInstance.popup(this, x, y)
+        }
+        onContextMenuRequested: (x, y) => openCommunityContextMenu(x, y)
+
+        // "banned" decoration
         StatusRoundIcon {
             visible: model.amIBanned
-            width: Theme.padding
+            width: 16
             height: width
             anchors.top: parent.top
             anchors.left: parent.right
@@ -328,7 +301,7 @@ Drawer {
             border.width: 2
             asset.name: "cancel"
             asset.color: d.containerBgColor
-            asset.width: Theme.smallPadding
+            asset.width: 10
         }
 
         Binding on icon.color {
@@ -340,7 +313,7 @@ Drawer {
     component BottomSectionButton: RegularSectionButton {
         readonly property bool displayCreateCommunityBadge: model.sectionType === Constants.appSection.communitiesPortal && root.showCreateCommunityBadge
         showBadgeGradient: displayCreateCommunityBadge
-        hasNotification: {
+        showBadge: {
             if (model.sectionType === Constants.appSection.profile)
                 return root.profileSectionHasNotification
             if (displayCreateCommunityBadge)
@@ -350,9 +323,42 @@ Drawer {
     }
 
     component SidebarListView: ListView {
+        id: sidebarLV
+
         Layout.fillWidth: true
         clip: true
         spacing: root.spacing
         interactive: contentHeight > height
+
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            source: sidebarLV
+            maskEnabled: true
+            maskSource: gradientMask
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
+        }
+
+        // Mask geometry
+        Rectangle {
+            id: gradientMask
+            anchors.fill: sidebarLV
+            visible: false
+            layer.enabled: true
+            gradient: Gradient {
+                orientation: Gradient.Vertical
+                GradientStop {position: 0; color: !sidebarLV.atYBeginning ? Qt.rgba(1, 1, 1, 0) : Qt.rgba(0, 0, 0)}
+                GradientStop {position: 0.1; color: Qt.rgba(0, 0, 0)}
+                GradientStop {position: 0.9; color: Qt.rgba(0, 0, 0)}
+                GradientStop {position: 1; color: !sidebarLV.atYEnd ? Qt.rgba(1, 1, 1, 0) : Qt.rgba(0, 0, 0)}
+            }
+        }
+    }
+
+    component SidebarSeparator: Rectangle {
+        Layout.preferredWidth: 16
+        Layout.preferredHeight: 1
+        Layout.alignment: Qt.AlignHCenter
+        color: Theme.palette.baseColor1
     }
 }

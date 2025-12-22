@@ -54,35 +54,12 @@ SplitView {
 
             searchPhrase: homePage.searchPhrase
 
-            profileId: profileStore.pubKey
+            profileId: "0xdeadbeef"
         }
 
         homePageEntriesModel: homePageAdaptor.homePageEntriesModel
         sectionsModel: homePageAdaptor.sectionsModel
         pinnedModel: homePageAdaptor.pinnedModel
-
-        profileStore: ProfileStores.ProfileStore {
-            id: profileStore
-            readonly property string pubKey: "0xdeadbeef"
-            readonly property string compressedPubKey: "zxDeadBeef"
-            readonly property string name: "John Roe"
-            readonly property string icon: ModelsData.icons.rarible
-            readonly property int colorId: 7
-            readonly property bool usesDefaultName: false
-            property int currentUserStatus: Constants.currentUserStatus.automatic
-        }
-
-        getEmojiHashFn: function(pubKey) { // <- root.utilsStore.getEmojiHash(pubKey)
-            if (pubKey === "")
-                return ""
-
-            return["👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮","🤷🏻‍♂️", "🤦🏻", "📣", "🤎", "👷🏽", "😺", "🥞", "🔃", "🧝🏽‍♂️"]
-        }
-        getLinkToProfileFn: function(pubKey) { // <- root.rootStore.contactsStore.getLinkToProfile(pubKey)
-            return Constants.userLinkPrefix + pubKey
-        }
-
-        useNewDockIcons: ctrlNewIcons.checked
 
         onItemActivated: function(key, sectionType, itemId) {
             homePageAdaptor.setTimestamp(key, new Date().valueOf())
@@ -100,13 +77,6 @@ SplitView {
             logs.logEvent("onDappDisconnectRequested", ["dappUrl"], arguments)
             console.info("!!! DAPP DISCONNECT:", dappUrl)
         }
-        onSetCurrentUserStatusRequested: function (status) {
-            profileStore.currentUserStatus = status
-            logs.logEvent("onSetCurrentUserStatusRequested", ["status"], arguments) // <- root.rootStore.setCurrentUserStatus(status)
-        }
-        onViewProfileRequested: function(pubKey) {
-            logs.logEvent("onViewProfileRequested", ["pubKey"], arguments) // <- Global.openProfilePopup(pubKey)
-        }
     }
 
     LogsAndControlsPanel {
@@ -117,10 +87,6 @@ SplitView {
         logsView.logText: logs.logText
 
         ColumnLayout {
-            Switch {
-                id: ctrlNewIcons
-                text: "Use new dock icons"
-            }
             Switch {
                 id: ctrlShowEnabledSectionsOnly
                 text: "Show enabled sections only"

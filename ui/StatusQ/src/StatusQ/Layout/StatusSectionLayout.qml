@@ -70,11 +70,6 @@ LayoutChooser {
     */
     property Item rightPanel
     /*!
-        \qmlproperty Item StatusSectionLayout::navBar
-        This property holds the navigation bar of the component. Usually displayed next to the leftPanel.
-    */
-    property Item navBar
-    /*!
         \qmlproperty Item StatusSectionLayout::footer
         This property holds the footer of the component.
     */
@@ -182,7 +177,6 @@ LayoutChooser {
         leftPanel: root.leftPanel
         centerPanel: root.centerPanel
         rightPanel: root.rightPanel
-        navBar: root.navBar
         footer: root.footer
         headerBackground: root.headerBackground
         showRightPanel: root.showRightPanel
@@ -203,7 +197,6 @@ LayoutChooser {
         leftPanel: root.leftPanel
         centerPanel: root.centerPanel
         rightPanel: root.rightPanel
-        navBar: root.navBar
         footer: root.footer
         headerBackground: root.headerBackground
         showRightPanel: root.showRightPanel

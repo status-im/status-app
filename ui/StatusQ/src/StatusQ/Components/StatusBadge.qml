@@ -27,7 +27,7 @@ Rectangle {
     StatusBaseText {
         id: value
         visible: statusBadge.value > 0
-        font.pixelSize: statusBadge.value > 99 ? Theme.asideTextFontSize : Theme.tertiaryTextFontSize
+        font.pixelSize: Theme.asideTextFontSize
         font.weight: Font.Medium
         color: Theme.palette.statusBadge.foregroundColor
         anchors.centerIn: parent

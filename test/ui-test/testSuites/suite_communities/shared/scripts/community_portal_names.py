@@ -1,10 +1,10 @@
 from scripts.global_names import *
 
 # Main:
-navBarListView_Communities_Portal_navbar_StatusNavBarTabButton = {"checkable": True, "container": mainWindow_navBarListView_ListView, "objectName": "Communities Portal-navbar", "type": "StatusNavBarTabButton", "visible": True}
+navBarListView_Communities_Portal_navbar_PrimaryNavSidebarButton = {"checkable": True, "container": mainWindow_navBarListView_ListView, "objectName": "Communities Portal-navbar", "type": "PrimaryNavSidebarButton", "visible": True}
 mainWindow_communitiesPortalLayoutContainer_CommunitiesPortalLayout = {"container": statusDesktop_mainWindow, "objectName": "communitiesPortalLayout", "type": "CommunitiesPortalLayout"}
 communitiesPortalLayoutContainer_createCommunityButton_StatusButton = {"container": mainWindow_communitiesPortalLayoutContainer_CommunitiesPortalLayout, "objectName": "createCommunityButton", "type": "StatusButton", "visible": True}
-navBarListView_All_Community_Buttons = {"checkable": True, "container": mainWindow_communityNavBarListView_ListView, "objectName": "CommunityNavBarButton", "type": "StatusNavBarTabButton"}
+navBarListView_All_Community_Buttons = {"checkable": True, "container": mainWindow_communityNavBarListView_ListView, "objectName": "CommunityNavBarButton", "type": "PrimaryNavSidebarButton"}
 
 # Create community intermediate popup:
 createCommunity_banner = {"container": statusDesktop_mainWindow_overlay, "objectName": "createCommunityBanner", "type": "BannerPanel", "visible": True}

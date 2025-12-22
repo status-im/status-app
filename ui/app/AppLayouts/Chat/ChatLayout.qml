@@ -54,7 +54,6 @@ StackLayout {
     required property SharedStores.NetworksStore networksStore
     required property ProfileStores.AdvancedStore advancedStore
     property bool paymentRequestFeatureEnabled
-    property Item navBar
 
     property var mutualContactsModel
     property var sectionItemModel
@@ -156,7 +155,6 @@ StackLayout {
         JoinCommunityView {
             id: joinCommunityView
             readonly property string communityId: sectionItemModel.id
-            navBar: root.navBar
             name: sectionItemModel.name
             introMessage: sectionItemModel.introMessage
             communityDesc: sectionItemModel.description
@@ -201,7 +199,6 @@ StackLayout {
             readonly property string communityId: root.sectionItemModel.id
 
             objectName: "chatViewComponent"
-            navBar: root.navBar
 
             rootStore: root.rootStore
             createChatPropertiesStore: root.createChatPropertiesStore
@@ -370,7 +367,6 @@ StackLayout {
 
         sourceComponent: CommunitySettingsView {
             id: communitySettingsView
-            navBar: root.navBar
 
             rootStore: root.rootStore
             walletAccountsModel: WalletStore.RootStore.nonWatchAccounts
@@ -421,7 +417,6 @@ StackLayout {
         id: controlNodeOfflineComponent
         ControlNodeOfflineCommunityView {
             id: controlNodeOfflineView
-            navBar: root.navBar
             name: root.sectionItemModel.name
             communityDesc: root.sectionItemModel.description
             color: root.sectionItemModel.color
@@ -437,7 +432,6 @@ StackLayout {
         BannedMemberCommunityView {
             id: communityBanView
             readonly property var communityData: sectionItemModel
-            navBar: root.navBar
             name: root.sectionItemModel.name
             communityDesc: root.sectionItemModel.description
             color: root.sectionItemModel.color

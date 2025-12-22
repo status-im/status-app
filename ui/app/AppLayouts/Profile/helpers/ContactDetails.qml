@@ -2,6 +2,7 @@ import QtQml
 
 QtObject {
     required property string publicKey
+    property string compressedPubKey
     property string displayName
     property string ensName
     property bool ensVerified

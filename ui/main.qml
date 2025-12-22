@@ -404,7 +404,7 @@ Window {
 
         // Set Android status bar icons to dark (black) if on Android and background is light
         if (SQUtils.Utils.isAndroid) {
-            SystemUtils.setAndroidStatusBarIconColor(Theme.isDarkTheme)
+            SystemUtils.setAndroidStatusBarIconColor(applicationWindow.appThemeDark)
         }
 
         restoreAppState()

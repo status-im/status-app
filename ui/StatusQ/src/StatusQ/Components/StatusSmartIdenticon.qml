@@ -3,6 +3,7 @@ import QtQuick
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
+import StatusQ.Components
 
 Loader {
     id: root

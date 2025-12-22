@@ -16,7 +16,6 @@
        \li \l{StatusChatListCategoryItemButton}
        \li \l{StatusDropdown}
        \li \l{StatusIconTabButton}
-       \li \l{StatusNavBarTabButton}
        \li \l{StatusTabBarIconButton}
        \li \l{StatusToolTip}
        \li \l{StatusBaseButton}

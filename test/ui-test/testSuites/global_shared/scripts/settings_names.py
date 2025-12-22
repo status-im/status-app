@@ -30,7 +30,7 @@ class SettingsSubsection(Enum):
     BACKUP_SEED: str = "18" + _MAIN_MENU_ITEM_OBJ_NAME
 
 # Main:
-navBarListView_Settings_navbar_StatusNavBarTabButton = {"checkable": True, "container": mainWindow_navBarListView_ListView, "objectName": "Settings-navbar", "type": "StatusNavBarTabButton", "visible": True}
+navBarListView_Settings_navbar_PrimaryNavSidebarButton = {"checkable": True, "container": mainWindow_navBarListView_ListView, "objectName": "Settings-navbar", "type": "PrimaryNavSidebarButton", "visible": True}
 settingsSave_StatusButton = {"container": statusDesktop_mainWindow, "objectName": "settingsDirtyToastMessageSaveButton", "type": "StatusButton", "visible": True}
 settings_Sidebar_ENS_Item = {"container": mainWindow_ScrollView, "objectName": SettingsSubsection.ENS_USERNAMES.value, "type": "StatusNavigationListItem"}
 settingsContentBase_ScrollView = {"container": statusDesktop_mainWindow, "objectName": "settingsContentBaseScrollView", "type": "StatusScrollView", "visible": True}

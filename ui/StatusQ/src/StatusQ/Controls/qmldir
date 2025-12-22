@@ -1,6 +1,5 @@
 module StatusQ.Controls
 
-StatusActivityCenterButton 0.1 StatusActivityCenterButton.qml
 StatusAmountInput 0.1 StatusAmountInput.qml
 StatusAnimatedText 0.1 StatusAnimatedText.qml
 StatusBackButton 0.1 StatusBackButton.qml
@@ -34,7 +33,6 @@ StatusItemDelegate 0.1 StatusItemDelegate.qml
 StatusItemPicker 0.1 StatusItemPicker.qml
 StatusLabeledSlider 0.1 StatusLabeledSlider.qml
 StatusLinkText 0.1 StatusLinkText.qml
-StatusNavBarTabButton 0.1 StatusNavBarTabButton.qml
 StatusNavigationButton 0.1 StatusNavigationButton.qml
 StatusPasswordInput 0.1 StatusPasswordInput.qml
 StatusPasswordStrengthIndicator 0.1 StatusPasswordStrengthIndicator.qml

@@ -6,11 +6,12 @@ import utils
 
 import QtModelsToolkit
 import SortFilterProxyModel
+import AppLayouts.Profile.helpers
 
 /**
   * Adaptor concatenating model of contacts with own profile details into single
     model in order to use it as a complete source of profile info, with no
-    distinction between own and contat's profiles.
+    distinction between own and contact's profiles.
   */
 QObject {
     id: root
@@ -19,24 +20,13 @@ QObject {
     property alias contactsModel: mainSource.model
 
     /* Self-profile details */
-    property string selfPubKey
-    property string selfDisplayName
-    property string selfName
-    property string selfPreferredDisplayName
-    property string selfAlias
-    property bool selfUsesDefaultName
-    property string selfIcon
-    property int selfColorId
-    property int selfOnlineStatus
-    property string selfThumbnailImage
-    property string selfLargeImage
-    property string selfBio
+    required property ContactDetails selfContactDetails
 
     readonly property ConcatModel allContactsModel: ConcatModel {
         id: concatModel
 
         function hasUser(pubKey) {
-            return  pubKey === root.selfPubKey || contactsModel.hasUser(pubKey)
+            return pubKey === root.selfContactDetails.publicKey || contactsModel.hasUser(pubKey)
         }
 
         expectedRoles: [
@@ -61,19 +51,18 @@ QObject {
                     }
 
                     delegate: QtObject {
-                        readonly property string pubKey: root.selfPubKey
-                        readonly property string displayName: root.selfDisplayName
-                        readonly property string ensName: root.selfName
-                        readonly property bool isEnsVerified: root.selfName !== ""
-                                                              && Utils.isValidEns(root.selfName)
+                        readonly property string pubKey: root.selfContactDetails.publicKey
+                        readonly property string displayName: root.selfContactDetails.displayName
+                        readonly property string ensName: root.selfContactDetails.ensName
+                        readonly property bool isEnsVerified: !!ensName && Utils.isValidEns(ensName)
                         readonly property string localNickname: ""
-                        readonly property string preferredDisplayName: root.selfPreferredDisplayName
+                        readonly property string preferredDisplayName: root.selfContactDetails.preferredDisplayName
                         readonly property string name: preferredDisplayName
-                        readonly property string alias: root.selfAlias
-                        readonly property bool usesDefaultName: root.selfUsesDefaultName
-                        readonly property string icon: root.selfIcon
-                        readonly property int colorId: root.selfColorId
-                        readonly property int onlineStatus: root.selfOnlineStatus
+                        readonly property string alias: root.selfContactDetails.alias
+                        readonly property bool usesDefaultName: root.selfContactDetails.usesDefaultName
+                        readonly property string icon: root.selfContactDetails.icon
+                        readonly property int colorId: root.selfContactDetails.colorId
+                        readonly property int onlineStatus: root.selfContactDetails.onlineStatus
                         readonly property bool isContact: false
                         readonly property bool isCurrentUser: true
                         readonly property bool isVerified: false
@@ -82,13 +71,13 @@ QObject {
                         readonly property int contactRequestState: Constants.ContactRequestState.None
                         readonly property int lastUpdated: 0
                         readonly property int lastUpdatedLocally: 0
-                        readonly property string thumbnailImage: root.selfThumbnailImage
-                        readonly property string largeImage: root.selfLargeImage
+                        readonly property string thumbnailImage: root.selfContactDetails.thumbnailImage
+                        readonly property string largeImage: root.selfContactDetails.largeImage
                         readonly property bool isContactRequestReceived: Constants.ContactRequestState.None
                         readonly property bool isContactRequestSent: Constants.ContactRequestState.None
                         readonly property bool removed: false
                         readonly property int trustStatus: Constants.trustStatus.unknown
-                        readonly property string bio: root.selfBio
+                        readonly property string bio: root.selfContactDetails.bio
                     }
 
                     exposedRoles: concatModel.expectedRoles

@@ -26,9 +26,9 @@ class MainScreenComponents(Enum):
     PROFILE_NAVBAR_BUTTON = 'mainWindow_ProfileNavBarButton'
     MAIN_WINDOW = "statusDesktop_mainWindow"
     POPUP_OVERLAY = "statusDesktop_mainWindow_overlay"
-    CHAT_NAVBAR_ICON = "navBarListView_Chat_navbar_StatusNavBarTabButton"
-    COMMUNITY_PORTAL_BUTTON = "navBarListView_Communities_Portal_navbar_StatusNavBarTabButton"
-    SETTINGS_BUTTON = "navBarListView_Settings_navbar_StatusNavBarTabButton"
+    CHAT_NAVBAR_ICON = "navBarListView_Chat_navbar_PrimaryNavSidebarButton"
+    COMMUNITY_PORTAL_BUTTON = "navBarListView_Communities_Portal_navbar_PrimaryNavSidebarButton"
+    SETTINGS_BUTTON = "navBarListView_Settings_navbar_PrimaryNavSidebarButton"
     WALLET_BUTTON = "wallet_navbar_wallet_icon_StatusIcon"
     START_CHAT_BTN = "mainWindow_startChat"
     CHAT_LIST = "chatList"

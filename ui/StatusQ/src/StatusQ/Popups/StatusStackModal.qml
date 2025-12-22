@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
+import StatusQ.Popups
 
 StatusModal {
     id: root

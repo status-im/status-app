@@ -55,8 +55,6 @@ Control {
     **/
     required property var pinnedModel
 
-    property bool useNewDockIcons: true
-
     signal itemActivated(string key, int sectionType, string itemId)
     signal itemPinRequested(string key, bool pin)
     signal dappDisconnectRequested(string dappUrl)
@@ -144,7 +142,7 @@ Control {
             notificationsCount: model.notificationsCount ?? 0
             connectorBadge: model.connectorBadge ?? ""
             icon.color: hovered ? Theme.palette.primaryColor1 : Theme.palette.baseColor1
-            icon.name: (root.useNewDockIcons ? "homepage/" : "") + model.icon
+            icon.name: model.icon
             enabled: model.enabled
             onClicked: root.itemActivated(model.key, sectionType, "") // not interested in item (section) id here
         }

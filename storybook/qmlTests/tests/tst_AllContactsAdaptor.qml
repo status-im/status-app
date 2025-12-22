@@ -6,6 +6,7 @@ import utils
 
 import StatusQ.Core.Utils
 import mainui.adaptors
+import AppLayouts.Profile.helpers
 
 Item {
     id: root
@@ -14,7 +15,9 @@ Item {
         id: testComponent
 
         AllContactsAdaptor {
-            selfPubKey: "0x0000x"
+            selfContactDetails: ContactDetails {
+                publicKey: "0x0000x"
+            }
         }
     }
 
@@ -37,22 +40,23 @@ Item {
         name: "AllContactsAdaptorTest"
 
         function test_selfEntry() {
-            const contactDetails = createTemporaryObject(testComponent, root)
-            const model = contactDetails.allContactsModel
+            const obj = createTemporaryObject(testComponent, root)
+            const contactDetails = obj.selfContactDetails
+            const model = obj.allContactsModel
 
             compare(model.rowCount(), 1)
             compare(ModelUtils.get(model, 0).pubKey, "0x0000x")
 
-            contactDetails.selfDisplayName = "Display name"
-            contactDetails.selfName = "@name"
-            contactDetails.selfPreferredDisplayName = "Preferred display name"
-            contactDetails.selfAlias = "Alias"
-            contactDetails.selfIcon = "Icon"
-            contactDetails.selfColorId = 42
-            contactDetails.selfOnlineStatus = Constants.onlineStatus.online
-            contactDetails.selfThumbnailImage = "Thumbnail image"
-            contactDetails.selfLargeImage = "Large image"
-            contactDetails.selfBio = "Bio"
+            contactDetails.displayName = "Display name"
+            contactDetails.ensName = "@name"
+            contactDetails.preferredDisplayName = "Preferred display name"
+            contactDetails.alias = "Alias"
+            contactDetails.icon = "Icon"
+            contactDetails.colorId = 42
+            contactDetails.onlineStatus = Constants.onlineStatus.online
+            contactDetails.thumbnailImage = "Thumbnail image"
+            contactDetails.largeImage = "Large image"
+            contactDetails.bio = "Bio"
 
             compare(ModelUtils.get(model, 0).displayName, "Display name")
             compare(ModelUtils.get(model, 0).alias, "Alias")

@@ -9,7 +9,7 @@ import shared.popups
 
 import utils
 
-StatusNavBarTabButton {
+StatusIconTabButton {
     id: root
 
     required property string name
@@ -22,8 +22,6 @@ StatusNavBarTabButton {
 
     property var getLinkToProfileFn: function(pubKey) { console.error("IMPLEMENT ME"); return "" }
     property var getEmojiHashFn: function(pubKey) { console.error("IMPLEMENT ME"); return "" }
-
-    property bool opened: false
 
     signal viewProfileRequested(string pubKey)
     signal setCurrentUserStatusRequested(int status)
@@ -45,27 +43,18 @@ StatusNavBarTabButton {
         }
         return icon.name
     }
-    // identicon.asset.width: identicon.asset.isImage ? 28 : (root.usesDefaultName ? Math.floor(width * 0.9) : width)
-    // identicon.asset.height: identicon.asset.isImage ? 28 : (root.usesDefaultName ? Math.floor(height * 0.9) : height)
     identicon.asset.bgWidth: root.usesDefaultName ? width : 0
     identicon.asset.bgHeight: root.usesDefaultName ? height : 0
     identicon.asset.color: root.usesDefaultName ? Theme.palette.indirectColor2 : Utils.colorForPubkey(Theme.palette, root.pubKey)
     identicon.asset.isLetterIdenticon: root.usesDefaultName ? false : icon.name !== "" && !identicon.asset.isImage
     identicon.asset.bgColor: root.usesDefaultName ? Utils.colorForPubkey(Theme.palette, root.pubKey) : "transparent"
 
-    badge.visible: true
-    badge.anchors {
-        left: undefined
-        top: undefined
-        right: root.right
-        bottom: root.bottom
-        margins: 0
-        rightMargin: -badge.border.width
-        bottomMargin: -badge.border.width
-    }
-    badge.implicitHeight: 12
-    badge.implicitWidth: 12
-    badge.color: {
+    identicon.badge.visible: true
+    identicon.badge.border.width: 2
+    identicon.badge.border.color: Theme.palette.statusAppNavBar.backgroundColor
+    identicon.badge.height: 12
+    identicon.badge.width: 12
+    identicon.badge.color: {
         switch(root.currentUserStatus) {
         case Constants.currentUserStatus.automatic:
         case Constants.currentUserStatus.alwaysOnline:
@@ -80,6 +69,8 @@ StatusNavBarTabButton {
     UserStatusContextMenu {
         id: userStatusContextMenu
         objectName: "userStatusContextMenu"
+
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
 
         y: root.y - userStatusContextMenu.height + root.height
         x: root.x + root.width + 5

@@ -8,8 +8,6 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 
-import AppLayouts.Profile.stores as ProfileStores
-
 import shared.popups
 import shared.controls
 
@@ -25,21 +23,11 @@ Control {
     required property var sectionsModel
     required property var pinnedModel
 
-    required property ProfileStores.ProfileStore profileStore
-
-    property bool useNewDockIcons: true
-
-    property var getLinkToProfileFn: function(pubkey) { console.error("IMPLEMENT ME"); return "" }
-    property var getEmojiHashFn: function(pubkey) { console.error("IMPLEMENT ME"); return "" }
-
     readonly property string searchPhrase: searchField.text
 
     signal itemActivated(string key, int sectionType, string itemId)
     signal itemPinRequested(string key, bool pin)
     signal dappDisconnectRequested(string dappUrl)
-
-    signal setCurrentUserStatusRequested(int status)
-    signal viewProfileRequested(string pubKey)
 
     topPadding: Theme.defaultBigPadding * 2
     bottomPadding: Theme.smallPadding * 2
@@ -144,7 +132,6 @@ Control {
 
             objectName: "homeDock"
 
-            useNewDockIcons: root.useNewDockIcons
             sectionsModel: root.sectionsModel
             pinnedModel: root.pinnedModel
 
@@ -157,32 +144,6 @@ Control {
             onDappDisconnectRequested: function(dappUrl) {
                 root.dappDisconnectRequested(dappUrl)
             }
-        }
-    }
-
-    // top right action buttons
-    RowLayout {
-        anchors.right: parent.right
-        anchors.rightMargin: Theme.defaultPadding
-        anchors.top: parent.top
-        anchors.topMargin: Theme.defaultSmallPadding
-        spacing: 12
-
-        ProfileButton {
-            objectName: "homeProfileButton"
-            name: root.profileStore.name
-            pubKey: root.profileStore.pubKey
-            compressedPubKey: root.profileStore.compressedPubKey
-            iconSource: root.profileStore.icon
-            colorId: root.profileStore.colorId
-            currentUserStatus: root.profileStore.currentUserStatus
-            usesDefaultName: root.profileStore.usesDefaultName
-
-            getEmojiHashFn: root.getEmojiHashFn
-            getLinkToProfileFn: root.getLinkToProfileFn
-
-            onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
-            onViewProfileRequested: (pubKey) => root.viewProfileRequested(pubKey)
         }
     }
 }

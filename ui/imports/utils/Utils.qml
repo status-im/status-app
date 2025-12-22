@@ -409,11 +409,7 @@ QtObject {
     }
 
     // handle translations for section names coming from app_sections_config.nim
-    function translatedSectionName(sectionType, fallback, additionalTextFunction) {
-        if (additionalTextFunction === undefined) {
-            additionalTextFunction = function() { return "" }
-        }
-
+    function translatedSectionName(sectionType, fallback = "") {
         switch(sectionType) {
         case Constants.appSection.chat:
             return qsTr("Messages")
@@ -438,7 +434,7 @@ QtObject {
         case Constants.appSection.dApp:
             return qsTr("dApp")
         case Constants.appSection.homePage:
-            return "%1 (%2)".arg(qsTr("Home Page")).arg(additionalTextFunction(sectionType))
+            return qsTr("Home Page")
         case Constants.appSection.activityCenter:
             return qsTr("Activity Center")
         default:

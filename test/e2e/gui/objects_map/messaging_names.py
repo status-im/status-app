@@ -18,7 +18,6 @@ mainWindow_statusToolBar_StatusToolBar = {"container": mainWindow_chatView_ChatV
 statusToolBar_Confirm_StatusButton = {"checkable": False, "container": mainWindow_statusToolBar_StatusToolBar, "objectName": "inlineSelectorConfirmButton", "type": "StatusButton", "visible": True}
 statusToolBar_Cancel_StatusButton = {"checkable": False, "container": mainWindow_statusToolBar_StatusToolBar, "type": "StatusButton", "unnamed": 1, "visible": True}
 statusToolBar_StatusTagItem = {"container": mainWindow_statusToolBar_StatusToolBar, "type": "StatusTagItem", "visible": True}
-statusToolBar_notificationButton_StatusActivityCenterButton = {"container": statusDesktop_mainWindow, "objectName": "activityCenterNotificationsButton", "type": "StatusActivityCenterButton", "visible": True}
 
 # Chat View
 mainWindow_ChatColumnView = {"container": mainWindow_chatView_ChatView, "type": "ChatColumnView", "unnamed": 1, "visible": True}

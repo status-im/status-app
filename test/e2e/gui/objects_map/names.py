@@ -41,26 +41,26 @@ mainWindow_LeftPanelNavBar = {"container": statusDesktop_mainWindow, "objectName
 
 # First half of left main panel: home button, chat button, wallet button, market button
 
-homeButton = {"checkable": True, "container": mainWindow_LeftPanelNavBar, "objectName": "Home Page-navbar", "type": "StatusNavBarTabButton", "visible": True}
+homeButton = {"checkable": True, "container": mainWindow_LeftPanelNavBar, "objectName": "Home Page-navbar", "type": "PrimaryNavSidebarButton", "visible": True}
 walletChatSwapNavBarList = {"container": mainWindow_LeftPanelNavBar, "objectName": "statusChatNavBarListView",
                             "type": "ListView", "visible": True}
 mainWalletButton = {"container": walletChatSwapNavBarList, "objectName": "Wallet-navbar",
-                    "type": "StatusNavBarTabButton", "visible": True}
-chatButton = {"container": walletChatSwapNavBarList, "objectName": "Messages-navbar", "type": "StatusNavBarTabButton",
+                    "type": "PrimaryNavSidebarButton", "visible": True}
+chatButton = {"container": walletChatSwapNavBarList, "objectName": "Messages-navbar", "type": "PrimaryNavSidebarButton",
               "visible": True}
 
 # Second half of left main panel: communities button, settings button
 communitiesSettingsNavBarList = {"container": statusDesktop_mainWindow, "objectName": "statusMainNavBarListView",
                                  "type": "ListView", "visible": True}
 communitiesPortalButton = {"container": communitiesSettingsNavBarList, "objectName": "Communities Portal-navbar",
-                           "type": "StatusNavBarTabButton", "visible": True}
+                           "type": "PrimaryNavSidebarButton", "visible": True}
 settingsGearButton = {"container": communitiesSettingsNavBarList, "objectName": "Settings-navbar",
-                      "type": "StatusNavBarTabButton", "visible": True}
-activityCenterButton = {"container": communitiesSettingsNavBarList, "objectName": "Activity Center-navbar", "type": "StatusNavBarTabButton", "visible": True}
+                      "type": "PrimaryNavSidebarButton", "visible": True}
+activityCenterButton = {"container": communitiesSettingsNavBarList, "objectName": "Activity Center-navbar", "type": "PrimaryNavSidebarButton", "visible": True}
 
 # Online identifier
 onlineIdentifierButton = {"container": mainWindow_LeftPanelNavBar, "objectName": "statusProfileNavBarTabButton",
-                          "type": "StatusNavBarTabButton", "visible": True}
+                          "type": "PrimaryNavSidebarButton", "visible": True}
 
 mainWindow_statusCommunityMainNavBarListView_ListView = {"container": statusDesktop_mainWindow,
                                                          "objectName": "statusCommunityMainNavBarListView",
@@ -68,7 +68,7 @@ mainWindow_statusCommunityMainNavBarListView_ListView = {"container": statusDesk
 statusCommunityMainNavBarListView_CommunityNavBarButton = {"checkable": True,
                                                            "container": mainWindow_statusCommunityMainNavBarListView_ListView,
                                                            "objectName": "CommunityNavBarButton",
-                                                           "type": "StatusNavBarTabButton", "visible": True}
+                                                           "type": "PrimaryNavSidebarButton", "visible": True}
 scrollView_Add_members_StatusButton = {"container": mainWindow_scrollView_StatusScrollView,
                                        "objectName": "CommunityWelcomeBannerPanel_AddMembersButton",
                                        "type": "StatusButton", "visible": True}

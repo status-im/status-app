@@ -46,6 +46,7 @@ import StatusQ.Popups.Dialog
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Communities.stores
 import AppLayouts.Profile.stores as ProfileStores
+import AppLayouts.Profile.helpers
 import AppLayouts.Wallet.popups as WalletPopups
 import AppLayouts.Wallet.popups.dapps as DAppsPopups
 import AppLayouts.Wallet.stores as WalletStores
@@ -147,23 +148,30 @@ Item {
         popupRequestsHandler.enableBiometricsPopupHandler.openPopup()
     }
 
+    ContactDetails {
+        id: ownContactDetails
+        isCurrentUser: true
+        publicKey: appMain.profileStore.pubKey
+        compressedPubKey: appMain.profileStore.compressedPubKey
+        displayName: appMain.profileStore.displayName
+        ensName: appMain.profileStore.name
+        ensVerified: !!ensName && Utils.isValidEns(ensName)
+        preferredDisplayName: appMain.profileStore.preferredName
+        alias: appMain.profileStore.username
+        usesDefaultName: appMain.profileStore.usesDefaultName
+        icon: appMain.profileStore.icon
+        colorId: appMain.profileStore.colorId
+        onlineStatus: appMain.profileStore.currentUserStatus
+        thumbnailImage: appMain.profileStore.thumbnailImage
+        largeImage: appMain.profileStore.largeImage
+        bio: appMain.profileStore.bio
+    }
+
     AllContactsAdaptor {
         id: allContacsAdaptor
 
         contactsModel: appMain.contactsStore.contactsModel
-
-        selfPubKey: appMain.profileStore.pubKey
-        selfDisplayName : appMain.profileStore.displayName
-        selfName: appMain.profileStore.name
-        selfPreferredDisplayName: appMain.profileStore.preferredName
-        selfAlias: appMain.profileStore.username
-        selfUsesDefaultName: appMain.profileStore.usesDefaultName
-        selfIcon: appMain.profileStore.icon
-        selfColorId: appMain.profileStore.colorId
-        selfOnlineStatus: appMain.profileStore.currentUserStatus
-        selfThumbnailImage: appMain.profileStore.thumbnailImage
-        selfLargeImage: appMain.profileStore.largeImage
-        selfBio: appMain.profileStore.bio
+        selfContactDetails: ownContactDetails
     }
 
     ContactsModelAdaptor {
@@ -840,6 +848,7 @@ Item {
                                                            activeSectionType === Constants.appSection.dApp
         readonly property bool isBrowserEnabled: appMain.featureFlagsStore.browserEnabled &&
                                                  localAccountSensitiveSettings.isBrowserEnabled
+        readonly property int syncingBadgeCount: appMain.devicesStore.totalDevicesCount - appMain.devicesStore.pairedDevicesCount
 
         function openHomePage() {
             appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.homePage)
@@ -1217,288 +1226,10 @@ Item {
             onBuyClicked: popupRequestsHandler.sendModalHandler.buyStickerPack(packId, price)
         }
     }
-    
-    property Item navBar: StatusAppNavBar {
-        visible: !homePageLoader.active
-        width: visible ? implicitWidth : 0
-
-        thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
-
-        topSectionModel: SortFilterProxyModel {
-            sourceModel: appMain.rootStore.sectionsModel
-            filters: [
-                AnyOf {
-                    ValueFilter {
-                        roleName: "sectionType"
-                        value: Constants.appSection.homePage
-                    }
-                    ValueFilter {
-                        roleName: "sectionType"
-                        value: Constants.appSection.wallet
-                    }
-                    ValueFilter {
-                        roleName: "sectionType"
-                        value: Constants.appSection.swap
-                        enabled: !appMain.featureFlagsStore.marketEnabled
-                    }
-                    ValueFilter {
-                        roleName: "sectionType"
-                        value: Constants.appSection.market
-                        enabled: appMain.featureFlagsStore.marketEnabled
-                    }
-                    ValueFilter {
-                        roleName: "sectionType"
-                        value: Constants.appSection.chat
-                    }
-                    ValueFilter {
-                        roleName: "sectionType"
-                        value: Constants.appSection.browser
-                        enabled: d.isBrowserEnabled
-                    }
-                    ValueFilter {
-                        roleName: "sectionType"
-                        value: Constants.appSection.node
-                        enabled: localAccountSensitiveSettings.nodeManagementEnabled
-                    }
-                },
-                ValueFilter {
-                    roleName: "enabled"
-                    value: true
-                }
-            ]
-        }
-        topSectionDelegate: navbarButton
-
-        communityItemsModel: SortFilterProxyModel {
-            sourceModel: appMain.rootStore.sectionsModel
-            filters: [
-                ValueFilter {
-                    roleName: "sectionType"
-                    value: Constants.appSection.community
-                },
-                ValueFilter {
-                    roleName: "enabled"
-                    value: true
-                }
-            ]
-        }
-        communityItemDelegate: StatusNavBarTabButton {
-            objectName: "CommunityNavBarButton"
-            anchors.horizontalCenter: parent.horizontalCenter
-            name: model.icon.length > 0? "" : model.name
-            icon.name: model.icon
-            icon.source: model.image
-            identicon.asset.color: (hovered || identicon.highlighted || checked) ? model.color : icon.color
-            tooltip.text: model.name
-            checked: model.active
-            badge.value: model.notificationsCount
-            badge.visible: model.hasNotification
-
-            stateIcon.color: Theme.palette.dangerColor1
-            stateIcon.border.color: Theme.palette.baseColor2
-            stateIcon.border.width: 2
-            stateIcon.visible: model.amIBanned
-            stateIcon.asset.name: "cancel"
-            stateIcon.asset.color: Theme.palette.baseColor2
-            stateIcon.asset.width: 14
-
-            thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
-
-            onClicked: {
-                changeAppSectionBySectionId(model.id)
-            }
-
-            popupMenu: Component {
-                StatusMenu {
-                    id: communityContextMenu
-                    property var chatCommunitySectionModule
-
-                    readonly property bool isSpectator: model.spectated && !model.joined
-
-                    openHandler: function () {
-                        // we cannot return QVariant if we pass another parameter in a function call
-                        // that's why we're using it this way
-                        communityContextMenu.chatCommunitySectionModule = appMain.rootChatStore.getCommunitySectionModule(model.id)
-                    }
-
-                    StatusAction {
-                        text: qsTr("Invite People")
-                        icon.name: "share-ios"
-                        objectName: "invitePeople"
-                        onTriggered: {
-                            popups.openInviteFriendsToCommunityPopup(model,
-                                                                        communityContextMenu.chatCommunitySectionModule,
-                                                                        null)
-                        }
-                    }
-
-                    StatusAction {
-                        text: qsTr("Community Info")
-                        icon.name: "info"
-                        onTriggered: popups.openCommunityProfilePopup(appMain.rootStore, model, communityContextMenu.chatCommunitySectionModule)
-                    }
-
-                    StatusAction {
-                        text: qsTr("Community Rules")
-                        icon.name: "text"
-                        onTriggered: popups.openCommunityRulesPopup(model.name, model.introMessage, model.image, model.color)
-                    }
-
-                    StatusMenuSeparator {}
-
-                    MuteChatMenuItem {
-                        enabled: !model.muted
-                        title: qsTr("Mute Community")
-                        onMuteTriggered: {
-                            communityContextMenu.chatCommunitySectionModule.setCommunityMuted(interval)
-                            communityContextMenu.close()
-                        }
-                    }
-
-                    StatusAction {
-                        enabled: model.muted
-                        text: qsTr("Unmute Community")
-                        icon.name: "notification"
-                        onTriggered: communityContextMenu.chatCommunitySectionModule.setCommunityMuted(Constants.MutingVariations.Unmuted)
-                    }
-
-                    StatusAction {
-                        text: qsTr("Mark as read")
-                        icon.name: "check-circle"
-                        onTriggered: communityContextMenu.chatCommunitySectionModule.markAllReadInCommunity()
-                    }
-
-                    StatusAction {
-                        text: qsTr("Edit Shared Addresses")
-                        icon.name: "wallet"
-                        enabled: {
-                            if (model.memberRole === Constants.memberRole.owner || communityContextMenu.isSpectator)
-                                return false
-                            return true
-                        }
-                        onTriggered: {
-                            communityContextMenu.close()
-                            Global.openEditSharedAddressesFlow(model.id)
-                        }
-                    }
-
-                    StatusMenuSeparator { visible: leaveCommunityMenuItem.enabled }
-
-                    StatusAction {
-                        id: leaveCommunityMenuItem
-                        objectName: "leaveCommunityMenuItem"
-                        // allow to leave community for the owner in non-production builds
-                        enabled: model.memberRole !== Constants.memberRole.owner || !production
-                        text: {
-                            if (communityContextMenu.isSpectator)
-                                return qsTr("Close Community")
-                            return qsTr("Leave Community")
-                        }
-                        icon.name: communityContextMenu.isSpectator ? "close-circle" : "arrow-left"
-                        type: StatusAction.Type.Danger
-                        onTriggered: communityContextMenu.isSpectator ? communityContextMenu.chatCommunitySectionModule.leaveCommunity()
-                                                                      : popups.openLeaveCommunityPopup(model.name, model.id, model.outroMessage)
-                    }
-                }
-            }
-        }
-
-        regularItemsModel: SortFilterProxyModel {
-            sourceModel: appMain.rootStore.sectionsModel
-            filters: [
-                ValueFilter {
-                    roleName: "enabled"
-                    value: true
-                },
-                AnyOf {
-                    ValueFilter {
-                        roleName: "sectionType"
-                        value: Constants.appSection.profile
-                    }
-                    ValueFilter {
-                        roleName: "sectionType"
-                        value: Constants.appSection.activityCenter
-                    }
-                    ValueFilter {
-                        roleName: "sectionType"
-                        value: Constants.appSection.communitiesPortal
-                    }
-                }
-            ]
-        }
-        regularItemDelegate: navbarButton
-
-        delegateHeight: 40
-
-        profileComponent: ProfileButton {
-            objectName: "statusProfileNavBarTabButton"
-
-            name: appMain.profileStore.name
-            usesDefaultName: appMain.profileStore.usesDefaultName
-            pubKey: appMain.profileStore.pubKey
-            compressedPubKey: appMain.profileStore.compressedPubKey
-            iconSource: appMain.profileStore.icon
-            colorId: appMain.profileStore.colorId
-            currentUserStatus: appMain.profileStore.currentUserStatus
-
-            getEmojiHashFn: appMain.utilsStore.getEmojiHash
-            getLinkToProfileFn: appMain.contactsStore.getLinkToProfile
-            onSetCurrentUserStatusRequested: (status) => appMain.rootStore.setCurrentUserStatus(status)
-            onViewProfileRequested: (pubKey) => Global.openProfilePopup(pubKey)
-        }
-
-        Component {
-            id: navbarButton
-            StatusNavBarTabButton {
-                id: navbar
-                objectName: model.name + "-navbar"
-                anchors.horizontalCenter: parent.horizontalCenter
-                name: model.icon.length > 0? "" : model.name
-                icon.name: model.icon
-                icon.source: model.image
-                tooltip.text: Utils.translatedSectionName(model.sectionType, model.name, (sectionType) => {
-                    if (sectionType === Constants.appSection.homePage) {
-                        return homePageShortcut.nativeText
-                    }
-                    return ""
-                })
-                checked: model.active
-
-                readonly property bool displayCreateCommunityBadge: model.sectionType === Constants.appSection.communitiesPortal && !appMain.communitiesStore.createCommunityPopupSeen
-                badge.value: model.notificationsCount
-                badge.visible: {
-                    if (model.sectionType === Constants.appSection.profile) {
-                        if (contactsModelAdaptor.pendingReceivedRequestContacts.ModelCount.count > 0) // pending contact request
-                            return true
-                        if (!appMain.privacyStore.mnemonicBackedUp && !appMain.profileStore.userDeclinedBackupBanner) // seedphrase not backed up (removed)
-                            return true
-                        if (appMain.devicesStore.totalDevicesCount - appMain.devicesStore.pairedDevicesCount > 0) // sync entries
-                            return true
-                        return false
-                    }
-                    if (displayCreateCommunityBadge) // create new community badge
-                        return true
-                    return model.hasNotification // Otherwise, use the value coming from the model
-                }
-
-                StatusNewItemGradient { id: newGradient }
-                badge.gradient: displayCreateCommunityBadge ? newGradient : undefined // gradient has precedence over a simple color
-
-                thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
-
-                onClicked: {
-                    if(model.sectionType === Constants.appSection.swap) {
-                        popupRequestsHandler.swapModalHandler.launchSwap()
-                    } else {
-                        changeAppSectionBySectionId(model.id)
-                    }
-                }
-            }
-        }
-    }
 
     ColumnLayout {
         anchors.fill: parent
+        anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width + Theme.halfPadding : 0
 
         spacing: 0
         objectName: "mainRightView"
@@ -1788,7 +1519,7 @@ Item {
                             marketEnabled: appMain.featureFlagsStore.marketEnabled
                             browserEnabled: d.isBrowserEnabled
 
-                            syncingBadgeCount: appMain.devicesStore.totalDevicesCount - appMain.devicesStore.pairedDevicesCount
+                            syncingBadgeCount: d.syncingBadgeCount
                             messagingBadgeCount: contactsModelAdaptor.pendingReceivedRequestContacts.count
                             showBackUpSeed: !appMain.privacyStore.mnemonicBackedUp
                             backUpSeedBadgeCount: appMain.profileStore.userDeclinedBackupBanner ? 0 : showBackUpSeed
@@ -1805,13 +1536,6 @@ Item {
                         homePageEntriesModel: homePageAdaptor.homePageEntriesModel
                         sectionsModel: homePageAdaptor.sectionsModel
                         pinnedModel: homePageAdaptor.pinnedModel
-
-                        profileStore: appMain.profileStore
-
-                        getEmojiHashFn: appMain.utilsStore.getEmojiHash
-                        getLinkToProfileFn: appMain.contactsStore.getLinkToProfile
-
-                        useNewDockIcons: false
 
                         onItemActivated: function(key, sectionType, itemId) {
                             homePageAdaptor.setTimestamp(key, new Date().valueOf())
@@ -1848,9 +1572,6 @@ Item {
                             dappMetrics.logNavigationEvent(DAppsMetrics.DAppsNavigationAction.DAppDisconnectInitiated)
                             dAppsServiceLoader.dappDisconnectRequested(dappUrl)
                         }
-
-                        onSetCurrentUserStatusRequested: (status) => appMain.rootStore.setCurrentUserStatus(status)
-                        onViewProfileRequested: (pubKey) => Global.openProfilePopup(pubKey)
                     }
                 }
 
@@ -1914,7 +1635,6 @@ Item {
                                 show => appMain.accountSettingsStore.setShowUsersList(show)
 
                             isChatView: true
-                            navBar: appMain.navBar
                             rootStore: ChatStores.RootStore {
                                 contactsStore: appMain.contactsStore
                                 currencyStore: appMain.currencyStore
@@ -1990,7 +1710,6 @@ Item {
                     sourceComponent: CommunitiesPortalLayout {
                         anchors.fill: parent
                         createCommunityEnabled: !SQUtils.Utils.isMobile
-                        navBar: appMain.navBar
                         communitiesStore: appMain.communitiesStore
                         assetsModel: appMain.rootStore.globalAssetsModel
                         collectiblesModel: appMain.rootStore.globalCollectiblesModel
@@ -2006,8 +1725,6 @@ Item {
                         id: walletPrivacyWall
 
                         WalletPrivacyWall {
-                            navBar: appMain.navBar
-
                             onOpenThirdpartyServicesInfoPopupRequested: popupRequestsHandler.thirdpartyServicesPopupHandler.openPopup()
                             onOpenDiscussPageRequested: Global.requestOpenLink(Constants.statusDiscussPageUrl)
                         }
@@ -2018,7 +1735,6 @@ Item {
 
                         WalletLayout {
                             objectName: "walletLayoutReal"
-                            navBar: appMain.navBar
                             walletRootStore: WalletStores.RootStore
                             sharedRootStore: appMain.sharedRootStore
                             store: appMain.rootStore
@@ -2068,8 +1784,6 @@ Item {
                         id: browserPrivacyWall
 
                         BrowserPrivacyWall {
-                            navBar: appMain.navBar
-
                             onOpenThirdpartyServicesInfoPopupRequested: popupRequestsHandler.thirdpartyServicesPopupHandler.openPopup()
                             onOpenDiscussPageRequested: Global.openLinkWithConfirmation(
                                                             Constants.statusDiscussPageUrl,
@@ -2084,7 +1798,6 @@ Item {
                             isMobile: SQUtils.Utils.isMobile
                             userUID: appMain.profileStore.pubKey
                             thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
-                            navBar: appMain.navBar
                             bookmarksStore: BrowserStores.BookmarksStore {}
                             downloadsStore: BrowserStores.DownloadsStore {}
                             browserRootStore: BrowserStores.BrowserRootStore {}
@@ -2118,7 +1831,6 @@ Item {
 
                     active: appView.currentIndex === Constants.appViewStackIndex.profile
                     sourceComponent: ProfileLayout {
-                        navBar: appMain.navBar
                         isProduction: appMain.rootStore.isProduction
 
                         sharedRootStore: appMain.sharedRootStore
@@ -2209,9 +1921,7 @@ Item {
 
                 Loader {
                     active: appView.currentIndex === Constants.appViewStackIndex.node
-                    sourceComponent: NodeLayout {
-                        navBar: appMain.navBar
-                    }
+                    sourceComponent: NodeLayout {}
                 }
 
                 Loader {
@@ -2222,8 +1932,6 @@ Item {
                         id: marketPrivacyWall
 
                         MarketPrivacyWall {
-                            navBar: appMain.navBar
-
                             onOpenThirdpartyServicesInfoPopupRequested: popupRequestsHandler.thirdpartyServicesPopupHandler.openPopup()
                             onOpenDiscussPageRequested: Global.requestOpenLink(Constants.statusDiscussPageUrl)
                         }
@@ -2234,7 +1942,6 @@ Item {
 
                         MarketLayout {
                             objectName: "marketLayout"
-                            navBar: appMain.navBar
 
                             tokensModel: appMain.marketStore.marketLeaderboardModel
                             totalTokensCount: appMain.marketStore.totalLeaderboardCount
@@ -2273,7 +1980,6 @@ Item {
                         id: activityCenterPopup
 
                         objectName: "activityCenterLayout"
-                        navBar: appMain.navBar
 
                         contactsStore: appMain.contactsStore
                         store: ChatStores.RootStore {
@@ -2344,7 +2050,6 @@ Item {
                                 show => appMain.accountSettingsStore.setShowUsersList(show)
 
                             isChatView: false // This will be a community view
-                            navBar: appMain.navBar
                             emojiPopup: statusEmojiPopup.item
                             stickersPopup: statusStickersPopupLoader.item
                             sectionItemModel: model
@@ -2450,6 +2155,172 @@ Item {
             }
         }
     } // ColumnLayout
+
+    PrimaryNavSidebar {
+        id: sidebar
+        height: parent.height
+
+        PrimaryNavSidebarAdaptor {
+            id: sidebarAdaptor
+            sectionsModel: appMain.rootStore.sectionsModel
+
+            showEnabledSectionsOnly: true
+            marketEnabled: appMain.featureFlagsStore.marketEnabled
+            browserEnabled: d.isBrowserEnabled
+            nodeEnabled: localAccountSensitiveSettings.nodeManagementEnabled
+        }
+
+        regularItemsModel: sidebarAdaptor.regularItemsModel
+        communityItemsModel: sidebarAdaptor.communityItemsModel
+        bottomItemsModel: sidebarAdaptor.bottomItemsModel
+
+        Binding on alwaysVisible { // NB: on browser+mobile, can't overlay the native WebView
+            when: SQUtils.Utils.isMobile && d.activeSectionType === Constants.appSection.browser
+            value: true
+        }
+
+        acVisible: d.activeSectionType === Constants.appSection.activityCenter // FIXME AC should not be a section
+        acHasUnseenNotifications: appMain.activityCenterStore.hasUnseenNotifications
+        acUnreadNotificationsCount: appMain.activityCenterStore.unreadNotificationsCount
+
+        selfContactDetails: ownContactDetails
+        getEmojiHashFn: appMain.utilsStore.getEmojiHash
+        getLinkToProfileFn: appMain.contactsStore.getLinkToProfile
+
+        communityPopupMenu: communityContextMenuComponent
+
+        showCreateCommunityBadge: !appMain.communitiesStore.createCommunityPopupSeen
+        profileSectionHasNotification: {
+            if (contactsModelAdaptor.pendingReceivedRequestContacts.ModelCount.count > 0) // pending contact request
+                return true
+            if (!appMain.privacyStore.mnemonicBackedUp && !appMain.profileStore.userDeclinedBackupBanner) // seedphrase not backed up (removed)
+                return true
+            if (d.syncingBadgeCount > 0) // sync entries
+                return true
+            return false
+        }
+        thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
+
+        // FIXME AC should not be a section; remove `prevSectionId` then
+        property string prevSectionId: appMain.rootStore.activeSectionId
+        onActivityCenterRequested: function(shouldShow) {
+            if (shouldShow) {
+                appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.activityCenter)
+            } else {
+                changeAppSectionBySectionId(prevSectionId)
+            }
+        }
+
+        onSetCurrentUserStatusRequested: status => appMain.rootStore.setCurrentUserStatus(status)
+        onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
+
+        onItemActivated: function(sectionType, sectionId) {
+            prevSectionId = sectionId
+            if (sectionType === Constants.appSection.swap) {
+                popupRequestsHandler.swapModalHandler.launchSwap()
+            } else {
+                changeAppSectionBySectionId(sectionId)
+            }
+        }
+    }
+
+    Component {
+        id: communityContextMenuComponent
+        StatusMenu {
+            id: communityContextMenu
+
+            required property var model
+
+            property var chatCommunitySectionModule
+
+            readonly property bool isSpectator: model.spectated && !model.joined
+
+            openHandler: function () {
+                // we cannot return QVariant if we pass another parameter in a function call
+                // that's why we're using it this way
+                communityContextMenu.chatCommunitySectionModule = appMain.rootChatStore.getCommunitySectionModule(model.id)
+            }
+
+            StatusAction {
+                text: qsTr("Invite People")
+                icon.name: "share-ios"
+                objectName: "invitePeople"
+                onTriggered: {
+                    popups.openInviteFriendsToCommunityPopup(model,
+                                                             communityContextMenu.chatCommunitySectionModule,
+                                                             null)
+                }
+            }
+
+            StatusAction {
+                text: qsTr("Community Info")
+                icon.name: "info"
+                onTriggered: popups.openCommunityProfilePopup(appMain.rootStore, model, communityContextMenu.chatCommunitySectionModule)
+            }
+
+            StatusAction {
+                text: qsTr("Community Rules")
+                icon.name: "text"
+                onTriggered: popups.openCommunityRulesPopup(model.name, model.introMessage, model.image, model.color)
+            }
+
+            StatusMenuSeparator {}
+
+            MuteChatMenuItem {
+                enabled: !model.muted
+                title: qsTr("Mute Community")
+                onMuteTriggered: {
+                    communityContextMenu.chatCommunitySectionModule.setCommunityMuted(interval)
+                    communityContextMenu.close()
+                }
+            }
+
+            StatusAction {
+                enabled: model.muted
+                text: qsTr("Unmute Community")
+                icon.name: "notification"
+                onTriggered: communityContextMenu.chatCommunitySectionModule.setCommunityMuted(Constants.MutingVariations.Unmuted)
+            }
+
+            StatusAction {
+                text: qsTr("Mark as read")
+                icon.name: "check-circle"
+                onTriggered: communityContextMenu.chatCommunitySectionModule.markAllReadInCommunity()
+            }
+
+            StatusAction {
+                text: qsTr("Edit Shared Addresses")
+                icon.name: "wallet"
+                enabled: {
+                    if (model.memberRole === Constants.memberRole.owner || communityContextMenu.isSpectator)
+                        return false
+                    return true
+                }
+                onTriggered: {
+                    communityContextMenu.close()
+                    Global.openEditSharedAddressesFlow(model.id)
+                }
+            }
+
+            StatusMenuSeparator { visible: leaveCommunityMenuItem.enabled }
+
+            StatusAction {
+                id: leaveCommunityMenuItem
+                objectName: "leaveCommunityMenuItem"
+                // allow to leave community for the owner in non-production builds
+                enabled: model.memberRole !== Constants.memberRole.owner || !production
+                text: {
+                    if (communityContextMenu.isSpectator)
+                        return qsTr("Close Community")
+                    return qsTr("Leave Community")
+                }
+                icon.name: communityContextMenu.isSpectator ? "close-circle" : "arrow-left"
+                type: StatusAction.Type.Danger
+                onTriggered: communityContextMenu.isSpectator ? communityContextMenu.chatCommunitySectionModule.leaveCommunity()
+                                                              : popups.openLeaveCommunityPopup(model.name, model.id, model.outroMessage)
+            }
+        }
+    }
 
     Instantiator {
         model: 9

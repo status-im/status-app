@@ -166,6 +166,11 @@ class ThemePalette : public QObject {
 
     Q_PROPERTY(bool isDark READ isDark CONSTANT)
 
+    // static colors
+    Q_PROPERTY(QColor transparent MEMBER transparent CONSTANT)
+    Q_PROPERTY(QColor black MEMBER black CONSTANT)
+    Q_PROPERTY(QColor white MEMBER white CONSTANT)
+
     // Base colors
     Q_PROPERTY(QColor baseColor1 MEMBER baseColor1 CONSTANT)
     Q_PROPERTY(QColor baseColor2 MEMBER baseColor2 CONSTANT)
@@ -294,6 +299,8 @@ public:
 
     // Members
     QString name;
+
+    QColor transparent, black, white;
 
     QColor baseColor1, baseColor2, baseColor3, baseColor4, baseColor5;
 

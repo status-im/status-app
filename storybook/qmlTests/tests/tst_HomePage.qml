@@ -7,7 +7,6 @@ import Storybook
 import StatusQ.TestHelpers
 
 import AppLayouts.HomePage
-import AppLayouts.Profile.stores as ProfileStores
 
 import utils
 
@@ -33,18 +32,7 @@ Item {
 
         searchPhrase: controlUnderTest ? controlUnderTest.searchPhrase : ""
 
-        profileId: mockProfileStore.pubKey
-    }
-
-    ProfileStores.ProfileStore {
-        id: mockProfileStore
-        readonly property string pubKey: "0xdeadbeef"
-        readonly property string compressedPubKey: "zxDeadBeef"
-        readonly property string name: "John Roe"
-        readonly property string icon: ModelsData.icons.rarible
-        readonly property int colorId: 7
-        readonly property bool usesDefaultName: false
-        property int currentUserStatus: Constants.currentUserStatus.automatic
+        profileId: "0xdeadbeef"
     }
 
     Component {
@@ -57,20 +45,6 @@ Item {
             sectionsModel: homePageAdaptor.sectionsModel
             pinnedModel: homePageAdaptor.pinnedModel
 
-            profileStore: mockProfileStore
-
-            getEmojiHashFn: function(pubKey) { // <- root.utilsStore.getEmojiHash(pubKey)
-                if (pubKey === "")
-                    return ""
-
-                return["👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮","🤷🏻‍♂️", "🤦🏻", "📣", "🤎", "👷🏽", "😺", "🥞", "🔃", "🧝🏽‍♂️"]
-            }
-            getLinkToProfileFn: function(pubKey) { // <- root.rootStore.contactStore.getLinkToProfile(pubKey)
-                return Constants.userLinkPrefix + pubKey
-            }
-
-            useNewDockIcons: false
-
             onItemActivated: function(key, sectionType, itemId) {
                 homePageAdaptor.setTimestamp(key, new Date().valueOf())
             }
@@ -78,9 +52,6 @@ Item {
                 homePageAdaptor.setPinned(key, pin)
                 if (pin)
                     homePageAdaptor.setTimestamp(key, new Date().valueOf()) // update the timestamp so that the pinned dock items are sorted by their recency
-            }
-            onSetCurrentUserStatusRequested: function (status) {
-                profileStore.currentUserStatus = status
             }
         }
     }
@@ -119,15 +90,6 @@ Item {
             verify(!!controlUnderTest)
             verify(controlUnderTest.width > 0)
             verify(controlUnderTest.height > 0)
-        }
-
-        function test_homePageProfileButton() {
-            const btn = findChild(controlUnderTest, "homeProfileButton")
-            verify(!!btn)
-            mouseClick(btn)
-            const popupMenu = findChild(btn, "userStatusContextMenu")
-            verify(!!popupMenu)
-            tryCompare(popupMenu, "opened", true)
         }
 
         function test_gridItem_search_and_click_data() {
