@@ -1,5 +1,7 @@
 import QtQuick
 
+import utils
+
 /**
  * @brief State manager for KeycardChannelDrawer
  * 
@@ -17,7 +19,7 @@ QtObject {
     
     /// Input: Backend state from the keycard system
     /// Expected values: "idle", "waiting-for-keycard", "reading", "error"
-    property string backendState: "idle"
+    property string backendState: Constants.keycardChannelState.idle
     
     /// Output: Current display state for the UI
     /// Values: "", "waiting-for-card", "reading", "success", "error"
@@ -28,6 +30,14 @@ QtObject {
     
     /// Configuration: How long to show success before closing (ms)
     property int successDisplayDuration: 1200
+
+    // Display states definition
+    // These are slightly different from the backend states
+    readonly property string stateSuccess: "success"
+    readonly property string stateIdle: ""
+    readonly property string stateReading: Constants.keycardChannelState.reading
+    readonly property string stateError: Constants.keycardChannelState.error
+    readonly property string stateWaitingForCard: Constants.keycardChannelState.waitingForKeycard
     
     /// Signals
     signal readyToOpen()   // Drawer should open
@@ -43,13 +53,6 @@ QtObject {
     // ============================================================
     
     property QtObject d: QtObject {
-        // Display states (internal representation)
-        readonly property string stateWaitingForCard: "waiting-for-card"
-        readonly property string stateReading: "reading"
-        readonly property string stateSuccess: "success"
-        readonly property string stateError: "error"
-        readonly property string stateIdle: "" // empty = not showing anything
-        
         // Current display state (what the user sees)
         property string displayState: stateIdle
         
@@ -57,20 +60,18 @@ QtObject {
         property var stateQueue: []
         
         // Track previous backend state for success detection
-        property string previousBackendState: "idle"
+        property string previousBackendState: Constants.keycardChannelState.idle
         
         /// Map backend state to display state
         function mapBackendStateToDisplayState(backendState) {
             switch(backendState) {
-                case "waiting-for-keycard":
-                    return stateWaitingForCard
-                case "reading":
-                    return stateReading
-                case "error":
-                    return stateError
-                case "idle":
+                case Constants.keycardChannelState.waitingForKeycard:
+                case Constants.keycardChannelState.reading:
+                case Constants.keycardChannelState.error:
+                    return backendState
+                case Constants.keycardChannelState.idle:
                     // Success detection: were we just reading?
-                    if (previousBackendState === "reading") {
+                    if (previousBackendState === Constants.keycardChannelState.reading) {
                         return stateSuccess
                     }
                     return stateIdle
