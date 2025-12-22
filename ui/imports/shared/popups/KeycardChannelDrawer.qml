@@ -27,7 +27,7 @@ StatusDialog {
     
     /// The current keycard channel state from the backend
     /// Expected values: "idle", "waiting-for-keycard", "reading", "error"
-    property string currentState: "idle"
+    property string currentState: ""
     
     /// Emitted when the user dismisses the drawer without completing the operation
     signal dismissed()
@@ -82,7 +82,7 @@ StatusDialog {
             states: [
                 State {
                     name: "waiting"
-                    when: stateManager.displayState === "waiting-for-card"
+                    when: stateManager.displayState === stateManager.stateWaitingForCard
                     PropertyChanges {
                         target: stateDisplay
                         iconSource: Assets.png("onboarding/carousel/keycard")
@@ -94,7 +94,7 @@ StatusDialog {
                 },
                 State {
                     name: "reading"
-                    when: stateManager.displayState === "reading"
+                    when: stateManager.displayState === stateManager.stateReading
                     PropertyChanges {
                         target: stateDisplay
                         iconSource: Assets.png("onboarding/status_generate_keycard")
@@ -106,7 +106,7 @@ StatusDialog {
                 },
                 State {
                     name: "success"
-                    when: stateManager.displayState === "success"
+                    when: stateManager.displayState === stateManager.stateSuccess
                     PropertyChanges {
                         target: stateDisplay
                         iconSource: Assets.png("onboarding/status_key")
@@ -118,7 +118,7 @@ StatusDialog {
                 },
                 State {
                     name: "error"
-                    when: stateManager.displayState === "error"
+                when: stateManager.displayState === stateManager.stateError
                     PropertyChanges {
                         target: stateDisplay
                         iconSource: Assets.png("onboarding/status_generate_keys")

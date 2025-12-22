@@ -3,10 +3,8 @@ import nimqml
 import io_interface, view, controller
 import app/global/global_singleton
 import app/core/eventemitter
-import ./constants
 
 export io_interface
-export constants
 
 type
   Module* = ref object of io_interface.AccessInterface
