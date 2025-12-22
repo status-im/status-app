@@ -5,6 +5,8 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
 
+import shared
+
 /// Reusable component for displaying a state in the KeycardChannelDrawer
 /// Shows an icon, title, and description in a consistent layout
 Item {
@@ -25,6 +27,9 @@ Item {
     
     /// Whether this is an error state (affects text color)
     property bool isError: false
+    
+    /// Whether to show a loading animation
+    property bool showLoading: false
 
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
@@ -71,6 +76,13 @@ Item {
             color: Theme.palette.baseColor1
             wrapMode: Text.WordWrap
             visible: root.description !== ""
+        }
+        
+        // Loading animation (shown for reading state)
+        LoadingAnimation {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: Theme.padding
+            visible: root.showLoading
         }
     }
 }
