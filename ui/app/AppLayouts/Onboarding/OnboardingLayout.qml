@@ -55,6 +55,8 @@ Page {
     //    "data:var": contains "password" or "pin"
     signal loginRequested(string keyUid, int method, var data)
 
+    signal keycardRequested()
+
     function restartFlow() {
         unload()
         onboardingFlow.restart()
@@ -200,7 +202,10 @@ Page {
         onExportKeysRequested: root.onboardingStore.exportRecoverKeys()
         onImportLocalBackupRequested: (importFilePath) => d.backupImportFileUrl = importFilePath
         onFinished: (flow) => d.finishFlow(flow)
-        onKeycardRequested: root.onboardingStore.startKeycardDetection()
+        onKeycardRequested: {
+            root.keycardRequested()
+            root.onboardingStore.startKeycardDetection()
+        }
 
         onBiometricsRequested: (profileId) => {
             const isKeycardProfile = SQUtils.ModelUtils.getByKey(
