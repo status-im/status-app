@@ -24,6 +24,7 @@ import StatusQ.Components
 
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.stores as AppLayoutStores
+import AppLayouts.Profile.helpers
 
 Loader {
     id: root
@@ -181,6 +182,30 @@ Loader {
 
     signal emojiReactionToggled(string messageId, string hexcode)
 
+    property var senderContactEntry: ContactModelEntry {
+        publicKey: root.senderId
+        contactsModel: root.rootStore.contactsModel
+        onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(root.senderId)
+    }
+
+    property var quotedMessageFromContactEntryLoader: Loader {
+        active: !!root.quotedMessageFrom
+        sourceComponent: ContactModelEntry {
+            publicKey: root.quotedMessageFrom
+            contactsModel: root.rootStore.contactsModel
+            onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(root.quotedMessageFrom)
+        }
+    }
+
+    property var messagePinnedByContactEntryLoader: Loader {
+        active: !!root.messagePinnedBy
+        sourceComponent: ContactModelEntry {
+            publicKey: root.messagePinnedBy
+            contactsModel: root.rootStore.contactsModel
+            onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(root.messagePinnedBy)
+        }
+    }
+
     function openProfileContextMenu(x, y, isReply = false) {
         if (isViewMemberMessagesePopup)
             return false
@@ -190,12 +215,12 @@ Loader {
         if (isReply && !quotedMessageFrom)
             return false
 
-        const pubKey = isReply ? quotedMessageFrom : root.senderId
+        const pubKey = isReply ? root.quotedMessageFrom : root.senderId
         const isBridgedAccount = isReply ? (quotedMessageContentType === Constants.messageContentType.bridgeMessageType)
                                          : root.isBridgeMessage
 
-        // TODO: getContactDetailsAsJson will be called from contacts store when refactored
-        const contactDetails = Utils.getContactDetailsAsJson(pubKey, true, true, true)
+        const contactDetails = isReply ? root.quotedMessageFromContactEntryLoader.item.contactDetails
+                                       : root.senderContactEntry.contactDetails
         const isMe = pubKey === root.myPublicKey
 
         const profileType = Utils.getProfileType(isMe, isBridgedAccount, contactDetails.isBlocked)
@@ -211,7 +236,6 @@ Loader {
             userIcon: isReply ? quotedMessageAuthorDetailsThumbnailImage : root.senderIcon,
             colorId: Utils.colorIdForPubkey(pubKey),
             trustStatus: contactDetails.trustStatus,
-            ensVerified: contactDetails.ensVerified,
             onlineStatus: contactDetails.onlineStatus,
             usesDefaultName: contactDetails.usesDefaultName,
             hasLocalNickname: !!contactDetails.localNickname
@@ -581,8 +605,14 @@ Loader {
         id: systemMessageMutualEventComponent
 
         StyledText {
+            property var chatContactModelEntry: ContactModelEntry {
+                publicKey: chatId
+                contactsModel: root.rootStore.contactsModel
+                onPopulateContactDetailsRequested: root.rootStore.populateContactDetailsRequested(chatId)
+            }
+
             text: {
-                var displayName = root.amISender ? Utils.getContactDetailsAsJson(chatId, false).displayName : root.senderDisplayName
+                var displayName = root.amISender ? chatContactModelEntry.contactDetails.displayName : root.senderDisplayName
                 switch (root.messageContentType) {
                     case Constants.messageContentType.systemMessageMutualEventSent:
                         return root.amISender ?
@@ -774,9 +804,9 @@ Loader {
                 hasMention: root.hasMention
                 isPinned: root.pinnedMessage
                 pinnedBy: {
-                    if (!root.pinnedMessage || root.isDiscordMessage)
+                    if (!root.pinnedMessage || root.isDiscordMessage || !root.messagePinnedByContactEntryLoader.active)
                         return ""
-                    const contact = Utils.getContactDetailsAsJson(root.messagePinnedBy, false)
+                    const contact = root.messagePinnedByContactEntryLoader.item.contactDetails
                     return ProfileUtils.displayName(contact.localNickname, contact.name, contact.displayName, contact.alias)
                 }
                 isInPinnedPopup: root.isInPinnedPopup

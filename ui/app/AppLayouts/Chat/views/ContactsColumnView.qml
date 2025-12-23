@@ -147,14 +147,12 @@ Item {
                 }
 
                 highlightItem: !root.store.openCreateChat
-                onChatItemSelected: {
+                onChatItemSelected: (categoryId, id) => {
                     Global.closeCreateChatView()
-                    root.chatSectionModule.setActiveItem(id, "")
+                    root.chatSectionModule.setActiveItem(id)
                 }
-                onChatItemClicked: (id) => {
-                    root.chatItemClicked(id)
-                }
-                onChatItemUnmuted: root.chatSectionModule.unmuteChat(id)
+                onChatItemClicked: (id) => root.chatItemClicked(id)
+                onChatItemUnmuted: (id) => root.chatSectionModule.unmuteChat(id)
 
                 popupMenu: ChatContextMenuView {
                     id: chatContextMenuView

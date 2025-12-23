@@ -72,6 +72,8 @@ QtObject {
     property CurrenciesStore currencyStore
     property NetworkConnectionStore networkConnectionStore
 
+    property var contactsModel: contactsStore.contactsModel
+
     // Unique instance for all the chat / channel related low-level UI components
     readonly property UsersStore usersStore: UsersStore {
         property var chatDetails: !!root.activeChatContentModule ? root.activeChatContentModule.chatDetails : null
@@ -665,5 +667,9 @@ QtObject {
     function removeMemberFromGroupChat(publicKey) {
         const chatId = chatCommunitySectionModule.activeItem.id
         chatCommunitySectionModule.removeMemberFromGroupChat("", chatId, publicKey)
+    }
+
+    function populateContactDetailsRequested(publicKey) {
+        root.contactsStore.populateContactDetails(publicKey)
     }
 }
