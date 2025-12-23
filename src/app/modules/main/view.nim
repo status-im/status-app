@@ -216,10 +216,6 @@ QtObject:
   QtProperty[QVariant] appSearchModule:
     read = getAppSearchModule
 
-  proc getContactDetailsAsJson(self: View, publicKey: string, getVerificationRequest: bool, getOnlineStatus: bool,
-    includeDetails: bool): string {.slot.} =
-    return self.delegate.getContactDetailsAsJson(publicKey, getVerificationRequest, getOnlineStatus, includeDetails)
-
   proc getOwnerTokenAsJson(self: View, communityId: string): string {.slot.} =
     return self.delegate.getOwnerTokenAsJson(communityId)
 

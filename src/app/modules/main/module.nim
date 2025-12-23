@@ -1420,50 +1420,6 @@ method onCommunityMuted*[T](
     muted: bool) =
   self.view.model.setMuted(communityId, muted)
 
-method getContactDetailsAsJson*[T](self: Module[T], publicKey: string, getVerificationRequest: bool = false,
-  getOnlineStatus: bool = false, includeDetails: bool = false): string =
-  var contactDetails: ContactDetails
-  ## If includeDetails is true, additional details are calculated, like color hash and that results in higher CPU usage,
-  ## that's why by default it is false and we should set it to true only when we really need it.
-  if includeDetails:
-    contactDetails = self.controller.getContactDetails(publicKey)
-  else:
-    contactDetails.dto = self.controller.getContact(publicKey)
-
-  var onlineStatus = OnlineStatus.Inactive
-  if getOnlineStatus:
-    onlineStatus = toOnlineStatus(self.controller.getStatusForContactWithId(publicKey).statusType)
-
-  let jsonObj = %* {
-    # contact details props
-    "icon": contactDetails.icon,
-    "isCurrentUser": contactDetails.isCurrentUser,
-    "colorId": contactDetails.colorId,
-    # contact dto props
-    "displayName": contactDetails.dto.displayName,
-    "publicKey": contactDetails.dto.id,
-    "compressedPubKey": accounts_utils.compressPk(contactDetails.dto.id),
-    "name": contactDetails.dto.name,
-    "ensVerified": contactDetails.dto.ensVerified,
-    "alias": contactDetails.dto.alias,
-    "lastUpdated": contactDetails.dto.lastUpdated,
-    "lastUpdatedLocally": contactDetails.dto.lastUpdatedLocally,
-    "localNickname": contactDetails.dto.localNickname,
-    "thumbnailImage": contactDetails.dto.image.thumbnail,
-    "largeImage": contactDetails.dto.image.large,
-    "isContact": contactDetails.dto.isContact,
-    "isBlocked": contactDetails.dto.isBlocked,
-    "isContactRequestReceived": contactDetails.dto.isContactRequestReceived,
-    "isContactRequestSent": contactDetails.dto.isContactRequestSent,
-    "removed": contactDetails.dto.removed,
-    "trustStatus": contactDetails.dto.trustStatus.int,
-    "contactRequestState": contactDetails.dto.contactRequestState.int,
-    "bio": contactDetails.dto.bio,
-    "onlineStatus": onlineStatus.int,
-    "usesDefaultName": resolveUsesDefaultName(contactDetails.dto.localNickname, contactDetails.dto.name, contactDetails.dto.displayName)
-  }
-  return $jsonObj
-
 # used in FinaliseOwnershipPopup in UI
 method getOwnerTokenAsJson*[T](self: Module[T], communityId: string): string =
   let item = self.view.model().getItemById(communityId)

@@ -1019,50 +1019,6 @@ QtObject {
         return (startsWith0x(value) && isHex(value) && value.length === 132) || globalUtilsInst.isCompressedPubKey(value)
     }
 
-    function getContactDetailsAsJson(publicKey, getVerificationRequest=true, getOnlineStatus=false, includeDetails=false) {
-        const defaultValue = {
-            icon: "",
-            isCurrentUser: "",
-            colorId: "",
-            displayName: "",
-            publicKey: publicKey,
-            compressedPubKey: "",
-            name: "",
-            ensVerified: false,
-            alias: "",
-            lastUpdated: 0,
-            lastUpdatedLocally: 0,
-            localNickname: "",
-            thumbnailImage: "",
-            largeImage: "",
-            isContact: false,
-            isBlocked: false,
-            isContactRequestReceived: false,
-            isContactRequestSent: false,
-            usesDefaultName: false,
-            removed: false,
-            trustStatus: Constants.trustStatus.unknown,
-            contactRequestState: Constants.ContactRequestState.None,
-            socialLinks: [],
-            bio: "",
-            onlineStatus: Constants.onlineStatus.inactive
-        }
-
-        if (!mainModuleInst || !publicKey)
-            return defaultValue
-
-        const jsonObj = mainModuleInst.getContactDetailsAsJson(publicKey, getVerificationRequest, getOnlineStatus, includeDetails)
-
-        try {
-            return JSON.parse(jsonObj)
-        }
-        catch (e) {
-            // This log is available only in debug mode, if it's annoying we can remove it
-            console.warn("error parsing contact details for public key: ", publicKey, " error: ", e.message)
-            return defaultValue
-        }
-    }
-
     function isEnsVerified(publicKey) {
         if (publicKey === "" || !isChatKey(publicKey) )
             return false
