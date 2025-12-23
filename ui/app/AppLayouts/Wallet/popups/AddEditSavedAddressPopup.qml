@@ -12,12 +12,16 @@ import StatusQ.Popups.Dialog
 import utils
 import shared.stores as SharedStores
 import AppLayouts.Wallet.stores as WalletStores
+import AppLayouts.Profile.helpers
 
 StatusDialog {
     id: root
 
     required property WalletStores.RootStore store
     required property SharedStores.RootStore sharedRootStore
+    property var contactsModel
+
+    signal populateContactDetails(string publicKey)
 
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
@@ -89,8 +93,9 @@ StatusDialog {
 
         property bool incorrectChecksum: {
             if (d.addressInputIsAddress) {
-                d.incorrectChecksum = !root.store.isChecksumValidForAddress(d.address)
+                return !root.store.isChecksumValidForAddress(d.address)
             }
+            return false
         }
 
         readonly property bool addressInputIsENS: !!d.ens &&
@@ -110,6 +115,27 @@ StatusDialog {
         property bool addressAlreadyAddedToSavedAddressesError: false
         property bool checkingContactsAddressInProgress: false
         property int contactsWithSameAddress: 0
+
+        property var sharedContactModelEntryLoader: Loader {
+            property string publicKey: ""
+
+            active: false
+
+            sourceComponent: ContactModelEntry {
+                publicKey: d.sharedContactModelEntryLoader.publicKey
+                contactsModel: root.contactsModel
+                onPopulateContactDetailsRequested: {
+                    root.populateContactDetails(d.sharedContactModelEntryLoader.publicKey)
+                }
+            }
+        }
+
+        function getContactModelEntry(pubkey) {
+            d.sharedContactModelEntryLoader.active = false
+            d.sharedContactModelEntryLoader.publicKey = pubkey
+            d.sharedContactModelEntryLoader.active = true
+            return d.sharedContactModelEntryLoader.item
+        }
 
         function checkIfAddressIsAlreadyAddedToWallet(address) {
             let account = root.store.getWalletAccount(address)
@@ -282,15 +308,15 @@ StatusDialog {
                     addressInput.errorMessageCmp.text = qsTr("This address belongs to the following contacts")
 
                 for (let i = 0; i < accountsJson.length; ++i) {
-                    let contact = Utils.getContactDetailsAsJson(accountsJson[i].contactId, true, true, true)
+                    let contactEntry = d.getContactModelEntry(accountsJson[i].contactId)
                     d.cardsModel.append({
                                             type: AddEditSavedAddressPopup.CardType.Contact,
                                             address: accountsJson[i].address,
-                                            title: ProfileUtils.displayName(contact.localNickname, contact.name, contact.displayName, contact.alias),
-                                            icon: contact.icon,
+                                            title: ProfileUtils.displayName(contactEntry.contactDetails.localNickname, contactEntry.contactDetails.name, contactEntry.contactDetails.displayName, contactEntry.contactDetails.alias),
+                                            icon: contactEntry.contactDetails.icon,
                                             emoji: "",
-                                            color: Utils.colorForColorId(root.Theme.palette, contact.colorId),
-                                            onlineStatus: contact.onlineStatus
+                                            color: Utils.colorForColorId(root.Theme.palette, contactEntry.contactDetails.colorId),
+                                            onlineStatus: contactEntry.contactDetails.onlineStatus
                                         })
 
                 }
@@ -458,7 +484,7 @@ StatusDialog {
                     }
                 }
 
-                onKeyPressed: {
+                onKeyPressed: (event) => {
                     d.submit(event)
                 }
 
