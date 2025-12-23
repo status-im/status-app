@@ -2148,6 +2148,7 @@ Item {
                     createChatPropertiesStore: appMain.createChatPropertiesStore
 
                     mutualContactsModel: contactsModelAdaptor.mutualContacts
+                    allContactsModel: appMain.contactsStore.contactsModel
 
                     emojiPopup: statusEmojiPopup.item
                     stickersPopup: statusStickersPopupLoader.item

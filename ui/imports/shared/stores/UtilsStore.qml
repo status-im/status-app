@@ -48,4 +48,11 @@ QtObject {
             return publicKey
         return d.globalUtilsInst.getCompressedPk(publicKey)
     }
+
+    function getDecompressedPk(publicKey) {
+        if (publicKey === "") {
+            return ""
+        }
+        return d.globalUtilsInst.getDecompressedPk(publicKey)
+    }
 }

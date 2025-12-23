@@ -26,6 +26,7 @@ Page {
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
 
     property var mutualContactsModel
+    property var allContactsModel
 
     property var emojiPopup: null
     property var stickersPopup: null
@@ -69,6 +70,7 @@ Page {
 
                 utilsStore: root.utilsStore
                 contactsModel: root.mutualContactsModel
+                allContactsModel: root.allContactsModel
 
                 function createChat() {
                     if (model.count === 0) {
@@ -103,19 +105,15 @@ Page {
                         edit.forceActiveFocus()
                 }
 
-                onEnterKeyPressed: {
-                    entryAccepted(contactsList.itemAtIndex(contactsList.currentIndex));
-                }
+                onEnterKeyPressed: entryAccepted(contactsList.itemAtIndex(contactsList.currentIndex))
 
-                onUpKeyPressed: {
-                    contactsList.decrementCurrentIndex();
-                }
+                onUpKeyPressed: contactsList.decrementCurrentIndex()
 
-                onDownKeyPressed: {
-                    contactsList.incrementCurrentIndex();
-                }
+                onDownKeyPressed: contactsList.incrementCurrentIndex()
 
-                onResolveENS: (address) => root.rootStore.contactsStore.resolveENS(address);
+                onResolveENS: (address) => root.rootStore.contactsStore.resolveENS(address)
+
+                onPopulateContactDetails: (pubkey) => root.rootStore.contactsStore.populateContactDetails(pubkey)
 
                 Connections {
                     enabled: membersSelector.visible
