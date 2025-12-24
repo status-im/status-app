@@ -329,6 +329,24 @@ QtObject:
     except Exception as e:
       error "restore account failed", procName="restoreAccountAndLogin", errName = e.name, errDesription = e.msg
 
+  proc deleteMultiaccount*(self: Service, keyUid: string): string =
+    try:
+      let response = status_account.deleteMultiaccount(keyUid, joinPath(main_constants.ROOTKEYSTOREDIR, keyUid))
+
+      if not response.result.contains("error"):
+        error "invalid status-go response", response
+        raise newException(RpcException, "invalid response: no error field found")
+
+      let error = response.result["error"].getStr
+      if error == "":
+        debug "Account deleted succesfully"
+        return ""
+
+      raise newException(RpcException, error)
+    except Exception as e:
+      error "deleteMultiaccount failed", procName="deleteMultiaccount", errName = e.name, errDesription = e.msg
+      return "deleteMultiaccount failed: " & e.msg
+
   proc createAccountFromPrivateKey*(self: Service, privateKey: string): GeneratedAccountDto =
     if privateKey.len == 0:
       error "empty private key"

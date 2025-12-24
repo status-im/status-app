@@ -84,11 +84,31 @@ QtObject:
     self.endResetModel()
     self.countChanged()
 
+  proc findIndexByKeyUid*(self: Model, keyUid: string): int =
+    for i in 0 ..< self.items.len:
+      if self.items[i].getKeyUid() == keyUid:
+        return i
+
+    return -1
+
   proc getItemAtIndex*(self: Model, index: int): Item =
     if(index < 0 or index >= self.items.len):
       return
 
     return self.items[index]
+
+  proc removeItem*(self: Model, keyUid: string) =
+    let index = self.findIndexByKeyUid(keyUid)
+    if index == -1 or index >= self.items.len:
+      return
+
+    let parentModelIndex = newQModelIndex()
+    defer: parentModelIndex.delete
+
+    self.beginRemoveRows(parentModelIndex, index, index)
+    self.items.delete(index)
+    self.endRemoveRows()
+    self.countChanged()
 
   proc delete(self: Model) =
     self.QAbstractListModel.delete

@@ -183,6 +183,9 @@ proc restoreAccountAndLogin*(self: Controller, password, mnemonic: string,
     thirdpartyServicesEnabled,
   )
 
+proc deleteMultiaccount*(self: Controller, keyUid: string): string =
+  return self.accountsService.deleteMultiaccount(keyUid)
+
 proc restoreKeycardAccountAndLogin*(self: Controller, keyUid, instanceUid: string, 
   keycardKeys: KeycardExportedKeysDto, thirdpartyServicesEnabled: bool): string =
   return self.accountsService.restoreKeycardAccountAndLoginV2(

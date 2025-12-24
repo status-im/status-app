@@ -229,6 +229,7 @@ Page {
         }
 
         onSkippedBiometricFlow: root.skippedBiometricFlow()
+        onDeleteMultiaccountRequested: keyUid => root.onboardingStore.deleteMultiaccountRequested(keyUid)
     }
 
     // needs to be on top of the stack

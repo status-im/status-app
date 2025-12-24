@@ -142,6 +142,9 @@ QtObject:
   QtProperty[QVariant] loginAccountsModel:
     read = getLoginAccountsModel
 
+  proc removeLoginAccountItem*(self: View, keyUid: string) =
+    self.loginAccountsModel.removeItem(keyUid)
+
   proc convertKeycardAccountStateChanged*(self: View) {.signal.}
   proc getConvertKeycardAccountState(self: View): int {.slot.} =
     return self.convertKeycardAccountState.int
@@ -197,6 +200,9 @@ QtObject:
 
   proc startKeycardDetection(self: View) {.slot.} =
     self.delegate.startKeycardDetection()
+
+  proc requestDeleteMultiaccount(self: View, keyUid: string): string {.slot.} =
+    return self.delegate.requestDeleteMultiaccount(keyUid)
 
   proc delete*(self: View) =
     self.QObject.delete

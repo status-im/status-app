@@ -303,6 +303,19 @@ proc restoreAccountAndLogin*(request: RestoreAccountRequest): RpcResponse[JsonNo
     error "error doing rpc request", methodName = "restoreAccountAndLogin", exception=e.msg
     raise newException(RpcException, e.msg)
 
+proc deleteMultiaccount*(keyUid: string, keyStoreDir: string): RpcResponse[JsonNode] =
+  try:
+    let payload = %*{
+      "keyUID": keyUid,
+      "keyStoreDir": keyStoreDir
+    }
+    let response = status_go.deleteMultiaccount($payload)
+    result.result = Json.decode(response, JsonNode)
+
+  except RpcException as e:
+    error "error doing rpc request", methodName = "deleteMultiaccount", exception=e.msg
+    raise newException(RpcException, e.msg)
+
 proc convertRegularProfileKeypairToKeycard*(account: JsonNode, settings: JsonNode, keycardUid: string, password: string, newPassword: string):
   RpcResponse[JsonNode] =
   try:

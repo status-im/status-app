@@ -12748,6 +12748,18 @@ selhalo</translation>
         <source>Status Software Terms of Use</source>
         <translation>Podmínky použití softwaru Status</translation>
     </message>
+    <message>
+        <source>Remove %1 profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you remove %1, all data for this profile will be deleted from this device. To use this profile again, you&apos;ll need to reimport it to this device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove profile</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>OnboardingLayout</name>

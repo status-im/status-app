@@ -25,6 +25,7 @@ Control {
 
     signal onboardingCreateProfileFlowRequested()
     signal onboardingLoginFlowRequested()
+    signal deleteMultiaccountRequested(string keyUid, string username)
 
     function setSelection(keyUid: string) {
         let selection = keyUid
@@ -134,6 +135,16 @@ Control {
                     onClicked: {
                         dropdown.close()
                         root.setSelection(model.keyUid)
+                    }
+                    // Placeholder button until the real design is implemented
+                    StatusButton {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.right: parent.right
+                        anchors.rightMargin: Theme.padding
+                        size: StatusBaseButton.Size.Tiny
+                        icon.name: "delete"
+                        tooltip.text: "Delete Multiaccount"// no qsTr() as it's placeholder
+                        onClicked: root.deleteMultiaccountRequested(model.keyUid, model.username)
                     }
                 }
             }

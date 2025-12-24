@@ -15404,6 +15404,21 @@
       <comment>OnboardingFlow</comment>
       <translation>Status Software Terms of Use</translation>
     </message>
+    <message>
+      <source>Remove %1 profile</source>
+      <comment>OnboardingFlow</comment>
+      <translation>Remove %1 profile</translation>
+    </message>
+    <message>
+      <source>If you remove %1, all data for this profile will be deleted from this device. To use this profile again, you&#39;ll need to reimport it to this device.</source>
+      <comment>OnboardingFlow</comment>
+      <translation>If you remove %1, all data for this profile will be deleted from this device. To use this profile again, you&#39;ll need to reimport it to this device.</translation>
+    </message>
+    <message>
+      <source>Remove profile</source>
+      <comment>OnboardingFlow</comment>
+      <translation>Remove profile</translation>
+    </message>
   </context>
   <context>
     <name>OnboardingLayout</name>

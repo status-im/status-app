@@ -112,6 +112,9 @@ method requestLocalBackup*(self: AccessInterface, backupImportFileUrl: string) {
 method startKeycardDetection*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method requestDeleteMultiaccount*(self: AccessInterface, keyUid: string): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 # This way (using concepts) is used only for the modules managed by AppController
 type
   DelegateInterface* = concept c

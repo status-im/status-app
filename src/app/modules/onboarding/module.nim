@@ -449,6 +449,14 @@ method requestDeleteBiometrics*[T](self: Module[T], account: string) =
 method startKeycardDetection*[T](self: Module[T]) =
   self.controller.startKeycardDetection()
 
+method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
+  let err = self.controller.deleteMultiaccount(keyUid)
+  if err.len > 0:
+    return err
+
+  self.view.removeLoginAccountItem(keyUid)
+  return ""
+
 proc runPostLoginTasks*[T](self: Module[T]) =
   let tasks = self.postLoginTasks
   for task in tasks:
