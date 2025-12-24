@@ -1,18 +1,25 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import QtQml
 
 import StatusQ
+import StatusQ.Core
+import StatusQ.Controls
+import StatusQ.Core.Theme
 import StatusQ.Popups
+import StatusQ.Popups.Dialog
 import StatusQ.Core.Utils as SQUtils
 
 import AppLayouts.Onboarding.pages
 import AppLayouts.Onboarding.enums
+import AppLayouts.Onboarding.controls
 
 import QtModelsToolkit
 
 import shared.popups
 import utils
+import SortFilterProxyModel
 
 OnboardingStackView {
     id: root
@@ -146,6 +153,10 @@ OnboardingStackView {
             thirdpartyServicesPopup.createObject(root).open()
         }
 
+        function openManageProfilesPopup() {
+            manageProfilesPopup.createObject(root).open()
+        }
+
         function openDeleteMultiaccountConfirmationDialog(keyUid, username) {
             deleteMultiaccountConfirmationDialog.createObject(root, { keyUid, username }).open()
         }
@@ -242,11 +253,11 @@ OnboardingStackView {
                 root.keyUidSubmitted(loginScreen.selectedProfileKeyId)
                 root.push(keycardLostPage)
             }
+            onOnboardingManageProfilesFlowRequested: d.openManageProfilesPopup()
 
             onUnblockWithSeedphraseRequested: root.push(unblockWithSeedphraseFlow)
             onUnblockWithPukRequested: root.push(unblockWithPukFlow)
             onKeycardRequested: root.keycardRequested()
-            onDeleteMultiaccountRequested: (keyUid, username) => d.openDeleteMultiaccountConfirmationDialog(keyUid, username)
 
             onVisibleChanged: {
                 if (!visible)
@@ -623,6 +634,60 @@ OnboardingStackView {
                 close()
             }
             onCancelButtonClicked: close()
+        }
+    }
+
+    Component {
+        id: manageProfilesPopup
+
+        StatusDialog {
+            implicitWidth: 480
+            title: qsTr("Manage profiles")
+            destroyOnClose: true
+            leftPadding: 0
+            rightPadding: 0
+
+            ColumnLayout {
+                anchors.fill: parent
+
+
+                StatusListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    model: SortFilterProxyModel {
+                        sourceModel: root.loginAccountsModel
+                        sorters: RoleSorter {
+                            roleName: "order"
+                        }
+                    }
+                    implicitHeight: contentHeight
+                    spacing: Theme.halfPadding
+
+                    delegate: LoginUserSelectorDelegate {
+                        objectName: "manageProfilesDelegate-" + model.keyUid
+                        width: ListView.view.width
+                        height: d.delegateHeight
+                        label: model.username
+                        image: model.thumbnailImage
+                        colorId: model.colorId
+                        keycardCreatedAccount: model.keycardCreatedAccount
+                        keycardEnabled: true // We just care to show the icon here
+                        managementMode: true
+                        onDeleteProfileRequested: d.openDeleteMultiaccountConfirmationDialog(model.keyUid, model.username)
+                    }
+                }
+            }
+
+            footer: StatusDialogFooter {
+                dropShadowEnabled: true
+                rightButtons: ObjectModel {
+                    StatusButton {
+                        objectName: "doneBtnManageProfiles"
+                        text: qsTr("Done")
+                        onClicked: close()
+                    }
+                }
+            }
         }
     }
 }

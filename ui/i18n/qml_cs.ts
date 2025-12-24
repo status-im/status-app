@@ -10761,6 +10761,10 @@ selhalo</translation>
         <source>Log in</source>
         <translation>Přihlásit se</translation>
     </message>
+    <message>
+        <source>Manage profiles</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>LoginUserSelectorDelegate</name>
@@ -12762,6 +12766,10 @@ selhalo</translation>
     </message>
     <message>
         <source>Remove profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Manage profiles</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

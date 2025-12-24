@@ -5,6 +5,7 @@ import QtQuick.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
+import StatusQ.Controls
 import StatusQ.Popups
 import StatusQ.Core.Utils as StatusQUtils
 
@@ -21,6 +22,9 @@ ItemDelegate {
     property bool keycardLocked
     property bool keycardEnabled
     property bool isAction
+    property bool managementMode
+
+    signal deleteProfileRequested()
 
     verticalPadding: 12
     leftPadding: Theme.padding
@@ -86,6 +90,16 @@ ItemDelegate {
                 icon: "keycard"
                 color: root.keycardLocked || !root.keycardEnabled ? Theme.palette.dangerColor1 : Theme.palette.baseColor1
                 tooltipText: !root.keycardEnabled ? qsTr("Keycard is not yet supported") : ""
+            }
+        }
+
+        Loader {
+            active: root.managementMode
+            sourceComponent: StatusFlatButton {
+                objectName: "deleteProfileButton"
+                size: StatusBaseButton.Size.Large
+                icon.name: "delete"
+                onClicked: root.deleteProfileRequested()
             }
         }
     }

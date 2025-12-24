@@ -25,7 +25,7 @@ Control {
 
     signal onboardingCreateProfileFlowRequested()
     signal onboardingLoginFlowRequested()
-    signal deleteMultiaccountRequested(string keyUid, string username)
+    signal onboardingManageProfilesFlowRequested()
 
     function setSelection(keyUid: string) {
         let selection = keyUid
@@ -136,16 +136,6 @@ Control {
                         dropdown.close()
                         root.setSelection(model.keyUid)
                     }
-                    // Placeholder button until the real design is implemented
-                    StatusButton {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.right: parent.right
-                        anchors.rightMargin: Theme.padding
-                        size: StatusBaseButton.Size.Tiny
-                        icon.name: "delete"
-                        tooltip.text: "Delete Multiaccount"// no qsTr() as it's placeholder
-                        onClicked: root.deleteMultiaccountRequested(model.keyUid, model.username)
-                    }
                 }
             }
             StatusMenuSeparator {
@@ -174,6 +164,18 @@ Control {
                 onClicked: {
                     dropdown.close()
                     root.onboardingLoginFlowRequested()
+                }
+            }
+            LoginUserSelectorDelegate {
+                Layout.fillWidth: true
+                Layout.preferredHeight: d.delegateHeight
+                objectName: "manageProfilesDelegate"
+                label: qsTr("Manage profiles")
+                image: "settings"
+                isAction: true
+                onClicked: {
+                    dropdown.close()
+                    root.onboardingManageProfilesFlowRequested()
                 }
             }
         }
