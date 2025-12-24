@@ -14741,30 +14741,6 @@ to load</source>
         <source>Message</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Arbiscan Explorer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Optimism Explorer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Base Explorer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status Explorer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>BNB Smart Chain Explorer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Etherscan Explorer</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>RouterErrorTag</name>
@@ -18631,6 +18607,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Import key pair to use derived accounts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>LineaScan</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

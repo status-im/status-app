@@ -24,6 +24,8 @@ QtObject {
         readonly property int arbitrumSepoliaChainId: 421614
         readonly property int baseChainId: 8453
         readonly property int baseSepoliaChainId: 84532
+        readonly property int lineaMainnetChainId: 59144
+        readonly property int lineaSepoliaChainId: 59141
         readonly property int statusNetworkSepoliaChainId: 1660990954
         readonly property int binanceSmartChainMainnetChainId: 56
         readonly property int binanceSmartChainTestnetChainId: 97
@@ -818,6 +820,7 @@ QtObject {
         readonly property string arbitrum: "arb1"
         readonly property string optimism: "oeth"
         readonly property string base: "base"
+        readonly property string linea: "linea"
         readonly property string status: "status"
         readonly property string binanceSmartChain: "bsc"
     }
@@ -831,6 +834,8 @@ QtObject {
         readonly property string sepoliaOptimism: "Optimism Sepolia"
         readonly property string base: "Base"
         readonly property string sepoliaBase: "Base Sepolia"
+        readonly property string linea: "Linea"
+        readonly property string sepoliaLinea: "Linea Sepolia"
         readonly property string status: "Status Network"
         readonly property string sepoliaStatus: "Status Network Sepolia"
         readonly property string binanceSmartChain: "BNB Smart Chain"
@@ -842,11 +847,13 @@ QtObject {
         readonly property string arbiscan: "https://arbiscan.io"
         readonly property string optimism: "https://optimistic.etherscan.io"
         readonly property string base: "https://basescan.org"
+        readonly property string linea: "https://lineascan.build"
         readonly property string binanceSmartChain: "https://bscscan.com"
         readonly property string sepoliaEtherscan: "https://sepolia.etherscan.io/"
         readonly property string sepoliaArbiscan: "https://sepolia.arbiscan.io/"
         readonly property string sepoliaOptimism: "https://sepolia-optimism.etherscan.io/"
         readonly property string sepoliaBase: "https://sepolia.basescan.org/"
+        readonly property string sepoliaLinea: "https://sepolia.lineascan.build/"
         readonly property string sepoliaStatus: "https://sepoliascan.status.network/"
         readonly property string testnetBinanceSmartChain: "https://testnet.bscscan.com/"
         readonly property string addressPath: "address"
@@ -861,11 +868,13 @@ QtObject {
         readonly property string arbitrum: "arbitrum"
         readonly property string optimism: "optimism"
         readonly property string base: "base"
+        readonly property string linea: "linea"
         readonly property string binanceSmartChain: "binance-smart-chain"
         readonly property string sepoliaEthereum: "sepolia"
         readonly property string sepoliaArbitrum: "arbitrum-sepolia"
         readonly property string sepoliaOptimism: "optimism-sepolia"
         readonly property string sepoliaBase: "base-sepolia"
+        readonly property string sepoliaLinea: "linea-sepolia"
         readonly property string sepoliaStatus: "status-sepolia"
     }
 

@@ -396,25 +396,6 @@ QtObject {
         }
     }
 
-    function getExplorerNameForNetwork(networkShortName)  {
-        if (networkShortName === Constants.networkShortChainNames.arbitrum) {
-            return qsTr("Arbiscan Explorer")
-        }
-        if (networkShortName === Constants.networkShortChainNames.optimism) {
-            return qsTr("Optimism Explorer")
-        }
-        if (networkShortName === Constants.networkShortChainNames.base) {
-            return qsTr("Base Explorer")
-        }
-        if (networkShortName === Constants.networkShortChainNames.status) {
-            return qsTr("Status Explorer")
-        }
-        if (networkShortName === Constants.networkShortChainNames.binanceSmartChain) {
-            return qsTr("BNB Smart Chain Explorer")
-        }
-        return qsTr("Etherscan Explorer")
-    }
-
     function getOpenSeaNetworkName(networkShortName) {
         let networkName = Constants.openseaExplorerLinks.ethereum
         if (networkShortName === Constants.networkShortChainNames.mainnet) {
@@ -436,6 +417,11 @@ QtObject {
             networkName = Constants.openseaExplorerLinks.base
             if (root.areTestNetworksEnabled) {
                 networkName = Constants.openseaExplorerLinks.sepoliaBase
+            }
+        } else if (networkShortName === Constants.networkShortChainNames.linea) {
+            networkName = Constants.openseaExplorerLinks.linea
+            if (root.areTestNetworksEnabled) {
+                networkName = Constants.openseaExplorerLinks.sepoliaLinea
             }
         }
         return networkName

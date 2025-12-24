@@ -17954,36 +17954,6 @@
       <comment>RootStore</comment>
       <translation>Message</translation>
     </message>
-    <message>
-      <source>Arbiscan Explorer</source>
-      <comment>RootStore</comment>
-      <translation>Arbiscan Explorer</translation>
-    </message>
-    <message>
-      <source>Optimism Explorer</source>
-      <comment>RootStore</comment>
-      <translation>Optimism Explorer</translation>
-    </message>
-    <message>
-      <source>Base Explorer</source>
-      <comment>RootStore</comment>
-      <translation>Base Explorer</translation>
-    </message>
-    <message>
-      <source>Status Explorer</source>
-      <comment>RootStore</comment>
-      <translation>Status Explorer</translation>
-    </message>
-    <message>
-      <source>BNB Smart Chain Explorer</source>
-      <comment>RootStore</comment>
-      <translation>BNB Smart Chain Explorer</translation>
-    </message>
-    <message>
-      <source>Etherscan Explorer</source>
-      <comment>RootStore</comment>
-      <translation>Etherscan Explorer</translation>
-    </message>
   </context>
   <context>
     <name>RouterErrorTag</name>
@@ -22662,6 +22632,11 @@
       <source>Import key pair to use derived accounts</source>
       <comment>Utils</comment>
       <translation>Import key pair to use derived accounts</translation>
+    </message>
+    <message>
+      <source>LineaScan</source>
+      <comment>Utils</comment>
+      <translation>LineaScan</translation>
     </message>
   </context>
   <context>

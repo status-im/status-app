@@ -14720,30 +14720,6 @@ to load</source>
         <source>Message</source>
         <translation>메시지</translation>
     </message>
-    <message>
-        <source>Arbiscan Explorer</source>
-        <translation>Arbiscan 탐색기</translation>
-    </message>
-    <message>
-        <source>Optimism Explorer</source>
-        <translation>Optimism 익스플로러</translation>
-    </message>
-    <message>
-        <source>Base Explorer</source>
-        <translation>Base 익스플로러</translation>
-    </message>
-    <message>
-        <source>Status Explorer</source>
-        <translation>Status Explorer</translation>
-    </message>
-    <message>
-        <source>BNB Smart Chain Explorer</source>
-        <translation>BNB 스마트 체인 익스플로러</translation>
-    </message>
-    <message>
-        <source>Etherscan Explorer</source>
-        <translation>Etherscan Explorer</translation>
-    </message>
 </context>
 <context>
     <name>RouterErrorTag</name>
@@ -18607,6 +18583,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Import key pair to use derived accounts</source>
         <translation>파생 계정을 사용하려면 키 쌍 가져오기</translation>
+    </message>
+    <message>
+        <source>LineaScan</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

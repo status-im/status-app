@@ -14849,30 +14849,6 @@ selhalo</translation>
         <source>Message</source>
         <translation>Zpráva</translation>
     </message>
-    <message>
-        <source>Arbiscan Explorer</source>
-        <translation>Průzkumník Arbiscan</translation>
-    </message>
-    <message>
-        <source>Optimism Explorer</source>
-        <translation>Průzkumník Optimism</translation>
-    </message>
-    <message>
-        <source>Base Explorer</source>
-        <translation>Průzkumník Base</translation>
-    </message>
-    <message>
-        <source>Status Explorer</source>
-        <translation>Průzkumník Status</translation>
-    </message>
-    <message>
-        <source>BNB Smart Chain Explorer</source>
-        <translation>Průzkumník BNB Smart Chain</translation>
-    </message>
-    <message>
-        <source>Etherscan Explorer</source>
-        <translation>Průzkumník Etherscan</translation>
-    </message>
 </context>
 <context>
     <name>RouterErrorTag</name>
@@ -18761,6 +18737,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Import key pair to use derived accounts</source>
         <translation>Importovat dvojici klíčů pro použití odvozených účtů</translation>
+    </message>
+    <message>
+        <source>LineaScan</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

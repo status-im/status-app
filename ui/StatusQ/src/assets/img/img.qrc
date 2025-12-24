@@ -407,6 +407,8 @@
         <file>icons/network/Network=Ethereum.svg</file>
         <file>icons/network/Network=Ethereum-test.svg</file>
         <file>icons/network/Network=Hermez.svg</file>
+        <file>icons/network/Network=Linea.svg</file>
+        <file>icons/network/Network=Linea-test.svg</file>
         <file>icons/network/Network=Optimism.svg</file>
         <file>icons/network/Network=Optimism-test.svg</file>
         <file>icons/network/Network=Status.svg</file>

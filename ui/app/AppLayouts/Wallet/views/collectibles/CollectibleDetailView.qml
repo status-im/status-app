@@ -100,7 +100,7 @@ Item {
         networkShortName: !!collectible ? collectible.networkShortName : ""
         networkColor: !!collectible ?collectible.networkColor : ""
         networkIconURL: !!collectible ? collectible.networkIconUrl : ""
-        networkExplorerName: !!collectible ? root.walletRootStore.getExplorerNameForNetwork(collectible.networkShortName): ""
+        networkExplorerName: !!collectible ? Utils.getChainExplorerName(collectible.networkShortName): ""
         collectibleLinkEnabled: Utils.getUrlStatus(d.collectibleLink)
         collectionLinkEnabled: (!!communityDetails && communityDetails.name)  || Utils.getUrlStatus(d.collectionLink)
         explorerLinkEnabled: Utils.getUrlStatus(d.blockExplorerLink)

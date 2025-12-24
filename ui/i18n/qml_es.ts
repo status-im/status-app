@@ -14764,30 +14764,6 @@ al cargar</translation>
         <source>Message</source>
         <translation>Mensaje</translation>
     </message>
-    <message>
-        <source>Arbiscan Explorer</source>
-        <translation>Explorador Arbiscan</translation>
-    </message>
-    <message>
-        <source>Optimism Explorer</source>
-        <translation>Explorador Optimism</translation>
-    </message>
-    <message>
-        <source>Base Explorer</source>
-        <translation>Explorador Base</translation>
-    </message>
-    <message>
-        <source>Status Explorer</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>BNB Smart Chain Explorer</source>
-        <translation>Explorador BNB Smart Chain</translation>
-    </message>
-    <message>
-        <source>Etherscan Explorer</source>
-        <translation>Explorador Etherscan</translation>
-    </message>
 </context>
 <context>
     <name>RouterErrorTag</name>
@@ -18669,6 +18645,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Import key pair to use derived accounts</source>
         <translation>Importe el par de claves para usar cuentas derivadas</translation>
+    </message>
+    <message>
+        <source>LineaScan</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

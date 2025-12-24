@@ -644,6 +644,11 @@ QtObject {
             if (testnetMode) {
                 link = Constants.networkExplorerLinks.sepoliaBase
             }
+        } else if (networkShortName === Constants.networkShortChainNames.linea) {
+            link = Constants.networkExplorerLinks.linea
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.sepoliaLinea
+            }
         } else if (networkShortName === Constants.networkShortChainNames.status) {
             link = Constants.networkExplorerLinks.status
             if (testnetMode) {
@@ -688,6 +693,9 @@ QtObject {
         if (networkShortName === Constants.networkShortChainNames.base) {
             return qsTr("BaseScan")
         }
+        if (networkShortName === Constants.networkShortChainNames.linea) {
+            return qsTr("LineaScan")
+        }
         if (networkShortName === Constants.networkShortChainNames.status) {
             return qsTr("Status Explorer")
         }
@@ -712,7 +720,9 @@ QtObject {
             case Constants.chains.baseChainId:
             case Constants.chains.baseSepoliaChainId:
                 return Constants.networkShortChainNames.base
-            case Constants.chains.statusNetworkChainId:
+            case Constants.chains.lineaMainnetChainId:
+            case Constants.chains.lineaSepoliaChainId:
+                return Constants.networkShortChainNames.linea
             case Constants.chains.statusNetworkSepoliaChainId:
                 return Constants.networkShortChainNames.status
             case Constants.chains.binanceSmartChainMainnetChainId:
@@ -741,8 +751,10 @@ QtObject {
                 return Constants.networkNames.base
             case Constants.chains.baseSepoliaChainId:
                 return Constants.networkNames.sepoliaBase
-            case Constants.chains.statusNetworkChainId:
-                return Constants.networkNames.status
+            case Constants.chains.lineaMainnetChainId:
+                return Constants.networkNames.linea
+            case Constants.chains.lineaSepoliaChainId:
+                return Constants.networkNames.sepoliaLinea
             case Constants.chains.statusNetworkSepoliaChainId:
                 return Constants.networkNames.sepoliaStatus
             case Constants.chains.binanceSmartChainMainnetChainId:
@@ -759,6 +771,7 @@ QtObject {
             case Constants.chains.arbitrumChainId:
             case Constants.chains.optimismChainId:
             case Constants.chains.baseChainId:
+            case Constants.chains.lineaMainnetChainId:
             case Constants.chains.binanceSmartChainMainnetChainId:
                 return false
         }
@@ -870,7 +883,7 @@ QtObject {
         rawGasPrice = StatusQUtils.AmountsArithmetic.times(rawGasPrice, StatusQUtils.AmountsArithmetic.fromNumber(gasAmount))
         return nativeTokenRawToDecimal(chainID, rawGasPrice)
     }
-    
+
     // TODO: https://github.com/status-im/status-desktop/issues/15329
     // Get DApp data from the backend
     function getDappDetails(chainId, contractAddress) {
