@@ -152,3 +152,6 @@ proc tokenAvailableForBridgingViaHop*(self: Controller, tokenChainId: int, token
 
 proc getMandatoryTokenGroupKeys*(self: Controller): seq[string] =
   return self.tokenService.getMandatoryTokenGroupKeys()
+
+proc getListOfTokenKeysAvailableForSwapViaParaswap*(self: Controller, chainId: int): seq[string] =
+  return self.tokenService.getListOfTokenKeysAvailableForSwapViaParaswap(chainId)

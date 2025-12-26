@@ -612,6 +612,7 @@ Item {
             waitForRendering(receivePanel)
             formValuesChanged.wait()
             root.swapFormData.selectedNetworkChainId = 11155420
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
             formValuesChanged.wait()
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             formValuesChanged.wait()
@@ -906,6 +907,11 @@ Item {
         }
 
         function test_modal_pay_input_default() {
+            if (root.swapFormData.selectedNetworkChainId === -1) {
+                root.swapFormData.selectedNetworkChainId = 1
+            }
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+
             // Launch popup
             launchAndVerfyModal()
 
@@ -955,6 +961,7 @@ Item {
 
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.fromGroupKey = sttGroupKey
             root.swapFormData.fromTokenAmount = valueToExchangeString
 
@@ -1014,6 +1021,7 @@ Item {
                 // try setting value before popup is launched and check values
                 root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
                 root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
                 root.swapFormData.fromGroupKey = ""
                 root.swapFormData.fromTokenAmount = invalidValue
 
@@ -1063,6 +1071,7 @@ Item {
             let valueToExchangeString = valueToExchange.toString()
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.fromGroupKey = sttGroupKey
             root.swapFormData.fromTokenAmount = valueToExchangeString
 
@@ -1112,6 +1121,11 @@ Item {
         }
 
         function test_modal_receive_input_default() {
+            if (root.swapFormData.selectedNetworkChainId === -1) {
+                root.swapFormData.selectedNetworkChainId = 1
+            }
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
+
             // Launch popup
             launchAndVerfyModal()
 
@@ -1136,7 +1150,7 @@ Item {
             verify(!amountToSendInput.interactive)
             verify(!amountToSendInput.cursorVisible)
             compare(amountToSendInput.placeholderText, LocaleUtils.numberToLocaleString(0))
-            compare(bottomItemText.text, root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency))
+            tryCompare(bottomItemText, "text", root.swapAdaptor.currencyStore.formatCurrencyAmount(0, root.swapAdaptor.currencyStore.currentCurrency))
             compare(tokenSelectorContentItemText.text, Constants.ethToken)
             verify(!maxTagButton.visible)
             compare(receivePanel.selectedHoldingId, Constants.ethGroupKey)
@@ -1156,6 +1170,7 @@ Item {
             // try setting value before popup is launched and check values
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.selectedNetworkChainId = 11155420
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.toGroupKey = sttGroupKey
             root.swapFormData.toTokenAmount = valueToReceiveString
 
@@ -1209,6 +1224,7 @@ Item {
             let valueToExchange = 0.2
             let valueToExchangeString = valueToExchange.toString()
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
             // The default is the first account. Setting the second account to test switching accounts
             root.swapFormData.fromGroupKey = ethGroupKey
             root.swapFormData.fromTokenAmount = valueToExchangeString
@@ -1303,6 +1319,7 @@ Item {
 
             // try setting value before popup is launched and check values
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.fromGroupKey = ethGroupKey
             root.swapFormData.toGroupKey = sttGroupKey
@@ -1365,6 +1382,7 @@ Item {
                 root.swapFormData.fromTokenAmount = valueToExchangeString
                 root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
                 root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
+                root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
                 root.swapFormData.fromGroupKey = sttGroupKey
 
                 // Launch popup
@@ -1483,6 +1501,7 @@ Item {
 
             // set network and address by default same
             root.swapFormData.selectedNetworkChainId = root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.selectedAccountAddress = walletAccounts.get(0).address
             root.swapFormData.fromGroupKey = data.fromToken
             root.swapFormData.fromTokenAmount = data.fromTokenAmount
@@ -1509,11 +1528,11 @@ Item {
             let paytokenSelectorContentItemText = findChild(payPanel, "tokenSelectorContentItemText")
             verify(!!paytokenSelectorContentItemText)
             let paytokenSelectorIcon = findChild(payPanel, "tokenSelectorIcon")
-            verify(!!paytokenSelectorIcon)
+            verify(!!paytokenSelectorIcon === !!expectedFromTokenKey)
             let receivetokenSelectorContentItemText = findChild(receivePanel, "tokenSelectorContentItemText")
             verify(!!receivetokenSelectorContentItemText)
             let receivetokenSelectorIcon = findChild(receivePanel, "tokenSelectorIcon")
-            verify(!!receivetokenSelectorIcon)
+            verify(!!receivetokenSelectorIcon === !!expectedToTokenKey)
 
             // verify pay values
             compare(payPanel.groupKey, expectedFromTokenKey)
@@ -1983,6 +2002,7 @@ Item {
             root.swapFormData.fromTokenAmount = "0.0001"
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             root.swapFormData.selectedNetworkChainId = 11155111
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapFormData.selectedNetworkChainId)
             root.swapFormData.fromGroupKey = ethGroupKey
             root.swapFormData.toGroupKey = sttGroupKey
 
@@ -2037,6 +2057,8 @@ Item {
 
         function test_exchange_rate() {
             // Asset chosen but no pay value set state -------------------------------------------------------------------------------
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(11155111)
+
             root.swapFormData.fromTokenAmount = "1"
             root.swapFormData.selectedAccountAddress = "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
             root.swapFormData.selectedNetworkChainId = 11155111

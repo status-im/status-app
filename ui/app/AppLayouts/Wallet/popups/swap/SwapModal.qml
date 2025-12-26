@@ -89,6 +89,32 @@ StatusDialog {
         readonly property int loadingFeesWidth: 60
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapInputParamsForm.selectedNetworkChainId)
+
+        function rebuildGroupsForChain(chainId) {
+            if (chainId <= 0) {
+                return
+            }
+
+            const listOfTokenKeysAvailableForSwapViaParaswap = root.swapAdaptor.walletAssetsStore.walletTokensStore.getListOfTokenKeysAvailableForSwapViaParaswap(chainId)
+            if (listOfTokenKeysAvailableForSwapViaParaswap.length === 0) {
+                console.warn("swap via paraswap not supported for chain", chainId)
+                const networkName = Utils.getNetworkName(chainId)
+                Global.openInfoPopup(qsTr("Info"), qsTr("Swap on %1 is not supported by ParaSwap.").arg(networkName))
+
+                Qt.callLater(() => {
+                                 // by default set ethereum chain
+                                 root.swapInputParamsForm.selectedNetworkChainId = Utils.isChainIDTestnet(chainId)?
+                                     Constants.chains.sepoliaChainId
+                                   : Constants.chains.mainnetChainId
+                             })
+                return
+            }
+            payPanel.listOfTokenKeysAvailableForSwapViaParaswap = listOfTokenKeysAvailableForSwapViaParaswap
+            receivePanel.listOfTokenKeysAvailableForSwapViaParaswap = listOfTokenKeysAvailableForSwapViaParaswap
+
+            const keys = SQUtils.ModelUtils.joinModelEntries(root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel, "key", d.mandatoryKeysSeparator)
+            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(chainId, keys)
+        }
     }
 
     ModelEntry {
@@ -105,8 +131,7 @@ StatusDialog {
         }
 
         function onSelectedNetworkChainIdChanged() {
-            let keys = SQUtils.ModelUtils.joinModelEntries(root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel, "key", d.mandatoryKeysSeparator)
-            root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapInputParamsForm.selectedNetworkChainId, keys)
+            d.rebuildGroupsForChain(root.swapInputParamsForm.selectedNetworkChainId)
 
             networkFilter.selection = [root.swapInputParamsForm.selectedNetworkChainId]
         }
@@ -131,8 +156,7 @@ StatusDialog {
         payPanel.reset()
         receivePanel.reset()
 
-        let keys = SQUtils.ModelUtils.joinModelEntries(root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel, "key", d.mandatoryKeysSeparator)
-        root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(root.swapInputParamsForm.selectedNetworkChainId, keys)
+        d.rebuildGroupsForChain(root.swapInputParamsForm.selectedNetworkChainId)
     }
 
     onOpened: {

@@ -50,24 +50,28 @@ QtObject {
 
     readonly property SwapModalHandler swapModalHandler: SwapModalHandler {
 
-        property SwapInputParamsForm swapFormData: SwapInputParamsForm {}
 
         function launchSwap() {
-            swapFormData.selectedAccountAddress =
-                    SQUtils.ModelUtils.get(root.walletRootStore.nonWatchAccounts, 0, "address")
-            swapFormData.selectedNetworkChainId =
-                    SQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId")
-            openSendModal(swapFormData, (popup) => {
-                              popup.Component.destruction.connect(() => {
-                                                                      swapFormData.resetFormData()
-                                                                  })})
+            if (root.walletRootStore.areTestNetworksEnabled) {
+                Global.openInfoPopup(qsTr("Info"), qsTr("Swap is not available in the testnet mode."))
+                return
+            }
+
+            const data = {
+                selectedAccountAddress: SQUtils.ModelUtils.get(root.walletRootStore.nonWatchAccounts, 0, "address"),
+                selectedNetworkChainId: SQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId")
+            }
+
+            openSendModal(data)
         }
 
         function launchSwapSpecific(data) {
-            openSendModal(data, (popup) => {
-                              popup.Component.destruction.connect(() => {
-                                                                      data.resetFormData()
-                                                                  })})
+            if (root.walletRootStore.areTestNetworksEnabled) {
+                Global.openInfoPopup(qsTr("Info"), qsTr("Swap is not available in the testnet mode."))
+                return
+            }
+
+            openSendModal(data)
         }
 
         popupParent: root.popupParent

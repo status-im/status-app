@@ -190,3 +190,6 @@ method tokenAvailableForBridgingViaHop*(self: Module, tokenChainId: int, tokenAd
 
 method getMandatoryTokenGroupKeys*(self: Module): seq[string] =
   return self.controller.getMandatoryTokenGroupKeys()
+
+method getListOfTokenKeysAvailableForSwapViaParaswap*(self: Module, chainId: int): seq[string] =
+  return self.controller.getListOfTokenKeysAvailableForSwapViaParaswap(chainId)

@@ -20,7 +20,7 @@ QtObject {
     property double selectedSlippage: 0.5
 
     // default to token key
-    property string defaultToGroupKey: Utils.getNativeTokenGroupKey(root.selectedNetworkChainId)
+    property string defaultToGroupKey: root.getDefaultToGroupKey(root.selectedNetworkChainId)
     // default from group key
     property string defaultFromGroupKey: root.getDefaultFromGroupKey(root.selectedNetworkChainId)
     // 15 seconds
@@ -43,6 +43,7 @@ QtObject {
     }
 
     function resetFromTokenValues(keepDefault = true) {
+        root.defaultFromGroupKey = root.getDefaultFromGroupKey(root.selectedNetworkChainId)
         if(keepDefault) {
             root.fromGroupKey = root.defaultFromGroupKey
         } else {
@@ -52,6 +53,7 @@ QtObject {
     }
 
     function resetToTokenValues(keepDefault = true) {
+        root.defaultToGroupKey = root.getDefaultToGroupKey(root.selectedNetworkChainId)
         if(keepDefault) {
             root.toGroupKey = root.defaultToGroupKey
         } else {
@@ -79,4 +81,11 @@ QtObject {
         }
     }
 
+    function getDefaultToGroupKey(chainId) {
+        let selectedGK = Utils.getNativeTokenGroupKey(chainId)
+        if (selectedGK !== root.defaultFromGroupKey) {
+            return selectedGK
+        }
+        return root.getDefaultFromGroupKey()
+    }
 }

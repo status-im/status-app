@@ -402,7 +402,7 @@ RightTabBaseView {
                                                     key, Constants.TokenType.ERC20)
                         }
 
-                        onSwapRequested: root.launchSwapModal(key)
+                        onSwapRequested: (key) => root.launchSwapModal(key)
                         onReceiveRequested: root.launchShareAddressModal()
                         onCommunityClicked: Global.switchToCommunity(communityKey)
 

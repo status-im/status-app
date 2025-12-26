@@ -2184,10 +2184,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Swap</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Manage tokens</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2197,6 +2193,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Hide all assets from this community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swap</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -8155,6 +8155,17 @@ L2 fee: %2</source>
     <name>GroupsModel</name>
     <message>
         <source>Popular assets on %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>HandlersManager</name>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swap is not available in the testnet mode.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -16894,6 +16905,14 @@ access to your webcam</source>
     </message>
     <message>
         <source>Sign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swap on %1 is not supported by ParaSwap.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

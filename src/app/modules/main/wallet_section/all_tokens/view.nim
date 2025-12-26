@@ -236,6 +236,10 @@ QtObject:
   proc tokenAvailableForBridgingViaHop(self: View, tokenChainId: int, tokenAddress: string): bool {.slot.} =
     return self.delegate.tokenAvailableForBridgingViaHop(tokenChainId, tokenAddress)
 
+  proc getListOfTokenKeysAvailableForSwapViaParaswap*(self: View, chainId: int): string {.slot.} =
+    let tokenKeys = self.delegate.getListOfTokenKeysAvailableForSwapViaParaswap(chainId)
+    return $(%* tokenKeys)
+
   proc delete*(self: View) =
     self.QObject.delete
 

@@ -29,6 +29,23 @@ proc tokenAvailableForBridgingViaHop(tokenChainId: int, tokenAddress: string): b
     let errDesription = e.msg
     error "error: ", errDesription
 
+proc getListOfTokenKeysAvailableForSwapViaParaswap(chainId: int): seq[string] =
+  try:
+    var response: JsonNode
+    var err = status_go_tokens.getListOfTokenKeysAvailableForSwapViaParaswap(response, chainId)
+    if err.len > 0:
+      raise newException(CatchableError, "failed" & err)
+    if response.isNil or response.kind != JsonNodeKind.JArray:
+      raise newException(CatchableError, "unexpected response")
+    # Create a copy of the tokenResultStr to avoid exceptions in `decode`
+    # Workaround for https://github.com/status-im/status-desktop/issues/17398
+    let responseStr = $response
+    let parsedResponse = Json.decode(responseStr, seq[string], allowUnknownFields = true)
+    result = parsedResponse
+  except Exception as e:
+    let errDesription = e.msg
+    error "error1: ", errDesription
+
 proc getAllTokenLists(): seq[TokenListItem] =
   try:
     var response: JsonNode

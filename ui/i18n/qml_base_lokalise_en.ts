@@ -2681,11 +2681,6 @@
       <translation>Receive</translation>
     </message>
     <message>
-      <source>Swap</source>
-      <comment>AssetContextMenu</comment>
-      <translation>Swap</translation>
-    </message>
-    <message>
       <source>Manage tokens</source>
       <comment>AssetContextMenu</comment>
       <translation>Manage tokens</translation>
@@ -2699,6 +2694,11 @@
       <source>Hide all assets from this community</source>
       <comment>AssetContextMenu</comment>
       <translation>Hide all assets from this community</translation>
+    </message>
+    <message>
+      <source>Swap</source>
+      <comment>AssetContextMenu</comment>
+      <translation>Swap</translation>
     </message>
   </context>
   <context>
@@ -9961,6 +9961,19 @@
       <source>Popular assets on %1</source>
       <comment>GroupsModel</comment>
       <translation>Popular assets on %1</translation>
+    </message>
+  </context>
+  <context>
+    <name>HandlersManager</name>
+    <message>
+      <source>Info</source>
+      <comment>HandlersManager</comment>
+      <translation>Info</translation>
+    </message>
+    <message>
+      <source>Swap is not available in the testnet mode.</source>
+      <comment>HandlersManager</comment>
+      <translation>Swap is not available in the testnet mode.</translation>
     </message>
   </context>
   <context>
@@ -20549,6 +20562,16 @@
       <source>Sign</source>
       <comment>SwapModal</comment>
       <translation>Sign</translation>
+    </message>
+    <message>
+      <source>Info</source>
+      <comment>SwapModal</comment>
+      <translation>Info</translation>
+    </message>
+    <message>
+      <source>Swap on %1 is not supported by ParaSwap.</source>
+      <comment>SwapModal</comment>
+      <translation>Swap on %1 is not supported by ParaSwap.</translation>
     </message>
   </context>
   <context>

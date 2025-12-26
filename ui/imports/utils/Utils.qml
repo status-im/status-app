@@ -1181,4 +1181,8 @@ QtObject {
         }
         return result
     }
+
+    function buildTokenKey(chainId, address) {
+        return "%1%2%3".arg(chainId).arg(Constants.tokenKeyDelimiter).arg(address.toLowerCase())
+    }
 }

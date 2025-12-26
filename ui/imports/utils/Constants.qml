@@ -778,7 +778,9 @@ QtObject {
 
     readonly property int maxTokens: 200
 
+    readonly property string tokenKeyDelimiter: "-"
     readonly property string zeroAddress: "0x0000000000000000000000000000000000000000"
+    readonly property string zeroAddress1: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 
     readonly property string networkMainnet: "Mainnet"
 
@@ -1221,6 +1223,9 @@ QtObject {
     ]
 
     function tokenIcon(symbol, useDefault=true) {
+        if (!symbol) {
+            return ""
+        }
         let tmpSymbol = symbol
         let index = symbol.indexOf(" (EVM)")
         if (index === -1) {

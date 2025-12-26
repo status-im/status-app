@@ -192,4 +192,16 @@ QtObject {
     function tokenAvailableForBridgingViaHop(tokenChainId, tokenAddress) {
         return root._allTokensModule.tokenAvailableForBridgingViaHop(tokenChainId, tokenAddress)
     }
+
+    function getListOfTokenKeysAvailableForSwapViaParaswap(chainId) {
+        const jsonListAsString = root._allTokensModule.getListOfTokenKeysAvailableForSwapViaParaswap(chainId)
+
+        try {
+            return JSON.parse(jsonListAsString)
+        }
+        catch (e) {
+            console.warn("unable to parse the list of available tokens", e)
+            return []
+        }
+    }
 }

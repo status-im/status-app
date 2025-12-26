@@ -33,6 +33,7 @@ Control {
 
     property var allTokenGroupsForChainModel
     property var searchResultModel
+    property var listOfTokenKeysAvailableForSwapViaParaswap
 
     property int selectedNetworkChainId: -1
     onSelectedNetworkChainIdChanged: reevaluateSelectedId()
@@ -139,7 +140,7 @@ Control {
             }
             holdingSelector.reset()
         }
-        
+
         readonly property bool isSelectedHoldingValidAsset: selectedHolding.available && !!selectedHolding.item
         readonly property double maxFiatBalance: isSelectedHoldingValidAsset && !!selectedHolding.item.currencyBalance ? selectedHolding.item.currencyBalance : 0
         readonly property double maxCryptoBalance: isSelectedHoldingValidAsset && !!selectedHolding.item.currentBalance ? selectedHolding.item.currentBalance : 0
@@ -151,6 +152,7 @@ Control {
             assetsModel: root.processedAssetsModel
             allTokenGroupsForChainModel: root.allTokenGroupsForChainModel
             searchResultModel: root.searchResultModel
+            listOfAvailableTokens: root.listOfTokenKeysAvailableForSwapViaParaswap
 
             flatNetworksModel: root.flatNetworksModel
             currentCurrency: root.currencyStore.currentCurrency

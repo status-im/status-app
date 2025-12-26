@@ -1435,7 +1435,7 @@ QtObject {
 
                 StatusBaseText {
                     anchors.fill: parent
-                    font.pixelSize: Constants.keycard.general.fontSize2
+                    font.pixelSize: Theme.primaryTextFontSize
                     color: Theme.palette.directColor1
                     text: infoPopup.message
                 }

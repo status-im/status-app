@@ -31,6 +31,7 @@ Control {
         logoUri                 [string] - icon
         currencyBalanceAsString [string] - formatted balance
         sectionName (optional)  [string] - text to be rendered as a section
+        groupAvailable          [bool] - determines if the group is available or not (true by default), mainly added for Swap via ParaSwap
         balances            [model]  - contains a single entry for (token, accountAddress) pair
             account         [string] - wallet account address
             groupKey        [string] - group key that the token belongs to (cross chain id or token key if cross chain id is empty)
@@ -145,7 +146,7 @@ Control {
                 width: ListView.view.width
 
                 highlighted: model.key === root.highlightedKey
-                enabled: model.key !== root.nonInteractiveKey
+                enabled: model.key !== root.nonInteractiveKey && model.groupAvailable
                 balancesListInteractive: !ListView.view.moving
                 isAutoHovered: d.validSearchResultExists && index === 0 && !listViewHoverHandler.hovered
 

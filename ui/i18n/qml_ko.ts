@@ -2177,10 +2177,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>받기</translation>
     </message>
     <message>
-        <source>Swap</source>
-        <translation>스왑</translation>
-    </message>
-    <message>
         <source>Manage tokens</source>
         <translation>토큰 관리</translation>
     </message>
@@ -2191,6 +2187,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>Hide all assets from this community</source>
         <translation>이 커뮤니티의 모든 자산 숨기기</translation>
+    </message>
+    <message>
+        <source>Swap</source>
+        <translation type="unfinished">스왑</translation>
     </message>
 </context>
 <context>
@@ -8143,6 +8143,17 @@ L2 수수료: %2</translation>
     <message>
         <source>Popular assets on %1</source>
         <translation type="unfinished">%1에서 인기 있는 자산</translation>
+    </message>
+</context>
+<context>
+    <name>HandlersManager</name>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swap is not available in the testnet mode.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16865,6 +16876,14 @@ access to your webcam</source>
         <source>Sign</source>
         <translation>서명</translation>
     </message>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swap on %1 is not supported by ParaSwap.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
@@ -18668,7 +18687,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Swap</source>
-        <translation>스왑</translation>
+        <translation type="unfinished">스왑</translation>
     </message>
 </context>
 <context>

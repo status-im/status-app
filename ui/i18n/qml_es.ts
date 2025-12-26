@@ -2185,10 +2185,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Recibir</translation>
     </message>
     <message>
-        <source>Swap</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>Manage tokens</source>
         <translation>Gestionar tokens</translation>
     </message>
@@ -2199,6 +2195,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <message>
         <source>Hide all assets from this community</source>
         <translation>Ocultar todos los activos de esta comunidad</translation>
+    </message>
+    <message>
+        <source>Swap</source>
+        <translation type="unfinished">Swap</translation>
     </message>
 </context>
 <context>
@@ -8171,6 +8171,17 @@ Tarifa L2: %2</translation>
     <message>
         <source>Popular assets on %1</source>
         <translation type="unfinished">Activos populares en %1</translation>
+    </message>
+</context>
+<context>
+    <name>HandlersManager</name>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swap is not available in the testnet mode.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16921,6 +16932,14 @@ acceso a tu cámara web</translation>
         <source>Sign</source>
         <translation>Firmar</translation>
     </message>
+    <message>
+        <source>Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Swap on %1 is not supported by ParaSwap.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SwapModalAdaptor</name>
@@ -18730,7 +18749,7 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Swap</source>
-        <translation></translation>
+        <translation type="unfinished">Swap</translation>
     </message>
 </context>
 <context>

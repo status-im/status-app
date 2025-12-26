@@ -57,7 +57,7 @@ Item {
     signal dappListRequested()
     signal dappConnectRequested()
     signal dappDisconnectRequested(string dappUrl)
-    
+
     signal manageNetworksRequested()
 
     // TODO: remove tokenType parameter from signals below
@@ -186,10 +186,6 @@ Item {
             }
         }
 
-        property SwapInputParamsForm swapFormData: SwapInputParamsForm {
-            selectedAccountAddress: RootStore.selectedAddress
-        }
-
         property BuyCryptoParamsForm buyFormData: BuyCryptoParamsForm {
             selectedWalletAddress: RootStore.selectedAddress
         }
@@ -295,11 +291,13 @@ Item {
                                                                   switchingAccounsEnabled: true,
                                                                   hasFloatingButtons: true
                                                               })
-            onLaunchSwapModal: {
-                d.swapFormData.selectedAccountAddress = d.getSelectedOrFirstNonWatchedAddress()
-                d.swapFormData.selectedNetworkChainId = StatusQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId")
-                d.swapFormData.fromGroupKey = groupKey
-                root.openSwapModalRequested(d.swapFormData)
+            onLaunchSwapModal: (groupKey) => {
+                const params = {
+                    selectedAccountAddress: d.getSelectedOrFirstNonWatchedAddress(),
+                    selectedNetworkChainId: StatusQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId"),
+                    defaultFromGroupKey: groupKey
+                }
+                root.openSwapModalRequested(params)
             }
             onDappListRequested: root.dappListRequested()
             onDappConnectRequested: root.dappConnectRequested()
@@ -426,12 +424,15 @@ Item {
                                           walletStore.currentViewedHoldingType)
             }
             onLaunchSwapModal: {
-                d.swapFormData.selectedAccountAddress = d.getSelectedOrFirstNonWatchedAddress()
-                d.swapFormData.selectedNetworkChainId = StatusQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId")
-                if(!!walletStore.currentViewedHoldingTokenGroupKey && walletStore.currentViewedHoldingType === Constants.TokenType.ERC20) {
-                    d.swapFormData.fromGroupKey =  walletStore.currentViewedHoldingTokenGroupKey
+                let params = {
+                    selectedAccountAddress: d.getSelectedOrFirstNonWatchedAddress(),
+                    selectedNetworkChainId: StatusQUtils.ModelUtils.getByKey(root.networksStore.activeNetworks, "layer", 1, "chainId"),
                 }
-                root.openSwapModalRequested(d.swapFormData)
+
+                if(!!walletStore.currentViewedHoldingTokenGroupKey && walletStore.currentViewedHoldingType === Constants.TokenType.ERC20) {
+                    params.defaultFromGroupKey =  walletStore.currentViewedHoldingTokenGroupKey
+                }
+                root.openSwapModalRequested(params)
             }
             onLaunchBuyCryptoModal: d.launchBuyCryptoModal()
 
