@@ -533,7 +533,7 @@ QtObject:
           "amIBanned": item.isBanned,
           "access": item.access,
           "ensOnly": item.ensOnly,
-          "nbMembers": item.members.getCount(),
+          "nbMembers": item.joinedMembersCount,
           "encrypted": item.encrypted,
         }
         return $jsonObj
