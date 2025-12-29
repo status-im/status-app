@@ -104,14 +104,15 @@ ToolButton {
     StatusToolTip {
         id: statusTooltip
         text: root.tooltipText
-        visible: (root.hovered || root.pressed) && !!text
         delay: 50
+        visible: (root.hovered || root.pressed) && !!text && hoverHandler.point.device.pointerType == PointerDevice.Generic
         orientation: StatusToolTip.Orientation.Right
         x: root.width + Theme.padding
         y: root.height / 2 - height / 2 + 4
     }
 
     HoverHandler {
+        id: hoverHandler
         cursorShape: hovered && root.hoverEnabled ? Qt.PointingHandCursor : undefined
     }
 

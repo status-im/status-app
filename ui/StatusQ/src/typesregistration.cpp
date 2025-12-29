@@ -20,9 +20,18 @@
 #include "StatusQ/undefinedfilter.h"
 #include "StatusQ/urlutils.h"
 #include "StatusQ/statuslayoutstate.h"
+#include "StatusQ/NativeSwipeHandlerItem.h"
+#include "StatusQ/NativeIndicatorItem.h"
 
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
 #include "StatusQ/darwinwebviewbackend.h"
+#endif
+
+// Forward declare platform-specific registration functions
+// These are implemented in the respective platform files
+#if defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_MACOS)
+extern void registerNativeSwipeHandlerItemType();
+extern void registerNativeIndicatorItemType();
 #endif
 
 #include <qtmodelstoolkit/registerqmltypes.h>
@@ -120,6 +129,14 @@ void registerStatusQTypes() {
 
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     qmlRegisterType<DarwinWebViewBackend>("StatusQ.CustomWebView", 1, 0, "DarwinWebViewBackend");
+#endif
+    // Register NativeSwipeHandler + NativeIndicator (native on iOS/Android/macOS)
+#if defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_MACOS)
+    registerNativeSwipeHandlerItemType();
+    registerNativeIndicatorItemType();
+#else
+    qmlRegisterType<NativeSwipeHandlerItem>("StatusQ.Controls", 0, 1, "NativeSwipeHandlerItem");
+    qmlRegisterType<NativeIndicatorItem>("StatusQ.Controls", 0, 1, "NativeIndicatorItem");
 #endif
 
 #ifdef BUNDLE_QML_RESOURCES

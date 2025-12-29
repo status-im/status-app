@@ -37,7 +37,7 @@ endif()
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
-        Core Qml Gui Quick QuickControls2 WebChannel REQUIRED)
+        Core Qml Gui Quick QuickControls2 WebChannel Svg REQUIRED)
 
 # --- QML test hooks flag and TestConfig generation ---
 option(STATUSQ_TESTMODE "Enable QML test hooks (TestConfig.testMode)" OFF)
@@ -173,6 +173,8 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/formatteddoubleproperty.h
         include/StatusQ/genericvalidator.h
         include/StatusQ/keychain.h
+        include/StatusQ/NativeSwipeHandlerItem.h
+        include/StatusQ/NativeIndicatorItem.h
         include/StatusQ/networkchecker.h
         include/StatusQ/oneoffilter.h
         include/StatusQ/permissionutilsinternal.h
@@ -215,6 +217,9 @@ add_library(StatusQ ${LIB_TYPE}
         src/statuslayoutstate.cpp
         src/ios_utils.h
 
+        src/StatusQ/Controls/NativeSwipeHandlerItem.cpp
+        src/StatusQ/Controls/NativeIndicatorItem.cpp
+
         # wallet
         src/wallet/managetokenscontroller.cpp
         src/wallet/managetokenscontroller.h
@@ -241,7 +246,8 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_library(Security Security)
     find_library(LocalAuthentication LocalAuthentication)
     find_library(WebKit WebKit)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit})
+    find_library(QuartzCore QuartzCore)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${QuartzCore})
     target_sources(StatusQ PRIVATE
         src/keychain_apple.mm
         include/StatusQ/darwinwebviewbackend.h
@@ -257,6 +263,8 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         src/CustomWebView/darwin/dispatch_utils.h
         src/CustomWebView/darwin/darwinwebchanneltransport.h
         src/CustomWebView/darwin/darwinwebchanneltransport.mm
+        src/StatusQ/Controls/NativeSwipeHandlerItem_macos.mm
+        src/StatusQ/Controls/NativeIndicatorItem_macos.mm
     )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     find_library(UIKit UIKit)
@@ -282,11 +290,15 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/CustomWebView/darwin/dispatch_utils.h
         src/CustomWebView/darwin/darwinwebchanneltransport.h
         src/CustomWebView/darwin/darwinwebchanneltransport.mm
+        src/StatusQ/Controls/NativeSwipeHandlerItem_ios.mm
+        src/StatusQ/Controls/NativeIndicatorItem_ios.mm
     )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE
         src/keychain_android.cpp
         src/safutils_android.cpp
+        src/StatusQ/Controls/NativeSwipeHandlerItem_android.cpp
+        src/StatusQ/Controls/NativeIndicatorItem_android.cpp
     )
 else ()
     target_sources(StatusQ PRIVATE
@@ -318,6 +330,7 @@ target_link_libraries(StatusQ PRIVATE
         Qt::Quick
         Qt::QuickControls2
         Qt::WebChannel
+        Qt::Svg
         SortFilterProxyModel
         QtModelsToolkit
         MobileUI

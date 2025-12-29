@@ -706,7 +706,7 @@ Window {
             id: headerMouseArea
             enabled: d.macOSWindowed
             propagateComposedEvents: true
-            onPressed: {
+            onPressed: (mouse) => {
                 applicationWindow.startSystemMove()
                 mouse.accepted = false
             }

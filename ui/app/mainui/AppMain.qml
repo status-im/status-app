@@ -2217,10 +2217,6 @@ Item {
         communityItemsModel: sidebarAdaptor.communityItemsModel
         bottomItemsModel: sidebarAdaptor.bottomItemsModel
 
-        Binding on alwaysVisible { // NB: on browser+mobile, can't overlay the native WebView
-            when: SQUtils.Utils.isMobile && d.activeSectionType === Constants.appSection.browser
-            value: true
-        }
 
         acVisible: d.activeSectionType === Constants.appSection.activityCenter // FIXME AC should not be a section
         acHasUnseenNotifications: appMain.activityCenterStore.hasUnseenNotifications

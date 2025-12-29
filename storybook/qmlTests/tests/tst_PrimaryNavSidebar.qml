@@ -86,7 +86,7 @@ Item {
         function init() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
             verify(!!controlUnderTest)
-            waitForRendering(controlUnderTest.contentItem)
+            waitForRendering(controlUnderTest)
             tryCompare(controlUnderTest, "visible", true)
         }
 
@@ -100,29 +100,6 @@ Item {
             verify(controlUnderTest.width > 0)
             verify(controlUnderTest.height > 0)
             compare(controlUnderTest.implicitWidth, 68)
-        }
-
-        function test_drawer_properties() {
-            compare(controlUnderTest.edge, Qt.LeftEdge)
-            compare(controlUnderTest.dim, controlUnderTest.interactive)
-            verify(controlUnderTest.spacing > 0)
-        }
-
-        function test_zzz_portrait_mobile_view() {
-            // switch to portrait/mobile mode
-            root.width = 640
-            root.height = 800
-            tryCompare(controlUnderTest, "visible", false)
-
-            // position the mouse over the handle
-            const handle = findChild(controlUnderTest, "rainbowHandle")
-            verify(!!handle)
-            mouseMove(handle)
-
-            // drag to reveal it
-            mouseDrag(handle, handle.width/2, handle.height/2, 80, 0)
-            tryCompare(controlUnderTest, "visible", true)
-            tryCompare(handle, "visible", false)
         }
 
         function test_sections_model_binding() {
@@ -141,7 +118,7 @@ Item {
         }
 
         function test_profile_button_exists() {
-            const profileBtn = findChild(controlUnderTest.contentItem, "statusProfileNavBarTabButton")
+            const profileBtn = findChild(controlUnderTest, "statusProfileNavBarTabButton")
             verify(!!profileBtn)
             tryCompare(profileBtn, "visible", true)
         }
@@ -152,7 +129,7 @@ Item {
             controlUnderTest.acUnreadNotificationsCount = 5
 
             // AC button should be checkable
-            const acButton = findChild(controlUnderTest.contentItem, "Activity Center-navbar")
+            const acButton = findChild(controlUnderTest, "Activity Center-navbar")
             verify(!!acButton)
 
             compare(acButton.checkable, true)
@@ -165,9 +142,10 @@ Item {
         function test_activity_center_toggle() {
             controlUnderTest.acVisible = false
 
-            const acButton = findChild(controlUnderTest.contentItem, "Activity Center-navbar")
+            const acButton = findChild(controlUnderTest, "Activity Center-navbar")
             verify(!!acButton)
-
+            waitForRendering(acButton)
+            waitForItemPolished(acButton)
             mouseClick(acButton)
 
             compare(activityCenterSpy.count, 1)
@@ -176,23 +154,23 @@ Item {
 
         function test_regular_section_buttons_exist() {
             // Check for Messages button
-            const messagesBtn = findChild(controlUnderTest.contentItem, "Messages-navbar")
+            const messagesBtn = findChild(controlUnderTest, "Messages-navbar")
             verify(!!messagesBtn)
             tryCompare(messagesBtn, "visible", true)
 
             // Check for Wallet button
-            const walletBtn = findChild(controlUnderTest.contentItem, "Wallet-navbar")
+            const walletBtn = findChild(controlUnderTest, "Wallet-navbar")
             verify(!!walletBtn)
             tryCompare(walletBtn, "visible", true)
 
             // Check for Settings button
-            const settingsBtn = findChild(controlUnderTest.contentItem, "Settings-navbar")
+            const settingsBtn = findChild(controlUnderTest, "Settings-navbar")
             verify(!!settingsBtn)
             tryCompare(settingsBtn, "visible", true)
         }
 
         function test_section_button_click() {
-            const messagesBtn = findChild(controlUnderTest.contentItem, "Messages-navbar")
+            const messagesBtn = findChild(controlUnderTest, "Messages-navbar")
             verify(!!messagesBtn)
             tryCompare(messagesBtn, "visible", true)
 
@@ -205,12 +183,12 @@ Item {
 
         function test_active_section_changed() {
             // Wallet should be active according to SectionsModel
-            const walletBtn = findChild(controlUnderTest.contentItem, "Wallet-navbar")
+            const walletBtn = findChild(controlUnderTest, "Wallet-navbar")
             verify(!!walletBtn)
             tryCompare(walletBtn, "checked", true)
 
             // verify the Settings button is not checked
-            const settingsBtn = findChild(controlUnderTest.contentItem, "Settings-navbar")
+            const settingsBtn = findChild(controlUnderTest, "Settings-navbar")
             verify(!!settingsBtn)
             tryCompare(settingsBtn, "checked", false)
 
@@ -224,14 +202,14 @@ Item {
 
         function test_notification_indicators() {
             // Messages has notifications according to SectionsModel
-            const messagesBtn = findChild(controlUnderTest.contentItem, "Messages-navbar")
+            const messagesBtn = findChild(controlUnderTest, "Messages-navbar")
             verify(!!messagesBtn)
             compare(messagesBtn.showBadge, true)
             compare(messagesBtn.badgeCount, 442)
             verify(messagesBtn.badgeVisible)
 
             // Wallet has no notifications
-            const walletBtn = findChild(controlUnderTest.contentItem, "Wallet-navbar")
+            const walletBtn = findChild(controlUnderTest, "Wallet-navbar")
             verify(!!walletBtn)
             compare(walletBtn.showBadge, false)
             compare(walletBtn.badgeCount, 0)
@@ -241,9 +219,9 @@ Item {
         function test_browser_section_enabled() {
             sidebarAdaptor.browserEnabled = true
 
-            waitForRendering(controlUnderTest.contentItem)
+            waitForRendering(controlUnderTest)
 
-            const browserBtn = findChild(controlUnderTest.contentItem, "Browser-navbar")
+            const browserBtn = findChild(controlUnderTest, "Browser-navbar")
             verify(!!browserBtn)
             tryCompare(browserBtn, "visible", true)
         }
@@ -251,31 +229,31 @@ Item {
         function test_node_section_enabled() {
             sidebarAdaptor.nodeEnabled = true
 
-            waitForRendering(controlUnderTest.contentItem)
+            waitForRendering(controlUnderTest)
 
-            const nodeBtn = findChild(controlUnderTest.contentItem, "Node-navbar")
+            const nodeBtn = findChild(controlUnderTest, "Node-navbar")
             verify(!!nodeBtn)
             tryCompare(nodeBtn, "visible", true)
         }
 
         function test_communities_portal_button() {
-            const communitiesBtn = findChild(controlUnderTest.contentItem, "Communities-navbar")
+            const communitiesBtn = findChild(controlUnderTest, "Communities-navbar")
             verify(!!communitiesBtn)
             tryCompare(communitiesBtn, "visible", true)
         }
 
         function test_market_swap_sections() {
-            const swapBtn = findChild(controlUnderTest.contentItem, "Swap-navbar")
+            const swapBtn = findChild(controlUnderTest, "Swap-navbar")
             verify(!!swapBtn)
             tryCompare(swapBtn, "visible", true)
 
             // When marketEnabled is true, Market section should be present, Swap not
             sidebarAdaptor.marketEnabled = true
 
-            waitForRendering(controlUnderTest.contentItem)
+            waitForRendering(controlUnderTest)
 
             // Should have market-related functionality
-            const marketBtn = findChild(controlUnderTest.contentItem, "Market-navbar")
+            const marketBtn = findChild(controlUnderTest, "Market-navbar")
             verify(!!marketBtn)
             tryCompare(marketBtn, "visible", true)
             compare(swapBtn.visible, undefined)
@@ -285,12 +263,12 @@ Item {
             sidebarAdaptor.showEnabledSectionsOnly = true
 
             // Home section is disabled in SectionsModel, should not be visible
-            const homeBtn = findChild(controlUnderTest.contentItem, "Home-navbar")
+            const homeBtn = findChild(controlUnderTest, "Home-navbar")
             compare(homeBtn, null)
 
             sidebarAdaptor.showEnabledSectionsOnly = false
 
-            waitForRendering(controlUnderTest.contentItem)
+            waitForRendering(controlUnderTest)
 
             // Now it might be present (depending on filter implementation)
             verify(true) // Basic validation
@@ -299,7 +277,7 @@ Item {
         function test_profile_section_notification() {
             controlUnderTest.profileSectionHasNotification = true
 
-            const settingsBtn = findChild(controlUnderTest.contentItem, "Settings-navbar")
+            const settingsBtn = findChild(controlUnderTest, "Settings-navbar")
             verify(!!settingsBtn)
 
             // Settings button should show notification when profileSectionHasNotification is true
@@ -310,7 +288,7 @@ Item {
         function test_create_community_badge() {
             controlUnderTest.showCreateCommunityBadge = true
 
-            const communitiesBtn = findChild(controlUnderTest.contentItem, "Communities-navbar")
+            const communitiesBtn = findChild(controlUnderTest, "Communities-navbar")
             verify(!!communitiesBtn)
 
             // Communities button should show badge gradient
@@ -319,15 +297,9 @@ Item {
             tryCompare(communitiesBtn, "badgeVisible", true)
         }
 
-        function test_background_is_transparent() {
-            const bg = controlUnderTest.background
-            verify(!!bg)
-            verify(Qt.colorEqual(bg.color, "transparent"))
-        }
-
         function test_community_buttons_have_object_name() {
             // Look for community buttons with specific objectName
-            const communityBtn = findChild(controlUnderTest.contentItem, "CommunityNavBarButton")
+            const communityBtn = findChild(controlUnderTest, "CommunityNavBarButton")
             // May or may not exist depending on model data, just verify no crash
             verify(true)
         }
@@ -335,20 +307,11 @@ Item {
         function test_drawer_always_visible() {
             // Test interactive mode
             controlUnderTest.alwaysVisible = false
-            compare(controlUnderTest.dim, false)
-            compare(controlUnderTest.modal, false)
+            tryCompare(controlUnderTest, "position", 0.0)
 
             // Test non-interactive mode
             controlUnderTest.alwaysVisible = true
-            compare(controlUnderTest.dim, false)
-            compare(controlUnderTest.modal, false)
-        }
-
-        function test_section_spacing() {
-            const contentItem = controlUnderTest.contentItem
-            verify(!!contentItem)
-            verify(contentItem.spacing > 0)
-            compare(contentItem.spacing, controlUnderTest.spacing)
+            tryCompare(controlUnderTest, "position", 1.0)
         }
     }
 }

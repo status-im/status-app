@@ -123,6 +123,10 @@
         <file>StatusQ/Controls/StatusItemPicker.qml</file>
         <file>StatusQ/Controls/StatusLabeledSlider.qml</file>
         <file>StatusQ/Controls/StatusLinkText.qml</file>
+        <file>StatusQ/Controls/NativeSwipeHandler.qml</file>
+        <file>StatusQ/Controls/NativeSwipeHandlerImpl.qml</file>
+        <file>StatusQ/Controls/NativeIndicator.qml</file>
+        <file>StatusQ/Controls/NativeIndicatorImpl.qml</file>
         <file>StatusQ/Controls/StatusNavigationButton.qml</file>
         <file>StatusQ/Controls/StatusPasswordInput.qml</file>
         <file>StatusQ/Controls/StatusPasswordStrengthIndicator.qml</file>

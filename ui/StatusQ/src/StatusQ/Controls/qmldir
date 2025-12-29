@@ -33,6 +33,10 @@ StatusItemDelegate 0.1 StatusItemDelegate.qml
 StatusItemPicker 0.1 StatusItemPicker.qml
 StatusLabeledSlider 0.1 StatusLabeledSlider.qml
 StatusLinkText 0.1 StatusLinkText.qml
+NativeSwipeHandler 0.1 NativeSwipeHandler.qml
+NativeSwipeHandlerImpl 0.1 NativeSwipeHandlerImpl.qml
+NativeIndicator 0.1 NativeIndicator.qml
+NativeIndicatorImpl 0.1 NativeIndicatorImpl.qml
 StatusNavigationButton 0.1 StatusNavigationButton.qml
 StatusPasswordInput 0.1 StatusPasswordInput.qml
 StatusPasswordStrengthIndicator 0.1 StatusPasswordStrengthIndicator.qml

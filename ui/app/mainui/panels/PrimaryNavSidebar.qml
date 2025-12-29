@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
 import StatusQ.Components
+import StatusQ.Controls
 
 import mainui
 
@@ -15,7 +16,7 @@ import AppLayouts.Profile.helpers
 
 import utils
 
-Drawer {
+Control {
     id: root
 
     /**
@@ -40,6 +41,12 @@ Drawer {
     property bool alwaysVisible: d.windowWidth > d.windowHeight
 
     required property ContactDetails selfContactDetails
+    // External swipe/drag driver can set this directly (0..1).
+    // When alwaysVisible is true, we force it to 1.
+    property real position: 0.0
+    readonly property bool opened: alwaysVisible || position >= 0.999
+    // Used by button delegates to auto-close on click in non-always-visible mode.
+    readonly property bool interactive: !alwaysVisible && !d.hasPopups
     property var getLinkToProfileFn: function(pubkey) { console.error("IMPLEMENT ME"); return "" }
     property var getEmojiHashFn: function(pubkey) { console.error("IMPLEMENT ME"); return "" }
 
@@ -58,30 +65,34 @@ Drawer {
     signal viewProfileRequested(string pubKey)
     signal setCurrentUserStatusRequested(int status)
 
-    edge: Qt.LeftEdge
+    Component.onCompleted: d.snapToMode()
+    onAlwaysVisibleChanged: d.snapToMode()
 
-    // behaviors like visible/modal/interactive/dim all depend on `alwaysVisible`
-    visible: alwaysVisible
-    interactive: !alwaysVisible
-    modal: !alwaysVisible && visible // block input when the sidebar is pulled open on mobile
+    // Slide in/out from the left.
+    x: alwaysVisible ? 0 : (-width + width * position)
 
-    implicitWidth: 60 + leftPadding
+    // Animate snapping when not directly driven by a drag/swipe.
+    Behavior on position {
+        enabled: !d.dragActive && !root.alwaysVisible
+        NumberAnimation {
+            duration: ThemeUtils.AnimationDuration.Fast
+            easing.type: Easing.OutCubic
+        }
+    }
 
+    function open() { d.dragActive = false; position = 1.0 }
+    function close() { if (root.alwaysVisible) return; d.dragActive = false; position = 0.0 } 
+    function toggle() { root.position == 0.0 ? open() : close() }
+
+
+    // Padding and spacing were previously Drawer properties; keep them as locals.
+    topPadding: parent.SafeArea.margins.top + Theme.defaultHalfPadding
+    bottomPadding: parent.SafeArea.margins.bottom + Theme.defaultHalfPadding
+    leftPadding: parent.SafeArea.margins.left + Theme.defaultHalfPadding
+    rightPadding: 0
     spacing: Theme.defaultHalfPadding
 
-    topPadding: SafeArea.margins.top + (Qt.platform.os === SQUtils.Utils.mac && Window.visibility !== Window.FullScreen ? 48
-                                                                                                                        : 8)
-    bottomPadding: SafeArea.margins.bottom + Theme.defaultHalfPadding
-    leftPadding: SafeArea.margins.left + Theme.defaultHalfPadding
-    rightPadding: 0
-
-    background: Rectangle {
-        color: Theme.palette.transparent
-    }
-
-    Overlay.modal: Rectangle {
-        color: Theme.palette.backdropColor
-    }
+    implicitWidth: 60 + leftPadding
 
     QtObject {
         id: d
@@ -89,11 +100,18 @@ Drawer {
         // UI
         readonly property int windowWidth: root.parent?.Window?.width ?? Screen.width
         readonly property int windowHeight: root.parent?.Window?.height ?? Screen.height
-        readonly property bool hasPopups: root.Overlay.overlay.children.filter(item => item.toString().includes("QQuickPopupItem") && !item.toString().includes("PrimaryNavSidebar")).length
 
         readonly property color containerBgColor: root.thirdpartyServicesEnabled ? root.Theme.palette.statusAppNavBar.backgroundColor
                                                                                  : root.Theme.palette.privacyColors.primary
         readonly property int containerBgRadius: Theme.defaultPadding
+
+        readonly property bool hasPopups: root.Overlay.overlay.children.filter(item => item.toString().includes("QQuickPopupItem") && item.toString().includes("StatusTooltip")).length
+
+        onHasPopupsChanged: {
+            if (d.hasPopups) {
+                root.close()
+            }
+        }
 
         // context menu guard
         property var popupMenuInstance: null
@@ -103,6 +121,72 @@ Drawer {
                 d.popupMenuInstance.destroy()
                 d.popupMenuInstance = null
             }
+        }
+
+        // When true, disable snapping animation so the drawer tracks the finger precisely.
+        property bool dragActive: false
+        // Snap when switching between modes:
+        // - alwaysVisible=true  -> force open immediately (position=1)
+        // - alwaysVisible=false -> default closed (position=0)
+        function snapToMode() {
+            d.dragActive = false
+            root.position = root.alwaysVisible ? 1.0 : 0.0
+        }
+    }
+
+    // Tap outside the sidebar to close it
+    Item {
+        parent: Window.window?.contentItem
+        readonly property point sidebarTopLeft: parent?.mapFromItem(root, 0, 0) ?? Qt.point(0, 0)
+        readonly property point sidebarBottomRight: parent?.mapFromItem(root, root.width * root.position, root.height) ?? Qt.point(0, 0)
+        height: parent?.height ?? 0
+        x: Math.max(0, sidebarBottomRight.x)
+        width: Math.max(0, (parent?.width ?? 0) - x)
+        TapHandler {
+            enabled: !root.alwaysVisible && root.position > 0.5
+            onPressedChanged: root.close()
+        }
+    }
+
+    // Swipe-to-close inside the drawer (when not alwaysVisible).
+    // Use DragHandler so it behaves consistently regardless of the initial open/closed state.
+    DragHandler {
+        id: closeDrag
+        enabled: !root.alwaysVisible && root.position > 0
+        xAxis.enabled: true
+        yAxis.enabled: false
+        // Don't target anything, we don't want to capture the drag
+        target: null
+
+        property real _startPos: 0
+        property real _lastTx: 0
+        property real _lastDelta: 0
+
+        onActiveChanged: {
+            if (active) {
+                d.dragActive = true
+                _startPos = root.position
+                _lastTx = translation.x
+                _lastDelta = 0
+            } else {
+                const opening =
+                    _lastDelta > 0 ? true :
+                    _lastDelta < 0 ? false :
+                    root.position >= 0.5
+
+                d.dragActive = false
+                root.position = opening ? 1.0 : 0.0
+                opening ? root.open() : root.close()
+            }
+        }
+
+        onTranslationChanged: {
+            const dx = translation.x - _lastTx
+            _lastDelta = dx
+            _lastTx = translation.x
+
+            const nextPos = _startPos + (translation.x / Math.max(1.0, root.width))
+            root.position = Math.max(0.0, Math.min(1.0, nextPos))
         }
     }
 
@@ -202,34 +286,10 @@ Drawer {
 
                 onToggled: {
                     root.activityCenterRequested(checked)
-                    if (root.interactive)
-                        root.close()
+                    root.close()
                 }
             }
         }
-    }
-
-    // "rainbow" handle
-    // (parented to the Overlay, so that it functionally stays on top of the drawer,
-    // but visually sticking out from under, even when collapsed/invisible)
-    Rectangle {
-        objectName: "rainbowHandle"
-        height: 100
-        width: Constants.primaryNavSidebarHandleWidth
-        radius: width
-        parent: root.Overlay.overlay
-        anchors.left: parent.left
-        anchors.leftMargin: (root.width * root.position) - width/2
-        anchors.verticalCenter: parent.verticalCenter
-        gradient: Gradient {
-            orientation: Gradient.Vertical
-            GradientStop {position: 0; color: "#7552FA"}
-            GradientStop {position: 0.2; color: "#6D9C9F"}
-            GradientStop {position: 0.4; color: "#F1AF40"}
-            GradientStop {position: 0.6; color: "#F7A440"}
-            GradientStop {position: 0.8; color: "#F87A4F"}
-        }
-        visible: root.position < 1 && !d.hasPopups
     }
 
     component RegularSectionButton: PrimaryNavSidebarButton {
@@ -248,6 +308,7 @@ Drawer {
         thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
         onClicked: {
+            print ("!!!! Clicked", model.name)
             d.popupMenuInstance?.close()
             root.itemActivated(model.sectionType, model.id)
             if (root.interactive)
@@ -368,5 +429,63 @@ Drawer {
         Layout.preferredHeight: 1
         Layout.alignment: Qt.AlignHCenter
         color: Theme.palette.baseColor1
+    }
+
+        // Component that provides clipping for the indicator
+    Item {
+        id: swipeIndicatorWrapper
+        anchors.left: root.right
+        anchors.verticalCenter: root.verticalCenter
+        anchors.verticalCenterOffset: Math.min((root.height - height) * 0.5, root.height * 0.25)
+        // position the indicator closer to the natural position of the thumb
+        width: 5
+        height: 100
+        // Clip the indicator to create a hiding below the navbar effect
+        clip: true
+        visible: root.interactive
+
+        NativeIndicator {
+            width: swipeIndicatorWrapper.width
+            height: swipeIndicatorWrapper.height
+            x: - width * root.position
+            source: Assets.svg("swipe-indicator")
+        }
+    }
+
+    // Swipe gesture handler for sidebar (native on iOS/Android/macOS)
+    // Must be OUTSIDE the sidebar so it can catch gestures when the sidebar is closed.
+    NativeSwipeHandler {
+        id: navSwipeHandler
+        anchors.verticalCenter: swipeIndicatorWrapper.verticalCenter
+        width: 2 * root.width
+        // Max 200px is allowed on Android
+        height: swipeIndicatorWrapper.height * 2
+        openDistance: root.width
+        enabled: root.interactive
+        visible: enabled
+
+        property real _startPos: 0
+
+        onSwipeStarted: () => {
+            d.dragActive = true
+            _startPos = root.position
+        }
+        onSwipeUpdated: (delta, velocity) => {
+            const pos = _startPos + (delta / Math.max(1.0, root.width))
+            root.position = Math.max(0.0, Math.min(1.0, pos))
+        }
+        onSwipeEnded: (delta, velocity, canceled) => {
+            if (canceled) {
+                d.dragActive = false
+                return
+            }
+            const opening =
+                velocity > ThemeUtils.AnimationDuration.Default ? true :
+                velocity < -ThemeUtils.AnimationDuration.Default ? false :
+                root.position >= 0.5
+
+            d.dragActive = false
+            opening ? root.open() : root.close()
+        }
     }
 }

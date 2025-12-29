@@ -109,6 +109,8 @@ Item {
             verify(!!grid)
             tryVerify(() => grid.width > 0)
             tryVerify(() => grid.height > 0)
+            waitForRendering(grid)
+            waitForItemPolished(grid)
 
             const searchField = findChild(controlUnderTest, "homeSearchField")
             verify(!!searchField)

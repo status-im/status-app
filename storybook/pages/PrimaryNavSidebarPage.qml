@@ -90,6 +90,7 @@ SplitView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.verticalStretchFactor: 2
+                Layout.leftMargin: !sidebar.alwaysVisible ? sidebar.width * sidebar.position : 0
                 url: "https://status.app"
                 visible: d.activeSectionType === Constants.appSection.browser
             }
@@ -97,7 +98,7 @@ SplitView {
             StatusButton {
                 icon.name: "more"
                 enabled: !sidebar.alwaysVisible
-                onClicked: sidebar.open()
+                onClicked: sidebar.toggle()
 
                 tooltip.text: "Open sidebar"
                 tooltip.orientation: StatusToolTip.Orientation.Bottom
