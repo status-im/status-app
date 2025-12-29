@@ -63,6 +63,12 @@ SettingsContentBase {
                                  })
             }
 
+            function setupDeleteDevice(installationId) {
+                Global.openPopup(deleteDeviceDialogComponent, {
+                                     "installationId": installationId
+                                 })
+            }
+
             function setupSyncing() {
                 root.devicesStore.generateConnectionStringAndRunSetupSyncingPopup(messageSyncingEnabled)
             }
@@ -142,9 +148,7 @@ SettingsContentBase {
                     d.setupUnpair(model.installationId)
                 }
                 onClicked: {
-                    if (deviceEnabled) {
-                        d.personalizeDevice(model)
-                    }
+                    d.personalizeDevice(model)
                 }
             }
         }
@@ -269,6 +273,7 @@ SettingsContentBase {
                 destroyOnClose: true
                 devicesStore: root.devicesStore
                 advancedStore: root.advancedStore
+                onDeleteDeviceRequested: installationId => d.setupDeleteDevice(installationId)
             }
         }
 
@@ -318,6 +323,27 @@ SettingsContentBase {
                     const error = devicesStore.devicesModule.unpairDevice(installationId)
                     if (error) {
                         unpairDeviceDialog.confirmationText = qsTr("Error unpairing device: %1").arg(error)
+                    } else {
+                        Global.closePopup()
+                    }
+                }
+            }
+        }
+
+        Component {
+            id: deleteDeviceDialogComponent
+            ConfirmationDialog {
+                property string installationId
+
+                id: deleteDeviceDialog
+                destroyOnClose: true
+                headerSettings.title: qsTr("Delete Device")
+                confirmationText: qsTr("Are you sure you want to delete this device?\nThis action cannot be undone.")
+                confirmButtonLabel: qsTr("Delete")
+                onConfirmButtonClicked: {
+                    const error = devicesStore.devicesModule.deleteDevice(installationId)
+                    if (error) {
+                        deleteDeviceDialog.confirmationText = qsTr("Error deleting device: %1").arg(error)
                     } else {
                         Global.closePopup()
                     }

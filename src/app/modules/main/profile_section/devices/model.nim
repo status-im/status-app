@@ -108,6 +108,20 @@ QtObject:
         return i
     return -1
 
+  proc removeItem*(self: Model, installationId: string) =
+    var i = self.findIndexByInstallationId(installationId)
+    if i == -1:
+      return
+
+    let parentModelIndex = newQModelIndex()
+    defer: parentModelIndex.delete
+
+    self.beginRemoveRows(parentModelIndex, i, i)
+    self.items.delete(i)
+    self.endRemoveRows()
+    self.countChanged()
+    self.updatePairedCount()
+
   proc isItemWithInstallationIdAdded*(self: Model, installationId: string): bool =
     return self.findIndexByInstallationId(installationId) != -1
 

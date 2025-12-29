@@ -146,6 +146,12 @@ QtObject:
       self.model.updateItemEnabled(installationId, false)
     return error
 
+  proc deleteDevice*(self: View, installationId: string): string {.slot.} =
+    let error = self.delegate.deleteDevice(installationId)
+    if error.len == 0:
+      self.model.removeItem(installationId)
+    return error
+
   proc delete*(self: View) =
     self.QObject.delete
 

@@ -131,3 +131,6 @@ method pairDevice*(self: Module, installationId: string): string =
 
 method unpairDevice*(self: Module, installationId: string): string =
   return self.controller.unpairDevice(installationId)
+
+method deleteDevice*(self: Module, installationId: string): string =
+  return self.controller.deleteDevice(installationId)

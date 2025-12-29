@@ -81,7 +81,6 @@ StatusListItem {
         },
         StatusIcon {
             anchors.verticalCenter: parent.verticalCenter
-            visible: root.deviceEnabled
             icon: "next"
             color: Theme.palette.baseColor1
         }

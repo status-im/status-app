@@ -108,3 +108,6 @@ proc pairDevice*(self: Controller, installationId: string): string =
 
 proc unpairDevice*(self: Controller, installationId: string): string =
   return self.devicesService.unpairDevice(installationId)
+
+proc deleteDevice*(self: Controller, installationId: string): string =
+  return self.devicesService.deleteDevice(installationId)

@@ -20824,6 +20824,11 @@
       <comment>SyncDeviceCustomizationPopup</comment>
       <translation>Done</translation>
     </message>
+    <message>
+      <source>Delete Device</source>
+      <comment>SyncDeviceCustomizationPopup</comment>
+      <translation>Delete Device</translation>
+    </message>
   </context>
   <context>
     <name>SyncProgressPage</name>
@@ -21111,6 +21116,26 @@
       <source>Copies and sends your direct, group, and community messages to your new device using encrypted local pairing.</source>
       <comment>SyncingView</comment>
       <translation>Copies and sends your direct, group, and community messages to your new device using encrypted local pairing.</translation>
+    </message>
+    <message>
+      <source>Delete Device</source>
+      <comment>SyncingView</comment>
+      <translation>Delete Device</translation>
+    </message>
+    <message>
+      <source>Delete</source>
+      <comment>SyncingView</comment>
+      <translation>Delete</translation>
+    </message>
+    <message>
+      <source>Error deleting device: %1</source>
+      <comment>SyncingView</comment>
+      <translation>Error deleting device: %1</translation>
+    </message>
+    <message>
+      <source>Are you sure you want to delete this device?&#xA;This action cannot be undone.</source>
+      <comment>SyncingView</comment>
+      <translation>Are you sure you want to delete this device?&#xA;This action cannot be undone.</translation>
     </message>
   </context>
   <context>

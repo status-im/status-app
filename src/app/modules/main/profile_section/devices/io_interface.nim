@@ -67,3 +67,6 @@ method pairDevice*(self: AccessInterface, installationId: string): string {.base
 
 method unpairDevice*(self: AccessInterface, installationId: string): string {.base.} =
   raise newException(ValueError, "No implementation available")
+
+method deleteDevice*(self: AccessInterface, installationId: string): string {.base.} =
+  raise newException(ValueError, "No implementation available")

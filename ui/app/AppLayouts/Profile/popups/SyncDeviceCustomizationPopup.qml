@@ -25,6 +25,8 @@ StatusDialog {
 
     readonly property string deviceName: d.deviceName
 
+    signal deleteDeviceRequested(string installationId)
+
     title: qsTr("Personalize %1").arg(deviceModel.name)
     width: implicitWidth
     padding: 16
@@ -76,6 +78,17 @@ StatusDialog {
     }
 
      footer: StatusDialogFooter {
+        leftButtons: ObjectModel {
+            StatusButton {
+                text: qsTr("Delete Device")
+                type: StatusBaseButton.Type.Danger
+                onClicked : {
+                    root.deleteDeviceRequested(root.deviceModel.installationId)
+                    root.close()
+                }
+            }
+        }
+
         rightButtons: ObjectModel {
             StatusButton {
                 text: qsTr("Done")

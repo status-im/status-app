@@ -17090,6 +17090,10 @@ access to your webcam</source>
         <source>Done</source>
         <translation>완료</translation>
     </message>
+    <message>
+        <source>Delete Device</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SyncProgressPage</name>
@@ -17322,6 +17326,23 @@ access to your webcam</source>
     </message>
     <message>
         <source>Copies and sends your direct, group, and community messages to your new device using encrypted local pairing.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete Device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation type="unfinished">삭제</translation>
+    </message>
+    <message>
+        <source>Error deleting device: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete this device?
+This action cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

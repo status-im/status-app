@@ -17147,6 +17147,10 @@ acceso a tu cámara web</translation>
         <source>Done</source>
         <translation>Listo</translation>
     </message>
+    <message>
+        <source>Delete Device</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SyncProgressPage</name>
@@ -17379,6 +17383,23 @@ acceso a tu cámara web</translation>
     </message>
     <message>
         <source>Copies and sends your direct, group, and community messages to your new device using encrypted local pairing.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete Device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation type="unfinished">Eliminar</translation>
+    </message>
+    <message>
+        <source>Error deleting device: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete this device?
+This action cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -104,6 +104,10 @@ QtObject {
         return root.devicesModule.unpairDevice(installationId)
     }
 
+    function deleteDevice(installationId) {
+        return root.devicesModule.deleteDevice(installationId)
+    }
+
     function importLocalBackupFile(filePath: string) {
         root.syncModule.importLocalBackupFile(filePath)
     }

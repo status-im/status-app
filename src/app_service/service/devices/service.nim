@@ -436,6 +436,16 @@ QtObject:
       error "error in unpairDevice: ", desription = e.msg
       return e.msg
 
+  proc deleteDevice*(self: Service, installationId: string): string =
+    try:
+      let response = status_installations.deleteDevice(installationId)
+      if response.error != nil:
+        let e = Json.decode($response.error, RpcError)
+        raise newException(CatchableError, e.message)
+    except Exception as e:
+      error "error in deleteDevice: ", desription = e.msg
+      return e.msg
+
   proc pairDevice*(self: Service, installationId: string): string =
     try:
       let response = status_installations.pairDevice(installationId)

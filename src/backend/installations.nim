@@ -47,3 +47,7 @@ proc unpairDevice*(installationId: string): RpcResponse[JsonNode] =
 proc pairDevice*(installationId: string): RpcResponse[JsonNode] =
   let payload = %* [installationId]
   result = callPrivateRPC("enableInstallation".prefix, payload)
+
+proc deleteDevice*(installationId: string): RpcResponse[JsonNode] =
+  let payload = %* [installationId]
+  result = callPrivateRPC("deleteInstallation".prefix, payload)

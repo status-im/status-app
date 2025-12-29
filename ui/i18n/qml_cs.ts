@@ -17244,6 +17244,10 @@ přístup k vaší webkameře</translation>
         <source>Done</source>
         <translation>Hotovo</translation>
     </message>
+    <message>
+        <source>Delete Device</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SyncProgressPage</name>
@@ -17477,6 +17481,23 @@ přístup k vaší webkameře</translation>
     <message>
         <source>Copies and sends your direct, group, and community messages to your new device using encrypted local pairing.</source>
         <translation>Zkopíruje a odešle vaše přímé, skupinové a komunitní zprávy do nového zařízení pomocí šifrovaného místního párování.</translation>
+    </message>
+    <message>
+        <source>Delete Device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation type="unfinished">Smazat</translation>
+    </message>
+    <message>
+        <source>Error deleting device: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to delete this device?
+This action cannot be undone.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
