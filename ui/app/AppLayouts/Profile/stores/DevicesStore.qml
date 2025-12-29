@@ -84,10 +84,6 @@ QtObject {
         root.devicesModule.advertise()
     }
 
-    function enableDevice(installationId, enable) {
-        root.devicesModule.enableDevice(installationId, enable)
-    }
-
     function generateConnectionStringAndRunSetupSyncingPopup(messageSyncingEnabled) {
         root.devicesModule.generateConnectionStringAndRunSetupSyncingPopup(messageSyncingEnabled)
     }

@@ -88,9 +88,6 @@ method syncAllDevices*(self: Module) =
 method advertise*(self: Module) =
   self.controller.advertise()
 
-method enableDevice*(self: Module, installationId: string, enable: bool) =
-  self.controller.enableDevice(installationId, enable)
-
 method updateOrAddDevice*(self: Module, installation: InstallationDto) =
   if(self.view.model().isItemWithInstallationIdAdded(installation.id)):
     self.view.model().updateItem(installation)

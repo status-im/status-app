@@ -185,21 +185,12 @@ QtObject:
 
   proc syncAllDevices*(self: Service) =
     let preferredName = self.settingsService.getPreferredName()
-    let photoPath = "" # From the old code: TODO change this to identicon when status-go is updated
     # Once we get more info from `status-go` we may emit success/failed signal from here.
     discard status_installations.syncDevices(preferredName, "")
 
   proc advertise*(self: Service) =
     # Once we get more info from `status-go` we may emit success/failed signal from here.
     discard status_installations.sendPairInstallation()
-
-  proc enable*(self: Service, deviceId: string) =
-    # Once we get more info from `status-go` we may emit success/failed signal from here.
-    discard status_installations.enableInstallation(deviceId)
-
-  proc disable*(self: Service, deviceId: string) =
-    # Once we get more info from `status-go` we may emit success/failed signal from here.
-    discard status_installations.disableInstallation(deviceId)
 
 
   #

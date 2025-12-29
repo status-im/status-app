@@ -80,9 +80,6 @@ QtObject:
   proc advertise*(self: View) {.slot.} =
     self.delegate.advertise()
 
-  proc enableDevice*(self: View, installationId: string, enable: bool) {.slot.} =
-    self.delegate.enableDevice(installationId, enable)
-
   # LocalPairing status
 
   proc localPairingStatusChanged*(self: View) {.signal.}

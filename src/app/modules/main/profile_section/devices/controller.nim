@@ -79,12 +79,6 @@ proc syncAllDevices*(self: Controller) =
 proc advertise*(self: Controller) =
   self.devicesService.advertise()
 
-proc enableDevice*(self: Controller, deviceId: string, enable: bool) =
-  if enable:
-    self.devicesService.enable(deviceId)
-  else:
-    self.devicesService.disable(deviceId)
-
 #
 # Pairing status
 #
