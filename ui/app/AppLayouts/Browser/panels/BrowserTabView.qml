@@ -28,6 +28,7 @@ FocusScope {
     readonly property int tabHeight: d.tabHeight
 
     signal openNewTabTriggered()
+    signal removeView(int index)
 
     QtObject {
         id: d

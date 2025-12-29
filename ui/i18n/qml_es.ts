@@ -2643,6 +2643,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Si lo deseas, puedes continuar con un certificado no verificado. Aceptar un certificado no verificado significa que puede que no estés conectado con el host al que intentaste conectarte.
 ¿Deseas omitir la verificación de seguridad y continuar?</translation>
     </message>
+    <message>
+        <source>Add Favourite</source>
+        <translation type="unfinished">Agregar favorito</translation>
+    </message>
 </context>
 <context>
     <name>BrowserPrivacyWall</name>
@@ -2754,13 +2758,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Show Favorites Bar</source>
         <translation>Mostrar barra de favoritos</translation>
-    </message>
-</context>
-<context>
-    <name>BrowserWebEngineView</name>
-    <message>
-        <source>Add Favourite</source>
-        <translation>Agregar favorito</translation>
     </message>
 </context>
 <context>

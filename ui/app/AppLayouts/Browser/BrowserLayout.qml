@@ -217,8 +217,11 @@ StatusSectionLayout {
             }
             onOpenNewTabTriggered: _internal.addNewTab()
             fnGetWebView: (index) => {
-                        return webStackView.getWebView(index)
-                    }
+                              return webStackView.getWebView(index)
+                          }
+            onRemoveView: (index) => {
+                              webStackView.removeView(index)
+                          }
         }
 
         BrowserHeader {
@@ -278,14 +281,14 @@ StatusSectionLayout {
             onOpenWalletMenu: {
                 // Initialize activity filters before opening popup
                 const activeChainIds = SQUtils.ModelUtils.modelToFlatArray(
-                    root.networksStore.activeNetworks, "chainId")
+                                         root.networksStore.activeNetworks, "chainId")
                 if (activeChainIds.length > 0) {
                     root.browserActivityStore.activityController.setFilterChainsJson(
-                        JSON.stringify(activeChainIds), true)
+                                JSON.stringify(activeChainIds), true)
                 }
                 const currentAddress = root.browserWalletStore.dappBrowserAccount.address
                 root.browserActivityStore.activityController.setFilterAddressesJson(
-                    JSON.stringify([currentAddress]))
+                            JSON.stringify([currentAddress]))
 
                 Global.openPopup(browserWalletMenu)
             }
@@ -296,6 +299,8 @@ StatusSectionLayout {
             id: findBar
             visible: false
 
+            Layout.preferredWidth: 300
+            Layout.preferredHeight: 40
             Layout.alignment: Qt.AlignRight
             z: 60
 
@@ -326,13 +331,14 @@ StatusSectionLayout {
 
             function createEmptyTab(profile, createAsStartPage = false, focusOnNewTab = true, url = undefined) {
                 createAsStartPage = createAsStartPage || webStackView.count === 1
-                var webview = webEngineView.createObject(webStackView, {profile})
+                let container = (createAsStartPage || !!url) ? webEngineView: emptyPage
+                var webview = container.createObject(webStackView, {profile})
                 tabs.createEmptyTab(createAsStartPage, focusOnNewTab, url, webview)
                 return webview;
             }
 
             function createDownloadTab(profile) {
-                var webview = webEngineView.createObject(webStackView, {profile, isDownloadView: true})
+                var webview = downloadView.createObject(webStackView, {profile})
                 tabs.createDownloadTab()
             }
 
@@ -426,11 +432,11 @@ StatusSectionLayout {
             }
 
             onAccountSwitchRequested: (address) => {
-                root.browserWalletStore.switchAccountByAddress(address)
-            }
+                                          root.browserWalletStore.switchAccountByAddress(address)
+                                      }
             onFilterAddressesChangeRequested: (addressesJson) => {
-                root.browserActivityStore.activityController.setFilterAddressesJson(addressesJson)
-            }
+                                                  root.browserActivityStore.activityController.setFilterAddressesJson(addressesJson)
+                                              }
 
             Connections {
                 target: root.browserActivityStore.transactionActivityStatus
@@ -593,19 +599,10 @@ StatusSectionLayout {
     Component {
         id: webEngineView
         BrowserWebEngineView {
-            bookmarksStore: root.bookmarksStore
-            downloadsStore: root.downloadsStore
             currentWebView: _internal.currentWebView
             webChannel: connectorBridge.channel
-            findBarComp: findBar
-            favMenu: favoriteMenu
-            addFavModal: addFavoriteModal
-            downloadsMenu: downloadMenuInst
             enableJsLogs: root.isDebugEnabled
 
-            determineRealURLFn: function(url) {
-                return _internal.determineRealURL(url)
-            }
             onLinkHovered: function(hoveredUrl) {
                 if (hoveredUrl.toString() === "") {
                     hideStatusText.start();
@@ -615,7 +612,6 @@ StatusSectionLayout {
                     hideStatusText.stop();
                 }
             }
-            onSetCurrentWebUrl: (url) => _internal.currentWebView.url = url
             onWindowCloseRequested: tabs.removeView(StackLayout.index)
             onNewWindowRequested: function(request) {
                 if (!request.userInitiated) {
@@ -626,8 +622,8 @@ StatusSectionLayout {
                 } else if (request.destination === WebEngineNewWindowRequest.InNewBackgroundTab) {
                     var backgroundTab = webStackView.createEmptyTab(_internal.currentWebView.profile, false, false, request.requestedUrl);
                     backgroundTab.acceptAsNewWindow(request);
-                // Disabling popups temporarily since we need to set that webengineview settings / channel and other properties
-                /*} else if (request.destination === WebEngineNewWindowRequest.InNewDialog) {
+                    // Disabling popups temporarily since we need to set that webengineview settings / channel and other properties
+                    /*} else if (request.destination === WebEngineNewWindowRequest.InNewDialog) {
                     var dialog = browserDialogComponent.createObject();
                     dialog.currentWebView.profile = currentWebView.profile;
                     dialog.currentWebView.webChannel = channel;
@@ -647,6 +643,18 @@ StatusSectionLayout {
                 request.accepted = true;
                 var dialog = _internal.jsDialogComponent.createObject(root, {"request": request});
                 dialog.open();
+            }
+
+            onShowFindBar: function(numberOfMatches, activeMatch) {
+                if (!findBar.visible)
+                    findBar.visible = true
+
+                findBar.numberOfMatches = numberOfMatches;
+                findBar.activeMatch = activeMatch;
+            }
+
+            onResetFindBar: function() {
+                findBar.reset()
             }
 
             Rectangle {
@@ -680,6 +688,41 @@ StatusSectionLayout {
         }
     }
 
+    Component {
+        id: downloadView
+        DownloadView {
+            downloadsModel: root.downloadsStore.downloadModel
+            downloadsMenu: downloadMenuInst
+            onOpenDownloadClicked: function(downloadComplete, index) {
+                if (downloadComplete) {
+                    return root.downloadsStore.openFile(index)
+                }
+                root.downloadsStore.openDirectory(index)
+            }
+        }
+    }
+
+    Component {
+        id: emptyPage
+        EmptyWebPage {
+            bookmarksModel: root.bookmarksStore.bookmarksModel
+            favMenu: favoriteMenu
+            addFavModal: addFavoriteModal
+            determineRealURLFn: function(url) {
+                return _internal.determineRealURL(url)
+            }
+            onSetCurrentWebUrl: (url) => {
+                                    _internal.currentWebView.url = url
+                                }
+            Component.onCompleted: {
+                // Add fav button at the end of the grid
+                var index = root.bookmarksStore.getBookmarkIndexByUrl(Constants.newBookmark)
+                if (index !== -1) { root.bookmarksStore.deleteBookmark(Constants.newBookmark) }
+                root.bookmarksStore.addBookmark(Constants.newBookmark, qsTr("Add Favourite"))
+            }
+        }
+    }
+
     Connections {
         target: _internal.currentWebView
         function onUrlChanged() {
@@ -688,10 +731,10 @@ StatusSectionLayout {
             // Update ConnectorBridge with current dApp metadata
             if (_internal.currentWebView && _internal.currentWebView.url) {
                 connectorBridge.connectorManager.updateDAppUrl(
-                    _internal.currentWebView.url,
-                    _internal.currentWebView.title,
-                    _internal.currentWebView.icon
-                )
+                            _internal.currentWebView.url,
+                            _internal.currentWebView.title,
+                            _internal.currentWebView.icon
+                            )
             }
         }
     }

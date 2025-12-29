@@ -2650,6 +2650,10 @@ Do you wish to override the security check and continue?</source>
         <translation>Pokud si přejete, můžete pokračovat s neověřeným certifikátem. Přijetí neověřeného certifikátu znamená, že nemusíte být spojeni s hostitelem, ke kterému jste se pokusili připojit.
 Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
+    <message>
+        <source>Add Favourite</source>
+        <translation type="unfinished">Přidat oblíbené</translation>
+    </message>
 </context>
 <context>
     <name>BrowserPrivacyWall</name>
@@ -2761,13 +2765,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Search engine for address bar</source>
         <translation>Vyhledávač pro adresní řádek</translation>
-    </message>
-</context>
-<context>
-    <name>BrowserWebEngineView</name>
-    <message>
-        <source>Add Favourite</source>
-        <translation>Přidat oblíbené</translation>
     </message>
 </context>
 <context>

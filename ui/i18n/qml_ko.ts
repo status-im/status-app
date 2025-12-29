@@ -2635,6 +2635,10 @@ Do you wish to override the security check and continue?</source>
         <translation>원하신다면, 검증되지 않은 인증서로 계속할 수 있습니다. 검증되지 않은 인증서를 수락하면, 시도한 호스트와 실제로 연결되지 않을 수 있습니다.
 보안 검사를 무시하고 계속하시겠습니까?</translation>
     </message>
+    <message>
+        <source>Add Favourite</source>
+        <translation type="unfinished">즐겨찾기 추가</translation>
+    </message>
 </context>
 <context>
     <name>BrowserPrivacyWall</name>
@@ -2746,13 +2750,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Search engine for address bar</source>
         <translation>주소 표시줄 검색 엔진</translation>
-    </message>
-</context>
-<context>
-    <name>BrowserWebEngineView</name>
-    <message>
-        <source>Add Favourite</source>
-        <translation>즐겨찾기 추가</translation>
     </message>
 </context>
 <context>

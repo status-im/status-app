@@ -8,19 +8,20 @@ import utils
 
 import AppLayouts.Browser.controls
 
-Rectangle {
-    id: downloadView
+WebEngineView {
+    id: root
 
     property alias downloadsModel: listView.model
 
-    property var downloadsMenu
+    required property var downloadsMenu
 
     signal openDownloadClicked(bool downloadComplete, int index)
 
-    color: Theme.palette.background
+    backgroundColor: Theme.palette.background
 
     StatusListView {
         id: listView
+
         anchors {
             topMargin: Theme.bigPadding
             top: parent.top
@@ -28,6 +29,8 @@ Rectangle {
             bottomMargin: Theme.bigPadding * 2
             horizontalCenter: parent.horizontalCenter
         }
+
+        z: 54
         width: 624
         spacing: Theme.padding
 
@@ -58,13 +61,14 @@ Rectangle {
                 downloadsMenu.index = index
                 downloadsMenu.parent = downloadElement
                 downloadsMenu.x = xVal
-                downloadsMenu.y = downloadView.y - downloadsMenu.height
+                downloadsMenu.y = root.y - downloadsMenu.height
                 downloadsMenu.open()
             }
         }
     }
 
     StatusBaseText {
+        z: 54
         visible: !listView.count
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter

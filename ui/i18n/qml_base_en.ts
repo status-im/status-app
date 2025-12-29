@@ -2639,6 +2639,10 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
 Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Add Favourite</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BrowserPrivacyWall</name>
@@ -2749,13 +2753,6 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Search engine for address bar</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>BrowserWebEngineView</name>
-    <message>
-        <source>Add Favourite</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

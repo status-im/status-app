@@ -3232,6 +3232,11 @@
       <comment>BrowserLayout</comment>
       <translation>If you wish so, you may continue with an unverified certificate. Accepting an unverified certificate means you may not be connected with the host you tried to connect to.&#xA;Do you wish to override the security check and continue?</translation>
     </message>
+    <message>
+      <source>Add Favourite</source>
+      <comment>BrowserLayout</comment>
+      <translation>Add Favourite</translation>
+    </message>
   </context>
   <context>
     <name>BrowserPrivacyWall</name>
@@ -3368,14 +3373,6 @@
       <source>Search engine for address bar</source>
       <comment>BrowserView</comment>
       <translation>Search engine for address bar</translation>
-    </message>
-  </context>
-  <context>
-    <name>BrowserWebEngineView</name>
-    <message>
-      <source>Add Favourite</source>
-      <comment>BrowserWebEngineView</comment>
-      <translation>Add Favourite</translation>
     </message>
   </context>
   <context>

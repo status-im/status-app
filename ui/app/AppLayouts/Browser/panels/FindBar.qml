@@ -76,8 +76,6 @@ Rectangle {
     signal findNext()
     signal findPrevious()
 
-    width: 300
-    height: 40
     radius: Theme.radius
 
     border.width: 0
