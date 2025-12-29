@@ -18,20 +18,14 @@ FocusScope {
     property alias currentIndex: tabBar.currentIndex
     readonly property alias count: tabBar.count
     required property bool thirdpartyServicesEnabled
+    required property bool currentTabIcognito
 
-    function getTab(index) { // -> WebEngineView
-        return tabLayout.children[index]
-    }
-
-    function getCurrentTab() { // -> WebEngineView
-        return getTab(currentIndex)
-    }
+    property var fnGetWebView: (index) => {}
 
     property var currentWebEngineProfile
     property var tabComponent
     property var determineRealURL: function(url) {}
     readonly property int tabHeight: d.tabHeight
-    property int contentTopMargin: 0
 
     signal openNewTabTriggered()
 
@@ -44,7 +38,6 @@ FocusScope {
         readonly property int minTabButtonWidth: 118
         readonly property int maxTabButtonWidth: 236
         readonly property bool tabBarOverflowing: tabBarListView.visibleArea.widthRatio < 1
-        readonly property bool currentTabIcognito: root.getCurrentTab()?.profile?.offTheRecord ?? false
     }
 
     TabBar {
@@ -54,7 +47,7 @@ FocusScope {
         anchors.right: parent.right
         height: root.tabHeight
         background: Rectangle {
-            color: d.currentTabIcognito ?
+            color: root.currentTabIcognito ?
                        Theme.palette.privacyColors.secondary:
                        Theme.palette.statusAppNavBar.backgroundColor
         }
@@ -89,22 +82,7 @@ FocusScope {
         visible: d.tabBarOverflowing
     }
 
-    StackLayout {
-        id: tabLayout
-        currentIndex: tabBar.currentIndex
-
-        anchors.top: tabBar.bottom
-        anchors.topMargin: root.contentTopMargin
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-    }
-
-    function createEmptyTab(profile, createAsStartPage = false, focusOnNewTab = true, url = undefined) {
-        createAsStartPage = createAsStartPage || tabLayout.count === 1
-
-        var webview = tabComponent.createObject(tabLayout, {profile})
-
+    function createEmptyTab(createAsStartPage = false, focusOnNewTab = true, url = undefined, webview) {
         const tabTitle = Qt.binding(function() {
             var tabTitle = ""
             if (webview.title) {
@@ -132,27 +110,15 @@ FocusScope {
         if (focusOnNewTab) {
             tabBar.setCurrentIndex(tabBar.count - 1);
         }
-
-        return webview;
     }
 
-    function createDownloadTab(profile) {
-        var webview = tabComponent.createObject(tabLayout, {profile, isDownloadView: true})
+    function createDownloadTab() {
         var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle: qsTr("Downloads Page")})
         tabBar.addItem(newTabButton);
-        return webview;
     }
 
-    function removeView(index) {
-        if (tabBar.count <= 1) {
-            createEmptyTab(currentWebEngineProfile, true)
-        }
-
+    function removeTab(index) {
         tabBar.removeItem(tabBar.itemAt(index))
-        var tab = getTab(index)
-        tab.stop()
-        tab.parent = null // reparent to null first to prevent a crash
-        tab.destroy()
     }
 
     component AddTabButton: Rectangle {
@@ -164,8 +130,8 @@ FocusScope {
             anchors.margins: 4
             radius: Theme.radius
             icon.name: "add"
-            incognitoMode: d.currentTabIcognito
-            hoverColor: d.currentTabIcognito ?
+            incognitoMode: root.currentTabIcognito
+            hoverColor: root.currentTabIcognito ?
                             Theme.palette.privacyColors.primary:
                             Theme.palette.indirectColor1
             onClicked: root.openNewTabTriggered()
@@ -179,7 +145,7 @@ FocusScope {
             id: tabButton
             property string tabTitle
 
-            readonly property bool incognito: root.getTab(tabButton.TabBar.index)?.profile.offTheRecord ?? false
+            readonly property bool incognito: root.fnGetWebView(tabButton.TabBar.index)?.profile.offTheRecord ?? false
 
             width: Math.min(Math.max(implicitWidth, d.minTabButtonWidth), d.maxTabButtonWidth)
             anchors.top: parent ? parent.top : undefined
@@ -207,7 +173,7 @@ FocusScope {
                 StatusIcon {
                     Layout.preferredWidth: d.iconSize
                     Layout.preferredHeight: d.iconSize
-                    readonly property string favicon: root.getTab(tabButton.TabBar.index)?.icon.toString().replace("image://favicon/", "") ?? ""
+                    readonly property string favicon: root.fnGetWebView(tabButton.TabBar.index)?.icon.toString().replace("image://favicon/", "") ?? ""
                     sourceSize: Qt.size(width, height)
                     icon: favicon || "globe"
                     visible: !loadingIndicator.visible
@@ -216,7 +182,7 @@ FocusScope {
                     id: loadingIndicator
                     Layout.preferredWidth: d.iconSize
                     Layout.preferredHeight: d.iconSize
-                    visible: root.getTab(tabButton.TabBar.index)?.loading ?? false
+                    visible: root.fnGetWebView(tabButton.TabBar.index)?.loading ?? false
                 }
 
                 StatusBaseText {
