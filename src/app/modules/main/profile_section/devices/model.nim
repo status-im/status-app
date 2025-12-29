@@ -27,13 +27,6 @@ QtObject:
     new(result, delete)
     result.setup
 
-  proc countChanged(self: Model) {.signal.}
-  proc getCount(self: Model): int {.slot.} =
-    self.items.len
-  QtProperty[int] count:
-    read = getCount
-    notify = countChanged
-
   proc pairedCountChanged(self: Model) {.signal.}
   proc getPairedCount(self: Model): int {.slot.} =
     self.pairedCount
@@ -89,7 +82,6 @@ QtObject:
     self.beginResetModel()
     self.items = items
     self.endResetModel()
-    self.countChanged()
     self.updatePairedCount()
 
   proc addItem*(self: Model, item: Item) =
@@ -99,7 +91,6 @@ QtObject:
     self.beginInsertRows(parentModelIndex, self.items.len, self.items.len)
     self.items.add(item)
     self.endInsertRows()
-    self.countChanged()
     self.updatePairedCount()
 
   proc findIndexByInstallationId(self: Model, installationId: string): int =
@@ -119,7 +110,6 @@ QtObject:
     self.beginRemoveRows(parentModelIndex, i, i)
     self.items.delete(i)
     self.endRemoveRows()
-    self.countChanged()
     self.updatePairedCount()
 
   proc isItemWithInstallationIdAdded*(self: Model, installationId: string): bool =

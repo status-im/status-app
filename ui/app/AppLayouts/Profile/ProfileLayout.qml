@@ -31,7 +31,7 @@ import AppLayouts.stores as AppLayoutsStores
 import AppLayouts.stores.Messaging as MessagingStores
 
 import SortFilterProxyModel
-
+import QtModelsToolkit
 
 StatusSectionLayout {
     id: root
@@ -175,7 +175,7 @@ StatusSectionLayout {
         isKeycardEnabled: root.isKeycardEnabled
         localBackupEnabled: root.devicesStore.localBackupEnabled
 
-        syncingBadgeCount: root.devicesStore.devicesModel.count -
+        syncingBadgeCount: root.devicesStore.devicesModel.ModelCount.count -
                            root.devicesStore.devicesModel.pairedCount
         messagingBadgeCount: root.pendingReceivedContactsCount
     }
