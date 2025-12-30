@@ -1,0 +1,8 @@
+JSDialogWindow 1.0 JSDialogWindow.qml
+BrowserConnectionModal 1.0 BrowserConnectionModal.qml
+BrowserSettingsMenu 1.0 BrowserSettingsMenu.qml
+AddFavoriteModal 1.0 AddFavoriteModal.qml
+SignMessageModal 1.0 SignMessageModal.qml
+FavoriteMenu 1.0 FavoriteMenu.qml
+BrowserWalletMenu 1.0 BrowserWalletMenu.qml
+DownloadMenu 1.0 DownloadMenu.qml

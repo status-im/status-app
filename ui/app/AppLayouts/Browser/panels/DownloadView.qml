@@ -1,5 +1,4 @@
 import QtQuick
-import QtWebEngine
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -8,7 +7,7 @@ import utils
 
 import AppLayouts.Browser.controls
 
-WebEngineView {
+Rectangle {
     id: root
 
     property alias downloadsModel: listView.model
@@ -17,7 +16,8 @@ WebEngineView {
 
     signal openDownloadClicked(bool downloadComplete, int index)
 
-    backgroundColor: Theme.palette.background
+    z: 54
+    color: Theme.palette.background
 
     StatusListView {
         id: listView
@@ -30,7 +30,6 @@ WebEngineView {
             horizontalCenter: parent.horizontalCenter
         }
 
-        z: 54
         width: 624
         spacing: Theme.padding
 
@@ -68,7 +67,6 @@ WebEngineView {
     }
 
     StatusBaseText {
-        z: 54
         visible: !listView.count
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter

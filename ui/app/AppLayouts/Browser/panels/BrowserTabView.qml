@@ -22,8 +22,6 @@ FocusScope {
 
     property var fnGetWebView: (index) => {}
 
-    property var currentWebEngineProfile
-    property var tabComponent
     property var determineRealURL: function(url) {}
     readonly property int tabHeight: d.tabHeight
 

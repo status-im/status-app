@@ -8,7 +8,6 @@ import "ScriptUtils.js" as ScriptUtils
 WebEngineView {
     id: root
 
-    property var currentWebView
     property bool enableJsLogs: false
     property bool htmlPageLoaded: false
 

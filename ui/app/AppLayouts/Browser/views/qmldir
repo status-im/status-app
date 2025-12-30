@@ -1,1 +1,4 @@
 BrowserWebEngineView 1.0 BrowserWebEngineView.qml
+WebViewContainer 1.0 WebViewContainer.qml
+BrowserShortcutActions 1.0 BrowserShortcutActions.qml
+EmptyWebPage 1.0 EmptyWebPage.qml

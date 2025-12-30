@@ -6,16 +6,13 @@ import QtWebEngine
 import QtModelsToolkit
 
 import StatusQ.Core
-import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Layout
 import StatusQ.Popups
 import StatusQ.Popups.Dialog
 
 import utils
-import shared.controls
-import shared
-import shared.status
 import shared.popups.send
 import shared.stores.send
 import shared.stores as SharedStores
@@ -23,15 +20,14 @@ import shared.stores as SharedStores
 import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Wallet.services.dapps
 
-import "provider/qml"
-import "popups"
-import "controls"
-import "views"
-import "panels"
+import AppLayouts.Browser.provider.qml
+import AppLayouts.Browser.popups
+import AppLayouts.Browser.controls
+import AppLayouts.Browser.views
+import AppLayouts.Browser.panels
 
 // Code based on https://code.qt.io/cgit/qt/qtwebengine.git/tree/examples/webengine/quicknanobrowser/BrowserWindow.qml?h=5.15
 // Licensed under BSD
-
 StatusSectionLayout {
     id: root
 
@@ -73,48 +69,11 @@ StatusSectionLayout {
         // tab.url = root.browserRootStore.determineRealURL("https://simpledapp.eth");
     }
 
-    ConnectorBridge {
-        id: connectorBridge
-
-        userUID: root.userUID
-        connectorController: root.connectorController
-        httpUserAgent: {
-            if (localAccountSensitiveSettings.compatibilityMode) {
-                // Google doesn't let you connect if the user agent is Chrome-ish and doesn't satisfy some sort of hidden requirement
-                const os = root.platformOS
-                let platform = "X11; Linux x86_64" // default Linux
-                let mobile = ""
-                if (os === SQUtils.Utils.windows)
-                    platform = "Windows NT 11.0; Win64; x64"
-                else if (os === SQUtils.Utils.mac)
-                    platform = "Macintosh; Intel Mac OS X 10_15_7"
-                else if (os === SQUtils.Utils.android) {
-                    platform = "Linux; Android 10; K"
-                    mobile = "Mobile"
-                } else if (os === SQUtils.Utils.ios) {
-                    platform = "iPhone; CPU iPhone OS 18_6 like Mac OS X"
-                    mobile = "Mobile/15E148"
-                }
-
-                return "Mozilla/5.0 (%1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 %2 Safari/604.1".arg(platform).arg(mobile)
-            }
-            return ""
-        }
-    }
-
-    BCBrowserDappsProvider {
-        id: browserDappsProvider
-        connectorController: root.connectorController
-        clientId: connectorBridge.clientId  // "status-desktop/dapp-browser"
-    }
-
     QtObject {
         id: _internal
 
         property Item currentWebView: tabs.currentIndex < tabs.count ? webStackView.getCurrentWebView() : null
         readonly property bool currentTabIcognito: webStackView.getCurrentWebView()?.profile?.offTheRecord ?? false
-
-        property Component browserDialogComponent: BrowserDialog {}
 
         property Component jsDialogComponent: JSDialogWindow {}
 
@@ -209,8 +168,6 @@ StatusSectionLayout {
             Layout.preferredHeight: 44
 
             currentTabIcognito: _internal.currentTabIcognito
-            tabComponent: webEngineView
-            currentWebEngineProfile: _internal.currentWebView.profile
             thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
             determineRealURL: function(url) {
                 return _internal.determineRealURL(url)
@@ -319,78 +276,6 @@ StatusSectionLayout {
         }
     }
 
-    centerPanel: ColumnLayout {
-        id: browserWindow
-
-        StackLayout {
-            id: webStackView
-            currentIndex: tabs.currentIndex
-
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-
-            function createEmptyTab(profile, createAsStartPage = false, focusOnNewTab = true, url = undefined) {
-                createAsStartPage = createAsStartPage || webStackView.count === 1
-                let container = (createAsStartPage || !!url) ? webEngineView: emptyPage
-                var webview = container.createObject(webStackView, {profile})
-                tabs.createEmptyTab(createAsStartPage, focusOnNewTab, url, webview)
-                return webview;
-            }
-
-            function createDownloadTab(profile) {
-                var webview = downloadView.createObject(webStackView, {profile})
-                tabs.createDownloadTab()
-            }
-
-            function getWebView(index) { // -> WebEngineView
-                return webStackView.children[index]
-            }
-
-            function removeView(index) {
-                if (tabs.count <= 1) {
-                    createEmptyTab(_internal.currentWebView.profile, true)
-                }
-                tabs.removeTab(index)
-                var view = getWebView(index)
-                view.stop()
-                view.parent = null // reparent to null first to prevent a crash
-                view.destroy()
-            }
-
-            function getCurrentWebView() { // -> WebEngineView
-                return getWebView(tabs.currentIndex)
-            }
-        }
-
-        WebEngineView {
-            id: devToolsView
-
-            Layout.preferredHeight: visible ? 400 : 0
-            Layout.fillWidth: true
-
-            visible: localAccountSensitiveSettings.devToolsEnabled
-            inspectedView: visible && tabs.currentIndex < tabs.count ? webStackView.getCurrentWebView() : null
-            settings.forceDarkMode: Application.styleHints.colorScheme === Qt.ColorScheme.Dark
-            onNewWindowRequested: function(request) {
-                var tab = webStackView.createEmptyTab(_internal.currentWebView.profile);
-                request.openIn(tab);
-            }
-            onWindowCloseRequested: localAccountSensitiveSettings.devToolsEnabled = false
-            z: 100
-        }
-
-        // Non UI component
-        Loader {
-            // Only load the shortcuts when the browser is visible, to avoid interfering with other app sections
-            active: root.visible
-            sourceComponent: BrowserShortcutActions {
-                currentWebView: _internal.currentWebView
-                findBarComponent: findBar
-                browserHeaderComponent: browserHeader
-            }
-        }
-    }
-
     footer: Loader {
         id: downloadBar
         active: false
@@ -406,6 +291,152 @@ StatusSectionLayout {
             }
             onAddNewDownloadTab: _internal.addNewDownloadTab()
             onClose: downloadBar.active = false
+        }
+    }
+
+    centerPanel: ColumnLayout {
+        id: browserWindow
+
+        StackLayout {
+            id: webStackView
+            currentIndex: tabs.currentIndex
+
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+
+            function createEmptyTab(profile, createAsStartPage = false, focusOnNewTab = true, url = undefined) {
+                createAsStartPage = createAsStartPage || webStackView.count === 1
+                const isEmptyPage = (!createAsStartPage && !url)
+                var webview = webViewContainer.createObject(webStackView, {isEmptyPage: isEmptyPage}).currentView
+                webview.profile = profile
+                tabs.createEmptyTab(createAsStartPage, focusOnNewTab, url, webview)
+                return webview;
+            }
+
+            function createDownloadTab(profile) {
+                var webview = webViewContainer.createObject(webStackView, {isDownloadView: true}).currentView
+                webview.profile = profile
+                tabs.createDownloadTab()
+                return webview;
+            }
+
+            function getCurrentWebView() { // -> WebEngineView/WebView
+                return getWebView(tabs.currentIndex)
+            }
+
+            function getWebView(index) { // -> WebEngineView/WebView
+                return webStackView.children[index].currentView
+            }
+
+            function removeView(index) {
+                if (tabs.count <= 1) {
+                    createEmptyTab(_internal.currentWebView.profile, true)
+                }
+                tabs.removeTab(index)
+                var view = getWebView(index)
+                view.stop()
+                view.parent = null // reparent to null first to prevent a crash
+                view.destroy()
+            }
+        }
+
+        WebViewContainer {
+            id: devToolsView
+            z: 100
+            Layout.preferredHeight: visible ? 400 : 0
+            Layout.fillWidth: true
+            visible: localAccountSensitiveSettings.devToolsEnabled
+            inspectedView: visible && tabs.currentIndex < tabs.count ? webStackView.getCurrentWebView() : null
+        }
+
+        // Non UI component
+        Loader {
+            // Only load the shortcuts when the browser is visible, to avoid interfering with other app sections
+            active: root.visible
+            sourceComponent: BrowserShortcutActions {
+                currentWebView: _internal.currentWebView
+                findBarComponent: findBar
+                browserHeaderComponent: browserHeader
+            }
+        }
+    }
+
+    Component {
+        id: webViewContainer
+        WebViewContainer {
+            isDebugEnabled: root.isDebugEnabled
+            webChannel: connectorBridge.channel
+            currentWebViewProfile: _internal.currentWebView.profile
+            fnCreateEmptyTab: function(profile, createAsStartPage, focusOnNewTab, url)  {
+                return webStackView.createEmptyTab(profile, createAsStartPage, focusOnNewTab, url);
+            }
+
+            downloadViewComponent: downloadView
+            emptyPageComponent: emptyPage
+
+            onRemoveView: (index) => {
+                              tabs.removeView(StackLayout.index)
+                          }
+            onShowFindBar: (numberOfMatches, activeMatch) => {
+                               if (!findBar.visible)
+                               findBar.visible = true
+
+                               findBar.numberOfMatches = numberOfMatches;
+                               findBar.activeMatch = activeMatch;
+                           }
+            onResetFindBar: () => {
+                                findBar.reset()
+                            }
+            onShowSslDialog: (error) => {
+                                 error.defer()
+                                 sslDialog.enqueue(error)
+                             }
+
+            onShowJsDialogComponent: (request) => {
+                                         request.accepted = true;
+                                         var dialog = _internal.jsDialogComponent.createObject(root, {"request": request})
+                                         dialog.open()
+                                     }
+
+            onLinkHovered: (hoveredUrl) => {
+                               if (hoveredUrl.toString() === "") {
+                                   hideStatusText.start();
+                               } else {
+                                   statusText.text = hoveredUrl;
+                                   statusBubble.visible = true;
+                                   hideStatusText.stop();
+                               }
+                           }
+
+            // TODO: refactor this
+            Rectangle {
+                id: statusBubble
+                color: Theme.palette.baseColor2
+                z: 54
+                visible: false
+
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                width: Math.min(statusText.implicitWidth, parent.width)
+                height: statusText.implicitHeight
+
+                StatusBaseText {
+                    id: statusText
+                    anchors.fill: parent
+                    verticalAlignment: Qt.AlignVCenter
+                    elide: Qt.ElideMiddle
+                    padding: 4
+
+                    Timer {
+                        id: hideStatusText
+                        interval: 750
+                        onTriggered: {
+                            statusText.text = "";
+                            statusBubble.visible = false;
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -597,98 +628,6 @@ StatusSectionLayout {
     }
 
     Component {
-        id: webEngineView
-        BrowserWebEngineView {
-            currentWebView: _internal.currentWebView
-            webChannel: connectorBridge.channel
-            enableJsLogs: root.isDebugEnabled
-
-            onLinkHovered: function(hoveredUrl) {
-                if (hoveredUrl.toString() === "") {
-                    hideStatusText.start();
-                } else {
-                    statusText.text = hoveredUrl;
-                    statusBubble.visible = true;
-                    hideStatusText.stop();
-                }
-            }
-            onWindowCloseRequested: tabs.removeView(StackLayout.index)
-            onNewWindowRequested: function(request) {
-                if (!request.userInitiated) {
-                    console.warn("Warning: Blocked a popup window.");
-                } else if (request.destination === WebEngineNewWindowRequest.InNewTab) {
-                    var tab = webStackView.createEmptyTab(_internal.currentWebView.profile, false, true, request.requestedUrl);
-                    tab.acceptAsNewWindow(request);
-                } else if (request.destination === WebEngineNewWindowRequest.InNewBackgroundTab) {
-                    var backgroundTab = webStackView.createEmptyTab(_internal.currentWebView.profile, false, false, request.requestedUrl);
-                    backgroundTab.acceptAsNewWindow(request);
-                    // Disabling popups temporarily since we need to set that webengineview settings / channel and other properties
-                    /*} else if (request.destination === WebEngineNewWindowRequest.InNewDialog) {
-                    var dialog = browserDialogComponent.createObject();
-                    dialog.currentWebView.profile = currentWebView.profile;
-                    dialog.currentWebView.webChannel = channel;
-                    request.openIn(dialog.currentWebView);*/
-                } else {
-                    // Instead of opening a new window, we open a new tab
-                    // TODO: remove "open in new window" from context menu
-                    var tab = webStackView.createEmptyTab(_internal.currentWebView.profile, false, true, request.requestedUrl);
-                    tab.acceptAsNewWindow(request);
-                }
-            }
-            onCertificateError: function(error) {
-                error.defer();
-                sslDialog.enqueue(error);
-            }
-            onJavaScriptDialogRequested: function(request) {
-                request.accepted = true;
-                var dialog = _internal.jsDialogComponent.createObject(root, {"request": request});
-                dialog.open();
-            }
-
-            onShowFindBar: function(numberOfMatches, activeMatch) {
-                if (!findBar.visible)
-                    findBar.visible = true
-
-                findBar.numberOfMatches = numberOfMatches;
-                findBar.activeMatch = activeMatch;
-            }
-
-            onResetFindBar: function() {
-                findBar.reset()
-            }
-
-            Rectangle {
-                id: statusBubble
-                color: Theme.palette.baseColor2
-                visible: false
-                z: 54
-
-                anchors.left: parent.left
-                anchors.bottom: parent.bottom
-                width: Math.min(statusText.implicitWidth, parent.width)
-                height: statusText.implicitHeight
-
-                StatusBaseText {
-                    id: statusText
-                    anchors.fill: parent
-                    verticalAlignment: Qt.AlignVCenter
-                    elide: Qt.ElideMiddle
-                    padding: 4
-
-                    Timer {
-                        id: hideStatusText
-                        interval: 750
-                        onTriggered: {
-                            statusText.text = "";
-                            statusBubble.visible = false;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    Component {
         id: downloadView
         DownloadView {
             downloadsModel: root.downloadsStore.downloadModel
@@ -721,6 +660,41 @@ StatusSectionLayout {
                 root.bookmarksStore.addBookmark(Constants.newBookmark, qsTr("Add Favourite"))
             }
         }
+    }
+
+    ConnectorBridge {
+        id: connectorBridge
+
+        userUID: root.userUID
+        connectorController: root.connectorController
+        httpUserAgent: {
+            if (localAccountSensitiveSettings.compatibilityMode) {
+                // Google doesn't let you connect if the user agent is Chrome-ish and doesn't satisfy some sort of hidden requirement
+                const os = root.platformOS
+                let platform = "X11; Linux x86_64" // default Linux
+                let mobile = ""
+                if (os === SQUtils.Utils.windows)
+                    platform = "Windows NT 11.0; Win64; x64"
+                else if (os === SQUtils.Utils.mac)
+                    platform = "Macintosh; Intel Mac OS X 10_15_7"
+                else if (os === SQUtils.Utils.android) {
+                    platform = "Linux; Android 10; K"
+                    mobile = "Mobile"
+                } else if (os === SQUtils.Utils.ios) {
+                    platform = "iPhone; CPU iPhone OS 18_6 like Mac OS X"
+                    mobile = "Mobile/15E148"
+                }
+
+                return "Mozilla/5.0 (%1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 %2 Safari/604.1".arg(platform).arg(mobile)
+            }
+            return ""
+        }
+    }
+
+    BCBrowserDappsProvider {
+        id: browserDappsProvider
+        connectorController: root.connectorController
+        clientId: connectorBridge.clientId  // "status-desktop/dapp-browser"
     }
 
     Connections {

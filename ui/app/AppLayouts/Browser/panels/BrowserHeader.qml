@@ -45,8 +45,7 @@ Rectangle {
         readonly property int buttonSize: 36
     }
 
-    width: parent.width
-    height: barRow.height + (favoritesBarLoader.active ? favoritesBarLoader.height : 0)
+    implicitHeight: barRow.height + (favoritesBarLoader.active ? favoritesBarLoader.height : 0)
     color: root.currentTabIncognito ?
                Theme.palette.privacyColors.primary:
                Theme.palette.background
