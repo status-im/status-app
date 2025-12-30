@@ -103,7 +103,18 @@ LayoutChooser {
         Default value is true.
     */
     property bool showHeader: true
-
+    /*!
+        \qmlproperty bool StatusSectionLayout::showFooter
+        This property sets the footer component's visibility to true/false.
+        Default value is true.
+    */
+    property bool showFooter: true
+    /*!
+        \qmlproperty int StatusSectionLayout::headerPadding
+        This property sets the padding for the header component
+        Default value is Theme.halfPadding.
+    */
+    property int headerPadding: Theme.halfPadding
     /*!
         \qmlproperty string StatusSectionLayout::backButtonName
         This property holds a reference to the backButtonName property of the
@@ -123,6 +134,12 @@ LayoutChooser {
         the section
     */
     property color backgroundColor: Theme.palette.statusAppLayout.rightPanelBackgroundColor
+    /*!
+        \qmlproperty bool StatusSectionLayout::invertedLayout
+        This property sets the flow to  Footer - Center - Header
+        when true, otherwise  Header - Center - Footer
+    */
+    property bool invertedLayout: false
 
     /*!
         \qmlsignal
@@ -171,6 +188,8 @@ LayoutChooser {
         showRightPanel: root.showRightPanel
         rightPanelWidth: root.rightPanelWidth
         showHeader: root.showHeader
+        headerPadding: root.headerPadding
+        showFooter: root.showFooter
         backButtonName: root.backButtonName
         headerContent: root.headerContent
         backgroundColor: root.backgroundColor
@@ -190,9 +209,12 @@ LayoutChooser {
         showRightPanel: root.showRightPanel
         rightPanelWidth: root.rightPanelWidth
         showHeader: root.showHeader
+        headerPadding: root.headerPadding
+        showFooter: root.showFooter
         backButtonName: root.backButtonName
         headerContent: root.headerContent
         backgroundColor: root.backgroundColor
+        invertedLayout: root.invertedLayout
 
         property int currentIndexCache
 

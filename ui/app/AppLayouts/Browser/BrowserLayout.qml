@@ -126,7 +126,7 @@ StatusSectionLayout {
         function onDownloadRequested(download) {
             download.accept();
             root.downloadsStore.addDownload(download)
-            downloadBar.active = true
+            root.showFooter = true
 
             // close the tab launched only for starting download
             if (!download.view)
@@ -155,6 +155,9 @@ StatusSectionLayout {
         }
     }
 
+    invertedLayout: SQUtils.Utils.isMobile
+    showFooter: false
+    headerPadding: 0
     backgroundColor: Theme.palette.statusAppNavBar.backgroundColor
 
     headerContent: ColumnLayout {
@@ -182,7 +185,7 @@ StatusSectionLayout {
         BrowserHeader {
             id: browserHeader
 
-            Layout.preferredWidth: parent.width
+            Layout.fillWidth: true
 
             favoriteComponent: favoritesBar
             favoritesVisible: localAccountSensitiveSettings.shouldShowFavoritesBar &&
@@ -275,26 +278,12 @@ StatusSectionLayout {
     }
 
     footer: Loader {
-        id: downloadBar
-        active: false
-        height: active ? implicitHeight: 0
-        sourceComponent: DownloadBar {
-            downloadsModel: root.downloadsStore.downloadModel
-            downloadsMenu: downloadMenuInst
-            onOpenDownloadClicked: function (downloadComplete, index) {
-                if (downloadComplete) {
-                    return root.downloadsStore.openFile(index)
-                }
-                root.downloadsStore.openDirectory(index)
-            }
-            onAddNewDownloadTab: _internal.addNewDownloadTab()
-            onClose: downloadBar.active = false
-        }
+        sourceComponent: downloadBar
     }
 
     centerPanel: ColumnLayout {
         id: mainView
-
+        spacing: 0
         StackLayout {
             id: webStackView
             currentIndex: tabs.currentIndex
@@ -703,6 +692,22 @@ StatusSectionLayout {
         id: browserDappsProvider
         connectorController: root.connectorController
         clientId: connectorBridge.clientId  // "status-desktop/dapp-browser"
+    }
+
+    Component {
+        id: downloadBar
+        DownloadBar {
+            downloadsModel: root.downloadsStore.downloadModel
+            downloadsMenu: downloadMenuInst
+            onOpenDownloadClicked: function (downloadComplete, index) {
+                if (downloadComplete) {
+                    return root.downloadsStore.openFile(index)
+                }
+                root.downloadsStore.openDirectory(index)
+            }
+            onAddNewDownloadTab: _internal.addNewDownloadTab()
+            onClose: root.showFooter = false
+        }
     }
 
     Connections {

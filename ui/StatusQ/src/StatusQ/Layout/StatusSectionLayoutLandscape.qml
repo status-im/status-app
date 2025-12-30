@@ -99,6 +99,20 @@ SplitView {
     property bool showHeader: true
 
     /*!
+        \qmlproperty bool StatusSectionLayout::showFooter
+        This property sets the footer component's visibility to true/false.
+        Default value is true.
+    */
+    property bool showFooter: true
+
+    /*!
+        \qmlproperty int StatusSectionLayout::headerPadding
+        This property sets the padding for the header component
+        Default value is Theme.halfPadding.
+    */
+    property int headerPadding: Theme.halfPadding
+
+    /*!
         \qmlproperty alias StatusSectionLayout::backButtonName
         This property holds a reference to the backButtonName property of the
         header component.
@@ -172,6 +186,7 @@ SplitView {
                 width: visible ? parent.width : 0
                 height: visible ? implicitHeight : 0
                 visible: root.showHeader
+                padding: root.headerPadding
                 headerContent: LayoutItemProxy {
                     id: headerContentProxy
                     target: root.headerContent
@@ -191,10 +206,10 @@ SplitView {
             LayoutItemProxy {
                 id: footerSlot
                 width: parent.width
-                height: root.footer ? root.footer.height : 0
+                height: visible ? implicitHeight : 0
                 anchors.bottom: parent.bottom
                 target: root.footer
-                visible: !!target
+                visible: root.showFooter && !!target
             }
         }
     }

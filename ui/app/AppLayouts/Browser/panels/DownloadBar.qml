@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import QtWebEngine
 
 import StatusQ.Core
@@ -24,35 +25,19 @@ Rectangle {
     border.width: 1
     border.color: Theme.palette.border
 
-    // This container is to contain the downloaded elements between the parent buttons and hide the overflow
-    Item {
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.left: parent.left
-        anchors.leftMargin: Theme.smallPadding
-        anchors.right: showAllBtn.left
-        anchors.rightMargin: Theme.smallPadding
-        height: listView.height
-        clip: true
+    RowLayout {
+        anchors.fill: parent
 
         StatusListView {
             id: listView
 
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            Layout.preferredHeight: currentItem ? currentItem.height : 0
+
             orientation: ListView.Horizontal
             model: downloadsModel
-            height: currentItem ? currentItem.height : 0
-            // This makes it show the newest on the right
-            layoutDirection: Qt.RightToLeft
             spacing: Theme.smallPadding
-            anchors.left: parent.left
-            width: {
-                // Children rect shows a warning but this works ¯\_(ツ)_/¯
-                let w = 0
-                for (let i = 0; i < count; i++) {
-                    w += this.itemAtIndex(i).width + this.spacing
-                }
-                return w
-            }
-            interactive: false
             delegate: DownloadElement {
                 id: downloadElement
 
@@ -70,7 +55,7 @@ Rectangle {
                         return qsTr("Paused")
                     }
                     return "%1/%2".arg(Qt.locale().formattedDataSize(downloadItem?.receivedBytes ?? 0, 2, Locale.DataSizeTraditionalFormat)) //e.g. 14.4/109 MB
-                                  .arg(Qt.locale().formattedDataSize(downloadItem?.totalBytes ?? 0, 2, Locale.DataSizeTraditionalFormat))
+                    .arg(Qt.locale().formattedDataSize(downloadItem?.totalBytes ?? 0, 2, Locale.DataSizeTraditionalFormat))
                 }
                 onItemClicked: {
                     openDownloadClicked(downloadComplete, index)
@@ -83,30 +68,35 @@ Rectangle {
                     downloadsMenu.open()
                 }
             }
-        }
-    }
 
-    StatusButton {
-        id: showAllBtn
-        size: StatusBaseButton.Size.Small
-        text: qsTr("Show All")
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.right: closeBtn.left
-        anchors.rightMargin: Theme.padding
-        onClicked: {
-            addNewDownloadTab()
+            onCountChanged: positionViewAtEnd()
+            Component.onCompleted: positionViewAtEnd()
         }
-    }
 
-    StatusFlatRoundButton {
-        id: closeBtn
-        width: 32
-        height: 32
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.right: parent.right
-        anchors.rightMargin: Theme.smallPadding
-        icon.name: "close"
-        type: StatusFlatRoundButton.Type.Quaternary
-        onClicked: root.close()
+        StatusButton {
+            id: showAllBtn
+
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
+            Layout.rightMargin: Theme.padding
+
+            size: StatusBaseButton.Size.Small
+            text: qsTr("Show All")
+            onClicked: {
+                addNewDownloadTab()
+            }
+        }
+
+        StatusFlatRoundButton {
+            id: closeBtn
+
+            Layout.preferredWidth: 32
+            Layout.preferredHeight: 32
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
+            Layout.rightMargin: Theme.smallPadding
+
+            icon.name: "close"
+            type: StatusFlatRoundButton.Type.Quaternary
+            onClicked: root.close()
+        }
     }
 }

@@ -92,7 +92,18 @@ SwipeView {
         Default value is true.
     */
     property bool showHeader: true
-
+    /*!
+        \qmlproperty int StatusSectionLayout::headerPadding
+        This property sets the padding for the header component
+        Default value is Theme.halfPadding.
+    */
+    property bool showFooter: true
+    /*!
+        \qmlproperty int StatusSectionLayout::headerPadding
+        This property sets the padding for the header component
+        Default value is Theme.halfPadding.
+    */
+    property int headerPadding: Theme.halfPadding
     /*!
         \qmlproperty alias StatusSectionLayout::backButtonName
         This property holds a reference to the backButtonName property of the
@@ -112,6 +123,12 @@ SwipeView {
         the section
     */
     property color backgroundColor: Theme.palette.statusAppLayout.rightPanelBackgroundColor
+    /*!
+        \qmlproperty bool StatusSectionLayoutPortrait::invertedLayout
+        This property sets the flow to  Footer - Center - Header
+        when true, otherwise  Header - Center - Footer
+    */
+    property bool invertedLayout: false
 
     /*!
         \qmlsignal
@@ -193,13 +210,20 @@ SwipeView {
         backgroundColor: root.backgroundColor
         implicitIndex: 1
         inView: !!root.centerPanel
-        target: ColumnLayout {
+
+        target: GridLayout {
             objectName: "centerPanelLayout"
             anchors.fill: parent
-            spacing: 0
+            columns: 1
+            rowSpacing: 0
+
+            // Header
             Item {
+                id: headerItem
                 Layout.fillWidth: true
-                implicitHeight: headerBackgroundProxy.implicitHeight
+                implicitHeight: statusToolBar.implicitHeight
+                Layout.row: root.invertedLayout ? 2 : 0
+
                 LayoutItemProxy {
                     id: headerBackgroundProxy
                     anchors.fill: parent
@@ -216,19 +240,25 @@ SwipeView {
                     }
                 }
             }
+
+            // Central
             LayoutItemProxy {
                 id: centerPanelProxy
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.topMargin: statusToolBar.height - headerBackgroundProxy.height
+                Layout.row: 1
                 implicitHeight: centerPanel ? centerPanel.implicitHeight : 0
                 implicitWidth: centerPanel ? centerPanel.implicitWidth : 0
             }
+
+            // Footer
             LayoutItemProxy {
                 id: footerProxy
                 Layout.fillWidth: true
-                Layout.preferredHeight: footer ? footer.implicitHeight : 0
-                Layout.alignment: Qt.AlignBottom
+                Layout.preferredHeight: visible ? implicitHeight : 0
+                Layout.row: root.invertedLayout ? 0 : 2
+
+                visible: root.showFooter && !!target
             }
         }
     }
@@ -254,6 +284,7 @@ SwipeView {
 
     component BaseToolBar: StatusToolBar {
         visible: root.showHeader
+        padding: root.headerPadding
         backButtonVisible: root.currentIndex !== 0
         onBackButtonClicked: d.handleBackAction() 
     }

@@ -33,6 +33,11 @@ Page {
                 text: "Show Right Panel"
                 checked: true
             }
+            CheckBox {
+                id: inverted
+                text: "Inverted"
+                checked: true
+            }
             Button {
                 text: "Next Panel"
                 onClicked: sectionLayout.goToNextPanel()
@@ -133,6 +138,7 @@ Page {
             clip: true
             implicitWidth: 800
             implicitHeight: 400
+            invertedLayout: inverted.checked
             leftPanel: leftPanelCheckBox.checked ? leftPanel : null
             centerPanel: centerPanelCheckBox.checked ? centerPanel : null
             rightPanel: rightPanel
