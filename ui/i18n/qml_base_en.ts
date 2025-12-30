@@ -8964,6 +8964,10 @@ L2 fee: %2</source>
 <context>
     <name>KeycardChannelDrawer</name>
     <message>
+        <source>Ready to scan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Please tap your Keycard to the back of your device</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8992,11 +8996,23 @@ L2 fee: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Dismiss</source>
+        <source>Keycard Not Supported</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ready to scan</source>
+        <source>Your device does not support keycard operations. Please try again with a different device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard Not Available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please enable NFC on your device to use the Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dismiss</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
