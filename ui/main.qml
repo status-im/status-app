@@ -681,6 +681,9 @@ Window {
         sourceComponent: KeycardChannelDrawer {
             id: keycardChannelDrawer
             currentState: applicationWindow.keycardStateStore.state
+            onDismissed: {
+                applicationWindow.keycardStateStore.keycardDismissed()
+            }
         }
     }
 

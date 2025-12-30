@@ -18,11 +18,11 @@ QtObject {
     // ============================================================
     
     /// Input: Backend state from the keycard system
-    /// Expected values: "idle", "waiting-for-keycard", "reading", "error"
+    /// Expected values: "idle", "waiting-for-keycard", "reading", "error", "not-supported", "not-available"
     property string backendState: Constants.keycardChannelState.idle
     
     /// Output: Current display state for the UI
-    /// Values: "", "waiting-for-card", "reading", "success", "error"
+    /// Values: "", "waiting-for-card", "reading", "success", "error", "not-supported", "not-available"
     readonly property string displayState: d.displayState
     
     /// Configuration: Minimum time to show each state (ms)
@@ -38,6 +38,8 @@ QtObject {
     readonly property string stateReading: Constants.keycardChannelState.reading
     readonly property string stateError: Constants.keycardChannelState.error
     readonly property string stateWaitingForCard: Constants.keycardChannelState.waitingForKeycard
+    readonly property string stateNotSupported: Constants.keycardChannelState.notSupported
+    readonly property string stateNotAvailable: Constants.keycardChannelState.notAvailable
     
     /// Signals
     signal readyToOpen()   // Drawer should open
@@ -75,6 +77,10 @@ QtObject {
                         return stateSuccess
                     }
                     return stateIdle
+                case Constants.keycardChannelState.notSupported:
+                    return stateNotSupported
+                case Constants.keycardChannelState.notAvailable:
+                    return stateNotAvailable
                 default:
                     return stateIdle
             }

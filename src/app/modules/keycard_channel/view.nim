@@ -31,6 +31,9 @@ QtObject:
     write = setKeycardChannelState
     notify = keycardChannelStateChanged
 
+  proc keycardDismissed*(self: View) {.slot.} =
+    self.setKeycardChannelState("")
+
   proc setup(self: View) =
     self.QObject.setup
 

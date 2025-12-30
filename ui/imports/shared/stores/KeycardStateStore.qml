@@ -8,6 +8,10 @@ QtObject {
 
     // Channel state property
     readonly property string state: keycardChannelModuleInst ? keycardChannelModuleInst.keycardChannelState : Constants.keycardChannelState.idle
+
+    function keycardDismissed() {
+        keycardChannelModuleInst.keycardDismissed()
+    }
 }
 
 
