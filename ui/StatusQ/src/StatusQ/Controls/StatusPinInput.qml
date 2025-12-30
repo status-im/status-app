@@ -105,9 +105,9 @@ Item {
     /*!
        \qmlproperty flags StatusPinInput::inputMethodHints
        This property allows you to customize the input method hints for the virtual keyboard.
-       The default value is Qt.ImhNone which allows any input based on the validator.
+       The default value is Qt.ImhDigitsOnly which allows only digits input.
     */
-    property int inputMethodHints: Qt.ImhNone
+    property int inputMethodHints: Qt.ImhDigitsOnly
 
     signal pinEditedManually()
 
@@ -166,9 +166,6 @@ Item {
     */
     function forceFocus() {
         inputText.forceActiveFocus()
-        if (Qt.inputMethod.visible == false) {
-            Qt.inputMethod.show()
-        }
         d.activateBlink()
     }
 
@@ -223,7 +220,7 @@ Item {
         opacity: 0
         maximumLength: root.pinLen
         inputMethodHints: root.inputMethodHints
-        // validator: d.statusValidator.validatorObj
+        validator: d.statusValidator.validatorObj
         onTextChanged: {
             // Modify state of current introduced character position:
             if(text.length >= (d.currentPinIndex + 1)) {
