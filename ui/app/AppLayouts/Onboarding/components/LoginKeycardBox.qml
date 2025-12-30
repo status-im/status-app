@@ -6,6 +6,7 @@ import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Controls.Validators
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 
 import AppLayouts.Onboarding.enums
 import AppLayouts.Onboarding.controls
@@ -32,6 +33,8 @@ Control {
     signal unblockWithPukRequested()
 
     signal loginRequested(string pin)
+
+    signal keycardRequested()
 
     function clear() {
         d.wrongPin = false
@@ -82,10 +85,19 @@ Control {
             elide: Text.ElideRight
             color: Theme.palette.baseColor1
             linkColor: hoveredLink ? Theme.palette.hoverColor(color) : color
+            visible: text !== ""
             HoverHandler {
                 cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
             }
             onLinkActivated: root.detailedErrorPopupRequested()
+        }
+
+        StatusButton {
+            Layout.fillWidth: true
+            id: scanKeycardButton
+            text: qsTr("Scan keycard")
+            visible: SQUtils.Utils.isMobile
+            onClicked: root.keycardRequested()
         }
         Column {
             id: lockedButtons
@@ -124,6 +136,11 @@ Control {
                 d.wrongPin = false
                 root.pinEditedManually()
             }
+            onVisibleChanged: {
+                if (visible) {
+                    pinInputField.forceFocus()
+                }
+            }
         }
     }
 
@@ -131,7 +148,7 @@ Control {
         // normal/intro states
         State {
             name: "plugin"
-            when: root.keycardState === Onboarding.KeycardState.PluginReader
+            when: root.keycardState === Onboarding.KeycardState.PluginReader && !SQUtils.Utils.isMobile
             PropertyChanges {
                 target: infoText
                 text: qsTr("Plug in Keycard reader...")
@@ -139,7 +156,7 @@ Control {
         },
         State {
             name: "insert"
-            when: root.keycardState === Onboarding.KeycardState.InsertKeycard
+            when: root.keycardState === Onboarding.KeycardState.InsertKeycard && !SQUtils.Utils.isMobile
             PropertyChanges {
                 target: infoText
                 text: qsTr("Insert your Keycard...")
@@ -147,7 +164,7 @@ Control {
         },
         State {
             name: "reading"
-            when: root.keycardState === Onboarding.KeycardState.ReadingKeycard
+            when: root.keycardState === Onboarding.KeycardState.ReadingKeycard && !SQUtils.Utils.isMobile
             PropertyChanges {
                 target: infoText
                 text: qsTr("Reading Keycard...")
@@ -160,7 +177,7 @@ Control {
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
-                text: qsTr("Oops this isn't a Keycard.<br>Remove card and insert a Keycard.")
+                text: qsTr("Oops this isn't a Keycard.<br>Try using a Keycard instead.")
             }
         },
         State {
@@ -169,18 +186,31 @@ Control {
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
-                text: qsTr("Wrong Keycard for this profile inserted")
+                text: qsTr("Wrong Keycard for this profile")
+            }
+            PropertyChanges {
+                target: scanKeycardButton
+                visible: SQUtils.Utils.isMobile
             }
         },
         State {
             name: "genericError"
-            when: root.keycardState === -1 ||
+            when: (root.keycardState === -1 ||
                   root.keycardState === Onboarding.KeycardState.NoPCSCService ||
-                  root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached // TODO add a generic/fallback keycard error here too
+                  root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached ) && !SQUtils.Utils.isMobile// TODO add a generic/fallback keycard error here too
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
                 text: qsTr("Issue detecting Keycard.<br>Remove and re-insert reader and Keycard.")
+            }
+        },
+        State {
+            name: "maxPairingSlotsReached"
+            when: root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached && SQUtils.Utils.isMobile
+            PropertyChanges {
+                target: infoText
+                color: Theme.palette.dangerColor1
+                text: qsTr("Max pairing slots reached.")
             }
         },
         State {
@@ -203,7 +233,11 @@ Control {
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
-                text: qsTr("The inserted Keycard is empty.<br>Insert the correct Keycard for this profile.")
+                text: qsTr("The scanned Keycard is empty.<br>Use the correct Keycard for this profile.")
+            }
+            PropertyChanges {
+                target: scanKeycardButton
+                visible: SQUtils.Utils.isMobile
             }
         },
         State {
@@ -228,7 +262,7 @@ Control {
         // exit states
         State {
             name: "notEmpty"
-            when: root.keycardState === Onboarding.KeycardState.NotEmpty && !d.wrongPin
+            when: root.keycardState === Onboarding.KeycardState.NotEmpty && !d.wrongPin 
             PropertyChanges {
                 target: infoText
                 text: qsTr("Enter Keycard PIN")
@@ -241,11 +275,6 @@ Control {
             PropertyChanges {
                 target: background
                 border.color: Theme.palette.primaryColor1
-            }
-            StateChangeScript {
-                script: {
-                    pinInputField.forceFocus()
-                }
             }
             PropertyChanges {
                 target: touchIdIcon
