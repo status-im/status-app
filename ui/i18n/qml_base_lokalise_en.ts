@@ -10971,14 +10971,29 @@
       <translation>An error occurred. Please try again.</translation>
     </message>
     <message>
+      <source>Keycard Not Supported</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Keycard Not Supported</translation>
+    </message>
+    <message>
+      <source>Your device does not support keycard operations. Please try again with a different device.</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Your device does not support keycard operations. Please try again with a different device.</translation>
+    </message>
+    <message>
+      <source>Keycard Not Available</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Keycard Not Available</translation>
+    </message>
+    <message>
+      <source>Please enable NFC on your device to use the Keycard.</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Please enable NFC on your device to use the Keycard.</translation>
+    </message>
+    <message>
       <source>Dismiss</source>
       <comment>KeycardChannelDrawer</comment>
       <translation>Dismiss</translation>
-    </message>
-    <message>
-      <source>Ready to scan</source>
-      <comment>KeycardChannelDrawer</comment>
-      <translation>Ready to scan</translation>
     </message>
   </context>
   <context>

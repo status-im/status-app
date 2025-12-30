@@ -8971,11 +8971,23 @@ L2 수수료: %2</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Dismiss</source>
+        <source>Keycard Not Supported</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ready to scan</source>
+        <source>Your device does not support keycard operations. Please try again with a different device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard Not Available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please enable NFC on your device to use the Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dismiss</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
