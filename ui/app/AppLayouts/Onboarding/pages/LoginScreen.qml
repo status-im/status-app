@@ -105,12 +105,6 @@ OnboardingPage {
         readonly property int loginModelCount: root.loginAccountsModel.ModelCount.count
         onLoginModelCountChanged: setSelectedLoginUser()
 
-        onCurrentProfileIsKeycardChanged: {
-            if (d.currentProfileIsKeycard) {
-                root.keycardRequested()
-            }
-        }
-
         function setSelectedLoginUser() {
             if (loginModelCount > 0) {
                 loginUserSelector.setSelection(d.settings.lastKeyUid)
@@ -297,6 +291,7 @@ OnboardingPage {
                 onDetailedErrorPopupRequested: detailedErrorPopupComp.createObject(root, {detailedError: loginError}).open()
                 onBiometricsRequested: root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
                 onLoginRequested: (pin) => d.doKeycardLogin(pin)
+                onKeycardRequested: root.keycardRequested()
             }
 
             Item { Layout.fillHeight: true }
