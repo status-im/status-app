@@ -127,6 +127,30 @@ StatusDialog {
                         isError: true
                         showLoading: false
                     }
+                },
+                State {
+                    name: "not-supported"
+                    when: stateManager.displayState === stateManager.stateNotSupported
+                    PropertyChanges {
+                        target: stateDisplay
+                        iconSource: Assets.png("onboarding/status_generate_keys")
+                        title: qsTr("Keycard Not Supported")
+                        description: qsTr("Your device does not support keycard operations. Please try again with a different device.")
+                        isError: true
+                        showLoading: false
+                    }
+                },
+                State {
+                    name: "not-available"
+                    when: stateManager.displayState === stateManager.stateNotAvailable
+                    PropertyChanges {
+                        target: stateDisplay
+                        iconSource: Assets.png("onboarding/status_generate_keys")
+                        title: qsTr("Keycard Not Available")
+                        description: qsTr("Please enable NFC on your device to use the Keycard.")
+                        isError: true
+                        showLoading: false
+                    }
                 }
             ]
         }
@@ -142,7 +166,6 @@ StatusDialog {
             type: StatusButton.Type.Normal
             
             onClicked: {
-                stateManager.clearAndClose()
                 root.dismissed()
             }
         }

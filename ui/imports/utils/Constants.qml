@@ -1445,6 +1445,8 @@ QtObject {
         readonly property string waitingForKeycard: "waiting-for-keycard"
         readonly property string reading: "reading"
         readonly property string error: "error"
+        readonly property string notSupported: "not-supported"
+        readonly property string notAvailable: "not-available"
     }
 
 }
