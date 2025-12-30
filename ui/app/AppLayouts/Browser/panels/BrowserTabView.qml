@@ -17,8 +17,7 @@ FocusScope {
 
     property alias currentIndex: tabBar.currentIndex
     readonly property alias count: tabBar.count
-    required property bool thirdpartyServicesEnabled
-    required property bool currentTabIcognito
+    required property bool currentTabIncognito
 
     property var fnGetWebView: (index) => {}
 
@@ -27,6 +26,38 @@ FocusScope {
 
     signal openNewTabTriggered()
     signal removeView(int index)
+
+    function createEmptyTab(createAsStartPage = false, focusOnNewTab = true, webview = undefined) {
+        const tabTitle = Qt.binding(function() {
+            var tabTitle = ""
+            if (webview && webview.title) {
+                tabTitle = webview.title
+            }
+            else if (createAsStartPage) {
+                tabTitle = qsTr("Start Page")
+            } else {
+                tabTitle = qsTr("New Tab")
+            }
+
+            return SQUtils.StringUtils.escapeHtml(tabTitle);
+        })
+
+        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle})
+        tabBar.addItem(newTabButton)
+
+        if (focusOnNewTab) {
+            tabBar.currentIndex = tabBar.count - 1
+        }
+    }
+
+    function createDownloadTab() {
+        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle: qsTr("Downloads Page")})
+        tabBar.addItem(newTabButton);
+    }
+
+    function removeTab(index) {
+        tabBar.removeItem(tabBar.itemAt(index))
+    }
 
     QtObject {
         id: d
@@ -46,7 +77,7 @@ FocusScope {
         anchors.right: parent.right
         height: root.tabHeight
         background: Rectangle {
-            color: root.currentTabIcognito ?
+            color: root.currentTabIncognito ?
                        Theme.palette.privacyColors.secondary:
                        Theme.palette.statusAppNavBar.backgroundColor
         }
@@ -81,45 +112,6 @@ FocusScope {
         visible: d.tabBarOverflowing
     }
 
-    function createEmptyTab(createAsStartPage = false, focusOnNewTab = true, url = undefined, webview) {
-        const tabTitle = Qt.binding(function() {
-            var tabTitle = ""
-            if (webview.title) {
-                tabTitle = webview.title
-            } else if (createAsStartPage) {
-                tabTitle = qsTr("Start Page")
-            } else {
-                tabTitle = qsTr("New Tab")
-            }
-
-            return SQUtils.StringUtils.escapeHtml(tabTitle);
-        })
-
-        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle})
-        tabBar.addItem(newTabButton);
-
-        if (createAsStartPage && root.thirdpartyServicesEnabled) {
-            webview.url = Constants.browserDefaultHomepage
-        } else if (url !== undefined) {
-            webview.url = url;
-        } else if (localAccountSensitiveSettings.browserHomepage !== "") {
-            webview.url = determineRealURL(localAccountSensitiveSettings.browserHomepage)
-        }
-
-        if (focusOnNewTab) {
-            tabBar.setCurrentIndex(tabBar.count - 1);
-        }
-    }
-
-    function createDownloadTab() {
-        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle: qsTr("Downloads Page")})
-        tabBar.addItem(newTabButton);
-    }
-
-    function removeTab(index) {
-        tabBar.removeItem(tabBar.itemAt(index))
-    }
-
     component AddTabButton: Rectangle {
         color: StatusColors.transparent
         width: d.tabHeight
@@ -129,8 +121,8 @@ FocusScope {
             anchors.margins: 4
             radius: Theme.radius
             icon.name: "add"
-            incognitoMode: root.currentTabIcognito
-            hoverColor: root.currentTabIcognito ?
+            incognitoMode: root.currentTabIncognito
+            hoverColor: root.currentTabIncognito ?
                             Theme.palette.privacyColors.primary:
                             Theme.palette.indirectColor1
             onClicked: root.openNewTabTriggered()

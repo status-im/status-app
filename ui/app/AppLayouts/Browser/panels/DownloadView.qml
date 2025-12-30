@@ -1,4 +1,5 @@
 import QtQuick
+import QtWebEngine
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -16,7 +17,6 @@ Rectangle {
 
     signal openDownloadClicked(bool downloadComplete, int index)
 
-    z: 54
     color: Theme.palette.background
 
     StatusListView {

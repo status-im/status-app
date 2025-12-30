@@ -17,7 +17,6 @@ Rectangle {
 
     signal setCurrentWebUrl(url url)
 
-    z: 54
     color: Theme.palette.background
 
     Image {

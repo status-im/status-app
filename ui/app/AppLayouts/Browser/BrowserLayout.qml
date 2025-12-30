@@ -73,7 +73,7 @@ StatusSectionLayout {
         id: _internal
 
         property Item currentWebView: tabs.currentIndex < tabs.count ? webStackView.getCurrentWebView() : null
-        readonly property bool currentTabIcognito: webStackView.getCurrentWebView()?.profile?.offTheRecord ?? false
+        readonly property bool currentTabIncognito: webStackView.getCurrentWebView()?.profile?.offTheRecord ?? false
 
         property Component jsDialogComponent: JSDialogWindow {}
 
@@ -81,9 +81,9 @@ StatusSectionLayout {
             browserRootStore: root.browserRootStore
             browserWalletStore: root.browserWalletStore
 
-            parent: browserWindow
-            x: browserWindow.width - width - Theme.halfPadding
-            y: browserWindow.y + browserHeader.height + Theme.halfPadding
+            parent: mainView
+            x: mainView.width - width - Theme.halfPadding
+            y: mainView.y + browserHeader.height + Theme.halfPadding
         }
 
         property Component sendTransactionModalComponent: SendModal {
@@ -129,15 +129,14 @@ StatusSectionLayout {
             downloadBar.active = true
 
             // close the tab launched only for starting download
-            var downloadView = download.view
-            if (!downloadView)
+            if (!download.view)
                 return
 
             // find tab for this view
             for (var i = 0; i < tabs.count; ++i) {
                 var tab = webStackView.getWebView(i)
                 // close the “download-only” tab
-                if (tab === downloadView &&
+                if (tab === download.view &&
                         !tab.htmlPageLoaded &&
                         tab.title === "") {
                     webStackView.removeView(i)
@@ -167,8 +166,7 @@ StatusSectionLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: 44
 
-            currentTabIcognito: _internal.currentTabIcognito
-            thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+            currentTabIncognito: _internal.currentTabIncognito
             determineRealURL: function(url) {
                 return _internal.determineRealURL(url)
             }
@@ -295,7 +293,7 @@ StatusSectionLayout {
     }
 
     centerPanel: ColumnLayout {
-        id: browserWindow
+        id: mainView
 
         StackLayout {
             id: webStackView
@@ -305,11 +303,21 @@ StatusSectionLayout {
             Layout.fillWidth: true
 
             function createEmptyTab(profile, createAsStartPage = false, focusOnNewTab = true, url = undefined) {
-                createAsStartPage = createAsStartPage || webStackView.count === 1
-                const isEmptyPage = (!createAsStartPage && !url)
-                var webview = webViewContainer.createObject(webStackView, {isEmptyPage: isEmptyPage}).currentView
+                focusOnNewTab = focusOnNewTab && !createAsStartPage
+
+                var webview = webViewContainer.createObject(webStackView).currentView
                 webview.profile = profile
-                tabs.createEmptyTab(createAsStartPage, focusOnNewTab, url, webview)
+
+                tabs.createEmptyTab(createAsStartPage, focusOnNewTab, webview)
+
+                if (createAsStartPage && root.thirdpartyServicesEnabled) {
+                    webview.url = Constants.browserDefaultHomepage
+                } else if (url !== undefined) {
+                    webview.url = url;
+                } else if (!!localAccountSensitiveSettings.browserHomepage) {
+                    webview.url = _internal.determineRealURL(localAccountSensitiveSettings.browserHomepage)
+                }
+
                 return webview;
             }
 
@@ -335,8 +343,7 @@ StatusSectionLayout {
                 tabs.removeTab(index)
                 var view = getWebView(index)
                 view.stop()
-                view.parent = null // reparent to null first to prevent a crash
-                view.destroy()
+                webStackView.children[index].destroy()
             }
         }
 
@@ -409,6 +416,7 @@ StatusSectionLayout {
                            }
 
             // TODO: refactor this
+            // https://github.com/status-im/status-app/issues/19669
             Rectangle {
                 id: statusBubble
                 color: Theme.palette.baseColor2

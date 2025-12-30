@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtWebEngine
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -7,6 +8,7 @@ import StatusQ.Core.Theme
 import AppLayouts.Browser.popups
 
 // TODO: Add WebView in this file for mobile platform
+// https://github.com/status-im/status-app/issues/19668
 Item {
     id: root
 
@@ -20,7 +22,6 @@ Item {
     property var downloadViewComponent
     property var emptyPageComponent
     property bool isDownloadView
-    property bool isEmptyPage
 
     signal showFindBar(int numberOfMatches, int activeMatch)
     signal resetFindBar()
@@ -28,10 +29,6 @@ Item {
     signal showSslDialog(var error)
     signal showJsDialogComponent(var request)
     signal linkHovered(var hoveredUrl)
-
-    QtObject {
-        id: d
-    }
 
     Loader {
         id: webContainerLoader
@@ -43,8 +40,9 @@ Item {
     Loader {
         id: downloadViewLoader
         anchors.fill: parent
-        active: root.isDownloadView ||
-                root.isEmptyPage
+        z: active ? 54: 0
+        active: (root.isDownloadView && !root.currentView.url.toString()) ||
+                !root.currentView.url.toString()
         sourceComponent: root.isDownloadView ?
                              root.downloadViewComponent:
                              root.emptyPageComponent
