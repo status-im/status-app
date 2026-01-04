@@ -9,7 +9,7 @@ def isPRBuild = utils.isPRBuild()
 pipeline {
   /* This way we run the same Jenkinsfile on different platforms. */
   agent {
-    label "${getAgentLabels().join(' && ')} && qt-${QT_VERSION} && go-1.24 && xcode-16.2"
+    label "${getAgentLabels().join(' && ')} && qt-${QT_VERSION} && go-1.24 && xcode-26.4"
   }
 
   parameters {

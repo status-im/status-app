@@ -22,7 +22,7 @@ if [[ "$OS" == "ios" ]]; then
     COMMON_CMAKE_CONFIG+=(
         -DCMAKE_OSX_ARCHITECTURES:STRING="$ARCH"
         -DCMAKE_OSX_SYSROOT="$SDK"
-        -DCMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET=12.0
+        -DCMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET=26.0
     )
 elif [[ "$OS" == "android" ]]; then
     if [[ "$ARCH" == "arm64" ]]; then

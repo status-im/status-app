@@ -8,7 +8,7 @@ def isPRBuild = utils.isPRBuild()
 
 pipeline {
 
-  agent { label "macos && arm64 && nix-2.24 && xcode-16.2 && qt-${QT_VERSION}" }
+  agent { label "macos && arm64 && nix-2.24 && xcode-26.4 && qt-${QT_VERSION}" }
 
   parameters {
     booleanParam(

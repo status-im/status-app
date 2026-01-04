@@ -150,13 +150,13 @@ platform :ios do
     # https://github.com/fastlane/fastlane/blob/512a047abd596a5c2c0e0156e9f52e111552a727/sigh/lib/assets/resign.sh#L177C1-L177C9
     FileUtils.rm_rf("_floatsignTemp")
 
-    # Call resign.sh directly with /bin/bash instead of using the resign action
-    # Ruby backticks use /bin/sh which doesn't support bash process substitution < <(...)
-    # that resign.sh uses for processing nested apps/extensions
+    # Invoke resign.sh via /bin/bash directly: fastlane's `resign` action runs it through
+    # Ruby backticks (/bin/sh), which doesn't support the `< <(...)` process substitution
+    # resign.sh uses for nested apps/extensions.
     resign_sh = File.join(Sigh::ROOT, 'lib', 'assets', 'resign.sh')
 
     # Extract entitlements from provisioning profile and modify NFC entitlement
-    # This fixes "NDEF is disallowed" error with Xcode 16+ / SDK 18.x
+    # This fixes "NDEF is disallowed" error,
     # We remove NDEF from com.apple.developer.nfc.readersession.formats (keep TAG and PACE)
     require 'tempfile'
     entitlements_file = Tempfile.new(['entitlements', '.plist'])

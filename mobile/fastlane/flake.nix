@@ -40,6 +40,17 @@
               export PATH="$GEM_HOME/bin:$PATH"
               export LANG="en_US.UTF-8"
 
+              unset BUNDLE_PATH
+              unset BUNDLE_GEMFILE
+
+              echo "Ruby $(ruby --version)"
+              echo "Bundler $(bundle --version)"
+              echo ""
+              echo "Installing fastlane dependencies..."
+              # Build native gem extensions against nix's apple-sdk, NOT host Xcode.
+              # Host Xcode 26 SDK headers break Ruby 3.1's mkmf probes.
+              ( unset DEVELOPER_DIR SDKROOT; bundle install )
+
               export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
 
               # fastlane resign needs xcode tools in shell
@@ -48,15 +59,6 @@
                 ln -sf /usr/bin/$tool "$XCODE_WRAPPER_DIR/$tool" 2>/dev/null || true
               done
               export PATH="$XCODE_WRAPPER_DIR:$PATH"
-
-              unset BUNDLE_PATH
-              unset BUNDLE_GEMFILE
-
-              echo "Ruby $(ruby --version)"
-              echo "Bundler $(bundle --version)"
-              echo ""
-              echo "Installing fastlane dependencies..."
-              bundle install
             '';
           };
         }
