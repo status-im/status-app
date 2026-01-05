@@ -303,7 +303,7 @@ SettingsContentBase {
                     if (error) {
                         pairDeviceDialog.confirmationText = qsTr("Error pairing device: %1").arg(error)
                     } else {
-                        Global.closePopup()
+                        pairDeviceDialog.close()
                     }
                 }
             }
@@ -324,7 +324,7 @@ SettingsContentBase {
                     if (error) {
                         unpairDeviceDialog.confirmationText = qsTr("Error unpairing device: %1").arg(error)
                     } else {
-                        Global.closePopup()
+                        unpairDeviceDialog.close()
                     }
                 }
             }
@@ -345,7 +345,7 @@ SettingsContentBase {
                     if (error) {
                         deleteDeviceDialog.confirmationText = qsTr("Error deleting device: %1").arg(error)
                     } else {
-                        Global.closePopup()
+                        deleteDeviceDialog.close()
                     }
                 }
             }
