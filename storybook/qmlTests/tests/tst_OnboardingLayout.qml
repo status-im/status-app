@@ -1509,5 +1509,62 @@ Item {
             // Verify keycardRequested signal was NOT emitted throughout the password flow
             compare(keycardRequestedSpy.count, 0)
         }
+
+        function test_loginScreen_deleteProfile_data() {
+            return [{ tag: "delete profile" }] // dummy to skip global data, and run just once
+        }
+
+        function test_loginScreen_deleteProfile(data) {
+            verify(!!controlUnderTest)
+            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+
+            const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
+            verify(!!page)
+
+            const onboardingFlow = findChild(controlUnderTest, "onboardingFlow")
+            verify(!!onboardingFlow)
+
+            const loginUserSelector = findChild(page, "loginUserSelector")
+            verify(!!loginUserSelector)
+            mouseClick(loginUserSelector)
+
+            const dropdown = findChild(loginUserSelector, "dropdown")
+            verify(!!dropdown)
+            tryCompare(dropdown, "opened", true)
+
+            const menuDelegate = findChild(dropdown, "manageProfilesDelegate")
+            verify(!!menuDelegate)
+            dynamicSpy.setup(page, "onboardingManageProfilesFlowRequested")
+            mouseClick(menuDelegate)
+            tryCompare(dynamicSpy, "count", 1)
+
+            // Manage profile dialog
+            const manageProfilesDialog = findChild(controlUnderTest, "manageProfilesDialog")
+            verify(!!manageProfilesDialog)
+            tryVerify( () => manageProfilesDialog.opened)
+
+            const manageProfilesListView = findChild(manageProfilesDialog, "manageProfilesListView")
+            verify(!!manageProfilesListView)
+
+            const profileDelegate = findChild(manageProfilesListView, "manageProfilesDelegate-uid_3")
+            verify(!!profileDelegate)
+
+            const deleteButton = findChild(profileDelegate, "deleteProfileButton")
+            verify(!!deleteButton)
+            dynamicSpy.setup(profileDelegate, "deleteProfileRequested")
+            mouseClick(deleteButton)
+            tryCompare(dynamicSpy, "count", 1)
+
+            // Confirmation dialog
+            const deleteMultiaccountConfirmationDialog = findChild(controlUnderTest, "deleteMultiaccountConfirmationDialog")
+            verify(!!deleteMultiaccountConfirmationDialog)
+            tryVerify( () => deleteMultiaccountConfirmationDialog.opened)
+
+            const confirmDeleteButton = findChild(deleteMultiaccountConfirmationDialog, "confirmDeleteMultiaccountBtn")
+            verify(!!confirmDeleteButton)
+            dynamicSpy.setup(onboardingFlow, "deleteMultiaccountRequested")
+            mouseClick(confirmDeleteButton)
+            tryCompare(dynamicSpy, "count", 1)
+        }
     }
 }

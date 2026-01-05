@@ -148,6 +148,7 @@ Page {
 
     OnboardingFlow {
         id: onboardingFlow
+        objectName: "onboardingFlow"
 
         anchors.fill: parent
 

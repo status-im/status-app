@@ -623,6 +623,8 @@ OnboardingStackView {
             property string keyUid
             property string username
 
+            objectName: "deleteMultiaccountConfirmationDialog"
+            confirmButtonObjectName: "confirmDeleteMultiaccountBtn"
             destroyOnClose: true
             headerSettings.title: qsTr("Remove %1 profile").arg(username)
             confirmationText: qsTr("If you remove %1, all data for this profile will be deleted from this device. To use this profile again, you'll need to reimport it to this device.").arg(username)
@@ -643,6 +645,7 @@ OnboardingStackView {
         StatusDialog {
             implicitWidth: 480
             title: qsTr("Manage profiles")
+            objectName: "manageProfilesDialog"
             destroyOnClose: true
             leftPadding: 0
             rightPadding: 0
@@ -652,6 +655,7 @@ OnboardingStackView {
 
 
                 StatusListView {
+                    objectName: "manageProfilesListView"
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     model: SortFilterProxyModel {
