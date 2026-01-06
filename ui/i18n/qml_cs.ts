@@ -8215,10 +8215,6 @@ L2 poplatek: %2</translation>
         <translation>Sdílet data o používání</translation>
     </message>
     <message>
-        <source>Not now</source>
-        <translation>Teď ne</translation>
-    </message>
-    <message>
         <source>Got it</source>
         <translation>Rozumím</translation>
     </message>
@@ -8253,6 +8249,10 @@ L2 poplatek: %2</translation>
     <message>
         <source>Privacy Policy</source>
         <translation>Zásady ochrany osobních údajů</translation>
+    </message>
+    <message>
+        <source>Skip sharing</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

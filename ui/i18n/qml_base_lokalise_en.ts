@@ -9981,11 +9981,6 @@
       <translation>Share usage data</translation>
     </message>
     <message>
-      <source>Not now</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Not now</translation>
-    </message>
-    <message>
       <source>Got it</source>
       <comment>HelpUsImproveStatusPage</comment>
       <translation>Got it</translation>
@@ -10029,6 +10024,11 @@
       <source>Privacy Policy</source>
       <comment>HelpUsImproveStatusPage</comment>
       <translation>Privacy Policy</translation>
+    </message>
+    <message>
+      <source>Skip sharing</source>
+      <comment>HelpUsImproveStatusPage</comment>
+      <translation>Skip sharing</translation>
     </message>
   </context>
   <context>

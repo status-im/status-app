@@ -8160,10 +8160,6 @@ L2 수수료: %2</translation>
         <translation>사용 데이터 공유</translation>
     </message>
     <message>
-        <source>Not now</source>
-        <translation>지금은 아니요</translation>
-    </message>
-    <message>
         <source>Got it</source>
         <translation>확인했습니다</translation>
     </message>
@@ -8198,6 +8194,10 @@ L2 수수료: %2</translation>
     <message>
         <source>Privacy Policy</source>
         <translation>개인 정보 보호 정책</translation>
+    </message>
+    <message>
+        <source>Skip sharing</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

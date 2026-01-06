@@ -8188,10 +8188,6 @@ Tarifa L2: %2</translation>
         <translation>Compartir datos de uso</translation>
     </message>
     <message>
-        <source>Not now</source>
-        <translation>Ahora no</translation>
-    </message>
-    <message>
         <source>Got it</source>
         <translation>Entendido</translation>
     </message>
@@ -8226,6 +8222,10 @@ Tarifa L2: %2</translation>
     <message>
         <source>Privacy Policy</source>
         <translation>Política de privacidad</translation>
+    </message>
+    <message>
+        <source>Skip sharing</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -61,7 +61,7 @@ OnboardingPage {
                 objectName: "btnDontShare"
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 320
-                text: qsTr("Not now")
+                text: qsTr("Skip sharing")
                 isOutline: true
                 onClicked: root.shareUsageDataRequested(false)
             }
