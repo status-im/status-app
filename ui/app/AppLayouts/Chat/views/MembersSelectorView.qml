@@ -80,16 +80,25 @@ MembersSelectorBase {
 
         property ListModel selectedMembers: ListModel {}
 
+        property bool waitingForContactDetails: false
+
         property var sharedContactModelEntryLoader: Loader {
             property string publicKey: ""
 
             active: false
 
             sourceComponent: ContactModelEntry {
+                id: contactModelEntry
                 publicKey: d.sharedContactModelEntryLoader.publicKey
                 contactsModel: root.allContactsModel
                 onPopulateContactDetailsRequested: {
                     root.populateContactDetails(d.sharedContactModelEntryLoader.publicKey)
+                }
+                onContactDetailsPopulated: {
+                    if (d.waitingForContactDetails) {
+                        d.waitingForContactDetails = false
+                        d.processContactDetails(contactModelEntry.contactDetails)
+                    }
                 }
             }
         }
@@ -126,19 +135,28 @@ MembersSelectorBase {
         }
 
         function processContact(publicKey) {
+            if (!publicKey) {
+                root.suggestionsDialog.forceHide = false
+                return
+            }
+
             let fullPubkey = publicKey
             if (root.utilsStore.isCompressedPubKey(fullPubkey)) {
                 fullPubkey = root.utilsStore.getDecompressedPk(publicKey)
             }
             const contactEntry = d.getContactModelEntry(fullPubkey)
-            const contactDetails = contactEntry.contactDetails
 
-            if (contactDetails.publicKey === "") {
-                // not a valid key given
-                root.suggestionsDialog.forceHide = false
+            if (!contactEntry.available) {
+                // Waiting for contact details to be populated
+                d.waitingForContactDetails = true
                 return
             }
 
+            const contactDetails = contactEntry.contactDetails
+            processContactDetails(contactDetails)
+        }
+
+        function processContactDetails(contactDetails) {
             if (contactDetails.isContact) {
                 // Is a contact, we add their name to the list
                 root.pastedChatKey = contactDetails.publicKey

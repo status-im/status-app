@@ -12,13 +12,21 @@ QObject {
 
     required property string publicKey
     required property var contactsModel
+    readonly property bool available: itemData.item !== null
 
     signal populateContactDetailsRequested()
+    signal contactDetailsPopulated()
 
     onPublicKeyChanged: {
         if (root.publicKey && contactsModel && !contactsModel.hasUser(root.publicKey)) {
             // Fetch contact details
             root.populateContactDetailsRequested()
+        }
+    }
+
+    onAvailableChanged: {
+        if (available) {
+            root.contactDetailsPopulated()
         }
     }
 
