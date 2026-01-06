@@ -8215,10 +8215,6 @@ L2 poplatek: %2</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Not now</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Got it</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8252,6 +8248,10 @@ L2 poplatek: %2</translation>
     </message>
     <message>
         <source>Privacy Policy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skip sharing</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

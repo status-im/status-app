@@ -8187,10 +8187,6 @@ L2 fee: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Not now</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Got it</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8224,6 +8220,10 @@ L2 fee: %2</source>
     </message>
     <message>
         <source>Privacy Policy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Skip sharing</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
