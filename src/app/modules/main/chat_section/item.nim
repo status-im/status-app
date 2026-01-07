@@ -1,4 +1,4 @@
-import stew/shims/strformat, json
+import std/strformat, json
 
 import ../../../../app_service/common/types
 import ../../../../app_service/service/contacts/dto/contacts

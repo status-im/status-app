@@ -1,4 +1,4 @@
-import nimqml, tables, strutils, stew/shims/strformat
+import nimqml, tables, strutils, std/strformat
 import ../../../../../app_service/service/wallet_account/service as wallet_account_service
 
 type

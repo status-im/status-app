@@ -1,4 +1,4 @@
-import stew/shims/strformat
+import std/strformat
 import json_serialization
 
 type MarketItem* = ref object of RootObj

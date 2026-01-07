@@ -1,4 +1,4 @@
-import times, stew/shims/strformat
+import times, std/strformat
 
 #################################################
 # Async load transactions

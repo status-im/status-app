@@ -1,6 +1,6 @@
 import
   std/[json, net, sequtils, strutils, times, unicode],
-  stew/shims/strformat,
+  std/strformat,
   stew/byteutils,
   json_serialization,
   stint

@@ -1,6 +1,6 @@
 {.used.}
 
-import json, stew/shims/strformat, strutils
+import json, std/strformat, strutils
 
 include ../../../common/json_utils
 include ../../../common/utils

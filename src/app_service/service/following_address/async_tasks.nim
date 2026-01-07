@@ -2,7 +2,7 @@ include app_service/common/json_utils
 include app/core/tasks/common
 
 import backend/following_addresses
-import stew/shims/strformat
+import std/strformat
 import chronicles
 
 logScope:

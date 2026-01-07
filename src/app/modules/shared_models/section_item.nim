@@ -1,4 +1,4 @@
-import stew/shims/strformat, stint
+import std/strformat, stint
 import ./member_model, ./member_item
 import ../main/communities/tokens/models/token_model as community_tokens_model
 import ../main/communities/tokens/models/token_item

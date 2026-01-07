@@ -1,5 +1,5 @@
 import std/[json, options, strutils]
-import stew/shims/strformat
+import std/strformat
 import chronicles
 import nimcrypto, stint
 import ../../common/conversion as common_conversion

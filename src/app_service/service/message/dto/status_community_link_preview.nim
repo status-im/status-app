@@ -1,4 +1,4 @@
-import json, stew/shims/strformat, nimqml, chronicles
+import json, std/strformat, nimqml, chronicles
 import link_preview_thumbnail
 
 include ../../../common/json_utils

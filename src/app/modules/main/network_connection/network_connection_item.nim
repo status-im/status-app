@@ -1,4 +1,4 @@
-import nimqml, stew/shims/strformat
+import nimqml, std/strformat
 
 QtObject:
   type NetworkConnectionItem* = ref object of QObject

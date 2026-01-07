@@ -1,6 +1,6 @@
 {.used.}
 
-import json, stew/shims/strformat, hashes
+import json, std/strformat, hashes
 import app_service/service/transaction/dto
 include app_service/common/json_utils
 

@@ -1,4 +1,4 @@
-import nimqml, tables, stew/shims/strformat, sequtils, sugar
+import nimqml, tables, std/strformat, sequtils, sugar
 import user_item
 
 import ../../../app_service/common/types

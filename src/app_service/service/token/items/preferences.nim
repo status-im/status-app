@@ -1,4 +1,4 @@
-import stew/shims/strformat
+import std/strformat
 
 
 type

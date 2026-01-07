@@ -1,5 +1,5 @@
 
-import json, json_serialization, stew/shims/strformat
+import json, json_serialization, std/strformat
 import options
 
 include app_service/common/json_utils

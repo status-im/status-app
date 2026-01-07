@@ -1,4 +1,4 @@
-import nimqml, stew/shims/strformat
+import nimqml, std/strformat
 
 QtObject:
   type DerivedAddressItem* = ref object of QObject

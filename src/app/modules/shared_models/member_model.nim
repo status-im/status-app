@@ -1,4 +1,4 @@
-import nimqml, tables, stew/shims/strformat, sequtils, sugar
+import nimqml, tables, std/strformat, sequtils, sugar
 # TODO: use generics to remove duplication between user_model and member_model
 
 import app/global/global_singleton

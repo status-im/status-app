@@ -1,6 +1,6 @@
 {.used.}
 
-import stew/shims/strformat
+import std/strformat
 
 type
   RpcException* = object of CatchableError

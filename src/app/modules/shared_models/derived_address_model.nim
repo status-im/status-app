@@ -1,4 +1,4 @@
-import nimqml, tables, strutils, sequtils, sugar, stew/shims/strformat
+import nimqml, tables, strutils, sequtils, sugar, std/strformat
 
 import ./derived_address_item
 

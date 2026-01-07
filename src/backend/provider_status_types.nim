@@ -1,4 +1,4 @@
-import json, strutils, stew/shims/strformat, tables
+import json, strutils, std/strformat, tables
 
 include app_service/common/json_utils
 

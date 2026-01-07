@@ -1,4 +1,4 @@
-import tables, json, stew/shims/strformat, strutils, sequtils, sugar, chronicles
+import tables, json, std/strformat, strutils, sequtils, sugar, chronicles
 
 import account_dto, keycard_dto
 

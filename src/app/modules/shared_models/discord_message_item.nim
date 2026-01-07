@@ -1,4 +1,4 @@
-import Nimqml, json, stew/shims/strformat
+import Nimqml, json, std/strformat
 
 import ../../../app_service/service/message/dto/message
 

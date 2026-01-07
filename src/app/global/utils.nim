@@ -1,5 +1,5 @@
 import nimqml
-import std/[strutils, httpclient, os, uri], stew/shims/strformat, regex, stint
+import std/[strformat, strutils, httpclient, os, uri], regex, stint
 import stew/byteutils
 import ./utils/qrcodegen
 

@@ -1,4 +1,4 @@
-import nimqml, tables, json, sequtils, std/sets, std/algorithm, stew/shims/strformat, strutils, chronicles, sugar, times
+import nimqml, tables, json, sequtils, std/sets, std/algorithm, std/strformat, strutils, chronicles, sugar, times
 import json_serialization/std/tables as ser_tables # Needed to serialize tables inside objects
 
 import json_serialization

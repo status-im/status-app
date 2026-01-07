@@ -1,4 +1,4 @@
-import json, strutils, stint, json_serialization, stew/shims/strformat
+import json, strutils, stint, json_serialization, std/strformat
 import tables, sequtils
 
 import

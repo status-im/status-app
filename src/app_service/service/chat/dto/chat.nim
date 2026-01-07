@@ -1,6 +1,6 @@
 {.used.}
 
-import json, stew/shims/strformat, strutils, tables
+import json, std/strformat, strutils, tables
 import ../../shared_urls/dto/url_data
 import app_service/service/message/dto/message
 

@@ -1,4 +1,4 @@
-import stew/shims/strformat, stint
+import std/strformat, stint
 import backend/activity as backend
 
 type

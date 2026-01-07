@@ -1,4 +1,4 @@
-import nimqml, tables, strutils, stew/shims/strformat, chronicles
+import nimqml, tables, strutils, std/strformat, chronicles
 
 import item
 

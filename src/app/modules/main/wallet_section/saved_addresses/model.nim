@@ -1,4 +1,4 @@
-import nimqml, tables, strutils, stew/shims/strformat
+import nimqml, tables, strutils, std/strformat
 
 import item
 import app_service/common/account_constants

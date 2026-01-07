@@ -1,4 +1,4 @@
-import times, stew/shims/strformat, options, chronicles
+import times, std/strformat, options, chronicles
 import json, json_serialization
 import core, response_type
 import stint

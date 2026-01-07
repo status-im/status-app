@@ -1,4 +1,4 @@
-import stew/shims/strformat, tables
+import std/strformat, tables
 import backend/collectibles_types
 
 type

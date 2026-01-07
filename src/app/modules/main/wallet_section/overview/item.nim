@@ -1,4 +1,4 @@
-import stew/shims/strformat, strutils
+import std/strformat, strutils
 
 type
   Item* = object

@@ -1,4 +1,4 @@
-import stew/shims/strformat
+import std/strformat
 import ../../../shared_models/[token_permissions_model, token_permission_item]
 
 type

@@ -1,5 +1,5 @@
 import json, chronicles
-import stew/shims/strformat
+import std/strformat
 include app_service/common/json_utils
 
 type PaymentRequest* = object

@@ -1,4 +1,4 @@
-import nimqml, stew/shims/strformat
+import nimqml, std/strformat
 import sequtils, sugar
 
 import backend/network_types

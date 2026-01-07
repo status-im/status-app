@@ -1,4 +1,4 @@
-import tables, json, stew/shims/strformat, strutils
+import tables, json, std/strformat, strutils
 
 import asset_group_item
 

@@ -1,4 +1,4 @@
-import json, stew/shims/strformat, chronicles
+import json, std/strformat, chronicles
 import status_go
 import response_type
 import json_serialization

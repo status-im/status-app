@@ -1,4 +1,4 @@
-import nimqml, json, stint, strutils, stew/shims/strformat, chronicles
+import nimqml, json, stint, strutils, std/strformat, chronicles
 
 import io_interface
 import ../io_interface as delegate_interface

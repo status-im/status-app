@@ -1,8 +1,7 @@
 import
-  std/[os, json, strutils, times],
+  std/[os, json, strformat, strutils, times],
   nimqml,
   chronicles,
-  stew/shims/strformat,
   checksums/md5,
   regex
 

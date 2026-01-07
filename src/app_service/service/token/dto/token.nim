@@ -1,4 +1,4 @@
-import stew/shims/strformat, json_serialization
+import std/strformat, json_serialization
 
 
 type CommunityDataDto* = object

@@ -1,4 +1,4 @@
-import nimqml, tables, stew/shims/strformat, sequtils, stint
+import nimqml, tables, std/strformat, sequtils, stint
 import token_item
 import token_owners_item
 import token_owners_model

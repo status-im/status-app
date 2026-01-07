@@ -1,4 +1,4 @@
-import stew/shims/strformat, stint
+import std/strformat, stint
 import backend/collectibles_types
 import ../../../../../../app_service/common/types
 

@@ -1,4 +1,4 @@
-import nimqml, strutils, stew/shims/strformat
+import nimqml, std/[strutils, strformat]
 
 QtObject:
   type TokenDataItem* = ref object of QObject

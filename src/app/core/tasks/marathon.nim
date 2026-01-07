@@ -1,5 +1,5 @@
 import # std libs
-  stew/shims/strformat, tables
+  std/[strformat, tables]
 
 import # vendor libs
   chronicles

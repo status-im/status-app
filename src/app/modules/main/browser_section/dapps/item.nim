@@ -1,4 +1,4 @@
-import stew/shims/strformat
+import std/strformat
 import ./permissions
 import ./accounts
 import ../../../../../app_service/service/wallet_account/service as wallet_account_service

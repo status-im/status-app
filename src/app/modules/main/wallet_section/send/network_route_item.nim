@@ -1,4 +1,4 @@
-import stew/shims/strformat, strutils
+import std/strformat, strutils
 
 import app/modules/shared_models/currency_amount
 

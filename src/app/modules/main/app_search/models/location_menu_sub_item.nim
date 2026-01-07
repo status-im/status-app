@@ -1,4 +1,4 @@
-import json, stew/shims/strformat
+import json, std/strformat
 import base_item
 
 export base_item

@@ -1,4 +1,4 @@
-import nimqml, tables, strutils, stew/shims/strformat, sequtils, sugar, json, stint
+import nimqml, tables, strutils, std/strformat, sequtils, sugar, json, stint
 
 import app_service/service/network/types
 import app/modules/shared_models/currency_amount

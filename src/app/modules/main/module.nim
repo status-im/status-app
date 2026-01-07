@@ -1,4 +1,5 @@
-import nimqml, tables, json, sequtils, stew/shims/strformat, marshal, times, chronicles, stint, strutils
+import nimqml
+import std/[strformat, strutils, tables, json, sequtils, marshal, times], chronicles, stint
 
 import io_interface, view, controller
 import ephemeral_notification_item, ephemeral_notification_model

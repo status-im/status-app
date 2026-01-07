@@ -1,4 +1,4 @@
-import nimqml, tables, strutils, stew/shims/strformat
+import nimqml, tables, strutils, std/strformat
 
 import backend/collectibles as backend
 

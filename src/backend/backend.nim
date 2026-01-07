@@ -1,4 +1,4 @@
-import json, json_serialization, stew/shims/strformat
+import json, json_serialization, std/strformat
 import hashes
 import ./core, ./response_type
 import app_service/service/saved_address/dto as saved_address_dto

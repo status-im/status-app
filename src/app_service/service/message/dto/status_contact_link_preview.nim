@@ -1,4 +1,4 @@
-import json, stew/shims/strformat, nimqml, chronicles
+import json, std/strformat, nimqml, chronicles
 import app/global/global_singleton
 import link_preview_thumbnail
 import ../../contacts/dto/contact_details

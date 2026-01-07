@@ -1,4 +1,4 @@
-import json, stew/shims/strformat, tables
+import json, std/strformat, tables
 import ./status_link_preview, ./standard_link_preview
 import ./status_contact_link_preview, ./status_community_link_preview, ./status_community_channel_link_preview
 import ../../contacts/dto/contact_details

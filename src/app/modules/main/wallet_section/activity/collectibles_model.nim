@@ -1,4 +1,4 @@
-import nimqml, tables, strutils, stew/shims/strformat, sequtils, stint, options
+import nimqml, tables, strutils, std/strformat, sequtils, stint, options
 import chronicles
 
 import ./collectibles_item

@@ -1,4 +1,4 @@
-import tables, nimqml, chronicles, sequtils, sugar, stint, strutils, json, stew/shims/strformat
+import tables, nimqml, chronicles, sequtils, sugar, stint, strutils, json, std/strformat
 
 import backend/collectibles as collectibles
 import backend/transactions as transactions

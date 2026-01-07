@@ -1,4 +1,4 @@
-import nimqml, tables, strutils, stew/shims/strformat, std/sequtils, chronicles
+import nimqml, tables, strutils, std/strformat, std/sequtils, chronicles
 
 import ./item
 import ../../../shared_models/currency_amount

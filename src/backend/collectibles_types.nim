@@ -1,4 +1,4 @@
-import json, stew/shims/strformat, json_serialization
+import json, std/strformat, json_serialization
 import stint, tables, options, strutils
 import community_tokens_types
 

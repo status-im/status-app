@@ -1,4 +1,4 @@
-import json, stew/shims/strformat, strutils
+import json, std/strformat, strutils
 import app/global/global_singleton
 import ../../../app_service/common/types
 import ../../../app_service/service/contacts/dto/contact_details

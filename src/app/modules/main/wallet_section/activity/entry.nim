@@ -1,4 +1,4 @@
-import nimqml, json, stew/shims/strformat, sequtils, strutils, chronicles, stint, options
+import nimqml, json, std/strformat, sequtils, strutils, chronicles, stint, options
 
 import backend/backend as backend_backend
 import backend/activity as backend_activity

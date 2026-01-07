@@ -1,4 +1,4 @@
-import stew/shims/strformat
+import std/strformat
 
 import app/modules/shared_models/contract_model as contract_model
 import app/modules/shared_models/contract_item as contract_item

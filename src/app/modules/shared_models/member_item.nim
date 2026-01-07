@@ -1,4 +1,4 @@
-import stew/shims/strformat
+import std/strformat
 import user_item
 
 import ../../../app_service/common/types
