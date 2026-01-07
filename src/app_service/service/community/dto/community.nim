@@ -241,7 +241,7 @@ proc toDiscordImportError*(jsonObj: JsonNode): DiscordImportError =
 
 proc toCommunityTokenAdresses*(jsonObj: JsonNode): Table[int, string] =
   for i in jsonObj.keys():
-    result[parseInt(i)] = jsonObj[i].getStr()
+    result[parseInt(i)] = jsonObj[i].getStr().toLower()
 
 proc toCommunityTokensMetadataDto*(jsonObj: JsonNode): CommunityTokensMetadataDto =
   result = CommunityTokensMetadataDto()
@@ -289,7 +289,7 @@ proc toTokenCriteriaDto*(jsonObj: JsonNode): TokenCriteriaDto =
   if(jsonObj.getProp("contract_addresses", contractAddressesObj) and contractAddressesObj.kind == JObject):
     result.contractAddresses = initTable[int, string]()
     for chainId, contractAddress in contractAddressesObj:
-      result.contractAddresses[parseInt(chainId)] = contractAddress.getStr
+      result.contractAddresses[parseInt(chainId)] = contractAddress.getStr().toLower()
 
   var tokenIdsObj: JsonNode
   if(jsonObj.getProp("tokenIds", tokenIdsObj) and tokenIdsObj.kind == JArray):
