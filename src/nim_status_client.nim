@@ -2,7 +2,7 @@ import
   std/[os, json, strformat, strutils, times],
   nimqml,
   chronicles,
-  checksums/md5,
+  nimcrypto/keccak,
   regex
 
 import status_go
@@ -211,7 +211,7 @@ proc mainProc() =
     if singletonInstance.localAppSettings.getLanguage() != DEFAULT_LAS_KEY_LANGUAGE:
       singletonInstance.localAppSettings.setLanguage(DEFAULT_LAS_KEY_LANGUAGE)
 
-  let singleInstance = newSingleInstance($toMD5(DATADIR), openUri)
+  let singleInstance = newSingleInstance(($keccak256.digest(DATADIR))[0..31], openUri)
   let urlSchemeEvent = newStatusUrlSchemeEventObject()
   # init url manager before app controller
   statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri)

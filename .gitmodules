@@ -111,11 +111,6 @@
 [submodule "vendor/qzxing"]
 	path = vendor/qzxing
 	url = https://github.com/status-im/qzxing.git
-[submodule "vendor/checksums"]
-	path = vendor/checksums
-	url = https://github.com/nim-lang/checksums.git
-	ignore = untracked
-	branch = master
 [submodule "vendor/DOtherSide"]
 	path = vendor/DOtherSide
 	url = https://github.com/status-im/dotherside.git
