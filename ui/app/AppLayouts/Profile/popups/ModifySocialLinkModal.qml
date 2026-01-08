@@ -95,9 +95,7 @@ StatusDialog {
                                   return !root.containsSocialLink(value,
                                                                   ProfileUtils.addSocialLinkPrefix(linkTarget.text, root.linkType))
                               }
-                    errorMessage: root.linkType === Constants.socialLinkType.custom ?
-                                      qsTr("Title and link combination already added") :
-                                      qsTr("Username already added")
+                    errorMessage: qsTr("Title and link combination already added")
                 }
             ]
 
@@ -130,19 +128,18 @@ StatusDialog {
                                   return !root.containsSocialLink(customTitle.text,
                                                                   ProfileUtils.addSocialLinkPrefix(value, root.linkType))
                               }
-                    errorMessage: root.linkType === Constants.socialLinkType.custom?
-                                      qsTr("Title and link combination already added") :
-                                      qsTr("Username already added")
+                    errorMessage: {
+                        if (root.linkType === Constants.socialLinkType.custom)
+                            return qsTr("Title and link combination already added")
+                        if (root.linkType === Constants.socialLinkType.personalSite)
+                            return qsTr("URL already added")
+                        return qsTr("Username already added")
+                    }
                 }
             ]
 
             onValidChanged: {customTitle.validate(true)}
             onTextChanged: {customTitle.validate(true)}
-        }
-
-        // Filler
-        Item {
-            Layout.fillHeight: true
         }
     }
 }

@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 
 import StatusQ.Core
-import StatusQ.Core.Utils as CoreUtils
 
 import mainui
 import AppLayouts.stores as AppLayoutStores
@@ -118,10 +117,9 @@ SplitView {
 
         logsView.logText: logs.logText
 
-
-        CheckBox {
+        Switch {
             id: emptyModelCheck
-            text: "emptyModel"
+            text: "Empty model"
             checked: false
         }
     }

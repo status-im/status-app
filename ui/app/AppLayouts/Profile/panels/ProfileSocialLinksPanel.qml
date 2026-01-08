@@ -14,8 +14,6 @@ import utils
 
 import AppLayouts.Profile.popups
 
-import SortFilterProxyModel
-
 Control {
     id: root
     
@@ -42,7 +40,7 @@ Control {
         id: addSocialLinkModalComponent
         AddSocialLinkModal {
             containsSocialLink: d.containsSocialLink
-            onAddLinkRequested: root.addSocialLink(linkUrl, linkText)
+            onAddLinkRequested: (linkText, linkUrl, linkType, linkIcon) => root.addSocialLink(linkUrl, linkText)
         }
     }
 
@@ -50,8 +48,8 @@ Control {
         id: modifySocialLinkModal
         ModifySocialLinkModal {
             containsSocialLink: d.containsSocialLink
-            onUpdateLinkRequested: root.updateSocialLink(index, linkUrl, linkText)
-            onRemoveLinkRequested: root.removeSocialLink(index)
+            onUpdateLinkRequested: (index, linkText, linkUrl) => root.updateSocialLink(index, linkUrl, linkText)
+            onRemoveLinkRequested: index => root.removeSocialLink(index)
         }
     }
 

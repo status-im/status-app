@@ -1085,10 +1085,6 @@
         <translation>Título inválido</translation>
     </message>
     <message>
-        <source>Ttile and link combination already added</source>
-        <translation>La combinación de título y enlace ya fue agregada</translation>
-    </message>
-    <message>
         <source>Username already added</source>
         <translation>Nombre de usuario ya agregado</translation>
     </message>
@@ -1111,6 +1107,14 @@
     <message>
         <source>Title and link combination already added</source>
         <translation>La combinación de título y enlace ya fue agregada</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation type="unfinished">URL</translation>
+    </message>
+    <message>
+        <source>URL already added</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11889,6 +11893,10 @@ al cargar</translation>
     <message>
         <source>link</source>
         <translation>enlace</translation>
+    </message>
+    <message>
+        <source>URL already added</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

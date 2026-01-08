@@ -1085,10 +1085,6 @@
         <translation>제목이 올바르지 않습니다</translation>
     </message>
     <message>
-        <source>Ttile and link combination already added</source>
-        <translation>제목과 링크 조합이 이미 추가되었습니다</translation>
-    </message>
-    <message>
         <source>Username already added</source>
         <translation>사용자명이 이미 추가됨</translation>
     </message>
@@ -1111,6 +1107,14 @@
     <message>
         <source>Title and link combination already added</source>
         <translation>제목과 링크 조합이 이미 추가되었습니다</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation type="unfinished">URL</translation>
+    </message>
+    <message>
+        <source>URL already added</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11855,6 +11859,10 @@ to load</source>
     <message>
         <source>link</source>
         <translation>링크</translation>
+    </message>
+    <message>
+        <source>URL already added</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

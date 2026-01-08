@@ -1085,10 +1085,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ttile and link combination already added</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Username already added</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1110,6 +1106,14 @@
     </message>
     <message>
         <source>Title and link combination already added</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>URL already added</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11867,6 +11871,10 @@ to load</source>
     </message>
     <message>
         <source>link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>URL already added</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

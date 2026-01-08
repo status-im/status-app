@@ -35,7 +35,7 @@ StatusStackModal {
             root.addLinkRequested(d.selectedLinkTypeText || customTitle.text, // text for custom link, otherwise the link typeId
                                   ProfileUtils.addSocialLinkPrefix(linkTarget.text, d.selectedLinkType),
                                   d.selectedLinkType, d.selectedIcon)
-            root.close();
+            root.close()
         }
     }
     showFooter: currentIndex > 0
@@ -80,7 +80,7 @@ StatusStackModal {
     stackItems: [
         StatusListView {
             width: root.availableWidth
-            height: root.availableHeight
+            height: contentHeight
             model: d.staticLinkTypesModel
             delegate: StatusListItem {
                 width: ListView.view.width
@@ -131,9 +131,7 @@ StatusStackModal {
                                       return !root.containsSocialLink(value,
                                                                       ProfileUtils.addSocialLinkPrefix(linkTarget.text, d.selectedLinkType))
                                   }
-                        errorMessage: d.selectedLinkType === Constants.socialLinkType.custom?
-                                          qsTr("Ttile and link combination already added") :
-                                          qsTr("Username already added")
+                        errorMessage: qsTr("Title and link combination already added")
                     }
                 ]
 
@@ -146,7 +144,13 @@ StatusStackModal {
                 Layout.fillWidth: true
                 Layout.topMargin: customTitle.visible ? Theme.padding : 0
                 placeholderText: ""
-                label: linkType === Constants.socialLinkType.custom ? qsTr("Link") : qsTr("Username")
+                label: {
+                    if (linkType === Constants.socialLinkType.custom)
+                        return qsTr("Link")
+                    if (linkType === Constants.socialLinkType.personalSite)
+                        return qsTr("URL")
+                    return qsTr("Username")
+                }
                 linkType: d.selectedLinkType
                 icon: d.selectedIcon
                 input.tabNavItem: customTitle.input.edit
@@ -165,9 +169,13 @@ StatusStackModal {
                                       return !root.containsSocialLink(d.selectedLinkTypeText || customTitle.text,
                                                                       ProfileUtils.addSocialLinkPrefix(value, d.selectedLinkType))
                                   }
-                        errorMessage: d.selectedLinkType === Constants.socialLinkType.custom?
-                                          qsTr("Title and link combination already added") :
-                                          qsTr("Username already added")
+                        errorMessage: {
+                            if (d.selectedLinkType === Constants.socialLinkType.custom)
+                                return qsTr("Title and link combination already added")
+                            if (d.selectedLinkType === Constants.socialLinkType.personalSite)
+                                return qsTr("URL already added")
+                            return qsTr("Username already added")
+                        }
                     }
                 ]
 

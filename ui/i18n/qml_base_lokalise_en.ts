@@ -1328,11 +1328,6 @@
       <translation>Invalid title</translation>
     </message>
     <message>
-      <source>Ttile and link combination already added</source>
-      <comment>AddSocialLinkModal</comment>
-      <translation>Ttile and link combination already added</translation>
-    </message>
-    <message>
       <source>Username already added</source>
       <comment>AddSocialLinkModal</comment>
       <translation>Username already added</translation>
@@ -1361,6 +1356,16 @@
       <source>Title and link combination already added</source>
       <comment>AddSocialLinkModal</comment>
       <translation>Title and link combination already added</translation>
+    </message>
+    <message>
+      <source>URL</source>
+      <comment>AddSocialLinkModal</comment>
+      <translation>URL</translation>
+    </message>
+    <message>
+      <source>URL already added</source>
+      <comment>AddSocialLinkModal</comment>
+      <translation>URL already added</translation>
     </message>
   </context>
   <context>
@@ -14451,6 +14456,11 @@
       <source>link</source>
       <comment>ModifySocialLinkModal</comment>
       <translation>link</translation>
+    </message>
+    <message>
+      <source>URL already added</source>
+      <comment>ModifySocialLinkModal</comment>
+      <translation>URL already added</translation>
     </message>
   </context>
   <context>
