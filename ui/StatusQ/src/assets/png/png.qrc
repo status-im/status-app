@@ -288,6 +288,7 @@
         <file>onRampProviders/moonPay.png</file>
         <file>onRampProviders/ramp.png</file>
         <file>profile/gradient.png</file>
+        <file>qr-scan-success.png</file>
         <file>settings/communities.png</file>
         <file>swap/paraswap.png</file>
         <file>tokens/0-native.png</file>

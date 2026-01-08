@@ -65,7 +65,7 @@ ColumnLayout {
         // StackLayout doesn't support alignment, so we create an `Item` wrappers
 
         Item {
-            StatusSyncCodeScan {
+            StatusQRCodeScanner {
                 id: syncQr
                 anchors {
                     left: parent.left
@@ -78,8 +78,8 @@ ColumnLayout {
                         validate: root.validateConnectionString
                     }
                 ]
-                onConnectionStringFound: connectionString => {
-                    root.proceed(connectionString)
+                onValidTagFound: tag => {
+                    root.proceed(tag)
                 }
             }
         }

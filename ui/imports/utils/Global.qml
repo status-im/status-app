@@ -13,6 +13,8 @@ QtObject {
     signal openCreateChatView()
     signal closeCreateChatView()
 
+    signal openQRScannerRequested()
+
     signal blockContactRequested(string publicKey)
     signal unblockContactRequested(string publicKey)
 

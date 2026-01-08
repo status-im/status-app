@@ -37,8 +37,10 @@ Column {
     id: root
 
     property list<StatusValidator> validators
+    property alias cameraHeight: cameraLoader.height
+    property alias cameraWidth: cameraLoader.width
 
-    signal connectionStringFound(connectionString: string)
+    signal validTagFound(tag: string)
 
     spacing: 12
 
@@ -47,21 +49,20 @@ Column {
 
         readonly property int radius: 16
         property string errorMessage
-        property string lastTag
         property int counter: 0
 
         property bool showCamera: false
 
-        function validateConnectionString(connectionString) {
+        function validateTag(tag) {
             for (let i in root.validators) {
                 const validator = root.validators[i]
-                if (!validator.validate(connectionString)) {
+                if (!validator.validate(tag)) {
                     d.errorMessage = validator.errorMessage
                     return
                 }
-                d.errorMessage = ""
-                root.connectionStringFound(connectionString)
             }
+            d.errorMessage = ""
+            root.validTagFound(tag)
         }
     }
 
@@ -144,7 +145,7 @@ Column {
         StatusQrCodeScanner {
             anchors.fill: parent
             onLastTagChanged: {
-                d.validateConnectionString(lastTag)
+                d.validateTag(lastTag)
             }
         }
     }
@@ -155,7 +156,7 @@ Column {
     }
 
     StatusBaseText {
-        visible: d.showCamera && cameraLoader.item.currentTag ? true : false
+        visible: d.showCamera && !!d.errorMessage
         width: parent.width
         height: visible ? implicitHeight : 0
         wrapMode: Text.WordWrap

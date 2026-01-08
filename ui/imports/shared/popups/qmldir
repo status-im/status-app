@@ -29,6 +29,7 @@ NicknamePopup 1.0 NicknamePopup.qml
 NoPermissionsToJoinPopup 1.0 NoPermissionsToJoinPopup.qml
 OutgoingContactVerificationRequestPopup 1.0 OutgoingContactVerificationRequestPopup.qml
 ProfileDialog 1.0 ProfileDialog.qml
+QRCodeScannerDialog 1.0 QRCodeScannerDialog.qml
 RemoveAccountConfirmationPopup 1.0 RemoveAccountConfirmationPopup.qml
 RemoveContactPopup 1.0 RemoveContactPopup.qml
 RemoveIDVerificationDialog 1.0 RemoveIDVerificationDialog.qml

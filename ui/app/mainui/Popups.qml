@@ -123,6 +123,7 @@ QtObject {
         Global.termsOfUseRequested.connect(() => openPopup(termsOfUsePopupComponent))
         Global.openNewsMessagePopupRequested.connect(openNewsMessagePopup)
         Global.quitAppRequested.connect(() => openPopup(quitConfirmPopupComponent))
+        Global.openQRScannerRequested.connect(() => openPopup(qrCodeScannerDialogComponent))
         Global.openInfoPopup.connect(openInfoPopup)
     }
 
@@ -1441,6 +1442,22 @@ QtObject {
                 }
 
                 standardButtons: Dialog.Ok
+            }
+        },
+
+        Component {
+            id: qrCodeScannerDialogComponent
+
+            QRCodeScannerDialog {
+                destroyOnClose: true
+                onAddressScanned: address => Global.sendToRecipientRequested(address)
+                onUrlScanned: url => {
+                    if (Utils.isStatusDeepLink(url)) {
+                        root.rootStore.activateStatusDeepLink(url)
+                        return
+                    }
+                    Global.requestOpenLink(url)
+                }
             }
         }
     ]
