@@ -33,7 +33,6 @@ Control {
 
     property var allTokenGroupsForChainModel
     property var searchResultModel
-    property var listOfTokenKeysAvailableForSwapViaParaswap
 
     property int selectedNetworkChainId: -1
     onSelectedNetworkChainIdChanged: reevaluateSelectedId()
@@ -152,7 +151,6 @@ Control {
             assetsModel: root.processedAssetsModel
             allTokenGroupsForChainModel: root.allTokenGroupsForChainModel
             searchResultModel: root.searchResultModel
-            listOfAvailableTokens: root.listOfTokenKeysAvailableForSwapViaParaswap
 
             flatNetworksModel: root.flatNetworksModel
             currentCurrency: root.currencyStore.currentCurrency

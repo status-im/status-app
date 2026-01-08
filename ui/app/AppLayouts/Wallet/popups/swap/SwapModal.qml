@@ -95,8 +95,8 @@ StatusDialog {
                 return
             }
 
-            const listOfTokenKeysAvailableForSwapViaParaswap = root.swapAdaptor.walletAssetsStore.walletTokensStore.getListOfTokenKeysAvailableForSwapViaParaswap(chainId)
-            if (listOfTokenKeysAvailableForSwapViaParaswap.length === 0) {
+            const chainAvailableForSwapViaParaswap = root.swapAdaptor.walletAssetsStore.walletTokensStore.isChainSupportedForSwapViaParaswap(chainId)
+            if (!chainAvailableForSwapViaParaswap) {
                 console.warn("swap via paraswap not supported for chain", chainId)
                 const networkName = Utils.getNetworkName(chainId)
                 Global.openInfoPopup(qsTr("Info"), qsTr("Swap on %1 is not supported by ParaSwap.").arg(networkName))
@@ -109,8 +109,6 @@ StatusDialog {
                              })
                 return
             }
-            payPanel.listOfTokenKeysAvailableForSwapViaParaswap = listOfTokenKeysAvailableForSwapViaParaswap
-            receivePanel.listOfTokenKeysAvailableForSwapViaParaswap = listOfTokenKeysAvailableForSwapViaParaswap
 
             const keys = SQUtils.ModelUtils.joinModelEntries(root.swapAdaptor.walletAssetsStore.groupedAccountAssetsModel, "key", d.mandatoryKeysSeparator)
             root.swapAdaptor.walletAssetsStore.walletTokensStore.buildGroupsForChain(chainId, keys)

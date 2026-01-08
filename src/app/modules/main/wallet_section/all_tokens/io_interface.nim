@@ -135,5 +135,5 @@ method tokenAvailableForBridgingViaHop*(self: AccessInterface, tokenChainId: int
 method getMandatoryTokenGroupKeys*(self: AccessInterface): seq[string] {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method getListOfTokenKeysAvailableForSwapViaParaswap*(self: AccessInterface, chainId: int): seq[string] {.base.} =
+method isChainSupportedForSwapViaParaswap*(self: AccessInterface, chainId: int): bool {.base.} =
   raise newException(ValueError, "No implementation available")

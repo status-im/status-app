@@ -41,6 +41,7 @@ QtObject:
 
     # local storage, fulfilled by need, empty at the start
     tokensForBridgingViaHop: Table[string, bool] # [tokenKey, bool]
+    chainsSupportedForSwapViaParaswap: Table[int, bool] # [chainId, bool]
     # local storage
     tokensOfInterestByKey: Table[string, TokenItem] # [tokenKey, TokenItem]
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]

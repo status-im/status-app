@@ -35,7 +35,7 @@ rpc(tokenAvailableForBridgingViaHop, "wallet"):
   tokenChainId: int
   tokenAddress: string
 
-rpc(getListOfTokenKeysAvailableForSwapViaParaswap, "wallet"):
+rpc(isChainSupportedForSwapViaParaswap, "wallet"):
   chainId: int
 
 
@@ -64,16 +64,16 @@ proc tokenAvailableForBridgingViaHop*(resultOut: var JsonNode, tokenChainId: int
     warn "error checking if token is available for bridging via Hop", err = e.msg
     return e.msg
 
-## Gets the list of tokens available for swap via Paraswap
-## `resultOut` represents a json object that contains the list of tokens if the call was successful, or `nil`
+## Checks if the chain is supported for swap via Paraswap
+## `resultOut` represents a json object that contains the bool if the call was successful, or `nil`
 ## `chainId` is the chain id of the chain the tokens are on
 ## returns the error message if any, or an empty string
-proc getListOfTokenKeysAvailableForSwapViaParaswap*(resultOut: var JsonNode, chainId: int): string =
+proc isChainSupportedForSwapViaParaswap*(resultOut: var JsonNode, chainId: int): string =
   try:
-    let response = getListOfTokenKeysAvailableForSwapViaParaswap(chainId)
+    let response = isChainSupportedForSwapViaParaswap(chainId)
     return prepareResponse(resultOut, response)
   except Exception as e:
-    warn "error getting list of tokens available for swap via Paraswap", err = e.msg
+    warn "error checking if chain is supported for swap via Paraswap", err = e.msg
     return e.msg
 
 ## Gets all token lists

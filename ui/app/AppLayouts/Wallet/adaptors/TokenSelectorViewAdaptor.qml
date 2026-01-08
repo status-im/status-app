@@ -38,7 +38,6 @@ QObject {
 
     property var allTokenGroupsForChainModel // all token groups, loaded on demand
     property var searchResultModel // token groups that match the search keyword
-    property var listOfAvailableTokens // considered only if non-empty, otherwise all token groups default to true
 
     // expected roles: chainId, chainName, iconUrl
     required property var flatNetworksModel
@@ -240,11 +239,6 @@ QObject {
                 name: "iconSource"
                 expression: model.logoUri || d.tokenIcon(model.symbol)
                 expectedRoles: ["logoUri", "symbol"]
-            },
-            FastExpressionRole {
-                name: "groupAvailable" // group is available if at least one token is in the list of available tokens
-                expression: d.isAvailable(model.tokens)
-                expectedRoles: ["tokens"]
             }
         ]
 
@@ -300,11 +294,6 @@ QObject {
                     name: "iconSource"
                     expression: model.logoUri || d.tokenIcon(model.symbol)
                     expectedRoles: ["logoUri", "symbol"]
-                },
-                FastExpressionRole {
-                    name: "groupAvailable" // group is available if at least one token is in the list of available tokens
-                    expression: d.isAvailable(model.tokens)
-                    expectedRoles: ["tokens"]
                 }
             ]
 
@@ -348,28 +337,6 @@ QObject {
 
         function tokenIcon(symbol) {
             return Constants.tokenIcon(symbol)
-        }
-
-        function isAvailable(tokens) {
-            if (!root.listOfAvailableTokens) {
-                return true
-            }
-
-            for (let i = 0; i < tokens.ModelCount.count; i++) {
-                const token = ModelUtils.get(tokens, i)
-                let tokenKey = token.key.toLowerCase()
-                if (token.address === Constants.zeroAddress) {
-                    // special handling for native tokens
-                    tokenKey = Utils.buildTokenKey(token.chainId, Constants.zeroAddress1)
-                }
-                for (let j = 0; j < root.listOfAvailableTokens.length; j++) {
-                    if (tokenKey !== root.listOfAvailableTokens[j].toLowerCase()) {
-                        continue
-                    }
-                    return true
-                }
-            }
-            return false
         }
     }
 

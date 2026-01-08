@@ -200,14 +200,16 @@ proc tokenAvailableForBridgingViaHop*(self: Service, tokenChainId: int, tokenAdd
   self.tokensForBridgingViaHop[key] = available
   return available
 
-## Returns the list of token keys available for swap via Paraswap for the given chainId, if the chain is not supported by Paraswap, the list will be empty.
-## NOTE: for now we don't store the list of tokens available for swap via Paraswap, we fetch it on demand.
-## Reason: storing can speed up switching the chain, but will increase the occupied memory.
-proc getListOfTokenKeysAvailableForSwapViaParaswap*(self: Service, chainId: int): seq[string] =
+## Checks if the chain is supported for swap via Paraswap
+proc isChainSupportedForSwapViaParaswap*(self: Service, chainId: int): bool =
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
-    return @[]
-  return getListOfTokenKeysAvailableForSwapViaParaswap(chainId)
+    return false
+  if self.chainsSupportedForSwapViaParaswap.hasKey(chainId):
+    return self.chainsSupportedForSwapViaParaswap[chainId]
+  let supported = isChainSupportedForSwapViaParaswap(chainId)
+  self.chainsSupportedForSwapViaParaswap[chainId] = supported
+  return supported
 
 proc getTokenListUpdatedAt*(self: Service): int64 =
   return self.tokenListUpdatedAt
