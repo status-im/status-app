@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -8,26 +7,29 @@ import StatusQ.Controls
 
 import utils
 
-RowLayout {
-    id: favoritesBar
+Rectangle {
+    id: root
 
     property alias bookmarkModel: bookmarkList.model
 
+    property bool currentTabIncognito: false
     property var favoritesMenu
 
     signal addFavModalRequested()
     signal setAsCurrentWebUrl(url url)
     signal openInNewTab(url url)
 
-    spacing: 0
-    height: 38
+    color: root.currentTabIncognito ?
+               Theme.palette.privacyColors.primary:
+               Theme.palette.background
 
     StatusListView {
         id: bookmarkList
+        anchors.fill: parent
+        anchors.leftMargin: Theme.halfPadding
+        anchors.rightMargin: Theme.halfPadding
         spacing: Theme.halfPadding
         orientation : ListView.Horizontal
-        Layout.fillWidth: true
-        Layout.fillHeight: true
         delegate: StatusFlatButton {
             id: favoriteBtn
             size: StatusBaseButton.Size.Small
@@ -59,14 +61,14 @@ RowLayout {
                     }
 
                     if (isAddBookmarkButton) {
-                        favoritesBar.addFavModalRequested()
+                        root.addFavModalRequested()
                         return
                     }
 
                     if (mouse.button === Qt.LeftButton)
-                        favoritesBar.setAsCurrentWebUrl(model.url)
+                        root.setAsCurrentWebUrl(model.url)
                     else if (mouse.button === Qt.MiddleButton)
-                        favoritesBar.openInNewTab(model.url)
+                        root.openInNewTab(model.url)
                 }
             }
         }

@@ -2664,13 +2664,6 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
     </message>
 </context>
 <context>
-    <name>BrowserHeader</name>
-    <message>
-        <source>Enter URL</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>BrowserLayout</name>
     <message>
         <source>Error sending the transaction</source>
@@ -2796,6 +2789,13 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Downloads Page</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>BrowserToolbar</name>
+    <message>
+        <source>Enter URL</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

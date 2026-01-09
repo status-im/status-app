@@ -3264,14 +3264,6 @@
     </message>
   </context>
   <context>
-    <name>BrowserHeader</name>
-    <message>
-      <source>Enter URL</source>
-      <comment>BrowserHeader</comment>
-      <translation>Enter URL</translation>
-    </message>
-  </context>
-  <context>
     <name>BrowserLayout</name>
     <message>
       <source>Error sending the transaction</source>
@@ -3426,6 +3418,14 @@
       <source>Downloads Page</source>
       <comment>BrowserTabView</comment>
       <translation>Downloads Page</translation>
+    </message>
+  </context>
+  <context>
+    <name>BrowserToolbar</name>
+    <message>
+      <source>Enter URL</source>
+      <comment>BrowserToolbar</comment>
+      <translation>Enter URL</translation>
     </message>
   </context>
   <context>

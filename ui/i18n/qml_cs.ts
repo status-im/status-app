@@ -2674,13 +2674,6 @@ Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezp
     </message>
 </context>
 <context>
-    <name>BrowserHeader</name>
-    <message>
-        <source>Enter URL</source>
-        <translation>Zadejte URL</translation>
-    </message>
-</context>
-<context>
     <name>BrowserLayout</name>
     <message>
         <source>Error sending the transaction</source>
@@ -2808,6 +2801,13 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Downloads Page</source>
         <translation>Stránka stahování</translation>
+    </message>
+</context>
+<context>
+    <name>BrowserToolbar</name>
+    <message>
+        <source>Enter URL</source>
+        <translation type="unfinished">Zadejte URL</translation>
     </message>
 </context>
 <context>

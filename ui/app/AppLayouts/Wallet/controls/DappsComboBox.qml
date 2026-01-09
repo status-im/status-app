@@ -70,8 +70,7 @@ ComboBox {
             icon: "dapp"
             color: root.incognitoMode ?
                        Theme.palette.privacyColors.tertiary:
-                       hovered ? Theme.palette.primaryColor1:
-                                 Theme.palette.baseColor1
+                       Theme.palette.primaryColor1
         }
     }
 

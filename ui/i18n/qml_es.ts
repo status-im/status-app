@@ -2667,13 +2667,6 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
     </message>
 </context>
 <context>
-    <name>BrowserHeader</name>
-    <message>
-        <source>Enter URL</source>
-        <translation>Ingresa una URL</translation>
-    </message>
-</context>
-<context>
     <name>BrowserLayout</name>
     <message>
         <source>Error sending the transaction</source>
@@ -2801,6 +2794,13 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Downloads Page</source>
         <translation>Página de descargas</translation>
+    </message>
+</context>
+<context>
+    <name>BrowserToolbar</name>
+    <message>
+        <source>Enter URL</source>
+        <translation type="unfinished">Ingresa una URL</translation>
     </message>
 </context>
 <context>

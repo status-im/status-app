@@ -2081,6 +2081,7 @@ Item {
                         id: browserLayout
 
                         BrowserLayout {
+                            isMobile: SQUtils.Utils.isMobile
                             userUID: appMain.profileStore.pubKey
                             thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
                             navBar: appMain.navBar

@@ -469,5 +469,9 @@
         <file>icons/search_engines/ecosia.svg</file>
         <file>icons/search_engines/google.svg</file>
         <file>icons/search_engines/custom.svg</file>
+        <file>icons/bookmark.svg</file>
+        <file>icons/open-tabs.svg</file>
+        <file>icons/bookmark-added.svg</file>
+        <file>icons/webhomepage.svg</file>
     </qresource>
 </RCC>

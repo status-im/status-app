@@ -61,8 +61,7 @@ QObject {
     Shortcut {
         sequences: ["Ctrl+L", "F6"]
         onActivated: {
-            browserHeaderComponent.addressBar.forceActiveFocus();
-            browserHeaderComponent.addressBar.selectAll();
+            browserHeaderComponent.activateAddressBar()
         }
     }
     Shortcut {
