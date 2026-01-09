@@ -40,7 +40,7 @@ Column {
     property alias cameraHeight: cameraLoader.height
     property alias cameraWidth: cameraLoader.width
 
-    signal validTagFound(tag: string)
+    signal validTagFound(string tag)
 
     spacing: 12
 
@@ -156,7 +156,7 @@ Column {
     }
 
     StatusBaseText {
-        visible: d.showCamera && !!d.errorMessage
+        visible: d.showCamera && !!text
         width: parent.width
         height: visible ? implicitHeight : 0
         wrapMode: Text.WordWrap

@@ -18,20 +18,23 @@ StatusDialog {
 
     title: qsTr("Scan QR")
 
-    signal addressScanned(string address)
-    signal urlScanned(string url)
+    signal tagFound(int tagType, string tag)
+
+    enum TagType {
+        Link,
+        Address
+    }
 
     QtObject {
         id: d
 
         property string validTag: ""
-        property bool validTagFound: false
     }
 
     contentItem: Loader {
         Layout.fillWidth: true
         Layout.margins: Theme.padding
-        sourceComponent: d.validTagFound ? validTagFound : cameraComponent
+        sourceComponent: !!d.validTag ? validTagFoundComponent : cameraComponent
     }
 
     Component {
@@ -57,13 +60,12 @@ StatusDialog {
             ]
             onValidTagFound: tag => {
                 d.validTag = tag
-                d.validTagFound = true
             }
         }
     }
 
     Component {
-        id: validTagFound
+        id: validTagFoundComponent
 
         ColumnLayout {
             height: contentHeight
@@ -76,23 +78,21 @@ StatusDialog {
                 repeat: false
                 onTriggered: {
                     if (Utils.isURL(d.validTag)) {
-                        root.urlScanned(d.validTag)
+                        root.tagFound(QRCodeScannerDialog.TagType.Link, d.validTag)
                     } else if (Utils.isValidAddress(d.validTag)) {
-                        root.addressScanned(d.validTag)
+                        root.tagFound(QRCodeScannerDialog.TagType.Address, d.validTag)
                     }
                     root.close()
                 }
             }
 
             StatusImage {
-                visible: d.validTagFound
                 source: Assets.png("qr-scan-success")
                 Layout.fillWidth: true
                 Layout.preferredHeight: 272
             }
 
             StatusBaseText {
-                visible: d.validTagFound
                 text: qsTr("Scanned successfully")
                 color: Theme.palette.primaryColor1
                 horizontalAlignment: Text.AlignHCenter

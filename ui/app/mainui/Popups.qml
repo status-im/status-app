@@ -1450,13 +1450,16 @@ QtObject {
 
             QRCodeScannerDialog {
                 destroyOnClose: true
-                onAddressScanned: address => Global.sendToRecipientRequested(address)
-                onUrlScanned: url => {
-                    if (Utils.isStatusDeepLink(url)) {
-                        root.rootStore.activateStatusDeepLink(url)
-                        return
+                onTagFound: (tagType, tag) => {
+                    if (tagType === QRCodeScannerDialog.TagType.Address) {
+                        root.sendToRecipientRequested(tag)
+                    } else if (tagType === QRCodeScannerDialog.TagType.Link) {
+                        if (Utils.isStatusDeepLink(tag)) {
+                            root.rootStore.activateStatusDeepLink(tag)
+                            return
+                        }
+                        Global.requestOpenLink(tag)
                     }
-                    Global.requestOpenLink(url)
                 }
             }
         }
