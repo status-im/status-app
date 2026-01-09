@@ -37,7 +37,6 @@ const KEY_INSTALLED_STICKER_PACKS* = "stickers/packs-installed"
 const KEY_FLEET* = "fleet"
 const KEY_NODE_CONFIG* = "node-config"
 const KEY_WAKU_BLOOM_FILTER_MODE* = "waku-bloom-filter-mode"
-const KEY_AUTO_MESSAGE_ENABLED* = "auto-message-enabled?"
 const KEY_GIF_FAVORITES* = "gifs/favorite-gifs"
 const KEY_GIF_RECENTS* = "gifs/recent-gifs"
 const KEY_GIF_API_KEY* = "gifs/api-key"
@@ -144,7 +143,6 @@ type
     currentUserStatus*: CurrentUserStatus
     nodeConfig*: JsonNode
     wakuBloomFilterMode*: bool
-    autoMessageEnabled*: bool
     gifRecents*: JsonNode
     gifFavorites*: JsonNode
     testNetworksEnabled*: bool
@@ -221,7 +219,6 @@ proc toSettingsDto*(jsonObj: JsonNode): SettingsDto =
   discard jsonObj.getProp(KEY_WALLET_ROOT_ADDRESS, result.walletRootAddress)
   discard jsonObj.getProp(KEY_SEND_STATUS_UPDATES, result.sendStatusUpdates)
   discard jsonObj.getProp(KEY_FLEET, result.fleet)
-  discard jsonObj.getProp(KEY_AUTO_MESSAGE_ENABLED, result.autoMessageEnabled)
   discard jsonObj.getProp(KEY_GIF_RECENTS, result.gifRecents)
   discard jsonObj.getProp(KEY_GIF_FAVORITES, result.gifFavorites)
   discard jsonObj.getProp(KEY_TEST_NETWORKS_ENABLED, result.testNetworksEnabled)

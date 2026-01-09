@@ -42,33 +42,12 @@ QtObject:
   proc setWakuV2LightClientEnabled*(self: View, enabled: bool) {.slot.} =
     self.delegate.setWakuV2LightClientEnabled(enabled)
 
-  # include this if we decide to not quit the app on waku v2 light client change
-  # proc emitWakuV2LightClientEnabledSignal*(self: View) =
-  #   self.wakuV2LightClientEnabledChanged()
-
-  proc isAutoMessageEnabledChanged*(self: View) {.signal.}
-  proc getIsAutoMessageEnabled*(self: View): bool {.slot.} =
-    return self.delegate.isAutoMessageEnabled()
-  QtProperty[bool] isAutoMessageEnabled:
-    read = getIsAutoMessageEnabled
-    notify = isAutoMessageEnabledChanged
-
-  proc emitAutoMessageEnabledSignal*(self: View) =
-    self.isAutoMessageEnabledChanged()
-
-  proc toggleAutoMessage*(self: View) {.slot.} =
-    self.delegate.toggleAutoMessage()
-
   proc isDebugEnabledChanged*(self: View) {.signal.}
   proc getIsDebugEnabled*(self: View): bool {.slot.} =
     return self.delegate.isDebugEnabled()
   QtProperty[bool] isDebugEnabled:
     read = getIsDebugEnabled
     notify = isDebugEnabledChanged
-
-  # include this if we decide to not quit the app on toggle debug
-  # proc emitDebugEnabledSignal*(self: View) =
-  #   self.isDebugEnabledChanged()
 
   proc toggleDebug*(self: View) {.slot.} =
     self.delegate.toggleDebug()
@@ -112,9 +91,6 @@ QtObject:
 
   proc toggleNodeManagementSection*(self: View) {.slot.} =
     self.delegate.toggleNodeManagementSection()
-
-  proc enableDeveloperFeatures*(self: View) {.slot.} =
-    self.delegate.enableDeveloperFeatures()
 
   proc toggleCommunitiesPortalSection*(self: View) {.slot.} =
     self.delegate.toggleCommunitiesPortalSection()

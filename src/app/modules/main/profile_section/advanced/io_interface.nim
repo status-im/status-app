@@ -21,9 +21,6 @@ method onFleetSet*(self: AccessInterface) {.base.} =
 method onWakuV2LightClientSet*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onAutoMessageToggled*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method onDebugToggled*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -46,12 +43,6 @@ method getWakuV2LightClientEnabled*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method setWakuV2LightClientEnabled*(self: AccessInterface, enabled: bool) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method isAutoMessageEnabled*(self: AccessInterface): bool {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method toggleAutoMessage*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method isDebugEnabled*(self: AccessInterface): bool {.base.} =
@@ -91,9 +82,6 @@ method toggleCommunitySection*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method toggleNodeManagementSection*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method enableDeveloperFeatures*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getLogMaxBackups*(self: AccessInterface): int {.base.} =

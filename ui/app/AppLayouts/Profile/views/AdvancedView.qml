@@ -334,22 +334,6 @@ SettingsContentBase {
 
             StatusSettingsLineButton {
                 width: parent.width
-                text: qsTr("Full developer mode")
-                enabled: {
-                    return !root.advancedStore.isDebugEnabled ||
-                        !root.advancedStore.isAutoMessageEnabled
-                }
-                onClicked: {
-                    Global.openPopup(enableDeveloperFeaturesConfirmationDialogComponent)
-                }
-            }
-
-            Separator {
-                width: parent.width
-            }
-
-            StatusSettingsLineButton {
-                width: parent.width
                 text: qsTr("Enable translations")
                 isSwitch: true
                 checked: localAppSettings.translationsEnabled
@@ -399,16 +383,6 @@ SettingsContentBase {
 
             StatusSettingsLineButton {
                 width: parent.width
-                text: qsTr("Auto message")
-                isSwitch: true
-                checked: root.advancedStore.isAutoMessageEnabled
-                onClicked: {
-                    Global.openPopup(enableAutoMessageConfirmationDialogComponent)
-                }
-            }
-
-            StatusSettingsLineButton {
-                width: parent.width
                 objectName: "manageCommunitiesOnTestnetButton"
                 text: qsTr("Manage communities on testnet")
                 isSwitch: true
@@ -448,44 +422,6 @@ SettingsContentBase {
         FleetsModal {
             id: fleetModal
             advancedStore: root.advancedStore
-        }
-
-        Component {
-            id: enableDeveloperFeaturesConfirmationDialogComponent
-            ConfirmationDialog {
-                property bool mode: false
-
-                id: confirmDialog
-                destroyOnClose: true
-                showCancelButton: true
-                confirmationText: qsTr("Are you sure you want to enable all the developer features? The app will be restarted.")
-                onConfirmButtonClicked: {
-                    Qt.callLater(root.advancedStore.enableDeveloperFeatures)
-                    close()
-                }
-                onCancelButtonClicked: {
-                    close()
-                }
-            }
-        }
-
-        Component {
-            id: enableAutoMessageConfirmationDialogComponent
-            ConfirmationDialog {
-                property bool mode: false
-
-                id: confirmDialog
-                destroyOnClose: true
-                showCancelButton: true
-                confirmationText: qsTr("Are you sure you want to enable auto message? You need to restart the app for this change to take effect.")
-                onConfirmButtonClicked: {
-                    root.advancedStore.toggleAutoMessage()
-                    close()
-                }
-                onCancelButtonClicked: {
-                    close()
-                }
-            }
         }
 
         Component {

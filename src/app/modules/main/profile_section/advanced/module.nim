@@ -75,18 +75,6 @@ method onWakuV2LightClientSet*(self: Module) =
   info "quit the app because of successful WakuV2 light client change"
   quit(QuitSuccess) # quits the app TODO: change this to logout instead when supported
 
-method enableDeveloperFeatures*(self: Module) =
-  self.controller.enableDeveloperFeatures()
-
-method isAutoMessageEnabled*(self: Module): bool =
-  self.controller.isAutoMessageEnabled()
-
-method toggleAutoMessage*(self: Module) =
-  self.controller.toggleAutoMessage()
-
-method onAutoMessageToggled*(self: Module) =
-  self.view.emitAutoMessageEnabledSignal()
-
 method isDebugEnabled*(self: Module): bool =
   self.controller.isDebugEnabled()
 

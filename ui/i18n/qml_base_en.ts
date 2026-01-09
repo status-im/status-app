@@ -1325,10 +1325,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Full developer mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Enable translations</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1353,10 +1349,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Auto message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Manage communities on testnet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1370,14 +1362,6 @@
     </message>
     <message>
         <source>RPC statistics</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to enable all the developer features? The app will be restarted.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to enable auto message? You need to restart the app for this change to take effect.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

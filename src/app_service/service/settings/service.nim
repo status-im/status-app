@@ -428,15 +428,6 @@ QtObject:
   proc getCurrentUserStatus*(self: Service): CurrentUserStatus =
     self.settings.currentUserStatus
 
-  proc saveAutoMessageEnabled*(self: Service, value: bool): bool =
-    if(self.saveSetting(KEY_AUTO_MESSAGE_ENABLED, value)):
-      self.settings.autoMessageEnabled = value
-      return true
-    return false
-
-  proc autoMessageEnabled*(self: Service): bool =
-    return self.settings.autoMessageEnabled
-
   proc setDefaultSyncPeriod*(self: Service, value: int): bool =
     if(self.saveSetting(KEY_DEFAULT_SYNC_PERIOD,value)):
       self.settings.defaultSyncPeriod = value

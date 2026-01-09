@@ -67,24 +67,6 @@ proc setWakuV2LightClientEnabled*(self: Controller, enabled: bool) =
 
   self.delegate.onWakuV2LightClientSet()
 
-proc enableDeveloperFeatures*(self: Controller) =
-  discard self.settingsService.saveAutoMessageEnabled(true)
-  discard self.nodeConfigurationService.setLogLevel(LogLevel.DEBUG)
-
-  quit(QuitSuccess) # quits the app TODO: change this to logout instead when supported
-
-proc toggleAutoMessage*(self: Controller) =
-  let enabled = self.settingsService.autoMessageEnabled()
-  if(not self.settingsService.saveAutoMessageEnabled(not enabled)):
-    # in the future we may do a call from here to show a popup about this error
-    error "an error occurred, we couldn't toggle auto message"
-    return
-
-  self.delegate.onAutoMessageToggled()
-
-proc isAutoMessageEnabled*(self: Controller): bool =
-  return self.settingsService.autoMessageEnabled()
-
 proc isDebugEnabled*(self: Controller): bool =
   return self.nodeConfigurationService.isDebugEnabled()
 

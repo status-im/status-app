@@ -1325,10 +1325,6 @@
         <translation>Funciones para desarrolladores</translation>
     </message>
     <message>
-        <source>Full developer mode</source>
-        <translation>Modo de desarrollador completo</translation>
-    </message>
-    <message>
         <source>Enable translations</source>
         <translation>Habilitar traducciones</translation>
     </message>
@@ -1353,10 +1349,6 @@
         <translation>El valor se sobrescribe con opciones de tiempo de ejecución</translation>
     </message>
     <message>
-        <source>Auto message</source>
-        <translation>Mensaje automático</translation>
-    </message>
-    <message>
         <source>Manage communities on testnet</source>
         <translation>Gestionar comunidades en testnet</translation>
     </message>
@@ -1371,14 +1363,6 @@
     <message>
         <source>RPC statistics</source>
         <translation>Estadísticas RPC</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to enable all the developer features? The app will be restarted.</source>
-        <translation>¿Estás seguro de que quieres habilitar todas las funciones de desarrollador? La aplicación se reiniciará.</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to enable auto message? You need to restart the app for this change to take effect.</source>
-        <translation>¿Estás seguro de que quieres habilitar el mensaje automático? Necesitas reiniciar la aplicación para que este cambio surta efecto.</translation>
     </message>
     <message>
         <source>Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.</source>

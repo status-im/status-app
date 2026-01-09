@@ -1620,11 +1620,6 @@
       <translation>Developer features</translation>
     </message>
     <message>
-      <source>Full developer mode</source>
-      <comment>AdvancedView</comment>
-      <translation>Full developer mode</translation>
-    </message>
-    <message>
       <source>Enable translations</source>
       <comment>AdvancedView</comment>
       <translation>Enable translations</translation>
@@ -1655,11 +1650,6 @@
       <translation>The value is overridden with runtime options</translation>
     </message>
     <message>
-      <source>Auto message</source>
-      <comment>AdvancedView</comment>
-      <translation>Auto message</translation>
-    </message>
-    <message>
       <source>Manage communities on testnet</source>
       <comment>AdvancedView</comment>
       <translation>Manage communities on testnet</translation>
@@ -1678,16 +1668,6 @@
       <source>RPC statistics</source>
       <comment>AdvancedView</comment>
       <translation>RPC statistics</translation>
-    </message>
-    <message>
-      <source>Are you sure you want to enable all the developer features? The app will be restarted.</source>
-      <comment>AdvancedView</comment>
-      <translation>Are you sure you want to enable all the developer features? The app will be restarted.</translation>
-    </message>
-    <message>
-      <source>Are you sure you want to enable auto message? You need to restart the app for this change to take effect.</source>
-      <comment>AdvancedView</comment>
-      <translation>Are you sure you want to enable auto message? You need to restart the app for this change to take effect.</translation>
     </message>
     <message>
       <source>Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.</source>

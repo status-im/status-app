@@ -1328,10 +1328,6 @@
         <translation>Vývojářské funkce</translation>
     </message>
     <message>
-        <source>Full developer mode</source>
-        <translation>Plný vývojářský režim</translation>
-    </message>
-    <message>
         <source>Enable translations</source>
         <translation>Povolit překlady</translation>
     </message>
@@ -1356,10 +1352,6 @@
         <translation>Hodnota je přepsána možnostmi běhu</translation>
     </message>
     <message>
-        <source>Auto message</source>
-        <translation>Automatická zpráva</translation>
-    </message>
-    <message>
         <source>Manage communities on testnet</source>
         <translation>Spravovat komunity na testnetu</translation>
     </message>
@@ -1374,14 +1366,6 @@
     <message>
         <source>RPC statistics</source>
         <translation>Statistiky RPC</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to enable all the developer features? The app will be restarted.</source>
-        <translation>Opravdu chcete povolit všechny vývojářské funkce? Aplikace bude restartována.</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to enable auto message? You need to restart the app for this change to take effect.</source>
-        <translation>Opravdu chcete povolit automatickou zprávu? Pro projevení této změny musíte restartovat aplikaci.</translation>
     </message>
     <message>
         <source>Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.</source>

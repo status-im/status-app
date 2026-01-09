@@ -11,7 +11,6 @@ QtObject {
     // Advanced Module Properties
     property string fleet: advancedModule? advancedModule.fleet : ""
     property bool wakuV2LightClientEnabled: advancedModule? advancedModule.wakuV2LightClientEnabled : false
-    property bool isAutoMessageEnabled: advancedModule? advancedModule.isAutoMessageEnabled : false
     property bool isNimbusProxyEnabled: advancedModule? advancedModule.isNimbusProxyEnabled : false
     property bool isDebugEnabled: advancedModule? advancedModule.isDebugEnabled : false
     property int logMaxBackups: advancedModule ? advancedModule.logMaxBackups : 1
@@ -67,13 +66,6 @@ QtObject {
         root.advancedModule.setWakuV2LightClientEnabled(mode)
     }
 
-    function toggleAutoMessage() {
-        if(!root.advancedModule)
-            return
-
-        root.advancedModule.toggleAutoMessage()
-    }
-
     function toggleDebug() {
         if(!root.advancedModule)
             return
@@ -93,13 +85,6 @@ QtObject {
             return
 
         root.advancedModule.setMaxLogBackups(value)
-    }
-
-    function enableDeveloperFeatures() {
-        if(!root.advancedModule)
-            return
-
-        root.advancedModule.enableDeveloperFeatures()
     }
 
     function toggleExperimentalFeature(feature) {

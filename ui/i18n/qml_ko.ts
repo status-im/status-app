@@ -1322,10 +1322,6 @@
         <translation>개발자 기능</translation>
     </message>
     <message>
-        <source>Full developer mode</source>
-        <translation>전체 개발자 모드</translation>
-    </message>
-    <message>
         <source>Enable translations</source>
         <translation>번역 사용</translation>
     </message>
@@ -1350,10 +1346,6 @@
         <translation>값은 런타임 옵션으로 재정의됩니다</translation>
     </message>
     <message>
-        <source>Auto message</source>
-        <translation>자동 메시지</translation>
-    </message>
-    <message>
         <source>Manage communities on testnet</source>
         <translation>Testnet에서 커뮤니티 관리</translation>
     </message>
@@ -1368,14 +1360,6 @@
     <message>
         <source>RPC statistics</source>
         <translation>rpc 통계</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to enable all the developer features? The app will be restarted.</source>
-        <translation>모든 개발자 기능을 활성화하시겠습니까? 앱이 재시작됩니다.</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to enable auto message? You need to restart the app for this change to take effect.</source>
-        <translation>자동 메시지를 활성화하시겠습니까? 이 변경 사항을 적용하려면 앱을 다시 시작해야 합니다.</translation>
     </message>
     <message>
         <source>Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.</source>
