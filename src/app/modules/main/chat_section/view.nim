@@ -331,9 +331,6 @@ QtObject:
     self.loadingHistoryMessagesInProgress = value
     self.loadingHistoryMessagesInProgressChanged()
 
-  proc downloadMessages*(self: View, chatId: string, filePath: string) {.slot.} =
-    self.delegate.downloadMessages(chatId, filePath)
-
   proc tokenPermissionsModel*(self: View): TokenPermissionsModel =
     result = self.tokenPermissionsModel
 

@@ -1337,10 +1337,6 @@
         <translation>Reiniciar</translation>
     </message>
     <message>
-        <source>Download messages</source>
-        <translation>Descargar mensajes</translation>
-    </message>
-    <message>
         <source>Debug</source>
         <translation>Depuración</translation>
     </message>
@@ -3104,10 +3100,6 @@ Do you wish to override the security check and continue?</source>
         <translation>Obtener mensajes</translation>
     </message>
     <message>
-        <source>Download</source>
-        <translation>Descargar</translation>
-    </message>
-    <message>
         <source>Clear History</source>
         <translation>Limpiar historial</translation>
     </message>
@@ -3126,14 +3118,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Leave Chat</source>
         <translation>Abandonar chat</translation>
-    </message>
-    <message>
-        <source>Save</source>
-        <translation>Guardar</translation>
-    </message>
-    <message>
-        <source>Download messages</source>
-        <translation>Descargar mensajes</translation>
     </message>
     <message>
         <source>Clear chat history</source>

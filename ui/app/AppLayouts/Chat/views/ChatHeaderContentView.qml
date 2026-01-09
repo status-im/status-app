@@ -227,14 +227,6 @@ RowLayout {
 
                 onDeleteCommunityChat: root.rootStore.removeCommunityChat(chatId)
 
-                onDownloadMessages: {
-                    if(!chatContentModule) {
-                        console.debug("error on leave chat from context menu - chat content module is not set")
-                        return
-                    }
-                    chatContentModule.downloadMessages(file)
-                }
-
                 onDisplayProfilePopup: {
                     Global.openProfilePopup(publicKey)
                 }

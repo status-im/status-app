@@ -1459,13 +1459,6 @@ method addOrUpdateChat(self: Module,
       insertIntoModel,
     )
 
-method downloadMessages*(self: Module, chatId: string, filePath: string) =
-  if(not self.chatContentModules.contains(chatId)):
-    error "unexisting chat key: ", chatId, methodName="downloadMessages"
-    return
-
-  self.chatContentModules[chatId].downloadMessages(filePath)
-
 method contactsStatusUpdated*(self: Module, statusUpdates: seq[StatusUpdateDto]) =
   for s in statusUpdates:
     let status = toOnlineStatus(s.statusType)

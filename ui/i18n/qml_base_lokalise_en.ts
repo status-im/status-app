@@ -1635,11 +1635,6 @@
       <translation>Restart</translation>
     </message>
     <message>
-      <source>Download messages</source>
-      <comment>AdvancedView</comment>
-      <translation>Download messages</translation>
-    </message>
-    <message>
       <source>Debug</source>
       <comment>AdvancedView</comment>
       <translation>Debug</translation>
@@ -3792,11 +3787,6 @@
       <translation>Fetch messages</translation>
     </message>
     <message>
-      <source>Download</source>
-      <comment>ChatContextMenuView</comment>
-      <translation>Download</translation>
-    </message>
-    <message>
       <source>Clear History</source>
       <comment>ChatContextMenuView</comment>
       <translation>Clear History</translation>
@@ -3820,16 +3810,6 @@
       <source>Leave Chat</source>
       <comment>ChatContextMenuView</comment>
       <translation>Leave Chat</translation>
-    </message>
-    <message>
-      <source>Save</source>
-      <comment>ChatContextMenuView</comment>
-      <translation>Save</translation>
-    </message>
-    <message>
-      <source>Download messages</source>
-      <comment>ChatContextMenuView</comment>
-      <translation>Download messages</translation>
     </message>
     <message>
       <source>Clear chat history</source>

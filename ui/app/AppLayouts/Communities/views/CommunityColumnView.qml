@@ -386,10 +386,6 @@ Item {
 
                 onDeleteCommunityChat:  root.store.removeCommunityChat(chatId)
 
-                onDownloadMessages: {
-                    root.communitySectionModule.downloadMessages(chatId, file)
-                }
-
                 onDisplayProfilePopup: {
                     Global.openProfilePopup(publicKey)
                 }

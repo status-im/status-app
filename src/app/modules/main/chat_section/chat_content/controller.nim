@@ -261,13 +261,3 @@ proc getTransactionDetails*(self: Controller, message: MessageDto): (string,stri
 
 proc getWalletAccounts*(self: Controller): seq[wallet_account_service.WalletAccountDto] =
   return self.messageService.getWalletAccounts()
-
-proc downloadMessages*(self: Controller, messages: seq[message_item.Item], filePath: string) =
-  let data = newJArray()
-  for message in messages:
-    data.elems.add(%*{
-      "id": message.id(), "text": message.messageText(), "timestamp": message.timestamp(),
-      "sender": message.senderDisplayName()
-    })
-
-  writeFile(url_toLocalFile(filePath), $data)

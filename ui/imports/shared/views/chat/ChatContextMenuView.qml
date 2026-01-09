@@ -38,7 +38,6 @@ StatusMenu {
     signal muteChat(string chatId, int interval)
     signal markAllMessagesRead(string chatId)
     signal clearChatHistory(string chatId)
-    signal downloadMessages(string file)
     signal deleteCommunityChat(string chatId)
     signal leaveChat(string chatId)
     signal updateGroupChatDetails(string chatId, string groupName, string groupColor, string groupImage)
@@ -159,13 +158,6 @@ StatusMenu {
         }
     }
 
-    StatusAction {
-        text: qsTr("Download")
-        enabled: localAccountSensitiveSettings.downloadChannelMessagesEnabled
-        icon.name: "download"
-        onTriggered: downloadDialog.open()
-    }
-
     StatusMenuSeparator {
         visible: clearHistoryGroupMenuItem.enabled || deleteOrLeaveMenuItem.enabled
     }
@@ -220,18 +212,6 @@ StatusMenu {
         type: StatusAction.Type.Danger
         onTriggered: {
             Global.openPopup(clearChatConfirmationDialogComponent);
-        }
-    }
-
-    StatusSaveFileDialog {
-        id: downloadDialog
-        acceptLabel: qsTr("Save")
-        title: qsTr("Download messages")
-        selectedFile: documentsLocation + "/messages.json"
-        defaultSuffix: "json"
-
-        onAccepted: {
-            root.downloadMessages(downloadDialog.selectedFile)
         }
     }
 

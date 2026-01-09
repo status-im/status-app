@@ -1337,10 +1337,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Download messages</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Debug</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3100,10 +3096,6 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Download</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Clear History</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3121,14 +3113,6 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Leave Chat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Save</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Download messages</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

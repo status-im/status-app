@@ -394,10 +394,6 @@ method onGroupChatDetailsUpdated*(self: Module, newName: string, newColor: strin
   self.view.updateChatDetailsNameColorIcon(newName, newColor, newImage)
   self.messagesModule.updateChatIdentifier()
 
-method downloadMessages*(self: Module, filePath: string) =
-  let messages = self.messagesModule.getMessages()
-  self.controller.downloadMessages(messages, filePath)
-
 method onMutualContactChanged*(self: Module) =
   let contactDto = self.controller.getContactById(self.controller.getMyChatId())
   let isContact = contactDto.isContact

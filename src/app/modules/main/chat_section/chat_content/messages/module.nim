@@ -557,9 +557,6 @@ method onChatMemberUpdated*(self: Module, publicKey: string, memberRole: MemberR
 
   self.view.model().refreshItemWithId(CHAT_IDENTIFIER_MESSAGE_ID)
 
-method getMessages*(self: Module): seq[message_item.Item] =
-  return self.view.model().items
-
 method onMailserverSynced*(self: Module, syncedFrom: int64) =
   let chatDto = self.controller.getChatDetails()
   if (not chatDto.hasMoreMessagesToRequest(syncedFrom)):

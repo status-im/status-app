@@ -199,12 +199,10 @@ Item {
                         // Not Refactored Yet
                     }
 
-                    onDownloadMessages: {
-                        root.chatSectionModule.downloadMessages(chatId, file)
-                    }
                     onDisplayProfilePopup: {
                         Global.openProfilePopup(publicKey)
                     }
+
                     onUpdateGroupChatDetails: {
                         chatSectionModule.updateGroupChatDetails(
                                     chatId,
@@ -213,6 +211,7 @@ Item {
                                     groupImage
                                     )
                     }
+
                     onAddRemoveGroupMember: {
                         root.addRemoveGroupMemberClicked()
                     }

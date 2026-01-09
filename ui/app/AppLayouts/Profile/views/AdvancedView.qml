@@ -336,8 +336,7 @@ SettingsContentBase {
                 width: parent.width
                 text: qsTr("Full developer mode")
                 enabled: {
-                    return !localAccountSensitiveSettings.downloadChannelMessagesEnabled ||
-                        !root.advancedStore.isDebugEnabled ||
+                    return !root.advancedStore.isDebugEnabled ||
                         !root.advancedStore.isAutoMessageEnabled
                 }
                 onClicked: {
@@ -369,16 +368,6 @@ SettingsContentBase {
                     confirmationText: qsTr("Display language will be switched back to English. You must restart the application for changes to take effect.")
                     confirmButtonLabel: qsTr("Restart")
                     onConfirmButtonClicked: SystemUtils.restartApplication()
-                }
-            }
-
-            StatusSettingsLineButton {
-                width: parent.width
-                text: qsTr("Download messages")
-                isSwitch: true
-                checked: localAccountSensitiveSettings.downloadChannelMessagesEnabled
-                onClicked: {
-                    localAccountSensitiveSettings.downloadChannelMessagesEnabled = !localAccountSensitiveSettings.downloadChannelMessagesEnabled
                 }
             }
 
@@ -471,7 +460,6 @@ SettingsContentBase {
                 showCancelButton: true
                 confirmationText: qsTr("Are you sure you want to enable all the developer features? The app will be restarted.")
                 onConfirmButtonClicked: {
-                    localAccountSensitiveSettings.downloadChannelMessagesEnabled = true
                     Qt.callLater(root.advancedStore.enableDeveloperFeatures)
                     close()
                 }

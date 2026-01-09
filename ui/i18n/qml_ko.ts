@@ -1334,10 +1334,6 @@
         <translation>다시 시작</translation>
     </message>
     <message>
-        <source>Download messages</source>
-        <translation>메시지 다운로드</translation>
-    </message>
-    <message>
         <source>Debug</source>
         <translation>디버그</translation>
     </message>
@@ -3095,10 +3091,6 @@ Do you wish to override the security check and continue?</source>
         <translation>메시지 가져오기</translation>
     </message>
     <message>
-        <source>Download</source>
-        <translation>다운로드</translation>
-    </message>
-    <message>
         <source>Clear History</source>
         <translation>기록 지우기</translation>
     </message>
@@ -3117,14 +3109,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Leave Chat</source>
         <translation>채팅 나가기</translation>
-    </message>
-    <message>
-        <source>Save</source>
-        <translation>저장</translation>
-    </message>
-    <message>
-        <source>Download messages</source>
-        <translation>메시지 다운로드</translation>
     </message>
     <message>
         <source>Clear chat history</source>

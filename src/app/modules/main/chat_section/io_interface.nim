@@ -319,9 +319,6 @@ method toggleCollapsedCommunityCategoryAsync*(self: AccessInterface, categoryId:
 method reorderCommunityChat*(self: AccessInterface, categoryId: string, chatId: string, position: int) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method downloadMessages*(self: AccessInterface, chatId: string, filePath: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method updateLastMessage*(self: AccessInterface, chatId: string, lastMessageTimestamp: int, lastMessage: MessageDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 

@@ -141,9 +141,6 @@ method leaveChat*(self: AccessInterface) {.base.} =
 method didIJoinedChat*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method getMessages*(self: AccessInterface): seq[message_item.Item] {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method onMailserverSynced*(self: AccessInterface, syncedFrom: int64) {.base.} =
   raise newException(ValueError, "No implementation available")
 

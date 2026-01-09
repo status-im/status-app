@@ -1340,10 +1340,6 @@
         <translation>Restartovat</translation>
     </message>
     <message>
-        <source>Download messages</source>
-        <translation>Stáhnout zprávy</translation>
-    </message>
-    <message>
         <source>Debug</source>
         <translation>Ladění</translation>
     </message>
@@ -3112,10 +3108,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Stáhnout zprávy</translation>
     </message>
     <message>
-        <source>Download</source>
-        <translation>Stáhnout</translation>
-    </message>
-    <message>
         <source>Clear History</source>
         <translation>Smazat historii</translation>
     </message>
@@ -3134,14 +3126,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Leave Chat</source>
         <translation>Opustit chat</translation>
-    </message>
-    <message>
-        <source>Save</source>
-        <translation>Uložit</translation>
-    </message>
-    <message>
-        <source>Download messages</source>
-        <translation>Stánout zprávy</translation>
     </message>
     <message>
         <source>Clear chat history</source>
