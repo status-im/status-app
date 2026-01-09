@@ -3,7 +3,6 @@ library 'status-jenkins-lib@v1.9.34'
 
 /* Options section can't access functions in objects. */
 def isPRBuild = utils.isPRBuild()
-def isReleaseBranch = (env.CHANGE_BRANCH ?: env.BRANCH_NAME)?.startsWith('release')
 
 /* Object to store public URLs for description. */
 descLinks = [:]
@@ -32,11 +31,6 @@ pipeline {
       name: 'VERBOSE',
       description: 'Level of verbosity based on nimbus-build-system setup.',
       choices: ['0','1','2','3']
-    )
-    choice(
-      name: 'PACKAGE_TYPE',
-      description: 'Package type to build.',
-      choices: ['auto', 'apk', 'aab']
     )
   }
 
@@ -70,24 +64,29 @@ pipeline {
     QT_VERSION = "6.9.2"
     QT_ANDROID_PATH = "/opt/qt/${env.QT_VERSION}/android_arm64_v8a"
     QMAKE = "/opt/qt/${env.QT_VERSION}/android_arm64_v8a/bin/qmake"
-    /* override package type if set, otherwise auto-select based on branch
-     * release branches build both APK and AAB */
-    PACKAGE_TYPE = "${params.PACKAGE_TYPE != 'auto' ? params.PACKAGE_TYPE : (isReleaseBranch ? 'apk-aab' : 'apk')}"
-    BUILD_AAB = "${env.PACKAGE_TYPE == 'apk-aab'}"
-    /* For 'apk-aab' mode, primary artifact is APK; otherwise use PACKAGE_TYPE */
-    PRIMARY_EXT = "${env.BUILD_AAB == 'true' ? 'apk' : env.PACKAGE_TYPE}"
-    /* BUILD_VARIANT controls package name and signing: pr = app.status.mobile.pr, release = app.status.mobile */
-    BUILD_VARIANT = "${isReleaseBranch ? 'release' : 'pr'}"
-    /* App name derived from BUILD_VARIANT */
-    STATUS_ANDROID_APP_NAME = "${['pr': 'StatusPR', 'release': 'Status'][env.BUILD_VARIANT]}"
-    STATUS_ARTIFACT = "pkg/${utils.pkgFilename(ext: env.PRIMARY_EXT, arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
-    STATUS_BINARY = "${WORKSPACE}/mobile/bin/android/qt6/${env.STATUS_ANDROID_APP_NAME}.${env.PRIMARY_EXT}"
+    /* Release-dependent vars are set in Initialize stage after Git checkout */
+    STATUS_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'apk', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
     STATUS_AAB_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'aab', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
-    STATUS_AAB_BINARY = "${WORKSPACE}/mobile/bin/android/qt6/${env.STATUS_ANDROID_APP_NAME}.aab"
     NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
   }
 
   stages {
+
+    stage('Initialize') {
+      steps { script {
+        /* Set release-dependent env vars now that GIT_BRANCH is available */
+        def gitBranch = env.GIT_BRANCH ?: ''
+        def isRelease = gitBranch.contains('release/')
+        env.IS_RELEASE_BRANCH = isRelease ? 'true' : 'false'
+        env.PACKAGE_TYPE = isRelease ? 'apk-aab' : 'apk'
+        env.BUILD_VARIANT = isRelease ? 'release' : 'pr'
+        env.STATUS_ANDROID_APP_NAME = isRelease ? 'Status' : 'StatusPR'
+        env.STATUS_BINARY = "${env.WORKSPACE}/mobile/bin/android/qt6/${env.STATUS_ANDROID_APP_NAME}.apk"
+        env.STATUS_AAB_BINARY = "${env.WORKSPACE}/mobile/bin/android/qt6/${env.STATUS_ANDROID_APP_NAME}.aab"
+        echo "GIT_BRANCH: '${gitBranch}', isRelease: ${isRelease}"
+        echo "IS_RELEASE_BRANCH: ${env.IS_RELEASE_BRANCH}, PACKAGE_TYPE: ${env.PACKAGE_TYPE}, BUILD_VARIANT: ${env.BUILD_VARIANT}"
+      } }
+    }
 
     stage('Cleanup Workspace') {
       steps {
@@ -111,7 +110,7 @@ pipeline {
       steps { script {
         sh 'mkdir -p pkg'
         sh "cp -v ${env.STATUS_BINARY} ${env.STATUS_ARTIFACT}"
-        if (env.BUILD_AAB == 'true') {
+        if (env.IS_RELEASE_BRANCH == 'true') {
           sh "cp -v ${env.STATUS_AAB_BINARY} ${env.STATUS_AAB_ARTIFACT}"
         }
       } }
@@ -122,12 +121,12 @@ pipeline {
         stage('Upload') {
           steps { script {
             env.PKG_URL = s5cmd.upload(env.STATUS_ARTIFACT)
-            descLinks[env.PRIMARY_EXT.toUpperCase()] = env.PKG_URL
+            descLinks.APK = env.PKG_URL
           } }
         }
 
         stage('Upload AAB') {
-          when { expression { env.BUILD_AAB == 'true' } }
+          when { expression { env.IS_RELEASE_BRANCH == 'true' } }
           steps { script {
             env.AAB_URL = s5cmd.upload(env.STATUS_AAB_ARTIFACT)
             descLinks.AAB = env.AAB_URL
@@ -139,7 +138,7 @@ pipeline {
     stage('Archive') {
       steps { script {
         archiveArtifacts env.STATUS_ARTIFACT
-        if (env.BUILD_AAB == 'true') {
+        if (env.IS_RELEASE_BRANCH == 'true') {
           archiveArtifacts env.STATUS_AAB_ARTIFACT
         }
       } }

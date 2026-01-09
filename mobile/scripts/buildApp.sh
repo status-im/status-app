@@ -6,7 +6,7 @@ CWD=$(realpath "$(dirname "$0")")
 ARCH=${ARCH:-amd64}
 SDK=${SDK:-iphonesimulator}
 BUILD_DIR=${BUILD_DIR:-"$CWD/../build"}
-BUILD_TYPE=${BUILD_TYPE:-"apk"}
+GRADLE_TARGETS=${GRADLE_TARGETS:-"assembleRelease"}
 BUILD_VARIANT=${BUILD_VARIANT:-"release"}
 
 QMAKE_BIN="${QMAKE:-qmake}"
@@ -58,29 +58,22 @@ if [[ "${OS}" == "android" ]]; then
   APK_OUT="build/outputs/apk/release/android-build-release.apk"
   AAB_OUT="build/outputs/bundle/release/android-build-release.aab"
 
-  # Build based on BUILD_TYPE: apk, aab, or apk-aab
-  case "$BUILD_TYPE" in
-    apk-aab)
-      gradle assembleRelease bundleRelease --no-daemon
-      [[ ! -f "$APK_OUT" ]] && { echo "Error: $APK_OUT not found"; exit 1; }
-      [[ ! -f "$AAB_OUT" ]] && { echo "Error: $AAB_OUT not found"; exit 1; }
-      cp "$APK_OUT" "$BIN_DIR/${OUTPUT_NAME}.apk"
-      cp "$AAB_OUT" "$BIN_DIR/${OUTPUT_NAME}.aab"
-      echo "Build succeeded: $BIN_DIR/${OUTPUT_NAME}.apk and $BIN_DIR/${OUTPUT_NAME}.aab"
-      ;;
-    aab)
-      gradle bundleRelease --no-daemon
-      [[ ! -f "$AAB_OUT" ]] && { echo "Error: $AAB_OUT not found"; exit 1; }
-      cp "$AAB_OUT" "$BIN_DIR/${OUTPUT_NAME}.aab"
-      echo "Build succeeded: $BIN_DIR/${OUTPUT_NAME}.aab"
-      ;;
-    *)
-      gradle assembleRelease --no-daemon
-      [[ ! -f "$APK_OUT" ]] && { echo "Error: $APK_OUT not found"; exit 1; }
-      cp "$APK_OUT" "$BIN_DIR/${OUTPUT_NAME}.apk"
-      echo "Build succeeded: $BIN_DIR/${OUTPUT_NAME}.apk"
-      ;;
-  esac
+  # Build with specified gradle targets
+  gradle $GRADLE_TARGETS --no-daemon
+
+  # Copy whichever artifacts were built
+  BUILT=""
+  if [[ -f "$APK_OUT" ]]; then
+    cp "$APK_OUT" "$BIN_DIR/${OUTPUT_NAME}.apk"
+    BUILT="$BIN_DIR/${OUTPUT_NAME}.apk"
+  fi
+  if [[ -f "$AAB_OUT" ]]; then
+    cp "$AAB_OUT" "$BIN_DIR/${OUTPUT_NAME}.aab"
+    BUILT="$BUILT $BIN_DIR/${OUTPUT_NAME}.aab"
+  fi
+
+  [[ -z "$BUILT" ]] && { echo "Error: No artifacts produced"; exit 1; }
+  echo "Build succeeded:$BUILT"
 
 else
   "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec macx-ios-clang CONFIG+="$SDK" VERSION="$VERSION" -after

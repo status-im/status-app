@@ -40,11 +40,9 @@ TARGET_PREFIX := Status
 # Default package type for Android builds
 PACKAGE_TYPE ?= apk
 
-# mobile app extension to be based on OS and PACKAGE_TYPE
+# mobile app extension - always apk for Android (AAB built alongside when requested)
 ifeq ($(OS),ios)
 EXTENSION := app
-else ifeq ($(OS),android)
-EXTENSION := $(PACKAGE_TYPE)
 else
 EXTENSION := apk
 endif

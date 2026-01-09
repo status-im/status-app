@@ -76,7 +76,7 @@ $(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT
 $(TARGET): $(APP_SCRIPT) $(STATUS_GO_LIB) $(STATUS_Q_LIB) $(DOTHERSIDE_LIB) $(OPENSSL_LIB) $(QRCODEGEN_LIB) $(NIM_STATUS_CLIENT_LIB) $(STATUS_DESKTOP_RCC) $(WRAPPER_APP_FILES)
 	@echo "Building app"
 ifeq ($(OS),android)
-	@STATUS_DESKTOP=$(STATUS_DESKTOP) BUILD_TYPE=$(PACKAGE_TYPE) BIN_DIR=$(BIN_PATH) BUILD_DIR=$(BUILD_PATH) QT_MAJOR=$(QT_MAJOR) $(APP_SCRIPT) $(HANDLE_OUTPUT)
+	@STATUS_DESKTOP=$(STATUS_DESKTOP) GRADLE_TARGETS="$(GRADLE_TARGETS)" BIN_DIR=$(BIN_PATH) BUILD_DIR=$(BUILD_PATH) QT_MAJOR=$(QT_MAJOR) $(APP_SCRIPT) $(HANDLE_OUTPUT)
 else
 	@STATUS_DESKTOP=$(STATUS_DESKTOP) BIN_DIR=$(BIN_PATH) BUILD_DIR=$(BUILD_PATH) QT_MAJOR=$(QT_MAJOR) $(APP_SCRIPT) $(HANDLE_OUTPUT)
 endif
@@ -93,46 +93,36 @@ compile-translations:
 	@make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
 
 .PHONY: apk
+apk:
 ifeq ($(OS),android)
-apk:
-	@$(MAKE) PACKAGE_TYPE=apk $(BIN_PATH)/Status.apk
-	@echo "✓ APK built successfully"
+	@$(MAKE) GRADLE_TARGETS=assembleRelease $(TARGET)
 else
-apk:
-	@echo "Error: APK target is only available for Android"
-	@exit 1
+	$(error APK target is only available for Android)
 endif
 
 .PHONY: aab
+aab:
 ifeq ($(OS),android)
-aab:
-	@$(MAKE) PACKAGE_TYPE=aab $(BIN_PATH)/Status.aab
-	@echo "✓ AAB built successfully"
+	@$(MAKE) GRADLE_TARGETS="assembleRelease bundleRelease" $(TARGET)
 else
-aab:
-	@echo "Error: AAB target is only available for Android"
-	@exit 1
+	$(error AAB target is only available for Android)
 endif
 
 .PHONY: apk-aab
+apk-aab:
 ifeq ($(OS),android)
-apk-aab:
-	@$(MAKE) PACKAGE_TYPE=apk-aab $(BIN_PATH)/Status.apk
-	@echo "✓ APK and AAB built successfully"
+	@$(MAKE) GRADLE_TARGETS="assembleRelease bundleRelease" $(TARGET)
 else
-apk-aab:
-	@echo "Error: apk-aab target is only available for Android"
-	@exit 1
+	$(error apk-aab target is only available for Android)
 endif
 
 .PHONY: ios-app
+ios-app:
 ifeq ($(OS),ios)
-ios-app: $(TARGET)
+	@$(MAKE) $(TARGET)
 	@echo "✓ iOS app built successfully"
 else
-ios-app:
-	@echo "Error: iOS app target is only available for iOS"
-	@exit 1
+	$(error iOS app target is only available for iOS)
 endif
 
 .PHONY: all
