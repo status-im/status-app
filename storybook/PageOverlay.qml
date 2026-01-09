@@ -8,10 +8,9 @@ import StatusQ.Core.Theme
 Loader {
     id: root
 
-    function setPage(pageName: string, pageItem: Item) {
+    function setPage(pageName: string) {
         active = false
         d.currentPage = pageName
-        d.currentPageItem = pageItem
         active = true
     }
 
@@ -23,7 +22,7 @@ Loader {
         id: d
 
         property string currentPage
-        property Item currentPageItem
+        readonly property Window currentWindow: root.Window.window
     }
 
     active: false
@@ -61,34 +60,34 @@ Loader {
             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
 
             PageOverlayPanel {
-                style: d.currentPageItem.Theme.style
-                themePadding: d.currentPageItem.Theme.padding
-                fontSizeOffset: d.currentPageItem.Theme.fontSizeOffset
+                style: d.currentWindow.Theme.style
+                themePadding: d.currentWindow.Theme.padding
+                fontSizeOffset: d.currentWindow.Theme.fontSizeOffset
 
                 onStyleRequested: style => {
-                    d.currentPageItem.Theme.style = style
+                    d.currentWindow.Theme.style = style
                 }
 
                 onPaddingRequested: padding => {
-                    d.currentPageItem.Theme.padding = padding
+                    d.currentWindow.Theme.padding = padding
                 }
 
                 onPaddingFactorRequested: paddingFactor => {
-                    ThemeUtils.setPaddingFactor(d.currentPageItem, paddingFactor)
+                    ThemeUtils.setPaddingFactor(d.currentWindow, paddingFactor)
                 }
 
                 onFontSizeOffsetRequested: fontSizeOffset => {
-                    d.currentPageItem.Theme.fontSizeOffset = fontSizeOffset
+                    d.currentWindow.Theme.fontSizeOffset = fontSizeOffset
                 }
 
                 onFontSizeRequested: fontSize => {
-                    ThemeUtils.setFontSize(d.currentPageItem, fontSize)
+                    ThemeUtils.setFontSize(d.currentWindow, fontSize)
                 }
 
                 onResetRequested: {
-                    d.currentPageItem.Theme.style = undefined
-                    d.currentPageItem.Theme.padding = undefined
-                    d.currentPageItem.Theme.fontSizeOffset = undefined
+                    d.currentWindow.Theme.style = undefined
+                    d.currentWindow.Theme.padding = undefined
+                    d.currentWindow.Theme.fontSizeOffset = undefined
                 }
             }
         }
@@ -97,17 +96,17 @@ Loader {
             if (!settings.initialized) {
                 settings.initialized = true
             } else {
-                d.currentPageItem.Theme.style = settings.style
-                d.currentPageItem.Theme.padding = settings.padding
-                d.currentPageItem.Theme.fontSizeOffset = settings.fontSizeOffset
+                d.currentWindow.Theme.style = settings.style
+                d.currentWindow.Theme.padding = settings.padding
+                d.currentWindow.Theme.fontSizeOffset = settings.fontSizeOffset
             }
 
             settings.style
-                    = Qt.binding(() => d.currentPageItem.Theme.style)
+                    = Qt.binding(() => d.currentWindow.Theme.style)
             settings.padding
-                    = Qt.binding(() => d.currentPageItem.Theme.padding)
+                    = Qt.binding(() => d.currentWindow.Theme.padding)
             settings.fontSizeOffset
-                    = Qt.binding(() => d.currentPageItem.Theme.fontSizeOffset)
+                    = Qt.binding(() => d.currentWindow.Theme.fontSizeOffset)
         }
 
         Settings {

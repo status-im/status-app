@@ -19,7 +19,8 @@ ApplicationWindow {
 
     title: "%1 – %2".arg(storybook.currentPage).arg(Qt.application.displayName)
 
-    // cf. Universal theme kept here as the basic light/dark theme for the app itself
+    // cf. Universal theme kept here as the basic light/dark theme for the
+    // Storybook app itself
     Universal.theme: storybook.darkMode ? Universal.Dark : Universal.Light
     font.pixelSize: 13
 
@@ -30,7 +31,7 @@ ApplicationWindow {
 
         onCurrentPageItemChanged: {
             if (currentPageItem)
-                overlay.setPage(currentPage, currentPageItem)
+                overlay.setPage(currentPage)
             else
                 overlay.clear()
         }

@@ -24,7 +24,7 @@ Dialog {
        \qmlproperty color backgroundColor
         This property decides the modal background color
     */
-    property color backgroundColor: Theme.palette.statusModal.backgroundColor
+    property color backgroundColor: contentItem.Theme.palette.statusModal.backgroundColor
 
     /*!
        \qmlproperty var closeHandler

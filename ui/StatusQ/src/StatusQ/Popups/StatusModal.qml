@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 
 import StatusQ.Core
-import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Popups.Dialog
 
