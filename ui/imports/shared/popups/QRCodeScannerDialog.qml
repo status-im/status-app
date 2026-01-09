@@ -101,7 +101,5 @@ StatusDialog {
         }
     }
 
-    footer: Item {
-        visible: false
-    }
+    footer: null
 }
