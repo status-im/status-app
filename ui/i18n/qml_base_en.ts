@@ -4344,10 +4344,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <source>Start chat</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Open QR Scanner</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ContactsListPanel</name>
@@ -14392,21 +14388,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>QRCodeScannerDialog</name>
-    <message>
-        <source>Scan QR</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status doesn&apos;t understand the QR code.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Scanned successfully</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>RPCStatsModal</name>
     <message>
         <source>Total</source>
@@ -16615,26 +16596,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>StatusQRCodeScanner</name>
-    <message>
-        <source>Enable access to your camera</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>To scan a QR, Status needs
-access to your webcam</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Scan QR</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ensure that the QR code is in focus to scan</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>StatusQrCodeScanner</name>
     <message>
         <source>Camera is not available</source>
@@ -16766,6 +16727,26 @@ access to your webcam</source>
     </message>
     <message>
         <source>Paste</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>StatusSyncCodeScan</name>
+    <message>
+        <source>Enable access to your camera</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To scan a QR, Status needs
+access to your webcam</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ensure that the QR code is in focus to scan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scan QR</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

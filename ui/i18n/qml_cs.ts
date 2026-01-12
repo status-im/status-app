@@ -4366,10 +4366,6 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <source>Start chat</source>
         <translation>Zahájit chat</translation>
     </message>
-    <message>
-        <source>Open QR Scanner</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ContactsListPanel</name>
@@ -13563,164 +13559,164 @@ selhalo</translation>
     <name>Popups</name>
     <message>
         <source>Share addresses with %1&apos;s owner</source>
-        <translation type="unfinished"></translation>
+        <translation>Sdílet adresy s vlastníkem %1</translation>
     </message>
     <message>
         <source>Share addresses to rejoin %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Sdílet adresy pro opětovné připojení k %1</translation>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 odstraněn z kontaktů a označen jako nedůvěryhodný</translation>
     </message>
     <message>
         <source>%1 removed from contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 odstraněn z kontaktů</translation>
     </message>
     <message>
         <source>%1 marked as trusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 označen jako důvěryhodný</translation>
     </message>
     <message>
         <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 značka důvěry odstraněna, odstraněn z kontaktů a označen jako nedůvěryhodný</translation>
     </message>
     <message>
         <source>%1 trust mark removed and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 značka důvěry odstraněna a označen jako nedůvěryhodný</translation>
     </message>
     <message>
         <source>%1 trust mark removed and removed from contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 značka důvěry odstraněna a odstraněn z kontaktů</translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádost o kontakt přijata</translation>
     </message>
     <message>
         <source>Contact request ignored</source>
-        <translation type="unfinished"></translation>
+        <translation>Žádost o kontakt ignorována</translation>
     </message>
     <message>
         <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Obnovovací fráze trvale odstraněna z úložiště aplikace Status</translation>
     </message>
     <message>
         <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Zálohovali jste svou obnovovací frázi. Přístup k ní máte v Nastavení</translation>
     </message>
     <message>
         <source>Profile Picture</source>
-        <translation type="unfinished"></translation>
+        <translation>Profilový obrázek</translation>
     </message>
     <message>
         <source>Make this my Profile Pic</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastavit jako můj profilový obrázek</translation>
     </message>
     <message>
         <source>%1 marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 označen jako nedůvěryhodný</translation>
     </message>
     <message>
         <source>%1 unblocked</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 odblokován</translation>
     </message>
     <message>
         <source>%1 blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 zablokován</translation>
     </message>
     <message>
         <source>Please choose a directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyberte prosím adresář</translation>
     </message>
     <message>
         <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Opravdu chcete opustit &apos;%1&apos;?</translation>
     </message>
     <message>
         <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud se budete chtít v budoucnu znovu stát členem, budete muset požádat o připojení. Pokud jste se ke komunitě připojili pomocí veřejného klíče, ujistěte se, že máte jeho kopii, než odejdete.</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Zrušit</translation>
+        <translation>Zrušit</translation>
     </message>
     <message>
         <source>Leave %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Opustit %1</translation>
     </message>
     <message>
         <source>Turn off testnet mode</source>
-        <translation type="unfinished">Vypnout režim testnet</translation>
+        <translation>Vypnout režim testnet</translation>
     </message>
     <message>
         <source>Turn on testnet mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Zapnout režim testnet</translation>
     </message>
     <message>
         <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation type="unfinished"></translation>
+        <translation>Opravdu chcete vypnout %1? Všechny budoucí transakce budou prováděny na živých sítích se skutečnými prostředky</translation>
     </message>
     <message>
         <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation type="unfinished"></translation>
+        <translation>Opravdu chcete zapnout %1? V tomto režimu budou všechna zobrazená blockchainová data pocházet z testnetů a všechny interakce s blockchainem budou probíhat s testnety. Režim testnet přepne celou aplikaci pouze na používání testnetů. Zapněte tento režim pouze v případě, že přesně víte, proč jej potřebujete použít.</translation>
     </message>
     <message>
         <source>Testnet mode turned on</source>
-        <translation type="unfinished"></translation>
+        <translation>Režim testnet zapnut</translation>
     </message>
     <message>
         <source>Testnet mode turned off</source>
-        <translation type="unfinished"></translation>
+        <translation>Režim testnet vypnut</translation>
     </message>
     <message>
         <source>Sign transaction - update %1 smart contract</source>
-        <translation type="unfinished"></translation>
+        <translation>Podepsat transakci - aktualizovat chytrý kontrakt %1</translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 (%2) úspěšně skryto. Viditelnost aktiv můžete přepínat přes %3.</translation>
     </message>
     <message>
         <source>Settings</source>
         <comment>Go to Settings</comment>
-        <translation type="unfinished">Nastavení</translation>
+        <translation>Nastavení</translation>
     </message>
     <message>
         <source>Hide collectible</source>
-        <translation type="unfinished">Skrýt sběratelský předmět</translation>
+        <translation>Skrýt sběratelský předmět</translation>
     </message>
     <message>
         <source>Hide %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Skrýt %1</translation>
     </message>
     <message>
         <source>Are you sure you want to hide %1? You will no longer see or be able to interact with this collectible anywhere inside Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>Opravdu chcete skrýt %1? Tento sběratelský předmět již nikde ve Statusu neuvidíte ani s ním nebudete moci interagovat.</translation>
     </message>
     <message>
         <source>%1 successfully hidden. You can toggle collectible visibility via %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 úspěšně skryto. Viditelnost sběratelských předmětů můžete přepínat přes %2.</translation>
     </message>
     <message>
         <source>Status Software Privacy Policy</source>
-        <translation type="unfinished">Zásady ochrany osobních údajů softwaru Status</translation>
+        <translation>Zásady ochrany osobních údajů softwaru Status</translation>
     </message>
     <message>
         <source>Status Software Terms of Use</source>
-        <translation type="unfinished">Podmínky použití softwaru Status</translation>
+        <translation>Podmínky použití softwaru Status</translation>
     </message>
     <message>
         <source>Sign out</source>
-        <translation type="unfinished"></translation>
+        <translation>Odhlásit se</translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ujistěte se, že máte uložené heslo k účtu a obnovovací frázi. Bez nich se můžete uzamknout ze svého účtu a přijít o prostředky.</translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation type="unfinished">Odhlásit se a ukončit</translation>
+        <translation>Odhlásit se a ukončit</translation>
     </message>
 </context>
 <context>
@@ -14496,21 +14492,6 @@ selhalo</translation>
     <message>
         <source>Use Status profile password</source>
         <translation>Použít heslo profilu Status</translation>
-    </message>
-</context>
-<context>
-    <name>QRCodeScannerDialog</name>
-    <message>
-        <source>Scan QR</source>
-        <translation type="unfinished">Skenovat QR</translation>
-    </message>
-    <message>
-        <source>Status doesn&apos;t understand the QR code.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Scanned successfully</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16733,26 +16714,6 @@ selhalo</translation>
     </message>
 </context>
 <context>
-    <name>StatusQRCodeScanner</name>
-    <message>
-        <source>Enable access to your camera</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>To scan a QR, Status needs
-access to your webcam</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Scan QR</source>
-        <translation type="unfinished">Skenovat QR</translation>
-    </message>
-    <message>
-        <source>Ensure that the QR code is in focus to scan</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>StatusQrCodeScanner</name>
     <message>
         <source>Camera is not available</source>
@@ -16885,6 +16846,27 @@ access to your webcam</source>
     <message>
         <source>Paste</source>
         <translation>Vložit</translation>
+    </message>
+</context>
+<context>
+    <name>StatusSyncCodeScan</name>
+    <message>
+        <source>Enable access to your camera</source>
+        <translation>Povolit přístup k fotoaparátu</translation>
+    </message>
+    <message>
+        <source>To scan a QR, Status needs
+access to your webcam</source>
+        <translation>Pro naskenování QR kódu potřebuje Status
+přístup k vaší webkameře</translation>
+    </message>
+    <message>
+        <source>Ensure that the QR code is in focus to scan</source>
+        <translation>Ujistěte se, že je QR kód zaostřený pro naskenování</translation>
+    </message>
+    <message>
+        <source>Scan QR</source>
+        <translation>Skenovat QR</translation>
     </message>
 </context>
 <context>

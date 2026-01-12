@@ -5300,11 +5300,6 @@
       <comment>ContactsColumnView</comment>
       <translation>Start chat</translation>
     </message>
-    <message>
-      <source>Open QR Scanner</source>
-      <comment>ContactsColumnView</comment>
-      <translation>Open QR Scanner</translation>
-    </message>
   </context>
   <context>
     <name>ContactsListPanel</name>
@@ -17532,24 +17527,6 @@
     </message>
   </context>
   <context>
-    <name>QRCodeScannerDialog</name>
-    <message>
-      <source>Scan QR</source>
-      <comment>QRCodeScannerDialog</comment>
-      <translation>Scan QR</translation>
-    </message>
-    <message>
-      <source>Status doesn&#39;t understand the QR code.</source>
-      <comment>QRCodeScannerDialog</comment>
-      <translation>Status doesn&#39;t understand the QR code.</translation>
-    </message>
-    <message>
-      <source>Scanned successfully</source>
-      <comment>QRCodeScannerDialog</comment>
-      <translation>Scanned successfully</translation>
-    </message>
-  </context>
-  <context>
     <name>RPCStatsModal</name>
     <message>
       <source>Total</source>
@@ -20215,29 +20192,6 @@
     </message>
   </context>
   <context>
-    <name>StatusQRCodeScanner</name>
-    <message>
-      <source>Enable access to your camera</source>
-      <comment>StatusQRCodeScanner</comment>
-      <translation>Enable access to your camera</translation>
-    </message>
-    <message>
-      <source>To scan a QR, Status needs&#xA;access to your webcam</source>
-      <comment>StatusQRCodeScanner</comment>
-      <translation>To scan a QR, Status needs&#xA;access to your webcam</translation>
-    </message>
-    <message>
-      <source>Scan QR</source>
-      <comment>StatusQRCodeScanner</comment>
-      <translation>Scan QR</translation>
-    </message>
-    <message>
-      <source>Ensure that the QR code is in focus to scan</source>
-      <comment>StatusQRCodeScanner</comment>
-      <translation>Ensure that the QR code is in focus to scan</translation>
-    </message>
-  </context>
-  <context>
     <name>StatusQrCodeScanner</name>
     <message>
       <source>Camera is not available</source>
@@ -20397,6 +20351,29 @@
       <source>Paste</source>
       <comment>StatusSyncCodeInput</comment>
       <translation>Paste</translation>
+    </message>
+  </context>
+  <context>
+    <name>StatusSyncCodeScan</name>
+    <message>
+      <source>Enable access to your camera</source>
+      <comment>StatusSyncCodeScan</comment>
+      <translation>Enable access to your camera</translation>
+    </message>
+    <message>
+      <source>To scan a QR, Status needs&#xA;access to your webcam</source>
+      <comment>StatusSyncCodeScan</comment>
+      <translation>To scan a QR, Status needs&#xA;access to your webcam</translation>
+    </message>
+    <message>
+      <source>Ensure that the QR code is in focus to scan</source>
+      <comment>StatusSyncCodeScan</comment>
+      <translation>Ensure that the QR code is in focus to scan</translation>
+    </message>
+    <message>
+      <source>Scan QR</source>
+      <comment>StatusSyncCodeScan</comment>
+      <translation>Scan QR</translation>
     </message>
   </context>
   <context>

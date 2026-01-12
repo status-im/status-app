@@ -4351,10 +4351,6 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
         <source>Start chat</source>
         <translation>Iniciar chat</translation>
     </message>
-    <message>
-        <source>Open QR Scanner</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ContactsListPanel</name>
@@ -13479,165 +13475,165 @@ al cargar</translation>
 <context>
     <name>Popups</name>
     <message>
+        <source>Settings</source>
+        <comment>Go to Settings</comment>
+        <translation>Ajustes</translation>
+    </message>
+    <message>
         <source>Share addresses with %1&apos;s owner</source>
-        <translation type="unfinished"></translation>
+        <translation>Compartir direcciones con el propietario de %1</translation>
     </message>
     <message>
         <source>Share addresses to rejoin %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Compartir direcciones para volver a unirse a %1</translation>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 eliminado de contactos y marcado como no confiable</translation>
     </message>
     <message>
         <source>%1 removed from contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 eliminado de contactos</translation>
     </message>
     <message>
         <source>%1 marked as trusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 marcado como confiable</translation>
     </message>
     <message>
         <source>%1 trust mark removed, removed from contacts and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>Marca de confianza de %1 eliminada, eliminado de contactos y marcado como no confiable</translation>
     </message>
     <message>
         <source>%1 trust mark removed and marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>Marca de confianza de %1 eliminada y marcado como no confiable</translation>
     </message>
     <message>
         <source>%1 trust mark removed and removed from contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Marca de confianza de %1 eliminada y eliminado de contactos</translation>
     </message>
     <message>
         <source>Contact request accepted</source>
-        <translation type="unfinished"></translation>
+        <translation>Solicitud de contacto aceptada</translation>
     </message>
     <message>
         <source>Contact request ignored</source>
-        <translation type="unfinished"></translation>
+        <translation>Solicitud de contacto ignorada</translation>
     </message>
     <message>
         <source>Recovery phrase permanently removed from Status application storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Frase de recuperación eliminada permanentemente del almacenamiento de la aplicación Status</translation>
     </message>
     <message>
         <source>You backed up your recovery phrase. Access it in Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Hiciste una copia de seguridad de tu frase de recuperación. Accede a ella en Ajustes</translation>
     </message>
     <message>
         <source>Profile Picture</source>
-        <translation type="unfinished"></translation>
+        <translation>Foto de perfil</translation>
     </message>
     <message>
         <source>Make this my Profile Pic</source>
-        <translation type="unfinished"></translation>
+        <translation>Hacer esta mi foto de perfil</translation>
     </message>
     <message>
         <source>%1 marked as untrusted</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 marcado como no confiable</translation>
     </message>
     <message>
         <source>%1 unblocked</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 desbloqueado</translation>
     </message>
     <message>
         <source>%1 blocked</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 bloqueado</translation>
     </message>
     <message>
         <source>Please choose a directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Por favor elige un directorio</translation>
     </message>
     <message>
         <source>Are you sure want to leave &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Estás seguro de que quieres dejar &apos;%1&apos;?</translation>
     </message>
     <message>
         <source>You will need to request to join if you want to become a member again in the future. If you joined the Community via public key ensure you have a copy of it before you go.</source>
-        <translation type="unfinished"></translation>
+        <translation>Necesitarás solicitar unirte si quieres volver a ser miembro en el futuro. Si te uniste a la Comunidad mediante clave pública, asegúrate de tener una copia antes de irte.</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation type="unfinished">Cancelar</translation>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <source>Leave %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Dejar %1</translation>
     </message>
     <message>
         <source>Turn off testnet mode</source>
-        <translation type="unfinished">Desactivar modo testnet</translation>
+        <translation>Desactivar modo testnet</translation>
     </message>
     <message>
         <source>Turn on testnet mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Activar modo testnet</translation>
     </message>
     <message>
         <source>Are you sure you want to turn off %1? All future transactions will be performed on live networks with real funds</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Estás seguro de que quieres desactivar %1? Todas las transacciones futuras se realizarán en redes en vivo con fondos reales</translation>
     </message>
     <message>
         <source>Are you sure you want to turn on %1? In this mode, all blockchain data displayed will come from testnets and all blockchain interactions will be with testnets. Testnet mode switches the entire app to using testnets only. Please switch this mode on only if you know exactly why you need to use it.</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Estás seguro de que quieres activar %1? En este modo, todos los datos de blockchain mostrados provendrán de testnets y todas las interacciones de blockchain serán con testnets. El modo testnet cambia toda la aplicación para usar solo testnets. Por favor activa este modo solo si sabes exactamente por qué necesitas usarlo.</translation>
     </message>
     <message>
         <source>Testnet mode turned on</source>
-        <translation type="unfinished"></translation>
+        <translation>Modo testnet activado</translation>
     </message>
     <message>
         <source>Testnet mode turned off</source>
-        <translation type="unfinished"></translation>
+        <translation>Modo testnet desactivado</translation>
     </message>
     <message>
         <source>Sign transaction - update %1 smart contract</source>
-        <translation type="unfinished"></translation>
+        <translation>Firmar transacción - actualizar contrato inteligente %1</translation>
     </message>
     <message>
         <source>%1 (%2) successfully hidden. You can toggle asset visibility via %3.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Settings</source>
-        <comment>Go to Settings</comment>
-        <translation type="unfinished">Ajustes</translation>
+        <translation>%1 (%2) ocultado exitosamente. Puedes alternar la visibilidad del activo mediante %3.</translation>
     </message>
     <message>
         <source>Hide collectible</source>
-        <translation type="unfinished">Ocultar coleccionable</translation>
+        <translation>Ocultar coleccionable</translation>
     </message>
     <message>
         <source>Hide %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Ocultar %1</translation>
     </message>
     <message>
         <source>Are you sure you want to hide %1? You will no longer see or be able to interact with this collectible anywhere inside Status.</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Estás seguro de que quieres ocultar %1? Ya no verás ni podrás interactuar con este coleccionable en ningún lugar dentro de Status.</translation>
     </message>
     <message>
         <source>%1 successfully hidden. You can toggle collectible visibility via %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 ocultado exitosamente. Puedes alternar la visibilidad del coleccionable mediante %2.</translation>
     </message>
     <message>
         <source>Status Software Privacy Policy</source>
-        <translation type="unfinished">Política de Privacidad del Software Status</translation>
+        <translation>Política de Privacidad del Software Status</translation>
     </message>
     <message>
         <source>Status Software Terms of Use</source>
-        <translation type="unfinished">Términos de Uso del Software Status</translation>
+        <translation>Términos de Uso del Software Status</translation>
     </message>
     <message>
         <source>Sign out</source>
-        <translation type="unfinished"></translation>
+        <translation>Cerrar sesión</translation>
     </message>
     <message>
         <source>Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.</source>
-        <translation type="unfinished"></translation>
+        <translation>Asegúrate de tener almacenada tu contraseña de cuenta y frase de recuperación. Sin ellas puedes quedar bloqueado de tu cuenta y perder fondos.</translation>
     </message>
     <message>
         <source>Sign out &amp; Quit</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -14411,21 +14407,6 @@ al cargar</translation>
     <name>QObject</name>
     <message>
         <source>Use Status profile password</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>QRCodeScannerDialog</name>
-    <message>
-        <source>Scan QR</source>
-        <translation type="unfinished">Escanear QR</translation>
-    </message>
-    <message>
-        <source>Status doesn&apos;t understand the QR code.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Scanned successfully</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -16639,26 +16620,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>StatusQRCodeScanner</name>
-    <message>
-        <source>Enable access to your camera</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>To scan a QR, Status needs
-access to your webcam</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Scan QR</source>
-        <translation type="unfinished">Escanear QR</translation>
-    </message>
-    <message>
-        <source>Ensure that the QR code is in focus to scan</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>StatusQrCodeScanner</name>
     <message>
         <source>Camera is not available</source>
@@ -16791,6 +16752,27 @@ access to your webcam</source>
     <message>
         <source>Paste</source>
         <translation>Pegar</translation>
+    </message>
+</context>
+<context>
+    <name>StatusSyncCodeScan</name>
+    <message>
+        <source>Enable access to your camera</source>
+        <translation>Habilitar acceso a tu cámara</translation>
+    </message>
+    <message>
+        <source>To scan a QR, Status needs
+access to your webcam</source>
+        <translation>Para escanear un QR, Status necesita
+acceso a tu cámara web</translation>
+    </message>
+    <message>
+        <source>Scan QR</source>
+        <translation>Escanear QR</translation>
+    </message>
+    <message>
+        <source>Ensure that the QR code is in focus to scan</source>
+        <translation>Asegúrate de que el código QR esté enfocado para escanear</translation>
     </message>
 </context>
 <context>
