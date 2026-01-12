@@ -16611,11 +16611,11 @@ access to your webcam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Scan QR</source>
+        <source>Ensure that the QR code is in focus to scan</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ensure that the QR code is in focus to scan</source>
+        <source>Camera access denied. Please enable it in system settings.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -16636,12 +16636,12 @@ access to your webcam</source>
 acceso a tu cámara web</translation>
     </message>
     <message>
-        <source>Scan QR</source>
-        <translation>Escanear QR</translation>
-    </message>
-    <message>
         <source>Ensure that the QR code is in focus to scan</source>
         <translation>Asegúrate de que el código QR esté enfocado para escanear</translation>
+    </message>
+    <message>
+        <source>Camera access denied. Please enable it in system settings.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

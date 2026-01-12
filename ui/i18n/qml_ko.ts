@@ -16582,12 +16582,12 @@ access to your webcam</source>
         <translation>QR를 스캔하려면 Status가 웹캠에 접근할 수 있어야 합니다</translation>
     </message>
     <message>
-        <source>Scan QR</source>
-        <translation>QR 코드 스캔</translation>
-    </message>
-    <message>
         <source>Ensure that the QR code is in focus to scan</source>
         <translation>QR 코드를 선명하게 맞춰 스캔하세요</translation>
+    </message>
+    <message>
+        <source>Camera access denied. Please enable it in system settings.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

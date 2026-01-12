@@ -16730,12 +16730,12 @@ access to your webcam</source>
 přístup k vaší webkameře</translation>
     </message>
     <message>
-        <source>Scan QR</source>
-        <translation>Skenovat QR</translation>
-    </message>
-    <message>
         <source>Ensure that the QR code is in focus to scan</source>
         <translation>Ujistěte se, že je QR kód zaostřený pro naskenování</translation>
+    </message>
+    <message>
+        <source>Camera access denied. Please enable it in system settings.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

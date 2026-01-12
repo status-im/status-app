@@ -20209,14 +20209,14 @@
       <translation>To scan a QR, Status needs&#xA;access to your webcam</translation>
     </message>
     <message>
-      <source>Scan QR</source>
-      <comment>StatusQRCodeScanner</comment>
-      <translation>Scan QR</translation>
-    </message>
-    <message>
       <source>Ensure that the QR code is in focus to scan</source>
       <comment>StatusQRCodeScanner</comment>
       <translation>Ensure that the QR code is in focus to scan</translation>
+    </message>
+    <message>
+      <source>Camera access denied. Please enable it in system settings.</source>
+      <comment>StatusQRCodeScanner</comment>
+      <translation>Camera access denied. Please enable it in system settings.</translation>
     </message>
   </context>
   <context>
