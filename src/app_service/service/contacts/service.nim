@@ -171,14 +171,20 @@ QtObject:
 
   proc doConnect(self: Service) =
     self.events.on(SignalType.Message.event) do(e:Args):
-      var receivedData = MessageSignal(e)
-      if(receivedData.statusUpdates.len > 0):
+      let receivedData = MessageSignal(e)
+
+      if receivedData.updatedProfileShowcaseContactIDs.len > 0:
+        for contactId in receivedData.updatedProfileShowcaseContactIDs:
+          self.events.emit(SIGNAL_CONTACT_PROFILE_SHOWCASE_UPDATED,
+            ProfileShowcaseContactIdArgs(contactId: contactId))
+
+      if receivedData.statusUpdates.len > 0:
         self.updateAndEmitStatuses(receivedData.statusUpdates)
 
       if receivedData.contacts.len > 0:
         for c in receivedData.contacts:
           let localContact = self.getContactById(c.id)
-          var receivedContact = c
+          let receivedContact = c
 
           self.saveContact(receivedContact)
 
@@ -192,16 +198,9 @@ QtObject:
           let data = ContactArgs(contactId: c.id)
           self.events.emit(SIGNAL_CONTACT_UPDATED, data)
 
-    self.events.on(SignalType.Message.event) do(e: Args):
-      let receivedData = MessageSignal(e)
-      if receivedData.updatedProfileShowcaseContactIDs.len > 0:
-        for contactId in receivedData.updatedProfileShowcaseContactIDs:
-          self.events.emit(SIGNAL_CONTACT_PROFILE_SHOWCASE_UPDATED,
-            ProfileShowcaseContactIdArgs(contactId: contactId))
-
     self.events.on(SignalType.StatusUpdatesTimedout.event) do(e:Args):
-      var receivedData = StatusUpdatesTimedoutSignal(e)
-      if(receivedData.statusUpdates.len > 0):
+      let receivedData = StatusUpdatesTimedoutSignal(e)
+      if receivedData.statusUpdates.len > 0:
         self.updateAndEmitStatuses(receivedData.statusUpdates)
 
   proc setImageServerUrl(self: Service) =
