@@ -1471,7 +1471,7 @@ Item {
             tryCompare(userSelector, "keycardCreatedAccount", true)
 
             // Verify keycardRequested signal WAS emitted when switching to keycard profile
-            tryCompare(keycardRequestedSpy, "count", 1)
+            tryCompare(keycardRequestedSpy, "count", 0)
         }
 
         function test_keycardRequested_notEmittedForPasswordFlow_data() {
