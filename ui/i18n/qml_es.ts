@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="es">
+<TS version="2.1" language="es_ES">
 <context>
     <name>AboutView</name>
     <message>
@@ -4350,6 +4350,10 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <message>
         <source>Start chat</source>
         <translation>Iniciar chat</translation>
+    </message>
+    <message>
+        <source>Open QR Scanner</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14411,6 +14415,21 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>QRCodeScannerDialog</name>
+    <message>
+        <source>Scan QR</source>
+        <translation>Escanear QR</translation>
+    </message>
+    <message>
+        <source>Status doesn&apos;t understand the QR code.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scanned successfully</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>RPCStatsModal</name>
     <message>
         <source>Total</source>
@@ -16620,6 +16639,27 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>StatusQRCodeScanner</name>
+    <message>
+        <source>Enable access to your camera</source>
+        <translation>Habilitar acceso a tu cámara</translation>
+    </message>
+    <message>
+        <source>To scan a QR, Status needs
+access to your webcam</source>
+        <translation>Para escanear un QR, Status necesita
+acceso a tu cámara web</translation>
+    </message>
+    <message>
+        <source>Scan QR</source>
+        <translation>Escanear QR</translation>
+    </message>
+    <message>
+        <source>Ensure that the QR code is in focus to scan</source>
+        <translation>Asegúrate de que el código QR esté enfocado para escanear</translation>
+    </message>
+</context>
+<context>
     <name>StatusQrCodeScanner</name>
     <message>
         <source>Camera is not available</source>
@@ -16752,27 +16792,6 @@ al cargar</translation>
     <message>
         <source>Paste</source>
         <translation>Pegar</translation>
-    </message>
-</context>
-<context>
-    <name>StatusSyncCodeScan</name>
-    <message>
-        <source>Enable access to your camera</source>
-        <translation>Habilitar acceso a tu cámara</translation>
-    </message>
-    <message>
-        <source>To scan a QR, Status needs
-access to your webcam</source>
-        <translation>Para escanear un QR, Status necesita
-acceso a tu cámara web</translation>
-    </message>
-    <message>
-        <source>Scan QR</source>
-        <translation>Escanear QR</translation>
-    </message>
-    <message>
-        <source>Ensure that the QR code is in focus to scan</source>
-        <translation>Asegúrate de que el código QR esté enfocado para escanear</translation>
     </message>
 </context>
 <context>

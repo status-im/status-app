@@ -4366,6 +4366,10 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <source>Start chat</source>
         <translation>Zahájit chat</translation>
     </message>
+    <message>
+        <source>Open QR Scanner</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ContactsListPanel</name>
@@ -14495,6 +14499,21 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>QRCodeScannerDialog</name>
+    <message>
+        <source>Scan QR</source>
+        <translation>Skenovat QR</translation>
+    </message>
+    <message>
+        <source>Status doesn&apos;t understand the QR code.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scanned successfully</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>RPCStatsModal</name>
     <message>
         <source>Total</source>
@@ -16714,6 +16733,27 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>StatusQRCodeScanner</name>
+    <message>
+        <source>Enable access to your camera</source>
+        <translation>Povolit přístup k fotoaparátu</translation>
+    </message>
+    <message>
+        <source>To scan a QR, Status needs
+access to your webcam</source>
+        <translation>Pro naskenování QR kódu potřebuje Status
+přístup k vaší webkameře</translation>
+    </message>
+    <message>
+        <source>Scan QR</source>
+        <translation>Skenovat QR</translation>
+    </message>
+    <message>
+        <source>Ensure that the QR code is in focus to scan</source>
+        <translation>Ujistěte se, že je QR kód zaostřený pro naskenování</translation>
+    </message>
+</context>
+<context>
     <name>StatusQrCodeScanner</name>
     <message>
         <source>Camera is not available</source>
@@ -16846,27 +16886,6 @@ selhalo</translation>
     <message>
         <source>Paste</source>
         <translation>Vložit</translation>
-    </message>
-</context>
-<context>
-    <name>StatusSyncCodeScan</name>
-    <message>
-        <source>Enable access to your camera</source>
-        <translation>Povolit přístup k fotoaparátu</translation>
-    </message>
-    <message>
-        <source>To scan a QR, Status needs
-access to your webcam</source>
-        <translation>Pro naskenování QR kódu potřebuje Status
-přístup k vaší webkameře</translation>
-    </message>
-    <message>
-        <source>Ensure that the QR code is in focus to scan</source>
-        <translation>Ujistěte se, že je QR kód zaostřený pro naskenování</translation>
-    </message>
-    <message>
-        <source>Scan QR</source>
-        <translation>Skenovat QR</translation>
     </message>
 </context>
 <context>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="ko">
+<TS version="2.1" language="ko_KR">
 <context>
     <name>AboutView</name>
     <message>
@@ -4334,6 +4334,10 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <message>
         <source>Start chat</source>
         <translation>채팅 시작</translation>
+    </message>
+    <message>
+        <source>Open QR Scanner</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14368,6 +14372,21 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>QRCodeScannerDialog</name>
+    <message>
+        <source>Scan QR</source>
+        <translation>QR 코드 스캔</translation>
+    </message>
+    <message>
+        <source>Status doesn&apos;t understand the QR code.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scanned successfully</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>RPCStatsModal</name>
     <message>
         <source>Total</source>
@@ -16567,6 +16586,26 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StatusQRCodeScanner</name>
+    <message>
+        <source>Enable access to your camera</source>
+        <translation>카메라 접근을 허용하세요</translation>
+    </message>
+    <message>
+        <source>To scan a QR, Status needs
+access to your webcam</source>
+        <translation>QR를 스캔하려면 Status가 웹캠에 접근할 수 있어야 합니다</translation>
+    </message>
+    <message>
+        <source>Scan QR</source>
+        <translation>QR 코드 스캔</translation>
+    </message>
+    <message>
+        <source>Ensure that the QR code is in focus to scan</source>
+        <translation>QR 코드를 선명하게 맞춰 스캔하세요</translation>
+    </message>
+</context>
+<context>
     <name>StatusQrCodeScanner</name>
     <message>
         <source>Camera is not available</source>
@@ -16699,26 +16738,6 @@ to load</source>
     <message>
         <source>Paste</source>
         <translation>붙여넣기</translation>
-    </message>
-</context>
-<context>
-    <name>StatusSyncCodeScan</name>
-    <message>
-        <source>Enable access to your camera</source>
-        <translation>카메라 접근을 허용하세요</translation>
-    </message>
-    <message>
-        <source>To scan a QR, Status needs
-access to your webcam</source>
-        <translation>QR를 스캔하려면 Status가 웹캠에 접근할 수 있어야 합니다</translation>
-    </message>
-    <message>
-        <source>Ensure that the QR code is in focus to scan</source>
-        <translation>QR 코드를 선명하게 맞춰 스캔하세요</translation>
-    </message>
-    <message>
-        <source>Scan QR</source>
-        <translation>QR 코드 스캔</translation>
     </message>
 </context>
 <context>
