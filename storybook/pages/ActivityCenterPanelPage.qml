@@ -10,57 +10,166 @@ import AppLayouts.ActivityCenter.panels
 import Storybook
 import Models
 
+import SortFilterProxyModel
 import QtModelsToolkit
 import utils
 
 SplitView {
     id: root
 
+    property int currentActiveGroup: ActivityCenterTypes.ActivityCenterGroup.All
+
     Logs { id: logs }
 
-    // Since the notifications model mock is defined as `ListModel`, once the `onAppend` happen, attachments role is converted
-    // from a plain array to a submodel. That's why it cannot be defined directly on the model definition file.
-    // Here it is a manual definition of the `attachments` role so that the plain array is set to the items needed.
-    ObjectProxyModel {
-        id: notificationsModelMock
-
-        sourceModel: NotificationsModel{}
-
-        delegate: QtObject {
-            readonly property var attachments: {
-                if (model.chatKey === "zQ3shuV7mZextijeBSDpgaq2EvebPGEeCrkH9AgmpCM7JTAAA") // TODO: It will be the notification type instead
-                    return [
-                                "https://picsum.photos/320/240?3",
-                                "https://picsum.photos/320/240?4",
-                                "https://picsum.photos/320/240?5",
-                                "https://picsum.photos/320/240?6",
-                                "https://picsum.photos/320/240?7",
-                                "https://picsum.photos/320/240?8",
-                                "https://picsum.photos/320/240?1"
-                            ]
-                else if (model.chatKey === "zQ3142hUdnpxi26rLmgdUwNxHgcbcYFW75JcSvVych58QVXXT") // TODO: It will be the notification type instead
-                    return [
-                                "https://picsum.photos/320/240?1",
-                                "https://picsum.photos/320/240?2",
-                                "https://picsum.photos/320/240?9"
-                            ]
-
-                else if (model.chatKey === "zAssshuV7mZextijeBSDpgaq2EvebPGEeCrkH9AgmpCM7Jss12") // TODO: It will be the notification type instead
-                    return [
-                                "https://picsum.photos/320/240?10",
-                                "https://picsum.photos/320/240?9"
-                            ]
-                else if (model.chatKey === "zAMNAuV7mZextijeBSDpgaq2EvebPGEeCrkH9AgmpCM7JTXcA") // TODO: It will be the notification type instead
-                    return [
-                                "https://picsum.photos/320/240?11"
-                            ]
-                return []
-            }
-        }
-
-        expectedRoles: "chatKey" // TODO: It will be the notification type instead
-        exposedRoles: "attachments"
+    // Here the complete list of notifications
+    NotificationsModel {
+        id: allNotificationsModelMock
     }
+
+    // *** Simple adaptors to simulate filter entries according to a selected categroy
+    SortFilterProxyModel {
+        id: adminMock
+        sourceModel: allNotificationsModelMock
+        filters: [
+            AnyOf {
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.OwnerTokenReceived
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.OwnershipReceived
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.OwnershipLost
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.OwnershipFailed
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.OwnershipDeclined
+                }
+            }
+        ]
+    }
+
+    SortFilterProxyModel {
+        id: mentionsMock
+        sourceModel: allNotificationsModelMock
+        filters: [
+            ValueFilter {
+                roleName: "notificationType"
+                value: ActivityCenterTypes.NotificationType.Mention
+            }
+        ]
+    }
+
+    SortFilterProxyModel {
+        id: repliesMock
+        sourceModel: allNotificationsModelMock
+        filters: [
+            ValueFilter {
+                roleName: "notificationType"
+                value: ActivityCenterTypes.NotificationType.Reply
+            }
+        ]
+    }
+
+    SortFilterProxyModel {
+        id: contactRequestsMock
+        sourceModel: allNotificationsModelMock
+        filters: [
+            AnyOf {
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.ContactRequest
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.ContactRemoved
+                }
+            }
+        ]
+    }
+
+    SortFilterProxyModel {
+        id: membershipMock
+        sourceModel: allNotificationsModelMock
+        filters: [
+            AnyOf {
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.CommunityInvitation
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.CommunityMembershipRequest
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.CommunityRequest
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.CommunityKicked
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.CommunityTokenReceived
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.FirstCommunityTokenReceived
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.CommunityBanned
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.CommunityUnbanned
+                }
+            }
+        ]
+    }
+
+    SortFilterProxyModel {
+        id: newsMock
+        sourceModel: allNotificationsModelMock
+        filters: [
+            ValueFilter {
+                roleName: "notificationType"
+                value: ActivityCenterTypes.NotificationType.ActivityCenterNotificationTypeNews
+            }
+        ]
+    }
+
+    function getNotificationsModelMock() {
+        switch (root.currentActiveGroup) {
+        case ActivityCenterTypes.ActivityCenterGroup.Admin:
+            return adminMock
+
+        case ActivityCenterTypes.ActivityCenterGroup.Mentions:
+            return mentionsMock
+
+        case ActivityCenterTypes.ActivityCenterGroup.Replies:
+            return repliesMock
+
+        case ActivityCenterTypes.ActivityCenterGroup.ContactRequests:
+            return contactRequestsMock
+
+        case ActivityCenterTypes.ActivityCenterGroup.Membership:
+            return membershipMock
+
+        case ActivityCenterTypes.ActivityCenterGroup.NewsMessage:
+            return newsMock
+        }
+        return allNotificationsModelMock
+    }
+    // ***
 
     SplitView {
         orientation: Qt.Vertical
@@ -80,24 +189,22 @@ SplitView {
                 height: sliderHeight.value
 
                 ActivityCenterPanel {
-                    property int currentActiveGroup: ActivityCenterTypes.ActivityCenterGroup.All
-
                     anchors.fill: parent
 
                     backgroundColor: parent.color
 
-                    hasAdmin: admin.checked
-                    hasMentions: mentions.checked
-                    hasReplies: replies.checked
-                    hasContactRequests: contactRequests.checked
-                    hasMembership: membership.checked
-                    activeGroup: currentActiveGroup
+                    hasAdmin: adminMock.count > 0
+                    hasMentions: mentionsMock.count > 0
+                    hasReplies: repliesMock.count > 0
+                    hasContactRequests: contactRequestsMock.count > 0
+                    hasMembership: membershipMock.count > 0
+                    activeGroup: root.currentActiveGroup
 
                     hasUnreadNotifications: unreadNotifications.checked
                     readNotificationsStatus: read.checked ? ActivityCenterTypes.ActivityCenterReadType.Read :
                                                             unread.checked ? ActivityCenterTypes.ActivityCenterReadType.Unread :
                                                                              ActivityCenterTypes.ActivityCenterReadType.All
-                    notificationsModel: (noNotifications.checked || unread.checked) ? null : notificationsModelMock
+                    notificationsModel: (noNotifications.checked || unread.checked) ? null : getNotificationsModelMock()
                     newsSettingsStatus: newsSettingsTurnOff.checked ? Constants.settingsSection.notifications.turnOffValue : Constants.settingsSection.notifications.sendAlertsValue
                     newsEnabledViaRSS: enabledViaRSS.checked
 
@@ -116,7 +223,7 @@ SplitView {
                     }
                     onSetActiveGroupRequested: (group) => {
                                                    logs.logEvent("ActivityCenterPanel::onSetActiveGroupRequested: " + group)
-                                                   currentActiveGroup = group
+                                                   root.currentActiveGroup = group
                                                }
                     onNotificationClicked: (index) => logs.logEvent("ActivityCenterPanel::onNotificationClicked: " + index)
                     onFetchMoreNotificationsRequested: logs.logEvent("ActivityCenterPanel::onFetchMoreNotificationsRequested")
@@ -171,42 +278,6 @@ SplitView {
                 value: 650
                 from: 400
                 to: 800
-            }
-
-            Label {
-                Layout.fillWidth: true
-                text: "Type of notifications:"
-                font.bold: true
-            }
-
-            CheckBox {
-                id: admin
-                Layout.fillWidth: true
-                text: "Has admin notifications?"
-            }
-
-            CheckBox {
-                id: mentions
-                Layout.fillWidth: true
-                text: "Has mentions notifications?"
-            }
-
-            CheckBox {
-                id: replies
-                Layout.fillWidth: true
-                text: "Has replies notifications?"
-            }
-
-            CheckBox {
-                id: contactRequests
-                Layout.fillWidth: true
-                text: "Has contact requests notifications?"
-            }
-
-            CheckBox {
-                id: membership
-                Layout.fillWidth: true
-                text: "Has membership notifications?"
             }
 
             Label {

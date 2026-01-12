@@ -13,8 +13,8 @@ import utils
 StatusMenu {
     id: root
 
-    required property bool hasUnreadNotifications
-    required property bool hideReadNotifications
+    property bool hasUnreadNotifications
+    property bool hideReadNotifications
 
     signal markAllAsReadRequested()
     signal hideShowReadNotificationsRequested()

@@ -16,6 +16,11 @@ import AppLayouts.ActivityCenter.helpers
 
 import utils
 
+// This component provides criteria for displaying notifications (category, read/unread) and renders provided list of modifications.
+// It's consumer's responsibility to adjust model data to the criteria exposed by the component.
+//
+// Additionally consumer is obliged to provide other hints like (hasAdmin, hasMentions, hasReplies, etc.) which cannot be inferred from
+// provided model because dynamic `fetch more` approach is used.
 Control {
     id: root
 
@@ -31,6 +36,47 @@ Control {
     required property int readNotificationsStatus
     required property bool hasUnreadNotifications
     readonly property bool hideReadNotifications: root.readNotificationsStatus === ActivityCenterTypes.ActivityCenterReadType.Unread
+
+
+    // Here is an example of the complete set of roles the `notificationsModel` can contain:
+    //
+    // ** Card states related:
+    //    unread: false,
+    //    selected: false,
+    //
+    // ** Avatar related:
+    //    avatarSource: "https://i.pravatar.cc/128?img=8",
+    //    badgeIconName: "action-mention",
+    //    isCircularAvatar: true,
+    //
+    // ** Header row related
+    //    title: "Notification 2",
+    //    chatKey: "zQ3saskd11lfkjs1dkf5Rj9",
+    //    isContact: true,
+    //    trustIndicator: 0,
+    //
+    // ** Context row related
+    //    primaryText: "Communities",
+    //    iconName: "communities",
+    //    secondaryText: "Channel 12",
+    //    separatorIconName: "arrow-next",
+    //
+    // ** Action text
+    //    actionText: "Action Text",
+    //
+    // ** Content block related
+    //    preImageSource: "https://picsum.photos/320/240?6",
+    //    preImageRadius: 8,
+    //    content: "Some notification description that can be long and long and long",
+    //    attachments: [
+    //                    "https://picsum.photos/320/240?1",
+    //                    "https://picsum.photos/320/240?2",
+    //                    "https://picsum.photos/320/240?9"
+    //                    ],
+    //
+    // ** Timestamp related
+    //    timestamp: 1765799225000
+    //
     required property var notificationsModel
 
     // Properties related to news feed settings:
@@ -147,7 +193,7 @@ Control {
         StatusListView {
             id: listView
             Layout.fillWidth: true
-            Layout.fillHeight: !d.emptyNotificationsList || !d.isNewsPlaceholderActive
+            Layout.fillHeight: true
             Layout.topMargin: 2
 
             visible: !d.emptyNotificationsList && !d.isNewsPlaceholderActive
@@ -160,8 +206,9 @@ Control {
             delegate: NotificationCard {
                 enabled: !d.optionsMenuVisible
 
-                width: root.width - 2 * Theme.halfPadding
-                anchors.horizontalCenter: listView.contentItem.horizontalCenter
+                anchors.left: listView.contentItem.left
+                anchors.right: listView.contentItem.right
+                anchors.margins: Theme.halfPadding
 
                 // Card states related
                 unread: model.unread
@@ -215,7 +262,6 @@ Control {
         // OR Placeholder for the status news when they are all seen or there are no notifications
         Loader {
             id: placeholderLoader
-
 
             Layout.topMargin: 2
             Layout.bottomMargin: 2
