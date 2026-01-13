@@ -39,11 +39,12 @@ AbstractWebView {
 
     readonly property real zoomFactor: 1.0
 
-    // DarwinWebViewBackend is now a QQuickItem that automatically tracks its own geometry
-    DarwinWebViewBackend {
+        DarwinWebViewBackend {
         id: backend
         anchors.fill: parent
         visible: root.visible
+        userScripts: root.profileParams.scripts
+        webChannel: root.webChannel
     }
 
     function loadUrl(newUrl) {

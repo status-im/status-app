@@ -49,6 +49,8 @@ StatusSectionLayout {
 
     property bool isDebugEnabled: false
     property string platformOS: Qt.platform.os
+    property bool useWebViewAdapter: false
+    readonly property Component webViewAdapterComponent: useWebViewAdapter ? darwinWebViewAdapterComponent : webEngineAdapterComponent
 
     signal sendToRecipientRequested(string address)
 
@@ -95,6 +97,7 @@ StatusSectionLayout {
 
         property Item currentWebView: tabs.currentIndex < tabs.count ? webStackView.getCurrentWebView() : null
         readonly property bool currentTabIncognito: webStackView.getCurrentWebView()?.offTheRecord ?? false
+        property bool webViewHidden: false
 
         property Component jsDialogComponent: JSDialogWindow {}
 
@@ -342,6 +345,7 @@ StatusSectionLayout {
         StackLayout {
             id: webStackView
             currentIndex: tabs.currentIndex
+            visible: !_internal.webViewHidden
 
             Layout.fillHeight: true
             Layout.fillWidth: true
@@ -349,7 +353,7 @@ StatusSectionLayout {
             function createEmptyTab(profileParams, createAsStartPage = false, focusOnNewTab = true, url = undefined) {
                 focusOnNewTab = focusOnNewTab && !createAsStartPage
 
-                var webview = webEngineAdapterComponent.createObject(webStackView, {
+                var webview = root.webViewAdapterComponent.createObject(webStackView, {
                     profileParams: profileParams,
                     isDownloadView: false
                 })
@@ -368,7 +372,7 @@ StatusSectionLayout {
             }
 
             function createDownloadTab(profileParams) {
-                var webview = webEngineAdapterComponent.createObject(webStackView, {
+                var webview = root.webViewAdapterComponent.createObject(webStackView, {
                     profileParams: profileParams,
                     isDownloadView: true
                 })
@@ -465,6 +469,36 @@ StatusSectionLayout {
                     findBar.visible = true
                 findBar.numberOfMatches = result.numberOfMatches;
                 findBar.activeMatch = result.activeMatch;
+            }
+        }
+    }
+
+    Component {
+        id: darwinWebViewAdapterComponent
+        DarwinWebViewAdapter {
+            id: darwinWebViewAdapterItem
+            anchors.fill: parent
+            bookmarksStore: root.bookmarksStore
+            downloadsStore: root.downloadsStore
+            webChannel: connectorBridge.channel
+            enableJsLogs: root.isDebugEnabled
+
+            onWindowCloseRequested: webStackView.removeView(StackLayout.index)
+            onNewWindowRequested: (makeCurrent, requestedUrl, callback) => {
+                var tab = webStackView.createEmptyTab(_internal.currentWebView.profileParams, false, makeCurrent, requestedUrl);
+                callback(tab);
+            }
+            onDownloadRequested: (download) => {
+                _internal.onDownloadRequested(download)
+            }
+            onCertificateError: (error) => {
+                error.defer()
+                sslDialog.enqueue(error)
+            }
+            onJavaScriptDialogRequested: (request) => {
+                request.accepted = true;
+                var dialog = _internal.jsDialogComponent.createObject(root, {"request": request})
+                dialog.open()
             }
         }
     }
