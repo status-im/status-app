@@ -107,12 +107,13 @@ proc registerPushNotificationToken*(): bool =
       debug "Registering FCM token with status-go...", tokenType="FIREBASE_TOKEN(2)"
       let response = registerForPushNotifications(g_pushToken, "", FIREBASE_TOKEN)
     elif defined(ios):
-      # Bundle ID for new status-desktop iOS app
-      let apnTopic = "im.status.ethereum"
-      info "Registering APNS token with status-go", 
-        token=g_pushToken, 
-        apnTopic=apnTopic, 
-        tokenType="APN_TOKEN(1)"
+      # APNS topic must match the *actual* iOS bundle identifier of the app that generated the token.
+      var apnTopic = ""
+      let apnTopicC = statusq_getIOSBundleIdentifier()
+      if not apnTopicC.isNil:
+        apnTopic = $apnTopicC
+        statusq_freeCString(apnTopicC)
+      info "Registering APNS token with status-go"
       let response = registerForPushNotifications(g_pushToken, apnTopic, APN_TOKEN)
     else:
       error "Unsupported platform for push notifications"

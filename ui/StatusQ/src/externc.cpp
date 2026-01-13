@@ -9,6 +9,9 @@
 #endif
 
 #ifdef Q_OS_IOS
+#include <cstdlib>
+#include <cstring>
+#include <CoreFoundation/CoreFoundation.h>
 #include <StatusQ/pushnotification_ios.h>
 #include <StatusQ/statusappdelegate_ios.h>
 #endif
@@ -82,6 +85,36 @@ Q_DECL_EXPORT bool statusq_hasNotificationPermission()
     return true; // Other platforms don't require permission
 #endif
 }
+
+#ifdef Q_OS_IOS
+// Returns a heap-allocated C string; caller must free with statusq_freeCString.
+Q_DECL_EXPORT const char* statusq_getIOSBundleIdentifier()
+{
+    CFBundleRef mainBundle = CFBundleGetMainBundle();
+    if (!mainBundle) {
+        return strdup("");
+    }
+
+    CFStringRef bundleId = CFBundleGetIdentifier(mainBundle);
+    if (!bundleId) {
+        return strdup("");
+    }
+
+    // CFBundle identifier strings are small; this buffer is intentionally generous.
+    char buffer[1024] = {0};
+    if (!CFStringGetCString(bundleId, buffer, sizeof(buffer), kCFStringEncodingUTF8)) {
+        return strdup("");
+    }
+    return strdup(buffer);
+}
+
+Q_DECL_EXPORT void statusq_freeCString(const char* s)
+{
+    if (s) {
+        std::free((void*)s);
+    }
+}
+#endif
 
 Q_DECL_EXPORT void statusq_showMobileNotification(
     const char* title,

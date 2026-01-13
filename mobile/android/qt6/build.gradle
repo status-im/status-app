@@ -43,6 +43,10 @@ def qtDir = System.getenv("QT_ANDROID_DIR") ?: qtAndroidDir
 // Build variant: 'pr' or 'release' (controls app ID and name)
 def buildVariant = System.getenv("BUILD_VARIANT") ?: "release"
 
+// Release keystore (optional; if not provided we sign release with debug key for local builds)
+def releaseKeystorePath = System.getenv("STATUS_APP_KEYSTORE_PATH")
+def hasReleaseKeystore = releaseKeystorePath != null && !releaseKeystorePath.isEmpty()
+
 android {
     /*******************************************************
      * The following variables:
@@ -108,10 +112,16 @@ android {
 
     signingConfigs {
         release {
-            storeFile file(System.getenv("STATUS_APP_KEYSTORE_PATH") ?: "/nonexistent")
-            storePassword System.getenv("STATUS_APP_KEYSTORE_PASSWORD")
-            keyAlias System.getenv("STATUS_APP_KEY_ALIAS")
-            keyPassword System.getenv("STATUS_APP_KEY_PASSWORD")
+            if (hasReleaseKeystore) {
+                def f = file(releaseKeystorePath)
+                if (!f.exists()) {
+                    throw new GradleException("STATUS_APP_KEYSTORE_PATH points to missing file: " + releaseKeystorePath)
+                }
+                storeFile f
+                storePassword System.getenv("STATUS_APP_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("STATUS_APP_KEY_ALIAS")
+                keyPassword System.getenv("STATUS_APP_KEY_PASSWORD")
+            }
         }
     }
 
@@ -119,7 +129,8 @@ android {
         release {
             debuggable = false
             minifyEnabled = false
-            signingConfig signingConfigs.release
+            // Avoid failing builds when no release keystore is configured.
+            signingConfig hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
         }
         debug {
             debuggable = true

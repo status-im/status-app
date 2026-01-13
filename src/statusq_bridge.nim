@@ -19,3 +19,8 @@ when defined(android) or defined(ios):
   # iOS: Always required, shows system dialog
   proc statusq_requestNotificationPermission*() {.cdecl, importc.}
   proc statusq_hasNotificationPermission*(): bool {.cdecl, importc.}
+
+when defined(ios):
+  ## Returns heap-allocated C string; caller must free via statusq_freeCString.
+  proc statusq_getIOSBundleIdentifier*(): cstring {.cdecl, importc.}
+  proc statusq_freeCString*(s: cstring) {.cdecl, importc.}
