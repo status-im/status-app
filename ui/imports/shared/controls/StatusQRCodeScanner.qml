@@ -48,8 +48,8 @@ Column {
         id: d
 
         readonly property int radius: 16
+        readonly property bool cameraReady: cameraPermission.status === Qt.Granted
         property string errorMessage
-        property bool cameraReady: cameraPermission.status === Qt.Granted
         property int counter: 0
 
         function validateTag(tag) {
@@ -68,7 +68,8 @@ Column {
     CameraPermission {
         id: cameraPermission
         Component.onCompleted: {
-            cameraPermission.request()
+            if (cameraPermission.status !== Qt.PermissionStatus.Granted)
+                cameraPermission.request()
         }
     }
 
