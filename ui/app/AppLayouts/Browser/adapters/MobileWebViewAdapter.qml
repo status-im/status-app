@@ -39,11 +39,12 @@ AbstractWebView {
 
     readonly property real zoomFactor: 1.0
 
-    // DarwinWebViewBackend is now a QQuickItem that automatically tracks its own geometry
-    DarwinWebViewBackend {
+    MobileWebViewBackend {
         id: backend
         anchors.fill: parent
         visible: root.visible
+        userScripts: root.profileParams.scripts
+        webChannel: root.webChannel
     }
 
     function loadUrl(newUrl) {
@@ -51,15 +52,15 @@ AbstractWebView {
     }
 
     function goBack() {
-        console.warn("DarwinWebViewAdapter: goBack not supported yet")
+        console.warn("MobileWebViewAdapter: goBack not supported yet")
     }
 
     function goForward() {
-        console.warn("DarwinWebViewAdapter: goForward not supported yet")
+        console.warn("MobileWebViewAdapter: goForward not supported yet")
     }
 
     function goBackOrForward(offset) {
-        console.warn("DarwinWebViewAdapter: goBackOrForward not supported yet")
+        console.warn("MobileWebViewAdapter: goBackOrForward not supported yet")
     }
 
     function reload() {
@@ -69,7 +70,7 @@ AbstractWebView {
     }
 
     function stop() {
-        console.warn("DarwinWebViewAdapter: stop not supported yet")
+        console.warn("MobileWebViewAdapter: stop not supported yet")
     }
 
     function findText(text, flags) {
@@ -81,7 +82,7 @@ AbstractWebView {
     }
 
     function acceptAsNewWindow(request) {
-        console.warn("DarwinWebViewAdapter: acceptAsNewWindow not supported")
+        console.warn("MobileWebViewAdapter: acceptAsNewWindow not supported")
     }
 
     function triggerWebAction(action) {
@@ -99,7 +100,7 @@ AbstractWebView {
                 reload()
                 break
             default:
-                console.warn("DarwinWebViewAdapter: Web action not supported:", action)
+                console.warn("MobileWebViewAdapter: Web action not supported:", action)
         }
     }
 }

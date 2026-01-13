@@ -12,6 +12,7 @@ STATUS_GO_LIB := $(LIB_PATH)/libstatus$(LIB_EXT)
 FLAG_KEYCARD_ENABLED ?= 1
 FLAG_DAPPS_ENABLED ?= 1
 FLAG_CONNECTOR_ENABLED ?= 0
+FLAG_BROWSER_ENABLED ?= 1
 
 $(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
 

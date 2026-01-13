@@ -25,8 +25,8 @@
 #include "StatusQ/NativeSwipeHandlerItem.h"
 #include "StatusQ/NativeIndicatorItem.h"
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
-#include "StatusQ/darwinwebviewbackend.h"
+#if defined(STATUSQ_HAS_MOBILEWEBVIEW)
+#include "MobileWebView/mobilewebviewbackend.h"
 #endif
 
 // Forward declare platform-specific registration functions
@@ -136,8 +136,8 @@ void registerStatusQTypes() {
     qmlRegisterUncreatableType<StatusLayoutState>("StatusQ.Layout", 0, 1,
                                                   "StatusLayoutState", QStringLiteral("StatusLayoutState is an attached property type"));
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
-    qmlRegisterType<DarwinWebViewBackend>("StatusQ.CustomWebView", 1, 0, "DarwinWebViewBackend");
+#if defined(STATUSQ_HAS_MOBILEWEBVIEW)
+    qmlRegisterType<MobileWebViewBackend>("StatusQ.CustomWebView", 1, 0, "MobileWebViewBackend");
 #endif
     // Register NativeSwipeHandler + NativeIndicator (native on iOS/Android/macOS)
 #if defined(Q_OS_IOS) || defined(Q_OS_ANDROID) || defined(Q_OS_MACOS)
@@ -151,6 +151,9 @@ void registerStatusQTypes() {
 #ifdef BUNDLE_QML_RESOURCES
     Q_INIT_RESOURCE(TestConfig);
     Q_INIT_RESOURCE(statusq);
+#if defined(STATUSQ_HAS_MOBILEWEBVIEW)
+    Q_INIT_RESOURCE(customwebview);
+#endif
     Q_INIT_RESOURCE(fonts);
     Q_INIT_RESOURCE(img);
     Q_INIT_RESOURCE(png);

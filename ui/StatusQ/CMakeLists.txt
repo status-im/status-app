@@ -77,6 +77,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 add_subdirectory(../../vendor/SortFilterProxyModel SortFilterProxyModel)
+add_subdirectory(../../vendor/qzxing/src qzxing)
 
 target_compile_options(SortFilterProxyModel PRIVATE -w)
 
@@ -129,7 +130,6 @@ endif ()
 if (${STATUSQ_SHADOW_BUILD})
     add_definitions(-DBUNDLE_QML_RESOURCES)
     set(STATUSQ_QRC_FILES src/statusq.qrc
-        src/CustomWebView/customwebview.qrc
         src/assets/fonts/fonts.qrc
         src/assets/img/img.qrc
         src/assets/png/png.qrc
@@ -243,26 +243,14 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_library(Foundation Foundation)
     find_library(Security Security)
     find_library(LocalAuthentication LocalAuthentication)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication})
     find_library(WebKit WebKit)
     find_library(QuartzCore QuartzCore)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${QuartzCore})
     qt_import_plugins(${PROJECT_NAME} INCLUDE Qt6::QDarwinCameraPermissionPlugin)
     target_sources(StatusQ PRIVATE
-        src/keychain_apple.mm
         src/shareutils_other.cpp
-        include/StatusQ/darwinwebviewbackend.h
-        src/CustomWebView/darwin/webviewbackend.mm
-        src/CustomWebView/darwin/navigationdelegate.h
-        src/CustomWebView/darwin/navigationdelegate.mm
-        src/CustomWebView/darwin/userscripts.h
-        src/CustomWebView/darwin/userscripts.mm
-        src/CustomWebView/darwin/origin_utils.h
-        src/CustomWebView/darwin/origin_utils.mm
-        src/CustomWebView/darwin/script_utils.h
-        src/CustomWebView/darwin/script_utils.mm
-        src/CustomWebView/darwin/dispatch_utils.h
-        src/CustomWebView/darwin/darwinwebchanneltransport.h
-        src/CustomWebView/darwin/darwinwebchanneltransport.mm
+        src/keychain_apple.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_macos.mm
         src/StatusQ/Controls/NativeIndicatorItem_macos.mm
     )
@@ -271,6 +259,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     find_library(Foundation Foundation)
     find_library(Security Security)
     find_library(LocalAuthentication LocalAuthentication)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication})
     find_library(WebKit WebKit)
     find_library(UserNotifications UserNotifications)
     find_library(CoreMotion CoreMotion)
@@ -279,19 +268,6 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/ios_utils.mm
         src/shareutils_ios.mm
         src/keychain_apple.mm
-        include/StatusQ/darwinwebviewbackend.h
-        src/CustomWebView/darwin/webviewbackend.mm
-        src/CustomWebView/darwin/navigationdelegate.h
-        src/CustomWebView/darwin/navigationdelegate.mm
-        src/CustomWebView/darwin/userscripts.h
-        src/CustomWebView/darwin/userscripts.mm
-        src/CustomWebView/darwin/origin_utils.h
-        src/CustomWebView/darwin/origin_utils.mm
-        src/CustomWebView/darwin/script_utils.h
-        src/CustomWebView/darwin/script_utils.mm
-        src/CustomWebView/darwin/dispatch_utils.h
-        src/CustomWebView/darwin/darwinwebchanneltransport.h
-        src/CustomWebView/darwin/darwinwebchanneltransport.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_ios.mm
         src/StatusQ/Controls/NativeIndicatorItem_ios.mm
         src/localnetworkpermission_ios.mm
@@ -312,8 +288,20 @@ else ()
 endif ()
 
 include(FetchContent)
+set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
+
+FetchContent_Declare(
+  MobileWebView
+
+  GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
+  GIT_TAG 551b1610deceec99b5b99e9612ab4947faa8c332
+  SOURCE_SUBDIR mobilewebview
+)
+FetchContent_MakeAvailable(MobileWebView)
+
 FetchContent_Declare(
   QtModelsToolkit
+
   GIT_REPOSITORY https://github.com/status-im/QtModelsToolkit.git
   GIT_TAG af59b81bc10bc37359c2839ae202c160c8321f1a
 )
@@ -364,8 +352,14 @@ target_link_libraries(StatusQ PRIVATE
         SortFilterProxyModel
         QtModelsToolkit
         MobileUI
+        qzxing
         SCodes
         )
+
+if(TARGET MobileWebView)
+    target_link_libraries(StatusQ PRIVATE MobileWebView)
+    target_compile_definitions(StatusQ PRIVATE STATUSQ_HAS_MOBILEWEBVIEW=1)
+endif()
 
 if(TARGET SCodes)
     set_target_properties(SCodes PROPERTIES
@@ -395,6 +389,14 @@ install(TARGETS StatusQ
         RUNTIME DESTINATION StatusQ
         LIBRARY DESTINATION StatusQ
         )
+
+if(TARGET MobileWebView)
+    install(TARGETS MobileWebView
+            RUNTIME DESTINATION StatusQ
+            LIBRARY DESTINATION StatusQ
+            ARCHIVE DESTINATION StatusQ
+            )
+endif()
 
 # https://doc.qt.io/qtcreator/creator-qml-modules-with-plugins.html#importing-qml-modules
 set(QML_IMPORT_PATH
