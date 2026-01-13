@@ -18,10 +18,25 @@ Page {
                 model: ["landscape", "portrait"]
                 currentIndex: 0
             }
-            CheckBox {
-                id: leftPanelCheckBox
-                text: "Show Left Panel"
-                checked: true
+            ColumnLayout {
+                CheckBox {
+                    id: leftPanelCheckBox
+                    text: "Show Left Panel"
+                    checked: true
+                }
+                CheckBox{
+                    id: leftFloatingPanelCheckbox
+                    text: "Open Floating Panel"
+                    checked: false
+
+                    onCheckedChanged: {
+                        if(checked) {
+                            sectionLayout.openFloatingPanel()
+                        } else {
+                            sectionLayout.closeFloatingPanel()
+                        }
+                    }
+                }
             }
             CheckBox {
                 id: centerPanelCheckBox
@@ -57,6 +72,22 @@ Page {
         }
         Label {
             text: "This is the left panel"
+            anchors.centerIn: parent
+        }
+    }
+
+    Page {
+        id: leftFloatingPanel
+        objectName: "leftFloatingPanel"
+        title: "Left Floating Panel"
+        anchors.fill: parent
+        Rectangle {
+            color: "grey"
+            anchors.fill: parent
+            radius: 8
+        }
+        Label {
+            text: "This is the left floating panel"
             anchors.centerIn: parent
         }
     }
@@ -139,6 +170,7 @@ Page {
             implicitWidth: 800
             implicitHeight: 400
             invertedLayout: inverted.checked
+            leftFloatingPanelItem: leftFloatingPanel
             leftPanel: leftPanelCheckBox.checked ? leftPanel : null
             centerPanel: centerPanelCheckBox.checked ? centerPanel : null
             rightPanel: rightPanel
@@ -150,14 +182,14 @@ Page {
 
                 contentItem: Loader {
                     sourceComponent: Rectangle {
-                                id: headerBackground
-                                color: "yellow"
-                                width: 300
-                                height: 50
-                                onHeightChanged: console.trace()
-                        }
+                        id: headerBackground
+                        color: "yellow"
+                        width: 300
+                        height: 50
+                        onHeightChanged: console.trace()
                     }
                 }
             }
         }
     }
+}

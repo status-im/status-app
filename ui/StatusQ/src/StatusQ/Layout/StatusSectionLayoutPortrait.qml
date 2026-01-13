@@ -4,6 +4,8 @@ import QtQuick.Controls
 
 import StatusQ.Components
 import StatusQ.Core.Theme
+import StatusQ.Popups.Dialog
+
 /*!
      \qmltype StatusSectionLayoutPortrait
      \inherits SwipeView
@@ -51,6 +53,11 @@ SwipeView {
         This property holds the left panel of the component.
     */
     property alias leftPanel: leftPanelProxy.target
+    /*!
+        \qmlproperty Item StatusSectionLayout::leftFloatingPanelItem
+        This property holds the left floating panel of the component.
+    */
+    property Item leftFloatingPanelItem
     /*!
         \qmlproperty Item StatusSectionLayout::centerPanel
         This property holds the center panel of the component.
@@ -134,6 +141,27 @@ SwipeView {
         is pressed.
     */
     signal backButtonClicked()
+
+    /*!
+        \qmlsignal
+        This signal is emitted when the floating panel has been automatically closed.
+    */
+    signal floatingPanelAutoClosed()
+
+    /*!
+        \qmlmethod StatusSectionLayout::openFloatingPanel()
+        This method is used to open left floating panel modal.
+    */
+    function openFloatingPanel()  {
+        floatingPopup.open()
+    }
+    /*!
+        \qmlmethod StatusSectionLayout::closeFloatingPanel()
+        This method is used to close left floating panel modal.
+    */
+    function closeFloatingPanel() {
+        floatingPopup.close()
+    }
 
     QtObject {
         id: d
@@ -279,6 +307,34 @@ SwipeView {
         visible: root.showHeader
         padding: root.headerPadding
         backButtonVisible: root.currentIndex !== 0
-        onBackButtonClicked: d.handleBackAction() 
+        onBackButtonClicked: d.handleBackAction()
+    }
+
+    // --------------------------------------------------------------
+    // Floating overlay: Just a bottom sheet popup.
+    // Open/close is driven from outsite of the component.
+    // --------------------------------------------------------------
+    StatusDialog {
+        id: floatingPopup
+        parent: Overlay.overlay
+        modal: true
+        focus: true
+
+        padding: 0
+        margins: 0
+        bottomPadding: 0
+        topPadding: 0
+
+        closePolicy: Popup.CloseOnPressOutside | Popup.CloseOnEscape
+        fillHeightOnBottomSheet: true
+
+        width: root.width
+        height: root.height - 2 * Theme.padding
+
+        header: null
+        footer: null
+        contentItem: LayoutItemProxy { target: root.leftFloatingPanelItem }
+
+        onClosed: root.floatingPanelAutoClosed()
     }
 }

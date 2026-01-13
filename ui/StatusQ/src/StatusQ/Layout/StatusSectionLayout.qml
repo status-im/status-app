@@ -52,8 +52,19 @@ LayoutChooser {
         RightPanel
     }
 
-    property Component handle: Item { }
+    property alias handle: landscapeView.handle
 
+    /*!
+        \qmlproperty Item StatusSectionLayout::leftFloatingPanelItem
+        This property holds the left floating panel of the component.
+    */
+    property Item leftFloatingPanelItem
+    /*!
+        \qmlproperty bool isFloatingPanelAlreadyOpen
+        True if the floating panel is already open, used to prevent reopening
+        or retriggering open animations.
+    */
+    property bool isFloatingPanelAlreadyOpen: false
     /*!
         \qmlproperty Item StatusSectionLayout::leftPanel
         This property holds the left panel of the component.
@@ -85,7 +96,6 @@ LayoutChooser {
         Default value is false.
     */
     property bool showRightPanel: false
-
     /*!
         \qmlproperty int StatusSectionLayout::rightPanelWidth
         This property sets the right panel component's width.
@@ -141,10 +151,15 @@ LayoutChooser {
         This signal is emitted when the back button of the header component
         is pressed.
     */
-
     signal backButtonClicked()
 
     signal swiped(int previousIndex, int currentIndex)
+
+    /*!
+        \qmlsignal
+        This signal is emitted when the floating panel has been automatically closed.
+    */
+    signal floatingPanelAutoClosed()
 
     /*!
         \qmlmethod StatusSectionLayout::goToNextPanel()
@@ -160,6 +175,33 @@ LayoutChooser {
             portraitView.decrementCurrentIndex()
     }
 
+    /*!
+        \qmlmethod StatusSectionLayout::openFloatingPanel()
+        This method is used to open left floating panel. It will open it always with animation and transitions.
+    */
+    function openFloatingPanel()  {
+        if (d.activeLayout && d.activeLayout.openFloatingPanel) {
+            d.activeLayout.openFloatingPanel(true)
+        }
+    }
+
+    /*!
+        \qmlmethod StatusSectionLayout::closeFloatingPanel()
+        This method is used to close left floating panel.
+    */
+    function closeFloatingPanel() {
+        if (d.activeLayout && d.activeLayout.closeFloatingPanel) {
+            d.activeLayout.closeFloatingPanel()
+        }
+    }
+
+    QtObject {
+        id: d
+
+        // This property contains the active layout reference
+        readonly property Item activeLayout: portraitView.visible ? portraitView : landscapeView
+    }
+
     criteria: [
         root.height > root.width && root.width < root.implicitWidth, // Portrait mode
         true // Defaults to landscape mode
@@ -173,7 +215,7 @@ LayoutChooser {
     StatusSectionLayoutLandscape {
         id: landscapeView
         anchors.fill: parent
-        handle: root.handle
+        leftFloatingPanelItem: root.leftFloatingPanelItem
         leftPanel: root.leftPanel
         centerPanel: root.centerPanel
         rightPanel: root.rightPanel
@@ -189,11 +231,21 @@ LayoutChooser {
         backgroundColor: root.backgroundColor
 
         onBackButtonClicked: root.backButtonClicked()
+
+        Component.onCompleted: {
+            // Initialize with floating panel open, so no animation neither transition to simulate
+            // it's already an open floating panel
+            if(root.isFloatingPanelAlreadyOpen && landscapeView.visible) {
+                openFloatingPanel(false) // No animation
+            }
+        }
     }
 
     StatusSectionLayoutPortrait {
         id: portraitView
         anchors.fill: parent
+
+        leftFloatingPanelItem: root.leftFloatingPanelItem
         leftPanel: root.leftPanel
         centerPanel: root.centerPanel
         rightPanel: root.rightPanel
@@ -217,6 +269,8 @@ LayoutChooser {
         }
 
         onBackButtonClicked: root.backButtonClicked()
+
+        onFloatingPanelAutoClosed: root.floatingPanelAutoClosed()
 
         Component.onCompleted: currentIndexCache = currentIndex
     }
