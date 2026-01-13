@@ -1449,6 +1449,10 @@ QtObject {
             id: qrCodeScannerDialogComponent
 
             QRCodeScannerDialog {
+                // workaround for QTBUG-142248
+                Theme.style: popupParent.Theme.style
+                Theme.padding: popupParent.Theme.padding
+                Theme.fontSizeOffset: popupParent.Theme.fontSizeOffset
                 destroyOnClose: true
                 onTagFound: (tagType, tag) => {
                     if (tagType === QRCodeScannerDialog.TagType.Address) {
