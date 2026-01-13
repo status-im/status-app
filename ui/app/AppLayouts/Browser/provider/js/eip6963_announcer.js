@@ -12,22 +12,15 @@
         rdns: "app.status"
     };
     
-    let retryCount = 0;
-    const MAX_RETRIES = 50;
-    const RETRY_DELAY = 100;
-    
-    function announceProvider() {
+    function announceProvider(retries, announced) {
         // Wait for window.ethereum to be available (injected by ethereum_wrapper.js)
         if (!window.ethereum) {
-            if (retryCount >= MAX_RETRIES) {
-                console.error('[EIP-6963] Max retries reached, window.ethereum not available');
-                return;
-            }
-            
-            retryCount++;
-            console.log(`[EIP-6963] window.ethereum not yet available, retry ${retryCount}/${MAX_RETRIES}`);
-
-            setTimeout(announceProvider, RETRY_DELAY);
+            retries && setTimeout(announceProvider, 100, retries - 1, announced);
+            return;
+        }
+        
+        // Prevent double announcement
+        if (announced) {
             return;
         }
         
@@ -41,20 +34,21 @@
         );
         
         console.log('[EIP-6963] Status provider announced');
+        return true;
     }
     
     // Listen for discovery requests from dApps
-    window.addEventListener('eip6963:requestProvider', () => {
+    window.addEventListener('eip6963:requestProvider', function() {
         console.log('[EIP-6963] Provider discovery requested');
-        announceProvider();
+        announceProvider(50);
     });
     
     // Announce provider when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', announceProvider);
+        document.addEventListener('DOMContentLoaded', function() { announceProvider(50); });
     } else {
         // DOM already loaded, announce immediately (after ethereum is injected)
-        setTimeout(announceProvider, 0);
+        setTimeout(function() { announceProvider(50); }, 0);
     }
     
 })();

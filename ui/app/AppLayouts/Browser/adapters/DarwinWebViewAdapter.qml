@@ -44,6 +44,8 @@ AbstractWebView {
         id: backend
         anchors.fill: parent
         visible: root.visible
+        userScripts: root.profileParams.scripts
+        webChannel: root.webChannel
     }
 
     function loadUrl(newUrl) {
