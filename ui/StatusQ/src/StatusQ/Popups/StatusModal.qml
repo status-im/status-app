@@ -231,6 +231,7 @@ StatusDialog {
     }
 
     footer: ToolBar {
+        visible: root.showFooter || root.showAdvancedFooter
         background: StatusDialogBackground {
             implicitHeight: footerImpl.implicitHeight
         }
