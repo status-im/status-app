@@ -139,6 +139,22 @@ pipeline {
             'Android/arm64', jenkins.Build('status-app/systems/android/arm64/package')
           )
         } } }
+        stage('Linux/x86_64 nwaku') { steps { script {
+          linux_x86_64_nwaku = getArtifacts(
+            'Linux/nwaku', build(
+              job: 'status-app/systems/linux/x86_64/package',
+              parameters: jenkins.mapToParams([USE_NWAKU: true]),
+            )
+          )
+        } } }
+        stage('MacOS/aarch64 nwaku') { steps { script {
+          macos_aarch64_nwaku = getArtifacts(
+            'MacOS/nwaku', build(
+              job: 'status-app/systems/macos/aarch64/package',
+              parameters: jenkins.mapToParams([USE_NWAKU: true]),
+            )
+          )
+        } } }
       }
     }
     stage('Publish') {
