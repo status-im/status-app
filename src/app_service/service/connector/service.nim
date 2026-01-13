@@ -1,4 +1,5 @@
 import nimqml, chronicles, json
+import base64 as base64lib
 
 import backend/connector as status_go
 
@@ -252,12 +253,15 @@ QtObject:
 
   proc connectorCallRPC*(self: Service, requestId: int, message: string) =
     try:
+      # Encode message as base64 to avoid JSON escaping issues with nested JSON
+      let messageBase64 = base64lib.encode(message)
+      
       let arg = ConnectorCallRPCTaskArg(
         tptr: connectorCallRPCTask,
         vptr: cast[uint](self.vptr),
         slot: "onConnectorCallRPCResolved",
         requestId: requestId,
-        message: message
+        messageBase64: messageBase64
       )
       self.threadpool.start(arg)
     except:
