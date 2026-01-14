@@ -152,15 +152,13 @@ pipeline {
       }
     }
 
-    stage('Publish test results') {
-      steps {
-        junit allowEmptyResults: true, testResults: "test/e2e_appium/reports/${env.BUILD_TAG}/pytest_results_*.xml"
-        archiveArtifacts artifacts: "test/e2e_appium/reports/${env.BUILD_TAG}/**/*", allowEmptyArchive: true
-      }
-    }
   }
 
   post {
+    always {
+      junit allowEmptyResults: true, testResults: "test/e2e_appium/reports/${env.BUILD_TAG}/pytest_results_*.xml"
+      archiveArtifacts artifacts: "test/e2e_appium/reports/${env.BUILD_TAG}/**/*", allowEmptyArchive: true
+    }
     success { script { github.notifyPR(true) } }
     failure { script { github.notifyPR(false) } }
     cleanup {
