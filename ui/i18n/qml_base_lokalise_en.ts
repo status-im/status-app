@@ -12509,6 +12509,11 @@
       <comment>LeftTabView</comment>
       <translation>EFP onchain friends</translation>
     </message>
+    <message>
+      <source>Add account</source>
+      <comment>LeftTabView</comment>
+      <translation>Add account</translation>
+    </message>
   </context>
   <context>
     <name>LinkPreviewCard</name>
@@ -12776,11 +12781,6 @@
       <translation>Reading Keycard...</translation>
     </message>
     <message>
-      <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</translation>
-    </message>
-    <message>
       <source>Keycard blocked</source>
       <comment>LoginKeycardBox</comment>
       <translation>Keycard blocked</translation>
@@ -12832,6 +12832,11 @@
       <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
       <comment>LoginKeycardBox</comment>
       <translation>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</translation>
+    </message>
+    <message>
+      <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</translation>
     </message>
   </context>
   <context>

@@ -10258,6 +10258,10 @@ access to your funds.</source>
         <source>EFP onchain friends</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Add account</source>
+        <translation type="unfinished">계정 추가</translation>
+    </message>
 </context>
 <context>
     <name>LinkPreviewCard</name>
@@ -10484,10 +10488,6 @@ to load</source>
         <translation>Keycard 읽는 중...</translation>
     </message>
     <message>
-        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</source>
-        <translation>Keycard 감지 문제.&lt;br&gt;리더기와 Keycard를 제거했다가 다시 삽입하세요.</translation>
-    </message>
-    <message>
         <source>Keycard blocked</source>
         <translation>Keycard가 차단됨</translation>
     </message>
@@ -10527,6 +10527,10 @@ to load</source>
     </message>
     <message>
         <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -295,7 +295,7 @@ StatusDialog {
         // Used to get collectible entry if selected token is a collectible
         readonly property var selectedCollectibleEntry: ModelEntry {
             sourceModel: root.flatCollectiblesModel
-            key: "groupingValue"
+            key: "key"
             value: root.selectedGroupKey
             onItemChanged: d.setCollectibleInTokenSelector()
             onAvailableChanged: d.setCollectibleInTokenSelector()
@@ -394,10 +394,14 @@ StatusDialog {
         }
 
         readonly property bool allowTryingToSendEnteredAmount: {
+            if (selectedCollectibleEntryValid) {
+                return true
+            }
+
             if (!d.selectedTokenExistsInAssetsModel) {
                 false
             }
-            if (!selectedCollectibleEntryValid && !d.selectedAssetEntryValid) {
+            if (!d.selectedAssetEntryValid) {
                 return true // if no asset selected
             }
 
@@ -460,7 +464,7 @@ StatusDialog {
         }
 
         function setSelectedCollectible(key) {
-            const tokenType = SQUtils.ModelUtils.getByKey(root.flatCollectiblesModel, "groupingValue", key, "tokenType")
+            const tokenType = SQUtils.ModelUtils.getByKey(root.flatCollectiblesModel, "key", key, "tokenType")
             if(tokenType === Constants.TokenType.ERC1155) {
                 root.sendType =  Constants.SendType.ERC1155Transfer
             } else if(tokenType === Constants.TokenType.ERC721) {

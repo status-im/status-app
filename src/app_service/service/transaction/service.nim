@@ -400,24 +400,35 @@ QtObject:
       mutableParamsTable[ExtraKeyUsername] = ens_utils.addDomain(mutableParamsTable[ExtraKeyUsername])
 
     try:
-      let token = self.tokenService.getTokenByGroupKeyAndChainId(tokenGroupKey, fromChainID)
-      if token.isNil:
-        raise newException(CatchableError, "no token (from) found for group key: " & tokenGroupKey & " and chain id: " & $fromChainID)
+      var
+        fromTokenKey: string
+        toTokenKey: string
 
-      var toToken: TokenItem
-      if toTokenGroupKey.isEmptyOrWhitespace or toTokenGroupKey == tokenGroupKey:
-        toToken = token
-        if sendType == SendType.Bridge:
-          toToken = self.tokenService.getTokenByGroupKeyAndChainId(token.crossChainId, toChainID)
-          if toToken.isNil:
-            raise newException(CatchableError, "no token (to) found for group key: " & tokenGroupKey & " and chain id: " & $toChainID)
+      if sendType == SendType.ERC721Transfer or
+        sendType == SendType.ERC1155Transfer:
+          fromTokenKey = tokenGroupKey
+          toTokenKey = tokenGroupKey
       else:
-        toToken = self.tokenService.getTokenByGroupKeyAndChainId(toTokenGroupKey, toChainID)
-        if toToken.isNil:
-          raise newException(CatchableError, "no token (to) found for group key: " & toTokenGroupKey & " and chain id: " & $toChainID)
+        let token = self.tokenService.getTokenByGroupKeyAndChainId(tokenGroupKey, fromChainID)
+        if token.isNil:
+          raise newException(CatchableError, "no token (from) found for group key: " & tokenGroupKey & " and chain id: " & $fromChainID)
 
-      let err = wallet.suggestedRoutesAsync(uuid, ord(sendType), accountFrom, accountTo, amountInHex, amountOutHex, token.key,
-        tokenIsOwnerToken, toToken.key, fromChainID, toChainID, slippagePercentage, mutableParamsTable)
+        var toToken: TokenItem
+        if toTokenGroupKey.isEmptyOrWhitespace or toTokenGroupKey == tokenGroupKey:
+          toToken = token
+          if sendType == SendType.Bridge:
+            toToken = self.tokenService.getTokenByGroupKeyAndChainId(token.crossChainId, toChainID)
+            if toToken.isNil:
+              raise newException(CatchableError, "no token (to) found for group key: " & tokenGroupKey & " and chain id: " & $toChainID)
+        else:
+          toToken = self.tokenService.getTokenByGroupKeyAndChainId(toTokenGroupKey, toChainID)
+          if toToken.isNil:
+            raise newException(CatchableError, "no token (to) found for group key: " & toTokenGroupKey & " and chain id: " & $toChainID)
+        fromTokenKey = token.key
+        toTokenKey = toToken.key
+
+      let err = wallet.suggestedRoutesAsync(uuid, ord(sendType), accountFrom, accountTo, amountInHex, amountOutHex, fromTokenKey,
+        tokenIsOwnerToken, toTokenKey, fromChainID, toChainID, slippagePercentage, mutableParamsTable)
       if err.len > 0:
         raise newException(CatchableError, "err fetching the best route: " & err)
     except CatchableError as e:

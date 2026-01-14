@@ -46,7 +46,7 @@ QObject {
     /**
       Expected model structure:
 
-        symbol              [string] - unique identifier of a collectible
+        key                 [string] - unique identifier of a collectible
         chainId             [int] - unique identifier of a network
         collectionUid       [string] - unique identifier of a collection
         contractAddress     [string] - collectible's contract address
@@ -109,7 +109,6 @@ QObject {
                                                         ? model.communityId
                                                         : model.collectionUid
 
-                readonly property string key: model.symbol
 
                 readonly property url icon:
                     model.imageUrl || model.mediaUrl || Assets.png(Constants.defaultTokenIcon)
@@ -135,9 +134,9 @@ QObject {
 
             expectedRoles: [
                 "ownership", "communityId", "collectionUid", "imageUrl",
-                "mediaUrl", "symbol"
+                "mediaUrl"
             ]
-            exposedRoles: ["balance", "groupingValue", "icon", "key"]
+            exposedRoles: ["balance", "groupingValue", "icon"]
         }
 
         filters: [

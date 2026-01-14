@@ -10339,6 +10339,10 @@ přístup ke svým prostředkům.</translation>
         <source>EFP onchain friends</source>
         <translation>Přátelé na EFP</translation>
     </message>
+    <message>
+        <source>Add account</source>
+        <translation type="unfinished">Přidat účet</translation>
+    </message>
 </context>
 <context>
     <name>LinkPreviewCard</name>
@@ -10579,10 +10583,6 @@ selhalo</translation>
         <translation>Načítání Keycard...</translation>
     </message>
     <message>
-        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</source>
-        <translation>Problém s detekcí Keycard.&lt;br&gt;Vyjměte a znovu vložte čtečku a Keycard.</translation>
-    </message>
-    <message>
         <source>Keycard blocked</source>
         <translation>Keycard zablokována</translation>
     </message>
@@ -10624,6 +10624,10 @@ selhalo</translation>
     </message>
     <message>
         <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

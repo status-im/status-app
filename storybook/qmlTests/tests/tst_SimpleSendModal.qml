@@ -178,6 +178,7 @@ Item {
                     // collection 2
                     {
                         tokenId: "id_3",
+                        key: "abc",
                         symbol: "abc",
                         groupingValue: "abc",
                         chainId: NetworksModel.mainnetChainId,
@@ -201,6 +202,7 @@ Item {
                     },
                     {
                         tokenId: "id_4",
+                        key: "def",
                         symbol: "def",
                         groupingValue: "def",
                         chainId: NetworksModel.mainnetChainId,
@@ -224,6 +226,7 @@ Item {
                     },
                     {
                         tokenId: "id_5",
+                        key: "ghi",
                         symbol: "ghi",
                         groupingValue: "ghi",
                         chainId: NetworksModel.mainnetChainId,
@@ -920,10 +923,10 @@ Item {
             compare(controlUnderTest.selectedRawAmount, "")
 
             // Asset Selection
-            sendModalHeader.assetSelected("ETH")
+            sendModalHeader.assetSelected(Constants.ethGroupKey)
 
             compare(controlUnderTest.sendType, Constants.SendType.Transfer)
-            compare(controlUnderTest.selectedGroupKey, "ETH")
+            compare(controlUnderTest.selectedGroupKey, Constants.ethGroupKey)
             compare(controlUnderTest.selectedChainId, 1)
             compare(controlUnderTest.selectedRawAmount, "")
 
@@ -935,7 +938,7 @@ Item {
             compare(controlUnderTest.selectedChainId, 1)
             compare(controlUnderTest.selectedRawAmount, "1")
 
-            sendModalHeader.assetSelected("ETH")
+            sendModalHeader.assetSelected(Constants.ethGroupKey)
         }
 
         function test_marketDataNotAvailable_behavior() {

@@ -349,12 +349,12 @@ QtObject {
         if (tokenType === Constants.TokenType.ERC721)  {
             sendType = Constants.SendType.ERC721Transfer
             selectedChainId =
-                    SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "symbol", gorupKey, "chainId")
+                    SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "key", gorupKey, "chainId")
         }
         else if(tokenType === Constants.TokenType.ERC1155) {
             sendType = Constants.SendType.ERC1155Transfer
             selectedChainId =
-                    SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "symbol", gorupKey, "chainId")
+                    SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "key", gorupKey, "chainId")
         }
         else {
             let layer1chainId = SQUtils.ModelUtils.getByKey(root.filteredFlatNetworksModel, "layer", "1", "chainId")
@@ -546,29 +546,13 @@ QtObject {
                 if(allValuesFilledCorrectly) {
                     handler.uuid = Utils.uuid()
                     simpleSendModal.routesLoading = true
-                    let groupKey = selectedGroupKey
-                    /** TODO: This special handling for collectibles should ideally not
-                    be needed, howver is needed because of current implementation and
-                    collectible token id is contractAddress:tokenId **/
-                    if(sendType === Constants.SendType.ERC1155Transfer ||
-                            sendType === Constants.SendType.ERC721Transfer) {
-                        const selectedCollectible =
-                                                  SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "symbol", selectedGroupKey)
-                        if(!!selectedCollectible &&
-                                !!selectedCollectible.contractAddress &&
-                                !!selectedCollectible.tokenId) {
-                            groupKey = "%1:%2".arg(
-                                        selectedCollectible.contractAddress).arg(
-                                        selectedCollectible.tokenId)
-                        }
-                    }
                     root.transactionStoreNew.fetchSuggestedRoutes(handler.uuid,
                                                                   sendType,
                                                                   selectedChainId,
                                                                   selectedAccountAddress,
                                                                   selectedRecipientAddress,
                                                                   selectedRawAmount,
-                                                                  groupKey,
+                                                                  selectedGroupKey,
                                                                   /*amountOut = */ "0",
                                                                   /*toToken =*/ "",
                                                                   /*slippagePercentage*/ "",
@@ -581,7 +565,7 @@ QtObject {
                 if(sendType === Constants.SendType.ERC1155Transfer ||
                         sendType === Constants.SendType.ERC721Transfer) {
                     const selectedCollectible =
-                                              SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "symbol", selectedGroupKey)
+                                              SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "key", selectedGroupKey)
                     if(!!selectedCollectible &&
                             !!selectedCollectible.contractAddress &&
                             !!selectedCollectible.tokenId) {

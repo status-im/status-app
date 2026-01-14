@@ -10278,6 +10278,10 @@ acceso a tus fondos.</translation>
         <source>EFP onchain friends</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Add account</source>
+        <translation type="unfinished">Agregar cuenta</translation>
+    </message>
 </context>
 <context>
     <name>LinkPreviewCard</name>
@@ -10511,10 +10515,6 @@ al cargar</translation>
         <translation>Leyendo Keycard...</translation>
     </message>
     <message>
-        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</source>
-        <translation>Problema al detectar Keycard.&lt;br&gt;Retira y vuelve a insertar el lector y el Keycard.</translation>
-    </message>
-    <message>
         <source>Keycard blocked</source>
         <translation></translation>
     </message>
@@ -10555,6 +10555,10 @@ al cargar</translation>
     </message>
     <message>
         <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
