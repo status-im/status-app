@@ -37,7 +37,7 @@ endif()
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
-        Core Qml Gui Quick QuickControls2 REQUIRED)
+        Core Qml Gui Quick QuickControls2 WebChannel REQUIRED)
 
 # --- QML test hooks flag and TestConfig generation ---
 option(STATUSQ_TESTMODE "Enable QML test hooks (TestConfig.testMode)" OFF)
@@ -135,6 +135,7 @@ endif ()
 if (${STATUSQ_SHADOW_BUILD})
     add_definitions(-DBUNDLE_QML_RESOURCES)
     set(STATUSQ_QRC_FILES src/statusq.qrc
+        src/CustomWebView/customwebview.qrc
         src/assets/fonts/fonts.qrc
         src/assets/img/img.qrc
         src/assets/png/png.qrc
@@ -239,14 +240,47 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_library(Foundation Foundation)
     find_library(Security Security)
     find_library(LocalAuthentication LocalAuthentication)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication})
+    find_library(WebKit WebKit)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit})
     target_sources(StatusQ PRIVATE
         src/keychain_apple.mm
+        include/StatusQ/darwinwebviewbackend.h
+        src/CustomWebView/darwin/webviewbackend.mm
+        src/CustomWebView/darwin/navigationdelegate.h
+        src/CustomWebView/darwin/navigationdelegate.mm
+        src/CustomWebView/darwin/userscripts.h
+        src/CustomWebView/darwin/userscripts.mm
+        src/CustomWebView/darwin/origin_utils.h
+        src/CustomWebView/darwin/origin_utils.mm
+        src/CustomWebView/darwin/script_utils.h
+        src/CustomWebView/darwin/script_utils.mm
+        src/CustomWebView/darwin/dispatch_utils.h
+        src/CustomWebView/darwin/darwinwebchanneltransport.h
+        src/CustomWebView/darwin/darwinwebchanneltransport.mm
     )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+    find_library(UIKit UIKit)
+    find_library(Foundation Foundation)
+    find_library(Security Security)
+    find_library(LocalAuthentication LocalAuthentication)
+    find_library(WebKit WebKit)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit})
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/keychain_apple.mm
+        include/StatusQ/darwinwebviewbackend.h
+        src/CustomWebView/darwin/webviewbackend.mm
+        src/CustomWebView/darwin/navigationdelegate.h
+        src/CustomWebView/darwin/navigationdelegate.mm
+        src/CustomWebView/darwin/userscripts.h
+        src/CustomWebView/darwin/userscripts.mm
+        src/CustomWebView/darwin/origin_utils.h
+        src/CustomWebView/darwin/origin_utils.mm
+        src/CustomWebView/darwin/script_utils.h
+        src/CustomWebView/darwin/script_utils.mm
+        src/CustomWebView/darwin/dispatch_utils.h
+        src/CustomWebView/darwin/darwinwebchanneltransport.h
+        src/CustomWebView/darwin/darwinwebchanneltransport.mm
     )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE
@@ -282,6 +316,7 @@ target_link_libraries(StatusQ PRIVATE
         Qt::Gui
         Qt::Quick
         Qt::QuickControls2
+        Qt::WebChannel
         SortFilterProxyModel
         QtModelsToolkit
         MobileUI

@@ -309,12 +309,12 @@ const EthereumWrapper = (function() {
     }
 
     function install() {
-        if (!window.ethereumProvider) {
-            return false;
-        }
-        
         if (window.__ETHEREUM_INSTALLED__) {
             return true;
+        }
+        
+        if (!window.ethereumProvider) {
+            return false;
         }
         
         let provider;
@@ -341,39 +341,10 @@ const EthereumWrapper = (function() {
         }
     }
     
-    function tryInstall() {
-        if (install()) {
-            return;
-        }
-        
-        let attempts = 0;
-        const maxAttempts = 20;
-        const retryInterval = 50;
-        
-        const retry = () => {
-            attempts++;
-            if (install()) {
-                return;
-            }
-            
-            if (attempts < maxAttempts) {
-                setTimeout(retry, retryInterval * Math.min(attempts, 5));
-            } else {
-                const isIframe = window.self !== window.top;
-                if (!isIframe) {
-                    console.error('[Ethereum Wrapper] Failed to install after', maxAttempts, 'attempts');
-                }
-            }
-        };
-        
-        setTimeout(retry, retryInterval);
-    }
-
     // Return public API if needed
     const instance = {
         EthereumProvider: EthereumProvider,
-        install: install,
-        tryInstall: tryInstall
+        install: install
     };
     
     // Store instance globally to prevent duplicate loading
@@ -382,11 +353,3 @@ const EthereumWrapper = (function() {
     return instance;
 
 })(); // IIFE end
-
-// Auto-install on script load (only if this is the first instance)
-if (!window.__ETHEREUM_AUTO_INSTALL_CALLED__) {
-    window.__ETHEREUM_AUTO_INSTALL_CALLED__ = true;
-    EthereumWrapper.tryInstall();
-}
-
-

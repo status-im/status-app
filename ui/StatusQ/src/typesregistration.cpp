@@ -21,6 +21,10 @@
 #include "StatusQ/urlutils.h"
 #include "StatusQ/statuslayoutstate.h"
 
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#include "StatusQ/darwinwebviewbackend.h"
+#endif
+
 #include <qtmodelstoolkit/registerqmltypes.h>
 #include <qqmlsortfilterproxymodeltypes.h>
 
@@ -114,6 +118,9 @@ void registerStatusQTypes() {
     qmlRegisterUncreatableType<StatusLayoutState>("StatusQ.Layout", 0, 1,
                                                   "StatusLayoutState", QStringLiteral("StatusLayoutState is an attached property type"));
 
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    qmlRegisterType<DarwinWebViewBackend>("StatusQ.CustomWebView", 1, 0, "DarwinWebViewBackend");
+#endif
 
 #ifdef BUNDLE_QML_RESOURCES
     Q_INIT_RESOURCE(TestConfig);

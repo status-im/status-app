@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/CustomWebView">
+        <file>js/bootstrap_page.js</file>
+        <file>js/bootstrap_bridge.js</file>
+    </qresource>
+</RCC>
