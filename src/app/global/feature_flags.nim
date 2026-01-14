@@ -16,7 +16,6 @@ macro featureFlag(name: string, defaultValue: bool, buildFlag: static bool = fal
     return quote do:
       let `flagName`* = getEnv("FLAG_" & `name`.toUpper, boolToEnv(`defaultValue`)) != "0"
 
-const DEFAULT_FLAG_SWAP_ENABLED  = when defined(swap_disabled): false else: true
 const DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED  = true
 const DEFAULT_FLAG_PAYMENT_REQUEST_ENABLED = true
 const DEFAULT_FLAG_SIMPLE_SEND_ENABLED = true
@@ -32,9 +31,10 @@ const DEFAULT_FLAG_CONNECTOR_ENABLED  = true
 const DEFAULT_FLAG_KEYCARD_ENABLED = true
 const DEFAULT_FLAG_THREADPOOL_ENABLED = true
 const DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED = true
+const DEFAULT_FLAG_BUY_ENABLED = true
+const DEFAULT_FLAG_SWAP_ENABLED = true
 
 # Public feature flags
-featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED)
 featureFlag("SEND_VIA_PERSONAL_CHAT_ENABLED", DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED)
 featureFlag("PAYMENT_REQUEST_ENABLED",        DEFAULT_FLAG_PAYMENT_REQUEST_ENABLED)
 featureFlag("SIMPLE_SEND_ENABLED",            DEFAULT_FLAG_SIMPLE_SEND_ENABLED)
@@ -49,6 +49,8 @@ featureFlag("CONNECTOR_ENABLED",              DEFAULT_FLAG_CONNECTOR_ENABLED, tr
 featureFlag("KEYCARD_ENABLED",                DEFAULT_FLAG_KEYCARD_ENABLED, true)
 featureFlag("THREADPOOL_ENABLED",             DEFAULT_FLAG_THREADPOOL_ENABLED, true)
 featureFlag("SINGLE_STATUS_INSTANCE_ENABLED", DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED, true)
+featureFlag("BUY_ENABLED",                    DEFAULT_FLAG_BUY_ENABLED, true)
+featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED, true)
 # The `featureGuard` macro conditionally replaces the guarded code
 # There are two main usages:
 # 1. With a statement list:
@@ -93,6 +95,7 @@ QtObject:
     homePageEnabled: bool
     localBackupEnabled: bool
     privacyModeFeatureEnabled: bool
+    buyEnabled: bool
 
   proc setup(self: FeatureFlags) =
     self.QObject.setup()
@@ -108,6 +111,7 @@ QtObject:
     self.homePageEnabled = HOMEPAGE_ENABLED
     self.localBackupEnabled = LOCAL_BACKUP_ENABLED
     self.privacyModeFeatureEnabled = PRIVACY_MODE_FEATURE_ENABLED
+    self.buyEnabled = BUY_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -187,3 +191,9 @@ QtObject:
 
   proc getPrivacyModeFeatureEnabled*(self: FeatureFlags): bool {.slot.} =
     return self.privacyModeFeatureEnabled
+
+  QtProperty[bool] buyEnabled:
+    read = getBuyEnabled
+
+  proc getBuyEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.buyEnabled

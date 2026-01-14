@@ -2033,6 +2033,7 @@ Item {
                             networksStore: appMain.networksStore
                             appMainVisible: appMain.visible
                             swapEnabled: featureFlagsStore.swapEnabled
+                            buyEnabled: featureFlagsStore.buyEnabled
                             dAppsVisible: dAppsServiceLoader.item ? dAppsServiceLoader.item.serviceAvailableToCurrentAddress : false
                             dAppsEnabled: dAppsServiceLoader.item ? dAppsServiceLoader.item.isServiceOnline : false
                             dAppsModel: dAppsServiceLoader.item ? dAppsServiceLoader.item.dappsModel : null

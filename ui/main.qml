@@ -43,6 +43,7 @@ Window {
         homePageEnabled: featureFlags ? featureFlags.homePageEnabled : false
         localBackupEnabled: featureFlags ? featureFlags.localBackupEnabled : false
         privacyModeFeatureEnabled: featureFlags ? featureFlags.privacyModeFeatureEnabled : false
+        buyEnabled: featureFlags ? featureFlags.buyEnabled : false
     }
 
     readonly property MetricsStore metricsStore: MetricsStore {}
