@@ -67,6 +67,8 @@ pipeline {
     STATUS_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'apk', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
     STATUS_AAB_ARTIFACT = "pkg/${utils.pkgFilename(ext: 'aab', arch: 'arm64', version: env.VERSION, type: env.APP_TYPE)}"
     NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
+    /* Enable test mode (hooks for e2e) for PR/nightly builds, but NOT for releases */
+    STATUSQ_TESTMODE = "${!utils.isReleaseBuild()}"
   }
 
   stages {
@@ -148,6 +150,20 @@ pipeline {
           }
         }
       }
+    }
+
+    stage('E2E') {
+      when { expression { utils.isPRBuild() } }
+      steps { script {
+        build(
+          job: 'status-app/e2e/prs-android',
+          wait: false,
+          parameters: jenkins.mapToParams([
+            GIT_REF: env.CHANGE_BRANCH ?: env.BRANCH_NAME,
+            BUILD_SOURCE: env.PKG_URL,
+          ]),
+        )
+      } }
     }
   }
 

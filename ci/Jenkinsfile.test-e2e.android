@@ -70,7 +70,7 @@ pipeline {
     stage('Setup Python environment') {
       steps {
         dir('test/e2e_appium') {
-          sh """
+          sh """#!/bin/bash
             set -euo pipefail
             python3 -m venv ${VIRTUAL_ENV}
             source ${VIRTUAL_ENV}/bin/activate
@@ -93,7 +93,8 @@ pipeline {
           projectName: params.BUILD_SOURCE,
           filter:      'pkg/*.apk',
           selector:    lastWithArtifacts(),
-          target:      './pkg/'
+          target:      './pkg/',
+          flatten:     true
         )
       } } } }
     }
@@ -108,7 +109,7 @@ pipeline {
             params.BUILD_SOURCE : utils.findFile('test/e2e_appium/pkg/*.apk')
           withCredentials([
             usernamePassword(
-              credentialsId: 'browserstack-status-desktop',
+              credentialsId: 'browserstack-status-mobile-android',
               usernameVariable: 'BROWSERSTACK_USERNAME',
               passwordVariable: 'BROWSERSTACK_ACCESS_KEY'
             )
@@ -139,7 +140,7 @@ pipeline {
           dir('test/e2e_appium') {
             withCredentials([
               usernamePassword(
-                credentialsId: 'browserstack-status-desktop',
+                credentialsId: 'browserstack-status-mobile-android',
                 usernameVariable: 'BROWSERSTACK_USERNAME',
                 passwordVariable: 'BROWSERSTACK_ACCESS_KEY'
               )
