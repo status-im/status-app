@@ -305,6 +305,7 @@ StatusScrollView {
             Layout.fillWidth: true
 
             flatNetworks: root.flatNetworks
+            disableChainsWithNoCommunitiesSupport: true
             selection: !!ownerToken.chainId ? [ownerToken.chainId] : [SQUtils.ModelUtils.getByKey(flatNetworks, "layer", 2).chainId/*first layer 2 network*/]
 
             multiSelection: false

@@ -21,6 +21,7 @@ type
     ShortName
     IsActive
     IsDeactivatable
+    CommunitiesSupported
 
 QtObject:
   type
@@ -52,7 +53,8 @@ QtObject:
       ModelRole.ShortName.int: "shortName",
       ModelRole.ChainColor.int: "chainColor",
       ModelRole.IsActive.int: "isActive",
-      ModelRole.IsDeactivatable.int: "isDeactivatable"
+      ModelRole.IsDeactivatable.int: "isDeactivatable",
+      ModelRole.CommunitiesSupported.int: "communitiesSupported"
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
@@ -94,6 +96,8 @@ QtObject:
       result = newQVariant(item.isActive)
     of ModelRole.IsDeactivatable:
       result = newQVariant(item.isDeactivatable)
+    of ModelRole.CommunitiesSupported:
+      result = newQVariant(item.communitiesSupported)
 
   proc refreshModel*(self: Model) =
     self.beginResetModel()
@@ -114,7 +118,7 @@ QtObject:
 
   proc getEnabledChainIds*(self: Model, areTestNetworksEnabled: bool): string =
     return self.getEnabledNetworks(areTestNetworksEnabled).map(n => n.chainId).join(":")
-  
+
   proc getNetworkByChainId*(self: Model, chainId: int): NetworkItem =
     for network in self.delegate.getFlatNetworksList():
       if chainId == network.chainId:

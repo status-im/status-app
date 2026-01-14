@@ -127,34 +127,34 @@ proc updateNetworkEndPointValues*(self: Service, chainId: int, newMainRpcInput, 
     var rpcProviders: seq[RpcProviderDto] = @[]
     if newMainRpcInput != "":
       rpcProviders.add(RpcProviderDto(
-        id: 1, 
-        chainId: chainId, 
-        name: "user-rpc-provider-1", 
-        url: newMainRpcInput, 
-        isRpsLimiterEnabled: false, 
-        providerType: RpcProviderType.User, 
-        isEnabled: true, 
-        authType: RpcProviderAuthType.NoAuth, 
-        authLogin: "", 
-        authPassword: "", 
+        id: 1,
+        chainId: chainId,
+        name: "user-rpc-provider-1",
+        url: newMainRpcInput,
+        isRpsLimiterEnabled: false,
+        providerType: RpcProviderType.User,
+        isEnabled: true,
+        authType: RpcProviderAuthType.NoAuth,
+        authLogin: "",
+        authPassword: "",
         authToken: ""
       ))
     if newFailoverRpcUrl != "":
       rpcProviders.add(RpcProviderDto(
-        id: 2, 
-        chainId: chainId, 
-        name: "user-rpc-provider-2", 
-        url: newFailoverRpcUrl, 
-        isRpsLimiterEnabled: false, 
-        providerType: RpcProviderType.User, 
-        isEnabled: true, 
-        authType: RpcProviderAuthType.NoAuth, 
-        authLogin: "", 
-        authPassword: "", 
+        id: 2,
+        chainId: chainId,
+        name: "user-rpc-provider-2",
+        url: newFailoverRpcUrl,
+        isRpsLimiterEnabled: false,
+        providerType: RpcProviderType.User,
+        isEnabled: true,
+        authType: RpcProviderAuthType.NoAuth,
+        authLogin: "",
+        authPassword: "",
         authToken: ""
       ))
     let response = backend.setChainUserRpcProviders(chainId, rpcProviders)
-    
+
     if response.error == nil:
       self.fetchNetworks()
       self.events.emit(SIGNAL_NETWORK_ENDPOINT_UPDATED, NetworkEndpointUpdatedArgs(isTest: network.isTest, networkName: network.chainName))

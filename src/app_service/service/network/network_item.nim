@@ -27,6 +27,7 @@ QtObject:
     eip1559Enabled*: bool
     noBaseFee*: bool
     noPriorityFee*: bool
+    communitiesSupported*: bool
 
   proc setup*(self: NetworkItem,
         chainId: int,
@@ -47,7 +48,8 @@ QtObject:
         isDeactivatable: bool,
         eip1559Enabled: bool,
         noBaseFee: bool,
-        noPriorityFee: bool
+        noPriorityFee: bool,
+        communitiesSupported: bool
         )
   proc delete*(self: NetworkItem)
   proc networkDtoToItem*(network: NetworkDto): NetworkItem =
@@ -57,7 +59,7 @@ QtObject:
       network.chainColor, rpcProviders,
       network.blockExplorerURL, network.nativeCurrencyName, network.nativeCurrencySymbol, network.nativeCurrencyDecimals,
       network.isTest, network.isEnabled, network.relatedChainId, network.isActive, network.isDeactivatable,
-      network.eip1559Enabled, network.noBaseFee, network.noPriorityFee)
+      network.eip1559Enabled, network.noBaseFee, network.noPriorityFee, network.communitiesSupported)
 
   proc networkItemToDto*(network: NetworkItem): NetworkDto =
     result = NetworkDto(
@@ -79,7 +81,8 @@ QtObject:
       isDeactivatable: network.isDeactivatable,
       eip1559Enabled: network.eip1559Enabled,
       noBaseFee: network.noBaseFee,
-      noPriorityFee: network.noPriorityFee
+      noPriorityFee: network.noPriorityFee,
+      communitiesSupported: network.communitiesSupported
     )
 
   proc `$`*(self: NetworkItem): string =
@@ -102,7 +105,8 @@ QtObject:
       isDeactivatable: {self.isDeactivatable},
       eip1559Enabled: {self.eip1559Enabled},
       noBaseFee: {self.noBaseFee},
-      noPriorityFee: {self.noPriorityFee}
+      noPriorityFee: {self.noPriorityFee},
+      communitiesSupported: {self.communitiesSupported}
       ]"""
 
   proc chainId*(self: NetworkItem): int {.slot.} =
@@ -178,6 +182,11 @@ QtObject:
   QtProperty[bool] isActive:
     read = isActive
 
+  proc communitiesSupported*(self: NetworkItem): bool {.slot.} =
+    return self.communitiesSupported
+  QtProperty[bool] communitiesSupported:
+    read = communitiesSupported
+
   proc delete*(self: NetworkItem) =
       self.QObject.delete
 
@@ -200,7 +209,8 @@ QtObject:
       isDeactivatable: bool,
       eip1559Enabled: bool,
       noBaseFee: bool,
-      noPriorityFee: bool
+      noPriorityFee: bool,
+      communitiesSupported: bool
       ) =
         self.QObject.setup
         self.chainId = chainId
@@ -222,3 +232,4 @@ QtObject:
         self.eip1559Enabled = eip1559Enabled
         self.noBaseFee = noBaseFee
         self.noPriorityFee = noPriorityFee
+        self.communitiesSupported = communitiesSupported

@@ -25,6 +25,7 @@ StatusListView {
         layer          [int]             - chain layer. e.g. 1 or 2
         isTest         [bool]            - true if the chain is a testnet
     **/
+    property bool disableChainsWithNoCommunitiesSupport: false
     property bool showIndicator: true
     property bool multiSelection: false
     property bool interactive: true
@@ -55,6 +56,7 @@ StatusListView {
         objectName: "networkSelectorDelegate_" + model.chainName
         height: 48
         width: ListView.view.width
+        enabled: !root.disableChainsWithNoCommunitiesSupport || model.communitiesSupported
         title: model.chainName
         iconUrl: Assets.svg(model.iconUrl)
         showIndicator: root.showIndicator

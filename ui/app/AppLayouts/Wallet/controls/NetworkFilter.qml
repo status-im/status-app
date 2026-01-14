@@ -29,6 +29,7 @@ StatusComboBox {
     required property var flatNetworks
     readonly property alias singleSelectionItemData: d.singleSelectionItem.item
 
+    property bool disableChainsWithNoCommunitiesSupport: false
     property bool multiSelection: true
     property bool showSelectionIndicator: true
     property bool showTitle: true
@@ -169,6 +170,7 @@ StatusComboBox {
         bottomPadding: !!d.window.window ? d.window.window.SafeArea.margins.bottom: 0
 
         flatNetworks: root.flatNetworks
+        disableChainsWithNoCommunitiesSupport: root.disableChainsWithNoCommunitiesSupport
         selectionAllowed: root.selectionAllowed
         multiSelection: root.multiSelection
         showSelectionIndicator: root.showSelectionIndicator

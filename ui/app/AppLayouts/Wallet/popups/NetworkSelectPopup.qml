@@ -20,6 +20,7 @@ StatusDropdown {
 
     required property var flatNetworks
 
+    property bool disableChainsWithNoCommunitiesSupport
     property bool showSelectionIndicator: true
     property bool selectionAllowed: true
     property bool multiSelection: false
@@ -62,6 +63,7 @@ StatusDropdown {
             Layout.fillWidth: true
 
             model: root.flatNetworks
+            disableChainsWithNoCommunitiesSupport: root.disableChainsWithNoCommunitiesSupport
             interactive: root.selectionAllowed
             multiSelection: root.multiSelection
             showIndicator: root.showSelectionIndicator

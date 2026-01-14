@@ -62,6 +62,7 @@ type NetworkDto* = object
   eip1559Enabled* {.serializedFieldName("eip1559Enabled").}: bool
   noBaseFee* {.serializedFieldName("noBaseFee").}: bool
   noPriorityFee* {.serializedFieldName("noPriorityFee").}: bool
+  communitiesSupported* {.serializedFieldName("communitiesSupported").}: bool
 
 type NetworkDtoSafe* = NetworkDto
 
@@ -87,7 +88,8 @@ proc `$`*(self: NetworkDto): string =
     isDeactivatable:{self.isDeactivatable},
     eip1559Enabled:{self.eip1559Enabled},
     noBaseFee:{self.noBaseFee},
-    noPriorityFee:{self.noPriorityFee}
+    noPriorityFee:{self.noPriorityFee},
+    communitiesSupported:{self.communitiesSupported}
   )"""
 
 proc `%`*(t: NetworkDto): JsonNode {.inline.} =
