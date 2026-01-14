@@ -30,6 +30,7 @@ Rectangle {
     required property TransactionStore transactionStore
 
     property bool swapEnabled
+    property bool buyEnabled
 
     // Community-token related properties:
     required property bool isCommunityOwnershipTransfer
@@ -83,7 +84,7 @@ Rectangle {
                                                         && !d.isCollectibleViewed
                                                         && !d.isCommunityAsset
 
-        readonly property bool buyActionAvailable: !isCollectibleViewed
+        readonly property bool buyActionAvailable: !isCollectibleViewed && root.buyEnabled
 
         readonly property bool swapActionAvailable: root.swapEnabled
                                                     && !walletStore.overview.isWatchOnlyAccount
