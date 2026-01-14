@@ -18,8 +18,18 @@ else
     CARCH="$ARCH"
 fi
 
+# setting compile time feature flags
+FEATURE_FLAGS=(
+            FLAG_DAPPS_ENABLED=0 \
+            FLAG_CONNECTOR_ENABLED=0 \
+            FLAG_KEYCARD_ENABLED=0 \
+            FLAG_SINGLE_STATUS_INSTANCE_ENABLED=0 \
+            FLAG_BROWSER_ENABLED=0 \
+)
+
 if [[ "$OS" == "ios" ]]; then
-    PLATFORM_SPECIFIC=(--app:staticlib -d:ios --os:ios -d:swap_disabled)
+    PLATFORM_SPECIFIC=(--app:staticlib -d:ios --os:ios)
+    FEATURE_FLAGS+=(FLAG_BUY_ENABLED=0 FLAG_SWAP_ENABLED=0)
 else
     PLATFORM_SPECIFIC=(--app:lib --os:android -d:android -d:androidNDK -d:chronicles_sinks=textlines[logcat],textlines[nocolors,dynamic],textlines[file,nocolors] \
         --passL="-L$LIB_DIR" --passL="-lstatus" --passL="-lStatusQ$LIB_SUFFIX" --passL="-lDOtherSide$LIB_SUFFIX" --passL="-lqrcodegen" --passL="-lqzxing" --passL="-lssl_3" --passL="-lcrypto_3" -d:taskpool)
@@ -36,9 +46,6 @@ echo "Building status-client for $ARCH using compiler: $CC"
 cd "$STATUS_DESKTOP"
 # build nim compiler with host env
 
-# setting compile time feature flags
-FEATURE_FLAGS="FLAG_DAPPS_ENABLED=0 FLAG_CONNECTOR_ENABLED=0 FLAG_KEYCARD_ENABLED=0 FLAG_SINGLE_STATUS_INSTANCE_ENABLED=0 FLAG_BROWSER_ENABLED=0"
-
 # app configuration defines
 APP_CONFIG_DEFINES=(
     --outdir:./bin
@@ -49,7 +56,7 @@ APP_CONFIG_DEFINES=(
 )
 
 # build status-client with feature flags
-env $FEATURE_FLAGS ./vendor/nimbus-build-system/scripts/env.sh nim c "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
+env "${FEATURE_FLAGS[@]}" ./vendor/nimbus-build-system/scripts/env.sh nim c "${PLATFORM_SPECIFIC[@]}" "${APP_CONFIG_DEFINES[@]}" ${QML_SERVER_DEFINES}  \
     --mm:orc \
     -d:useMalloc \
     --opt:size \
