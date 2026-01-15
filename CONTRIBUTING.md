@@ -31,7 +31,7 @@
 These guides are meant to be used by internal contributors. If you're an external contributor, you can also read them to get a sense of how we work, but you do not have to apply those guidelines.
 
 - [Release Process Guide](/docs/internal/release-process.md)
-- Dev-Design-Product-QA Workflow (Coming soon)
+- [Cross-Team Epic Delivery Workflow](/docs/internal/epic-delivery-workflow.md)
 
 ## 🪲 Status App Community Testing
 
