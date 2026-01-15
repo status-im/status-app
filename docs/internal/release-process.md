@@ -1,6 +1,6 @@
 # Release Process Guide
 
-This guide is meant to explain the flow and rules of the release process, ie the period when we cut a release branch off the master branch in prevision of releasing it to users. Release Candidates (RC) are provided to test the Release.
+This guide is meant to explain the flow and rules of the release process, i.e. the period when we cut a release branch off the master branch in prevision of releasing it to users. Release Candidates (RC) are provided to test the Release.
 
 1. A release branch **must** be created at the start of the Release Process for the [Status App](https://github.com/status-im/status-app)'s master branch and [status-go](https://github.com/status-im/status-go)'s develop branch
    1. The format for the status-app branch is `release/MAJOR.MINOR.x`, eg. `release/2.36.x`
@@ -17,7 +17,7 @@ This guide is meant to explain the flow and rules of the release process, ie the
       2. potential data or funds loss
       3. crashes
       4. full regressions
-5. One or more Testing days **should** be done by the entire Status team to find any regressions.
+5. One or more testing days **should** be done by the entire Status team to find any regressions.
    1. The Status team **should** split in testing groups to help test features.
    2. Testing groups **should** contain people from different teams to spread the knowledge.
    3. Testing days **must** use a list of current features to test.
@@ -31,9 +31,9 @@ This guide is meant to explain the flow and rules of the release process, ie the
 
 7. Code coverage does **not** need to be met on the release branch.
 
-8.  Features **must not** be allowed to be added to the release branch under any circumstances.
+8. Features **must not** be allowed to be added to the release branch under any circumstances.
 
-9.  Fixes for issues identified during the RC phase **must** be worked on and committed on the release branch **first**.
+9. Fixes for issues identified during the RC phase **must** be worked on and committed on the release branch **first**.
 
 10. Once a fix has been applied to the release branch, it **must** be ported to the master branch by the author of the commit.
 
