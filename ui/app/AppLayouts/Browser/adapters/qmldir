@@ -1,2 +1,3 @@
 AbstractWebView 1.0 AbstractWebView.qml
 WebEngineAdapter 1.0 WebEngineAdapter.qml
+DarwinWebViewAdapter 1.0 DarwinWebViewAdapter.qml
