@@ -13,7 +13,10 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
     - [Windows](#windows)
       - [Install Chocolatey](#install-chocolatey)
       - [Install Required Packages](#install-required-packages)
+      - [Install Microsoft Visual C++ Build Tools](#install-microsoft-visual-c-build-tools)
       - [Install Go 1.24](#install-go-124)
+      - [Install Nim 2.2.x](#install-nim-22x)
+      - [Install protobuf](#install-protobuf)
     - [Linux](#linux)
       - [Ubuntu](#ubuntu)
       - [Fedora](#fedora)
@@ -32,6 +35,10 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
     - [Windows](#windows-1)
     - [Linux](#linux-1)
   - [4️⃣ Build the App](#4️⃣-build-the-app)
+    - [Build Configuration Options](#build-configuration-options)
+  - [Pro tips](#pro-tips)
+    - [Working with VS Code](#working-with-vs-code)
+    - [Data folder](#data-folder)
   - [🐞 Troubleshooting](#-troubleshooting)
     - [Qt Not Found](#qt-not-found)
     - [Application doesn't build](#application-doesnt-build)
@@ -60,11 +67,28 @@ Run with **Administrator** privileges:
 choco install make cmake mingw wget
 ```
 
+#### Install Microsoft Visual C++ Build Tools
+
+You can install them from the [Microsoft website](https://visualstudio.microsoft.com/visual-cpp-build-tools/) or run the `Install-VC-BuildTools` from the setup script `scripts/windows_build_setup.ps1`.
+
 #### Install Go 1.24
 
 Download and install Go 1.24 from the [official website](https://go.dev/dl/).
 
-> ⚠️ Note: There is a script `scripts/windows_build_setup.ps1`, but it may be outdated.
+#### Install Nim 2.2.x
+
+Download and install Nim 2.2.x from the [official website](https://nim-lang.org/install_windows.html).
+
+#### Install protobuf
+
+Install [scoop](https://scoop.sh/) if you don't have it already. Then run:
+
+```
+scoop bucket add extras
+scoop install --global protobuf@3.20.1
+```
+
+> ⚠️ Note: There is a script `scripts/windows_build_setup.ps1`, which is used to install dependencies on CI machines. Feel free to use it as inspiration for the needed versions.
 
 ### Linux
 
@@ -220,29 +244,27 @@ sudo dnf install qt6-qtbase-devel qt6-qtbase-private-devel qt6-qt5compat-devel q
 Set environment variables:
 
 ```powershell
-$env:QTPATH = "C:\Qt\5.15.2\5.15.2"
-$env:QTBASE = "C:\Qt\5.15.2"
-$env:QTDIR = "C:\Qt\5.15.2\msvc2017_64"
-$env:GOPATH = "C:\Users\{your_username}\go\bin"
-$env:VCINSTALLDIR = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC"
-$env:VS160COMNTOOLS = "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build"
+$env:QTBASE = "C:\Qt\6.9.2"
+$env:QTDIR = "C:\Qt\6.9.2\msvc2022_64"
+$env:GOPATH = "C:\Program Files\Go\bin"
+$env:VCINSTALLDIR = "C:\BuildTools\VC"
 ```
 
 Add the following paths to your `PATH` environment variable:
 
 ```
 C:\ProgramData\chocolatey\bin
-C:\Users\{your_username}\scoop\apps\mingw\current\bin
-C:\Users\{your_username}\scoop\apps\cmake\3.31.6\bin
-C:\Users\{your_username}\scoop\apps\mingw\15.1.0-rt_v12-rev0\bin
+C:\ProgramData\scoop\shims
 С:\Users\{your_username}\go\bin
 C:\Program Files\Go\bin
-C:\Qt\5.15.2\msvc2019_64\bin
-C:\protoc-30.2-win64\bin
+C:\nim-2.2.6\bin
+C:\Users\{you_username}\.nimble\bin
+C:\Qt\6.9.2\msvc2022_64\bin
+C:\BuildTools\VC\Tools\MSVC\14.44.35207\bin
+C:\ProgramData\mingw64\mingw64\bin
+C:\Program Files\CMake\bin
 C:\Qt\Tools\Ninja
-C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin
-C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\bin
-C:\Users\{your_username}\AppData\Local\Programs\Microsoft VS Code\bin
+C:\Program Files\7-Zip
 ```
 
 ### Linux
@@ -314,6 +336,24 @@ The following environment variables can be used to customize the build:
 - USE_STATUS_KEYCARD_QT (0,1) - Toggle to switch between `status-keycard-go` and `status-keycard-qt`. Defaults to `0`
 - VCINSTALLDIR (path) - Visual Studio compiler installation path. Defaults to `C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\`
 
+
+## Pro tips
+
+### Working with VS Code
+
+To have nim code parsing, set the environment variables before opening your IDE. E.g. run `./env.sh code .` in the source root folder.
+
+### Data folder
+
+The developer builds (using `make run`) compiled with `make` will generate and use the `Status` data folder at the root of the source tree as the user folder.
+
+The release binaries (CI or `make pkg`) will use a user location to create and load user data.
+
+For testing purposes, you can use a custom data folder by passing the `-d` flag. For example:
+
+```bash
+make run ARGS="-d=./dir"
+```
 
 ## 🐞 Troubleshooting
 
