@@ -142,7 +142,7 @@ class Message:
                 try:
                     object_name = getattr(child, 'objectName', '')
                     child_id = getattr(child, 'id', '')
-                    
+
                     if object_name == 'StatusDateGroupLabel':
                         self.date = str(getattr(child, 'text', ''))
                     elif child_id == 'title':
@@ -181,7 +181,7 @@ class Message:
     @allure.step('Open community invitation')
     def open_community_invitation(self, attempts: int = 4):
         driver.waitFor(lambda: self.delegate_button.is_visible, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-        
+
         for attempt in range(1, attempts + 1):
             self.delegate_button.click()
             try:
@@ -260,7 +260,7 @@ class Message:
                                         icon_path = str(getattr(item, 'icon', ''))
                                     elif hasattr(item, 'source'):
                                         icon_path = str(getattr(item, 'source', ''))
-                                    
+
                                     if icon_path:
                                         # Extract emoji ID from path like "qrc:/assets/twemoji/svg/1f600.svg"
                                         match = re.search(r'/([a-f0-9]+)\.svg', icon_path)
@@ -279,9 +279,10 @@ class Message:
         except (RuntimeError, AttributeError, LookupError):
             # If walking children fails, return empty list
             pass
-        
+
         if not reactions_pathes:
             raise LookupError('No emoji reactions found for this message')
+
         return reactions_pathes
 
 
@@ -297,7 +298,6 @@ class ChatView(QObject):
     @allure.step('Get messages')
     def messages(self, index: int) -> typing.List[Message]:
         _messages = []
-        time.sleep(2)
         # message_list_item has different indexes if we run multiple instances, so we pass index
         if index is not None:
             self._message_list_item.real_name['index'] = index

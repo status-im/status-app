@@ -23,6 +23,7 @@ mainWindow_LoadingAnimation = {"container": statusDesktop_mainWindow, "objectNam
                                "type": "LoadingAnimation", "visible": True}
 keycardPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "KeycardPopup", "type": "PopupItem", "visible": True}
 keycardPopupCloseButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "headerCloseButton", "type": "StatusFlatRoundButton", "visible": True}
+primaryNavSidebar = {"container": statusDesktop_mainWindow_overlay, "objectName": "primaryNavSideBarControl", "type": "Control", "visible": True}
 
 # Common names
 settingsSave_StatusButton = {"container": statusDesktop_mainWindow, "objectName": "settingsDirtyToastMessageSaveButton",
@@ -41,34 +42,31 @@ mainWindow_LeftPanelNavBar = {"container": statusDesktop_mainWindow, "objectName
 
 # First half of left main panel: home button, chat button, wallet button, market button
 
-homeButton = {"checkable": True, "container": mainWindow_LeftPanelNavBar, "objectName": "Home Page-navbar", "type": "PrimaryNavSidebarButton", "visible": True}
-walletChatSwapNavBarList = {"container": mainWindow_LeftPanelNavBar, "objectName": "statusChatNavBarListView",
+homeButton = {"container": primaryNavSidebar, "objectName": "Home Page-navbar", "type": "RegularSectionButton", "visible": True}
+walletChatSwapNavBarList = {"container": primaryNavSidebar, "objectName": "statusChatNavBarListView",
                             "type": "ListView", "visible": True}
-mainWalletButton = {"container": walletChatSwapNavBarList, "objectName": "Wallet-navbar",
+mainWalletButton = {"container": primaryNavSidebar, "objectName": "Wallet-navbar",
                     "type": "PrimaryNavSidebarButton", "visible": True}
-chatButton = {"container": walletChatSwapNavBarList, "objectName": "Messages-navbar", "type": "PrimaryNavSidebarButton",
+chatButton = {"container": primaryNavSidebar, "objectName": "Messages-navbar", "type": "PrimaryNavSidebarButton",
               "visible": True}
 
 # Second half of left main panel: communities button, settings button
 communitiesSettingsNavBarList = {"container": statusDesktop_mainWindow, "objectName": "statusMainNavBarListView",
                                  "type": "ListView", "visible": True}
-communitiesPortalButton = {"container": communitiesSettingsNavBarList, "objectName": "Communities Portal-navbar",
+communitiesPortalButton = {"container": primaryNavSidebar, "objectName": "Communities Portal-navbar",
                            "type": "PrimaryNavSidebarButton", "visible": True}
-settingsGearButton = {"container": communitiesSettingsNavBarList, "objectName": "Settings-navbar",
+settingsGearButton = {"container": primaryNavSidebar, "objectName": "Settings-navbar",
                       "type": "PrimaryNavSidebarButton", "visible": True}
-activityCenterButton = {"container": communitiesSettingsNavBarList, "objectName": "Activity Center-navbar", "type": "PrimaryNavSidebarButton", "visible": True}
+activityCenterButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "Activity Center-navbar", "type": "PrimaryNavSidebarButton", "visible": True}
 
 # Online identifier
-onlineIdentifierButton = {"container": mainWindow_LeftPanelNavBar, "objectName": "statusProfileNavBarTabButton",
-                          "type": "PrimaryNavSidebarButton", "visible": True}
+onlineIdentifierButton = {"checkable": True, "container": primaryNavSidebar, "objectName": "statusProfileNavBarTabButton", "type": "ProfileButton", "visible": True}
 
 mainWindow_statusCommunityMainNavBarListView_ListView = {"container": statusDesktop_mainWindow,
                                                          "objectName": "statusCommunityMainNavBarListView",
                                                          "type": "ListView", "visible": True}
-statusCommunityMainNavBarListView_CommunityNavBarButton = {"checkable": True,
-                                                           "container": mainWindow_statusCommunityMainNavBarListView_ListView,
-                                                           "objectName": "CommunityNavBarButton",
-                                                           "type": "PrimaryNavSidebarButton", "visible": True}
+statusCommunityMainNavBarListView_CommunityNavBarButton = {"container": primaryNavSidebar, "objectName": "CommunityNavBarButton", "type": "CommunitySectionButton", "visible": True}
+
 scrollView_Add_members_StatusButton = {"container": mainWindow_scrollView_StatusScrollView,
                                        "objectName": "CommunityWelcomeBannerPanel_AddMembersButton",
                                        "type": "StatusButton", "visible": True}
@@ -364,11 +362,13 @@ copy_icon_StatusIcon = {"container": statusDesktop_mainWindow_overlay, "objectNa
 communityMembershipSetupDialog = {"container": statusDesktop_mainWindow_overlay,
                                   "objectName": "CommunityMembershipSetupDialog", "type": "PopupItem", "visible": True}
 o_ColumnLayout = {"container": statusDesktop_mainWindow_overlay, "type": "ColumnLayout", "unnamed": 1, "visible": True}
+
 headerTitle_StatusBaseText = {"container": statusDesktop_mainWindow_overlay, "objectName": "headerTitle",
                               "type": "StatusBaseText", "visible": True}
 image_StatusImage = {"container": statusDesktop_mainWindow_overlay, "id": "image", "type": "StatusImage", "unnamed": 1,
                      "visible": True}
-intro_StatusBaseText = {"container": o_ColumnLayout, "type": "StatusBaseText", "unnamed": 1, "visible": True}
+intro_StatusBaseText = {"container": statusDesktop_mainWindow_overlay, "type": "StatusBaseText", "unnamed": 1, "visible": True}
+
 select_addresses_to_share_StatusFlatButton = {"container": statusDesktop_mainWindow_overlay, "type": "StatusFlatButton",
                                               "unnamed": 1, "visible": True}
 join_StatusButton = {"container": statusDesktop_mainWindow_overlay, "type": "StatusButton", "unnamed": 1,

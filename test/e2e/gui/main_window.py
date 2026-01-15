@@ -35,7 +35,7 @@ LOG = logging.getLogger(__name__)
 class MainLeftPanel(QObject):
 
     def __init__(self):
-        super().__init__(names.mainWindow_LeftPanelNavBar)
+        super().__init__(names.primaryNavSidebar)
         self.profile_button = Button(names.onlineIdentifierButton)
         self.home_button = Button(names.homeButton)
         self.messages_button = Button(names.chatButton)
@@ -106,8 +106,8 @@ class MainLeftPanel(QObject):
         community_names = []
         for obj in driver.findAllObjects(self.community_template_button.real_name):
             try:
-                if obj is not None and hasattr(obj, 'name') and obj.name is not None:
-                    community_names.append(str(obj.name))
+                if obj is not None and hasattr(obj, 'text') and obj.text is not None:
+                    community_names.append(str(obj.text))
             except Exception as e:
                 LOG.warning(f'Error getting community name: {e}')
                 continue
@@ -171,8 +171,8 @@ class MainLeftPanel(QObject):
             
             for i, obj in enumerate(objects):
                 try:
-                    if obj is not None and hasattr(obj, 'name') and obj.name is not None:
-                        obj_name = str(obj.name)
+                    if obj is not None and hasattr(obj, 'text') and obj.text is not None:
+                        obj_name = str(obj.text)
                         community_names.append(obj_name)
                         LOG.info(f'  Object {i}: {obj_name}')
                         if obj_name == str(name):

@@ -172,9 +172,15 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step(f'User {user_one.name}, received reply from {user_two.name}'):
             switch_to_aut(aut_one, main_window)
-            message_object = messages_screen.chat.messages(2)[0]
-            assert driver.waitFor(lambda: chat_message2 in str(message_object.object.unparsedText)), \
-                f"Message text is not found in the last message"
+            # Wait until the reply message appears and contains the expected text.
+            # Re-fetch message object inside lambda to ensure we always check the latest state
+            assert driver.waitFor(
+                lambda: (
+                    len(messages_screen.chat.messages(2)) > 0 and
+                    chat_message2 in str(messages_screen.chat.messages(2)[0].object.unparsedText)
+                ),
+                timeout
+            ), f"Message text is not found in the last message"
 
         with step(f'User {user_one.name}, received emoji from {user_two.name}'):
             message_object = messages_screen.chat.messages(1)[0]
@@ -200,18 +206,20 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step(f'User {user_one.name}, add reaction to the last message and verify it was added'):
             occurrence = random.randint(1, 5)
-            message.open_context_menu_for_message().add_reaction_to_message(occurrence)
-            assert driver.waitFor(lambda: EMOJI_PATHES[occurrence - 1] in str(message.get_emoji_reactions_pathes()[0]),
+            context_menu = message.open_context_menu_for_message()
+            expected_emoji_code = context_menu.get_emoji_code_by_occurrence(occurrence)
+            context_menu.add_reaction_to_message(occurrence)
+            assert driver.waitFor(lambda: expected_emoji_code in message.get_emoji_reactions_pathes(),
                                   timeout), \
-                f"Emoji reaction is not correct"
+                f"Emoji reaction is not correct. Expected: {expected_emoji_code}, Got: {message.get_emoji_reactions_pathes()}"
             main_window.minimize()
 
         with step(f'User {user_two.name}, also see emoji reaction on the last message'):
             switch_to_aut(aut_two, main_window)
             message = chat.find_message_by_text(chat_message_reply, 0)
-            assert driver.waitFor(lambda: EMOJI_PATHES[occurrence - 1] in str(message.get_emoji_reactions_pathes()[0]),
+            assert driver.waitFor(lambda: expected_emoji_code in message.get_emoji_reactions_pathes(),
                                   timeout), \
-                f"Emoji reaction is not correct"
+                f"Emoji reaction is not correct. Expected: {expected_emoji_code}, Got: {message.get_emoji_reactions_pathes()}"
             main_window.minimize()
 
         with step(f'User {user_one.name}, delete own message and verify it was deleted'):
