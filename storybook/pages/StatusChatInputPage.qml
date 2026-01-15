@@ -9,48 +9,59 @@ import utils
 import shared.status
 
 import StatusQ.Core.Utils as SQUtils
-import StatusQ.Controls
 
 SplitView {
     id: root
 
+    orientation: Qt.Vertical
+
     function openGifTestPopup(params, cbOnGifSelected, cbOnClose)
     {
-        _d.cbOnGifSelected = cbOnGifSelected
-        _d.cbOnClose = cbOnClose
-        _d.popupParent = params.popupParent
-        _d.parentXPosition = _d.popupParent.x + _d.popupParent.width
-        _d.parentYPosition = _d.popupParent.y
-        _d.closeAfterSelection = params.closeAfterSelection
+        const popupParams = {
+            cbOnGifSelected: cbOnGifSelected,
+            cbOnClose: cbOnClose,
+            popupParent: params.popupParent,
+            parentXPosition: params.popupParent.x + params.popupParent.width,
+            parentYPosition: params.popupParent.y,
+        }
 
-        let gifPopupInst = gifPopupComponent.createObject(_d.popupParent)
+        const gifPopupInst = gifPopupComponent.createObject(params.popupParent,
+                                                            popupParams)
         gifPopupInst.open()
-    }
-
-    property QtObject _d: QtObject {
-        property var cbOnGifSelected: function () {} // It stores callback for gifSelected
-        property var cbOnClose: function () {} // It stores callback for popup closed
-        property var popupParent: null // Parent button object type
-        property var parentXPosition: null // Parent rigth
-        property var parentYPosition: null // Parent bottom
-        property bool closeAfterSelection: true
     }
 
     Logs { id: logs }
 
     QtObject {
-        id: globalUtilsMock
+        id: d
 
-        property bool ready: false
-        property var globalUtils: QtObject {
-            function isCompressedPubKey(publicKey) {
-                return false
-            }
+        property bool linkPreviewsEnabled: linkPreviewSwitch.checked && !askToEnableLinkPreviewSwitch.checked
+        onLinkPreviewsEnabledChanged: {
+            loadLinkPreviews(chatInput.unformattedText)
         }
-        Component.onCompleted: {
-            Utils.globalUtilsInst = globalUtilsMock.globalUtils
-            globalUtilsMock.ready = true
+        function loadLinkPreviews(text) {
+            const words = text.split(/\s+/)
+            const data = []
+
+            words.forEach(word => {
+                if (!Utils.isURL(word))
+                    return
+
+                const linkPreview = fakeLinksModel.getStandardLinkPreview()
+                linkPreview.url = encodeURI(word)
+                linkPreview.unfurled = Math.random() > 0.2
+                linkPreview.immutable = !d.linkPreviewsEnabled
+                linkPreview.empty = Math.random() > 0.7
+                data.push(linkPreview)
+            })
+
+            fakeLinksModel.clear()
+            fakeLinksModel.append(data)
         }
+    }
+
+    ListModel {
+        id: paymentRequestModel
     }
 
     UsersModel {
@@ -59,269 +70,226 @@ SplitView {
 
     LinkPreviewModel {
         id: fakeLinksModel
+
+        Component.onCompleted: clear()
     }
 
-    SplitView {
-        orientation: Qt.Vertical
+    Item {
+        SplitView.fillHeight: true
         SplitView.fillWidth: true
-        //dummy item to position chatInput at the bottom
-        Item {
-            SplitView.fillHeight: true
-            SplitView.fillWidth: true
+
+        ColumnLayout {
+            Label {
+                text: "unformatted: " + chatInput.unformattedText
+            }
+            Label {
+                text: "formatted: " + chatInput.textInput.text
+            }
         }
 
-        Loader {
-            id: chatInputLoader
-            active: globalUtilsMock.ready
-            sourceComponent: StatusChatInput {
-                id: chatInput
-                property string unformattedText: chatInput.textInput.getText(0, chatInput.textInput.length)
+        StatusChatInput {
+            id: chatInput
 
-                readonly property SQUtils.ModelChangeTracker urlsModelChangeTracker: SQUtils.ModelChangeTracker {
-                    model: fakeLinksModel
-                }
+            anchors.centerIn: parent
 
-                onUnformattedTextChanged: {
-                    textEditConnection.enabled = false
+            width: 700
+
+            property string unformattedText:
+                chatInput.textInput.getText(0, chatInput.textInput.length)
+
+            SQUtils.ModelChangeTracker {
+                id: urlsModelChangeTracker
+
+                model: fakeLinksModel
+            }
+
+            onUnformattedTextChanged: {
+                Qt.callLater(() => {
                     d.loadLinkPreviews(unformattedText)
-                    textEditConnection.enabled = true
-                }
 
-                Connections {
-                    id: textEditConnection
-                    target: chatInput.textInput
-                    function onTextChanged() {
-                        if(unformattedText !== chatInput.textInput.getText(0, chatInput.textInput.length))
-                            unformattedText = chatInput.textInput.getText(0, chatInput.textInput.length)
-                    }
-                }
-
-                enabled: enabledCheckBox.checked
-                linkPreviewModel: fakeLinksModel
-                paymentRequestModel: d.paymentRequestModel
-                urlsList: {
-                    urlsModelChangeTracker.revision
-                    return SQUtils.ModelUtils.modelToFlatArray(fakeLinksModel, "url")
-                }
-                askToEnableLinkPreview: askToEnableLinkPreviewSwitch.checked
-                onAskToEnableLinkPreviewChanged: {
-                    if(askToEnableLinkPreview) {
-                        fakeLinksModel.clear()
-                        d.loadLinkPreviews(unformattedText)
-                    }
-                }
-                usersModel: fakeUsersModel
-
-                paymentRequestFeatureEnabled: true
-                areTestNetworksEnabled: testnetEnabledCheckBox.checked
-
-                onSendMessage: {
-                    logs.logEvent("StatusChatInput::sendMessage", ["MessageWithPk"], [chatInput.getTextWithPublicKeys()])
-                    logs.logEvent("StatusChatInput::sendMessage", ["PlainText"], [SQUtils.StringUtils.plainText(chatInput.getTextWithPublicKeys())])
-                    logs.logEvent("StatusChatInput::sendMessage", ["RawText"], [chatInput.textInput.text])
-                    imageNb.currentIndex = 0 // images cleared
-                    linksNb.currentIndex = 0 // links cleared
-                }
-                onEnableLinkPreviewForThisMessage: {
-                    linkPreviewSwitch.checked = true
-                    askToEnableLinkPreviewSwitch.checked = false
-                }
-                onEnableLinkPreview: {
-                    linkPreviewSwitch.checked = true
-                    askToEnableLinkPreviewSwitch.checked = false
-                }
-                onDisableLinkPreview: {
-                    linkPreviewSwitch.checked = false
-                    askToEnableLinkPreviewSwitch.checked = false
-                }
-                onDismissLinkPreviewSettings: {
-                    askToEnableLinkPreviewSwitch.checked = false
-                    linkPreviewSwitch.checked = false
-                }
-                onDismissLinkPreview: (index) => {
-                    fakeLinksModel.setProperty(index, "unfurled", false)
-                    fakeLinksModel.setProperty(index, "immutable", true)
-                }
-                onRemovePaymentRequestPreview: (index) => {
-                    d.paymentRequestModel.remove(index)
-                }
-                onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => {
-                                           logs.logEvent("StatusChatInput:openGifPopupRequest --> Open GIF Popup Request!")
-                                           root.openGifTestPopup(params, cbOnGifSelected, cbOnClose)
-                                       }
-            }
-        }
-
-        LogsAndControlsPanel {
-            id: logsAndControlsPanel
-
-            SplitView.minimumHeight: 100
-            SplitView.preferredHeight: 200
-
-            logsView.logText: logs.logText
-        }
-
-        QtObject {
-            id: d
-
-            property var paymentRequestModel: ListModel {}
-
-            property bool linkPreviewsEnabled: linkPreviewSwitch.checked && !askToEnableLinkPreviewSwitch.checked
-            onLinkPreviewsEnabledChanged: {
-                loadLinkPreviews(chatInputLoader.item ? chatInputLoader.item.unformattedText : "")
-            }
-            function loadLinkPreviews(text) {
-                var words = text.split(/\s+/)
-
-                fakeLinksModel.clear()
-                words.forEach(function(word){
-                    if(Utils.isURL(word)) {
-                        const linkPreview = fakeLinksModel.getStandardLinkPreview()
-                        linkPreview.url = encodeURI(word)
-                        linkPreview.unfurled = Math.random() > 0.2
-                        linkPreview.immutable = !d.linkPreviewsEnabled
-                        linkPreview.empty = Math.random() > 0.7
-                        fakeLinksModel.append(linkPreview)
-                    }
+                    if(chatInput.unformattedText !== chatInput.textInput.getText(0, chatInput.textInput.length))
+                        chatInput.unformattedText = chatInput.textInput.getText(0, chatInput.textInput.length)
                 })
             }
+
+            enabled: enabledCheckBox.checked
+            linkPreviewModel: fakeLinksModel
+            paymentRequestModel: paymentRequestModel
+            urlsList: {
+                urlsModelChangeTracker.revision
+                return SQUtils.ModelUtils.modelToFlatArray(fakeLinksModel, "url")
+            }
+            askToEnableLinkPreview: askToEnableLinkPreviewSwitch.checked
+            onAskToEnableLinkPreviewChanged: {
+                if(askToEnableLinkPreview) {
+                    fakeLinksModel.clear()
+                    d.loadLinkPreviews(unformattedText)
+                }
+            }
+            usersModel: fakeUsersModel
+
+            paymentRequestFeatureEnabled: true
+            areTestNetworksEnabled: testnetEnabledCheckBox.checked
+
+            onSendMessage: {
+                console.log()
+
+                logs.logEvent("StatusChatInput::sendMessage", ["MessageWithPk"], [chatInput.getTextWithPublicKeys()])
+                logs.logEvent("StatusChatInput::sendMessage", ["PlainText"], [SQUtils.StringUtils.plainText(chatInput.getTextWithPublicKeys())])
+                logs.logEvent("StatusChatInput::sendMessage", ["RawText"], [chatInput.textInput.text])
+                imageNb.currentIndex = 0 // images cleared
+                linksNb.currentIndex = 0 // links cleared
+            }
+            onEnableLinkPreviewForThisMessage: {
+                linkPreviewSwitch.checked = true
+                askToEnableLinkPreviewSwitch.checked = false
+            }
+            onEnableLinkPreview: {
+                linkPreviewSwitch.checked = true
+                askToEnableLinkPreviewSwitch.checked = false
+            }
+            onDisableLinkPreview: {
+                linkPreviewSwitch.checked = false
+                askToEnableLinkPreviewSwitch.checked = false
+            }
+            onDismissLinkPreviewSettings: {
+                askToEnableLinkPreviewSwitch.checked = false
+                linkPreviewSwitch.checked = false
+            }
+            onDismissLinkPreview: (index) => {
+                fakeLinksModel.setProperty(index, "unfurled", false)
+                fakeLinksModel.setProperty(index, "immutable", true)
+            }
+            onRemovePaymentRequestPreview: (index) => {
+                paymentRequestModel.remove(index)
+            }
+            onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => {
+                                       logs.logEvent("StatusChatInput:openGifPopupRequest --> Open GIF Popup Request!")
+                                       root.openGifTestPopup(params, cbOnGifSelected, cbOnClose)
+                                   }
         }
     }
 
-    Pane {
-        SplitView.minimumWidth: 300
-        SplitView.preferredWidth: 300
+    LogsAndControlsPanel {
+        id: logsAndControlsPanel
+
+        SplitView.minimumHeight: 300
+        SplitView.preferredHeight: 300
+
+        logsView.logText: logs.logText
 
         ColumnLayout {
             anchors.fill: parent
-            CheckBox {
-                id: enabledCheckBox
-                text: "enabled"
-                checked: true
-            }
 
-            CheckBox {
-                id: testnetEnabledCheckBox
-                text: "testnet enabled"
-                checked: false
-            }
+            RowLayout {
+                CheckBox {
+                    id: enabledCheckBox
+                    text: "enabled"
+                    checked: true
+                }
 
-            TabBar {
-                id: bar
-                TabButton {
-                    width: implicitWidth
-                    text: "Attachments"
-                }
-                TabButton {
-                    width: implicitWidth
-                    text: "Users"
-                }
-                TabButton {
-                    width: implicitWidth
-                    text: "Payment request"
+                CheckBox {
+                    id: testnetEnabledCheckBox
+                    text: "testnet enabled"
+                    checked: false
                 }
             }
 
-            StackLayout {
-                currentIndex: bar.currentIndex
-                ColumnLayout {
-                    id: attachmentsTab
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Label {
-                        text: "Images"
-                        Layout.fillWidth: true
+            RowLayout {
+                Switch {
+                    id: linkPreviewSwitch
+
+                    text: "Link preview enabled"
+                }
+
+                Switch {
+                    id: askToEnableLinkPreviewSwitch
+                    text: "Ask to enable link preview"
+                    checked: true
+                }
+            }
+
+            RowLayout {
+                Label {
+                    text: "Links"
+                }
+
+                ComboBox {
+                    id: linksNb
+
+                    editable: true
+                    model: 20
+
+                    validator: IntValidator {
+                        bottom: 0
+                        top: 20
                     }
-                    ComboBox {
-                        id: imageNb
-                        editable: true
-                        model: 20
-                        validator: IntValidator {bottom: 0; top: 20;}
-                        focus: true
-                        onCurrentIndexChanged: {
-                            if(!chatInputLoader.item)
-                                return
-                            const urls = []
-                            for (let i = 0; i < imageNb.currentIndex ; i++) {
-                                urls.push("https://picsum.photos/200/300?random=" + i)
-                            }
-                            console.log(urls.length)
-                            chatInputLoader.item.fileUrlsAndSources = urls
+
+                    onCurrentIndexChanged: {
+                        let urls = ""
+                        for (let i = 0; i < linksNb.currentIndex ; i++) {
+                            urls += "https://www.youtube.com/watch?v=9bZkp7q19f0" + Math.floor(Math.random() * 100) + " "
                         }
-                    }
-                    Label {
-                        text: "Links"
-                        Layout.fillWidth: true
-                    }
 
-                    Switch {
-                        id: linkPreviewSwitch
-                        text: "Link Preview enabled"
-                    }
-
-                    Switch {
-                        id: askToEnableLinkPreviewSwitch
-                        text: "Ask to enable Link Preview"
-                        checked: true
-                    }
-
-                    ComboBox {
-                        id: linksNb
-                        editable: true
-                        model: 20
-                        validator: IntValidator {bottom: 0; top: 20;}
-                        onCurrentIndexChanged: {
-                            if(!chatInputLoader.item)
-                                return
-                            let urls = ""
-                            for (let i = 0; i < linksNb.currentIndex ; i++) {
-                                urls += "https://www.youtube.com/watch?v=9bZkp7q19f0" + Math.floor(Math.random() * 100) + " "
-                            }
-
-                            chatInputLoader.item.textInput.text = urls
-                        }
+                        chatInput.textInput.text = urls
                     }
                 }
-                UsersModelEditor {
-                    id: modelEditor
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    model: fakeUsersModel
 
-                    onRemoveClicked: fakeUsersModel.remove(index, 1)
-                    onRemoveAllClicked: fakeUsersModel.clear()
-                    onAddClicked: fakeUsersModel.append(modelEditor.getNewUser(fakeUsersModel.count))
+                ToolSeparator {}
+
+                Label {
+                    text: "Images"
                 }
+                ComboBox {
+                    id: imageNb
 
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-
-                    Button {
-                        text: "Add payment request"
-                        enabled: paymentRequestAmount.text !== "" && paymentRequestAsset.text !== ""
-                        onClicked: {
-                            d.paymentRequestModel.append({
-                                "amount": paymentRequestAmount.text,
-                                "symbol": paymentRequestAsset.text
-                            })
+                    editable: true
+                    model: 20
+                    validator: IntValidator {bottom: 0; top: 20;}
+                    focus: true
+                    onCurrentIndexChanged: {
+                        const urls = []
+                        for (let i = 0; i < imageNb.currentIndex ; i++) {
+                            urls.push("https://picsum.photos/200/300?random=" + i)
                         }
-                    }
-
-                    Label { text: "Amount:" }
-                    TextField {
-                        id: paymentRequestAmount
-                    }
-
-                    Label { text: "Asset:" }
-                    TextField {
-                        id: paymentRequestAsset
+                        chatInput.fileUrlsAndSources = urls
                     }
                 }
             }
-            Label {
-                text: "Attachments"
+
+            MenuSeparator {
                 Layout.fillWidth: true
+            }
+
+            RowLayout {
+                Label { text: "Amount:" }
+                TextField {
+                    id: paymentRequestAmount
+
+                    text: "1"
+                }
+
+                Label { text: "Asset:" }
+                TextField {
+                    id: paymentRequestAsset
+
+                    text: "1"
+                }
+            }
+
+            Button {
+                text: "Add payment request"
+                enabled: paymentRequestAmount.text !== "" && paymentRequestAsset.text !== ""
+                onClicked: {
+                    paymentRequestModel.append({
+                        amount: paymentRequestAmount.text,
+                        symbol: paymentRequestAsset.text
+                    })
+                }
+            }
+
+            Item {
+                Layout.fillHeight: true
             }
         }
     }
@@ -332,30 +300,36 @@ SplitView {
         Popup {
             id: testPopup
 
-            x: _d.parentXPosition - width - 8
-            y: _d.parentYPosition - height
+            required property var cbOnGifSelected
+            required property var cbOnClose
+            required property var popupParent
+            required property var parentXPosition
+            required property var parentYPosition
+
+            x: parentXPosition - width - 8
+            y: parentYPosition - height
 
             ColumnLayout {
-                StatusButton {
+                Button {
                     text: "Send GIF 1"
                     onClicked: {
 
-                        _d.cbOnGifSelected("GIF 1", "URL GIF 1")
+                        cbOnGifSelected("GIF 1", "URL GIF 1")
                         testPopup.close()
                     }
                 }
-                StatusButton {
+                Button {
                     text: "Send GIF 2"
                     onClicked: {
 
-                        _d.cbOnGifSelected("GIF 2", "URL GIF 2")
+                        cbOnGifSelected("GIF 2", "URL GIF 2")
                         testPopup.close()
                     }
                 }
 
             }
             onClosed: {
-                _d.cbOnClose()
+                cbOnClose()
                 destroy()
             }
 

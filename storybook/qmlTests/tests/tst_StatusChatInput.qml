@@ -18,8 +18,6 @@ Item {
     Component {
         id: componentUnderTest
         StatusChatInput {
-            property var globalUtils: globalUtilsMock
-
             width: parent.width
             height: implicitHeight
             anchors.bottom: parent.bottom
@@ -63,7 +61,6 @@ Item {
         property StatusChatInput controlUnderTest: null
 
         function init() {
-            Utils.globalUtilsInst = globalUtilsMock
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
         }
 
@@ -305,10 +302,6 @@ Item {
             }
         }
 
-        function initTestCase() {
-            Utils.globalUtilsInst = globalUtilsMock
-        }
-
 //        Scenario: Default TextArea keyboard shortcuts are not altered by StatusChatInput
 //        Given a new StatusChatInput instance
 //        And a new standard Qt TextArea instance
@@ -419,7 +412,6 @@ Item {
         property StatusChatInput controlUnderTest: null
 
         function init() {
-            Utils.globalUtilsInst = globalUtilsMock
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
         }
 
@@ -473,7 +465,6 @@ Item {
         property StatusChatInput controlUnderTest: null
 
         function init() {
-            Utils.globalUtilsInst = globalUtilsMock
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
         }
 
@@ -678,14 +669,6 @@ Item {
 
         function given_multiline_text_is_typed(testCase: TestCase, textLines: list<string>) {
             when_multiline_text_is_typed(testCase, textLines, (lineNb) => {}, (typedText) => {})
-        }
-    }
-
-    QtObject {
-        id: globalUtilsMock
-
-        function isCompressedPubKey(publicKey) {
-            return false
         }
     }
 }

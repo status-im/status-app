@@ -85,7 +85,7 @@ Rectangle {
         Bottom
     }
 
-    function parseMessage(message) {
+    function parseMessage(message: string) {
         let mentionsMap = new Map()
         let index = 0
         while (true) {
@@ -1117,6 +1117,9 @@ Rectangle {
             color: isEdit ? Theme.palette.statusChatInput.secondaryBackgroundColor : Theme.palette.baseColor2
             radius: 20
 
+            // Bottom right corner has different radius
+            bottomRightRadius: Theme.radius
+
             StatusQ.StatusToolTip {
                 id: messageLengthLimitTooltip
                 text: messageInputField.length >= control.messageLimitHard ? qsTr("Please reduce the message length")
@@ -1221,16 +1224,6 @@ Rectangle {
                     running: !imageQtyValidator.isValid || !imageSizeValidator.isValid || !imageExtValidator.isValid
                     onTriggered: validateImages(control.fileUrlsAndSources)
                 }
-            }
-
-            Rectangle {
-                // Bottom right corner has different radius
-                color: parent.color
-                anchors.bottom: parent.bottom
-                anchors.right: parent.right
-                height: parent.height / 2
-                width: 32
-                radius: Theme.radius
             }
 
             ColumnLayout {
@@ -1341,11 +1334,6 @@ Rectangle {
                             Keys.onReleased: (event) => onRelease(event) // gives much more up to date cursorPosition
 
                             property var keyEvent
-
-                            Component.onDestruction: {
-                                // NOTE: Without losing focus the app crashes on apply/cancel message editing.
-                                control.forceActiveFocus();
-                            }
 
                             onCursorPositionChanged: {
                                 if(mentionsPos.length > 0 && ((keyEvent.key === Qt.Key_Left) || (keyEvent.key === Qt.Key_Right)
