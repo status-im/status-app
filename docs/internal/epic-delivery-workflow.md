@@ -42,6 +42,7 @@ This guide documents the optimal steps to create and work on Feature Epics in a 
 * Once iterated and aligned, the final design direction is agreed by:
     * Design / Product / Dev
 * The designer prepares and delivers the **Figma handoff package**.
+  * Includes adding a link to the Figma files to the Epic's description.
 * The designer **removes the <code>needs-design</code> label** from the epic.
 * The designer **pings the Dev team** (in the same epic) to indicate the feature is ready for implementation.
 
