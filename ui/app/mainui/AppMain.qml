@@ -1472,7 +1472,7 @@ Item {
                             return true
                         if (!appMain.privacyStore.mnemonicBackedUp && !appMain.profileStore.userDeclinedBackupBanner) // seedphrase not backed up (removed)
                             return true
-                        if (appMain.devicesStore.ModelCount.count - appMain.devicesStore.devicesModel.pairedCount > 0) // sync entries
+                        if (appMain.devicesStore.totalDevicesCount - appMain.devicesStore.pairedDevicesCount > 0) // sync entries
                             return true
                         return false
                     }
@@ -1788,7 +1788,7 @@ Item {
                             marketEnabled: appMain.featureFlagsStore.marketEnabled
                             browserEnabled: d.isBrowserEnabled
 
-                            syncingBadgeCount: appMain.devicesStore.ModelCount.count - appMain.devicesStore.devicesModel.pairedCount
+                            syncingBadgeCount: appMain.devicesStore.totalDevicesCount - appMain.devicesStore.pairedDevicesCount
                             messagingBadgeCount: contactsModelAdaptor.pendingReceivedRequestContacts.count
                             showBackUpSeed: !appMain.privacyStore.mnemonicBackedUp
                             backUpSeedBadgeCount: appMain.profileStore.userDeclinedBackupBanner ? 0 : showBackUpSeed

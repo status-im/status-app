@@ -35,6 +35,8 @@ SplitView {
 
         contentWidth: 664
 
+        errorDeletingDeviceMessage: ctrlDevicesDeletionError.checked ? "Fake error" : ""
+
         advancedStore: ProfileStores.AdvancedStore {
             readonly property bool isDebugEnabled: ctrlDebugEnabled.checked
         }
@@ -135,6 +137,10 @@ SplitView {
             RadioButton {
                 id: ctrlDevicesLoadingError
                 text: "Devices loading error"
+            }
+            Switch {
+                id: ctrlDevicesDeletionError
+                text: "Devices deletion error"
             }
 
             Switch {

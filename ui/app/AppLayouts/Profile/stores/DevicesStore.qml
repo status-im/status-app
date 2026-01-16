@@ -3,6 +3,7 @@ import utils
 
 import StatusQ.Core.Utils 0.1 as StatusQUtils
 import StatusQ.Core.Backpressure
+import QtModelsToolkit
 
 QtObject {
     id: root
@@ -11,10 +12,13 @@ QtObject {
     property var syncModule
     property bool localBackupEnabled: false
 
-    property var devicesModel: devicesModule ?  devicesModule.model : null
-
     // Module Properties
     property bool isDeviceSetup: devicesModule ? devicesModule.isDeviceSetup : false
+
+    // Devices properties
+    readonly property var devicesModel: devicesModule ?  devicesModule.model : null
+    readonly property int totalDevicesCount: devicesModel ? devicesModel.ModelCount.count : 0
+    readonly property int pairedDevicesCount: devicesModel ? devicesModel.pairedCount : 0
 
     readonly property int localPairingState: devicesModule ? devicesModule.localPairingState : -1
     readonly property string localPairingError: devicesModule ? devicesModule.localPairingError : ""

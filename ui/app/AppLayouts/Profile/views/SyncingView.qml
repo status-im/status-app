@@ -29,6 +29,10 @@ SettingsContentBase {
     property ProfileStores.PrivacyStore privacyStore
     property ProfileStores.AdvancedStore advancedStore
 
+    property string errorDeletingDeviceMessage
+
+    signal deleteDeviceRequested(string installationId)
+
     ColumnLayout {
         id: layout
         width: root.contentWidth
@@ -64,9 +68,7 @@ SettingsContentBase {
             }
 
             function setupDeleteDevice(installationId) {
-                Global.openPopup(deleteDeviceDialogComponent, {
-                                     "installationId": installationId
-                                 })
+                Global.openPopup(deleteDeviceDialogComponent, {installationId})
             }
 
             function setupSyncing() {
@@ -98,6 +100,14 @@ SettingsContentBase {
             visible: root.devicesStore.devicesModule.devicesLoading
             horizontalAlignment: Text.AlignHCenter
             text: qsTr("Loading devices...")
+        }
+
+        StatusBaseText {
+            Layout.fillWidth: true
+            visible: !!root.errorDeletingDeviceMessage
+            horizontalAlignment: Text.AlignHCenter
+            text: qsTr("Error deleting device: %1").arg(root.errorDeletingDeviceMessage)
+            color: Theme.palette.dangerColor1
         }
 
         StatusBaseText {
@@ -290,9 +300,10 @@ SettingsContentBase {
         Component {
             id: pairDeviceDialogComponent
             ConfirmationDialog {
+                id: pairDeviceDialog
+
                 property string installationId
 
-                id: pairDeviceDialog
                 destroyOnClose: true
                 headerSettings.title: qsTr("Pair Device")
                 confirmationText: qsTr("Are you sure you want to pair this device?")
@@ -312,9 +323,10 @@ SettingsContentBase {
         Component {
             id: unpairDeviceDialogComponent
             ConfirmationDialog {
+                id: unpairDeviceDialog
+
                 property string installationId
 
-                id: unpairDeviceDialog
                 destroyOnClose: true
                 headerSettings.title: qsTr("Unpair Device")
                 confirmationText: qsTr("Are you sure you want to unpair this device?")
@@ -333,20 +345,18 @@ SettingsContentBase {
         Component {
             id: deleteDeviceDialogComponent
             ConfirmationDialog {
+                id: deleteDeviceDialog
+
                 property string installationId
 
-                id: deleteDeviceDialog
                 destroyOnClose: true
                 headerSettings.title: qsTr("Delete Device")
                 confirmationText: qsTr("Are you sure you want to delete this device?\nThis action cannot be undone.")
                 confirmButtonLabel: qsTr("Delete")
                 onConfirmButtonClicked: {
-                    const error = devicesStore.devicesModule.deleteDevice(installationId)
-                    if (error) {
-                        deleteDeviceDialog.confirmationText = qsTr("Error deleting device: %1").arg(error)
-                    } else {
-                        deleteDeviceDialog.close()
-                    }
+                    root.deleteDeviceRequested(installationId)
+                    root.errorDeletingDeviceMessage = ""
+                    deleteDeviceDialog.close()
                 }
             }
         }

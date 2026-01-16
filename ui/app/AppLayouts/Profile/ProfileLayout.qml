@@ -175,8 +175,7 @@ StatusSectionLayout {
         isKeycardEnabled: root.isKeycardEnabled
         localBackupEnabled: root.devicesStore.localBackupEnabled
 
-        syncingBadgeCount: root.devicesStore.devicesModel.ModelCount.count -
-                           root.devicesStore.devicesModel.pairedCount
+        syncingBadgeCount: root.devicesStore.totalDevicesCount - root.devicesStore.pairedDevicesCount
         messagingBadgeCount: root.pendingReceivedContactsCount
     }
 
@@ -426,6 +425,7 @@ StatusSectionLayout {
         Loader {
             active: false
             sourceComponent: SyncingView {
+                id: syncingView
                 implicitWidth: parent.width
                 implicitHeight: parent.height
 
@@ -435,6 +435,13 @@ StatusSectionLayout {
                 advancedStore: root.advancedStore
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.syncingSettings)
                 contentWidth: d.contentWidth
+
+                onDeleteDeviceRequested: (installationId) => {
+                    const error = root.devicesStore.devicesModule.deleteDevice(installationId)
+                    if (error) {
+                        syncingView.errorDeletingDeviceMessage = error
+                    }
+                }
             }
         }
 
