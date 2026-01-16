@@ -17588,6 +17588,19 @@
     </message>
   </context>
   <context>
+    <name>ReceiveModal</name>
+    <message>
+      <source>Copy address</source>
+      <comment>ReceiveModal</comment>
+      <translation>Copy address</translation>
+    </message>
+    <message>
+      <source>QR code for wallet address</source>
+      <comment>ReceiveModal</comment>
+      <translation>QR code for wallet address</translation>
+    </message>
+  </context>
+  <context>
     <name>RecipientInfoButtonWithMenu</name>
     <message>
       <source>View receiver address on %1</source>
@@ -23680,6 +23693,31 @@
       <source>Status Desktop</source>
       <comment>main</comment>
       <translation>Status Desktop</translation>
+    </message>
+    <message>
+      <source>Hello World</source>
+      <comment>main</comment>
+      <translation>Hello World</translation>
+    </message>
+    <message>
+      <source>Share logs or report a bug?</source>
+      <comment>main</comment>
+      <translation>Share logs or report a bug?</translation>
+    </message>
+    <message>
+      <source>Export log files</source>
+      <comment>main</comment>
+      <translation>Export log files</translation>
+    </message>
+    <message>
+      <source>No log files found</source>
+      <comment>main</comment>
+      <translation>No log files found</translation>
+    </message>
+    <message>
+      <source>Report a bug on GitHub</source>
+      <comment>main</comment>
+      <translation>Report a bug on GitHub</translation>
     </message>
   </context>
   <context>

@@ -8,9 +8,13 @@
 #include <QSaveFile>
 #include <QStandardPaths>
 #include <QTimer>
+#include <QDebug>
+#include <QMetaObject>
+#include <mutex>
 
 #ifdef Q_OS_ANDROID
 #include <QJniObject>
+#include <QJniEnvironment>
 #include <QtCore/qnativeinterface.h>
 #endif
 
@@ -37,9 +41,22 @@ signals:
     void quit(bool spontaneous);
 };
 
+static SystemUtilsInternal* s_systemUtilsInternal = nullptr;
+
+#ifdef Q_OS_IOS
+static void iosShakeDetected();
+#endif
+
+#ifdef Q_OS_ANDROID
+extern "C" {
+static void jni_nativeShakeDetected(JNIEnv*, jclass);
+}
+#endif
+
 SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
     : QObject{parent}
 {
+    s_systemUtilsInternal = this;
     auto app = QCoreApplication::instance();
     auto filter = new QuitFilter(this);
     app->installEventFilter(filter);
@@ -78,11 +95,47 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
         }
     });
     keyboardTimer->start();
+
+    // Set up Android shake detection and event-driven native callback
+    QJniObject activity = QNativeInterface::QAndroidApplication::context();
+    if (activity.isValid()) {
+        QJniObject::callStaticMethod<void>(
+            "app/status/mobile/ShakeDetector",
+            "start",
+            "(Landroid/app/Activity;)V",
+            activity.object<jobject>()
+        );
+    }
+
+    static std::once_flag regOnce;
+    std::call_once(regOnce, []{
+        QJniEnvironment env;
+        jclass clazz = env->FindClass("app/status/mobile/ShakeDetector");
+        if (!clazz) return;
+
+        const JNINativeMethod methods[] = {
+            { const_cast<char*>("nativeShakeDetected"),
+              const_cast<char*>("()V"),
+              reinterpret_cast<void*>(jni_nativeShakeDetected) },
+        };
+
+        jint rc = env->RegisterNatives(clazz, methods, jint(std::size(methods)));
+        env->DeleteLocalRef(clazz);
+
+        if (rc != 0) {
+            qWarning() << "[Android Shake] RegisterNatives failed:" << rc;
+        }
+    });
 #endif
 
 #ifdef Q_OS_IOS
     // Set up iOS keyboard tracking
     ::setupIOSKeyboardTracking();
+
+    ::setIOSShakeCallback(&iosShakeDetected);
+    ::setIOSShakeToEditEnabled(false);
+    // Set up iOS shake detection
+    ::setupIOSShakeDetection();
     
     // Poll iOS keyboard state and emit property change signals
     m_iosKeyboardPollTimer = new QTimer(this);
@@ -102,6 +155,7 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
         }
     });
     m_iosKeyboardPollTimer->start();
+
 #endif
 }
 
@@ -286,4 +340,145 @@ void SystemUtilsInternal::setupIOSKeyboardTracking()
 #endif
 }
 
+void SystemUtilsInternal::iosShareFile(const QUrl& fileUrl) const
+{
+#ifdef Q_OS_IOS
+    const QString localPath = fileUrl.isLocalFile() ? fileUrl.toLocalFile() : QString();
+    if (localPath.isEmpty())
+        return;
+    ::presentIOSShareSheetForFilePath(localPath);
+#else
+    Q_UNUSED(fileUrl);
+#endif
+}
+
+void SystemUtilsInternal::iosShareFiles(const QVariantList& fileUrls) const
+{
+#ifdef Q_OS_IOS
+    QStringList paths;
+    paths.reserve(fileUrls.size());
+    for (const auto& v : fileUrls) {
+        if (v.canConvert<QUrl>()) {
+            const QUrl url = v.toUrl();
+            const QString p = url.isLocalFile() ? url.toLocalFile() : QString();
+            if (!p.isEmpty())
+                paths.push_back(p);
+        } else if (v.canConvert<QString>()) {
+            // Allow passing either a raw local path or a file:// URL string.
+            const QString s = v.toString();
+            if (s.isEmpty())
+                continue;
+            const QUrl url = QUrl::fromUserInput(s);
+            const QString p = url.isLocalFile() ? url.toLocalFile() : s;
+            if (!p.isEmpty())
+                paths.push_back(p);
+        }
+    }
+    if (paths.isEmpty())
+        return;
+    qInfo() << "[iOS Share] SystemUtilsInternal::iosShareFiles paths=" << paths.size()
+            << " sample=" << (paths.size() > 0 ? paths.first() : QString());
+    ::presentIOSShareSheetForFilePaths(paths);
+#else
+    Q_UNUSED(fileUrls);
+#endif
+}
+
+void SystemUtilsInternal::iosSharePaths(const QStringList& filePaths) const
+{
+#ifdef Q_OS_IOS
+    QStringList paths;
+    paths.reserve(filePaths.size());
+    for (const auto& s : filePaths) {
+        if (s.isEmpty())
+            continue;
+        const QUrl url = QUrl::fromUserInput(s);
+        const QString p = url.isLocalFile() ? url.toLocalFile() : s;
+        if (!p.isEmpty())
+            paths.push_back(p);
+    }
+    if (paths.isEmpty())
+        return;
+    qInfo() << "[iOS Share] SystemUtilsInternal::iosSharePaths paths=" << paths.size()
+            << " sample=" << (paths.size() > 0 ? paths.first() : QString());
+    ::presentIOSShareSheetForFilePaths(paths);
+#else
+    Q_UNUSED(filePaths);
+#endif
+}
+
+void SystemUtilsInternal::androidSharePaths(const QStringList& filePaths) const
+{
+#ifdef Q_OS_ANDROID
+    QJniObject activity = QNativeInterface::QAndroidApplication::context();
+    if (!activity.isValid())
+        return;
+
+    QJniObject arrayList("java/util/ArrayList");
+    if (!arrayList.isValid())
+        return;
+
+    for (const auto& s : filePaths) {
+        if (s.isEmpty())
+            continue;
+        QJniObject jStr = QJniObject::fromString(s);
+        arrayList.callMethod<jboolean>("add", "(Ljava/lang/Object;)Z", jStr.object<jstring>());
+    }
+
+    const int count = arrayList.callMethod<jint>("size", "()I");
+    if (count <= 0)
+        return;
+
+    QJniObject::callStaticMethod<void>(
+        "app/status/mobile/ShareUtils",
+        "sharePaths",
+        "(Landroid/app/Activity;Ljava/util/ArrayList;)V",
+        activity.object<jobject>(),
+        arrayList.object<jobject>()
+    );
+#else
+    Q_UNUSED(filePaths);
+#endif
+}
+
+void SystemUtilsInternal::sharePaths(const QStringList& filePaths) const
+{
+#if defined(Q_OS_IOS)
+    iosSharePaths(filePaths);
+#elif defined(Q_OS_ANDROID)
+    androidSharePaths(filePaths);
+#else
+    Q_UNUSED(filePaths);
+#endif
+}
+
+void SystemUtilsInternal::debugLog(const QString& message) const
+{
+    qInfo() << "[QML]" << message;
+}
+
 #include "systemutilsinternal.moc"
+
+#ifdef Q_OS_IOS
+static void iosShakeDetected()
+{
+    if (!s_systemUtilsInternal)
+        return;
+    QMetaObject::invokeMethod(s_systemUtilsInternal, []() {
+        qInfo() << "[iOS Shake] SystemUtilsInternal: shakeDetected signal emitted";
+        emit s_systemUtilsInternal->shakeDetected();
+    }, Qt::QueuedConnection);
+}
+#endif
+
+#ifdef Q_OS_ANDROID
+static void jni_nativeShakeDetected(JNIEnv*, jclass)
+{
+    if (!s_systemUtilsInternal)
+        return;
+    QMetaObject::invokeMethod(s_systemUtilsInternal, []() {
+        qInfo() << "[Android Shake] SystemUtilsInternal: shakeDetected signal emitted";
+        emit s_systemUtilsInternal->shakeDetected();
+    }, Qt::QueuedConnection);
+}
+#endif

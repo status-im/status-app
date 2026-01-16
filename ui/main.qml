@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 import utils
 import shared.panels
@@ -16,10 +17,12 @@ import AppLayouts.Onboarding.stores
 import AppLayouts.Onboarding.pages
 
 import StatusQ
+import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Platform
+import StatusQ.Popups.Dialog
 
 import MobileUI
 
@@ -178,6 +181,7 @@ Window {
         id: d
 
         property var mockedKeycardControllerWindow
+        property double lastShakeShareMs: 0
         function runMockedKeycardControllerWindow() {
             if (localAppSettings.displayMockedKeycardWindow()) {
                 if (!!d.mockedKeycardControllerWindow) {
@@ -292,11 +296,24 @@ Window {
     */
     Connections {
         target: SystemUtils
-        enabled: SQUtils.Utils.mac
+        enabled: SQUtils.Utils.isMacOS
 
         function onQuit(spontaneous) {
             if (spontaneous)
                 Qt.exit(0)
+        }
+    }
+
+    Connections {
+        target: SystemUtils
+        enabled: SQUtils.Utils.isMobile
+        function onShakeDetected() {
+            const nowMs = Date.now()
+            if (nowMs - d.lastShakeShareMs < 3000) {
+                shakeToShareLoader.active = true
+                return
+            }
+            d.lastShakeShareMs = nowMs
         }
     }
 
@@ -463,6 +480,52 @@ Window {
         showRedDot: typeof mainModule !== "undefined" ? mainModule.notificationAvailable : false
         onActivateApp: {
             applicationWindow.makeStatusAppActive()
+        }
+    }
+
+    Loader {
+        id: shakeToShareLoader
+        active: false
+        sourceComponent: StatusDialog {
+            id: shakeLogFilesPopup
+            title: qsTr("Share logs or report a bug?")
+            visible: true
+            contentItem: ColumnLayout {
+                spacing: Theme.padding
+                StatusButton {
+                    id: exportLogFilesButton
+                    Layout.fillWidth: true
+                    text: qsTr("Export log files")
+                    onClicked: {
+                        try {
+                            const json = globalUtils.collectLogFilesJson()
+                            const paths = JSON.parse(json)
+                            if (!paths || paths.length === 1) {
+                                exportLogFilesButton.enabled = false
+                                exportLogFilesButton.text = qsTr("No log files found")
+                                return
+                            }
+
+                            SystemUtils.sharePaths(paths)
+                        } catch (e) {
+                            console.error("[Shake] handler threw: " + e)
+                        }
+                        shakeLogFilesPopup.close()
+                    }
+                }
+                StatusButton {
+                    Layout.fillWidth: true
+                    text: qsTr("Report a bug on GitHub")
+                    onClicked: {
+                        Qt.openUrlExternally(Constants.bugReportUrl)
+                        shakeLogFilesPopup.close()
+                    }
+                }
+            }
+
+            footer: null
+
+            onClosed: shakeToShareLoader.active = false
         }
     }
 

@@ -14439,6 +14439,17 @@ access to your webcam</source>
     </message>
 </context>
 <context>
+    <name>ReceiveModal</name>
+    <message>
+        <source>Copy address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QR code for wallet address</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>RecipientInfoButtonWithMenu</name>
     <message>
         <source>View receiver address on %1</source>
@@ -19461,6 +19472,26 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>main</name>
     <message>
         <source>Status Desktop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Share logs or report a bug?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export log files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No log files found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Report a bug on GitHub</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

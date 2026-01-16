@@ -1461,4 +1461,5 @@ QtObject {
         readonly property string notAvailable: "not-available"
     }
 
+    readonly property string bugReportUrl: "https://github.com/status-im/status-app/issues/new?template=bug.md"
 }

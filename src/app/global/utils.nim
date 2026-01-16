@@ -2,15 +2,21 @@ import nimqml
 import std/[strformat, strutils, httpclient, os, uri], regex, stint
 import stew/byteutils
 import ./utils/qrcodegen
+import std/json
+import chronicles
 
 # Services as instances shouldn't be used in this class, just some general/global procs
 import ../../app_service/common/conversion
 import ../../app_service/service/visual_identity/service as procs_from_visual_identity_service
 import ../../backend/accounts as status_accounts
+import ../../constants
 
 include ../../app_service/service/accounts/utils
 
 const URL_STATUS_OK* = "200 OK"
+
+logScope:
+  topics = "global-utils"
 
 QtObject:
   type Utils* = ref object of QObject
@@ -47,6 +53,47 @@ QtObject:
                   else:
                     "file://" & absPath
     return uriPath
+
+  proc collectLogFilesJson*(self: Utils): string {.slot.} =
+    ## Return a JSON array of absolute file paths for all "*.log" files under constants.DATADIR (recursive).
+    ## This is used to share the files directly (without archiving).
+    let baseDirWithSep = constants.DATADIR
+    var arr = newJArray()
+    if baseDirWithSep.len == 0:
+      return $arr
+
+    let baseDir =
+      if baseDirWithSep.len > 0 and baseDirWithSep[^1] in {'/', '\\'}:
+        baseDirWithSep[0 .. ^2]
+      else:
+        baseDirWithSep
+
+    if not dirExists(baseDir):
+      return $arr
+
+    const MaxFiles = 200
+    var scanned: int = 0
+    for p in walkDirRec(baseDir, {pcFile}):
+      inc scanned
+      if arr.len >= MaxFiles:
+        break
+      if p.len == 0:
+        continue
+      if not p.toLowerAscii().endsWith(".log"):
+        continue
+      arr.add(%absolutePath(p))
+
+    when not defined(production):
+      try:
+        let cnt = arr.len
+        var sample = ""
+        if cnt > 0:
+          sample = arr[0].getStr()
+        info "collectLogFilesJson", baseDir = baseDir, scanned = scanned, found = cnt, sample = sample
+      except:
+        discard
+
+    return $arr
 
   proc isAlias*(self: Utils, value: string): bool {.slot.} =
     result = isAlias(value)

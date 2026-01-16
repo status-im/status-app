@@ -14463,6 +14463,17 @@ acceso a tu cámara web</translation>
     </message>
 </context>
 <context>
+    <name>ReceiveModal</name>
+    <message>
+        <source>Copy address</source>
+        <translation type="unfinished">Copiar dirección</translation>
+    </message>
+    <message>
+        <source>QR code for wallet address</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>RecipientInfoButtonWithMenu</name>
     <message>
         <source>View receiver address on %1</source>
@@ -19499,6 +19510,26 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Status Desktop</source>
         <translation>Escritorio de Status</translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Share logs or report a bug?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Export log files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No log files found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Report a bug on GitHub</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

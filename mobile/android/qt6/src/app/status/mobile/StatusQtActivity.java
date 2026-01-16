@@ -25,6 +25,21 @@ public class StatusQtActivity extends QtActivity {
         // QTBUG-140897: Install Android 16 keyboard workaround
         // Remove this line when Qt 6.10+ fixes the issue
         mKeyboardWorkaround = Android16KeyboardWorkaround.install(this);
+
+        // Set up shake detection (used for share-on-shake)
+        ShakeDetector.start(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ShakeDetector.onResume(this);
+    }
+
+    @Override
+    protected void onPause() {
+        ShakeDetector.onPause();
+        super.onPause();
     }
 
     @Override

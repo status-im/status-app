@@ -275,7 +275,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     find_library(LocalAuthentication LocalAuthentication)
     find_library(WebKit WebKit)
     find_library(UserNotifications UserNotifications)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications})
+    find_library(CoreMotion CoreMotion)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion})
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/shareutils_ios.mm
