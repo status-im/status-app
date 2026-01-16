@@ -55,7 +55,7 @@ pipeline {
     VIRTUAL_ENV = "${env.WORKSPACE_TMP}/venv-appium"
     PYTHONUNBUFFERED = "1"
     TEST_DEVICE_ID = "${params.TEST_DEVICE_ID}"
-    BROWSERSTACK_PROJECT_NAME = "Mobile E2E ${utils.getBuildType()}"
+    BROWSERSTACK_PROJECT_NAME = "Mobile E2E ${getBuildTypeFromSource()}"
   }
 
   stages {
@@ -184,4 +184,12 @@ def updateGitHubStatus() {
       repo_url: 'https://github.com/status-im/status-desktop'
     )
   }
+}
+
+def getBuildTypeFromSource() {
+  def source = params.BUILD_SOURCE ?: ''
+  if (source.contains('/prs/')) return 'PR'
+  if (source.contains('/nightly/')) return 'Nightly'
+  if (source.contains('/release/')) return 'Release'
+  return 'Other'
 }
