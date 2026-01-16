@@ -27,25 +27,31 @@ import StatusQ.Core.Utils as SQUtils
 import StatusQ.Components
 
 import utils
-import shared.controls
 import shared.panels
-import shared.controls.chat
+
+import AppLayouts.Chat.adaptors
 
 Rectangle {
     id: root
 
     property var model
     property Item delegate
-    property alias suggestionsModel: filterItem.model
-    property alias filter: filterItem.filter
-    readonly property alias formattedPlainTextFilter: filterItem.formattedFilter
-    property alias suggestionFilter: filterItem
-    property int cursorPosition
+
+    property alias suggestionsModel: suggestionsFilterAdaptor.model
+
+    property string filter
+    readonly property alias formattedPlainTextFilter: suggestionsFilterAdaptor.filter
+
+    property int lastAtPosition: -1
+    property int cursorPosition: 0
+
     property alias listView: listView
     property var inputField
     property bool shouldHide: false
 
     signal itemSelected(var item, int lastAtPosition, int lastCursorPosition)
+
+    onFilterChanged: suggestionsFilterAdaptor.invalidateFilter()
 
     onFormattedPlainTextFilterChanged: {
         // We need to callLater because the sort needs to happen before setting the index
@@ -65,7 +71,7 @@ Rectangle {
     }
 
     function selectCurrentItem() {
-        root.itemSelected(listView.model.get(listView.currentIndex), filterItem.lastAtPosition, filterItem.cursorPosition)
+        root.itemSelected(listView.model.get(listView.currentIndex), root.lastAtPosition, root.cursorPosition)
     }
 
     onVisibleChanged: {
@@ -80,7 +86,7 @@ Rectangle {
     }
 
     z: parent.z + 100
-    visible: !shouldHide && filter.length > 0 && suggestionsModel.count > 0 && filterItem.lastAtPosition > -1
+    visible: !shouldHide && filter.length > 0 && suggestionsModel.count > 0 && root.lastAtPosition > -1
     height: Math.min(400, listView.contentHeight + Theme.padding)
 
     opacity: visible ? 1.0 : 0
@@ -106,10 +112,35 @@ Rectangle {
         color: "#22000000"
     }
 
-    SuggestionFilterPanel {
-        id: filterItem
+    SuggestionsFilterAdaptor {
+        id: suggestionsFilterAdaptor
+
         sourceModel: root.model
-        cursorPosition: root.cursorPosition
+        filter: getFilter().substring(root.lastAtPosition + 1, root.cursorPosition).replace(/\*/g, "")
+
+        function invalidateFilter() {
+            root.lastAtPosition = -1
+
+            const filter = getFilter()
+            if (filter === "") {
+                return
+            }
+
+            for (let c = root.cursorPosition === 0 ? 0 : (root.cursorPosition-1); c >= 0; c--) {
+                if (filter.charAt(c) === "@") {
+                    root.lastAtPosition = c
+                    break
+                }
+            }
+        }
+
+        function getFilter() {
+            if (root.filter.length === 0 || root.cursorPosition === 0) {
+                return ""
+            }
+
+            return SQUtils.StringUtils.plainText(root.filter)
+        }
     }
 
     StatusListView {
@@ -169,7 +200,7 @@ Rectangle {
                     listView.currentIndex = index
                 }
                 onClicked: {
-                    root.itemSelected(model, filterItem.lastAtPosition, filterItem.cursorPosition)
+                    root.itemSelected(model, root.lastAtPosition, root.cursorPosition)
                 }
             }
         }

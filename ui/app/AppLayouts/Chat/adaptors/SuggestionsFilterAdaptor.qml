@@ -1,31 +1,32 @@
 import QtQuick
 
-import StatusQ
-import StatusQ.Core
-import StatusQ.Core.Utils as SQUtils
+import StatusQ.Core.Utils
 
 import QtModelsToolkit
 import SortFilterProxyModel
 
-SQUtils.QObject {
+// Adaptor adding special entry "everyone" to list of users, providing filtering
+// by preferredDisplayName role and sorting by the same role.
+QObject {
     id: root
 
+    // input model
     required property var sourceModel
+
+    // name used for filtering
     property string filter: ""
-    property int cursorPosition: 0
-    property int lastAtPosition: -1
 
-    readonly property alias model: filteredModel // resulting, filtered model
-    readonly property string formattedFilter: getFilter().substring(lastAtPosition + 1, cursorPosition).replace(/\*/g, "")
-
-    onFilterChanged: invalidateFilter()
+    // output model
+    readonly property alias model: filteredModel
 
     SortFilterProxyModel {
         id: filteredModel
+
         sourceModel: concatModel
-        filters: SQUtils.SearchFilter {
+
+        filters: SearchFilter {
             roleName: "preferredDisplayName"
-            searchPhrase: root.formattedFilter
+            searchPhrase: root.filter
         }
         sorters: StringSorter {
             roleName: "preferredDisplayName"
@@ -35,6 +36,7 @@ SQUtils.QObject {
 
     ConcatModel {
         id: concatModel
+
         sources: [
             SourceModel {
                 model: root.sourceModel
@@ -55,29 +57,5 @@ SQUtils.QObject {
         ]
         markerRoleName: "which_model"
         expectedRoles: ["pubKey", "preferredDisplayName"]
-    }
-
-    function invalidateFilter() {
-        root.lastAtPosition = -1
-
-        let filter = getFilter()
-        if (filter === "") {
-            return
-        }
-
-        for (let c = root.cursorPosition === 0 ? 0 : (root.cursorPosition-1); c >= 0; c--) {
-            if (filter.charAt(c) === "@") {
-                root.lastAtPosition = c
-                break
-            }
-        }
-    }
-
-    function getFilter() {
-        if (root.filter.length === 0 || root.cursorPosition === 0) {
-            return ""
-        }
-
-        return SQUtils.StringUtils.plainText(root.filter)
     }
 }

@@ -301,7 +301,7 @@ Rectangle {
             messageInputField.remove(mention.leftIndex, mention.rightIndex)
         }
 
-        function getMentionAtPosition(position: int) {
+        function getMentionAtPosition(position: int) : var {
             return mentionsPos.find(mention => mention.leftIndex < position && mention.rightIndex > position)
         }
 
@@ -720,8 +720,8 @@ Rectangle {
 
         if (suggestionsBox.visible) {
             let aliasName = suggestionsBox.formattedPlainTextFilter;
-            let lastCursorPosition = suggestionsBox.suggestionFilter.cursorPosition;
-            let lastAtPosition = suggestionsBox.suggestionFilter.lastAtPosition;
+            let lastCursorPosition = suggestionsBox.cursorPosition;
+            let lastAtPosition = suggestionsBox.lastAtPosition;
             let suggestionItem = suggestionsBox.listView.itemAtIndex(suggestionsBox.listView.currentIndex);
 
             if (aliasName !== "" && aliasName.toLowerCase() === suggestionItem.preferredDisplayName.toLowerCase()
