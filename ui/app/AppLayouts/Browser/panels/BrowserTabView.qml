@@ -136,7 +136,7 @@ FocusScope {
             id: tabButton
             property string tabTitle
 
-            readonly property bool incognito: root.fnGetWebView(tabButton.TabBar.index)?.profile.offTheRecord ?? false
+            readonly property bool incognito: root.fnGetWebView(tabButton.TabBar.index)?.offTheRecord ?? false
 
             width: Math.min(Math.max(implicitWidth, d.minTabButtonWidth), d.maxTabButtonWidth)
             anchors.top: parent ? parent.top : undefined

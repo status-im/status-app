@@ -18,6 +18,8 @@ AbstractWebView {
     property bool enableJsLogs: false
     property bool isDownloadView: false
 
+    readonly property bool offTheRecord: false
+
     property alias url: backend.url
     readonly property alias loading: backend.loading
     readonly property string title: ""
