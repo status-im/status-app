@@ -59,6 +59,7 @@ class LeftPanel(QObject):
         self._chat_list_item.real_name['objectName'] = chat_name
         
         for attempt in range(1, attempts + 1):
+            self._chat_list_item.wait_until_appears()
             self._chat_list_item.click()
             try:
                 return ChatView().wait_until_appears()
@@ -136,35 +137,46 @@ class Message:
         self.init_ui()
 
     def init_ui(self):
-        for child in walk_children(self.object):
-            if getattr(child, 'objectName', '') == 'StatusDateGroupLabel':
-                self.date = str(child.text)
-            elif getattr(child, 'id', '') == 'title':
-                self.community_invitation['name'] = str(child.text)
-            elif getattr(child, 'id', '') == 'description':
-                self.community_invitation['description'] = str(child.text)
-            elif getattr(child, 'id', '') == 'titleLayout':
-                self.link_preview_title_object = child
-            else:
-                match getattr(child, 'id', ''):
-                    case 'profileImage':
-                        self.icon = Image(driver.objectMap.realName(child))
-                    case 'primaryDisplayName':
-                        self.from_user = str(child.text)
-                    case 'timestampText':
-                        self.time = str(child.text)
-                    case 'chatText':
-                        self.text = str(child.text)
-                    case 'replyCorner':
-                        self.reply_corner = QObject(real_name=driver.objectMap.realName(child))
-                    case 'delegate':
-                        self.delegate_button = Button(real_name=driver.objectMap.realName(child))
-                    case 'linksMessageView':
-                        self.link_preview = QObject(real_name=driver.objectMap.realName(child))
-                    case 'imageMessage':
-                        self.image_message = child
-                    case 'bannerImage':
-                        self.banner_image = QObject(real_name=driver.objectMap.realName(child))
+        try:
+            for child in walk_children(self.object):
+                try:
+                    object_name = getattr(child, 'objectName', '')
+                    child_id = getattr(child, 'id', '')
+                    
+                    if object_name == 'StatusDateGroupLabel':
+                        self.date = str(getattr(child, 'text', ''))
+                    elif child_id == 'title':
+                        self.community_invitation['name'] = str(getattr(child, 'text', ''))
+                    elif child_id == 'description':
+                        self.community_invitation['description'] = str(getattr(child, 'text', ''))
+                    elif child_id == 'titleLayout':
+                        self.link_preview_title_object = child
+                    else:
+                        match child_id:
+                            case 'profileImage':
+                                self.icon = Image(driver.objectMap.realName(child))
+                            case 'primaryDisplayName':
+                                self.from_user = str(getattr(child, 'text', ''))
+                            case 'timestampText':
+                                self.time = str(getattr(child, 'text', ''))
+                            case 'chatText':
+                                self.text = str(getattr(child, 'text', ''))
+                            case 'replyCorner':
+                                self.reply_corner = QObject(real_name=driver.objectMap.realName(child))
+                            case 'delegate':
+                                self.delegate_button = Button(real_name=driver.objectMap.realName(child))
+                            case 'linksMessageView':
+                                self.link_preview = QObject(real_name=driver.objectMap.realName(child))
+                            case 'imageMessage':
+                                self.image_message = child
+                            case 'bannerImage':
+                                self.banner_image = QObject(real_name=driver.objectMap.realName(child))
+                except (AttributeError, RuntimeError, LookupError):
+                    # Skip children that can't be accessed safely
+                    continue
+        except (RuntimeError, AttributeError, LookupError):
+            # If walking children fails, continue with minimal initialization
+            pass
 
     @allure.step('Open community invitation')
     def open_community_invitation(self, attempts: int = 4):
@@ -217,7 +229,14 @@ class Message:
 
     @allure.step('Get link domain from message')
     def get_link_domain(self) -> str:
-        return self.delegate_button.object.linkData.domain
+        # Safely access linkData attribute which may not exist immediately
+        link_data = getattr(self.delegate_button.object, 'linkData', None)
+        if link_data is None:
+            raise AttributeError('linkData is not available on message object yet')
+        domain = getattr(link_data, 'domain', None)
+        if domain is None:
+            raise AttributeError('domain is not available in linkData')
+        return str(domain)
 
     @allure.step('Open context menu for message')
     def open_context_menu_for_message(self):
@@ -227,22 +246,40 @@ class Message:
     @allure.step('Get emoji reactions pathes')
     def get_emoji_reactions_pathes(self):
         reactions_pathes = []
-        for child in walk_children(self.object):
-            if getattr(child, 'id', '') == 'reactionDelegate':
-                # Search for StatusIcon inside reactionDelegate and extract emoji ID from icon path
-                for item in walk_children(child):
-                    icon_path = None
-                    if hasattr(item, 'icon'):
-                        icon_path = str(item.icon)
-                    elif hasattr(item, 'source'):
-                        icon_path = str(item.source)
-                    
-                    if icon_path:
-                        # Extract emoji ID from path like "qrc:/assets/twemoji/svg/1f600.svg"
-                        match = re.search(r'/([a-f0-9]+)\.svg', icon_path)
-                        if match:
-                            reactions_pathes.append(match.group(1))
-                            break
+        try:
+            for child in walk_children(self.object):
+                try:
+                    child_id = getattr(child, 'id', '')
+                    if child_id == 'reactionDelegate':
+                        # Search for StatusIcon inside reactionDelegate and extract emoji ID from icon path
+                        try:
+                            for item in walk_children(child):
+                                try:
+                                    icon_path = None
+                                    if hasattr(item, 'icon'):
+                                        icon_path = str(getattr(item, 'icon', ''))
+                                    elif hasattr(item, 'source'):
+                                        icon_path = str(getattr(item, 'source', ''))
+                                    
+                                    if icon_path:
+                                        # Extract emoji ID from path like "qrc:/assets/twemoji/svg/1f600.svg"
+                                        match = re.search(r'/([a-f0-9]+)\.svg', icon_path)
+                                        if match:
+                                            reactions_pathes.append(match.group(1))
+                                            break
+                                except (AttributeError, RuntimeError, LookupError):
+                                    # Skip items that can't be accessed safely
+                                    continue
+                        except (RuntimeError, AttributeError, LookupError):
+                            # Skip reactionDelegate children if walking fails
+                            continue
+                except (AttributeError, RuntimeError, LookupError):
+                    # Skip children that can't be accessed safely
+                    continue
+        except (RuntimeError, AttributeError, LookupError):
+            # If walking children fails, return empty list
+            pass
+        
         if not reactions_pathes:
             raise LookupError('No emoji reactions found for this message')
         return reactions_pathes
@@ -412,16 +449,14 @@ class ChatMessagesView(QObject):
 
     @allure.step('Choose edit group name option')
     def open_edit_group_name_form(self):
-        time.sleep(2)
         self.open_more_options()
-        time.sleep(2)
-        self._edit_menu_item.click()
+        self._edit_menu_item.wait_until_appears().click()
         return EditGroupNameAndImagePopup().wait_until_appears()
 
     @allure.step('Choose leave group option')
     def leave_group(self):
         self.open_more_options()
-        self._leave_group_item.click()
+        self._leave_group_item.wait_until_appears().click()
         return LeaveGroupPopup().wait_until_appears()
 
     @allure.step('Send message to group chat')
@@ -503,40 +538,30 @@ class ChatMessagesView(QObject):
 
     @allure.step('Remove member from chat')
     def remove_member_from_chat(self, member):
-        time.sleep(2)
         self.open_more_options()
-        time.sleep(2)
-        self._add_remove_item.click()
+        self._add_remove_item.wait_until_appears().click()
         tool_bar = ToolBar().wait_until_appears()
         tool_bar.click_contact_close_icon(member)
-        time.sleep(1)
-        tool_bar.confirm_button.click()
-        time.sleep(1)
+        tool_bar.confirm_button.wait_until_appears().click()
 
     @allure.step('Clear chat history option')
     def clear_history(self):
-        time.sleep(2)
         self.open_more_options()
-        time.sleep(2)
-        self._clear_history_item.click()
+        self._clear_history_item.wait_until_appears().click()
         clear_history_popup = ClearChatHistoryPopup().wait_until_appears()
         clear_history_popup.confirm_clearing_chat()
 
     @allure.step('Clear group chat history option')
     def clear_group_chat_history(self):
-        time.sleep(2)
         self.open_more_options()
-        time.sleep(2)
-        self._clear_group_chhat_history_item.click()
+        self._clear_group_chhat_history_item.wait_until_appears().click()
         clear_history_popup = ClearChatHistoryPopup().wait_until_appears()
         clear_history_popup.confirm_clearing_chat()
 
     @allure.step('Close chat')
     def close_chat(self):
-        time.sleep(2)
         self.open_more_options()
-        time.sleep(2)
-        self._close_chat_item.click()
+        self._close_chat_item.wait_until_appears().click()
         CloseChatPopup().wait_until_appears().confirm_closing_chat()
 
 
@@ -572,7 +597,7 @@ class MessageQuickActions(QObject):
     @allure.step('Delete message')
     def delete_message(self):
         self._delete_button.click()
-        ConfirmationMessagePopup().delete_button.click()
+        ConfirmationMessagePopup().wait_until_appears().delete_button.click()
 
     @allure.step('Reply to own message')
     def reply_own_message(self, text: str):

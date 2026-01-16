@@ -214,9 +214,12 @@ class SavedAddressesView(QObject):
 
     @allure.step('Delete saved address from the list')
     def delete_saved_address(self, address_name):
-        self.right_click(address_name).delete_saved_address_from_context.click()
-        assert ConfirmationPopup().get_confirmation_text().startswith('Are you sure you want to remove')
-        ConfirmationPopup().confirm()
+        context_menu = self.right_click(address_name)
+        # Ensure the delete menu item is ready before clicking
+        context_menu.delete_saved_address_from_context.wait_until_appears().click()
+        confirmation_popup = ConfirmationPopup().wait_until_appears()
+        assert confirmation_popup.get_confirmation_text().startswith('Are you sure you want to remove')
+        confirmation_popup.confirm()
 
     @allure.step('Open context menu in saved address')
     def right_click(self, name) -> ContextMenu:

@@ -14,6 +14,19 @@ class ConfirmationPopup(QObject):
         self._cancel_button = Button(names.mainWallet_Saved_Addresses_More_Confirm_Cancel)
         self._confirmation_notification = TextLabel(names.mainWallet_Saved_Addresses_More_Confirm_Notification)
 
+    @property
+    def is_visible(self) -> bool:
+        """
+        Override is_visible to check for the confirm button instead of the generic popup.
+        This ensures we're detecting the confirmation popup, not the context menu which
+        uses the same PopupItem object name.
+        """
+        try:
+            # Check if the confirm button is visible, which uniquely identifies this popup
+            return self._confirm_button.is_visible
+        except Exception:
+            return False
+
     @allure.step('Confirm delete action')
     def confirm(self):
         self._confirm_button.click()

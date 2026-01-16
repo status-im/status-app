@@ -458,11 +458,13 @@ class CreatePasswordView(OnboardingView):
 
     @allure.step('Set password in first field')
     def set_password_in_first_field(self, value: str):
-        self._new_password_text_field.text = value
+        self._new_password_text_field.clear()
+        self._new_password_text_field.type_text(value)
 
     @allure.step('Set password in confirmation field')
     def set_password_in_confirmation_field(self, value: str):
-        self._confirm_password_text_field.text = value
+        self._confirm_password_text_field.clear()
+        self._confirm_password_text_field.type_text(value)
 
     @allure.step('Set password and open Confirmation password view')
     def create_password(self, value: str) -> 'ConfirmPasswordView':
@@ -555,11 +557,13 @@ class OnboardingCreatePasswordView(OnboardingView):
 
     @allure.step('Fill in choose password field')
     def set_password_in_first_field(self, value: str):
-        self.choose_password_field.text = value
+        self.choose_password_field.clear()
+        self.choose_password_field.type_text(value)
 
     @allure.step('Repeat password')
     def set_password_in_repeat_field(self, value: str):
-        self.repeat_password_field.text = value
+        self.repeat_password_field.clear()
+        self.repeat_password_field.type_text(value)
 
     @property
     @allure.step('Get error message')
@@ -617,7 +621,8 @@ class ConfirmPasswordView(OnboardingView):
 
     @allure.step('Set password')
     def set_password(self, value: str):
-        self._confirm_password_text_field.text = value
+        self._confirm_password_text_field.clear()
+        self._confirm_password_text_field.type_text(value)
 
     @allure.step('Click confirm password')
     def click_confirm_password(self):
@@ -691,14 +696,15 @@ class ReturningLoginView(QObject):
             self.user_selector_button.click()
             self.select_user_by_name(account.name)
         self.login_password_input.click()
-        self.login_password_input.text = account.password
+        self.login_password_input.clear()
+        self.login_password_input.type_text(account.password)
         self.login_button.click()
         return SplashScreen()
 
     @allure.step('Add existing user')
     def add_existing_status_user(self):
         self.user_selector_button.click()
-        OnboardingLoginUsersPopup().create_profile_button.click()
+        OnboardingLoginUsersPopup().wait_until_appears().create_profile_button.click()
         HelpUsImproveStatusView().not_now_button.click()
         return CreateYourProfileViewOnboarding().wait_until_appears()
 

@@ -216,14 +216,22 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
 
             with step('Verify image and link unfurl are present in the last sent message'):
                 message_object = messages_screen.chat.messages(0)[0]
-                assert driver.waitFor(lambda: message_object.image_message.visible,
-                                      timeout), f"Image is not found in the last message"
-                assert driver.waitFor(lambda: message_object.delegate_button.is_visible,
+                # Re-check message object in case image wasn't found during initial init
+                assert driver.waitFor(lambda: (
+                    messages_screen.chat.messages(0)[0].image_message is not None and
+                    messages_screen.chat.messages(0)[0].image_message.visible
+                ), timeout), f"Image is not found in the last message"
+                # Re-fetch message object in lambda to ensure we're checking the latest state
+                assert driver.waitFor(lambda: messages_screen.chat.messages(0)[0].delegate_button.is_visible,
                                       timeout), f"Link preview is not found in the last message"
-                assert driver.waitFor(lambda: message_object.banner_image.is_visible,
-                                      timeout), f"Banner image is not found in the last message"
+                # Re-check message object in case banner wasn't found during initial init
+                assert driver.waitFor(lambda: (
+                    messages_screen.chat.messages(0)[0].banner_image is not None and
+                    messages_screen.chat.messages(0)[0].banner_image.is_visible
+                ), timeout), f"Banner image is not found in the last message"
+                # Re-fetch message object in lambda to ensure init_ui() is re-run if needed
                 assert driver.waitFor(
-                    lambda: domain_link_2 == message_object.get_link_domain(),
+                    lambda: domain_link_2 == messages_screen.chat.messages(0)[0].get_link_domain(),
                     configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
             with step(f'Paste link to status community'):

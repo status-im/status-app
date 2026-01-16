@@ -162,9 +162,12 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step(f'User {user_two.name} send image to {user_one.name} and verify it was sent'):
             messages_screen.group_chat.send_image_to_chat(str(picture))
-            message_object = messages_screen.chat.messages(0)[0]
-            assert message_object.image_message.visible, \
-                f"Message text is not found in the last message"
+            # Re-check message object in case image wasn't found during initial init
+            assert driver.waitFor(lambda: (
+                messages_screen.chat.messages(0)[0].image_message is not None and
+                messages_screen.chat.messages(0)[0].image_message.visible
+            ), timeout), \
+                f"Image is not found in the last message"
             main_window.minimize()
 
         with step(f'User {user_one.name}, received reply from {user_two.name}'):
@@ -179,8 +182,11 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
                 f"Message text is not found in the last message"
 
         with step(f'User {user_one.name}, received image from {user_two.name}'):
-            message_object = messages_screen.chat.messages(0)[0]
-            assert message_object.image_message.visible, \
+            # Re-check message object in case image wasn't found during initial init
+            assert driver.waitFor(lambda: (
+                messages_screen.chat.messages(0)[0].image_message is not None and
+                messages_screen.chat.messages(0)[0].image_message.visible
+            ), timeout), \
                 f"There is no image in the last message"
 
         with step(f'User {user_one.name}, reply to own message and verify that message displayed as a reply'):

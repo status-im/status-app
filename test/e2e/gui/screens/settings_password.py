@@ -20,8 +20,11 @@ class ChangePasswordView(QObject):
 
     @allure.step('Fill in the form, submit and sign out')
     def change_password(self, old_pwd: str, new_pwd: str):
-        self._current_password_text_field.text = old_pwd
-        self._new_password_text_field.text = new_pwd
-        self._confirm_password_text_field.text = new_pwd
+        self._current_password_text_field.clear()
+        self._current_password_text_field.type_text(old_pwd)
+        self._new_password_text_field.clear()
+        self._new_password_text_field.type_text(new_pwd)
+        self._confirm_password_text_field.clear()
+        self._confirm_password_text_field.type_text(new_pwd)
         self._change_password_button.click()
         return ChangePasswordPopup()

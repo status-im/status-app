@@ -183,13 +183,13 @@ class EditCommunityView(QObject):
     def set_logo_without_file_upload_dialog(self, path):
         fileuri = pathlib.Path(str(path)).as_uri()
         self._cropped_image_edit_logo_item.object.cropImage(fileuri)
-        return PictureEditPopup()
+        return PictureEditPopup().wait_until_appears()
 
     @allure.step('Set community banner without file upload dialog')
     def set_banner_without_file_upload_dialog(self, path):
         fileuri = pathlib.Path(str(path)).as_uri()
         self._cropped_image_edit_banner_item.object.cropImage(fileuri)
-        return PictureEditPopup()
+        return PictureEditPopup().wait_until_appears()
 
     @property
     @allure.step('Get community color')
@@ -251,10 +251,10 @@ class EditCommunityView(QObject):
         self._scroll.vertical_scroll_down(self._name_text_edit)
         self.name = name
         self.description = description
-        self.set_logo_without_file_upload_dialog(logo)
-        PictureEditPopup().set_zoom_shift_for_picture(None, None)
-        self.set_banner_without_file_upload_dialog(banner)
-        PictureEditPopup().set_zoom_shift_for_picture(None, None)
+        logo_popup = self.set_logo_without_file_upload_dialog(logo)
+        logo_popup.set_zoom_shift_for_picture(None, None)
+        banner_popup = self.set_banner_without_file_upload_dialog(banner)
+        banner_popup.set_zoom_shift_for_picture(None, None)
         self.intro = intro
         self.outro = outro
         self._save_changes_button.click()
