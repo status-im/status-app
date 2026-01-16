@@ -1,6 +1,7 @@
 import QtQuick
-import QtWebEngine
 import QtWebChannel
+
+import AppLayouts.Browser.adapters
 
 import "Utils.js" as BrowserUtils
 
@@ -8,8 +9,7 @@ import "Utils.js" as BrowserUtils
  * ConnectorBridge
  *
  * Simplified connector infrastructure for BrowserLayout.
- * Provides WebEngine profiles with script injection, WebChannel,
- * ConnectorManager, and direct connection to Nim backend.
+ * Provides WebChannel, ConnectorManager, and direct connection to Nim backend.
  *
  * This component bridges the Browser UI with the Connector backend system.
  */
@@ -19,6 +19,27 @@ QtObject {
     required property string userUID
     required property var connectorController
     property string httpUserAgent: ""          // Custom user agent for web profiles
+
+    readonly property ProfileParams defaultProfileParams: ProfileParams {
+        userId: root.userUID
+        userAgent: root.httpUserAgent
+        scripts: root.scriptPaths
+        offTheRecord: false
+    }
+
+    readonly property ProfileParams otrProfileParams: ProfileParams {
+        userId: root.userUID
+        userAgent: root.httpUserAgent
+        scripts: root.scriptPaths
+        offTheRecord: true
+    }
+
+    readonly property var scriptPaths: [
+        { path: Qt.resolvedUrl("../js/qwebchannel.js"), runOnSubFrames: true },
+        { path: Qt.resolvedUrl("../js/ethereum_wrapper.js"), runOnSubFrames: true },
+        { path: Qt.resolvedUrl("../js/eip6963_announcer.js"), runOnSubFrames: false },
+        { path: Qt.resolvedUrl("../js/ethereum_injector.js"), runOnSubFrames: true }
+    ]
 
     readonly property alias dappUrl: connectorManager.dappUrl
     readonly property alias dappOrigin: connectorManager.dappOrigin
@@ -52,28 +73,6 @@ QtObject {
         connected: connectorManager.connected
 
         onRequestInternal: (args) => connectorManager.request(args)
-    }
-
-    readonly property var _scripts: [
-        createScript("qwebchannel.js", true),
-        createScript("ethereum_wrapper.js", true),
-        createScript("eip6963_announcer.js", false), // Only top-level window (EIP-6963 spec)
-        createScript("ethereum_injector.js", true)
-    ]
-
-    readonly property WebEngineProfile defaultProfile: WebEngineProfile {
-        storageName: "Profile_%1".arg(root.userUID)
-        offTheRecord: false
-        httpUserAgent: root.httpUserAgent
-        userScripts.collection: root._scripts
-    }
-
-    readonly property WebEngineProfile otrProfile: WebEngineProfile {
-        storageName: "IncognitoProfile_%1".arg(root.userUID)
-        offTheRecord: true
-        persistentCookiesPolicy: WebEngineProfile.NoPersistentCookies
-        httpUserAgent: root.httpUserAgent
-        userScripts.collection: root._scripts
     }
 
     readonly property WebChannel channel: WebChannel {
@@ -116,17 +115,5 @@ QtObject {
 
     function updateDAppUrl(url, name) {
         connectorManager.updateDAppUrl(url, name)
-    }
-
-    function createScript(scriptName, runsOnSubframes = true) {
-        if (!connectorController)
-            return {}
-        return {
-            name: scriptName,
-            sourceUrl: Qt.resolvedUrl("../js/" + scriptName),
-            injectionPoint: WebEngineScript.DocumentCreation,
-            worldId: WebEngineScript.MainWorld,
-            runsOnSubframes: runsOnSubframes
-        }
     }
 }

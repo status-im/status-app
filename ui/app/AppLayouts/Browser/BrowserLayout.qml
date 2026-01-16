@@ -50,8 +50,6 @@ StatusSectionLayout {
     property bool isDebugEnabled: false
     property string platformOS: Qt.platform.os
 
-    readonly property string userAgent: connectorBridge.httpUserAgent
-
     signal sendToRecipientRequested(string address)
 
     function openUrlInNewTab(url) {
@@ -64,9 +62,7 @@ StatusSectionLayout {
     }
 
     Component.onCompleted: {
-        connectorBridge.defaultProfile.downloadRequested.connect(_internal.onDownloadRequested);
-        connectorBridge.otrProfile.downloadRequested.connect(_internal.onDownloadRequested);
-        var tab = webStackView.createEmptyTab(connectorBridge.defaultProfile, true);
+        var tab = webStackView.createEmptyTab(connectorBridge.defaultProfileParams, true);
         // For Devs: Uncomment the next line if you want to use the simpledapp on first load
         // tab.url = root.browserRootStore.determineRealURL("https://simpledapp.eth");
     }
@@ -98,7 +94,7 @@ StatusSectionLayout {
         id: _internal
 
         property Item currentWebView: tabs.currentIndex < tabs.count ? webStackView.getCurrentWebView() : null
-        readonly property bool currentTabIncognito: webStackView.getCurrentWebView()?.profile?.offTheRecord ?? false
+        readonly property bool currentTabIncognito: webStackView.getCurrentWebView()?.offTheRecord ?? false
 
         property Component jsDialogComponent: JSDialogWindow {}
 
@@ -136,12 +132,12 @@ StatusSectionLayout {
         }
 
         function addNewDownloadTab() {
-            webStackView.createDownloadTab(tabs.count !== 0 ? currentWebView.profile : connectorBridge.defaultProfile);
+            webStackView.createDownloadTab(tabs.count !== 0 ? currentWebView.profileParams : connectorBridge.defaultProfileParams);
             tabs.currentIndex = tabs.count - 1;
         }
 
         function addNewTab() {
-            var tab = webStackView.createEmptyTab(tabs.count !== 0 ? currentWebView.profile : connectorBridge.defaultProfile);
+            var tab = webStackView.createEmptyTab(tabs.count !== 0 ? currentWebView.profileParams : connectorBridge.defaultProfileParams);
             browserToolbar.activateAddressBar()
             return tab;
         }
@@ -350,12 +346,17 @@ StatusSectionLayout {
             Layout.fillHeight: true
             Layout.fillWidth: true
 
-            function createEmptyTab(profile, createAsStartPage = false, focusOnNewTab = true, url = undefined) {
+            function createEmptyTab(profileParams, createAsStartPage = false, focusOnNewTab = true, url = undefined) {
                 focusOnNewTab = focusOnNewTab && !createAsStartPage
 
-                var container = webEngineContainer.createObject(webStackView)
+                var container = webViewContainerComponent.createObject(webStackView, {
+                    profileParams: profileParams,
+                    webEngineAdapterComponent: webEngineAdapterComponent,
+                    isDownloadView: false,
+                    downloadViewComponent: downloadViewComponent,
+                    emptyPageComponent: emptyPageComponent
+                })
                 var webview = container.webEngineAdapter
-                webview.profile = profile
 
                 tabs.createEmptyTab(createAsStartPage, focusOnNewTab, webview)
 
@@ -370,10 +371,15 @@ StatusSectionLayout {
                 return webview;
             }
 
-            function createDownloadTab(profile) {
-                var container = webEngineContainer.createObject(webStackView, {isDownloadView: true})
+            function createDownloadTab(profileParams) {
+                var container = webViewContainerComponent.createObject(webStackView, {
+                    profileParams: profileParams,
+                    webEngineAdapterComponent: webEngineAdapterComponent,
+                    isDownloadView: true,
+                    downloadViewComponent: downloadViewComponent,
+                    emptyPageComponent: emptyPageComponent
+                })
                 var webview = container.webEngineAdapter
-                webview.profile = profile
                 tabs.createDownloadTab()
                 return webview;
             }
@@ -388,7 +394,7 @@ StatusSectionLayout {
 
             function removeView(index) {
                 if (tabs.count <= 1) {
-                    createEmptyTab(_internal.currentWebView.profile, true)
+                    createEmptyTab(_internal.currentWebView.profileParams, true)
                 }
                 tabs.removeTab(index)
                 var view = getWebView(index)
@@ -407,6 +413,20 @@ StatusSectionLayout {
                 browserHeaderComponent: browserToolbar
             }
         }
+
+        StatusBubble {
+            id: statusBubble
+            z: 54
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+        }
+
+        Connections {
+            target: _internal.currentWebView
+            function onLinkHovered(hoveredUrl) {
+                statusBubble.show(hoveredUrl)
+            }
+        }
     }
 
     Component {
@@ -418,19 +438,13 @@ StatusSectionLayout {
             enableJsLogs: root.isDebugEnabled
             devToolsEnabled: localAccountSensitiveSettings.devToolsEnabled
 
-            onLinkHovered: (hoveredUrl) => {
-                if (hoveredUrl === "") {
-                    hideStatusText.start();
-                } else {
-                    statusText.text = hoveredUrl;
-                    statusBubble.visible = true;
-                    hideStatusText.stop();
-                }
-            }
             onWindowCloseRequested: webStackView.removeView(StackLayout.index)
             onNewWindowRequested: (makeCurrent, requestedUrl, callback) => {
-                var tab = webStackView.createEmptyTab(_internal.currentWebView.profile, false, makeCurrent, requestedUrl);
+                var tab = webStackView.createEmptyTab(_internal.currentWebView.profileParams, false, makeCurrent, requestedUrl);
                 callback(tab);
+            }
+            onDownloadRequested: (download) => {
+                _internal.onDownloadRequested(download)
             }
             onCertificateError: (error) => {
                 error.defer()
@@ -486,60 +500,9 @@ StatusSectionLayout {
     }
 
     Component {
-        id: webEngineContainer
-        Item {
-            id: containerItem
-            property bool isDownloadView: false
-            property alias webEngineAdapter: webEngineAdapterLoader.item
-
-            Loader {
-                id: webEngineAdapterLoader
-                anchors.fill: parent
-                sourceComponent: webEngineAdapterComponent
-            }
-
-            // Download + Empty Page slots for combined web views
-            Loader {
-                id: downloadViewLoader
-                anchors.fill: parent
-                z: 54
-                active: (containerItem.isDownloadView && !webEngineAdapterLoader.item.url.toString()) ||
-                        !webEngineAdapterLoader.item.url.toString()
-                sourceComponent: containerItem.isDownloadView ?
-                                     downloadViewComponent:
-                                     emptyPageComponent
-            }
-
-            // TODO: refactor this
-            // https://github.com/status-im/status-app/issues/19669
-            Rectangle {
-                id: statusBubble
-                color: Theme.palette.baseColor2
-                z: 54
-                visible: false
-
-                anchors.left: parent.left
-                anchors.bottom: parent.bottom
-                width: Math.min(statusText.implicitWidth, parent.width)
-                height: statusText.implicitHeight
-
-                StatusBaseText {
-                    id: statusText
-                    anchors.fill: parent
-                    verticalAlignment: Qt.AlignVCenter
-                    elide: Qt.ElideMiddle
-                    padding: 4
-
-                    Timer {
-                        id: hideStatusText
-                        interval: 750
-                        onTriggered: {
-                            statusText.text = "";
-                            statusBubble.visible = false;
-                        }
-                    }
-                }
-            }
+        id: webViewContainerComponent
+        WebViewContainer {
+            // Properties will be passed via createObject
         }
     }
 
@@ -550,7 +513,7 @@ StatusSectionLayout {
             x: browserToolbar.width - width - Theme.halfPadding
             y: browserToolbar.height + 4
 
-            incognitoMode: _internal.currentWebView && _internal.currentWebView.profile === connectorBridge.otrProfile
+            incognitoMode: _internal.currentWebView && _internal.currentWebView.offTheRecord
             accounts: root.browserWalletStore.accounts
             currentAccount: root.browserWalletStore.dappBrowserAccount
             activityStore: root.browserActivityStore
@@ -593,13 +556,13 @@ StatusSectionLayout {
         x: parent.width - width - Theme.halfPadding
         y: browserToolbar.height + 4
 
-        incognitoMode: _internal.currentWebView && _internal.currentWebView.profile === connectorBridge.otrProfile
+        incognitoMode: _internal.currentWebView && _internal.currentWebView.offTheRecord
         zoomFactor: _internal.currentWebView ? _internal.currentWebView.zoomFactor : 1
         onAddNewTab: _internal.addNewTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
         onGoIncognito: function (checked) {
             if (_internal.currentWebView) {
-                _internal.currentWebView.profile = checked ? connectorBridge.otrProfile : connectorBridge.defaultProfile;
+                _internal.currentWebView.offTheRecord = checked;
             }
         }
         onZoomIn: {
@@ -639,7 +602,7 @@ StatusSectionLayout {
             parent: browserToolbar
             x: Theme.halfPadding
             y: browserToolbar.height + 4
-            incognitoMode: _internal.currentWebView && _internal.currentWebView.profile === connectorBridge.otrProfile
+            incognitoMode: _internal.currentWebView && _internal.currentWebView.offTheRecord
             bookmarksStore: root.bookmarksStore
         }
     }

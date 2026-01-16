@@ -1,3 +1,4 @@
 AbstractWebView 1.0 AbstractWebView.qml
+ProfileParams 1.0 ProfileParams.qml
 WebEngineAdapter 1.0 WebEngineAdapter.qml
 DarwinWebViewAdapter 1.0 DarwinWebViewAdapter.qml
