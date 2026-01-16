@@ -11,4 +11,12 @@ void setupIOSKeyboardTracking();
 int getIOSKeyboardHeight();
 bool isIOSKeyboardVisible();
 
+// Shake detection utilities
+void setupIOSShakeDetection();
+int getIOSShakeCount();
+
+// Share sheet utilities
+void presentIOSShareSheetForFilePath(const QString& filePath);
+void presentIOSShareSheetForFilePaths(const QStringList& filePaths);
+
 #endif // Q_OS_IOS

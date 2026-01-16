@@ -8,6 +8,7 @@
 #include <QSaveFile>
 #include <QStandardPaths>
 #include <QTimer>
+#include <QDebug>
 
 #ifdef Q_OS_ANDROID
 #include <QJniObject>
@@ -83,6 +84,9 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
 #ifdef Q_OS_IOS
     // Set up iOS keyboard tracking
     ::setupIOSKeyboardTracking();
+
+    // Set up iOS shake detection
+    ::setupIOSShakeDetection();
     
     // Poll iOS keyboard state and emit property change signals
     m_iosKeyboardPollTimer = new QTimer(this);
@@ -102,6 +106,20 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
         }
     });
     m_iosKeyboardPollTimer->start();
+
+    // Poll iOS shake counter and emit a signal when it increments.
+    m_iosShakePollTimer = new QTimer(this);
+    m_iosShakePollTimer->setInterval(50); // 20 FPS polling rate
+    m_iosShakeCount = ::getIOSShakeCount();
+    QObject::connect(m_iosShakePollTimer, &QTimer::timeout, this, [this]() {
+        const int count = ::getIOSShakeCount();
+        if (count != m_iosShakeCount) {
+            m_iosShakeCount = count;
+            qInfo() << "[iOS Shake] SystemUtilsInternal: shakeDetected signal emitted, count=" << count;
+            emit shakeDetected();
+        }
+    });
+    m_iosShakePollTimer->start();
 #endif
 }
 
@@ -284,6 +302,78 @@ void SystemUtilsInternal::setupIOSKeyboardTracking()
 #ifdef Q_OS_IOS
     ::setupIOSKeyboardTracking();
 #endif
+}
+
+void SystemUtilsInternal::iosShareFile(const QUrl& fileUrl) const
+{
+#ifdef Q_OS_IOS
+    const QString localPath = fileUrl.isLocalFile() ? fileUrl.toLocalFile() : QString();
+    if (localPath.isEmpty())
+        return;
+    ::presentIOSShareSheetForFilePath(localPath);
+#else
+    Q_UNUSED(fileUrl);
+#endif
+}
+
+void SystemUtilsInternal::iosShareFiles(const QVariantList& fileUrls) const
+{
+#ifdef Q_OS_IOS
+    QStringList paths;
+    paths.reserve(fileUrls.size());
+    for (const auto& v : fileUrls) {
+        if (v.canConvert<QUrl>()) {
+            const QUrl url = v.toUrl();
+            const QString p = url.isLocalFile() ? url.toLocalFile() : QString();
+            if (!p.isEmpty())
+                paths.push_back(p);
+        } else if (v.canConvert<QString>()) {
+            // Allow passing either a raw local path or a file:// URL string.
+            const QString s = v.toString();
+            if (s.isEmpty())
+                continue;
+            const QUrl url = QUrl::fromUserInput(s);
+            const QString p = url.isLocalFile() ? url.toLocalFile() : s;
+            if (!p.isEmpty())
+                paths.push_back(p);
+        }
+    }
+    if (paths.isEmpty())
+        return;
+    qInfo() << "[iOS Share] SystemUtilsInternal::iosShareFiles paths=" << paths.size()
+            << " sample=" << (paths.size() > 0 ? paths.first() : QString());
+    ::presentIOSShareSheetForFilePaths(paths);
+#else
+    Q_UNUSED(fileUrls);
+#endif
+}
+
+void SystemUtilsInternal::iosSharePaths(const QStringList& filePaths) const
+{
+#ifdef Q_OS_IOS
+    QStringList paths;
+    paths.reserve(filePaths.size());
+    for (const auto& s : filePaths) {
+        if (s.isEmpty())
+            continue;
+        const QUrl url = QUrl::fromUserInput(s);
+        const QString p = url.isLocalFile() ? url.toLocalFile() : s;
+        if (!p.isEmpty())
+            paths.push_back(p);
+    }
+    if (paths.isEmpty())
+        return;
+    qInfo() << "[iOS Share] SystemUtilsInternal::iosSharePaths paths=" << paths.size()
+            << " sample=" << (paths.size() > 0 ? paths.first() : QString());
+    ::presentIOSShareSheetForFilePaths(paths);
+#else
+    Q_UNUSED(filePaths);
+#endif
+}
+
+void SystemUtilsInternal::debugLog(const QString& message) const
+{
+    qInfo() << "[QML]" << message;
 }
 
 #include "systemutilsinternal.moc"

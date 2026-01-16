@@ -3,7 +3,10 @@
 #import <Foundation/Foundation.h>
 #import <Photos/Photos.h>
 #import <UIKit/UIKit.h>
+#import <CoreMotion/CoreMotion.h>
 #import <objc/runtime.h>
+#include <atomic>
+#include <cmath>
 #include <QString>
 #include <QUrl>
 
@@ -276,4 +279,260 @@ int getIOSKeyboardHeight() {
 
 bool isIOSKeyboardVisible() {
     return g_keyboardVisible;
+}
+
+// -----------------------------------------------------------------------------
+// Shake detection
+// -----------------------------------------------------------------------------
+
+static std::atomic<int> g_shakeCount{0};
+static std::atomic<bool> g_shakeDetectionStarted{false};
+static CMMotionManager* g_motionManager = nil;
+
+void setupIOSShakeDetection() {
+    @autoreleasepool {
+        // Idempotent setup
+        bool expected = false;
+        if (!g_shakeDetectionStarted.compare_exchange_strong(expected, true)) {
+            NSLog(@"[iOS Shake] setupIOSShakeDetection: already started");
+            return;
+        }
+
+        g_motionManager = [[CMMotionManager alloc] init];
+        if (!g_motionManager || !g_motionManager.accelerometerAvailable) {
+            NSLog(@"[iOS Shake] Accelerometer not available");
+            return;
+        }
+
+        // 50Hz sampling
+        g_motionManager.accelerometerUpdateInterval = 0.02;
+        NSOperationQueue* queue = [[NSOperationQueue alloc] init];
+        queue.qualityOfService = NSQualityOfServiceUserInitiated;
+
+        __block NSTimeInterval lastShakeTs = 0.0;
+        NSLog(@"[iOS Shake] setupIOSShakeDetection: started accelerometer updates");
+
+        [g_motionManager startAccelerometerUpdatesToQueue:queue withHandler:^(CMAccelerometerData* data, NSError* error) {
+            if (error) {
+                // Don't spam logs; just ignore occasional errors.
+                return;
+            }
+            if (!data) return;
+
+            const double ax = data.acceleration.x;
+            const double ay = data.acceleration.y;
+            const double az = data.acceleration.z;
+
+            // At rest, magnitude is ~1g. Detect spikes well above that.
+            const double mag = std::sqrt(ax*ax + ay*ay + az*az);
+            const double deltaFrom1g = std::fabs(mag - 1.0);
+
+            // Threshold tuned to reduce false positives. Cooldown prevents rapid repeats.
+            constexpr double kShakeThreshold = 1.35; // ~1.35g deviation from 1g
+            constexpr NSTimeInterval kCooldownSec = 1.0;
+
+            if (deltaFrom1g < kShakeThreshold) return;
+
+            const NSTimeInterval nowTs = [NSDate date].timeIntervalSince1970;
+            if (nowTs - lastShakeTs < kCooldownSec) return;
+
+            lastShakeTs = nowTs;
+            const int newCount = g_shakeCount.fetch_add(1) + 1;
+            NSLog(@"[iOS Shake] detected: count=%d mag=%f deltaFrom1g=%f", newCount, mag, deltaFrom1g);
+        }];
+    }
+}
+
+int getIOSShakeCount() {
+    return g_shakeCount.load();
+}
+
+// -----------------------------------------------------------------------------
+// Share sheet
+// -----------------------------------------------------------------------------
+
+static UIViewController* topMostViewController(UIViewController* root) {
+    if (!root) return nil;
+    UIViewController* vc = root;
+    while (vc.presentedViewController) {
+        vc = vc.presentedViewController;
+    }
+    return vc;
+}
+
+static UIViewController* currentRootViewController() {
+    UIWindow* keyWindow = nil;
+    UIWindow* anyWindowWithRoot = nil;
+
+    // Use modern API for getting windows
+    if (@available(iOS 15.0, *)) {
+        NSSet<UIScene*>* connectedScenes = [UIApplication sharedApplication].connectedScenes;
+        for (UIScene* scene in connectedScenes) {
+            if (![scene isKindOfClass:[UIWindowScene class]]) continue;
+            UIWindowScene* windowScene = (UIWindowScene*)scene;
+            for (UIWindow* window in windowScene.windows) {
+                if (!anyWindowWithRoot && window.rootViewController)
+                    anyWindowWithRoot = window;
+                if (window.isKeyWindow) {
+                    keyWindow = window;
+                    break;
+                }
+            }
+            if (keyWindow) break;
+        }
+    } else {
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        for (UIWindow* window in [[UIApplication sharedApplication] windows]) {
+            if (!anyWindowWithRoot && window.rootViewController)
+                anyWindowWithRoot = window;
+            if (window.isKeyWindow) {
+                keyWindow = window;
+                break;
+            }
+        }
+        #pragma clang diagnostic pop
+    }
+
+    if (keyWindow && keyWindow.rootViewController)
+        return keyWindow.rootViewController;
+
+    if (anyWindowWithRoot && anyWindowWithRoot.rootViewController)
+        return anyWindowWithRoot.rootViewController;
+
+    // Fallback: try app delegate's window (some Qt setups don't mark a keyWindow)
+    id<UIApplicationDelegate> delegate = [UIApplication sharedApplication].delegate;
+    if (delegate && [delegate respondsToSelector:@selector(window)]) {
+        UIWindow* w = [delegate window];
+        if (w && w.rootViewController)
+            return w.rootViewController;
+    }
+
+    NSLog(@"[iOS Share] currentRootViewController: unable to find a window/rootViewController");
+    return nil;
+}
+
+void presentIOSShareSheetForFilePath(const QString& filePath) {
+    @autoreleasepool {
+        if (filePath.isEmpty()) return;
+        const QString pathCopy = filePath; // copy for async block safety
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            @autoreleasepool {
+                @try {
+                    UIViewController* rootVC = currentRootViewController();
+                    UIViewController* vc = topMostViewController(rootVC);
+                    if (!vc) {
+                        NSLog(@"[iOS Share] No root view controller");
+                        return;
+                    }
+                    if (!vc.view) {
+                        NSLog(@"[iOS Share] No view on view controller: %@", vc);
+                        return;
+                    }
+                    if (!vc.view.window) {
+                        NSLog(@"[iOS Share] VC view not attached to a window yet. vc=%@", vc);
+                        // Still try; some setups attach shortly after.
+                    }
+
+                    NSString* nsPath = pathCopy.toNSString();
+                    NSURL* url = [NSURL fileURLWithPath:nsPath];
+                    if (!url) return;
+
+                    UIActivityViewController* activityVC =
+                        [[UIActivityViewController alloc] initWithActivityItems:@[url] applicationActivities:nil];
+
+                    // Prefer a larger, more “full-screen” sheet on iPhone (iOS 15+).
+                    if (@available(iOS 15.0, *)) {
+                        UISheetPresentationController* sheet = activityVC.sheetPresentationController;
+                        if (sheet) {
+                            sheet.detents = @[UISheetPresentationControllerDetent.largeDetent];
+                            sheet.prefersGrabberVisible = YES;
+                        }
+                    }
+
+                    // iPad requires a popover anchor.
+                    UIPopoverPresentationController* popover = activityVC.popoverPresentationController;
+                    if (popover) {
+                        popover.sourceView = vc.view;
+                        CGRect b = vc.view.bounds;
+                        popover.sourceRect = CGRectMake(CGRectGetMidX(b), CGRectGetMidY(b), 1, 1);
+                        popover.permittedArrowDirections = 0;
+                    }
+
+                    NSLog(@"[iOS Share] Presenting UIActivityViewController (single), root=%@ top=%@ state=%ld",
+                          rootVC, vc, (long)[UIApplication sharedApplication].applicationState);
+                    [vc presentViewController:activityVC animated:YES completion:nil];
+                }
+                @catch (NSException* e) {
+                    NSLog(@"[iOS Share] Exception presenting share sheet (single): %@ %@", e.name, e.reason);
+                }
+            }
+        });
+    }
+}
+
+void presentIOSShareSheetForFilePaths(const QStringList& filePaths) {
+    @autoreleasepool {
+        if (filePaths.isEmpty()) return;
+        const QStringList pathsCopy = filePaths; // copy for async block safety
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            @autoreleasepool {
+                @try {
+                    UIViewController* rootVC = currentRootViewController();
+                    UIViewController* vc = topMostViewController(rootVC);
+                    if (!vc) {
+                        NSLog(@"[iOS Share] No root view controller");
+                        return;
+                    }
+                    if (!vc.view) {
+                        NSLog(@"[iOS Share] No view on view controller: %@", vc);
+                        return;
+                    }
+                    if (!vc.view.window) {
+                        NSLog(@"[iOS Share] VC view not attached to a window yet. vc=%@", vc);
+                        // Still try; some setups attach shortly after.
+                    }
+
+                    NSMutableArray* items = [NSMutableArray arrayWithCapacity:(NSUInteger)pathsCopy.size()];
+                    for (const auto& p : pathsCopy) {
+                        if (p.isEmpty()) continue;
+                        NSURL* url = [NSURL fileURLWithPath:p.toNSString()];
+                        if (url) [items addObject:url];
+                    }
+                    if (items.count == 0) return;
+
+                    NSLog(@"[iOS Share] Presenting UIActivityViewController, items=%lu root=%@ top=%@ state=%ld",
+                          (unsigned long)items.count, rootVC, vc, (long)[UIApplication sharedApplication].applicationState);
+
+                    UIActivityViewController* activityVC =
+                        [[UIActivityViewController alloc] initWithActivityItems:items applicationActivities:nil];
+
+                    // Prefer a larger, more “full-screen” sheet on iPhone (iOS 15+).
+                    if (@available(iOS 15.0, *)) {
+                        UISheetPresentationController* sheet = activityVC.sheetPresentationController;
+                        if (sheet) {
+                            sheet.detents = @[UISheetPresentationControllerDetent.largeDetent];
+                            sheet.prefersGrabberVisible = YES;
+                        }
+                    }
+
+                    // iPad requires a popover anchor.
+                    UIPopoverPresentationController* popover = activityVC.popoverPresentationController;
+                    if (popover) {
+                        popover.sourceView = vc.view;
+                        CGRect b = vc.view.bounds;
+                        popover.sourceRect = CGRectMake(CGRectGetMidX(b), CGRectGetMidY(b), 1, 1);
+                        popover.permittedArrowDirections = 0;
+                    }
+
+                    [vc presentViewController:activityVC animated:YES completion:nil];
+                }
+                @catch (NSException* e) {
+                    NSLog(@"[iOS Share] Exception presenting share sheet (multi): %@ %@", e.name, e.reason);
+                }
+            }
+        });
+    }
 }
