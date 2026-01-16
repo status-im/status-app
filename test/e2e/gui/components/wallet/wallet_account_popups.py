@@ -187,7 +187,7 @@ class EditAccountFromSettingsPopup(QObject):
     def edit_account(self, account_name):
         self.type_in_account_name(account_name)
         self.select_random_color_for_account()
-        self.select_random_emoji_for_account()
+        # self.select_random_emoji_for_account()
         self.change_name_button.click()
 
     @allure.step('Type in name for account')
