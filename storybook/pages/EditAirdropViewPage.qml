@@ -137,8 +137,8 @@ SplitView {
                         expression: model.index ? "Optimism" : "Arbitrum"
                     },
                     ExpressionRole {
-                        readonly property string icon1: "network/Network=Optimism"
-                        readonly property string icon2: "network/Network=Arbitrum"
+                        readonly property string icon1: "network/optimism"
+                        readonly property string icon2: "network/arbitrum"
 
                         name: "chainIcon"
                         expression: model.index ? icon1 : icon2
@@ -186,8 +186,8 @@ SplitView {
                         expression: model.index ? "Ethereum Mainnet" : "Sepolia"
                     },
                     ExpressionRole {
-                        readonly property string icon1: "network/Network=Ethereum"
-                        readonly property string icon2: "network/Network=Testnet"
+                        readonly property string icon1: "network/ethereum"
+                        readonly property string icon2: "network/testnet"
 
                         name: "chainIcon"
                         expression: model.index ? icon1 : icon2

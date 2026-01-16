@@ -221,7 +221,7 @@ Item {
                 ListElement {
                     chainId: 2
                     chainName: "Test Chain"
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                     layer: 2
                 }
                 // Used by tst_balanceCheck
@@ -245,7 +245,7 @@ Item {
                 ListElement {
                     chainId: 2
                     chainName: "Test Chain"
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                     layer: 2
                     isOnline: true
                 }
@@ -1040,7 +1040,7 @@ Item {
             controlUnderTest.networksModel.append({
                     chainId: request.chainId,
                     chainName: "Test Chain",
-                    iconUrl: "network/Network=Ethereum",
+                    iconUrl: "network/ethereum",
                     layer: 1
             })
             controlUnderTest.sessionRequestsModel.enqueue(request)
@@ -1071,7 +1071,7 @@ Item {
             controlUnderTest.networksModel.append({
                     chainId: request.chainId,
                     chainName: "Test Chain",
-                    iconUrl: "network/Network=Ethereum",
+                    iconUrl: "network/ethereum",
                     layer: 1
             })
             controlUnderTest.sessionRequestsModel.enqueue(request)

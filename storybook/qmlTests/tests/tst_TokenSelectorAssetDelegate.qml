@@ -38,11 +38,11 @@ Item {
 
         ListElement {
             balanceAsString: "1234.50"
-            iconUrl: "network/Network=Ethereum"
+            iconUrl: "network/ethereum"
         }
         ListElement {
             balanceAsString: "33.52"
-            iconUrl: "network/Network=Arbitrum"
+            iconUrl: "network/arbitrum"
         }
     }
 

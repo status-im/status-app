@@ -45,7 +45,7 @@ StatusDialog {
         accountBalance          [var]    - account balance for a specific network
             formattedBalance    [string] - formatted balance e.g. "1234.56B"
             balance             [string] - balance e.g. "123456000000"
-            iconUrl             [string] - icon url e.g. "network/Network=Hermez"
+            iconUrl             [string] - icon url e.g. "network/hermez"
             chainColor          [string] - chain color e.g. "#FF0000"
     */
     required property var accounts
@@ -54,7 +54,7 @@ StatusDialog {
       Expected model structure:
         chainName      [string]          - chain long name. e.g. "Ethereum" or "Optimism"
         chainId        [int]             - chain unique identifier
-        iconUrl        [string]          - SVG icon name. e.g. "network/Network=Ethereum"
+        iconUrl        [string]          - SVG icon name. e.g. "network/ethereum"
         layer          [int]             - chain layer. e.g. 1 or 2
         isTest         [bool]            - true if the chain is a testnet
     */

@@ -18,7 +18,7 @@ Pane {
             balances: [
                 {
                     balanceAsString: "0,56",
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 }
             ],
 
@@ -35,7 +35,7 @@ Pane {
             balances: [
                 {
                     balanceAsString: "0,12",
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 }
             ],
 

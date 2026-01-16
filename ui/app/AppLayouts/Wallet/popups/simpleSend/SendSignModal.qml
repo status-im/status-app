@@ -52,7 +52,7 @@ SignTransactionModalBase {
     /** Input property holding selected network name **/
     required property string networkName
     /** Input property holding selected network icon path
-    e.g. `Assets.svg("network/Network=Optimism")`**/
+    e.g. `Assets.svg("network/optimism")`**/
     required property string networkIconPath
     /** Input property holding selected network blockchain
     explorer name **/

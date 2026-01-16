@@ -4012,118 +4012,118 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <name>Constants</name>
     <message>
         <source>Key pair starting with whitespace are not allowed</source>
-        <translation>No se permiten pares de claves que comiencen con espacio en blanco</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>Key pair must be at least %n character(s)</source>
-        <translation>
-            <numerusform>El par de claves debe tener al menos %n carácter</numerusform>
-            <numerusform>El par de claves debe tener al menos %n caracteres</numerusform>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
     <message>
         <source>Only letters and numbers allowed</source>
-        <translation>Solo se permiten letras y números</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, whitespaces and hyphens allowed</source>
-        <translation>Solo se permiten letras, números, guiones bajos, puntos, espacios en blanco y guiones</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Invalid characters (A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Caracteres inválidos (solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed</source>
-        <translation>Solo se permiten letras, números, guiones bajos, puntos, comas, espacios en blanco y guiones</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Special characters are not allowed</source>
-        <translation>No se permiten caracteres especiales</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Only letters, numbers and ASCII characters allowed</source>
-        <translation>Solo se permiten letras, números y caracteres ASCII</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Name is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>El nombre contiene caracteres no permitidos (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Whole numbers only</source>
-        <translation>Solo números enteros</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Positive real numbers only</source>
-        <translation>Solo números reales positivos</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>How to display the QR code on your other device</source>
-        <translation>Cómo mostrar el código QR en tu otro dispositivo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>How to copy the encrypted key from your other device</source>
-        <translation>Cómo copiar la clave cifrada de tu otro dispositivo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 20 accounts reached</source>
-        <translation>Se alcanzó el límite de 20 cuentas</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove any account to add a new one.</source>
-        <translation>Elimina cualquier cuenta para agregar una nueva.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 5 key pairs reached</source>
-        <translation>Se alcanzó el límite de 5 pares de claves</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove key pair to add a new one.</source>
-        <translation>Elimina un par de claves para agregar uno nuevo.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 3 watched addresses reached</source>
-        <translation>Se alcanzó el límite de 3 direcciones observadas</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove a watched address to add a new one.</source>
-        <translation>Elimina una dirección observada para agregar una nueva.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 20 saved addresses reached</source>
-        <translation>Se alcanzó el límite de 20 direcciones guardadas</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove a saved address to add a new one.</source>
-        <translation>Elimina una dirección guardada para agregar una nueva.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Username already taken :(</source>
-        <translation>Nombre de usuario ya está tomado :(</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Username doesn’t belong to you :(</source>
-        <translation>El nombre de usuario no te pertenece :(</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continuing will connect this username with your chat key.</source>
-        <translation>Continuar con el proceso conectará este nombre de usuario con tu clave de chat.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>✓ Username available!</source>
-        <translation>✓ ¡Nombre de usuario disponible!</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Username is already connected with your chat key and can be used inside Status.</source>
-        <translation>El nombre de usuario ya está conectado con tu clave de chat y se puede usar dentro de Status.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>This user name is owned by you and connected with your chat key. Continue to set `Show my ENS username in chats`.</source>
-        <translation>Este nombre de usuario te pertenece y está conectado con tu clave de chat. Continúa para configurar `Mostrar mi nombre de usuario ENS en chats`.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
-        <translation>Continuar con el proceso requerirá una transacción para conectar el nombre de usuario con tu clave de chat actual.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Temporarily unavailable, will be available in the next release.</source>
@@ -18663,6 +18663,42 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>LineaScan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Polygon zkEVM Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unichain Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Katana Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ink Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Abstract Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ZkSync Era Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Soneium Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ScrollScan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>BlastScan</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

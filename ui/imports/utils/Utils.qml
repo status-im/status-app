@@ -645,6 +645,51 @@ QtObject {
             if (testnetMode) {
                 link = Constants.networkExplorerLinks.sepoliaLinea
             }
+        } else if (networkShortName === Constants.networkShortChainNames.polygonZkEvm) {
+            link = Constants.networkExplorerLinks.polygonZkEvm
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.cardonaPolygonZkEvm
+            }
+        } else if (networkShortName === Constants.networkShortChainNames.unichain) {
+            link = Constants.networkExplorerLinks.unichain
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.sepoliaUnichain
+            }
+        } else if (networkShortName === Constants.networkShortChainNames.katana) {
+            link = Constants.networkExplorerLinks.katana
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.bokutoKatana
+            }
+        } else if (networkShortName === Constants.networkShortChainNames.ink) {
+            link = Constants.networkExplorerLinks.ink
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.sepoliaInk
+            }
+        } else if (networkShortName === Constants.networkShortChainNames.aabstract) {
+            link = Constants.networkExplorerLinks.aabstract
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.sepoliaAbstract
+            }
+        } else if (networkShortName === Constants.networkShortChainNames.zkSync) {
+            link = Constants.networkExplorerLinks.zkSync
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.sepoliaZkSync
+            }
+        } else if (networkShortName === Constants.networkShortChainNames.soneium) {
+            link = Constants.networkExplorerLinks.soneium
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.minatoSoneium
+            }
+        } else if (networkShortName === Constants.networkShortChainNames.scroll) {
+            link = Constants.networkExplorerLinks.scroll
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.sepoliaScroll
+            }
+        } else if (networkShortName === Constants.networkShortChainNames.blast) {
+            link = Constants.networkExplorerLinks.blast
+            if (testnetMode) {
+                link = Constants.networkExplorerLinks.sepoliaBlast
+            }
         } else if (networkShortName === Constants.networkShortChainNames.status) {
             link = Constants.networkExplorerLinks.status
             if (testnetMode) {
@@ -692,6 +737,33 @@ QtObject {
         if (networkShortName === Constants.networkShortChainNames.linea) {
             return qsTr("LineaScan")
         }
+        if (networkShortName === Constants.networkShortChainNames.polygonZkEvm) {
+            return qsTr("Polygon zkEVM Explorer")
+        }
+        if (networkShortName === Constants.networkShortChainNames.unichain) {
+            return qsTr("Unichain Explorer")
+        }
+        if (networkShortName === Constants.networkShortChainNames.katana) {
+            return qsTr("Katana Explorer")
+        }
+        if (networkShortName === Constants.networkShortChainNames.ink) {
+            return qsTr("Ink Explorer")
+        }
+        if (networkShortName === Constants.networkShortChainNames.aabstract) {
+            return qsTr("Abstract Explorer")
+        }
+        if (networkShortName === Constants.networkShortChainNames.zkSync) {
+            return qsTr("ZkSync Era Explorer")
+        }
+        if (networkShortName === Constants.networkShortChainNames.soneium) {
+            return qsTr("Soneium Explorer")
+        }
+        if (networkShortName === Constants.networkShortChainNames.scroll) {
+            return qsTr("ScrollScan")
+        }
+        if (networkShortName === Constants.networkShortChainNames.blast) {
+            return qsTr("BlastScan")
+        }
         if (networkShortName === Constants.networkShortChainNames.status) {
             return qsTr("Status Explorer")
         }
@@ -719,6 +791,33 @@ QtObject {
             case Constants.chains.lineaMainnetChainId:
             case Constants.chains.lineaSepoliaChainId:
                 return Constants.networkShortChainNames.linea
+            case Constants.chains.polygonZkEvmMainnetChainId:
+            case Constants.chains.polygonZkEvmCardonaChainId:
+                return Constants.networkShortChainNames.polygonZkEvm
+            case Constants.chains.unichainMainnetChainId:
+            case Constants.chains.unichainSepoliaChainId:
+                return Constants.networkShortChainNames.unichain
+            case Constants.chains.katanaMainnetChainId:
+            case Constants.chains.katanaBokutoChainId:
+                return Constants.networkShortChainNames.katana
+            case Constants.chains.inkMainnetChainId:
+            case Constants.chains.inkSepoliaChainId:
+                return Constants.networkShortChainNames.ink
+            case Constants.chains.abstractMainnetChainId:
+            case Constants.chains.abstractSepoliaChainId:
+                return Constants.networkShortChainNames.aabstract
+            case Constants.chains.zkSyncMainnetChainId:
+            case Constants.chains.zkSyncSepoliaChainId:
+                return Constants.networkShortChainNames.zkSync
+            case Constants.chains.soneiumMainnetChainId:
+            case Constants.chains.soneiumMinatoChainId:
+                return Constants.networkShortChainNames.soneium
+            case Constants.chains.scrollMainnetChainId:
+            case Constants.chains.scrollSepoliaChainId:
+                return Constants.networkShortChainNames.scroll
+            case Constants.chains.blastMainnetChainId:
+            case Constants.chains.blastSepoliaChainId:
+                return Constants.networkShortChainNames.blast
             case Constants.chains.statusNetworkSepoliaChainId:
                 return Constants.networkShortChainNames.status
             case Constants.chains.binanceSmartChainMainnetChainId:
@@ -751,6 +850,42 @@ QtObject {
                 return Constants.networkNames.linea
             case Constants.chains.lineaSepoliaChainId:
                 return Constants.networkNames.sepoliaLinea
+            case Constants.chains.polygonZkEvmMainnetChainId:
+                return Constants.networkNames.polygonZkEvm
+            case Constants.chains.polygonZkEvmCardonaChainId:
+                return Constants.networkNames.cardonaPolygonZkEvm
+            case Constants.chains.unichainMainnetChainId:
+                return Constants.networkNames.unichain
+            case Constants.chains.unichainSepoliaChainId:
+                return Constants.networkNames.sepoliaUnichain
+            case Constants.chains.katanaMainnetChainId:
+                return Constants.networkNames.katana
+            case Constants.chains.katanaBokutoChainId:
+                return Constants.networkNames.bokutoKatana
+            case Constants.chains.inkMainnetChainId:
+                return Constants.networkNames.ink
+            case Constants.chains.inkSepoliaChainId:
+                return Constants.networkNames.sepoliaInk
+            case Constants.chains.abstractMainnetChainId:
+                return Constants.networkNames.aabstract
+            case Constants.chains.abstractSepoliaChainId:
+                return Constants.networkNames.sepoliaAbstract
+            case Constants.chains.zkSyncMainnetChainId:
+                return Constants.networkNames.zkSync
+            case Constants.chains.zkSyncSepoliaChainId:
+                return Constants.networkNames.sepoliaZkSync
+            case Constants.chains.soneiumMainnetChainId:
+                return Constants.networkNames.soneium
+            case Constants.chains.soneiumMinatoChainId:
+                return Constants.networkNames.minatoSoneium
+            case Constants.chains.scrollMainnetChainId:
+                return Constants.networkNames.scroll
+            case Constants.chains.scrollSepoliaChainId:
+                return Constants.networkNames.sepoliaScroll
+            case Constants.chains.blastMainnetChainId:
+                return Constants.networkNames.blast
+            case Constants.chains.blastSepoliaChainId:
+                return Constants.networkNames.sepoliaBlast
             case Constants.chains.statusNetworkSepoliaChainId:
                 return Constants.networkNames.sepoliaStatus
             case Constants.chains.binanceSmartChainMainnetChainId:
@@ -768,6 +903,15 @@ QtObject {
             case Constants.chains.optimismChainId:
             case Constants.chains.baseChainId:
             case Constants.chains.lineaMainnetChainId:
+            case Constants.chains.polygonZkEvmMainnetChainId:
+            case Constants.chains.unichainMainnetChainId:
+            case Constants.chains.katanaMainnetChainId:
+            case Constants.chains.inkMainnetChainId:
+            case Constants.chains.abstractMainnetChainId:
+            case Constants.chains.zkSyncMainnetChainId:
+            case Constants.chains.soneiumMainnetChainId:
+            case Constants.chains.scrollMainnetChainId:
+            case Constants.chains.blastMainnetChainId:
             case Constants.chains.binanceSmartChainMainnetChainId:
                 return false
         }

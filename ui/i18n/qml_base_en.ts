@@ -18633,6 +18633,42 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <source>LineaScan</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Polygon zkEVM Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unichain Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Katana Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ink Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Abstract Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ZkSync Era Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Soneium Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ScrollScan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>BlastScan</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ViewProfileMenuItem</name>

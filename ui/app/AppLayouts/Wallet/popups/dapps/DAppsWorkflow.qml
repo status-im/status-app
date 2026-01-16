@@ -51,7 +51,7 @@ SQUtils.QObject {
         accountBalance          [var]    - account balance for a specific network
             formattedBalance    [string] - formatted balance e.g. "1234.56B"
             balance             [string] - balance e.g. "123456000000"
-            iconUrl             [string] - icon url e.g. "network/Network=Hermez"
+            iconUrl             [string] - icon url e.g. "network/hermez"
             chainColor          [string] - chain color e.g. "#FF0000"
     */
     property var accountsModel
@@ -60,7 +60,7 @@ SQUtils.QObject {
       Expected model structure:
         chainName      [string]          - chain long name. e.g. "Ethereum" or "Optimism"
         chainId        [int]             - chain unique identifier
-        iconUrl        [string]          - SVG icon name. e.g. "network/Network=Ethereum"
+        iconUrl        [string]          - SVG icon name. e.g. "network/ethereum"
         layer          [int]             - chain layer. e.g. 1 or 2
         isTest         [bool]            - true if the chain is a testnet
     */
@@ -69,7 +69,7 @@ SQUtils.QObject {
       ObjectModel containig session requests
         requestId     [string]                  - unique identifier for the request
         requestItem   [SessionRequestResolved]  - request object
-    */ 
+    */
     property SessionRequestsModel sessionRequestsModel
     /*
       ObjectModel containing dApps
@@ -304,7 +304,7 @@ SQUtils.QObject {
                     console.error("Missing chain selection")
                     return
                 }
-                
+
                 root.connectionAccepted(connectDappLoader.key, selectedChains, selectedAccount.address)
             }
 

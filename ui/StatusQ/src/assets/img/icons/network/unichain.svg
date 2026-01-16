@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+    <g clip-path="url(#unichain__a)">
+	<circle cx="12" cy="12" r="12" fill="#F50DB4"/>
+        <path fill="#fff" d="M20 11.848A7.847 7.847 0 0 1 12.152 4h-.304v7.848H4v.304A7.847 7.847 0 0 1 11.848 20h.304v-7.848H20z"/>
+    </g>
+    <defs>
+        <clipPath id="unichain__a">
+            <path fill="#fff" d="M0 0h24v24H0z"/>
+        </clipPath>
+    </defs>
+</svg>

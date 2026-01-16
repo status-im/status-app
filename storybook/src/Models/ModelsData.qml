@@ -72,12 +72,12 @@ QtObject {
     }
 
     readonly property QtObject networks: QtObject {
-        readonly property string arbitrum: "network/Network=Arbitrum"
-        readonly property string custom: "network/Network=Custom"
-        readonly property string ethereum: "network/Network=Ethereum"
-        readonly property string hermez: "network/Network=Hermez"
-        readonly property string optimism: "network/Network=Optimism"
-        readonly property string testnet: "network/Network=Testnet"
+        readonly property string arbitrum: "network/arbitrum"
+        readonly property string custom: "network/custom"
+        readonly property string ethereum: "network/ethereum"
+        readonly property string hermez: "network/hermez"
+        readonly property string optimism: "network/optimism"
+        readonly property string testnet: "network/testnet"
     }
 
     readonly property QtObject descriptions: QtObject {

@@ -77,7 +77,7 @@ QtObject {
         ListElement {
             chainId: 11155420
             chainName: "Optimism"
-            iconUrl: "network/Network=Optimism"
+            iconUrl: "network/optimism"
             amountOut: "3003845308235848343"
         }
     }

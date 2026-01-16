@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+    <g clip-path="url(#zksync__a)">
+        <path fill="#000" d="M24 0H0v24h24z"/>
+        <path fill="#fff" fill-rule="evenodd" d="m20 12-4.539-3.998v2.93l-4.506 2.931 4.506.002V16zM4 12l4.539 4v-2.9l4.475-2.934-4.473-.001V8z" clip-rule="evenodd"/>
+    </g>
+    <defs>
+        <clipPath id="zksync__a">
+	    <circle cx="12" cy="12" r="12"/>
+        </clipPath>
+    </defs>
+</svg>

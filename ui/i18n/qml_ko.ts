@@ -3997,117 +3997,117 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <name>Constants</name>
     <message>
         <source>Key pair starting with whitespace are not allowed</source>
-        <translation>공백으로 시작하는 키 쌍은 허용되지 않습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>Key pair must be at least %n character(s)</source>
-        <translation>
-            <numerusform>키 쌍은 최소 %n자여야 합니다</numerusform>
+        <translation type="unfinished">
+            <numerusform></numerusform>
         </translation>
     </message>
     <message>
         <source>Only letters and numbers allowed</source>
-        <translation>영문자와 숫자만 사용할 수 있습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, whitespaces and hyphens allowed</source>
-        <translation>영문자, 숫자, 밑줄, 마침표, 공백, 하이픈만 사용할 수 있습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Invalid characters (A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>유효하지 않은 문자입니다 (A-Z와 0-9, 단일 공백, 하이픈, 밑줄만 허용)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed</source>
-        <translation>문자, 숫자, 밑줄(_), 마침표(.), 쉼표(,), 공백, 하이픈(-)만 사용할 수 있습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Special characters are not allowed</source>
-        <translation>특수 문자는 사용할 수 없습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Only letters, numbers and ASCII characters allowed</source>
-        <translation>영문자, 숫자, 그리고 ASCII 문자만 허용됩니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Name is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>이 이름은 너무 쿨해요 (A-Z, 0-9, 공백 한 칸, 하이픈, 밑줄만 사용 가능)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Whole numbers only</source>
-        <translation>정수만 입력</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Positive real numbers only</source>
-        <translation>양의 실수만 입력하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>How to display the QR code on your other device</source>
-        <translation>다른 기기에서 QR 코드를 표시하는 방법</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>How to copy the encrypted key from your other device</source>
-        <translation>다른 기기에서 암호화된 키 복사하기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 20 accounts reached</source>
-        <translation>최대 20개 계정에 도달했습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove any account to add a new one.</source>
-        <translation>새 계정을 추가하려면 기존 계정을 제거하세요.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 5 key pairs reached</source>
-        <translation>키 페어 5개 한도에 도달했습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove key pair to add a new one.</source>
-        <translation>새 키를 추가하려면 기존 키 쌍을 제거하세요.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 3 watched addresses reached</source>
-        <translation>관찰 중인 주소는 최대 3개까지입니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove a watched address to add a new one.</source>
-        <translation>새 주소를 추가하려면 감시 중인 주소를 제거하세요.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 20 saved addresses reached</source>
-        <translation>저장된 주소 한도 20개에 도달했습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove a saved address to add a new one.</source>
-        <translation>새 주소를 추가하려면 저장된 주소를 제거하세요.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Username already taken :(</source>
-        <translation>이미 사용 중인 이름입니다 :(</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Username doesn’t belong to you :(</source>
-        <translation>소유한 사용자 이름이 아닙니다 :(</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continuing will connect this username with your chat key.</source>
-        <translation>계속하면 이 사용자 이름이 채팅 키와 연결됩니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>✓ Username available!</source>
-        <translation>✓ 사용자 이름을 사용할 수 있습니다!</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Username is already connected with your chat key and can be used inside Status.</source>
-        <translation>사용자 이름은 사용자의 채팅 키와 연결되며, 스테이터스에서 사용 가능합니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>This user name is owned by you and connected with your chat key. Continue to set `Show my ENS username in chats`.</source>
-        <translation>이 사용자 이름은 당신이 소유하고 있으며 채팅 키에 연결되어 있습니다. 계속해서 `Show my ENS username in chats`를 설정하세요.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
-        <translation>사용자 이름과 현재 키를 연결하는 트랜잭션이 필요합니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Temporarily unavailable, will be available in the next release.</source>
@@ -18601,6 +18601,42 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>LineaScan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Polygon zkEVM Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unichain Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Katana Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ink Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Abstract Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ZkSync Era Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Soneium Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ScrollScan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>BlastScan</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

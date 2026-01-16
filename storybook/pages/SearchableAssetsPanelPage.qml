@@ -17,15 +17,15 @@ Pane {
             balances: [
                 {
                     balanceAsString: "0,56",
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 },
                 {
                     balanceAsString: "0,22",
-                    iconUrl: "network/Network=Arbitrum"
+                    iconUrl: "network/arbitrum"
                 },
                 {
                     balanceAsString: "0,12",
-                    iconUrl: "network/Network=Optimism"
+                    iconUrl: "network/optimism"
                 }
             ],
 
@@ -41,15 +41,15 @@ Pane {
             balances: [
                 {
                     balanceAsString: "1,01",
-                    iconUrl: "network/Network=Optimism"
+                    iconUrl: "network/optimism"
                 },
                 {
                     balanceAsString: "0,47",
-                    iconUrl: "network/Network=Arbitrum"
+                    iconUrl: "network/arbitrum"
                 },
                 {
                     balanceAsString: "0,12",
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 }
             ],
 

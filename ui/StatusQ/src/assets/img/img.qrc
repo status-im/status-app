@@ -402,23 +402,41 @@
         <file>icons/linkPreviewThumbnails/tenor.svg</file>
         <file>icons/linkPreviewThumbnails/youtube.svg</file>
         <file>icons/mask/dummyLineGraph.svg</file>
-        <file>icons/network/Network=Arbitrum.svg</file>
-        <file>icons/network/Network=Arbitrum-test.svg</file>
-        <file>icons/network/Network=Base.svg</file>
-        <file>icons/network/Network=Base-test.svg</file>
-        <file>icons/network/Network=Custom.svg</file>
-        <file>icons/network/Network=Ethereum.svg</file>
-        <file>icons/network/Network=Ethereum-test.svg</file>
-        <file>icons/network/Network=Hermez.svg</file>
-        <file>icons/network/Network=Linea.svg</file>
-        <file>icons/network/Network=Linea-test.svg</file>
-        <file>icons/network/Network=Optimism.svg</file>
-        <file>icons/network/Network=Optimism-test.svg</file>
-        <file>icons/network/Network=Status.svg</file>
-        <file>icons/network/Network=Status-test.svg</file>
-        <file>icons/network/Network=bsc.svg</file>
-        <file>icons/network/Network=bsc-test.svg</file>
-        <file>icons/network/Network=Testnet.svg</file>
+        <file>icons/network/abstract.svg</file>
+        <file>icons/network/abstract-test.svg</file>
+        <file>icons/network/arbitrum.svg</file>
+        <file>icons/network/arbitrum-test.svg</file>
+        <file>icons/network/base.svg</file>
+        <file>icons/network/base-test.svg</file>
+        <file>icons/network/blast.svg</file>
+        <file>icons/network/blast-test.svg</file>
+        <file>icons/network/bsc.svg</file>
+        <file>icons/network/bsc-test.svg</file>
+        <file>icons/network/custom.svg</file>
+        <file>icons/network/ethereum.svg</file>
+        <file>icons/network/ethereum-test.svg</file>
+        <file>icons/network/hermez.svg</file>
+        <file>icons/network/ink.svg</file>
+        <file>icons/network/ink-test.svg</file>
+        <file>icons/network/katana.svg</file>
+        <file>icons/network/katana-test.svg</file>
+        <file>icons/network/linea.svg</file>
+        <file>icons/network/linea-test.svg</file>
+        <file>icons/network/optimism.svg</file>
+        <file>icons/network/optimism-test.svg</file>
+        <file>icons/network/polygon-zkevm.svg</file>
+        <file>icons/network/polygon-zkevm-test.svg</file>
+        <file>icons/network/scroll.svg</file>
+        <file>icons/network/scroll-test.svg</file>
+        <file>icons/network/soneium.svg</file>
+        <file>icons/network/soneium-test.svg</file>
+        <file>icons/network/status.svg</file>
+        <file>icons/network/status-test.svg</file>
+        <file>icons/network/testnet.svg</file>
+        <file>icons/network/unichain.svg</file>
+        <file>icons/network/unichain-test.svg</file>
+        <file>icons/network/zksync.svg</file>
+        <file>icons/network/zksync-test.svg</file>
         <file>icons/onboarding/chains.svg</file>
         <file>icons/profile/about.svg</file>
         <file>icons/profile/advanced.svg</file>

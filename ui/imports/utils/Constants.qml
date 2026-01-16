@@ -26,6 +26,24 @@ QtObject {
         readonly property int baseSepoliaChainId: 84532
         readonly property int lineaMainnetChainId: 59144
         readonly property int lineaSepoliaChainId: 59141
+        readonly property int polygonZkEvmMainnetChainId: 1101
+        readonly property int polygonZkEvmCardonaChainId: 2442
+        readonly property int unichainMainnetChainId: 130
+        readonly property int unichainSepoliaChainId: 1301
+        readonly property int katanaMainnetChainId: 747474
+        readonly property int katanaBokutoChainId: 737373
+        readonly property int inkMainnetChainId: 57073
+        readonly property int inkSepoliaChainId: 763373
+        readonly property int abstractMainnetChainId: 2741
+        readonly property int abstractSepoliaChainId: 11124
+        readonly property int zkSyncMainnetChainId: 324
+        readonly property int zkSyncSepoliaChainId: 300
+        readonly property int soneiumMainnetChainId: 1868
+        readonly property int soneiumMinatoChainId: 1946
+        readonly property int scrollMainnetChainId: 534352
+        readonly property int scrollSepoliaChainId: 534351
+        readonly property int blastMainnetChainId: 81457
+        readonly property int blastSepoliaChainId: 168587773
         readonly property int statusNetworkSepoliaChainId: 1660990954
         readonly property int binanceSmartChainMainnetChainId: 56
         readonly property int binanceSmartChainTestnetChainId: 97
@@ -750,6 +768,15 @@ QtObject {
         readonly property string optimism: "oeth"
         readonly property string base: "base"
         readonly property string linea: "linea"
+        readonly property string polygonZkEvm: "polygon-zkevm"
+        readonly property string unichain: "unichain"
+        readonly property string katana: "katana"
+        readonly property string ink: "ink"
+        readonly property string aabstract: "abstract"
+        readonly property string zkSync: "zksync"
+        readonly property string soneium: "soneium"
+        readonly property string scroll: "scroll"
+        readonly property string blast: "blast"
         readonly property string status: "status"
         readonly property string binanceSmartChain: "bsc"
     }
@@ -765,6 +792,24 @@ QtObject {
         readonly property string sepoliaBase: "Base Sepolia"
         readonly property string linea: "Linea"
         readonly property string sepoliaLinea: "Linea Sepolia"
+        readonly property string polygonZkEvm: "Polygon zkEVM"
+        readonly property string cardonaPolygonZkEvm: "Polygon zkEVM Cardona"
+        readonly property string unichain: "Unichain"
+        readonly property string sepoliaUnichain: "Unichain Sepolia"
+        readonly property string katana: "Katana"
+        readonly property string bokutoKatana: "Katana Bokuto"
+        readonly property string ink: "Ink"
+        readonly property string sepoliaInk: "Ink Sepolia"
+        readonly property string aabstract: "Abstract"
+        readonly property string sepoliaAbstract: "Abstract Sepolia"
+        readonly property string zkSync: "ZkSync"
+        readonly property string sepoliaZkSync: "ZkSync Sepolia"
+        readonly property string soneium: "Soneium"
+        readonly property string minatoSoneium: "Soneium Minato"
+        readonly property string scroll: "Scroll"
+        readonly property string sepoliaScroll: "Scroll Sepolia"
+        readonly property string blast: "Blast"
+        readonly property string sepoliaBlast: "Blast Sepolia"
         readonly property string status: "Status Network"
         readonly property string sepoliaStatus: "Status Network Sepolia"
         readonly property string binanceSmartChain: "BNB Smart Chain"
@@ -777,34 +822,61 @@ QtObject {
         readonly property string optimism: "https://optimistic.etherscan.io"
         readonly property string base: "https://basescan.org"
         readonly property string linea: "https://lineascan.build"
+        readonly property string polygonZkEvm: "https://www.oklink.com/polygon-zkevm"
+        readonly property string unichain: "https://unichain.blockscout.com"
+        readonly property string katana: "https://katanascan.com"
+        readonly property string ink: "https://explorer.inkonchain.com"
+        readonly property string aabstract: "https://abscan.org"
+        readonly property string zkSync: "https://explorer.zksync.io"
+        readonly property string soneium: "https://soneium.blockscout.com"
+        readonly property string scroll: "https://scrollscan.com"
+        readonly property string blast: "https://blastscan.io"
         readonly property string binanceSmartChain: "https://bscscan.com"
-        readonly property string sepoliaEtherscan: "https://sepolia.etherscan.io/"
-        readonly property string sepoliaArbiscan: "https://sepolia.arbiscan.io/"
-        readonly property string sepoliaOptimism: "https://sepolia-optimism.etherscan.io/"
-        readonly property string sepoliaBase: "https://sepolia.basescan.org/"
-        readonly property string sepoliaLinea: "https://sepolia.lineascan.build/"
-        readonly property string sepoliaStatus: "https://sepoliascan.status.network/"
-        readonly property string testnetBinanceSmartChain: "https://testnet.bscscan.com/"
+        readonly property string sepoliaEtherscan: "https://sepolia.etherscan.io"
+        readonly property string sepoliaArbiscan: "https://sepolia.arbiscan.io"
+        readonly property string sepoliaOptimism: "https://sepolia-optimism.etherscan.io"
+        readonly property string sepoliaBase: "https://sepolia.basescan.org"
+        readonly property string sepoliaLinea: "https://sepolia.lineascan.build"
+        readonly property string cardonaPolygonZkEvm: "https://www.oklink.com/polygon-zkevm-testnet"
+        readonly property string sepoliaUnichain: "https://unichain-sepolia.blockscout.com"
+        readonly property string bokutoKatana: "https://bokuto.katanascan.com"
+        readonly property string sepoliaInk: "https://explorer-sepolia.inkonchain.com"
+        readonly property string sepoliaAbstract: "https://sepolia.abscan.org"
+        readonly property string sepoliaZkSync: "https://sepolia.explorer.zksync.io"
+        readonly property string minatoSoneium: "https://soneium-minato.blockscout.com"
+        readonly property string sepoliaScroll: "https://sepolia.scrollscan.com"
+        readonly property string sepoliaBlast: "https://sepolia.blastscan.io"
+        readonly property string sepoliaStatus: "https://sepoliascan.status.network"
+        readonly property string testnetBinanceSmartChain: "https://testnet.bscscan.com"
         readonly property string addressPath: "address"
         readonly property string txPath: "tx"
     }
 
     readonly property QtObject openseaExplorerLinks: QtObject {
         readonly property string mainnetLink: "https://opensea.io"
-        readonly property string testnetLink: "https://testnets.opensea.io"
+        readonly property string testnetLink: "https://testnets.opensea.io" // not supported anymore
 
         readonly property string ethereum: "ethereum"
         readonly property string arbitrum: "arbitrum"
         readonly property string optimism: "optimism"
         readonly property string base: "base"
         readonly property string linea: "linea"
-        readonly property string binanceSmartChain: "binance-smart-chain"
-        readonly property string sepoliaEthereum: "sepolia"
-        readonly property string sepoliaArbitrum: "arbitrum-sepolia"
-        readonly property string sepoliaOptimism: "optimism-sepolia"
-        readonly property string sepoliaBase: "base-sepolia"
-        readonly property string sepoliaLinea: "linea-sepolia"
-        readonly property string sepoliaStatus: "status-sepolia"
+        readonly property string polygonZkEvm: "polygon-zkevm" //opensea does not support polygon zkEVM yet
+        readonly property string unichain: "unichain"
+        readonly property string katana: "katana" // opensea does not support katana yet
+        readonly property string ink: "ink" // opensea does not support ink yet
+        readonly property string aabstract: "abstract"
+        readonly property string zkSync: "zksync" // opensea does not support zkSync Era yet
+        readonly property string soneium: "soneium"
+        readonly property string scroll: "scroll" // opensea does not support scroll yet
+        readonly property string blast: "blast"
+        readonly property string binanceSmartChain: "binance-smart-chain" // testnet not supported
+        readonly property string sepoliaEthereum: "sepolia" // testnet not supported
+        readonly property string sepoliaArbitrum: "arbitrum-sepolia" // testnet not supported
+        readonly property string sepoliaOptimism: "optimism-sepolia" // testnet not supported
+        readonly property string sepoliaBase: "base-sepolia" // testnet not supported
+        readonly property string sepoliaLinea: "linea-sepolia" // testnet not supported
+        readonly property string sepoliaStatus: "status-sepolia" // testnet not supported
     }
 
     readonly property string api_request: "api-request"

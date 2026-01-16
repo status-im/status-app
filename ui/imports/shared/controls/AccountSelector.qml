@@ -32,7 +32,7 @@ import QtModelsToolkit
     accountBalance          [var]    - account balance for a specific network
         formattedBalance    [string] - formatted balance e.g. "1234.56B"
         balance             [string] - balance e.g. "123456000000"
-        iconUrl             [string] - icon url e.g. "network/Network=Hermez"
+        iconUrl             [string] - icon url e.g. "network/hermez"
         chainColor          [string] - chain color e.g. "#FF0000"
 **/
 
@@ -106,7 +106,7 @@ StatusComboBox {
         }
     }
 
-    delegate: WalletAccountListItem {  
+    delegate: WalletAccountListItem {
         id: delegateItem
 
         required property var model

@@ -34,7 +34,7 @@ SignTransactionModalBase {
 
     required property string networkShortName // e.g. "oeth"
     required property string networkName // e.g. "Optimism"
-    required property string networkIconPath // e.g. `Assets.svg("network/Network=Optimism")`
+    required property string networkIconPath // e.g. `Assets.svg("network/optimism")`
     required property string networkBlockExplorerUrl
     required property int networkChainId
 

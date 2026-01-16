@@ -34,7 +34,7 @@ SplitView {
             name: nameTextField.text
             balance: balanceSpinBox.value ? balanceSpinBox.value : ""
             image: Constants.tokenIcon("ETH")
-            networkIcon: "network/Network=Ethereum"
+            networkIcon: "network/ethereum"
 
             goDeeperIconVisible: goDeeperSwitch.checked
 

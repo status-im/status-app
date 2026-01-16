@@ -4026,119 +4026,119 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     <name>Constants</name>
     <message>
         <source>Key pair starting with whitespace are not allowed</source>
-        <translation>Pár klíčů začínající mezerou není povolen</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>Key pair must be at least %n character(s)</source>
-        <translation>
-            <numerusform>Pár klíčů musí mít alespoň %n znak</numerusform>
-            <numerusform>Pár klíčů musí mít alespoň %n znaky</numerusform>
-            <numerusform>Pár klíčů musí mít alespoň %n znaků</numerusform>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
     <message>
         <source>Only letters and numbers allowed</source>
-        <translation>Povoleny pouze písmena a čísla</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, whitespaces and hyphens allowed</source>
-        <translation>Povoleny pouze písmena, čísla, podtržítka, tečky, mezery a pomlčky</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Invalid characters (A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Neplatné znaky (pouze A-Z a 0-9, jedna mezera, pomlčky a podtržítka)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Only letters, numbers, underscores, periods, commas, whitespaces and hyphens allowed</source>
-        <translation>Povoleny pouze písmena, čísla, podtržítka, tečky, čárky, mezery a pomlčky</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Special characters are not allowed</source>
-        <translation>Speciální znaky nejsou povoleny</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Only letters, numbers and ASCII characters allowed</source>
-        <translation>Povoleny pouze písmena, čísla a ASCII znaky</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Name is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Jméno je příliš cool (použijte pouze A-Z a 0-9, jednu mezeru, pomlčky a podtržítka)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Whole numbers only</source>
-        <translation>Pouze celá čísla</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Positive real numbers only</source>
-        <translation>Pouze kladná reálná čísla</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>How to display the QR code on your other device</source>
-        <translation>Jak zobrazit QR kód na vašem druhém zařízení</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>How to copy the encrypted key from your other device</source>
-        <translation>Jak zkopírovat šifrovaný klíč z vašeho druhého zařízení</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 20 accounts reached</source>
-        <translation>Dosažen limit 20 účtů</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove any account to add a new one.</source>
-        <translation>Odstraňte libovolný účet pro přidání nového.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 5 key pairs reached</source>
-        <translation>Dosažen limit 5 párů klíčů</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove key pair to add a new one.</source>
-        <translation>Odstraňte pár klíčů pro přidání nového.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 3 watched addresses reached</source>
-        <translation>Dosažen limit 3 sledovaných adres</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove a watched address to add a new one.</source>
-        <translation>Odstraňte sledovanou adresu pro přidání nové.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Limit of 20 saved addresses reached</source>
-        <translation>Dosažen limit 20 uložených adres</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Remove a saved address to add a new one.</source>
-        <translation>Odstraňte uloženou adresu pro přidání nové.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Username already taken :(</source>
-        <translation>Uživatelské jméno je již obsazeno :(</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Username doesn’t belong to you :(</source>
-        <translation>Uživatelské jméno vám nepatří :(</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continuing will connect this username with your chat key.</source>
-        <translation>Pokračováním propojíte toto uživatelské jméno s vaším chatovacím klíčem.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>✓ Username available!</source>
-        <translation>✓ Uživatelské jméno dostupné!</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Username is already connected with your chat key and can be used inside Status.</source>
-        <translation>Uživatelské jméno je již propojeno s vaším chatovacím klíčem a lze jej použít ve Statusu.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>This user name is owned by you and connected with your chat key. Continue to set `Show my ENS username in chats`.</source>
-        <translation>Toto uživatelské jméno vlastníte a je propojeno s vaším chatovacím klíčem. Pokračujte nastavením `Zobrazit mé ENS uživatelské jméno v chatech`.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
-        <translation>Pokračování bude vyžadovat transakci pro propojení uživatelského jména s vaším aktuálním chatovacím klíčem.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Temporarily unavailable, will be available in the next release.</source>
@@ -18758,6 +18758,42 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>LineaScan</source>
         <translation>LineaScan</translation>
+    </message>
+    <message>
+        <source>Polygon zkEVM Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unichain Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Katana Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ink Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Abstract Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ZkSync Era Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Soneium Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ScrollScan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>BlastScan</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

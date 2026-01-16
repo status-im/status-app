@@ -4893,8 +4893,8 @@
       <source>Key pair must be at least %n character(s)</source>
       <comment>Constants</comment>
       <translation>
-        <numerusform>Key pair must be at least %n character</numerusform>
-        <numerusform>Key pair must be at least %n characters</numerusform>
+        <numerusform></numerusform>
+        <numerusform></numerusform>
       </translation>
     </message>
     <message>
@@ -22669,6 +22669,51 @@
       <source>LineaScan</source>
       <comment>Utils</comment>
       <translation>LineaScan</translation>
+    </message>
+    <message>
+      <source>Polygon zkEVM Explorer</source>
+      <comment>Utils</comment>
+      <translation>Polygon zkEVM Explorer</translation>
+    </message>
+    <message>
+      <source>Unichain Explorer</source>
+      <comment>Utils</comment>
+      <translation>Unichain Explorer</translation>
+    </message>
+    <message>
+      <source>Katana Explorer</source>
+      <comment>Utils</comment>
+      <translation>Katana Explorer</translation>
+    </message>
+    <message>
+      <source>Ink Explorer</source>
+      <comment>Utils</comment>
+      <translation>Ink Explorer</translation>
+    </message>
+    <message>
+      <source>Abstract Explorer</source>
+      <comment>Utils</comment>
+      <translation>Abstract Explorer</translation>
+    </message>
+    <message>
+      <source>ZkSync Era Explorer</source>
+      <comment>Utils</comment>
+      <translation>ZkSync Era Explorer</translation>
+    </message>
+    <message>
+      <source>Soneium Explorer</source>
+      <comment>Utils</comment>
+      <translation>Soneium Explorer</translation>
+    </message>
+    <message>
+      <source>ScrollScan</source>
+      <comment>Utils</comment>
+      <translation>ScrollScan</translation>
+    </message>
+    <message>
+      <source>BlastScan</source>
+      <comment>Utils</comment>
+      <translation>BlastScan</translation>
     </message>
   </context>
   <context>

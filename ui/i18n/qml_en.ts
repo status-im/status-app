@@ -137,9 +137,9 @@
     <name>Constants</name>
     <message numerus="yes">
         <source>Key pair must be at least %n character(s)</source>
-        <translation>
-            <numerusform>Key pair must be at least %n character</numerusform>
-            <numerusform>Key pair must be at least %n characters</numerusform>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
 </context>

@@ -26,11 +26,11 @@ SplitView {
         NetworkSelectItemDelegate {
             id: delegate
             title: "Ethereum"
-            iconUrl: Assets.svg("network/Network=Ethereum")
+            iconUrl: Assets.svg("network/ethereum")
             showIndicator: true
             multiSelection: true
             checkState: checkStateSelector.checkState
-            nextCheckState: checkState === Qt.Unchecked ? Qt.PartiallyChecked : 
+            nextCheckState: checkState === Qt.Unchecked ? Qt.PartiallyChecked :
                         checkState === Qt.PartiallyChecked ? Qt.Checked : Qt.Unchecked
 
             onCheckStateChanged: {

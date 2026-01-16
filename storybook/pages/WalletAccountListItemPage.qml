@@ -29,7 +29,7 @@ SplitView {
             accountBalance: hasAccountBalanceCheckBox.checked ? ({
                 formattedBalance: formattedAccountBalance.text,
                 balance: formattedAccountBalance.text,
-                iconUrl: "network/Network=Hermez",
+                iconUrl: "network/hermez",
                 chainColor: "#FF0000"
             }) : null
 
@@ -48,7 +48,7 @@ SplitView {
             }
         }
     }
-    
+
 
     Pane {
         id: pane

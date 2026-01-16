@@ -18,7 +18,7 @@ Item {
         NetworkSelectItemDelegate {
             anchors.centerIn: parent
             title: "Ethereum"
-            iconUrl: Assets.svg("network/Network=Ethereum")
+            iconUrl: Assets.svg("network/ethereum")
             onToggled: root.onToggledHandler()
         }
     }
@@ -68,11 +68,11 @@ Item {
 
         function test_icon() {
             verify(!!controlUnderTest)
-            compare(controlUnderTest.iconUrl, Assets.svg("network/Network=Ethereum"))
-            compare(findChild(controlUnderTest, "statusRoundImage").image.source, Assets.svg("network/Network=Ethereum"))
-            controlUnderTest.iconUrl = Assets.svg("network/Network=Polygon")
-            compare(controlUnderTest.iconUrl, Assets.svg("network/Network=Polygon"))
-            compare(findChild(controlUnderTest, "statusRoundImage").image.source, Assets.svg("network/Network=Polygon"))
+            compare(controlUnderTest.iconUrl, Assets.svg("network/ethereum"))
+            compare(findChild(controlUnderTest, "statusRoundImage").image.source, Assets.svg("network/ethereum"))
+            controlUnderTest.iconUrl = Assets.svg("network/polygon")
+            compare(controlUnderTest.iconUrl, Assets.svg("network/polygon"))
+            compare(findChild(controlUnderTest, "statusRoundImage").image.source, Assets.svg("network/polygon"))
         }
 
         function test_indicatorConfig() {
@@ -81,7 +81,7 @@ Item {
             verify(!findChild(controlUnderTest, "networkSelectionCheckbox_Ethereum"))
             compare(controlUnderTest.showIndicator, true)
             compare(controlUnderTest.multiSelection, false)
-            
+
             //changing to multiselect -> indicator switches to checkbox
             controlUnderTest.multiSelection = true
             waitForRendering(controlUnderTest)
@@ -105,7 +105,7 @@ Item {
             const image = findChild(controlUnderTest, "statusRoundImage")
             mouseClick(image)
             tryCompare(toggledSpy, "count", 2)
-            
+
             const radioButton = findChild(controlUnderTest, "networkSelectionRadioButton_Ethereum")
             mouseClick(radioButton)
             tryCompare(toggledSpy, "count", 3)
@@ -142,7 +142,7 @@ Item {
             mouseClick(controlUnderTest)
             compare(controlUnderTest.checkState, Qt.Checked)
             mouseClick(controlUnderTest)
-            compare(controlUnderTest.checkState, Qt.Unchecked)            
+            compare(controlUnderTest.checkState, Qt.Unchecked)
         }
 
         function test_manualCheckStateChanges() {
@@ -181,7 +181,7 @@ Item {
 
             controlUnderTest.multiSelection = true
             root.onToggledHandler = function() {
-                controlUnderTest.checkState = controlUnderTest.checkState === Qt.Unchecked ? Qt.PartiallyChecked : 
+                controlUnderTest.checkState = controlUnderTest.checkState === Qt.Unchecked ? Qt.PartiallyChecked :
                                                                             controlUnderTest.checkState === Qt.Checked ? Qt.Unchecked : Qt.Checked
             }
 
@@ -224,10 +224,10 @@ Item {
             compare(controlUnderTest.interactive, true)
             controlUnderTest.interactive = false
             compare(controlUnderTest.checkState, Qt.Unchecked)
-            
+
             mouseClick(controlUnderTest)
             compare(controlUnderTest.checkState, Qt.Unchecked)
-            
+
             let radioButton = findChild(controlUnderTest, "networkSelectionRadioButton_Ethereum")
             mouseClick(radioButton)
             compare(controlUnderTest.checkState, Qt.Unchecked)
@@ -251,7 +251,7 @@ Item {
             waitForRendering(controlUnderTest)
             waitForItemPolished(controlUnderTest)
             compare(controlUnderTest.sensor.containsMouse, true)
-            
+
             // manual selection works
             controlUnderTest.checkState = Qt.Checked
             compare(controlUnderTest.checkState, Qt.Checked)

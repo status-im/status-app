@@ -19,15 +19,15 @@ Pane {
             balances: [
                 {
                     balanceAsString: "0,56",
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 },
                 {
                     balanceAsString: "0,22",
-                    iconUrl: "network/Network=Arbitrum"
+                    iconUrl: "network/arbitrum"
                 },
                 {
                     balanceAsString: "0,12",
-                    iconUrl: "network/Network=Optimism"
+                    iconUrl: "network/optimism"
                 }
             ]
         },
@@ -43,15 +43,15 @@ Pane {
             balances: [
                 {
                     balanceAsString: "1,01",
-                    iconUrl: "network/Network=Optimism"
+                    iconUrl: "network/optimism"
                 },
                 {
                     balanceAsString: "0,47",
-                    iconUrl: "network/Network=Arbitrum"
+                    iconUrl: "network/arbitrum"
                 },
                 {
                     balanceAsString: "0,12",
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 }
             ]
         },
@@ -67,15 +67,15 @@ Pane {
             balances: [
                 {
                     balanceAsString: "45,12",
-                    iconUrl: "network/Network=Arbitrum"
+                    iconUrl: "network/arbitrum"
                 },
                 {
                     balanceAsString: "0,56",
-                    iconUrl: "network/Network=Optimism"
+                    iconUrl: "network/optimism"
                 },
                 {
                     balanceAsString: "0,12",
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 }
             ]
         }
@@ -93,7 +93,7 @@ Pane {
                     balance: 1,
                     icon: Constants.tokenIcon("CFI"),
                     chainId: 11155111,
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 }
             ]
         },
@@ -108,7 +108,7 @@ Pane {
                     balance: 1,
                     icon: Constants.tokenIcon("FUEL"),
                     chainId: 11155111,
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 },
                 {
                     key: "collection_1_key_2",
@@ -116,7 +116,7 @@ Pane {
                     balance: 1,
                     icon: Constants.tokenIcon("ENJ"),
                     chainId: 11155111,
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 },
                 {
                     key: "collection_1_key_3",
@@ -124,7 +124,7 @@ Pane {
                     balance: 1,
                     icon: Constants.tokenIcon("FUN"),
                     chainId: 11155111,
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 }
             ]
         },
@@ -139,7 +139,7 @@ Pane {
                     balance: 12,
                     icon: Constants.tokenIcon("CVC"),
                     chainId: 11155111,
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 },
                 {
                     key: "collection_2_key_2",
@@ -147,7 +147,7 @@ Pane {
                     balance: 1,
                     icon: Constants.tokenIcon("CVC"),
                     chainId: 11155111,
-                    iconUrl: "network/Network=Ethereum"
+                    iconUrl: "network/ethereum"
                 }
             ]
         },
@@ -156,7 +156,7 @@ Pane {
             icon: Constants.tokenIcon("ELF"),
             type: "other",
             chainId: 11155111,
-            iconUrl: "network/Network=Ethereum",
+            iconUrl: "network/ethereum",
             subitems: [
                 {
                     key: "collection_3_key_1",

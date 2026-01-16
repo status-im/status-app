@@ -21,7 +21,7 @@ StatusListView {
       Expected model structure:
         chainName      [string]          - chain long name. e.g. "Ethereum" or "Optimism"
         chainId        [int]             - chain unique identifier
-        iconUrl        [string]          - SVG icon name. e.g. "network/Network=Ethereum"
+        iconUrl        [string]          - SVG icon name. e.g. "network/ethereum"
         layer          [int]             - chain layer. e.g. 1 or 2
         isTest         [bool]            - true if the chain is a testnet
     **/
@@ -39,7 +39,7 @@ StatusListView {
     property var selection: []
 
     signal toggleNetwork(int chainId, int index)
-    
+
     objectName: "networkSelectorList"
     implicitWidth: 300
     implicitHeight: contentHeight
@@ -70,7 +70,7 @@ StatusListView {
             d.onToggled(checkState, model.chainId)
             root.toggleNetwork(model.chainId, index)
         }
-    
+
         Binding on checkState {
             when: root.multiSelection && d.allSelected && root.interactive
             value: Qt.PartiallyChecked
@@ -94,7 +94,7 @@ StatusListView {
 
         readonly property bool allSelected: root.selection.length === d.networksCount
 
-        function onToggled(initialState, chainId) {  
+        function onToggled(initialState, chainId) {
             let selection = root.selection
             if (initialState === Qt.Unchecked && initialState !== Qt.PartiallyChecked) {
                 if (!root.multiSelection)
