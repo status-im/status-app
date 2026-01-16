@@ -14407,6 +14407,27 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>QRCodeScanner</name>
+    <message>
+        <source>Enable access to your camera</source>
+        <translation>Habilitar acceso a tu cámara</translation>
+    </message>
+    <message>
+        <source>To scan a QR, Status needs
+access to your webcam</source>
+        <translation>Para escanear un QR, Status necesita
+acceso a tu cámara web</translation>
+    </message>
+    <message>
+        <source>Camera access denied. Please enable it in system settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ensure that the QR code is in focus to scan</source>
+        <translation>Asegúrate de que el código QR esté enfocado para escanear</translation>
+    </message>
+</context>
+<context>
     <name>QRCodeScannerDialog</name>
     <message>
         <source>Scan QR</source>
@@ -16621,27 +16642,6 @@ al cargar</translation>
     <message>
         <source>Very strong</source>
         <translation>Muy fuerte</translation>
-    </message>
-</context>
-<context>
-    <name>StatusQRCodeScanner</name>
-    <message>
-        <source>Enable access to your camera</source>
-        <translation>Habilitar acceso a tu cámara</translation>
-    </message>
-    <message>
-        <source>To scan a QR, Status needs
-access to your webcam</source>
-        <translation>Para escanear un QR, Status necesita
-acceso a tu cámara web</translation>
-    </message>
-    <message>
-        <source>Ensure that the QR code is in focus to scan</source>
-        <translation>Asegúrate de que el código QR esté enfocado para escanear</translation>
-    </message>
-    <message>
-        <source>Camera access denied. Please enable it in system settings.</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

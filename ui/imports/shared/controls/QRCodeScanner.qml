@@ -151,7 +151,15 @@ Column {
         wrapMode: Text.WordWrap
         color: Theme.palette.dangerColor1
         horizontalAlignment: Text.AlignHCenter
-        text: d.errorMessage || cameraPermission.status === Qt.Denied ? qsTr("Camera access denied. Please enable it in system settings.") : ""
+        text: {
+            if (!!d.errorMessage) {
+                return d.errorMessage
+            }
+            if (cameraPermission.status === Qt.Denied) {
+                return qsTr("Camera access denied. Please enable it in system settings.")
+            }
+            return ""
+        }
     }
 
     StatusBaseText {

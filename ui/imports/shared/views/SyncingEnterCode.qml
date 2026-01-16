@@ -65,7 +65,7 @@ ColumnLayout {
         // StackLayout doesn't support alignment, so we create an `Item` wrappers
 
         Item {
-            StatusQRCodeScanner {
+            QRCodeScanner {
                 id: syncQr
                 anchors {
                     left: parent.left

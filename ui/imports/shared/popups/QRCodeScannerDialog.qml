@@ -40,7 +40,7 @@ StatusDialog {
     Component {
         id: cameraComponent
 
-        StatusQRCodeScanner {
+        QRCodeScanner {
             id: syncQr
             
             Layout.fillWidth: true

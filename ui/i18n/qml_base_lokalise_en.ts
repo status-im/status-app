@@ -17522,6 +17522,29 @@
     </message>
   </context>
   <context>
+    <name>QRCodeScanner</name>
+    <message>
+      <source>Enable access to your camera</source>
+      <comment>QRCodeScanner</comment>
+      <translation>Enable access to your camera</translation>
+    </message>
+    <message>
+      <source>To scan a QR, Status needs&#xA;access to your webcam</source>
+      <comment>QRCodeScanner</comment>
+      <translation>To scan a QR, Status needs&#xA;access to your webcam</translation>
+    </message>
+    <message>
+      <source>Camera access denied. Please enable it in system settings.</source>
+      <comment>QRCodeScanner</comment>
+      <translation>Camera access denied. Please enable it in system settings.</translation>
+    </message>
+    <message>
+      <source>Ensure that the QR code is in focus to scan</source>
+      <comment>QRCodeScanner</comment>
+      <translation>Ensure that the QR code is in focus to scan</translation>
+    </message>
+  </context>
+  <context>
     <name>QRCodeScannerDialog</name>
     <message>
       <source>Scan QR</source>
@@ -20194,29 +20217,6 @@
       <source>Very strong</source>
       <comment>StatusPasswordStrengthIndicator</comment>
       <translation>Very strong</translation>
-    </message>
-  </context>
-  <context>
-    <name>StatusQRCodeScanner</name>
-    <message>
-      <source>Enable access to your camera</source>
-      <comment>StatusQRCodeScanner</comment>
-      <translation>Enable access to your camera</translation>
-    </message>
-    <message>
-      <source>To scan a QR, Status needs&#xA;access to your webcam</source>
-      <comment>StatusQRCodeScanner</comment>
-      <translation>To scan a QR, Status needs&#xA;access to your webcam</translation>
-    </message>
-    <message>
-      <source>Ensure that the QR code is in focus to scan</source>
-      <comment>StatusQRCodeScanner</comment>
-      <translation>Ensure that the QR code is in focus to scan</translation>
-    </message>
-    <message>
-      <source>Camera access denied. Please enable it in system settings.</source>
-      <comment>StatusQRCodeScanner</comment>
-      <translation>Camera access denied. Please enable it in system settings.</translation>
     </message>
   </context>
   <context>

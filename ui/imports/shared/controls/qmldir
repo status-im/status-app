@@ -38,7 +38,7 @@ ShapeRectangle 1.0 ShapeRectangle.qml
 SlippageSelector 1.0 SlippageSelector.qml
 SocialLinkPreview 1.0 SocialLinkPreview.qml
 StatusSyncCodeInput 1.0 StatusSyncCodeInput.qml
-StatusQRCodeScanner 1.0 StatusQRCodeScanner.qml
+QRCodeScanner 1.0 QRCodeScanner.qml
 StatusSyncingInstructions 1.0 StatusSyncingInstructions.qml
 StyledTextEdit 1.0 StyledTextEdit.qml
 StyledTextEditWithLoadingState 1.0 StyledTextEditWithLoadingState.qml
