@@ -163,6 +163,9 @@ QtObject {
     /** property to store the params to be updated in the send modal until it is launched **/
     property var simpleSendParams
 
+    /** input property to indicate if buy action is enabled **/
+    property bool buyEnabled
+
     /** signal to request launch of buy crypto modal **/
     signal launchBuyFlowRequested(string accountAddress, int chainId, string groupKey)
 
@@ -482,6 +485,7 @@ QtObject {
             marketDataNotAvailable: handler.marketDataNotAvailable
 
             getTokenByKeyOrGroupKeyFromAllTokens: WalletStores.RootStore.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens
+            buyEnabled: root.buyEnabled
 
             onOpened: {
                 if(isValidParameter(root.simpleSendParams.interactive)) {

@@ -34,6 +34,9 @@ StatusDialog {
     required property SwapModalAdaptor swapAdaptor
     required property int loginType
 
+    /** input property to indicate if buy action is enabled **/
+    property bool buyEnabled
+
     signal addMetricsEvent(string subEvent)
 
     objectName: "swapModal"
@@ -442,7 +445,7 @@ StatusDialog {
                 Layout.topMargin: Theme.smallPadding
                 text: root.swapAdaptor.errorMessage
                 buttonText: root.swapAdaptor.isTokenBalanceInsufficient ? qsTr("Add assets") : qsTr("Add %1").arg(d.nativeTokenSymbol)
-                buttonVisible: visible && (root.swapAdaptor.isTokenBalanceInsufficient || root.swapAdaptor.isEthBalanceInsufficient)
+                buttonVisible: visible && (root.swapAdaptor.isTokenBalanceInsufficient || root.swapAdaptor.isEthBalanceInsufficient) && root.buyEnabled
                 onButtonClicked: {
                     // value dont update correctly if not done from here
                     d.buyFormData.selectedWalletAddress = root.swapInputParamsForm.selectedAccountAddress

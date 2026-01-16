@@ -107,6 +107,7 @@ QtObject {
         stickersNetworkId: root.rootChatStore.appNetworkId
 
         simpleSendEnabled: root.featureFlagsStore.simpleSendEnabled
+        buyEnabled: root.featureFlagsStore.buyEnabled
 
         // for simple send
         walletAccountsModel: root.walletRootStore.accounts
