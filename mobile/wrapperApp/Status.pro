@@ -67,6 +67,7 @@ ios {
     # --- iOS frameworks required by keychain_apple.mm ---
     LIBS += -framework LocalAuthentication \
             -framework Security \
+            -framework CoreMotion \
             -framework UIKit \
             -framework Foundation
 }

@@ -224,10 +224,16 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         src/keychain_apple.mm
     )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+    find_library(CoreMotion CoreMotion)
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/keychain_apple.mm
     )
+    # ios_utils.mm uses CMMotionManager (CoreMotion.framework). StatusQ is often linked as a
+    # static library (libStatusQ.a), so this must be PUBLIC to propagate to the final app link.
+    if (CoreMotion)
+        target_link_libraries(StatusQ PUBLIC ${CoreMotion})
+    endif()
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE
         src/keychain_android.cpp

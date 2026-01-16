@@ -27,6 +27,7 @@ Window {
     id: applicationWindow
 
     property bool appIsReady: false
+    property double _lastShakeShareMs: 0
 
     readonly property AppStores.FeatureFlagsStore featureFlagsStore: AppStores.FeatureFlagsStore {
         readonly property var featureFlags: typeof featureFlagsRootContextProperty !== undefined ? featureFlagsRootContextProperty : null
@@ -296,6 +297,52 @@ Window {
         function onQuit(spontaneous) {
             if (spontaneous)
                 Qt.exit(0)
+        }
+
+        function onShakeDetected() {
+            try {
+                SystemUtils.debugLog("[iOS Shake] QML onShakeDetected fired")
+
+                if (Qt.platform.os !== "ios") {
+                    SystemUtils.debugLog("[iOS Shake] not ios, ignoring: " + Qt.platform.os)
+                    return
+                }
+
+                const nowMs = Date.now()
+                if (nowMs - applicationWindow._lastShakeShareMs < 3000) {
+                    SystemUtils.debugLog("[iOS Shake] cooldown active")
+                    return
+                }
+                applicationWindow._lastShakeShareMs = nowMs
+
+                if (typeof globalUtils === "undefined" || !globalUtils) {
+                    SystemUtils.debugLog("[iOS Shake] globalUtils not available")
+                    return
+                }
+
+                const json = globalUtils.collectLogFilesJson()
+                SystemUtils.debugLog("[iOS Shake] collectLogFilesJson len: " + (json ? json.length : 0))
+
+                let paths = []
+                try {
+                    paths = JSON.parse(json)
+                } catch (e) {
+                    SystemUtils.debugLog("[iOS Shake] JSON.parse failed: " + e)
+                    return
+                }
+                if (!paths || paths.length === 0) {
+                    SystemUtils.debugLog("[iOS Shake] no log paths found")
+                    return
+                }
+
+                SystemUtils.debugLog("[iOS Share] requesting share for " + paths.length + " files. First: " + paths[0])
+
+                // Prefer the QStringList overload to avoid QVariantList conversion quirks on iOS.
+                // Also keep this inside a try/catch (callLater would hide TypeErrors).
+                SystemUtils.iosSharePaths(paths)
+            } catch (e) {
+                SystemUtils.debugLog("[iOS Shake] handler threw: " + e)
+            }
         }
     }
 
