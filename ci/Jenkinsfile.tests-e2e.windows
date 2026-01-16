@@ -306,7 +306,7 @@ def getDefaultTestScopeFlag() {
   }
 }
 
-def getTestStageTimeout() { params.TEST_SCOPE_FLAG == '-m=critical' ? 30 : 120 }
+def getTestStageTimeout() { params.TEST_SCOPE_FLAG == '-m=critical' ? 40 : 120 }
 
 def getAgentLabel() {
   def baseLabel = 'windows && x86_64 && qt-6.9.2 && windows-e2e'
