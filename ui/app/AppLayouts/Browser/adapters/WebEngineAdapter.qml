@@ -4,11 +4,14 @@ import QtWebEngine
 import StatusQ.Core.Theme
 
 import AppLayouts.Browser.views
+import AppLayouts.Browser.provider.qml
 
 AbstractWebView {
     id: root
 
     property bool enableJsLogs: false
+
+    property var profile: ProfileManager.getProfile(root.profileParams)
 
     // Expose BrowserWebEngineView properties
     property alias url: webView.url
@@ -112,6 +115,21 @@ AbstractWebView {
 
         onWindowCloseRequested: {
             root.devToolsEnabled = false
+        }
+    }
+
+    Connections {
+        target: root.profile
+        function onDownloadRequested(download) {
+            root.downloadRequested(download)
+        }
+    }
+
+    Connections {
+        // This connection is needed because changing profileParams.offTheRecord doesn't trigger the root.profile update
+        target: root.profileParams
+        function onOffTheRecordChanged() {
+            root.profile = ProfileManager.getProfile(root.profileParams)
         }
     }
 }

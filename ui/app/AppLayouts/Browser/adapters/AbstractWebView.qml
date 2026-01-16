@@ -4,8 +4,10 @@ Item {
     id: root
 
     required property var webChannel
-    property var profile: null
+    required property ProfileParams profileParams
     property bool devToolsEnabled: false
+
+    readonly property bool offTheRecord: profileParams.offTheRecord
 
     // === State Properties ===
     property url url: ""
@@ -51,6 +53,7 @@ Item {
 
     signal linkHovered(string hoveredUrl)
     signal windowCloseRequested()
+    signal downloadRequested(var download)
 
     // Signals to be handled at Layout level
     // newWindowRequested passes ready-to-use parameters for tab creation:
