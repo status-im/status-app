@@ -192,6 +192,9 @@ StatusDialog {
     /** Input function to resolve Ens Name **/
     required property var fnResolveENS
 
+    /** input property to indicate if buy action is enabled **/
+    property bool buyEnabled
+
     /** Output function to set resolved ens name values **/
     function ensNameResolved(resolvedPubKey, resolvedAddress, uuid) {
         recipientsPanel.ensNameResolved(resolvedPubKey, resolvedAddress, uuid)
@@ -805,6 +808,9 @@ StatusDialog {
         RouterErrorTag {
             errorTitle: qsTr("Insufficient funds for send transaction")
             buttonText: {
+                if (!root.buyEnabled) {
+                    return ""
+                }
                 if (d.selectedCryptoTokenSymbol === d.nativeTokenSymbol) {
                     switch (d.selectedCryptoTokenSymbol) {
                         case Constants.ethToken:
@@ -822,7 +828,18 @@ StatusDialog {
         RouterErrorTag {
             errorTitle: root.routerError
             errorDetails: !d.errNotEnoughEth && !d.errNotEnoughToken? root.routerErrorDetails: ""
-            buttonText: d.errNotEnoughToken? qsTr("Add assets") : d.errNotEnoughEth? qsTr("Add %1").arg(d.nativeTokenSymbol) : ""
+            buttonText: {
+                if (!root.buyEnabled) {
+                    return ""
+                }
+                if (d.errNotEnoughToken) {
+                    return qsTr("Add assets")
+                }
+                if (d.errNotEnoughEth) {
+                    return qsTr("Add %1").arg(d.nativeTokenSymbol)
+                }
+                return ""
+            }
             expandable: !!errorDetails &&
                         !(!root.routerErrorCode &&
                           !!root.routerError)
