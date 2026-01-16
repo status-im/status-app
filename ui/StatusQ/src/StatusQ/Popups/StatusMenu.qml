@@ -70,7 +70,16 @@ Menu {
     closePolicy: Popup.CloseOnPressOutside | Popup.CloseOnEscape
     verticalPadding: Theme.halfPadding
     horizontalPadding: 0
-    margins: Theme.padding
+
+    QtObject {
+        id: d
+        readonly property var window: root.contentItem.Window.window
+    }
+
+    leftMargin: Theme.padding + (d.window?.SafeArea.margins.left ?? 0)
+    rightMargin: Theme.padding + (d.window?.SafeArea.margins.right ?? 0)
+    topMargin: Theme.padding + (d.window?.SafeArea.margins.top ?? 0)
+    bottomMargin: Theme.padding + (d.window?.SafeArea.margins.bottom ?? 0)
 
     onOpened: {
         if (typeof openHandler === "function") {

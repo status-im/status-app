@@ -78,6 +78,14 @@
         <source>Decline and block</source>
         <translation>Rechazar y bloquear</translation>
     </message>
+    <message>
+        <source>Decline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accept</source>
+        <translation type="unfinished">Aceptar</translation>
+    </message>
 </context>
 <context>
     <name>AccountAddressSelection</name>

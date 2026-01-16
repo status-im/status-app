@@ -95,6 +95,16 @@
       <comment>AcceptRejectOptionsButtonsPanel</comment>
       <translation>Decline and block</translation>
     </message>
+    <message>
+      <source>Decline</source>
+      <comment>AcceptRejectOptionsButtonsPanel</comment>
+      <translation>Decline</translation>
+    </message>
+    <message>
+      <source>Accept</source>
+      <comment>AcceptRejectOptionsButtonsPanel</comment>
+      <translation>Accept</translation>
+    </message>
   </context>
   <context>
     <name>AccountAddressSelection</name>

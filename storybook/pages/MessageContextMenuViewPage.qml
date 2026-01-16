@@ -24,12 +24,12 @@ SplitView {
         Rectangle {
             SplitView.fillWidth: true
             SplitView.fillHeight: true
-            color: Theme.palette.statusAppLayout.rightPanelBackgroundColor
+            color: Theme.palette.background
 
             Button {
                 anchors.centerIn: parent
                 text: "Reopen"
-                onClicked: messageContextMenuView.open()
+                onClicked: messageContextMenuView.popup()
             }
 
             MessageContextMenuView {
@@ -39,6 +39,7 @@ SplitView {
                 closePolicy: Popup.NoAutoClose
 
                 messageId: "Oxdeadbeef"
+                messageSenderId: "foobar"
                 emojiModel: SortFilterProxyModel {
                     sourceModel: StatusQUtils.Emoji.emojiModel
                 }
@@ -54,11 +55,12 @@ SplitView {
                 onUnpinMessage: logs.logEvent(`onUnpinMessage: ${messageContextMenuView.messageId}`)
                 onPinnedMessagesLimitReached: logs.logEvent(`onPinnedMessagesLimitReached: ${messageContextMenuView.messageId}`)
                 onMarkMessageAsUnread: logs.logEvent(`onMarkMessageAsUnread: ${messageContextMenuView.messageId}`)
-                onToggleReaction: (emoji) => logs.logEvent("onToggleReaction", ["emoji"], [emoji])
+                onToggleReaction: (hexcode) => logs.logEvent("onToggleReaction", ["hexcode"], [hexcode])
                 onDeleteMessage: logs.logEvent(`onDeleteMessage: ${messageContextMenuView.messageId}`)
                 onEditClicked: logs.logEvent(`onEditClicked: ${messageContextMenuView.messageId}`)
                 onShowReplyArea: (senderId) => logs.logEvent("onShowReplyArea", ["senderId"], [senderId])
                 onCopyToClipboard: (text) => logs.logEvent("onCopyToClipboard", ["text"], [text])
+                onOpenEmojiPopup: logs.logEvent("onOpenEmojiPopup")
             }
         }
     }
@@ -100,3 +102,4 @@ SplitView {
 }
 
 // category: Views
+// status: good

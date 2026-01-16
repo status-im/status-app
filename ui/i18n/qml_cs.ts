@@ -78,6 +78,14 @@
         <source>Decline and block</source>
         <translation>Zamítnout a blokovat</translation>
     </message>
+    <message>
+        <source>Decline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accept</source>
+        <translation type="unfinished">Přijmout</translation>
+    </message>
 </context>
 <context>
     <name>AccountAddressSelection</name>

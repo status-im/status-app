@@ -9,8 +9,6 @@ import StatusQ.Components
 import utils
 import shared.controls.chat
 
-import SortFilterProxyModel
-
 StatusMenu {
     id: root
 
