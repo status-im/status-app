@@ -6,6 +6,7 @@ Item {
     required property var webChannel
     required property ProfileParams profileParams
     property bool devToolsEnabled: false
+    property bool isDownloadView: false
 
     readonly property bool offTheRecord: profileParams.offTheRecord
 
