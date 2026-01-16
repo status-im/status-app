@@ -148,7 +148,6 @@ StatusSectionLayout {
         function determineRealURL(url) {
             return root.browserRootStore.determineRealURL(url)
         }
-
         onCurrentWebViewChanged: {
             findBar.reset();
             browserHeader.addressBar.text = root.browserRootStore.obtainAddress(currentWebView.url)
@@ -614,7 +613,18 @@ StatusSectionLayout {
         FavoritesBar {
             bookmarkModel: root.bookmarksStore.bookmarksModel
             favoritesMenu: favoriteMenu
-            onSetAsCurrentWebUrl: (url) => _internal.currentWebView.url = _internal.determineRealURL(url)
+            onSetAsCurrentWebUrl: (url) => {
+                if (!_internal.currentWebView) {
+                    console.error("[Browser] currentWebView is null, cannot set URL")
+                    return
+                }
+                const newUrl = _internal.determineRealURL(url)
+                Qt.callLater(function() {
+                    if (_internal.currentWebView) {
+                        _internal.currentWebView.url = newUrl
+                    }
+                })
+            }
             onOpenInNewTab: (url) => root.openUrlInNewTab(url)
             onAddFavModalRequested: {
                 Global.openPopup(addFavoriteModal, {toolbarMode: true,
@@ -714,7 +724,7 @@ StatusSectionLayout {
         target: _internal.currentWebView
         function onUrlChanged() {
             browserHeader.addressBar.text = root.browserRootStore.obtainAddress(_internal.currentWebView.url)
-            
+
             // Update ConnectorBridge with current dApp metadata
             if (_internal.currentWebView && _internal.currentWebView.url) {
                 connectorBridge.connectorManager.updateDAppUrl(
