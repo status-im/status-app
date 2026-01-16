@@ -668,6 +668,32 @@ StatusSectionLayout {
     }
 
     Component {
+        id: favoritesBar
+        FavoritesBar {
+            bookmarkModel: root.bookmarksStore.bookmarksModel
+            favoritesMenu: favoriteMenu
+            onSetAsCurrentWebUrl: (url) => {
+                if (!_internal.currentWebView) {
+                    console.error("[Browser] currentWebView is null, cannot set URL")
+                    return
+                }
+                const newUrl = _internal.determineRealURL(url)
+                Qt.callLater(function() {
+                    if (_internal.currentWebView) {
+                        _internal.currentWebView.url = newUrl
+                    }
+                })
+            }
+            onOpenInNewTab: (url) => root.openUrlInNewTab(url)
+            onAddFavModalRequested: {
+                Global.openPopup(addFavoriteModal, {toolbarMode: true,
+                                     ogUrl: browserHeader.currentFavorite ? browserHeader.currentFavorite.url : _internal.currentWebView.url,
+                                     ogName: browserHeader.currentFavorite ? browserHeader.currentFavorite.name : _internal.currentWebView.title})
+            }
+        }
+    }
+
+    Component {
         id: downloadView
         DownloadView {
             downloadsModel: root.downloadsStore.downloadModel
@@ -750,6 +776,36 @@ StatusSectionLayout {
             }
             onAddNewDownloadTab: _internal.addNewDownloadTab()
             onClose: root.showFooter = false
+        }
+    }
+
+    Connections {
+        target: _internal.currentWebView
+        function onUrlChanged() {
+            browserHeader.addressBar.text = root.browserRootStore.obtainAddress(_internal.currentWebView.url)
+
+            // Update ConnectorBridge with current dApp metadata
+            if (_internal.currentWebView && _internal.currentWebView.url) {
+                connectorBridge.connectorManager.updateDAppUrl(
+                            _internal.currentWebView.url,
+                            _internal.currentWebView.title,
+                            _internal.currentWebView.icon
+                            )
+            }
+        }
+    }
+
+    Connections {
+        target: root.bookmarksStore.bookmarksModel
+        function onModelChanged() {
+            browserHeader.currentFavorite = Qt.binding(function () {return root.bookmarksStore.getCurrentFavorite(_internal.currentWebView.url)})
+        }
+    }
+
+    Connections {
+        target: typeof browserSection !== "undefined" ? browserSection : null
+        function onOpenUrl(url: string) {
+            root.openUrlInNewTab(url);
         }
     }
 }
