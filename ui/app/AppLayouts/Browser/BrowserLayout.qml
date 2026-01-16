@@ -290,14 +290,10 @@ StatusSectionLayout {
             function createEmptyTab(profileParams, createAsStartPage = false, focusOnNewTab = true, url = undefined) {
                 focusOnNewTab = focusOnNewTab && !createAsStartPage
 
-                var container = webViewContainerComponent.createObject(webStackView, {
+                var webview = webEngineAdapterComponent.createObject(webStackView, {
                     profileParams: profileParams,
-                    webEngineAdapterComponent: webEngineAdapterComponent,
-                    isDownloadView: false,
-                    downloadViewComponent: downloadViewComponent,
-                    emptyPageComponent: emptyPageComponent
+                    isDownloadView: false
                 })
-                var webview = container.webEngineAdapter
 
                 tabs.createEmptyTab(createAsStartPage, focusOnNewTab, webview)
 
@@ -313,14 +309,10 @@ StatusSectionLayout {
             }
 
             function createDownloadTab(profileParams) {
-                var container = webViewContainerComponent.createObject(webStackView, {
+                var webview = webEngineAdapterComponent.createObject(webStackView, {
                     profileParams: profileParams,
-                    webEngineAdapterComponent: webEngineAdapterComponent,
-                    isDownloadView: true,
-                    downloadViewComponent: downloadViewComponent,
-                    emptyPageComponent: emptyPageComponent
+                    isDownloadView: true
                 })
-                var webview = container.webEngineAdapter
                 tabs.createDownloadTab()
                 return webview;
             }
@@ -330,7 +322,7 @@ StatusSectionLayout {
             }
 
             function getWebView(index) { // -> WebEngineView/WebView
-                return webStackView.children[index].webEngineAdapter
+                return webStackView.children[index]
             }
 
             function removeView(index) {
@@ -340,8 +332,21 @@ StatusSectionLayout {
                 tabs.removeTab(index)
                 var view = getWebView(index)
                 view.stop()
-                webStackView.children[index].destroy()
+                view.destroy()
             }
+        }
+
+        // Overlay for DownloadView and EmptyWebPage
+        Loader {
+            id: overlayLoader
+            anchors.fill: parent
+            z: 53
+            
+            readonly property bool showDownloadView: _internal.currentWebView?.isDownloadView ?? false
+            readonly property bool showEmptyPage: !showDownloadView && (!_internal.currentWebView?.url?.toString())
+            
+            active: showDownloadView || showEmptyPage
+            sourceComponent: showDownloadView ? downloadViewComponent : emptyPageComponent
         }
 
         // Non UI component
@@ -437,13 +442,6 @@ StatusSectionLayout {
                 if (index !== -1) { root.bookmarksStore.deleteBookmark(Constants.newBookmark) }
                 root.bookmarksStore.addBookmark(Constants.newBookmark, qsTr("Add Favourite"))
             }
-        }
-    }
-
-    Component {
-        id: webViewContainerComponent
-        WebViewContainer {
-            // Properties will be passed via createObject
         }
     }
 
