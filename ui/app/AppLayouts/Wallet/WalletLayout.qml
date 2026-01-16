@@ -245,6 +245,7 @@ Item {
             networksStore: root.networksStore
 
             swapEnabled: root.swapEnabled
+            buyEnabled: root.buyEnabled
             dAppsEnabled: root.dAppsEnabled
             dAppsVisible: root.dAppsVisible
 

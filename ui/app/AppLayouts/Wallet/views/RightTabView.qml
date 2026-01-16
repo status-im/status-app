@@ -49,6 +49,7 @@ RightTabBaseView {
     required property SharedStores.NetworksStore networksStore
 
     property bool swapEnabled
+    property bool buyEnabled
     property bool dAppsEnabled
     property bool dAppsVisible
     property var dAppsModel
@@ -202,7 +203,7 @@ RightTabBaseView {
 
                 onBuyClicked: root.launchBuyCryptoModal()
                 onReceiveClicked: root.launchShareAddressModal()
-                buyEnabled: walletSettings.buyBannerEnabled
+                buyEnabled: walletSettings.buyBannerEnabled && root.buyEnabled
                 receiveEnabled: walletSettings.receiveBannerEnabled
                 onCloseBuy: walletSettings.buyBannerEnabled = false
                 onCloseReceive: walletSettings.receiveBannerEnabled = false
