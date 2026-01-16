@@ -76,7 +76,7 @@ Item {
                     text: qsTr("Open QR Scanner")
                     visible: parent.hovered
                     orientation: StatusToolTip.Orientation.Bottom
-                    y: parent.height + 12
+                    y: parent.height + Theme.padding
                 }
             }
 
