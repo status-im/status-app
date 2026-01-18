@@ -76,6 +76,38 @@ const BUILD_ETH_RPC_PROXY_USER = getEnv(BUILD_TIME_PREFIX & BASE_NAME_ETH_RPC_PR
 const BUILD_ETH_RPC_PROXY_PASSWORD = getEnv(BUILD_TIME_PREFIX & BASE_NAME_ETH_RPC_PROXY_PASSWORD)
 const BUILD_ETH_RPC_PROXY_URL = getEnv(BUILD_TIME_PREFIX & BASE_NAME_ETH_RPC_PROXY_URL)
 
+################################################################################
+# Build-time credential diagnostics
+# Uses compiler warnings to report whether proxy credentials were set.
+# Missing credentials will cause 401 Unauthorized errors at runtime.
+# Warnings bypass HANDLE_OUTPUT suppression in mobile builds.
+################################################################################
+
+# Helper to generate masked credential status at compile time
+func credentialStatus(name: string, value: string): string =
+  if value.len == 0:
+    name & ": <NOT SET>"
+  elif value.len <= 4:
+    name & ": ****"
+  else:
+    name & ": " & value[0..1] & "****" & value[^2..^1]
+
+# Always emit credential status as hints (visible even with V=0)
+{.hint: "=== Build Credentials Diagnostic ===" .}
+{.hint: credentialStatus("MARKET_DATA_PROXY_USER", BUILD_MARKET_DATA_PROXY_USER) .}
+{.hint: credentialStatus("MARKET_DATA_PROXY_PASSWORD", BUILD_MARKET_DATA_PROXY_PASSWORD) .}
+{.hint: credentialStatus("PROXY_USER", BUILD_STATUS_PROXY_USER) .}
+{.hint: credentialStatus("PROXY_PASSWORD", BUILD_STATUS_PROXY_PASSWORD) .}
+{.hint: credentialStatus("ETH_RPC_PROXY_USER", BUILD_ETH_RPC_PROXY_USER) .}
+{.hint: credentialStatus("ETH_RPC_PROXY_PASSWORD", BUILD_ETH_RPC_PROXY_PASSWORD) .}
+{.hint: "===================================" .}
+
+# Emit warnings for missing market data credentials (the ones causing 401 errors)
+when BUILD_MARKET_DATA_PROXY_USER.len == 0:
+  {.warning: "STATUS_BUILD_MARKET_DATA_PROXY_USER is NOT SET - will cause 401 errors!" .}
+when BUILD_MARKET_DATA_PROXY_PASSWORD.len == 0:
+  {.warning: "STATUS_BUILD_MARKET_DATA_PROXY_PASSWORD is NOT SET - will cause 401 errors!" .}
+
 const
   DEFAULT_TENOR_API_KEY = "DU7DWZ27STB2"
   BUILD_TENOR_API_KEY = getEnv(BUILD_TIME_PREFIX & BASE_NAME_TENOR_API_KEY, DEFAULT_TENOR_API_KEY)
