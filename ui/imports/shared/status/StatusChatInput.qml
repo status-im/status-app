@@ -11,6 +11,7 @@ import shared.panels
 import mainui
 
 import AppLayouts.Chat.panels
+import AppLayouts.Chat.adaptors
 
 import StatusQ
 import StatusQ.Core
@@ -719,7 +720,7 @@ Rectangle {
 
 
         if (suggestionsBox.visible) {
-            let aliasName = suggestionsBox.formattedPlainTextFilter;
+            let aliasName = suggestionsBox.filter;
             let lastCursorPosition = suggestionsBox.cursorPosition;
             let lastAtPosition = suggestionsBox.lastAtPosition;
             let suggestionItem = suggestionsBox.listView.itemAtIndex(suggestionsBox.listView.currentIndex);
@@ -1066,20 +1067,97 @@ Rectangle {
     SuggestionBoxPanel {
         id: suggestionsBox
         objectName: "suggestionsBox"
-        model: control.usersModel
+
+        model: suggestionsFilterAdaptor.model
+        inputField: messageInputField
+
         x: messageInput.x
         y: -height - Theme.smallPadding
         width: messageInput.width
-        filter: messageInputField.text
-        cursorPosition: messageInputField.cursorPosition
-        inputField: messageInputField
-        onItemSelected: function (item, lastAtPosition, lastCursorPosition) {
+        height: Math.min(400, implicitHeight)
+        z: parent.z + 100
+
+        visible: !shouldHide && messageInputField.text.length > 0
+                 && model.ModelCount.count > 0 && lastAtPosition > -1
+
+        property bool shouldHide: false
+        property int lastAtPosition: -1
+        property int cursorPosition: messageInputField.cursorPosition
+
+        readonly property string filter:
+            getFilter().substring(lastAtPosition + 1,
+                                  messageInputField.cursorPosition).replace(/\*/g, "")
+
+        function selectItem(item: var, lastAtPosition: int, lastCursorPosition: int) {
             messageInputField.forceActiveFocus()
-            d.insertMention(item.preferredDisplayName, item.pubKey, lastAtPosition, lastCursorPosition)
+            d.insertMention(item.preferredDisplayName, item.pubKey,
+                            lastAtPosition, lastCursorPosition)
         }
+
+        function selectCurrentItem() {
+            selectItem(listView.model.get(listView.currentIndex),
+                       lastAtPosition, cursorPosition)
+        }
+
+        function hide() {
+            shouldHide = true
+        }
+
+        function invalidateFilter() {
+            const filter = getFilter()
+            lastAtPosition = filter.substring(0, messageInputField.cursorPosition).lastIndexOf("@")
+        }
+
+        function getFilter() {
+            if (messageInputField.text.length === 0 ||
+                    messageInputField.cursorPosition === 0)
+                return ""
+
+            return StatusQUtils.StringUtils.plainText(messageInputField.text)
+        }
+
+        onFilterChanged: {
+            // We need to callLater because the sort needs to happen before setting the index
+            Qt.callLater(function () {
+                listView.currentIndex = 0
+            })
+        }
+
+        onClicked: index => {
+            const item = model.get(index)
+            selectItem(item, lastAtPosition, cursorPosition)
+        }
+
         onVisibleChanged: {
-            if (!visible) {
+            if (!visible)
                 messageInputField.forceActiveFocus();
+
+            // If the previous selection was made using the mouse, the currentIndex was changed to -1
+            // We change it back to 0 so that it can be used to select using the keyboard
+            if (visible && listView.currentIndex === -1)
+                listView.currentIndex = 0
+
+            if (visible && !StatusQUtils.Utils.isMobile)
+                listView.forceActiveFocus()
+        }
+
+        onCursorPositionChanged: {
+            if (shouldHide)
+                shouldHide = false
+        }
+
+        SuggestionsFilterAdaptor {
+            id: suggestionsFilterAdaptor
+
+            sourceModel: control.usersModel
+            filter: suggestionsBox.filter
+        }
+
+        Connections {
+            target: messageInputField
+
+            function onTextChanged() {
+                suggestionsBox.invalidateFilter()
             }
         }
     }
