@@ -26,6 +26,9 @@ import QtModelsToolkit
 StatusQ.StatusTextArea {
     id: messageInputField
 
+    property int messageLimit: 20
+    property int messageLimitHard: 200
+
     property int previousCursorPosition: 0
 
     textFormat: Text.RichText
@@ -80,14 +83,14 @@ StatusQ.StatusTextArea {
     }
 
     onTextChanged: {
-        if (length <= root.messageLimit) {
+        if (length <= messageInputField.messageLimit) {
             if (length === 0) {
                 mentionsPos = [];
             } else {
                 checkForInlineEmojis()
             }
-        } else if (length > root.messageLimitHard) {
-            const removeFrom = (cursorPosition < messageLimitHard) ? cursorWhenPressed : messageLimitHard;
+        } else if (length > messageInputField.messageLimitHard) {
+            const removeFrom = (cursorPosition < messageInputField.messageLimitHard) ? cursorWhenPressed : messageInputField.messageLimitHard;
             remove(removeFrom, cursorPosition);
             lengthLimitTooltip.open();
         }
@@ -95,7 +98,7 @@ StatusQ.StatusTextArea {
         d.updateMentionsPositions()
         d.cleanMentionsPos()
 
-        lengthLimitText.remainingChars = (messageLimit - length);
+        lengthLimitText.remainingChars = (messageInputField.messageLimit - length);
     }
 
     onLinkActivated: {
