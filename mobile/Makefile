@@ -34,6 +34,7 @@ status-desktop-rcc: clean-status-desktop-rcc $(STATUS_DESKTOP_RCC)
 
 $(STATUS_GO_LIB):
 	@echo "Building status-go mobile library"
+	@echo "NIM_SDS_SOURCE_DIR=$(NIM_SDS_SOURCE_DIR)"
 	@mkdir -p $(LIB_PATH)
 ifeq ($(OS),android)
 	  CC="$(CC)" $(MAKE) -C ../vendor/status-go statusgo-android-library \
@@ -42,6 +43,7 @@ ifeq ($(OS),android)
 		ANDROID_API="$(ANDROID_API)" \
 		HOST_OS="$(HOST_OS)" \
 		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
+		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
 else ifeq ($(OS),ios)
@@ -50,6 +52,7 @@ else ifeq ($(OS),ios)
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
 		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
+		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
 		SHELL=/bin/sh
 endif
 	@echo "Copying library to mobile lib directory"
