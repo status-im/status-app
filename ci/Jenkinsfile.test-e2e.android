@@ -55,7 +55,7 @@ pipeline {
     VIRTUAL_ENV = "${env.WORKSPACE_TMP}/venv-appium"
     PYTHONUNBUFFERED = "1"
     TEST_DEVICE_ID = "${params.TEST_DEVICE_ID}"
-    BROWSERSTACK_PROJECT_NAME = "Mobile E2E ${getBuildTypeFromSource()}"
+    BROWSERSTACK_PROJECT_NAME = "Mobile E2E ${getBuildTypeFromUpstream()}"
   }
 
   stages {
@@ -82,7 +82,8 @@ pipeline {
       }
     }
 
-    stage('Copy') {
+    /* Copies APK from Jenkins build job (skipped when BUILD_SOURCE is a URL) */
+    stage('Fetch APK from Build') {
       when {
         allOf {
           expression { !params.BROWSERSTACK_APP_ID?.trim() }
@@ -100,7 +101,8 @@ pipeline {
       } } } }
     }
 
-    stage('Upload APK to BrowserStack') {
+    /* Uploads local APK or passes URL for BrowserStack to download */
+    stage('Provide APK to BrowserStack') {
       when {
         expression { !params.BROWSERSTACK_APP_ID?.trim() }
       }
@@ -186,10 +188,13 @@ def updateGitHubStatus() {
   }
 }
 
-def getBuildTypeFromSource() {
-  def source = params.BUILD_SOURCE ?: ''
-  if (source.contains('/prs/')) return 'PR'
-  if (source.contains('/nightly/')) return 'Nightly'
-  if (source.contains('/release/')) return 'Release'
-  return 'Other'
+def getBuildTypeFromUpstream() {
+  def upstream = currentBuild.upstreamBuilds?.getAt(0)
+  if (upstream) {
+    def upstreamJob = upstream.getFullProjectName()
+    if (upstreamJob.contains('/prs/')) return 'PR'
+    if (upstreamJob.contains('/nightly/')) return 'Nightly'
+    if (upstreamJob.contains('/release/')) return 'Release'
+  }
+  return 'Manual'
 }
