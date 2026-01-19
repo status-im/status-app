@@ -25,7 +25,7 @@ import StatusQ.Controls as StatusQ
 import QtModelsToolkit
 
 Rectangle {
-    id: control
+    id: root
     objectName: "statusChatInput"
 
     signal stickerSelected(string hashId, string packId, string url)
@@ -164,12 +164,12 @@ Rectangle {
 
         // common popups are emoji, jif and stickers
         // Put controlWidth as argument with default value for binding
-        function getCommonPopupRelativePosition(popup, popupParent, controlWidth = control.width) {
+        function getCommonPopupRelativePosition(popup, popupParent, controlWidth = root.width) {
             const popupWidth = popup ? popup.width : 0
             const popupHeight = popup ? popup.height : 0
             const controlX = controlWidth - popupWidth - Theme.halfPadding
             const controlY = -popupHeight
-            return popupParent.mapFromItem(control, controlX, controlY)
+            return popupParent.mapFromItem(root, controlX, controlY)
         }
 
         readonly property point emojiPopupPosition: getCommonPopupRelativePosition(emojiPopup, emojiBtn)
@@ -349,11 +349,11 @@ Rectangle {
 
     Connections {
         enabled: d.stickersPopupOpened
-        target: control.stickersPopup
+        target: root.stickersPopup
 
         function onStickerSelected(hashId: string, packId: string, url: string ) {
-            control.stickerSelected(hashId, packId, url)
-            control.hideExtendedArea();
+            root.stickerSelected(hashId, packId, url)
+            root.hideExtendedArea();
             messageInputField.forceActiveFocus();
         }
         function onClosed() {
@@ -390,8 +390,8 @@ Rectangle {
             }
             if (messageLength <= messageLimit) {
                 checkForInlineEmojis(true);
-                control.sendMessage(event);
-                control.hideExtendedArea();
+                root.sendMessage(event);
+                root.hideExtendedArea();
                 event.accepted = true;
                 return;
             } else {
@@ -402,8 +402,8 @@ Rectangle {
             }
         }
 
-        if (event.key === Qt.Key_Escape && control.isReply) {
-            control.isReply = false;
+        if (event.key === Qt.Key_Escape && root.isReply) {
+            root.isReply = false;
             event.accepted = true;
             return;
         }
@@ -435,7 +435,7 @@ Rectangle {
 
         // handle new line in blockquote
         if ((event.key === Qt.Key_Enter || event.key === Qt.Key_Return) && (event.modifiers & Qt.ShiftModifier)) {
-            const message = control.extrapolateCursorPosition();
+            const message = root.extrapolateCursorPosition();
 
             if(message.data.startsWith(">") && !message.data.endsWith("\n\n")) {
                 let newMessage1 = ""
@@ -451,7 +451,7 @@ Rectangle {
         }
 
         if (event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) {
-            const message = control.extrapolateCursorPosition();
+            const message = root.extrapolateCursorPosition();
             if(mentionsPos.length > 0) {
                 let anticipatedCursorPosition = messageInputField.cursorPosition
                 anticipatedCursorPosition += event.key === Qt.Key_Backspace ?
@@ -490,7 +490,7 @@ Rectangle {
                 const clipboardText = StatusQUtils.StringUtils.plainText(ClipboardUtils.text)
                 // prevent repetitive & huge clipboard paste, where huge is total char count > than messageLimitHard
                 const selectionLength = messageInputField.selectionEnd - messageInputField.selectionStart;
-                if ((messageLength + clipboardText.length - selectionLength) > control.messageLimitHard)
+                if ((messageLength + clipboardText.length - selectionLength) > root.messageLimitHard)
                 {
                     messageLengthLimitTooltip.open();
                     event.accepted = true;
@@ -901,7 +901,7 @@ Rectangle {
 
     function resetImageArea() {
         isImage = false;
-        control.fileUrlsAndSources = []
+        root.fileUrlsAndSources = []
         for (let i=0; i<validators.children.length; i++) {
             const validator = validators.children[i]
             validator.images = []
@@ -919,8 +919,8 @@ Rectangle {
     }
 
     function validateImages(imagePaths = []) {
-        // needed because control.fileUrlsAndSources is not a normal js array
-        const existing = (control.fileUrlsAndSources || []).map(x => x.toString())
+        // needed because root.fileUrlsAndSources is not a normal js array
+        const existing = (root.fileUrlsAndSources || []).map(x => x.toString())
         let validImages = Utils.deduplicate(existing.concat(imagePaths))
         for (let i=0; i<validators.children.length; i++) {
             const validator = validators.children[i]
@@ -932,7 +932,7 @@ Rectangle {
 
     function showImageArea(imagePathsOrData) {
         isImage = imagePathsOrData.length > 0
-        control.fileUrlsAndSources = imagePathsOrData
+        root.fileUrlsAndSources = imagePathsOrData
     }
 
     // Use this to validate and show the images. The concatenation of previous selected images is done automatically
@@ -961,13 +961,13 @@ Rectangle {
     }
 
     function openImageDialog() {
-        d.imageDialog = imageDialogComponent.createObject(control)
+        d.imageDialog = imageDialogComponent.createObject(root)
         d.imageDialog.open()
     }
 
     DropAreaPanel {
-        enabled: control.visible && control.enabled
-        parent: control.Overlay.overlay
+        enabled: root.visible && root.enabled
+        parent: root.Overlay.overlay
         anchors.fill: parent
         onDroppedOnValidScreen: (drop) => {
             let dropUrls = drop.urls
@@ -1021,22 +1021,22 @@ Rectangle {
                 objectName: "chatCommandMenu_addImage"
                 text: qsTr("Add image")
                 icon.name: "image"
-                onTriggered: control.openImageDialog()
+                onTriggered: root.openImageDialog()
             }
 
             StatusMouseArea {
                 implicitWidth: paymentRequestMenuItem.width
                 implicitHeight: paymentRequestMenuItem.height
                 hoverEnabled: true
-                visible: control.paymentRequestFeatureEnabled
+                visible: root.paymentRequestFeatureEnabled
                 StatusMenuItem {
                     id: paymentRequestMenuItem
                     text: parent.containsMouse && !enabled ? qsTr("Not available in Testnet mode") : qsTr("Add payment request")
                     icon.name: "wallet"
                     icon.color: enabled ? Theme.palette.primaryColor1 : Theme.palette.baseColor1
-                    enabled: !control.areTestNetworksEnabled
+                    enabled: !root.areTestNetworksEnabled
                     onTriggered: {
-                        control.openPaymentRequestModal()
+                        root.openPaymentRequestModal()
                         chatCommandMenu.close()
                     }
                 }
@@ -1147,7 +1147,7 @@ Rectangle {
         SuggestionsFilterAdaptor {
             id: suggestionsFilterAdaptor
 
-            sourceModel: control.usersModel
+            sourceModel: root.usersModel
             filter: suggestionsBox.filter
         }
 
@@ -1198,8 +1198,8 @@ Rectangle {
 
             StatusQ.StatusToolTip {
                 id: messageLengthLimitTooltip
-                text: messageInputField.length >= control.messageLimitHard ? qsTr("Please reduce the message length")
-                      : qsTr("Maximum message character count is %n", "", control.messageLimit)
+                text: messageInputField.length >= root.messageLimitHard ? qsTr("Please reduce the message length")
+                      : qsTr("Maximum message character count is %n", "", root.messageLimit)
                 orientation: StatusQ.StatusToolTip.Orientation.Top
                 timeout: 3000 // show for 3 seconds
             }
@@ -1273,10 +1273,10 @@ Rectangle {
 
             ColumnLayout {
                 id: validators
-                anchors.bottom: control.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Top ? parent.top : undefined
-                anchors.bottomMargin: control.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Top ? -4 : undefined
-                anchors.top: control.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Bottom ? parent.bottom : undefined
-                anchors.topMargin: control.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Bottom ? (isImage ? -4 : 4) : undefined
+                anchors.bottom: root.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Top ? parent.top : undefined
+                anchors.bottomMargin: root.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Top ? -4 : undefined
+                anchors.top: root.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Bottom ? parent.bottom : undefined
+                anchors.topMargin: root.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Bottom ? (isImage ? -4 : 4) : undefined
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width
                 z: 1
@@ -1298,7 +1298,7 @@ Rectangle {
                     interval: 3000
                     repeat: true
                     running: !imageQtyValidator.isValid || !imageSizeValidator.isValid || !imageExtValidator.isValid
-                    onTriggered: validateImages(control.fileUrlsAndSources)
+                    onTriggered: validateImages(root.fileUrlsAndSources)
                 }
             }
 
@@ -1323,29 +1323,29 @@ Rectangle {
                     visible: hasContent
                     horizontalPadding: 12
                     topPadding: 12
-                    imagePreviewArray: control.fileUrlsAndSources
-                    linkPreviewModel: control.linkPreviewModel
-                    paymentRequestModel: control.paymentRequestModel
-                    formatBalance: control.formatBalance
-                    showLinkPreviewSettings: control.askToEnableLinkPreview
+                    imagePreviewArray: root.fileUrlsAndSources
+                    linkPreviewModel: root.linkPreviewModel
+                    paymentRequestModel: root.paymentRequestModel
+                    formatBalance: root.formatBalance
+                    showLinkPreviewSettings: root.askToEnableLinkPreview
                     onImageRemoved: (index) => {
                         //Just do a copy and replace the whole thing because it's a plain JS array and thre's no signal when a single item is removed
-                        let urls = control.fileUrlsAndSources
+                        let urls = root.fileUrlsAndSources
                         if (urls.length > index && urls[index]) {
                             urls.splice(index, 1)
                         }
-                        control.fileUrlsAndSources = urls
-                        validateImages(control.fileUrlsAndSources)
+                        root.fileUrlsAndSources = urls
+                        validateImages(root.fileUrlsAndSources)
                     }
                     onImageClicked: (chatImage) => Global.openImagePopup(chatImage, "", false)
-                    onLinkReload: (link) => control.linkPreviewReloaded(link)
+                    onLinkReload: (link) => root.linkPreviewReloaded(link)
                     onLinkClicked: (link) => Global.requestOpenLink(link)
-                    onEnableLinkPreview: () => control.enableLinkPreview()
-                    onEnableLinkPreviewForThisMessage: () => control.enableLinkPreviewForThisMessage()
-                    onDisableLinkPreview: () => control.disableLinkPreview()
-                    onDismissLinkPreviewSettings: () => control.dismissLinkPreviewSettings()
-                    onDismissLinkPreview: (index) => control.dismissLinkPreview(index)
-                    onRemovePaymentRequestPreview: (index) => control.removePaymentRequestPreview(index)
+                    onEnableLinkPreview: () => root.enableLinkPreview()
+                    onEnableLinkPreviewForThisMessage: () => root.enableLinkPreviewForThisMessage()
+                    onDisableLinkPreview: () => root.disableLinkPreview()
+                    onDismissLinkPreviewSettings: () => root.dismissLinkPreviewSettings()
+                    onDismissLinkPreview: (index) => root.dismissLinkPreview(index)
+                    onRemovePaymentRequestPreview: (index) => root.removePaymentRequestPreview(index)
                 }
 
                 RowLayout {
@@ -1375,7 +1375,7 @@ Rectangle {
                             width: inputScrollView.availableWidth
 
                             textFormat: Text.RichText
-                            placeholderText: control.chatInputPlaceholder
+                            placeholderText: root.chatInputPlaceholder
                             color: isEdit ? Theme.palette.directColor1 : Theme.palette.textColor
                             topPadding: 9
                             bottomPadding: 9
@@ -1388,7 +1388,7 @@ Rectangle {
 
                             // This is needed to make sure the text area is disabled when the input is disabled
                             Binding on enabled {
-                                value: control.enabled
+                                value: root.enabled
                             }
                             Keys.onShortcutOverride: function (event) {
                                 event.accepted = event.matches(StandardKey.Paste)
@@ -1398,7 +1398,7 @@ Rectangle {
                                     forceActiveFocus();
                                 } else {
                                     if (messageInputField.length === 0) {
-                                        control.keyUpPress();
+                                        root.keyUpPress();
                                     }
                                 }
                                 event.accepted = false
@@ -1431,13 +1431,13 @@ Rectangle {
                             }
 
                             onTextChanged: {
-                                if (length <= control.messageLimit) {
+                                if (length <= root.messageLimit) {
                                     if (length === 0) {
                                         mentionsPos = [];
                                     } else {
                                         checkForInlineEmojis()
                                     }
-                                } else if (length > control.messageLimitHard) {
+                                } else if (length > root.messageLimitHard) {
                                     const removeFrom = (cursorPosition < messageLimitHard) ? cursorWhenPressed : messageLimitHard;
                                     remove(removeFrom, cursorPosition);
                                     messageLengthLimitTooltip.open();
@@ -1459,7 +1459,7 @@ Rectangle {
                             onEnabledChanged: {
                                 if (!enabled) {
                                     clear()
-                                    control.hideExtendedArea()
+                                    root.hideExtendedArea()
                                 }
                             }
 
@@ -1467,7 +1467,7 @@ Rectangle {
                                 quickTextDocument: messageInputField.textDocument
                                 codeBackgroundColor: Theme.palette.baseColor4
                                 codeForegroundColor: Theme.palette.textColor
-                                hyperlinks: control.urlsList
+                                hyperlinks: root.urlsList
                                 hyperlinkColor: Theme.palette.primaryColor1
                                 highlightedHyperlink: linkPreviewArea.hoveredUrl
                                 hyperlinkHoverColor: Theme.palette.primaryColor3
@@ -1496,7 +1496,7 @@ Rectangle {
                             property int remainingChars: -1
                             leftPadding: Theme.halfPadding
                             rightPadding: Theme.halfPadding
-                            visible: messageInputField.length >= control.messageLimit - control.messageLimitSoft
+                            visible: messageInputField.length >= root.messageLimit - root.messageLimitSoft
                             color: {
                                 if (remainingChars  >= 0)
                                     return Theme.palette.textColor
@@ -1528,11 +1528,11 @@ Rectangle {
                                 implicitWidth: 32
                                 icon.name: "send"
                                 type: StatusQ.StatusFlatRoundButton.Type.Tertiary
-                                visible: messageInputField.length > 0 || messageInputField.preeditText || control.fileUrlsAndSources.length > 0 ||
-                                         (!!control.paymentRequestModel && control.paymentRequestModel.ModelCount.count > 0)
+                                visible: messageInputField.length > 0 || messageInputField.preeditText || root.fileUrlsAndSources.length > 0 ||
+                                         (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0)
                                 onClicked: {
                                     InputMethod.commit()
-                                    control.onKeyPress({modifiers: d.kbdModifierToSendMessage, key: Qt.Key_Return})
+                                    root.onKeyPress({modifiers: d.kbdModifierToSendMessage, key: Qt.Key_Return})
                                 }
                                 tooltip.text: qsTr("Send message")
                             }
@@ -1570,21 +1570,27 @@ Rectangle {
                                 type: StatusQ.StatusFlatRoundButton.Type.Tertiary
                                 onClicked: {
                                     highlighted = true
-                                    control.openGifPopupRequest({// Properties needed for relative position and close
-                                                                    popupParent: actions,
-                                                                    closeAfterSelection: control.closeGifPopupAfterSelection
-                                                                },
-                                                                // Gif selected callback
-                                                                (event, url) => {
-                                                                    messageInputField.text += "\n" + url
-                                                                    control.sendMessage(event)
-                                                                    control.isReply = false
-                                                                    messageInputField.forceActiveFocus()
-                                                                },
-                                                                // Close callback
-                                                                () => {
-                                                                    highlighted = false
-                                                                })
+
+                                    // Properties needed for relative position and close
+                                    const properties = {
+                                        popupParent: actions,
+                                        closeAfterSelection: root.closeGifPopupAfterSelection
+                                    }
+
+                                    const onGifSelectedCb = (event, url) => {
+                                        messageInputField.text += "\n" + url
+                                        root.sendMessage(event)
+                                        root.isReply = false
+                                        messageInputField.forceActiveFocus()
+                                    }
+
+                                    const onCloseCb = () => {
+                                        highlighted = false
+                                    }
+
+                                    root.openGifPopupRequest(properties,
+                                                             onGifSelectedCb,
+                                                             onCloseCb)
                                 }
                             }
 
@@ -1602,10 +1608,10 @@ Rectangle {
                                 highlighted: d.stickersPopupOpened
                                 onClicked: {
                                     if (d.stickersPopupOpened) {
-                                        control.stickersPopup.close()
+                                        root.stickersPopup.close()
                                         return
                                     }
-                                    control.stickersPopup.open()
+                                    root.stickersPopup.open()
                                     d.stickersPopupOpened = true
                                 }
                             }
