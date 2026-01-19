@@ -30,7 +30,7 @@ StatusQ.StatusTextArea {
 
     textFormat: Text.RichText
 
-    color: isEdit ? Theme.palette.directColor1 : Theme.palette.textColor
+    color: Theme.palette.textColor
     topPadding: 9
     bottomPadding: 9
     leftPadding: 0
@@ -89,13 +89,13 @@ StatusQ.StatusTextArea {
         } else if (length > root.messageLimitHard) {
             const removeFrom = (cursorPosition < messageLimitHard) ? cursorWhenPressed : messageLimitHard;
             remove(removeFrom, cursorPosition);
-            messageLengthLimitTooltip.open();
+            lengthLimitTooltip.open();
         }
 
         d.updateMentionsPositions()
         d.cleanMentionsPos()
 
-        messageLengthLimit.remainingChars = (messageLimit - length);
+        lengthLimitText.remainingChars = (messageLimit - length);
     }
 
     onLinkActivated: {

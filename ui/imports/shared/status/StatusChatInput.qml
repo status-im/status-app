@@ -396,7 +396,7 @@ Rectangle {
                 return;
             } else {
                 // pop-up a warning message when trying to send a message over the limit
-                messageLengthLimitTooltip.open();
+                lengthLimitTooltip.open();
                 event.accepted = true;
                 return;
             }
@@ -492,7 +492,7 @@ Rectangle {
                 const selectionLength = messageInputField.selectionEnd - messageInputField.selectionStart;
                 if ((messageLength + clipboardText.length - selectionLength) > root.messageLimitHard)
                 {
-                    messageLengthLimitTooltip.open();
+                    lengthLimitTooltip.open();
                     event.accepted = true;
                     return;
                 }
@@ -1197,7 +1197,7 @@ Rectangle {
             bottomRightRadius: Theme.radius
 
             StatusQ.StatusToolTip {
-                id: messageLengthLimitTooltip
+                id: lengthLimitTooltip
                 text: messageInputField.length >= root.messageLimitHard ? qsTr("Please reduce the message length")
                       : qsTr("Maximum message character count is %n", "", root.messageLimit)
                 orientation: StatusQ.StatusToolTip.Orientation.Top
@@ -1397,7 +1397,7 @@ Rectangle {
                         Layout.bottomMargin: 3
 
                         StyledText {
-                            id: messageLengthLimit
+                            id: lengthLimitText
                             property int remainingChars: -1
                             leftPadding: Theme.halfPadding
                             rightPadding: Theme.halfPadding
@@ -1415,10 +1415,10 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onEntered: {
-                                    messageLengthLimitTooltip.open()
+                                    lengthLimitTooltip.open()
                                 }
                                 onExited: {
-                                    messageLengthLimitTooltip.hide()
+                                    lengthLimitTooltip.hide()
                                 }
                             }
                         }
