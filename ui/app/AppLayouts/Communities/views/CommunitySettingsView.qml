@@ -789,26 +789,13 @@ StatusSectionLayout {
     }
 
     Connections {
-        target: root.chatCommunitySectionModule
-
-        function onOpenNoPermissionsToJoinPopup(communityName: string,
-                                                userName: string, communityId:
-                                                string, requestId: string) {
-            const properties = {
-                communityName: communityName,
-                userName: userName,
-                communityId: communityId,
-                requestId: requestId
-            }
-
-            Global.openPopup(noPermissionsPopupCmp, properties)
-        }
+        target: root.rootStore
 
         function onPermissionSavedSuccessfully() {
             if (!permissionsSettingsPanelLoader.active) {
                 return 
             }
-            permissionsSettingsPanelLoader.item.permissionSavedSuccessfully()
+            permissionsSettingsPanelLoader.item.goToPermissionsList()
         }
     }
 }

@@ -49,8 +49,7 @@ StackView {
     signal removePermissionRequested(string key)
     signal navigateToMintTokenSettings(bool isAssetType)
 
-    function permissionSavedSuccessfully() {
-        // Go back to the permissions list after successful save
+    function goToPermissionsList() {
         root.pop(StackView.Immediate)
     }
 

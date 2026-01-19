@@ -30,6 +30,27 @@ QtObject {
         }
     }
 
+    readonly property Connections chatCommunitySectionModuleConnections: Connections {
+        target: root.chatCommunitySectionModule
+
+        function onOpenNoPermissionsToJoinPopup(communityName: string,
+                                                userName: string, communityId:
+                                                string, requestId: string) {
+            const properties = {
+                communityName: communityName,
+                userName: userName,
+                communityId: communityId,
+                requestId: requestId
+            }
+
+            Global.openPopup(noPermissionsPopupCmp, properties)
+        }
+
+        function onPermissionSavedSuccessfully() {
+            root.permissionSavedSuccessfully()
+        }
+    }
+
     readonly property var chatSectionModuleModel: root.mainModuleInst.getChatSectionModule().model
     readonly property bool chatsLoadingFailed: root.mainModuleInst.chatsLoadingFailed
 
@@ -188,6 +209,8 @@ QtObject {
     signal importingCommunityStateChanged(string communityId, int state, string errorMsg)
 
     signal communityAdded(string communityId)
+
+    signal permissionSavedSuccessfully()
 
     function setActiveCommunity(communityId) {
         mainModule.setActiveSectionById(communityId);
