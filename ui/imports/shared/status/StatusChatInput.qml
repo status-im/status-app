@@ -1373,6 +1373,8 @@ Rectangle {
                             messageLimit: root.messageLimit
                             messageLimitHard: root.messageLimitHard
 
+                            urlsList: root.urlsList
+
                             placeholderText: root.chatInputPlaceholder
 
                             // This is needed to make sure the text area is disabled when the input is disabled

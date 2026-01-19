@@ -29,6 +29,8 @@ StatusQ.StatusTextArea {
     property int messageLimit: 20
     property int messageLimitHard: 200
 
+    property var urlsList: []
+
     property int previousCursorPosition: 0
 
     textFormat: Text.RichText
@@ -112,7 +114,7 @@ StatusQ.StatusTextArea {
         quickTextDocument: messageInputField.textDocument
         codeBackgroundColor: Theme.palette.baseColor4
         codeForegroundColor: Theme.palette.textColor
-        hyperlinks: root.urlsList
+        hyperlinks: messageInputField.urlsList
         hyperlinkColor: Theme.palette.primaryColor1
         highlightedHyperlink: linkPreviewArea.hoveredUrl
         hyperlinkHoverColor: Theme.palette.primaryColor3
