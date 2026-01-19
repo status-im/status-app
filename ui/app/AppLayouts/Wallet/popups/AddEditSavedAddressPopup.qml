@@ -122,10 +122,16 @@ StatusDialog {
             active: false
 
             sourceComponent: ContactModelEntry {
+                id: contactModelEntry
                 publicKey: d.sharedContactModelEntryLoader.publicKey
                 contactsModel: root.contactsModel
                 onPopulateContactDetailsRequested: {
                     root.populateContactDetails(d.sharedContactModelEntryLoader.publicKey)
+                }
+                onAvailableChanged: {
+                    if (contactModelEntry.available) {
+                        d.processContactDetails(contactModelEntry.contactDetails)
+                    }
                 }
             }
         }
@@ -272,6 +278,35 @@ StatusDialog {
             root.store.createOrUpdateSavedAddress(d.name, d.address, d.ens, d.colorId)
             root.close()
         }
+
+        property var contactsToProcess: []
+
+        function processContactDetails(contactDetails) {
+            //Remove from list of contacts to process
+            let index = d.contactsToProcess.indexOf(contactDetails.publicKey)
+            if (index > -1) {
+                d.contactsToProcess.splice(index, 1)
+            }
+            // Process by adding to cards model
+            d.cardsModel.append({
+                type: AddEditSavedAddressPopup.CardType.Contact,
+                address: contactDetails.address,
+                title: ProfileUtils.displayName(contactDetails.localNickname, contactDetails.name, contactDetails.displayName, contactDetails.alias),
+                icon: contactDetails.icon,
+                emoji: "",
+                color: Utils.colorForColorId(root.Theme.palette, contactDetails.colorId),
+                onlineStatus: contactDetails.onlineStatus
+            })
+            // If there are still contacts to process, get their details
+            if (d.contactsToProcess.length > 0) {
+                const nextContactEntry = d.getContactModelEntry(d.contactsToProcess[0])
+                if (!nextContactEntry.available) {
+                    // Waiting for contact details to be populated
+                    return
+                }
+                d.processContactDetails(nextContactEntry.contactDetails)
+            }
+        }
     }
 
     Connections {
@@ -307,18 +342,14 @@ StatusDialog {
                 if (d.contactsWithSameAddress > 1)
                     addressInput.errorMessageCmp.text = qsTr("This address belongs to the following contacts")
 
+                d.contactsToProcess = accountsJson.map(account => account.contactId)
                 for (let i = 0; i < accountsJson.length; ++i) {
-                    let contactEntry = d.getContactModelEntry(accountsJson[i].contactId)
-                    d.cardsModel.append({
-                                            type: AddEditSavedAddressPopup.CardType.Contact,
-                                            address: accountsJson[i].address,
-                                            title: ProfileUtils.displayName(contactEntry.contactDetails.localNickname, contactEntry.contactDetails.name, contactEntry.contactDetails.displayName, contactEntry.contactDetails.alias),
-                                            icon: contactEntry.contactDetails.icon,
-                                            emoji: "",
-                                            color: Utils.colorForColorId(root.Theme.palette, contactEntry.contactDetails.colorId),
-                                            onlineStatus: contactEntry.contactDetails.onlineStatus
-                                        })
-
+                    const contactEntry = d.getContactModelEntry(accountsJson[i].contactId)
+                    if (!contactEntry.available) {
+                        // Waiting for contact details to be populated
+                        continue
+                    }
+                    d.processContactDetails(contactEntry.contactDetails)
                 }
             }
             catch (e) {

@@ -709,6 +709,7 @@ QtObject:
       error "Error requesting profile showcase for a contact", msg = e.msg
 
   proc fetchProfileShowcaseAccountsByAddress*(self: Service, address: string) =
+    # FIXME: this task doesn't work, it returns no accounts https://github.com/status-im/status-app/issues/19739
     let arg = FetchProfileShowcaseAccountsTaskArg(
       address: address,
       tptr: fetchProfileShowcaseAccountsTask,

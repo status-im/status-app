@@ -80,8 +80,6 @@ MembersSelectorBase {
 
         property ListModel selectedMembers: ListModel {}
 
-        property bool waitingForContactDetails: false
-
         property var sharedContactModelEntryLoader: Loader {
             property string publicKey: ""
 
@@ -94,9 +92,8 @@ MembersSelectorBase {
                 onPopulateContactDetailsRequested: {
                     root.populateContactDetails(d.sharedContactModelEntryLoader.publicKey)
                 }
-                onContactDetailsPopulated: {
-                    if (d.waitingForContactDetails) {
-                        d.waitingForContactDetails = false
+                onAvailableChanged: {
+                    if (contactModelEntry.available) {
                         d.processContactDetails(contactModelEntry.contactDetails)
                     }
                 }
@@ -148,12 +145,10 @@ MembersSelectorBase {
 
             if (!contactEntry.available) {
                 // Waiting for contact details to be populated
-                d.waitingForContactDetails = true
                 return
             }
 
-            const contactDetails = contactEntry.contactDetails
-            processContactDetails(contactDetails)
+            processContactDetails(contactEntry.contactDetails)
         }
 
         function processContactDetails(contactDetails) {
