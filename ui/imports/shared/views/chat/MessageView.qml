@@ -1022,7 +1022,6 @@ Loader {
                         emojiPopup: root.emojiPopup
                         stickersPopup: root.stickersPopup
 
-                        chatType: root.messageStore.chatType
                         isEdit: true
 
                         onSendMessage: delegate.editCompletedHandler(editTextInput.getTextWithPublicKeys())

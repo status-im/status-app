@@ -62,8 +62,6 @@ Rectangle {
     readonly property int messageLimitSoft: 200 // we start showing a char counter when this no. of chars left in the message
     readonly property int messageLimitHard: 20000 // still cut-off attempts to paste beyond this limit, for app usability reasons
 
-    property int chatType
-
     property string chatInputPlaceholder: qsTr("Message")
 
     property alias textInput: messageInputField

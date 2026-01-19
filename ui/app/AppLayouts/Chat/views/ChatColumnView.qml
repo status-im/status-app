@@ -430,7 +430,6 @@ Item {
 
                     emojiPopup: root.emojiPopup
                     stickersPopup: root.stickersPopup
-                    chatType: root.activeChatType
                     areTestNetworksEnabled: root.areTestNetworksEnabled
                     paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
 
