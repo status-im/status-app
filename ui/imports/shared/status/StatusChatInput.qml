@@ -1365,95 +1365,16 @@ Rectangle {
                         rightPadding: Theme.padding // for the scrollbar
                         contentWidth: availableWidth
 
-                        StatusQ.StatusTextArea {
+                        StatusChatInputTextArea {
                             id: messageInputField
 
                             objectName: "messageInputField"
 
-                            property int previousCursorPosition: 0
-
-                            width: inputScrollView.availableWidth
-
-                            textFormat: Text.RichText
                             placeholderText: root.chatInputPlaceholder
-                            color: isEdit ? Theme.palette.directColor1 : Theme.palette.textColor
-                            topPadding: 9
-                            bottomPadding: 9
-                            leftPadding: 0
-                            rightPadding: 0
-                            background: null
-
-                            inputMethodHints: Qt.ImhMultiLine | Qt.ImhNoEditMenu
-                            EnterKey.type: Qt.EnterKeyReturn // insert newlines hint for OSK
 
                             // This is needed to make sure the text area is disabled when the input is disabled
                             Binding on enabled {
                                 value: root.enabled
-                            }
-                            Keys.onShortcutOverride: function (event) {
-                                event.accepted = event.matches(StandardKey.Paste)
-                            }
-                            Keys.onUpPressed: function(event) {
-                                if (isEdit && !activeFocus) {
-                                    forceActiveFocus();
-                                } else {
-                                    if (messageInputField.length === 0) {
-                                        root.keyUpPress();
-                                    }
-                                }
-                                event.accepted = false
-                            }
-                            Keys.onPressed: function(event) {
-                                keyEvent = event;
-                                onKeyPress(event)
-                            }
-                            Keys.onReleased: (event) => onRelease(event) // gives much more up to date cursorPosition
-
-                            property var keyEvent
-
-                            onCursorPositionChanged: {
-                                if(mentionsPos.length > 0 && ((keyEvent.key === Qt.Key_Left) || (keyEvent.key === Qt.Key_Right)
-                                  || (selectedText.length>0))) {
-                                    const mention = d.getMentionAtPosition(cursorPosition)
-                                    if (mention) {
-                                        const cursorMovingLeft = (cursorPosition < previousCursorPosition);
-                                        const newCursorPosition = cursorMovingLeft ?
-                                                                    mention.leftIndex :
-                                                                    mention.rightIndex
-                                        const isSelection = (selectedText.length>0);
-                                        isSelection ? moveCursorSelection(newCursorPosition, TextEdit.SelectCharacters) :
-                                                      cursorPosition = newCursorPosition
-                                    }
-                                }
-
-                                inputScrollView.ensureVisible(cursorRectangle)
-                                previousCursorPosition = cursorPosition
-                            }
-
-                            onTextChanged: {
-                                if (length <= root.messageLimit) {
-                                    if (length === 0) {
-                                        mentionsPos = [];
-                                    } else {
-                                        checkForInlineEmojis()
-                                    }
-                                } else if (length > root.messageLimitHard) {
-                                    const removeFrom = (cursorPosition < messageLimitHard) ? cursorWhenPressed : messageLimitHard;
-                                    remove(removeFrom, cursorPosition);
-                                    messageLengthLimitTooltip.open();
-                                }
-
-                                d.updateMentionsPositions()
-                                d.cleanMentionsPos()
-
-                                messageLengthLimit.remainingChars = (messageLimit - length);
-                            }
-
-                            onLinkActivated: {
-                                const mention = d.getMentionAtPosition(cursorPosition - 1)
-                                if(mention) {
-                                    select(mention.leftIndex, mention.rightIndex)
-                                }
                             }
 
                             onEnabledChanged: {
@@ -1461,22 +1382,6 @@ Rectangle {
                                     clear()
                                     root.hideExtendedArea()
                                 }
-                            }
-
-                            StatusSyntaxHighlighter {
-                                quickTextDocument: messageInputField.textDocument
-                                codeBackgroundColor: Theme.palette.baseColor4
-                                codeForegroundColor: Theme.palette.textColor
-                                hyperlinks: root.urlsList
-                                hyperlinkColor: Theme.palette.primaryColor1
-                                highlightedHyperlink: linkPreviewArea.hoveredUrl
-                                hyperlinkHoverColor: Theme.palette.primaryColor3
-                            }
-                            StatusMouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.NoButton
-                                enabled: parent.hoveredLink
-                                cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.IBeamCursor
                             }
                         }
 
