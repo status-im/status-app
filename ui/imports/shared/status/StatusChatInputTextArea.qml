@@ -32,6 +32,7 @@ StatusQ.StatusTextArea {
     property var urlsList: []
 
     property int previousCursorPosition: 0
+    property KeyEvent lastKeyPressedEvent
 
     textFormat: Text.RichText
 
@@ -59,15 +60,13 @@ StatusQ.StatusTextArea {
         event.accepted = false
     }
     Keys.onPressed: function(event) {
-        keyEvent = event;
+        lastKeyPressedEvent = event
         onKeyPress(event)
     }
     Keys.onReleased: (event) => onRelease(event) // gives much more up to date cursorPosition
 
-    property var keyEvent
-
     onCursorPositionChanged: {
-        if(mentionsPos.length > 0 && ((keyEvent.key === Qt.Key_Left) || (keyEvent.key === Qt.Key_Right)
+        if(mentionsPos.length > 0 && ((lastKeyPressedEvent.key === Qt.Key_Left) || (lastKeyPressedEvent.key === Qt.Key_Right)
           || (selectedText.length>0))) {
             const mention = d.getMentionAtPosition(cursorPosition)
             if (mention) {

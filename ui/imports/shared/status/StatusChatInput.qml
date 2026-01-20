@@ -239,7 +239,7 @@ Rectangle {
                 return
             }
 
-            const keyEvent = messageInputField.keyEvent
+            const keyEvent = messageInputField.lastKeyPressedEvent
             if ((keyEvent.key === Qt.Key_Right) || (keyEvent.key === Qt.Key_Left)
                     || (keyEvent.key === Qt.Key_Up) || (keyEvent.key === Qt.Key_Down)) {
                 return
