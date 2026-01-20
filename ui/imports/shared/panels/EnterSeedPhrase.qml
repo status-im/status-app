@@ -376,6 +376,12 @@ Control {
                                 inputModel.setEntry(index, text, d.isInDictionary(text))
                                 d.filteringPrefix = ""
                             }
+                        } else if (suggestionsModel.count > 1 && text.length === 3 && text === suggestionsModel.takeFirst()) {
+                            // Some valid words have only three letters, but they have more than one suggestion
+                            // In that case, we set it as an entry to possibly enable the user to submit without further input
+                            // This also fixes the e2e test
+                            // If the valid word is longer, the user can still finish typing or select from suggestions
+                            inputModel.setEntry(index, suggestionsModel.takeFirst(), true)
                         }
                     }
                 }
