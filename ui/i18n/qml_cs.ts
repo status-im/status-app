@@ -9061,6 +9061,10 @@ L2 poplatek: %2</translation>
         <source>Dismiss</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Ready to scan</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardConfirmation</name>
@@ -10591,24 +10595,12 @@ selhalo</translation>
         <translation>Načítání Keycard...</translation>
     </message>
     <message>
-        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
-        <translation>Jejda, toto není Keycard.&lt;br&gt;Vyjměte kartu a vložte Keycard.</translation>
-    </message>
-    <message>
-        <source>Wrong Keycard for this profile inserted</source>
-        <translation>Vložena nesprávná Keycard pro tento profil</translation>
-    </message>
-    <message>
         <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</source>
         <translation>Problém s detekcí Keycard.&lt;br&gt;Vyjměte a znovu vložte čtečku a Keycard.</translation>
     </message>
     <message>
         <source>Keycard blocked</source>
         <translation>Keycard zablokována</translation>
-    </message>
-    <message>
-        <source>The inserted Keycard is empty.&lt;br&gt;Insert the correct Keycard for this profile.</source>
-        <translation>Vložená Keycard je prázdná.&lt;br&gt;Vložte správnou Keycard pro tento profil.</translation>
     </message>
     <message numerus="yes">
         <source>PIN incorrect. %n attempt(s) remaining.</source>
@@ -10629,6 +10621,26 @@ selhalo</translation>
     <message>
         <source>Enter Keycard PIN</source>
         <translation>Zadejte PIN Keycard</translation>
+    </message>
+    <message>
+        <source>Scan keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard for this profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max pairing slots reached.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

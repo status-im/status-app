@@ -64,6 +64,37 @@ platform :ios do
   end
 
   # ============================================
+  # Development Builds - Sign for local device testing
+  # ============================================
+  desc "Sign iOS app for local development on physical devices"
+  lane :development do
+    # Use separate password and repo for dev certs (MATCH_DEV_PASSWORD)
+    # This keeps production cert passwords and repo protected
+    if ENV["MATCH_DEV_PASSWORD"]
+      ENV["MATCH_PASSWORD"] = ENV["MATCH_DEV_PASSWORD"]
+    else
+      UI.user_error!("MATCH_DEV_PASSWORD environment variable is required for development signing")
+    end
+
+    # Point to the development certificates repo
+    ENV["MATCH_GIT_URL"] = "git@github.com:status-im/status-app-ios-dev-certs.git"
+
+    # Use readonly by default - most devs shouldn't modify certs
+    # Only designated team members should run with readonly:false to generate/update certs
+    match(
+      type: "development",
+      readonly: is_ci ? false : true,
+      app_identifier: "app.status.mobile"
+    )
+
+    resign_and_package(
+      app_name: APP_NAME_RELEASE,
+      display_name: DISPLAY_NAME_RELEASE,
+      profile_type: "development"
+    )
+  end
+
+  # ============================================
   # Helper Methods
   # ============================================
 
@@ -190,6 +221,31 @@ platform :ios do
     sh("/bin/bash", "-c", command)
 
     UI.success("Signed and packaged: #{ipa_path}")
+
+    # Also sign the .app bundle directly for device testing via devicectl
+    UI.message("Signing .app bundle for device deployment...")
+
+    # Copy provisioning profile into the app bundle
+    embedded_profile = File.join(app_path, "embedded.mobileprovision")
+    FileUtils.cp(provisioning_profile, embedded_profile)
+
+    # Sign frameworks first (if any)
+    frameworks_path = File.join(app_path, "Frameworks")
+    if File.directory?(frameworks_path)
+      Dir.glob("#{frameworks_path}/*.framework").each do |framework|
+        UI.message("Signing framework: #{framework}")
+        sh("codesign --force --sign #{signing_identity.shellescape} --preserve-metadata=identifier,entitlements #{framework.shellescape}")
+      end
+      Dir.glob("#{frameworks_path}/*.dylib").each do |dylib|
+        UI.message("Signing dylib: #{dylib}")
+        sh("codesign --force --sign #{signing_identity.shellescape} #{dylib.shellescape}")
+      end
+    end
+
+    # Sign the main app bundle (--generate-entitlement-der required for iOS 15+)
+    sh("codesign --force --sign #{signing_identity.shellescape} --entitlements #{entitlements_file.path.shellescape} --generate-entitlement-der #{app_path.shellescape}")
+
+    UI.success("Signed app bundle: #{app_path}")
   end
 
   def keychain_name

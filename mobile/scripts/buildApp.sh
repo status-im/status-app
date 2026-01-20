@@ -119,4 +119,11 @@ else
   [[ ! -e "$BIN_DIR/${OUTPUT_NAME}.app/Info.plist" ]] && { echo "Build failed"; exit 1; }
 
   echo "Build succeeded: $BIN_DIR/${OUTPUT_NAME}.app"
+
+  # Note: For device builds, signing happens automatically in run.sh
+  if [[ "$SDK" == "iphoneos" ]]; then
+    echo ""
+    echo "Device build complete. Run with: make mobile-run IPHONE_SDK=iphoneos"
+    echo "(Signing will happen automatically if MATCH_DEV_PASSWORD is set)"
+  fi
 fi

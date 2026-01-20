@@ -2,7 +2,11 @@
 # match manages iOS code signing certificates and provisioning profiles
 
 # Git repository for storing encrypted certificates and profiles
-git_url("git@github.com:status-im/status-app-ios-certs.git")
+# - Production certs (adhoc, appstore): status-app-ios-certs.git (restricted, uses MATCH_PASSWORD)
+# - Development certs: status-app-ios-dev-certs.git (shareable, uses MATCH_DEV_PASSWORD)
+#
+# Set MATCH_GIT_URL to override (used by development lane and direct match commands)
+git_url(ENV["MATCH_GIT_URL"] || "git@github.com:status-im/status-app-ios-certs.git")
 
 storage_mode("git")
 

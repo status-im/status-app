@@ -1,33 +1,19 @@
-# iOS Fastlane Configuration
+fastlane documentation
+----
 
-iOS builds use **fastlane** with **match** for code signing management. This provides:
-- Automatic certificate and profile management
-- Separate signing for PR vs release builds
+# Installation
 
-## Bundle Identifiers
+Make sure you have the latest version of the Xcode command line tools installed:
 
-| Build Type | Bundle ID              | Fastlane Lane |
-|------------|------------------------|---------------|
-| PR builds  | `app.status.mobile.pr` | `pr`          |
-| Release    | `app.status.mobile`    | `release`     |
+```sh
+xcode-select --install
+```
 
-## Certificate Types
+For _fastlane_ installation instructions, see [Installing _fastlane_](https://docs.fastlane.tools/#installing-fastlane)
 
-| Build Type | Certificate Type   | Match Type  | Purpose                       |
-|------------|--------------------|-------------|-------------------------------|
-| PR builds  | Apple Distribution | `adhoc`     | Testing on registered devices |
-| Release    | Apple Distribution | `appstore`  | App Store / TestFlight        |
+# Available Actions
 
-## Fastlane Files
-
-| File        | Purpose                                      |
-|-------------|----------------------------------------------|
-| `Fastfile`  | Defines signing lanes (`pr`, `release`)      |
-| `Matchfile` | Configures match for certificate management  |
-| `Appfile`   | App identifiers and team configuration       |
-| `Gemfile`   | Ruby dependencies                            |
-
-## Available Actions
+## iOS
 
 ### ios pr
 
@@ -45,32 +31,18 @@ Sign and package iOS app for PRs
 
 Sign and package iOS app for release
 
-## Local Development
+### ios development
 
-To run `fastlane` locally for testing:
-
-```bash
-cd mobile/fastlane
-nix --extra-experimental-features 'nix-command flakes' develop
-bundle install
-
-# Run a specific lane
-bundle exec fastlane ios pr
-bundle exec fastlane ios release
+```sh
+[bundle exec] fastlane ios development
 ```
 
-## Revoking/Rotating Certificates
+Sign iOS app for local development on physical devices
 
-If a certificate is compromised or revoked:
+----
 
-```bash
-cd mobile/fastlane
+This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
 
-# Nuke existing certificates (warning!! watch what you nuke)
-bundle exec fastlane match nuke development
-bundle exec fastlane match nuke distribution
+More information about _fastlane_ can be found on [fastlane.tools](https://fastlane.tools).
 
-# Regenerate
-bundle exec fastlane match development --app_identifier "app.status.mobile.pr"
-bundle exec fastlane match appstore --app_identifier "app.status.mobile"
-```
+The documentation of _fastlane_ can be found on [docs.fastlane.tools](https://docs.fastlane.tools).

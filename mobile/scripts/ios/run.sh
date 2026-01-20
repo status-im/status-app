@@ -3,6 +3,7 @@
 # 1. Lists available iOS simulators and lets the user choose one.
 # 2. If no simulator exists, a default iPad simulator is created automatically.
 # 3. Boots the chosen simulator (if needed), installs the built app and launches it.
+# 4. For physical devices: automatically signs the app if MATCH_DEV_PASSWORD is set.
 
 set -euo pipefail
 
@@ -12,6 +13,8 @@ APPID=${APPID:-$(plutil -extract CFBundleIdentifier raw "$APP/Info.plist")} # Bu
 SIMULATOR_UDID=${SIMULATOR_UDID:-""}               # Specify to skip interactive selection
 IPHONE_SDK=${IPHONE_SDK:-iphonesimulator}  # Default to simulator if not set
 DEVICE_ID=${DEVICE_ID:-""}                # For physical device selection
+FASTLANE_DIR="$CWD/../../fastlane"
+SKIP_SIGNING=${SKIP_SIGNING:-0}           # Set to 1 to skip automatic signing
 
 # Create a default iPad simulator if none are found
 create_default_simulator() {
@@ -74,16 +77,109 @@ select_simulator() {
   SIMULATOR_NAME=$(echo "$selected_line" | sed -E 's/^\s+([^()]*)\s+\(.*/\1/' | xargs)
 }
 
+# Check if app is signed for device deployment
+is_app_signed() {
+  # Check if the app has a valid signature
+  codesign -v "$APP" 2>/dev/null
+}
+
+# Sign the app for physical device deployment
+sign_app_for_device() {
+  if [[ "$SKIP_SIGNING" == "1" ]]; then
+    echo "Skipping signing (SKIP_SIGNING=1)"
+    return 0
+  fi
+
+  # Check if already signed
+  if is_app_signed; then
+    echo "App is already signed, skipping signing step"
+    return 0
+  fi
+
+  echo ""
+  echo "=================================================="
+  echo "App needs to be signed for physical device"
+  echo "=================================================="
+
+  # Check for MATCH_DEV_PASSWORD
+  if [[ -z "${MATCH_DEV_PASSWORD:-}" ]]; then
+    echo ""
+    echo "ERROR: MATCH_DEV_PASSWORD not set"
+    echo ""
+    echo "To sign the app for physical device, set MATCH_DEV_PASSWORD:"
+    echo "  export MATCH_DEV_PASSWORD='...'"
+    echo ""
+    echo "Then run again:"
+    echo "  make mobile-run IPHONE_SDK=iphoneos"
+    echo ""
+    echo "Or skip signing (app won't install on device):"
+    echo "  SKIP_SIGNING=1 make mobile-run IPHONE_SDK=iphoneos"
+    echo "=================================================="
+    exit 1
+  fi
+
+  echo "Signing app with fastlane..."
+
+  # Run fastlane in nix shell
+  if command -v nix &>/dev/null; then
+    (cd "$FASTLANE_DIR" && \
+      nix --extra-experimental-features 'nix-command flakes' develop --command \
+      bundle exec fastlane ios development)
+  else
+    # Fallback: try running fastlane directly if nix is not available
+    echo "Warning: nix not found, trying direct fastlane execution..."
+    (cd "$FASTLANE_DIR" && bundle exec fastlane ios development)
+  fi
+
+  if [[ $? -eq 0 ]]; then
+    echo ""
+    echo "=================================================="
+    echo "App signed successfully!"
+    echo "=================================================="
+  else
+    echo ""
+    echo "=================================================="
+    echo "Signing failed! Check the error above."
+    echo "=================================================="
+    exit 1
+  fi
+}
+
 run_device() {
   if [[ -z "$DEVICE_ID" ]]; then
     select_device
   fi
 
+  # Sign the app before installing on device
+  sign_app_for_device
+
   echo "Using device: ${DEVICE_NAME:-$DEVICE_ID}"
 
   # Install the app on the device
   echo "Installing app $APP onto device $DEVICE_ID"
-  xcrun devicectl device install app --device "$DEVICE_ID" "$APP"
+  if ! xcrun devicectl device install app --device "$DEVICE_ID" "$APP" 2>&1; then
+    echo ""
+    echo "=================================================="
+    echo "Installation failed. Common issues:"
+    echo ""
+    echo "1. App not signed: Set MATCH_DEV_PASSWORD and rebuild"
+    echo "   export MATCH_DEV_PASSWORD='...'"
+    echo "   make mobile-build IPHONE_SDK=iphoneos"
+    echo ""
+    echo "2. Device not trusted: On your iOS device go to:"
+    echo "   Settings > General > VPN & Device Management"
+    echo "   Find the developer profile and tap 'Trust'"
+    echo "=================================================="
+    exit 1
+  fi
+
+  echo ""
+  echo "=================================================="
+  echo "First time running on this device?"
+  echo "If the app doesn't launch, trust the developer profile:"
+  echo "  Settings > General > VPN & Device Management > Trust"
+  echo "=================================================="
+  echo ""
 
   # Launch the app on the device
   echo "Launching $APPID on device $DEVICE_ID"

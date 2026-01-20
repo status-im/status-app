@@ -27,24 +27,64 @@ export PATH=$HOME/qt/6.9.2/ios/bin:$HOME/qt/6.9.2/macos/libexec:$HOME/qt/6.9.2/m
 export QTDIR=$HOME/qt/6.9.2/ios
 ```
 
-2. **Build and run:**
+2. **Build and run (Simulator):**
 ```bash
 make mobile-run
 ```
 
-Running the app requires a code sign identity. See [Signing](#signing)
+Simulator builds don't require signing - they just work!
 
-#### Keycard
+#### Running on Physical Device
 
-The keycard support is disabled by default in the mobile makefile for IOS. It requires a paid apple developer account to run the app with NFC enabled.
+To run on a physical iOS device, you need to sign the app with development certificates.
 
-To enable keycard use the `USE_STATUS_KEYCARD_QT=1` flag for the main Makefile and use a paid account by updating the `QMAKE_DEVELOPMENT_TEAM` flag and the bundle if (if the development team isn't Status).
+**First-time setup:**
+```bash
+# 1. Get MATCH_DEV_PASSWORD from team (freely shareable)
+export MATCH_DEV_PASSWORD="..."
 
-#### Signing
+# 2. Sync development certificates (one-time)
+cd mobile/fastlane
+bundle install  # if not done before
+bundle exec fastlane match development
 
-By default the app isn't signed.
+# 3. Build and run on device
+make mobile-run IPHONE_SDK=iphoneos
 
-To sign the app the `QMAKE_DEVELOPMENT_TEAM` flag needs to be provided. If the development team is not Status development team, then the app bundle id needs to be updated to a unique bundle id.
+# 4. First run only: Trust the developer profile on your device
+#    Settings > General > VPN & Device Management > Trust
+```
+
+**Subsequent runs:**
+```bash
+export MATCH_DEV_PASSWORD="..."
+make mobile-run IPHONE_SDK=iphoneos
+```
+
+**Note:** By using the shared development certificates, all developers get access to paid account features (NFC/Keycard, push notifications) without needing their own paid Apple Developer account.
+
+#### Keycard / NFC
+
+Keycard support requires NFC entitlements. With the shared development certificates from fastlane match, NFC is automatically enabled for all developers.
+
+To explicitly enable/disable keycard in builds:
+```bash
+# Enable keycard (default for device builds with signing)
+make mobile-run IPHONE_SDK=iphoneos FLAG_KEYCARD_ENABLED=1
+
+# Disable keycard
+make mobile-run IPHONE_SDK=iphoneos FLAG_KEYCARD_ENABLED=0
+```
+
+#### Signing (Advanced)
+
+The recommended approach is to use fastlane match as described above. For advanced use cases:
+
+- **Development certificates** use `MATCH_DEV_PASSWORD` and are stored in a separate shareable repo
+- **Production certificates** (adhoc/appstore) use `MATCH_PASSWORD` and are restricted to CI
+- To skip auto-signing: `NO_SIGN=1 make mobile-build IPHONE_SDK=iphoneos`
+
+See [fastlane/README.md](fastlane/README.md) for more details.
 
 #### 
 

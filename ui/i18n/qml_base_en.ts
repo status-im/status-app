@@ -10510,23 +10510,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Wrong Keycard for this profile inserted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Keycard blocked</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The inserted Keycard is empty.&lt;br&gt;Insert the correct Keycard for this profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -10546,6 +10534,26 @@ to load</source>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scan keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard for this profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max pairing slots reached.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

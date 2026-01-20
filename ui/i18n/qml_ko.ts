@@ -8990,6 +8990,10 @@ L2 수수료: %2</translation>
         <source>Dismiss</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Ready to scan</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardConfirmation</name>
@@ -10496,24 +10500,12 @@ to load</source>
         <translation>Keycard 읽는 중...</translation>
     </message>
     <message>
-        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
-        <translation>이런, 이건 Keycard가 아니에요.&lt;br&gt;카드를 제거하고 Keycard를 삽입하세요.</translation>
-    </message>
-    <message>
-        <source>Wrong Keycard for this profile inserted</source>
-        <translation>이 프로필에 맞지 않는 Keycard가 삽입되었습니다</translation>
-    </message>
-    <message>
         <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</source>
         <translation>Keycard 감지 문제.&lt;br&gt;리더기와 Keycard를 제거했다가 다시 삽입하세요.</translation>
     </message>
     <message>
         <source>Keycard blocked</source>
         <translation>Keycard가 차단됨</translation>
-    </message>
-    <message>
-        <source>The inserted Keycard is empty.&lt;br&gt;Insert the correct Keycard for this profile.</source>
-        <translation>삽입한 Keycard가 비어 있습니다.&lt;br&gt;이 프로필에 맞는 올바른 Keycard를 삽입하세요.</translation>
     </message>
     <message numerus="yes">
         <source>PIN incorrect. %n attempt(s) remaining.</source>
@@ -10532,6 +10524,26 @@ to load</source>
     <message>
         <source>Enter Keycard PIN</source>
         <translation>Keycard PIN 입력</translation>
+    </message>
+    <message>
+        <source>Scan keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard for this profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max pairing slots reached.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

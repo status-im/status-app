@@ -10936,6 +10936,11 @@
   <context>
     <name>KeycardChannelDrawer</name>
     <message>
+      <source>Ready to scan</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Ready to scan</translation>
+    </message>
+    <message>
       <source>Please tap your Keycard to the back of your device</source>
       <comment>KeycardChannelDrawer</comment>
       <translation>Please tap your Keycard to the back of your device</translation>
@@ -12791,16 +12796,6 @@
       <translation>Reading Keycard...</translation>
     </message>
     <message>
-      <source>Oops this isn&#39;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Oops this isn&#39;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</translation>
-    </message>
-    <message>
-      <source>Wrong Keycard for this profile inserted</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Wrong Keycard for this profile inserted</translation>
-    </message>
-    <message>
       <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</source>
       <comment>LoginKeycardBox</comment>
       <translation>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard.</translation>
@@ -12809,11 +12804,6 @@
       <source>Keycard blocked</source>
       <comment>LoginKeycardBox</comment>
       <translation>Keycard blocked</translation>
-    </message>
-    <message>
-      <source>The inserted Keycard is empty.&lt;br&gt;Insert the correct Keycard for this profile.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>The inserted Keycard is empty.&lt;br&gt;Insert the correct Keycard for this profile.</translation>
     </message>
     <message numerus="yes">
       <source>PIN incorrect. %n attempt(s) remaining.</source>
@@ -12837,6 +12827,31 @@
       <source>Enter Keycard PIN</source>
       <comment>LoginKeycardBox</comment>
       <translation>Enter Keycard PIN</translation>
+    </message>
+    <message>
+      <source>Scan keycard</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Scan keycard</translation>
+    </message>
+    <message>
+      <source>Oops this isn&#39;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Oops this isn&#39;t a Keycard.&lt;br&gt;Try using a Keycard instead.</translation>
+    </message>
+    <message>
+      <source>Wrong Keycard for this profile</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Wrong Keycard for this profile</translation>
+    </message>
+    <message>
+      <source>Max pairing slots reached.</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Max pairing slots reached.</translation>
+    </message>
+    <message>
+      <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</translation>
     </message>
   </context>
   <context>
