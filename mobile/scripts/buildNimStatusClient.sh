@@ -76,7 +76,7 @@ NIM_FLAGS=(
 if [ "$DEBUG" -eq 1 ]; then
     NIM_FLAGS+=(-d:debug -d:nimTypeNames)
 else
-    NIM_FLAGS+=(-d:release -d:lto -d:production)
+    NIM_FLAGS+=(-d:release -d:production)
 fi
 
 # build status-client with feature flags
