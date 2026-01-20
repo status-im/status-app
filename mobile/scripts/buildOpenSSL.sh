@@ -17,7 +17,8 @@ SSL_BUILD_DIR=${BUILD_DIR}/openssl-${TARGET}
 CRYPTO_OUTPUT_LIB=${LIB_PATH}/libcrypto_3${LIB_EXT}
 SSL_OUTPUT_LIB=${LIB_PATH}/libssl_3${LIB_EXT}
 
-PLATFORM_ARGS=""
+PLATFORM_CONFIG_ARGS=()
+PLATFORM_BUILD_ARGS=()
 
 if [[ "$OS" == "ios" ]]; then
   if [[ "$SDK" == "iphonesimulator" ]]; then
@@ -38,30 +39,28 @@ if [[ "$OS" == "ios" ]]; then
 fi
 
 if [[ "$OS" == "android" ]]; then
-  PLATFORM_CONFIG_ARGS="-U__ANDROID_API__ -D__ANDROID_API__=${ANDROID_API}"
-  PLATFORM_BUILD_ARGS="SHLIB_VERSION_NUMBER="
+  PLATFORM_CONFIG_ARGS=("-U__ANDROID_API__" "-D__ANDROID_API__=${ANDROID_API}")
+  PLATFORM_BUILD_ARGS=("SHLIB_VERSION_NUMBER=")
   cleanup() {
-    if [[ "$OS" == "android" ]]; then
-      patch -d ${OPENSSL} -R -p0 <"${SCRIPT_DIR}/openssl-patch.diff"
-    fi
+    patch -d "${OPENSSL}" -R -p0 <"${SCRIPT_DIR}/openssl-patch.diff"
   }
 
   trap cleanup EXIT
-  patch -d ${OPENSSL} -p0 <"${SCRIPT_DIR}/openssl-patch.diff"
+  patch -d "${OPENSSL}" -p0 <"${SCRIPT_DIR}/openssl-patch.diff"
 fi
 
-echo "Building OpenSSL for $TARGET with platform config args $PLATFORM_CONFIG_ARGS"
+echo "Building OpenSSL for $TARGET with platform config args ${PLATFORM_CONFIG_ARGS[*]}"
 
-mkdir -p ${SSL_BUILD_DIR}
+mkdir -p "${SSL_BUILD_DIR}"
 
 (
-  cd ${SSL_BUILD_DIR}
-  
+  cd "${SSL_BUILD_DIR}"
+
   # - no-module: Makes legacy provider built-in to libcrypto (not a separate module)
   # - enable-legacy: Enables legacy algorithms including DES
   # This is required for GlobalPlatform SCP02 which uses single-DES
   # Reference: https://github.com/openssl/openssl/discussions/25793
-  
+
   # Platform-specific config
   if [[ "$OS" == "ios" ]]; then
     # iOS uses static libraries (.a files)
@@ -70,14 +69,14 @@ mkdir -p ${SSL_BUILD_DIR}
     # Android uses shared libraries (.so files)
     SHARED_FLAG="shared"
   fi
-  
-  ${OPENSSL}/Configure --release "$TARGET" $PLATFORM_CONFIG_ARGS \
+
+  "${OPENSSL}"/Configure --release "$TARGET" "${PLATFORM_CONFIG_ARGS[@]}" \
     no-module \
     enable-legacy \
     enable-des \
     enable-md2 \
     enable-rc5 \
-    $SHARED_FLAG \
+    "$SHARED_FLAG" \
     no-tests \
     no-ui-console
   # Rebuilding isn't working with the default target, so we need to clean and build again

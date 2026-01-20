@@ -228,3 +228,11 @@ clean-status-desktop-rcc:
 	@rm -f $(STATUS_DESKTOP_RCC)
 	@rm -f $(STATUS_DESKTOP)/resources.rcc
 	@rm -f $(STATUS_DESKTOP)/ui/resources.qrc
+
+.PHONY: apk-fdroid
+apk-fdroid:
+ifeq ($(OS),android)
+	@$(MAKE) GRADLE_TARGETS=assembleFdroid $(TARGET)
+else
+	$(error apk-fdroid target is only available for Android)
+endif

@@ -2,6 +2,7 @@
 set -eo pipefail
 
 CWD=$(realpath "$(dirname "$0")")
+REPO_ROOT=$(realpath "$CWD/../..")
 
 ARCH=${ARCH:-amd64}
 SDK=${SDK:-iphonesimulator}
@@ -40,6 +41,11 @@ if [[ "${OS}" == "android" ]]; then
   # Export BUILD_VARIANT for build.gradle to pick up
   export BUILD_VARIANT
 
+  if [[ "$GRADLE_TARGETS" == *"Fdroid"* ]]; then
+    # shellcheck source=../../fdroid/generate-keystore.sh
+    source "$REPO_ROOT/fdroid/generate-keystore.sh" "$REPO_ROOT/status-fdroid.keystore"
+  fi
+
   "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec android-clang \
     ANDROID_ABIS="${ANDROID_ABI:-arm64-v8a}" VERSION="$VERSION" "${QMAKE_DEFINES[@]}" -after
 
@@ -64,16 +70,31 @@ if [[ "${OS}" == "android" ]]; then
   # Determine build type from GRADLE_TARGETS
   if [[ "$GRADLE_TARGETS" == *"Debug"* ]]; then
     BUILD_TYPE="debug"
+  elif [[ "$GRADLE_TARGETS" == *"Fdroid"* ]]; then
+    BUILD_TYPE="fdroid"
   else
     BUILD_TYPE="release"
   fi
 
-  # Gradle output paths
-  APK_OUT="build/outputs/apk/${BUILD_TYPE}/android-build-${BUILD_TYPE}.apk"
+  # Gradle output paths (may be signed or unsigned depending on environment)
+  APK_DIR="build/outputs/apk/${BUILD_TYPE}"
+  export APK_OUT="${APK_DIR}/android-build-${BUILD_TYPE}.apk"
+  export APK_OUT_UNSIGNED="${APK_DIR}/android-build-${BUILD_TYPE}-unsigned.apk"
   AAB_OUT="build/outputs/bundle/${BUILD_TYPE}/android-build-${BUILD_TYPE}.aab"
 
   # Build with specified gradle targets
-  ./gradlew ${GRADLE_TARGETS} --no-daemon
+  # shellcheck disable=SC2086 # intentional word splitting for multiple gradle tasks
+  ./gradlew ${GRADLE_TARGETS} --no-daemon --console=plain
+
+  echo "APK outputs:"
+  find build/outputs/apk -name '*.apk' 2>/dev/null || echo "No APKs found"
+
+  # If Gradle produced an unsigned APK (e.g. fdroid build where signing configs
+  # are stripped by fdroid's remove_signing_keys), sign it via the dedicated script.
+  if [[ ! -f "$APK_OUT" && -f "$APK_OUT_UNSIGNED" && -n "${FDROID_STORE_FILE:-}" ]]; then
+    echo "Signing unsigned APK..."
+    "$REPO_ROOT/fdroid/sign-apk.sh"
+  fi
 
   # Copy whichever artifacts were built
   BUILT=""

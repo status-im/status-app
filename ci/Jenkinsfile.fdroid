@@ -1,0 +1,124 @@
+#!/usr/bin/env groovy
+library 'status-jenkins-lib@v1.9.40'
+
+/* Options section can't access functions in objects. */
+def isPRBuild = utils.isPRBuild()
+
+/* Object to store public URLs for description. */
+descLinks = [:]
+
+pipeline {
+  agent {
+    dockerfile {
+      dir 'fdroid'
+      filename 'Dockerfile'
+      label 'linuxcontainer'
+      args '--entrypoint="" ' +
+           '--group-add docker ' +
+           '--volume=/nix:/nix ' +
+           '--volume=/etc/nix:/etc/nix ' +
+           '--volume=/var/run/docker.sock:/var/run/docker.sock '
+    }
+  }
+
+  parameters {
+    string(
+      name: 'BUILD_TARGET',
+      description: 'F-Droid build target in format appid:versioncode (leave empty for script default)',
+      defaultValue: ''
+    )
+    string(
+      name: 'FDROIDDATA_REPO',
+      description: 'Git repository URL for fdroiddata',
+      defaultValue: 'https://gitlab.com/siddarthkay/fdroiddata.git' // FIXME: point to org repo after https://gitlab.com/fdroid/fdroiddata/-/merge_requests/32193 is merged
+    )
+    string(
+      name: 'FDROIDDATA_BRANCH',
+      description: 'Branch of fdroiddata repository to use',
+      defaultValue: 'app.status.mobile'
+    )
+  }
+
+  options {
+    timestamps()
+    /* F-Droid builds can take many hours due to Qt compilation */
+    timeout(time: 48, unit: 'HOURS')
+    /* manage how many builds we keep */
+    buildDiscarder(logRotator(
+      numToKeepStr: '5',
+      daysToKeepStr: '30',
+      artifactNumToKeepStr: '2',
+    ))
+    /* Allows combined build to copy */
+    copyArtifactPermission('/status-app/*')
+    /* Abort old PR builds. */
+    disableConcurrentBuilds(abortPrevious: isPRBuild)
+    disableRestartFromStage()
+  }
+
+  environment {
+    FDROIDDATA_PATH = "${env.WORKSPACE}/fdroiddata"
+  }
+
+  stages {
+
+    stage('Cleanup Workspace') {
+      steps { script {
+        sh './scripts/clean-git.sh'
+      } }
+    }
+
+    stage('Clone fdroiddata') {
+      steps {
+        sh './fdroid/cleanup-fdroiddata.sh'
+        sh "git clone --branch '${params.FDROIDDATA_BRANCH}' '${params.FDROIDDATA_REPO}' ${env.FDROIDDATA_PATH}"
+        /* Update metadata commit to current HEAD so we always build the checked-out revision */
+        sh "sed -i 's/commit: .*/commit: '`git rev-parse HEAD`'/' ${env.FDROIDDATA_PATH}/metadata/app.status.mobile.yml"
+      }
+    }
+
+    stage('Build F-Droid') {
+      steps {
+        sh "./scripts/fdroid-local-build.sh ${params.BUILD_TARGET ?: ''}"
+      }
+    }
+
+    stage('Package') {
+      steps {
+        script {
+          sh 'mkdir -p pkg'
+          sh "cp -v ${env.FDROIDDATA_PATH}/tmp/*.apk pkg/"
+          env.STATUS_FDROID_APK = utils.findFile("pkg/*.apk")
+        }
+      }
+    }
+
+    stage('Upload') {
+      steps {
+        script {
+          env.PKG_URL = s5cmd.upload(env.STATUS_FDROID_APK)
+          descLinks['F-Droid APK'] = env.PKG_URL
+        }
+      }
+    }
+
+    stage('Archive') {
+      steps {
+        archiveArtifacts artifacts: 'pkg/*.apk', fingerprint: true
+      }
+    }
+  }
+
+  post {
+    always { script {
+      jenkins.setBuildDesc(descLinks)
+    } }
+    success { script { github.notifyPR(true) } }
+    failure { script { github.notifyPR(false) } }
+    cleanup {
+      sh 'docker ps -aq --filter "name=fdroid-local-build" | xargs -r docker rm -f || true'
+      sh './fdroid/cleanup-fdroiddata.sh || true'
+      cleanWs(disableDeferredWipeout: true)
+    }
+  }
+}

@@ -93,8 +93,8 @@ android {
         minSdkVersion qtMinSdkVersion
         targetSdkVersion qtTargetSdkVersion
         ndk.abiFilters = qtTargetAbiList.split(",")
-        // Generate unique versionCode based on minutes since epoch
-        versionCode = (System.currentTimeMillis() / 60000).toInteger()
+        // Use FDROID_VERSION_CODE env var if set, otherwise generate from timestamp
+        versionCode = System.getenv("FDROID_VERSION_CODE")?.toInteger() ?: (System.currentTimeMillis() / 60000).toInteger()
         // Set applicationId and app name based on build variant
         applicationId = buildVariant == 'release' ? "app.status.mobile" : "app.status.mobile.pr"
         resValue "string", "app_name", buildVariant == 'release' ? "Status" : "Status PR"
@@ -116,6 +116,10 @@ android {
             debuggable = false
             minifyEnabled = false
             signingConfig signingConfigs.release
+        }
+        fdroid {
+            debuggable = false
+            minifyEnabled = false
         }
         debug {
             debuggable = true
