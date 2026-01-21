@@ -4336,10 +4336,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <source>Start chat</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Open QR Scanner</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ContactsListPanel</name>

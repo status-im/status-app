@@ -4358,10 +4358,6 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <source>Start chat</source>
         <translation>Zahájit chat</translation>
     </message>
-    <message>
-        <source>Open QR Scanner</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ContactsListPanel</name>

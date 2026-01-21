@@ -65,22 +65,6 @@ Item {
             }
 
             StatusIconTabButton {
-                id: qrScannerButton
-                Layout.alignment: Qt.AlignVCenter
-                objectName: "qrScannerButton"
-                icon.name: "qr-scan"
-                icon.color: Theme.palette.directColor1
-                onClicked: Global.openQRScannerRequested()
-
-                StatusToolTip {
-                    text: qsTr("Open QR Scanner")
-                    visible: parent.hovered
-                    orientation: StatusToolTip.Orientation.Bottom
-                    y: parent.height + Theme.padding
-                }
-            }
-
-            StatusIconTabButton {
                 id: startChatButton
                 Layout.alignment: Qt.AlignVCenter
                 objectName: "startChatButton"
