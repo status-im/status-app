@@ -88,6 +88,10 @@ SQUtils.QObject {
             }
             ValueFilter {
                 roleName: "sectionType"
+                value: Constants.appSection.qrCodeScanner
+            }
+            ValueFilter {
+                roleName: "sectionType"
                 value: Constants.appSection.profile
             }
         }

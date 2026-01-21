@@ -2261,6 +2261,8 @@ Item {
             prevSectionId = sectionId
             if (sectionType === Constants.appSection.swap) {
                 popupRequestsHandler.swapModalHandler.launchSwap()
+            } else if (sectionType === Constants.appSection.qrCodeScanner) {
+                Global.openQRScannerRequested()
             } else {
                 changeAppSectionBySectionId(sectionId)
             }
