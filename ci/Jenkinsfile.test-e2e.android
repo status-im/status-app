@@ -13,6 +13,11 @@ pipeline {
 
   parameters {
     string(
+      name: 'CHANGE_ID',
+      description: 'Passed from PR CI Job, optional',
+      defaultValue: ''
+    )
+    string(
       name: 'GIT_REF',
       description: 'Git branch to checkout.',
       defaultValue: 'master'
@@ -54,7 +59,9 @@ pipeline {
     PLATFORM = 'tests/e2e-android'
     VIRTUAL_ENV = "${env.WORKSPACE_TMP}/venv-appium"
     PYTHONUNBUFFERED = "1"
+    CHANGE_ID = "${params.CHANGE_ID}"
     TEST_DEVICE_ID = "${params.TEST_DEVICE_ID}"
+    BROWSERSTACK_APP_ID = "${params.BROWSERSTACK_APP_ID?.trim() ?: ''}"
     BROWSERSTACK_PROJECT_NAME = "Mobile E2E ${getBuildTypeFromUpstream()}"
   }
 
@@ -136,9 +143,6 @@ pipeline {
     stage('Run pytest suite') {
       steps {
         script {
-          if (params.BROWSERSTACK_APP_ID?.trim()) {
-            env.BROWSERSTACK_APP_ID = params.BROWSERSTACK_APP_ID.trim()
-          }
           env.E2E_RUN_ID = env.BUILD_TAG
           dir('test/e2e_appium') {
             withCredentials([
@@ -173,13 +177,12 @@ pipeline {
 }
 
 def setNewBuildName() {
-  def prMatch = params.BUILD_SOURCE =~ /PR-(\d+)/
-  if (prMatch) {
-    currentBuild.displayName = "PR${prMatch[0][1]}"
+  if (utils.isPRBuild()) {
+    currentBuild.displayName = "PR${env.CHANGE_ID}"
   }
 }
 def updateGitHubStatus() {
-  if (params.BUILD_SOURCE ==~ /.*\/PR-[0-9]+\/?$/) {
+  if (utils.isPRBuild()) {
     github.statusUpdate(
       context: 'jenkins/prs/tests/e2e-android',
       commit: jenkins.getJobCommitByPath(params.BUILD_SOURCE),

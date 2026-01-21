@@ -159,6 +159,7 @@ pipeline {
           job: 'status-app/e2e/prs-android',
           wait: false,
           parameters: jenkins.mapToParams([
+            CHANGE_ID: env.CHANGE_ID,
             GIT_REF: env.CHANGE_BRANCH ?: env.BRANCH_NAME,
             BUILD_SOURCE: env.PKG_URL,
           ]),
