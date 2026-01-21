@@ -1,4 +1,4 @@
-import QtQuick
+﻿import QtQuick
 import QtTest
 
 import StatusQ.Core
@@ -82,6 +82,7 @@ Item {
             swapInputParamsForm: root.swapFormData
             swapAdaptor: root.swapAdaptor
             loginType: Constants.LoginType.Password
+            buyEnabled: true
         }
     }
 
