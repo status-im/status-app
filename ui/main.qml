@@ -47,6 +47,7 @@ Window {
         localBackupEnabled: featureFlags ? featureFlags.localBackupEnabled : false
         privacyModeFeatureEnabled: featureFlags ? featureFlags.privacyModeFeatureEnabled : false
         buyEnabled: featureFlags ? featureFlags.buyEnabled : false
+        bridgeEnabled: featureFlags ? featureFlags.bridgeEnabled : false
     }
 
     readonly property MetricsStore metricsStore: MetricsStore {}
