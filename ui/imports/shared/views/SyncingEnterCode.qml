@@ -58,29 +58,24 @@ ColumnLayout {
 
     StackLayout {
         Layout.fillWidth: true
+        Layout.fillHeight: true
         Layout.preferredHeight: Math.max(syncQr.implicitHeight, syncCode.implicitHeight)
         Layout.topMargin: Theme.bigPadding
         currentIndex: switchTabBar.currentIndex
 
-        // StackLayout doesn't support alignment, so we create an `Item` wrappers
-
-        Item {
-            QRCodeScanner {
-                id: syncQr
-                anchors {
-                    left: parent.left
-                    right: parent.right
+        QRCodeScanner {
+            id: syncQr
+            Layout.preferredHeight: 440
+            Layout.preferredWidth: 440
+            validators: [
+                StatusValidator {
+                    name: "isSyncQrCode"
+                    errorMessage: root.syncQrErrorMessage
+                    validate: root.validateConnectionString
                 }
-                validators: [
-                    StatusValidator {
-                        name: "isSyncQrCode"
-                        errorMessage: root.syncQrErrorMessage
-                        validate: root.validateConnectionString
-                    }
-                ]
-                onValidTagFound: tag => {
-                    root.proceed(tag)
-                }
+            ]
+            onValidTagFound: tag => {
+                root.proceed(tag)
             }
         }
 

@@ -14,9 +14,16 @@ import utils
 StatusDialog {
     id: root
 
-    width: 438
+    width: 360
+    height: 500
+    fillHeightOnBottomSheet: true
+    leftPadding: Theme.smallPadding
+    rightPadding: Theme.smallPadding
+    topPadding: 0
+    bottomPadding: Theme.bigPadding
 
-    title: qsTr("Scan QR")
+    title: qsTr("QR Code Scanner")
+    showHeaderDivider: false
 
     signal tagFound(int tagType, string tag)
 
@@ -33,7 +40,7 @@ StatusDialog {
 
     contentItem: Loader {
         Layout.fillWidth: true
-        Layout.margins: Theme.padding
+        // Layout.margins: Theme.smallPadding
         sourceComponent: !!d.validTag ? validTagFoundComponent : cameraComponent
     }
 
@@ -41,17 +48,11 @@ StatusDialog {
         id: cameraComponent
 
         QRCodeScanner {
-            id: syncQr
-            
-            Layout.fillWidth: true
-            leftPadding: Theme.padding
-            rightPadding: Theme.padding
-            cameraWidth: parent.width
-            cameraHeight: 276
+            id: qrCodeScanner
             validators: [
                 StatusValidator {
-                    name: "isSyncQrCode"
-                    errorMessage: qsTr("Status doesn't understand the QR code.")
+                    name: "isValidQR"
+                    errorMessage: qsTr("We cannot read that QR code.")
                     validate: function (tag) {
                         // We accept URLs and addresses
                         return Utils.isURL(tag) || Utils.isValidAddress(tag)

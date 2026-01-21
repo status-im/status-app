@@ -14385,22 +14385,22 @@ access to your webcam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Ensure that the QR code is in focus to scan</source>
+        <source>Align the QR code within the frame to scan</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>QRCodeScannerDialog</name>
     <message>
-        <source>Scan QR</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status doesn&apos;t understand the QR code.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Scanned successfully</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>QR Code Scanner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We cannot read that QR code.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
