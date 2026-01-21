@@ -533,7 +533,7 @@ Rectangle {
                     ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
                     : StatusQUtils.Emoji.deparse(ClipboardUtils.html)));
                 }
-                
+
                 // Reset readOnly immediately after paste completes
                 // Don't wait for onRelease which might not fire on mobile
                 if (StatusQUtils.Utils.isMobile) {
@@ -713,21 +713,25 @@ Rectangle {
             messageInputField.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard);
         }
 
-
         if (suggestionsBox.visible) {
-            let aliasName = suggestionsBox.filter;
-            let lastCursorPosition = suggestionsBox.cursorPosition;
-            let lastAtPosition = suggestionsBox.lastAtPosition;
-            let suggestionItem = suggestionsBox.listView.itemAtIndex(suggestionsBox.listView.currentIndex);
+            const namePrefix = suggestionsBox.filter
+            const lastCursorPosition = suggestionsBox.cursorPosition
+            const lastAtPosition = suggestionsBox.lastAtPosition
 
-            if (aliasName !== "" && aliasName.toLowerCase() === suggestionItem.preferredDisplayName.toLowerCase()
-                    && event.key !== Qt.Key_Backspace && event.key !== Qt.Key_Delete && event.key !== Qt.Key_Left) {
-                d.insertMention(aliasName, suggestionItem.pubKey, lastAtPosition, lastCursorPosition);
-            } else if (event.key === Qt.Key_Space) {
-                var plainTextToReplace = messageInputField.getText(lastAtPosition, lastCursorPosition);
-                messageInputField.remove(lastAtPosition, lastCursorPosition);
-                messageInputField.insert(lastAtPosition, plainTextToReplace);
-                suggestionsBox.hide();
+            const suggestionItem = StatusQUtils.ModelUtils.get(
+                    suggestionsFilterAdaptor.model,
+                    suggestionsBox.listView.currentIndex)
+
+            const namePrefixLowerCase = namePrefix.toLowerCase()
+            const fullName = suggestionItem.preferredDisplayName
+            const fullNameLowerCase = fullName.toLowerCase()
+
+            if (namePrefix !== "" && namePrefixLowerCase === fullNameLowerCase
+                    && event.key !== Qt.Key_Backspace
+                    && event.key !== Qt.Key_Delete
+                    && event.key !== Qt.Key_Left) {
+                d.insertMention(fullName, suggestionItem.pubKey,
+                                lastAtPosition, lastCursorPosition)
             }
         }
     }
