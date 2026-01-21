@@ -116,6 +116,29 @@ StackLayout {
     signal showUsersListRequested(bool show)
     signal navToMsgDetailsRequested(bool navigate)
 
+    // Floating panel interaction:
+    // Added here since this layout does not directly inherit from `StatusSectionLayout`.
+    /*!
+        \qmlproperty Item ChatLayout::leftFloatingPanelItem
+        This property holds the left floating panel of the component.
+    */
+    property Item leftFloatingPanelItem
+    /*!
+        \qmlproperty bool ChatLayout::floatingPanelOpen
+        Consumer-driven source of truth for the floating panel state.
+        The layout never mutates this property; consumers must keep it in sync.
+    */
+    property bool floatingPanelOpen: false
+
+    /*!
+        \qmlsignal
+        Emitted when the floating panel is automatically closed (e.g. dismiss, Escape).
+
+        Note: This signal does not update any state internally. It is the consumer’s
+        responsibility to react to it and keep the external floating panel state in sync.
+    */
+    signal floatingPanelAutoClosed()
+
     onCurrentIndexChanged: {
         Global.closeCreateChatView()
     }
@@ -187,6 +210,11 @@ StackLayout {
                 Global.communityIntroPopupRequested(joinCommunityView.communityId, sectionItemModel.name, sectionItemModel.introMessage,
                                                     sectionItemModel.image, root.isInvitationPending)
             }
+
+            // Floating panel (state + shared content)
+            leftFloatingPanelItem: root.leftFloatingPanelItem
+            floatingPanelOpen: root.floatingPanelOpen
+            onFloatingPanelAutoClosed:  root.floatingPanelAutoClosed()
         }
     }
 
@@ -289,6 +317,11 @@ StackLayout {
 
             // Navigation:
             navToMsgDetails: root.navToMsgDetails
+
+            // Floating panel (state + shared content)
+            leftFloatingPanelItem: root.leftFloatingPanelItem
+            floatingPanelOpen: root.floatingPanelOpen
+            onFloatingPanelAutoClosed:  root.floatingPanelAutoClosed()
 
             onGroupMembersUpdateRequested: root.groupMembersUpdateRequested(membersPubKeysList)
 
@@ -410,6 +443,11 @@ StackLayout {
             onDeclineRequestToJoinCommunityRequested: (requestId, communityId) => {
                 root.communityAccessStore.declineRequestToJoinCommunityRequested(requestId, communityId)
             }
+
+            // Floating panel (state + shared content)
+            leftFloatingPanelItem: root.leftFloatingPanelItem
+            floatingPanelOpen: root.floatingPanelOpen
+            onFloatingPanelAutoClosed:  root.floatingPanelAutoClosed()
         }
     }
 
@@ -424,6 +462,11 @@ StackLayout {
             membersCount: sectionItemModel.joinedMembersCount
             communityItemsModel: root.rootStore.communityItemsModel
             onAdHocChatButtonClicked: rootStore.openCloseCreateChatView()
+
+            // Floating panel (state + shared content)
+            leftFloatingPanelItem: root.leftFloatingPanelItem
+            floatingPanelOpen: root.floatingPanelOpen
+            onFloatingPanelAutoClosed:  root.floatingPanelAutoClosed()
         }
     }
 
@@ -439,6 +482,11 @@ StackLayout {
             membersCount: sectionItemModel.joinedMembersCount
             communityItemsModel: root.rootStore.communityItemsModel
             onAdHocChatButtonClicked: rootStore.openCloseCreateChatView()
+
+            // Floating panel (state + shared content)
+            leftFloatingPanelItem: root.leftFloatingPanelItem
+            floatingPanelOpen: root.floatingPanelOpen
+            onFloatingPanelAutoClosed:  root.floatingPanelAutoClosed()
         }
     }
 }

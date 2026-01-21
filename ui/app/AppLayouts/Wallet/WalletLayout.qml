@@ -64,6 +64,29 @@ Item {
 
     signal openSwapModalRequested(var swapFormData)
 
+    // Floating panel interaction:
+    // Added here since this layout does not directly inherit from `StatusSectionLayout`.
+    /*!
+        \qmlproperty Item WalletLayout::leftFloatingPanelItem
+        This property holds the left floating panel of the component.
+    */
+    property Item leftFloatingPanelItem
+    /*!
+        \qmlproperty bool WalletLayout::floatingPanelOpen
+        Consumer-driven source of truth for the floating panel state.
+        The layout never mutates this property; consumers must keep it in sync.
+    */
+    property bool floatingPanelOpen: false
+
+    /*!
+        \qmlsignal
+        Emitted when the floating panel is automatically closed (e.g. dismiss, Escape).
+
+        Note: This signal does not update any state internally. It is the consumer’s
+        responsibility to react to it and keep the external floating panel state in sync.
+    */
+    signal floatingPanelAutoClosed()
+
     onAppMainVisibleChanged: {
         resetView()
     }
@@ -440,6 +463,11 @@ Item {
                 value: footer.walletStore.currentViewedCollectible.communityId
             }
         }
+
+        // Floating panel (state + shared content)
+        leftFloatingPanelItem: root.leftFloatingPanelItem
+        floatingPanelOpen: root.floatingPanelOpen
+        onFloatingPanelAutoClosed:  root.floatingPanelAutoClosed()
     }
 
     Loader {
