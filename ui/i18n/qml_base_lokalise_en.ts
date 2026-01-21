@@ -17538,14 +17538,14 @@
       <comment>QRCodeScanner</comment>
       <translation>Align the QR code within the frame to scan</translation>
     </message>
+    <message>
+      <source>Scanned successfully</source>
+      <comment>QRCodeScanner</comment>
+      <translation>Scanned successfully</translation>
+    </message>
   </context>
   <context>
     <name>QRCodeScannerDialog</name>
-    <message>
-      <source>Scanned successfully</source>
-      <comment>QRCodeScannerDialog</comment>
-      <translation>Scanned successfully</translation>
-    </message>
     <message>
       <source>QR Code Scanner</source>
       <comment>QRCodeScannerDialog</comment>
