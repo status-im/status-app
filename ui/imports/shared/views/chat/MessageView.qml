@@ -1024,7 +1024,7 @@ Loader {
 
                         isEdit: true
 
-                        onSendMessage: delegate.editCompletedHandler(editTextInput.getTextWithPublicKeys())
+                        onSendMessageRequested: delegate.editCompletedHandler(editTextInput.getTextWithPublicKeys())
                         onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
 
                         Component.onCompleted: {

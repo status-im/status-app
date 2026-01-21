@@ -131,7 +131,7 @@ SplitView {
             paymentRequestFeatureEnabled: true
             areTestNetworksEnabled: testnetEnabledCheckBox.checked
 
-            onSendMessage: {
+            onSendMessageRequested: {
                 console.log()
 
                 logs.logEvent("StatusChatInput::sendMessage", ["MessageWithPk"], [chatInput.getTextWithPublicKeys()])

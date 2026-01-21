@@ -29,7 +29,7 @@ Rectangle {
     objectName: "statusChatInput"
 
     signal stickerSelected(string hashId, string packId, string url)
-    signal sendMessage(var event)
+    signal sendMessageRequested()
     signal keyUpPress()
     signal linkPreviewReloaded(string link)
     signal enableLinkPreview()
@@ -379,29 +379,30 @@ Rectangle {
         // get text without HTML formatting
         const messageLength = messageInputField.length
 
-        if (event.modifiers === d.kbdModifierToSendMessage && (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)) {
+        if (event.modifiers === d.kbdModifierToSendMessage &&
+                (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)) {
             if (checkTextInsert()) {
-                event.accepted = true;
+                event.accepted = true
                 return
             }
             if (messageLength <= messageLimit) {
-                checkForInlineEmojis(true);
-                root.sendMessage(event);
-                root.hideExtendedArea();
-                event.accepted = true;
-                return;
+                checkForInlineEmojis(true)
+                root.sendMessageRequested()
+                root.hideExtendedArea()
+                event.accepted = true
+                return
             } else {
                 // pop-up a warning message when trying to send a message over the limit
-                lengthLimitTooltip.open();
-                event.accepted = true;
-                return;
+                lengthLimitTooltip.open()
+                event.accepted = true
+                return
             }
         }
 
         if (event.key === Qt.Key_Escape && root.isReply) {
-            root.isReply = false;
-            event.accepted = true;
-            return;
+            root.isReply = false
+            event.accepted = true
+            return
         }
 
         const symbolPressed = event.text.length > 0 &&
@@ -1485,7 +1486,7 @@ Rectangle {
 
                                     const onGifSelectedCb = url => {
                                         messageInputField.text += "\n" + url
-                                        root.sendMessage({})
+                                        root.sendMessageRequested()
                                         root.isReply = false
                                         messageInputField.forceActiveFocus()
                                     }

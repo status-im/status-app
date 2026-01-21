@@ -100,8 +100,7 @@ Item {
         } else if (root.createChatPropertiesStore.createChatInitMessage !== ""
                  || root.createChatPropertiesStore.createChatFileUrls.length > 0) {
             root.rootStore.sendMessage(
-                        chatId, Qt.Key_Enter,
-                        root.createChatPropertiesStore.createChatInitMessage,
+                        chatId, root.createChatPropertiesStore.createChatInitMessage,
                         "", root.createChatPropertiesStore.createChatFileUrls)
         }
 
@@ -458,14 +457,13 @@ Item {
                                                    url)
                     }
 
-                    onSendMessage: function (event) {
+                    onSendMessageRequested: {
                         if (!d.activeChatContentModule) {
                             console.debug("error on sending message - chat content module is not set")
                             return
                         }
 
                         if (root.rootStore.sendMessage(d.activeChatContentModule.getMyChatId(),
-                                                    event,
                                                     chatInput.getTextWithPublicKeys(),
                                                     chatInput.isReply? chatInput.replyMessageId : "",
                                                     chatInput.fileUrlsAndSources

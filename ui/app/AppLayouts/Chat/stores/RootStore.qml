@@ -22,7 +22,7 @@ QtObject {
     // Backend Entry Point:
     // Important:
     // Each `ChatLayout` has its own chatCommunitySectionModule
-    // (on the backend chat and community sections share the same module since they are actually the same)   
+    // (on the backend chat and community sections share the same module since they are actually the same)
     readonly property var chatCommunitySectionModule: {
         if(root.isChatSectionModule) {
             return root.mainModuleInst.getChatSectionModule()
@@ -275,16 +275,12 @@ QtObject {
         return interpretMessage(text)
     }
 
-    function sendMessage(chatId, event, text, replyMessageId, fileUrlsAndSources) {
+    function sendMessage(chatId, text, replyMessageId, fileUrlsAndSources) {
         chatCommunitySectionModule.prepareChatContentModuleForChatId(chatId)
         const chatContentModule = chatCommunitySectionModule.getChatContentModule()
         var result = false
 
         const textMsg = cleanMessageText(text)
-        if (textMsg.trim() !== "") {
-            if (event)
-                event.accepted = true
-        }
 
         if (fileUrlsAndSources.length > 0) {
             let convertedImagePaths = fileUrlsAndSources.map((file) => {

@@ -178,7 +178,7 @@ Page {
                     membersSelector.createChat();
                 }
 
-                onSendMessage: { d.createChat() }
+                onSendMessageRequested: { d.createChat() }
             }
         }
 
