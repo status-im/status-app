@@ -50,6 +50,7 @@ Item {
     property bool dAppsEnabled
     property bool dAppsVisible
     property bool buyEnabled
+    property bool bridgeEnabled
 
     property var dAppsModel
 
@@ -339,6 +340,7 @@ Item {
             transactionStore: root.transactionStore
             swapEnabled: root.swapEnabled
             buyEnabled: root.buyEnabled
+            bridgeEnabled: root.bridgeEnabled
             networkConnectionStore: root.networkConnectionStore
             isCommunityOwnershipTransfer: footer.isHoldingSelected && footer.isOwnerCommunityCollectible
             communityName: {

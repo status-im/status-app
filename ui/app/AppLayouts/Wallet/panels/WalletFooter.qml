@@ -31,6 +31,7 @@ Rectangle {
 
     property bool swapEnabled
     property bool buyEnabled
+    property bool bridgeEnabled
 
     // Community-token related properties:
     required property bool isCommunityOwnershipTransfer
@@ -77,7 +78,8 @@ Rectangle {
         
         readonly property bool receiveActionAvailable: !walletStore.showAllAccounts
 
-        readonly property bool bridgeActionAvailable: !walletStore.overview.isWatchOnlyAccount
+        readonly property bool bridgeActionAvailable: root.bridgeEnabled
+                                                        && !walletStore.overview.isWatchOnlyAccount
                                                         && !root.isCommunityOwnershipTransfer
                                                         && walletStore.overview.canSend
                                                         && !root.walletStore.showAllAccounts

@@ -14,4 +14,5 @@ QtObject {
     property bool localBackupEnabled
     property bool privacyModeFeatureEnabled
     property bool buyEnabled
+    property bool bridgeEnabled
 }
