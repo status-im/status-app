@@ -38,6 +38,14 @@ Item {
     readonly property string lastTag: capture.lastTag
     readonly property string currentTag: capture.currentTag
 
+    property int state: StatusQrCodeScanner.State.None
+
+    enum State {
+        None,
+        Success,
+        Error
+    }
+
     signal tagFound(string tag)
 
     implicitWidth: sourceSize.width
@@ -85,31 +93,37 @@ Item {
         }
 
         Loader {
-            active: root.highlightContentZone
+            active: root.state === StatusQrCodeScanner.State.Success || root.state === StatusQrCodeScanner.State.Error
             sourceComponent: Rectangle {
-                color: "blue"
-                opacity: 0.2
-                border.width: 3
-                border.color: "blue"
+                color: {
+                    if (root.state === StatusQrCodeScanner.State.Success) {
+                        return Theme.palette.successColor2
+                    }
+                    if (root.state === StatusQrCodeScanner.State.Error) {
+                        return Theme.palette.dangerColor3
+                    }
+                }
                 x: capture.contentRect.x
                 y: capture.contentRect.y
                 width: capture.contentRect.width
                 height: capture.contentRect.height
             }
         }
+    }
 
-        Loader {
-            active: root.highlightCaptureZone
-            sourceComponent:  Rectangle {
-                color: "hotpink"
-                opacity: 0.2
-                border.width: 3
-                border.color: "hotpink"
-                x: capture.contentRect.x + root.captureRectangle.x * capture.contentRect.width
-                y: capture.contentRect.y + root.captureRectangle.y * capture.contentRect.height
-                width: capture.contentRect.width * root.captureRectangle.width
-                height: capture.contentRect.height * root.captureRectangle.height
+    StatusScanCorners {
+        id: scanCorners
+        width: root.width / 1.5
+        height: width
+        anchors.centerIn: parent
+        color: {
+            if (root.state === StatusQrCodeScanner.State.Success) {
+                return Theme.palette.successColor3
             }
+            if (root.state === StatusQrCodeScanner.State.Error) {
+                return Theme.palette.dangerColor2
+            }
+            return Theme.palette.baseColor4
         }
     }
 

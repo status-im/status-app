@@ -38,67 +38,35 @@ StatusDialog {
         property string validTag: ""
     }
 
-    contentItem: Loader {
-        Layout.fillWidth: true
-        // Layout.margins: Theme.smallPadding
-        sourceComponent: !!d.validTag ? validTagFoundComponent : cameraComponent
-    }
+    contentItem: QRCodeScanner {
+        id: qrCodeScanner
 
-    Component {
-        id: cameraComponent
-
-        QRCodeScanner {
-            id: qrCodeScanner
-            validators: [
-                StatusValidator {
-                    name: "isValidQR"
-                    errorMessage: qsTr("We cannot read that QR code.")
-                    validate: function (tag) {
-                        // We accept URLs and addresses
-                        return Utils.isURL(tag) || Utils.isValidAddress(tag)
-                    }
+        Timer {
+            interval: 300
+            running: !!d.validTag
+            repeat: false
+            onTriggered: {
+                if (Utils.isURL(d.validTag)) {
+                    root.tagFound(QRCodeScannerDialog.TagType.Link, d.validTag)
+                } else if (Utils.isValidAddress(d.validTag)) {
+                    root.tagFound(QRCodeScannerDialog.TagType.Address, d.validTag)
                 }
-            ]
-            onValidTagFound: tag => {
-                d.validTag = tag
+                root.close()
             }
         }
-    }
 
-    Component {
-        id: validTagFoundComponent
-
-        ColumnLayout {
-            height: contentHeight
-            spacing: Theme.padding
-            Layout.fillWidth: true
-
-            Timer {
-                interval: 1000
-                running: true
-                repeat: false
-                onTriggered: {
-                    if (Utils.isURL(d.validTag)) {
-                        root.tagFound(QRCodeScannerDialog.TagType.Link, d.validTag)
-                    } else if (Utils.isValidAddress(d.validTag)) {
-                        root.tagFound(QRCodeScannerDialog.TagType.Address, d.validTag)
-                    }
-                    root.close()
+        validators: [
+            StatusValidator {
+                name: "isValidQR"
+                errorMessage: qsTr("We cannot read that QR code.")
+                validate: function (tag) {
+                    // We accept URLs and addresses
+                    return Utils.isURL(tag) || Utils.isValidAddress(tag)
                 }
             }
-
-            StatusImage {
-                source: Assets.png("qr-scan-success")
-                Layout.fillWidth: true
-                Layout.preferredHeight: 272
-            }
-
-            StatusBaseText {
-                text: qsTr("Scanned successfully")
-                color: Theme.palette.primaryColor1
-                horizontalAlignment: Text.AlignHCenter
-                Layout.fillWidth: true
-            }
+        ]
+        onValidTagFound: tag => {
+            d.validTag = tag
         }
     }
 

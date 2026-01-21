@@ -14496,13 +14496,13 @@ přístup k vaší webkameře</translation>
         <source>Align the QR code within the frame to scan</source>
         <translation type="unfinished"></translation>
     </message>
-</context>
-<context>
-    <name>QRCodeScannerDialog</name>
     <message>
         <source>Scanned successfully</source>
         <translation type="unfinished"></translation>
     </message>
+</context>
+<context>
+    <name>QRCodeScannerDialog</name>
     <message>
         <source>Status doesn&apos;t understand the QR code.</source>
         <translation>Status nedokáže rozeznat tento QR kód.</translation>
