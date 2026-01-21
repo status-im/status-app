@@ -61,7 +61,7 @@ Control {
     }
 
     background: Rectangle {
-        color: "transparent"
+        color: StatusColors.transparent
         border.width: 1
         border.color: Theme.palette.baseColor2
         radius: Theme.radius
@@ -84,6 +84,7 @@ Control {
             horizontalAlignment: Qt.AlignHCenter
             elide: Text.ElideRight
             color: Theme.palette.baseColor1
+            wrapMode: Text.Wrap
             linkColor: hoveredLink ? Theme.palette.hoverColor(color) : color
             visible: text !== ""
             HoverHandler {
@@ -201,7 +202,7 @@ Control {
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
-                text: qsTr("Issue detecting Keycard.<br>Remove and re-insert reader and Keycard.")
+                text: qsTr("Issue detecting Keycard.<br>Remove and re-insert reader and Keycard, check no other security keys are plugged in.")
             }
         },
         State {
