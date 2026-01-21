@@ -14368,13 +14368,13 @@ access to your webcam</source>
         <source>Align the QR code within the frame to scan</source>
         <translation type="unfinished"></translation>
     </message>
-</context>
-<context>
-    <name>QRCodeScannerDialog</name>
     <message>
         <source>Scanned successfully</source>
         <translation type="unfinished"></translation>
     </message>
+</context>
+<context>
+    <name>QRCodeScannerDialog</name>
     <message>
         <source>QR Code Scanner</source>
         <translation type="unfinished"></translation>

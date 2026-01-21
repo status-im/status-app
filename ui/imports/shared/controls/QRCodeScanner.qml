@@ -37,6 +37,7 @@ ColumnLayout {
     id: root
 
     property list<StatusValidator> validators
+    property int state: StatusQrCodeScanner.State.None
 
     signal validTagFound(string tag)
 
@@ -54,12 +55,25 @@ ColumnLayout {
             for (let i in root.validators) {
                 const validator = root.validators[i]
                 if (!validator.validate(tag)) {
+                    root.state = StatusQrCodeScanner.State.Error
                     d.errorMessage = validator.errorMessage
+                    errorTimer.start()
                     return
                 }
             }
             d.errorMessage = ""
             root.validTagFound(tag)
+            root.state = StatusQrCodeScanner.State.Success
+        }
+    }
+
+    Timer {
+        id: errorTimer
+        interval: 2000
+        running: false
+        repeat: false
+        onTriggered: {
+            root.state = StatusQrCodeScanner.State.None
         }
     }
 
@@ -131,11 +145,20 @@ ColumnLayout {
     Component {
         id: cameraComponent
         StatusQrCodeScanner {
+            state: root.state
             anchors.fill: parent
             onLastTagChanged: {
                 d.validateTag(lastTag)
             }
         }
+    }
+
+    StatusBaseText {
+        text: qsTr("Scanned successfully")
+        color: Theme.palette.primaryColor1
+        horizontalAlignment: Text.AlignHCenter
+        Layout.fillWidth: true
+        visible: root.state === StatusQrCodeScanner.State.Success
     }
 
     StatusBaseText {
@@ -158,7 +181,7 @@ ColumnLayout {
     }
 
     StatusBaseText {
-        visible: d.cameraReady && !!cameraLoader.item?.cameraAvailable
+        visible: d.cameraReady && !!cameraLoader.item?.cameraAvailable && root.state === StatusQrCodeScanner.State.None
         width: parent.width
         height: visible ? implicitHeight : 0
         wrapMode: Text.WordWrap

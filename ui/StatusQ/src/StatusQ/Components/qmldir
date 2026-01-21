@@ -56,6 +56,7 @@ StatusRoundIcon 0.1 StatusRoundIcon.qml
 StatusRoundedComponent 0.1 StatusRoundedComponent.qml
 StatusRoundedImage 0.1 StatusRoundedImage.qml
 StatusRoundedMedia 0.1 StatusRoundedMedia.qml
+StatusScanCorners 0.1 StatusScanCorners.qml
 StatusSmartIdenticon 0.1 StatusSmartIdenticon.qml
 StatusSoundEffect 0.1 StatusSoundEffect.qml
 StatusSortableColumnHeader 0.1 StatusSortableColumnHeader.qml
