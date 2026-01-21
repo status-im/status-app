@@ -23,6 +23,7 @@ StatusSectionLayout {
 
     required property var connectorController
     property bool isDebugEnabled: false
+    property bool isMobile
 
     signal sendToRecipientRequested(string address)
 }
