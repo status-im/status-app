@@ -59,6 +59,12 @@ Dialog {
     */
     property bool fullScreenSheet: false
 
+    /*!
+       \qmlproperty bool showHeaderDivider
+        Whether the dialog's header should show the divider below it (default: true)
+    */
+    property alias showHeaderDivider: dialogHeader.showDivider
+
     QtObject {
         id: d
 
@@ -169,6 +175,7 @@ Dialog {
     background: StatusDialogBackground {}
 
     header: StatusDialogHeader {
+        id: dialogHeader
         visible: root.title || root.subtitle
         headline.title: root.title
         headline.subtitle: root.subtitle

@@ -17534,27 +17534,27 @@
       <translation>Camera access denied. Please enable it in system settings.</translation>
     </message>
     <message>
-      <source>Ensure that the QR code is in focus to scan</source>
+      <source>Align the QR code within the frame to scan</source>
       <comment>QRCodeScanner</comment>
-      <translation>Ensure that the QR code is in focus to scan</translation>
+      <translation>Align the QR code within the frame to scan</translation>
     </message>
   </context>
   <context>
     <name>QRCodeScannerDialog</name>
     <message>
-      <source>Scan QR</source>
-      <comment>QRCodeScannerDialog</comment>
-      <translation>Scan QR</translation>
-    </message>
-    <message>
-      <source>Status doesn&#39;t understand the QR code.</source>
-      <comment>QRCodeScannerDialog</comment>
-      <translation>Status doesn&#39;t understand the QR code.</translation>
-    </message>
-    <message>
       <source>Scanned successfully</source>
       <comment>QRCodeScannerDialog</comment>
       <translation>Scanned successfully</translation>
+    </message>
+    <message>
+      <source>QR Code Scanner</source>
+      <comment>QRCodeScannerDialog</comment>
+      <translation>QR Code Scanner</translation>
+    </message>
+    <message>
+      <source>We cannot read that QR code.</source>
+      <comment>QRCodeScannerDialog</comment>
+      <translation>We cannot read that QR code.</translation>
     </message>
   </context>
   <context>

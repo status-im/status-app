@@ -14503,15 +14503,15 @@ přístup k vaší webkameře</translation>
         <translation>Přístup k fotoaparátu odepřen. Prosím povolte jej v nastavení systému.</translation>
     </message>
     <message>
-        <source>Ensure that the QR code is in focus to scan</source>
-        <translation>Ujistěte se, že je QR kód zaostřený pro naskenování</translation>
+        <source>Align the QR code within the frame to scan</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>QRCodeScannerDialog</name>
     <message>
-        <source>Scan QR</source>
-        <translation>Skenovat QR</translation>
+        <source>Scanned successfully</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status doesn&apos;t understand the QR code.</source>

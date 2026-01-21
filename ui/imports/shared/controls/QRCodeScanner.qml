@@ -33,16 +33,14 @@ import StatusQ.Core.Theme
     So we show `Scan QR` button everytime.
 */
 
-Column {
+ColumnLayout {
     id: root
 
     property list<StatusValidator> validators
-    property alias cameraHeight: cameraLoader.height
-    property alias cameraWidth: cameraLoader.width
 
     signal validTagFound(string tag)
 
-    spacing: 12
+    spacing: Theme.smallPadding
 
     QtObject {
         id: d
@@ -76,9 +74,10 @@ Column {
     Loader {
         id: cameraLoader
         active: true
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: 330
-        height: 330
+        Layout.alignment: Qt.AlignHCenter
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.maximumHeight: 500
 
         sourceComponent: d.cameraReady ? cameraComponent : btnComponent
     }
@@ -139,17 +138,13 @@ Column {
         }
     }
 
-    Item {
-        width: parent.width
-        height: 8
-    }
-
     StatusBaseText {
         visible: !!text
         width: parent.width
         height: visible ? implicitHeight : 0
         wrapMode: Text.WordWrap
         color: Theme.palette.dangerColor1
+        Layout.alignment: Qt.AlignHCenter
         horizontalAlignment: Text.AlignHCenter
         text: {
             if (!!d.errorMessage) {
@@ -163,13 +158,13 @@ Column {
     }
 
     StatusBaseText {
-        visible: d.cameraReady && cameraLoader.item?.cameraAvailable
+        visible: d.cameraReady && !!cameraLoader.item?.cameraAvailable
         width: parent.width
         height: visible ? implicitHeight : 0
         wrapMode: Text.WordWrap
         color: Theme.palette.baseColor1
-        font.pixelSize: Theme.tertiaryTextFontSize
+        Layout.alignment: Qt.AlignHCenter
         horizontalAlignment: Text.AlignHCenter
-        text: qsTr("Ensure that the QR code is in focus to scan")
+        text: qsTr("Align the QR code within the frame to scan")
     }
 }

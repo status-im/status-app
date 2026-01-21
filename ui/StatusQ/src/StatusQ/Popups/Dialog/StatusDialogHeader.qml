@@ -11,6 +11,7 @@ Rectangle {
     readonly property alias headline: headline
     readonly property alias actions: actions
     property bool dropShadowEnabled
+    property bool showDivider: true
 
     property alias leftComponent: leftComponentLoader.sourceComponent
 
@@ -71,6 +72,7 @@ Rectangle {
     StatusDialogDivider {
         anchors.bottom: parent.bottom
         width: parent.width
+        visible: root.showDivider
     }
 
     layer.enabled: root.dropShadowEnabled
