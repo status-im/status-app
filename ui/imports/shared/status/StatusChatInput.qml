@@ -1483,9 +1483,9 @@ Rectangle {
                                         closeAfterSelection: root.closeGifPopupAfterSelection
                                     }
 
-                                    const onGifSelectedCb = (event, url) => {
+                                    const onGifSelectedCb = url => {
                                         messageInputField.text += "\n" + url
-                                        root.sendMessage(event)
+                                        root.sendMessage({})
                                         root.isReply = false
                                         messageInputField.forceActiveFocus()
                                     }

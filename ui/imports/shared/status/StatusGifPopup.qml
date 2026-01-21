@@ -59,7 +59,7 @@ StatusDropdown {
     property var toggleFavoriteGif: function () {}
     property var setGifUnfurlingEnabled: function () {}
 
-    signal gifSelected(var event, var url)
+    signal gifSelected(string url)
     signal enableThirdpartyServicesRequested
 
     width: 360
@@ -288,7 +288,7 @@ StatusDropdown {
                     onGifHovered: {
                         gifs.lastHoveredId = id
                     }
-                    onGifSelected: root.gifSelected(event, url)
+                    onGifSelected: url => root.gifSelected(url)
                 }
 
                 StatusGifColumn {
@@ -303,7 +303,7 @@ StatusDropdown {
                     onGifHovered: {
                         gifs.lastHoveredId = id
                     }
-                    onGifSelected: root.gifSelected(event, url)
+                    onGifSelected: url => root.gifSelected(url)
                 }
 
                 StatusGifColumn {
@@ -318,7 +318,7 @@ StatusDropdown {
                     onGifHovered: {
                         gifs.lastHoveredId = id
                     }
-                    onGifSelected: root.gifSelected(event, url)
+                    onGifSelected: url => root.gifSelected(url)
                 }
             }
         }

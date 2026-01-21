@@ -23,7 +23,7 @@ Column {
     property var addToRecentsGif: function () {}
 
     signal gifHovered(string id)
-    signal gifSelected(var event, var url)
+    signal gifSelected(string url)
 
     Repeater {
         id: repeater
@@ -114,9 +114,9 @@ Column {
                 cursorShape: Qt.PointingHandCursor
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: function (event) {
+                onClicked: {
                     root.addToRecentsGif(model.id)
-                    root.gifSelected(event, model.url)
+                    root.gifSelected(model.url)
                 }
             }
         }

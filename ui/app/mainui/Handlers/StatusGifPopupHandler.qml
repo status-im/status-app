@@ -60,8 +60,8 @@ QtObject {
             toggleFavoriteGif: root.gifStore.toggleFavoriteGif
             setGifUnfurlingEnabled: root.gifStore.setGifUnfurlingEnabled
 
-            onGifSelected: {
-                _d.cbOnGifSelected(event, url)
+            onGifSelected: url => {
+                _d.cbOnGifSelected(url)
 
                 if (_d.closeAfterSelection) {
                     close()
