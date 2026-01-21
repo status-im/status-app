@@ -4343,10 +4343,6 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
         <source>Start chat</source>
         <translation>Iniciar chat</translation>
     </message>
-    <message>
-        <source>Open QR Scanner</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>ContactsListPanel</name>

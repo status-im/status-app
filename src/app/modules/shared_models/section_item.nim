@@ -15,12 +15,13 @@ type
     Community,
     ProfileSettings,
     NodeManagement,
+    QrCodeScanner,
     CommunitiesPortal,
     LoadingSection,
     Swap,
     Market,
-    Browser
-    ActivityCenter
+    Browser,
+    ActivityCenter,
 
 type
   SectionItem* = object

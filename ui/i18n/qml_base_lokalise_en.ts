@@ -5290,11 +5290,6 @@
       <comment>ContactsColumnView</comment>
       <translation>Start chat</translation>
     </message>
-    <message>
-      <source>Open QR Scanner</source>
-      <comment>ContactsColumnView</comment>
-      <translation>Open QR Scanner</translation>
-    </message>
   </context>
   <context>
     <name>ContactsListPanel</name>
