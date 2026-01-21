@@ -14,7 +14,7 @@ importCommunityPopup = {"container": statusDesktop_mainWindow_overlay, "objectNa
 importCommunityPopup_KeyInput = {"container": statusDesktop_mainWindow_overlay, "id": "keyInput", "type": "StatusTextArea", "unnamed": 1, "visible": True}
 importCommunityPopup_JoinButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "joinStatusDialogFooterButton", "type": "StatusButton", "visible": True}
 # Community View
-mainWindow_communityLoader_Loader = {"container": statusDesktop_mainWindow, "objectName": "StatusSectionLayoutLandscape", "type": "ContentItem", "visible": True}
+mainWindow_communityLoader_Loader = {"container": statusDesktop_mainWindow, "objectName": "SplitView", "type": "ContentItem", "visible": True}
 
 # Left Panel
 mainWindow_communityColumnView_CommunityColumnView = {"container": mainWindow_communityLoader_Loader, "objectName": "communityColumnView", "type": "CommunityColumnView", "visible": True}
