@@ -1,5 +1,6 @@
 #include "StatusQ/systemutilsinternal.h"
 
+#include <QDesktopServices>
 #include <QGuiApplication>
 #include <QMimeDatabase>
 #include <QNetworkAccessManager>
@@ -239,6 +240,25 @@ void SystemUtilsInternal::downloadImageByUrl(
         save(btArray, targetDir);
 #endif
     });
+}
+
+
+void SystemUtilsInternal::openAppSettings() const
+{
+#ifdef Q_OS_ANDROID
+    QJniObject::callStaticMethod<void>(
+        "app/status/mobile/StatusQtActivity",
+        "openAppSettings",
+        "()V"
+    );
+#elif defined(Q_OS_IOS)
+    // iOS implementation
+    QUrl url(QStringLiteral("app-settings:"));
+    QDesktopServices::openUrl(url);
+#else
+    // Desktop - we shouldn't be here
+    qWarning() << "openAppSettings not implemented for this platform";
+#endif
 }
 
 void SystemUtilsInternal::synthetizeRightClick(QQuickItem* item, qreal x, qreal y, Qt::KeyboardModifiers modifiers) const

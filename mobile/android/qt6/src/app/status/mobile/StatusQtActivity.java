@@ -5,6 +5,9 @@ import android.os.Build;
 import android.os.Bundle;
 import androidx.core.splashscreen.SplashScreen;
 import java.util.concurrent.atomic.AtomicBoolean;
+import android.content.Intent;
+import android.net.Uri;
+import android.provider.Settings;
 
 public class StatusQtActivity extends QtActivity {
     private static final AtomicBoolean splashShouldHide = new AtomicBoolean(false);
@@ -57,5 +60,16 @@ public class StatusQtActivity extends QtActivity {
     // Called from Qt via JNI when main window is visible
     public static void hideSplashScreen() {
         splashShouldHide.set(true);
+    }
+
+    // Static method to open app settings
+    public static void openAppSettings() {
+        QtActivity activity = (QtActivity) QtNative.activity();
+        if (activity != null) {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            Uri uri = Uri.fromParts("package", activity.getPackageName(), null);
+            intent.setData(uri);
+            activity.startActivity(intent);
+        }
     }
 }
