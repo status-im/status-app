@@ -1227,6 +1227,21 @@ Item {
         }
     }
 
+    // Provides the section-specific content rendered in the left floating panel.
+    // This is the only instance of the floating panel content and is shared
+    // across layouts by being reparented internally via a LayoutItemProxy.
+    // TODO(#18908): Replace this inline Item with a dedicated `ActivityCenterPanel` component.
+    readonly property Item activityCenterPanel: Item {
+        id: activityCenterPanelItem
+
+        // Source-of-truth state for the Activity Center panel visibility.
+        // This flag is explicitly controlled by user interactions (open/close button)
+        // and when the user intentionally selects a different section.
+        property bool activityCenterOpen: false
+
+        anchors.fill: parent
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width + Theme.halfPadding : 0
@@ -1701,6 +1716,15 @@ Item {
                             // Navigation: Temporary solution that keeps ui navigation state when in-app links
                             // are triggered and allow messaging details navigation in portrait
                             onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
+
+                            // Floating panel (state + shared content)
+                            leftFloatingPanelItem: appMain.activityCenterPanel
+                            floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
+                            onFloatingPanelAutoClosed: {
+                                // When the floating panel auto-closes itself (e.g. dismiss, Escape),
+                                // keep the external state in sync
+                                activityCenterPanelItem.activityCenterOpen = false
+                            }
                         }
                     }
                 }
@@ -1714,6 +1738,15 @@ Item {
                         assetsModel: appMain.rootStore.globalAssetsModel
                         collectiblesModel: appMain.rootStore.globalCollectiblesModel
                         createCommunityBadgeVisible: !appMain.communitiesStore.createCommunityPopupSeen
+
+                        // Floating panel (state + shared content)
+                        leftFloatingPanelItem: appMain.activityCenterPanel
+                        floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
+                        onFloatingPanelAutoClosed: {
+                            // When the floating panel auto-closes itself (e.g. dismiss, Escape),
+                            // keep the external state in sync
+                            activityCenterPanelItem.activityCenterOpen = false
+                        }
                     }
                 }
 
@@ -1762,6 +1795,15 @@ Item {
                             onSendTokenRequested: (senderAddress, gorupKey, tokenType) => popupRequestsHandler.sendModalHandler.sendToken(senderAddress, gorupKey, tokenType)
                             onBridgeTokenRequested: (tokenId, tokenType) => popupRequestsHandler.sendModalHandler.bridgeToken(tokenId, tokenType)
                             onOpenSwapModalRequested: (swapFormData) => popupRequestsHandler.swapModalHandler.launchSwapSpecific(swapFormData)
+
+                            // Floating panel (state + shared content)
+                            leftFloatingPanelItem: appMain.activityCenterPanel
+                            floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
+                            onFloatingPanelAutoClosed: {
+                                // When the floating panel auto-closes itself (e.g. dismiss, Escape),
+                                // keep the external state in sync
+                                activityCenterPanelItem.activityCenterOpen = false
+                            }
                         }
                     }
                     onLoaded: {
@@ -1812,6 +1854,15 @@ Item {
 
                             transactionStore: appMain.transactionStore
                             onSendToRecipientRequested: (address) => popupRequestsHandler.sendModalHandler.sendToRecipient(address)
+
+                            // Floating panel (state + shared content)
+                            leftFloatingPanelItem: appMain.activityCenterPanel
+                            floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
+                            onFloatingPanelAutoClosed: {
+                                // When the floating panel auto-closes itself (e.g. dismiss, Escape),
+                                // keep the external state in sync
+                                activityCenterPanelItem.activityCenterOpen = false
+                            }
                         }
                     }
                 }
@@ -1912,6 +1963,15 @@ Item {
                             appMainLocalSettings.whitelistedUnfurledDomains = whitelistedUnfurledDomainsCpy
                             Global.displaySuccessToastMessage(qsTr("%1 was removed from your trusted sites.").arg(domainRemoved))
                         }
+
+                        // Floating panel (state + shared content)
+                        leftFloatingPanelItem: appMain.activityCenterPanel
+                        floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
+                        onFloatingPanelAutoClosed: {
+                            // When the floating panel auto-closes itself (e.g. dismiss, Escape),
+                            // keep the external state in sync
+                            activityCenterPanelItem.activityCenterOpen = false
+                        }
                     }
                     onLoaded: {
                         item.settingsSubsection = profileLoader.settingsSubsection
@@ -1963,6 +2023,15 @@ Item {
                             onFetchMarketTokens: (pageNumber, pageSize) => {
                                                      appMain.marketStore.requestMarketTokenPage(pageNumber, pageSize)
                                                  }
+
+                            // Floating panel (state + shared content)
+                            leftFloatingPanelItem: appMain.activityCenterPanel
+                            floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
+                            onFloatingPanelAutoClosed: {
+                                // When the floating panel auto-closes itself (e.g. dismiss, Escape),
+                                // keep the external state in sync
+                                activityCenterPanelItem.activityCenterOpen = false
+                            }
                         }
                     }
 
@@ -1996,6 +2065,15 @@ Item {
                         messagingRootStore: appMain.messagingRootStore
 
                         onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
+
+                        // Floating panel (state + shared content)
+                        leftFloatingPanelItem: appMain.activityCenterPanel
+                        floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
+                        onFloatingPanelAutoClosed: {
+                            // When the floating panel auto-closes itself (e.g. dismiss, Escape),
+                            // keep the external state in sync
+                            activityCenterPanelItem.activityCenterOpen = false
+                        }
                     }
                 }
 
@@ -2113,6 +2191,15 @@ Item {
 
                             // Navigation:
                             onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
+
+                            // Floating panel (state + shared content)
+                            leftFloatingPanelItem: appMain.activityCenterPanel
+                            floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
+                            onFloatingPanelAutoClosed: {
+                                // When the floating panel auto-closes itself (e.g. dismiss, Escape),
+                                // keep the external state in sync
+                                activityCenterPanelItem.activityCenterOpen = false
+                            }
                         }
                     }
                 }
