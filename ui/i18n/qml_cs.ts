@@ -14483,21 +14483,19 @@ selhalo</translation>
         <translation>Povolit přístup k fotoaparátu</translation>
     </message>
     <message>
-        <source>To scan a QR, Status needs
-access to your webcam</source>
-        <translation>Pro naskenování QR kódu potřebuje Status
-přístup k vaší webkameře</translation>
+        <source>Align the QR code within the frame to scan</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Camera access denied. Please enable it in system settings.</source>
         <translation>Přístup k fotoaparátu odepřen. Prosím povolte jej v nastavení systému.</translation>
     </message>
     <message>
-        <source>Align the QR code within the frame to scan</source>
+        <source>To scan QR codes, add contacts, send funds to wallets, and sync apps.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Scanned successfully</source>
+        <source>Open settings</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
