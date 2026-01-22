@@ -375,28 +375,40 @@ Rectangle {
         return false
     }
 
+    /**
+        This method does final clean-up and emits sendMessageRequested if message
+        is well-formed.
+        - if there is active mention suggestion, accepts the suggestion, no send request
+        - if message exceeds length limit, triggers tooltip, no send request
+        - converts textual emoji representations (like ":)") to actual emojis
+        - emits send request
+        - hides extended area
+      */
+    function tryFinalizeMessage() {
+        const messageLength = messageInputField.length
+
+        if (checkTextInsert())
+            return
+
+        if (messageLength <= messageLimit) {
+            checkForInlineEmojis(true)
+            root.sendMessageRequested()
+            root.hideExtendedArea()
+        } else {
+            // pop-up a warning message when trying to send a message over the limit
+            lengthLimitTooltip.open()
+        }
+    }
+
     function onKeyPress(event) {
         // get text without HTML formatting
         const messageLength = messageInputField.length
 
         if (event.modifiers === d.kbdModifierToSendMessage &&
                 (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)) {
-            if (checkTextInsert()) {
-                event.accepted = true
-                return
-            }
-            if (messageLength <= messageLimit) {
-                checkForInlineEmojis(true)
-                root.sendMessageRequested()
-                root.hideExtendedArea()
-                event.accepted = true
-                return
-            } else {
-                // pop-up a warning message when trying to send a message over the limit
-                lengthLimitTooltip.open()
-                event.accepted = true
-                return
-            }
+            tryFinalizeMessage()
+            event.accepted = true
+            return
         }
 
         if (event.key === Qt.Key_Escape && root.isReply) {
@@ -1443,7 +1455,7 @@ Rectangle {
                                          (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0)
                                 onClicked: {
                                     InputMethod.commit()
-                                    root.onKeyPress({modifiers: d.kbdModifierToSendMessage, key: Qt.Key_Return})
+                                    root.tryFinalizeMessage()
                                 }
                                 tooltip.text: qsTr("Send message")
                             }
