@@ -14376,15 +14376,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>To scan a QR, Status needs
-access to your webcam</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Camera access denied. Please enable it in system settings.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Align the QR code within the frame to scan</source>
         <translation type="unfinished"></translation>
     </message>
@@ -14392,15 +14383,23 @@ access to your webcam</source>
         <source>Scanned successfully</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>To scan QR codes, add contacts, send funds to wallets, and sync apps.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open settings</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>QRCodeScannerDialog</name>
     <message>
-        <source>QR Code Scanner</source>
+        <source>We cannot read that QR code.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>We cannot read that QR code.</source>
+        <source>QR Scanner</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

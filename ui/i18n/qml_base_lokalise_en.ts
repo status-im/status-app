@@ -17513,16 +17513,6 @@
       <translation>Enable access to your camera</translation>
     </message>
     <message>
-      <source>To scan a QR, Status needs&#xA;access to your webcam</source>
-      <comment>QRCodeScanner</comment>
-      <translation>To scan a QR, Status needs&#xA;access to your webcam</translation>
-    </message>
-    <message>
-      <source>Camera access denied. Please enable it in system settings.</source>
-      <comment>QRCodeScanner</comment>
-      <translation>Camera access denied. Please enable it in system settings.</translation>
-    </message>
-    <message>
       <source>Align the QR code within the frame to scan</source>
       <comment>QRCodeScanner</comment>
       <translation>Align the QR code within the frame to scan</translation>
@@ -17532,18 +17522,28 @@
       <comment>QRCodeScanner</comment>
       <translation>Scanned successfully</translation>
     </message>
+    <message>
+      <source>To scan QR codes, add contacts, send funds to wallets, and sync apps.</source>
+      <comment>QRCodeScanner</comment>
+      <translation>To scan QR codes, add contacts, send funds to wallets, and sync apps.</translation>
+    </message>
+    <message>
+      <source>Open settings</source>
+      <comment>QRCodeScanner</comment>
+      <translation>Open settings</translation>
+    </message>
   </context>
   <context>
     <name>QRCodeScannerDialog</name>
     <message>
-      <source>QR Code Scanner</source>
-      <comment>QRCodeScannerDialog</comment>
-      <translation>QR Code Scanner</translation>
-    </message>
-    <message>
       <source>We cannot read that QR code.</source>
       <comment>QRCodeScannerDialog</comment>
       <translation>We cannot read that QR code.</translation>
+    </message>
+    <message>
+      <source>QR Scanner</source>
+      <comment>QRCodeScannerDialog</comment>
+      <translation>QR Scanner</translation>
     </message>
   </context>
   <context>
