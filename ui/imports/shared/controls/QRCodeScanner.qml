@@ -9,6 +9,9 @@ import StatusQ.Controls.Validators
 import StatusQ.Core
 import StatusQ.Core.Backpressure
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
+
+import MobileUI
 
 /*
     NOTE:   I'm doing some crazy workarounds here. Tested on MacOS.
@@ -147,10 +150,13 @@ ColumnLayout {
 
             StatusButton {
                 text: qsTr("Open settings")
+                // Opening app settings is only supported on mobile
+                // This screen shouldn't be shown on desktop anyway
+                visible: SQUtils.Utils.isMobile
                 size: StatusBaseButton.Size.Tiny
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: Theme.smallPadding
-                onClicked: console.log("Open settings") // TODO open OS settings
+                onClicked: SystemUtils.openAppSettings()
             }
 
             Item {
