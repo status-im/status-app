@@ -5,6 +5,7 @@ import allure
 import pytest
 import shortuuid
 import sys
+import subprocess
 
 from tests import test_data
 from PIL import ImageGrab
@@ -31,6 +32,50 @@ pytest_plugins = [
 ]
 
 
+def get_git_commit():
+    """Get git commit hash from parent repository"""
+    # Try to get git commit from parent repository (status-app)
+    try:
+        # Get parent directory (status-app)
+        parent_repo = configs.testpath.ROOT.parent.parent
+        result = subprocess.run(
+            ['git', 'rev-parse', 'HEAD'],
+            cwd=str(parent_repo),
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0:
+            commit_hash = result.stdout.strip()
+            return commit_hash
+    except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
+        LOG.debug(f'Could not get git commit: {e}')
+    
+    return None
+
+
+def get_status_go_commit():
+    """Get git commit hash from status-go repository"""
+    # Try to get git commit from status-go repository (vendor/status-go)
+    try:
+        # Get status-go directory (vendor/status-go)
+        status_go_repo = configs.testpath.ROOT.parent.parent / 'vendor' / 'status-go'
+        result = subprocess.run(
+            ['git', 'rev-parse', 'HEAD'],
+            cwd=str(status_go_repo),
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0:
+            commit_hash = result.stdout.strip()
+            return commit_hash
+    except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
+        LOG.debug(f'Could not get status-go git commit: {e}')
+    
+    return None
+
+
 @pytest.fixture(scope='session', autouse=True)
 def generate_allure_environment():
     """Generate allure environment.properties with dynamic platform information"""
@@ -42,13 +87,23 @@ def generate_allure_environment():
     
     platform_name = get_platform()
     python_version = f"Python {sys.version_info.major}.{sys.version_info.minor}"
+    git_commit = get_git_commit()
+    status_go_commit = get_status_go_commit()
     
-    content = f"""os_platform = {platform_name}
-python_version = {python_version}
-"""
+    lines = [f"os_platform = {platform_name}"]
+    
+    if git_commit:
+        lines.append(f"status app commit hash = {git_commit}")
+    
+    if status_go_commit:
+        lines.append(f"status-go commit hash = {status_go_commit}")
+    
+    lines.append(f"python_version = {python_version}")
+    
+    content = "\n".join(lines) + "\n"
     
     env_file.write_text(content)
-    LOG.info(f'Generated allure environment.properties with platform={platform_name}, python={python_version}')
+    LOG.info(f'Generated allure environment.properties with platform={platform_name}, status app commit hash={git_commit}, status-go commit hash={status_go_commit}, python={python_version}')
     yield
 
 
