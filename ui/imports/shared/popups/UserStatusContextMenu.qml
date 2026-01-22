@@ -19,6 +19,7 @@ StatusMenu {
     property int currentUserStatus
 
     signal viewProfileRequested
+    signal shareProfileRequested
     signal copyLinkRequested
     signal setCurrentUserStatusRequested(int status)
 
@@ -36,6 +37,16 @@ StatusMenu {
         objectName: "userStatusViewMyProfileAction"
         onTriggered: {
             root.viewProfileRequested()
+            root.close()
+        }
+    }
+
+    StatusAction {
+        objectName: "userStatusShareProfileAction"
+        text: qsTr("Share Profile")
+        icon.name: "qr"
+        onTriggered: {
+            root.shareProfileRequested()
             root.close()
         }
     }

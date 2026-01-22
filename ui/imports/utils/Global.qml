@@ -31,6 +31,7 @@ QtObject {
     signal openImagePopup(var image, string url, bool plain)
     signal openVideoPopup(string url)
     signal openProfilePopupRequested(string publicKey, var parentPopup, var cb)
+    signal openShareProfileRequested(string publicKey, var parentPopup, var cb)
     signal openMarkAsIDVerifiedPopup(string publicKey, var cb)
     signal openRemoveIDVerificationDialog(string publicKey, var cb)
     signal openContactRequestPopup(string publicKey, var cb)
@@ -112,6 +113,10 @@ QtObject {
 
     function openProfilePopup(publicKey, parentPopup, cb) {
         root.openProfilePopupRequested(publicKey, parentPopup, cb)
+    }
+
+    function shareProfileRequested(publicKey, parentPopup, cb) {
+        root.openShareProfileRequested(publicKey, parentPopup, cb)
     }
 
     function openPopup(popupComponent, params = {}) {

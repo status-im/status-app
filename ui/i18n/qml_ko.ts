@@ -13575,6 +13575,14 @@ to load</source>
         <source>Sign out &amp; Quit</source>
         <translation>로그아웃 및 종료</translation>
     </message>
+    <message>
+        <source>Share your profile</source>
+        <translation type="unfinished">프로필 공유하기</translation>
+    </message>
+    <message>
+        <source>%1&apos;s profile</source>
+        <translation type="unfinished">%1의 프로필</translation>
+    </message>
 </context>
 <context>
     <name>PrivacyAndSecurityView</name>
@@ -13765,14 +13773,6 @@ to load</source>
     <message>
         <source>Share Profile</source>
         <translation>프로필 공유</translation>
-    </message>
-    <message>
-        <source>Share your profile</source>
-        <translation>프로필 공유하기</translation>
-    </message>
-    <message>
-        <source>%1&apos;s profile</source>
-        <translation>%1의 프로필</translation>
     </message>
     <message>
         <source>Mark as trusted</source>
@@ -18457,6 +18457,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Set status automatically</source>
         <translation>자동으로 상태 설정</translation>
+    </message>
+    <message>
+        <source>Share Profile</source>
+        <translation type="unfinished">프로필 공유</translation>
     </message>
 </context>
 <context>

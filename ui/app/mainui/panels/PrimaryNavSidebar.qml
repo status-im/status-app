@@ -56,6 +56,7 @@ Drawer {
     signal itemActivated(int sectionType, string sectionId)
     signal activityCenterRequested(bool shouldShow)
     signal viewProfileRequested(string pubKey)
+    signal shareProfileRequested(string pubKey)
     signal setCurrentUserStatusRequested(int status)
 
     edge: Qt.LeftEdge
@@ -170,6 +171,7 @@ Drawer {
 
                     onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
                     onViewProfileRequested: (pubKey) => root.viewProfileRequested(pubKey)
+                    onShareProfileRequested: (pubKey) => root.shareProfileRequested(pubKey)
                 }
             }
         }
