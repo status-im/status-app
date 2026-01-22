@@ -25,7 +25,7 @@ StatusDialog {
     topPadding: 0
     bottomPadding: Theme.bigPadding
 
-    title: qsTr("QR Code Scanner")
+    title: qsTr("QR Scanner")
     showHeaderDivider: false
 
     signal tagFound(int tagType, string tag)
