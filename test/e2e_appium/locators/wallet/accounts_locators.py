@@ -2,7 +2,7 @@ from ..base_locators import BaseLocators
 
 
 class WalletAccountsLocators(BaseLocators):
-    ADD_ACCOUNT_BUTTON = BaseLocators.content_desc_contains("[tid:addAccountButton]")
+    ADD_ACCOUNT_BUTTON = BaseLocators.resource_id_contains("addAccountButton")
     ALL_ACCOUNTS_BUTTON = BaseLocators.xpath(
         "//*[contains(@resource-id,'allAccountsBtn')]"
     )

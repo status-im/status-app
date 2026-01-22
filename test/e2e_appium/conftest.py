@@ -1,5 +1,6 @@
 import multiprocessing
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, List, Optional
@@ -270,6 +271,26 @@ def pytest_runtest_teardown(item, nextitem):
         duration_ms = int(duration.total_seconds() * 1000)
 
     log_test_end(test_name, success, duration_ms)
+    _apply_test_cooldown(item)
+
+
+def _apply_test_cooldown(item) -> None:
+    env_name = getattr(item.config, "getoption", lambda *_: None)("--env")
+    if env_name != "browserstack":
+        return
+
+    cooldown_raw = os.getenv("TEST_COOLDOWN_SECONDS", "0")
+    try:
+        cooldown_seconds = float(cooldown_raw)
+    except (TypeError, ValueError):
+        cooldown_seconds = 0.0
+
+    if cooldown_seconds <= 0:
+        return
+
+    logger = get_logger("conftest")
+    logger.debug("Cooldown after test: %.1fs", cooldown_seconds)
+    time.sleep(cooldown_seconds)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -310,17 +331,38 @@ def pytest_runtest_makereport(item, call):
     from core.session_manager import SessionManager
     logger = get_logger("conftest")
 
-    outcome = getattr(item, "rep_call", None)
-    global_failed = bool(outcome and outcome.failed)
+    rep_setup = getattr(item, "rep_setup", None)
+    rep_call = getattr(item, "rep_call", None)
+    rep_teardown = getattr(item, "rep_teardown", None)
+
+    failure_report = None
+    skipped_report = None
+    for report in (rep_setup, rep_call, rep_teardown):
+        if report and report.failed:
+            failure_report = report
+            break
+        if report and report.skipped and skipped_report is None:
+            skipped_report = report
+
+    global_failed = failure_report is not None
+    global_skipped = (not global_failed) and skipped_report is not None
     global_reason = None
-    if global_failed and outcome and outcome.longrepr:
+    if global_failed and failure_report and failure_report.longrepr:
         try:
-            reprcrash = getattr(outcome.longrepr, "reprcrash", None)
+            reprcrash = getattr(failure_report.longrepr, "reprcrash", None)
             global_reason = getattr(reprcrash, "message", None) if reprcrash else None
             if not global_reason:
-                global_reason = str(outcome.longrepr)
+                global_reason = str(failure_report.longrepr)
         except Exception:
-            global_reason = str(outcome.longrepr)
+            global_reason = str(failure_report.longrepr)
+    elif global_skipped and skipped_report and skipped_report.longrepr:
+        try:
+            reprcrash = getattr(skipped_report.longrepr, "reprcrash", None)
+            global_reason = getattr(reprcrash, "message", None) if reprcrash else None
+            if not global_reason:
+                global_reason = str(skipped_report.longrepr)
+        except Exception:
+            global_reason = str(skipped_report.longrepr)
 
     for session_managers, pool, environment in stash_entries:
         # Always cleanup (all environments)
@@ -353,11 +395,15 @@ def pytest_runtest_makereport(item, call):
             logger.debug("Skipping status reporting for environment: %s", environment)
             continue
 
-        test_passed = not global_failed
+        test_passed = not global_failed and not global_skipped
         
         for name, session_manager in session_managers.items():
-            report_status = "passed" if test_passed else "failed"
-            report_reason = global_reason if global_failed else None
+            if global_skipped:
+                report_status = "skipped"
+                report_reason = global_reason
+            else:
+                report_status = "passed" if test_passed else "failed"
+                report_reason = global_reason if global_failed else None
 
             session_id = session_manager.session_id
 

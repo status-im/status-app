@@ -46,10 +46,10 @@ devices:
   default: "dynamic_samsung_tab"
   matrix:
     - id: "dynamic_samsung_tab"
-      display_name: "Any Galaxy Tab (Android 11-16)"
+      display_name: "Any Galaxy Tab (Android 12-16)"
       capabilities:
         deviceName: "Samsung Galaxy Tab.*"
-        platformVersion: "11|12|13|14|15|16"
+        platformVersion: "12|13|14|15|16"
         platformName: "android"
     - id: "galaxy_tab_s10p_android_15"
       display_name: "Galaxy Tab S10 Plus – Android 15"

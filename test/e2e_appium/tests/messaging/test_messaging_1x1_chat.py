@@ -100,7 +100,9 @@ class TestMessaging1x1Chat(StepMixin):
             assert chat_page.is_loaded(timeout=self.UI_TIMEOUT), "Chat page did not load"
 
         async with self.step(device, "Open start chat dialog"):
-            assert chat_page.tap_start_chat(), "Failed to open start chat dialog"
+            assert create_chat_page.tap_start_chat(), (
+                "Failed to open start chat dialog"
+            )
 
         async with self.step(device, "Paste secondary profile link into chat input"):
             assert create_chat_page.enter_profile_link(

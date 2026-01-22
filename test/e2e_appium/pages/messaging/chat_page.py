@@ -54,6 +54,7 @@ class ChatPage(BasePage):
         return self.is_element_visible(self.locators.MESSAGE_INPUT, timeout=timeout)
 
     def tap_start_chat(self, timeout: Optional[int] = 5) -> bool:
+        self.dismiss_backup_prompt(timeout=2)
         return self.safe_click(self.locators.START_CHAT_BUTTON, timeout=timeout)
 
     def send_message(self, message: str, timeout: Optional[int] = None) -> bool:

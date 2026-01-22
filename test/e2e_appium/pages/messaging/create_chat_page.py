@@ -2,6 +2,7 @@ import time
 from typing import Optional
 
 from ..base_page import BasePage
+from .chat_page import ChatPage
 from locators.messaging.create_chat_locators import CreateChatLocators
 
 
@@ -27,8 +28,26 @@ class CreateChatPage(BasePage):
 
         return True
 
-    def tap_start_chat(self, timeout: Optional[int] = 5) -> bool:
-        return self.safe_click(self.locators.START_CHAT_BUTTON, timeout=timeout)
+    def tap_start_chat(
+        self, timeout: Optional[int] = 5, wait_for_input: bool = True
+    ) -> bool:
+        try:
+            ChatPage(self.driver).dismiss_backup_prompt(timeout=2)
+        except Exception as exc:
+            self.logger.debug("Backup prompt dismiss check failed: %s", exc)
+
+        if not self.safe_click(self.locators.START_CHAT_BUTTON, timeout=timeout):
+            return False
+
+        if wait_for_input and not self.is_element_visible(
+            self.locators.RECIPIENT_INPUT, timeout=timeout or 5
+        ):
+            self.logger.error("Create chat input did not appear after tapping start chat")
+            self.take_screenshot("create_chat_input_missing")
+            self.dump_page_source("create_chat_input_missing")
+            return False
+
+        return True
 
     def wait_for_contact_request_modal(self, timeout: Optional[int] = 10) -> bool:
         return self.is_element_visible(
