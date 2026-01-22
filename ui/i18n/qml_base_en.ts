@@ -12251,22 +12251,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>To pair your devices and sync your profile, make sure to check and complete the following steps:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Connect both devices to the same network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Make sure you are logged in on the other device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Disable the firewall and VPN on both devices</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12312,6 +12296,26 @@ to load</source>
     </message>
     <message>
         <source>Verifying</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To pair your devices and sync your profile, make sure:&lt;ul&gt;&lt;li&gt;Both devices are on the same network&lt;/li&gt;&lt;li&gt;You&apos;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checking access...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable local network access to sync devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Turn on Local network access in your device settings under Settings &gt;&gt; Status &gt;&gt; Local Network.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Settings</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

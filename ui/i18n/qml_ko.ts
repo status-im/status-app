@@ -12202,103 +12202,107 @@ to load</source>
     <name>NewAccountLoginPage</name>
     <message>
         <source>Log in</source>
-        <translation>로그인</translation>
+        <translation type="unfinished">로그인</translation>
     </message>
     <message>
         <source>How would you like to log in to Status?</source>
-        <translation>Status에 어떻게 로그인할까요?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Log in with recovery phrase</source>
-        <translation>복구 구문으로 로그인</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>If you have your Status recovery phrase</source>
-        <translation>Status 복구 구문이 있다면</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Enter recovery phrase</source>
-        <translation>복구 구문 입력</translation>
+        <translation type="unfinished">복구 구문 입력</translation>
     </message>
     <message>
         <source>Log in by syncing</source>
-        <translation>동기화로 로그인</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>If you have Status on another device</source>
-        <translation>다른 기기에서 Status를 사용 중이라면</translation>
+        <translation type="unfinished">다른 기기에 Status가 있는 경우</translation>
     </message>
     <message>
         <source>Log in with Keycard</source>
-        <translation>Keycard로 로그인</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>If your profile keys are stored on a Keycard</source>
-        <translation>프로필 키가 Keycard에 저장되어 있다면</translation>
-    </message>
-    <message>
-        <source>To pair your devices and sync your profile, make sure to check and complete the following steps:</source>
-        <translation>기기를 페어링하고 프로필을 동기화하려면, 다음 단계를 확인하고 완료하세요:</translation>
-    </message>
-    <message>
-        <source>Connect both devices to the same network</source>
-        <translation>두 기기를 동일한 네트워크에 연결하세요</translation>
-    </message>
-    <message>
-        <source>Make sure you are logged in on the other device</source>
-        <translation>다른 기기에서 로그인되어 있는지 확인하세요</translation>
-    </message>
-    <message>
-        <source>Disable the firewall and VPN on both devices</source>
-        <translation>두 기기 모두에서 방화벽과 VPN을 비활성화하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>취소</translation>
+        <translation type="unfinished">취소</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation>계속</translation>
+        <translation type="unfinished">계속</translation>
     </message>
     <message>
         <source>Status does not have access to local network</source>
-        <translation>Status는 로컬 네트워크에 접근할 수 없습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status must be connected to the local network on this device for you to be able to log in via syncing. To rectify this...</source>
-        <translation>이 기기에서 동기화를 통해 로그인하려면 Status가 로컬 네트워크에 연결되어 있어야 합니다. 이를 해결하려면...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>1. Open System Settings</source>
-        <translation>1. 시스템 설정 열기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>2. Click Privacy &amp; Security</source>
-        <translation>2. 개인정보 및 보안을 클릭하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>3. Click Local Network</source>
-        <translation>3. 로컬 네트워크를 클릭하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>4. Find Status</source>
-        <translation>4. Status 찾기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>5. Toggle the switch to grant access</source>
-        <translation>5. 스위치를 켜서 접근 권한을 부여하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>6. Click %1 below</source>
-        <translation>6. 아래에서 %1을(를) 클릭하세요</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Verify local network access</source>
-        <translation>로컬 네트워크 접근 확인</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Verifying</source>
-        <translation>검증 중</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To pair your devices and sync your profile, make sure:&lt;ul&gt;&lt;li&gt;Both devices are on the same network&lt;/li&gt;&lt;li&gt;You&apos;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checking access...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable local network access to sync devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Turn on Local network access in your device settings under Settings &gt;&gt; Status &gt;&gt; Local Network.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Settings</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

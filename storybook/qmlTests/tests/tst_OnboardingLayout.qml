@@ -114,6 +114,10 @@ Item {
                     return mockDriver.mnemonic
                 }
 
+                function startKeycardDetection() {
+                    startKeycardDetectionCalled()
+                }
+
                 readonly property int syncState: Onboarding.ProgressState.InProgress // enum Onboarding.ProgressState
                 function validateLocalPairingConnectionString(connectionString: string) {
                     return !Number.isNaN(parseInt(connectionString))
@@ -126,6 +130,7 @@ Item {
                 signal authorizeCalled(string pin)
                 signal loadMnemonicCalled(string mnemonic)
                 signal exportRecoverKeysCalled
+                signal startKeycardDetectionCalled
             }
 
             onLoginRequested: (keyUid, method, data) => {
@@ -822,14 +827,10 @@ Item {
 
             let btnContinue = findChild(loginWithSyncAckPopup, "btnContinue")
             verify(!!btnContinue)
-            compare(btnContinue.enabled, false)
-            for (let ack of ["ack1", "ack2", "ack3"]) {
-                const cb = findChild(loginWithSyncAckPopup, ack)
-                verify(!!cb)
-                mouseClick(cb)
-            }
-            tryCompare(btnContinue, "enabled", true)
+            compare(btnContinue.enabled, true)
             mouseClick(btnContinue)
+            compare(btnContinue.enabled, false)
+
             tryVerify(() => loginWithSyncAckPopup.exit ? !loginWithSyncAckPopup.exit.running : true)
 
             // PAGE 4: Log in by syncing

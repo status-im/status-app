@@ -5,6 +5,7 @@ import QtQml.Models
 
 import StatusQ
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core.Theme
@@ -101,7 +102,7 @@ OnboardingPage {
                         text: qsTr("Log in by syncing") // FIXME wording, "Log in by pairing"?
                         subTitle: qsTr("If you have Status on another device")
                         icon.source: Assets.png("onboarding/login_syncing")
-                        onClicked: loginWithSyncAck.createObject(root).open()
+                        onClicked: popupsLoader.goToLoginWithSyncAck()
                     }
                     Rectangle {
                         Layout.fillWidth: true
@@ -130,43 +131,46 @@ OnboardingPage {
         active: root.networkChecksEnabled && root.thirdpartyServicesEnabled
     }
 
+    Loader {
+        id: popupsLoader
+        property bool waitingForPermission: false
+        function goToLoginWithSyncAck() {
+            sourceComponent = loginWithSyncAck
+            active = true
+        }
+
+        function goToLocalNetworkPermissionDenied() {
+            sourceComponent = localNetworkPermissionDeniedPopup
+            active = true
+        }
+
+        function goToNetworkCheck() {
+            sourceComponent = networkCheckPopup
+            active = true
+        }
+
+        function reset() {
+            active = false
+            sourceComponent = null
+            waitingForPermission = false
+        }
+
+        active: false
+    }
+
     Component {
         id: loginWithSyncAck
-        StatusDialog {
+        CommonDialogComponent {
             objectName: "loginWithSyncAckPopup"
+            id: loginWithSyncAckPopup
             title: qsTr("Log in by syncing")
-            width: 480
-            padding: 20
-            destroyOnClose: true
-            onOpened: if (root.networkChecksEnabled) netChecker.checkNetwork()
+
             contentItem: ColumnLayout {
                 spacing: 20
                 StatusBaseText {
                     Layout.fillWidth: true
                     wrapMode: Text.Wrap
-                    text: qsTr("To pair your devices and sync your profile, make sure to check and complete the following steps:")
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.padding
-                    StatusCheckBox {
-                        objectName: "ack1"
-                        Layout.fillWidth: true
-                        id: ack1
-                        text: qsTr("Connect both devices to the same network")
-                    }
-                    StatusCheckBox {
-                        objectName: "ack2"
-                        Layout.fillWidth: true
-                        id: ack2
-                        text: qsTr("Make sure you are logged in on the other device")
-                    }
-                    StatusCheckBox {
-                        objectName: "ack3"
-                        Layout.fillWidth: true
-                        id: ack3
-                        text: qsTr("Disable the firewall and VPN on both devices")
-                    }
+                    text: qsTr("To pair your devices and sync your profile, make sure:<ul><li>Both devices are on the same network</li><li>You're logged in on the other device</li><li>No firewall or VPN is blocking local network access</li></ul>")
                 }
             }
             footer: StatusDialogFooter {
@@ -177,16 +181,43 @@ OnboardingPage {
                         onClicked: close()
                     }
                     StatusButton {
+                        id: btnContinue
                         objectName: "btnContinue"
-                        text: qsTr("Continue")
-                        enabled: ack1.checked && ack2.checked && ack3.checked
-                        onClicked: {
-                            if (root.networkChecksEnabled && !netChecker.isOnline) {
-                                networkCheckPopup.createObject(root, {netChecker}).open()
-                            } else {
-                                root.loginWithSyncingRequested()
+                        
+                        function tryAccept() {
+                            if (localNetworkPermission.status === LocalNetworkPermission.Unknown) {
+                                popupsLoader.waitingForPermission = true
+                                localNetworkPermission.request()
+                                return
                             }
+
+                            if (localNetworkPermission.status === LocalNetworkPermission.Denied) {
+                                popupsLoader.goToLocalNetworkPermissionDenied()
+                                return
+                            }
+
+                            if (root.networkChecksEnabled && !netChecker.isOnline) {
+                                popupsLoader.goToNetworkCheck()
+                                return
+                            }
+
+                            root.loginWithSyncingRequested()
                             close()
+                        }
+
+                        text: popupsLoader.waitingForPermission ? qsTr("Checking access...") : qsTr("Continue")
+                        enabled: !popupsLoader.waitingForPermission
+                        onClicked: tryAccept()
+
+                        LocalNetworkPermission {
+                            id: localNetworkPermission
+                            onStatusChanged: btnContinue.tryAccept()
+                        }
+
+                        Component.onCompleted: {
+                            if (popupsLoader.waitingForPermission) {
+                                btnContinue.tryAccept()
+                            }
                         }
                     }
                 }
@@ -194,18 +225,47 @@ OnboardingPage {
         }
     }
 
+    Component {
+        id: localNetworkPermissionDeniedPopup
+        CommonDialogComponent {
+            objectName: "localNetworkPermissionDeniedPopup"
+            title: qsTr("Enable local network access to sync devices")
 
+            contentItem: ColumnLayout {
+                spacing: 20
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    text: qsTr("Turn on Local network access in your device settings under Settings >> Status >> Local Network.")
+                }
+            }
+            footer: StatusDialogFooter {
+                spacing: Theme.padding
+                rightButtons: ObjectModel {
+                    StatusFlatButton {
+                        text: qsTr("Cancel")
+                        onClicked: close()
+                    }
+                    StatusButton {
+                        id: btnOpenSettings
+                        objectName: "btnOpenSettings"
+                        text: qsTr("Open Settings")
+                        enabled: true
+                        onClicked: {
+                            Qt.openUrlExternally("app-settings:")
+                            popupsLoader.goToLoginWithSyncAck()
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     Component {
         id: networkCheckPopup
-        StatusDialog {
+        CommonDialogComponent {
             objectName: "networkCheckPopup"
             title: qsTr("Status does not have access to local network")
-            width: 480
-            padding: 20
-            destroyOnClose: true
-
-            required property var netChecker
 
             contentItem: ColumnLayout {
                 spacing: 20
@@ -289,5 +349,12 @@ OnboardingPage {
                 }
             }
         }
+    }
+
+    component CommonDialogComponent: StatusDialog {
+            width: 480
+            padding: 20
+            visible: true
+            onClosed: () => popupsLoader.reset()
     }
 }

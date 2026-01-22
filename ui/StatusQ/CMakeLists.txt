@@ -175,6 +175,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/keychain.h
         include/StatusQ/NativeSwipeHandlerItem.h
         include/StatusQ/NativeIndicatorItem.h
+        include/StatusQ/localnetworkpermission.h
         include/StatusQ/networkchecker.h
         include/StatusQ/oneoffilter.h
         include/StatusQ/permissionutilsinternal.h
@@ -201,6 +202,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/formatteddoubleproperty.cpp
         src/genericvalidator.cpp
         src/keychain.cpp
+        src/localnetworkpermission.cpp
         src/networkchecker.cpp
         src/oneoffilter.cpp
         src/permissionutilsinternal.cpp
@@ -296,6 +298,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/CustomWebView/darwin/darwinwebchanneltransport.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_ios.mm
         src/StatusQ/Controls/NativeIndicatorItem_ios.mm
+        src/localnetworkpermission_ios.mm
     )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE

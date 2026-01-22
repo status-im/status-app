@@ -14918,26 +14918,6 @@
       <translation>If your profile keys are stored on a Keycard</translation>
     </message>
     <message>
-      <source>To pair your devices and sync your profile, make sure to check and complete the following steps:</source>
-      <comment>NewAccountLoginPage</comment>
-      <translation>To pair your devices and sync your profile, make sure to check and complete the following steps:</translation>
-    </message>
-    <message>
-      <source>Connect both devices to the same network</source>
-      <comment>NewAccountLoginPage</comment>
-      <translation>Connect both devices to the same network</translation>
-    </message>
-    <message>
-      <source>Make sure you are logged in on the other device</source>
-      <comment>NewAccountLoginPage</comment>
-      <translation>Make sure you are logged in on the other device</translation>
-    </message>
-    <message>
-      <source>Disable the firewall and VPN on both devices</source>
-      <comment>NewAccountLoginPage</comment>
-      <translation>Disable the firewall and VPN on both devices</translation>
-    </message>
-    <message>
       <source>Cancel</source>
       <comment>NewAccountLoginPage</comment>
       <translation>Cancel</translation>
@@ -14996,6 +14976,31 @@
       <source>Verifying</source>
       <comment>NewAccountLoginPage</comment>
       <translation>Verifying</translation>
+    </message>
+    <message>
+      <source>To pair your devices and sync your profile, make sure:&lt;ul&gt;&lt;li&gt;Both devices are on the same network&lt;/li&gt;&lt;li&gt;You&#39;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</source>
+      <comment>NewAccountLoginPage</comment>
+      <translation>To pair your devices and sync your profile, make sure:&lt;ul&gt;&lt;li&gt;Both devices are on the same network&lt;/li&gt;&lt;li&gt;You&#39;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</translation>
+    </message>
+    <message>
+      <source>Checking access...</source>
+      <comment>NewAccountLoginPage</comment>
+      <translation>Checking access...</translation>
+    </message>
+    <message>
+      <source>Enable local network access to sync devices</source>
+      <comment>NewAccountLoginPage</comment>
+      <translation>Enable local network access to sync devices</translation>
+    </message>
+    <message>
+      <source>Turn on Local network access in your device settings under Settings &gt;&gt; Status &gt;&gt; Local Network.</source>
+      <comment>NewAccountLoginPage</comment>
+      <translation>Turn on Local network access in your device settings under Settings &gt;&gt; Status &gt;&gt; Local Network.</translation>
+    </message>
+    <message>
+      <source>Open Settings</source>
+      <comment>NewAccountLoginPage</comment>
+      <translation>Open Settings</translation>
     </message>
   </context>
   <context>

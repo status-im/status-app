@@ -7,6 +7,7 @@
 #include "StatusQ/formatteddoubleproperty.h"
 #include "StatusQ/genericvalidator.h"
 #include "StatusQ/keychain.h"
+#include "StatusQ/localnetworkpermission.h"
 #include "StatusQ/networkchecker.h"
 #include "StatusQ/oneoffilter.h"
 #include "StatusQ/permissionutilsinternal.h"
@@ -110,6 +111,8 @@ void registerStatusQTypes() {
         "StatusQ.Internal", 0, 1, "PermissionUtils", [](QQmlEngine*, QJSEngine*) {
             return new PermissionUtilsInternal;
         });
+
+    qmlRegisterType<LocalNetworkPermission>("StatusQ.Core", 0, 1, "LocalNetworkPermission");
 
     // onboarding
     qmlRegisterSingletonType<OnboardingEnums>("AppLayouts.Onboarding.enums", 1, 0,

@@ -12237,103 +12237,107 @@ al cargar</translation>
     <name>NewAccountLoginPage</name>
     <message>
         <source>Log in</source>
-        <translation>Iniciar sesión</translation>
+        <translation type="unfinished">Iniciar sesión</translation>
     </message>
     <message>
         <source>How would you like to log in to Status?</source>
-        <translation>¿Cómo te gustaría iniciar sesión en Status?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Log in with recovery phrase</source>
-        <translation>Iniciar sesión con frase de recuperación</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>If you have your Status recovery phrase</source>
-        <translation>Si tienes tu frase de recuperación de Status</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Enter recovery phrase</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Log in by syncing</source>
-        <translation>Iniciar sesión sincronizando</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>If you have Status on another device</source>
-        <translation>Si tienes Status en otro dispositivo</translation>
+        <translation type="unfinished">Si tienes Status en otro dispositivo</translation>
     </message>
     <message>
         <source>Log in with Keycard</source>
-        <translation>Iniciar sesión con Keycard</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>If your profile keys are stored on a Keycard</source>
-        <translation>Si las claves de tu perfil están almacenadas en un Keycard</translation>
-    </message>
-    <message>
-        <source>To pair your devices and sync your profile, make sure to check and complete the following steps:</source>
-        <translation>Para emparejar tus dispositivos y sincronizar tu perfil, asegúrate de revisar y completar los siguientes pasos:</translation>
-    </message>
-    <message>
-        <source>Connect both devices to the same network</source>
-        <translation>Conecta ambos dispositivos a la misma red</translation>
-    </message>
-    <message>
-        <source>Make sure you are logged in on the other device</source>
-        <translation>Asegúrate de estar iniciado sesión en el otro dispositivo</translation>
-    </message>
-    <message>
-        <source>Disable the firewall and VPN on both devices</source>
-        <translation>Deshabilita el firewall y VPN en ambos dispositivos</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Cancelar</translation>
+        <translation type="unfinished">Cancelar</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation>Continuar</translation>
+        <translation type="unfinished">Continuar</translation>
     </message>
     <message>
         <source>Status does not have access to local network</source>
-        <translation>Status no tiene acceso a la red local</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status must be connected to the local network on this device for you to be able to log in via syncing. To rectify this...</source>
-        <translation>Status debe estar conectado a la red local en este dispositivo para que puedas iniciar sesión mediante sincronización. Para corregir esto...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>1. Open System Settings</source>
-        <translation>1. Abre Configuración del sistema</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>2. Click Privacy &amp; Security</source>
-        <translation>2. Haz clic en Privacidad y Seguridad</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>3. Click Local Network</source>
-        <translation>3. Haz clic en Red local</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>4. Find Status</source>
-        <translation>4. Busca Status</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>5. Toggle the switch to grant access</source>
-        <translation>5. Activa el interruptor para otorgar acceso</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>6. Click %1 below</source>
-        <translation>6. Haz clic en %1 a continuación</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Verify local network access</source>
-        <translation>Verificar acceso a la red local</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Verifying</source>
-        <translation>Verificando</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To pair your devices and sync your profile, make sure:&lt;ul&gt;&lt;li&gt;Both devices are on the same network&lt;/li&gt;&lt;li&gt;You&apos;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checking access...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable local network access to sync devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Turn on Local network access in your device settings under Settings &gt;&gt; Status &gt;&gt; Local Network.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Settings</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

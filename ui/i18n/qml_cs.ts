@@ -12313,103 +12313,107 @@ selhalo</translation>
     <name>NewAccountLoginPage</name>
     <message>
         <source>Log in</source>
-        <translation>Přihlásit se</translation>
+        <translation type="unfinished">Přihlásit se</translation>
     </message>
     <message>
         <source>How would you like to log in to Status?</source>
-        <translation>Jak se chcete přihlásit do Statusu?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Log in with recovery phrase</source>
-        <translation>Přihlásit se pomocí obnovovací fráze</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>If you have your Status recovery phrase</source>
-        <translation>Pokud máte svou obnovovací frázi Status</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Enter recovery phrase</source>
-        <translation>Zadejte obnovovací frázi</translation>
+        <translation type="unfinished">Zadejte obnovovací frázi</translation>
     </message>
     <message>
         <source>Log in by syncing</source>
-        <translation>Přihlásit se synchronizací</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>If you have Status on another device</source>
-        <translation>Pokud máte Status na jiném zařízení</translation>
+        <translation type="unfinished">Pokud máte Status na jiném zařízení</translation>
     </message>
     <message>
         <source>Log in with Keycard</source>
-        <translation>Přihlásit se pomocí Keycard</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>If your profile keys are stored on a Keycard</source>
-        <translation>Pokud jsou klíče vašeho profilu uloženy na Keycard</translation>
-    </message>
-    <message>
-        <source>To pair your devices and sync your profile, make sure to check and complete the following steps:</source>
-        <translation>Pro spárování zařízení a synchronizaci profilu zkontrolujte a dokončete následující kroky:</translation>
-    </message>
-    <message>
-        <source>Connect both devices to the same network</source>
-        <translation>Připojte obě zařízení ke stejné síti</translation>
-    </message>
-    <message>
-        <source>Make sure you are logged in on the other device</source>
-        <translation>Ujistěte se, že jste přihlášeni na druhém zařízení</translation>
-    </message>
-    <message>
-        <source>Disable the firewall and VPN on both devices</source>
-        <translation>Vypněte firewall a VPN na obou zařízeních</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Zrušit</translation>
+        <translation type="unfinished">Zrušit</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation>Pokračovat</translation>
+        <translation type="unfinished">Pokračovat</translation>
     </message>
     <message>
         <source>Status does not have access to local network</source>
-        <translation>Status nemá přístup k místní síti</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Status must be connected to the local network on this device for you to be able to log in via syncing. To rectify this...</source>
-        <translation>Status musí být na tomto zařízení připojen k místní síti, abyste se mohli přihlásit pomocí synchronizace. Pro nápravu...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>1. Open System Settings</source>
-        <translation>1. Otevřete Nastavení systému</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>2. Click Privacy &amp; Security</source>
-        <translation>2. Klikněte na Soukromí a zabezpečení</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>3. Click Local Network</source>
-        <translation>3. Klikněte na Místní síť</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>4. Find Status</source>
-        <translation>4. Najděte Status</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>5. Toggle the switch to grant access</source>
-        <translation>5. Přepněte přepínač pro udělení přístupu</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>6. Click %1 below</source>
-        <translation>6. Klikněte na %1 níže</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Verify local network access</source>
-        <translation>Ověřit přístup k místní síti</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Verifying</source>
-        <translation>Ověřování</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To pair your devices and sync your profile, make sure:&lt;ul&gt;&lt;li&gt;Both devices are on the same network&lt;/li&gt;&lt;li&gt;You&apos;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Checking access...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable local network access to sync devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Turn on Local network access in your device settings under Settings &gt;&gt; Status &gt;&gt; Local Network.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open Settings</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
