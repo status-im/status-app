@@ -227,6 +227,10 @@ Rectangle {
             StatusRoundButton {
                 id: icon
                 objectName: "addAccountButton"
+                Accessible.name: Utils.formatAccessibleName(
+                    qsTr("Add account"),
+                    "addAccountButton"
+                )
                 icon.name: "add-circle"
                 anchors.right: parent.right
                 anchors.rightMargin: -Theme.smallPadding
