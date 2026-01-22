@@ -17,7 +17,7 @@ ActivityNotificationBaseLayout {
     property bool emoji1: false
 
     showBaseEditorFields: true
-    communityEditorActive: false
+    communityEditorActive: true
     contactEditorActive: true
     activityNotificationComponent: ActivityNotificationMention {
         notification: QtObject {
@@ -36,9 +36,13 @@ ActivityNotificationBaseLayout {
                 readonly property string communityId: "communityId-222"
                 readonly property string messageText: baseEditor.notificationBaseMock.description
                 property bool amISender: true
+                readonly property int contentType: 1
+                readonly property int albumImagesCount: 0
+                readonly property string messageImage: ""
+                readonly property string albumMessageImages: ""
             }
         }
-        contactsModel: QtObject {}
+        contactsModel: ListModel {}
         contactDetails: conntactEditor.contactDetailsMock
         community: communityEditor.communityMock
         channel: QtObject {

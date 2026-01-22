@@ -15,7 +15,7 @@ ActivityNotificationBaseLayout {
     contactEditorActive: true
     activityNotificationComponent: ActivityNotificationContactRemoved {
         notification: baseEditor.notificationBaseMock
-        contactsModel: QtObject {}
+        contactsModel: ListModel {}
         contactDetails: conntactEditor.contactDetailsMock
 
         onOpenProfilePopup: (contactId) =>

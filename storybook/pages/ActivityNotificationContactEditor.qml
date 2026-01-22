@@ -13,10 +13,13 @@ ColumnLayout {
         readonly property string displayName: contactName.text
         readonly property string alias: contactAlias.text
         readonly property string compressedPubKey: compressedPK.text
+        readonly property string thumbnailImage: ""
         readonly property bool isContact: isContact.checked
         readonly property int trustStatus: isTrusted.checked ? 0 /*Not verified*/ : 2 /*Untrusted*/
         readonly property bool added: isContactAdded.checked
         readonly property bool isContactRequestReceived: isRequestReceived.checked
+        readonly property bool isBlocked: false
+        readonly property bool ensVerified: false
     }
 
     Label {

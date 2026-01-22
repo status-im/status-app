@@ -13,6 +13,8 @@ ColumnLayout {
 
     property QtObject notificationBaseMock: QtObject {
         property string id: "notificationID-111"
+        property string chatId: ""
+        property string author: ""
         property int notificationType: 0
         property string communityId: "communityID-222"
         property double previousTimestamp: 0

@@ -31,7 +31,8 @@ ActivityNotificationBase {
         }
     }
 
-    readonly property var contactDetails: contactModelEntryLoader.item ? contactModelEntryLoader.item.contactDetails : null
+    // Not readonly so that Storybook can override it
+    property var contactDetails: contactModelEntryLoader.item ? contactModelEntryLoader.item.contactDetails : null
 
     property int maximumLineCount: 2
 

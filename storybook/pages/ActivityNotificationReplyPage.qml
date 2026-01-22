@@ -76,7 +76,7 @@ ActivityNotificationBaseLayout {
                 }
             }
         }
-        contactsModel: QtObject {}
+        contactsModel: ListModel {}
         contactDetails: conntactEditor.contactDetailsMock
 
         onSwitchToRequested: (sectionId, chatId, messageId) =>

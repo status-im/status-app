@@ -123,7 +123,7 @@ SplitView {
 
                 sourceComponent : ActivityNotificationCommunityMembershipRequest {
                     notification: notificationMock
-                    contactsModel: QtObject {}
+                    contactsModel: ListModel {}
                     contactDetails: contactDetailsMock
                     community: communityEditor.communityMock
 
