@@ -431,7 +431,7 @@ Window {
         Global.openMetricsEnablePopupRequested.connect(openMetricsEnablePopup)
         Global.addCentralizedMetricIfEnabled.connect(metricsStore.addCentralizedMetricIfEnabled)
 
-        nativeSafeAreaBottom = mobileUI.safeAreaBottom + mobileUI.navbarHeight
+        nativeSafeAreaBottom = MobileUI.safeAreaBottom + MobileUI.navbarHeight
 
         // SafeArea margins works well out of the box when app uses regular qml Window as a top level
         // window. When custom window derived from QQuickWindow is used, SafeArea's margins are all 0
@@ -440,17 +440,17 @@ Window {
         // via native API. When the margins are initialized, binding is cleared.
         const safeArea = applicationWindow.contentItem.SafeArea
 
-        if (safeArea.margins.bottom === 0 && mobileUI.safeAreaBottom + mobileUI.navbarHeight > 0)
-            safeArea.additionalMargins.bottom = Qt.binding(() => mobileUI.safeAreaBottom + mobileUI.navbarHeight + applicationWindow.additionalBottomMargin)
+        if (safeArea.margins.bottom === 0 && MobileUI.safeAreaBottom + MobileUI.navbarHeight > 0)
+            safeArea.additionalMargins.bottom = Qt.binding(() => MobileUI.safeAreaBottom + MobileUI.navbarHeight + applicationWindow.additionalBottomMargin)
 
-        if (safeArea.margins.top === 0 && mobileUI.safeAreaTop > 0)
-            safeArea.additionalMargins.top = Qt.binding(() => mobileUI.safeAreaTop)
+        if (safeArea.margins.top === 0 && MobileUI.safeAreaTop > 0)
+            safeArea.additionalMargins.top = Qt.binding(() => MobileUI.safeAreaTop)
 
-        if (safeArea.margins.right === 0 && mobileUI.safeAreaRight > 0)
-            safeArea.additionalMargins.right = Qt.binding(() => mobileUI.safeAreaRight)
+        if (safeArea.margins.right === 0 && MobileUI.safeAreaRight > 0)
+            safeArea.additionalMargins.right = Qt.binding(() => MobileUI.safeAreaRight)
 
-        if (safeArea.margins.left === 0 && mobileUI.safeAreaLeft > 0)
-            safeArea.additionalMargins.left = Qt.binding(() => mobileUI.safeAreaLeft)
+        if (safeArea.margins.left === 0 && MobileUI.safeAreaLeft > 0)
+            safeArea.additionalMargins.left = Qt.binding(() => MobileUI.safeAreaLeft)
 
         safeMarginsCleanupConnections.enabled = true
     }
@@ -774,10 +774,6 @@ Window {
                 mouse.accepted = false
             }
         }
-    }
-
-    MobileUI {
-        id: mobileUI
     }
 
     //Workaround for QTBUG-140897

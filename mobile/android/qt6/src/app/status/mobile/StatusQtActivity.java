@@ -11,10 +11,12 @@ import android.provider.Settings;
 
 public class StatusQtActivity extends QtActivity {
     private static final AtomicBoolean splashShouldHide = new AtomicBoolean(false);
+    private static StatusQtActivity sInstance = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sInstance = this;
         
         if (Build.VERSION.SDK_INT >= 31) { // Android 12+
             SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
@@ -38,6 +40,7 @@ public class StatusQtActivity extends QtActivity {
 
     @Override
     protected void onDestroy() {
+        sInstance = null;
         super.onDestroy();
     }
 
@@ -48,12 +51,11 @@ public class StatusQtActivity extends QtActivity {
 
     // Static method to open app settings
     public static void openAppSettings() {
-        QtActivity activity = (QtActivity) QtNative.activity();
-        if (activity != null) {
+        if (sInstance != null) {
             Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            Uri uri = Uri.fromParts("package", activity.getPackageName(), null);
+            Uri uri = Uri.fromParts("package", sInstance.getPackageName(), null);
             intent.setData(uri);
-            activity.startActivity(intent);
+            sInstance.startActivity(intent);
         }
     }
 }

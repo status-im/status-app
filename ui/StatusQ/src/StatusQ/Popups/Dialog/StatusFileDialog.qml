@@ -34,10 +34,6 @@ QObject {
         dlg.close()
     }
 
-    MobileUI {
-        id: mobileUI
-    }
-
     QtObject {
         id: d
 
@@ -52,7 +48,7 @@ QObject {
 
             let resolvedLocalFile = UrlUtils.convertUrlToLocalPath(file)
             // This will reserve the access to the file for the duration of the app
-            if (Utils.isIOS && !mobileUI.startAccessingPath(resolvedLocalFile)) {
+            if (Utils.isIOS && !MobileUI.startAccessingPath(resolvedLocalFile)) {
                 console.warn("StatusFileDialog failed to start access for selected file")
             }
             if (!resolvedLocalFile.startsWith("file:"))

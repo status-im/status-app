@@ -13,6 +13,8 @@ import StatusQ.Core.Utils as SQUtils
 
 import MobileUI
 
+import utils
+
 /*
     NOTE:   I'm doing some crazy workarounds here. Tested on MacOS.
             What I wanted to achieve:
@@ -69,6 +71,7 @@ ColumnLayout {
             }
             d.errorMessage = ""
             root.validTagFound(tag)
+            MobileUI.vibrate()
             root.state = StatusQrCodeScanner.State.Success
         }
     }
@@ -79,6 +82,7 @@ ColumnLayout {
         running: false
         repeat: false
         onTriggered: {
+            MobileUI.vibrate()
             root.state = StatusQrCodeScanner.State.None
         }
     }
@@ -110,7 +114,7 @@ ColumnLayout {
 
         ColumnLayout {
             anchors.fill: parent
-            spacing: 4 // TODO use theme
+            spacing: Theme.smallPadding / 2
 
             Item {
                 Layout.fillHeight: true

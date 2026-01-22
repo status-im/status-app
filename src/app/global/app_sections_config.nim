@@ -26,7 +26,7 @@ const NODEMANAGEMENT_SECTION_NAME* = "Node Management"
 const NODEMANAGEMENT_SECTION_ICON* = "node"
 
 const QR_SCANNER_SECTION_ID* = "qrScannerDialog"
-const QR_SCANNER_SECTION_NAME* = "QR Code Scanner"
+const QR_SCANNER_SECTION_NAME* = "QR Scanner"
 const QR_SCANNER_SECTION_ICON* = "qr-scan"
 
 const ACTIVITYCENTER_SECTION_ID* = "activityCenterPage"
