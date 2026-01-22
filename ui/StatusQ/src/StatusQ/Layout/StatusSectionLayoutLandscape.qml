@@ -198,6 +198,7 @@ Control {
     // header in the central panel to be used as the base layout of all application
     // ------------------------------------------------------------------------------------
     SplitView {
+        id: splitView
         anchors.fill: parent
         handle: root.handle
 
@@ -316,16 +317,21 @@ Control {
         }
 
         // Helpers
-        function leftPanelTopLeftInRoot() {
-            const lp = d.effectiveLeftPanel
-            return lp ? root.mapFromItem(lp, 0, 0) : Qt.point(0, 0)
-        }
 
+        // Computes the horizontal position of the floating left panel.
+        // The position is derived from the SplitView slot geometry
+        // (`leftPanelSlot.x` / `leftPanelSlot.width`) instead of using `mapFromItem()`
+        // to ensure the binding is correctly re-evaluated on SplitView relayouts
+        // (e.g. window resize or dynamic column width changes).
         function targetX() {
-            const lp = d.effectiveLeftPanel
-            if (!lp) return 0
-            const p = leftPanelTopLeftInRoot()
-            return p.x + lp.width - width - Theme.halfPadding
+            if (!d.effectiveLeftPanel) {
+                return 0
+            }
+            return splitView.x
+                    + leftPanelSlot.x
+                    + leftPanelSlot.width
+                    - width
+                    - Theme.halfPadding
         }
 
         function targetY() {
