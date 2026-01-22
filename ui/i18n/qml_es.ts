@@ -13613,6 +13613,14 @@ al cargar</translation>
         <source>Sign out &amp; Quit</source>
         <translation></translation>
     </message>
+    <message>
+        <source>Share your profile</source>
+        <translation type="unfinished">Comparte tu perfil</translation>
+    </message>
+    <message>
+        <source>%1&apos;s profile</source>
+        <translation type="unfinished">Perfil de %1</translation>
+    </message>
 </context>
 <context>
     <name>PrivacyAndSecurityView</name>
@@ -13804,14 +13812,6 @@ al cargar</translation>
     <message>
         <source>Share Profile</source>
         <translation>Compartir perfil</translation>
-    </message>
-    <message>
-        <source>Share your profile</source>
-        <translation>Comparte tu perfil</translation>
-    </message>
-    <message>
-        <source>%1&apos;s profile</source>
-        <translation>Perfil de %1</translation>
     </message>
     <message>
         <source>Mark as trusted</source>
@@ -18541,6 +18541,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Set status automatically</source>
         <translation>Establecer estado automáticamente</translation>
+    </message>
+    <message>
+        <source>Share Profile</source>
+        <translation type="unfinished">Compartir perfil</translation>
     </message>
 </context>
 <context>

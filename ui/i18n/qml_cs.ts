@@ -13700,6 +13700,14 @@ selhalo</translation>
         <source>Sign out &amp; Quit</source>
         <translation>Odhlásit se a ukončit</translation>
     </message>
+    <message>
+        <source>Share your profile</source>
+        <translation type="unfinished">Sdílet svůj profil</translation>
+    </message>
+    <message>
+        <source>%1&apos;s profile</source>
+        <translation type="unfinished">Profil uživatele %1</translation>
+    </message>
 </context>
 <context>
     <name>PrivacyAndSecurityView</name>
@@ -13892,14 +13900,6 @@ selhalo</translation>
     <message>
         <source>Share Profile</source>
         <translation>Sdílet profil</translation>
-    </message>
-    <message>
-        <source>Share your profile</source>
-        <translation>Sdílet svůj profil</translation>
-    </message>
-    <message>
-        <source>%1&apos;s profile</source>
-        <translation>Profil uživatele %1</translation>
     </message>
     <message>
         <source>Mark as trusted</source>
@@ -18634,6 +18634,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Set status automatically</source>
         <translation>Nastavit stav automaticky</translation>
+    </message>
+    <message>
+        <source>Share Profile</source>
+        <translation type="unfinished">Sdílet profil</translation>
     </message>
 </context>
 <context>

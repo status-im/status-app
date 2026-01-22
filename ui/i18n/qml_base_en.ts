@@ -13590,6 +13590,14 @@ to load</source>
         <source>Sign out &amp; Quit</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Share your profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1&apos;s profile</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>PrivacyAndSecurityView</name>
@@ -13780,14 +13788,6 @@ to load</source>
     </message>
     <message>
         <source>Share Profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Share your profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1&apos;s profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -18503,6 +18503,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Set status automatically</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Share Profile</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

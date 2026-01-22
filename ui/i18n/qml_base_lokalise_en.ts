@@ -16554,6 +16554,16 @@
       <comment>Popups</comment>
       <translation>Sign out &amp; Quit</translation>
     </message>
+    <message>
+      <source>Share your profile</source>
+      <comment>Popups</comment>
+      <translation>Share your profile</translation>
+    </message>
+    <message>
+      <source>%1&#39;s profile</source>
+      <comment>Popups</comment>
+      <translation>%1&#39;s profile</translation>
+    </message>
   </context>
   <context>
     <name>PrivacyAndSecurityView</name>
@@ -16787,16 +16797,6 @@
       <source>Share Profile</source>
       <comment>ProfileDialogView</comment>
       <translation>Share Profile</translation>
-    </message>
-    <message>
-      <source>Share your profile</source>
-      <comment>ProfileDialogView</comment>
-      <translation>Share your profile</translation>
-    </message>
-    <message>
-      <source>%1&#39;s profile</source>
-      <comment>ProfileDialogView</comment>
-      <translation>%1&#39;s profile</translation>
     </message>
     <message>
       <source>Mark as trusted</source>
@@ -22505,6 +22505,11 @@
       <source>Set status automatically</source>
       <comment>UserStatusContextMenu</comment>
       <translation>Set status automatically</translation>
+    </message>
+    <message>
+      <source>Share Profile</source>
+      <comment>UserStatusContextMenu</comment>
+      <translation>Share Profile</translation>
     </message>
   </context>
   <context>

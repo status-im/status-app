@@ -34,6 +34,7 @@ import shared.popups
 import shared.status
 import shared.stores
 import shared.views
+import shared.views.profile
 
 import utils
 
@@ -109,6 +110,7 @@ QtObject {
         Global.openImagePopup.connect(openImagePopup)
         Global.openVideoPopup.connect(openVideoPopup)
         Global.openProfilePopupRequested.connect(openProfilePopup)
+        Global.openShareProfileRequested.connect(openShareProfilePopup)
         Global.openNicknamePopupRequested.connect(openNicknamePopup)
         Global.markAsUntrustedRequested.connect(openMarkAsUntrustedPopup)
         Global.blockContactRequested.connect(openBlockContactPopup)
@@ -194,6 +196,10 @@ QtObject {
 
     function openProfilePopup(publicKey: string, parentPopup, cb) {
         openPopup(profilePopupComponent, {publicKey: publicKey, parentPopup: parentPopup}, cb)
+    }
+
+    function openShareProfilePopup(publicKey: string, parentPopup, cb) {
+        openPopup(shareProfilePopupComponent, {publicKey, parentPopup}, cb)
     }
 
     function openNicknamePopup(publicKey: string, cb) {
@@ -638,6 +644,44 @@ QtObject {
                     }
                     destroy()
                 }
+            }
+        },
+
+        Component {
+            id: shareProfilePopupComponent
+
+            ShareProfileDialog {
+                id: shareProfilePopup
+
+                ContactModelEntry {
+                    id: shareProfileContactModelEntry
+                    publicKey: shareProfilePopup.publicKey
+                    contactsModel: root.allContactsModel
+                    onPopulateContactDetailsRequested: {
+                        root.contactsStore.populateContactDetails(shareProfilePopup.publicKey)
+                    }
+                }
+
+                destroyOnClose: true
+                readonly property bool isCurrentUser: shareProfileContactModelEntry.contactDetails.isCurrentUser
+                readonly property string userDisplayName: ProfileUtils.displayName(
+                    shareProfileContactModelEntry.contactDetails.localNickname,
+                    shareProfileContactModelEntry.contactDetails.name,
+                    shareProfileContactModelEntry.contactDetails.displayName,
+                    shareProfileContactModelEntry.contactDetails.alias
+                )
+
+                title: shareProfilePopup.isCurrentUser ?
+                    qsTr("Share your profile") :
+                    qsTr("%1's profile").arg(StatusQUtils.Emoji.parse(shareProfilePopup.userDisplayName))
+
+                emojiHash: root.utilsStore.getEmojiHash(shareProfilePopup.publicKey)
+                linkToProfile: root.contactsStore.getLinkToProfile(shareProfilePopup.publicKey)
+                qrCode: root.profileStore.getQrCodeSource(linkToProfile)
+                displayName: shareProfilePopup.userDisplayName
+                usesDefaultName: shareProfileContactModelEntry.contactDetails.usesDefaultName
+                largeImage: shareProfileContactModelEntry.contactDetails.largeImage
+                colorId: Utils.colorForColorId(Theme.palette, shareProfileContactModelEntry.contactDetails.colorId)
             }
         },
 

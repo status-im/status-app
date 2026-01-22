@@ -63,6 +63,7 @@ Control {
     signal itemActivated(int sectionType, string sectionId)
     signal activityCenterRequested(bool shouldShow)
     signal viewProfileRequested(string pubKey)
+    signal shareProfileRequested(string pubKey)
     signal setCurrentUserStatusRequested(int status)
 
     Component.onCompleted: d.snapToMode()
@@ -254,6 +255,7 @@ Control {
 
                     onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
                     onViewProfileRequested: (pubKey) => root.viewProfileRequested(pubKey)
+                    onShareProfileRequested: (pubKey) => root.shareProfileRequested(pubKey)
                 }
             }
         }
