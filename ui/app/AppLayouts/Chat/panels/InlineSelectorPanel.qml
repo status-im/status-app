@@ -251,6 +251,8 @@ ColumnLayout {
 
                     TextInput {
                         id: edit
+                        objectName: "chatRecipientInput"
+                        Accessible.name: Utils.formatAccessibleName("Input for adding group members", "chatRecipientInput")
 
                         property bool pasteOperation: false
 

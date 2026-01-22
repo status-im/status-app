@@ -5,9 +5,7 @@ class CreateChatLocators:
     START_CHAT_BUTTON = BaseLocators.xpath(
         "//*[contains(@resource-id,'startChatButton')]"
     )
-    RECIPIENT_INPUT = BaseLocators.xpath(
-        "//android.view.ViewGroup[contains(@resource-id,'CreateChatView')]"
-    )
+    RECIPIENT_INPUT = BaseLocators.resource_id_contains("chatRecipientInput")
     CONTACT_REQUEST_MESSAGE_INPUT = BaseLocators.xpath(
         "//android.widget.EditText[contains(@resource-id, 'ProfileSendContactRequestModal_sayWhoYouAreInput')]"
     )
