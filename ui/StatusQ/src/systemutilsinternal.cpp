@@ -243,7 +243,7 @@ void SystemUtilsInternal::downloadImageByUrl(
 }
 
 
-void SystemUtilsInternal::openAppSettings() const
+void SystemUtilsInternal::openAppSettings()
 {
 #ifdef Q_OS_ANDROID
     QJniObject::callStaticMethod<void>(

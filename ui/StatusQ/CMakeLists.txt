@@ -329,7 +329,7 @@ FetchContent_Declare(
   MobileUI
 
   GIT_REPOSITORY https://github.com/status-im/MobileUI.git
-  GIT_TAG 341bb4e4ed0d1c818244f61a4d1d9a54443332c5
+  GIT_TAG 12802e2a1931917f84011bafecb2a86880ff110c
 )
 FetchContent_MakeAvailable(MobileUI)
 

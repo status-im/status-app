@@ -24,8 +24,6 @@ QObject {
         dlg.close()
     }
 
-    MobileUI { id: mobileUI }
-
     QtObject {
         id: d
         property url resolvedFolder: d.resolveFolder(dlg.selectedFolder)
@@ -36,7 +34,7 @@ QObject {
                 //Convert from `file://` to local path
                 resolvedFolder = UrlUtils.convertUrlToLocalPath(folder)
                 // This will reserve the access to the folder for the duration of the app
-                const success = mobileUI.startAccessingPath(resolvedFolder)
+                const success = MobileUI.startAccessingPath(resolvedFolder)
                 if (!success) {
                     console.warn("StatusFolderDialog failed to start access for selected folder")
                 }
