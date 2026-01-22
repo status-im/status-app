@@ -28,14 +28,6 @@ Page {
                     id: leftFloatingPanelCheckbox
                     text: "Open Floating Panel"
                     checked: false
-
-                    onCheckedChanged: {
-                        if(checked) {
-                            sectionLayout.openFloatingPanel()
-                        } else {
-                            sectionLayout.closeFloatingPanel()
-                        }
-                    }
                 }
             }
             CheckBox {
@@ -171,6 +163,7 @@ Page {
             implicitHeight: 400
             invertedLayout: inverted.checked
             leftFloatingPanelItem: leftFloatingPanel
+            floatingPanelOpen: leftFloatingPanelCheckbox.checked
             leftPanel: leftPanelCheckBox.checked ? leftPanel : null
             centerPanel: centerPanelCheckBox.checked ? centerPanel : null
             rightPanel: rightPanel
@@ -190,6 +183,7 @@ Page {
                     }
                 }
             }
+            onFloatingPanelAutoClosed: leftFloatingPanelCheckbox.checked = false
         }
     }
 }
