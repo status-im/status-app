@@ -161,6 +161,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/formatteddoubleproperty.h
         include/StatusQ/genericvalidator.h
         include/StatusQ/keychain.h
+        include/StatusQ/localnetworkpermission.h
         include/StatusQ/networkchecker.h
         include/StatusQ/permissionutilsinternal.h
         include/StatusQ/rxvalidator.h
@@ -182,6 +183,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/formatteddoubleproperty.cpp
         src/genericvalidator.cpp
         src/keychain.cpp
+        src/localnetworkpermission.cpp
         src/networkchecker.cpp
         src/permissionutilsinternal.cpp
         src/rxvalidator.cpp
@@ -227,6 +229,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/keychain_apple.mm
+        src/localnetworkpermission_ios.mm
     )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE

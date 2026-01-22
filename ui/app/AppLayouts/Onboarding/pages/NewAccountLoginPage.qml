@@ -5,6 +5,7 @@ import QtQml.Models
 
 import StatusQ
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core.Theme
@@ -133,11 +134,19 @@ OnboardingPage {
         id: loginWithSyncAck
         StatusDialog {
             objectName: "loginWithSyncAckPopup"
+            id: loginWithSyncAckPopup
             title: qsTr("Log in by syncing")
             width: 480
             padding: 20
             destroyOnClose: true
-            onOpened: if (root.networkChecksEnabled) netChecker.checkNetwork()
+
+            LocalNetworkPermission {
+                id: localNetworkPermission
+                onStatusChanged: {
+                    iosLocalNetworkSwitch.checked = (localNetworkPermission.status === LocalNetworkPermission.Granted)
+                }
+            }
+
             contentItem: ColumnLayout {
                 spacing: 20
                 StatusBaseText {
@@ -166,6 +175,42 @@ OnboardingPage {
                         id: ack3
                         text: qsTr("Disable the firewall and VPN on both devices")
                     }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.padding
+                        visible: SQUtils.Utils.isIOS
+
+                        StatusSwitch {
+                            objectName: "iosLocalNetworkSwitch"
+                            id: iosLocalNetworkSwitch
+                            Layout.fillWidth: true
+                            text: qsTr("Local network access")
+                            enabled: localNetworkPermission.status === LocalNetworkPermission.Unknown
+                            Binding {
+                                target: iosLocalNetworkSwitch
+                                property: "checked"
+                                value: localNetworkPermission.status === LocalNetworkPermission.Granted
+                                restoreMode: Binding.RestoreBinding
+                            }
+                            onToggled: {
+                                if (checked) {
+                                    // The switch should be checked only by the permission request.
+                                    checked = false
+                                    localNetworkPermission.request()
+                                }
+                            }
+                        }
+                        StatusBaseText {
+                            Layout.fillWidth: true
+                            wrapMode: Text.Wrap
+                            color: Theme.palette.baseColor1
+                            textFormat: Text.RichText
+                            text: qsTr("Enable access to local network to pair with your other device in your network. Local network permissions can be managed in %1iOS Settings → Status → Local Network%2.").arg(`<a href="app-settings:">`).arg(`</a>`)
+                            onLinkActivated: (link) => {
+                                Qt.openUrlExternally(link)
+                            }
+                        }
+                    }
                 }
             }
             footer: StatusDialogFooter {
@@ -178,7 +223,10 @@ OnboardingPage {
                     StatusButton {
                         objectName: "btnContinue"
                         text: qsTr("Continue")
-                        enabled: ack1.checked && ack2.checked && ack3.checked
+                        enabled: ack1.checked
+                                 && ack2.checked
+                                 && ack3.checked
+                                 && (!SQUtils.Utils.isIOS || localNetworkPermission.status === LocalNetworkPermission.Granted)
                         onClicked: {
                             if (root.networkChecksEnabled && !netChecker.isOnline) {
                                 networkCheckPopup.createObject(root, {netChecker}).open()

@@ -14885,6 +14885,16 @@
       <comment>NewAccountLoginPage</comment>
       <translation>Verifying</translation>
     </message>
+    <message>
+      <source>Local network access</source>
+      <comment>NewAccountLoginPage</comment>
+      <translation>Local network access</translation>
+    </message>
+    <message>
+      <source>Enable access to local network to pair with your other device in your network. Local network permissions can be managed in %1iOS Settings → Status → Local Network%2.</source>
+      <comment>NewAccountLoginPage</comment>
+      <translation>Enable access to local network to pair with your other device in your network. Local network permissions can be managed in %1iOS Settings → Status → Local Network%2.</translation>
+    </message>
   </context>
   <context>
     <name>NewMessagesMarker</name>
@@ -23436,6 +23446,11 @@
       <source>Status Desktop</source>
       <comment>main</comment>
       <translation>Status Desktop</translation>
+    </message>
+    <message>
+      <source>Hello World</source>
+      <comment>main</comment>
+      <translation>Hello World</translation>
     </message>
   </context>
   <context>

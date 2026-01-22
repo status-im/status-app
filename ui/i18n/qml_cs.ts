@@ -12276,6 +12276,14 @@ to load</source>
         <source>Verifying</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Local network access</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable access to local network to pair with your other device in your network. Local network permissions can be managed in %1iOS Settings → Status → Local Network%2.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NewMessagesMarker</name>
@@ -19342,6 +19350,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Status Desktop</source>
         <translation>Status Desktop</translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
