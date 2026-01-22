@@ -742,7 +742,6 @@ proc buildKeyPairItemBasedOnCardMetadata[T](self: Module[T], cardMetadata: CardM
       let name = atc.KEYCARD_ACCOUNT_NAME_OF_UNKNOWN_WALLET_ACCOUNT & $unknownAccountNumber
       result.item.addAccount(newKeyPairAccountItem(name, cardAcc.path, cardAcc.address, pubKey = cardAcc.publicKey,
         emoji = "", colorId = "undefined", icon = "wallet", currencyAmountToItem(balance, currencyFormat), balanceFetched))
-  self.controller.buildAllTokens(addressesToFetchBalanceFor, forceRefresh = true)
 
 method updateKeyPairForProcessing*[T](self: Module[T], cardMetadata: CardMetadata) =
   let(item, knownKeyPair) = self.buildKeyPairItemBasedOnCardMetadata(cardMetadata)

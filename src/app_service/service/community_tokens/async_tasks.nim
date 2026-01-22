@@ -3,6 +3,7 @@ import stint, tables
 import backend/collectibles
 import app/core/tasks/qt
 import ../community/dto/community
+import app_service/common/utils as common_utils
 
 include app/core/tasks/common
 include app_service/common/json_utils
@@ -81,7 +82,8 @@ proc fetchAssetOwnersTaskArg(argEncoded: string) {.gcsafe, nimcall.} =
       allCommunityMembersAddresses.add(address)
       walletMemberTable[address.toUpper] = member.toContactsDto()
 
-    let balancesResponse = backend.getBalancesByChain(@[arg.chainId], allCommunityMembersAddresses, @[arg.contractAddress])
+    let tokenKey = common_utils.createTokenKey(arg.chainId, arg.contractAddress)
+    let balancesResponse = backend.fetchTokenBalances(allCommunityMembersAddresses, @[tokenKey])
 
     let walletBalanceTable = balanceInfoToTable(balancesResponse.result)
 

@@ -138,15 +138,6 @@ proc startWallet(self: Service) =
 
 proc init*(self: Service) =
   try:
-    self.buildTokensDebouncer = debouncer_service.newDebouncer(
-      self.threadpool,
-      # this is the delay before the first call to the callback, this is an action that doesn't need to be called immediately, but it's pretty expensive in terms of time/performances
-      # for example `wallet-tick-reload` event is emitted for every single chain-account pair, and at the app start can be more such signals received from the statusgo side if the balance have changed.
-      # Means it the app contains more accounts the likelihood of having more `wallet-tick-reload` signals is higher, so we need to delay the rebuildMarketData call to avoid unnecessary calls.
-      delayMs = 1000,
-      checkIntervalMs = 500)
-    self.buildTokensDebouncer.registerCall2(callback = proc(accounts: seq[string], forceRefresh: bool) = self.buildAllTokensInternal(accounts, forceRefresh))
-
     var addressesToGetENSName: seq[string] = @[]
     let chainId = self.networkService.getAppNetwork().chainId
     let woAccounts = getWatchOnlyAccountsFromDb()
@@ -162,6 +153,8 @@ proc init*(self: Service) =
     self.fetchENSNamesForAddressesAsync(addressesToGetENSName, chainId)
 
     let addresses = self.getWalletAddresses()
+    let chainIds = self.networkService.getCurrentNetworksChainIds()
+    self.refreshAllTokenBalancesCache(addresses, chainIds)
     self.startWallet()
   except Exception as e:
     let errDesription = e.msg
@@ -183,9 +176,6 @@ proc init*(self: Service) =
   self.events.on(SignalType.Wallet.event) do(e:Args):
     var data = WalletSignal(e)
     case data.eventType:
-      of "wallet-tick-reload":
-        let addresses = self.getWalletAddresses()
-        self.buildAllTokens(addresses, forceRefresh = true)
       of EventWatchOnlyAccountRetrieved:
         var watchOnlyAccountPayload: JsonNode
         try:
@@ -195,22 +185,21 @@ proc init*(self: Service) =
         except CatchableError:
           return
 
-  self.events.on(SIGNAL_CURRENCY_UPDATED) do(e:Args):
-    self.buildAllTokens(self.getWalletAddresses(), forceRefresh = false)
+  self.events.on(SignalType.WalletTokenBalancesFetchFinished.event) do(e: Args):
+    var data = WalletSignal(e)
+    if data.balanceChanged:
+      self.refreshAllTokenBalancesCache(@[data.balanceFetchAccount], @[data.balanceFetchChainId])
 
-  self.events.on(SIGNAL_TOKENS_LIST_UPDATED) do(e:Args):
-    self.buildAllTokens(self.getWalletAddresses(), forceRefresh = false)
+  # Rebuild grouped assets when token list is updated (group keys may have changed)
+  self.events.on(token_service.SIGNAL_TOKENS_LIST_UPDATED) do(e: Args):
+    self.rebuildGroupedAssets()
 
   self.events.on(SIGNAL_PASSWORD_PROVIDED) do(e: Args):
     let args = AuthenticationArgs(e)
     self.cleanKeystoreFiles(args.password)
     self.importPartiallyOperableAccounts(args.keyUid, args.password)
 
-  let addresses = self.getWalletAddresses()
-  self.buildAllTokens(addresses, forceRefresh = true)
-
 proc addNewKeypairsAccountsToLocalStoreAndNotify(self: Service, notify: bool = true) =
-  var addressesToFetchBalanceFor: seq[string] = @[]
   let chainId = self.networkService.getAppNetwork().chainId
   let allLocalAaccounts = self.getWalletAccounts()
   # check if there is new watch only account
@@ -225,7 +214,6 @@ proc addNewKeypairsAccountsToLocalStoreAndNotify(self: Service, notify: bool = t
       continue
     self.storeWatchOnlyAccount(woAccDb)
     self.fetchENSNamesForAddressesAsync(@[woAccDb.address], chainId)
-    addressesToFetchBalanceFor.add(woAccDb.address)
     if notify:
       self.events.emit(SIGNAL_WALLET_ACCOUNT_SAVED, AccountArgs(account: woAccDb))
   # check if there is new keypair or any account added to an existing keypair
@@ -236,7 +224,6 @@ proc addNewKeypairsAccountsToLocalStoreAndNotify(self: Service, notify: bool = t
       self.storeKeypair(kpDb)
       let addresses = kpDb.accounts.map(a => a.address)
       self.fetchENSNamesForAddressesAsync(addresses, chainId)
-      addressesToFetchBalanceFor.add(addresses)
       for acc in kpDb.accounts:
         if acc.isChat:
           continue
@@ -255,10 +242,8 @@ proc addNewKeypairsAccountsToLocalStoreAndNotify(self: Service, notify: bool = t
         self.fetchENSNamesForAddressesAsync(@[accDb.address], chainId)
         if accDb.isChat:
           continue
-        addressesToFetchBalanceFor.add(accDb.address)
         if notify:
           self.events.emit(SIGNAL_WALLET_ACCOUNT_SAVED, AccountArgs(account: accDb))
-  self.buildAllTokens(addressesToFetchBalanceFor, forceRefresh = true)
 
 proc removeAccountFromLocalStoreAndNotify(self: Service, address: string, notify: bool = true) =
   var acc = self.getAccountByAddress(address)
@@ -592,15 +577,10 @@ proc setNetworksState*(self: Service, chainIds: seq[int], enabled: bool) =
 
 proc setNetworkActive*(self: Service, chainId: int, active: bool) =
   self.networkService.setNetworkActive(chainId, active)
-  # TODO: This should be some common response to network changes
-  let addresses = self.getWalletAddresses()
-  self.buildAllTokens(addresses, forceRefresh = true)
   self.events.emit(SIGNAL_WALLET_ACCOUNT_NETWORK_ENABLED_UPDATED, Args())
 
 proc toggleTestNetworksEnabled*(self: Service) =
   discard self.settingsService.toggleTestNetworksEnabled()
-  let addresses = self.getWalletAddresses()
-  self.buildAllTokens(addresses, forceRefresh = true)
   self.events.emit(SIGNAL_WALLET_ACCOUNT_NETWORK_ENABLED_UPDATED, Args())
 
 proc updateWalletAccount*(self: Service, address: string, accountName: string, colorId: string, emoji: string): bool =

@@ -1516,6 +1516,7 @@ method createOrEditCommunityTokenPermission*(self: Module, permissionId: string,
           tokenCriteriaDto.decimals = token.decimals
       else:
         let tokenKey = service_common_utils.communityKeyToTokenKey(key)
+        echo "createOrEditCommunityTokenPermission: getTokenByKey: ", tokenKey
         var token = self.controller.getTokenByKey(tokenKey)
         if token.isNil and tokenCriteriaDto.`type` != TokenType.ENS:
           # if tokens is nil, could be that it's a collectible and we figure out the contract addresses from the key

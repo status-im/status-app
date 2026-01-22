@@ -112,12 +112,16 @@ proc `$`*(self: TransactionIdentity): string =
     address:{self.address},
   )"""
 
-rpc(getWalletToken, "wallet"):
-  accounts: seq[string]
+rpc(getAllTokenBalances, "wallet"):
+  chainIDs: seq[int]
+  addresses: seq[string]
 
-rpc(fetchOrGetCachedWalletBalances, "wallet"):
-  accounts: seq[string]
-  forceRefresh: bool
+rpc(refetchAllTokenBalances, "wallet"):
+  discard
+
+rpc(fetchTokenBalances, "wallet"):
+  addresses: seq[string]
+  tokenKeys: seq[string]
 
 rpc(fetchMarketValues, "wallet"):
   tokensKeys: seq[string]
@@ -292,14 +296,6 @@ rpc(fetchAllCurrencyFormats, "wallet"):
   discard
 
 rpc(hasPairedDevices, "accounts"):
-  discard
-
-rpc(getBalancesByChain, "wallet"):
-  chainIds: seq[int]
-  addresses: seq[string]
-  tokenAddresses: seq[string]
-
-rpc(restartWalletReloadTimer, "wallet"):
   discard
 
 rpc(isChecksumValidForAddress, "wallet"):

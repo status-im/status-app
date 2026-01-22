@@ -155,6 +155,7 @@ proc getTokensByChain*(resultOut: var JsonNode, chainId: int): string =
 ## `keys` is the keys of the tokens
 ## returns the error message if any, or an empty string
 proc getTokensByKeys*(resultOut: var JsonNode, keys: seq[string]): string =
+  echo "getTokensByKeys: ", keys
   try:
     let response = getTokensByKeys(keys)
     return prepareResponse(resultOut, response)

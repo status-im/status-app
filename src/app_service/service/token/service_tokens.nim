@@ -154,7 +154,7 @@ proc getTokensByChain(chainId: int): seq[TokenItem] =
     error "error: ", errDesription
 
 
-proc getTokensByKeys(keys: seq[string]): seq[TokenItem] =
+proc fetchTokensByKeys(keys: seq[string]): seq[TokenItem] =
   try:
     var response: JsonNode
     var err = status_go_tokens.getTokensByKeys(response, keys)

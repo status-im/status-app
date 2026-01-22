@@ -706,6 +706,7 @@ proc getColorId*(self: Controller, pubkey: string): int =
   procs_from_visual_identity_service.colorIdOf(pubkey)
 
 proc getTokenByKey*(self: Controller, tokenKey: string): TokenItem =
+  echo "chat_section: getTokenByKey: ", tokenKey
   return self.tokenService.getTokenByKey(tokenKey)
 
 proc getTokensByGroupKey*(self: Controller, groupKey: string): seq[TokenItem] =

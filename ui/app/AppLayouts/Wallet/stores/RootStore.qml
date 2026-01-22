@@ -492,7 +492,7 @@ QtObject {
         root.walletSectionInst.activityController.loadMoreItems()
     }
 
-    function reloadAccountTokens() {
-        root.walletSectionInst.reloadAccountTokens()
+    function reloadAccountBalances() {
+        root.walletSectionInst.reloadAccountBalances()
     }
 }

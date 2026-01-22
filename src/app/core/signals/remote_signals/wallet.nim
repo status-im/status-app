@@ -33,6 +33,10 @@ type WalletSignal* = ref object of Signal
   routerTransactionsForSigning*: RouterTransactionsForSigningDto
   routerSentTransactions*: RouterSentTransactionsDto
   transactionStatusChange*: TransactionStatusChange
+  # Token balance fetch signal fields
+  balanceFetchChainId*: int
+  balanceFetchAccount*: string
+  balanceChanged*: bool
 
 proc fromEvent*(T: type WalletSignal, signalType: SignalType, jsonSignal: JsonNode): WalletSignal =
   result = WalletSignal()
@@ -113,4 +117,9 @@ proc fromEvent*(T: type WalletSignal, signalType: SignalType, jsonSignal: JsonNo
           result.updatedPrices[tokenKey] = price.getFloat
     except Exception as e:
       error "Error parsing best route: ", err=e.msg
+    return
+  if signalType == SignalType.WalletTokenBalancesFetchFinished:
+    result.balanceFetchChainId = event{"chainId"}.getInt
+    result.balanceFetchAccount = event{"account"}.getStr
+    result.balanceChanged = event{"balanceChanged"}.getBool
     return
