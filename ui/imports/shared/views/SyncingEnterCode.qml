@@ -59,7 +59,6 @@ ColumnLayout {
     StackLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        Layout.preferredHeight: Math.max(syncQr.implicitHeight, syncCode.implicitHeight)
         Layout.topMargin: Theme.bigPadding
         currentIndex: switchTabBar.currentIndex
 
