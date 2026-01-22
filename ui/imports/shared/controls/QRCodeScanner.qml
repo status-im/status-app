@@ -39,6 +39,9 @@ ColumnLayout {
     property list<StatusValidator> validators
     property int state: StatusQrCodeScanner.State.None
 
+    // This property is used in Storybook to simulate camera access being denied
+    property bool cameraPermissionDenied: false
+
     signal validTagFound(string tag)
 
     spacing: Theme.smallPadding
@@ -47,7 +50,7 @@ ColumnLayout {
         id: d
 
         readonly property int radius: 16
-        readonly property bool cameraReady: cameraPermission.status === Qt.Granted
+        readonly property bool cameraReady: !root.cameraPermissionDenied && cameraPermission.status === Qt.Granted
         property string errorMessage
         property int counter: 0
 
@@ -80,6 +83,10 @@ ColumnLayout {
     CameraPermission {
         id: cameraPermission
         Component.onCompleted: {
+            if (root.cameraPermissionDenied) {
+                return
+            }
+
             if (cameraPermission.status !== Qt.PermissionStatus.Granted)
                 cameraPermission.request()
         }
@@ -91,7 +98,6 @@ ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
         Layout.fillWidth: true
         Layout.fillHeight: true
-        Layout.maximumHeight: 500
 
         sourceComponent: d.cameraReady ? cameraComponent : btnComponent
     }
@@ -99,45 +105,57 @@ ColumnLayout {
     Component {
         id: btnComponent
 
-        ShapeRectangle {
+        ColumnLayout {
             anchors.fill: parent
-            path.fillColor: Theme.palette.baseColor4
-            radius: d.radius
+            spacing: 4 // TODO use theme
 
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 20
+            Item {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+            }
 
-                Item {
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
-                }
+            Image {
+                Layout.alignment: Qt.AlignHCenter
 
-                StatusBaseText {
-                    Layout.fillWidth: true
-                    text: qsTr('Enable access to your camera')
-                    leftPadding: 48
-                    rightPadding: 48
-                    font.pixelSize: 15
-                    wrapMode: Text.WordWrap
-                    horizontalAlignment: Text.AlignHCenter
-                }
+                // Temporary image
+                source: (Theme.style === Theme.Light) ? Assets.png("activity_center/NewsDisabled-Light") :
+                                                        Assets.png("activity_center/NewsDisabled-Dark")
+                fillMode: Image.PreserveAspectFit
+                Layout.preferredWidth: 80
+                mipmap: true
+                cache: false
+            }
 
-                StatusBaseText {
-                    Layout.fillWidth: true
-                    text: qsTr("To scan a QR, Status needs\naccess to your webcam")
-                    leftPadding: 48
-                    rightPadding: 48
-                    font.pixelSize: 15
-                    wrapMode: Text.WordWrap
-                    horizontalAlignment: Text.AlignHCenter
-                    color: Theme.palette.directColor4
-                }
+            StatusBaseText {
+                Layout.fillWidth: true
+                text: qsTr('Enable access to your camera')
+                leftPadding: Theme.bigPadding
+                rightPadding: Theme.bigPadding
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+            }
 
-                Item {
-                    Layout.fillHeight: true
-                    Layout.fillWidth: true
-                }
+            StatusBaseText {
+                Layout.fillWidth: true
+                text: qsTr("To scan QR codes, add contacts, send funds to wallets, and sync apps.")
+                leftPadding: Theme.bigPadding
+                rightPadding: Theme.bigPadding
+                font.pixelSize: Theme.additionalTextSize
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            StatusButton {
+                text: qsTr("Open settings")
+                size: StatusBaseButton.Size.Tiny
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: Theme.smallPadding
+                onClicked: console.log("Open settings") // TODO open OS settings
+            }
+
+            Item {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
             }
         }
     }
@@ -172,9 +190,6 @@ ColumnLayout {
         text: {
             if (!!d.errorMessage) {
                 return d.errorMessage
-            }
-            if (cameraPermission.status === Qt.Denied) {
-                return qsTr("Camera access denied. Please enable it in system settings.")
             }
             return ""
         }
