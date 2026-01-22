@@ -23,7 +23,7 @@ RightTabBaseView {
                                   root.rootStore.lastReloadTimestamp * 1000) : ""
         loading: root.rootStore.isAccountTokensReloading
 
-        onReloadRequested: root.rootStore.reloadAccountTokens()
+        onReloadRequested: root.rootStore.reloadAccountBalances()
         onAddNewAddressClicked: Global.openAddEditSavedAddressesPopup({})
     }
 

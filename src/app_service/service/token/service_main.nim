@@ -55,11 +55,6 @@ proc init*(self: Service) =
     checkIntervalMs = 500)
   self.rebuildMarketDataDebouncer.registerCall0(callback = proc() = self.rebuildMarketDataInternal())
 
-  self.events.on(SignalType.Wallet.event) do(e:Args):
-    var data = WalletSignal(e)
-    case data.eventType:
-      of "wallet-tick-reload":
-        self.rebuildMarketData()
   # update and populate internal list and then emit signal when new custom token detected?
   self.events.on(SignalType.WalletTokensListsUpdated.event) do(e:Args):
     self.refreshTokens()
@@ -74,7 +69,7 @@ proc init*(self: Service) =
 
 proc getMandatoryTokenGroupKeys*(self: Service): seq[string] =
   let tokenKeys = getMandatoryTokenKeys()
-  let tokens = getTokensByKeys(tokenKeys)
+  let tokens = fetchTokensByKeys(tokenKeys)
   var groupKeysMap: Table[string, bool] = initTable[string, bool]()
   for token in tokens:
     groupKeysMap[token.groupKey] = true
@@ -95,6 +90,9 @@ proc getAllTokenGroupsForActiveNetworksMode*(self: Service): seq[TokenGroupItem]
 
 proc getGroupsOfInterest*(self: Service): var seq[TokenGroupItem] =
   return self.groupsOfInterest
+
+proc getTokensOfInterestKeys*(self: Service): seq[string] =
+  return toSeq(self.tokensOfInterestByKey.keys)
 
 proc buildGroupsForChain*(self: Service, chainId: int): bool =
   if chainId <= 0:
@@ -133,29 +131,45 @@ proc getAllCommunityTokens*(self: Service): var seq[TokenItem] =
     if tl.id == communityTokenListId:
       return tl.tokens
 
-proc getTokenByKey*(self: Service, key: string): TokenItem =
-  if not common_utils.isTokenKey(key):
-    return nil
-  if self.tokensOfInterestByKey.hasKey(key):
-    return self.tokensOfInterestByKey[key]
-  let tokens = getTokensByKeys(@[key])
-  if tokens.len > 0:
-    self.tokensOfInterestByKey[key] = tokens[0]
-    return self.tokensOfInterestByKey[key]
-  return nil
+proc getTokensByKeys*(self: Service, keys: seq[string], fetchIfNotAvailable: bool = true): Table[string, TokenItem] =
+  if fetchIfNotAvailable:
+    echo "getTokensByKeys: ", keys, " fetchIfNotAvailable: ", fetchIfNotAvailable
+  result = initTable[string, TokenItem]()
+  var keysToFetch: seq[string] = @[]
+  for key in keys:
+    if not common_utils.isTokenKey(key):
+      continue
+    if self.tokensOfInterestByKey.hasKey(key):
+      result[key] = self.tokensOfInterestByKey[key]
+    else:
+      keysToFetch.add(key)
+  if keysToFetch.len > 0 and fetchIfNotAvailable:
+    let tokens = fetchTokensByKeys(keysToFetch)
+    for token in tokens:
+      result[token.key] = token
+  return result
+
+proc getTokenByKey*(self: Service, key: string, fetchIfNotAvailable: bool = true): TokenItem =
+  if fetchIfNotAvailable:
+    echo "getTokenByKey: ", key, " fetchIfNotAvailable: ", fetchIfNotAvailable
+  let tokens = self.getTokensByKeys(@[key], fetchIfNotAvailable)
+  return tokens.getOrDefault(key, nil)
 
 proc getTokenByChainAddress*(self: Service, chainId: int, address: string): TokenItem =
+  echo "getTokenByChainAddress: ", chainId, " ", address
   let key = common_utils.createTokenKey(chainId, address)
   return self.getTokenByKey(key)
 
-proc getTokensByGroupKey*(self: Service, groupKey: string): seq[TokenItem] =
+proc getTokensByGroupKey*(self: Service, groupKey: string, fetchIfNotAvailable: bool = true): seq[TokenItem] =
+  if fetchIfNotAvailable:
+    echo "getTokensByGroupKey: ", groupKey, " fetchIfNotAvailable: ", fetchIfNotAvailable
   if not self.groupsOfInterestByKey.hasKey(groupKey):
     # If the group key is not at the same time a token key (e.g. "usd-coin") it was already added to the
     # groupsOfInterestByKey table at the app start or when tokens were refreshed the last time.
     # That means that the group key is definitelly a token key, so we need to add it to the groupsOfInterestByKey table.
     if not common_utils.isTokenKey(groupKey):
       return @[]
-    let token = self.getTokenByKey(groupKey)
+    let token = self.getTokenByKey(groupKey, fetchIfNotAvailable)
     if token.isNil:
       return @[]
     let group = TokenGroupItem(
@@ -173,6 +187,7 @@ proc getTokensByGroupKey*(self: Service, groupKey: string): seq[TokenItem] =
 ## Note: use this function in a very rare case, when you're sure the token is not present in the models.
 ## Returns a token that matches the key, or the first token in the group that matches the key.
 proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): TokenItem =
+  echo "getTokenByKeyOrGroupKeyFromAllTokens: ", key
   if common_utils.isTokenKey(key):
     return self.getTokenByKey(key)
   var tokens = self.getTokensByGroupKey(key)

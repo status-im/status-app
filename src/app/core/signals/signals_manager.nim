@@ -86,7 +86,11 @@ QtObject:
         SignalType.WalletRouterTransactionsSent,
         SignalType.WalletTransactionStatusChanged,
         SignalType.WalletSuggestedRoutes,
-        SignalType.WalletTokensListsUpdated:
+        SignalType.WalletTokensListsUpdated,
+        SignalType.WalletTokenBalancesFetchStarted,
+        SignalType.WalletTokenBalancesFetchFailedToStart,
+        SignalType.WalletTokenBalancesFetchFinished,
+        SignalType.WalletTokenBalancesFetchError:
           WalletSignal.fromEvent(signalType, jsonSignal)
       of SignalType.NodeReady,
         SignalType.NodeCrashed,

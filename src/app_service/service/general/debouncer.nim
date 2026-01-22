@@ -82,33 +82,5 @@ QtObject:
     self.remaining = self.delay
     self.runTimer()
 
-  proc call*[T1, T2](self: Debouncer, param0: T1, param1: T2) =
-    let busy = self.remaining > 0
-    if busy:
-      ## params check, while the call is waiting to be called
-      ## TODO: if needed we can add the queue of pending params to be called after the current call is completed
-      ##
-      ## FOR NOW: since the only usage is for buildAllTokens, we add ONLY those accounts (which is the first param (on position 0))
-      ## to list of accounts if they are not in the list yet.
-      var currentAccounts = getValueAtPosition[T1](self.params, 0) # refers to accounts of the `buildAllTokens` call
-      let forceRefresh = getValueAtPosition[T2](self.params, 1) # refers to forceRefresh of the `buildAllTokens` call
-
-      var update = false
-      for account in param0:
-        if not currentAccounts.contains(account):
-          update = true
-          currentAccounts.add(account)
-
-      if update:
-        self.params.clear()
-        self.params.add(currentAccounts)
-        self.params.add(forceRefresh)
-      return
-    self.params.clear()
-    self.params.add(param0)
-    self.params.add(param1)
-    self.remaining = self.delay
-    self.runTimer()
-
   proc delete*(self: Debouncer) =
     self.QObject.delete

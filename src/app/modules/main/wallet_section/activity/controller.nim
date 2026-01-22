@@ -376,16 +376,8 @@ QtObject:
   # Depends on self.filterTokenCodes and self.chainIds, so should be called after updating them
   proc updateAssetsIdentities(self: Controller) =
     var assets = newSeq[backend_activity.Token]()
-    for tokenCode in self.filterTokenCodes:
-      for chainId in self.chainIds:
-        let network = self.networkService.getNetworkByChainId(chainId)
-        if network == nil:
-          error "network not found for chainId: ", chainId
-          continue
-
-        let token = self.tokenService.getTokenByKey(tokenCode)
-        if token.isNil:
-          continue
+    let tokens = self.tokenService.getTokensByKeys(self.filterTokenCodes.toSeq())
+    for token in tokens.values:
         let tokenType = if token.isNative: TokenType.Native else: TokenType.ERC20
         assets.add(backend_activity.Token(
           tokenType: tokenType,

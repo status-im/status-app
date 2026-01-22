@@ -73,20 +73,20 @@ proc fetchDetailsForAddressTask*(argEncoded: string) {.gcsafe, nimcall.} =
 #################################################
 
 type
-  BuildTokensTaskArg = ref object of QObjectTaskArg
+  GetAllTokenBalancesTaskArg = ref object of QObjectTaskArg
     accounts: seq[string]
-    forceRefresh: bool
+    chainIds: seq[int]
 
-proc prepareTokensTask(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[BuildTokensTaskArg](argEncoded)
+proc getAllTokenBalancesTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[GetAllTokenBalancesTaskArg](argEncoded)
   var output = %*{
     "result": ""
   }
   try:
-    let response = backend.fetchOrGetCachedWalletBalances(arg.accounts, arg.forceRefresh)
+    let response = backend.getAllTokenBalances(arg.chainIds, arg.accounts)
     output["result"] = response.result
   except Exception as e:
-    let err = fmt"Error getting wallet tokens"
+    let err = fmt"Error getting wallet tokens: {e.msg}"
   arg.finish(output)
 
 #################################################

@@ -105,10 +105,10 @@ QtObject:
     if key.len == 0:
       return newCurrencyFormatDto()
     if not self.currencyFormatCache.hasKey(key):
-      let groupedTokens = self.tokenService.getTokensByGroupKey(key)
+      let groupedTokens = self.tokenService.getTokensByGroupKey(key, fetchIfNotAvailable = false)
       if groupedTokens.len > 0: # it means that the provided key is a token group key
         return newCurrencyFormatDto(groupedTokens[0].key, groupedTokens[0].symbol) # since all tokens in the same group have the same symbol and currency format
-      let token = self.tokenService.getTokenByKey(key)
+      let token = self.tokenService.getTokenByKey(key, fetchIfNotAvailable = false)
       if not token.isNil: # it means that the provided key is has a token key
         return newCurrencyFormatDto(token.key, token.symbol)
       return newCurrencyFormatDto(key, key) # it means that the provided key is a currency symbol
@@ -130,7 +130,7 @@ QtObject:
     return i.toFloat() + r.toFloat() / p.toFloat()
 
   proc getCurrencyValueForToken*(self: Service, tokenKey: string, amountInt: UInt256): float64 =
-    let token = self.tokenService.getTokenByKey(tokenKey)
+    let token = self.tokenService.getTokenByKey(tokenKey, fetchIfNotAvailable = false)
     var decimals: int = 0
     if not token.isNil:
       decimals = token.decimals

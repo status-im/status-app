@@ -105,7 +105,7 @@ QObject {
             readonly property string balanceText: root.formatBalance(balance, model.key)
 
             readonly property bool marketDetailsAvailable: !hasCommunityId
-            readonly property bool marketDetailsLoading: model.detailsLoading
+            readonly property bool marketDetailsLoading: !!model.detailsLoading
             readonly property real marketPrice: marketDetails?.currencyPrice?.amount ?? 0
             readonly property real marketChangePct24hour: marketDetails?.changePct24hour ?? 0
 

@@ -149,7 +149,7 @@ RightTabBaseView {
             seenChains.push(...Constants.chains.newChains)
             localAppSettings.seenNetworkChains = JSON.stringify(seenChains)
         }
-        onReloadRequested: root.walletRootStore.reloadAccountTokens()
+        onReloadRequested: root.walletRootStore.reloadAccountBalances()
     }
 
     header: stack.currentIndex === 0 ? header : null

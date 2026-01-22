@@ -4,7 +4,6 @@ import web3/eth_api_types
 
 import app/global/global_singleton
 
-import app_service/service/general/debouncer as debouncer_service
 import app_service/service/settings/service as settings_service
 import app_service/service/accounts/service as accounts_service
 import app_service/service/token/service as token_service
@@ -48,13 +47,13 @@ QtObject:
     currencyService: currency_service.Service
     watchOnlyAccounts: Table[string, WalletAccountDto] ## [address, WalletAccountDto]
     keypairs: Table[string, KeypairDto] ## [keyUid, KeypairDto]
-    groupedAssets: seq[AssetGroupItem]
+    flatAssets: seq[FlatBalanceItem] # Flat list of all balances for all accounts and tokens
+    balanceStates: Table[string, Table[int, BalanceState]] # [accountAddress][chainId] -> BalanceState
+    groupedAssets: seq[AssetGroupItem] # Grouped assets derived from flatAssets using token group keys
     hasBalanceCache: bool
-    buildTokensDebouncer: debouncer_service.Debouncer
 
   # Forward declaration
-  proc buildAllTokens*(self: Service, accounts: seq[string], forceRefresh: bool)
-  proc buildAllTokensInternal(self: Service, accounts: seq[string], forceRefresh: bool)
+  proc refreshAllTokenBalancesCache(self: Service, accounts: seq[string], chainIds: seq[int])
   proc handleWalletAccount(self: Service, account: WalletAccountDto, notify: bool = true)
   proc handleKeypair(self: Service, keypair: KeypairDto)
   proc updateAccountsPositions(self: Service)
@@ -62,8 +61,9 @@ QtObject:
   proc cleanKeystoreFiles(self: Service, password: string)
   proc getCurrencyValueForToken*(self: Service, tokenKey: string, amountInt: UInt256): float64
   proc fetchENSNamesForAddressesAsync(self: Service, addresses: seq[string], chainId: int)
+  proc rebuildGroupedAssets*(self: Service)
   # All slots defined in included files have to be forward declared
-  proc onAllTokensBuilt(self: Service, response: string) {.slot.}
+  proc onGetAllTokenBalancesResponse(self: Service, response: string) {.slot.}
   proc onDerivedAddressesFetched*(self: Service, jsonString: string) {.slot.}
   proc onDerivedAddressesForMnemonicFetched*(self: Service, jsonString: string) {.slot.}
   proc onAddressDetailsFetched*(self: Service, jsonString: string) {.slot.}
