@@ -213,10 +213,6 @@ RowLayout {
                     chatContentModule.clearChatHistory()
                 }
 
-                onRequestAllHistoricMessages: {
-                    // Not Refactored Yet - Check in the `master` branch if this is applicable here.
-                }
-
                 onLeaveChat: {
                     if(!chatContentModule) {
                         console.debug("error on leave chat from context menu - chat content module is not set")
@@ -239,9 +235,6 @@ RowLayout {
                 }
                 onAddRemoveGroupMember: {
                     root.addRemoveGroupMember()
-                }
-                onRequestMoreMessages: {
-                    messageStore.requestMoreMessages();
                 }
                 onUpdateGroupChatDetails: {
                     root.rootStore.chatCommunitySectionModule.updateGroupChatDetails(

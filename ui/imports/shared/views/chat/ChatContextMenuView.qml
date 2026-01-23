@@ -33,7 +33,6 @@ StatusMenu {
 
     signal displayProfilePopup(string publicKey)
     signal displayEditChannelPopup(string chatId)
-    signal requestAllHistoricMessages(string chatId)
     signal unmuteChat(string chatId)
     signal muteChat(string chatId, int interval)
     signal markAllMessagesRead(string chatId)
@@ -42,7 +41,6 @@ StatusMenu {
     signal leaveChat(string chatId)
     signal updateGroupChatDetails(string chatId, string groupName, string groupColor, string groupImage)
 
-    signal requestMoreMessages(string chatId)
     signal addRemoveGroupMember()
 
     width: root.amIChatAdmin && (root.chatType === Constants.chatType.privateGroupChat) ? 207 : implicitWidth
@@ -146,15 +144,6 @@ StatusMenu {
             text: root.isCommunityChat ? qsTr("Copy channel ID") : qsTr("Copy chat ID")
             icon.name: "copy"
             onTriggered: ClipboardUtils.setText(root.chatId)
-        }
-
-        StatusAction {
-            objectName: "chatFetchMessagesMenuItem"
-            text: qsTr("Fetch messages")
-            icon.name: "download"
-            onTriggered: {
-                root.requestMoreMessages(root.chatId)
-            }
         }
     }
 

@@ -193,16 +193,8 @@ Item {
                         root.chatSectionModule.markAllMessagesRead(chatId)
                     }
 
-                    onRequestMoreMessages: {
-                        root.chatSectionModule.requestMoreMessages(chatId)
-                    }
-
                     onClearChatHistory: {
                         root.chatSectionModule.clearChatHistory(chatId)
-                    }
-
-                    onRequestAllHistoricMessages: {
-                        // Not Refactored Yet - Check in the `master` branch if this is applicable here.
                     }
 
                     onLeaveChat: {

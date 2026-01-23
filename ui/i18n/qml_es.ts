@@ -3088,10 +3088,6 @@ Do you wish to override the security check and continue?</source>
         <translation>Copiar ID del chat</translation>
     </message>
     <message>
-        <source>Fetch messages</source>
-        <translation>Obtener mensajes</translation>
-    </message>
-    <message>
         <source>Clear History</source>
         <translation>Limpiar historial</translation>
     </message>
@@ -7720,17 +7716,6 @@ Por favor, agrégala e intenta de nuevo.</translation>
     </message>
 </context>
 <context>
-    <name>FetchMoreMessagesButton</name>
-    <message>
-        <source>↓ Fetch more messages</source>
-        <translation>↓ Recuperar más mensajes</translation>
-    </message>
-    <message>
-        <source>Before %1</source>
-        <translation>Antes de %1</translation>
-    </message>
-</context>
-<context>
     <name>FilterComboBox</name>
     <message>
         <source>Collection</source>
@@ -11511,10 +11496,6 @@ al cargar</translation>
         <translation>Mensaje eliminado</translation>
     </message>
     <message>
-        <source>Unknown message. Try fetching more messages</source>
-        <translation>Mensaje desconocido. Intenta obtener más mensajes</translation>
-    </message>
-    <message>
         <source>Reply</source>
         <translation>Responder</translation>
     </message>
@@ -11537,6 +11518,10 @@ al cargar</translation>
     <message>
         <source>Delete</source>
         <translation>Eliminar</translation>
+    </message>
+    <message>
+        <source>Unknown message. Trying to recover it</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

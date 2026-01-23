@@ -9,7 +9,6 @@ import ../../../../../../app_service/service/message/service as message_service
 import ../../../../../../app_service/service/mailservers/service as mailservers_service
 import ../../../../../../app_service/service/wallet_account/service as wallet_account_service
 import ../../../../../../app_service/service/shared_urls/service as shared_urls_service
-import ../../../../../../app_service/common/types
 import ../../../../../core/eventemitter
 import ../../../../../core/unique_event_emitter
 
@@ -309,9 +308,6 @@ proc increaseLoadingMessagesPerPageFactor*(self: Controller) =
 
 proc resetLoadingMessagesPerPageFactor*(self: Controller) =
   self.loadingMessagesPerPageFactor = 1
-
-proc requestMoreMessages*(self: Controller) =
-  self.mailserversService.requestMoreMessages(self.chatId)
 
 proc fillGaps*(self: Controller, messageId: string) =
   self.mailserversService.fillGaps(self.chatId, messageId)

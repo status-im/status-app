@@ -3084,10 +3084,6 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Fetch messages</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Clear History</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7706,17 +7702,6 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
-    <name>FetchMoreMessagesButton</name>
-    <message>
-        <source>↓ Fetch more messages</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Before %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>FilterComboBox</name>
     <message>
         <source>Collection</source>
@@ -11494,10 +11479,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unknown message. Try fetching more messages</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Reply</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11519,6 +11500,10 @@ to load</source>
     </message>
     <message>
         <source>Delete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown message. Trying to recover it</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

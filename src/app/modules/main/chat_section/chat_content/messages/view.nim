@@ -127,9 +127,6 @@ QtObject:
   proc emitScrollToMessageSignal*(self: View, messageIndex: int) =
     self.scrollToMessage(messageIndex)
 
-  proc requestMoreMessages(self: View) {.slot.} =
-    self.delegate.requestMoreMessages()
-
   proc fillGaps(self: View, messageId: string) {.slot.} =
     self.delegate.fillGaps(messageId)
 

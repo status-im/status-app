@@ -109,9 +109,6 @@ method unblockChat*(self: AccessInterface) {.base.} =
 method markAllMessagesRead*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method requestMoreMessages*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method markMessageRead*(self: AccessInterface, msgID: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

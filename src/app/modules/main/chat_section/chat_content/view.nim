@@ -72,9 +72,6 @@ QtObject:
   proc markAllMessagesRead*(self: View) {.slot.} =
     self.delegate.markAllMessagesRead()
 
-  proc requestMoreMessages*(self: View) {.slot.} =
-    self.delegate.requestMoreMessages()
-
   proc markMessageRead*(self: View, msgID: string) {.slot.} =
     self.delegate.markMessageRead(msgID)
 

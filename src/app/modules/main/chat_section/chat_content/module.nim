@@ -268,9 +268,6 @@ method unblockChat*(self: Module) =
 method markAllMessagesRead*(self: Module) =
   self.controller.markAllMessagesRead()
 
-method requestMoreMessages*(self: Module) =
-  self.controller.requestMoreMessages()
-
 method markMessageRead*(self: Module, msgID: string) =
   self.controller.markMessageRead(msgID)
 

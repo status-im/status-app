@@ -537,9 +537,6 @@ method onGetMessageById*(self: Module, requestId: UUID, messageId: string, messa
   self.checkIfMessageLoadedAndScroll()
   self.reevaluateViewLoadingState()
 
-method requestMoreMessages*(self: Module) =
-  self.controller.requestMoreMessages()
-
 method fillGaps*(self: Module, messageId: string) =
   self.controller.fillGaps(messageId)
 

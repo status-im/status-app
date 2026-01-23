@@ -3772,11 +3772,6 @@
       <translation>Copy chat ID</translation>
     </message>
     <message>
-      <source>Fetch messages</source>
-      <comment>ChatContextMenuView</comment>
-      <translation>Fetch messages</translation>
-    </message>
-    <message>
       <source>Clear History</source>
       <comment>ChatContextMenuView</comment>
       <translation>Clear History</translation>
@@ -9411,19 +9406,6 @@
     </message>
   </context>
   <context>
-    <name>FetchMoreMessagesButton</name>
-    <message>
-      <source>↓ Fetch more messages</source>
-      <comment>FetchMoreMessagesButton</comment>
-      <translation>↓ Fetch more messages</translation>
-    </message>
-    <message>
-      <source>Before %1</source>
-      <comment>FetchMoreMessagesButton</comment>
-      <translation>Before %1</translation>
-    </message>
-  </context>
-  <context>
     <name>FilterComboBox</name>
     <message>
       <source>Collection</source>
@@ -13994,11 +13976,6 @@
       <translation>Message deleted</translation>
     </message>
     <message>
-      <source>Unknown message. Try fetching more messages</source>
-      <comment>MessageView</comment>
-      <translation>Unknown message. Try fetching more messages</translation>
-    </message>
-    <message>
       <source>Reply</source>
       <comment>MessageView</comment>
       <translation>Reply</translation>
@@ -14027,6 +14004,11 @@
       <source>Delete</source>
       <comment>MessageView</comment>
       <translation>Delete</translation>
+    </message>
+    <message>
+      <source>Unknown message. Trying to recover it</source>
+      <comment>MessageView</comment>
+      <translation>Unknown message. Trying to recover it</translation>
     </message>
   </context>
   <context>

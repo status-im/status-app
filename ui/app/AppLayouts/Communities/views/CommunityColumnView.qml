@@ -368,16 +368,8 @@ Item {
                     root.communitySectionModule.markAllMessagesRead(chatId)
                 }
 
-                onRequestMoreMessages: {
-                    root.communitySectionModule.requestMoreMessages(chatId)
-                }
-
                 onClearChatHistory: {
                     root.communitySectionModule.clearChatHistory(chatId)
-                }
-
-                onRequestAllHistoricMessages: {
-                    // Not Refactored Yet - Check in the `master` branch if this is applicable here.
                 }
 
                 onLeaveChat: {

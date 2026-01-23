@@ -5,6 +5,7 @@ import Qt5Compat.GraphicalEffects
 import SortFilterProxyModel
 
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
 import StatusQ.Components
 import StatusQ.Controls
@@ -227,7 +228,7 @@ Rectangle {
             StatusRoundButton {
                 id: icon
                 objectName: "addAccountButton"
-                Accessible.name: Utils.formatAccessibleName(
+                Accessible.name: SQUtils.Utils.formatAccessibleName(
                     qsTr("Add account"),
                     "addAccountButton"
                 )

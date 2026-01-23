@@ -2,7 +2,6 @@ import nimqml, uuids
 
 import ../../../../../../app_service/service/message/dto/[message, reaction, pinned_message]
 import ../../../../../../app_service/service/community/dto/community
-import ../../../../shared_models/message_item
 import ../../../../../../app_service/common/types
 
 type
@@ -157,9 +156,6 @@ method resetAndScrollToNewMessagesMarker*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method markAllMessagesRead*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method requestMoreMessages*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method markMessagesAsRead*(self: AccessInterface, messages: seq[string]) {.base.} =

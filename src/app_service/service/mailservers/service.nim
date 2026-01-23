@@ -20,9 +20,6 @@ type
     chatId*: string
     syncedFrom*: int64
 
-  RequestMoreMessagesTaskArg = ref object of QObjectTaskArg
-    chatId*: string
-
   FillGapsTaskArg* = ref object of QObjectTaskArg
     chatId*: string
     messageIds*: seq[string]
@@ -33,25 +30,6 @@ const SIGNAL_MAILSERVER_NOT_WORKING* = "mailserverNotWorking"
 const SIGNAL_MAILSERVER_SYNCED* = "mailserverSynced"
 const SIGNAL_MAILSERVER_HISTORY_REQUEST_STARTED* = "historyRequestStarted"
 const SIGNAL_MAILSERVER_HISTORY_REQUEST_COMPLETED* = "historyRequestCompleted"
-
-proc requestMoreMessagesTask(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[RequestMoreMessagesTaskArg](argEncoded)
-  try:
-    info "Requesting additional message history for chat", chatId=arg.chatId
-    let response = status_mailservers.requestMoreMessages(arg.chatId)
-
-    if(not response.error.isNil):
-      error "Could not request additional messages due to error", errDescription = response.error.message
-      arg.finish(%*{"error": response.error.message})
-    else:
-      info "synced mailserver successfully", chatID=arg.chatId
-      arg.finish(%*{"error": ""})
-
-  except Exception as e:
-    warn "Could not request additional messages due to error", errDescription=e.msg
-    arg.finish(%* {
-      "error": e.msg
-    })
 
 proc fillGapsTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[FillGapsTaskArg](argEncoded)
@@ -85,14 +63,6 @@ QtObject:
 
   proc init*(self: Service) =
     self.doConnect()
-
-  proc requestMoreMessages*(self: Service, chatId: string) =
-    let arg = RequestMoreMessagesTaskArg(
-      tptr: requestMoreMessagesTask,
-      vptr: cast[uint](self.vptr),
-      chatId: chatId,
-    )
-    self.threadpool.start(arg)
 
   proc fillGaps*(self: Service, chatId: string, messageId: string) =
     let arg = FillGapsTaskArg(

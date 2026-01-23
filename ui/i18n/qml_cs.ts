@@ -3096,10 +3096,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Kopírovat ID chatu</translation>
     </message>
     <message>
-        <source>Fetch messages</source>
-        <translation>Stáhnout zprávy</translation>
-    </message>
-    <message>
         <source>Clear History</source>
         <translation>Smazat historii</translation>
     </message>
@@ -7747,17 +7743,6 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     </message>
 </context>
 <context>
-    <name>FetchMoreMessagesButton</name>
-    <message>
-        <source>↓ Fetch more messages</source>
-        <translation>↓ Stáhnout více zpráv</translation>
-    </message>
-    <message>
-        <source>Before %1</source>
-        <translation>Před %1</translation>
-    </message>
-</context>
-<context>
     <name>FilterComboBox</name>
     <message>
         <source>Collection</source>
@@ -11585,10 +11570,6 @@ selhalo</translation>
         <translation>Smazaná zpráva</translation>
     </message>
     <message>
-        <source>Unknown message. Try fetching more messages</source>
-        <translation>Neznámá zpráva. Zkuste načíst více zpráv</translation>
-    </message>
-    <message>
         <source>Reply</source>
         <translation>Odpovědět</translation>
     </message>
@@ -11611,6 +11592,10 @@ selhalo</translation>
     <message>
         <source>Delete</source>
         <translation>Smazat</translation>
+    </message>
+    <message>
+        <source>Unknown message. Trying to recover it</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

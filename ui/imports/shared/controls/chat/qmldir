@@ -3,7 +3,6 @@ CalloutOpacityMask 1.0 CalloutOpacityMask.qml
 ChatInputLinksPreviewArea 1.0 ChatInputLinksPreviewArea.qml
 DateGroup 1.0 DateGroup.qml
 EmojiReaction 1.0 EmojiReaction.qml
-FetchMoreMessagesButton 1.0 FetchMoreMessagesButton.qml
 GapComponent 1.0 GapComponent.qml
 GasSelectorButton 1.0 GasSelectorButton.qml
 LinkPreviewCard 1.0 LinkPreviewCard.qml

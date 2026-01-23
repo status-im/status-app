@@ -314,8 +314,8 @@ Loader {
         case Constants.messageContentType.chatIdentifier:
             return channelIdentifierComponent
         case Constants.messageContentType.fetchMoreMessagesButton:
-            return fetchMoreMessagesButtonComponent
-        case Constants.messageContentType.systemMessagePrivateGroupType: // no break
+            return null // cf https://github.com/status-im/status-app/issues/17823
+        case Constants.messageContentType.systemMessagePrivateGroupType:
             return systemMessageGroupComponent
         case Constants.messageContentType.systemMessageMutualEventSent:
         case Constants.messageContentType.systemMessageMutualEventAccepted:
@@ -535,17 +535,6 @@ Loader {
                 messageStore.fillGaps(messageId)
                 root.visible = false;
                 root.height = 0;
-            }
-        }
-    }
-
-    Component {
-        id: fetchMoreMessagesButtonComponent
-        FetchMoreMessagesButton {
-            nextMessageIndex: root.nextMessageIndex
-            nextMsgTimestamp: root.nextMessageTimestamp
-            onTimerTriggered: {
-                messageStore.requestMoreMessages();
             }
         }
     }
@@ -987,7 +976,7 @@ Loader {
                         if (messageDeleted)
                             return qsTr("Message deleted")
                         if (!root.quotedMessageText && !root.quotedMessageFrom)
-                            return qsTr("Unknown message. Try fetching more messages")
+                            return qsTr("Unknown message. Trying to recover it")
                         return root.quotedMessageText
                     }
                     album: root.quotedMessageAlbumMessageImages

@@ -185,12 +185,6 @@ QtObject {
         return msg
     }
 
-    function requestMoreMessages() {
-        if(!messageModule)
-            return
-        return messageModule.requestMoreMessages()
-    }
-
     function fillGaps(messageId) {
         if(!messageModule)
             return

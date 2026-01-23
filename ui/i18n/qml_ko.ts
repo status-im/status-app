@@ -3079,10 +3079,6 @@ Do you wish to override the security check and continue?</source>
         <translation>채팅 ID 복사</translation>
     </message>
     <message>
-        <source>Fetch messages</source>
-        <translation>메시지 가져오기</translation>
-    </message>
-    <message>
         <source>Clear History</source>
         <translation>기록 지우기</translation>
     </message>
@@ -7692,17 +7688,6 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
-    <name>FetchMoreMessagesButton</name>
-    <message>
-        <source>↓ Fetch more messages</source>
-        <translation>↓ 메시지 더 가져오기</translation>
-    </message>
-    <message>
-        <source>Before %1</source>
-        <translation>%1 이전</translation>
-    </message>
-</context>
-<context>
     <name>FilterComboBox</name>
     <message>
         <source>Collection</source>
@@ -11478,10 +11463,6 @@ to load</source>
         <translation>메시지 삭제됨</translation>
     </message>
     <message>
-        <source>Unknown message. Try fetching more messages</source>
-        <translation>알 수 없는 메시지입니다. 더 많은 메시지를 불러와 보세요</translation>
-    </message>
-    <message>
         <source>Reply</source>
         <translation>답장</translation>
     </message>
@@ -11504,6 +11485,10 @@ to load</source>
     <message>
         <source>Delete</source>
         <translation>삭제</translation>
+    </message>
+    <message>
+        <source>Unknown message. Trying to recover it</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

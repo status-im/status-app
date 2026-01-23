@@ -1,4 +1,4 @@
-import nimqml, tables, json
+import tables
 import io_interface
 
 import ../../../../../app_service/service/settings/service as settings_service
@@ -13,8 +13,6 @@ import ../../../../../app_service/service/wallet_account/service as wallet_accou
 import ../../../../core/signals/types
 import ../../../../core/eventemitter
 import ../../../../core/unique_event_emitter
-import ../../../shared_models/message_item
-
 
 type
   Controller* = ref object of RootObj
@@ -231,9 +229,6 @@ proc unblockChat*(self: Controller) =
 
 proc markAllMessagesRead*(self: Controller) =
   self.messageService.markAllMessagesRead(self.chatId)
-
-proc requestMoreMessages*(self: Controller) =
-  self.mailserversService.requestMoreMessages(self.chatId)
 
 proc markMessageRead*(self: Controller, msgID: string) =
   self.messageService.markCertainMessagesRead(self.chatId, @[msgID])
