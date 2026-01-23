@@ -311,6 +311,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(MobileUI)
 
+FetchContent_Declare(
+  SCodes
+
+  GIT_REPOSITORY https://github.com/status-im/SCodes.git
+  GIT_TAG c0647299d6be021ac59f57e031c794bd58757efe
+    SOURCE_SUBDIR src
+)
+FetchContent_MakeAvailable(SCodes)
+
 target_link_libraries(StatusQ PRIVATE
         Qt::Core
         Qt::Qml
@@ -322,6 +331,7 @@ target_link_libraries(StatusQ PRIVATE
         QtModelsToolkit
         MobileUI
         qzxing
+        SCodes
         )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

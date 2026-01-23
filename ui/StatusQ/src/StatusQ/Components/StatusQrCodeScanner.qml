@@ -32,11 +32,7 @@ Item {
     readonly property size contentSize: capture.contentSize
     readonly property real sourceRatio: capture.sourceRatio
 
-    readonly property int failsCount: capture.failsCount
-    readonly property int tagsCount: capture.tagsCount
-    readonly property int decodeTime: capture.decodeTime
     readonly property string lastTag: capture.lastTag
-    readonly property string currentTag: capture.currentTag
 
     property int state: StatusQrCodeScanner.State.None
 
@@ -74,6 +70,8 @@ Item {
             anchors.fill: parent
             visible: false
             clip: true
+            captureRectWidth: scanCorners.width
+            captureRectHeight: scanCorners.height
 
             onTagFound: (tag) => root.tagFound(tag)
         }
@@ -113,7 +111,7 @@ Item {
 
     StatusScanCorners {
         id: scanCorners
-        width: root.width / 1.5
+        width: root.width / 1.4
         height: width
         anchors.centerIn: parent
         color: {
