@@ -57,14 +57,12 @@ LayoutChooser {
     /*!
         \qmlproperty Item StatusSectionLayout::leftFloatingPanelItem
         This property holds the left floating panel of the component.
+
+        The layout observes and reacts to the attached
+        \c StatusLayoutState.opened property of this item in order to
+        open or close the floating panel.
     */
     property Item leftFloatingPanelItem
-    /*!
-        \qmlproperty bool StatusSectionLayout::floatingPanelOpen
-        Consumer-driven source of truth for the floating panel state.
-        The layout never mutates this property; consumers must keep it in sync.
-    */
-    property bool floatingPanelOpen: false
     /*!
         \qmlproperty Item StatusSectionLayout::leftPanel
         This property holds the left panel of the component.
@@ -156,15 +154,6 @@ LayoutChooser {
     signal swiped(int previousIndex, int currentIndex)
 
     /*!
-        \qmlsignal
-        Emitted when the floating panel is automatically closed (e.g. dismiss, Escape).
-
-        Note: This signal does not update any state internally. It is the consumer’s
-        responsibility to react to it and keep the external floating panel state in sync.
-    */
-    signal floatingPanelAutoClosed()
-
-    /*!
         \qmlmethod StatusSectionLayout::goToNextPanel()
         This method is used to focus the panel that needs to be active.
     */
@@ -214,19 +203,6 @@ LayoutChooser {
         landscapeView
     ]
 
-    // Sync floating panel state with imperative open/close calls
-    onFloatingPanelOpenChanged: {
-        // While this is false, initial binding evaluations are intentionally ignored
-        // to prevent opening the floating panel before its content has been properly
-        // reparented into the layout.
-        if(d.isLayoutReady) {
-            if (root.floatingPanelOpen)
-                d.openFloatingPanel()
-            else
-                d.closeFloatingPanel()
-        }
-    }
-
     StatusSectionLayoutLandscape {
         id: landscapeView
         anchors.fill: parent
@@ -252,7 +228,7 @@ LayoutChooser {
 
             // Initialize the floating panel in an open state when required,
             // skipping animation to prevent startup transitions.
-            if(root.floatingPanelOpen && landscapeView.visible) {
+            if(root.leftFloatingPanelItem?.StatusLayoutState.opened && landscapeView.visible) {
                 openFloatingPanel(false) // No animation
             }
         }
@@ -287,11 +263,30 @@ LayoutChooser {
 
         onBackButtonClicked: root.backButtonClicked()
 
-        onFloatingPanelAutoClosed: root.floatingPanelAutoClosed()
-
         Component.onCompleted: {
             d.isLayoutReady = true
             currentIndexCache = currentIndex
+        }
+    }
+
+    // Sync floating panel state with imperative open/close calls
+    Connections {
+        target: root.leftFloatingPanelItem
+                ? root.leftFloatingPanelItem.StatusLayoutState
+                : null
+
+        function onOpenedChanged() {
+
+            // While this is false, initial binding evaluations are intentionally ignored
+            // to prevent opening the floating panel before its content has been properly
+            // reparented into the layout.
+            if (!d.isLayoutReady)
+                return
+
+            if (root.leftFloatingPanelItem.StatusLayoutState.opened)
+                d.openFloatingPanel()
+            else
+                d.closeFloatingPanel()
         }
     }
 }

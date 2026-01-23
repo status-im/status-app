@@ -1234,11 +1234,6 @@ Item {
     readonly property Item activityCenterPanel: Item {
         id: activityCenterPanelItem
 
-        // Source-of-truth state for the Activity Center panel visibility.
-        // This flag is explicitly controlled by user interactions (open/close button)
-        // and when the user intentionally selects a different section.
-        property bool activityCenterOpen: false
-
         anchors.fill: parent
     }
 
@@ -1717,14 +1712,8 @@ Item {
                             // are triggered and allow messaging details navigation in portrait
                             onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
 
-                            // Floating panel (state + shared content)
+                            // Floating panel
                             leftFloatingPanelItem: appMain.activityCenterPanel
-                            floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
-                            onFloatingPanelAutoClosed: {
-                                // When the floating panel auto-closes itself (e.g. dismiss, Escape),
-                                // keep the external state in sync
-                                activityCenterPanelItem.activityCenterOpen = false
-                            }
                         }
                     }
                 }
@@ -1739,14 +1728,8 @@ Item {
                         collectiblesModel: appMain.rootStore.globalCollectiblesModel
                         createCommunityBadgeVisible: !appMain.communitiesStore.createCommunityPopupSeen
 
-                        // Floating panel (state + shared content)
+                        // Floating panel
                         leftFloatingPanelItem: appMain.activityCenterPanel
-                        floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
-                        onFloatingPanelAutoClosed: {
-                            // When the floating panel auto-closes itself (e.g. dismiss, Escape),
-                            // keep the external state in sync
-                            activityCenterPanelItem.activityCenterOpen = false
-                        }
                     }
                 }
 
@@ -1796,14 +1779,8 @@ Item {
                             onBridgeTokenRequested: (tokenId, tokenType) => popupRequestsHandler.sendModalHandler.bridgeToken(tokenId, tokenType)
                             onOpenSwapModalRequested: (swapFormData) => popupRequestsHandler.swapModalHandler.launchSwapSpecific(swapFormData)
 
-                            // Floating panel (state + shared content)
+                            // Floating panel
                             leftFloatingPanelItem: appMain.activityCenterPanel
-                            floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
-                            onFloatingPanelAutoClosed: {
-                                // When the floating panel auto-closes itself (e.g. dismiss, Escape),
-                                // keep the external state in sync
-                                activityCenterPanelItem.activityCenterOpen = false
-                            }
                         }
                     }
                     onLoaded: {
@@ -1855,14 +1832,8 @@ Item {
                             transactionStore: appMain.transactionStore
                             onSendToRecipientRequested: (address) => popupRequestsHandler.sendModalHandler.sendToRecipient(address)
 
-                            // Floating panel (state + shared content)
+                            // Floating panel
                             leftFloatingPanelItem: appMain.activityCenterPanel
-                            floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
-                            onFloatingPanelAutoClosed: {
-                                // When the floating panel auto-closes itself (e.g. dismiss, Escape),
-                                // keep the external state in sync
-                                activityCenterPanelItem.activityCenterOpen = false
-                            }
                         }
                     }
                 }
@@ -1964,14 +1935,8 @@ Item {
                             Global.displaySuccessToastMessage(qsTr("%1 was removed from your trusted sites.").arg(domainRemoved))
                         }
 
-                        // Floating panel (state + shared content)
+                        // Floating panel
                         leftFloatingPanelItem: appMain.activityCenterPanel
-                        floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
-                        onFloatingPanelAutoClosed: {
-                            // When the floating panel auto-closes itself (e.g. dismiss, Escape),
-                            // keep the external state in sync
-                            activityCenterPanelItem.activityCenterOpen = false
-                        }
                     }
                     onLoaded: {
                         item.settingsSubsection = profileLoader.settingsSubsection
@@ -2024,14 +1989,8 @@ Item {
                                                      appMain.marketStore.requestMarketTokenPage(pageNumber, pageSize)
                                                  }
 
-                            // Floating panel (state + shared content)
+                            // Floating panel
                             leftFloatingPanelItem: appMain.activityCenterPanel
-                            floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
-                            onFloatingPanelAutoClosed: {
-                                // When the floating panel auto-closes itself (e.g. dismiss, Escape),
-                                // keep the external state in sync
-                                activityCenterPanelItem.activityCenterOpen = false
-                            }
                         }
                     }
 
@@ -2066,14 +2025,8 @@ Item {
 
                         onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
 
-                        // Floating panel (state + shared content)
+                        // Floating panel
                         leftFloatingPanelItem: appMain.activityCenterPanel
-                        floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
-                        onFloatingPanelAutoClosed: {
-                            // When the floating panel auto-closes itself (e.g. dismiss, Escape),
-                            // keep the external state in sync
-                            activityCenterPanelItem.activityCenterOpen = false
-                        }
                     }
                 }
 
@@ -2192,14 +2145,8 @@ Item {
                             // Navigation:
                             onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
 
-                            // Floating panel (state + shared content)
+                            // Floating panel
                             leftFloatingPanelItem: appMain.activityCenterPanel
-                            floatingPanelOpen: activityCenterPanelItem.activityCenterOpen
-                            onFloatingPanelAutoClosed: {
-                                // When the floating panel auto-closes itself (e.g. dismiss, Escape),
-                                // keep the external state in sync
-                                activityCenterPanelItem.activityCenterOpen = false
-                            }
                         }
                     }
                 }
@@ -2291,6 +2238,8 @@ Item {
         // FIXME AC should not be a section; remove `prevSectionId` then
         property string prevSectionId: appMain.rootStore.activeSectionId
         onActivityCenterRequested: function(shouldShow) {
+            // TODO(#18908): This will be the connection needed:
+            // activityCenterPanelItem.StatusLayoutState.opened = shouldShow
             if (shouldShow) {
                 appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.activityCenter)
             } else {

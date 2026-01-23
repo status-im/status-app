@@ -186,6 +186,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/typesregistration.h
         include/StatusQ/undefinedfilter.h
         include/StatusQ/urlutils.h
+        include/StatusQ/statuslayoutstate.h
         src/audioutils.cpp
         src/clipboardutils.cpp
         src/constantrole.cpp
@@ -210,6 +211,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/typesregistration.cpp
         src/undefinedfilter.cpp
         src/urlutils.cpp
+        src/statuslayoutstate.cpp
         src/ios_utils.h
 
         # wallet

@@ -19,6 +19,7 @@
 #include "StatusQ/theme.h"
 #include "StatusQ/undefinedfilter.h"
 #include "StatusQ/urlutils.h"
+#include "StatusQ/statuslayoutstate.h"
 
 #include <qtmodelstoolkit/registerqmltypes.h>
 #include <qqmlsortfilterproxymodeltypes.h>
@@ -109,6 +110,9 @@ void registerStatusQTypes() {
 
     qmlRegisterUncreatableType<ThemePalette>("StatusQ.Core.Theme", 0, 1,
                                              "ThemePalette", QStringLiteral("Theme palette cannot be created directly."));
+
+    qmlRegisterUncreatableType<StatusLayoutState>("StatusQ.Layout", 0, 1,
+                                                  "StatusLayoutState", QStringLiteral("StatusLayoutState is an attached property type"));
 
 
 #ifdef BUNDLE_QML_RESOURCES

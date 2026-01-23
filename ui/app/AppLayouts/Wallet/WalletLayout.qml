@@ -69,23 +69,12 @@ Item {
     /*!
         \qmlproperty Item WalletLayout::leftFloatingPanelItem
         This property holds the left floating panel of the component.
+
+        The layout observes and reacts to the attached
+        \c StatusLayoutState.opened property of this item in order to
+        open or close the floating panel.
     */
     property Item leftFloatingPanelItem
-    /*!
-        \qmlproperty bool WalletLayout::floatingPanelOpen
-        Consumer-driven source of truth for the floating panel state.
-        The layout never mutates this property; consumers must keep it in sync.
-    */
-    property bool floatingPanelOpen: false
-
-    /*!
-        \qmlsignal
-        Emitted when the floating panel is automatically closed (e.g. dismiss, Escape).
-
-        Note: This signal does not update any state internally. It is the consumer’s
-        responsibility to react to it and keep the external floating panel state in sync.
-    */
-    signal floatingPanelAutoClosed()
 
     onAppMainVisibleChanged: {
         resetView()
@@ -464,10 +453,8 @@ Item {
             }
         }
 
-        // Floating panel (state + shared content)
+        // Floating panel
         leftFloatingPanelItem: root.leftFloatingPanelItem
-        floatingPanelOpen: root.floatingPanelOpen
-        onFloatingPanelAutoClosed:  root.floatingPanelAutoClosed()
     }
 
     Loader {

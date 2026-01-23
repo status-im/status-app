@@ -143,12 +143,6 @@ SwipeView {
     signal backButtonClicked()
 
     /*!
-        \qmlsignal
-        This signal is emitted when the floating panel has been automatically closed.
-    */
-    signal floatingPanelAutoClosed()
-
-    /*!
         \qmlmethod StatusSectionLayout::openFloatingPanel()
         This method is used to open left floating panel modal.
     */
@@ -335,6 +329,10 @@ SwipeView {
         footer: null
         contentItem: LayoutItemProxy { target: root.leftFloatingPanelItem }
 
-        onClosed: root.floatingPanelAutoClosed()
+        onClosed: {
+            if(root.leftFloatingPanelItem) {
+                root.leftFloatingPanelItem.StatusLayoutState.opened = false
+            }
+        }
     }
 }
