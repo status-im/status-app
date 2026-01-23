@@ -1470,7 +1470,7 @@ QtObject {
                 destroyOnClose: true
                 onTagFound: (tagType, tag) => {
                     if (tagType === QRCodeScannerDialog.TagType.Address) {
-                        root.sendToRecipientRequested(tag)
+                        Global.sendToRecipientRequested(tag)
                     } else if (tagType === QRCodeScannerDialog.TagType.Link) {
                         if (Utils.isStatusDeepLink(tag)) {
                             root.rootStore.activateStatusDeepLink(tag)

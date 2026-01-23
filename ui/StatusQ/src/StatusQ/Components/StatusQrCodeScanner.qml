@@ -32,11 +32,7 @@ Item {
     readonly property size contentSize: capture.contentSize
     readonly property real sourceRatio: capture.sourceRatio
 
-    readonly property int failsCount: capture.failsCount
-    readonly property int tagsCount: capture.tagsCount
-    readonly property int decodeTime: capture.decodeTime
     readonly property string lastTag: capture.lastTag
-    readonly property string currentTag: capture.currentTag
 
     property int state: StatusQrCodeScanner.State.None
 
@@ -72,8 +68,10 @@ Item {
             id: capture
 
             anchors.fill: parent
-            visible: false
+            visible: true
             clip: true
+            captureRectWidth: scanCorners.width
+            captureRectHeight: scanCorners.height
 
             onTagFound: (tag) => root.tagFound(tag)
         }
@@ -113,7 +111,7 @@ Item {
 
     StatusScanCorners {
         id: scanCorners
-        width: root.width / 1.5
+        width: root.width / 1.4
         height: width
         anchors.centerIn: parent
         color: {
@@ -156,20 +154,24 @@ Item {
         spacing: 10
 
         StatusBaseText {
+            id: cameraUnavailableText
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             color: Theme.palette.dangerColor1
             visible: !capture.cameraAvailable
             text: qsTr("Camera is not available")
+            wrapMode: Text.WordWrap
         }
 
         StatusBaseText {
+            visible: cameraUnavailableText.visible && capture.cameraError
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             color: Theme.palette.directColor5
             text: capture.cameraError
+            wrapMode: Text.WordWrap
         }
     }
 }

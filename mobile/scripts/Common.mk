@@ -77,6 +77,7 @@ RUN_SCRIPT := $(SCRIPTS_PATH)/$(OS)/run.sh
 # lib files
 STATUS_GO_LIB := $(LIB_PATH)/libstatus$(LIB_EXT)
 STATUS_Q_LIB := $(LIB_PATH)/libStatusQ$(LIB_SUFFIX)$(LIB_EXT)
+LIB_ZXING := $(LIB_PATH)/libZXing$(LIB_SUFFIX)$(LIB_EXT)
 OPENSSL_LIB := $(LIB_PATH)/libssl_3$(LIB_EXT)
 QRCODEGEN_LIB := $(LIB_PATH)/libqrcodegen.a
 QZXING_LIB := $(LIB_PATH)/libqzxing.a

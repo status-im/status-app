@@ -49,7 +49,8 @@ android {
                         $$PWD/../lib/$$LIB_PREFIX/libDOtherSide$$(LIB_SUFFIX)$$(LIB_EXT) \
                         $$PWD/../lib/$$LIB_PREFIX/libstatus.so \
                         $$PWD/../lib/$$LIB_PREFIX/libsds.so \
-                        $$PWD/../lib/$$LIB_PREFIX/libStatusQ$$(LIB_SUFFIX)$$(LIB_EXT)
+                        $$PWD/../lib/$$LIB_PREFIX/libStatusQ$$(LIB_SUFFIX)$$(LIB_EXT) \
+                        $$PWD/../lib/$$LIB_PREFIX/libZXing.so
     contains(DEFINES, FLAG_KEYCARD_ENABLED) {
         ANDROID_EXTRA_LIBS += $$PWD/../lib/$$LIB_PREFIX/libstatus-keycard-qt.so
     }
@@ -83,7 +84,7 @@ ios {
             -framework UserNotifications
 
     # Base libraries (always included)
-    LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lDOtherSideStatic -lstatusq -lstatus -lsds -lssl_3 -lcrypto_3 -lqzxing -lresolv -lqrcodegen
+    LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lDOtherSideStatic -lstatusq -lstatus -lsds -lssl_3 -lcrypto_3 -lqzxing -lSCodes -lZXing -lresolv -lqrcodegen
 
     contains(DEFINES, FLAG_KEYCARD_ENABLED) {
         # Use entitlements with NFC support (requires paid Apple Developer account)

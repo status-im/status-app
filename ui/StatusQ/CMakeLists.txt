@@ -333,6 +333,30 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(MobileUI)
 
+# iOS-specific configuration for SCodes and its ZXing dependency
+if(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+    # Set CMake variables before fetching SCodes to ensure proper iOS compilation
+    # These flags must be set before FetchContent_MakeAvailable for iOS arm64 support
+    string(APPEND CMAKE_CXX_FLAGS " -fPIC")
+    string(APPEND CMAKE_C_FLAGS " -fPIC")
+    
+    # Ensure proper linking by disabling shared library mode for iOS
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries for iOS" FORCE)
+    
+    # Pass iOS-specific settings to dependencies
+    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_FIND_ROOT_PATH}")
+endif()
+
+FetchContent_Declare(
+  SCodes
+
+  GIT_REPOSITORY https://github.com/status-im/SCodes.git
+  GIT_TAG 8d2baf1250393544b1949ff04b7414465b6d73cf
+    SOURCE_SUBDIR src
+)
+
+FetchContent_MakeAvailable(SCodes)
+
 target_link_libraries(StatusQ PRIVATE
         Qt::Core
         Qt::Qml
@@ -345,7 +369,28 @@ target_link_libraries(StatusQ PRIVATE
         QtModelsToolkit
         MobileUI
         qzxing
+        SCodes
         )
+
+# iOS-specific compiler settings for proper SCodes/ZXing compilation
+if(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+    # Ensure SCodes and ZXing are compiled with proper settings for iOS arm64
+    if(TARGET SCodes)
+        set_target_properties(SCodes PROPERTIES
+            POSITION_INDEPENDENT_CODE ON
+            CXX_STANDARD 17
+            CXX_STANDARD_REQUIRED ON
+        )
+    endif()
+    
+    if(TARGET ZXing)
+        set_target_properties(ZXing PROPERTIES
+            POSITION_INDEPENDENT_CODE ON
+            CXX_STANDARD 17
+            CXX_STANDARD_REQUIRED ON
+        )
+    endif()
+endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_link_libraries(StatusQ PRIVATE

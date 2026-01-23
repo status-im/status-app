@@ -2,6 +2,7 @@ import QtQuick
 
 import QtMultimedia
 import QZXing
+import com.scythestudio.scodes 1.0
 
 Item {
     id: root
@@ -13,13 +14,12 @@ Item {
     readonly property real sourceRatio: videoOutput.sourceRect.width
                                         / videoOutput.sourceRect.height
 
-    readonly property int failsCount: d.failsCount
-    readonly property int tagsCount: d.tagsCount
-    readonly property int decodeTime: d.decodeTime
     readonly property string lastTag: d.lastTag
-    readonly property string currentTag: d.currentTag
 
     readonly property alias contentRect: videoOutput.contentRect
+
+    required property int captureRectWidth
+    required property int captureRectHeight
 
     readonly property var availableCameras: {
         return mediaDevices.videoInputs.map(d => ({
@@ -29,7 +29,7 @@ Item {
     }
 
     readonly property bool cameraAvailable: camera.active
-    readonly property string cameraError: camera.errorString
+    readonly property string cameraError: camera.error === Camera.CameraError ? camera.errorString : ""
 
     signal tagFound(string tag)
 
@@ -45,11 +45,23 @@ Item {
     QtObject {
         id: d
 
-        property int failsCount: 0
-        property int tagsCount: 0
-        property int decodeTime: 0
         property string lastTag
-        property string currentTag
+    }
+
+
+    SBarcodeScanner {
+        id: barcodeScanner
+
+        forwardVideoSink: videoOutput.videoSink
+        camera: camera
+        scanning: true
+
+        captureRect: captureRect
+
+        onCapturedChanged: (tag) => {
+            d.lastTag = tag
+            root.tagFound(tag)
+        }
     }
 
     Camera {
@@ -61,43 +73,19 @@ Item {
         Component.onDestruction: camera.active = false
     }
 
-    CaptureSession {
-        camera: camera
-        videoOutput: videoOutput
-    }
-
     VideoOutput {
         id: videoOutput
 
         anchors.fill: parent
+        focus: visible
         fillMode: VideoOutput.PreserveAspectCrop
     }
 
-    QZXingFilter {
-        id: zxingFilter
-        videoSink: videoOutput.videoSink
-        orientation: videoOutput.orientation
-
-        captureRect: videoOutput.sourceRect
-
-        decoder {
-            enabledDecoders: QZXing.DecoderFormat_EAN_13 | QZXing.DecoderFormat_CODE_39 | QZXing.DecoderFormat_QR_CODE
-            onTagFound: (tag) => {
-                d.currentTag = tag
-                d.lastTag = tag
-                root.tagFound(tag)
-            }
-            tryHarder: false
-        }
-
-        onDecodingFinished: (succeeded, decodeTime) => {
-            if (succeeded) {
-                ++d.tagsCount
-            } else {
-                ++d.failsCount
-                d.currentTag = ""
-            }
-            d.decodeTime = decodeTime
-        }
+    Rectangle {
+        id: captureRect
+        width: root.captureRectWidth
+        height: root.captureRectHeight
+        anchors.centerIn: parent
+        visible: false
     }
 }
