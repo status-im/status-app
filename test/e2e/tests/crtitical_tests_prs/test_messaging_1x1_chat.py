@@ -148,17 +148,30 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             chat_message2 = \
                 ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(1, 21))
             messages_screen.group_chat.send_message_to_group_chat(chat_message2)
-            message_object_0 = messages_screen.chat.messages(0)[0]
-            assert chat_message2 in message_object_0.text, \
-                f"Message text is not found in the last message"
+            # Wait until the message appears and contains the expected text
+            # Re-fetch message object inside lambda to ensure we always check the latest state
+            assert driver.waitFor(
+                lambda: (
+                    len(messages_screen.chat.messages(0)) > 0 and
+                    chat_message2 in str(messages_screen.chat.messages(0)[0].object.unparsedText)
+                ),
+                timeout
+            ), f"Message text is not found in the last message"
             message_object_1 = messages_screen.chat.messages(1)[0]
             assert chat_message1 in str(message_object_1.object.unparsedText), \
                 f"Message text is not found in the last message"
 
         with step(f'User {user_two.name} send emoji to {user_one.name}'):
             messages_screen.group_chat.send_emoji_to_chat(emoji)
-            message_object = messages_screen.chat.messages(0)[0]
-            assert '😎' in message_object.text
+            # Wait until the emoji message appears and contains the expected emoji
+            # Re-fetch message object inside lambda to ensure we always check the latest state
+            assert driver.waitFor(
+                lambda: (
+                    len(messages_screen.chat.messages(0)) > 0 and
+                    '😎' in str(messages_screen.chat.messages(0)[0].object.unparsedText)
+                ),
+                timeout
+            ), f"Emoji is not found in the last message"
 
         with step(f'User {user_two.name} send image to {user_one.name} and verify it was sent'):
             messages_screen.group_chat.send_image_to_chat(str(picture))

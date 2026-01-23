@@ -54,12 +54,24 @@ class ProfileSettingsView(QObject):
         self.web_tab_button.click()
         self.showcase_popup_close_if_present()
         links = {}
-        for link_name in walk_children(
-                driver.waitForObjectExists(self._links_list.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)):
-            if getattr(link_name, 'id', '') == 'draggableDelegate':
-                for link_value in walk_children(link_name):
-                    if getattr(link_value, 'id', '') == 'textMouseArea':
-                        links[str(link_name.title)] = str(driver.object.parent(link_value).text)
+        try:
+            for link_name in walk_children(
+                    driver.waitForObjectExists(self._links_list.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)):
+                try:
+                    if getattr(link_name, 'id', '') == 'draggableDelegate':
+                        for link_value in walk_children(link_name):
+                            try:
+                                if getattr(link_value, 'id', '') == 'textMouseArea':
+                                    links[str(link_name.title)] = str(driver.object.parent(link_value).text)
+                            except (RuntimeError, AttributeError, LookupError):
+                                # Skip children that can't be accessed safely (may have been deleted)
+                                continue
+                except (RuntimeError, AttributeError, LookupError):
+                    # Skip link_name objects that can't be accessed safely
+                    continue
+        except (RuntimeError, AttributeError, LookupError):
+            # If walking children fails, return empty dict or partial results
+            pass
         return links
 
     @allure.step('Close Showcase profile popup if it is there')

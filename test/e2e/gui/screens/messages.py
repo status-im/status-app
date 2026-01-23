@@ -326,13 +326,17 @@ class ChatView(QObject):
     def find_message_by_text(self, message_text: str, index: int):
         message = None
         started_at = time.monotonic()
+        check_interval = 0.5
         while message is None:
             for _message in self.messages(index):
                 if message_text in remove_tags(_message.text):
                     message = _message
                     break
-            if time.monotonic() - started_at > configs.timeouts.MESSAGING_TIMEOUT_SEC:
-                raise LookupError(f'Message not found')
+            if message is None:
+                # Only sleep if message not found yet and we haven't timed out
+                if time.monotonic() - started_at > configs.timeouts.MESSAGING_TIMEOUT_SEC:
+                    raise LookupError(f'Message not found')
+                time.sleep(check_interval)
         return message
 
     @allure.step('Open community invitation')

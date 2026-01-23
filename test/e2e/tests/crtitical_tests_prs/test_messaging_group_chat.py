@@ -122,10 +122,15 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
             with step('Send message to group chat and verify it was sent'):
                 chat_message = random_text_message()
                 messages_screen.group_chat.send_message_to_group_chat(chat_message)
-                message_objects = messages_screen.chat.messages('0')
-                message_items = [message.text for message in message_objects]
-                for message_item in message_items:
-                    assert chat_message in message_item
+                # Wait until the message appears and contains the expected text
+                # Re-fetch message objects inside lambda to ensure we always check the latest state
+                assert driver.waitFor(
+                    lambda: (
+                        len(messages_screen.chat.messages(0)) > 0 and
+                        chat_message in str(messages_screen.chat.messages(0)[0].object.unparsedText)
+                    ),
+                    timeout
+                ), f"Message text is not found in the last message"
 
             with step(f'Remove {user_three.name} from group'):
                 messages_screen.group_chat.remove_member_from_chat(user_three.name)
@@ -159,10 +164,15 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
             with step('Send message to group chat after user removal and verify it'):
                 chat_message_2 = random_text_message()
                 messages_screen.group_chat.send_message_to_group_chat(chat_message_2)
-                message_objects = messages_screen.chat.messages('1')
-                message_items = [message.text for message in message_objects]
-                for message_item in message_items:
-                    assert chat_message_2 in message_item
+                # Wait until the message appears and contains the expected text
+                # Re-fetch message objects inside lambda to ensure we always check the latest state
+                assert driver.waitFor(
+                    lambda: (
+                        len(messages_screen.chat.messages(1)) > 0 and
+                        chat_message_2 in str(messages_screen.chat.messages(1)[0].object.unparsedText)
+                    ),
+                    timeout
+                ), f"Message text is not found in the last message"
 
             with step(f'User {user_two.name}, get own profile link in online identifier'):
                 online_identifier = main_window.left_panel.open_online_identifier()
