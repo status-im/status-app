@@ -48,6 +48,7 @@ extern void registerNativeIndicatorItemType();
 #include "onboarding/enums.h"
 
 #include <QZXing.h>
+#include <SBarcodeScanner.h>
 
 #include <QQmlEngine>
 
@@ -79,6 +80,8 @@ void registerStatusQTypes() {
 
     qmlRegisterType<StatusEmojiModel>("StatusQ", 0, 1, "StatusEmojiModel");
     qmlRegisterType<FormattedDoubleProperty>("StatusQ", 0, 1, "FormattedDoubleProperty");
+
+    qmlRegisterType<SBarcodeScanner>("com.scythestudio.scodes", 1, 0, "SBarcodeScanner");
 
     qmlRegisterSingletonType<ClipboardUtils>("StatusQ", 0, 1, "ClipboardUtils", &ClipboardUtils::qmlInstance);
     qmlRegisterSingletonType<UrlUtils>("StatusQ", 0, 1, "UrlUtils", [](QQmlEngine* engine, QJSEngine*) {

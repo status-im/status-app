@@ -16,6 +16,7 @@ mkdir -p \
 
 cp bin/nim_status_client "${APP_DIR}/usr/bin"
 cp bin/StatusQ/* "${APP_DIR}/usr/lib"
+cp -R bin/lib/* "${APP_DIR}/usr/lib"
 cp nim-status.desktop "${APP_DIR}/."
 cp status.png "${APP_DIR}/status.png"
 cp status.png "${APP_DIR}/usr/"
