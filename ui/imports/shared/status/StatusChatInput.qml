@@ -218,6 +218,18 @@ Rectangle {
             }
             return text
         }
+
+        function surroundedBy(text: string, surroundings: string) : bool {
+            if (text === "")
+                return false
+
+            const firstIndex = text.indexOf(surroundings)
+            if (firstIndex === -1) {
+                return false
+            }
+
+            return (text.lastIndexOf(surroundings) > firstIndex)
+        }
     }
 
     function insertInTextInput(start, text) {
@@ -701,59 +713,60 @@ Rectangle {
                 x: messageInputField.positionToRectangle(messageInputField.selectionStart).x
                 y: messageInputField.y - height - 5
 
-                StatusChatInputTextFormationAction {
-                    id: boldAction
+                component FormattingAction:  Action {
+                    required property string wrapper
+                    required property string name
+
+                    checkable: true
+                    checked: d.surroundedBy(d.getSelectedTextWithFormationChars(messageInputField), wrapper)
+                    text: `${name} (${StatusQUtils.StringUtils.shortcutToText(shortcut)})`
+                    onToggled: !checked ? unwrapSelection(wrapper, d.getSelectedTextWithFormationChars(messageInputField))
+                                        : wrapSelection(wrapper)
+                    enabled: textFormatMenu.visible
+                }
+
+                FormattingAction {
                     wrapper: "**"
+                    name: qsTr("Bold")
                     icon.name: "bold"
-                    text: qsTr("Bold (%1)").arg(StatusQUtils.StringUtils.shortcutToText(shortcut))
-                    selectedTextWithFormationChars: d.getSelectedTextWithFormationChars(messageInputField)
-                    onToggled: !checked ? unwrapSelection(wrapper, d.getSelectedTextWithFormationChars(messageInputField))
-                                        : wrapSelection(wrapper)
                     shortcut: StandardKey.Bold
-                    enabled: textFormatMenu.visible
                 }
-                StatusChatInputTextFormationAction {
-                    id: italicAction
+
+                FormattingAction {
                     wrapper: "*"
+                    name: qsTr("Italic")
                     icon.name: "italic"
-                    text: qsTr("Italic (%1)").arg(StatusQUtils.StringUtils.shortcutToText(shortcut))
-                    selectedTextWithFormationChars: d.getSelectedTextWithFormationChars(messageInputField)
-                    checked: (surroundedBy("*") && !surroundedBy("**")) || surroundedBy("***")
-                    onToggled: !checked ? unwrapSelection(wrapper, d.getSelectedTextWithFormationChars(messageInputField))
-                                        : wrapSelection(wrapper)
+                    checked: {
+                        const text = d.getSelectedTextWithFormationChars(messageInputField)
+                        return (surroundedBy(text, "*") && !surroundedBy(text, "**")) || surroundedBy(text, "***")
+                    }
                     shortcut: StandardKey.Italic
-                    enabled: textFormatMenu.visible
                 }
-                StatusChatInputTextFormationAction {
-                    id: strikethruAction
+
+                FormattingAction {
                     wrapper: "~~"
+                    name: qsTr("Strikethrough")
                     icon.name: "strikethrough"
-                    text: qsTr("Strikethrough (%1)").arg(StatusQUtils.StringUtils.shortcutToText(shortcut))
-                    selectedTextWithFormationChars: d.getSelectedTextWithFormationChars(messageInputField)
-                    onToggled: !checked ? unwrapSelection(wrapper, d.getSelectedTextWithFormationChars(messageInputField))
-                                        : wrapSelection(wrapper)
                     shortcut: "Ctrl+Shift+S"
-                    enabled: textFormatMenu.visible
                 }
-                StatusChatInputTextFormationAction {
-                    id: codeAction
-                    readonly property bool multilineSelection: messageInputField.positionToRectangle(messageInputField.selectionEnd).y >
-                                                               messageInputField.positionToRectangle(messageInputField.selectionStart).y
+
+                FormattingAction {
+                    readonly property bool multilineSelection:
+                        messageInputField.positionToRectangle(messageInputField.selectionEnd).y >
+                        messageInputField.positionToRectangle(messageInputField.selectionStart).y
 
                     wrapper: multilineSelection ? "```" : "`"
+                    name: qsTr("Code")
                     icon.name: "code"
-                    text: qsTr("Code (%1)").arg(StatusQUtils.StringUtils.shortcutToText(shortcut))
-                    selectedTextWithFormationChars: d.getSelectedTextWithFormationChars(messageInputField)
-                    onToggled: !checked ? unwrapSelection(wrapper, d.getSelectedTextWithFormationChars(messageInputField))
-                                        : wrapSelection(wrapper)
                     shortcut: multilineSelection ? "Ctrl+Shift+Alt+C" : "Ctrl+Shift+C"
-                    enabled: textFormatMenu.visible
                 }
-                StatusChatInputTextFormationAction {
-                    id: quoteAction
-                    wrapper: "> "
+
+                Action {
+                    readonly property string wrapper: "> "
+
                     icon.name: "quote"
                     text: qsTr("Quote (%1)").arg(StatusQUtils.StringUtils.shortcutToText(shortcut))
+                    checkable: true
                     checked: messageInputField.selectedText && isSelectedLinePrefixedBy(messageInputField.selectionStart, wrapper)
                     onToggled: !checked ? unprefixSelectedLine(wrapper) : prefixSelectedLine(wrapper)
                     shortcut: "Ctrl+Shift+Q"

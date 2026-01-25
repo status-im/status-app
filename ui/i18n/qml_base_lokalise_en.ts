@@ -19780,26 +19780,6 @@
       </translation>
     </message>
     <message>
-      <source>Bold (%1)</source>
-      <comment>StatusChatInput</comment>
-      <translation>Bold (%1)</translation>
-    </message>
-    <message>
-      <source>Italic (%1)</source>
-      <comment>StatusChatInput</comment>
-      <translation>Italic (%1)</translation>
-    </message>
-    <message>
-      <source>Strikethrough (%1)</source>
-      <comment>StatusChatInput</comment>
-      <translation>Strikethrough (%1)</translation>
-    </message>
-    <message>
-      <source>Code (%1)</source>
-      <comment>StatusChatInput</comment>
-      <translation>Code (%1)</translation>
-    </message>
-    <message>
       <source>Quote (%1)</source>
       <comment>StatusChatInput</comment>
       <translation>Quote (%1)</translation>
@@ -19808,6 +19788,26 @@
       <source>Send message</source>
       <comment>StatusChatInput</comment>
       <translation>Send message</translation>
+    </message>
+    <message>
+      <source>Bold</source>
+      <comment>StatusChatInput</comment>
+      <translation>Bold</translation>
+    </message>
+    <message>
+      <source>Italic</source>
+      <comment>StatusChatInput</comment>
+      <translation>Italic</translation>
+    </message>
+    <message>
+      <source>Strikethrough</source>
+      <comment>StatusChatInput</comment>
+      <translation>Strikethrough</translation>
+    </message>
+    <message>
+      <source>Code</source>
+      <comment>StatusChatInput</comment>
+      <translation>Code</translation>
     </message>
   </context>
   <context>

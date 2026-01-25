@@ -16368,28 +16368,28 @@ selhalo</translation>
         </translation>
     </message>
     <message>
-        <source>Bold (%1)</source>
-        <translation>Tučné (%1)</translation>
-    </message>
-    <message>
-        <source>Italic (%1)</source>
-        <translation>Skloněné (%1)</translation>
-    </message>
-    <message>
-        <source>Strikethrough (%1)</source>
-        <translation>Přeškrtnuté (%1)</translation>
-    </message>
-    <message>
-        <source>Code (%1)</source>
-        <translation>Kód (%1)</translation>
-    </message>
-    <message>
         <source>Quote (%1)</source>
         <translation>Odsazení (%1)</translation>
     </message>
     <message>
         <source>Send message</source>
         <translation>Odeslat zprávu</translation>
+    </message>
+    <message>
+        <source>Bold</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Italic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Strikethrough</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Code</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

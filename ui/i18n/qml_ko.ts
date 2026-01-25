@@ -16223,28 +16223,28 @@ to load</source>
         </translation>
     </message>
     <message>
-        <source>Bold (%1)</source>
-        <translation>굵게 (%1)</translation>
-    </message>
-    <message>
-        <source>Italic (%1)</source>
-        <translation>이탤릭체 (%1)</translation>
-    </message>
-    <message>
-        <source>Strikethrough (%1)</source>
-        <translation>취소선 (%1)</translation>
-    </message>
-    <message>
-        <source>Code (%1)</source>
-        <translation>코드 (%1)</translation>
-    </message>
-    <message>
         <source>Quote (%1)</source>
         <translation>인용 (%1)</translation>
     </message>
     <message>
         <source>Send message</source>
         <translation>메시지 보내기</translation>
+    </message>
+    <message>
+        <source>Bold</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Italic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Strikethrough</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Code</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

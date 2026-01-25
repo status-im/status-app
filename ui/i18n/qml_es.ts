@@ -16275,28 +16275,28 @@ al cargar</translation>
         </translation>
     </message>
     <message>
-        <source>Bold (%1)</source>
-        <translation>Negrita (%1)</translation>
-    </message>
-    <message>
-        <source>Italic (%1)</source>
-        <translation>Cursiva (%1)</translation>
-    </message>
-    <message>
-        <source>Strikethrough (%1)</source>
-        <translation>Tachado (%1)</translation>
-    </message>
-    <message>
-        <source>Code (%1)</source>
-        <translation>Código (%1)</translation>
-    </message>
-    <message>
         <source>Quote (%1)</source>
         <translation>Cita (%1)</translation>
     </message>
     <message>
         <source>Send message</source>
         <translation>Enviar mensaje</translation>
+    </message>
+    <message>
+        <source>Bold</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Italic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Strikethrough</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Code</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

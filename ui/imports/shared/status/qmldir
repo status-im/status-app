@@ -8,7 +8,6 @@ StatusChatImageValidator 1.0 StatusChatImageValidator.qml
 StatusChatInput 1.0 StatusChatInput.qml
 StatusChatInputImageArea 1.0 StatusChatInputImageArea.qml
 StatusChatInputReplyArea 1.0 StatusChatInputReplyArea.qml
-StatusChatInputTextFormationAction 1.0 StatusChatInputTextFormationAction.qml
 StatusEmojiPopup 1.0 StatusEmojiPopup.qml
 StatusEmojiSuggestionPopup 1.0 StatusEmojiSuggestionPopup.qml
 StatusGifPopup 1.0 StatusGifPopup.qml

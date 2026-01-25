@@ -16252,27 +16252,27 @@ to load</source>
         </translation>
     </message>
     <message>
-        <source>Bold (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Italic (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Strikethrough (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Code (%1)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Quote (%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Send message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bold</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Italic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Strikethrough</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Code</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
