@@ -232,11 +232,6 @@ Rectangle {
         }
     }
 
-    function insertInTextInput(start, text) {
-        // Replace new lines with entities because `insert` gets rid of them
-        messageInputField.insert(start, text.replace(/\n/g, "<br/>"));
-    }
-
     Connections {
         enabled: d.emojiPopupOpened
         target: emojiPopup
@@ -245,7 +240,8 @@ Rectangle {
             // commit any potential preedit text first
             InputMethod.commit()
 
-            insertInTextInput(atCursor ? messageInputField.cursorPosition : messageInputField.length, text)
+            messageInputField.insertInTextInput(atCursor ? messageInputField.cursorPosition
+                                                         : messageInputField.length, text)
             emojiBtn.highlighted = false
             messageInputField.forceActiveFocus();
         }
@@ -309,81 +305,9 @@ Rectangle {
         }
     }
 
-    function getLineStartPosition(selectionStart) {
-        const text = getPlainText()
-        const lastNewLinePos = text.lastIndexOf("\n\n", messageInputField.selectionStart)
-        return lastNewLinePos === -1 ? 0 : lastNewLinePos + 2
-    }
-
-    function prefixSelectedLine(prefix) {
-        const selectedLinePosition = getLineStartPosition(messageInputField.selectionStart)
-        insertInTextInput(selectedLinePosition, prefix)
-    }
-
-    function unprefixSelectedLine(prefix) {
-        if( isSelectedLinePrefixedBy(messageInputField.selectionStart, prefix) ) {
-            const selectedLinePosition = getLineStartPosition(messageInputField.selectionStart)
-            messageInputField.remove(selectedLinePosition, selectedLinePosition + prefix.length)
-        }
-    }
-
-    function isSelectedLinePrefixedBy(selectionStart, prefix) {
-        const selectedLinePosition = getLineStartPosition(selectionStart)
-        const text = getPlainText()
-        const selectedLine = text.substring(selectedLinePosition)
-        return selectedLine.startsWith(prefix)
-    }
-
-    function wrapSelection(wrapWith) {
-        if (messageInputField.selectionStart - messageInputField.selectionEnd === 0) return
-
-        // calulate the new selection start and end positions
-        var newSelectionStart = messageInputField.selectionStart + wrapWith.length
-        var newSelectionEnd = messageInputField.selectionEnd - messageInputField.selectionStart + newSelectionStart
-
-        insertInTextInput(messageInputField.selectionStart, wrapWith);
-        insertInTextInput(messageInputField.selectionEnd, wrapWith);
-
-        messageInputField.select(newSelectionStart, newSelectionEnd)
-    }
-
-    function unwrapSelection(unwrapWith, selectedTextWithFormationChars) {
-        if (messageInputField.selectionStart - messageInputField.selectionEnd === 0) return
-
-        // Calculate the new selection start and end positions
-        var newSelectionStart = messageInputField.selectionStart -  unwrapWith.length
-        var newSelectionEnd = messageInputField.selectionEnd-messageInputField.selectionStart + newSelectionStart
-
-        selectedTextWithFormationChars = selectedTextWithFormationChars.trim()
-        // Check if the selectedTextWithFormationChars has formation chars and if so, calculate how many so we can adapt the start and end pos
-        const selectTextDiff = (selectedTextWithFormationChars.length - messageInputField.selectedText.length) / 2
-
-        // Remove the deselected option from the before and after the selected text
-        const prefixChars = messageInputField.getText((messageInputField.selectionStart - selectTextDiff), messageInputField.selectionStart)
-        const updatedPrefixChars = prefixChars.replace(unwrapWith, '')
-        const postfixChars = messageInputField.getText(messageInputField.selectionEnd, (messageInputField.selectionEnd + selectTextDiff))
-        const updatedPostfixChars = postfixChars.replace(unwrapWith, '')
-
-        // Create updated selected string with pre and post formatting characters
-        const updatedSelectedStringWithFormatChars = updatedPrefixChars + messageInputField.selectedText + updatedPostfixChars
-
-        messageInputField.remove(messageInputField.selectionStart - selectTextDiff, messageInputField.selectionEnd + selectTextDiff)
-
-        insertInTextInput(messageInputField.selectionStart, updatedSelectedStringWithFormatChars)
-
-        messageInputField.select(newSelectionStart, newSelectionEnd)
-    }
-
+    // exposed because tests use it
     function getPlainText() {
-        const textWithoutMention = messageInputField.text.replace(/<span style="[ :#0-9a-z;\-\.,\(\)]+">(@([a-z\.]+(\ ?[a-z]+\ ?[a-z]+)?))<\/span>/ig, "\[\[mention\]\]$1\[\[mention\]\]")
-
-        const deparsedEmoji = StatusQUtils.Emoji.deparse(textWithoutMention);
-
-        return StatusQUtils.StringUtils.plainText(deparsedEmoji)
-    }
-
-    function removeMentions(currentText) {
-        return currentText.replace(/\[\[mention\]\]/g, '')
+        return messageInputField.getPlainText()
     }
 
     function parseMarkdown(markdownText) {
@@ -720,8 +644,8 @@ Rectangle {
                     checkable: true
                     checked: d.surroundedBy(d.getSelectedTextWithFormationChars(messageInputField), wrapper)
                     text: `${name} (${StatusQUtils.StringUtils.shortcutToText(shortcut)})`
-                    onToggled: !checked ? unwrapSelection(wrapper, d.getSelectedTextWithFormationChars(messageInputField))
-                                        : wrapSelection(wrapper)
+                    onToggled: !checked ? messageInputField.unwrapSelection(wrapper, d.getSelectedTextWithFormationChars(messageInputField))
+                                        : messageInputField.wrapSelection(wrapper)
                     enabled: textFormatMenu.visible
                 }
 
@@ -767,8 +691,10 @@ Rectangle {
                     icon.name: "quote"
                     text: qsTr("Quote (%1)").arg(StatusQUtils.StringUtils.shortcutToText(shortcut))
                     checkable: true
-                    checked: messageInputField.selectedText && isSelectedLinePrefixedBy(messageInputField.selectionStart, wrapper)
-                    onToggled: !checked ? unprefixSelectedLine(wrapper) : prefixSelectedLine(wrapper)
+                    checked: messageInputField.selectedText &&
+                             messageInputField.isSelectedLinePrefixedBy(messageInputField.selectionStart, wrapper)
+                    onToggled: !checked ? messageInputField.unprefixSelectedLine(wrapper)
+                                        : messageInputField.prefixSelectedLine(wrapper)
                     shortcut: "Ctrl+Shift+Q"
                     enabled: textFormatMenu.visible
                 }

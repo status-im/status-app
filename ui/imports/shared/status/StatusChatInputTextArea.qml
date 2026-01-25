@@ -144,6 +144,82 @@ StatusQ.StatusTextArea {
         _d.replaceWithEmoji(shortname, codePoint, offset)
     }
 
+    function insertInTextInput(start, text) {
+        // Replace new lines with entities because `insert` gets rid of them
+        messageInputField.insert(start, text.replace(/\n/g, "<br/>"));
+    }
+
+    function wrapSelection(wrapWith) {
+        if (messageInputField.selectionStart - messageInputField.selectionEnd === 0)
+            return
+
+        // calulate the new selection start and end positions
+        const newSelectionStart = messageInputField.selectionStart + wrapWith.length
+        const newSelectionEnd = messageInputField.selectionEnd
+                              - messageInputField.selectionStart + newSelectionStart
+
+        insertInTextInput(messageInputField.selectionStart, wrapWith);
+        insertInTextInput(messageInputField.selectionEnd, wrapWith);
+
+        messageInputField.select(newSelectionStart, newSelectionEnd)
+    }
+
+    function unwrapSelection(unwrapWith, selectedTextWithFormationChars) {
+        if (messageInputField.selectionStart - messageInputField.selectionEnd === 0)
+            return
+
+        // Calculate the new selection start and end positions
+        const newSelectionStart = messageInputField.selectionStart -  unwrapWith.length
+        const newSelectionEnd = messageInputField.selectionEnd-messageInputField.selectionStart + newSelectionStart
+
+        selectedTextWithFormationChars = selectedTextWithFormationChars.trim()
+        // Check if the selectedTextWithFormationChars has formation chars and if so, calculate how many so we can adapt the start and end pos
+        const selectTextDiff = (selectedTextWithFormationChars.length - messageInputField.selectedText.length) / 2
+
+        // Remove the deselected option from the before and after the selected text
+        const prefixChars = messageInputField.getText((messageInputField.selectionStart - selectTextDiff), messageInputField.selectionStart)
+        const updatedPrefixChars = prefixChars.replace(unwrapWith, '')
+        const postfixChars = messageInputField.getText(messageInputField.selectionEnd, (messageInputField.selectionEnd + selectTextDiff))
+        const updatedPostfixChars = postfixChars.replace(unwrapWith, '')
+
+        // Create updated selected string with pre and post formatting characters
+        const updatedSelectedStringWithFormatChars = updatedPrefixChars + messageInputField.selectedText + updatedPostfixChars
+
+        messageInputField.remove(messageInputField.selectionStart - selectTextDiff, messageInputField.selectionEnd + selectTextDiff)
+
+        insertInTextInput(messageInputField.selectionStart, updatedSelectedStringWithFormatChars)
+
+        messageInputField.select(newSelectionStart, newSelectionEnd)
+    }
+
+    function prefixSelectedLine(prefix) {
+        const selectedLinePosition = _d.getLineStartPosition(messageInputField.selectionStart)
+        messageInputField.insertInTextInput(selectedLinePosition, prefix)
+    }
+
+    function unprefixSelectedLine(prefix) {
+        if (isSelectedLinePrefixedBy(messageInputField.selectionStart, prefix)) {
+            const selectedLinePosition = _d.getLineStartPosition(messageInputField.selectionStart)
+            messageInputField.remove(selectedLinePosition, selectedLinePosition + prefix.length)
+        }
+    }
+
+    function isSelectedLinePrefixedBy(selectionStart, prefix) {
+        const selectedLinePosition = _d.getLineStartPosition(selectionStart)
+        const text = getPlainText()
+        const selectedLine = text.substring(selectedLinePosition)
+        return selectedLine.startsWith(prefix)
+    }
+
+    function getPlainText() {
+        const textWithoutMention = messageInputField.text.replace(
+                                     /<span style="[ :#0-9a-z;\-\.,\(\)]+">(@([a-z\.]+(\ ?[a-z]+\ ?[a-z]+)?))<\/span>/ig,
+                                     "\[\[mention\]\]$1\[\[mention\]\]")
+        const deparsedEmoji = StatusQUtils.Emoji.deparse(textWithoutMention);
+
+        return StatusQUtils.StringUtils.plainText(deparsedEmoji)
+    }
+
     QtObject {
         id: _d
 
@@ -202,7 +278,7 @@ StatusQ.StatusTextArea {
 
             // handle new line in blockquote
             if ((event.key === Qt.Key_Enter || event.key === Qt.Key_Return) && (event.modifiers & Qt.ShiftModifier)) {
-                const message = _d.extrapolateCursorPosition();
+                const message = _d.extrapolateCursorPosition()
 
                 if(message.data.startsWith(">") && !message.data.endsWith("\n\n")) {
                     let newMessage1 = ""
@@ -211,14 +287,14 @@ StatusQ.StatusTextArea {
                     } else {
                         newMessage1 = message.data + "\n> ";
                     }
-                    messageInputField.remove(0, messageInputField.cursorPosition);
-                    insertInTextInput(0, StatusQUtils.Emoji.parse(newMessage1));
+                    messageInputField.remove(0, messageInputField.cursorPosition)
+                    insertInTextInput(0, StatusQUtils.Emoji.parse(newMessage1))
                     event.accepted = true
                 }
             }
 
             if (event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) {
-                const message = _d.extrapolateCursorPosition();
+                const message = _d.extrapolateCursorPosition()
                 if(mentionsPos.length > 0) {
                     let anticipatedCursorPosition = messageInputField.cursorPosition
                     anticipatedCursorPosition += event.key === Qt.Key_Backspace ?
@@ -573,7 +649,7 @@ StatusQ.StatusTextArea {
         function extrapolateCursorPosition() {
             // we need only the message part to be html
             const text = getPlainText()
-            const completelyPlainText = removeMentions(text)
+            const completelyPlainText = _d.removeMentions(text)
             const plainText = StatusQUtils.Emoji.parse(text)
 
             let bracketEvent = false
@@ -632,6 +708,16 @@ StatusQ.StatusTextArea {
                 length = length - match.length
             }
             return length
+        }
+
+        function getLineStartPosition(selectionStart) {
+            const text = getPlainText()
+            const lastNewLinePos = text.lastIndexOf("\n", messageInputField.selectionStart)
+            return lastNewLinePos === -1 ? 0 : lastNewLinePos + 1
+        }
+
+        function removeMentions(currentText) {
+            return currentText.replace(/\[\[mention\]\]/g, '')
         }
     }
 
