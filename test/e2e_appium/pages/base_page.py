@@ -324,6 +324,40 @@ class BasePage:
         except Exception:
             return True
 
+    def _clear_input_field(self, locator: tuple, timeout: int = 5) -> bool:
+        """Clear text from an input field using select-all + delete.
+
+        Uses Ctrl+A to select all text, then Backspace to delete.
+        More reliable than element.clear() for Qt/QML fields.
+
+        Args:
+            locator: Element locator tuple.
+            timeout: Timeout for finding the element.
+
+        Returns:
+            bool: True if clearing was attempted, False if element not found.
+        """
+        from selenium.webdriver.common.keys import Keys
+
+        element = self.find_element_safe(locator, timeout=timeout)
+        if not element:
+            return False
+
+        try:
+            element.click()
+
+            # Select all with Ctrl+A, then delete (Ctrl is correct for Android)
+            actions = ActionChains(self.driver)
+            actions.key_down(Keys.CONTROL).send_keys("a").key_up(Keys.CONTROL)
+            actions.send_keys(Keys.BACKSPACE)
+            actions.perform()
+
+            self.logger.debug("Cleared input field via Ctrl+A + Backspace")
+            return True
+        except Exception as exc:
+            self.logger.debug(f"Select-all clear failed: {exc}")
+            return False
+
     def long_press_element(self, element, duration: int = 800) -> bool:
         """Perform long-press gesture on element to trigger context menu.
 

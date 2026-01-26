@@ -15,6 +15,9 @@ class WalletAccountsLocators(BaseLocators):
     ACCOUNT_MENU_DELETE = BaseLocators.xpath(
         "//*[@content-desc='Delete' or contains(@resource-id,'AccountMenu-DeleteAction')]"
     )
+    ACCOUNT_MENU_EDIT = BaseLocators.xpath(
+        "//*[@content-desc='Edit' or contains(@resource-id,'AccountMenu-EditAction')]"
+    )
     KEYCARD_POPUP = BaseLocators.xpath(
         "//*[contains(@resource-id,'KeycardPopup')]"
     )
@@ -47,8 +50,8 @@ class WalletAccountsLocators(BaseLocators):
     ACCOUNT_NAME_INPUT = BaseLocators.content_desc_exact(
         "Account name [tid:statusBaseInput]"
     )
-    ADD_ACCOUNT_PRIMARY = BaseLocators.content_desc_exact(
-        "Add account [tid:AddAccountPopup-PrimaryButton]"
+    ADD_ACCOUNT_PRIMARY = BaseLocators.content_desc_contains(
+        "[tid:AddAccountPopup-PrimaryButton]"
     )
     EDIT_DERIVATION_BUTTON = BaseLocators.content_desc_exact(
         "Edit [tid:AddAccountPopup-EditDerivationPath]"

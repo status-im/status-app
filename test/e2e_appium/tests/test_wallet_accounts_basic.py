@@ -43,10 +43,21 @@ class TestWalletAccountsBasic(StepMixin):
                 f"Before: {before}, After: {after_add}"
             )
 
+        async with self.step(self.device, "Rename account via context menu"):
+            renamed_name = generate_account_name(16)
+            assert panel.edit_account_via_menu(
+                renamed_name, index=-1
+            ), f"Failed to rename account '{name}' via context menu"
+
+        async with self.step(self.device, "Verify account renamed"):
+            assert panel.wait_for_account_name(renamed_name, timeout=10), (
+                f"Renamed account '{renamed_name}' not visible in account list"
+            )
+
         async with self.step(self.device, "Delete account"):
             assert panel.delete_latest_account_via_menu(
                 auth_password=user_password
-            ), f"Failed to delete generated account '{name}' via context menu"
+            ), f"Failed to delete generated account '{renamed_name}' via context menu"
 
         async with self.step(self.device, "Verify account deleted"):
             toast = app.wait_for_toast(

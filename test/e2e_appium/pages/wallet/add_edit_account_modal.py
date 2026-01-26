@@ -12,7 +12,18 @@ class AddEditAccountModal(BasePage):
     def is_displayed(self, timeout: Optional[int] = 10) -> bool:
         return self.is_element_visible(self.locators.ADD_ACCOUNT_MODAL, timeout=timeout)
 
-    def set_name(self, name: str) -> bool:
+    def set_name(self, name: str, clear_existing: bool = False) -> bool:
+        """Set account name in the modal.
+
+        Args:
+            name: The account name to set.
+            clear_existing: If True, clears existing text before typing (for edit flow).
+                          If False, relies on qt_safe_input's native clear (for add flow).
+        """
+        if clear_existing:
+            if not self._clear_input_field(self.locators.ACCOUNT_NAME_INPUT):
+                self.logger.error("Failed to clear existing account name")
+                return False
         return self.qt_safe_input(self.locators.ACCOUNT_NAME_INPUT, name, verify=False)
 
     def save_changes(self) -> bool:

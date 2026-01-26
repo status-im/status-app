@@ -56,6 +56,23 @@ class WalletLeftPanel(BasePage):
             self.logger.debug(f"account_rows lookup failed: {e}")
             return []
 
+    def account_names(self) -> List[str]:
+        """Extract account names from visible account rows."""
+        names: List[str] = []
+        for row in self.account_rows():
+            try:
+                desc = row.get_attribute("content-desc") or row.get_attribute("text") or ""
+                if desc:
+                    name = desc.split(" [tid:", 1)[0]
+                    if name:
+                        names.append(name)
+            except Exception as e:
+                self.logger.debug(f"Failed to extract account name: {e}")
+        return names
+
+    def wait_for_account_name(self, name: str, timeout: int = 10) -> bool:
+        return self.wait_for_condition(lambda: name in self.account_names(), timeout=timeout)
+
     def long_press_row(self, index: int = -1, duration_ms: int = 800) -> bool:
         rows = self.account_rows()
         if not rows:
@@ -71,6 +88,39 @@ class WalletLeftPanel(BasePage):
         if not self.long_press_row(index=index):
             return False
         return self.is_element_visible(self.locators.ACCOUNT_CONTEXT_MENU, timeout=5)
+
+    def edit_account_via_menu(self, new_name: str, index: int = -1) -> bool:
+        """Edit account name via context menu.
+
+        Args:
+            new_name: New name to set for the account.
+            index: Index of the account row to edit (-1 for last).
+
+        Returns:
+            bool: True if edit succeeded.
+        """
+        if not self.open_context_menu_for_row(index=index):
+            self.logger.error("Failed to open account context menu via long-press")
+            return False
+
+        self.safe_click(self.locators.ACCOUNT_MENU_EDIT, timeout=5)
+
+        modal = AddEditAccountModal(self.driver)
+        if not modal.is_displayed(timeout=10):
+            self.logger.error("Edit account modal did not appear")
+            return False
+
+        if not modal.set_name(new_name, clear_existing=True):
+            self.logger.error(f"Failed to set account name to '{new_name}'")
+            return False
+
+        modal.save_changes()
+
+        if not modal.wait_until_hidden(timeout=10):
+            self.logger.error("Edit account modal did not close after saving")
+            return False
+
+        return True
 
     def delete_latest_account_via_menu(self, auth_password: Optional[str] = None) -> bool:
         if not self.open_context_menu_for_row(index=-1):
