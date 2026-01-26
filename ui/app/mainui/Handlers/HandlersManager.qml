@@ -3,6 +3,7 @@ import QtQuick
 import StatusQ
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Backpressure
+import StatusQ.Core.Theme
 import StatusQ.Core
 
 import shared.stores as SharedStores
@@ -17,6 +18,9 @@ import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Wallet.popups.buy
 import AppLayouts.Wallet.popups.swap
 import utils
+
+
+import MobileUI
 
 // Public API for this object are ONLY `stores` + the main `popupParent`
 QtObject {
@@ -47,6 +51,7 @@ QtObject {
     required property ProfileStores.PrivacyStore privacyStore
 
     required property Keychain keychain
+
 
     readonly property SwapModalHandler swapModalHandler: SwapModalHandler {
 
@@ -200,6 +205,64 @@ QtObject {
             return true
         }
         return false
+    }
+
+    readonly property Component enablePushNotificationsPopupComponent: Component {
+        EnablePushNotificationsPopup {
+            id: enablePushNotificationsPopup
+            destroyOnClose: true
+            hasPermission: PushNotifications.status === PushNotifications.Granted
+
+            onContinueRequested: {
+                PushNotifications.request()
+
+                enablePushNotificationsPopup.loading = true
+            }
+
+            onOpenSettingsRequested: {
+                PushNotifications.openSettings()
+                enablePushNotificationsPopup.close()
+            }
+
+
+            Connections {
+                target: PushNotifications
+
+                function onStatusChanged() {
+                    enablePushNotificationsPopup.loading = false
+                    enablePushNotificationsPopup.hasPermission = PushNotifications.status === PushNotifications.Granted
+
+                    if (PushNotifications.status === PushNotifications.Granted) {
+                        Global.displayToastMessage(
+                            qsTr("Push notifications enabled"),
+                            "",
+                            "checkmark-circle",
+                            false,
+                            Constants.ephemeralNotificationType.success,
+                            ""
+                        )
+                        enablePushNotificationsPopup.close()
+                        return
+                    }
+                }
+            }
+        }
+    }
+
+    function showEnablePushNotificationsPopup() {
+        enablePushNotificationsPopupComponent.createObject(root.popupParent).open()
+    }
+
+    function maybeDisplayEnablePushNotificationsPopup() {
+        if (!SQUtils.Utils.isMobile) {
+            return false
+        }
+
+        if (PushNotifications.status === PushNotifications.Granted) {
+            return false
+        }
+
+        showEnablePushNotificationsPopup()
     }
 
     readonly property EnableBiometricsPopupHandler enableBiometricsPopupHandler: EnableBiometricsPopupHandler {

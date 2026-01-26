@@ -1113,6 +1113,15 @@ Item {
     }
 
     Connections {
+        target: appMain.rootStore
+
+        function onSectionsLoadedChanged() {
+            if (!appMain.rootStore.sectionsLoaded) return
+            popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup()
+        }
+    }
+
+    Connections {
         target: appMain.communitiesStore
 
         function onImportingCommunityStateChanged(communityId, state, errorMsg) {

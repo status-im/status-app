@@ -9,6 +9,8 @@ import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Popups
 
+import MobileUI
+
 import utils
 import shared.panels
 import shared.controls
@@ -193,15 +195,48 @@ SettingsContentBase {
             }
         }
 
+        Control {
+            id: mobileHelperBanner
+            Layout.preferredWidth: root.contentWidth
+            visible: SQUtils.Utils.isMobile &&
+                    d.notificationsSettings.notifSettingAllowNotifications &&
+                    PushNotifications.status !== PushNotifications.Granted
+
+            padding: Theme.defaultPadding
+
+            background: Rectangle {
+                color: Theme.palette.primaryColor3
+                radius: Constants.settingsSection.radius
+                TapHandler {
+                    cursorShape: Qt.PointingHandCursor
+                    onTapped: PushNotifications.openSettings()
+                }
+            }
+
+            contentItem: StatusBaseText {
+                text: qsTr("<font color='%1'>Enable Push notifications in your device Settings</font><br><br>Before enabling mobile push notifications in the app below, enable them in <font color='%1'>your device settings</font> first.").arg(Theme.palette.primaryColor1)
+                font.pixelSize: d.infoFontSize
+                lineHeight: d.infoLineHeight
+                lineHeightMode: Text.FixedHeight
+                color: Theme.palette.baseColor1
+                wrapMode: Text.WordWrap
+            }
+        }
+
         StatusListItem {
             Layout.preferredWidth: root.contentWidth
-            title: qsTr("Allow Notification Bubbles")
+            title: SQUtils.Utils.isMobile
+                   ? qsTr("Enable mobile push notifications in the app")
+                   : qsTr("Allow Notification Bubbles")
             components: [
                 StatusSwitch {
                     id: allowNotifSwitch
                     checked: d.notificationsSettings.notifSettingAllowNotifications
                     onClicked: {
                         d.notificationsSettings.notifSettingAllowNotifications = !d.notificationsSettings.notifSettingAllowNotifications
+                        if (d.notificationsSettings.notifSettingAllowNotifications) {
+                            PushNotifications.request()
+                        }
                     }
                 }
             ]

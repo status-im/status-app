@@ -6,7 +6,12 @@
 	<array>
 		<string>applinks:status.app</string>
 	</array>
-	<!-- No NFC capability - allows building without paid Apple Developer account -->
+    <!-- Push Notifications Entitlement -->
+    <!-- NOTE: This works with a FREE Apple Developer account! -->
+    <key>aps-environment</key>
+    <string>development</string>
+    
+    <!-- NOTE: NO NFC entitlement here - NFC requires paid Apple Developer account -->
+    <!-- This version can be used with a free account for testing -->
 </dict>
 </plist>
-

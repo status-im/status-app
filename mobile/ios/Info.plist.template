@@ -87,6 +87,12 @@
     <true/>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+    <!-- Push Notifications Background Modes -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>remote-notification</string>
+        <string>fetch</string>
+    </array>
     <!-- Do not require paid apple accounts to build the app with NFC support -->
     <!-- KEYCARD_NFC_START
         <key>NFCReaderUsageDescription</key>

@@ -6894,6 +6894,37 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
 </context>
 <context>
+    <name>EnablePushNotificationsPopup</name>
+    <message>
+        <source>Enable push notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Maybe later</source>
+        <translation type="unfinished">나중에</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation type="unfinished">완료</translation>
+    </message>
+    <message>
+        <source>Open settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">계속</translation>
+    </message>
+    <message>
+        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EnsAddedView</name>
     <message>
         <source>ENS usernames</source>
@@ -8273,6 +8304,10 @@ L2 수수료: %2</translation>
     </message>
     <message>
         <source>Swap is not available in the testnet mode.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Push notifications enabled</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -12621,6 +12656,14 @@ to load</source>
     <message>
         <source>Most recent</source>
         <translation>최신순</translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable mobile push notifications in the app</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19518,7 +19561,11 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>main</name>
     <message>
         <source>Status Desktop</source>
-        <translation>스테이터스 데스크톱</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>

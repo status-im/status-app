@@ -11,6 +11,7 @@ DeleteMessageConfirmationPopup 1.0 DeleteMessageConfirmationPopup.qml
 DownloadModal 1.0 DownloadModal.qml
 DownloadPage 1.0 DownloadPage.qml
 EnableMessageBackupPopup 1.0 EnableMessageBackupPopup.qml
+EnablePushNotificationsPopup 1.0 EnablePushNotificationsPopup.qml
 GetSyncCodeInstructionsPopup 1.0 GetSyncCodeInstructionsPopup.qml
 ImageContextMenu 1.0 ImageContextMenu.qml
 ImageCropWorkflow 1.0 ImageCropWorkflow.qml

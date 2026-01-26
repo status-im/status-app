@@ -8433,6 +8433,44 @@
     </message>
   </context>
   <context>
+    <name>EnablePushNotificationsPopup</name>
+    <message>
+      <source>Enable push notifications</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Enable push notifications</translation>
+    </message>
+    <message>
+      <source>Maybe later</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Maybe later</translation>
+    </message>
+    <message>
+      <source>Done</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Done</translation>
+    </message>
+    <message>
+      <source>Open settings</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Open settings</translation>
+    </message>
+    <message>
+      <source>Continue</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Continue</translation>
+    </message>
+    <message>
+      <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</translation>
+    </message>
+    <message>
+      <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</translation>
+    </message>
+  </context>
+  <context>
     <name>EnsAddedView</name>
     <message>
       <source>ENS usernames</source>
@@ -10120,6 +10158,11 @@
       <source>Swap is not available in the testnet mode.</source>
       <comment>HandlersManager</comment>
       <translation>Swap is not available in the testnet mode.</translation>
+    </message>
+    <message>
+      <source>Push notifications enabled</source>
+      <comment>HandlersManager</comment>
+      <translation>Push notifications enabled</translation>
     </message>
   </context>
   <context>
@@ -15396,6 +15439,16 @@
       <source>Most recent</source>
       <comment>NotificationsView</comment>
       <translation>Most recent</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</source>
+      <comment>NotificationsView</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</translation>
+    </message>
+    <message>
+      <source>Enable mobile push notifications in the app</source>
+      <comment>NotificationsView</comment>
+      <translation>Enable mobile push notifications in the app</translation>
     </message>
   </context>
   <context>
@@ -23808,6 +23861,11 @@
       <source>Report a bug on GitHub</source>
       <comment>main</comment>
       <translation>Report a bug on GitHub</translation>
+    </message>
+    <message>
+      <source>Hello World</source>
+      <comment>main</comment>
+      <translation>Hello World</translation>
     </message>
   </context>
   <context>

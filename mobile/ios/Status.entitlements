@@ -6,15 +6,15 @@
 	<array>
 		<string>applinks:status.app</string>
 	</array>
-	<!-- NFC Tag Reading Capability -->
-	<!-- Required for reading NFC tags (Keycard) on iOS -->
-	<key>com.apple.developer.nfc.readersession.formats</key>
-	<array>
-		<string>TAG</string>
-	</array>
+    <!-- Push Notifications Entitlement -->
+    <key>aps-environment</key>
+    <string>development</string>
+    
+    <!-- NFC Capability (for Keycard support) -->
+    <!-- NOTE: Requires PAID Apple Developer account -->
+    <key>com.apple.developer.nfc.readersession.formats</key>
+    <array>
+        <string>TAG</string>
+    </array>
 </dict>
 </plist>
-
-
-
-

@@ -21,7 +21,7 @@ equals(QT_MAJOR_VERSION, 6) {
 }
 
 SOURCES += \
-        sources/main.cpp
+    sources/main.cpp
 
 # Add all status-desktop qrc files
 RESOURCES += \
