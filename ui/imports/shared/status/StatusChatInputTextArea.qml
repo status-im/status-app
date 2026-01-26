@@ -245,12 +245,6 @@ StatusQ.StatusTextArea {
                 return
             }
 
-            if (event.key === Qt.Key_Escape && root.isReply) {
-                root.isReply = false
-                event.accepted = true
-                return
-            }
-
             const symbolPressed = event.text.length > 0 &&
                                 event.key !== Qt.Key_Backspace &&
                                 event.key !== Qt.Key_Delete &&
@@ -388,21 +382,6 @@ StatusQ.StatusTextArea {
                     }
                     event.accepted = true
                 }
-            }
-
-            // ⌘⇧U
-            if (isUploadFilePressed(event)) {
-                openImageDialog()
-                event.accepted = true
-            }
-
-            if (event.key === Qt.Key_Down && emojiSuggestions.visible) {
-                event.accepted = true
-                return emojiSuggestions.listView.incrementCurrentIndex()
-            }
-            if (event.key === Qt.Key_Up && emojiSuggestions.visible) {
-                event.accepted = true
-                return emojiSuggestions.listView.decrementCurrentIndex()
             }
 
             isColonPressed = event.key === Qt.Key_Colon;

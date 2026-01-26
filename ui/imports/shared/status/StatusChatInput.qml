@@ -230,6 +230,11 @@ Rectangle {
 
             return (text.lastIndexOf(surroundings) > firstIndex)
         }
+
+        function isUploadFilePressed(event) {
+            return (event.key === Qt.Key_U) &&
+                    (event.modifiers & Qt.ControlModifier) && !d.imageDialog
+        }
     }
 
     Connections {
@@ -262,10 +267,6 @@ Rectangle {
         function onClosed() {
             d.stickersPopupOpened = false
         }
-    }
-
-    function isUploadFilePressed(event) {
-        return (event.key === Qt.Key_U) && (event.modifiers & Qt.ControlModifier) && !d.imageDialog
     }
 
     function checkTextInsert() {
@@ -794,28 +795,60 @@ Rectangle {
                         rightPadding: Theme.padding // for the scrollbar
                         contentWidth: availableWidth
 
-                        StatusChatInputTextArea {
-                            id: messageInputField
+                        Control {
+                            id: messageInputFieldControl
 
-                            objectName: "messageInputField"
+                            width: inputScrollView.availableWidth
 
-                            messageLimit: root.messageLimit
-                            messageLimitHard: root.messageLimitHard
-
-                            urlsList: root.urlsList
-                            usersModel: root.usersModel
-
-                            placeholderText: root.chatInputPlaceholder
-
-                            // This is needed to make sure the text area is disabled when the input is disabled
-                            Binding on enabled {
-                                value: root.enabled
+                            Keys.onEscapePressed: {
+                                if (root.isReply) {
+                                    root.isReply = false
+                                    event.accepted = true
+                                }
                             }
 
-                            onEnabledChanged: {
-                                if (!enabled) {
-                                    clear()
-                                    root.hideExtendedArea()
+                            Keys.onPressed: (event) => {
+                                // ⌘⇧U
+                                if (d.isUploadFilePressed(event)) {
+                                    event.accepted = true
+                                    openImageDialog()
+                                }
+
+                                if (event.key === Qt.Key_Down && emojiSuggestions.visible) {
+                                    event.accepted = true
+                                    return emojiSuggestions.listView.incrementCurrentIndex()
+                                }
+                                if (event.key === Qt.Key_Up && emojiSuggestions.visible) {
+                                    event.accepted = true
+                                    return emojiSuggestions.listView.decrementCurrentIndex()
+                                }
+                            }
+
+                            contentItem: StatusChatInputTextArea {
+                                id: messageInputField
+
+                                Keys.forwardTo: [messageInputFieldControl]
+
+                                objectName: "messageInputField"
+
+                                messageLimit: root.messageLimit
+                                messageLimitHard: root.messageLimitHard
+
+                                urlsList: root.urlsList
+                                usersModel: root.usersModel
+
+                                placeholderText: root.chatInputPlaceholder
+
+                                // This is needed to make sure the text area is disabled when the input is disabled
+                                Binding on enabled {
+                                    value: root.enabled
+                                }
+
+                                onEnabledChanged: {
+                                    if (!enabled) {
+                                        clear()
+                                        root.hideExtendedArea()
+                                    }
                                 }
                             }
                         }
