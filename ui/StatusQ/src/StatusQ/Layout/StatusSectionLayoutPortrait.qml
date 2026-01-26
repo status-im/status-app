@@ -149,21 +149,6 @@ SwipeView {
     */
     signal backButtonClicked()
 
-    /*!
-        \qmlmethod StatusSectionLayout::openFloatingPanel()
-        This method is used to open left floating panel modal.
-    */
-    function openFloatingPanel()  {
-        floatingPopup.open()
-    }
-    /*!
-        \qmlmethod StatusSectionLayout::closeFloatingPanel()
-        This method is used to close left floating panel modal.
-    */
-    function closeFloatingPanel() {
-        floatingPopup.close()
-    }
-
     QtObject {
         id: d
         // Cache wrapper items removed from the swipe view
@@ -339,6 +324,39 @@ SwipeView {
         onClosed: {
             if(root.leftFloatingPanelItem) {
                 root.leftFloatingPanelItem.StatusLayoutState.opened = false
+            }
+        }
+    }
+
+    onVisibleChanged: {
+        // Important: if portrait becomes inactive, ensure popup is closed
+        if (!root.visible && root.leftFloatingPanelItem.StatusLayoutState.opened) {
+            floatingPopup.close()
+        }
+        else if (root.visible && root.leftFloatingPanelItem) {
+            // Sync when becoming visible
+            if (root.leftFloatingPanelItem.StatusLayoutState.opened)
+                floatingPopup.open()
+        }
+    }
+
+    // Sync floating panel state with imperative open/close calls
+    Connections {
+        target: root.leftFloatingPanelItem
+                ? root.leftFloatingPanelItem.StatusLayoutState
+                : null
+
+        function onOpenedChanged() {
+
+            // Guard against inactive layouts reacting to the floating panel state.
+            // Only the visible layout should handle open/close.
+            if (!root.visible)
+                return
+
+            if (root.leftFloatingPanelItem.StatusLayoutState.opened) {
+                floatingPopup.open()
+            } else {
+                floatingPopup.close()
             }
         }
     }

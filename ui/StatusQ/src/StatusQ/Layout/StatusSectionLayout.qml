@@ -181,32 +181,6 @@ LayoutChooser {
             portraitView.decrementCurrentIndex()
     }
 
-    QtObject {
-        id: d
-
-        // Indicates whether the active layout has completed its initialization
-        // and is ready to apply layout state changes (i.e floating panel state changes).
-        property bool isLayoutReady: false
-
-        // This property contains the active layout reference
-        readonly property Item activeLayout: portraitView.visible ? portraitView : landscapeView
-
-        // This method is used to open left floating panel. It will open it always
-        // with animation and transitions.
-        function openFloatingPanel()  {
-            if (d.activeLayout && d.activeLayout.openFloatingPanel) {
-                d.activeLayout.openFloatingPanel(true)
-            }
-        }
-
-        // This method is used to close left floating panel.
-        function closeFloatingPanel() {
-            if (d.activeLayout && d.activeLayout.closeFloatingPanel) {
-                d.activeLayout.closeFloatingPanel()
-            }
-        }
-    }
-
     criteria: [
         root.height > root.width && root.width < root.implicitWidth, // Portrait mode
         true // Defaults to landscape mode
@@ -236,16 +210,6 @@ LayoutChooser {
         backgroundColor: root.backgroundColor
 
         onBackButtonClicked: root.backButtonClicked()
-
-        Component.onCompleted: {
-            d.isLayoutReady = true
-
-            // Initialize the floating panel in an open state when required,
-            // skipping animation to prevent startup transitions.
-            if(root.leftFloatingPanelItem?.StatusLayoutState.opened && landscapeView.visible) {
-                openFloatingPanel(false) // No animation
-            }
-        }
     }
 
     StatusSectionLayoutPortrait {
@@ -277,30 +241,6 @@ LayoutChooser {
 
         onBackButtonClicked: root.backButtonClicked()
 
-        Component.onCompleted: {
-            d.isLayoutReady = true
-            currentIndexCache = currentIndex
-        }
-    }
-
-    // Sync floating panel state with imperative open/close calls
-    Connections {
-        target: root.leftFloatingPanelItem
-                ? root.leftFloatingPanelItem.StatusLayoutState
-                : null
-
-        function onOpenedChanged() {
-
-            // While this is false, initial binding evaluations are intentionally ignored
-            // to prevent opening the floating panel before its content has been properly
-            // reparented into the layout.
-            if (!d.isLayoutReady)
-                return
-
-            if (root.leftFloatingPanelItem.StatusLayoutState.opened)
-                d.openFloatingPanel()
-            else
-                d.closeFloatingPanel()
-        }
+        Component.onCompleted: currentIndexCache = currentIndex
     }
 }

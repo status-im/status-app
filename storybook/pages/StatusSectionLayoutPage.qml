@@ -27,7 +27,7 @@ Page {
                 CheckBox{
                     id: leftFloatingPanelCheckbox
                     text: "Open Floating Panel"
-                    checked: false
+                    checked: leftFloatingPanel.StatusLayoutState.opened
 
                     onCheckedChanged: {
                         leftFloatingPanel.StatusLayoutState.opened = checked

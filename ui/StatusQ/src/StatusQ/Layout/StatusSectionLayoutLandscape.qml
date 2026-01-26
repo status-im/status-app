@@ -145,23 +145,12 @@ Control {
     */
     signal backButtonClicked()
 
-    /*!
-        \qmlmethod StatusSectionLayout::openFloatingPanel()
-        This method is used to open left floating panel triggering the needed animations and transitions.
-    */
-    function openFloatingPanel(isAnimated) {
-        floatingPanel.openPanel(isAnimated)
-    }
-    /*!
-        \qmlmethod StatusSectionLayout::closeFloatingPanel()
-        This method is used to close left floating  panel triggering the needed animations and transitions.
-    */
-    function closeFloatingPanel() {
-        floatingPanel.closeAnimated()
-    }
-
     QtObject {
         id: d
+
+        // Indicates whether the active layout has completed its initialization
+        // and is ready to apply layout state changes (i.e floating panel state changes).
+        property bool isLayoutReady: false
 
         // Default width of the left panel in its collapsed state.
         readonly property int defaultLeftPanelWidth: 306
@@ -389,5 +378,42 @@ Control {
                 }
             }
         ]
+    }
+
+    // Sync floating panel state with imperative open/close calls
+    Connections {
+        target: root.leftFloatingPanelItem
+                ? root.leftFloatingPanelItem.StatusLayoutState
+                : null
+
+        function onOpenedChanged() {
+
+            // Guard against inactive layouts reacting to the floating panel state.
+            // Only the visible layout should handle open/close.
+            if (!root.visible)
+                return
+
+            // While this is false, initial binding evaluations are intentionally ignored
+            // to prevent opening the floating panel before its content has been properly
+            // reparented into the layout.
+            if (!d.isLayoutReady)
+                return
+
+            if (root.leftFloatingPanelItem.StatusLayoutState.opened) {
+                floatingPanel.openPanel(true)
+            } else {
+                floatingPanel.closeAnimated()
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        d.isLayoutReady = true
+
+        // Initialize the floating panel in an open state when required,
+        // skipping animation to prevent startup transitions.
+        if(root.leftFloatingPanelItem?.StatusLayoutState.opened) {
+            floatingPanel.openPanel(false) // No animation
+        }
     }
 }
