@@ -40,6 +40,8 @@ StatusQ.StatusTextArea {
     required property var usersModel
     readonly property alias suggestionsModel: suggestionsFilterAdaptor.model
 
+    readonly property alias emojiFilter: _d.emojiFilter
+
     // to be removed later
     readonly property alias lastAtPosition: suggestionsFilterAdaptor.lastAtPosition
 
@@ -231,8 +233,7 @@ StatusQ.StatusTextArea {
         property var copiedMentionsPos: []
 
         // Emojis
-        property bool emojiEvent: false
-        property bool isColonPressed: false
+        property string emojiFilter: ""
 
         function onKeyPress(event) {
             // get text without HTML formatting
@@ -383,12 +384,13 @@ StatusQ.StatusTextArea {
                     event.accepted = true
                 }
             }
-
-            isColonPressed = event.key === Qt.Key_Colon;
         }
 
         function onRelease(event) {
             if ((event.modifiers & Qt.ControlModifier) || (event.modifiers & Qt.MetaModifier)) // these are likely shortcuts with no meaningful text
+                return
+
+            if ((event.key === Qt.Key_Shift))
                 return
 
             // the text doesn't get registered to the textarea fast enough
@@ -413,12 +415,8 @@ StatusQ.StatusTextArea {
                 _d.leftOfMentionIndex = -1
             }
 
-            if (event.key !== Qt.Key_Escape) {
-                emojiEvent = _d.emojiHandler(event)
-                if (!emojiEvent) {
-                    emojiSuggestions.close()
-                }
-            }
+            if (event.key !== Qt.Key_Escape)
+                 _d.emojiHandler(event)
 
             if (messageInputField.readOnly) {
                 messageInputField.readOnly = false;
@@ -447,7 +445,6 @@ StatusQ.StatusTextArea {
                 }
             }
         }
-
 
         function updateMentionsPositions() {
             if (mentionsPos.length == 0) {
@@ -545,54 +542,43 @@ StatusQ.StatusTextArea {
         }
 
         // Emojis
-
         function emojiHandler(event) {
-            let message = extrapolateCursorPosition();
-            pollEmojiEvent(message);
+            const message = extrapolateCursorPosition()
+
+            // sets emoji even to true if threre is : before cursor and the string
+            // between : and cursor does not contain spaces or punctuation
+            const emojiEvent = pollEmojiEvent(message)
+            const isColonPressed = event.text === ":"
 
             // state machine to handle different forms of the emoji event state
-            if (!emojiEvent && isColonPressed) {
-                return (message.data.length <= 1 || Utils.isSpace(message.data.charAt(message.cursor - 1))) ? true : false;
-            } else if (emojiEvent && isColonPressed) {
-                const index = message.data.lastIndexOf(':', message.cursor - 2);
+            if (emojiEvent && isColonPressed) {
+                const index = message.data.lastIndexOf(':', message.cursor - 2)
                 if (index >= 0 && message.cursor > 0) {
-                    const shortname = message.data.substr(index, message.cursor);
-                    const codePoint = StatusQUtils.Emoji.getEmojiUnicode(shortname);
-                    if (codePoint !== undefined) {
+                    const shortname = message.data.substr(index, message.cursor)
+                    const codePoint = StatusQUtils.Emoji.getEmojiUnicode(shortname)
+                    if (codePoint !== undefined)
                         replaceWithEmoji(shortname, codePoint)
-                    }
-                    return false;
                 }
-                return true;
             } else if (emojiEvent && isKeyValid(event.key) && !isColonPressed) {
                 // popup
                 const index2 = message.data.lastIndexOf(':', message.cursor - 1);
                 if (index2 >= 0 && message.cursor > 0) {
-                    const emojiPart = message.data.substr(index2, message.cursor);
-                    if (emojiPart.length > 2) {
-                        const emojis = StatusQUtils.Emoji.emojiJSON.emoji_json.filter(function (emoji) {
-                            return emoji.name.includes(emojiPart) ||
-                                    emoji.shortname.includes(emojiPart) ||
-                                    emoji.aliases.some(a => a.includes(emojiPart)) ||
-                                    emoji.keywords.some(k => k.includes(emojiPart))
-                        })
-
-                        emojiSuggestions.openPopup(emojis, emojiPart)
-                    }
-                    return true;
+                    _d.emojiFilter = message.data.substr(index2, message.cursor)
+                    return
                 }
-            } else if (emojiEvent && !isKeyValid(event.key) && !isColonPressed) {
-                return false;
             }
-            return false;
+
+            _d.emojiFilter = ""
         }
 
         // check if user has placed cursor near valid emoji colon token
         function pollEmojiEvent(message) {
-            const index = message.data.lastIndexOf(':', message.cursor);
-            if (index >= 0) {
-                emojiEvent = validSubstr(message.data.substr(index, message.cursor - index));
-            }
+            const index = message.data.lastIndexOf(':', message.cursor)
+
+            if (index === -1)
+                return false
+
+            return validSubstr(message.data.substring(index, message.cursor))
         }
 
         function validSubstr(substr) {
@@ -619,8 +605,7 @@ StatusQ.StatusTextArea {
                                      messageInputField.cursorPosition);
             insertInTextInput(messageInputField.cursorPosition,
                               StatusQUtils.Emoji.parse(encodedCodePoint) + " ");
-            emojiSuggestions.close()
-            emojiEvent = false
+            _d.emojiFilter = ""
         }
 
         // since emoji length is not 1 we need to match that position that TextArea returns

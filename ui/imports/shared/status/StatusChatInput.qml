@@ -513,8 +513,9 @@ Rectangle {
 
     StatusEmojiSuggestionPopup {
         id: emojiSuggestions
+
         messageInput: messageInput
-        onClicked: function (index) {
+        onClicked: index => {
             if (index === undefined) {
                 index = emojiSuggestions.listView.currentIndex
             }
@@ -848,6 +849,15 @@ Rectangle {
                                     if (!enabled) {
                                         clear()
                                         root.hideExtendedArea()
+                                    }
+                                }
+
+                                onEmojiFilterChanged: {
+                                    if (emojiFilter.length > 2) {
+                                        const emojis = StatusQUtils.Emoji.getSuggestions(emojiFilter)
+                                        emojiSuggestions.openPopup(emojis, emojiFilter)
+                                    } else {
+                                        emojiSuggestions.close()
                                     }
                                 }
                             }

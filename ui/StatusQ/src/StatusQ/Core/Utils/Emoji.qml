@@ -16,7 +16,7 @@ QtObject {
         "verySmall": "16x16"
     }
     readonly property string base: Qt.resolvedUrl("../../../assets/twemoji/svg/")
-    property var emojiJSON: EmojiJSON
+    readonly property var emojiJSON: EmojiJSON
 
     readonly property StatusEmojiModel emojiModel: StatusEmojiModel {
         emojiJson: EmojiJSON.emoji_json
@@ -129,5 +129,14 @@ QtObject {
 
         // Adding a space because otherwise, some emojis would fuse since emoji is just a string
         return parse(encodedIcon, size || undefined) + ' '
+    }
+
+    function getSuggestions(input: string) : var {
+        return emojiJSON.emoji_json.filter(emoji => {
+            return emoji.name.includes(input) ||
+                    emoji.shortname.includes(input) ||
+                    emoji.aliases.some(a => a.includes(input)) ||
+                    emoji.keywords.some(k => k.includes(input))
+        })
     }
 }
