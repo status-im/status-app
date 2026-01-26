@@ -80,7 +80,6 @@ STATUS_Q_LIB := $(LIB_PATH)/libStatusQ$(LIB_SUFFIX)$(LIB_EXT)
 LIB_ZXING := $(LIB_PATH)/libZXing$(LIB_SUFFIX)$(LIB_EXT)
 OPENSSL_LIB := $(LIB_PATH)/libssl_3$(LIB_EXT)
 QRCODEGEN_LIB := $(LIB_PATH)/libqrcodegen.a
-QZXING_LIB := $(LIB_PATH)/libqzxing.a
 STATUS_KEYCARD_QT_LIB := $(LIB_PATH)/libstatus-keycard-qt$(LIB_EXT)
 NIM_STATUS_CLIENT_LIB := $(LIB_PATH)/libnim_status_client$(LIB_EXT)
 STATUS_DESKTOP_RCC := $(STATUS_DESKTOP)/ui/resources.qrc

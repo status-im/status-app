@@ -47,7 +47,6 @@ extern void registerNativeIndicatorItemType();
 #include "wallet/managetokensmodel.h"
 #include "onboarding/enums.h"
 
-#include <QZXing.h>
 #include <SBarcodeScanner.h>
 
 #include <QQmlEngine>
@@ -165,7 +164,6 @@ void registerStatusQTypes() {
 #endif
 
     qtmt::registerQmlTypes();
-    QZXing::registerQMLTypes();
     qqsfpm::registerTypes();
     MobileUI::registerQML();
 }

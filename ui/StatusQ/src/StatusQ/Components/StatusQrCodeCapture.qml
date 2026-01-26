@@ -1,7 +1,6 @@
 import QtQuick
 
 import QtMultimedia
-import QZXing
 import com.scythestudio.scodes 1.0
 
 Item {

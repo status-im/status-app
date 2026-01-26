@@ -108,9 +108,6 @@
 [submodule "vendor/nim-taskpools"]
 	path = vendor/nim-taskpools
 	url = https://github.com/status-im/nim-taskpools.git
-[submodule "vendor/qzxing"]
-	path = vendor/qzxing
-	url = https://github.com/status-im/qzxing.git
 [submodule "vendor/DOtherSide"]
 	path = vendor/DOtherSide
 	url = https://github.com/status-im/dotherside.git

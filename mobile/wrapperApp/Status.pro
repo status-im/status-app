@@ -84,7 +84,7 @@ ios {
             -framework UserNotifications
 
     # Base libraries (always included)
-    LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lDOtherSideStatic -lstatusq -lstatus -lsds -lssl_3 -lcrypto_3 -lqzxing -lSCodes -lZXing -lresolv -lqrcodegen
+    LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lDOtherSideStatic -lstatusq -lstatus -lsds -lssl_3 -lcrypto_3 -lSCodes -lZXing -lresolv -lqrcodegen
 
     contains(DEFINES, FLAG_KEYCARD_ENABLED) {
         # Use entitlements with NFC support (requires paid Apple Developer account)

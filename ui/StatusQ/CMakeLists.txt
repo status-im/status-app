@@ -18,13 +18,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Although SHARED libraries set this to ON by default,
 # all static libraries, that are built into this SHARED,
-# (which is qzxing in our case) should also be build with -fPIC.
+# should also be build with -fPIC.
 # This fixes it.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-set(QZXING_USE_QML ON)
-set(QZXING_MULTIMEDIA ON)
-set(QZXING_USE_DECODER_QR_CODE ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -81,9 +77,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 add_subdirectory(../../vendor/SortFilterProxyModel SortFilterProxyModel)
-add_subdirectory(../../vendor/qzxing/src qzxing)
 
-target_compile_options(qzxing PRIVATE -w)
 target_compile_options(SortFilterProxyModel PRIVATE -w)
 
 ### StatusQ library
@@ -368,7 +362,6 @@ target_link_libraries(StatusQ PRIVATE
         SortFilterProxyModel
         QtModelsToolkit
         MobileUI
-        qzxing
         SCodes
         )
 
