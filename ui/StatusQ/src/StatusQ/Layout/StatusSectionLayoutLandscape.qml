@@ -277,7 +277,7 @@ Control {
         visible: d.keepVirtualLeftPanel && !root.leftPanel
         width: d.leftPanelWidth
         height: root.height
-        color: root.backgroundColor
+        color: Theme.palette.baseColor4
     }
 
     // --------------------------------------------------------------------------------------------------

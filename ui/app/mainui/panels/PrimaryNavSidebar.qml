@@ -88,7 +88,6 @@ Control {
     function close() { if (root.alwaysVisible) return; d.dragActive = false; position = 0.0 } 
     function toggle() { root.position == 0.0 ? open() : close() }
 
-
     // Padding and spacing were previously Drawer properties; keep them as locals.
     topPadding: parent.SafeArea.margins.top + Theme.defaultHalfPadding
     bottomPadding: parent.SafeArea.margins.bottom + Theme.defaultHalfPadding
