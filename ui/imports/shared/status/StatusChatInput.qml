@@ -784,6 +784,7 @@ Rectangle {
                     Layout.minimumHeight: (messageInputField.contentHeight + messageInputField.topPadding + messageInputField.bottomPadding)
                     Layout.maximumHeight: 200
                     spacing: Theme.radius
+
                     StatusScrollView {
                         id: inputScrollView
                         Layout.fillWidth: true
@@ -837,6 +838,16 @@ Rectangle {
 
                                 urlsList: root.urlsList
                                 usersModel: root.usersModel
+
+                                suggestedMentionPubKey: {
+                                    suggestionsBox.listView.count
+
+                                    return suggestionsBox.visible ? StatusQUtils.ModelUtils.get(
+                                                                 suggestionsBox.model,
+                                                                 suggestionsBox.listView.currentIndex,
+                                                                 "pubKey") ?? ""
+                                                           : ""
+                                }
 
                                 placeholderText: root.chatInputPlaceholder
 

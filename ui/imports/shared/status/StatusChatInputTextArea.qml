@@ -40,6 +40,8 @@ StatusQ.StatusTextArea {
     required property var usersModel
     readonly property alias suggestionsModel: suggestionsFilterAdaptor.model
 
+    property string suggestedMentionPubKey
+
     readonly property alias emojiFilter: _d.emojiFilter
 
     // to be removed later
@@ -423,24 +425,22 @@ StatusQ.StatusTextArea {
                 messageInputField.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard);
             }
 
-            if (suggestionsBox.visible) {
+            if (suggestedMentionPubKey) {
                 const namePrefix = suggestionsFilterAdaptor.filter
                 const lastCursorPosition = messageInputField.cursorPosition
                 const lastAtPosition = suggestionsFilterAdaptor.lastAtPosition
-
-                const suggestionItem = StatusQUtils.ModelUtils.get(
-                        suggestionsFilterAdaptor.model,
-                        suggestionsBox.listView.currentIndex)
+                const fullName = StatusQUtils.ModelUtils.getByKey(
+                                   suggestionsFilterAdaptor.model, "pubKey",
+                                   suggestedMentionPubKey, "preferredDisplayName")
 
                 const namePrefixLowerCase = namePrefix.toLowerCase()
-                const fullName = suggestionItem.preferredDisplayName
                 const fullNameLowerCase = fullName.toLowerCase()
 
                 if (namePrefix !== "" && namePrefixLowerCase === fullNameLowerCase
                         && event.key !== Qt.Key_Backspace
                         && event.key !== Qt.Key_Delete
                         && event.key !== Qt.Key_Left) {
-                    _d.insertMention(fullName, suggestionItem.pubKey,
+                    _d.insertMention(fullName, suggestedMentionPubKey,
                                     lastAtPosition, lastCursorPosition)
                 }
             }
