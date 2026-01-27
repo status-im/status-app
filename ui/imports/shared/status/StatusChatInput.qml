@@ -824,6 +824,15 @@ Rectangle {
                                     event.accepted = true
                                     return emojiSuggestions.listView.decrementCurrentIndex()
                                 }
+
+                                if (event.matches(StandardKey.Paste)) {
+                                    if (!ClipboardUtils.hasImage)
+                                        return
+
+                                    const clipboardImage = ClipboardUtils.imageBase64
+                                    validateImagesAndShowImageArea([clipboardImage])
+                                    event.accepted = true
+                                }
                             }
 
                             contentItem: StatusChatInputTextArea {

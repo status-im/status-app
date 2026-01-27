@@ -322,69 +322,66 @@ StatusQ.StatusTextArea {
                     _d.copyMentions(messageInputField.selectionStart, messageInputField.selectionEnd)
                 }
             } else if (event.matches(StandardKey.Paste)) {
-                if (ClipboardUtils.hasImage) {
-                    const clipboardImage = ClipboardUtils.imageBase64
-                    validateImagesAndShowImageArea([clipboardImage])
-                    event.accepted = true
-                } else if (ClipboardUtils.hasText) {
-                    const clipboardText = StatusQUtils.StringUtils.plainText(ClipboardUtils.text)
-                    // prevent repetitive & huge clipboard paste, where huge is total char count > than messageLimitHard
-                    const selectionLength = messageInputField.selectionEnd - messageInputField.selectionStart;
-                    if ((messageLength + clipboardText.length - selectionLength) > root.messageLimitHard)
-                    {
-                        lengthLimitTooltip.open();
-                        event.accepted = true;
-                        return;
-                    }
+                if (!ClipboardUtils.hasText)
+                    return
 
-                    messageInputField.remove(messageInputField.selectionStart, messageInputField.selectionEnd)
+                const clipboardText = StatusQUtils.StringUtils.plainText(ClipboardUtils.text)
+                // prevent repetitive & huge clipboard paste, where huge is total char count > than messageLimitHard
+                const selectionLength = messageInputField.selectionEnd - messageInputField.selectionStart;
+                if ((messageLength + clipboardText.length - selectionLength) > root.messageLimitHard)
+                {
+                    lengthLimitTooltip.open();
+                    event.accepted = true;
+                    return;
+                }
 
-                    // cursor position must be stored in a helper property because setting readonly to true causes change
-                    // of the cursor position to the end of the input
-                    d.copyTextStart = messageInputField.cursorPosition
-                    messageInputField.readOnly = true
+                messageInputField.remove(messageInputField.selectionStart, messageInputField.selectionEnd)
 
-                    const copiedText = StatusQUtils.StringUtils.plainText(d.copiedTextPlain)
-                    if (copiedText === clipboardText) {
-                        if (d.copiedTextPlain.includes("@")) {
-                            d.copiedTextFormatted = d.copiedTextFormatted.replace(/span style="/g, "span style=\" text-decoration:none;")
+                // cursor position must be stored in a helper property because setting readonly to true causes change
+                // of the cursor position to the end of the input
+                d.copyTextStart = messageInputField.cursorPosition
+                messageInputField.readOnly = true
 
-                            let lastFoundIndex = -1
-                            for (let j = 0; j < _d.copiedMentionsPos.length; j++) {
-                                const name = _d.copiedMentionsPos[j].name
-                                const indexOfName = d.copiedTextPlain.indexOf(name, lastFoundIndex)
-                                lastFoundIndex += name.length
+                const copiedText = StatusQUtils.StringUtils.plainText(d.copiedTextPlain)
+                if (copiedText === clipboardText) {
+                    if (d.copiedTextPlain.includes("@")) {
+                        d.copiedTextFormatted = d.copiedTextFormatted.replace(/span style="/g, "span style=\" text-decoration:none;")
 
-                                if (indexOfName === _d.copiedMentionsPos[j].leftIndex + 1) {
-                                    const mention = {
-                                        name: name,
-                                        pubKey: _d.copiedMentionsPos[j].pubKey,
-                                        leftIndex: (_d.copiedMentionsPos[j].leftIndex + d.copyTextStart - 1),
-                                        rightIndex: (_d.copiedMentionsPos[j].leftIndex + d.copyTextStart + name.length)
-                                    }
-                                    mentionsPos.push(mention)
-                                    _d.sortMentions()
+                        let lastFoundIndex = -1
+                        for (let j = 0; j < _d.copiedMentionsPos.length; j++) {
+                            const name = _d.copiedMentionsPos[j].name
+                            const indexOfName = d.copiedTextPlain.indexOf(name, lastFoundIndex)
+                            lastFoundIndex += name.length
+
+                            if (indexOfName === _d.copiedMentionsPos[j].leftIndex + 1) {
+                                const mention = {
+                                    name: name,
+                                    pubKey: _d.copiedMentionsPos[j].pubKey,
+                                    leftIndex: (_d.copiedMentionsPos[j].leftIndex + d.copyTextStart - 1),
+                                    rightIndex: (_d.copiedMentionsPos[j].leftIndex + d.copyTextStart + name.length)
                                 }
+                                mentionsPos.push(mention)
+                                _d.sortMentions()
                             }
                         }
-                        insertInTextInput(d.copyTextStart, d.copiedTextFormatted)
-                    } else {
-                        d.copiedTextPlain = ""
-                        d.copiedTextFormatted = ""
-                        _d.copiedMentionsPos = []
-                        messageInputField.insert(d.copyTextStart, ((d.nbEmojisInClipboard === 0) ?
-                        ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
-                        : StatusQUtils.Emoji.deparse(ClipboardUtils.html)));
                     }
-
-                    // Reset readOnly immediately after paste completes
-                    // Don't wait for onRelease which might not fire on mobile
-                    if (StatusQUtils.Utils.isMobile) {
-                        messageInputField.readOnly = false
-                        messageInputField.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard)
-                    }
-                    event.accepted = true
+                    insertInTextInput(d.copyTextStart, d.copiedTextFormatted)
+                } else {
+                    d.copiedTextPlain = ""
+                    d.copiedTextFormatted = ""
+                    _d.copiedMentionsPos = []
+                    messageInputField.insert(d.copyTextStart, ((d.nbEmojisInClipboard === 0) ?
+                    ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
+                    : StatusQUtils.Emoji.deparse(ClipboardUtils.html)));
                 }
+
+                // Reset readOnly immediately after paste completes
+                // Don't wait for onRelease which might not fire on mobile
+                if (StatusQUtils.Utils.isMobile) {
+                    messageInputField.readOnly = false
+                    messageInputField.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard)
+                }
+                event.accepted = true
             }
         }
 
