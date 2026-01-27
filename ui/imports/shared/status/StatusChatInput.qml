@@ -27,6 +27,11 @@ Rectangle {
     id: root
     objectName: "statusChatInput"
 
+    enum ImageErrorMessageLocation {
+        Top,
+        Bottom
+    }
+
     signal stickerSelected(string hashId, string packId, string url)
     signal sendMessageRequested()
     signal keyUpPress()
@@ -76,9 +81,12 @@ Rectangle {
 
     property int imageErrorMessageLocation: StatusChatInput.ImageErrorMessageLocation.Top // TODO: Remove this property?
 
-    enum ImageErrorMessageLocation {
-        Top,
-        Bottom
+    onEnabledChanged: {
+        if (enabled)
+            return
+
+        clear()
+        hideExtendedArea()
     }
 
     function parseMessage(message: string) {
@@ -256,6 +264,45 @@ Rectangle {
         }
         function onClosed() {
             d.stickersPopupOpened = false
+        }
+    }
+
+    // Preliminary handling key events of text area. When not accepted events
+    // events are forwarded to the text area itself
+    Item {
+        id: keyEventsFilter
+
+        Keys.onEscapePressed: {
+            if (root.isReply)
+                root.isReply = false
+            else
+                event.accepted = false
+        }
+
+        Keys.onPressed: (event) => {
+            // ⌘⇧U
+            if (d.isUploadFilePressed(event)) {
+                event.accepted = true
+                openImageDialog()
+            }
+
+            if (event.key === Qt.Key_Down && emojiSuggestions.visible) {
+                event.accepted = true
+                return emojiSuggestions.listView.incrementCurrentIndex()
+            }
+            if (event.key === Qt.Key_Up && emojiSuggestions.visible) {
+                event.accepted = true
+                return emojiSuggestions.listView.decrementCurrentIndex()
+            }
+
+            if (event.matches(StandardKey.Paste)) {
+                if (!ClipboardUtils.hasImage)
+                    return
+
+                const clipboardImage = ClipboardUtils.imageBase64
+                validateImagesAndShowImageArea([clipboardImage])
+                event.accepted = true
+            }
         }
     }
 
@@ -777,6 +824,7 @@ Rectangle {
 
                     StatusScrollView {
                         id: inputScrollView
+
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         Layout.leftMargin: 12
@@ -787,93 +835,42 @@ Rectangle {
                         rightPadding: Theme.padding // for the scrollbar
                         contentWidth: availableWidth
 
-                        Control {
-                            id: messageInputFieldControl
+                        StatusChatInputTextArea {
+                            id: messageInputField
+                            objectName: "messageInputField"
 
-                            width: inputScrollView.availableWidth
+                            Keys.forwardTo: [keyEventsFilter]
 
-                            Keys.onEscapePressed: {
-                                if (root.isReply) {
-                                    root.isReply = false
-                                    event.accepted = true
+                            messageLimit: root.messageLimit
+                            messageLimitHard: root.messageLimitHard
+
+                            urlsList: root.urlsList
+                            usersModel: root.usersModel
+
+                            suggestedMentionPubKey: {
+                                suggestionsBox.listView.count
+
+                                return suggestionsBox.visible
+                                        ? StatusQUtils.ModelUtils.get(
+                                              suggestionsBox.model,
+                                              suggestionsBox.listView.currentIndex,
+                                              "pubKey") ?? ""
+                                        : ""
+                            }
+
+                            placeholderText: root.chatInputPlaceholder
+
+                            onEmojiFilterChanged: {
+                                if (emojiFilter.length > 2) {
+                                    const emojis = StatusQUtils.Emoji.getSuggestions(emojiFilter)
+                                    emojiSuggestions.openPopup(emojis, emojiFilter)
+                                } else {
+                                    emojiSuggestions.close()
                                 }
                             }
 
-                            Keys.onPressed: (event) => {
-                                // ⌘⇧U
-                                if (d.isUploadFilePressed(event)) {
-                                    event.accepted = true
-                                    openImageDialog()
-                                }
-
-                                if (event.key === Qt.Key_Down && emojiSuggestions.visible) {
-                                    event.accepted = true
-                                    return emojiSuggestions.listView.incrementCurrentIndex()
-                                }
-                                if (event.key === Qt.Key_Up && emojiSuggestions.visible) {
-                                    event.accepted = true
-                                    return emojiSuggestions.listView.decrementCurrentIndex()
-                                }
-
-                                if (event.matches(StandardKey.Paste)) {
-                                    if (!ClipboardUtils.hasImage)
-                                        return
-
-                                    const clipboardImage = ClipboardUtils.imageBase64
-                                    validateImagesAndShowImageArea([clipboardImage])
-                                    event.accepted = true
-                                }
-                            }
-
-                            contentItem: StatusChatInputTextArea {
-                                id: messageInputField
-
-                                Keys.forwardTo: [messageInputFieldControl]
-
-                                objectName: "messageInputField"
-
-                                messageLimit: root.messageLimit
-                                messageLimitHard: root.messageLimitHard
-
-                                urlsList: root.urlsList
-                                usersModel: root.usersModel
-
-                                suggestedMentionPubKey: {
-                                    suggestionsBox.listView.count
-
-                                    return suggestionsBox.visible ? StatusQUtils.ModelUtils.get(
-                                                                 suggestionsBox.model,
-                                                                 suggestionsBox.listView.currentIndex,
-                                                                 "pubKey") ?? ""
-                                                           : ""
-                                }
-
-                                placeholderText: root.chatInputPlaceholder
-
-                                // This is needed to make sure the text area is disabled when the input is disabled
-                                Binding on enabled {
-                                    value: root.enabled
-                                }
-
-                                onEnabledChanged: {
-                                    if (!enabled) {
-                                        clear()
-                                        root.hideExtendedArea()
-                                    }
-                                }
-
-                                onEmojiFilterChanged: {
-                                    if (emojiFilter.length > 2) {
-                                        const emojis = StatusQUtils.Emoji.getSuggestions(emojiFilter)
-                                        emojiSuggestions.openPopup(emojis, emojiFilter)
-                                    } else {
-                                        emojiSuggestions.close()
-                                    }
-                                }
-
-                                onAttemptToExceedHardLimit: {
-                                    lengthLimitTooltip.open()
-                                }
+                            onAttemptToExceedHardLimit: {
+                                lengthLimitTooltip.open()
                             }
                         }
 
