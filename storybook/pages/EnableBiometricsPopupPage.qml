@@ -34,9 +34,6 @@ SplitView {
             modal: false
             closePolicy: Popup.CloseOnEscape
 
-            SplitView.fillWidth: true
-            SplitView.fillHeight: true
-
             loading: loadingctrl.checked
             errorText: ""
 

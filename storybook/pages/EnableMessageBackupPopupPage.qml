@@ -14,11 +14,8 @@ SplitView {
 
     orientation: Qt.Vertical
 
-    property var dialog
-
     function createAndOpenDialog() {
-        dialog = dlgComponent.createObject(popupBg)
-        dialog.open()
+        dlgComponent.createObject(popupBg).open()
     }
 
     Component.onCompleted: createAndOpenDialog()
@@ -41,13 +38,14 @@ SplitView {
 
         Component {
             id: dlgComponent
-                EnableMessageBackupPopup {
+            EnableMessageBackupPopup {
                 anchors.centerIn: parent
                 visible: true
+                modal: false
                 onAccepted: logs.logEvent("EnableMessageBackupPopup::onAccepted")
                 onClosed: logs.logEvent("EnableMessageBackupPopup::onClosed")
 
-                destroyOnClose: false
+                destroyOnClose: true
             }
         }
     }

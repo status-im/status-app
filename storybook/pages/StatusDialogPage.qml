@@ -22,10 +22,8 @@ SplitView {
         SplitView.fillWidth: true
         SplitView.fillHeight: true
 
-        Rectangle {
-            color: "lightgray"
+        PopupBackground {
             anchors.fill: parent
-
             Button {
                 anchors.centerIn: parent
                 text: "Reopen"

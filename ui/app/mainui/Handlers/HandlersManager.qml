@@ -192,7 +192,7 @@ QtObject {
 
     function maybeDisplayEnableMessageBackupPopup() {
         if (!appMainLocalSettings.enableMessageBackupPopupSeen && !appMain.devicesStore.messagesBackupEnabled) {
-            enableMessageBackupPopupComponent.createObject(appMain).open()
+            enableMessageBackupPopupComponent.createObject(popupParent).open()
             return true
         }
         return false

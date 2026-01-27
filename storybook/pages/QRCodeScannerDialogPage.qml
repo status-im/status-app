@@ -9,11 +9,9 @@ Item {
 
     QRCodeScannerDialog {
         id: qrCodeScannerDialog
-        // workaround for QTBUG-142248
-        Theme.style: root.Theme.style
-        Theme.padding: root.Theme.padding
-        Theme.fontSizeOffset: root.Theme.fontSizeOffset
         visible: true
+        modal: false
+        closePolicy: Dialog.CloseOnEscape
     }
 
     Button {

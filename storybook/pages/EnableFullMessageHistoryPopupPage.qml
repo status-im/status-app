@@ -33,6 +33,7 @@ SplitView {
                 id: dialog
 
                 anchors.centerIn: parent
+                modal: false
 
                 onAccepted: logs.logEvent("EnableFullMessageHistoryPopup::onAccepted")
                 onClosed: logs.logEvent("EnableFullMessageHistoryPopup::onClosed")
@@ -57,3 +58,4 @@ SplitView {
 }
 
 // category: Popups
+// status: good

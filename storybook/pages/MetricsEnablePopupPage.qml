@@ -68,7 +68,8 @@ SplitView {
                         Constants.metricsEnablePlacement.unknown,
                         Constants.metricsEnablePlacement.welcome,
                         Constants.metricsEnablePlacement.privacyAndSecurity,
-                        Constants.metricsEnablePlacement.startApp
+                        Constants.metricsEnablePlacement.startApp,
+                        Constants.metricsEnablePlacement.onboarding
                     ]
                 }
             }

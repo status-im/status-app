@@ -885,7 +885,7 @@ Item {
 
     Settings {
         id: appMainLocalSettings
-        category: "AppMainLocalSettings_%1".arg(allContacsAdaptor.selfPubKey)
+        category: "AppMainLocalSettings_%1".arg(allContacsAdaptor.selfContactDetails.publicKey)
         property var whitelistedUnfurledDomains: []
         property bool introduceYourselfPopupSeen
         property bool enableMessageBackupPopupSeen

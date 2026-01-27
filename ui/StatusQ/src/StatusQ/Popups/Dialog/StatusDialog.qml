@@ -24,7 +24,7 @@ Dialog {
        \qmlproperty color backgroundColor
         This property decides the modal background color
     */
-    property color backgroundColor: contentItem.Theme.palette.statusModal.backgroundColor
+    property color backgroundColor: Theme.palette.statusModal.backgroundColor
 
     /*!
        \qmlproperty var closeHandler
@@ -54,7 +54,7 @@ Dialog {
     property bool fillHeightOnBottomSheet: false
 
     /*!
-       \qmlproperty bool fullScreen
+       \qmlproperty bool fullScreenSheet
         This property decides whether the dialog should take the full screen size.
     */
     property bool fullScreenSheet: false
@@ -166,9 +166,7 @@ Dialog {
         color: Theme.palette.backdropColor
     }
 
-    background: StatusDialogBackground {
-        color: root.backgroundColor
-    }
+    background: StatusDialogBackground {}
 
     header: StatusDialogHeader {
         visible: root.title || root.subtitle
