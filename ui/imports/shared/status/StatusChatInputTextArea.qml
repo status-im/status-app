@@ -21,7 +21,6 @@ import StatusQ.Core.Utils as StatusQUtils
 import StatusQ.Components
 import StatusQ.Controls as StatusQ
 
-
 import AppLayouts.Chat.adaptors
 
 import QtModelsToolkit
@@ -76,9 +75,211 @@ StatusQ.StatusTextArea {
     }
     Keys.onPressed: event => {
         lastKeyPressedEvent = event
-        _d.onKeyPress(event)
+
+        if (event.modifiers === _d.kbdModifierToSendMessage &&
+                (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)) {
+            tryFinalizeMessage()
+            event.accepted = true
+            return
+        }
+
+        const symbolPressed = event.text.length > 0 &&
+                            event.key !== Qt.Key_Backspace &&
+                            event.key !== Qt.Key_Delete &&
+                            event.key !== Qt.Key_Escape
+
+        if (_d.mentionsPos.length > 0 && symbolPressed && messageInputField.selectedText.length === 0) {
+            for (let i = 0; i < _d.mentionsPos.length; i++) {
+                if (messageInputField.cursorPosition === _d.mentionsPos[i].leftIndex) {
+                    _d.leftOfMentionIndex = i
+                    event.accepted = true
+                    return
+                } else if (messageInputField.cursorPosition === _d.mentionsPos[i].rightIndex) {
+                    _d.rightOfMentionIndex = i
+                    event.accepted = true
+                    return
+                }
+            }
+        }
+
+        if (event.key === Qt.Key_Tab) {
+            if (checkTextInsert()) {
+                event.accepted = true
+                return
+            }
+        }
+
+        // handle new line in blockquote
+        if ((event.key === Qt.Key_Enter || event.key === Qt.Key_Return)
+            && (event.modifiers & Qt.ShiftModifier)) {
+            const message = _d.extrapolateCursorPosition()
+
+            if (message.data.startsWith(">") && !message.data.endsWith("\n\n")) {
+                let newMessage1 = ""
+                if (message.data.endsWith("\n> ")) {
+                    newMessage1 = message.data.substr(0, message.data.lastIndexOf("> ")) + "\n\n"
+                } else {
+                    newMessage1 = message.data + "\n> "
+                }
+                messageInputField.remove(0, messageInputField.cursorPosition)
+                insertInTextInput(0, StatusQUtils.Emoji.parse(newMessage1))
+                event.accepted = true
+            }
+        }
+
+        if (event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) {
+            const message = _d.extrapolateCursorPosition()
+            if (_d.mentionsPos.length > 0) {
+                let anticipatedCursorPosition = messageInputField.cursorPosition
+                anticipatedCursorPosition += event.key === Qt.Key_Backspace ?
+                                               -1 : 1
+
+                const mention = _d.getMentionAtPosition(anticipatedCursorPosition)
+                if (mention) {
+                    _d.removeMention(mention)
+                    event.accepted = true
+                }
+            }
+
+            // handle backspace when entering an existing blockquote
+            if(message.data.startsWith(">") && message.data.endsWith("\n\n")) {
+                const newMessage = message.data.substr(0, message.data.lastIndexOf("\n")) + "> ";
+                messageInputField.remove(0, messageInputField.cursorPosition);
+                insertInTextInput(0, StatusQUtils.Emoji.parse(newMessage));
+                event.accepted = true
+            }
+        }
+
+        if (event.matches(StandardKey.Copy) || event.matches(StandardKey.Cut)) {
+            if (messageInputField.selectedText !== "") {
+                _d.copiedTextPlain = messageInputField.getText(
+                            messageInputField.selectionStart, messageInputField.selectionEnd)
+                _d.copiedTextFormatted = messageInputField.getFormattedText(
+                            messageInputField.selectionStart, messageInputField.selectionEnd)
+                _d.copyMentions(messageInputField.selectionStart, messageInputField.selectionEnd)
+            }
+        } else if (event.matches(StandardKey.Paste)) {
+            if (!ClipboardUtils.hasText)
+                return
+
+            const clipboardText = StatusQUtils.StringUtils.plainText(ClipboardUtils.text)
+            // prevent repetitive & huge clipboard paste, where huge is total char count > than messageLimitHard
+            const selectionLength = messageInputField.selectionEnd - messageInputField.selectionStart
+            if ((length + clipboardText.length - selectionLength) > messageInputField.messageLimitHard)
+            {
+                attemptToExceedHardLimit()
+                event.accepted = true
+                return
+            }
+
+            messageInputField.remove(messageInputField.selectionStart, messageInputField.selectionEnd)
+
+            // cursor position must be stored in a helper property because setting readonly to true causes change
+            // of the cursor position to the end of the input
+            _d.copyTextStart = messageInputField.cursorPosition
+            messageInputField.readOnly = true
+
+            const copiedText = StatusQUtils.StringUtils.plainText(_d.copiedTextPlain)
+
+            if (copiedText === clipboardText) {
+                if (_d.copiedTextPlain.includes("@")) {
+                    _d.copiedTextFormatted = _d.copiedTextFormatted.replace(
+                                        /span style="/g, "span style=\" text-decoration:none;")
+
+                    let lastFoundIndex = -1
+                    for (let j = 0; j < _d.copiedMentionsPos.length; j++) {
+                        const name = _d.copiedMentionsPos[j].name
+                        const indexOfName = _d.copiedTextPlain.indexOf(name, lastFoundIndex)
+                        lastFoundIndex += name.length
+
+                        if (indexOfName === _d.copiedMentionsPos[j].leftIndex + 1) {
+                            const mention = {
+                                name: name,
+                                pubKey: _d.copiedMentionsPos[j].pubKey,
+                                leftIndex: (_d.copiedMentionsPos[j].leftIndex + _d.copyTextStart - 1),
+                                rightIndex: (_d.copiedMentionsPos[j].leftIndex + _d.copyTextStart + name.length)
+                            }
+                            _d.mentionsPos.push(mention)
+                            _d.sortMentions()
+                        }
+                    }
+                }
+                insertInTextInput(_d.copyTextStart, _d.copiedTextFormatted)
+            } else {
+                _d.copiedTextPlain = ""
+                _d.copiedTextFormatted = ""
+                _d.copiedMentionsPos = []
+                messageInputField.insert(_d.copyTextStart, ((_d.nbEmojisInClipboard === 0) ?
+                ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
+                : StatusQUtils.Emoji.deparse(ClipboardUtils.html)))
+            }
+
+            // Reset readOnly immediately after paste completes
+            // Don't wait for onReleased which might not fire on mobile
+            if (StatusQUtils.Utils.isMobile) {
+                messageInputField.readOnly = false
+                messageInputField.cursorPosition = (_d.copyTextStart + ClipboardUtils.text.length + _d.nbEmojisInClipboard)
+            }
+            event.accepted = true
+        }
     }
-    Keys.onReleased: event => _d.onRelease(event) // gives much more up to date cursorPosition
+
+    // gives up-to-date cursorPosition
+    Keys.onReleased: event => {
+        // these are likely shortcuts with no meaningful text
+        if ((event.modifiers & Qt.ControlModifier) || (event.modifiers & Qt.MetaModifier))
+            return
+
+        if ((event.key === Qt.Key_Shift))
+            return
+
+        // the text doesn't get registered to the textarea fast enough
+        // we can only get it in the `released` event
+
+        const eventText = event.key === Qt.Key_Space ? "&nbsp;" : event.text
+
+        if(_d.rightOfMentionIndex !== -1) {
+            //make sure to add an extra space between mention and text
+            let mentionSeparator = event.key === Qt.Key_Space ? "" : "&nbsp;"
+            messageInputField.insert(_d.mentionsPos[_d.rightOfMentionIndex].rightIndex, mentionSeparator + eventText)
+
+            _d.rightOfMentionIndex = -1
+        }
+
+        if(_d.leftOfMentionIndex !== -1) {
+            messageInputField.insert(_d.mentionsPos[_d.leftOfMentionIndex].leftIndex, eventText)
+
+            _d.leftOfMentionIndex = -1
+        }
+
+        if (event.key !== Qt.Key_Escape)
+             _d.emojiHandler(event)
+
+        if (messageInputField.readOnly) {
+            messageInputField.readOnly = false
+            messageInputField.cursorPosition = _d.copyTextStart + ClipboardUtils.text.length + _d.nbEmojisInClipboard
+        }
+
+        if (suggestedMentionPubKey) {
+            const namePrefix = suggestionsFilterAdaptor.filter
+            const lastCursorPosition = messageInputField.cursorPosition
+            const lastAtPosition = suggestionsFilterAdaptor.lastAtPosition
+            const fullName = StatusQUtils.ModelUtils.getByKey(
+                               suggestionsFilterAdaptor.model, "pubKey",
+                               messageInputField.suggestedMentionPubKey, "preferredDisplayName")
+
+            const namePrefixLowerCase = namePrefix.toLowerCase()
+            const fullNameLowerCase = fullName.toLowerCase()
+
+            if (namePrefix !== "" && namePrefixLowerCase === fullNameLowerCase
+                    && event.key !== Qt.Key_Backspace
+                    && event.key !== Qt.Key_Delete
+                    && event.key !== Qt.Key_Left) {
+                _d.insertMention(fullName, suggestedMentionPubKey,
+                                lastAtPosition, lastCursorPosition)
+            }
+        }
+    }
 
     onCursorPositionChanged: {
         if(_d.mentionsPos.length > 0 && ((lastKeyPressedEvent.key === Qt.Key_Left) || (lastKeyPressedEvent.key === Qt.Key_Right)
@@ -251,212 +452,6 @@ StatusQ.StatusTextArea {
         // OSK (virtual keyboard presence)
         readonly property int kbdModifierToSendMessage:
             Qt.inputMethod.visible ? Qt.ControlModifier : Qt.NoModifier
-
-        function onKeyPress(event) {
-            // get text without HTML formatting
-            const messageLength = messageInputField.length
-
-            if (event.modifiers === kbdModifierToSendMessage &&
-                    (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)) {
-                tryFinalizeMessage()
-                event.accepted = true
-                return
-            }
-
-            const symbolPressed = event.text.length > 0 &&
-                                event.key !== Qt.Key_Backspace &&
-                                event.key !== Qt.Key_Delete &&
-                                event.key !== Qt.Key_Escape
-            if ((mentionsPos.length > 0) && symbolPressed && (messageInputField.selectedText.length === 0)) {
-                for (var i = 0; i < mentionsPos.length; i++) {
-                    if (messageInputField.cursorPosition === mentionsPos[i].leftIndex) {
-                        _d.leftOfMentionIndex = i
-                        event.accepted = true
-                        return
-                    } else if (messageInputField.cursorPosition === mentionsPos[i].rightIndex) {
-                        _d.rightOfMentionIndex = i
-                        event.accepted = true
-                        return
-                    }
-                }
-            }
-
-            if (event.key === Qt.Key_Tab) {
-                if (checkTextInsert()) {
-                    event.accepted = true;
-                    return
-                }
-            }
-
-            // handle new line in blockquote
-            if ((event.key === Qt.Key_Enter || event.key === Qt.Key_Return) && (event.modifiers & Qt.ShiftModifier)) {
-                const message = _d.extrapolateCursorPosition()
-
-                if(message.data.startsWith(">") && !message.data.endsWith("\n\n")) {
-                    let newMessage1 = ""
-                    if (message.data.endsWith("\n> ")) {
-                        newMessage1 = message.data.substr(0, message.data.lastIndexOf("> ")) + "\n\n"
-                    } else {
-                        newMessage1 = message.data + "\n> ";
-                    }
-                    messageInputField.remove(0, messageInputField.cursorPosition)
-                    insertInTextInput(0, StatusQUtils.Emoji.parse(newMessage1))
-                    event.accepted = true
-                }
-            }
-
-            if (event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) {
-                const message = _d.extrapolateCursorPosition()
-                if(mentionsPos.length > 0) {
-                    let anticipatedCursorPosition = messageInputField.cursorPosition
-                    anticipatedCursorPosition += event.key === Qt.Key_Backspace ?
-                                                   -1 : 1
-
-                    const mention = _d.getMentionAtPosition(anticipatedCursorPosition)
-                    if(mention) {
-                        _d.removeMention(mention)
-                        event.accepted = true
-                    }
-                }
-
-                // handle backspace when entering an existing blockquote
-                if(message.data.startsWith(">") && message.data.endsWith("\n\n")) {
-                    const newMessage = message.data.substr(0, message.data.lastIndexOf("\n")) + "> ";
-                    messageInputField.remove(0, messageInputField.cursorPosition);
-                    insertInTextInput(0, StatusQUtils.Emoji.parse(newMessage));
-                    event.accepted = true
-                }
-            }
-
-            if (event.matches(StandardKey.Copy) || event.matches(StandardKey.Cut)) {
-                if (messageInputField.selectedText !== "") {
-                    _d.copiedTextPlain = messageInputField.getText(
-                                messageInputField.selectionStart, messageInputField.selectionEnd)
-                    _d.copiedTextFormatted = messageInputField.getFormattedText(
-                                messageInputField.selectionStart, messageInputField.selectionEnd)
-                    _d.copyMentions(messageInputField.selectionStart, messageInputField.selectionEnd)
-                }
-            } else if (event.matches(StandardKey.Paste)) {
-                if (!ClipboardUtils.hasText)
-                    return
-
-                const clipboardText = StatusQUtils.StringUtils.plainText(ClipboardUtils.text)
-                // prevent repetitive & huge clipboard paste, where huge is total char count > than messageLimitHard
-                const selectionLength = messageInputField.selectionEnd - messageInputField.selectionStart
-                if ((messageLength + clipboardText.length - selectionLength) > messageInputField.messageLimitHard)
-                {
-                    attemptToExceedHardLimit()
-                    event.accepted = true
-                    return
-                }
-
-                messageInputField.remove(messageInputField.selectionStart, messageInputField.selectionEnd)
-
-                // cursor position must be stored in a helper property because setting readonly to true causes change
-                // of the cursor position to the end of the input
-                _d.copyTextStart = messageInputField.cursorPosition
-                messageInputField.readOnly = true
-
-                const copiedText = StatusQUtils.StringUtils.plainText(_d.copiedTextPlain)
-                if (copiedText === clipboardText) {
-                    if (_d.copiedTextPlain.includes("@")) {
-                        _d.copiedTextFormatted = _d.copiedTextFormatted.replace(/span style="/g, "span style=\" text-decoration:none;")
-
-                        let lastFoundIndex = -1
-                        for (let j = 0; j < _d.copiedMentionsPos.length; j++) {
-                            const name = _d.copiedMentionsPos[j].name
-                            const indexOfName = _d.copiedTextPlain.indexOf(name, lastFoundIndex)
-                            lastFoundIndex += name.length
-
-                            if (indexOfName === _d.copiedMentionsPos[j].leftIndex + 1) {
-                                const mention = {
-                                    name: name,
-                                    pubKey: _d.copiedMentionsPos[j].pubKey,
-                                    leftIndex: (_d.copiedMentionsPos[j].leftIndex + _d.copyTextStart - 1),
-                                    rightIndex: (_d.copiedMentionsPos[j].leftIndex + _d.copyTextStart + name.length)
-                                }
-                                mentionsPos.push(mention)
-                                _d.sortMentions()
-                            }
-                        }
-                    }
-                    insertInTextInput(_d.copyTextStart, _d.copiedTextFormatted)
-                } else {
-                    _d.copiedTextPlain = ""
-                    _d.copiedTextFormatted = ""
-                    _d.copiedMentionsPos = []
-                    messageInputField.insert(_d.copyTextStart, ((_d.nbEmojisInClipboard === 0) ?
-                    ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
-                    : StatusQUtils.Emoji.deparse(ClipboardUtils.html)))
-                }
-
-                // Reset readOnly immediately after paste completes
-                // Don't wait for onRelease which might not fire on mobile
-                if (StatusQUtils.Utils.isMobile) {
-                    messageInputField.readOnly = false
-                    messageInputField.cursorPosition = (_d.copyTextStart + ClipboardUtils.text.length + _d.nbEmojisInClipboard)
-                }
-                event.accepted = true
-            }
-        }
-
-        function onRelease(event) {
-            if ((event.modifiers & Qt.ControlModifier) || (event.modifiers & Qt.MetaModifier)) // these are likely shortcuts with no meaningful text
-                return
-
-            if ((event.key === Qt.Key_Shift))
-                return
-
-            // the text doesn't get registered to the textarea fast enough
-            // we can only get it in the `released` event
-
-            let eventText = event.text
-            if(event.key === Qt.Key_Space) {
-                eventText = "&nbsp;"
-            }
-
-            if(_d.rightOfMentionIndex !== -1) {
-                //make sure to add an extra space between mention and text
-                let mentionSeparator = event.key === Qt.Key_Space ? "" : "&nbsp;"
-                messageInputField.insert(mentionsPos[_d.rightOfMentionIndex].rightIndex, mentionSeparator + eventText)
-
-                _d.rightOfMentionIndex = -1
-            }
-
-            if(_d.leftOfMentionIndex !== -1) {
-                messageInputField.insert(mentionsPos[_d.leftOfMentionIndex].leftIndex, eventText)
-
-                _d.leftOfMentionIndex = -1
-            }
-
-            if (event.key !== Qt.Key_Escape)
-                 _d.emojiHandler(event)
-
-            if (messageInputField.readOnly) {
-                messageInputField.readOnly = false
-                messageInputField.cursorPosition = (_d.copyTextStart + ClipboardUtils.text.length + _d.nbEmojisInClipboard)
-            }
-
-            if (suggestedMentionPubKey) {
-                const namePrefix = suggestionsFilterAdaptor.filter
-                const lastCursorPosition = messageInputField.cursorPosition
-                const lastAtPosition = suggestionsFilterAdaptor.lastAtPosition
-                const fullName = StatusQUtils.ModelUtils.getByKey(
-                                   suggestionsFilterAdaptor.model, "pubKey",
-                                   suggestedMentionPubKey, "preferredDisplayName")
-
-                const namePrefixLowerCase = namePrefix.toLowerCase()
-                const fullNameLowerCase = fullName.toLowerCase()
-
-                if (namePrefix !== "" && namePrefixLowerCase === fullNameLowerCase
-                        && event.key !== Qt.Key_Backspace
-                        && event.key !== Qt.Key_Delete
-                        && event.key !== Qt.Key_Left) {
-                    _d.insertMention(fullName, suggestedMentionPubKey,
-                                    lastAtPosition, lastCursorPosition)
-                }
-            }
-        }
 
         function updateMentionsPositions() {
             if (mentionsPos.length == 0) {
