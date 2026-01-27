@@ -478,7 +478,7 @@ Item {
                         }
                     }
 
-                    onKeyUpPress: {
+                    onEditRequested: {
                         d.activeMessagesStore.setEditModeOnLastMessage(root.myPublicKey)
                     }
 

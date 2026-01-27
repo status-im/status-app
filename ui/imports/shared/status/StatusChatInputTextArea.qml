@@ -51,10 +51,6 @@ StatusQ.StatusTextArea {
     textFormat: Text.RichText
 
     color: Theme.palette.textColor
-    topPadding: 9
-    bottomPadding: 9
-    leftPadding: 0
-    rightPadding: 0
     background: null
 
     inputMethodHints: Qt.ImhMultiLine | Qt.ImhNoEditMenu
@@ -63,16 +59,7 @@ StatusQ.StatusTextArea {
     Keys.onShortcutOverride: function (event) {
         event.accepted = event.matches(StandardKey.Paste)
     }
-    Keys.onUpPressed: function(event) {
-        if (isEdit && !activeFocus) {
-            forceActiveFocus();
-        } else {
-            if (messageInputField.length === 0) {
-                root.keyUpPress();
-            }
-        }
-        event.accepted = false
-    }
+
     Keys.onPressed: event => {
         lastKeyPressedEvent = event
 

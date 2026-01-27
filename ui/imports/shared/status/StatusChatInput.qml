@@ -29,7 +29,7 @@ Rectangle {
 
     signal stickerSelected(string hashId, string packId, string url)
     signal sendMessageRequested()
-    signal keyUpPress()
+    signal editRequested()
     signal linkPreviewReloaded(string link)
     signal enableLinkPreview()
     signal enableLinkPreviewForThisMessage()
@@ -263,14 +263,21 @@ Rectangle {
     Item {
         id: keyEventsFilter
 
-        Keys.onEscapePressed: {
+        Keys.onEscapePressed: event => {
             if (root.isReply)
                 root.isReply = false
             else
                 event.accepted = false
         }
 
-        Keys.onPressed: (event) => {
+        Keys.onUpPressed: event => {
+            if (messageInputField.length === 0)
+                root.editRequested()
+
+            event.accepted = false
+        }
+
+        Keys.onPressed: event => {
             // ⌘⇧U
             if (d.isUploadFilePressed(event)) {
                 event.accepted = true
@@ -820,6 +827,11 @@ Rectangle {
                             objectName: "messageInputField"
 
                             Keys.forwardTo: [keyEventsFilter]
+
+                            topPadding: 9
+                            bottomPadding: 9
+                            leftPadding: 0
+                            rightPadding: 0
 
                             messageLimit: root.messageLimit
                             messageLimitHard: root.messageLimitHard
