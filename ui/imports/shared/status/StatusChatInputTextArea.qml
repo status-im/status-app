@@ -47,6 +47,8 @@ StatusQ.StatusTextArea {
     // to be removed later
     readonly property alias lastAtPosition: suggestionsFilterAdaptor.lastAtPosition
 
+    signal attemptToExceedHardLimit
+
     textFormat: Text.RichText
 
     color: Theme.palette.textColor
@@ -99,20 +101,21 @@ StatusQ.StatusTextArea {
     onTextChanged: {
         if (length <= messageInputField.messageLimit) {
             if (length === 0) {
-                _d.mentionsPos = [];
+                _d.mentionsPos = []
             } else {
                 checkForInlineEmojis()
             }
         } else if (length > messageInputField.messageLimitHard) {
-            const removeFrom = (cursorPosition < messageInputField.messageLimitHard) ? cursorWhenPressed : messageInputField.messageLimitHard;
-            remove(removeFrom, cursorPosition);
-            lengthLimitTooltip.open();
+            const removeFrom = cursorPosition < messageInputField.messageLimitHard
+                             ? cursorWhenPressed
+                             : messageInputField.messageLimitHard
+            remove(removeFrom, cursorPosition)
+
+            attemptToExceedHardLimit()
         }
 
         _d.updateMentionsPositions()
         _d.cleanMentionsPos()
-
-        lengthLimitText.remainingChars = (messageInputField.messageLimit - length);
     }
 
     onLinkActivated: {
@@ -238,16 +241,22 @@ StatusQ.StatusTextArea {
         property string copiedTextFormatted
         property int copyTextStart: 0
 
-        readonly property int nbEmojisInClipboard: StatusQUtils.Emoji.nbEmojis(ClipboardUtils.html)
+        readonly property int nbEmojisInClipboard:
+            StatusQUtils.Emoji.nbEmojis(ClipboardUtils.html)
 
         // Emojis
         property string emojiFilter: ""
+
+        // whether to send message using Ctrl+Return or just Enter; based on
+        // OSK (virtual keyboard presence)
+        readonly property int kbdModifierToSendMessage:
+            Qt.inputMethod.visible ? Qt.ControlModifier : Qt.NoModifier
 
         function onKeyPress(event) {
             // get text without HTML formatting
             const messageLength = messageInputField.length
 
-            if (event.modifiers === d.kbdModifierToSendMessage &&
+            if (event.modifiers === kbdModifierToSendMessage &&
                     (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)) {
                 tryFinalizeMessage()
                 event.accepted = true
@@ -333,12 +342,12 @@ StatusQ.StatusTextArea {
 
                 const clipboardText = StatusQUtils.StringUtils.plainText(ClipboardUtils.text)
                 // prevent repetitive & huge clipboard paste, where huge is total char count > than messageLimitHard
-                const selectionLength = messageInputField.selectionEnd - messageInputField.selectionStart;
-                if ((messageLength + clipboardText.length - selectionLength) > root.messageLimitHard)
+                const selectionLength = messageInputField.selectionEnd - messageInputField.selectionStart
+                if ((messageLength + clipboardText.length - selectionLength) > messageInputField.messageLimitHard)
                 {
-                    lengthLimitTooltip.open();
-                    event.accepted = true;
-                    return;
+                    attemptToExceedHardLimit()
+                    event.accepted = true
+                    return
                 }
 
                 messageInputField.remove(messageInputField.selectionStart, messageInputField.selectionEnd)

@@ -146,9 +146,6 @@ Rectangle {
 
         property var imageDialog: null
 
-        // whether to send message using Ctrl+Return or just Enter; based on OSK (virtual keyboard presence)
-        readonly property int kbdModifierToSendMessage: Qt.inputMethod.visible ? Qt.ControlModifier : Qt.NoModifier
-
         // common popups are emoji, jif and stickers
         // Put controlWidth as argument with default value for binding
         function getCommonPopupRelativePosition(popup, popupParent, controlWidth = root.width) {
@@ -873,6 +870,10 @@ Rectangle {
                                         emojiSuggestions.close()
                                     }
                                 }
+
+                                onAttemptToExceedHardLimit: {
+                                    lengthLimitTooltip.open()
+                                }
                             }
                         }
 
@@ -889,16 +890,17 @@ Rectangle {
 
                         StyledText {
                             id: lengthLimitText
-                            property int remainingChars: -1
+
+                            readonly property int remainingChars:
+                                messageInputField.messageLimit - messageInputField.length
+
                             leftPadding: Theme.halfPadding
                             rightPadding: Theme.halfPadding
                             visible: messageInputField.length >= root.messageLimit - root.messageLimitSoft
-                            color: {
-                                if (remainingChars  >= 0)
-                                    return Theme.palette.textColor
-                                else
-                                    return Theme.palette.dangerColor1
-                            }
+
+                            color: remainingChars >= 0 ? Theme.palette.textColor
+                                                       : Theme.palette.dangerColor1
+
                             text: visible ? remainingChars.toString() : ""
 
                             StatusMouseArea {
