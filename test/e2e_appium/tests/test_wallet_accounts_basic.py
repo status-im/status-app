@@ -2,6 +2,7 @@ import pytest
 
 from pages.wallet.wallet_left_panel import WalletLeftPanel
 from pages.app import App
+from pages.onboarding.welcome_back_page import WelcomeBackPage
 from utils.generators import generate_account_name
 from utils.multi_device_helpers import StepMixin
 
@@ -54,10 +55,49 @@ class TestWalletAccountsBasic(StepMixin):
                 f"Renamed account '{renamed_name}' not visible in account list"
             )
 
-        async with self.step(self.device, "Delete account"):
-            assert panel.delete_latest_account_via_menu(
-                auth_password=user_password
-            ), f"Failed to delete generated account '{renamed_name}' via context menu"
+        async with self.step(self.device, "Restart app"):
+            assert panel.restart_app(), "Failed to restart app"
+
+        async with self.step(self.device, "Re-authenticate after restart"):
+            welcome_back = WelcomeBackPage(self.device.driver)
+            assert welcome_back.perform_login(user_password), (
+                "Unable to authenticate after restart"
+            )
+
+        async with self.step(self.device, "Verify wallet panel loads after restart"):
+            panel = WalletLeftPanel(self.device.driver)
+            app = App(self.device.driver)
+            assert panel.is_loaded(timeout=20), "Wallet panel not visible after restart"
+
+        async with self.step(self.device, "Verify renamed account persists after restart"):
+            assert panel.wait_for_account_name(renamed_name, timeout=10), (
+                f"Renamed account '{renamed_name}' not visible after restart"
+            )
+
+        async with self.step(self.device, "Add second account after restart"):
+            second_name = generate_account_name(16)
+            assert panel.add_account(second_name, auth_password=user_password), (
+                f"Failed to add second account '{second_name}' after restart"
+            )
+
+        async with self.step(self.device, "Verify second account added"):
+            toast = app.wait_for_toast(
+                expected_substring="successfully added",
+                timeout=8,
+                stability=0.2,
+            )
+            if toast:
+                assert "successfully added" in toast.lower(), (
+                    f"Expected success toast after adding '{second_name}'. Got: '{toast}'"
+                )
+            assert panel.wait_for_account_name(second_name, timeout=10), (
+                f"Second account '{second_name}' not visible in account list"
+            )
+
+        async with self.step(self.device, "Delete renamed account"):
+            assert panel.delete_account_by_name(
+                renamed_name, auth_password=user_password
+            ), f"Failed to delete renamed account '{renamed_name}'"
 
         async with self.step(self.device, "Verify account deleted"):
             toast = app.wait_for_toast(

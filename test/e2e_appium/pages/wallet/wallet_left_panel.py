@@ -89,6 +89,36 @@ class WalletLeftPanel(BasePage):
             return False
         return self.is_element_visible(self.locators.ACCOUNT_CONTEXT_MENU, timeout=5)
 
+    def _complete_account_deletion(self, auth_password: Optional[str] = None) -> bool:
+        """Complete account deletion after context menu is open.
+
+        Clicks Delete, handles confirmation modal and authentication.
+
+        Args:
+            auth_password: Password for authentication if required.
+
+        Returns:
+            bool: True if deletion completed successfully.
+        """
+        self.safe_click(self.locators.ACCOUNT_MENU_DELETE, timeout=5)
+
+        confirmation = RemoveAccountConfirmationModal(self.driver)
+        if confirmation.is_displayed(timeout=5):
+            if not confirmation.confirm_removal():
+                self.logger.error("Failed to confirm account removal in confirmation modal")
+                return False
+
+        auth_modal = KeycardAuthenticationModal(self.driver)
+        if auth_modal.is_displayed(timeout=3):
+            if not auth_password:
+                self.logger.error("Post-removal authentication required but no password provided")
+                return False
+            if not auth_modal.authenticate(auth_password):
+                self.logger.error("Post-removal authentication failed")
+                return False
+
+        return True
+
     def edit_account_via_menu(self, new_name: str, index: int = -1) -> bool:
         """Edit account name via context menu.
 
@@ -126,22 +156,46 @@ class WalletLeftPanel(BasePage):
         if not self.open_context_menu_for_row(index=-1):
             self.logger.error("Failed to open account context menu via long-press")
             return False
+        return self._complete_account_deletion(auth_password)
 
-        self.safe_click(self.locators.ACCOUNT_MENU_DELETE, timeout=5)
+    def find_account_element_by_name(self, name: str, timeout: int = 10):
+        """Find account row element by its name.
 
-        confirmation = RemoveAccountConfirmationModal(self.driver)
-        if confirmation.is_displayed(timeout=5):
-            if not confirmation.confirm_removal():
-                self.logger.error("Failed to confirm account removal in confirmation modal")
-                return False
+        Args:
+            name: Account name to find.
+            timeout: Timeout for finding the element.
 
-        auth_modal = KeycardAuthenticationModal(self.driver)
-        if auth_modal.is_displayed(timeout=3):
-            if not auth_password:
-                self.logger.error("Post-removal authentication required but no password provided")
-                return False
-            if not auth_modal.authenticate(auth_password):
-                self.logger.error("Post-removal authentication failed")
-                return False
+        Returns:
+            WebElement if found, None otherwise.
+        """
+        # Dynamic XPath for row containing the account name in content-desc
+        locator = (
+            "xpath",
+            f"//*[contains(@resource-id,'walletAccountListItem') and starts-with(@content-desc, '{name}')]"
+        )
+        return self.find_element_safe(locator, timeout=timeout)
 
-        return True
+    def delete_account_by_name(self, name: str, auth_password: Optional[str] = None) -> bool:
+        """Delete account by name via context menu.
+
+        Args:
+            name: Name of the account to delete.
+            auth_password: Password for authentication if required.
+
+        Returns:
+            bool: True if deletion succeeded.
+        """
+        account_element = self.find_account_element_by_name(name, timeout=10)
+        if not account_element:
+            self.logger.error(f"Account '{name}' not found in account list")
+            return False
+
+        if not self.long_press_element(account_element, duration=800):
+            self.logger.error(f"Failed to long-press account '{name}'")
+            return False
+
+        if not self.is_element_visible(self.locators.ACCOUNT_CONTEXT_MENU, timeout=5):
+            self.logger.error("Context menu did not appear after long-press")
+            return False
+
+        return self._complete_account_deletion(auth_password)
