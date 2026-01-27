@@ -141,13 +141,6 @@ Rectangle {
         id: d
         readonly property string emojiReplacementSymbols: ":='xX><0O;*dB8-D#%\\"
 
-        //mentions helper properties
-        property string copiedTextPlain: ""
-        property string copiedTextFormatted: ""
-        property int copyTextStart: 0
-
-        readonly property int nbEmojisInClipboard: StatusQUtils.Emoji.nbEmojis(ClipboardUtils.html)
-
         property bool emojiPopupOpened: false
         property bool stickersPopupOpened: false
 

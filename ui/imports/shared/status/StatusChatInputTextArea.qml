@@ -234,6 +234,12 @@ StatusQ.StatusTextArea {
         property var mentionsPos: []
         property var copiedMentionsPos: []
 
+        property string copiedTextPlain
+        property string copiedTextFormatted
+        property int copyTextStart: 0
+
+        readonly property int nbEmojisInClipboard: StatusQUtils.Emoji.nbEmojis(ClipboardUtils.html)
+
         // Emojis
         property string emojiFilter: ""
 
@@ -315,9 +321,9 @@ StatusQ.StatusTextArea {
 
             if (event.matches(StandardKey.Copy) || event.matches(StandardKey.Cut)) {
                 if (messageInputField.selectedText !== "") {
-                    d.copiedTextPlain = messageInputField.getText(
+                    _d.copiedTextPlain = messageInputField.getText(
                                 messageInputField.selectionStart, messageInputField.selectionEnd)
-                    d.copiedTextFormatted = messageInputField.getFormattedText(
+                    _d.copiedTextFormatted = messageInputField.getFormattedText(
                                 messageInputField.selectionStart, messageInputField.selectionEnd)
                     _d.copyMentions(messageInputField.selectionStart, messageInputField.selectionEnd)
                 }
@@ -339,47 +345,47 @@ StatusQ.StatusTextArea {
 
                 // cursor position must be stored in a helper property because setting readonly to true causes change
                 // of the cursor position to the end of the input
-                d.copyTextStart = messageInputField.cursorPosition
+                _d.copyTextStart = messageInputField.cursorPosition
                 messageInputField.readOnly = true
 
-                const copiedText = StatusQUtils.StringUtils.plainText(d.copiedTextPlain)
+                const copiedText = StatusQUtils.StringUtils.plainText(_d.copiedTextPlain)
                 if (copiedText === clipboardText) {
-                    if (d.copiedTextPlain.includes("@")) {
-                        d.copiedTextFormatted = d.copiedTextFormatted.replace(/span style="/g, "span style=\" text-decoration:none;")
+                    if (_d.copiedTextPlain.includes("@")) {
+                        _d.copiedTextFormatted = _d.copiedTextFormatted.replace(/span style="/g, "span style=\" text-decoration:none;")
 
                         let lastFoundIndex = -1
                         for (let j = 0; j < _d.copiedMentionsPos.length; j++) {
                             const name = _d.copiedMentionsPos[j].name
-                            const indexOfName = d.copiedTextPlain.indexOf(name, lastFoundIndex)
+                            const indexOfName = _d.copiedTextPlain.indexOf(name, lastFoundIndex)
                             lastFoundIndex += name.length
 
                             if (indexOfName === _d.copiedMentionsPos[j].leftIndex + 1) {
                                 const mention = {
                                     name: name,
                                     pubKey: _d.copiedMentionsPos[j].pubKey,
-                                    leftIndex: (_d.copiedMentionsPos[j].leftIndex + d.copyTextStart - 1),
-                                    rightIndex: (_d.copiedMentionsPos[j].leftIndex + d.copyTextStart + name.length)
+                                    leftIndex: (_d.copiedMentionsPos[j].leftIndex + _d.copyTextStart - 1),
+                                    rightIndex: (_d.copiedMentionsPos[j].leftIndex + _d.copyTextStart + name.length)
                                 }
                                 mentionsPos.push(mention)
                                 _d.sortMentions()
                             }
                         }
                     }
-                    insertInTextInput(d.copyTextStart, d.copiedTextFormatted)
+                    insertInTextInput(_d.copyTextStart, _d.copiedTextFormatted)
                 } else {
-                    d.copiedTextPlain = ""
-                    d.copiedTextFormatted = ""
+                    _d.copiedTextPlain = ""
+                    _d.copiedTextFormatted = ""
                     _d.copiedMentionsPos = []
-                    messageInputField.insert(d.copyTextStart, ((d.nbEmojisInClipboard === 0) ?
+                    messageInputField.insert(_d.copyTextStart, ((_d.nbEmojisInClipboard === 0) ?
                     ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
-                    : StatusQUtils.Emoji.deparse(ClipboardUtils.html)));
+                    : StatusQUtils.Emoji.deparse(ClipboardUtils.html)))
                 }
 
                 // Reset readOnly immediately after paste completes
                 // Don't wait for onRelease which might not fire on mobile
                 if (StatusQUtils.Utils.isMobile) {
                     messageInputField.readOnly = false
-                    messageInputField.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard)
+                    messageInputField.cursorPosition = (_d.copyTextStart + ClipboardUtils.text.length + _d.nbEmojisInClipboard)
                 }
                 event.accepted = true
             }
@@ -418,8 +424,8 @@ StatusQ.StatusTextArea {
                  _d.emojiHandler(event)
 
             if (messageInputField.readOnly) {
-                messageInputField.readOnly = false;
-                messageInputField.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard);
+                messageInputField.readOnly = false
+                messageInputField.cursorPosition = (_d.copyTextStart + ClipboardUtils.text.length + _d.nbEmojisInClipboard)
             }
 
             if (suggestedMentionPubKey) {
