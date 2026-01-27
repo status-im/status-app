@@ -145,8 +145,6 @@ Rectangle {
         property bool emojiPopupOpened: false
         property bool stickersPopupOpened: false
 
-        property var imageDialog: null
-
         // common popups are emoji, jif and stickers
         // Put controlWidth as argument with default value for binding
         function getCommonPopupRelativePosition(popup, popupParent, controlWidth = root.width) {
@@ -224,7 +222,7 @@ Rectangle {
 
         function isUploadFilePressed(event) {
             return (event.key === Qt.Key_U) &&
-                    (event.modifiers & Qt.ControlModifier) && !d.imageDialog
+                    (event.modifiers & Qt.ControlModifier) && !imageDialog.visible
         }
     }
 
@@ -276,7 +274,7 @@ Rectangle {
             // ⌘⇧U
             if (d.isUploadFilePressed(event)) {
                 event.accepted = true
-                openImageDialog()
+                imageDialog.open()
             }
 
             if (event.key === Qt.Key_Down && emojiSuggestions.visible) {
@@ -452,11 +450,6 @@ Rectangle {
         messageInputField.forceActiveFocus();
     }
 
-    function openImageDialog() {
-        d.imageDialog = imageDialogComponent.createObject(root)
-        d.imageDialog.open()
-    }
-
     DropAreaPanel {
         enabled: root.visible && root.enabled
         parent: root.Overlay.overlay
@@ -483,23 +476,18 @@ Rectangle {
         messageInputField.forceActiveFocus();
     }
 
-    Component {
-        id: imageDialogComponent
+    StatusFileDialog {
+        id: imageDialog
 
-        StatusFileDialog {
-            title: qsTr("Please choose an image")
-            currentFolder: picturesShortcut
-            selectMultiple: true
-            nameFilters: [
-                qsTr("Image files (%1)").arg(UrlUtils.validImageNameFilters)
-            ]
-            onAccepted: {
-                validateImagesAndShowImageArea(selectedFiles)
-                messageInputField.forceActiveFocus()
-                destroy()
-            }
-            onRejected: destroy()
-            Component.onDestruction: d.imageDialog = null
+        title: qsTr("Please choose an image")
+        currentFolder: picturesShortcut
+        selectMultiple: true
+        nameFilters: [
+            qsTr("Image files (%1)").arg(UrlUtils.validImageNameFilters)
+        ]
+        onAccepted: {
+            validateImagesAndShowImageArea(selectedFiles)
+            messageInputField.forceActiveFocus()
         }
     }
 
@@ -513,7 +501,7 @@ Rectangle {
                 objectName: "chatCommandMenu_addImage"
                 text: qsTr("Add image")
                 icon.name: "image"
-                onTriggered: root.openImageDialog()
+                onTriggered: imageDialog.open()
             }
 
             StatusMouseArea {
