@@ -34,6 +34,7 @@ DOTHERSIDE?=$(STATUS_DESKTOP)/vendor/DOtherSide
 OPENSSL?=$(ROOT_DIR)/vendors/openssl
 QRCODEGEN?=$(STATUS_DESKTOP)/vendor/QR-Code-generator/c
 STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/vendor/status-keycard-qt
+NIM_SDS_SOURCE_DIR ?= $(STATUS_DESKTOP)/vendor/nim-sds
 
 # compile macros
 TARGET_PREFIX := Status
@@ -62,6 +63,8 @@ OPENSSL_FILES := $(shell find $(OPENSSL) -type f \( -iname '*.c' -o -iname '*.h'
 QRCODEGEN_FILES := $(shell find $(QRCODEGEN) -type f \( -iname '*.c' -o -iname '*.h' \))
 STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
 WRAPPER_APP_FILES := $(shell find $(WRAPPER_APP) -type f)
+STATUS_GO_STUB_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_stub_exports.cpp
+STATUS_GO_SERVICE_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_service_dispatch.cpp
 
 # script files
 STATUS_Q_SCRIPT := $(SCRIPTS_PATH)/buildStatusQ.sh
@@ -82,6 +85,8 @@ QRCODEGEN_LIB := $(LIB_PATH)/libqrcodegen.a
 STATUS_KEYCARD_QT_LIB := $(LIB_PATH)/libstatus-keycard-qt$(LIB_EXT)
 NIM_STATUS_CLIENT_LIB := $(LIB_PATH)/libnim_status_client$(LIB_EXT)
 STATUS_DESKTOP_RCC := $(STATUS_DESKTOP)/ui/resources.qrc
+STATUS_GO_STUB_LIB := $(LIB_PATH)/libstatus_stub$(LIB_EXT)
+STATUS_GO_SERVICE_LIB := $(LIB_PATH)/libstatus_service$(LIB_EXT)
 ifeq ($(OS), ios)
 DOTHERSIDE_LIB := $(LIB_PATH)/libDOtherSideStatic$(LIB_SUFFIX)$(LIB_EXT)
 LIB_ZXING := $(LIB_PATH)/libZXing$(LIB_SUFFIX)$(LIB_EXT)

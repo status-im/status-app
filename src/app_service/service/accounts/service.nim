@@ -408,6 +408,7 @@ QtObject:
     self.events.emit(SIGNAL_DERIVED_ADDRESSES_FROM_NOT_IMPORTED_MNEMONIC_FETCHED, data)
 
   proc doLogin(self: Service, account: AccountDto, passwordHash: string, chatPrivateKey: string = "", mnemonic: string = "") =
+
     var request = LoginAccountRequest(
       keyUid: account.keyUid,
       kdfIterations: account.kdfIterations,
@@ -522,3 +523,10 @@ QtObject:
   proc delete*(self: Service) =
     self.QObject.delete
 
+  proc fetchLoggedInAccount*(self: Service): AccountDto =
+    try:
+      let response = status_account.getActiveAccount()
+      result = toAccountDto(response.result)
+    except Exception as e:
+      error "fetchLoggedInAccount failed", procName="fetchLoggedInAccount", errName = e.name, errDesription = e.msg
+      result = AccountDto()

@@ -48,6 +48,8 @@ android {
                         $$PWD/../lib/$$LIB_PREFIX/libnim_status_client.so \
                         $$PWD/../lib/$$LIB_PREFIX/libDOtherSide$$(LIB_SUFFIX)$$(LIB_EXT) \
                         $$PWD/../lib/$$LIB_PREFIX/libstatus.so \
+                        $$PWD/../lib/$$LIB_PREFIX/libstatus_stub.so \
+                        $$PWD/../lib/$$LIB_PREFIX/libstatus_service.so \
                         $$PWD/../lib/$$LIB_PREFIX/libsds.so \
                         $$PWD/../lib/$$LIB_PREFIX/libStatusQ$$(LIB_SUFFIX)$$(LIB_EXT) \
                         $$PWD/../lib/$$LIB_PREFIX/libMobileWebView$$(LIB_SUFFIX)$$(LIB_EXT)

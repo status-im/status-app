@@ -434,3 +434,19 @@ proc remainingKeypairCapacity*(): RpcResponse[JsonNode] =
 proc remainingWatchOnlyAccountCapacity*(): RpcResponse[JsonNode] =
   let payload = %* []
   return core.callPrivateRPC("accounts_remainingWatchOnlyAccountCapacity", payload)
+
+proc getActiveAccount*(): RpcResponse[JsonNode] =
+  try:
+    let response = status_go.getActiveAccount()
+    result.result = Json.decode(response, JsonNode)
+  except RpcException as e:
+    error "getActiveAccount failed", exception=e.msg
+    raise newException(RpcException, e.msg)
+
+proc keyUID*(): RpcResponse[JsonNode] =
+  try:
+    let response = status_go.keyUID()
+    result.result = Json.decode(response, JsonNode)
+  except RpcException as e:
+    error "keyUID failed", exception=e.msg
+    raise newException(RpcException, e.msg)

@@ -285,8 +285,11 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   result.connect()
 
 proc delete*(self: AppController) =
-  info "logging out..."
-  self.generalService.logout()
+  when defined(android):
+      info "Skipping logout on AppController.delete (Android keepalive enabled)"
+  else:
+    info "logging out..."
+    self.generalService.logout()
 
   singletonInstance.delete
   self.notificationsManager.delete
@@ -343,6 +346,10 @@ proc initializeQmlContext(self: AppController) =
   singletonInstance.engine.setRootContextProperty("localAppSettings", self.localAppSettingsVariant)
   singletonInstance.engine.setRootContextProperty("localAccountSettings", self.localAccountSettingsVariant)
   singletonInstance.engine.setRootContextProperty("globalUtils", self.globalUtilsVariant)
+
+  # Expose a lightweight login flag that is available as soon as `main.qml` starts evaluating.
+  let resumeLogin = self.accountsService.fetchLoggedInAccount().isValid()
+  singletonInstance.engine.setRootContextProperty("skipOnboardingContextProperty", newQVariant(resumeLogin))
 
   # Load keycard channel module (available before login for Session API)
   self.keycardChannelModule.load()

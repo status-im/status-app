@@ -1,8 +1,6 @@
 -include ./scripts/EnvVariables.mk
 -include ./scripts/Common.mk
 
-STATUS_GO_LIB := $(LIB_PATH)/libstatus$(LIB_EXT)
-
 # FLAG_KEYCARD_ENABLED: Controls NFC/Keycard support
 # - iOS: Default 1 (enabled) - Build with NFC support, works with free Apple Developer account
 # - Android: Default 1 (enabled) - NFC support doesn't require paid account on Android
@@ -40,6 +38,7 @@ ifeq ($(OS),android)
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
 		ANDROID_API="$(ANDROID_API)" \
 		HOST_OS="$(HOST_OS)" \
+		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
 		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
@@ -54,6 +53,29 @@ endif
 	@echo "Copying library to mobile lib directory"
 	@cp $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
 	@cp ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
+
+$(STATUS_GO_STUB_LIB): $(STATUS_GO_LIB)
+	@echo "Building status-go stub library (UI process)"
+	@mkdir -p $(LIB_PATH)
+	@$(MAKE) $(STATUS_GO_STUB_GEN)
+	@$(CXX) -shared -fPIC -O2 \
+		-o $(STATUS_GO_STUB_LIB) \
+		$(STATUS_DESKTOP)/mobile/statusgo_stub/statusgo_stub.cpp \
+		$(STATUS_GO_STUB_GEN) \
+		-llog -lc++_shared
+
+$(STATUS_GO_SERVICE_LIB): $(STATUS_GO_LIB)
+	@echo "Building status-go service JNI library (service process)"
+	@mkdir -p $(LIB_PATH)
+	@$(MAKE) $(STATUS_GO_STUB_GEN)
+	@$(CXX) -shared -fPIC -O2 \
+		-o $(STATUS_GO_SERVICE_LIB) \
+		$(STATUS_DESKTOP)/mobile/statusgo_service/statusgo_service_jni.cpp \
+		$(STATUS_GO_SERVICE_GEN) \
+		-L$(LIB_PATH) -lstatus -llog -lc++_shared
+
+$(STATUS_GO_STUB_GEN):
+	@$(MAKE) -C $(STATUS_DESKTOP)/vendor/status-go statusgo-stub-bindings
 
 $(STATUS_Q_LIB): $(STATUS_Q_FILES) $(STATUS_Q_SCRIPT) $(STATUS_Q_UI_FILES)
 	@echo "Building StatusQ"
@@ -84,7 +106,12 @@ $(STATUS_DESKTOP_RCC): $(STATUS_DESKTOP_UI_FILES) compile-translations
 	@make -C $(STATUS_DESKTOP) rcc $(HANDLE_OUTPUT)
 	@echo "Status Desktop rcc built"
 
-$(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT) $(STATUS_DESKTOP_RCC) $(DOTHERSIDE_LIB) $(OPENSSL_LIB) $(STATUS_Q_LIB) $(STATUS_GO_LIB) $(QRCODEGEN_LIB)
+
+ifeq ($(OS),android)
+$(NIM_STATUS_CLIENT_LIB): $(STATUS_GO_STUB_LIB) $(STATUS_GO_SERVICE_LIB)
+endif
+
+$(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT) $(STATUS_DESKTOP_RCC) $(DOTHERSIDE_LIB) $(OPENSSL_LIB) $(STATUS_Q_LIB) $(QRCODEGEN_LIB)
 	@echo "Building Status Desktop Lib"
 	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
 	LIB_SUFFIX=$(LIB_SUFFIX) \

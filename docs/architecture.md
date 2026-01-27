@@ -1,12 +1,16 @@
 
 # Architecture of the Status App
 
+## Architecture Decision Records (ADRs)
+
+- [docs/adr/0001-android-status-go-as-a-service.md](/docs/adr/0001-android-status-go-as-a-service.md): Android architecture where `status-go` runs in a separate Service process and the UI talks to it via Binder IPC.
 
 ## Top level architecture
 
 This shows the flow from the UI all the way to the backend.
 
 We do not use servers. [status-go](https://github.com/status-im/status-go) is what our app considers the backend and as such, it has it's own local databases to contain the user data.
+
 
 ```mermaid
 flowchart LR

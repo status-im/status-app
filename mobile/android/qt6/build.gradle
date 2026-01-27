@@ -61,6 +61,10 @@ android {
     buildToolsVersion androidBuildToolsVersion
     ndkVersion = androidNdkVersion
 
+    buildFeatures {
+        aidl true
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'

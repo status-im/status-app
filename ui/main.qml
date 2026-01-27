@@ -32,6 +32,11 @@ Window {
     Theme.style: Application.styleHints.colorScheme === Qt.ColorScheme.Dark
                  ? Theme.Style.Dark : Theme.Style.Light
 
+    // Provided by Nim before `main.qml` starts (see AppController.initializeQmlContext()).
+    readonly property bool skipOnboarding: typeof skipOnboardingContextProperty !== "undefined"
+                                       ? skipOnboardingContextProperty
+                                       : false
+
     property bool appIsReady: false
 
     readonly property AppStores.FeatureFlagsStore featureFlagsStore: AppStores.FeatureFlagsStore {
@@ -330,7 +335,7 @@ Window {
                 close.accepted = false
                 // In case of android, we need to handle moveTaskToBackground explicitly
                 if (SQUtils.Utils.isAndroid)
-                    SystemUtils.androidMinimizeToBackground()
+                    close.accepted = true
                 else
                     applicationWindow.showMinimized()
             // In case not logged in or loading, quit app
@@ -451,6 +456,10 @@ Window {
             safeArea.additionalMargins.left = Qt.binding(() => MobileUI.safeAreaLeft)
 
         safeMarginsCleanupConnections.enabled = true
+
+        if (applicationWindow.skipOnboarding) {
+            moveToAppMain()
+        }
     }
 
     signal navigateTo(string path)
@@ -583,6 +592,7 @@ Window {
         anchors.leftMargin: parent.SafeArea.margins.left
         anchors.rightMargin: parent.SafeArea.margins.right
         anchors.bottomMargin: parent.SafeArea.margins.bottom
+        active: !applicationWindow.skipOnboarding
 
         sourceComponent: onboardingV2
     }

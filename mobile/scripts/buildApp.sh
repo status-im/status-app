@@ -67,6 +67,7 @@ if [[ "${OS}" == "android" ]]; then
   cp "$CWD/../android/qt${QT_MAJOR}"/{AndroidManifest.xml,build.gradle,settings.gradle,gradle.properties} "$BUILD_DIR/android-build/"
   rsync -a --exclude='libs.xml' "$CWD/../android/qt${QT_MAJOR}/res/" "$BUILD_DIR/android-build/res/" 2>/dev/null || true
   rsync -a "$CWD/../android/qt${QT_MAJOR}/src/" "$BUILD_DIR/android-build/src/" 2>/dev/null || true
+  rsync -a "$CWD/../android/qt${QT_MAJOR}/aidl/" "$BUILD_DIR/android-build/aidl/" 2>/dev/null || true
 
   if [[ -n "${MOBILEWEBVIEW_ANDROID_JAVA_SRC}" && \
         -f "${MOBILEWEBVIEW_ANDROID_JAVA_SRC}/org/mobilewebview/MobileWebView.java" ]]; then

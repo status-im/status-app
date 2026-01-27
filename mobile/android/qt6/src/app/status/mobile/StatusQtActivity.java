@@ -3,11 +3,13 @@ package app.status.mobile;
 import org.qtproject.qt.android.bindings.QtActivity;
 import android.os.Build;
 import android.os.Bundle;
+import android.content.pm.PackageManager;
 import androidx.core.splashscreen.SplashScreen;
 import java.util.concurrent.atomic.AtomicBoolean;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.Settings;
+import im.status.mobileui.PushNotificationHelper;
 
 public class StatusQtActivity extends QtActivity {
     private static final AtomicBoolean splashShouldHide = new AtomicBoolean(false);
@@ -21,6 +23,14 @@ public class StatusQtActivity extends QtActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Initialize the status-go UI stub bridge early.
+        // (In the service-based architecture this forwards to the separate status-go process.)
+        StatusGoStub.setContext(this);
+        StatusGoStub.ensureInitialized(this);
+
+        // IMPORTANT: call super.onCreate() after starting/binding the service.
+        // QtActivity may start the Qt (Nim) side during super.onCreate(), and the Nim
+        // onboarding resume check queries the service immediately on startup.
         super.onCreate(savedInstanceState);
         sInstance = this;
         
@@ -38,11 +48,15 @@ public class StatusQtActivity extends QtActivity {
     protected void onResume() {
         super.onResume();
         ShakeDetector.onResume(this);
+        // Inform the status-go service that UI is visible so it can suppress OS notifications.
+        StatusGoStub.setUiVisible(true);
     }
 
     @Override
     protected void onPause() {
         ShakeDetector.onPause();
+        // Inform the status-go service that UI is no longer in foreground.
+        StatusGoStub.setUiVisible(false);
         super.onPause();
     }
 
