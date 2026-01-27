@@ -10,6 +10,7 @@ import driver
 from configs.timeouts import APP_LOAD_TIMEOUT_MSEC
 from constants import UserAccount, CommunityData
 from gui.components.activity_center import ActivityCenter
+from gui.screens.market import MarketScreen
 from helpers.chat_helper import skip_message_backup_popup_if_visible, skip_intro_if_visible
 from gui.components.context_menu import ContextMenu
 from gui.components.splash_screen import SplashScreen
@@ -44,6 +45,7 @@ class MainLeftPanel(QObject):
         self.settings_button = Button(names.settingsGearButton)
         self.wallet_button = Button(names.mainWalletButton)
         self.activity_center_button = Button(names.activityCenterButton)
+        self.market_button = Button(names.marketButton)
 
     @allure.step('Click Wallet button and record load time until WalletScreen is visible')
     def open_wallet_and_record_load_time(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
@@ -70,6 +72,11 @@ class MainLeftPanel(QObject):
         load_time = time.time() - start_time
         LOG.info(f'Wallet loaded in {load_time:.3f} seconds')
         return wallet_screen, load_time
+
+    @allure.step('Click Market button and open Market screen')
+    @open_with_retries(MarketScreen)
+    def open_market_screen(self):
+        return self.market_button
 
     @allure.step('Click Home button and open Home screen')
     @open_with_retries(HomeScreen)

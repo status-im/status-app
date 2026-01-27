@@ -49,6 +49,7 @@ mainWalletButton = {"container": primaryNavSidebar, "objectName": "Wallet-navbar
                     "type": "PrimaryNavSidebarButton", "visible": True}
 chatButton = {"container": primaryNavSidebar, "objectName": "Messages-navbar", "type": "PrimaryNavSidebarButton",
               "visible": True}
+marketButton = {"container": primaryNavSidebar, "objectName": "Market-navbar", "type": "RegularSectionButton", "visible": True}
 
 # Second half of left main panel: communities button, settings button
 communitiesSettingsNavBarList = {"container": statusDesktop_mainWindow, "objectName": "statusMainNavBarListView",
@@ -1321,3 +1322,11 @@ keycard_Inserted_StatusMenuItem = {"checkable": False, "container": mocked_Keyca
 keycard_edit_TextEdit = {"container": keycardSettingsTab, "id": "edit", "type": "TextEdit", "unnamed": 1,
                          "visible": True}
 keycardFlickable = {"container": keycardSettingsTab, "type": "Flickable", "unnamed": 1, "visible": True}
+
+"""Market tab names"""
+
+marketScreen = {"container": statusDesktop_mainWindow, "objectName": "marketLayout", "type": "MarketLayout", "visible": True}
+marketScreenTokensList = {"container": marketScreen, "objectName": "tokensList", "type": "StatusListView", "visible": True}
+marketScreenSwapButton = {"container": marketScreen, "objectName": "swapButton", "type": "StatusButton", "visible": True}
+marketScreenHeading = {"container": marketScreen, "objectName": "heading", "type": "StatusBaseText", "visible": True}
+marketScreenToken = {"container": marketScreen, "type": "MarketTokenDelegate", "unnamed": 1, "visible": True}

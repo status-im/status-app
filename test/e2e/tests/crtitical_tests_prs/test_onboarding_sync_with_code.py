@@ -1,13 +1,11 @@
 import time
 
-import allure
 import pyperclip
 import pytest
 from allure_commons._allure import step
 
 import configs.testpath
 import driver
-from configs import get_platform
 from configs.timeouts import APP_LOAD_TIMEOUT_MSEC
 from constants import UserAccount, RandomUser
 from constants.syncing import SyncingSettings

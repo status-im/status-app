@@ -1,4 +1,3 @@
-import allure
 import pytest
 from allure_commons._allure import step
 
@@ -6,7 +5,6 @@ import driver
 from constants import RandomWalletAccount
 from tests.wallet_main_screen import marks
 
-from gui.components.authenticate_popup import AuthenticatePopup
 from gui.main_window import MainWindow
 
 pytestmark = marks
