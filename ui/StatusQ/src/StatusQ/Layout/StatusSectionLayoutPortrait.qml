@@ -98,9 +98,9 @@ SwipeView {
     */
     property bool showHeader: true
     /*!
-        \qmlproperty int StatusSectionLayout::headerPadding
-        This property sets the padding for the header component
-        Default value is Theme.halfPadding.
+        \qmlproperty bool StatusSectionLayout::showFooter
+        This property sets the footer component's visibility to true/false.
+        Default value is true.
     */
     property bool showFooter: true
     /*!

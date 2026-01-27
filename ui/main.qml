@@ -369,7 +369,7 @@ Window {
         }
     }
 
-    // Clear additional SafeArea's margins when regular margins are intialized. Doing cleanup
+    // Clear additional SafeArea's margins when regular margins are initialized. Doing cleanup
     // this way prevents binding loop between margins and additional margins.
     Connections {
         id: safeMarginsCleanupConnections
@@ -470,9 +470,10 @@ Window {
         id: loader
 
         anchors.fill: parent
-        anchors.topMargin: Qt.platform.os === SQUtils.Utils.mac ? 0 : parent.SafeArea.margins.top 
+        anchors.topMargin: Qt.platform.os === SQUtils.Utils.mac ? 0 : parent.SafeArea.margins.top
         anchors.bottomMargin: parent.SafeArea.margins.bottom
-        anchors.leftMargin: parent.SafeArea.margins.left
+        anchors.leftMargin: parent.portraitLayout ? parent.SafeArea.margins.left
+                                                  : 0 // the PrimaryNavSidebar is visible in landscape and already has it
         anchors.rightMargin: parent.SafeArea.margins.right
         opacity: active ? 1.0 : 0.0
         visible: (opacity > 0.0001)
@@ -668,7 +669,7 @@ Window {
         sourceComponent: MetricsEnablePopup {
             visible: true
             onClosed: metricsPopupLoader.active = false
-            onSetMetricsEnabledRequested: {
+            onSetMetricsEnabledRequested: function(enabled) {
                 applicationWindow.metricsStore.toggleCentralizedMetrics(enabled)
                 if (enabled) {
                     Global.addCentralizedMetricIfEnabled("usage_data_shared", {placement: metricsPopupLoader.item.placement})
@@ -695,7 +696,7 @@ Window {
         anchors.top: parent.top
         anchors.right: parent.right
         height: active ? parent.SafeArea.margins.top : 0
-        active: Qt.platform.os === SQUtils.Utils.mac && applicationWindow.visibility !== Window.FullScreen
+        active: d.macOSWindowed
         sourceComponent: macHeaderComponent
     }
 

@@ -12,6 +12,7 @@ StatusTextField {
     background: null
     font.pixelSize: Theme.fontSize(27)
     font.weight: Font.DemiBold
+    inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
 
     StatusClearButton {
         anchors.right: parent.right

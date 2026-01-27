@@ -33,7 +33,7 @@ Control {
     bottomPadding: Theme.smallPadding * 2
     horizontalPadding: Theme.defaultSmallPadding * 2
 
-    spacing: Theme.defaultBigPadding
+    spacing: Theme.defaultPadding
 
     function focusSearch(force = false) {
         if (SQUtils.Utils.isMobile && !force) {
@@ -54,7 +54,6 @@ Control {
 
     QtObject {
         id: d
-        readonly property int narrowViewThreshold: 660
         readonly property bool isNarrowView: root.width < root.height
     }
 
@@ -97,6 +96,7 @@ Control {
                     color: Theme.palette.baseColor1
                     verticalAlignment: Text.AlignVCenter
                     visible: searchField.text.length === 0
+                    elide: Text.ElideRight
                 }
             }
         }
@@ -104,36 +104,14 @@ Control {
         HomePageGrid {
             id: grid
             Layout.fillWidth: true
-            Layout.rightMargin: -root.horizontalPadding
             Layout.fillHeight: true
 
             objectName: "homeGrid"
 
             model: root.homePageEntriesModel
-
-            delegateWidth: 160
-            spacing: d.isNarrowView ? 10 : Theme.defaultPadding
-
-            onItemActivated: function(key, sectionType, itemId) {
-                root.itemActivated(key, sectionType, itemId)
-            }
-            onItemPinRequested: function(key, pin) {
-                root.itemPinRequested(key, pin)
-            }
-            onDappDisconnectRequested: function(dappUrl) {
-                root.dappDisconnectRequested(dappUrl)
-            }
-        }
-
-        HomePageDock {
-            Layout.alignment: d.isNarrowView && root.availableWidth < implicitWidth ? 0 : Qt.AlignHCenter
-            Layout.fillWidth: d.isNarrowView && root.availableWidth < implicitWidth
-            Layout.maximumWidth: parent.width
-
-            objectName: "homeDock"
-
-            sectionsModel: root.sectionsModel
-            pinnedModel: root.pinnedModel
+            delegateWidth: d.isNarrowView ? 120 : 160
+            delegateHeight: d.isNarrowView ? 135 : 160
+            spacing: d.isNarrowView ? Theme.defaultHalfPadding : Theme.defaultPadding
 
             onItemActivated: function(key, sectionType, itemId) {
                 root.itemActivated(key, sectionType, itemId)
@@ -145,5 +123,27 @@ Control {
                 root.dappDisconnectRequested(dappUrl)
             }
         }
+
+        // TODO will be refactored and the functionality folded into the PrimaryNavSidebar
+        // HomePageDock {
+        //     Layout.alignment: d.isNarrowView && root.availableWidth < implicitWidth ? 0 : Qt.AlignHCenter
+        //     Layout.fillWidth: d.isNarrowView && root.availableWidth < implicitWidth
+        //     Layout.maximumWidth: parent.width
+
+        //     objectName: "homeDock"
+
+        //     sectionsModel: root.sectionsModel
+        //     pinnedModel: root.pinnedModel
+
+        //     onItemActivated: function(key, sectionType, itemId) {
+        //         root.itemActivated(key, sectionType, itemId)
+        //     }
+        //     onItemPinRequested: function(key, pin) {
+        //         root.itemPinRequested(key, pin)
+        //     }
+        //     onDappDisconnectRequested: function(dappUrl) {
+        //         root.dappDisconnectRequested(dappUrl)
+        //     }
+        // }
     }
 }

@@ -86,7 +86,8 @@ AbstractButton {
         }
     }
 
-    onPressAndHold: contextMenuComponent.createObject(root).popup(root.pressX, root.pressY)
+    // TODO ctx menu will be re-enabled with the Pin feature moved over to PrimaryNavSidebar
+    //onPressAndHold: contextMenuComponent.createObject(root).popup(root.pressX, root.pressY)
 
     contentItem: Item {
         MouseArea {
@@ -94,7 +95,7 @@ AbstractButton {
             hoverEnabled: true
             acceptedButtons: Qt.RightButton
             cursorShape: containsMouse ? Qt.PointingHandCursor : undefined
-            onClicked: contextMenuComponent.createObject(root).popup()
+            //onClicked: contextMenuComponent.createObject(root).popup()
         }
 
         // contents
@@ -161,43 +162,44 @@ AbstractButton {
             }
         }
 
-        // top right corner
-        HomePageToolButton {
-            objectName: "pinButton"
-            anchors.right: parent.right
-            anchors.rightMargin: -4
-            anchors.top: parent.top
-            anchors.topMargin: -4
-            spacing: Theme.defaultHalfPadding
-            visible: opacity > 0
-            opacity: root.hovered || root.pinned ? 1 : 0
-            Behavior on opacity { OpacityAnimator { duration: ThemeUtils.AnimationDuration.Fast } }
-            action: pinAction
-        }
+        // TODO will be re-enabled with the Pin feature moved over to PrimaryNavSidebar
+        // // top right corner
+        // HomePageToolButton {
+        //     objectName: "pinButton"
+        //     anchors.right: parent.right
+        //     anchors.rightMargin: -4
+        //     anchors.top: parent.top
+        //     anchors.topMargin: -4
+        //     spacing: Theme.defaultHalfPadding
+        //     visible: opacity > 0
+        //     opacity: root.hovered || root.pinned ? 1 : 0
+        //     Behavior on opacity { OpacityAnimator { duration: ThemeUtils.AnimationDuration.Fast } }
+        //     action: pinAction
+        // }
     }
 
-    StatusAction {
-        id: pinAction
-        objectName: "pinAction"
-        icon.name: root.pinned ? "unpin" : "pin"
-        text: root.pinned ? qsTr("Unpin") : qsTr("Pin")
-        onTriggered: root.pinRequested()
-    }
+    // StatusAction {
+    //     id: pinAction
+    //     objectName: "pinAction"
+    //     icon.name: root.pinned ? "unpin" : "pin"
+    //     text: root.pinned ? qsTr("Unpin") : qsTr("Pin")
+    //     onTriggered: root.pinRequested()
+    // }
 
-    Component {
-        id: contextMenuComponent
-        StatusMenu {
-            id: contextMenu
-            objectName: "homeGridItemContextMenu"
-            StatusMenuInstantiator {
-                model: [pinAction, ...root.extraMenuActions]
-                menu: contextMenu
-                delegate: StatusMenuItem {
-                    action: modelData
-                }
-            }
+    // Component {
+    //     id: contextMenuComponent
+    //     StatusMenu {
+    //         id: contextMenu
+    //         objectName: "homeGridItemContextMenu"
+    //         StatusMenuInstantiator {
+    //             model: [pinAction, ...root.extraMenuActions]
+    //             menu: contextMenu
+    //             delegate: StatusMenuItem {
+    //                 action: modelData
+    //             }
+    //         }
 
-            onClosed: destroy()
-        }
-    }
+    //         onClosed: destroy()
+    //     }
+    // }
 }

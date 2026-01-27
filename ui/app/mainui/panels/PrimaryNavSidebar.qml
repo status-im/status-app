@@ -63,22 +63,25 @@ Drawer {
     // behaviors like visible/modal/interactive/dim all depend on `alwaysVisible`
     visible: alwaysVisible
     interactive: !alwaysVisible
-    dim: !alwaysVisible
-    modal: false // otherwise the handle blocks input
+    modal: !alwaysVisible && visible // block input when the sidebar is pulled open on mobile
 
-    topPadding: Qt.platform.os === SQUtils.Utils.mac && Window.visibility !== Window.FullScreen ? 48
-                                                                                                : 8
-    bottomPadding: 8
-    leftPadding: 8
+    implicitWidth: 60 + leftPadding
+
+    spacing: Theme.defaultHalfPadding
+
+    topPadding: SafeArea.margins.top + (Qt.platform.os === SQUtils.Utils.mac && Window.visibility !== Window.FullScreen ? 48
+                                                                                                                        : 8)
+    bottomPadding: SafeArea.margins.bottom + Theme.defaultHalfPadding
+    leftPadding: SafeArea.margins.left + Theme.defaultHalfPadding
     rightPadding: 0
-
-    spacing: 8
 
     background: Rectangle {
         color: Theme.palette.transparent
     }
 
-    implicitWidth: 68 // by design (60 + leftPadding + handle)
+    Overlay.modal: Rectangle {
+        color: Theme.palette.backdropColor
+    }
 
     QtObject {
         id: d
@@ -86,10 +89,11 @@ Drawer {
         // UI
         readonly property int windowWidth: root.parent?.Window?.width ?? Screen.width
         readonly property int windowHeight: root.parent?.Window?.height ?? Screen.height
+        readonly property bool hasPopups: root.Overlay.overlay.children.filter(item => item.toString().includes("QQuickPopupItem") && !item.toString().includes("PrimaryNavSidebar")).length
 
         readonly property color containerBgColor: root.thirdpartyServicesEnabled ? root.Theme.palette.statusAppNavBar.backgroundColor
                                                                                  : root.Theme.palette.privacyColors.primary
-        readonly property int containerBgRadius: 16
+        readonly property int containerBgRadius: Theme.defaultPadding
 
         // context menu guard
         property var popupMenuInstance: null
@@ -111,8 +115,8 @@ Drawer {
 
             Layout.fillWidth: true
             Layout.fillHeight: true
-            topPadding: 10
-            bottomPadding: 10
+            topPadding: Theme.defaultSmallPadding
+            bottomPadding: Theme.defaultSmallPadding
 
             background: Rectangle {
                 color: d.containerBgColor
@@ -191,12 +195,16 @@ Drawer {
 
                 icon.name: "notification"
 
-                showBadge: root.acHasUnseenNotifications
+                showBadge: root.acHasUnseenNotifications || root.acUnreadNotificationsCount
                 badgeCount: root.acUnreadNotificationsCount
 
                 thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
-                onToggled: root.activityCenterRequested(checked)
+                onToggled: {
+                    root.activityCenterRequested(checked)
+                    if (root.interactive)
+                        root.close()
+                }
             }
         }
     }
@@ -207,7 +215,7 @@ Drawer {
     Rectangle {
         objectName: "rainbowHandle"
         height: 100
-        width: 16
+        width: Constants.primaryNavSidebarHandleWidth
         radius: width
         parent: root.Overlay.overlay
         anchors.left: parent.left
@@ -221,7 +229,7 @@ Drawer {
             GradientStop {position: 0.6; color: "#F7A440"}
             GradientStop {position: 0.8; color: "#F87A4F"}
         }
-        visible: root.position < 1
+        visible: root.position < 1 && !d.hasPopups
     }
 
     component RegularSectionButton: PrimaryNavSidebarButton {
@@ -356,7 +364,7 @@ Drawer {
     }
 
     component SidebarSeparator: Rectangle {
-        Layout.preferredWidth: 16
+        Layout.preferredWidth: Theme.defaultPadding
         Layout.preferredHeight: 1
         Layout.alignment: Qt.AlignHCenter
         color: Theme.palette.baseColor1

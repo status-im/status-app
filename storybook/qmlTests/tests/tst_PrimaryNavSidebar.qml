@@ -335,7 +335,7 @@ Item {
         function test_drawer_always_visible() {
             // Test interactive mode
             controlUnderTest.alwaysVisible = false
-            compare(controlUnderTest.dim, true)
+            compare(controlUnderTest.dim, false)
             compare(controlUnderTest.modal, false)
 
             // Test non-interactive mode

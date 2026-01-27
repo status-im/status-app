@@ -1239,7 +1239,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width + Theme.halfPadding : 0
+        anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width + Constants.primaryNavSidebarHandleWidth/2 : undefined
 
         spacing: 0
         objectName: "mainRightView"

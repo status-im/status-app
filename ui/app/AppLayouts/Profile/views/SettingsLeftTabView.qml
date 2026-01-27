@@ -37,7 +37,7 @@ Item {
         anchors.topMargin: Theme.bigPadding
         anchors.bottomMargin: Theme.padding
 
-        leftMargin: Theme.halfPadding
+        leftMargin: Constants.primaryNavSidebarHandleWidth
         rightMargin: Theme.padding
         bottomMargin: Theme.bigPadding
 

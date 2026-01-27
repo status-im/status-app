@@ -65,10 +65,25 @@ SplitView {
         title: "PrimaryNavSidebar"
         color: Theme.palette.statusAppLayout.backgroundColor
 
+        Dialog {
+            id: dlg
+            objectName: "peekabooDlg"
+            width: parent.width * .7
+            height: parent.height * .7
+            anchors.centerIn: parent
+            visible: false
+            modal: true
+            Label {
+                anchors.centerIn: parent
+                text: "Peekabooooo!"
+            }
+            standardButtons: Dialog.Ok
+        }
+
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 2
-            anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width + Theme.halfPadding : 2
+            anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width + Constants.primaryNavSidebarHandleWidth/2 : undefined
             Behavior on anchors.leftMargin {PropertyAnimation {duration: ThemeUtils.AnimationDuration.Fast}}
 
             WebView {
@@ -107,6 +122,11 @@ SplitView {
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
                 text: "Sidebar position: %1".arg(sidebar.position)
+            }
+
+            StatusButton {
+                text: "Open modal dialog"
+                onClicked: dlg.open()
             }
 
             Item {

@@ -3,17 +3,15 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import StatusQ.Core
-import StatusQ.Core.Utils
 import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Core.Theme
-import StatusQ.Core.Backpressure
 
 import AppLayouts.HomePage.delegates
 
 import utils
 
-StatusScrollView {
+Control {
     id: root
 
     /**
@@ -55,201 +53,174 @@ StatusScrollView {
         pinned             [bool]   - whether the item is pinned in the UI
         timestamp          [int]    - timestamp of the last user interaction with the item
     **/
-    property alias model: repeater.model
+    property alias model: gridView.model
 
     property int delegateWidth: 160
-    property int minItemsPerRow: 3
-    Behavior on delegateWidth {
-        PropertyAnimation { duration: ThemeUtils.AnimationDuration.Fast }
-    }
     property int delegateHeight: 160
-    Behavior on delegateHeight {
-        PropertyAnimation { duration: ThemeUtils.AnimationDuration.Fast }
-    }
 
     signal itemActivated(string key, int sectionType, string itemId)
     signal itemPinRequested(string key, bool pin)
     signal dappDisconnectRequested(string dappUrl)
 
-    padding: 0
-    rightPadding: Theme.defaultPadding
-    contentWidth: availableWidth
-    contentItem.scale: d.scale
-    contentItem.width: availableWidth / contentItem.scale
-    contentItem.height: availableHeight / contentItem.scale
-    contentItem.transformOrigin: Item.TopLeft
+    padding: Theme.defaultHalfPadding
 
-    QtObject {
-        id: d
-        property bool positioningComplete // delay the animations
-        readonly property real minWidth: (root.delegateWidth * root.minItemsPerRow) + (flow.spacing * (minItemsPerRow - 1)) + root.rightPadding + root.leftPadding
-        readonly property real scale: Math.min(1, root.availableWidth / minWidth)
-    }
+    contentItem: Item {
+        StatusGridView {
+            id: gridView
 
-    ColumnLayout {
-        width: root.availableWidth / d.scale
+            readonly property int delegateCountPerRow: Math.trunc(parent.width / (root.delegateWidth + root.spacing))
 
-        Flow {
-            id: flow
-            // calculate a tight bounding box, and then horizontally center over the scrollview width
-            readonly property int delegateCountPerRow: Math.trunc(parent.width / (root.delegateWidth + spacing))
-            Layout.preferredWidth: (delegateCountPerRow * root.delegateWidth) + (spacing * (delegateCountPerRow - 1))
-            Layout.alignment: Qt.AlignHCenter
+            height: parent.height
+            width: (delegateCountPerRow * cellWidth) + (delegateCountPerRow - 1)
+            anchors.horizontalCenter: parent.horizontalCenter
 
-            spacing: Theme.defaultPadding
+            ScrollBar.vertical: StatusScrollBar {
+                parent: gridView.parent
+                anchors.top: gridView.top
+                anchors.bottom: gridView.bottom
+                anchors.left: parent.right
+                anchors.leftMargin: root.rightPadding
+            }
 
-            // for the drop shadow
-            topPadding: Theme.defaultSmallPadding
-            bottomPadding: Theme.defaultPadding
+            cellWidth: root.delegateWidth + root.spacing
+            cellHeight: root.delegateHeight + root.spacing
 
-            // delay the animations
-            onPositioningComplete: Backpressure.debounce(this, 500, () => {d.positioningComplete = true})()
+            delegate: Loader {
+                required property int index
+                required property var model
 
-            Repeater {
-                id: repeater
-                delegate: Loader {
-                    required property int index
-                    required property var model
+                objectName: "homeGridItemLoader_" + model.key
 
-                    objectName: "homeGridItemLoader_" + model.key
-
-                    sourceComponent: {
-                        switch (model.sectionType) {
-                        case Constants.appSection.profile:
-                            return settingsDelegate
-                        case Constants.appSection.community:
-                            return communityDelegate
-                        case Constants.appSection.wallet:
-                            return walletDelegate
-                        case Constants.appSection.chat:
-                        case -1: // search
-                            return chatDelegate
-                        case Constants.appSection.dApp:
-                            return dappDelegate
-                        default:
-                            console.warn("Unhandled HomePageGridItem delegate for sectionType:", model.sectionType)
-                        }
+                sourceComponent: {
+                    switch (model.sectionType) {
+                    case Constants.appSection.profile:
+                        return settingsDelegate
+                    case Constants.appSection.community:
+                        return communityDelegate
+                    case Constants.appSection.wallet:
+                        return walletDelegate
+                    case Constants.appSection.chat:
+                    case -1: // search
+                        return chatDelegate
+                    case Constants.appSection.dApp:
+                        return dappDelegate
+                    default:
+                        console.warn("Unhandled HomePageGridItem delegate for sectionType:", model.sectionType)
                     }
+                }
 
-                    Connections {
-                        target: item ?? null
-                        function onClicked() {
-                            root.itemActivated(model.key, model.sectionType, item.itemId)
-                        }
-                        function onPinRequested() {
-                            root.itemPinRequested(model.key, !model.pinned)
-                        }
+                Connections {
+                    target: item ?? null
+                    function onClicked() {
+                        root.itemActivated(model.key, model.sectionType, item.itemId)
+                    }
+                    function onPinRequested() {
+                        root.itemPinRequested(model.key, !model.pinned)
                     }
                 }
             }
+            displaced: Transition {
+                NumberAnimation { properties: "x,y"; duration: ThemeUtils.AnimationDuration.Fast }
+            }
+        }
 
-            Component {
-                id: communityDelegate
+        Component {
+            id: communityDelegate
 
-                HomePageGridCommunityItem {
-                    width: root.delegateWidth
-                    height: root.delegateHeight
-                    itemId: model.id
-                    title: model.name
-                    color: model.color
-                    icon.source: model.icon
-                    banner: model.banner ?? ""
-                    hasNotification: model.hasNotification
-                    notificationsCount: model.notificationsCount
-                    pinned: model.pinned
+            HomePageGridCommunityItem {
+                width: root.delegateWidth
+                height: root.delegateHeight
+                itemId: model.id
+                title: model.name
+                color: model.color
+                icon.source: model.icon
+                banner: model.banner ?? ""
+                hasNotification: model.hasNotification
+                notificationsCount: model.notificationsCount
+                pinned: model.pinned
 
-                    membersCount: model.members ?? 0
-                    activeMembersCount: model.activeMembers ?? 0
+                membersCount: model.members ?? 0
+                activeMembersCount: model.activeMembers ?? 0
 
-                    pending: model.pending ?? false
-                    banned: model.banned ?? false
+                pending: model.pending ?? false
+                banned: model.banned ?? false
+            }
+        }
+
+        Component {
+            id: settingsDelegate
+
+            HomePageGridSettingsItem {
+                width: root.delegateWidth
+                height: root.delegateHeight
+                itemId: model.id
+                title: model.name
+                icon.name: model.icon
+                hasNotification: model.hasNotification
+                notificationsCount: model.notificationsCount
+                pinned: model.pinned
+            }
+        }
+
+        Component {
+            id: walletDelegate
+
+            HomePageGridWalletItem {
+                width: root.delegateWidth
+                height: root.delegateHeight
+                itemId: model.id
+                title: model.name
+                icon.name: model.icon
+                icon.color: model.color
+                hasNotification: model.hasNotification
+                notificationsCount: model.notificationsCount
+                pinned: model.pinned
+
+                currencyBalance: model.currencyBalance ?? ""
+                walletType: model.walletType ?? ""
+            }
+        }
+
+        Component {
+            id: chatDelegate
+
+            HomePageGridChatItem {
+                width: root.delegateWidth
+                height: root.delegateHeight
+                itemId: model.id
+                title: chatType === Constants.chatType.communityChat ? "#" + model.name : model.name
+                icon.name: model.icon
+                icon.color: model.color
+                hasNotification: model.hasNotification ?? false
+                notificationsCount: model.notificationsCount ?? 0
+                pinned: model.pinned
+                sectionName: model.sectionName ?? ""
+                lastMessageText: {
+                    if (!!model.lastMessageText)
+                        return model.lastMessageText
+                    return ""
                 }
+
+                chatType: model.chatType ?? Constants.chatType.unknown
+                onlineStatus: model.onlineStatus ?? Constants.onlineStatus.unknown
             }
+        }
 
-            Component {
-                id: settingsDelegate
+        Component {
+            id: dappDelegate
 
-                HomePageGridSettingsItem {
-                    width: root.delegateWidth
-                    height: root.delegateHeight
-                    itemId: model.id
-                    title: model.name
-                    icon.name: model.icon
-                    hasNotification: model.hasNotification
-                    notificationsCount: model.notificationsCount
-                    pinned: model.pinned
-                }
-            }
+            HomePageGridDAppItem {
+                width: root.delegateWidth
+                height: root.delegateHeight
+                itemId: model.id
+                title: model.name
+                icon.name: model.icon
+                icon.color: model.color
+                pinned: model.pinned
 
-            Component {
-                id: walletDelegate
+                connectorBadge: model.connectorBadge ?? ""
 
-                HomePageGridWalletItem {
-                    width: root.delegateWidth
-                    height: root.delegateHeight
-                    itemId: model.id
-                    title: model.name
-                    icon.name: model.icon
-                    icon.color: model.color
-                    hasNotification: model.hasNotification
-                    notificationsCount: model.notificationsCount
-                    pinned: model.pinned
-
-                    currencyBalance: model.currencyBalance ?? ""
-                    walletType: model.walletType ?? ""
-                }
-            }
-
-            Component {
-                id: chatDelegate
-
-                HomePageGridChatItem {
-                    width: root.delegateWidth
-                    height: root.delegateHeight
-                    itemId: model.id
-                    title: chatType === Constants.chatType.communityChat ? "#" + model.name : model.name
-                    icon.name: model.icon
-                    icon.color: model.color
-                    hasNotification: model.hasNotification ?? false
-                    notificationsCount: model.notificationsCount ?? 0
-                    pinned: model.pinned
-                    sectionName: model.sectionName ?? ""
-                    lastMessageText: {
-                        if (!!model.lastMessageText)
-                            return model.lastMessageText
-                        return ""
-                    }
-
-                    chatType: model.chatType ?? Constants.chatType.unknown
-                    onlineStatus: model.onlineStatus ?? Constants.onlineStatus.unknown
-                }
-            }
-
-            Component {
-                id: dappDelegate
-
-                HomePageGridDAppItem {
-                    width: root.delegateWidth
-                    height: root.delegateHeight
-                    itemId: model.id
-                    title: model.name
-                    icon.name: model.icon
-                    icon.color: model.color
-                    pinned: model.pinned
-
-                    connectorBadge: model.connectorBadge ?? ""
-
-                    onDisconnectRequested: root.dappDisconnectRequested(itemId)
-                }
-            }
-
-            move: Transition {
-                enabled: d.positioningComplete
-                NumberAnimation { properties: "x,y"; }
-            }
-            add: Transition {
-                enabled: d.positioningComplete
-                NumberAnimation { properties: "x,y"; from: 0; duration: ThemeUtils.AnimationDuration.Fast }
+                onDisconnectRequested: root.dappDisconnectRequested(itemId)
             }
         }
     }

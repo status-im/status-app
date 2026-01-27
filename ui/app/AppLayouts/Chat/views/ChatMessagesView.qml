@@ -230,6 +230,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
+        leftMargin: Constants.primaryNavSidebarHandleWidth
         spacing: 0
         verticalLayoutDirection: ListView.BottomToTop
         cacheBuffer: height > 0 ? height * 2 : 0 // cache 2 screens worth of items

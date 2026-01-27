@@ -23,7 +23,7 @@ ToolButton {
 
     signal contextMenuRequested(int x, int y)
 
-    padding: 8
+    padding: Theme.defaultHalfPadding
     opacity: enabled ? 1 : ThemeUtils.disabledOpacity
 
     implicitWidth: 42
