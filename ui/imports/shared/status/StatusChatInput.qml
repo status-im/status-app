@@ -27,11 +27,6 @@ Rectangle {
     id: root
     objectName: "statusChatInput"
 
-    enum ImageErrorMessageLocation {
-        Top,
-        Bottom
-    }
-
     signal stickerSelected(string hashId, string packId, string url)
     signal sendMessageRequested()
     signal keyUpPress()
@@ -78,8 +73,6 @@ Rectangle {
     property var urlsList: []
 
     property bool askToEnableLinkPreview: false
-
-    property int imageErrorMessageLocation: StatusChatInput.ImageErrorMessageLocation.Top // TODO: Remove this property?
 
     onEnabledChanged: {
         if (enabled)
@@ -741,10 +734,9 @@ Rectangle {
 
             ColumnLayout {
                 id: validators
-                anchors.bottom: root.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Top ? parent.top : undefined
-                anchors.bottomMargin: root.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Top ? -4 : undefined
-                anchors.top: root.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Bottom ? parent.bottom : undefined
-                anchors.topMargin: root.imageErrorMessageLocation === StatusChatInput.ImageErrorMessageLocation.Bottom ? (isImage ? -4 : 4) : undefined
+
+                anchors.bottom: parent.top
+                anchors.bottomMargin: -4
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width
                 z: 1
