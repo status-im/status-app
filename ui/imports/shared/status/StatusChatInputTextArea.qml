@@ -1,27 +1,13 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
-
-import utils
-
-import shared
-import shared.controls.chat
-import shared.panels
-
-import mainui
-
-import AppLayouts.Chat.panels
 
 import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
-import StatusQ.Popups
-import StatusQ.Popups.Dialog
 import StatusQ.Core.Utils as StatusQUtils
-import StatusQ.Components
 import StatusQ.Controls as StatusQ
 
 import AppLayouts.Chat.adaptors
+import utils
 
 import QtModelsToolkit
 
