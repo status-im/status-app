@@ -605,7 +605,7 @@ QtObject {
 
                 contactDetails: {
                     const contactEntry = getContactModelEntry(profilePopup.publicKey)
-                    contactEntry.contactDetails
+                    return contactEntry.contactDetails
                 }
 
                 profileStore: root.profileStore

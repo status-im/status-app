@@ -17,7 +17,7 @@ QObject {
     signal populateContactDetailsRequested()
 
     onPublicKeyChanged: {
-        if (root.publicKey && contactsModel && contactsModel.length && !contactsModel.hasUser(root.publicKey)) {
+        if (root.publicKey && contactsModel && !contactsModel.hasUser(root.publicKey)) {
             // Fetch contact details
             root.populateContactDetailsRequested()
         }
