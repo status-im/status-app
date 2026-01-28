@@ -277,7 +277,7 @@ StatusQ.StatusTextArea {
             if (length === 0) {
                 _d.mentionsPos = []
             } else {
-                checkForInlineEmojis()
+                _d.convertInlineEmojis()
             }
         } else if (length > messageInputField.messageLimitHard) {
             const removeFrom = cursorPosition < messageInputField.messageLimitHard
@@ -399,6 +399,10 @@ StatusQ.StatusTextArea {
         const deparsedEmoji = StatusQUtils.Emoji.deparse(textWithoutMention);
 
         return StatusQUtils.StringUtils.plainText(deparsedEmoji)
+    }
+
+    function convertInlineEmojis() {
+        _d.convertInlineEmojis(true)
     }
 
     QtObject {
@@ -657,6 +661,45 @@ StatusQ.StatusTextArea {
 
         function removeMentions(currentText) {
             return currentText.replace(/\[\[mention\]\]/g, '')
+        }
+
+        // trigger inline emoji replacements at the end of the input, after space,
+        // or always (force==true) when sending the message
+        function convertInlineEmojis(force = false) {
+            const position = messageInputField.cursorPosition
+
+            if (force || messageInputField.getText(position, position - 1) === " ") {
+                // figure out last word (between spaces), max length of 5
+                let lastWord = ""
+
+                // just before the last non-space character
+                const cursorPos = position - (force ? 1 : 2)
+
+                // go back until we found a space or start of line
+                for (let i = cursorPos; i > cursorPos - 6; i--) {
+                    const lastChar = messageInputField.getText(i, i + 1)
+
+                    if (i < 0 || lastChar === " ") // reached start of line or a space
+                        break
+                    else
+                        lastWord = lastChar + lastWord // collect the last word
+                }
+
+                const emojiReplacementSymbols = ":='xX><0O;*dB8-D#%\\"
+
+                // check if the word contains any of the trigger chars (emojiReplacementSymbols)
+                if (!!lastWord && Array.prototype.some.call(emojiReplacementSymbols,
+                                                            trigger => lastWord.includes(trigger))) {
+                    // search the ASCII aliases for a possible match
+                    const emojiFound = StatusQUtils.Emoji.emojiJSON.emoji_json.find(
+                                         emoji => emoji.aliases_ascii.includes(lastWord))
+
+                    if (emojiFound) {
+                        messageInputField.replaceWithEmoji(
+                                    lastWord, emojiFound.unicode, force ? 0 : 1 /*offset*/)
+                    }
+                }
+            }
         }
     }
 

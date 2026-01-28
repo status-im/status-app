@@ -146,8 +146,6 @@ Rectangle {
         readonly property int kbdModifierToSendMessage:
             Qt.inputMethod.visible ? Qt.ControlModifier : Qt.NoModifier
 
-        readonly property string emojiReplacementSymbols: ":='xX><0O;*dB8-D#%\\"
-
         property bool emojiPopupOpened: false
         property bool stickersPopupOpened: false
 
@@ -356,14 +354,15 @@ Rectangle {
         if (checkTextInsert())
             return
 
-        if (messageLength <= messageLimit) {
-            checkForInlineEmojis(true)
-            root.sendMessageRequested()
-            root.hideExtendedArea()
-        } else {
+        if (messageLength > messageLimit) {
             // pop-up a warning message when trying to send a message over the limit
             lengthLimitTooltip.open()
+            return
         }
+
+        messageInputField.convertInlineEmojis()
+        root.sendMessageRequested()
+        root.hideExtendedArea()
     }
 
     // exposed because tests use it
@@ -393,32 +392,6 @@ Rectangle {
 
     function getTextWithPublicKeys() {
         return messageInputField.getTextWithPublicKeys()
-    }
-
-    function checkForInlineEmojis(force = false) {
-         // trigger inline emoji replacements after space, or always (force==true) when sending the message
-        if (force || messageInputField.getText(messageInputField.cursorPosition, messageInputField.cursorPosition - 1) === " ") {
-            // figure out last word (between spaces), max length of 5
-            var lastWord = ""
-            const cursorPos = messageInputField.cursorPosition - (force ? 1 : 2) // just before the last non-space character
-            for (let i = cursorPos; i > cursorPos - 6; i--) { // go back until we found a space or start of line
-                const lastChar = messageInputField.getText(i, i+1)
-                if (i < 0 || lastChar === " ") { // reached start of line or a space
-                    break
-                } else {
-                    lastWord = lastChar + lastWord // collect the last word
-                }
-            }
-
-            // check if the word contains any of the trigger chars (emojiReplacementSymbols)
-            if (!!lastWord && Array.prototype.some.call(d.emojiReplacementSymbols, (trigger) => lastWord.includes(trigger))) {
-                // search the ASCII aliases for a possible match
-                const emojiFound = StatusQUtils.Emoji.emojiJSON.emoji_json.find(emoji => emoji.aliases_ascii.includes(lastWord))
-                if (emojiFound) {
-                    messageInputField.replaceWithEmoji(lastWord, emojiFound.unicode, force ? 0 : 1 /*offset*/)
-                }
-            }
-        }
     }
 
     function resetImageArea() {
