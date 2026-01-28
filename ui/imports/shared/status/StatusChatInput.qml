@@ -140,6 +140,12 @@ Rectangle {
 
     QtObject {
         id: d
+
+        // whether to send message using Ctrl+Return or just Enter; based on
+        // OSK (virtual keyboard presence)
+        readonly property int kbdModifierToSendMessage:
+            Qt.inputMethod.visible ? Qt.ControlModifier : Qt.NoModifier
+
         readonly property string emojiReplacementSymbols: ":='xX><0O;*dB8-D#%\\"
 
         property bool emojiPopupOpened: false
@@ -278,19 +284,36 @@ Rectangle {
         }
 
         Keys.onPressed: event => {
+            if (event.modifiers === d.kbdModifierToSendMessage &&
+                    (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)) {
+                tryFinalizeMessage()
+                event.accepted = true
+                return
+            }
+
+            if (event.key === Qt.Key_Tab) {
+                if (checkTextInsert()) {
+                    event.accepted = true
+                    return
+                }
+            }
+
             // ⌘⇧U
             if (d.isUploadFilePressed(event)) {
                 event.accepted = true
                 imageDialog.open()
+                return
             }
 
             if (event.key === Qt.Key_Down && emojiSuggestions.visible) {
                 event.accepted = true
-                return emojiSuggestions.listView.incrementCurrentIndex()
+                emojiSuggestions.listView.incrementCurrentIndex()
+                return
             }
             if (event.key === Qt.Key_Up && emojiSuggestions.visible) {
                 event.accepted = true
-                return emojiSuggestions.listView.decrementCurrentIndex()
+                emojiSuggestions.listView.decrementCurrentIndex()
+                return
             }
 
             if (event.matches(StandardKey.Paste)) {
@@ -306,13 +329,15 @@ Rectangle {
 
     function checkTextInsert() {
         if (emojiSuggestions.visible) {
-            messageInputField.replaceWithEmoji(emojiSuggestions.shortname, emojiSuggestions.unicode)
+            messageInputField.replaceWithEmoji(emojiSuggestions.shortname,
+                                               emojiSuggestions.unicode)
             return true
         }
         if (suggestionsBox.visible) {
             suggestionsBox.selectCurrentItem()
             return true
         }
+
         return false
     }
 
@@ -939,8 +964,10 @@ Rectangle {
                                         emojiPopup.close()
                                         return
                                     }
-                                    emojiPopup.open()
-                                    d.emojiPopupOpened = true
+                                    if (emojiPopup) {
+                                        emojiPopup.open()
+                                        d.emojiPopupOpened = true
+                                    }
                                 }
                             }
 

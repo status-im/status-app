@@ -63,13 +63,6 @@ StatusQ.StatusTextArea {
     Keys.onPressed: event => {
         lastKeyPressedEvent = event
 
-        if (event.modifiers === _d.kbdModifierToSendMessage &&
-                (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)) {
-            tryFinalizeMessage()
-            event.accepted = true
-            return
-        }
-
         const symbolPressed = event.text.length > 0 &&
                             event.key !== Qt.Key_Backspace &&
                             event.key !== Qt.Key_Delete &&
@@ -86,13 +79,6 @@ StatusQ.StatusTextArea {
                     event.accepted = true
                     return
                 }
-            }
-        }
-
-        if (event.key === Qt.Key_Tab) {
-            if (checkTextInsert()) {
-                event.accepted = true
-                return
             }
         }
 
@@ -434,11 +420,6 @@ StatusQ.StatusTextArea {
 
         // Emojis
         property string emojiFilter: ""
-
-        // whether to send message using Ctrl+Return or just Enter; based on
-        // OSK (virtual keyboard presence)
-        readonly property int kbdModifierToSendMessage:
-            Qt.inputMethod.visible ? Qt.ControlModifier : Qt.NoModifier
 
         function updateMentionsPositions() {
             if (mentionsPos.length == 0) {
