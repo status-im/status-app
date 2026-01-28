@@ -14,38 +14,58 @@ import QtModelsToolkit
 StatusQ.StatusTextArea {
     id: root
 
+    // Maximum size of the message that is considered as appropriate to be sent.
+    // The user can provide more content, up to messageLimitHard, but behavior
+    // of the input changes above that limit, e.g. inline emojis are not
+    // coverted into images.
     property int messageLimit: 20
+
+    // Strict limit of the input. Content exceeding that limit will be ignored.
     property int messageLimitHard: 200
 
+    // List of urls that are intended to be highlighted.
     property var urlsList: []
 
-    property int previousCursorPosition: 0
-    property KeyEvent lastKeyPressedEvent
-
+    // Url intended to have special highlighting. Can be used e.g. when
+    // corresponding preview is hovered.
     property string urlToBeHighlighted
 
+    // Model of users used for creating mention suggestions list. Expected
+    // roles: "pubKey", "preferredDisplayName".
     required property var usersModel
+
+    // Read-only model of mentions suggestions. It's subset of usersModel
+    // filtered according to the provided partial name.
     readonly property alias suggestionsModel: suggestionsFilterAdaptor.model
 
+    // Pub key of mention which is intended to be inserted when user enters full
+    // name of that contact. E.g. pub key of contact "Maria" is provided, user's
+    // input @maria will be converted to interactive mention. But if the pub key
+    // points to contact "Maria2", input @maria won't trigger convertion into
+    // mention (would do after entering the remaining part - "2").
     property string suggestedMentionPubKey
 
+    // Partial emoji name currently provided by the user (like :man). Can be
+    // used to provide emoji suggestions list.
     readonly property alias emojiFilter: d.emojiFilter
 
-    // to be removed later
+    // Used for mention suggestion handling. To be removed later.
     readonly property alias lastAtPosition: suggestionsFilterAdaptor.lastAtPosition
 
+    // Mention internal representation details, exposed to potentially use in
+    // external processing.
     readonly property string mentionTagStart:
         `<span style="background-color: ${Theme.palette.mentionColor2};"><a style="color:${Theme.palette.mentionColor1};text-decoration:none" href='http://'>`
     readonly property string mentionTagEnd: `</a></span>`
 
+    // Signal emitted when user attempts to add content exceeding hard limit.
     signal attemptToExceedHardLimit
 
     textFormat: Text.RichText
-
     color: Theme.palette.textColor
     background: null
-
     inputMethodHints: Qt.ImhMultiLine | Qt.ImhNoEditMenu
+
     EnterKey.type: Qt.EnterKeyReturn // insert newlines hint for OSK
 
     Keys.onShortcutOverride: function (event) {
@@ -53,7 +73,7 @@ StatusQ.StatusTextArea {
     }
 
     Keys.onPressed: event => {
-        lastKeyPressedEvent = event
+        d.lastKeyPressedEvent = event
 
         const symbolPressed = event.text.length > 0 &&
                             event.key !== Qt.Key_Backspace &&
@@ -247,11 +267,14 @@ StatusQ.StatusTextArea {
     }
 
     onCursorPositionChanged: {
-        if(d.mentionsPos.length > 0 && ((lastKeyPressedEvent.key === Qt.Key_Left) || (lastKeyPressedEvent.key === Qt.Key_Right)
-          || (selectedText.length>0))) {
+        if (d.mentionsPos.length > 0 &&
+                (d.lastKeyPressedEvent.key === Qt.Key_Left ||
+                 d.lastKeyPressedEvent.key === Qt.Key_Right ||
+                 selectedText.length>0)) {
             const mention = d.getMentionAtPosition(cursorPosition)
+
             if (mention) {
-                const cursorMovingLeft = (cursorPosition < previousCursorPosition);
+                const cursorMovingLeft = (cursorPosition < d.previousCursorPosition);
                 const newCursorPosition = cursorMovingLeft ?
                                             mention.leftIndex :
                                             mention.rightIndex
@@ -261,7 +284,7 @@ StatusQ.StatusTextArea {
             }
         }
 
-        previousCursorPosition = cursorPosition
+        d.previousCursorPosition = cursorPosition
     }
 
     onTextChanged: {
@@ -401,6 +424,10 @@ StatusQ.StatusTextArea {
     QtObject {
         id: d
 
+        // General
+        property int previousCursorPosition: 0
+        property KeyEvent lastKeyPressedEvent
+
         // Mentions
         property int leftOfMentionIndex: -1
         property int rightOfMentionIndex: -1
@@ -412,10 +439,10 @@ StatusQ.StatusTextArea {
         property string copiedTextFormatted
         property int copyTextStart: 0
 
+        // Emojis
         readonly property int nbEmojisInClipboard:
             StatusQUtils.Emoji.nbEmojis(ClipboardUtils.html)
 
-        // Emojis
         property string emojiFilter: ""
 
         function updateMentionsPositions() {
@@ -428,7 +455,7 @@ StatusQ.StatusTextArea {
                 return
             }
 
-            const keyEvent = root.lastKeyPressedEvent
+            const keyEvent = d.lastKeyPressedEvent
             if ((keyEvent.key === Qt.Key_Right) || (keyEvent.key === Qt.Key_Left)
                     || (keyEvent.key === Qt.Key_Up) || (keyEvent.key === Qt.Key_Down)) {
                 return
@@ -532,7 +559,6 @@ StatusQ.StatusTextArea {
                         replaceWithEmoji(shortname, codePoint)
                 }
             } else if (emojiEvent && isKeyValid(event.key) && !isColonPressed) {
-                // popup
                 const index2 = message.data.lastIndexOf(':', message.cursor - 1);
                 if (index2 >= 0 && message.cursor > 0) {
                     d.emojiFilter = message.data.substr(index2, message.cursor)
