@@ -97,6 +97,28 @@ ListModel {
             trustStatus: Constants.trustStatus.untrustworthy
         },
         {
+            pubKey: "0x06daaed192343f470f1ab3",
+            emojiHash: JSON.stringify(["🤎", "👨🏻‍🍼", "📣", "👷🏽", "😺", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮","🤷🏻‍♂️", "🤦🏻", "🥞", "🔃", "🧝🏽‍♂️"]),
+            compressedPubKey: "zQ3shQXiTXxcMNvQLe17vewYyvSczbTj344vyQsBAL4PRDDF4",
+            onlineStatus: Constants.onlineStatus.online,
+            isContact: true,
+            isBlocked: false,
+            isVerified: false,
+            isAdmin: false,
+            isUntrustworthy: true,
+            displayName: "Maria2",
+            alias: "meth2",
+            localNickname: "",
+            ensName: "",
+            preferredDisplayName: "Maria2",
+            icon: "",
+            colorId: 5,
+            isEnsVerified: false,
+            isAwaitingAddress: false,
+            memberRole: Constants.memberRole.none,
+            trustStatus: Constants.trustStatus.untrustworthy
+        },
+        {
             pubKey: "0x04d1bed192343f470f1255",
             emojiHash: JSON.stringify(["🥞", "🔃", "🧝🏽‍♂️", "👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮","🤷🏻‍♂️", "🤦🏻", "📣", "🤎", "👷🏽", "😺"]),
             compressedPubKey: "zQ3shQBu4PGDX17vewYyvSczbTj344viTXxcMNvQLeyQsBD1A",
