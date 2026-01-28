@@ -26,7 +26,7 @@ import AppLayouts.Chat.adaptors
 import QtModelsToolkit
 
 StatusQ.StatusTextArea {
-    id: messageInputField
+    id: root
 
     property int messageLimit: 20
     property int messageLimitHard: 200
@@ -36,15 +36,21 @@ StatusQ.StatusTextArea {
     property int previousCursorPosition: 0
     property KeyEvent lastKeyPressedEvent
 
+    property string urlToBeHighlighted
+
     required property var usersModel
     readonly property alias suggestionsModel: suggestionsFilterAdaptor.model
 
     property string suggestedMentionPubKey
 
-    readonly property alias emojiFilter: _d.emojiFilter
+    readonly property alias emojiFilter: d.emojiFilter
 
     // to be removed later
     readonly property alias lastAtPosition: suggestionsFilterAdaptor.lastAtPosition
+
+    readonly property string mentionTagStart:
+        `<span style="background-color: ${Theme.palette.mentionColor2};"><a style="color:${Theme.palette.mentionColor1};text-decoration:none" href='http://'>`
+    readonly property string mentionTagEnd: `</a></span>`
 
     signal attemptToExceedHardLimit
 
@@ -68,14 +74,14 @@ StatusQ.StatusTextArea {
                             event.key !== Qt.Key_Delete &&
                             event.key !== Qt.Key_Escape
 
-        if (_d.mentionsPos.length > 0 && symbolPressed && messageInputField.selectedText.length === 0) {
-            for (let i = 0; i < _d.mentionsPos.length; i++) {
-                if (messageInputField.cursorPosition === _d.mentionsPos[i].leftIndex) {
-                    _d.leftOfMentionIndex = i
+        if (d.mentionsPos.length > 0 && symbolPressed && root.selectedText.length === 0) {
+            for (let i = 0; i < d.mentionsPos.length; i++) {
+                if (root.cursorPosition === d.mentionsPos[i].leftIndex) {
+                    d.leftOfMentionIndex = i
                     event.accepted = true
                     return
-                } else if (messageInputField.cursorPosition === _d.mentionsPos[i].rightIndex) {
-                    _d.rightOfMentionIndex = i
+                } else if (root.cursorPosition === d.mentionsPos[i].rightIndex) {
+                    d.rightOfMentionIndex = i
                     event.accepted = true
                     return
                 }
@@ -85,7 +91,7 @@ StatusQ.StatusTextArea {
         // handle new line in blockquote
         if ((event.key === Qt.Key_Enter || event.key === Qt.Key_Return)
             && (event.modifiers & Qt.ShiftModifier)) {
-            const message = _d.extrapolateCursorPosition()
+            const message = d.extrapolateCursorPosition()
 
             if (message.data.startsWith(">") && !message.data.endsWith("\n\n")) {
                 let newMessage1 = ""
@@ -94,22 +100,22 @@ StatusQ.StatusTextArea {
                 } else {
                     newMessage1 = message.data + "\n> "
                 }
-                messageInputField.remove(0, messageInputField.cursorPosition)
+                root.remove(0, root.cursorPosition)
                 insertInTextInput(0, StatusQUtils.Emoji.parse(newMessage1))
                 event.accepted = true
             }
         }
 
         if (event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) {
-            const message = _d.extrapolateCursorPosition()
-            if (_d.mentionsPos.length > 0) {
-                let anticipatedCursorPosition = messageInputField.cursorPosition
+            const message = d.extrapolateCursorPosition()
+            if (d.mentionsPos.length > 0) {
+                let anticipatedCursorPosition = root.cursorPosition
                 anticipatedCursorPosition += event.key === Qt.Key_Backspace ?
                                                -1 : 1
 
-                const mention = _d.getMentionAtPosition(anticipatedCursorPosition)
+                const mention = d.getMentionAtPosition(anticipatedCursorPosition)
                 if (mention) {
-                    _d.removeMention(mention)
+                    d.removeMention(mention)
                     event.accepted = true
                 }
             }
@@ -117,19 +123,19 @@ StatusQ.StatusTextArea {
             // handle backspace when entering an existing blockquote
             if(message.data.startsWith(">") && message.data.endsWith("\n\n")) {
                 const newMessage = message.data.substr(0, message.data.lastIndexOf("\n")) + "> ";
-                messageInputField.remove(0, messageInputField.cursorPosition);
+                root.remove(0, root.cursorPosition);
                 insertInTextInput(0, StatusQUtils.Emoji.parse(newMessage));
                 event.accepted = true
             }
         }
 
         if (event.matches(StandardKey.Copy) || event.matches(StandardKey.Cut)) {
-            if (messageInputField.selectedText !== "") {
-                _d.copiedTextPlain = messageInputField.getText(
-                            messageInputField.selectionStart, messageInputField.selectionEnd)
-                _d.copiedTextFormatted = messageInputField.getFormattedText(
-                            messageInputField.selectionStart, messageInputField.selectionEnd)
-                _d.copyMentions(messageInputField.selectionStart, messageInputField.selectionEnd)
+            if (root.selectedText !== "") {
+                d.copiedTextPlain = root.getText(
+                            root.selectionStart, root.selectionEnd)
+                d.copiedTextFormatted = root.getFormattedText(
+                            root.selectionStart, root.selectionEnd)
+                d.copyMentions(root.selectionStart, root.selectionEnd)
             }
         } else if (event.matches(StandardKey.Paste)) {
             if (!ClipboardUtils.hasText)
@@ -137,52 +143,52 @@ StatusQ.StatusTextArea {
 
             const clipboardText = StatusQUtils.StringUtils.plainText(ClipboardUtils.text)
             // prevent repetitive & huge clipboard paste, where huge is total char count > than messageLimitHard
-            const selectionLength = messageInputField.selectionEnd - messageInputField.selectionStart
-            if ((length + clipboardText.length - selectionLength) > messageInputField.messageLimitHard)
+            const selectionLength = root.selectionEnd - root.selectionStart
+            if ((length + clipboardText.length - selectionLength) > root.messageLimitHard)
             {
                 attemptToExceedHardLimit()
                 event.accepted = true
                 return
             }
 
-            messageInputField.remove(messageInputField.selectionStart, messageInputField.selectionEnd)
+            root.remove(root.selectionStart, root.selectionEnd)
 
             // cursor position must be stored in a helper property because setting readonly to true causes change
             // of the cursor position to the end of the input
-            _d.copyTextStart = messageInputField.cursorPosition
-            messageInputField.readOnly = true
+            d.copyTextStart = root.cursorPosition
+            root.readOnly = true
 
-            const copiedText = StatusQUtils.StringUtils.plainText(_d.copiedTextPlain)
+            const copiedText = StatusQUtils.StringUtils.plainText(d.copiedTextPlain)
 
             if (copiedText === clipboardText) {
-                if (_d.copiedTextPlain.includes("@")) {
-                    _d.copiedTextFormatted = _d.copiedTextFormatted.replace(
+                if (d.copiedTextPlain.includes("@")) {
+                    d.copiedTextFormatted = d.copiedTextFormatted.replace(
                                         /span style="/g, "span style=\" text-decoration:none;")
 
                     let lastFoundIndex = -1
-                    for (let j = 0; j < _d.copiedMentionsPos.length; j++) {
-                        const name = _d.copiedMentionsPos[j].name
-                        const indexOfName = _d.copiedTextPlain.indexOf(name, lastFoundIndex)
+                    for (let j = 0; j < d.copiedMentionsPos.length; j++) {
+                        const name = d.copiedMentionsPos[j].name
+                        const indexOfName = d.copiedTextPlain.indexOf(name, lastFoundIndex)
                         lastFoundIndex += name.length
 
-                        if (indexOfName === _d.copiedMentionsPos[j].leftIndex + 1) {
+                        if (indexOfName === d.copiedMentionsPos[j].leftIndex + 1) {
                             const mention = {
                                 name: name,
-                                pubKey: _d.copiedMentionsPos[j].pubKey,
-                                leftIndex: (_d.copiedMentionsPos[j].leftIndex + _d.copyTextStart - 1),
-                                rightIndex: (_d.copiedMentionsPos[j].leftIndex + _d.copyTextStart + name.length)
+                                pubKey: d.copiedMentionsPos[j].pubKey,
+                                leftIndex: (d.copiedMentionsPos[j].leftIndex + d.copyTextStart - 1),
+                                rightIndex: (d.copiedMentionsPos[j].leftIndex + d.copyTextStart + name.length)
                             }
-                            _d.mentionsPos.push(mention)
-                            _d.sortMentions()
+                            d.mentionsPos.push(mention)
+                            d.sortMentions()
                         }
                     }
                 }
-                insertInTextInput(_d.copyTextStart, _d.copiedTextFormatted)
+                insertInTextInput(d.copyTextStart, d.copiedTextFormatted)
             } else {
-                _d.copiedTextPlain = ""
-                _d.copiedTextFormatted = ""
-                _d.copiedMentionsPos = []
-                messageInputField.insert(_d.copyTextStart, ((_d.nbEmojisInClipboard === 0) ?
+                d.copiedTextPlain = ""
+                d.copiedTextFormatted = ""
+                d.copiedMentionsPos = []
+                root.insert(d.copyTextStart, ((d.nbEmojisInClipboard === 0) ?
                 ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
                 : StatusQUtils.Emoji.deparse(ClipboardUtils.html)))
             }
@@ -190,8 +196,8 @@ StatusQ.StatusTextArea {
             // Reset readOnly immediately after paste completes
             // Don't wait for onReleased which might not fire on mobile
             if (StatusQUtils.Utils.isMobile) {
-                messageInputField.readOnly = false
-                messageInputField.cursorPosition = (_d.copyTextStart + ClipboardUtils.text.length + _d.nbEmojisInClipboard)
+                root.readOnly = false
+                root.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard)
             }
             event.accepted = true
         }
@@ -211,35 +217,35 @@ StatusQ.StatusTextArea {
 
         const eventText = event.key === Qt.Key_Space ? "&nbsp;" : event.text
 
-        if(_d.rightOfMentionIndex !== -1) {
+        if(d.rightOfMentionIndex !== -1) {
             //make sure to add an extra space between mention and text
             let mentionSeparator = event.key === Qt.Key_Space ? "" : "&nbsp;"
-            messageInputField.insert(_d.mentionsPos[_d.rightOfMentionIndex].rightIndex, mentionSeparator + eventText)
+            root.insert(d.mentionsPos[d.rightOfMentionIndex].rightIndex, mentionSeparator + eventText)
 
-            _d.rightOfMentionIndex = -1
+            d.rightOfMentionIndex = -1
         }
 
-        if(_d.leftOfMentionIndex !== -1) {
-            messageInputField.insert(_d.mentionsPos[_d.leftOfMentionIndex].leftIndex, eventText)
+        if(d.leftOfMentionIndex !== -1) {
+            root.insert(d.mentionsPos[d.leftOfMentionIndex].leftIndex, eventText)
 
-            _d.leftOfMentionIndex = -1
+            d.leftOfMentionIndex = -1
         }
 
         if (event.key !== Qt.Key_Escape)
-             _d.emojiHandler(event)
+             d.emojiHandler(event)
 
-        if (messageInputField.readOnly) {
-            messageInputField.readOnly = false
-            messageInputField.cursorPosition = _d.copyTextStart + ClipboardUtils.text.length + _d.nbEmojisInClipboard
+        if (root.readOnly) {
+            root.readOnly = false
+            root.cursorPosition = d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard
         }
 
         if (suggestedMentionPubKey) {
             const namePrefix = suggestionsFilterAdaptor.filter
-            const lastCursorPosition = messageInputField.cursorPosition
+            const lastCursorPosition = root.cursorPosition
             const lastAtPosition = suggestionsFilterAdaptor.lastAtPosition
             const fullName = StatusQUtils.ModelUtils.getByKey(
                                suggestionsFilterAdaptor.model, "pubKey",
-                               messageInputField.suggestedMentionPubKey, "preferredDisplayName")
+                               root.suggestedMentionPubKey, "preferredDisplayName")
 
             const namePrefixLowerCase = namePrefix.toLowerCase()
             const fullNameLowerCase = fullName.toLowerCase()
@@ -248,16 +254,16 @@ StatusQ.StatusTextArea {
                     && event.key !== Qt.Key_Backspace
                     && event.key !== Qt.Key_Delete
                     && event.key !== Qt.Key_Left) {
-                _d.insertMention(fullName, suggestedMentionPubKey,
+                d.insertMention(fullName, suggestedMentionPubKey,
                                 lastAtPosition, lastCursorPosition)
             }
         }
     }
 
     onCursorPositionChanged: {
-        if(_d.mentionsPos.length > 0 && ((lastKeyPressedEvent.key === Qt.Key_Left) || (lastKeyPressedEvent.key === Qt.Key_Right)
+        if(d.mentionsPos.length > 0 && ((lastKeyPressedEvent.key === Qt.Key_Left) || (lastKeyPressedEvent.key === Qt.Key_Right)
           || (selectedText.length>0))) {
-            const mention = _d.getMentionAtPosition(cursorPosition)
+            const mention = d.getMentionAtPosition(cursorPosition)
             if (mention) {
                 const cursorMovingLeft = (cursorPosition < previousCursorPosition);
                 const newCursorPosition = cursorMovingLeft ?
@@ -273,47 +279,48 @@ StatusQ.StatusTextArea {
     }
 
     onTextChanged: {
-        if (length <= messageInputField.messageLimit) {
+        if (length <= root.messageLimit) {
             if (length === 0) {
-                _d.mentionsPos = []
+                d.mentionsPos = []
             } else {
-                _d.convertInlineEmojis()
+                d.convertInlineEmojis()
             }
-        } else if (length > messageInputField.messageLimitHard) {
-            const removeFrom = cursorPosition < messageInputField.messageLimitHard
+        } else if (length > root.messageLimitHard) {
+            const removeFrom = cursorPosition < root.messageLimitHard
                              ? cursorWhenPressed
-                             : messageInputField.messageLimitHard
+                             : root.messageLimitHard
             remove(removeFrom, cursorPosition)
 
             attemptToExceedHardLimit()
         }
 
-        _d.updateMentionsPositions()
-        _d.cleanMentionsPos()
+        d.updateMentionsPositions()
+        d.cleanMentionsPos()
+        suggestionsFilterAdaptor.invalidateFilter()
     }
 
     onLinkActivated: {
-        const mention = _d.getMentionAtPosition(cursorPosition - 1)
+        const mention = d.getMentionAtPosition(cursorPosition - 1)
         if(mention) {
             select(mention.leftIndex, mention.rightIndex)
         }
     }
 
     function insertMention(name: string, pubKey: string) {
-        _d.insertMention(name, pubKey,
+        d.insertMention(name, pubKey,
                          suggestionsFilterAdaptor.lastAtPosition,
                          suggestionsFilterAdaptor.cursorPosition)
     }
 
     function getTextWithPublicKeys() {
-        let result = messageInputField.text
+        let result = root.text
 
-        if (_d.mentionsPos.length > 0) {
-            for (let k = 0; k < _d.mentionsPos.length; k++) {
-                const leftIndex = result.indexOf(_d.mentionsPos[k].name)
-                const rightIndex = leftIndex + _d.mentionsPos[k].name.length
+        if (d.mentionsPos.length > 0) {
+            for (let k = 0; k < d.mentionsPos.length; k++) {
+                const leftIndex = result.indexOf(d.mentionsPos[k].name)
+                const rightIndex = leftIndex + d.mentionsPos[k].name.length
                 result = result.substring(0, leftIndex)
-                         + _d.mentionsPos[k].pubKey
+                         + d.mentionsPos[k].pubKey
                          + result.substring(rightIndex, result.length)
             }
         }
@@ -322,78 +329,78 @@ StatusQ.StatusTextArea {
     }
 
     function replaceWithEmoji(shortname, codePoint, offset = 0) {
-        _d.replaceWithEmoji(shortname, codePoint, offset)
+        d.replaceWithEmoji(shortname, codePoint, offset)
     }
 
     function insertInTextInput(start, text) {
         // Replace new lines with entities because `insert` gets rid of them
-        messageInputField.insert(start, text.replace(/\n/g, "<br/>"));
+        root.insert(start, text.replace(/\n/g, "<br/>"));
     }
 
     function wrapSelection(wrapWith) {
-        if (messageInputField.selectionStart - messageInputField.selectionEnd === 0)
+        if (root.selectionStart - root.selectionEnd === 0)
             return
 
         // calulate the new selection start and end positions
-        const newSelectionStart = messageInputField.selectionStart + wrapWith.length
-        const newSelectionEnd = messageInputField.selectionEnd
-                              - messageInputField.selectionStart + newSelectionStart
+        const newSelectionStart = root.selectionStart + wrapWith.length
+        const newSelectionEnd = root.selectionEnd
+                              - root.selectionStart + newSelectionStart
 
-        insertInTextInput(messageInputField.selectionStart, wrapWith);
-        insertInTextInput(messageInputField.selectionEnd, wrapWith);
+        insertInTextInput(root.selectionStart, wrapWith);
+        insertInTextInput(root.selectionEnd, wrapWith);
 
-        messageInputField.select(newSelectionStart, newSelectionEnd)
+        root.select(newSelectionStart, newSelectionEnd)
     }
 
     function unwrapSelection(unwrapWith, selectedTextWithFormationChars) {
-        if (messageInputField.selectionStart - messageInputField.selectionEnd === 0)
+        if (root.selectionStart - root.selectionEnd === 0)
             return
 
         // Calculate the new selection start and end positions
-        const newSelectionStart = messageInputField.selectionStart -  unwrapWith.length
-        const newSelectionEnd = messageInputField.selectionEnd-messageInputField.selectionStart + newSelectionStart
+        const newSelectionStart = root.selectionStart -  unwrapWith.length
+        const newSelectionEnd = root.selectionEnd-root.selectionStart + newSelectionStart
 
         selectedTextWithFormationChars = selectedTextWithFormationChars.trim()
         // Check if the selectedTextWithFormationChars has formation chars and if so, calculate how many so we can adapt the start and end pos
-        const selectTextDiff = (selectedTextWithFormationChars.length - messageInputField.selectedText.length) / 2
+        const selectTextDiff = (selectedTextWithFormationChars.length - root.selectedText.length) / 2
 
         // Remove the deselected option from the before and after the selected text
-        const prefixChars = messageInputField.getText((messageInputField.selectionStart - selectTextDiff), messageInputField.selectionStart)
+        const prefixChars = root.getText((root.selectionStart - selectTextDiff), root.selectionStart)
         const updatedPrefixChars = prefixChars.replace(unwrapWith, '')
-        const postfixChars = messageInputField.getText(messageInputField.selectionEnd, (messageInputField.selectionEnd + selectTextDiff))
+        const postfixChars = root.getText(root.selectionEnd, (root.selectionEnd + selectTextDiff))
         const updatedPostfixChars = postfixChars.replace(unwrapWith, '')
 
         // Create updated selected string with pre and post formatting characters
-        const updatedSelectedStringWithFormatChars = updatedPrefixChars + messageInputField.selectedText + updatedPostfixChars
+        const updatedSelectedStringWithFormatChars = updatedPrefixChars + root.selectedText + updatedPostfixChars
 
-        messageInputField.remove(messageInputField.selectionStart - selectTextDiff, messageInputField.selectionEnd + selectTextDiff)
+        root.remove(root.selectionStart - selectTextDiff, root.selectionEnd + selectTextDiff)
 
-        insertInTextInput(messageInputField.selectionStart, updatedSelectedStringWithFormatChars)
+        insertInTextInput(root.selectionStart, updatedSelectedStringWithFormatChars)
 
-        messageInputField.select(newSelectionStart, newSelectionEnd)
+        root.select(newSelectionStart, newSelectionEnd)
     }
 
     function prefixSelectedLine(prefix) {
-        const selectedLinePosition = _d.getLineStartPosition(messageInputField.selectionStart)
-        messageInputField.insertInTextInput(selectedLinePosition, prefix)
+        const selectedLinePosition = d.getLineStartPosition(root.selectionStart)
+        root.insertInTextInput(selectedLinePosition, prefix)
     }
 
     function unprefixSelectedLine(prefix) {
-        if (isSelectedLinePrefixedBy(messageInputField.selectionStart, prefix)) {
-            const selectedLinePosition = _d.getLineStartPosition(messageInputField.selectionStart)
-            messageInputField.remove(selectedLinePosition, selectedLinePosition + prefix.length)
+        if (isSelectedLinePrefixedBy(root.selectionStart, prefix)) {
+            const selectedLinePosition = d.getLineStartPosition(root.selectionStart)
+            root.remove(selectedLinePosition, selectedLinePosition + prefix.length)
         }
     }
 
     function isSelectedLinePrefixedBy(selectionStart, prefix) {
-        const selectedLinePosition = _d.getLineStartPosition(selectionStart)
+        const selectedLinePosition = d.getLineStartPosition(selectionStart)
         const text = getPlainText()
         const selectedLine = text.substring(selectedLinePosition)
         return selectedLine.startsWith(prefix)
     }
 
     function getPlainText() {
-        const textWithoutMention = messageInputField.text.replace(
+        const textWithoutMention = root.text.replace(
                                      /<span style="[ :#0-9a-z;\-\.,\(\)]+">(@([a-z\.]+(\ ?[a-z]+\ ?[a-z]+)?))<\/span>/ig,
                                      "\[\[mention\]\]$1\[\[mention\]\]")
         const deparsedEmoji = StatusQUtils.Emoji.deparse(textWithoutMention);
@@ -402,11 +409,11 @@ StatusQ.StatusTextArea {
     }
 
     function convertInlineEmojis() {
-        _d.convertInlineEmojis(true)
+        d.convertInlineEmojis(true)
     }
 
     QtObject {
-        id: _d
+        id: d
 
         // Mentions
         property int leftOfMentionIndex: -1
@@ -430,12 +437,12 @@ StatusQ.StatusTextArea {
                 return
             }
 
-            const unformattedText = messageInputField.getText(0, messageInputField.length)
+            const unformattedText = root.getText(0, root.length)
             if (!unformattedText.includes("@")) {
                 return
             }
 
-            const keyEvent = messageInputField.lastKeyPressedEvent
+            const keyEvent = root.lastKeyPressedEvent
             if ((keyEvent.key === Qt.Key_Right) || (keyEvent.key === Qt.Key_Left)
                     || (keyEvent.key === Qt.Key_Up) || (keyEvent.key === Qt.Key_Down)) {
                 return
@@ -455,25 +462,25 @@ StatusQ.StatusTextArea {
                 }
             }
 
-            _d.sortMentions()
+            d.sortMentions()
         }
 
         function insertMention(aliasName, publicKey, lastAtPosition, lastCursorPosition) {
-            const hasEmoji = StatusQUtils.Emoji.hasEmoji(messageInputField.text)
-            const spanPlusAlias = `${d.mentionTagStart}@${aliasName}${d.mentionTagEnd} `;
+            const hasEmoji = StatusQUtils.Emoji.hasEmoji(root.text)
+            const spanPlusAlias = `${root.mentionTagStart}@${aliasName}${root.mentionTagEnd} `;
 
             let rightIndex = hasEmoji ? lastCursorPosition + 2 : lastCursorPosition
-            messageInputField.remove(lastAtPosition, rightIndex)
-            messageInputField.insert(lastAtPosition, spanPlusAlias)
-            messageInputField.cursorPosition = lastAtPosition + aliasName.length + 2;
-            if (messageInputField.cursorPosition === 0) {
+            root.remove(lastAtPosition, rightIndex)
+            root.insert(lastAtPosition, spanPlusAlias)
+            root.cursorPosition = lastAtPosition + aliasName.length + 2;
+            if (root.cursorPosition === 0) {
                 // It reset to 0 for some reason, go back to the end
-                messageInputField.cursorPosition = messageInputField.length
+                root.cursorPosition = root.length
             }
 
             mentionsPos = mentionsPos.filter(mention => mention.leftIndex !== lastAtPosition)
             mentionsPos.push({name: aliasName, pubKey: publicKey, leftIndex: lastAtPosition, rightIndex: (lastAtPosition+aliasName.length + 1)});
-            _d.sortMentions()
+            d.sortMentions()
         }
 
         function sortMentions() {
@@ -488,7 +495,7 @@ StatusQ.StatusTextArea {
         function cleanMentionsPos() {
             if(mentionsPos.length == 0) return
 
-            const unformattedText = messageInputField.getText(0, messageInputField.length)
+            const unformattedText = root.getText(0, root.length)
             mentionsPos = mentionsPos.filter(mention => unformattedText.charAt(mention.leftIndex) === "@")
         }
 
@@ -498,7 +505,7 @@ StatusQ.StatusTextArea {
                 mentionsPos.splice(index, 1)
             }
 
-            messageInputField.remove(mention.leftIndex, mention.rightIndex)
+            root.remove(mention.leftIndex, mention.rightIndex)
         }
 
         function getMentionAtPosition(position: int) : var {
@@ -542,12 +549,12 @@ StatusQ.StatusTextArea {
                 // popup
                 const index2 = message.data.lastIndexOf(':', message.cursor - 1);
                 if (index2 >= 0 && message.cursor > 0) {
-                    _d.emojiFilter = message.data.substr(index2, message.cursor)
+                    d.emojiFilter = message.data.substr(index2, message.cursor)
                     return
                 }
             }
 
-            _d.emojiFilter = ""
+            d.emojiFilter = ""
         }
 
         // check if user has placed cursor near valid emoji colon token
@@ -580,11 +587,11 @@ StatusQ.StatusTextArea {
 
         function replaceWithEmoji(shortname, codePoint, offset = 0) {
             const encodedCodePoint = StatusQUtils.Emoji.getEmojiCodepoint(codePoint)
-            messageInputField.remove(messageInputField.cursorPosition - shortname.length - offset,
-                                     messageInputField.cursorPosition);
-            insertInTextInput(messageInputField.cursorPosition,
+            root.remove(root.cursorPosition - shortname.length - offset,
+                                     root.cursorPosition);
+            insertInTextInput(root.cursorPosition,
                               StatusQUtils.Emoji.parse(encodedCodePoint) + " ");
-            _d.emojiFilter = ""
+            d.emojiFilter = ""
         }
 
         // since emoji length is not 1 we need to match that position that TextArea returns
@@ -592,7 +599,7 @@ StatusQ.StatusTextArea {
         function extrapolateCursorPosition() {
             // we need only the message part to be html
             const text = getPlainText()
-            const completelyPlainText = _d.removeMentions(text)
+            const completelyPlainText = d.removeMentions(text)
             const plainText = StatusQUtils.Emoji.parse(text)
 
             let bracketEvent = false
@@ -601,7 +608,7 @@ StatusQ.StatusTextArea {
             let length = 0
 
             // This loop calculates the cursor position inside the plain text which contains the image tags (<img>) and the mention tags ([[mention]])
-            const cursorPos = messageInputField.cursorPosition
+            const cursorPos = root.cursorPosition
             let character = ""
 
             let i = 0
@@ -635,7 +642,7 @@ StatusQ.StatusTextArea {
 
             return {
                 cursor: countEmojiLengths(plainText.substr(0, i)) +
-                            messageInputField.cursorPosition +
+                            root.cursorPosition +
                             text.length - completelyPlainText.length,
                 data: textBeforeCursor,
             }
@@ -655,7 +662,7 @@ StatusQ.StatusTextArea {
 
         function getLineStartPosition(selectionStart) {
             const text = getPlainText()
-            const lastNewLinePos = text.lastIndexOf("\n", messageInputField.selectionStart)
+            const lastNewLinePos = text.lastIndexOf("\n", root.selectionStart)
             return lastNewLinePos === -1 ? 0 : lastNewLinePos + 1
         }
 
@@ -666,9 +673,9 @@ StatusQ.StatusTextArea {
         // trigger inline emoji replacements at the end of the input, after space,
         // or always (force==true) when sending the message
         function convertInlineEmojis(force = false) {
-            const position = messageInputField.cursorPosition
+            const position = root.cursorPosition
 
-            if (force || messageInputField.getText(position, position - 1) === " ") {
+            if (force || root.getText(position, position - 1) === " ") {
                 // figure out last word (between spaces), max length of 5
                 let lastWord = ""
 
@@ -677,7 +684,7 @@ StatusQ.StatusTextArea {
 
                 // go back until we found a space or start of line
                 for (let i = cursorPos; i > cursorPos - 6; i--) {
-                    const lastChar = messageInputField.getText(i, i + 1)
+                    const lastChar = root.getText(i, i + 1)
 
                     if (i < 0 || lastChar === " ") // reached start of line or a space
                         break
@@ -695,7 +702,7 @@ StatusQ.StatusTextArea {
                                          emoji => emoji.aliases_ascii.includes(lastWord))
 
                     if (emojiFound) {
-                        messageInputField.replaceWithEmoji(
+                        root.replaceWithEmoji(
                                     lastWord, emojiFound.unicode, force ? 0 : 1 /*offset*/)
                     }
                 }
@@ -706,51 +713,36 @@ StatusQ.StatusTextArea {
     SuggestionsFilterAdaptor {
         id: suggestionsFilterAdaptor
 
-        sourceModel: messageInputField.usersModel
+        sourceModel: root.usersModel
 
         filter: getFilter().substring(
                     lastAtPosition + 1,
-                    messageInputField.cursorPosition).replace(/\*/g, "")
+                    root.cursorPosition).replace(/\*/g, "")
 
         property int lastAtPosition: -1 // todo: rename to lastMentionAtPosition
-        property int cursorPosition: messageInputField.cursorPosition
+        property int cursorPosition: root.cursorPosition
 
         function getFilter() {
-            if (messageInputField.text.length === 0 ||
-                    messageInputField.cursorPosition === 0)
+            if (root.text.length === 0 ||
+                    root.cursorPosition === 0)
                 return ""
 
-            return StatusQUtils.StringUtils.plainText(messageInputField.text)
+            return StatusQUtils.StringUtils.plainText(root.text)
         }
-
 
         function invalidateFilter() {
             const filter = getFilter()
-            lastAtPosition = filter.substring(0, messageInputField.cursorPosition).lastIndexOf("@")
-        }
-
-        function selectItem(item: var, lastAtPosition: int, lastCursorPosition: int) {
-            messageInputField.forceActiveFocus()
-            d.insertMention(item.preferredDisplayName, item.pubKey,
-                            lastAtPosition, lastCursorPosition)
-        }
-
-        Connections {
-            target: messageInputField
-
-            function onTextChanged() {
-                suggestionsFilterAdaptor.invalidateFilter()
-            }
+            lastAtPosition = filter.substring(0, root.cursorPosition).lastIndexOf("@")
         }
     }
 
     StatusSyntaxHighlighter {
-        quickTextDocument: messageInputField.textDocument
+        quickTextDocument: root.textDocument
         codeBackgroundColor: Theme.palette.baseColor4
         codeForegroundColor: Theme.palette.textColor
-        hyperlinks: messageInputField.urlsList
+        hyperlinks: root.urlsList
         hyperlinkColor: Theme.palette.primaryColor1
-        highlightedHyperlink: linkPreviewArea.hoveredUrl
+        highlightedHyperlink: root.urlToBeHighlighted
         hyperlinkHoverColor: Theme.palette.primaryColor3
     }
     StatusMouseArea {

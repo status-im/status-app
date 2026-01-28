@@ -110,7 +110,7 @@ Rectangle {
             const linkTag = message.substring(index, endIndex)
             const linkText = linkTag.replace(/(<([^>]+)>)/ig,"").trim()
             const atSymbol = linkText.startsWith("@") ? '' : '@'
-            const mentionTag = d.mentionTagStart + atSymbol + linkText + '</span> '
+            const mentionTag = messageInputField.mentionTagStart + atSymbol + linkText + '</span> '
             mentionsMap.set(mentionLink, mentionTag)
             index += linkTag.length
         }
@@ -161,9 +161,6 @@ Rectangle {
 
         readonly property point emojiPopupPosition: getCommonPopupRelativePosition(emojiPopup, emojiBtn)
         readonly property point stickersPopupPosition: getCommonPopupRelativePosition(stickersPopup, stickersBtn)
-
-        readonly property string mentionTagStart: `<span style="background-color: ${root.Theme.palette.mentionColor2};"><a style="color:${root.Theme.palette.mentionColor1};text-decoration:none" href='http://'>`
-        readonly property string mentionTagEnd: `</a></span>`
 
         readonly property StateGroup emojiPopupTakeover: StateGroup {
             states: State {
@@ -836,6 +833,7 @@ Rectangle {
 
                             urlsList: root.urlsList
                             usersModel: root.usersModel
+                            urlToBeHighlighted: linkPreviewArea.hoveredUrl
 
                             suggestedMentionPubKey: {
                                 suggestionsBox.listView.count
