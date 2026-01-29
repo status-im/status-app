@@ -1,5 +1,5 @@
 from objectmaphelper import *
-
+from objectmaphelper import RegularExpression
 
 # MAIN NAMES
 
@@ -830,6 +830,11 @@ removeConfirmationAgreementCheckBox = {"container": statusDesktop_mainWindow_ove
 removeConfirmationConfirmButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                                    "objectName": "RemoveAccountPopup-ConfirmButton", "type": "StatusButton"}
 
+# Deactivate network popup
+deactivateNetworkPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "DeactivateNetworkPopup",
+                          "type": "PopupItem", "visible": True}
+deactivateNetworkPopupDisableButton = {"container": statusDesktop_mainWindow_overlay, "text": RegularExpression("Disable*"), "type": "StatusButton", "unnamed": 1, "visible": True}
+
 # Testnet mode popup
 testnetAlert = {"container": statusDesktop_mainWindow_overlay, "objectName": "AlertPopup", "type": "PopupItem",
                 "visible": True}
@@ -1014,8 +1019,9 @@ amountInput_TextEdit = {"container": statusDesktop_mainWindow_overlay, "objectNa
                         "type": "StatusTextField", "visible": True}
 paste_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "type": "StatusButton",
                       "unnamed": 1, "visible": True}
-ens_or_address_TextEdit = {"container": statusDesktop_mainWindow_overlay, "id": "edit", "type": "TextEdit",
-                           "unnamed": 1, "visible": True}
+ens_or_address_text_input = {"container": statusDesktop_mainWindow_overlay, "objectName": "RecipientView_SendRecipientInput", "type": "SendRecipientInput", "visible": True}
+ens_or_address_paste_button = {"container": statusDesktop_mainWindow_overlay, "objectName": "pasteButton", "type": "StatusButton", "visible": True}
+
 accountSelectionTabBar_StatusTabBar = {"container": statusDesktop_mainWindow_overlay, "id": "accountSelectionTabBar",
                                        "type": "StatusTabBar", "unnamed": 1, "visible": True}
 accountSelectionTabBar_My_Accounts_StatusTabButton = {"checkable": True,
@@ -1048,6 +1054,7 @@ sendModalHeader = {"container": statusDesktop_mainWindow_overlay, "objectName": 
                    "type": "SendModalHeader", "visible": True}
 sendModalRecipientPanel = {"container": statusDesktop_mainWindow_overlay, "objectName": "recipientsPanel",
                            "type": "RecipientSelectorPanel", "visible": True}
+sendModalRecipientViewDelegate = {"container": statusDesktop_mainWindow_overlay, "type": "RecipientViewDelegate", "unnamed": 1, "visible": True}
 sendModalTokenSelector = {"container": sendModalHeader, "objectName": "tokenSelectorButton",
                           "type": "TokenSelectorButton", "visible": True}
 sendModalNetworkFilter = {"container": sendModalHeader, "objectName": "networkFilter", "type": "NetworkFilter",

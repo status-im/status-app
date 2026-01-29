@@ -8,7 +8,7 @@ from configs import WALLET_SEED
 from constants import ReturningUser
 from constants.wallet import WalletAddress, WalletNetworkSettings
 from helpers.onboarding_helper import open_create_profile_view, import_seed_and_log_in
-from helpers.settings_helper import enable_testnet_mode
+from helpers.settings_helper import enable_testnet_mode, open_network_settings
 from helpers.wallet_helper import authenticate_with_password, open_send_modal_for_account
 from scripts.utils.generators import random_network
 
@@ -35,9 +35,14 @@ def test_wallet_send_0_eth(main_window, user_account, receiver_account_address, 
     with step('Set testnet mode'):
         enable_testnet_mode(main_window)
 
+    with step(f'Enable network {network_name}'):
+        networks_screen = open_network_settings(main_window)
+        networks_screen.toggle_network_state(network_name, True)
+
     with step('Open wallet send popup'):
         send_popup = open_send_modal_for_account(
             main_window, account_name=WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_NAME.value)
+
 
     with step('Select network'):
         send_popup.select_network(network_name)

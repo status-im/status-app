@@ -2,13 +2,13 @@
 Helper functions for common settings operations.
 Reduces code duplication across test files.
 """
+import logging
 import time
-
 import allure
-from allure_commons._allure import step
-
-from constants.dock_buttons import DockButtons
 from gui.components.settings.keycard_popup import KeycardPopup
+from gui.screens.settings_wallet import NetworkWalletSettings
+
+LOG = logging.getLogger(__name__)
 
 
 @allure.step('Enable testnet mode')
@@ -59,6 +59,28 @@ def open_profile_settings(main_window):
     return main_window.left_panel.open_settings().left_panel.open_profile_settings()
 
 
+@allure.step('Open network settings')
+def open_network_settings(main_window):
+    """
+    Open network settings from main window.
+    If already on Networks screen, returns the current screen instance.
+    
+    Returns:
+        NetworkWalletSettings: The network settings view instance
+    """
+    # Check if we're already on Networks screen
+    networks_screen = NetworkWalletSettings()
+    try:
+        if networks_screen.testnet_mode_toggle.is_visible:
+            LOG.debug('Already on Networks screen, returning current instance')
+            return networks_screen
+    except Exception:
+        pass  # Not on Networks screen, proceed with navigation
+    
+    # Navigate to Networks screen
+    return main_window.left_panel.open_settings().left_panel.open_wallet_settings().open_networks()
+
+
 @allure.step('Verify toast notification contains message')
 def verify_toast_notification(main_window, expected_message):
     """
@@ -83,4 +105,5 @@ def skip_pcsc_error_popup_if_visible():
     if pcsc_error_popup.is_visible:
         pcsc_error_popup.close_button.click()
         time.sleep(0.1)
+
 

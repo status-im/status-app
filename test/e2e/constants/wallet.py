@@ -99,3 +99,12 @@ class WalletAccountPopup(Enum):
     WALLET_ACCOUNT_NAME_MIN = 'Account name must be at least 5 characters'
     WALLET_KEYPAIR_NAME_MIN = 'Key pair name must be at least 5 characters'
     WALLET_KEYPAIR_MIN = 'Key pair must be at least 5 character(s)'
+
+class DefaultNetworksList(Enum):
+    # Networks enabled by default on app launch (max 5 active networks)
+    SEPOLIA = "Sepolia"
+    ARBITRUM_SEPOLIA = "Arbitrum Sepolia"
+    OPTIMISM_SEPOLIA = "Optimism Sepolia"
+    BASE_SEPOLIA = "Base Sepolia"
+    STATUS_NETWORK_SEPOLIA = "Status Network Sepolia"
+

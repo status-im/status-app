@@ -28,8 +28,8 @@ def random_ens_string():
         random.choices(string.digits + string.ascii_lowercase, k=8))
 
 
-def random_network():
-    return random.choice(['Arbitrum Sepolia', 'Optimism Sepolia', 'Base Sepolia', 'Status Network Sepolia'])
+def random_network(): # 'Linea Sepolia'
+    return random.choice(['Arbitrum Sepolia', 'Optimism Sepolia', 'Base Sepolia', 'Status Network Sepolia', 'Linea Sepolia'])
 
 
 def random_community_name():

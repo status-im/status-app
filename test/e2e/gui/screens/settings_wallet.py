@@ -1,3 +1,4 @@
+import random
 import time
 import typing
 
@@ -8,7 +9,7 @@ import configs.timeouts
 import constants
 import driver
 from constants import wallet_account_list_item
-from constants.wallet import WalletNetworkSettings, WalletNetworkDefaultValues
+from constants.wallet import WalletNetworkSettings, WalletNetworkDefaultValues, DefaultNetworksList
 from driver import objects_access
 from driver.objects_access import walk_children
 from gui.components.context_menu import ContextMenu
@@ -20,6 +21,7 @@ from gui.components.wallet.delete_account_confirmation_popup import RemoveAccoun
 from gui.components.wallet.testnet_mode_popup import TestnetModePopup
 
 from gui.components.wallet.wallet_account_popups import AccountPopup, EditAccountFromSettingsPopup
+from gui.components.settings.disable_network_confirmation_popup import DisableNetworkConfirmationPopup
 from gui.elements.button import Button
 from gui.elements.check_box import CheckBox
 from gui.elements.object import QObject
@@ -77,7 +79,7 @@ class WalletSettingsView(QObject):
                 return NetworkWalletSettings().wait_until_appears()
             except Exception:
                 pass
-        raise LookupError(f"Failed to open saved addresses popup in settings")
+        raise LookupError(f"Failed to open Networks in settings")
 
     @allure.step('Open manage tokens in wallet settings')
     def open_manage_tokens(self, attempts: int = 3) -> 'ManageTokensSettingsView':
@@ -290,6 +292,7 @@ class SavedAddressesWalletSettings(QObject):
 
 class NetworkWalletSettings(WalletSettingsView):
 
+
     def __init__(self):
         super().__init__()
         self.testnet_text_item = QObject(
@@ -298,16 +301,55 @@ class NetworkWalletSettings(WalletSettingsView):
         self.testnet_mode_title = TextLabel(settings_names.settings_Wallet_NetworksView_TestNet_Toggle_Title)
         self.back_button = Button(settings_names.main_toolBar_back_button)
         self.mainnet_network_item = QObject(settings_names.networkSettingsNetworks_Mainnet)
-        self.optimism_network_item = QObject(settings_names.networkSettingsNetworks_Optimism)
-        self.arbitrum_network_item = QObject(settings_names.networkSettingsNetworks_Arbitrum)
         self.wallet_network_item_template = QObject(
             settings_names.settingsContentBaseScrollView_WalletNetworkDelegate_template)
         self.wallet_network_edit_button_template = QObject(settings_names.networkItemEditTemplate)
+        self.network_switch = CheckBox(settings_names.networkItemToggle)
 
     @allure.step('Wait until appears {0}')
     def wait_until_appears(self):
         self.testnet_mode_toggle.wait_until_appears(configs.timeouts.FEES_TIMEOUT_MSEC)
         return self
+
+    @allure.step('Enable or disable network: {network_name}')
+    def toggle_network_state(self, network_name: str, enable: bool = True):
+        self.network_switch.real_name['objectName'] = f'isActiveSwitch_{network_name}'
+        is_currently_enabled = self.network_switch.is_checked
+
+        if enable and not is_currently_enabled:
+            # If enabling a non-default network, disable one default network first (max 5 active)
+            default_networks = [network.value for network in DefaultNetworksList]
+            if network_name not in default_networks:
+                network_to_disable = self._find_default_network_to_disable(network_name)
+                if network_to_disable:
+                    popup = self._disable_network(network_to_disable)
+                    popup.confirm_disable()
+
+            self.network_switch.real_name['objectName'] = f'isActiveSwitch_{network_name}'
+            self.network_switch.click()
+        elif not enable and is_currently_enabled:
+            popup = self._disable_network(network_name)
+            popup.confirm_disable()
+
+    @allure.step('Find default network to disable')
+    def _find_default_network_to_disable(self, target_network: str) -> str:
+        """Find a random default enabled network to disable (not Sepolia, not the target)."""
+        default_networks = [network.value for network in DefaultNetworksList]
+        available_networks = [
+            net_name for net_name in default_networks
+            if net_name.lower() != "sepolia" and net_name != target_network
+        ]
+        return random.choice(available_networks) if available_networks else None
+
+    @allure.step('Disable network: {network_name}')
+    def _disable_network(self, network_name: str):
+        """Disable a network and return confirmation popup."""
+        
+        self.network_switch.real_name['objectName'] = f'isActiveSwitch_{network_name}'
+        if self.network_switch.is_checked:
+            self.network_switch.click()
+            return DisableNetworkConfirmationPopup(network_name).wait_until_appears()
+        return None
 
     @allure.step('Check networks item title')
     def get_network_item_attribute_by_id_and_attr_name(self, attribute_name, network_id):
