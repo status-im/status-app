@@ -875,7 +875,7 @@ Loader {
                 onSenderNameClicked: (sender) => root.openProfileContextMenu(sender.x, sender.y)
 
                 onToggleReactionClicked: (hexcode) => {
-                    if (root.isChatBlocked)
+                    if (!d.addReactionAllowed)
                         return
 
                     if (!root.messageStore) {
