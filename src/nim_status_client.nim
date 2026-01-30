@@ -26,6 +26,10 @@ when defined(macosx) and defined(arm64):
 when defined(windows):
     {.link: "../status.o".}
 
+
+when defined(ios):
+  import library/libsds
+
 when defined(USE_QML_SERVER):
   # get the host OS and localhost IP
   # the host OS is the OS that compiles the app, not the OS that runs the app

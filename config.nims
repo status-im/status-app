@@ -9,6 +9,10 @@ else:
 --define:useOpenSSL3
 --parallelBuild:0  # 0 == auto nr. of cores
 
+when defined(ios):
+  switch("path", "vendor/nim-sds")
+  switch("path", "vendor/nim-libp2p")
+
 if hostOS == "macosx":
   echo "Building for macOS"
   --dynlibOverrideAll # don't use dlopen()
