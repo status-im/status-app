@@ -86,15 +86,21 @@ Control {
     // Style:
     property color backgroundColor: Theme.palette.baseColor2
 
+    // Notifications Interactions
     signal moreOptionsRequested()
     signal closeRequested()
     signal markAllAsReadRequested()
     signal hideShowReadNotificationsRequested()
     signal setActiveGroupRequested(int group)
-    signal notificationClicked(int index)
     signal fetchMoreNotificationsRequested()
     signal enableNewsViaRSSRequested()
     signal enableNewsRequested()
+
+    // Card interactions
+    signal avatarClicked(string avatarId)
+    signal redirectToDetails(string sectionId, string subsectionId, string itemId)
+    signal redirectToSection(string sectionId)
+    signal redirectToPopup(var notification)
 
     QtObject {
         id: d
@@ -218,15 +224,18 @@ Control {
                 avatarSource: model.avatarSource
                 badgeIconName: model.badgeIconName
                 isCircularAvatar: model.isCircularAvatar
+                isAvatarClickable: model.isAvatarClickable
 
                 // Header row related
                 title: model.title
                 chatKey: model.chatKey
                 isContact: model.isContact
                 trustIndicator: model.trustIndicator
+                isBlocked: model.isBlocked
 
                 // Context row related
                 primaryText: model.primaryText
+                contextAvatar: model.contextAvatar
                 iconName: model.iconName
                 secondaryText: model.secondaryText
                 separatorIconName: model.separatorIconName
@@ -244,7 +253,17 @@ Control {
                 timestamp: model.timestamp
 
                 // Interactions
-                onClicked: root.notificationClicked(model.index)
+                onClicked: {
+                    if(model.redirectToDetails) {
+                        root.redirectToDetails(model.sectionId, model.subsectionId, model.subsectionItemId)
+                    } else if (model.redirectToSection) {
+                        root.redirectToSection(model.sectionId)
+                    } else if (model.redirectToLink) {
+                        root.redirectToPopup(model)
+                    }
+                    // No actions when clicked
+                }
+                onAvatarClicked: root.avatarClicked(model.avatarId)
             }
 
             onContentYChanged: d.fetchMoreNotifications()

@@ -29,6 +29,7 @@ SplitView {
                 }
                 width: baseEditor.cardWidth
                 primaryText: editor.primartyText
+                contextAvatar: editor.isContextAvatar ? "https://picsum.photos/320/240?10" : ""
                 iconName: editor.iconType
                 secondaryText: editor.secondaryText
                 separatorIconName: editor.separatorType

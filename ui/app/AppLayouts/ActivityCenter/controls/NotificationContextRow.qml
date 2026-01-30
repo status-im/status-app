@@ -53,8 +53,9 @@ Control {
     property string secondaryText
 
     // Optional icons
-    property string separatorIconName   // Leading icon (hidden if empty)
-    property string iconName            // Separator icon between labels
+    property url    contextAvatar         // Primary context avatar source
+    property string separatorIconName    // Leading icon (hidden if empty)
+    property string iconName             // Separator icon between labels
 
     // ──────────────────────────────────────────────────────────────────────────
     // Colors (Theme-driven)
@@ -77,7 +78,7 @@ Control {
     // Layout configuration (single Flow → icon + pieces wrap together)
     // ──────────────────────────────────────────────────────────────────────────
 
-    spacing: Theme.shortPadding
+    spacing: Theme.halfPadding / 4
 
     contentItem:Flow {
         spacing: root.spacing
@@ -90,6 +91,15 @@ Control {
             width: root.iconSize
             height: width
             color: root.iconColor
+        }
+
+        // Primary avatar text (optional)
+        NotificationAvatar {
+            visible: root.contextAvatar.toString() !== ""
+            baseAvatarSize: visible ? root.iconSize : 0
+            avatarSource: root.contextAvatar
+            isAvatarClickable: false
+            includeBadgeInImplicit: false
         }
 
         // Primary text

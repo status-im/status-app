@@ -225,7 +225,6 @@ SplitView {
                                                    logs.logEvent("ActivityCenterPanel::onSetActiveGroupRequested: " + group)
                                                    root.currentActiveGroup = group
                                                }
-                    onNotificationClicked: (index) => logs.logEvent("ActivityCenterPanel::onNotificationClicked: " + index)
                     onFetchMoreNotificationsRequested: logs.logEvent("ActivityCenterPanel::onFetchMoreNotificationsRequested")
                     onEnableNewsViaRSSRequested: {
                         logs.logEvent("ActivityCenterPanel::onEnableNewsViaRSSRequested")
@@ -235,6 +234,14 @@ SplitView {
                         logs.logEvent("ActivityCenterPanel::onEnableNewsRequested")
                         newsSettingsTurnOff.checked = !newsSettingsTurnOff.checked
                     }
+                    onAvatarClicked: (avatarId) => {
+                                         logs.logEvent("ActivityCenterPanel::onAvatarClicked: " + avatarId)
+                                     }
+                    onRedirectToDetails: (sectionId, subsectionId, subsectionItemId) => {
+                                             logs.logEvent("ActivityCenterPanel::onRedirectToDetails: " + sectionId + subsectionId + subsectionItemId)
+                                         }
+                    onRedirectToSection: (sectionId) => { logs.logEvent("ActivityCenterPanel::onRedirectToSection: " + sectionId) }
+                    onRedirectToPopup: (notification) => { logs.logEvent("ActivityCenterPanel::onRedirectToPopup: " + notification)}
                 }
             }
         }

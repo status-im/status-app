@@ -65,6 +65,9 @@ Control {
     // Trust level indicator (0 = none). Expected values: StatusContactVerificationIcons.TrustedType
     property int    trustIndicator: 0
 
+    // Show "is blocked" badge if true
+    property bool isBlocked: false
+
     // ──────────────────────────────────────────────────────────────────────────
     // Colors (Theme-driven)
     // ──────────────────────────────────────────────────────────────────────────
@@ -116,7 +119,8 @@ Control {
             id: icons
             isContact: root.isContact
             trustIndicator: root.trustIndicator
-            tiny: d.areTinyIndicators
+            isBlocked: root.isBlocked
+            customIconSize: nameText.font.pixelSize
         }
 
         // Shortened chat key

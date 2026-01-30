@@ -14,6 +14,7 @@ import AppLayouts.ActivityCenter.helpers
 // Here is an example of the complete set of properties that a `Notification model` can contain:
 //{
 //    // Card states related
+//    notificationsType: ActivityCenterTypes.NotificationType.Mention,
 //    unread: false,
 //    selected: false,
 //
@@ -69,6 +70,8 @@ ObjectProxyModel {
                 avatarSource: "https://i.pravatar.cc/128?img=45",
                 badgeIconName: "action-mention",
                 isCircularAvatar: true,
+                isAvatarClickable: true,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "anna.eth",
@@ -81,7 +84,13 @@ ObjectProxyModel {
                          "Do we still plan to ship this with v2.1 or postpone to the next release cycle?",
 
                 // Timestamp related
-                timestamp: 1765799225000
+                timestamp: 1765799225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: true,
+                redirectToLink: false
             },
             {
                 // REPLY 1:1 TYPE
@@ -95,6 +104,8 @@ ObjectProxyModel {
                 avatarSource: "https://i.pravatar.cc/128?img=5",
                 badgeIconName: "action-reply",
                 isCircularAvatar: true,
+                isAvatarClickable: true,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "anna.eth with long nickname",
@@ -106,7 +117,13 @@ ObjectProxyModel {
                 content: "hey, Do we still plan to ship this with v2.1 or postpone to the next release cycle? we’re discussed it on the last meet",
 
                 // Timestamp related
-                timestamp: 1729799225000
+                timestamp: 1729799225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: true,
+                redirectToLink: false
             },
             {
                 // CONTACT REQUEST TYPE
@@ -120,6 +137,8 @@ ObjectProxyModel {
                 avatarSource: "https://i.pravatar.cc/128?img=15",
                 badgeIconName: "action-add",
                 isCircularAvatar: true,
+                isAvatarClickable: true,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "simon-dev.eth",
@@ -134,7 +153,13 @@ ObjectProxyModel {
                 content: "Hey! I came across your profile and thought it’d be nice to connect. Always happy to meet new people here 🙂",
 
                 // Timestamp related
-                timestamp: 1765909333000
+                timestamp: 1765909333000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: true,
+                redirectToLink: false
             },
             {
                 // CONTACT REMOVED TYPE
@@ -148,6 +173,8 @@ ObjectProxyModel {
                 avatarSource: "https://i.pravatar.cc/128?img=20",
                 badgeIconName: "action-warn",
                 isCircularAvatar: true,
+                isAvatarClickable: true,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "Sunshine",
@@ -159,7 +186,13 @@ ObjectProxyModel {
                 actionText: "Removed you from contacts",
 
                 // Timestamp related
-                timestamp: 1765329333000
+                timestamp: 1765329333000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: true,
+                redirectToLink: false
             },
             {
                 // NEW PRIVATE GROUP CHAT TYPE
@@ -173,6 +206,8 @@ ObjectProxyModel {
                 avatarSource: "https://i.pravatar.cc/128?img=8",
                 badgeIconName: "action-add",
                 isCircularAvatar: true,
+                isAvatarClickable: true,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "rockstar.eth",
@@ -187,7 +222,13 @@ ObjectProxyModel {
                 actionText: "You're added to private group chat",
 
                 // Timestamp related
-                timestamp: 1665909333000
+                timestamp: 1665909333000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: true,
+                redirectToLink: false
             },
             {
                 // MENTION IN GROUP CHAT TYPE
@@ -201,6 +242,8 @@ ObjectProxyModel {
                 avatarSource: "https://i.pravatar.cc/128?img=1",
                 badgeIconName: "action-mention",
                 isCircularAvatar: true,
+                isAvatarClickable: true,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "anna.eth",
@@ -215,7 +258,13 @@ ObjectProxyModel {
                 content: "Hey <a href='rockstar.eth'>@rockstar.eth</a> 👋 just wanted to check something with you.",
 
                 // Timestamp related
-                timestamp: 1699009333000
+                timestamp: 1699009333000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: true,
+                redirectToLink: false
             },
             {
                 // REPLY IN GROUP CHAT TYPE
@@ -229,6 +278,8 @@ ObjectProxyModel {
                 avatarSource: "https://i.pravatar.cc/128?img=21",
                 badgeIconName: "action-reply",
                 isCircularAvatar: true,
+                isAvatarClickable: true,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "Buddy",
@@ -243,7 +294,13 @@ ObjectProxyModel {
                 content: "Hi Pal! Saw your message and wanted to reply real quick.",
 
                 // Timestamp related
-                timestamp: 1755329333000
+                timestamp: 1755329333000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: true,
+                redirectToLink: false
             },
             {
                 // MENTION IN COMMUNITY TYPE
@@ -257,6 +314,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.cryptPunks,
                 badgeIconName: "action-mention",
                 isCircularAvatar: true,
+                isAvatarClickable: true,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "Mate-Mate",
@@ -274,7 +333,13 @@ ObjectProxyModel {
                 content: "<a href='pepe.eth'>@pepe.eth</a> I’ve just mentioned you in a conversation you might find interesting.",
 
                 // Timestamp related
-                timestamp: 1765799225000
+                timestamp: 1765799225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: true,
+                redirectToLink: false
             },
             {
                 // REPLY IN COMMUNITY TYPE
@@ -288,6 +353,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.cryptPunks,
                 badgeIconName: "action-reply",
                 isCircularAvatar: true,
+                isAvatarClickable: true,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "Friend",
@@ -306,7 +373,13 @@ ObjectProxyModel {
                           From my side, I think it would be good to clarify this soon so we can align expectations and avoid last-minute changes. Depending on the scope and remaining work, we can either lock it down for v2.1 or consciously move it to the next iteration and treat it as a follow-up improvement.",
 
                 // Timestamp related
-                timestamp: 1735799225000
+                timestamp: 1735799225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: true,
+                redirectToLink: false
             },
             {
                 // INVITATION TO COMMUNITY TYPE
@@ -320,6 +393,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.socks,
                 badgeIconName: "action-add",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "anna.eth",
@@ -337,7 +412,13 @@ ObjectProxyModel {
                 actionText: "Invitation to join community",
 
                 // Timestamp related
-                timestamp: 1745799225000
+                timestamp: 1745799225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // MEMBERSHIP REQUEST TO COMMUNITY TYPE (Five states: `pending`, `accepted`, `declined, `acceptedPending`, `declinedPending`)
@@ -351,6 +432,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.socks,
                 badgeIconName: "action-admin",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Socks Super Long Long Community Name ",
@@ -360,7 +443,13 @@ ObjectProxyModel {
                 actionText: "<a href='pepe.eth'>@pepe.eth</a> requested membership in your community",
 
                 // Timestamp related
-                timestamp: 1755799225000
+                timestamp: 1755799225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // MEMBERSHIP REQUEST ACCEPTED TO COMMUNITY TYPE (Three states: `pending`, `accepted`, `declined`)
@@ -374,6 +463,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.socks,
                 badgeIconName: "action-check",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Socks Community Name ",
@@ -383,7 +474,13 @@ ObjectProxyModel {
                 actionText: "Request to join community accepted",
 
                 // Timestamp related
-                timestamp: 1765799225000
+                timestamp: 1765799225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // KICKED FROM COMMUNITY TYPE
@@ -397,6 +494,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.socks,
                 badgeIconName: "action-warn",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Socks Super Long Long Community Name ",
@@ -406,7 +505,13 @@ ObjectProxyModel {
                 actionText: "You have been kicked out of community",
 
                 // Timestamp related
-                timestamp: 1766899225000
+                timestamp: 1766899225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // COMMUNITY TOKEN RECEIVED TYPE:
@@ -422,6 +527,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.dribble,
                 badgeIconName: "action-coin",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Dribble",
@@ -431,7 +538,13 @@ ObjectProxyModel {
                 actionText: "You're received a token in community",
 
                 // Timestamp related
-                timestamp: 1765699225000
+                timestamp: 1765699225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // FIRST COMMUNITY TOKEN RECEIVED TYPE
@@ -445,6 +558,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.dribble,
                 badgeIconName: "action-coin",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Dribble",
@@ -454,7 +569,13 @@ ObjectProxyModel {
                 actionText: "You're received a first community token",
 
                 // Timestamp related
-                timestamp: 1765688225000
+                timestamp: 1765688225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // BANNED FROM COMMUNITY TYPE
@@ -468,6 +589,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.dribble,
                 badgeIconName: "action-warn",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Dribble",
@@ -477,7 +600,13 @@ ObjectProxyModel {
                 actionText: "You were banned from community",
 
                 // Timestamp related
-                timestamp: 1766988225000
+                timestamp: 1766988225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // UNBANNED FROM COMMUNITY TYPE
@@ -491,6 +620,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.dribble,
                 badgeIconName: "action-check",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Dribble",
@@ -500,7 +631,13 @@ ObjectProxyModel {
                 actionText: "You have been unbanned in community",
 
                 // Timestamp related
-                timestamp: 1760988225000
+                timestamp: 1760988225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // OWNER TOKEN RECEIVED TYPE
@@ -514,6 +651,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.spotify,
                 badgeIconName: "action-admin",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Music and Sound",
@@ -523,7 +662,13 @@ ObjectProxyModel {
                 actionText: "You received the owner token from <a href='robert.eth'>@robert.eth</a>",
 
                 // Timestamp related
-                timestamp: 1760999225000
+                timestamp: 1760999225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // OWNERSHIP RECEIVED TYPE
@@ -537,6 +682,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.spotify,
                 badgeIconName: "action-admin",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Music and Sound",
@@ -546,7 +693,13 @@ ObjectProxyModel {
                 actionText: "You are now the owner of the community",
 
                 // Timestamp related
-                timestamp: 1760859225000
+                timestamp: 1760859225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // OWNERSHIP LOST TYPE
@@ -560,6 +713,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.spotify,
                 badgeIconName: "action-admin",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Music and Sound",
@@ -569,7 +724,13 @@ ObjectProxyModel {
                 actionText: "You no longer control the community",
 
                 // Timestamp related
-                timestamp: 1770859225000
+                timestamp: 1770859225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // OWNERSHIP TRANSFER FAILED TYPE
@@ -583,6 +744,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.spotify,
                 badgeIconName: "action-admin",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Music and Sound",
@@ -592,7 +755,13 @@ ObjectProxyModel {
                 actionText: "Ownership transfer failed",
 
                 // Timestamp related
-                timestamp: 1767759225000
+                timestamp: 1767759225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // OWNERSHIP TRANSFER DECLINED TYPE
@@ -606,6 +775,8 @@ ObjectProxyModel {
                 avatarSource: ModelsData.icons.spotify,
                 badgeIconName: "action-admin",
                 isCircularAvatar: true,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Context row related
                 primaryText: "Music and Sound",
@@ -615,7 +786,13 @@ ObjectProxyModel {
                 actionText: "Ownership transfer declined",
 
                 // Timestamp related
-                timestamp: 1767785225000
+                timestamp: 1767785225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: true,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // SYSTEM - NEW INSTALLATION TYPE
@@ -629,6 +806,8 @@ ObjectProxyModel {
                 avatarSource: Assets.png("status-logo-icon"),
                 isCircularAvatar: false,
 
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "Status",
@@ -637,7 +816,13 @@ ObjectProxyModel {
                 content: "New installation received from iPhoneABC",
 
                 // Timestamp related
-                timestamp: 1759995225000
+                timestamp: 1759995225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: false,
+                redirectToLink: false
             },
             {
                 // SYSTEM - NEWS ARTICLE TYPE
@@ -650,6 +835,8 @@ ObjectProxyModel {
                 // Avatar related
                 avatarSource: Assets.png("status-logo-icon"),
                 isCircularAvatar: false,
+                isAvatarClickable: false,
+                avatarId: "#avatarId",
 
                 // Header row related
                 title: "Status",
@@ -660,7 +847,13 @@ ObjectProxyModel {
                 content: "Update on notifications section will be rolled out to all users next week. Be prepared!",
 
                 // Timestamp related
-                timestamp: 1756887225000
+                timestamp: 1756887225000,
+
+                // Navigation related
+                subsectionItemId: "subsectionItemId",
+                redirectToSection: false,
+                redirectToDetails: false,
+                redirectToLink: true
             }
         ]
 

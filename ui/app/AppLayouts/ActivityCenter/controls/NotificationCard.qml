@@ -67,21 +67,27 @@ Control {
     // Render avatar as a circle when true; otherwise keep original image shape.
     property bool isCircularAvatar: true
 
+    // Enables or disables avatar click interaction.
+    property bool isAvatarClickable: false
+
     // ──────────────────────────────────────────────────────────────────────────
-     // Header parameters
-     // ──────────────────────────────────────────────────────────────────────────
+    // Header parameters
+    // ──────────────────────────────────────────────────────────────────────────
 
-     // Title (usually display name). Truncated in the header if too long.
-     property string title: ""
+    // Title (usually display name). Truncated in the header if too long.
+    property string title: ""
 
-     // Secondary identifier (e.g., chat key: "prefix…suffix"). Shown after title.
-     property string chatKey: ""
+    // Secondary identifier (e.g., chat key: "prefix…suffix"). Shown after title.
+    property string chatKey: ""
 
-     // Shows "is contact" badge when true.
-     property bool isContact: false
+    // Shows "is contact" badge when true.
+    property bool isContact: false
 
-     // Trust level indicator (0 = none). Values from StatusContactVerificationIcons.TrustedType.
-     property int trustIndicator: 0
+    // Trust level indicator (0 = none). Values from StatusContactVerificationIcons.TrustedType.
+    property int trustIndicator: 0
+
+    // Show "is blocked" badge if true
+    property bool isBlocked: false
 
     // ──────────────────────────────────────────────────────────────────────────
     // Context row parameters
@@ -89,6 +95,9 @@ Control {
 
     // Primary context label (e.g., Community name).
     property string primaryText
+
+    // Primary context avatar source (e.g., Community image).
+    property url contextAvatar
 
     // Secondary context label (e.g., #channel).
     property string secondaryText
@@ -151,6 +160,7 @@ Control {
 
     // Emitted when the card surface is clicked.
     signal clicked()
+    signal avatarClicked()
 
     QtObject {
         id: d
@@ -203,8 +213,8 @@ Control {
         Rectangle {
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: Theme.halfPadding
-            width: Theme.halfPadding
+            anchors.margins: Math.max(Theme.halfPadding, 8)
+            width: Math.max(Theme.halfPadding, 8)
             height: width
             radius: width / 2
             color: d.unreadDotColor
@@ -229,8 +239,10 @@ Control {
             avatarSource: root.avatarSource
             badgeIconName: root.badgeIconName
             circular: root.isCircularAvatar
-            isAvatarClickable: false
+            isAvatarClickable: root.isAvatarClickable
             isBadgeClickable: false
+
+            onAvatarClicked: root.avatarClicked()
         }
 
         // Main content area
@@ -248,6 +260,7 @@ Control {
                 chatKey: root.chatKey
                 isContact: root.isContact
                 trustIndicator: root.trustIndicator
+                isBlocked: root.isBlocked
             }
 
             // Context row: community + channel + optional icons.
@@ -256,6 +269,7 @@ Control {
                 Layout.rightMargin: d.unreadBadgeSize / 2
                 visible: root.primaryText != ""
                 primaryText: root.primaryText
+                contextAvatar: root.contextAvatar
                 secondaryText: root.secondaryText
                 iconName: root.iconName
                 separatorIconName: root.separatorIconName

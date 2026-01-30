@@ -8,6 +8,7 @@ Control {
     id: root
 
     property alias primartyText: primaryTextField.text
+    property alias isContextAvatar: isContextAvatar.checked
     property alias secondaryText: secondaryTextField.text
     property alias changeIconColor: changeIconColor.checked
     property alias changePrimaryTextColor: changePrimaryTextColor.checked
@@ -59,6 +60,13 @@ Control {
             Layout.fillWidth: true
             text: "CrytpoKitties"
         }
+
+        Switch {
+            id: isContextAvatar
+            Layout.leftMargin: Theme.padding
+            text: "Is Context Avatar Visible?"
+        }
+
 
         Label {
             Layout.leftMargin: Theme.padding
