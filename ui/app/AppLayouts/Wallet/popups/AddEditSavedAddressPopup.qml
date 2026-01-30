@@ -16,6 +16,7 @@ import AppLayouts.Profile.helpers
 
 StatusDialog {
     id: root
+    objectName: "AddEditSavedAddressPopup"
 
     required property WalletStores.RootStore store
     required property SharedStores.RootStore sharedRootStore
