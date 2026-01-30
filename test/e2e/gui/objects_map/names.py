@@ -23,7 +23,7 @@ mainWindow_LoadingAnimation = {"container": statusDesktop_mainWindow, "objectNam
                                "type": "LoadingAnimation", "visible": True}
 keycardPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "KeycardPopup", "type": "PopupItem", "visible": True}
 keycardPopupCloseButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "headerCloseButton", "type": "StatusFlatRoundButton", "visible": True}
-primaryNavSidebar = {"container": statusDesktop_mainWindow_overlay, "objectName": "primaryNavSideBarControl", "type": "Control", "visible": True}
+primaryNavSidebar = {"container": statusDesktop_mainWindow, "objectName": "primaryNavSideBarControl", "type": "Control", "visible": True}
 
 # Common names
 settingsSave_StatusButton = {"container": statusDesktop_mainWindow, "objectName": "settingsDirtyToastMessageSaveButton",
@@ -56,9 +56,8 @@ communitiesSettingsNavBarList = {"container": statusDesktop_mainWindow, "objectN
                                  "type": "ListView", "visible": True}
 communitiesPortalButton = {"container": primaryNavSidebar, "objectName": "Communities Portal-navbar",
                            "type": "PrimaryNavSidebarButton", "visible": True}
-settingsGearButton = {"container": primaryNavSidebar, "objectName": "Settings-navbar",
-                      "type": "PrimaryNavSidebarButton", "visible": True}
-activityCenterButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "Activity Center-navbar", "type": "PrimaryNavSidebarButton", "visible": True}
+settingsGearButton = {"container": primaryNavSidebar, "objectName": "Settings-navbar", "type": "BottomSectionButton", "visible": True}
+activityCenterButton = {"container": statusDesktop_mainWindow, "objectName": "Activity Center-navbar", "type": "PrimaryNavSidebarButton", "visible": True}
 
 # Online identifier
 onlineIdentifierButton = {"checkable": True, "container": primaryNavSidebar, "objectName": "statusProfileNavBarTabButton", "type": "ProfileButton", "visible": True}
