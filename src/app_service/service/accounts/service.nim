@@ -178,7 +178,7 @@ QtObject:
     return defined(ios) or defined(android)
 
   proc defaultCreateAccountRequest*(): CreateAccountRequest =
-    return CreateAccountRequest(
+    var request = CreateAccountRequest(
         rootDataDir: main_constants.STATUSGODIR,
         kdfIterations: KDF_ITERATIONS,
         customizationColor: DEFAULT_CUSTOMIZATION_COLOR,
@@ -195,6 +195,10 @@ QtObject:
         walletConfig: buildWalletConfig(),
         apiConfig: defaultApiConfig(),
       )
+    if main_constants.USE_ANVIL:
+      request.networkID = some(31337'u64)
+      request.testOverrideNetworks = @[newAnvilNetwork()]
+    return request
 
   proc buildCreateAccountRequest(password: string, displayName: string, imagePath: string,
     imageCropRectangle: ImageCropRectangle, thirdpartyServicesEnabled: bool): CreateAccountRequest =
