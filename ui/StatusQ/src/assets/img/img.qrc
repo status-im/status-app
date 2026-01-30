@@ -493,5 +493,7 @@
         <file>icons/chat/style.svg</file>
         <file>icons/chat/token.svg</file>
         <file>icons/chat/up.svg</file>
+        <file>icons/action-sent.svg</file>
+        <file>icons/action-decline.svg</file>
     </qresource>
 </RCC>

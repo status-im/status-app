@@ -302,6 +302,139 @@
     </message>
   </context>
   <context>
+    <name>ActivityCenterAdaptor</name>
+    <message>
+      <source>Removed you from contacts</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Removed you from contacts</translation>
+    </message>
+    <message>
+      <source>You’re added to private group chat</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>You’re added to private group chat</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;Accepted&lt;/font&gt;</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;Accepted&lt;/font&gt;</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;Declined&lt;/font&gt;</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;Declined&lt;/font&gt;</translation>
+    </message>
+    <message>
+      <source>Invitation to join community</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Invitation to join community</translation>
+    </message>
+    <message>
+      <source>Community membership request</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Community membership request</translation>
+    </message>
+    <message>
+      <source>Request to join community</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Request to join community</translation>
+    </message>
+    <message>
+      <source>In progress</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>In progress</translation>
+    </message>
+    <message>
+      <source>You have been kicked out of community</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>You have been kicked out of community</translation>
+    </message>
+    <message>
+      <source>You have been &lt;font color=&#39;%1&#39;&gt;banned&lt;/font&gt; from community</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>You have been &lt;font color=&#39;%1&#39;&gt;banned&lt;/font&gt; from community</translation>
+    </message>
+    <message>
+      <source>You have been &lt;font color=&#39;%1&#39;&gt;unbanned&lt;/font&gt; in community</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>You have been &lt;font color=&#39;%1&#39;&gt;unbanned&lt;/font&gt; in community</translation>
+    </message>
+    <message>
+      <source>You’re received a token in community</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>You’re received a token in community</translation>
+    </message>
+    <message>
+      <source>You received your first community token</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>You received your first community token</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;%1 %2 (%3) minted by %4.&lt;/b&gt;&lt;br&gt;</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>&lt;b&gt;%1 %2 (%3) minted by %4.&lt;/b&gt;&lt;br&gt;</translation>
+    </message>
+    <message>
+      <source>Community tokens are created by the community and aren’t verified. Always check their source before interacting.</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Community tokens are created by the community and aren’t verified. Always check their source before interacting.</translation>
+    </message>
+    <message>
+      <source>You received the owner token</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>You received the owner token</translation>
+    </message>
+    <message>
+      <source>Ownership transfer</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Ownership transfer</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;You are now the owner of the community&lt;/font&gt;</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;You are now the owner of the community&lt;/font&gt;</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;You no longer control the community&lt;/font&gt;</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;You no longer control the community&lt;/font&gt;</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;Failed&lt;/font&gt;</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;Failed&lt;/font&gt;</translation>
+    </message>
+    <message>
+      <source>To continue to be a member of community, you need to share your accounts</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>To continue to be a member of community, you need to share your accounts</translation>
+    </message>
+    <message>
+      <source>Status</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Status</translation>
+    </message>
+    <message>
+      <source>New device detected</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>New device detected</translation>
+    </message>
+    <message>
+      <source>New device with %1 profile has been detected.</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>New device with %1 profile has been detected.</translation>
+    </message>
+    <message>
+      <source>Sync your profile</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Sync your profile</translation>
+    </message>
+    <message>
+      <source>Check your other device for a pairing request.</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Check your other device for a pairing request.</translation>
+    </message>
+  </context>
+  <context>
     <name>ActivityCenterLayout</name>
     <message>
       <source>Notifications</source>
@@ -387,24 +520,6 @@
       <source>Your notifications will appear here</source>
       <comment>ActivityCenterLayout</comment>
       <translation>Your notifications will appear here</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityCenterOptionsPanel</name>
-    <message>
-      <source>Mark all as read</source>
-      <comment>ActivityCenterOptionsPanel</comment>
-      <translation>Mark all as read</translation>
-    </message>
-    <message>
-      <source>Hide read notifications</source>
-      <comment>ActivityCenterOptionsPanel</comment>
-      <translation>Hide read notifications</translation>
-    </message>
-    <message>
-      <source>Show read notifications</source>
-      <comment>ActivityCenterOptionsPanel</comment>
-      <translation>Show read notifications</translation>
     </message>
   </context>
   <context>
@@ -15260,6 +15375,52 @@
       <source>Type json-rpc message... e.g {&#34;method&#34;: &#34;eth_accounts&#34;}</source>
       <comment>NodeLayout</comment>
       <translation>Type json-rpc message... e.g {&#34;method&#34;: &#34;eth_accounts&#34;}</translation>
+    </message>
+  </context>
+  <context>
+    <name>NotificationAdaptorContactRequest</name>
+    <message>
+      <source>New contact request</source>
+      <comment>NotificationAdaptorContactRequest</comment>
+      <translation>New contact request</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;Accepted your contact request&lt;/font&gt;</source>
+      <comment>NotificationAdaptorContactRequest</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;Accepted your contact request&lt;/font&gt;</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;Declined your contact request&lt;/font&gt;</source>
+      <comment>NotificationAdaptorContactRequest</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;Declined your contact request&lt;/font&gt;</translation>
+    </message>
+    <message>
+      <source>You’ve sent request to contact</source>
+      <comment>NotificationAdaptorContactRequest</comment>
+      <translation>You’ve sent request to contact</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;Contact request accepted&lt;/font&gt;</source>
+      <comment>NotificationAdaptorContactRequest</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;Contact request accepted&lt;/font&gt;</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;Contact request declined&lt;/font&gt;</source>
+      <comment>NotificationAdaptorContactRequest</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;Contact request declined&lt;/font&gt;</translation>
+    </message>
+  </context>
+  <context>
+    <name>NotificationCard</name>
+    <message>
+      <source>Decline</source>
+      <comment>NotificationCard</comment>
+      <translation>Decline</translation>
+    </message>
+    <message>
+      <source>Accept</source>
+      <comment>NotificationCard</comment>
+      <translation>Accept</translation>
     </message>
   </context>
   <context>

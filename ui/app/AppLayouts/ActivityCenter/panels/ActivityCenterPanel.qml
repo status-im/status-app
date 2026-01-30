@@ -101,6 +101,7 @@ Control {
     signal redirectToDetails(string sectionId, string subsectionId, string itemId)
     signal redirectToSection(string sectionId)
     signal redirectToPopup(var notification)
+    signal redirectToWallet(string address, string txHash)
 
     // Emitted when quick actions are shown and user iteracts with the corresponding buttons
     signal declineRequested(string avatarId, string actionId)
@@ -272,6 +273,9 @@ Control {
                         return
                     } else if (model.redirectToLink) {
                         root.redirectToPopup(model)
+                        return
+                    } else if(model.redirectToWallet) {
+                        root.redirectToWallet(model.tokenData.walletAddress, model.tokenData.txHash)
                         return
                     }
                     // If no specific redirection but avatarId has some value, redirection will be to

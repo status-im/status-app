@@ -247,6 +247,113 @@
     </message>
 </context>
 <context>
+    <name>ActivityCenterAdaptor</name>
+    <message>
+        <source>Removed you from contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You’re added to private group chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;Accepted&lt;/font&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;Declined&lt;/font&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invitation to join community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Community membership request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Request to join community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In progress</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have been kicked out of community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have been &lt;font color=&apos;%1&apos;&gt;banned&lt;/font&gt; from community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You have been &lt;font color=&apos;%1&apos;&gt;unbanned&lt;/font&gt; in community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You’re received a token in community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You received your first community token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;%1 %2 (%3) minted by %4.&lt;/b&gt;&lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Community tokens are created by the community and aren’t verified. Always check their source before interacting.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You received the owner token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ownership transfer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;You are now the owner of the community&lt;/font&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;You no longer control the community&lt;/font&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;Failed&lt;/font&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To continue to be a member of community, you need to share your accounts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation type="unfinished">Stav</translation>
+    </message>
+    <message>
+        <source>New device detected</source>
+        <translation type="unfinished">Detekováno nové zařízení</translation>
+    </message>
+    <message>
+        <source>New device with %1 profile has been detected.</source>
+        <translation type="unfinished">Bylo detekováno nové zařízení s profilem %1.</translation>
+    </message>
+    <message>
+        <source>Sync your profile</source>
+        <translation type="unfinished">Synchronizovat váš profil</translation>
+    </message>
+    <message>
+        <source>Check your other device for a pairing request.</source>
+        <translation type="unfinished">Zkontrolujte své druhé zařízení pro žádost o spárování.</translation>
+    </message>
+</context>
+<context>
     <name>ActivityCenterLayout</name>
     <message>
         <source>Notifications</source>
@@ -315,21 +422,6 @@
     <message>
         <source>Your notifications will appear here</source>
         <translation>Zde se zobrazí vaše oznámení</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityCenterOptionsPanel</name>
-    <message>
-        <source>Mark all as read</source>
-        <translation>Označit vše jako přečtené</translation>
-    </message>
-    <message>
-        <source>Hide read notifications</source>
-        <translation>Skrýt přečtená oznámení</translation>
-    </message>
-    <message>
-        <source>Show read notifications</source>
-        <translation>Zobrazit přečtená oznámení</translation>
     </message>
 </context>
 <context>
@@ -12626,6 +12718,44 @@ selhalo</translation>
     <message>
         <source>Type json-rpc message... e.g {&quot;method&quot;: &quot;eth_accounts&quot;}</source>
         <translation>Zadejte zprávu json-rpc... např. {&quot;method&quot;: &quot;eth_accounts&quot;}</translation>
+    </message>
+</context>
+<context>
+    <name>NotificationAdaptorContactRequest</name>
+    <message>
+        <source>New contact request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;Accepted your contact request&lt;/font&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;Declined your contact request&lt;/font&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You’ve sent request to contact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;Contact request accepted&lt;/font&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;Contact request declined&lt;/font&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>NotificationCard</name>
+    <message>
+        <source>Decline</source>
+        <translation type="unfinished">Zamítnout</translation>
+    </message>
+    <message>
+        <source>Accept</source>
+        <translation type="unfinished">Přijmout</translation>
     </message>
 </context>
 <context>

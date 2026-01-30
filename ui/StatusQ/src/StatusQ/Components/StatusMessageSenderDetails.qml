@@ -1,8 +1,9 @@
 import QtQuick
 
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 
-QtObject {
+SQUtils.QObject {
     id: root
 
     property string id: ""
@@ -14,6 +15,7 @@ QtObject {
     property bool isEnsVerified: false
     property bool isContact: false
     property int trustIndicator: StatusContactVerificationIcons.TrustedType.None
+    property bool isBlocked: false
 
     property string badgeImage: ""
 

@@ -1,0 +1,9 @@
+ActivityCenterAdaptor 1.0 ActivityCenterAdaptor.qml
+NotificationAdaptorBase 1.0 NotificationAdaptorBase.qml
+NotificationAdaptorCommunity 1.0 NotificationAdaptorCommunity.qml
+NotificationAdaptorCommunityToken 1.0 NotificationAdaptorCommunityToken.qml
+NotificationAdaptorContactRequest 1.0 NotificationAdaptorContactRequest.qml
+NotificationAdaptorMessenger 1.0 NotificationAdaptorMessenger.qml
+NotificationAdaptorSender 1.0 NotificationAdaptorSender.qml
+NotificationAdaptorSystemNews 1.0 NotificationAdaptorSystemNews.qml
+NotificationSenderResolver 1.0 NotificationSenderResolver.qml
