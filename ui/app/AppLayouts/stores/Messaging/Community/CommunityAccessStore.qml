@@ -126,7 +126,7 @@ StatusQUtils.QObject {
         target: d.communitiesModuleInst
 
         function onCommunityAccessFailed(communityId: string, error: string) {
-            root.communityAccessFailed(communityId, error)
+            root.communityAccessFailed(communityId)
         }
 
         function onAllSharedAddressesSigned() {

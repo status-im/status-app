@@ -671,6 +671,8 @@ proc signRevealedAddressesForNonKeycardKeypairs(self: Module): bool =
     return true
   # signatures are returned in the same order as signingParams
   let signatures = self.controller.signCommunityRequests(self.joiningCommunityDetails.communityId, signingParams)
+  if signatures.len != signingParams.len:
+    return false
   for i in 0 ..< len(signingParams):
     self.joiningCommunityDetails.addressesToShare[signingParams[i].address].signature = signatures[i]
     self.view.keypairsSigningModel().setOwnershipVerified(self.joiningCommunityDetails.addressesToShare[signingParams[i].address].keyUid, true)
