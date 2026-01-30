@@ -96,7 +96,7 @@ StatusModal {
                     id: inputText
                     input.edit.objectName: "searchPopupSearchInput"
                     anchors.left: statusIcon.right
-                    anchors.right: parent.right
+                    anchors.right: closePopupButton.left
                     anchors.verticalCenter: parent.verticalCenter
                     focus: !Utils.isMobile
                     font.pixelSize: Theme.fontSize(28)
@@ -115,6 +115,22 @@ StatusModal {
                         if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return)
                             event.accepted = true
                     }
+                }
+
+                StatusFlatRoundButton {
+                    id: closePopupButton
+                    objectName: "headerCloseButton"
+                    anchors.right: parent.right
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 32
+                    height: 32
+                    type: StatusFlatRoundButton.Type.Secondary
+                    icon.name: "close"
+                    icon.color: Theme.palette.directColor1
+                    icon.width: 24
+                    icon.height: 24
+                    onClicked: root.close()
                 }
             }
             StatusMenuSeparator {

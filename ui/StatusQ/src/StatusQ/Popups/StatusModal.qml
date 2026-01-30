@@ -60,13 +60,13 @@ StatusDialog {
     */
     property alias advancedHeader: advancedHeader.item
     /*!
-       \qmlproperty advancedHeader
+       \qmlproperty advancedFooter
         This property represents the item loaded in footer loader.
         Can be used to read values from the component assigned to the loader.
     */
     property alias advancedFooter: advancedFooter.item
     /*!
-       \qmlproperty advancedHeader
+       \qmlproperty advancedHeaderComponent
         This property can be used to assign a Component to the advanced loader.
         This was introduced to give more control to user on the Modal Header
 
@@ -94,7 +94,7 @@ StatusDialog {
     */
     property alias advancedHeaderComponent: advancedHeader.sourceComponent
     /*!
-       \qmlproperty advancedHeader
+       \qmlproperty advancedFooterComponent
         This property can be used to assign a Component to the advanced loader.
         This was introduced to give more control to user on the Modal Footer.
 
@@ -129,7 +129,7 @@ StatusDialog {
     property alias headerActionButton: headerImpl.actionButton
 
     /*!
-       \qmlproperty header
+       \qmlproperty headerSettings
         type: StatusModalHeaderSettings
         This property exposes the different properties of the standard header.
     */
@@ -156,7 +156,7 @@ StatusDialog {
     */
     property bool showHeader: true
     /*!
-       \qmlproperty showHeader
+       \qmlproperty showFooter
         This property to decides whether the standard footer is shown.
         default value is true
     */
