@@ -4,16 +4,16 @@ from typing import Optional, Tuple
 import pytest
 
 from pages.messaging.chat_page import ChatPage
-from pages.messaging.create_chat_page import CreateChatPage
 from pages.app import App
 from pages.settings.messaging_page import MessagingSettingsPage
 from pages.settings.settings_page import SettingsPage
+from pages.settings.contacts_page import ContactsSettingsPage
 from utils.multi_device_helpers import StepMixin
 
 
 class TestMessaging1x1Chat(StepMixin):
 
-    DM_TIMEOUT = 60
+    DM_TIMEOUT = 120
     UI_TIMEOUT = 12
 
     @pytest.mark.messaging
@@ -79,7 +79,13 @@ class TestMessaging1x1Chat(StepMixin):
         )
 
     @staticmethod
+    def _extract_chat_key(link: str) -> str:
+        """Extract full chat key from profile link (part after #)."""
+        return link.rsplit("#", 1)[-1] if "#" in link else link
+
+    @staticmethod
     def _extract_chat_suffix(link: str, length: int = 6) -> str:
+        """Extract last N characters of chat key for display."""
         chat_key = link.rsplit("#", 1)[-1] if "#" in link else link
         return chat_key[-length:]
 
@@ -92,31 +98,36 @@ class TestMessaging1x1Chat(StepMixin):
         secondary_suffix: str,
     ) -> str:
         main_app = App(device.driver)
-        chat_page = ChatPage(device.driver)
-        create_chat_page = CreateChatPage(device.driver)
+        settings_page = SettingsPage(device.driver)
 
-        async with self.step(device, "Open messaging from primary user"):
-            assert main_app.click_messages_button(), "Failed to click messaging nav button"
-            assert chat_page.is_loaded(timeout=self.UI_TIMEOUT), "Chat page did not load"
+        async with self.step(device, "Open settings from primary user"):
+            assert main_app.click_settings_button(), "Failed to open settings"
+            assert settings_page.is_loaded(timeout=self.UI_TIMEOUT), "Settings page did not load"
 
-        async with self.step(device, "Open start chat dialog"):
-            assert create_chat_page.tap_start_chat(), (
-                "Failed to open start chat dialog"
-            )
+        async with self.step(device, "Navigate to messaging settings"):
+            messaging_page = settings_page.open_messaging_settings()
+            assert messaging_page is not None, "Failed to open messaging settings"
 
-        async with self.step(device, "Paste secondary profile link into chat input"):
-            assert create_chat_page.enter_profile_link(
-                recipient_link,
-                verify=False,
-                timeout=self.UI_TIMEOUT,
-            ), "Failed to paste secondary profile link into chat input"
+        async with self.step(device, "Open contacts settings"):
+            contacts_page = messaging_page.open_contacts()
+            assert contacts_page is not None, "Failed to open contacts settings"
+
+        async with self.step(device, "Open send contact request modal"):
+            modal = contacts_page.open_send_contact_request_modal()
+            assert modal is not None, "Failed to open send contact request modal"
 
         request_message = f"Hi {secondary_suffix}, it's {primary_suffix}. Let's connect on Status!"
         async with self.step(device, "Send contact request to secondary user"):
-            assert create_chat_page.send_contact_request(
-                request_message,
-                timeout=self.UI_TIMEOUT,
-            ), "Failed to send contact request to secondary user"
+            chat_key = self._extract_chat_key(recipient_link)
+            assert modal.enter_chat_key(chat_key), "Failed to enter chat key"
+            assert modal.enter_message(request_message), "Failed to enter message"
+            assert modal.send(), "Failed to send contact request"
+
+        async with self.step(device, "Navigate back to messages"):
+            assert main_app.click_messages_button(), "Failed to navigate to messages"
+            chat_page = ChatPage(device.driver)
+            chat_page.dismiss_backup_prompt(timeout=4)  # Dismiss if visible
+            assert chat_page.is_loaded(timeout=self.UI_TIMEOUT), "Chat page did not load"
 
         return request_message
 
@@ -141,13 +152,23 @@ class TestMessaging1x1Chat(StepMixin):
         async with self.step(device, "Open contacts settings list"):
             contacts_page = messaging_page.open_contacts()
             assert contacts_page is not None, "Failed to open contacts settings list"
-            assert contacts_page.open_pending_requests_tab(timeout=self.DM_TIMEOUT), (
+
+        async with self.step(device, "Wait for pending request to arrive"):
+            assert contacts_page.wait_for_pending_requests_focusable(
+                timeout=self.DM_TIMEOUT
+            ), (
+                f"Pending requests tab not clickable after {self.DM_TIMEOUT}s - "
+                "contact request may not have been delivered"
+            )
+
+        async with self.step(device, "Open pending requests tab and accept"):
+            assert contacts_page.open_pending_requests_tab(timeout=self.UI_TIMEOUT), (
                 "Failed to open pending requests tab"
             )
             assert contacts_page.pending_request_row_exists(
                 primary_suffix,
                 timeout=self.UI_TIMEOUT,
-            ), "Pending requests list did not show the expected request"
+            ), f"Pending request from '{primary_suffix}' not visible in list"
             assert contacts_page.accept_contact_request(primary_suffix), (
                 "Failed to accept contact request"
             )

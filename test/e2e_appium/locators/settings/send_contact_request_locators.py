@@ -11,8 +11,8 @@ class SendContactRequestLocators(BaseLocators):
     MESSAGE_INPUT = BaseLocators.xpath(
         "//*[contains(@resource-id,'SendContactRequestModal_SayWhoYouAre_Input')]"
     )
-    SEND_BUTTON = BaseLocators.content_desc_contains(
-        "[tid:SendContactRequestModal_Send_Button]"
+    SEND_BUTTON = BaseLocators.resource_id_contains(
+        "SendContactRequestModal_Send_Button"
     )
 
 

@@ -20,8 +20,8 @@ class ContactsSettingsLocators(BaseLocators):
     BLOCKED_TAB = BaseLocators.xpath(
         "//*[contains(@resource-id,'ContactsView_Blocked_Button')]"
     )
-    SEND_CONTACT_REQUEST_BUTTON = BaseLocators.content_desc_contains(
-        "[tid:ContactsView_ContactRequest_Button]"
+    SEND_CONTACT_REQUEST_BUTTON = BaseLocators.resource_id_contains(
+        "ContactsView_ContactRequest_Button"
     )
     CONTACT_LIST = BaseLocators.xpath(
         "//*[contains(@resource-id,'ContactListPanel_ListView')]"
