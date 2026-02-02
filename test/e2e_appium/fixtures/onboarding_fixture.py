@@ -379,7 +379,7 @@ class OnboardingFlow:
         self.logger.info("Step 6: Loading Screen")
 
         if self.config.wait_for_complete_loading:
-            success = self.loading_page.wait_for_loading_completion()
+            success = self.loading_page.wait_for_loading_completion(timeout=120)
             assert success, "Should successfully complete loading"
 
         self.step_results["loading_screen"] = {

@@ -89,36 +89,6 @@ class WalletLeftPanel(BasePage):
             return False
         return self.is_element_visible(self.locators.ACCOUNT_CONTEXT_MENU, timeout=5)
 
-    def _complete_account_deletion(self, auth_password: Optional[str] = None) -> bool:
-        """Complete account deletion after context menu is open.
-
-        Clicks Delete, handles confirmation modal and authentication.
-
-        Args:
-            auth_password: Password for authentication if required.
-
-        Returns:
-            bool: True if deletion completed successfully.
-        """
-        self.safe_click(self.locators.ACCOUNT_MENU_DELETE, timeout=5)
-
-        confirmation = RemoveAccountConfirmationModal(self.driver)
-        if confirmation.is_displayed(timeout=5):
-            if not confirmation.confirm_removal():
-                self.logger.error("Failed to confirm account removal in confirmation modal")
-                return False
-
-        auth_modal = KeycardAuthenticationModal(self.driver)
-        if auth_modal.is_displayed(timeout=3):
-            if not auth_password:
-                self.logger.error("Post-removal authentication required but no password provided")
-                return False
-            if not auth_modal.authenticate(auth_password):
-                self.logger.error("Post-removal authentication failed")
-                return False
-
-        return True
-
     def edit_account_via_menu(self, new_name: str, index: int = -1) -> bool:
         """Edit account name via context menu.
 
@@ -152,6 +122,36 @@ class WalletLeftPanel(BasePage):
 
         return True
 
+    def _complete_account_deletion(self, auth_password: Optional[str] = None) -> bool:
+        """Complete account deletion after context menu is open.
+
+        Clicks Delete, handles confirmation modal and authentication.
+
+        Args:
+            auth_password: Password for authentication if required.
+
+        Returns:
+            bool: True if deletion completed successfully.
+        """
+        self.safe_click(self.locators.ACCOUNT_MENU_DELETE, timeout=5)
+
+        confirmation = RemoveAccountConfirmationModal(self.driver)
+        if confirmation.is_displayed(timeout=5):
+            if not confirmation.confirm_removal():
+                self.logger.error("Failed to confirm account removal in confirmation modal")
+                return False
+
+        auth_modal = KeycardAuthenticationModal(self.driver)
+        if auth_modal.is_displayed(timeout=3):
+            if not auth_password:
+                self.logger.error("Post-removal authentication required but no password provided")
+                return False
+            if not auth_modal.authenticate(auth_password):
+                self.logger.error("Post-removal authentication failed")
+                return False
+
+        return True
+
     def delete_latest_account_via_menu(self, auth_password: Optional[str] = None) -> bool:
         if not self.open_context_menu_for_row(index=-1):
             self.logger.error("Failed to open account context menu via long-press")
@@ -168,10 +168,10 @@ class WalletLeftPanel(BasePage):
         Returns:
             WebElement if found, None otherwise.
         """
-        # Dynamic XPath for row containing the account name in content-desc
+        escaped = name.replace("'", "\\'")
         locator = (
             "xpath",
-            f"//*[contains(@resource-id,'walletAccountListItem') and starts-with(@content-desc, '{name}')]"
+            f"//*[contains(@resource-id,'walletAccountListItem') and starts-with(@content-desc, \"{escaped}\")]"
         )
         return self.find_element_safe(locator, timeout=timeout)
 

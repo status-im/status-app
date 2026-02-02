@@ -14,8 +14,8 @@ class PasswordChangeLocators(BaseLocators):
     CONFIRM_PASSWORD_INPUT = BaseLocators.xpath(
         "//*[contains(@resource-id, 'passwordViewNewPasswordConfirm')]"
     )
-    CHANGE_PASSWORD_BUTTON = BaseLocators.content_desc_contains(
-        "[tid:changePasswordModalSubmitButton]"
+    CHANGE_PASSWORD_BUTTON = BaseLocators.resource_id_contains(
+        "changePasswordModalSubmitButton"
     )
 
 
@@ -25,7 +25,7 @@ class ChangePasswordModalLocators(BaseLocators):
     )
     PRIMARY_BUTTON = BaseLocators.xpath(
         "//*[@resource-id='QGuiApplication.mainWindow.ConfirmChangePasswordModal']"
-        "//*[contains(@content-desc, 'tid:changePasswordModalSubmitButton')]"
+        "//*[contains(@resource-id, 'changePasswordModalSubmitButton')]"
     )
     STATUS_MESSAGE = BaseLocators.xpath(
         "//*[@resource-id='QGuiApplication.mainWindow.ConfirmChangePasswordModal']"
