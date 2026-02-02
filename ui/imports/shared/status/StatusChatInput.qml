@@ -554,8 +554,7 @@ Rectangle {
         height: Math.min(400, implicitHeight)
         z: parent.z + 100
 
-        visible: !shouldHide && messageInputField.text.length > 0
-                 && model.ModelCount.count > 0 && messageInputField.lastAtPosition > -1
+        visible: !shouldHide && messageInputField.activeMentionInput
 
         property bool shouldHide: false
 

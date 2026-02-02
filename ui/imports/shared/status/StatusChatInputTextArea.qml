@@ -52,6 +52,13 @@ StatusQ.StatusTextArea {
     // Used for mention suggestion handling. To be removed later.
     readonly property alias lastAtPosition: suggestionsFilterAdaptor.lastAtPosition
 
+    // Indicates whether the mention insertion is active. Mention insertion is
+    // active when @ was entered and there are suggestions available for the
+    // provided partial name.
+    readonly property bool activeMentionInput:
+        suggestionsFilterAdaptor.lastAtPosition > -1 &&
+        suggestionsFilterAdaptor.model.ModelCount.count > 0
+
     // Mention internal representation details, exposed to potentially use in
     // external processing.
     readonly property string mentionTagStart:
