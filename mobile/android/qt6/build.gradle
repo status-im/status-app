@@ -97,7 +97,9 @@ android {
         versionCode = (System.currentTimeMillis() / 60000).toInteger()
         // Set applicationId and app name based on build variant
         applicationId = buildVariant == 'release' ? "app.status.mobile" : "app.status.mobile.pr"
-        resValue "string", "app_name", buildVariant == 'release' ? "Status" : "StatusPR"
+        resValue "string", "app_name", buildVariant == 'release' ? "Status" : "Status PR"
+        // lib_name must match TARGET in Status.pro (spaces cause weird issues in paths)
+        resValue "string", "lib_name", buildVariant == 'release' ? "Status" : "StatusPR"
     }
 
     signingConfigs {
@@ -117,6 +119,8 @@ android {
         }
         debug {
             debuggable = true
+            applicationIdSuffix ".debug"
+            resValue "string", "app_name", "Status Debug"
         }
     }
 }

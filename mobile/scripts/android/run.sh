@@ -2,7 +2,8 @@
 
 CWD=$(realpath `dirname $0`)
 APP=${APP:="$CWD/../bin/$OS/Status.apk"}
-APP_PACKAGE=${APP_PACKAGE:="app.status.mobile"}
+# for local builds debug variant is default
+APP_PACKAGE=${APP_PACKAGE:="app.status.mobile.debug"}
 ARCH=${ARCH:="arm64-v8a"}
 ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:=""}
 EMULATOR=${EMULATOR:="$ANDROID_SDK_ROOT/emulator/emulator"}

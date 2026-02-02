@@ -54,7 +54,7 @@
 
           <meta-data
                 android:name="android.app.lib_name"
-                android:value="@string/app_name" />
+                android:value="@string/lib_name" />
 
           <meta-data
                 android:name="android.app.arguments"

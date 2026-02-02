@@ -132,12 +132,24 @@ makedir:
 .PHONY: compile-translations
 compile-translations:
 	@echo "Building translations"
+ifeq ($(HOST_OS),linux)
 	@make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
+else
+	@CC= CXX= make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
+endif
 
 .PHONY: apk
 apk:
 ifeq ($(OS),android)
 	@$(MAKE) GRADLE_TARGETS=assembleRelease $(TARGET)
+else
+	$(error APK target is only available for Android)
+endif
+
+.PHONY: apk-debug
+apk-debug:
+ifeq ($(OS),android)
+	@$(MAKE) GRADLE_TARGETS=assembleDebug $(TARGET)
 else
 	$(error APK target is only available for Android)
 endif
