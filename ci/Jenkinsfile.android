@@ -12,7 +12,7 @@ pipeline {
     /* Image with Ubuntu 22.04, QT 6.9.2, Android SDK/NDK, Go, and Nim */
     docker {
       label 'linuxcontainer'
-      image 'harbor.status.im/status-im/status-desktop-build:1.0.18-qt6.9.2-android'
+      image 'harbor.status.im/status-im/status-desktop-build:1.0.8-qt6.9.2-android'
       alwaysPull true
       args '--entrypoint="" ' +
            '--volume=/nix:/nix ' +

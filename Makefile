@@ -181,8 +181,6 @@ endif
 QT_INSTALL_PREFIX := $(shell $(QMAKE) -query QT_INSTALL_PREFIX 2>/dev/null)
 # what Qt version are we building against
 QT_VERSION := $(shell $(QMAKE) -query QT_VERSION 2>/dev/null)
-# referenced in android/qt6/build.gradle
-export QT_ANDROID_DIR := $(QT_INSTALL_PREFIX)/src/android/java
 # separate DOS build dir, per Qt version
 DOTHERSIDE_BUILD_PATH := vendor/DOtherSide/build/Qt$(QT_VERSION)
 # separate StatusQ/storybook/... build dirs, per Qt version
@@ -997,7 +995,7 @@ endif
 
 mobile-run: deps-common
 	echo -e "\033[92mRunning:\033[39m mobile app"
-	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug $(MOBILE_FLAGS)
+	$(MAKE) -C mobile run DEBUG=1 $(MOBILE_FLAGS)
 
 mobile-build: USE_SYSTEM_NIM=1 $(MOBILE_FLAGS)
 mobile-build: | deps-common

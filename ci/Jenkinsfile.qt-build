@@ -20,12 +20,12 @@ pipeline {
     )
     string(
       name: 'DOCKER_TAG_ANDROID',
-      defaultValue: '1.0.17-qt6.9.2-android',
+      defaultValue: '1.0.4-qt6.9.0-android',
       description: 'Docker image tag for the Andorid image'
     )
     string(
       name: 'DOCKER_TAG_LINUX',
-      defaultValue: '1.0.6-qt6.9.2',
+      defaultValue: '1.0.4-qt6.9.0',
       description: 'Docker image tag for the Linux image'
     )
     string(
@@ -42,6 +42,11 @@ pipeline {
       name: 'PCSCLITE_VERSION',
       description: 'PCSC Lite version to bundle for keycard support',
       defaultValue: '2.2.3',
+    )
+    string(
+      name: 'ANDROID_TARGET_ARCH',
+      description: 'CPU Target Architecture for Android Builds',
+      defaultValue: 'amd64',
     )
     string(
       name: 'JAVA_VERSION',
@@ -66,7 +71,7 @@ pipeline {
     string(
       name: 'NIM_VERSION',
       description: 'Nim language version',
-      defaultValue: '2.2.4',
+      defaultValue: '2.0.12',
     )
     string(
       name: 'NIX_VERSION',
@@ -126,14 +131,15 @@ pipeline {
           dir("${ANDROID_BUILD_DIR}") {
             image = docker.build(
               "${params.DOCKER_REGISTRY}/${DOCKER_IMAGE}:${params.DOCKER_TAG_ANDROID}",
-              "--build-arg QT_VERSION=${params.QT_VERSION} " +
+              "--build-arg QTVER=${params.QT_VERSION} " +
+              "--build-arg TARGETARCH=${params.ANDROID_TARGET_ARCH} " +
               "--build-arg JAVA_VERSION=${params.JAVA_VERSION} " +
               "--build-arg ANDROID_API_LEVEL=${params.ANDROID_API_LEVEL} " +
               "--build-arg ANDROID_NDK_VERSION=${params.ANDROID_NDK_VERSION} " +
               "--build-arg GOLANG_VERSION=${params.GOLANG_VERSION} " +
               "--build-arg NIM_VERSION=${params.NIM_VERSION} " +
               "--build-arg NIX_VERSION=${params.NIX_VERSION} " +
-              "."
+              "--target mobile-build ."
             )
           }
         }

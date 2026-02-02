@@ -61,19 +61,12 @@ if [[ "${OS}" == "android" ]]; then
   BIN_DIR=${BIN_DIR:-"$CWD/../bin/android/qt6"}
   mkdir -p "$BIN_DIR"
 
-  # Determine build type from GRADLE_TARGETS
-  if [[ "$GRADLE_TARGETS" == *"Debug"* ]]; then
-    BUILD_TYPE="debug"
-  else
-    BUILD_TYPE="release"
-  fi
-
   # Gradle output paths
-  APK_OUT="build/outputs/apk/${BUILD_TYPE}/android-build-${BUILD_TYPE}.apk"
-  AAB_OUT="build/outputs/bundle/${BUILD_TYPE}/android-build-${BUILD_TYPE}.aab"
+  APK_OUT="build/outputs/apk/release/android-build-release.apk"
+  AAB_OUT="build/outputs/bundle/release/android-build-release.aab"
 
   # Build with specified gradle targets
-  ./gradlew "${GRADLE_TARGETS}" --no-daemon
+  gradle $GRADLE_TARGETS --no-daemon
 
   # Copy whichever artifacts were built
   BUILT=""
