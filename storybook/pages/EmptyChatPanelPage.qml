@@ -1,11 +1,22 @@
 import QtQuick
 
+import StatusQ.Core.Theme
+
+import Storybook
+
 import AppLayouts.Chat.panels
 
 Item {
-    EmptyChatPanel {
+    id: root
+
+    Rectangle {
         anchors.fill: parent
-        onShareChatKeyClicked: console.log("share chat key clicked!")
+        color: Theme.palette.background
+
+        EmptyChatPanel {
+            anchors.fill: parent
+            onShareChatKeyClicked: console.log("EmptyChatPanel::onShareChatKeyClicked")
+        }
     }
 }
 

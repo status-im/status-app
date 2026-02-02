@@ -80,11 +80,11 @@
     </message>
     <message>
         <source>Decline</source>
-        <translation type="unfinished"></translation>
+        <translation>Zamítnout</translation>
     </message>
     <message>
         <source>Accept</source>
-        <translation type="unfinished">Přijmout</translation>
+        <translation>Přijmout</translation>
     </message>
 </context>
 <context>
@@ -321,38 +321,38 @@
     <name>ActivityCenterOptionsPanel</name>
     <message>
         <source>Mark all as read</source>
-        <translation type="unfinished"></translation>
+        <translation>Označit vše jako přečtené</translation>
     </message>
     <message>
         <source>Hide read notifications</source>
-        <translation type="unfinished">Skrýt přečtená oznámení</translation>
+        <translation>Skrýt přečtená oznámení</translation>
     </message>
     <message>
         <source>Show read notifications</source>
-        <translation type="unfinished">Zobrazit přečtená oznámení</translation>
+        <translation>Zobrazit přečtená oznámení</translation>
     </message>
 </context>
 <context>
     <name>ActivityCenterPanel</name>
     <message>
         <source>Notifications</source>
-        <translation type="unfinished">Oznámení</translation>
+        <translation>Oznámení</translation>
     </message>
     <message>
         <source>Enable Status News notifications</source>
-        <translation type="unfinished">Povolit oznámení Status News</translation>
+        <translation>Povolit oznámení Status News</translation>
     </message>
     <message>
         <source>Enable RSS</source>
-        <translation type="unfinished">Povolit RSS</translation>
+        <translation>Povolit RSS</translation>
     </message>
     <message>
         <source>No notifications right now.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktuálně žádná oznámení.</translation>
     </message>
     <message>
         <source>Check back later for updates.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkontrolujte aktualizace později.</translation>
     </message>
     <message>
         <source>Turn it on to get updates about new features and announcements. You can also enable this anytime in Privacy &amp; Security settings.</source>
@@ -2811,7 +2811,7 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <name>BrowserToolbar</name>
     <message>
         <source>Enter URL</source>
-        <translation type="unfinished">Zadejte URL</translation>
+        <translation>Zadejte URL</translation>
     </message>
 </context>
 <context>
@@ -4360,7 +4360,7 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     </message>
     <message>
         <source>Open QR Scanner</source>
-        <translation type="unfinished"></translation>
+        <translation>Otevřít QR skener</translation>
     </message>
 </context>
 <context>
@@ -6702,7 +6702,7 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     </message>
     <message>
         <source>There was an error saving the permission: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nastala chyba při ukládání oprávnění: %1</translation>
     </message>
 </context>
 <context>
@@ -6727,16 +6727,12 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
 <context>
     <name>EmptyChatPanel</name>
     <message>
-        <source>Share your chat key</source>
-        <translation>Sdílet váš klíč chatu</translation>
+        <source>Share your profile</source>
+        <translation>Sdílejte svůj profil</translation>
     </message>
     <message>
-        <source>invite</source>
-        <translation>pozvat</translation>
-    </message>
-    <message>
-        <source>%1 or %2&lt;br&gt;friends to start messaging in Status</source>
-        <translation>%1 nebo %2&lt;br&gt;přátel pro zahájení komunikace ve Statusu</translation>
+        <source>%1 to connect with or&lt;br&gt;invite your friends to Status.</source>
+        <translation>%1 pro spojení s&lt;br&gt;nebo pozvání přátel do Statusu.</translation>
     </message>
 </context>
 <context>
@@ -8796,10 +8792,6 @@ L2 poplatek: %2</translation>
         <source>Get Status at %1</source>
         <translation>Získejte Status na %1</translation>
     </message>
-    <message>
-        <source>Copied!</source>
-        <translation>Zkopírováno!</translation>
-    </message>
 </context>
 <context>
     <name>InviteFriendsToCommunityPopup</name>
@@ -10327,7 +10319,7 @@ přístup ke svým prostředkům.</translation>
     </message>
     <message>
         <source>Add account</source>
-        <translation type="unfinished">Přidat účet</translation>
+        <translation>Přidat účet</translation>
     </message>
 </context>
 <context>
@@ -10741,7 +10733,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Manage profiles</source>
-        <translation type="unfinished"></translation>
+        <translation>Spravovat profily</translation>
     </message>
 </context>
 <context>
@@ -11596,7 +11588,7 @@ selhalo</translation>
     </message>
     <message>
         <source>Unknown message. Trying to recover it</source>
-        <translation type="unfinished"></translation>
+        <translation>Neznámá zpráva. Obnovuje se</translation>
     </message>
 </context>
 <context>
@@ -12736,19 +12728,19 @@ selhalo</translation>
     </message>
     <message>
         <source>Remove %1 profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Odstranit profil %1</translation>
     </message>
     <message>
         <source>If you remove %1, all data for this profile will be deleted from this device. To use this profile again, you&apos;ll need to reimport it to this device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud odstraníte %1, veškerá data pro tento profil budou z tohoto zařízení odstraněna. K opětovnému použití jej budete muset znovu naimportovat na toto zařízení.</translation>
     </message>
     <message>
         <source>Remove profile</source>
-        <translation type="unfinished"></translation>
+        <translation>Odstranit profil</translation>
     </message>
     <message>
         <source>Manage profiles</source>
-        <translation type="unfinished"></translation>
+        <translation>Spravovat profily</translation>
     </message>
 </context>
 <context>
@@ -14494,7 +14486,7 @@ přístup k vaší webkameře</translation>
     </message>
     <message>
         <source>Camera access denied. Please enable it in system settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Přístup k fotoaparátu odepřen. Prosím povolte jej v nastavení systému.</translation>
     </message>
     <message>
         <source>Ensure that the QR code is in focus to scan</source>
@@ -14509,11 +14501,11 @@ přístup k vaší webkameře</translation>
     </message>
     <message>
         <source>Status doesn&apos;t understand the QR code.</source>
-        <translation type="unfinished"></translation>
+        <translation>Status nedokáže rozeznat tento QR kód.</translation>
     </message>
     <message>
         <source>Scanned successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Úspěšně naskenováno</translation>
     </message>
 </context>
 <context>
@@ -15715,16 +15707,35 @@ přístup k vaší webkameře</translation>
         <translation>Odkaz na profil</translation>
     </message>
     <message>
-        <source>Copy link</source>
-        <translation>Kopírovat odkaz</translation>
-    </message>
-    <message>
         <source>Emoji hash</source>
         <translation>Emoji hash</translation>
     </message>
     <message>
         <source>Copy emoji hash</source>
         <translation>Kopírovat emoji hash</translation>
+    </message>
+    <message>
+        <source>Privacy first! Join me on Status for truly private and secure chats. Use my profile link to download Status and connect: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy invitation &amp; link</source>
+        <translation>Zkopírovat pozvánku a odkaz</translation>
+    </message>
+    <message>
+        <source>Copy link</source>
+        <translation>Kopírovat odkaz</translation>
+    </message>
+    <message>
+        <source>Connect with %1 on Status: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareUtils</name>
+    <message>
+        <source>Share via</source>
+        <translation>Sdílet pomocí</translation>
     </message>
 </context>
 <context>
@@ -17256,7 +17267,7 @@ přístup k vaší webkameře</translation>
     </message>
     <message>
         <source>Delete Device</source>
-        <translation type="unfinished"></translation>
+        <translation>Smazat zařízení</translation>
     </message>
 </context>
 <context>
@@ -17494,20 +17505,21 @@ přístup k vaší webkameře</translation>
     </message>
     <message>
         <source>Delete Device</source>
-        <translation type="unfinished"></translation>
+        <translation>Smazat zařízení</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation type="unfinished">Smazat</translation>
+        <translation>Smazat</translation>
     </message>
     <message>
         <source>Error deleting device: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Chyba při mazání zařízení: %1</translation>
     </message>
     <message>
         <source>Are you sure you want to delete this device?
 This action cannot be undone.</source>
-        <translation type="unfinished"></translation>
+        <translation>Opravdu chcete smazat toto zařízení?
+Tuto akci nelze vzít zpět.</translation>
     </message>
 </context>
 <context>
@@ -18830,7 +18842,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>LineaScan</source>
-        <translation type="unfinished"></translation>
+        <translation>LineaScan</translation>
     </message>
 </context>
 <context>
@@ -19583,16 +19595,12 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <source>Status Desktop</source>
         <translation>Status Desktop</translation>
     </message>
-    <message>
-        <source>Hello World</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>tst_StatusInput</name>
     <message>
         <source>Enter an account name...</source>
-        <translation type="unfinished">Zadejte název účtu...</translation>
+        <translation>Zadejte název účtu...</translation>
     </message>
     <message>
         <source>You need to enter an account name</source>
@@ -19600,7 +19608,7 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>This is not a valid account name</source>
-        <translation type="unfinished">Toto není platný název účtu</translation>
+        <translation>Toto není platný název účtu</translation>
     </message>
 </context>
 </TS>

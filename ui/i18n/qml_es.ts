@@ -6703,16 +6703,12 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
 <context>
     <name>EmptyChatPanel</name>
     <message>
-        <source>%1 or %2&lt;br&gt;friends to start messaging in Status</source>
-        <translation>%1 o %2&lt;br&gt;amigos para empezar a enviar mensajes en Status</translation>
+        <source>Share your profile</source>
+        <translation type="unfinished">Comparte tu perfil</translation>
     </message>
     <message>
-        <source>Share your chat key</source>
-        <translation>Comparte tu clave de chat</translation>
-    </message>
-    <message>
-        <source>invite</source>
-        <translation>invita</translation>
+        <source>%1 to connect with or&lt;br&gt;invite your friends to Status.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -8765,10 +8761,6 @@ Tarifa L2: %2</translation>
     <message>
         <source>Get Status at %1</source>
         <translation>Obtén Status en %1</translation>
-    </message>
-    <message>
-        <source>Copied!</source>
-        <translation>¡Copiado!</translation>
     </message>
 </context>
 <context>
@@ -15629,16 +15621,35 @@ acceso a tu cámara web</translation>
         <translation>Enlace del perfil</translation>
     </message>
     <message>
-        <source>Copy link</source>
-        <translation>Copiar enlace</translation>
-    </message>
-    <message>
         <source>Emoji hash</source>
         <translation>Hash de emoji</translation>
     </message>
     <message>
         <source>Copy emoji hash</source>
         <translation>Copiar hash de emoji</translation>
+    </message>
+    <message>
+        <source>Privacy first! Join me on Status for truly private and secure chats. Use my profile link to download Status and connect: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy invitation &amp; link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy link</source>
+        <translation>Copiar enlace</translation>
+    </message>
+    <message>
+        <source>Connect with %1 on Status: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareUtils</name>
+    <message>
+        <source>Share via</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19488,10 +19499,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Status Desktop</source>
         <translation>Escritorio de Status</translation>
-    </message>
-    <message>
-        <source>Hello World</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

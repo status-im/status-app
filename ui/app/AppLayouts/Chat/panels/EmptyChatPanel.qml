@@ -1,10 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQml
 
 import StatusQ.Core
 import StatusQ.Core.Theme
-
-import shared.popups
 
 import utils
 
@@ -44,10 +43,8 @@ ColumnLayout {
         Layout.fillHeight: true
         Layout.minimumHeight: implicitHeight
 
-        text: qsTr("%1 or %2<br>friends to start messaging in Status")
-          .arg(Utils.getStyledLink(qsTr("Share your chat key"), "#share", hoveredLink,
-                Theme.palette.primaryColor1, Theme.palette.primaryColor1, false))
-          .arg(Utils.getStyledLink(qsTr("invite"), "#invite", hoveredLink,
+        text: qsTr("%1 to connect with or<br>invite your friends to Status.")
+          .arg(Utils.getStyledLink(qsTr("Share your profile"), "#share", hoveredLink,
                 Theme.palette.primaryColor1, Theme.palette.primaryColor1, false))
 
         horizontalAlignment: Text.AlignHCenter
@@ -61,22 +58,12 @@ ColumnLayout {
 
         onLinkActivated: link => {
             if (link === "#share")
-                shareChatKeyClicked()
-            else
-                Global.openPopup(inviteFriendsPopup)
+                root.shareChatKeyClicked()
         }
 
         HoverHandler {
             // Qt CSS doesn't support custom cursor shape
             cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
-        }
-    }
-
-    Component {
-        id: inviteFriendsPopup
-
-        InviteFriendsPopup {
-            destroyOnClose: true
         }
     }
 }

@@ -179,6 +179,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/oneoffilter.h
         include/StatusQ/permissionutilsinternal.h
         include/StatusQ/rxvalidator.h
+        include/StatusQ/shareutils.h
         include/StatusQ/statuscolors.h
         include/StatusQ/statusemojimodel.h
         include/StatusQ/statussyntaxhighlighter.h
@@ -250,6 +251,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${QuartzCore})
     target_sources(StatusQ PRIVATE
         src/keychain_apple.mm
+        src/shareutils_other.cpp
         include/StatusQ/darwinwebviewbackend.h
         src/CustomWebView/darwin/webviewbackend.mm
         src/CustomWebView/darwin/navigationdelegate.h
@@ -276,6 +278,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications})
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
+        src/shareutils_ios.mm
         src/keychain_apple.mm
         include/StatusQ/darwinwebviewbackend.h
         src/CustomWebView/darwin/webviewbackend.mm
@@ -299,9 +302,11 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
         src/safutils_android.cpp
         src/StatusQ/Controls/NativeSwipeHandlerItem_android.cpp
         src/StatusQ/Controls/NativeIndicatorItem_android.cpp
+        src/shareutils_android.cpp
     )
 else ()
     target_sources(StatusQ PRIVATE
+        src/shareutils_other.cpp
         src/keychain_other.cpp
     )
 endif ()

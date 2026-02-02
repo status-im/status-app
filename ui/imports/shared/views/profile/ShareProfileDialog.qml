@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Components
@@ -16,6 +17,7 @@ import shared.controls.chat
 StatusDialog {
     id: root
 
+    required property bool isCurrentUser
     required property string publicKey
     required property string qrCode
     required property string linkToProfile
@@ -93,6 +95,10 @@ StatusDialog {
             }
 
             StatusBaseInput {
+                id: profileLinkInput
+                readonly property string shareLinkText: root.isCurrentUser ? qsTr("Privacy first! Join me on Status for truly private and secure chats. Use my profile link to download Status and connect: %1").arg(root.linkToProfile)
+                                                                           : qsTr("Connect with %1 on Status: %2").arg(root.displayName).arg(root.linkToProfile)
+
                 objectName: "profileLinkInput"
                 Layout.fillWidth: true
                 Layout.preferredHeight: 44
@@ -107,10 +113,22 @@ StatusDialog {
                 edit.readOnly: true
                 background.color: "transparent"
                 background.border.color: Theme.palette.baseColor2
-                rightComponent: CopyButton {
-                    textToCopy: root.linkToProfile
+                rightComponent: SQUtils.Utils.isMobile ? shareButton : copyButton
+            }
+
+            Component {
+                id: shareButton
+                ShareButton {
+                    textToShare: profileLinkInput.shareLinkText
+                }
+            }
+
+            Component {
+                id: copyButton
+                CopyButton {
+                    textToCopy: profileLinkInput.shareLinkText
                     StatusToolTip {
-                        text: qsTr("Copy link")
+                        text: root.isCurrentUser ? qsTr("Copy invitation & link") : qsTr("Copy link")
                         visible: parent.hovered
                     }
                 }

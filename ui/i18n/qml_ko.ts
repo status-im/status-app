@@ -6678,16 +6678,12 @@ Remember your password and don&apos;t share it with anyone.</source>
 <context>
     <name>EmptyChatPanel</name>
     <message>
-        <source>Share your chat key</source>
-        <translation>채팅 키를 공유</translation>
+        <source>Share your profile</source>
+        <translation type="unfinished">프로필 공유하기</translation>
     </message>
     <message>
-        <source>invite</source>
-        <translation>초대</translation>
-    </message>
-    <message>
-        <source>%1 or %2&lt;br&gt;friends to start messaging in Status</source>
-        <translation>%1 또는 %2&lt;br&gt;친구를 추가하여 Status에서 메시징 시작</translation>
+        <source>%1 to connect with or&lt;br&gt;invite your friends to Status.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -8734,10 +8730,6 @@ L2 수수료: %2</translation>
     <message>
         <source>Get Status at %1</source>
         <translation>%1에서 Status 받기</translation>
-    </message>
-    <message>
-        <source>Copied!</source>
-        <translation>복사됨!</translation>
     </message>
 </context>
 <context>
@@ -15583,16 +15575,35 @@ access to your webcam</source>
         <translation>프로필 링크</translation>
     </message>
     <message>
-        <source>Copy link</source>
-        <translation>링크 복사</translation>
-    </message>
-    <message>
         <source>Emoji hash</source>
         <translation>이모지 해시</translation>
     </message>
     <message>
         <source>Copy emoji hash</source>
         <translation>이모지 해시 복사</translation>
+    </message>
+    <message>
+        <source>Privacy first! Join me on Status for truly private and secure chats. Use my profile link to download Status and connect: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy invitation &amp; link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy link</source>
+        <translation>링크 복사</translation>
+    </message>
+    <message>
+        <source>Connect with %1 on Status: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareUtils</name>
+    <message>
+        <source>Share via</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19425,10 +19436,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Status Desktop</source>
         <translation>스테이터스 데스크톱</translation>
-    </message>
-    <message>
-        <source>Hello World</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

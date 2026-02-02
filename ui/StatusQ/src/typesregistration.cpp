@@ -11,6 +11,7 @@
 #include "StatusQ/oneoffilter.h"
 #include "StatusQ/permissionutilsinternal.h"
 #include "StatusQ/rxvalidator.h"
+#include "StatusQ/shareutils.h"
 #include "StatusQ/statuscolors.h"
 #include "StatusQ/statusemojimodel.h"
 #include "StatusQ/statussyntaxhighlighter.h"
@@ -81,6 +82,9 @@ void registerStatusQTypes() {
     qmlRegisterSingletonType<ClipboardUtils>("StatusQ", 0, 1, "ClipboardUtils", &ClipboardUtils::qmlInstance);
     qmlRegisterSingletonType<UrlUtils>("StatusQ", 0, 1, "UrlUtils", [](QQmlEngine* engine, QJSEngine*) {
         return new UrlUtils(engine);
+    });
+    qmlRegisterSingletonType<ShareUtils>("StatusQ", 0, 1, "ShareUtils", [](QQmlEngine*, QJSEngine*) {
+        return new ShareUtils;
     });
     qmlRegisterSingletonType<AudioUtils>("StatusQ", 0, 1, "AudioUtils", [](QQmlEngine* engine, QJSEngine*) {
         return new AudioUtils(engine);

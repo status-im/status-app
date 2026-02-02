@@ -8171,19 +8171,14 @@
   <context>
     <name>EmptyChatPanel</name>
     <message>
-      <source>Share your chat key</source>
+      <source>Share your profile</source>
       <comment>EmptyChatPanel</comment>
-      <translation>Share your chat key</translation>
+      <translation>Share your profile</translation>
     </message>
     <message>
-      <source>invite</source>
+      <source>%1 to connect with or&lt;br&gt;invite your friends to Status.</source>
       <comment>EmptyChatPanel</comment>
-      <translation>invite</translation>
-    </message>
-    <message>
-      <source>%1 or %2&lt;br&gt;friends to start messaging in Status</source>
-      <comment>EmptyChatPanel</comment>
-      <translation>%1 or %2&lt;br&gt;friends to start messaging in Status</translation>
+      <translation>%1 to connect with or&lt;br&gt;invite your friends to Status.</translation>
     </message>
   </context>
   <context>
@@ -10681,11 +10676,6 @@
       <source>Get Status at %1</source>
       <comment>InviteFriendsPopup</comment>
       <translation>Get Status at %1</translation>
-    </message>
-    <message>
-      <source>Copied!</source>
-      <comment>InviteFriendsPopup</comment>
-      <translation>Copied!</translation>
     </message>
   </context>
   <context>
@@ -19002,11 +18992,6 @@
       <translation>Profile link</translation>
     </message>
     <message>
-      <source>Copy link</source>
-      <comment>ShareProfileDialog</comment>
-      <translation>Copy link</translation>
-    </message>
-    <message>
       <source>Emoji hash</source>
       <comment>ShareProfileDialog</comment>
       <translation>Emoji hash</translation>
@@ -19015,6 +19000,34 @@
       <source>Copy emoji hash</source>
       <comment>ShareProfileDialog</comment>
       <translation>Copy emoji hash</translation>
+    </message>
+    <message>
+      <source>Privacy first! Join me on Status for truly private and secure chats. Use my profile link to download Status and connect: %1</source>
+      <comment>ShareProfileDialog</comment>
+      <translation>Privacy first! Join me on Status for truly private and secure chats. Use my profile link to download Status and connect: %1</translation>
+    </message>
+    <message>
+      <source>Copy invitation &amp; link</source>
+      <comment>ShareProfileDialog</comment>
+      <translation>Copy invitation &amp; link</translation>
+    </message>
+    <message>
+      <source>Copy link</source>
+      <comment>ShareProfileDialog</comment>
+      <translation>Copy link</translation>
+    </message>
+    <message>
+      <source>Connect with %1 on Status: %2</source>
+      <comment>ShareProfileDialog</comment>
+      <translation>Connect with %1 on Status: %2</translation>
+    </message>
+  </context>
+  <context>
+    <name>ShareUtils</name>
+    <message>
+      <source>Share via</source>
+      <comment>ShareUtils</comment>
+      <translation>Share via</translation>
     </message>
   </context>
   <context>
@@ -23667,11 +23680,6 @@
       <source>Status Desktop</source>
       <comment>main</comment>
       <translation>Status Desktop</translation>
-    </message>
-    <message>
-      <source>Hello World</source>
-      <comment>main</comment>
-      <translation>Hello World</translation>
     </message>
   </context>
   <context>

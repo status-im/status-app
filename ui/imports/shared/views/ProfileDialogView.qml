@@ -90,7 +90,7 @@ Pane {
 
     Component {
         id: btnEditProfileComponent
-        StatusButton {
+        StatusFlatButton {
             objectName: "editProfileButton"
             size: StatusButton.Size.Small
             text: qsTr("Edit Profile")
@@ -178,11 +178,11 @@ Pane {
 
     Component {
         id: btnShareProfile
-        StatusFlatButton {
+        StatusButton {
             objectName: "shareProfileButton"
             size: StatusButton.Size.Small
             text: qsTr("Share Profile")
-            onClicked: Global.openPopup(shareProfileCmp)
+            onClicked: shareProfileCmp.createObject(root).open()
         }
     }
 
@@ -190,7 +190,8 @@ Pane {
         id: shareProfileCmp
         ShareProfileDialog {
             destroyOnClose: true
-            title: d.isCurrentUser ? qsTr("Share your profile") : qsTr("%1's profile").arg(StatusQUtils.Emoji.parse(d.mainDisplayName))
+            isCurrentUser: d.isCurrentUser
+            title: isCurrentUser ? qsTr("Share your profile") : qsTr("%1's profile").arg(StatusQUtils.Emoji.parse(d.mainDisplayName))
             publicKey: root.publicKey
             emojiHash: d.emojiHash
             linkToProfile: d.linkToProfile
@@ -319,7 +320,7 @@ Pane {
                         text: qsTr("Show QR code")
                         icon.name: "qr"
                         enabled: !d.isCurrentUser
-                        onTriggered: Global.openPopup(shareProfileCmp)
+                        onTriggered: shareProfileCmp.createObject(root).open()
                     }
                     StatusAction {
                         text: qsTr("Copy link to profile")

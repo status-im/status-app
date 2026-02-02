@@ -6690,15 +6690,11 @@ Remember your password and don&apos;t share it with anyone.</source>
 <context>
     <name>EmptyChatPanel</name>
     <message>
-        <source>Share your chat key</source>
+        <source>Share your profile</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>invite</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 or %2&lt;br&gt;friends to start messaging in Status</source>
+        <source>%1 to connect with or&lt;br&gt;invite your friends to Status.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -8749,10 +8745,6 @@ L2 fee: %2</source>
     </message>
     <message>
         <source>Get Status at %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Copied!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15605,15 +15597,34 @@ access to your webcam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Copy link</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Emoji hash</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Copy emoji hash</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Privacy first! Join me on Status for truly private and secure chats. Use my profile link to download Status and connect: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy invitation &amp; link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy link</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connect with %1 on Status: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ShareUtils</name>
+    <message>
+        <source>Share via</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -19450,10 +19461,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>main</name>
     <message>
         <source>Status Desktop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

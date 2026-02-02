@@ -1,23 +1,29 @@
-import StatusQ
-import StatusQ.Components
-import StatusQ.Popups
+import QtQuick
+import QtQuick.Controls
 
+import StatusQ.Core
+import StatusQ.Core.Theme
+import StatusQ.Popups.Dialog
+
+import shared.controls
 import utils
 
-StatusModal {
+StatusDialog {
     id: root
 
-    headerSettings.title: qsTr("Download Status link")
-    height: 156
+    title: qsTr("Download Status link")
+    standardButtons: Dialog.Ok
+    width: 400
 
-    StatusDescriptionListItem {
-        subTitle: qsTr("Get Status at %1").arg(Constants.externalStatusLinkWithHttps)
-        tooltip.text: qsTr("Copied!")
-        asset.name: "copy"
-        iconButton.onClicked: {
-            ClipboardUtils.setText(Constants.downloadLink)
-            tooltip.visible = !tooltip.visible
+    contentItem: Row {
+        spacing: Theme.halfPadding
+        StatusBaseText {
+            anchors.verticalCenter: parent.verticalCenter
+            text: qsTr("Get Status at %1").arg(Constants.externalStatusLinkWithHttps)
         }
-        width: parent.width
+        CopyButton {
+            anchors.verticalCenter: parent.verticalCenter
+            textToCopy: Constants.downloadLink
+        }
     }
 }

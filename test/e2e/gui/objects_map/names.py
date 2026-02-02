@@ -182,10 +182,10 @@ ProfileHeader_userImage = {"container": ProfileDialogView, "objectName": "Profil
                            "visible": True}
 ProfilePopup_displayName = {"container": ProfileDialogView, "objectName": "ProfileDialog_displayName",
                             "type": "StatusBaseText", "visible": True}
-ProfilePopup_editButton = {"container": ProfileDialogView, "objectName": "editProfileButton", "type": "StatusButton",
+ProfilePopup_editButton = {"container": ProfileDialogView, "objectName": "editProfileButton", "type": "StatusFlatButton",
                            "visible": True}
 share_Profile_StatusFlatButton = {"checkable": False, "container": ProfileDialogView,
-                                  "objectName": "shareProfileButton", "type": "StatusFlatButton", "visible": True}
+                                  "objectName": "shareProfileButton", "type": "StatusButton", "visible": True}
 ProfilePopup_SendContactRequestButton = {"container": ProfileDialogView,
                                          "objectName": "profileDialog_sendContactRequestButton", "type": "StatusButton",
                                          "visible": True}
