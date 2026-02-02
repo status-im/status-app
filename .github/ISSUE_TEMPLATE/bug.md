@@ -20,6 +20,6 @@ labels: bug
 
 ### Additional Information
 
-- Status desktop version:
-- Operating System:
+- Status app version:
+- Operating System and version:
 

@@ -6,10 +6,11 @@
 
 <!-- List the affected areas (e.g wallet, browser, etc..) -->
 
-### Architecture compliance
+### Quality checklist
 
 - [ ] I am familiar with the [application architecture](/docs/architecture.md) and agreed good practices.
 My PR is consistent with this document: [QML Architecture Guidelines](/guidelines/QML_ARCHITECTURE_GUIDE.md)
+- [ ] I have updated the necessary documentation if needed (eg: updated BUILDING.md if I updated dependencies)
 
 ### Screencapture of the functionality
 
@@ -21,8 +22,8 @@ My PR is consistent with this document: [QML Architecture Guidelines](/guideline
 
 ### How to test
 
-- <!-- How should one proceed with testing this PR. -->
-- <!-- What kind of user flows should be checked? -->
+<!-- How should one proceed with testing this PR. -->
+<!-- What kind of user flows should be checked? -->
 
 ### Risk 
 

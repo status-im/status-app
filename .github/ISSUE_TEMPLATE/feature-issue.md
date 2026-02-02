@@ -5,7 +5,7 @@ labels: feature
 ---
 
 <!-- Note -->
-<!-- Generally feature requests should go to https://github.com/status-im/feature-specs -->
+<!-- Generally feature requests should go to https://discuss.status.app/c/features/51 -->
 <!-- Note -->
 
 ### Description
@@ -13,10 +13,6 @@ labels: feature
 [comment]: # (Describe the feature you would like and include designs and Figma links if available.)
 [comment]: # (Describe the use cases the implementation should cover. E.g. New users, existing users, public chat, group chat, etc)
 *Summary*: ...
-
-### Metrics
-
-Does that feature need metrics to be added? If yes, describe which events should be tracked and add them to Mixpanel
 
 ### Acceptance Criteria
 
