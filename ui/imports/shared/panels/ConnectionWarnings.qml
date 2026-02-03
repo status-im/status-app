@@ -14,7 +14,7 @@ Loader {
     property NetworkConnectionStore networkConnectionStore
     readonly property string jointChainIdString: networkConnectionStore.getChainIdsJointString(chainIdsDown)
     property string websiteDown
-    property int connectionState: Constants.ConnectionStatus.Retrying
+    property int connectionState: Constants.ConnectionStatus.Unknown
     property var chainIdsDown: []
     property bool completelyDown: false
     property double lastCheckedAtUnix: -1
@@ -36,6 +36,12 @@ Loader {
                 item.hide()
             return
         }
+
+        // We show error banners when there's an actual connection problem,
+        // Show "Retrying" banners only when a previously working connection is being retried
+        // Unknown - initial state. After the first real check completes, status changes
+        if (connectionState === Constants.ConnectionStatus.Unknown)
+            return
 
         root.active = true
         if (connectionState === Constants.ConnectionStatus.Failure)

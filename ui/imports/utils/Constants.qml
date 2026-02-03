@@ -762,7 +762,8 @@ QtObject {
     enum ConnectionStatus {
         Success = 0,
         Failure = 1,
-        Retrying = 2
+        Retrying = 2,
+        Unknown = 3
     }
 
     readonly property string defaultTokenIcon: "tokens/DEFAULT-TOKEN"

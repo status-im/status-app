@@ -1363,6 +1363,8 @@ Item {
                             return ""
                     case Constants.ConnectionStatus.Retrying:
                         return qsTr("Retrying connection to POKT Network (grove.city).")
+                    case Constants.ConnectionStatus.Unknown:
+                        return ""
                     default:
                         return ""
                     }
@@ -1413,6 +1415,8 @@ Item {
                             return ""
                     case Constants.ConnectionStatus.Retrying:
                         return qsTr("Retrying connection to collectibles providers...")
+                    case Constants.ConnectionStatus.Unknown:
+                        return ""
                     default:
                         return ""
                     }
@@ -1438,6 +1442,8 @@ Item {
                     }
                     case Constants.ConnectionStatus.Retrying:
                         return qsTr("Retrying connection to CryptoCompare and CoinGecko...")
+                    case Constants.ConnectionStatus.Unknown:
+                        return ""
                     default:
                         return ""
                     }
