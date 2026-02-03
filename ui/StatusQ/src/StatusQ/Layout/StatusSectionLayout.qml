@@ -145,6 +145,14 @@ LayoutChooser {
     property bool invertedLayout: false
 
     /*!
+        \qmlproperty int StatusSectionLayout::currentIndex
+        This property holds the current index of the active panel.
+
+        Noop for landscape mode.
+    */
+    property alias currentIndex: portraitView.currentIndex
+
+    /*!
         \qmlsignal
         This signal is emitted when the back button of the header component
         is pressed.

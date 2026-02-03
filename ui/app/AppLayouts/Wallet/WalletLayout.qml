@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtCore
 
 import StatusQ
 import StatusQ.Layout
@@ -325,6 +326,7 @@ Item {
 
     StatusSectionLayout {
         id: walletSectionLayout
+        currentIndex: 1
         anchors.fill: parent
         backButtonName: RootStore.backButtonName
         onBackButtonClicked: {
@@ -473,5 +475,11 @@ Item {
         onLoaded: {
             keypairImport.item.open()
         }
+    }
+
+    Settings {
+        id: walletLocalSettings
+        category: "WalletLocalSettings_%1".arg(root.contactsStore.myPublicKey)
+        property alias selectedPanelIndex: walletSectionLayout.currentIndex
     }
 }
