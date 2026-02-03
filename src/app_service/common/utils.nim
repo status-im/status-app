@@ -162,6 +162,9 @@ proc isTokenKey*(key: string): bool =
 proc createTokenKey*(chainId: int, address: string): string =
   return $chainId & wallet_constants.TOKEN_KEY_DELIMITER & address.toLower()
 
+proc createNativeTokenKey*(chainId: int): string =
+  return createTokenKey(chainId, wallet_constants.ZERO_ADDRESS)
+
 proc communityKeyToTokenKey*(communityTokenKey: string): string =
   var parts = communityTokenKey.split(wallet_constants.COMMUNITY_TOKEN_KEY_DELIMITER)
   if parts.len < 2:

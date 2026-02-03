@@ -49,16 +49,17 @@ QtObject:
   proc isInTransactionType(self: ActivityEntry): bool =
     return self.metadata.activityType == backend_activity.ActivityType.Receive or self.metadata.activityType == backend_activity.ActivityType.Mint
 
-  proc getTokenKey(token: Option[backend_activity.Token], symbol: Option[string]): string =
-    if token.isSome() and token.get().address.isSome():
-      let t = token.get()
+  proc getTokenKey(token: Option[backend_activity.Token]): string =
+    if token.isNone():
+      return ""
+    let t = token.get()
+    if t.address.isSome():
       return common_utils.createTokenKey(t.chainId.int, $t.address.get())
-    return symbol.get("")
+    return common_utils.createNativeTokenKey(t.chainId.int)
 
   proc extractCurrencyAmount(self: ActivityEntry, currencyService: Service): CurrencyAmount =
     let usedToken = if self.isInTransactionType(): self.metadata.tokenIn else: self.metadata.tokenOut
-    let usedSymbol = if self.isInTransactionType(): self.metadata.symbolIn else: self.metadata.symbolOut
-    let tokenKey = getTokenKey(usedToken, usedSymbol)
+    let tokenKey = getTokenKey(usedToken)
     let amount = if self.isInTransactionType(): self.metadata.amountIn else: self.metadata.amountOut
     result = currencyAmountToItem(
       currencyService.getCurrencyValueForToken(tokenKey, amount),
@@ -84,14 +85,14 @@ QtObject:
 
     result.setup()
 
-  proc getConvertedAmount(token: Option[backend_activity.Token], symbol: Option[string], amount: UInt256, currencyService: Service): float64 =
-    if token.isNone() and symbol.isNone() and amount == 0:
+  proc getConvertedAmount(token: Option[backend_activity.Token], amount: UInt256, currencyService: Service): float64 =
+    if token.isNone() and amount == 0:
       return 0.0
-    return currencyService.getCurrencyValueForToken(getTokenKey(token, symbol), amount)
+    return currencyService.getCurrencyValueForToken(getTokenKey(token), amount)
 
   proc buildExtraData(metadata: backend_activity.ActivityEntry, currencyService: Service): ExtraData =
-    result.inAmount = getConvertedAmount(metadata.tokenIn, metadata.symbolIn, metadata.amountIn, currencyService)
-    result.outAmount = getConvertedAmount(metadata.tokenOut, metadata.symbolOut, metadata.amountOut, currencyService)
+    result.inAmount = getConvertedAmount(metadata.tokenIn, metadata.amountIn, currencyService)
+    result.outAmount = getConvertedAmount(metadata.tokenOut, metadata.amountOut, currencyService)
 
   proc newActivityEntry*(backendEntry: backend_activity.ActivityEntry, addresses: seq[string], currencyService: Service): ActivityEntry =
     let extraData = buildExtraData(backendEntry, currencyService)
