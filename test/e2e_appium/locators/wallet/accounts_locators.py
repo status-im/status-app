@@ -61,5 +61,6 @@ class WalletAccountsLocators(BaseLocators):
         "[tid:walletHeaderButton]"
     )
     FOOTER_SEND = BaseLocators.content_desc_contains("[tid:walletFooterSendButton]")
+    FOOTER_RECEIVE = BaseLocators.resource_id_contains("walletFooterReceiveButton")
     FOOTER_BUY = BaseLocators.content_desc_contains("[tid:walletFooterBuyButton]")
     FOOTER_SWAP = BaseLocators.content_desc_contains("[tid:walletFooterSwapButton]")

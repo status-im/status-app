@@ -4,6 +4,7 @@ from ..base_page import BasePage
 from locators.wallet.accounts_locators import WalletAccountsLocators
 from .add_edit_account_modal import AddEditAccountModal
 from .keycard_auth_modal import KeycardAuthenticationModal
+from .receive_modal import ReceiveModal
 from .remove_account_modal import RemoveAccountConfirmationModal
 
 
@@ -17,6 +18,22 @@ class WalletLeftPanel(BasePage):
             self.locators.ADD_ACCOUNT_BUTTON,
             timeout=timeout,
         )
+
+    def open_receive_modal(self, timeout: Optional[int] = 10) -> Optional[ReceiveModal]:
+        """Open the receive modal from wallet footer.
+
+        Returns:
+            ReceiveModal if opened successfully, None otherwise.
+        """
+        if not self.safe_click(self.locators.FOOTER_RECEIVE, timeout=timeout):
+            self.logger.error("Failed to click receive button in wallet footer")
+            return None
+
+        modal = ReceiveModal(self.driver)
+        if modal.is_displayed(timeout=timeout):
+            return modal
+        self.logger.error("Receive modal did not appear after clicking receive button")
+        return None
 
     def open_add_account_popup(self) -> Optional[AddEditAccountModal]:
         self.safe_click(self.locators.ADD_ACCOUNT_BUTTON, timeout=5)

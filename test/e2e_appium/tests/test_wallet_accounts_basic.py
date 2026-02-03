@@ -16,6 +16,29 @@ class TestWalletAccountsBasic(StepMixin):
             app = App(self.device.driver)
             assert panel.is_loaded(timeout=20), "Wallet left panel not visible"
 
+        async with self.step(self.device, "Select first account to enable receive button"):
+            account_rows = panel.account_rows()
+            assert len(account_rows) > 0, "No account rows found in wallet panel"
+            account_rows[0].click()
+            self.device.logger.info("Selected first account row")
+
+        async with self.step(self.device, "Check Receive modal opens"):
+            receive_modal = panel.open_receive_modal()
+            assert receive_modal is not None, "Failed to open receive modal"
+            assert receive_modal.is_qr_code_visible(), "Receive modal not visible"
+
+            # Note: Address extraction requires QML accessibility improvements
+            wallet_address = receive_modal.get_address()
+            if wallet_address:
+                assert wallet_address.startswith("0x"), (
+                    f"Wallet address should start with '0x', got: {wallet_address}"
+                )
+                self.device.logger.info(f"Wallet address: {wallet_address}")
+            else:
+                self.device.logger.info("Address not accessible (QML accessibility needed)")
+
+            assert receive_modal.close(), "Failed to close receive modal"
+
         async with self.step(self.device, "Add new account"):
             before = len(panel.account_rows())
             user_password = self.device.user.password

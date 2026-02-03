@@ -27,6 +27,7 @@ import AppLayouts.Wallet.stores as WalletStores
 
 StatusModal {
     id: root
+    objectName: "receiveModal"
 
     property var accounts
     property var selectedAccount
@@ -103,6 +104,7 @@ StatusModal {
                 width: parent.width
 
                 StatusBaseText {
+                    objectName: "receiveModalAddressText"
                     Layout.leftMargin: Theme.bigPadding
                     Layout.preferredWidth: parent.width - copyButton.width
                     Layout.fillWidth: true
@@ -112,10 +114,14 @@ StatusModal {
                     text: root.selectedAccount.mixedcaseAddress
                     font.pixelSize: Theme.primaryTextFontSize
                     color: Theme.palette.directColor1
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: root.selectedAccount.mixedcaseAddress
                 }
 
                 CopyButtonWithCircle {
                     id: copyButton
+                    objectName: "receiveModalCopyButton"
 
                     Layout.rightMargin: Theme.bigPadding
                     Layout.preferredWidth: 32
@@ -123,6 +129,9 @@ StatusModal {
                     Layout.fillWidth: true
                     textToCopy: root.selectedAccount.mixedcaseAddress
                     successCircleVisible: true
+
+                    Accessible.role: Accessible.Button
+                    Accessible.name: qsTr("Copy address")
                 }
             }
         }
@@ -193,6 +202,9 @@ StatusModal {
                 mipmap: true
                 smooth: false
                 source: root.qrImageSource
+
+                Accessible.role: Accessible.Graphic
+                Accessible.name: qsTr("QR code for wallet address")
             }
 
             Rectangle {
