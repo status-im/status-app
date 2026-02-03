@@ -64,6 +64,8 @@ ColumnLayout {
                 font.weight: Font.Bold
                 font.pixelSize: Theme.fontSize(28)
                 color: !!root.account? Utils.getColorForId(Theme.palette, root.account.colorId) : Theme.palette.directColor1
+                Accessible.role: Accessible.StaticText
+                Accessible.name: text
             }
             StatusEmoji {
                 id: accountImage

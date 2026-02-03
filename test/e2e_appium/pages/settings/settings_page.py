@@ -2,6 +2,7 @@ from typing import Optional
 
 from ..base_page import BasePage
 from locators.settings.settings_locators import SettingsLocators
+from locators.settings.wallet_settings_locators import WalletSettingsLocators
 from .backup_seed_modal import BackupSeedModal
 from .password_change_page import PasswordChangePage
 from locators.wallet.saved_addresses_locators import SavedAddressesLocators
@@ -10,6 +11,7 @@ from .messaging_page import MessagingSettingsPage
 from .contacts_page import ContactsSettingsPage
 from .profile_page import ProfileSettingsPage
 from .share_profile_dialog import ShareProfileDialog
+from .wallet_settings_page import WalletSettingsPage
 
 
 class SettingsPage(BasePage):
@@ -91,6 +93,28 @@ class SettingsPage(BasePage):
             return None
         page = SavedAddressesPage(self.driver)
         return page if page.is_loaded(timeout=10) else None
+
+    def open_wallet_settings(self, timeout: int = 10) -> Optional[WalletSettingsPage]:
+        """Navigate to Settings → Wallet.
+        
+        Opens the wallet settings view from the main settings menu.
+        
+        Args:
+            timeout: Maximum wait time for page load.
+            
+        Returns:
+            WalletSettingsPage if opened successfully, None otherwise.
+        """
+        wallet_locators = WalletSettingsLocators()
+        if not self.safe_click(wallet_locators.WALLET_MENU_ITEM, timeout=timeout):
+            self.logger.error("Failed to click Wallet menu item in settings")
+            return None
+        
+        page = WalletSettingsPage(self.driver)
+        if page.is_loaded(timeout=timeout):
+            return page
+        self.logger.error("Wallet settings page did not load")
+        return None
 
     def open_messaging_settings(self) -> Optional[MessagingSettingsPage]:
         if self.safe_click(

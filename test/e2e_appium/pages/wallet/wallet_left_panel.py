@@ -1,3 +1,4 @@
+import base64
 from typing import List, Optional
 
 from ..base_page import BasePage
@@ -32,19 +33,59 @@ class WalletLeftPanel(BasePage):
         if not self.open_context_menu_for_row(index=index):
             self.logger.error(f"Failed to open context menu for account at index {index}")
             return None
+
+        clipboard_reset = False
+        before_clipboard: Optional[str] = None
+        try:
+            before_clipboard = (self.driver.get_clipboard_text() or "").strip()
+        except Exception:
+            before_clipboard = None
+
+        try:
+            self.driver.set_clipboard_text("")
+            clipboard_reset = True
+            before_clipboard = ""
+        except Exception as exc:
+            self.logger.debug("Unable to reset clipboard before copy: %s", exc)
         
         if not self.safe_click(self.locators.ACCOUNT_MENU_COPY_ADDRESS, timeout=timeout):
             self.logger.error("Failed to click Copy Address in context menu")
             return None
         
-        try:
-            import time
-            time.sleep(0.3)  # Small delay for clipboard update
-            clipboard_text = self.driver.get_clipboard_text()
-            if clipboard_text:
-                return clipboard_text.strip()
-        except Exception as e:
-            self.logger.error(f"Failed to get clipboard content: {e}")
+        clipboard_result = [None]
+        
+        def check_clipboard():
+            try:
+                raw_text = self.driver.get_clipboard_text()
+                if not raw_text:
+                    return False
+                text = raw_text.strip().replace("×", "x")
+                if not text.startswith("0x"):
+                    # Some providers return base64 for getClipboard
+                    try:
+                        decoded = (
+                            base64.b64decode(text)
+                            .decode("utf-8", errors="ignore")
+                            .strip()
+                            .replace("×", "x")
+                        )
+                        if not decoded.startswith("0x"):
+                            return False
+                        text = decoded
+                    except Exception:
+                        return False
+                if not clipboard_reset and before_clipboard and text == before_clipboard:
+                    return False
+                clipboard_result[0] = text
+                return True
+            except Exception:
+                pass
+            return False
+        
+        if self.wait_for_condition(check_clipboard, timeout=3, poll_interval=0.1):
+            return clipboard_result[0]
+        
+        self.logger.error("Clipboard did not contain a valid address after copy")
         return None
 
     def open_receive_modal(self, timeout: Optional[int] = 10) -> Optional[ReceiveModal]:
@@ -213,10 +254,11 @@ class WalletLeftPanel(BasePage):
         Returns:
             WebElement if found, None otherwise.
         """
-        escaped = name.replace("'", "\\'")
+        from locators.base_locators import xpath_string
+        escaped = xpath_string(name)
         locator = (
             "xpath",
-            f"//*[contains(@resource-id,'walletAccountListItem') and starts-with(@content-desc, \"{escaped}\")]"
+            f"//*[contains(@resource-id,'walletAccountListItem') and starts-with(@content-desc, {escaped})]"
         )
         return self.find_element_safe(locator, timeout=timeout)
 

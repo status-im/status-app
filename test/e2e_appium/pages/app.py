@@ -50,6 +50,11 @@ class App(BasePage):
         self.logger.info("Clicking Messages button")
         return self.safe_click(self.locators.LEFT_NAV_MESSAGES)
 
+    def click_wallet_button(self) -> bool:
+        self.logger.info("Clicking Wallet button")
+        self._ensure_main_nav_visible()
+        return self.safe_click(self.locators.LEFT_NAV_WALLET, timeout=10)
+
     def _ensure_main_nav_visible(self) -> bool:
         if self.is_portrait_mode() and self.is_element_visible(
             self.locators.TOOLBAR_BACK_BUTTON, timeout=2

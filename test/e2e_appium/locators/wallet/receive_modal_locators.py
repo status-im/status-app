@@ -4,8 +4,8 @@ from ..base_locators import BaseLocators
 class ReceiveModalLocators(BaseLocators):
     """Locators for the Receive Modal (QR code / address popup)."""
 
-    # Modal container - uses the AlertDialog resource-id from the hierarchy
-    MODAL_CONTAINER = BaseLocators.resource_id_contains("ReceiveModal")
+    # Modal container - objectName in QML is "receiveModal" (lowercase 'm')
+    MODAL_CONTAINER = BaseLocators.resource_id_contains("receiveModal")
 
     # QR code image - uses Accessible.name which maps to content-desc on Android
     QR_CODE_IMAGE = BaseLocators.content_desc_contains("QR code for wallet address")
