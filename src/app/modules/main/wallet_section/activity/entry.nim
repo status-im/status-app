@@ -49,12 +49,17 @@ QtObject:
   proc isInTransactionType(self: ActivityEntry): bool =
     return self.metadata.activityType == backend_activity.ActivityType.Receive or self.metadata.activityType == backend_activity.ActivityType.Mint
 
-  proc extractCurrencyAmount(self: ActivityEntry, currencyService: Service): CurrencyAmount =
-    let usedToken = if self.isInTransactionType(): self.metadata.tokenIn.get() else: self.metadata.tokenOut.get()
-    let tokenKey = common_utils.createTokenKey(usedToken.chainId.int, $usedToken.address.get())
+  proc getTokenKey(token: Option[backend_activity.Token], symbol: Option[string]): string =
+    if token.isSome() and token.get().address.isSome():
+      let t = token.get()
+      return common_utils.createTokenKey(t.chainId.int, $t.address.get())
+    return symbol.get("")
 
+  proc extractCurrencyAmount(self: ActivityEntry, currencyService: Service): CurrencyAmount =
+    let usedToken = if self.isInTransactionType(): self.metadata.tokenIn else: self.metadata.tokenOut
+    let usedSymbol = if self.isInTransactionType(): self.metadata.symbolIn else: self.metadata.symbolOut
+    let tokenKey = getTokenKey(usedToken, usedSymbol)
     let amount = if self.isInTransactionType(): self.metadata.amountIn else: self.metadata.amountOut
-    let symbol = if self.isInTransactionType(): self.metadata.symbolIn.get("") else: self.metadata.symbolOut.get("")
     result = currencyAmountToItem(
       currencyService.getCurrencyValueForToken(tokenKey, amount),
       currencyService.getCurrencyFormat(tokenKey),
@@ -79,26 +84,14 @@ QtObject:
 
     result.setup()
 
-  proc buildMultiTransactionExtraData(metadata: backend_activity.ActivityEntry, currencyService: Service): ExtraData =
-    if metadata.symbolIn.isSome():
-      result.inAmount = currencyService.getCurrencyValueForToken(metadata.symbolIn.get(), metadata.amountIn) # TODO: use tokenKey instead of symbol
-    if metadata.symbolOut.isSome():
-      result.outAmount = currencyService.getCurrencyValueForToken(metadata.symbolOut.get(), metadata.amountOut) # TODO: use tokenKey instead of symbol
+  proc getConvertedAmount(token: Option[backend_activity.Token], symbol: Option[string], amount: UInt256, currencyService: Service): float64 =
+    if token.isNone() and symbol.isNone() and amount == 0:
+      return 0.0
+    return currencyService.getCurrencyValueForToken(getTokenKey(token, symbol), amount)
 
-  proc buildTransactionExtraData(metadata: backend_activity.ActivityEntry, currencyService: Service): ExtraData =
-    if metadata.symbolIn.isSome() or metadata.amountIn > 0:
-      result.inAmount = currencyService.getCurrencyValueForToken(metadata.symbolIn.get(""), metadata.amountIn) # TODO: use tokenKey instead of symbol
-    if metadata.symbolOut.isSome() or metadata.amountOut > 0:
-      result.outAmount = currencyService.getCurrencyValueForToken(metadata.symbolOut.get(""), metadata.amountOut) # TODO: use tokenKey instead of symbol
-
-  proc buildExtraData(backendEntry: backend_activity.ActivityEntry, currencyService: Service): ExtraData =
-    var extraData: ExtraData
-    case backendEntry.getPayloadType():
-      of MultiTransaction:
-        extraData = buildMultiTransactionExtraData(backendEntry, currencyService)
-      of SimpleTransaction, PendingTransaction:
-        extraData = buildTransactionExtraData(backendEntry, currencyService)
-    return extraData
+  proc buildExtraData(metadata: backend_activity.ActivityEntry, currencyService: Service): ExtraData =
+    result.inAmount = getConvertedAmount(metadata.tokenIn, metadata.symbolIn, metadata.amountIn, currencyService)
+    result.outAmount = getConvertedAmount(metadata.tokenOut, metadata.symbolOut, metadata.amountOut, currencyService)
 
   proc newActivityEntry*(backendEntry: backend_activity.ActivityEntry, addresses: seq[string], currencyService: Service): ActivityEntry =
     let extraData = buildExtraData(backendEntry, currencyService)
