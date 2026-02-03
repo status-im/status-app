@@ -32,6 +32,10 @@ StatusListItem {
     statusListItemSubTitle.lineHeight: 22
     statusListItemSubTitle.elide: Text.ElideNone
     statusListItemSubTitle.wrapMode: Text.WrapAnywhere
+
+    // Expose subtitle value for accessibility/testing
+    Accessible.role: Accessible.ListItem
+    Accessible.name: root.title + ": " + root.subTitle
     color: {
         if (isInteractive && (sensor.containsMouse || root.highlighted)) {
             return Theme.palette.baseColor2
