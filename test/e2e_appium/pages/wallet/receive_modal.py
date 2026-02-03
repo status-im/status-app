@@ -20,17 +20,14 @@ class ReceiveModal(BasePage):
         return self.wait_for_invisibility(self.locators.MODAL_CONTAINER, timeout=timeout)
 
     def is_qr_code_visible(self, timeout: Optional[int] = 10) -> bool:
-        """Verify QR code element is displayed."""
-        # Try to find QR code element with accessibility name
-        if self.is_element_visible(self.locators.QR_CODE_IMAGE, timeout=timeout):
-            return True
-        # Fallback: if modal is displayed, QR is visually present
-        return self.is_displayed(timeout=timeout)
+        """Verify QR code element is displayed via accessibility name."""
+        return self.is_element_visible(self.locators.QR_CODE_IMAGE, timeout=timeout)
 
     def get_address(self, timeout: Optional[int] = 10) -> Optional[str]:
         """Extract the displayed wallet address text.
         
         The address is exposed via Accessible.name which maps to content-desc on Android.
+        Note: The font may render 'x' as multiplication sign '×' (U+00D7).
         """
         element = self.find_element_safe(self.locators.ADDRESS_TEXT, timeout=timeout)
         if element:
@@ -38,10 +35,32 @@ class ReceiveModal(BasePage):
             address = element.get_attribute("content-desc") or element.text
             if address:
                 address = address.strip()
-                # Handle case where content-desc might have extra text
+                # Normalize multiplication sign to 'x' if present
+                address = address.replace("×", "x")
                 if address.startswith("0x"):
                     return address
         self.logger.warning("Address text element not found in accessibility tree")
+        return None
+
+    def copy_address(self, timeout: Optional[int] = 10) -> Optional[str]:
+        """Click the copy button and return the address from clipboard.
+        
+        Returns:
+            The wallet address from clipboard, or None if copy failed.
+        """
+        if not self.safe_click(self.locators.COPY_BUTTON, timeout=timeout):
+            self.logger.error("Failed to click copy address button")
+            return None
+        
+        try:
+            # Small delay to ensure clipboard is updated
+            import time
+            time.sleep(0.3)
+            clipboard_text = self.driver.get_clipboard_text()
+            if clipboard_text:
+                return clipboard_text.strip()
+        except Exception as e:
+            self.logger.error(f"Failed to get clipboard content: {e}")
         return None
 
     def close(self) -> bool:

@@ -16,26 +16,40 @@ class TestWalletAccountsBasic(StepMixin):
             app = App(self.device.driver)
             assert panel.is_loaded(timeout=20), "Wallet left panel not visible"
 
-        async with self.step(self.device, "Select first account to enable receive button"):
+        async with self.step(self.device, "Select first account"):
             account_rows = panel.account_rows()
             assert len(account_rows) > 0, "No account rows found in wallet panel"
             account_rows[0].click()
             self.device.logger.info("Selected first account row")
 
-        async with self.step(self.device, "Check Receive modal opens"):
+        async with self.step(self.device, "Copy address via context menu"):
+            # Copy address via context menu (like desktop test)
+            context_menu_address = panel.copy_account_address_via_context_menu(index=0)
+            assert context_menu_address is not None, "Failed to copy address via context menu"
+            assert context_menu_address.startswith("0x"), (
+                f"Context menu address should start with '0x', got: {context_menu_address}"
+            )
+            self.device.logger.info(f"Context menu address: {context_menu_address}")
+
+        async with self.step(self.device, "Open Receive modal and verify address match"):
+            # Re-select account after context menu closes (ensures receive button is enabled)
+            account_rows = panel.account_rows()
+            account_rows[0].click()
+            
             receive_modal = panel.open_receive_modal()
             assert receive_modal is not None, "Failed to open receive modal"
-            assert receive_modal.is_qr_code_visible(), "Receive modal not visible"
+            assert receive_modal.is_qr_code_visible(), "QR code not visible in receive modal"
 
-            # Note: Address extraction requires QML accessibility improvements
-            wallet_address = receive_modal.get_address()
-            if wallet_address:
-                assert wallet_address.startswith("0x"), (
-                    f"Wallet address should start with '0x', got: {wallet_address}"
-                )
-                self.device.logger.info(f"Wallet address: {wallet_address}")
-            else:
-                self.device.logger.info("Address not accessible (QML accessibility needed)")
+            # Copy address via receive modal's copy button
+            receive_modal_address = receive_modal.copy_address()
+            assert receive_modal_address is not None, "Failed to copy address from receive modal"
+            
+            # Compare context menu address with receive modal address (exact match like desktop)
+            assert context_menu_address == receive_modal_address, (
+                f"Address mismatch: context menu '{context_menu_address}' != "
+                f"receive modal '{receive_modal_address}'"
+            )
+            self.device.logger.info(f"Addresses match: {receive_modal_address}")
 
             assert receive_modal.close(), "Failed to close receive modal"
 

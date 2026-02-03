@@ -18,6 +18,9 @@ class WalletAccountsLocators(BaseLocators):
     ACCOUNT_MENU_EDIT = BaseLocators.xpath(
         "//*[@content-desc='Edit' or contains(@resource-id,'AccountMenu-EditAction')]"
     )
+    ACCOUNT_MENU_COPY_ADDRESS = BaseLocators.xpath(
+        "//*[contains(@resource-id,'AccountMenu-CopyAddressAction')]"
+    )
     KEYCARD_POPUP = BaseLocators.xpath(
         "//*[contains(@resource-id,'KeycardPopup')]"
     )
