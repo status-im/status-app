@@ -95,16 +95,13 @@ pipeline {
     /* To remove QML cache */
     QML_DISABLE_CACHE = 1
 
-    /*To enable Home tab */
-    FLAG_HOMEPAGE_ENABLED = 1
-
     TESTRAIL_URL = 'https://ethstatus.testrail.net'
     TESTRAIL_PROJECT_ID = 18
     /* Override QT xcb plugin with linux to avoid errors like:
      * "Could not load the Qt platform plugin "xcb" in "" even though it was found." */
     QT_QPA_PLATFORM = "linuxfb"
 
-    /* Runtime flag to make testing of the app easier.  Switched off: unpredictable app behavior under new tests */
+    /* Runtime flag to make testing of the app easier. Helps avoiding banners */
     STATUS_RUNTIME_TEST_MODE = 1
 
     /* Logging rules let you enable or disable logging for categories */
