@@ -4,16 +4,12 @@
 STATUS_GO_LIB := $(LIB_PATH)/libstatus$(LIB_EXT)
 
 # FLAG_KEYCARD_ENABLED: Controls NFC/Keycard support
-# - iOS: Default 0 (disabled) - Build without NFC, works with free Apple Developer account
+# - iOS: Default 1 (enabled) - Build with NFC support, works with free Apple Developer account
 # - Android: Default 1 (enabled) - NFC support doesn't require paid account on Android
 # - Set to 1: Build with NFC support (iOS requires paid Apple Developer account)
 # - Set to 0: Build without NFC support
 # Usage: make build-ios FLAG_KEYCARD_ENABLED=1
-ifeq ($(OS),android)
-  FLAG_KEYCARD_ENABLED ?= 1
-else
-  FLAG_KEYCARD_ENABLED ?= 0
-endif
+FLAG_KEYCARD_ENABLED ?= 1
 
 $(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
 

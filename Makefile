@@ -996,16 +996,11 @@ endef
 export PATH := $(call qmkq,QT_INSTALL_BINS):$(call qmkq,QT_HOST_BINS):$(call qmkq,QT_HOST_LIBEXECS):$(PATH)
 export QTDIR := $(call qmkq,QT_INSTALL_PREFIX)
 
-#Force keycard support for mobile builds
-ifeq ($(USE_STATUS_KEYCARD_QT),1)
-	MOBILE_FLAGS += "FLAG_KEYCARD_ENABLED=1"
-endif
-
 mobile-run: deps-common
 	echo -e "\033[92mRunning:\033[39m mobile app"
-	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug $(MOBILE_FLAGS)
+	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug
 
-mobile-build: USE_SYSTEM_NIM=1 $(MOBILE_FLAGS)
+mobile-build: USE_SYSTEM_NIM=1
 mobile-build: | deps-common
 	echo -e "\033[92mBuilding:\033[39m mobile app ($(or $(PACKAGE_TYPE),default))"
 ifeq ($(PACKAGE_TYPE),aab)
