@@ -228,12 +228,14 @@ class BasePage:
         timeout: int | None = None,
         max_retries: int = 3,
         verify: bool = True,
+        inter_key_delay: int = 50,
     ) -> bool:
         """Qt/QML-safe text input with proper waiting and retry logic.
 
         Notes:
         - max_retries represents total attempts; values <= 0 will still perform one attempt.
         - When verify=False, skips post-type verification and returns True after a single attempt.
+        - inter_key_delay: milliseconds between keystrokes (default 50ms, increase for slower typing).
         """
 
         attempts_total = max(1, max_retries)
@@ -251,10 +253,9 @@ class BasePage:
 
                 element.clear()
 
-
                 self.driver.update_settings({
                     "sendKeyStrategy": "oneByOne",
-                    "interKeyDelay": 50,
+                    "interKeyDelay": inter_key_delay,
                 })
                 actions = ActionChains(self.driver)
                 actions.send_keys(text).perform()

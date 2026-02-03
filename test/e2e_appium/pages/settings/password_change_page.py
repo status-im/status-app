@@ -41,26 +41,19 @@ class PasswordChangePage(BasePage):
             return None
         self.hide_keyboard()
 
-        if not self.wait_for_element_enabled(self.locators.CHANGE_PASSWORD_BUTTON, timeout=10):
-            self.logger.error("Change password button did not become enabled after 10s")
-            self.dump_page_source("change_password_button_not_enabled")
+        if not self.wait_for_element_enabled(self.locators.CHANGE_PASSWORD_BUTTON, timeout=8):
+            self.logger.error("Change password button did not become enabled")
             return None
 
         modal = ChangePasswordModal(self.driver)
         try:
-            clicked = self.safe_click(self.locators.CHANGE_PASSWORD_BUTTON, timeout=5)
-            if not clicked:
-                self.logger.error("safe_click returned False for change password button")
-                return None
-            self.logger.info("Change password button clicked successfully")
+            self.safe_click(self.locators.CHANGE_PASSWORD_BUTTON, timeout=5)
         except Exception as e:
             self.logger.error(f"Failed to click change password button: {e}")
             return None
 
         if modal.is_displayed(timeout=10):
-            self.logger.info("Change password modal appeared")
             return modal
 
         self.logger.error("Change password modal did not appear after clicking button")
-        self.dump_page_source("change_password_modal_not_visible")
         return None
