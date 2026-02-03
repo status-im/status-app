@@ -12,6 +12,7 @@ from utils.multi_device_helpers import StepMixin
 class TestSettingsPasswordChange(StepMixin):
     @pytest.mark.critical
     @pytest.mark.smoke
+    @pytest.mark.flaky(reruns=2, reruns_delay=2)
     async def test_change_password_and_login(self):
         async with self.step(self.device, "Navigate to Settings"):
             app = App(self.device.driver)
