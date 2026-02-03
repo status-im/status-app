@@ -5,9 +5,6 @@ Reduces code duplication across test files.
 import time
 
 import allure
-from allure_commons._allure import step
-
-from constants.dock_buttons import DockButtons
 from gui.components.settings.keycard_popup import KeycardPopup
 
 

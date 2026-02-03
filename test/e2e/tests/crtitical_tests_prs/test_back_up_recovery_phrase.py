@@ -1,9 +1,7 @@
-import allure
 import pytest
 from allure import step
 
 import constants
-from constants.dock_buttons import DockButtons
 from driver.aut import AUT
 from gui.components.back_up_your_seed_phrase_banner import BackUpSeedPhraseBanner
 
@@ -49,7 +47,7 @@ def test_back_up_recovery_phrase_sign_out(
         assert f'Recovery phrase permanently removed from Status application storage' in messages, f'Messages: {messages}'
 
     with step('Go to settings screen from dock and check back up seed phrase banner is not shown there'):
-        settings = home.open_from_dock(DockButtons.SETTINGS.value)
+        settings = main_screen.left_panel.open_settings()
         assert not settings.left_panel.settings_section_back_up_seed_option.exists, f"Back up seed option is present"
         assert not BackUpSeedPhraseBanner().back_up_seed_banner.exists, "Back up seed banner is present"
 

@@ -10,9 +10,6 @@ from gui.elements.object import QObject
 from gui.elements.text_edit import TextEdit
 from gui.objects_map import home_names
 from gui.screens.community_portal import CommunitiesPortal
-from gui.screens.market import MarketScreen
-from gui.screens.messages import MessagesScreen
-from gui.screens.settings import SettingsScreen
 from gui.screens.settings_messaging import MessagingSettingsView
 from gui.screens.settings_profile import ProfileSettingsView
 from gui.screens.settings_syncing import SyncingSettingsView
@@ -27,15 +24,6 @@ class HomeScreen(QObject):
         self.grid = QObject(home_names.home_grid)
         self.dock = QObject(home_names.home_dock)
         self.profile_button = QObject(home_names.home_profile)
-
-        # Dock button mapping
-        self.dock_buttons = {
-            "Wallet": (home_names.home_regular_dock_button_wallet, WalletScreen),
-            "Settings": (home_names.home_regular_dock_button_settings, SettingsScreen),
-            "Messages": (home_names.home_regular_dock_button_messages, MessagesScreen),
-            "Communities": (home_names.home_regular_dock_button_communities, CommunitiesPortal),
-            "Market": (home_names.home_regular_dock_button_market, MarketScreen)
-        }
 
     # =============================================================================
     # SEARCH FUNCTIONS
@@ -121,6 +109,11 @@ class HomeScreen(QObject):
         self.click_grid_item_by_title("Back up recovery phrase")
         return BackUpYourSeedPhrasePopUp().wait_until_appears()
 
+    @allure.step('Open Wallet from home page')
+    def open_wallet_from_home_page(self) -> 'WalletScreen':
+        self.click_grid_item_by_title("Wallet")
+        return WalletScreen().wait_until_appears()
+
     @allure.step('Open online identifier from home screen')
     def open_online_identifier_from_home_screen(self, attempts: int = 3) -> 'OnlineIdentifier':
         for _ in range(attempts):
@@ -131,33 +124,6 @@ class HomeScreen(QObject):
                 pass
         raise LookupError(f'Online identifier popup was not opened after {attempts} retries')
 
-    # =============================================================================
-    # DOCK FUNCTIONS
-    # =============================================================================
-
-    @allure.step('Open screen from home dock')
-    def open_from_dock(self, screen_name: str):
-        """Navigate to a screen from home dock"""
-        self.wait_for_home_ui_loaded()
-
-        if screen_name in self.dock_buttons:
-            button_locator, screen_class = self.dock_buttons[screen_name]
-            Button(button_locator).click()
-            return screen_class().wait_until_appears()
-        else:
-            raise ValueError(f"Unknown screen: {screen_name}")
-
-    @allure.step('Click dock button by text')
-    def click_dock_button_by_text(self, text: str):
-        """Click a dock button by its text"""
-        if text in self.dock_buttons:
-            button_locator, _ = self.dock_buttons[text]
-            Button(button_locator).click()
-        else:
-            # Fallback for unknown buttons
-            locator = home_names.home_generic_dock_button.copy()
-            locator["text"] = text
-            Button(locator).click()
 
     # =============================================================================
     # UTILITY FUNCTIONS
