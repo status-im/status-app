@@ -301,6 +301,9 @@ class ChatView(QObject):
         # message_list_item has different indexes if we run multiple instances, so we pass index
         if index is not None:
             self._message_list_item.real_name['index'] = index
+        else:
+            # When index is None, remove index from real_name so findAllObjects returns all list items
+            self._message_list_item.real_name.pop('index', None)
         if self._recent_messages_button.is_visible:
             self._recent_messages_button.click()
         for item in driver.findAllObjects(self._message_list_item.real_name):
@@ -328,7 +331,8 @@ class ChatView(QObject):
         started_at = time.monotonic()
         while message is None:
             for _message in self.messages(index):
-                if message_text in remove_tags(_message.text):
+                # Handle None text gracefully
+                if _message.text is not None and message_text in remove_tags(_message.text):
                     message = _message
                     break
             if time.monotonic() - started_at > configs.timeouts.MESSAGING_TIMEOUT_SEC:

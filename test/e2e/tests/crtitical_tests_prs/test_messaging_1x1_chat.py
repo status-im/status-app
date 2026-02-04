@@ -158,7 +158,8 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
         with step(f'User {user_two.name} send emoji to {user_one.name}'):
             messages_screen.group_chat.send_emoji_to_chat(emoji)
             message_object = messages_screen.chat.messages(0)[0]
-            assert '😎' in message_object.text
+            assert driver.waitFor(lambda: '😎' in str(message_object.object.unparsedText), timeout), \
+                f"Emoji not found in message text"
 
         with step(f'User {user_two.name} send image to {user_one.name} and verify it was sent'):
             messages_screen.group_chat.send_image_to_chat(str(picture))
