@@ -475,5 +475,19 @@
         <file>icons/webhomepage.svg</file>
         <file>open-menu-education-dark.svg</file>
         <file>open-menu-education-light.svg</file>
+        <file>icons/chat/bold.svg</file>
+        <file>icons/chat/camera.svg</file>
+        <file>icons/chat/code.svg</file>
+        <file>icons/chat/gif.svg</file>
+        <file>icons/chat/image.svg</file>
+        <file>icons/chat/italic.svg</file>
+        <file>icons/chat/mention.svg</file>
+        <file>icons/chat/quote.svg</file>
+        <file>icons/chat/smile.svg</file>
+        <file>icons/chat/sticker.svg</file>
+        <file>icons/chat/strikethrough.svg</file>
+        <file>icons/chat/style.svg</file>
+        <file>icons/chat/token.svg</file>
+        <file>icons/chat/up.svg</file>
     </qresource>
 </RCC>
