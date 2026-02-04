@@ -28,12 +28,17 @@ QtObject {
     // keycard
     readonly property int keycardState: d.onboardingModuleInst.keycardState // cf. enum Onboarding.KeycardState
     readonly property string keycardUID: d.onboardingModuleInst.keycardUID
+    readonly property string keycardKeyUID: d.onboardingModuleInst.keycardKeyUID
     readonly property int pinSettingState: d.onboardingModuleInst.pinSettingState // cf. enum Onboarding.ProgressState
     readonly property int authorizationState: d.onboardingModuleInst.authorizationState // cf. enum Onboarding.AuthorizationState
     readonly property int restoreKeysExportState: d.onboardingModuleInst.restoreKeysExportState // cf. enum Onboarding.AuthorizationState
     readonly property int convertKeycardAccountState: d.onboardingModuleInst.convertKeycardAccountState // cf. enum Onboarding.ProgressState
     readonly property int keycardRemainingPinAttempts: d.onboardingModuleInst.keycardRemainingPinAttempts
     readonly property int keycardRemainingPukAttempts: d.onboardingModuleInst.keycardRemainingPukAttempts
+
+    function resetKeycardProgressStates() {
+        d.onboardingModuleInst.resetKeycardProgressStates()
+    }
 
     function startKeycardDetection() {
         d.onboardingModuleInst.startKeycardDetection()
@@ -47,13 +52,14 @@ QtObject {
         d.onboardingModuleInst.loginRequested(keyUid, method, JSON.stringify(data))
     }
 
+    function recoverKeycardRequested(pin: string, mnemonic: string) {
+        d.onboardingModuleInst.recoverKeycardRequested(pin, mnemonic)
+    }
+
     function setPin(pin: string) {
         d.onboardingModuleInst.setPin(pin)
     }
 
-    function setPuk(puk: string): bool{
-        return d.onboardingModuleInst.setPuk(puk)
-    }
 
     function authorize(pin: string) {
         d.onboardingModuleInst.authorize(pin)

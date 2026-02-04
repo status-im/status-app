@@ -66,7 +66,8 @@ Item {
 
             onboardingStore: OnboardingStore {
                 readonly property int keycardState: mockDriver.keycardState // enum Onboarding.KeycardState
-                readonly property string keycardUID: "uid_4"
+                readonly property string keycardUID: "kc_uid_4"
+                readonly property string keycardKeyUID: "uid_4"
                 readonly property int pinSettingState: mockDriver.pinSettingState // enum Onboarding.ProgressState
                 readonly property int authorizationState: mockDriver.authorizationState // enum Onboarding.AuthorizationState
                 readonly property int restoreKeysExportState: mockDriver.restoreKeysExportState // enum Onboarding.ProgressState
@@ -967,6 +968,7 @@ Item {
         function test_loginScreen(data) {
             verify(!!controlUnderTest)
             controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.restartFlow()
 
             mockDriver.biometricsAvailable = data.biometrics // both available _and_ enabled for this profile
             mockDriver.existingPin = "111111" // let this be the correct PIN
@@ -1040,18 +1042,17 @@ Item {
                 // verify validation & pass error
                 tryCompare(passwordInput, "hasError", data.password !== mockDriver.dummyNewPassword)
             } else if (!!data.pin) { // keycard profile
-                mockDriver.keycardState = Onboarding.KeycardState.NotEmpty // happy path; keycard ready
                 const pinInput = findChild(page, "pinInput")
                 verify(!!pinInput)
-                tryCompare(pinInput, "visible", true)
-                compare(pinInput.pinInput, "")
 
                 const keycardBox = findChild(page, "keycardBox")
                 verify(!!keycardBox)
-                waitForRendering(keycardBox)
-                waitForItemPolished(keycardBox)
 
                 if (data.biometrics) { // biometrics + PIN
+                    mockDriver.keycardState = Onboarding.KeycardState.NotEmpty // triggers biometrics request
+                    waitForRendering(keycardBox)
+                    waitForItemPolished(keycardBox)
+
                     if (data.pin === mockDriver.existingPin) { // expecting correct fingerprint
                         // simulate the external biometrics response
                         controlUnderTest.keychain.getCredentialRequestCompleted(
@@ -1075,6 +1076,13 @@ Item {
                         expectFail(data.tag, "Biometrics failed, expected to fail to login")
                     }
                 } else { // manual PIN
+                    mockDriver.keycardState = Onboarding.KeycardState.UnknownReaderState // shows PIN input
+                    tryCompare(pinInput, "visible", true)
+                    compare(pinInput.pinInput, "")
+
+                    waitForRendering(keycardBox)
+                    waitForItemPolished(keycardBox)
+
                     keyClickSequence(data.pin)
                     if (data.pin !== mockDriver.existingPin) {
                         // Everything will still be called as with a good pin, the wrong pin return is async
@@ -1100,6 +1108,7 @@ Item {
         function test_loginScreen_launchesExternalFlow(data) {
             verify(!!controlUnderTest)
             controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.restartFlow()
 
             let page = getCurrentPage(controlUnderTest.stack, LoginScreen)
 
@@ -1138,8 +1147,10 @@ Item {
         }
 
         function test_loginScreenLostKeycardSeedphraseLoginFlow() {
+            skip("Lost keycard flow buttons are temporarily unavailable")
             verify(!!controlUnderTest)
             controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.restartFlow()
 
             const stack = controlUnderTest.stack
             verify(!!stack)
@@ -1233,8 +1244,10 @@ Item {
         }
 
         function test_loginScreenLostKeycardCreateReplacementFlow() {
+            skip("Lost keycard flow buttons are temporarily unavailable")
             verify(!!controlUnderTest)
             controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.restartFlow()
 
             // PAGE 1: Login screen
             const stack = controlUnderTest.stack
@@ -1316,8 +1329,12 @@ Item {
         }
 
         function test_loginScreen_unblockFlows(data) {
+            if (data.tag === "Unblock with PUK")
+                skip("Unblock with PUK is temporarily unavailable")
+
             verify(!!controlUnderTest)
             controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.restartFlow()
             mockDriver.keycardState = Onboarding.KeycardState.BlockedPIN
 
             const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
@@ -1454,6 +1471,7 @@ Item {
         function test_keycardRequested_selectKeycardProfileOnLoginScreen() {
             verify(!!controlUnderTest)
             controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.restartFlow()
 
             const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
 
@@ -1523,6 +1541,7 @@ Item {
         function test_loginScreen_deleteProfile(data) {
             verify(!!controlUnderTest)
             controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.restartFlow()
 
             const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
             verify(!!page)

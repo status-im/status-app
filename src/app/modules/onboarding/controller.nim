@@ -1,7 +1,8 @@
-import chronicles
+import chronicles, json
 import io_interface
 import uuids
 
+import constants as status_const
 import app/core/eventemitter
 import app/core/signals/types
 import app/global/app_signals
@@ -102,14 +103,12 @@ proc init*(self: Controller) =
     self.delegate.onKeycardExportRestoreKeysSuccess(args.exportedKeys)
   self.connectionIds.add(handlerId)
 
-  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_FAILURE) do(e: Args):
-    let args = KeycardErrorArg(e)
-    self.delegate.onKeycardExportLoginKeysFailure(args.error)
-  self.connectionIds.add(handlerId)
-
-  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_SUCCESS) do(e: Args):
-    let args = KeycardExportedKeysArg(e)
-    self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
+  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_LOGIN_FINISHED) do(e: Args):
+    let args = KeycardLoginArgs(e)
+    if args.error.len > 0:
+      self.delegate.onKeycardExportLoginKeysFailure(args.error)
+    else:
+      self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
   self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SIGNAL_LOGIN_ERROR) do(e: Args):
@@ -141,6 +140,13 @@ proc initialize*(self: Controller, pin: string) =
 proc authorize*(self: Controller, pin: string) =
   self.keycardServiceV2.asyncAuthorize(pin)
 
+proc loginKeycard*(self: Controller, keyUid: string, pin: string) =
+  self.keycardServiceV2.asyncLogin(keyUid, pin)
+
+proc recoverKeycard*(self: Controller, pin: string, mnemonic: string) =
+  let puk = keycard_serviceV2.generateRandomPUK()
+  self.keycardServiceV2.asyncRecover(pin, puk, mnemonic)
+
 proc getPasswordStrengthScore*(self: Controller, password, userName: string): int =
   return self.generalService.getPasswordStrengthScore(password, userName)
 
@@ -171,7 +177,7 @@ proc createAccountAndLogin*(self: Controller, password: string, thirdpartyServic
     thirdpartyServicesEnabled,
   )
 
-proc restoreAccountAndLogin*(self: Controller, password, mnemonic: string, 
+proc restoreAccountAndLogin*(self: Controller, password, mnemonic: string,
   keycardInstanceUID: string, thirdpartyServicesEnabled: bool): string =
   return self.accountsService.importAccountAndLogin(
     mnemonic,
@@ -186,7 +192,7 @@ proc restoreAccountAndLogin*(self: Controller, password, mnemonic: string,
 proc deleteMultiaccount*(self: Controller, keyUid: string): string =
   return self.accountsService.deleteMultiaccount(keyUid)
 
-proc restoreKeycardAccountAndLogin*(self: Controller, keyUid, instanceUid: string, 
+proc restoreKeycardAccountAndLogin*(self: Controller, keyUid, instanceUid: string,
   keycardKeys: KeycardExportedKeysDto, thirdpartyServicesEnabled: bool): string =
   return self.accountsService.restoreKeycardAccountAndLoginV2(
     keyUid,

@@ -20,7 +20,9 @@ const LAS_KEY_METRICS_POPUP_SEEN = "global/metrics_popup_seen"
 const DEFAULT_LAS_KEY_METRICS_POPUP_SEEN = false
 const LS_KEY_SEEN_NETWORK_CHAINS = "global/seenNetworkChains"
 const DEFAULT_SEEN_NETWORK_CHAINS = "[]"
-when defined(android) or defined(ios):
+const LAS_KEY_SELECTED_PROFILE_KEY_UID = "global/selected_profile_key_uid"
+
+when constants.IS_MOBILE:
   const DEFAULT_VISIBILITY = 4 #maximized visibility, from qml
 else:
   const DEFAULT_VISIBILITY = 2 #windowed visibility, from qml
@@ -39,7 +41,7 @@ QtObject:
 
   proc setup(self: LocalAppSettings) =
     self.QObject.setup
-  
+
   proc delete*(self: LocalAppSettings) =
     self.QObject.delete
 
@@ -205,3 +207,15 @@ QtObject:
     read = getSeenNetworkChains
     write = setSeenNetworkChains
     notify = seenNetworkChainsChanged
+
+  proc selectedProfileKeyUidChanged*(self: LocalAppSettings) {.signal.}
+  proc getSelectedProfileKeyUid*(self: LocalAppSettings): string {.slot.} =
+    self.settings.value(LAS_KEY_SELECTED_PROFILE_KEY_UID).stringVal
+  proc setSelectedProfileKeyUid*(self: LocalAppSettings, value: string) {.slot.} =
+    self.settings.setValue(LAS_KEY_SELECTED_PROFILE_KEY_UID, newQVariant(value))
+    self.selectedProfileKeyUidChanged()
+
+  QtProperty[string] selectedProfileKeyUid:
+    read = getSelectedProfileKeyUid
+    write = setSelectedProfileKeyUid
+    notify = selectedProfileKeyUidChanged

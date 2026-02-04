@@ -33,6 +33,7 @@ OnboardingStackView {
 
     required property int keycardState
     required property string keycardUID
+    required property string keycardKeyUID
     required property int pinSettingState
     required property int authorizationState
     required property int restoreKeysExportState
@@ -47,6 +48,7 @@ OnboardingStackView {
 
     property bool isKeycardEnabled: true
     property int keycardPinInfoPageDelay: 2000
+    property string lastSelectedProfileKeyUid
 
     // functions
     required property var generateMnemonic
@@ -55,7 +57,6 @@ OnboardingStackView {
     required property var isSeedPhraseValid
     required property var isSeedPhraseDuplicate
     required property var validateConnectionString
-    required property var tryToSetPukFunction
 
     readonly property LoginScreen loginScreen: d.loginScreen
 
@@ -63,6 +64,7 @@ OnboardingStackView {
     signal biometricsRequested(string profileId)
     signal dismissBiometricsRequested
     signal loginRequested(string keyUid, int method, var data)
+    signal recoverKeycardRequested(string pin, string seedphrase)
     signal setPinRequested(string pin)
     signal enableBiometricsRequested(bool enable)
     signal shareUsageDataRequested(bool enabled)
@@ -77,6 +79,7 @@ OnboardingStackView {
     signal importLocalBackupRequested(url importFilePath)
     signal deleteMultiaccountRequested(string keyUid)
 
+    signal profileSelected(string keyUid)
     signal linkActivated(string link)
 
     signal finished(int flow)
@@ -106,11 +109,6 @@ OnboardingStackView {
         property int flow
         property LoginScreen loginScreen: null
 
-        readonly property int loginAccountsModelCount: loginAccountsModel.ModelCount.count
-        onLoginAccountsModelCountChanged: {
-            // NB: have to delay showing the LoginScreen as the model is populated in an async way; therefore can't use `StackView::initialItem`
-            root.restart()
-        }
 
         function pushOrSkipBiometricsPage() {
             if (d.flow === Onboarding.OnboardingFlow.LoginWithSyncing
@@ -229,6 +227,7 @@ OnboardingStackView {
 
             keycardState: root.keycardState
             keycardUID: root.keycardUID
+            keycardKeyUID: root.keycardKeyUID
             keycardRemainingPinAttempts: root.remainingPinAttempts
             keycardRemainingPukAttempts: root.remainingPukAttempts
 
@@ -238,9 +237,11 @@ OnboardingStackView {
 
             loginAccountsModel: root.loginAccountsModel
             isKeycardEnabled: root.isKeycardEnabled
+            lastSelectedProfileKeyUid: root.lastSelectedProfileKeyUid
             isBiometricsLogin: root.biometricsAvailable &&
                                root.isBiometricsLogin(loginScreen.selectedProfileKeyId)
 
+            onProfileSelected: (keyUid) => root.profileSelected(keyUid)
             onBiometricsRequested: (profileId) => {
                 if (visible)
                     root.biometricsRequested(profileId)
@@ -255,8 +256,8 @@ OnboardingStackView {
             }
             onOnboardingManageProfilesFlowRequested: d.openManageProfilesPopup()
 
-            onUnblockWithSeedphraseRequested: root.push(unblockWithSeedphraseFlow)
-            onUnblockWithPukRequested: root.push(unblockWithPukFlow)
+            onUnblockWithSeedphraseRequested: root.push(unblockWithSeedphraseFlowComponent)
+            onUnblockWithPukRequested: root.push(unblockWithPukFlowComponent)
             onKeycardRequested: root.keycardRequested()
 
             onVisibleChanged: {
@@ -445,8 +446,8 @@ OnboardingStackView {
             onCreateProfileWithEmptyKeycardRequested: root.push(keycardCreateProfileFlow)
             onExportKeysRequested: root.exportKeysRequested()
             onKeycardFactoryResetRequested: root.push(keycardFactoryResetFlow)
-            onUnblockWithSeedphraseRequested: root.push(unblockWithSeedphraseFlow)
-            onUnblockWithPukRequested: root.push(unblockWithPukFlow)
+            onUnblockWithSeedphraseRequested: root.push(unblockWithSeedphraseFlowComponent)
+            onUnblockWithPukRequested: root.push(unblockWithPukFlowComponent)
 
             onImportLocalBackupRequested: (importFilePath) => root.importLocalBackupRequested(importFilePath)
 
@@ -458,28 +459,31 @@ OnboardingStackView {
     }
 
     Component {
-        id: unblockWithSeedphraseFlow
+        id: unblockWithSeedphraseFlowComponent
 
         UnblockWithSeedphraseFlow {
-            property string pin
+            id: unblockWithSeedphraseFlow
+
+            property string seedphrase
 
             isSeedPhraseValid: root.isSeedPhraseValid
             pinSettingState: root.pinSettingState
             keycardPinInfoPageDelay: root.keycardPinInfoPageDelay
 
-            onSeedphraseSubmitted: (seedphrase) => root.seedphraseSubmitted(seedphrase)
+            onSeedphraseSubmitted: (seedphrase) => {
+                                       unblockWithSeedphraseFlow.seedphrase = seedphrase
+                                   }
 
             onSetPinRequested: (newPin) => {
-                pin = newPin
-                root.setPinRequested(newPin)
-            }
+                                   if (root.loginScreen) {
+                                       root.recoverKeycardRequested(newPin, unblockWithSeedphraseFlow.seedphrase)
+                                   }
+                               }
 
             onFinished: {
                 if (root.loginScreen) {
-                    root.loginRequested(root.loginScreen.selectedProfileKeyId,
-                                        Onboarding.LoginMethod.Keycard, { pin })
                 } else {
-                    d.flow = Onboarding.SecondaryFlow.LoginWithKeycard
+                    d.flow = Onboarding.OnboardingFlow.LoginWithKeycard
                     d.pushOrSkipBiometricsPage()
                 }
             }
@@ -487,14 +491,19 @@ OnboardingStackView {
     }
 
     Component {
-        id: unblockWithPukFlow
+        id: unblockWithPukFlowComponent
 
         UnblockWithPukFlow {
+            id: unblockWithPukFlow
+
+            property string puk
             property string pin
 
             keycardState: root.keycardState
             pinSettingState: root.pinSettingState
-            tryToSetPukFunction: root.tryToSetPukFunction
+            tryToSetPukFunction: {
+                unblockWithPukFlow.puk = puk
+            }
             remainingAttempts: root.remainingPukAttempts
             keycardPinInfoPageDelay: root.keycardPinInfoPageDelay
 

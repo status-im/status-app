@@ -191,6 +191,21 @@ KeycardBasePage {
             text: qsTr("Unblock using PUK")
             anchors.horizontalCenter: parent.horizontalCenter
             onClicked: root.unblockWithPukRequested()
+
+            /////////////////////////////////////////////////////////////////////////////////
+            // # Remove this once we implement unlock via PUK
+            /////////////////////////////////////////////////////////////////////////////////
+            enabled: false
+            MouseArea {
+                id: unlockWithPukArea
+                anchors.fill: parent
+                hoverEnabled: true
+            }
+            StatusToolTip {
+                text: Constants.keycard.temporarilyUnavailable
+                visible: unlockWithPukArea.containsMouse
+            }
+            /////////////////////////////////////////////////////////////////////////////////
         },
         MaybeOutlineButton {
             id: btnUnblockWithSeedphrase
@@ -200,6 +215,21 @@ KeycardBasePage {
             text: qsTr("Unblock with recovery phrase")
             anchors.horizontalCenter: parent.horizontalCenter
             onClicked: root.unblockWithSeedphraseRequested()
+
+            /////////////////////////////////////////////////////////////////////////////////
+            // # Remove this once we implement unlock via PUK
+            /////////////////////////////////////////////////////////////////////////////////
+            enabled: false
+            MouseArea {
+                id: unlockWithSeedphraseArea
+                anchors.fill: parent
+                hoverEnabled: true
+            }
+            StatusToolTip {
+                text: Constants.keycard.temporarilyUnavailable
+                visible: unlockWithSeedphraseArea.containsMouse
+            }
+            /////////////////////////////////////////////////////////////////////////////////
         }
     ]
 }

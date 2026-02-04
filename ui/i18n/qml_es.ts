@@ -4286,6 +4286,10 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
         <translation>Continuar con el proceso requerirá una transacción para conectar el nombre de usuario con tu clave de chat actual.</translation>
     </message>
+    <message>
+        <source>Temporarily unavailable, will be available in the next release.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ContactPanel</name>
@@ -7908,15 +7912,11 @@ Por favor, agrégala e intenta de nuevo.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>View activity</source>
-        <translation type="unfinished">Ver actividad</translation>
-    </message>
-    <message>
-        <source>Already in saved addresses</source>
+        <source>Add to saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to saved addresses</source>
+        <source>Remove from saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7935,11 +7935,26 @@ Por favor, agrégala e intenta de nuevo.</translation>
         <translation type="unfinished">Tu búsqueda contiene caracteres inválidos (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
     </message>
     <message>
-        <source>Your EFP onchain friends will appear here</source>
+        <source>No following addresses found. Check spelling or whether the address is correct.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No following addresses found. Check spelling or whether the address is correct.</source>
+        <source>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ethereum Follow Protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>FollowingAddressesDelegate</name>
+    <message>
+        <source>Remove from saved addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9077,10 +9092,6 @@ Are you sure you want to do this?</source>
 <context>
     <name>KeycardEnterPinPage</name>
     <message>
-        <source>Enter Keycard PIN</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>PIN incorrect</source>
         <translation>PIN incorrecto</translation>
     </message>
@@ -9104,8 +9115,12 @@ Are you sure you want to do this?</source>
         <translation>Desbloquear usando PUK</translation>
     </message>
     <message>
+        <source>Enter Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Unblock with recovery phrase</source>
-        <translation>Desbloquear con frase de recuperación</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -9634,10 +9649,6 @@ to login to Status?</source>
         <translation>Desbloquear usando PUK</translation>
     </message>
     <message>
-        <source>Unblock with recovery phrase</source>
-        <translation>Desbloquear con frase de recuperación</translation>
-    </message>
-    <message>
         <source>Factory reset Keycard</source>
         <translation>Restablecer Keycard de fábrica</translation>
     </message>
@@ -9693,6 +9704,10 @@ to login to Status?</source>
         <source>The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one</source>
         <translation>La Keycard que has insertado está bloqueada, necesitarás desbloquearla, restablecerla de fábrica o insertar una diferente</translation>
     </message>
+    <message>
+        <source>Unblock with recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardItem</name>
@@ -9705,23 +9720,23 @@ to login to Status?</source>
     <name>KeycardLostPage</name>
     <message>
         <source>Lost Keycard</source>
-        <translation>Keycard perdida</translation>
+        <translation type="unfinished">Keycard perdida</translation>
     </message>
     <message>
         <source>Sorry you&apos;ve lost your Keycard</source>
-        <translation>Lamentamos que hayas perdido tu Keycard</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Create replacement Keycard using the same recovery phrase</source>
-        <translation>Crear una Keycard de reemplazo usando la misma frase de recuperación</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Start using this profile without Keycard</source>
-        <translation>Comenzar a usar este perfil sin Keycard</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Order a new Keycard</source>
-        <translation>Pedir una nueva Keycard</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -9766,10 +9781,6 @@ acceso a tus fondos.</translation>
     <message>
         <source>Enter this Keycard’s PIN</source>
         <translation>Escribe el PIN de esta Keycard</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PIN</source>
-        <translation></translation>
     </message>
     <message>
         <source>PIN incorrect</source>
@@ -9821,6 +9832,10 @@ acceso a tus fondos.</translation>
     <message>
         <source>Changing PIN failed</source>
         <translation>Error al cambiar el PIN</translation>
+    </message>
+    <message>
+        <source>Enter Keycard PIN</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -10257,12 +10272,12 @@ acceso a tus fondos.</translation>
         <translation>Direcciones guardadas</translation>
     </message>
     <message>
-        <source>EFP onchain friends</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Add account</source>
         <translation type="unfinished">Agregar cuenta</translation>
+    </message>
+    <message>
+        <source>Onchain friends</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -10478,50 +10493,23 @@ al cargar</translation>
     <name>LoginKeycardBox</name>
     <message>
         <source>Unblock with PUK</source>
-        <translation>Desbloquear con PUK</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation>Desbloquear con frase de recuperación</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation>Conecta el lector de Keycard...</translation>
+        <translation type="unfinished">Conecta el lector de Keycard...</translation>
     </message>
     <message>
         <source>Insert your Keycard...</source>
-        <translation>Inserta tu Keycard...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation>Leyendo Keycard...</translation>
-    </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation></translation>
-    </message>
-    <message numerus="yes">
-        <source>PIN incorrect. %n attempt(s) remaining.</source>
-        <translation>
-            <numerusform>PIN incorrecto. Queda %n intento.</numerusform>
-            <numerusform>PIN incorrecto. Quedan %n intentos.</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Login failed. %1</source>
-        <translation>Error al iniciar sesión. %1</translation>
-    </message>
-    <message>
-        <source>Show details.</source>
-        <translation>Mostrar detalles.</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PIN</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Scan keycard</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Leyendo Keycard...</translation>
     </message>
     <message>
         <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
@@ -10532,15 +10520,38 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Max pairing slots reached.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message numerus="yes">
+        <source>PIN incorrect. %n attempt(s) remaining.</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
     <message>
-        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
+        <source>Login failed. %1</source>
+        <translation type="unfinished">Error al iniciar sesión. %1</translation>
+    </message>
+    <message>
+        <source>Show details.</source>
+        <translation type="unfinished">Mostrar detalles.</translation>
+    </message>
+    <message>
+        <source>Enter Keycard PIN</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11827,13 +11838,6 @@ al cargar</translation>
     <message>
         <source>Retry mint</source>
         <translation></translation>
-    </message>
-</context>
-<context>
-    <name>MobileAddressBar</name>
-    <message>
-        <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14705,16 +14709,16 @@ acceso a tu cámara web</translation>
         <translation>Eliminar %1</translation>
     </message>
     <message>
-        <source>Are you sure you want to remove %1 from your saved addresses? Transaction history relating to this address will no longer be labelled %1.</source>
-        <translation>¿Estás seguro de que quieres eliminar %1 de tus direcciones guardadas? El historial de transacciones relacionado con esta dirección ya no se etiquetará como %1.</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
         <source>Remove saved address</source>
         <translation>Eliminar dirección guardada</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to remove %1 from your saved addresses?</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14938,12 +14942,12 @@ acceso a tu cámara web</translation>
         <translation></translation>
     </message>
     <message>
-        <source>View activity</source>
-        <translation>Ver actividad</translation>
-    </message>
-    <message>
         <source>Remove saved address</source>
         <translation>Eliminar dirección guardada</translation>
+    </message>
+    <message>
+        <source>Add to saved addresses</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18892,16 +18896,16 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
 <context>
     <name>WalletFollowingAddressesHeader</name>
     <message>
-        <source>Add via EFP</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>EFP onchain friends</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Last refreshed %1</source>
         <translation type="unfinished">Última actualización %1</translation>
+    </message>
+    <message>
+        <source>Find a friend</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Onchain friends</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19562,6 +19566,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Report a bug on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

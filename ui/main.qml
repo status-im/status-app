@@ -631,10 +631,13 @@ Window {
             objectName: "startupOnboardingLayout"
 
             isKeycardEnabled: featureFlagsStore.keycardEnabled
+            lastSelectedProfileKeyUid: localAppSettings.selectedProfileKeyUid
             networkChecksEnabled: true
 
             onboardingStore: OnboardingStore {
                 id: onboardingStore
+
+                property bool loginRequestSent: false
 
                 onAppLoaded: {
                     applicationWindow.appIsReady = true
@@ -646,6 +649,7 @@ Window {
                     }
                 }
                 onAccountLoginError: function (error, wrongPassword) {
+                    onboardingStore.loginRequestSent = false
                     onboardingLayout.unwindToLoginScreen() // error handled internally
                 }
                 onSaveBiometricsRequested: (account, credential) => {
@@ -654,6 +658,12 @@ Window {
                 }
                 onDeleteBiometricsRequested: (account) => {
                     appKeychain.deleteCredential(account)
+                }
+
+                onKeycardStateChanged: {
+                    if (onboardingStore.loginRequestSent && keycardState === Onboarding.KeycardState.NotEmpty) {
+                        stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate) // we unwind on error
+                    }
                 }
             }
 
@@ -685,8 +695,27 @@ Window {
                 }
             }
 
+            onProfileSelected: function (keyUid) {
+                if (localAppSettings.selectedProfileKeyUid === keyUid) {
+                    return
+                }
+                localAppSettings.selectedProfileKeyUid = keyUid
+                onboardingStore.resetKeycardProgressStates()
+            }
+
             onLoginRequested: function (keyUid, method, data) {
-                stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate) // we unwind on error
+                let selectedProfile = SQUtils.ModelUtils.getByKey(onboardingStore.loginAccountsModel, "keyUid", keyUid)
+                if (!selectedProfile) {
+                    console.error("cannot resolve selected profile")
+                    return
+                }
+
+                if (!selectedProfile.keycardPairing) {
+                    // if it's a keycard profile, display splash screen once the keycard is provided, otherwise display it now
+                    stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate) // we unwind on error
+                }
+
+                onboardingStore.loginRequestSent = true
                 onboardingStore.loginRequested(keyUid, method, data)
             }
 

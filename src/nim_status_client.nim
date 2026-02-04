@@ -117,7 +117,7 @@ proc ensureDirectories*(dataDir, tmpDir, logDir: string) =
 proc logHandlerCallback(messageType: cint, message: cstring, category: cstring, file: cstring, function: cstring, line: cint) {.cdecl, exportc.} =
   # Initialize Nim GC stack bottom for foreign threads
   # https://status-im.github.io/nim-style-guide/interop.html#calling-nim-code-from-other-languages
-  when declared(setupForeignThreadGc): 
+  when declared(setupForeignThreadGc):
     setupForeignThreadGc()
   when declared(nimGC_setStackBottom):
     var locals {.volatile, noinit.}: pointer
@@ -195,7 +195,7 @@ proc mainProc() =
   let imageCert = imageServerTLSCert()
   installSelfSignedCertificate(imageCert)
 
-  when defined(android) or defined(ios):
+  when main_constants.IS_MOBILE:
     # Apply dynamic scaling based on device width and DPI. Defaults to 1 for desktop.
     proc statusq_getMobileUIScaleFactor(baseWidth: cfloat, baseDpi: cfloat, baseScale: cfloat): cfloat {.importc, cdecl.}
     var scaleFactor = statusq_getMobileUIScaleFactor(1080.0, 480.0, 0.8)

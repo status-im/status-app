@@ -53,6 +53,7 @@ public:
 
     // NOTE: Keep in sync with KeycardState in src/app_service/service/keycardV2/dto.nim
     enum class KeycardState {
+        UnknownReaderState,
         NoPCSCService,
         PluginReader,
         InsertKeycard,

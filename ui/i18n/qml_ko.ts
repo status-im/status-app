@@ -4270,6 +4270,10 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <source>Continuing will require a transaction to connect the username with your current chat key.</source>
         <translation>사용자 이름과 현재 키를 연결하는 트랜잭션이 필요합니다.</translation>
     </message>
+    <message>
+        <source>Temporarily unavailable, will be available in the next release.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ContactPanel</name>
@@ -7880,15 +7884,11 @@ Please add it and try again.</source>
         <translation type="unfinished">주소 QR 표시</translation>
     </message>
     <message>
-        <source>View activity</source>
-        <translation type="unfinished">활동 보기</translation>
-    </message>
-    <message>
-        <source>Already in saved addresses</source>
+        <source>Add to saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to saved addresses</source>
+        <source>Remove from saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7907,11 +7907,26 @@ Please add it and try again.</source>
         <translation type="unfinished">검색어에 유효하지 않은 문자가 있습니다 (A-Z, 0-9, 단일 공백, 하이픈, 밑줄만 사용)</translation>
     </message>
     <message>
-        <source>Your EFP onchain friends will appear here</source>
+        <source>No following addresses found. Check spelling or whether the address is correct.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No following addresses found. Check spelling or whether the address is correct.</source>
+        <source>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ethereum Follow Protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>FollowingAddressesDelegate</name>
+    <message>
+        <source>Remove from saved addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9043,10 +9058,6 @@ Are you sure you want to do this?</source>
 <context>
     <name>KeycardEnterPinPage</name>
     <message>
-        <source>Enter Keycard PIN</source>
-        <translation>Keycard PIN 입력</translation>
-    </message>
-    <message>
         <source>PIN incorrect</source>
         <translation>PIN이 올바르지 않습니다</translation>
     </message>
@@ -9069,8 +9080,12 @@ Are you sure you want to do this?</source>
         <translation>PUK으로 잠금 해제</translation>
     </message>
     <message>
+        <source>Enter Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Unblock with recovery phrase</source>
-        <translation>복구 구문으로 잠금 해제</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -9616,10 +9631,6 @@ to login to Status?</source>
         <translation>PUK으로 잠금 해제</translation>
     </message>
     <message>
-        <source>Unblock with recovery phrase</source>
-        <translation>복구 구문으로 잠금 해제</translation>
-    </message>
-    <message>
         <source>Factory reset Keycard</source>
         <translation>Keycard 초기화</translation>
     </message>
@@ -9675,6 +9686,10 @@ to login to Status?</source>
         <source>The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one</source>
         <translation>삽입한 Keycard가 차단되었습니다. 잠금을 해제하거나 초기화(공장 초기화)하시거나, 다른 카드를 삽입하세요</translation>
     </message>
+    <message>
+        <source>Unblock with recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardItem</name>
@@ -9687,23 +9702,23 @@ to login to Status?</source>
     <name>KeycardLostPage</name>
     <message>
         <source>Lost Keycard</source>
-        <translation>분실한 Keycard</translation>
+        <translation type="unfinished">분실된 Keycard</translation>
     </message>
     <message>
         <source>Sorry you&apos;ve lost your Keycard</source>
-        <translation>Keycard를 분실하셨다니 안타깝습니다</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Create replacement Keycard using the same recovery phrase</source>
-        <translation>같은 복구 문구로 교체용 Keycard 만들기</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Start using this profile without Keycard</source>
-        <translation>Keycard 없이 이 프로필 사용 시작</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Order a new Keycard</source>
-        <translation>새 Keycard 주문하기</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -9748,10 +9763,6 @@ access to your funds.</source>
     <message>
         <source>Enter this Keycard’s PIN</source>
         <translation>이 Keycard의 PIN을 입력하세요</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PIN</source>
-        <translation>Keycard PIN 입력</translation>
     </message>
     <message>
         <source>PIN incorrect</source>
@@ -9802,6 +9813,10 @@ access to your funds.</source>
     <message>
         <source>Changing PIN failed</source>
         <translation>PIN 변경 실패</translation>
+    </message>
+    <message>
+        <source>Enter Keycard PIN</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -10237,12 +10252,12 @@ access to your funds.</source>
         <translation>저장된 주소</translation>
     </message>
     <message>
-        <source>EFP onchain friends</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Add account</source>
         <translation type="unfinished">계정 추가</translation>
+    </message>
+    <message>
+        <source>Onchain friends</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -10451,49 +10466,23 @@ to load</source>
     <name>LoginKeycardBox</name>
     <message>
         <source>Unblock with PUK</source>
-        <translation>PUK로 잠금 해제</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Unblock with recovery phrase</source>
-        <translation>복구 구문으로 잠금 해제</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation>Keycard 리더를 연결하세요...</translation>
+        <translation type="unfinished">Keycard 리더를 연결하세요...</translation>
     </message>
     <message>
         <source>Insert your Keycard...</source>
-        <translation>Keycard를 삽입하세요...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
-        <translation>Keycard 읽는 중...</translation>
-    </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation>Keycard가 차단됨</translation>
-    </message>
-    <message numerus="yes">
-        <source>PIN incorrect. %n attempt(s) remaining.</source>
-        <translation>
-            <numerusform>PIN이 올바르지 않습니다. 남은 시도: %n회.</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Login failed. %1</source>
-        <translation>로그인에 실패했습니다. %1</translation>
-    </message>
-    <message>
-        <source>Show details.</source>
-        <translation>자세히 보기.</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PIN</source>
-        <translation>Keycard PIN 입력</translation>
-    </message>
-    <message>
-        <source>Scan keycard</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Keycard 읽는 중...</translation>
     </message>
     <message>
         <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
@@ -10504,15 +10493,37 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Max pairing slots reached.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
+        <translation type="unfinished">Keycard가 차단됨</translation>
     </message>
     <message>
         <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message numerus="yes">
+        <source>PIN incorrect. %n attempt(s) remaining.</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
     <message>
-        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
+        <source>Login failed. %1</source>
+        <translation type="unfinished">로그인 실패. %1</translation>
+    </message>
+    <message>
+        <source>Show details.</source>
+        <translation type="unfinished">자세히 보기.</translation>
+    </message>
+    <message>
+        <source>Enter Keycard PIN</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11792,13 +11803,6 @@ to load</source>
     <message>
         <source>Retry mint</source>
         <translation>민팅 다시 시도</translation>
-    </message>
-</context>
-<context>
-    <name>MobileAddressBar</name>
-    <message>
-        <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14660,16 +14664,16 @@ access to your webcam</source>
         <translation>%1 제거</translation>
     </message>
     <message>
-        <source>Are you sure you want to remove %1 from your saved addresses? Transaction history relating to this address will no longer be labelled %1.</source>
-        <translation>저장된 주소에서 %1을(를) 정말 삭제할까요? 이 주소와 관련된 거래 내역에는 더 이상 %1 레이블이 표시되지 않습니다.</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
     <message>
         <source>Remove saved address</source>
         <translation>저장된 주소 삭제</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to remove %1 from your saved addresses?</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14892,12 +14896,12 @@ access to your webcam</source>
         <translation>주소 QR 표시</translation>
     </message>
     <message>
-        <source>View activity</source>
-        <translation>활동 보기</translation>
-    </message>
-    <message>
         <source>Remove saved address</source>
         <translation>저장된 주소 제거</translation>
+    </message>
+    <message>
+        <source>Add to saved addresses</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18829,16 +18833,16 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
 <context>
     <name>WalletFollowingAddressesHeader</name>
     <message>
-        <source>Add via EFP</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>EFP onchain friends</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Last refreshed %1</source>
         <translation type="unfinished">마지막 새로고침 %1</translation>
+    </message>
+    <message>
+        <source>Find a friend</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Onchain friends</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19499,6 +19503,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Report a bug on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -28,6 +28,7 @@ OnboardingPage {
 
     required property int keycardState
     required property string keycardUID
+    required property string keycardKeyUID
     required property int keycardRemainingPinAttempts
     required property int keycardRemainingPukAttempts
 
@@ -43,12 +44,16 @@ OnboardingPage {
     property bool isBiometricsLogin
     property bool isKeycardEnabled: true
 
+    // previously selected profile key UID (used to restore selection on startup)
+    property string lastSelectedProfileKeyUid
+
     readonly property string selectedProfileKeyId: loginUserSelector.selectedProfileKeyId
     readonly property bool selectedProfileIsKeycard: d.currentProfileIsKeycard
 
     signal biometricsRequested(string profileId)
     signal dismissBiometricsRequested
     signal changeLanguageRequested(string newLanguageCode)
+    signal profileSelected(string keyUid)
 
     function setBiometricResponse(secret: string, error = "") {
         if (!root.isBiometricsLogin)
@@ -101,23 +106,19 @@ OnboardingPage {
         property bool biometricsFailed
 
         readonly property bool currentProfileIsKeycard: loginUserSelector.keycardCreatedAccount
-        readonly property bool isWrongKeycard: !!root.keycardUID && loginUserSelector.selectedProfileKeyId !== root.keycardUID
+        readonly property bool isWrongKeycard: !!root.keycardUID && loginUserSelector.selectedProfileKeyId !== root.keycardKeyUID
 
         readonly property int loginModelCount: root.loginAccountsModel.ModelCount.count
         onLoginModelCountChanged: setSelectedLoginUser()
 
         function setSelectedLoginUser() {
             if (loginModelCount > 0) {
-                loginUserSelector.setSelection(d.settings.lastKeyUid)
+                loginUserSelector.setSelection(root.lastSelectedProfileKeyUid)
                 if (!d.currentProfileIsKeycard)
                     passwordBox.forceActiveFocus()
             }
         }
 
-        readonly property var settings: Settings { /* https://bugreports.qt.io/browse/QTBUG-135039 */
-            category: "Login"
-            property string lastKeyUid
-        }
 
         function resetBiometricsResult() {
             d.biometricsSuccessful = false
@@ -149,9 +150,6 @@ OnboardingPage {
         })
     }
 
-    Component.onCompleted: {
-        d.setSelectedLoginUser()
-    }
 
     // login errors reporting
     function setAccountLoginError(error: string, wrongPassword: bool) {
@@ -222,11 +220,15 @@ OnboardingPage {
                                       root.keycardState === Onboarding.KeycardState.BlockedPUK
                 isKeycardEnabled: root.isKeycardEnabled
 
-                onSelectedProfileKeyIdChanged: {
+                onSelectedProfileItemChanged: {
+                    if (!selectedProfileItem) {
+                        return
+                    }
+
                     root.dismissBiometricsRequested()
 
                     d.resetBiometricsResult()
-                    d.settings.lastKeyUid = selectedProfileKeyId
+                    root.profileSelected(selectedProfileItem.keyUid)
 
                     if (d.currentProfileIsKeycard) {
                         keycardBox.loginError = ""
@@ -293,7 +295,6 @@ OnboardingPage {
                 onDetailedErrorPopupRequested: detailedErrorPopupComp.createObject(root, {detailedError: loginError}).open()
                 onBiometricsRequested: root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
                 onLoginRequested: (pin) => d.doKeycardLogin(pin)
-                onKeycardRequested: root.keycardRequested()
             }
 
             Item { Layout.fillHeight: true }

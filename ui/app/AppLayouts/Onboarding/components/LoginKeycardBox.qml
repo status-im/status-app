@@ -11,6 +11,8 @@ import StatusQ.Core.Utils as SQUtils
 import AppLayouts.Onboarding.enums
 import AppLayouts.Onboarding.controls
 
+import utils
+
 Control {
     id: root
 
@@ -34,7 +36,6 @@ Control {
 
     signal loginRequested(string pin)
 
-    signal keycardRequested()
 
     function clear() {
         d.wrongPin = false
@@ -91,13 +92,6 @@ Control {
             onLinkActivated: root.detailedErrorPopupRequested()
         }
 
-        StatusButton {
-            Layout.fillWidth: true
-            id: scanKeycardButton
-            text: qsTr("Scan keycard")
-            visible: SQUtils.Utils.isMobile
-            onClicked: root.keycardRequested()
-        }
         Column {
             id: lockedButtons
             Layout.fillWidth: true
@@ -109,6 +103,21 @@ Control {
                 visible: root.keycardState === Onboarding.KeycardState.BlockedPIN && root.keycardRemainingPukAttempts > 0
                 text: qsTr("Unblock with PUK")
                 onClicked: root.unblockWithPukRequested()
+
+                /////////////////////////////////////////////////////////////////////////////////
+                // # Remove this once we implement unlock via PUK
+                /////////////////////////////////////////////////////////////////////////////////
+                enabled: false
+                MouseArea {
+                    id: unlockWithPukArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                }
+                StatusToolTip {
+                    text: Constants.keycard.temporarilyUnavailable
+                    visible: unlockWithPukArea.containsMouse
+                }
+                /////////////////////////////////////////////////////////////////////////////////
             }
             MaybeOutlineButton {
                 objectName: "btnUnblockWithSeedphrase"
@@ -132,7 +141,6 @@ Control {
                 }
             }
             onPinEditedManually: {
-                d.wrongPin = false
                 root.pinEditedManually()
             }
 
@@ -196,15 +204,10 @@ Control {
                 color: Theme.palette.dangerColor1
                 text: qsTr("Wrong Keycard for this profile")
             }
-            PropertyChanges {
-                target: scanKeycardButton
-                visible: SQUtils.Utils.isMobile
-            }
         },
         State {
             name: "genericError"
-            when: (root.keycardState === -1 ||
-                  root.keycardState === Onboarding.KeycardState.NoPCSCService ||
+            when: (root.keycardState === Onboarding.KeycardState.NoPCSCService ||
                   root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached ) && !SQUtils.Utils.isMobile// TODO add a generic/fallback keycard error here too
             PropertyChanges {
                 target: infoText
@@ -234,6 +237,11 @@ Control {
                 target: lockedButtons
                 visible: true
             }
+            PropertyChanges {
+                target: pinInputField
+                enabled: false
+                visible: false
+            }
         },
         State {
             name: "empty"
@@ -242,10 +250,6 @@ Control {
                 target: infoText
                 color: Theme.palette.dangerColor1
                 text: qsTr("The scanned Keycard is empty.<br>Use the correct Keycard for this profile.")
-            }
-            PropertyChanges {
-                target: scanKeycardButton
-                visible: SQUtils.Utils.isMobile
             }
         },
         State {
@@ -270,7 +274,7 @@ Control {
         // exit states
         State {
             name: "notEmpty"
-            when: root.keycardState === Onboarding.KeycardState.NotEmpty && !d.wrongPin 
+            when: root.keycardState === Onboarding.KeycardState.UnknownReaderState && !d.wrongPin
             PropertyChanges {
                 target: infoText
                 text: qsTr("Enter Keycard PIN")
@@ -282,6 +286,7 @@ Control {
             PropertyChanges {
                 target: pinInputField
                 visible: true
+                enabled: true
             }
             PropertyChanges {
                 target: touchIdIcon

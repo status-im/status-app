@@ -28,6 +28,7 @@ Page {
     required property string currentLanguage
 
     property bool isKeycardEnabled: true
+    property string lastSelectedProfileKeyUid
 
     property bool networkChecksEnabled: true
 
@@ -54,7 +55,7 @@ Page {
     // -> "keyUid:string": User ID to login; "method:int": password or keycard (cf Onboarding.LoginMethod.*) enum;
     //    "data:var": contains "password" or "pin"
     signal loginRequested(string keyUid, int method, var data)
-
+    signal profileSelected(string keyUid)
     signal keycardRequested()
 
     function restartFlow() {
@@ -158,6 +159,7 @@ Page {
 
         keycardState: root.onboardingStore.keycardState
         keycardUID: root.onboardingStore.keycardUID
+        keycardKeyUID: root.onboardingStore.keycardKeyUID
         pinSettingState: root.onboardingStore.pinSettingState
         authorizationState: root.onboardingStore.authorizationState
         restoreKeysExportState: root.onboardingStore.restoreKeysExportState
@@ -168,6 +170,7 @@ Page {
 
         biometricsAvailable: root.keychain.available
         isKeycardEnabled: root.isKeycardEnabled
+        lastSelectedProfileKeyUid: root.lastSelectedProfileKeyUid
         networkChecksEnabled: root.networkChecksEnabled
 
         generateMnemonic: root.onboardingStore.generateMnemonic
@@ -176,13 +179,14 @@ Page {
         isSeedPhraseValid: root.onboardingStore.validMnemonic
         isSeedPhraseDuplicate: root.onboardingStore.isMnemonicDuplicate
         validateConnectionString: root.onboardingStore.validateLocalPairingConnectionString
-        tryToSetPukFunction: root.onboardingStore.setPuk
+        // tryToSetPukFunction: root.onboardingStore.setPuk
         remainingPinAttempts: root.onboardingStore.keycardRemainingPinAttempts
         remainingPukAttempts: root.onboardingStore.keycardRemainingPukAttempts
 
         onChangeLanguageRequested: (newLanguageCode) => root.changeLanguageRequested(newLanguageCode)
 
         onLoginRequested: (keyUid, method, data) => root.loginRequested(keyUid, method, data)
+        onProfileSelected: (keyUid) => root.profileSelected(keyUid)
 
         onSetPinRequested: (pin) => {
             d.keycardPin = pin
@@ -190,6 +194,7 @@ Page {
         }
 
         onLoadMnemonicRequested: d.loadMnemonic()
+        onRecoverKeycardRequested: (pin, seedphrase) => root.onboardingStore.recoverKeycardRequested(pin, seedphrase)
         onAuthorizationRequested: (pin) => d.authorize(pin)
         onShareUsageDataRequested: (enabled) => root.shareUsageDataRequested(enabled)
         onPerformKeycardFactoryResetRequested: root.onboardingStore.startKeycardFactoryReset()
@@ -204,8 +209,8 @@ Page {
         onImportLocalBackupRequested: (importFilePath) => d.backupImportFileUrl = importFilePath
         onFinished: (flow) => d.finishFlow(flow)
         onKeycardRequested: {
-            root.keycardRequested()
             root.onboardingStore.startKeycardDetection()
+            root.keycardRequested()
         }
 
         onBiometricsRequested: (profileId) => {

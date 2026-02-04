@@ -32,6 +32,9 @@ const SIGNAL_KEYCARD_EXPORT_RESTORE_KEYS_SUCCESS* = "keycardExportRestoreKeysSuc
 const SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_FAILURE* = "keycardExportLoginKeysFailure"
 const SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_SUCCESS* = "keycardExportLoginKeysSuccess"
 
+## Signals for keycard composite actions
+const SIGNAL_KEYCARD_LOGIN_FINISHED* = "keycardLoginFinished"
+
 type KeycardAction {.pure.} = enum
   Start = "Start"
   Stop = "Stop"
@@ -44,6 +47,8 @@ type KeycardAction {.pure.} = enum
   FactoryReset = "FactoryReset"
   GetMetadata = "GetMetadata"
   StoreMetadata = "StoreMetadata"
+  Login = "Login"
+  Recover = "Recover"
 
 type
   KeycardEventArg* = ref object of Args
@@ -65,6 +70,10 @@ type
   KeycardChannelStateArg* = ref object of Args
     state*: string
 
+  KeycardLoginArgs* = ref object of Args
+    error*: string
+    exportedKeys*: KeycardExportedKeysDto
+
 include utils
 include app_service/common/async_tasks
 include async_tasks
@@ -85,7 +94,7 @@ QtObject:
 
   ## Forward declaration
   proc initializeRPC(self: Service)
-  proc asyncStart*(self: Service, storageDir: string)
+  proc asyncStart(self: Service, storageDir: string)
   proc onAsyncResponse(self: Service, response: string) {.slot.}
 
   proc delete*(self: Service)
@@ -212,7 +221,11 @@ QtObject:
     )
 
   proc asyncInitialize*(self: Service, pin: string, puk: string) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{"pin": pin, "puk": puk}
+    let params = %*{
+      "pin": pin,
+      "puk": puk,
+      "pairingPassword": "", # we keep it empty for now
+    }
     self.asyncCallRPC(KeycardAction.Initialize, params, proc (responseObj: JsonNode, err: string) =
       if err.len > 0:
         error "error initializing keycard", err=err
@@ -270,6 +283,65 @@ QtObject:
           raise newException(RpcException, error.message)
     except Exception as e:
       error "error storing metadata", err=e.msg
+
+  proc asyncLogin*(self: Service, keyUid: string, pin: string) {.featureGuard(KEYCARD_ENABLED).} =
+    let params = %*{
+      "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+      "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
+      "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
+      "keyUid": keyUid,
+      "pin": pin,
+    }
+    self.asyncCallRPC(KeycardAction.Login, params, proc (responseObj: JsonNode, err: string) =
+      var data = KeycardLoginArgs()
+      try:
+        if err.len > 0:
+          raise newException(CatchableError, "login action parsing response error: " & err)
+        if responseObj.hasKey("error") and responseObj["error"].kind != JNull:
+          let errorObj = responseObj["error"]
+          if errorObj.hasKey("message"):
+            raise newException(CatchableError, "login action keycard response error: " & errorObj["message"].getStr())
+          raise newException(CatchableError, "login action keycard response unknown error")
+        # since this is a composite action, the login response is good when we get the keys
+        let resultObj = responseObj["result"]
+        if not resultObj.hasKey("keys"):
+          raise newException(CatchableError, "login action keycard response missing keys")
+        data.exportedKeys = resultObj["keys"].toKeycardExportedKeysDto()
+      except Exception as e:
+        error "login action error", err=e.msg
+        data.error = e.msg
+      self.events.emit(SIGNAL_KEYCARD_LOGIN_FINISHED, data)
+    )
+
+  proc asyncRecover*(self: Service, pin: string, puk: string, mnemonic: string) {.featureGuard(KEYCARD_ENABLED).} =
+    let params = %*{
+      "pin": pin,
+      "puk": puk,
+      "pairingPassword": "", # we keep it empty for now
+      "mnemonic": mnemonic,
+      "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+      "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
+      "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
+    }
+    self.asyncCallRPC(KeycardAction.Recover, params, proc (responseObj: JsonNode, err: string) =
+      var data = KeycardLoginArgs()
+      try:
+        if err.len > 0:
+          raise newException(CatchableError, "recover action parsing response error: " & err)
+        if responseObj.hasKey("error") and responseObj["error"].kind != JNull:
+          let errorObj = responseObj["error"]
+          if errorObj.hasKey("message"):
+            raise newException(CatchableError, "recover action keycard response error: " & errorObj["message"].getStr())
+          raise newException(CatchableError, "recover action keycard response unknown error")
+        let resultObj = responseObj["result"]
+        if not resultObj.hasKey("keys"):
+          raise newException(CatchableError, "recover action keycard response missing keys")
+        data.exportedKeys = resultObj["keys"].toKeycardExportedKeysDto()
+      except Exception as e:
+        error "recover action error", err=e.msg
+        data.error = e.msg
+      self.events.emit(SIGNAL_KEYCARD_LOGIN_FINISHED, data)
+    )
 
   proc startDetection*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
     self.asyncStart(status_const.KEYCARDPAIRINGDATAFILE)

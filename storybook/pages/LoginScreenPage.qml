@@ -24,6 +24,7 @@ SplitView {
         // keycard
         property int keycardState: Onboarding.KeycardState.NoPCSCService
         readonly property string keycardUID: "uid_4"
+        readonly property string keycardKeyUID: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
         property int keycardRemainingPinAttempts: Constants.onboarding.defaultPinAttempts
         property int keycardRemainingPukAttempts: Constants.onboarding.defaultPukAttempts
 
@@ -52,6 +53,7 @@ SplitView {
 
         keycardState: driver.keycardState
         keycardUID: driver.keycardUID
+        keycardKeyUID: driver.keycardKeyUID
         keycardRemainingPinAttempts: driver.keycardRemainingPinAttempts
         keycardRemainingPukAttempts: driver.keycardRemainingPukAttempts
 
@@ -79,6 +81,10 @@ SplitView {
             } else {
                 driver.loginResult = Onboarding.ProgressState.Success
             }
+        }
+
+        onProfileSelected: function(keyUid) {
+            logs.logEvent("onProfileSelected", ["keyUid"], arguments)
         }
 
         onSelectedProfileKeyIdChanged: {

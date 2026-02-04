@@ -5,6 +5,8 @@ import StatusQ.Core.Theme
 
 import AppLayouts.Onboarding.controls
 
+import utils
+
 KeycardBasePage {
     id: root
 
@@ -21,12 +23,42 @@ KeycardBasePage {
             anchors.horizontalCenter: parent.horizontalCenter
             text: qsTr("Create replacement Keycard using the same recovery phrase")
             onClicked: root.createReplacementKeycardRequested()
+
+            /////////////////////////////////////////////////////////////////////////////////
+            // # Remove this once we implement unlock via PUK
+            /////////////////////////////////////////////////////////////////////////////////
+            enabled: false
+            MouseArea {
+                id: createReplacementArea
+                anchors.fill: parent
+                hoverEnabled: true
+            }
+            StatusToolTip {
+                text: Constants.keycard.temporarilyUnavailable
+                visible: createReplacementArea.containsMouse
+            }
+            /////////////////////////////////////////////////////////////////////////////////
         },
         StatusButton {
             objectName: "startUsingWithoutKeycardButton"
             anchors.horizontalCenter: parent.horizontalCenter
             text: qsTr("Start using this profile without Keycard")
             onClicked: root.useProfileWithoutKeycardRequested()
+
+            /////////////////////////////////////////////////////////////////////////////////
+            // # Remove this once we implement unlock via PUK
+            /////////////////////////////////////////////////////////////////////////////////
+            enabled: false
+            MouseArea {
+                id: startWithoutKeycardArea
+                anchors.fill: parent
+                hoverEnabled: true
+            }
+            StatusToolTip {
+                text: Constants.keycard.temporarilyUnavailable
+                visible: startWithoutKeycardArea.containsMouse
+            }
+            /////////////////////////////////////////////////////////////////////////////////
         }
     ]
 

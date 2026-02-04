@@ -4,6 +4,8 @@ import chronicles
 import io_interface, states
 import view, controller
 
+import constants as main_constants
+
 import app/global/global_singleton
 import app/core/eventemitter
 import app_service/common/utils
@@ -120,6 +122,23 @@ method initialize*[T](self: Module[T], pin: string) =
 method authorize*[T](self: Module[T], pin: string) =
   self.view.setAuthorizationState(AuthorizationState.InProgress)
   self.controller.authorize(pin)
+
+method loginKeycard*[T](self: Module[T], keyUid: string, pin: string) =
+  self.view.setAuthorizationState(AuthorizationState.InProgress)
+  self.controller.loginKeycard(keyUid, pin)
+
+method recoverKeycard*[T](self: Module[T], pin: string, mnemonic: string) =
+  self.view.setAddKeyPairState(ProgressState.InProgress)
+  self.controller.recoverKeycard(pin, mnemonic)
+
+method resetKeycardProgressStates*[T](self: Module[T]) =
+  self.view.setKeycardEvent(KeycardEventDto())
+  self.view.setAuthorizationState(AuthorizationState.Idle)
+  self.view.setPinSettingState(ProgressState.Idle)
+  self.view.setRestoreKeysExportState(ProgressState.Idle)
+  self.view.setAddKeyPairState(ProgressState.Idle)
+  self.view.setSyncState(LocalPairingState.Idle)
+  self.view.setConvertKeycardAccountState(ProgressState.Idle)
 
 method getPasswordStrengthScore*[T](self: Module[T], password, userName: string): int =
   self.controller.getPasswordStrengthScore(password, userName)
@@ -263,8 +282,7 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
       of LoginMethod.Password:
         self.controller.login(account, data["password"].str)
       of LoginMethod.Keycard:
-        self.authorize(data["pin"].str)
-        # We will continue the flow when the card is authorized in onKeycardStateUpdated
+        self.loginKeycard(keyUid, data["pin"].str)
       of LoginMethod.Mnemonic:
         self.controller.login(account, password = "", mnemonic = data["mnemonic"].str)
       else:
@@ -275,6 +293,9 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
     self.view.accountLoginError(e.msg, wrongPassword = false)
 
 proc syncAppAndKeycardState[T](self: Module[T]) =
+  # don't sync on mobile devices (requires one keycard tap more)
+  if main_constants.IS_MOBILE:
+    return
   let kcEvent = self.view.getKeycardEvent()
   if kcEvent.keycardInfo.keyUID == "":
     return
@@ -365,10 +386,6 @@ method onLocalPairingStatusUpdate*[T](self: Module[T], status: LocalPairingStatu
 method onKeycardStateUpdated*[T](self: Module[T], keycardEvent: KeycardEventDto) =
   self.view.setKeycardEvent(keycardEvent)
 
-  if keycardEvent.state == KeycardState.Authorized and self.loginFlow == LoginMethod.Keycard:
-    # After authorizing, we export the keys
-    self.controller.exportLoginKeysFromKeycard()
-    # We will login once we have the keys in onKeycardExportLoginKeysSuccess
 
   if keycardEvent.state == KeycardState.NotEmpty and self.view.getPinSettingState() == ProgressState.InProgress.int:
     # We just finished setting the pin
@@ -408,7 +425,7 @@ method onKeycardExportRestoreKeysSuccess*[T](self: Module[T], exportedKeys: Keyc
   self.view.setRestoreKeysExportState(ProgressState.Success)
 
 method onKeycardExportLoginKeysFailure*[T](self: Module[T], error: string) =
-  self.view.accountLoginError(error, wrongPassword = false)
+  self.view.accountLoginError(error, wrongPassword = true)
 
 method onKeycardExportLoginKeysSuccess*[T](self: Module[T], exportedKeys: KeycardExportedKeysDto) =
   let keycardInfo = self.view.getKeycardEvent().keycardInfo
@@ -447,6 +464,7 @@ method requestDeleteBiometrics*[T](self: Module[T], account: string) =
   self.view.deleteBiometricsRequested(account)
 
 method startKeycardDetection*[T](self: Module[T]) =
+  self.resetKeycardProgressStates()
   self.controller.startKeycardDetection()
 
 method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =

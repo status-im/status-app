@@ -174,16 +174,13 @@ QtObject:
       marketDataPriceRefreshInterval: toInt(MARKET_DATA_PRICE_REFRESH_INTERVAL, 0),
     )
 
-  proc isMobilePlatform(): bool =
-    return defined(ios) or defined(android)
-
   proc defaultCreateAccountRequest*(): CreateAccountRequest =
     return CreateAccountRequest(
         rootDataDir: main_constants.STATUSGODIR,
         kdfIterations: KDF_ITERATIONS,
         customizationColor: DEFAULT_CUSTOMIZATION_COLOR,
         logLevel: some(main_constants.getStatusGoLogLevel()),
-        wakuV2LightClient: isMobilePlatform(),
+        wakuV2LightClient: main_constants.IS_MOBILE,
         wakuV2EnableMissingMessageVerification: true,
         wakuV2EnableStoreConfirmationForMessagesSent: true,
         previewPrivacy: true,

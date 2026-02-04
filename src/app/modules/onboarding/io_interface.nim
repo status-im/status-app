@@ -25,6 +25,9 @@ method load*(self: AccessInterface) {.base.} =
 method initialize*(self: AccessInterface, pin: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method resetKeycardProgressStates*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method authorize*(self: AccessInterface, pin: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -53,6 +56,9 @@ method finishOnboardingFlow*(self: AccessInterface, flowInt: int, dataJson: stri
   raise newException(ValueError, "No implementation available")
 
 method loginRequested*(self: AccessInterface, keyUid: string, loginFlow: int, dataJson: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method recoverKeycard*(self: AccessInterface, pin: string, mnemonic: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onLocalPairingStatusUpdate*(self: AccessInterface, status: LocalPairingStatus) {.base.} =

@@ -21,7 +21,7 @@ type StateString* = enum
 
 # NOTE: Keep in sync with KeycardState in ui/StatusQ/src/onboarding/enums.h
 type KeycardState* = enum
-  UnknownReaderState = -1,
+  UnknownReaderState,
   NoPCSCService,
   PluginReader,
   InsertKeycard,

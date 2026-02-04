@@ -5221,6 +5221,11 @@
       <comment>Constants</comment>
       <translation>Continuing will require a transaction to connect the username with your current chat key.</translation>
     </message>
+    <message>
+      <source>Temporarily unavailable, will be available in the next release.</source>
+      <comment>Constants</comment>
+      <translation>Temporarily unavailable, will be available in the next release.</translation>
+    </message>
   </context>
   <context>
     <name>ContactPanel</name>
@@ -9641,19 +9646,14 @@
       <translation>Show address QR</translation>
     </message>
     <message>
-      <source>View activity</source>
-      <comment>FollowingAddressMenu</comment>
-      <translation>View activity</translation>
-    </message>
-    <message>
-      <source>Already in saved addresses</source>
-      <comment>FollowingAddressMenu</comment>
-      <translation>Already in saved addresses</translation>
-    </message>
-    <message>
       <source>Add to saved addresses</source>
       <comment>FollowingAddressMenu</comment>
       <translation>Add to saved addresses</translation>
+    </message>
+    <message>
+      <source>Remove from saved addresses</source>
+      <comment>FollowingAddressMenu</comment>
+      <translation>Remove from saved addresses</translation>
     </message>
   </context>
   <context>
@@ -9674,14 +9674,32 @@
       <translation>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</translation>
     </message>
     <message>
-      <source>Your EFP onchain friends will appear here</source>
-      <comment>FollowingAddresses</comment>
-      <translation>Your EFP onchain friends will appear here</translation>
-    </message>
-    <message>
       <source>No following addresses found. Check spelling or whether the address is correct.</source>
       <comment>FollowingAddresses</comment>
       <translation>No following addresses found. Check spelling or whether the address is correct.</translation>
+    </message>
+    <message>
+      <source>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</source>
+      <comment>FollowingAddresses</comment>
+      <translation>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</translation>
+    </message>
+    <message>
+      <source>Ethereum Follow Protocol</source>
+      <comment>FollowingAddresses</comment>
+      <translation>Ethereum Follow Protocol</translation>
+    </message>
+  </context>
+  <context>
+    <name>FollowingAddressesDelegate</name>
+    <message>
+      <source>Remove from saved addresses</source>
+      <comment>FollowingAddressesDelegate</comment>
+      <translation>Remove from saved addresses</translation>
+    </message>
+    <message>
+      <source>Add to saved addresses</source>
+      <comment>FollowingAddressesDelegate</comment>
+      <translation>Add to saved addresses</translation>
     </message>
   </context>
   <context>
@@ -11053,11 +11071,6 @@
   <context>
     <name>KeycardEnterPinPage</name>
     <message>
-      <source>Enter Keycard PIN</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>Enter Keycard PIN</translation>
-    </message>
-    <message>
       <source>PIN incorrect</source>
       <comment>KeycardEnterPinPage</comment>
       <translation>PIN incorrect</translation>
@@ -11084,6 +11097,11 @@
       <source>Unblock using PUK</source>
       <comment>KeycardEnterPinPage</comment>
       <translation>Unblock using PUK</translation>
+    </message>
+    <message>
+      <source>Enter Keycard PIN</source>
+      <comment>KeycardEnterPinPage</comment>
+      <translation>Enter Keycard PIN</translation>
     </message>
     <message>
       <source>Unblock with recovery phrase</source>
@@ -11719,11 +11737,6 @@
       <translation>Unblock using PUK</translation>
     </message>
     <message>
-      <source>Unblock with recovery phrase</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Unblock with recovery phrase</translation>
-    </message>
-    <message>
       <source>Factory reset Keycard</source>
       <comment>KeycardIntroPage</comment>
       <translation>Factory reset Keycard</translation>
@@ -11792,6 +11805,11 @@
       <source>The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one</source>
       <comment>KeycardIntroPage</comment>
       <translation>The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one</translation>
+    </message>
+    <message>
+      <source>Unblock with recovery phrase</source>
+      <comment>KeycardIntroPage</comment>
+      <translation>Unblock with recovery phrase</translation>
     </message>
   </context>
   <context>
@@ -11881,11 +11899,6 @@
       <translation>Enter this Keycard’s PIN</translation>
     </message>
     <message>
-      <source>Enter Keycard PIN</source>
-      <comment>KeycardPin</comment>
-      <translation>Enter Keycard PIN</translation>
-    </message>
-    <message>
       <source>PIN incorrect</source>
       <comment>KeycardPin</comment>
       <translation>PIN incorrect</translation>
@@ -11947,6 +11960,11 @@
       <source>Changing PIN failed</source>
       <comment>KeycardPin</comment>
       <translation>Changing PIN failed</translation>
+    </message>
+    <message>
+      <source>Enter Keycard PIN</source>
+      <comment>KeycardPin</comment>
+      <translation>Enter Keycard PIN</translation>
     </message>
   </context>
   <context>
@@ -12484,14 +12502,14 @@
       <translation>Saved addresses</translation>
     </message>
     <message>
-      <source>EFP onchain friends</source>
-      <comment>LeftTabView</comment>
-      <translation>EFP onchain friends</translation>
-    </message>
-    <message>
       <source>Add account</source>
       <comment>LeftTabView</comment>
       <translation>Add account</translation>
+    </message>
+    <message>
+      <source>Onchain friends</source>
+      <comment>LeftTabView</comment>
+      <translation>Onchain friends</translation>
     </message>
   </context>
   <context>
@@ -12760,16 +12778,41 @@
       <translation>Reading Keycard...</translation>
     </message>
     <message>
+      <source>Oops this isn&#39;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Oops this isn&#39;t a Keycard.&lt;br&gt;Try using a Keycard instead.</translation>
+    </message>
+    <message>
+      <source>Wrong Keycard for this profile</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Wrong Keycard for this profile</translation>
+    </message>
+    <message>
+      <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</translation>
+    </message>
+    <message>
+      <source>Max pairing slots reached.</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Max pairing slots reached.</translation>
+    </message>
+    <message>
       <source>Keycard blocked</source>
       <comment>LoginKeycardBox</comment>
       <translation>Keycard blocked</translation>
+    </message>
+    <message>
+      <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</translation>
     </message>
     <message numerus="yes">
       <source>PIN incorrect. %n attempt(s) remaining.</source>
       <comment>LoginKeycardBox</comment>
       <translation>
-        <numerusform>PIN incorrect. %n attempt remaining.</numerusform>
-        <numerusform>PIN incorrect. %n attempts remaining.</numerusform>
+        <numerusform></numerusform>
+        <numerusform></numerusform>
       </translation>
     </message>
     <message>
@@ -12786,36 +12829,6 @@
       <source>Enter Keycard PIN</source>
       <comment>LoginKeycardBox</comment>
       <translation>Enter Keycard PIN</translation>
-    </message>
-    <message>
-      <source>Scan keycard</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Scan keycard</translation>
-    </message>
-    <message>
-      <source>Oops this isn&#39;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Oops this isn&#39;t a Keycard.&lt;br&gt;Try using a Keycard instead.</translation>
-    </message>
-    <message>
-      <source>Wrong Keycard for this profile</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Wrong Keycard for this profile</translation>
-    </message>
-    <message>
-      <source>Max pairing slots reached.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Max pairing slots reached.</translation>
-    </message>
-    <message>
-      <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</translation>
-    </message>
-    <message>
-      <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</translation>
     </message>
   </context>
   <context>
@@ -14375,14 +14388,6 @@
       <source>Retry mint</source>
       <comment>MintedTokensView</comment>
       <translation>Retry mint</translation>
-    </message>
-  </context>
-  <context>
-    <name>MobileAddressBar</name>
-    <message>
-      <source>Search or enter address</source>
-      <comment>MobileAddressBar</comment>
-      <translation>Search or enter address</translation>
     </message>
   </context>
   <context>
@@ -17879,11 +17884,6 @@
       <translation>Remove %1</translation>
     </message>
     <message>
-      <source>Are you sure you want to remove %1 from your saved addresses? Transaction history relating to this address will no longer be labelled %1.</source>
-      <comment>RemoveSavedAddressPopup</comment>
-      <translation>Are you sure you want to remove %1 from your saved addresses? Transaction history relating to this address will no longer be labelled %1.</translation>
-    </message>
-    <message>
       <source>Cancel</source>
       <comment>RemoveSavedAddressPopup</comment>
       <translation>Cancel</translation>
@@ -17892,6 +17892,11 @@
       <source>Remove saved address</source>
       <comment>RemoveSavedAddressPopup</comment>
       <translation>Remove saved address</translation>
+    </message>
+    <message>
+      <source>Are you sure you want to remove %1 from your saved addresses?</source>
+      <comment>RemoveSavedAddressPopup</comment>
+      <translation>Are you sure you want to remove %1 from your saved addresses?</translation>
     </message>
   </context>
   <context>
@@ -18162,14 +18167,14 @@
       <translation>Show address QR</translation>
     </message>
     <message>
-      <source>View activity</source>
-      <comment>SavedAddressesDelegate</comment>
-      <translation>View activity</translation>
-    </message>
-    <message>
       <source>Remove saved address</source>
       <comment>SavedAddressesDelegate</comment>
       <translation>Remove saved address</translation>
+    </message>
+    <message>
+      <source>Add to saved addresses</source>
+      <comment>SavedAddressesDelegate</comment>
+      <translation>Add to saved addresses</translation>
     </message>
   </context>
   <context>
@@ -22930,19 +22935,19 @@
   <context>
     <name>WalletFollowingAddressesHeader</name>
     <message>
-      <source>Add via EFP</source>
-      <comment>WalletFollowingAddressesHeader</comment>
-      <translation>Add via EFP</translation>
-    </message>
-    <message>
-      <source>EFP onchain friends</source>
-      <comment>WalletFollowingAddressesHeader</comment>
-      <translation>EFP onchain friends</translation>
-    </message>
-    <message>
       <source>Last refreshed %1</source>
       <comment>WalletFollowingAddressesHeader</comment>
       <translation>Last refreshed %1</translation>
+    </message>
+    <message>
+      <source>Find a friend</source>
+      <comment>WalletFollowingAddressesHeader</comment>
+      <translation>Find a friend</translation>
+    </message>
+    <message>
+      <source>Onchain friends</source>
+      <comment>WalletFollowingAddressesHeader</comment>
+      <translation>Onchain friends</translation>
     </message>
   </context>
   <context>
@@ -23757,6 +23762,11 @@
       <source>Report a bug on GitHub</source>
       <comment>main</comment>
       <translation>Report a bug on GitHub</translation>
+    </message>
+    <message>
+      <source>Hello World</source>
+      <comment>main</comment>
+      <translation>Hello World</translation>
     </message>
   </context>
   <context>

@@ -21,6 +21,7 @@ Control {
     required property bool isKeycardEnabled
 
     readonly property string selectedProfileKeyId: currentEntry.value
+    readonly property var selectedProfileItem: currentEntry.available ? currentEntry.item : null
     readonly property bool keycardCreatedAccount: currentEntry.available ? currentEntry.item.keycardCreatedAccount : false
 
     signal onboardingCreateProfileFlowRequested()

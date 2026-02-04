@@ -96,6 +96,21 @@ KeycardBasePage {
             text: qsTr("Unblock with recovery phrase")
             anchors.horizontalCenter: parent.horizontalCenter
             onClicked: root.unblockWithSeedphraseRequested()
+
+            /////////////////////////////////////////////////////////////////////////////////
+            // # Remove this once we implement unlock via PUK
+            /////////////////////////////////////////////////////////////////////////////////
+            enabled: false
+            MouseArea {
+                id: unlockWithSeedphraseArea
+                anchors.fill: parent
+                hoverEnabled: true
+            }
+            StatusToolTip {
+                text: Constants.keycard.temporarilyUnavailable
+                visible: unlockWithSeedphraseArea.containsMouse
+            }
+            /////////////////////////////////////////////////////////////////////////////////
         },
         MaybeOutlineButton {
             id: btnFactoryReset
@@ -111,7 +126,7 @@ KeycardBasePage {
         State {
             name: "plugin"
             when: root.keycardState === Onboarding.KeycardState.PluginReader ||
-                  root.keycardState === -1
+                  root.keycardState === Onboarding.KeycardState.UnknownReaderState
             PropertyChanges {
                 target: root
                 title: qsTr("Plug in your Keycard reader")

@@ -423,9 +423,9 @@
     <name>LoginKeycardBox</name>
     <message numerus="yes">
         <source>PIN incorrect. %n attempt(s) remaining.</source>
-        <translation>
-            <numerusform>PIN incorrect. %n attempt remaining.</numerusform>
-            <numerusform>PIN incorrect. %n attempts remaining.</numerusform>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
 </context>

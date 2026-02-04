@@ -85,33 +85,44 @@ QtObject:
     self.restoreKeysExportState = restoreKeysExportState
     self.restoreKeysExportStateChanged()
 
-  proc keycardStateChanged*(self: View) {.signal.}
+  proc keycardEventChanged*(self: View) {.signal.}
+
+  proc setKeycardEvent*(self: View, keycardEvent: KeycardEventDto) =
+    self.keycardEvent = keycardEvent
+    self.keycardEventChanged()
+
+  proc getKeycardEvent*(self: View): KeycardEventDto =
+    return self.keycardEvent
+
   proc getKeycardState(self: View): int {.slot.} =
     return self.keycardEvent.state.int
   QtProperty[int] keycardState:
     read = getKeycardState
-    notify = keycardStateChanged
+    notify = keycardEventChanged
 
-  proc keycardUIDChanged*(self: View) {.signal.}
-  proc getKeycardUID(self: View): string {.slot.} =
+  proc getKeycardKeyUID(self: View): string {.slot.} =
     return self.keycardEvent.keycardInfo.keyUID
+  QtProperty[string] keycardKeyUID:
+    read = getKeycardKeyUID
+    notify = keycardEventChanged
+
+  proc getKeycardUID(self: View): string {.slot.} =
+    return self.keycardEvent.keycardInfo.instanceUID
   QtProperty[string] keycardUID:
     read = getKeycardUID
-    notify = keycardUIDChanged
+    notify = keycardEventChanged
 
-  proc keycardRemainingPinAttemptsChanged*(self: View) {.signal.}
   proc getKeycardRemainingPinAttempts(self: View): int {.slot.} =
     return self.keycardEvent.keycardStatus.remainingAttemptsPIN
   QtProperty[int] keycardRemainingPinAttempts:
     read = getKeycardRemainingPinAttempts
-    notify = keycardRemainingPinAttemptsChanged
+    notify = keycardEventChanged
 
-  proc keycardRemainingPukAttemptsChanged*(self: View) {.signal.}
   proc getKeycardRemainingPukAttempts(self: View): int {.slot.} =
     return self.keycardEvent.keycardStatus.remainingAttemptsPUK
   QtProperty[int] keycardRemainingPukAttempts:
     read = getKeycardRemainingPukAttempts
-    notify = keycardRemainingPukAttemptsChanged
+    notify = keycardEventChanged
 
   proc addKeyPairStateChanged*(self: View) {.signal.}
   proc getAddKeyPairState(self: View): int {.slot.} =
@@ -124,16 +135,6 @@ QtObject:
       return
     self.addKeyPairState = addKeyPairState
     self.addKeyPairStateChanged()
-
-  proc setKeycardEvent*(self: View, keycardEvent: KeycardEventDto) =
-    self.keycardEvent = keycardEvent
-    self.keycardStateChanged()
-    self.keycardUIDChanged()
-    self.keycardRemainingPinAttemptsChanged()
-    self.keycardRemainingPukAttemptsChanged()
-
-  proc getKeycardEvent*(self: View): KeycardEventDto =
-    return self.keycardEvent
 
   proc getLoginAccountsModel(self: View): QVariant {.slot.} =
     return self.loginAccountsModelVariant
@@ -161,6 +162,9 @@ QtObject:
 
   proc setPin(self: View, pin: string) {.slot.} =
     self.delegate.initialize(pin)
+
+  proc resetKeycardProgressStates(self: View) {.slot.} =
+    self.delegate.resetKeycardProgressStates()
 
   proc authorize(self: View, pin: string) {.slot.} =
     self.delegate.authorize(pin)
@@ -194,6 +198,9 @@ QtObject:
 
   proc loginRequested(self: View, keyUid: string, loginFlow: int, dataJson: string) {.slot.} =
     self.delegate.loginRequested(keyUid, loginFlow, dataJson)
+
+  proc recoverKeycardRequested(self: View, pin: string, mnemonic: string) {.slot.} =
+    self.delegate.recoverKeycard(pin, mnemonic)
 
   proc startKeycardFactoryReset(self: View) {.slot.} =
     self.delegate.startKeycardFactoryReset()
