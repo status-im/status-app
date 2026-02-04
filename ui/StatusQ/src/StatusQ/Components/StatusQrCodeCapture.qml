@@ -28,13 +28,13 @@ Item {
         }))
     }
 
-    readonly property bool cameraAvailable: barcodeScanner.camera.active
-    readonly property string cameraError: barcodeScanner.camera.errorString
+    readonly property bool cameraAvailable: camera.active
+    readonly property string cameraError: camera.errorString
 
     signal tagFound(string tag)
 
     function setCameraDevice(deviceId: string) {
-        barcodeScanner.camera.cameraDevice = mediaDevices.videoInputs.find(
+        camera.cameraDevice = mediaDevices.videoInputs.find(
                     d => d.id.toString() === deviceId)
     }
 
@@ -53,9 +53,10 @@ Item {
         id: barcodeScanner
 
         forwardVideoSink: videoOutput.videoSink
+        camera: camera
         scanning: true
 
-        captureRect: contentZoneHighlight
+        captureRect: captureRect
 
         onCapturedChanged: (tag) => {
             d.lastTag = tag
@@ -63,16 +64,23 @@ Item {
         }
     }
 
+    Camera {
+        id: camera
+
+        active: true
+        focusMode: Camera.FocusModeAutoNear
+
+        Component.onDestruction: camera.active = false
+    }
+
     VideoOutput {
         id: videoOutput
 
         anchors.fill: parent
-
-        width: root.width
-
         focus: visible
         fillMode: VideoOutput.PreserveAspectCrop
     }
+
     Rectangle {
         id: captureRect
         width: root.captureRectWidth

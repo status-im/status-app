@@ -68,7 +68,7 @@ Item {
             id: capture
 
             anchors.fill: parent
-            visible: false
+            visible: true
             clip: true
             captureRectWidth: scanCorners.width
             captureRectHeight: scanCorners.height
