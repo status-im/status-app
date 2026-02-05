@@ -55,7 +55,7 @@ pipeline {
     GOTMPDIR = "${env.WORKSPACE_TMP}"
     PLATFORM = "ios/${getArch()}"
     /* Improve make performance */
-    MAKEFLAGS = "-j${utils.getProcCount()} V=1"
+    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
     QT_VERSION="6.9.2"
     QMAKE = "/Users/admin/${QT_VERSION}/ios/bin/qmake"
     QT_HOST_PATH = "/Users/admin/${QT_VERSION}/macos"
@@ -109,7 +109,7 @@ pipeline {
     stage('Build iOS App') {
       steps {
         script {
-          app.buildSignedIOS(target='mobile-build', verbose='1')
+          app.buildSignedIOS(target='mobile-build', verbose=params.VERBOSE)
         }
       }
     }
