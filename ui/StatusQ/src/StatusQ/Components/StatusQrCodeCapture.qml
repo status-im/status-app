@@ -3,6 +3,8 @@ import QtQuick
 import QtMultimedia
 import com.scythestudio.scodes 1.0
 
+import StatusQ.Core.Utils as SQUtils
+
 Item {
     id: root
 
@@ -45,6 +47,15 @@ Item {
         id: d
 
         property string lastTag
+        readonly property bool isFrontCamera: {
+            // On desktop, cameras often report position as 0 (BackFace) or -1 (UnspecifiedPosition)
+            // Default to mirroring (front camera behavior) on desktop
+            if (!SQUtils.Utils.isMobile) {
+                return true
+            }
+            // On mobile, check actual position
+            return camera.cameraDevice.position === Camera.FrontFace
+        }
     }
 
 
@@ -77,6 +88,7 @@ Item {
 
         anchors.fill: parent
         focus: visible
+        mirrored: d.isFrontCamera
         fillMode: VideoOutput.PreserveAspectCrop
     }
 
