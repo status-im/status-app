@@ -4,6 +4,7 @@ import QtCore
 
 import StatusQ
 import StatusQ.Core.Utils
+import MobileUI
 
 QObject {
     id: root
@@ -33,6 +34,10 @@ QObject {
         dlg.close()
     }
 
+    MobileUI {
+        id: mobileUI
+    }
+
     QtObject {
         id: d
 
@@ -46,6 +51,10 @@ QObject {
                 return ""
 
             let resolvedLocalFile = UrlUtils.convertUrlToLocalPath(file)
+            // This will reserve the access to the file for the duration of the app
+            if (Utils.isIOS && !mobileUI.startAccessingPath(resolvedLocalFile)) {
+                console.warn("StatusFileDialog failed to start access for selected file")
+            }
             if (!resolvedLocalFile.startsWith("file:"))
                 resolvedLocalFile = "file:" + resolvedLocalFile
             return resolvedLocalFile

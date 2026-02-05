@@ -2498,6 +2498,18 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
         <source>Choose a folder to store your backup files in.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Backups are stored in the Status folder in Files.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate in Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate your backup directory in Files</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BalanceExceeded</name>
@@ -8408,11 +8420,11 @@ Tarifa L2: %2</translation>
     <name>HomePageGridItem</name>
     <message>
         <source>Unpin</source>
-        <translation>Desfijar</translation>
+        <translation type="unfinished">Desfijar</translation>
     </message>
     <message>
         <source>Pin</source>
-        <translation>Fijar</translation>
+        <translation type="unfinished">Fijar</translation>
     </message>
 </context>
 <context>
@@ -19298,6 +19310,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Status Desktop</source>
         <translation>Escritorio de Status</translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

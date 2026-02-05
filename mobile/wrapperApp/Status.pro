@@ -68,5 +68,7 @@ ios {
     LIBS += -framework LocalAuthentication \
             -framework Security \
             -framework UIKit \
-            -framework Foundation
+            -framework Foundation \
+            -framework UserNotifications
+
 }

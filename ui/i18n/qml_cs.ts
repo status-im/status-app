@@ -2502,6 +2502,18 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
         <source>Choose a folder to store your backup files in.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Backups are stored in the Status folder in Files.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate in Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate your backup directory in Files</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BalanceExceeded</name>
@@ -19342,6 +19354,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Status Desktop</source>
         <translation>Status Desktop</translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
