@@ -3111,6 +3111,21 @@
       <comment>BackupView</comment>
       <translation>Choose a folder to store your backup files in.</translation>
     </message>
+    <message>
+      <source>Backups are stored in the Status folder in Files.</source>
+      <comment>BackupView</comment>
+      <translation>Backups are stored in the Status folder in Files.</translation>
+    </message>
+    <message>
+      <source>Locate in Files</source>
+      <comment>BackupView</comment>
+      <translation>Locate in Files</translation>
+    </message>
+    <message>
+      <source>Locate your backup directory in Files</source>
+      <comment>BackupView</comment>
+      <translation>Locate your backup directory in Files</translation>
+    </message>
   </context>
   <context>
     <name>BalanceExceeded</name>
@@ -10267,19 +10282,6 @@
       <source>Disconnect</source>
       <comment>HomePageGridDAppItem</comment>
       <translation>Disconnect</translation>
-    </message>
-  </context>
-  <context>
-    <name>HomePageGridItem</name>
-    <message>
-      <source>Unpin</source>
-      <comment>HomePageGridItem</comment>
-      <translation>Unpin</translation>
-    </message>
-    <message>
-      <source>Pin</source>
-      <comment>HomePageGridItem</comment>
-      <translation>Pin</translation>
     </message>
   </context>
   <context>
@@ -23665,6 +23667,11 @@
       <source>Status Desktop</source>
       <comment>main</comment>
       <translation>Status Desktop</translation>
+    </message>
+    <message>
+      <source>Hello World</source>
+      <comment>main</comment>
+      <translation>Hello World</translation>
     </message>
   </context>
   <context>

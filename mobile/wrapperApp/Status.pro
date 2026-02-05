@@ -78,7 +78,8 @@ ios {
     LIBS += -framework LocalAuthentication \
             -framework Security \
             -framework UIKit \
-            -framework Foundation
+            -framework Foundation \
+            -framework UserNotifications
 
     # Base libraries (always included)
     LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lDOtherSideStatic -lstatusq -lstatus -lsds -lssl_3 -lcrypto_3 -lqzxing -lresolv -lqrcodegen

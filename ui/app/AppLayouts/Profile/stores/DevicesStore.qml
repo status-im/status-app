@@ -1,4 +1,5 @@
 import QtQuick
+import QtCore
 import utils
 
 import StatusQ.Core.Utils 0.1 as StatusQUtils
@@ -44,6 +45,18 @@ QtObject {
         readonly property var appSettingsInst: appSettings
         readonly property var localAccountSensitiveSettingsInst: localAccountSensitiveSettings
         readonly property var globalUtilsInst: globalUtils
+
+        /* Migration flow from the old backup path to the new public,writable location on iOS */
+        readonly property url defaultIosBackupPath: StandardPaths.writableLocation(StandardPaths.DocumentsLocation) + "/backups"
+        onAppSettingsInstChanged: d.migrateBackupPathToDefaultIosPath()
+        Component.onCompleted: d.migrateBackupPathToDefaultIosPath()
+
+        function migrateBackupPathToDefaultIosPath() {
+            if (StatusQUtils.Utils.isIOS && !!d.appSettingsInst) {
+                d.appSettingsInst.setBackupPath(d.defaultIosBackupPath)
+            }
+        }
+        /* End of migration flow */
     }
 
     signal localBackupExportCompleted(bool success)
@@ -61,6 +74,10 @@ QtObject {
     }
 
     function setBackupPath(path) {
+        if (SQUtils.Utils.isIOS) {
+            console.warn("setBackupPath on iOS is not supported, using default path")
+            return
+        }
         d.appSettingsInst.setBackupPath(path)
     }
 

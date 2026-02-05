@@ -2532,6 +2532,18 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
         <source>Backups are automatic (every 30 mins), secure (encrypted with your profile private key), and private (your data is stored &lt;b&gt;only&lt;/b&gt; on your device).</source>
         <translation>백업은 자동(30분마다), 안전(프로필 개인 키로 암호화), 그리고 비공개(데이터는 &lt;b&gt;오직&lt;/b&gt; 귀하의 기기에만 저장됨)입니다.</translation>
     </message>
+    <message>
+        <source>Backups are stored in the Status folder in Files.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate in Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Locate your backup directory in Files</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BalanceExceeded</name>
@@ -8395,17 +8407,6 @@ L2 수수료: %2</translation>
     <message>
         <source>Disconnect</source>
         <translation>연결 해제</translation>
-    </message>
-</context>
-<context>
-    <name>HomePageGridItem</name>
-    <message>
-        <source>Unpin</source>
-        <translation>고정 해제</translation>
-    </message>
-    <message>
-        <source>Pin</source>
-        <translation>고정</translation>
     </message>
 </context>
 <context>
@@ -19424,6 +19425,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Status Desktop</source>
         <translation>스테이터스 데스크톱</translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

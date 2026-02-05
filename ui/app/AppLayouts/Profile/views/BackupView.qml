@@ -138,6 +138,9 @@ SettingsContentBase {
                     // We cannot use arbitrary paths on Android without requesting storage permissions
                     return qsTr("Choose a folder to store your backup files in.")
                 }
+                if (SQUtils.Utils.isIOS) {
+                    return qsTr("Backups are stored in the Status folder in Files.")
+                }
                 return qsTr("Choose a folder to store your backup files or use the default one.")
             }
             color: Theme.palette.baseColor1
@@ -153,7 +156,7 @@ SettingsContentBase {
                 text: UrlUtils.displayPathLabel(root.backupPath)
             }
             StatusButton {
-                text: qsTr("Browse")
+                text: SQUtils.Utils.isIOS ? qsTr("Locate in Files") : qsTr("Browse")
                 onClicked: backupPathDialog.open()
             }
         }
@@ -207,9 +210,9 @@ SettingsContentBase {
     StatusFolderDialog {
         id: backupPathDialog
 
-        title: qsTr("Select your backup directory")
+        title: SQUtils.Utils.isIOS ? qsTr("Locate your backup directory in Files") : qsTr("Select your backup directory")
         currentFolder: root.backupPath
-        onAccepted: root.backupPathSet(backupPathDialog.selectedFolder)
+        onAccepted: SQUtils.Utils.isIOS ? console.info("Skipping backup path set on iOS") : root.backupPathSet(backupPathDialog.selectedFolder)
     }
 
     StatusFileDialog {

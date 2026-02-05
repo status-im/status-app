@@ -264,7 +264,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     find_library(Security Security)
     find_library(LocalAuthentication LocalAuthentication)
     find_library(WebKit WebKit)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit})
+    find_library(UserNotifications UserNotifications)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications})
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/keychain_apple.mm
@@ -306,7 +307,7 @@ FetchContent_Declare(
   MobileUI
 
   GIT_REPOSITORY https://github.com/status-im/MobileUI.git
-  GIT_TAG c8ac952179e91ff2643611b731f06dc6af06305c
+  GIT_TAG 341bb4e4ed0d1c818244f61a4d1d9a54443332c5
 )
 FetchContent_MakeAvailable(MobileUI)
 
