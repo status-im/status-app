@@ -9,6 +9,10 @@ Control {
     id: root
 
     property alias changeAvatarImage: switchAvatarImage.checked
+    property alias isAvatarImageOrLetter: isAvatarImageOrLetter.checked
+    property alias avatarText: avatarText.text
+    property alias changeAvatarLetterColor: switchAvatarLetterColor.checked
+    property alias isAvatarLetterAcronym: isAvatarLetterAcronym.checked
     property alias changeBadgeIcon: switchBadgeIcon.checked
     property alias changeBadgeIconVisible: switchBadgeIcon.visible
     property alias density: density.value
@@ -41,6 +45,42 @@ Control {
             Layout.leftMargin: Theme.padding
             Layout.rightMargin: Theme.padding
             text: "Change avatar image"
+        }
+
+        Switch {
+            id: isAvatarImageOrLetter
+            Layout.leftMargin: Theme.padding
+            Layout.rightMargin: Theme.padding
+            text: "Is avatar image or Letter?"
+        }
+
+        Label {
+            Layout.leftMargin: Theme.padding
+            Layout.rightMargin: Theme.padding
+            text: "Avatar name:"
+            font.weight: Font.Bold
+        }
+
+        TextInput {
+            id: avatarText
+            Layout.leftMargin: Theme.padding
+            Layout.rightMargin: Theme.padding
+            text: "John Smith Junior"
+        }
+
+        Switch {
+            id: switchAvatarLetterColor
+            Layout.leftMargin: Theme.padding
+            Layout.rightMargin: Theme.padding
+            text: "Change avatar letter color"
+        }
+
+        CheckBox {
+            id: isAvatarLetterAcronym
+            Layout.leftMargin: Theme.padding
+            Layout.rightMargin: Theme.padding
+            text: "Apply Acronym"
+            checked: false
         }
 
         Switch {

@@ -225,6 +225,10 @@ Control {
                 badgeIconName: model.badgeIconName
                 isCircularAvatar: model.isCircularAvatar
                 isAvatarClickable: model.isAvatarClickable
+                avatarLetterColor: model.avatarLetterColor
+                avatarLetterText: model.avatarLetterText
+                isAvatarLetterAcronym: model.isAvatarLetterAcronym
+                avatarMaxTextLen: model.avatarMaxTextLen
 
                 // Header row related
                 title: model.title

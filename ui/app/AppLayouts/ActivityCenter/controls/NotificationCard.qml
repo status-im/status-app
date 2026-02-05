@@ -70,6 +70,18 @@ Control {
     // Enables or disables avatar click interaction.
     property bool isAvatarClickable: false
 
+    // Background color for letter-based avatars
+    property color avatarLetterColor: Theme.palette.miscColor5
+
+    // Source text used to derive avatar letters
+    property string avatarLetterText: ""
+
+    // When true, generate an acronym from the source text
+    property bool isAvatarLetterAcronym: false
+
+    // Maximum number of characters shown in the avatar
+    property int avatarMaxTextLen: 1
+
     // ──────────────────────────────────────────────────────────────────────────
     // Header parameters
     // ──────────────────────────────────────────────────────────────────────────
@@ -241,6 +253,10 @@ Control {
             circular: root.isCircularAvatar
             isAvatarClickable: root.isAvatarClickable
             isBadgeClickable: false
+            avatarLetterColor: root.avatarLetterColor
+            avatarLetterText: root.avatarLetterText
+            isAvatarLetterAcronym: root.isAvatarLetterAcronym
+            avatarMaxTextLen: root.avatarMaxTextLen
 
             onAvatarClicked: root.avatarClicked()
         }

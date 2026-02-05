@@ -41,6 +41,7 @@ import QtQuick.Effects
 
 import StatusQ.Components
 import StatusQ.Core.Theme
+import StatusQ.Core
 
 Control {
     id: root
@@ -86,6 +87,12 @@ Control {
     // badge to be clickable or highlight on hover.
     property bool isBadgeClickable: true
 
+    // Properties used to show up avatar letters whenever no image source is provided
+    property color avatarLetterColor: Theme.palette.miscColor5
+    property string avatarLetterText: ""
+    property bool isAvatarLetterAcronym: false
+    property int avatarMaxTextLen: 1
+
     // Interactions
     signal avatarClicked()
     signal badgeClicked()
@@ -96,6 +103,13 @@ Control {
         // Dynamic size properties
         readonly property int avatarSize: Math.round(baseAvatarSize * density)
         readonly property int badgeSize:  Math.round(baseBadgeSize  * density)
+
+        function luminance(color) {
+            let r = Math.pow(color.r, 2.2) * 0.2126
+            let g = Math.pow(color.g, 2.2) * 0.7151
+            let b = Math.pow(color.b, 2.2) * 0.0721
+            return r + g + b
+        }
     }
 
     contentItem: Item {
@@ -103,11 +117,63 @@ Control {
         // Layout sizing
         // ──────────────────────────────────────────────────────────────────────────
         implicitWidth:  root.includeBadgeInImplicit
-                        ? Math.max(avatarImg.width,  badge.x + badge.width)
-                        : avatarImg.width
+                        ? Math.max(avatarComponent.width,  badge.x + badge.width)
+                        : avatarComponent.width
         implicitHeight: root.includeBadgeInImplicit
-                        ? Math.max(avatarImg.height, badge.y + badge.height)
-                        : avatarImg.height
+                        ? Math.max(avatarComponent.height, badge.y + badge.height)
+                        : avatarComponent.height
+
+        Loader {
+            id: avatarComponent
+
+            readonly property bool hasAvatarSource: root.avatarSource.toString().length > 0
+
+            width: d.avatarSize
+            height: width
+            sourceComponent: hasAvatarSource ? avatarImgComponent : avatarLetterComponent
+        }
+
+        // Unified click target for avatar
+        MouseArea {
+            anchors.fill: avatarComponent
+            enabled: root.isAvatarClickable
+            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onClicked: root.avatarClicked()
+        }
+
+        // ──────────────────────────────────────────────────────────────────────────
+        // Badge overlay (bottom-right)
+        // ──────────────────────────────────────────────────────────────────────────
+        StatusRoundIcon {
+            id: badge
+            visible: root.badgeIconName !== ""
+            width:  d.badgeSize  + 2 // Just to ensure the border renders completely
+            height: width
+
+            asset.width: d.badgeSize
+            asset.height: asset.width
+            asset.bgWidth: asset.width
+            asset.bgHeight: asset.height
+            asset.name: root.badgeIconName
+            asset.bgColor: StatusColors.transparent
+            asset.color: StatusColors.transparent
+
+            anchors.right:  avatarComponent.right
+            anchors.bottom: avatarComponent.bottom
+            anchors.rightMargin:  -width  * root.badgeOverlapRatio
+            anchors.bottomMargin: -height * root.badgeOverlapRatio
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: root.isBadgeClickable
+                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root.badgeClicked()
+            }
+        }
+    }
+
+    Component {
+        id: avatarImgComponent
 
         // ──────────────────────────────────────────────────────────────────────────
         // Content image (single source for both masked and unmasked paths)
@@ -147,42 +213,59 @@ Control {
 
             }
         }
+    }
 
-        // Unified click target for avatar
-        MouseArea {
-            anchors.fill: avatarImg
-            enabled: root.isAvatarClickable
-            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: root.avatarClicked()
-        }
+    Component {
+        id: avatarLetterComponent
 
         // ──────────────────────────────────────────────────────────────────────────
-        // Badge overlay (bottom-right)
+        // Letter content whenever no image is provided
         // ──────────────────────────────────────────────────────────────────────────
-        StatusRoundIcon {
-            id: badge
-            visible: root.badgeIconName !== ""
-            width:  d.badgeSize  + 2 // Just to ensure the border renders completely
+        // Used same design than in `StatusLetterIdenticon`
+        Rectangle {
+            width: d.avatarSize
             height: width
+            radius: width / 2
+            color: StatusColors.alphaColor(root.avatarLetterColor, 0.2)
 
-            asset.width: d.badgeSize
-            asset.height: asset.width
-            asset.bgWidth: asset.width
-            asset.bgHeight: asset.height
-            asset.name: root.badgeIconName
-            asset.bgColor: StatusColors.transparent
-            asset.color: StatusColors.transparent
+            StatusBaseText {
+                // Helper to compute offset for # / @
+                function offsetFor(str) {
+                    return (str.startsWith("#") || str.startsWith("@")) ? 1 : 0
+                }
 
-            anchors.right:  avatarImg.right
-            anchors.bottom: avatarImg.bottom
-            anchors.rightMargin:  -width  * root.badgeOverlapRatio
-            anchors.bottomMargin: -height * root.badgeOverlapRatio
-
-            MouseArea {
                 anchors.fill: parent
-                enabled: root.isBadgeClickable
-                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: root.badgeClicked()
+                font.weight: Font.Bold
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+                font.pixelSize: root.density * Theme.primaryTextFontSize
+                text: {
+                    const text = root.avatarLetterText
+                    if (!text || text.length === 0)
+                        return ""
+
+                    const parts = text.split(" ")
+
+                    if (root.isAvatarLetterAcronym) {
+                        let result = ""
+
+                        for (let i = 0; i < Math.min(parts.length, root.avatarMaxTextLen); i++) {
+                            const part = parts[i]
+                            const offset = offsetFor(part)
+
+                            result += part.substring(offset, offset + 1).toUpperCase()
+                        }
+                        return result
+                    }
+
+                    const offset = offsetFor(text)
+                    return text.substring(offset, offset + root.avatarMaxTextLen)
+                }
+
+                color: d.luminance(root.avatarLetterColor) > 0.5 ?
+                           Qt.rgba(0, 0, 0, 0.5) :
+                           Qt.rgba(1, 1, 1, 0.7)
             }
         }
     }

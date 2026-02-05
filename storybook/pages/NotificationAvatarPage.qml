@@ -30,7 +30,12 @@ SplitView {
                 Tracer {
                     visible: avatarEditor.showImplicitSizeArea
                 }
-                avatarSource: avatarEditor.changeAvatarImage ? "https://i.pravatar.cc/128?img=5" : Assets.png("status-logo-icon")
+                avatarSource: !avatarEditor.isAvatarImageOrLetter ?
+                                  (avatarEditor.changeAvatarImage ? "https://i.pravatar.cc/128?img=5" : Assets.png("status-logo-icon")) : ""
+                avatarLetterText: avatarEditor.avatarText
+                avatarLetterColor: avatarEditor.changeAvatarLetterColor ? "red" : "green"
+                isAvatarLetterAcronym: avatarEditor.isAvatarLetterAcronym
+                avatarMaxTextLen: 10
                 badgeIconName: root.badgeIconName
                 density: avatarEditor.density
                 circular: avatarEditor.isRoundedAvatar
