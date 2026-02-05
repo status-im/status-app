@@ -40,7 +40,8 @@ type
     OwnershipStateIdle = 1,
     OwnershipStateDelayed,
     OwnershipStateUpdating,
-    OwnershipStateError
+    OwnershipStateError,
+    OwnershipStateNotAvailable
 
   # Mirrors services/wallet/collectibles/service.go OwnershipState
   OwnershipStatus* = ref object

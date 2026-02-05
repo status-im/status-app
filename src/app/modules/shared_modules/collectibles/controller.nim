@@ -123,6 +123,9 @@ QtObject:
       of OwnershipStateError:
         self.model.setIsUpdating(false)
         self.model.setIsError(true)
+      of OwnershipStateNotAvailable:
+        self.model.setIsUpdating(false)
+        self.model.setIsError(false)
 
   proc resetOwnershipStatus(self: Controller) =
     # Initialize state table
@@ -200,37 +203,38 @@ QtObject:
     self.tempItems.add(newItems)
 
   proc processGetOwnedCollectiblesResponse(self: Controller, response: JsonNode) =
-    let res = fromJson(response, backend_collectibles.GetOwnedCollectiblesResponse)
-
-    let isError = res.errorCode != backend_collectibles.ErrorCodeSuccess
-
-    if isError:
-      error "error fetching collectibles entries: ", code = res.errorCode
-      self.model.setIsError(true)
-      self.model.setIsFetching(false)
-      return
-
     try: 
+      let res = fromJson(response, backend_collectibles.GetOwnedCollectiblesResponse)
+
+      let isError = res.errorCode != backend_collectibles.ErrorCodeSuccess
+
+      if isError:
+        error "error fetching collectibles entries: ", code = res.errorCode
+        self.model.setIsError(true)
+        self.model.setIsFetching(false)
+        return
+
       let items = res.collectibles.map(header => (block:
         let extradata = self.getExtraData(header.id.contractID.chainID)
         newCollectibleDetailsFullEntry(header, extradata)
       ))
+      
       if self.loadType.isPaginated():
         self.model.setItems(items, res.offset, res.hasMore)
       else:
         self.setTempItems(items, res.offset)
-        # If we reached the end of the list, commit the items to the model
         if not res.hasMore:
           self.model.updateItems(self.tempItems)
           self.tempItems = @[]
+
+      self.model.setIsFetching(false)
+      self.setOwnershipStatus(res.ownershipStatus)
+
+      if self.loadType.isAutoLoad() and res.hasMore:
+        self.loadMoreItems()
+      
     except Exception as e:
       error "Error converting activity entries: ", error = e.msg
-
-    self.model.setIsFetching(false)
-    self.setOwnershipStatus(res.ownershipStatus)
-
-    if self.loadType.isAutoLoad() and res.hasMore:
-      self.loadMoreItems()
 
   proc updateTempItems(self: Controller, updates: seq[backend_collectibles.Collectible]) =
     for i in countdown(self.tempItems.high, 0):
