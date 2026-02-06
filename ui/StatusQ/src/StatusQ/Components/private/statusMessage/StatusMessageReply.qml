@@ -28,6 +28,7 @@ Item {
 
         Shape {
             id: replyCorner
+            objectName: "statusMessageReplyCorner"
             Layout.alignment: Qt.AlignTop
             Layout.leftMargin: 35
             Layout.topMargin: profileImage.height/2
