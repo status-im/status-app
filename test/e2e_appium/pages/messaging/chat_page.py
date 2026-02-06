@@ -238,4 +238,50 @@ class ChatPage(BasePage):
         locator = self.locators.reaction_on_message(emoji_code)
         return self.is_element_visible(locator, timeout=timeout)
 
+    def message_is_reply(self, content: str, timeout: int = 10) -> bool:
+        """Check if a message shows the reply corner indicator."""
+        locator = self.locators.message_is_reply(content)
+        return self.is_element_visible(locator, timeout=timeout)
+
+    def send_emoji_to_chat(self, emoji_shortname: str, timeout: int = 10) -> bool:
+        """Send an emoji to the chat using the emoji picker search.
+
+        Args:
+            emoji_shortname: The emoji shortname without colons (e.g., 'thumbsup')
+        """
+        from locators.messaging.message_context_menu_locators import EmojiPickerLocators
+
+        emoji_locators = EmojiPickerLocators()
+
+        if not self.safe_click(self.locators.EMOJI_BUTTON, timeout=timeout):
+            self.logger.error("Failed to click emoji button")
+            return False
+
+        if not self.is_element_visible(emoji_locators.POPUP_CONTAINER, timeout=5):
+            self.logger.error("Emoji popup did not appear")
+            return False
+
+        if not self.qt_safe_input(
+            emoji_locators.SEARCH_INPUT,
+            emoji_shortname,
+            timeout=5,
+            verify=False,
+        ):
+            self.logger.error("Failed to type in emoji search")
+            return False
+
+        emoji_locator = emoji_locators.emoji_by_shortname(emoji_shortname)
+        if not self.safe_click(emoji_locator, timeout=5):
+            self.logger.error(f"Failed to tap emoji '{emoji_shortname}'")
+            return False
+
+        return self.safe_click(self.locators.SEND_BUTTON, timeout=5)
+
+    def open_image_dialog(self, timeout: int = 10) -> bool:
+        """Open the image attachment dialog via the command menu."""
+        if not self.safe_click(self.locators.COMMAND_BUTTON, timeout=timeout):
+            self.logger.error("Failed to click command button")
+            return False
+        return self.safe_click(self.locators.ADD_IMAGE_ACTION, timeout=5)
+
 
