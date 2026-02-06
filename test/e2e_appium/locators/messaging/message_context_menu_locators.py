@@ -131,12 +131,10 @@ class EmojiPickerLocators(BaseLocators):
     """Locators for the Emoji Picker popup.
     
     QML: ui/imports/shared/status/StatusEmojiPopup.qml
-    
-    LIMITATION: Individual emoji items in the grid currently lack accessible
-    identifiers (content-desc is empty, resource-id is generic). The emoji_by_character
-    locator won't work until QML accessibility is added to the emoji grid items.
-    
-    Current workaround: Use search functionality to filter emojis, then tap by position.
+
+    Emoji grid items expose objectName with the pattern:
+    "statusEmoji_" + model.shortname.replace(/:/g, "")
+    Use emoji_by_shortname for reliable selection.
     """
 
     # Popup container (android.app.AlertDialog)
@@ -162,15 +160,17 @@ class EmojiPickerLocators(BaseLocators):
     def emoji_by_character(emoji: str) -> tuple:
         """Locator for an emoji in the picker by character.
         
-        WARNING: This locator requires QML accessibility fixes to work.
-        Currently, emoji items have empty content-desc.
-        
-        TODO: Add Accessible.name to emoji grid items in StatusEmojiPopup.qml
+        Note: content-desc may be empty; prefer emoji_by_shortname.
         """
         return BaseLocators.xpath(
             f"//*[contains(@resource-id,'StatusEmojiPopup')]"
             f"//*[contains(@content-desc,'{emoji}')]"
         )
+
+    @staticmethod
+    def emoji_by_shortname(shortname: str) -> tuple:
+        """Locator for an emoji in the picker by shortname (e.g., 'thumbsup')."""
+        return BaseLocators.resource_id_contains(f"statusEmoji_{shortname}")
     
     @staticmethod
     def emoji_by_grid_position(index: int) -> tuple:
