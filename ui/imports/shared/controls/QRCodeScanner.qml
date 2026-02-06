@@ -136,6 +136,7 @@ ColumnLayout {
             StatusBaseText {
                 Layout.fillWidth: true
                 text: qsTr('Enable access to your camera')
+                font.weight: Font.Medium
                 leftPadding: Theme.bigPadding
                 rightPadding: Theme.bigPadding
                 wrapMode: Text.WordWrap
