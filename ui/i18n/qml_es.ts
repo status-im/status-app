@@ -19489,10 +19489,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
         <source>Status Desktop</source>
         <translation>Escritorio de Status</translation>
     </message>
-    <message>
-        <source>Hello World</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>tst_StatusInput</name>
