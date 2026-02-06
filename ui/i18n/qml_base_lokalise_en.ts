@@ -14978,11 +14978,6 @@
       <translation>Verifying</translation>
     </message>
     <message>
-      <source>To pair your devices and sync your profile, make sure:&lt;ul&gt;&lt;li&gt;Both devices are on the same network&lt;/li&gt;&lt;li&gt;You&#39;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</source>
-      <comment>NewAccountLoginPage</comment>
-      <translation>To pair your devices and sync your profile, make sure:&lt;ul&gt;&lt;li&gt;Both devices are on the same network&lt;/li&gt;&lt;li&gt;You&#39;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</translation>
-    </message>
-    <message>
       <source>Checking access...</source>
       <comment>NewAccountLoginPage</comment>
       <translation>Checking access...</translation>
@@ -15001,6 +14996,11 @@
       <source>Open Settings</source>
       <comment>NewAccountLoginPage</comment>
       <translation>Open Settings</translation>
+    </message>
+    <message>
+      <source>To pair your devices and sync your profile, make sure:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Both devices are on the same network&lt;/li&gt;&lt;li&gt;You&#39;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</source>
+      <comment>NewAccountLoginPage</comment>
+      <translation>To pair your devices and sync your profile, make sure:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Both devices are on the same network&lt;/li&gt;&lt;li&gt;You&#39;re logged in on the other device&lt;/li&gt;&lt;li&gt;No firewall or VPN is blocking local network access&lt;/li&gt;&lt;/ul&gt;</translation>
     </message>
   </context>
   <context>

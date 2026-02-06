@@ -203,6 +203,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/genericvalidator.cpp
         src/keychain.cpp
         src/localnetworkpermission.cpp
+        src/localnetworkpermission_backend.h
         src/networkchecker.cpp
         src/oneoffilter.cpp
         src/permissionutilsinternal.cpp

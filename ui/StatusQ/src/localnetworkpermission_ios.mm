@@ -32,9 +32,15 @@ namespace {
 class IOSBackend final : public QObject, public LocalNetworkPermissionBackend {
 public:
     explicit IOSBackend(LocalNetworkPermission* owner)
-        : QObject(nullptr)
+        : QObject(owner)
         , LocalNetworkPermissionBackend(owner)
-    {}
+    {
+        // Poll every 500ms for permission changes.
+        m_timer.setInterval(500);
+        QObject::connect(&m_timer, &QTimer::timeout, this, [this]() {
+            this->tick();
+        });
+    }
 
     ~IOSBackend() override { cancel(); }
 
@@ -77,7 +83,7 @@ public:
     }
 
 private:
-    QTimer* m_timer{nullptr};
+    QTimer m_timer;
     QElapsedTimer m_publishElapsed;
     QElapsedTimer m_cycleCooldown;
     bool m_publishAttempted{false};
@@ -88,24 +94,14 @@ private:
     void ensureTimer()
     {
         if (!m_owner) return;
-        if (m_timer) return;
-
-        m_timer = new QTimer(m_owner.data());
-        // Poll every 500ms for permission changes.
-        m_timer->setInterval(500);
-        QObject::connect(m_timer, &QTimer::timeout, m_owner.data(), [this]() {
-            this->tick();
-        });
-        m_timer->start();
+        if (m_timer.isActive()) return;
+        m_timer.start();
     }
 
     void stopTimer()
     {
-        if (m_timer) {
-            m_timer->stop();
-            delete m_timer;
-            m_timer = nullptr;
-        }
+        if (m_timer.isActive())
+            m_timer.stop();
     }
 
     void doProbe()

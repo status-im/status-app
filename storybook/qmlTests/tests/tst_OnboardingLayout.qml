@@ -828,10 +828,12 @@ Item {
             let btnContinue = findChild(loginWithSyncAckPopup, "btnContinue")
             verify(!!btnContinue)
             compare(btnContinue.enabled, true)
+            dynamicSpy.setup(page, "loginWithSyncingRequested")
             mouseClick(btnContinue)
             compare(btnContinue.enabled, false)
-
-            tryVerify(() => loginWithSyncAckPopup.exit ? !loginWithSyncAckPopup.exit.running : true)
+            tryCompare(dynamicSpy, "count", 1)
+            //wait for the popup to close and to be removed
+            tryVerify(() => !findChild(page, "loginWithSyncAckPopup"))
 
             // PAGE 4: Log in by syncing
             page = getCurrentPage(stack, LoginBySyncingPage)
@@ -858,6 +860,7 @@ Item {
             page.syncState = Onboarding.LocalPairingState.Finished // SIMULATION
             const btnLogin2 = findChild(page, "btnLogin") // TODO test other flows/buttons here as well
             verify(!!btnLogin2)
+            tryCompare(btnLogin2, "visible", true)
             compare(btnLogin2.enabled, true)
             mouseClick(btnLogin2)
 
