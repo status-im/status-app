@@ -1,21 +1,17 @@
+import allure
+
 from gui.elements.button import Button
 from gui.elements.object import QObject
-from gui.objects_map import onboarding_names
-from gui.elements.check_box import CheckBox
+from gui.objects_map import onboarding_names, names
 
 
-class LogInBySyncingChecklist(QObject):
+class LogInBySyncingDialog(QObject):
     def __init__(self):
-        super().__init__(onboarding_names.statusDialog)
-        self.connect_both_devices_option = CheckBox(onboarding_names.connectBothDevicesOption)
-        self.make_sure_you_are_logged_option = CheckBox(onboarding_names.makeSureYouAreLoggedOption)
-        self.disable_the_firewall_option = CheckBox(onboarding_names.disableTheFirewallOption)
+        super().__init__(names.commonDialog)
         self.cancel_button = Button(onboarding_names.cancelButton)
         self.continue_button = Button(onboarding_names.continueButton)
 
+    @allure.step('Click continue button for Log in by syncing dialog')
     def complete(self):
-        self.connect_both_devices_option.set(True)
-        self.make_sure_you_are_logged_option.set(True)
-        self.disable_the_firewall_option.set(True)
         assert self.continue_button.is_enabled
         self.continue_button.click()

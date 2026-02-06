@@ -12,7 +12,7 @@ import driver
 from constants import ColorCodes
 from driver.objects_access import walk_children
 from gui.components.onboarding.language_selector import LanguageSelector
-from gui.components.onboarding.login_by_syncing_checklist import LogInBySyncingChecklist
+from gui.components.onboarding.login_by_syncing_checklist import LogInBySyncingDialog
 from gui.components.onboarding.login_users_list_popup import OnboardingLoginUsersPopup
 from gui.components.onboarding.share_usage_data_popup import HelpUsImproveStatusView
 from gui.components.os.open_file_dialogs import OpenFileDialog
@@ -58,7 +58,7 @@ class OnboardingWelcomeToStatusView(QObject):
         self.log_in_button.click()
         HelpUsImproveStatusView().wait_until_appears().not_now_button.click()
         OnboardingLogIn().wait_until_appears().log_in_by_syncing_button.click()
-        LogInBySyncingChecklist().wait_until_appears().complete()
+        LogInBySyncingDialog().wait_until_appears().complete()
         return OnboardingSyncCodeView().wait_until_appears()
 
 

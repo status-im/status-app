@@ -31,11 +31,8 @@ startFreshLetsGoButton = {"container": onboardingFrame, "objectName": "btnCreate
 useRecoveryPhraseButton = {"container": buttonFrame, "objectName": "btnCreateWithSeedPhrase", "type": "ListItemButton", "visible": True}
 useEmptyKeycardButton = {"container": statusDesktop_mainWindow, "objectName": "btnCreateWithEmptyKeycard", "type": "ListItemButton", "visible": True}
 
-# Log in by syncing checklist popup
+# Log in by syncing dialog
 statusDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusDialog", "type": "PopupItem", "visible": True}
-connectBothDevicesOption = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": "ack1", "type": "StatusCheckBox", "visible": True}
-makeSureYouAreLoggedOption = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": "ack2", "type": "StatusCheckBox", "visible": True}
-disableTheFirewallOption = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": "ack3", "type": "StatusCheckBox", "visible": True}
 cancelButton = {"container": statusDesktop_mainWindow_overlay, "type": "StatusFlatButton", "unnamed": 1, "visible": True}
 continueButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "btnContinue", "type": "StatusButton", "visible": True}
 
