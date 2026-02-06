@@ -7,8 +7,14 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 
 Loader {
+    id: root
+    objectName: "statusPinMessageDetails"
+
     property string pinnedMsgInfoText: ""
     property string pinnedBy: ""
+
+    Accessible.role: Accessible.StaticText
+    Accessible.name: root.active ? root.pinnedMsgInfoText + " " + root.pinnedBy : ""
 
     sourceComponent: Control {
         verticalPadding: 3

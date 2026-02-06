@@ -10,6 +10,7 @@ import StatusQ.Components
 
 Flow {
     id: root
+    objectName: "statusMessageEmojiReactions"
 
     spacing: Theme.defaultHalfPadding/2
 
@@ -56,6 +57,10 @@ Flow {
 
         StatusButton {
             id: reactionDelegate
+            objectName: "messageReaction_" + model.emoji
+
+            Accessible.role: Accessible.Button
+            Accessible.name: model.emoji
 
             size: StatusBaseButton.Size.Small
             horizontalPadding: Theme.defaultHalfPadding

@@ -12,6 +12,8 @@ import StatusQ.Components.private
 
 Rectangle {
     id: root
+    objectName: "statusChatInputReplyArea"
+
     implicitHeight: (root.contentType === Constants.messageContentType.imageType)
                     ? replyToUsername.height + imageThumbnail.height + Theme.padding
                     : (root.contentType === Constants.messageContentType.stickerType)
@@ -21,6 +23,9 @@ Rectangle {
     color: Theme.palette.baseColor3
     radius: 16
     clip: true
+
+    Accessible.role: Accessible.Pane
+    Accessible.name: root.visible ? qsTr("Replying to %1").arg(root.userName) : ""
 
     property string userName: ""
     property string message : ""
@@ -104,6 +109,7 @@ Rectangle {
 
     RoundButton {
         id: closeBtn
+        objectName: "replyAreaCloseButton"
         implicitWidth: 20
         implicitHeight: 20
         radius: 10
@@ -112,6 +118,8 @@ Rectangle {
         anchors.topMargin: 4
         anchors.right: parent.right
         anchors.rightMargin: 4
+        Accessible.role: Accessible.Button
+        Accessible.name: qsTr("Cancel reply")
         contentItem: StatusIcon {
             id: iconImg
             source: Assets.svg("close")

@@ -23,6 +23,9 @@ Rectangle {
     border.color: Theme.palette.primaryColor1
     radius: Theme.radius
 
+    Accessible.role: Accessible.Button
+    Accessible.name: root.emojiId
+
     StatusEmoji {
         id: statusEmoji
         anchors.centerIn: parent

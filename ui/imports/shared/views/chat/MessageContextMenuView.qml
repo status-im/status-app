@@ -49,6 +49,7 @@ StatusMenu {
 
     MessageReactionsRow {
         id: emojiRow
+        objectName: "messageContextMenu_reactionsRow"
         visible: !root.emojiReactionLimitReached && (!root.disabledForChat || root.forceEnableEmojiReactions)
         emojiModel: root.emojiModel
         onToggleReaction: hexcode => {
@@ -68,6 +69,7 @@ StatusMenu {
 
     StatusAction {
         id: replyToMenuItem
+        objectName: "messageContextMenu_replyTo"
         text: qsTr("Reply to")
         icon.name: "chat"
         onTriggered: root.showReplyArea(root.messageSenderId)
@@ -76,6 +78,7 @@ StatusMenu {
 
     StatusAction {
         id: editMessageAction
+        objectName: "messageContextMenu_edit"
         text: qsTr("Edit message")
         onTriggered: editClicked()
         icon.name: "edit"
@@ -86,6 +89,7 @@ StatusMenu {
 
     StatusAction {
         id: copyMessageMenuItem
+        objectName: "messageContextMenu_copy"
         text: qsTr("Copy message")
         icon.name: "copy"
         onTriggered: root.copyToClipboard(root.unparsedText)
@@ -96,6 +100,7 @@ StatusMenu {
 
     StatusAction {
         id: copyMessageIdAction
+        objectName: "messageContextMenu_copyId"
         text: qsTr("Copy Message Id")
         icon.name: "copy"
         enabled: root.isDebugEnabled && replyToMenuItem.enabled
@@ -104,6 +109,7 @@ StatusMenu {
 
     StatusAction {
         id: pinAction
+        objectName: "messageContextMenu_pin"
         text: root.pinnedMessage ? qsTr("Unpin") : qsTr("Pin")
         icon.name: root.pinnedMessage ? "unpin" : "pin"
         onTriggered: {
@@ -132,6 +138,7 @@ StatusMenu {
 
     StatusAction {
         id: markMessageAsUnreadAction
+        objectName: "messageContextMenu_markUnread"
         text: qsTr("Mark as unread")
         icon.name: "hide"
         enabled: !root.disabledForChat
@@ -151,6 +158,7 @@ StatusMenu {
 
     StatusAction {
         id: deleteMessageAction
+        objectName: "messageContextMenu_delete"
         enabled: (root.isMyMessage || root.amIChatAdmin) &&
                  !root.disabledForChat &&
                  (root.messageContentType === Constants.messageContentType.messageType ||

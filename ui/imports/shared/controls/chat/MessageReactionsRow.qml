@@ -57,5 +57,6 @@ Row {
         icon.name: "reaction-b"
         type: StatusFlatRoundButton.Type.Tertiary
         onClicked: mouse => root.openEmojiPopup(this, mouse)
+        Accessible.name: qsTr("Add reaction")
     }
 }
