@@ -14,7 +14,7 @@ import utils
 StatusDialog {
     id: root
 
-    // This property is used in Storybook to simulate permission statuses
+    // Property used in to simulate permission statuses
     property alias cameraPermissionDenied: qrCodeScanner.cameraPermissionDenied
 
     width: 360
