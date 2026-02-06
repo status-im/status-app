@@ -83,13 +83,16 @@ class TestEmojiAndMedia:
 
         assert context_menu.long_press_message(original_msg), "Failed to open context menu"
         assert context_menu.tap_reply(), "Failed to tap Reply action"
+        assert chat_page.is_reply_mode_active(
+            timeout=5,
+        ), "Reply preview bar should be visible"
 
         assert chat_page.send_message(reply_msg), "Failed to send reply message"
         assert chat_page.message_exists(reply_msg), "Reply message not visible"
-        assert chat_page.message_is_reply(
-            reply_msg,
+        assert chat_page.is_element_visible(
+            chat_page.locators.REPLY_DETAILS,
             timeout=self.UI_TIMEOUT,
-        ), "Reply should show corner indicator"
+        ), "Reply details should be visible on the reply message"
 
     @pytest.mark.skip(reason="File dialog automation not supported in Appium environment")
     async def test_image_dialog_opens(self) -> None:

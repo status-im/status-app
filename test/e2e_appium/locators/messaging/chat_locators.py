@@ -16,9 +16,18 @@ class ChatLocators(BaseLocators):
     SEND_BUTTON = BaseLocators.xpath(
         "//*[contains(@resource-id,'statusChatInputSendButton')]"
     )
-    EMOJI_BUTTON = BaseLocators.resource_id_contains("statusChatInputEmojiButton")
-    COMMAND_BUTTON = BaseLocators.resource_id_contains("statusChatInputCommandButton")
-    ADD_IMAGE_ACTION = BaseLocators.resource_id_contains("chatCommandMenu_addImage")
+    EMOJI_BUTTON = BaseLocators.xpath(
+        "//*[contains(@content-desc, '[tid:statusChatInputEmojiButton]') or "
+        "contains(@resource-id,'statusChatInputEmojiButton')]"
+    )
+    COMMAND_BUTTON = BaseLocators.xpath(
+        "//*[contains(@content-desc, '[tid:statusChatInputCommandButton]') or "
+        "contains(@resource-id,'statusChatInputCommandButton')]"
+    )
+    ADD_IMAGE_ACTION = BaseLocators.xpath(
+        "//*[contains(@content-desc, '[tid:chatCommandMenu_addImage]') or "
+        "contains(@resource-id,'chatCommandMenu_addImage')]"
+    )
     CHAT_LOG_VIEW = BaseLocators.xpath("//*[contains(@resource-id,'chatLogView')]")
     INTRODUCE_SKIP_BUTTON = BaseLocators.content_desc_contains(
         "[tid:introduceSkipStatusFlatButton]"
@@ -77,7 +86,10 @@ class ChatLocators(BaseLocators):
     # and Accessible.name "Replying to {userName}"
     REPLY_PREVIEW = BaseLocators.resource_id_contains("statusChatInputReplyArea")
     REPLY_CLOSE_BUTTON = BaseLocators.resource_id_contains("replyAreaCloseButton")
-    REPLY_DETAILS = BaseLocators.resource_id_contains("StatusMessage_replyDetails")
+    REPLY_DETAILS = BaseLocators.xpath(
+        "//*[contains(@content-desc, '[tid:StatusMessage_replyDetails]') or "
+        "contains(@resource-id,'StatusMessage_replyDetails')]"
+    )
     REPLY_CORNER = BaseLocators.resource_id_contains("statusMessageReplyCorner")
     
     @staticmethod
