@@ -930,5 +930,7 @@
         <file>activity_center/EmptyNotifications-Light.png</file>
         <file>activity_center/NewsDisabled-Dark.png</file>
         <file>activity_center/NewsDisabled-Light.png</file>
+        <file>wallet/onchain-friends-empty-dark.png</file>
+        <file>wallet/onchain-friends-empty-light.png</file>
     </qresource>
 </RCC>

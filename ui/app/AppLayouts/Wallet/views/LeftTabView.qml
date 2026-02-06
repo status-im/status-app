@@ -490,7 +490,7 @@ Rectangle {
                     highlighted: RootStore.showFollowingAddresses
                     hoverColor: Theme.palette.backgroundHover
                     asset.bgColor: Theme.palette.primaryColor3
-                    text: qsTr("EFP onchain friends")
+                    text: qsTr("Onchain friends")
                     icon.name: "contact"
                     icon.width: 40
                     icon.height: 40

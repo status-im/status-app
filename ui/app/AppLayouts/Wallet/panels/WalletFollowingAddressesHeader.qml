@@ -13,9 +13,16 @@ import StatusQ.Core.Utils as SQUtils
 import AppLayouts.Wallet.controls
 
 import utils
+import shared.controls
 
 Control {
     id: root
+
+    /* Model of non-watch wallet accounts for the account selector */
+    property var accountsModel
+
+    /* The currently selected account address */
+    readonly property string selectedAddress: accountSelector.currentAccountAddress
 
     /* Formatted time of last reload */
     property string lastReloadedTime
@@ -29,11 +36,13 @@ Control {
     /* Emitted when add via EFP button is clicked */
     signal addViaEFPClicked
 
+    /* Emitted when the user selects a different account */
+    signal accountChanged(string address)
+
     QtObject {
         id: d
 
-        readonly property bool compact: root.width < 600 &&
-                                        root.availableWidth - headerButton.width - reloadButton.width - titleRow.spacing * 2 < titleText.implicitWidth
+        readonly property bool compact: root.availableWidth - headerButton.width - accountSelector.width - reloadButton.width - titleRow.spacing * 3 < titleText.implicitWidth
 
         //throttle for 1 min
         readonly property int reloadThrottleTimeMs: 1000 * 60
@@ -46,12 +55,31 @@ Control {
 
         Layout.preferredHeight: 38
 
-        text: qsTr("Add via EFP")
+        text: qsTr("Find a friend")
+        icon.name: "external-link"
+        textPosition: StatusBaseButton.TextPosition.Left
         size: StatusBaseButton.Size.Small
-        normalColor: Theme.palette.primaryColor3
-        hoverColor: Theme.palette.primaryColor2
+        type: StatusBaseButton.Type.Primary
 
         onClicked: root.addViaEFPClicked()
+    }
+
+    AccountSelectorHeader {
+        id: accountSelector
+        model: root.accountsModel
+
+        // Center the 32px content vertically within 38px height
+        control.topPadding: 3
+        control.bottomPadding: 3
+
+        Layout.preferredHeight: 38
+        Layout.preferredWidth: d.compact ? 48 : implicitWidth
+        Layout.alignment: Qt.AlignVCenter
+
+        onCurrentAccountAddressChanged: {
+            if (currentAccountAddress)
+                root.accountChanged(currentAccountAddress)
+        }
     }
 
     RowLayout {
@@ -71,7 +99,7 @@ Control {
             font.pixelSize: Theme.fontSize(19)
             font.weight: Font.Medium
 
-            text: qsTr("EFP onchain friends")
+            text: qsTr("Onchain friends")
             lineHeightMode: Text.FixedHeight
             lineHeight: 26
         }
@@ -135,6 +163,12 @@ Control {
             visible: !d.compact
             target: headerButton
         }
+
+        LayoutItemProxy {
+            visible: !d.compact
+            target: accountSelector
+            Layout.rightMargin: 6 // compensate for rightInset: -6 bleed to align with content below
+        }
     }
 
     contentItem: ColumnLayout {
@@ -146,12 +180,20 @@ Control {
             target: titleRow
         }
 
-        LayoutItemProxy {
-            Layout.alignment: Qt.AlignRight
+        RowLayout {
             Layout.fillWidth: true
-            Layout.maximumWidth: implicitWidth
             visible: d.compact
-            target: headerButton
+            spacing: Theme.padding
+
+            LayoutItemProxy {
+                target: accountSelector
+            }
+
+            Item { Layout.fillWidth: true }
+
+            LayoutItemProxy {
+                target: headerButton
+            }
         }
     }
 }

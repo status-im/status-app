@@ -23,6 +23,8 @@ RightTabBaseView {
     required property SharedStores.NetworksStore networksStore
 
     header: WalletFollowingAddressesHeader {
+        id: followingHeader
+        accountsModel: root.rootStore.nonWatchAccounts
         lastReloadedTime: !!root.rootStore.lastReloadTimestamp ?
                               LocaleUtils.formatRelativeTimestamp(
                                   root.rootStore.lastReloadTimestamp * 1000) : ""
@@ -30,6 +32,7 @@ RightTabBaseView {
 
         onReloadRequested: followingAddresses.refresh()
         onAddViaEFPClicked: Global.requestOpenLink("https://efp.app")
+        onAccountChanged: (address) => followingAddresses.refresh(address)
     }
 
     Item {
@@ -50,11 +53,12 @@ RightTabBaseView {
             totalFollowingCount: walletSectionFollowingAddresses ? 
                                  walletSectionFollowingAddresses.totalFollowingCount : 0
             rootStore: root.rootStore
+            selectedAddress: followingHeader.selectedAddress
 
             onSendToAddressRequested: root.sendToAddressRequested(address)
             
-            onRefreshRequested: (search, limit, offset) => {
-                root.rootStore.refreshFollowingAddresses(search, limit, offset)
+            onRefreshRequested: (address, search, limit, offset) => {
+                root.rootStore.refreshFollowingAddresses(address, search, limit, offset)
             }
             
             Connections {

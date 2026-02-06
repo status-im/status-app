@@ -6,7 +6,7 @@ import StatusQ.Components
 
 
 Rectangle {
-    id: statusRoundButton
+    id: root
 
     Accessible.role: Accessible.Button
     Accessible.name: Utils.formatAccessibleName("", objectName)
@@ -18,47 +18,47 @@ Rectangle {
         rotation: 0
 
         hoverColor: {
-            switch(statusRoundButton.type) {
+            switch(root.type) {
             case StatusRoundButton.Type.Primary:
-                return Theme.palette.primaryColor1;
+                return root.Theme.palette.primaryColor1;
             case StatusRoundButton.Type.Secondary:
-                return Theme.palette.indirectColor1;
+                return root.Theme.palette.indirectColor1;
             case StatusRoundButton.Type.Tertiary:
-                return Theme.palette.primaryColor1;
+                return root.Theme.palette.primaryColor1;
             case StatusRoundButton.Type.Quaternary:
-                return Theme.palette.dangerColor1;
+                return root.Theme.palette.dangerColor1;
             case StatusRoundButton.Type.Quinary:
-                return Theme.palette.directColor1;
+                return root.Theme.palette.directColor1;
             }
         }
 
         color: {
-            switch(statusRoundButton.type) {
+            switch(root.type) {
             case StatusRoundButton.Type.Primary:
-                return Theme.palette.primaryColor1;
+                return root.Theme.palette.primaryColor1;
             case StatusRoundButton.Type.Secondary:
-                return Theme.palette.indirectColor1;
+                return root.Theme.palette.indirectColor1;
             case StatusRoundButton.Type.Tertiary:
-                return Theme.palette.baseColor1;
+                return root.Theme.palette.baseColor1;
             case StatusRoundButton.Type.Quaternary:
-                return Theme.palette.dangerColor1;
+                return root.Theme.palette.dangerColor1;
             case StatusRoundButton.Type.Quinary:
-                return Theme.palette.directColor1;
+                return root.Theme.palette.directColor1;
             }
         }
 
         disabledColor: {
-            switch(statusRoundButton.type) {
+            switch(root.type) {
             case StatusRoundButton.Type.Primary:
-                return Theme.palette.baseColor1;
+                return root.Theme.palette.baseColor1;
             case StatusRoundButton.Type.Secondary:
-                return Theme.palette.indirectColor1;
+                return root.Theme.palette.indirectColor1;
             case StatusRoundButton.Type.Tertiary:
-                return Theme.palette.baseColor1;
+                return root.Theme.palette.baseColor1;
             case StatusRoundButton.Type.Quaternary:
-                return Theme.palette.baseColor1;
+                return root.Theme.palette.baseColor1;
             case StatusRoundButton.Type.Quinary:
-                return Theme.palette.baseColor1;
+                return root.Theme.palette.baseColor1;
             }
         }
     }
@@ -90,45 +90,45 @@ Rectangle {
         id: backgroundSettings
 
         property color color: {
-            switch(statusRoundButton.type) {
+            switch(root.type) {
             case StatusRoundButton.Type.Primary:
-                return Theme.palette.primaryColor3;
+                return root.Theme.palette.primaryColor3;
             case StatusRoundButton.Type.Secondary:
-                return Theme.palette.primaryColor1;
+                return root.Theme.palette.primaryColor1;
             case StatusRoundButton.Type.Tertiary:
                 return "transparent";
             case StatusRoundButton.Type.Quaternary:
-                return Theme.palette.dangerColor3;
+                return root.Theme.palette.dangerColor3;
             case StatusRoundButton.Type.Quinary:
                 return "transparent";
             }
         }
 
         property color hoverColor: {
-            switch(statusRoundButton.type) {
+            switch(root.type) {
             case StatusRoundButton.Type.Primary:
-                return Theme.palette.primaryColor2;
+                return root.Theme.palette.primaryColor2;
             case StatusRoundButton.Type.Secondary:
-                return Theme.palette.miscColor1;
+                return root.Theme.palette.miscColor1;
             case StatusRoundButton.Type.Tertiary:
-                return Theme.palette.primaryColor3;
+                return root.Theme.palette.primaryColor3;
             case StatusRoundButton.Type.Quaternary:
-                return Theme.palette.dangerColor2;
+                return root.Theme.palette.dangerColor2;
             case StatusRoundButton.Type.Quinary:
-                return Theme.palette.primaryColor3;
+                return root.Theme.palette.primaryColor3;
             }
         }
 
         property color disabledColor: {
-            switch(statusRoundButton.type) {
+            switch(root.type) {
             case StatusRoundButton.Type.Primary:
-                return Theme.palette.baseColor2;
+                return root.Theme.palette.baseColor2;
             case StatusRoundButton.Type.Secondary:
-                return Theme.palette.baseColor1;
+                return root.Theme.palette.baseColor1;
             case StatusRoundButton.Type.Tertiary:
                 return "transparent";
             case StatusRoundButton.Type.Quaternary:
-                return Theme.palette.baseColor2;
+                return root.Theme.palette.baseColor2;
             case StatusRoundButton.Type.Quinary:
                 return "transparent";
             }
@@ -137,9 +137,9 @@ Rectangle {
 
     QtObject {
         id: d
-        readonly property color iconColor: !statusRoundButton.enabled ? statusRoundButton.icon.disabledColor :
-                                                                        (statusRoundButton.enabled && (statusRoundButton.hovered || statusRoundButton.highlighted)) ? statusRoundButton.icon.hoverColor :
-                                                                                                                                   statusRoundButton.icon.color
+        readonly property color iconColor: !root.enabled ? root.icon.disabledColor :
+                                                           (root.enabled && (root.hovered || root.highlighted)) ? root.icon.hoverColor :
+                                                                                                                  root.icon.color
     }
 
     implicitWidth: 44
@@ -147,7 +147,7 @@ Rectangle {
     radius: width / 2;
 
     color: {
-        if (statusRoundButton.enabled)
+        if (root.enabled)
             return sensor.containsMouse || highlighted ? backgroundSettings.hoverColor
                                                        : backgroundSettings.color;
         return backgroundSettings.disabledColor
@@ -161,18 +161,18 @@ Rectangle {
                              : Qt.PointingHandCursor
 
         hoverEnabled: true
-        enabled: !loading && statusRoundButton.enabled
+        enabled: !loading && root.enabled
 
         StatusIcon {
             id: statusIcon
             anchors.centerIn: parent
             visible: !loading
 
-            icon: statusRoundButton.icon.name
-            rotation: statusRoundButton.icon.rotation
+            icon: root.icon.name
+            rotation: root.icon.rotation
 
-            width: statusRoundButton.icon.width
-            height: statusRoundButton.icon.height
+            width: root.icon.width
+            height: root.icon.height
 
             color: d.iconColor
         } // Icon
@@ -184,9 +184,9 @@ Rectangle {
             } // Indicator
         } // Loader
 
-        onClicked: mouse => statusRoundButton.clicked(mouse)
-        onPressed: mouse => statusRoundButton.pressed(mouse)
-        onReleased: mouse => statusRoundButton.released(mouse)
-        onPressAndHold: mouse => statusRoundButton.pressAndHold(mouse)
+        onClicked: mouse => root.clicked(mouse)
+        onPressed: mouse => root.pressed(mouse)
+        onReleased: mouse => root.released(mouse)
+        onPressAndHold: mouse => root.pressAndHold(mouse)
     } // Sensor
 } // Rectangle

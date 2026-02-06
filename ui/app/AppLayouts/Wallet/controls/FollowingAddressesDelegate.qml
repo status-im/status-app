@@ -105,19 +105,32 @@ StatusListItem {
             type: StatusRoundButton.Type.Quinary
             radius: Theme.radius
             icon.name: d.isAddressSaved ? "star-icon" : "star-icon-outline"
-            enabled: !d.isAddressSaved
             onClicked: {
-                let nameToUse = root.ensName || root.address
-                if (root.ensName && root.ensName.includes(".")) {
-                    nameToUse = root.ensName.split(".")[0]
+                if (d.isAddressSaved) {
+                    Global.openDeleteSavedAddressesPopup({
+                        name: root.ensName || root.address,
+                        address: root.address,
+                        ens: root.ensName,
+                        colorId: ""
+                    })
+                } else {
+                    let nameToUse = root.ensName || root.address
+                    if (root.ensName && root.ensName.includes(".")) {
+                        nameToUse = root.ensName.split(".")[0]
+                    }
+
+                    Global.openAddEditSavedAddressesPopup({
+                        addAddress: true,
+                        address: root.address,
+                        name: nameToUse,
+                        ens: root.ensName
+                    })
                 }
-                
-                Global.openAddEditSavedAddressesPopup({
-                    addAddress: true,
-                    address: root.address,
-                    name: nameToUse,
-                    ens: root.ensName
-                })
+            }
+
+            StatusToolTip {
+                text: d.isAddressSaved ? qsTr("Remove from saved addresses") : qsTr("Add to saved addresses")
+                visible: starButton.hovered
             }
         },
         StatusRoundButton {

@@ -2,17 +2,15 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Popups.Dialog
-import StatusQ.Core.Utils as StatusQUtils
 
-import AppLayouts.stores
-import AppLayouts.Wallet.stores as WalletStore
 import AppLayouts.Wallet.controls
 
-import shared.views
+import shared.controls
 import shared.stores as SharedStores
 
 import utils
@@ -21,7 +19,6 @@ StatusDialog {
     id: root
 
     property SharedStores.NetworkConnectionStore networkConnectionStore
-    property ContactsStore contactsStore
     required property SharedStores.NetworksStore networksStore
 
     signal sendToAddressRequested(string address)
@@ -29,32 +26,21 @@ StatusDialog {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
     implicitWidth: d.popupWidth
-    implicitHeight: d.popupHeight
-
-    onClosed: {
-        root.close()
-        walletSection.activityController.setFilterToAddresses(JSON.stringify([]))
-        walletSection.activityController.updateFilter()
-    }
 
     function initWithParams(params = {}) {
-        d.name = params.name?? ""
-        d.address = params.address?? Constants.zeroAddress
-        d.mixedcaseAddress = params.mixedcaseAddress?? Constants.zeroAddress
-        d.ens = params.ens?? ""
-        d.colorId = params.colorId?? ""
-        d.avatar = params.avatar?? ""
-        d.isFollowingAddress = params.isFollowingAddress?? false
-
-        walletSection.activityController.setFilterToAddresses(JSON.stringify([d.address]))
-        walletSection.activityController.updateFilter()
+        d.name = params.name ?? ""
+        d.address = params.address ?? Constants.zeroAddress
+        d.mixedcaseAddress = params.mixedcaseAddress ?? Constants.zeroAddress
+        d.ens = params.ens ?? ""
+        d.colorId = params.colorId ?? ""
+        d.avatar = params.avatar ?? ""
+        d.isFollowingAddress = params.isFollowingAddress ?? false
     }
 
     QtObject {
         id: d
 
         readonly property int popupWidth: 477
-        readonly property int popupHeight: 672
 
         property string name: ""
         property string address: Constants.zeroAddress
@@ -64,33 +50,13 @@ StatusDialog {
         property string avatar: ""
         property bool isFollowingAddress: false
 
-        readonly property string visibleAddress: !!d.ens? d.ens : d.address
-
-        readonly property int yRange: historyView.firstItemOffset
-        readonly property real extendedViewOpacity: {
-            if (historyView.yPosition <= 0) {
-                return 1
-            }
-
-            let op = 1 - historyView.yPosition / d.yRange
-            if (op > 0) {
-                return op
-            }
-
-            return 0
-        }
-        readonly property bool showSplitLine: d.extendedViewOpacity === 0
-    }
-
-    component Spacer: Item {
-        width: 1
+        readonly property string visibleAddress: !!d.ens ? d.ens : d.address
     }
 
     padding: Theme.bigPadding
     footer: null
 
-    ColumnLayout {
-        anchors.fill: parent
+    contentItem: ColumnLayout {
         spacing: Theme.padding
 
         SavedAddressesDelegate {
@@ -107,24 +73,8 @@ StatusDialog {
             showButtons: true
             statusListItemComponentsSlot.spacing: 4
 
-            statusListItemSubTitle.visible: d.extendedViewOpacity !== 1
-            statusListItemSubTitle.opacity: 1 - d.extendedViewOpacity
-            statusListItemSubTitle.customColor: Theme.palette.directColor1
-            statusListItemSubTitle.text: {
-                if (statusListItemSubTitle.visible) {
-                    if (!!d.ens) {
-                        return d.ens
-                    }
-                    else {
-                        return Utils.richColorText(StatusQUtils.Utils.elideText(d.address,6,4), Theme.palette.directColor1)
-                    }
-                }
-                return ""
-            }
-
-            sendButton.visible: d.extendedViewOpacity !== 1
-            sendButton.opacity: 1 - d.extendedViewOpacity
-            sendButton.type: StatusRoundButton.Type.Primary
+            statusListItemSubTitle.visible: false
+            sendButton.visible: false
 
             asset.width: 72
             asset.height: 72
@@ -154,83 +104,66 @@ StatusDialog {
             }
         }
 
-        StatusDialogDivider {
-            Layout.topMargin: -Theme.padding
+        Rectangle {
             Layout.fillWidth: true
-            visible: d.showSplitLine
-        }
+            Layout.preferredHeight: addressColumn.height + Theme.bigPadding
 
-        ColumnLayout {
-            Layout.fillWidth: true
+            color: StatusColors.transparent
+            radius: Theme.radius
+            border.color: Theme.palette.baseColor2
+            border.width: 1
 
-            spacing: Theme.padding
-            opacity: d.extendedViewOpacity
-            visible: opacity > 0.01
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: Math.max(addressText.height, copyButton.height) + Theme.bigPadding
-
-                color: StatusColors.transparent
-                radius: Theme.radius
-                border.color: Theme.palette.baseColor2
-                border.width: 1
+            Column {
+                id: addressColumn
+                anchors.left: parent.left
+                anchors.right: copyButton.left
+                anchors.rightMargin: Theme.padding
+                anchors.leftMargin: Theme.padding
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2
 
                 StatusBaseText {
-                    id: addressText
-                    anchors.left: parent.left
-                    anchors.right: copyButton.left
-                    anchors.rightMargin: Theme.padding
-                    anchors.leftMargin: Theme.padding
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: !!d.ens ? d.ens : d.address
+                    id: ensText
+                    width: parent.width
+                    visible: !!d.ens
+                    text: d.ens
                     wrapMode: Text.WrapAnywhere
                     font.pixelSize: Theme.primaryTextFontSize
                     color: Theme.palette.directColor1
                 }
 
-                StatusRoundButton {
-                    id: copyButton
-                    width: 24
-                    height: 24
-                    anchors.right: parent.right
-                    anchors.rightMargin: Theme.padding
-                    anchors.top: addressText.top
-                    icon.name: "copy"
-                    type: StatusRoundButton.Type.Tertiary
-                    onClicked: ClipboardUtils.setText(d.visibleAddress)
+                StatusBaseText {
+                    id: addressText
+                    width: parent.width
+                    text: d.address
+                    wrapMode: Text.WrapAnywhere
+                    font.pixelSize: !!d.ens ? Theme.additionalTextSize : Theme.primaryTextFontSize
+                    color: !!d.ens ? Theme.palette.baseColor1 : Theme.palette.directColor1
                 }
             }
 
-            StatusButton {
-                Layout.fillWidth: true
-
-                radius: Theme.radius
-                text: qsTr("Send")
-                icon.name: "send"
-                enabled: root.networkConnectionStore.sendBuyBridgeEnabled
-                onClicked: {
-                    root.sendToAddressRequested(d.visibleAddress)
-                    root.close()
-                }
+            CopyButtonWithCircle {
+                id: copyButton
+                width: 24
+                height: 24
+                anchors.right: parent.right
+                anchors.rightMargin: Theme.padding
+                anchors.verticalCenter: addressColumn.verticalCenter
+                textToCopy: d.address
             }
         }
 
-        HistoryView {
-            id: historyView
-
+        StatusButton {
             Layout.fillWidth: true
 
-            disableShadowOnScroll: true
-            hideVerticalScrollbar: true
-            displayValues: false
-            firstItemOffset: 1
-            overview: ({
-                           isWatchOnlyAccount: false,
-                           mixedcaseAddress: d.address
-                       })
-            activityStore: WalletStore.RootStore
-            networksStore: root.networksStore
+            radius: Theme.radius
+            text: qsTr("Send")
+            icon.name: "send"
+            enabled: root.networkConnectionStore.sendBuyBridgeEnabled
+            onClicked: {
+                root.sendToAddressRequested(d.visibleAddress)
+                root.close()
+            }
         }
     }
 }

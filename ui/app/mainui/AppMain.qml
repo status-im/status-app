@@ -2617,11 +2617,7 @@ Item {
         }
 
         onLoaded: {
-            deleteSavedAddress.item.address = deleteSavedAddress.params.address?? ""
-            deleteSavedAddress.item.ens = deleteSavedAddress.params.ens?? ""
-            deleteSavedAddress.item.name = deleteSavedAddress.params.name?? ""
-            deleteSavedAddress.item.colorId = deleteSavedAddress.params.colorId?? "blue"
-
+            deleteSavedAddress.item.initWithParams(deleteSavedAddress.params)
             deleteSavedAddress.item.open()
         }
 
@@ -2767,7 +2763,6 @@ Item {
 
         sourceComponent: WalletPopups.SavedAddressActivityPopup {
             networkConnectionStore: appMain.networkConnectionStore
-            contactsStore: appMain.contactsStore
             networksStore: appMain.networksStore
 
             onSendToAddressRequested: {

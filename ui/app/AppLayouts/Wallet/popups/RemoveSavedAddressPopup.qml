@@ -25,6 +25,13 @@ StatusDialog {
 
     signal removeSavedAddress(string address)
 
+    function initWithParams(params = {}) {
+        root.name = params.name ?? ""
+        root.address = params.address ?? ""
+        root.ens = params.ens ?? ""
+        root.colorId = params.colorId ?? "blue"
+    }
+
     width: 521
     focus: visible
     padding: Theme.padding
@@ -69,7 +76,7 @@ StatusDialog {
             textFormat: Text.RichText
             font.pixelSize: Theme.primaryTextFontSize
             lineHeight: d.lineHeight
-            text: qsTr("Are you sure you want to remove %1 from your saved addresses? Transaction history relating to this address will no longer be labelled %1.").arg("<b>%1</b>".arg(root.name))
+            text: qsTr("Are you sure you want to remove %1 from your saved addresses?").arg("<b>%1</b>".arg(root.name))
         }
     }
 

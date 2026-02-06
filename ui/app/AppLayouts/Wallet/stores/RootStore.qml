@@ -68,14 +68,14 @@ QtObject {
 
     readonly property var followingAddresses: walletSectionFollowingAddresses ? walletSectionFollowingAddresses.model : null
 
-    function refreshFollowingAddresses(search, limit, offset) {
+    function refreshFollowingAddresses(address, search, limit, offset) {
         if (!walletSectionFollowingAddresses) return
-        const primaryAddress = getPrimaryAccountAddress()
-        if (primaryAddress) {
-            search = search || ""
+        const userAddress = address || getPrimaryAccountAddress()
+        if (userAddress) {
+            search = (search || "").toLowerCase()
             limit = limit || 10
             offset = offset || 0
-            walletSectionFollowingAddresses.fetchFollowingAddresses(primaryAddress, search, limit, offset)
+            walletSectionFollowingAddresses.fetchFollowingAddresses(userAddress, search, limit, offset)
         }
     }
 

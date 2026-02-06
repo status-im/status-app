@@ -31,11 +31,6 @@ StatusMenu {
     // Expected roles: chainId (int), chainName (string), iconUrl (string), layer (int)
     property var activeNetworksModel
 
-    QtObject {
-        id: d
-        readonly property string visibleAddress: !!root.ensName ? root.ensName : root.address
-    }
-
     function openMenu(parent, x, y, model) {
         root.name = model.name;
         root.address = model.address;
@@ -59,7 +54,7 @@ StatusMenu {
         icon.name: "copy"
         timeout: 1500
         autoDismissMenu: true
-        onTriggered: ClipboardUtils.setText(d.visibleAddress)
+        onTriggered: ClipboardUtils.setText(root.address)
     }
 
     StatusAction {
@@ -73,20 +68,9 @@ StatusMenu {
                                        switchingAccounsEnabled: false,
                                        hasFloatingButtons: false,
                                        name: root.name,
-                                       address: root.address
+                                       address: root.address,
+                                       mixedcaseAddress: root.address
                                    })
-        }
-    }
-
-    StatusAction {
-        text: qsTr("View activity")
-        objectName: "viewActivityFollowingAddressAction"
-        assetSettings.name: "wallet"
-        onTriggered: {
-            Global.changeAppSectionBySectionType(Constants.appSection.wallet,
-                                                 WalletLayout.LeftPanelSelection.AllAddresses,
-                                                 WalletLayout.RightPanelSelection.Activity,
-                                                 {savedAddress: root.address})
         }
     }
 
@@ -96,8 +80,8 @@ StatusMenu {
         id: blockchainExplorersMenu
         flatNetworks: root.activeNetworksModel
         onNetworkClicked: (shortname, isTestnet) => {
-            let link = Utils.getUrlForAddressOnNetwork(shortname, isTestnet, d.visibleAddress ? d.visibleAddress : root.ensName);
-            Global.openLinkWithConfirmation(link, StatusQUtils.StringUtils.extractDomainFromLink(link));
+            let link = Utils.getUrlForAddressOnNetwork(shortname, isTestnet, root.address);
+            Global.requestOpenLink(link)
         }
     }
 
