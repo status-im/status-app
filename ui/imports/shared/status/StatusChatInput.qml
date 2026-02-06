@@ -1017,7 +1017,9 @@ Rectangle {
 
         StatusMenu {
             id: chatCommandMenu
+            objectName: "chatCommandMenu"
             StatusAction {
+                objectName: "chatCommandMenu_addImage"
                 text: qsTr("Add image")
                 icon.name: "image"
                 onTriggered: control.openImageDialog()
@@ -1089,6 +1091,7 @@ Rectangle {
 
         StatusQ.StatusFlatRoundButton {
             id: commandBtn
+            objectName: "statusChatInputCommandButton"
             Layout.preferredWidth: 32
             Layout.preferredHeight: 32
             Layout.alignment: Qt.AlignBottom
