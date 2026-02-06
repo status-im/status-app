@@ -9,6 +9,8 @@ import StatusQ.Components
 
 Item {
     id: root
+    Accessible.role: Accessible.Group
+    Accessible.name: Utils.formatAccessibleName("", root.objectName)
 
     property StatusMessageDetails replyDetails
     property bool profileClickable: true
