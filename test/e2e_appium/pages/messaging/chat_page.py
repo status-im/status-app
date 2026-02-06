@@ -243,11 +243,32 @@ class ChatPage(BasePage):
         locator = self.locators.message_is_reply(content)
         return self.is_element_visible(locator, timeout=timeout)
 
-    def send_emoji_to_chat(self, emoji_shortname: str, timeout: int = 10) -> bool:
-        """Send an emoji to the chat using the emoji picker search.
+    def message_count(self) -> int:
+        """Return the count of message content elements in the chat log."""
+        locator = (
+            "xpath",
+            "//*[contains(@resource-id,'StatusMessage_textMessage') or "
+            "contains(@resource-id,'StatusMessage_imageAlbum') or "
+            "contains(@resource-id,'StatusSticker')]",
+        )
+        try:
+            return len(self.driver.find_elements(*locator))
+        except Exception:
+            return 0
+
+    def wait_for_message_count(self, minimum: int, timeout: int = 10) -> bool:
+        """Wait until the chat has at least `minimum` messages."""
+        return self.wait_for_condition(
+            lambda: self.message_count() >= minimum,
+            timeout=timeout,
+            poll_interval=0.5,
+        )
+
+    def send_emoji_to_chat(self, search_term: str, timeout: int = 10) -> bool:
+        """Send an emoji to the chat using emoji picker search.
 
         Args:
-            emoji_shortname: The emoji shortname without colons (e.g., 'thumbsup')
+            search_term: Search text for the emoji picker (e.g., 'thumbsup').
         """
         from locators.messaging.message_context_menu_locators import EmojiPickerLocators
 
@@ -263,16 +284,20 @@ class ChatPage(BasePage):
 
         if not self.qt_safe_input(
             emoji_locators.SEARCH_INPUT,
-            emoji_shortname,
+            search_term,
             timeout=5,
             verify=False,
         ):
             self.logger.error("Failed to type in emoji search")
             return False
 
-        emoji_locator = emoji_locators.emoji_by_shortname(emoji_shortname)
-        if not self.safe_click(emoji_locator, timeout=5):
-            self.logger.error(f"Failed to tap emoji '{emoji_shortname}'")
+        first_result = emoji_locators.emoji_by_grid_position(0)
+        if not self.is_element_visible(first_result, timeout=5):
+            self.logger.error(f"No emoji results for search '{search_term}'")
+            return False
+
+        if not self.safe_click(first_result, timeout=5):
+            self.logger.error(f"Failed to tap first emoji for '{search_term}'")
             return False
 
         return self.safe_click(self.locators.SEND_BUTTON, timeout=5)

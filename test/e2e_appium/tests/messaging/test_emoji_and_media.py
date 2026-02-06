@@ -58,16 +58,18 @@ class TestEmojiAndMedia:
     async def test_send_emoji_via_picker(self) -> None:
         chat_page = self._ensure_in_chat()
 
-        emoji_shortname = "thumbsup"
-        emoji_char = "👍"
+        emoji_search = "thumbsup"
+        starting_count = chat_page.message_count()
 
         assert chat_page.send_emoji_to_chat(
-            emoji_shortname,
+            emoji_search,
             timeout=self.UI_TIMEOUT,
         ), "Failed to send emoji via picker"
 
-        assert chat_page.message_exists(
-            emoji_char,
+        chat_page.dump_page_source("emoji_message_check")
+
+        assert chat_page.wait_for_message_count(
+            starting_count + 1,
             timeout=self.UI_TIMEOUT,
         ), "Emoji message should appear in chat"
 
