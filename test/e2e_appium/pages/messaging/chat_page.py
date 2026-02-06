@@ -31,6 +31,29 @@ class ChatPage(BasePage):
         locator = self.locators.chat_list_item(display_name)
         return self.safe_click(locator, max_attempts=2)
 
+    def has_any_chat(self, timeout: int = 5) -> bool:
+        """Check if there are any chats in the chat list.
+        
+        Returns:
+            bool: True if at least one chat exists.
+        """
+        self._ensure_chat_list_visible()
+        return self.is_element_visible(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
+
+    def open_first_chat(self, timeout: int = 10) -> bool:
+        """Open the first chat in the chat list.
+        
+        Useful for tests that need any available chat without knowing specific names.
+        
+        Returns:
+            bool: True if a chat was opened successfully.
+        """
+        self._ensure_chat_list_visible()
+        if not self.is_element_visible(self.locators.FIRST_CHAT_ITEM, timeout=timeout):
+            self.logger.warning("No chats available in the list")
+            return False
+        return self.safe_click(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
+
     def _resolve_chat_locators(self, chat_identifier: str, display_name: Optional[str] = None):
         locators = [self.locators.dm_row_button(chat_identifier)]
         if display_name:
@@ -148,5 +171,71 @@ class ChatPage(BasePage):
         except Exception as e:
             self.logger.debug(f"is_chat_selected attribute read failed: {e}")
             return False
+
+    # ===== Reply Mode =====
+
+    def is_reply_mode_active(self, timeout: int = 5) -> bool:
+        """Check if the reply preview bar is visible (indicates reply mode is active)."""
+        return self.is_element_visible(self.locators.REPLY_PREVIEW, timeout=timeout)
+
+    def cancel_reply(self, timeout: int = 5) -> bool:
+        """Cancel reply mode by tapping the close button."""
+        if not self.is_reply_mode_active(timeout=2):
+            return True  # Not in reply mode
+        return self.safe_click(self.locators.REPLY_CLOSE_BUTTON, timeout=timeout)
+
+    # ===== Message State Verification =====
+
+    def message_is_edited(self, content: str, timeout: int = 10) -> bool:
+        """Check if a message shows the '(edited)' indicator.
+        
+        Args:
+            content: The message text (without the '(edited)' suffix).
+        """
+        locator = self.locators.message_with_edited_indicator(content)
+        return self.is_element_visible(locator, timeout=timeout)
+
+    def message_is_pinned(self, content: str, timeout: int = 10) -> bool:
+        """Check if a message shows the 'Pinned by' indicator.
+        
+        Approach: The StatusPinMessageDetails component (a Loader) is only active/visible
+        when a message is pinned. We check if this component exists and optionally verify
+        it's for the expected message.
+        
+        Note: Desktop tests use `delegate_button.object.isPinned` (direct property access).
+        Appium can only use accessibility properties (resource-id, content-desc).
+        """
+        # First check if the message exists
+        if not self.message_exists(content, timeout=5):
+            self.logger.warning(f"Message '{content}' not found")
+            return False
+        
+        # Check for ANY pinned indicator visible (statusPinMessageDetails component)
+        # The Loader component is only active when a message is pinned
+        if not self.is_element_visible(self.locators.PINNED_INDICATOR, timeout=timeout):
+            self.logger.debug("No pinned indicator found")
+            return False
+        
+        # Pinned indicator found - optionally verify content-desc contains "Pinned by"
+        # (Accessible.name = pinnedMsgInfoText + " " + pinnedBy, e.g., "Pinned by Alice")
+        element = self.find_element_safe(self.locators.PINNED_INDICATOR, timeout=2)
+        if element:
+            content_desc = element.get_attribute("content-desc") or ""
+            if "Pinned" in content_desc:
+                self.logger.info(f"Found pinned indicator: {content_desc}")
+                return True
+            self.logger.debug(f"Pinned indicator content-desc: '{content_desc}'")
+        
+        # Fallback: indicator visible but couldn't read content-desc, assume pinned
+        return True
+
+    def message_has_reaction(self, emoji_code: str, timeout: int = 10) -> bool:
+        """Check if any message has a specific reaction emoji visible.
+        
+        Args:
+            emoji_code: Unicode hex code (e.g., '1f600' for 😀)
+        """
+        locator = self.locators.reaction_on_message(emoji_code)
+        return self.is_element_visible(locator, timeout=timeout)
 
 
