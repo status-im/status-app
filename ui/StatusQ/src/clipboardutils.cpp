@@ -19,16 +19,22 @@ ClipboardUtils::ClipboardUtils()
 
 bool ClipboardUtils::hasText() const
 {
+    if (!QGuiApplication::clipboard() || !QGuiApplication::clipboard()->mimeData())
+        return false;
     return QGuiApplication::clipboard()->mimeData()->hasText();
 }
 
 QString ClipboardUtils::text() const
 {
+    if (!QGuiApplication::clipboard() || !QGuiApplication::clipboard()->mimeData())
+        return QString{};
     return QGuiApplication::clipboard()->text();
 }
 
 bool ClipboardUtils::hasHtml() const
 {
+    if (!QGuiApplication::clipboard() || !QGuiApplication::clipboard()->mimeData())
+        return false;
     return QGuiApplication::clipboard()->mimeData()->hasHtml();
 }
 
@@ -40,11 +46,15 @@ QString ClipboardUtils::html() const
 
 bool ClipboardUtils::hasImage() const
 {
+    if (!QGuiApplication::clipboard() || !QGuiApplication::clipboard()->mimeData())
+        return false;
     return QGuiApplication::clipboard()->mimeData()->hasImage();
 }
 
 QImage ClipboardUtils::image() const
 {
+    if (!QGuiApplication::clipboard())
+        return QImage{};
     return QGuiApplication::clipboard()->image();
 }
 
@@ -62,22 +72,30 @@ QString ClipboardUtils::imageBase64() const
 
 bool ClipboardUtils::hasUrls() const
 {
+    if (!QGuiApplication::clipboard() || !QGuiApplication::clipboard()->mimeData())
+        return false;
     return QGuiApplication::clipboard()->mimeData()->hasUrls();
 }
 
 QList<QUrl> ClipboardUtils::urls() const
 {
+    if (!QGuiApplication::clipboard() || !QGuiApplication::clipboard()->mimeData())
+        return QList<QUrl>{};
     return QGuiApplication::clipboard()->mimeData()->urls();
 }
 
 void ClipboardUtils::setText(const QString &text)
 {
+    if (!QGuiApplication::clipboard())
+        return;
     QGuiApplication::clipboard()->clear();
     QGuiApplication::clipboard()->setText(text);
 }
 
 void ClipboardUtils::setImageByUrl(const QUrl &url)
 {
+    if (!QGuiApplication::clipboard())
+        return;
     QGuiApplication::clipboard()->clear();
 
     static thread_local QNetworkAccessManager manager;
@@ -100,6 +118,8 @@ void ClipboardUtils::setImageByUrl(const QUrl &url)
 
 void ClipboardUtils::clear()
 {
+    if (!QGuiApplication::clipboard())
+        return;
     QGuiApplication::clipboard()->clear();
 }
 
