@@ -11,17 +11,12 @@ from gui.components.introduce_yourself_popup import IntroduceYourselfPopup
 
 @allure.step('Skip Enable Messages backup popup')
 def skip_message_backup_popup_if_visible(attempts = 4):
-    """
-    Skip the message backup popup if it's visible.
-    """
-    
     message_back_up_popup = EnableMessageBackupPopup()
-    # Wait for popup to appear (with short timeout, don't fail if it doesn't appear)
-    try:
-        message_back_up_popup.wait_until_appears(timeout_msec=configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-    except (TimeoutError, Exception):
-        # Popup didn't appear, nothing to skip
-        return
+    if not message_back_up_popup.is_visible:
+        try:
+            message_back_up_popup.wait_until_appears(timeout_msec=configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+        except (TimeoutError, Exception):
+            return
 
     for attempt in range(1, attempts + 1):
         message_back_up_popup.skip_button.click()
