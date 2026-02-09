@@ -13,12 +13,12 @@ from helpers.onboarding_helper import open_create_profile_view, import_seed_and_
 from helpers.settings_helper import enable_testnet_mode, enable_managing_communities_toggle
 from constants.community import MintOwnerTokensElements
 from gui.screens.community_settings_tokens import MintedTokensView
-from scripts.utils.generators import random_network
+from scripts.utils.generators import random_network_for_minting
 
 
 @pytest.mark.case(727245)
 @pytest.mark.transaction
-@pytest.mark.parametrize('network_name', [pytest.param(random_network())])
+@pytest.mark.parametrize('network_name', [pytest.param(random_network_for_minting())])
 def test_mint_owner_and_tokenmaster_tokens(main_window, user_account, network_name):
 
     user_account = ReturningUser(
@@ -50,7 +50,7 @@ def test_mint_owner_and_tokenmaster_tokens(main_window, user_account, network_na
         edit_owner_token_view = tokens_screen.click_next()
 
     with step('Select network'):
-        # no Sepolia L1 because of high gas prices
+        # no Sepolia L1 because of high gas prices, no Linea because of no contracts
         edit_owner_token_view.select_network(network_name)
 
     with step('Verify fees title and gas fees exist'):
