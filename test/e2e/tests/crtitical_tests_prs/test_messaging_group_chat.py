@@ -117,7 +117,10 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 edit_group_popup.save_changes()
 
             with step('Verify group chat name is changed'):
-                assert messages_screen.group_chat.group_name == group_chat_new_name
+                assert driver.waitFor(
+                    lambda: messages_screen.group_chat.group_name == group_chat_new_name,
+                    configs.timeouts.UI_LOAD_TIMEOUT_MSEC
+                ), f"Group chat name was not changed. Expected: {group_chat_new_name}, Actual: {messages_screen.group_chat.group_name}"
 
             with step('Send message to group chat and verify it was sent'):
                 chat_message = random_text_message()
