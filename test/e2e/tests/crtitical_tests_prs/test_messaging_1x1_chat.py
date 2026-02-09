@@ -157,9 +157,13 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step(f'User {user_two.name} send emoji to {user_one.name}'):
             messages_screen.group_chat.send_emoji_to_chat(emoji)
-            message_object = messages_screen.chat.messages(0)[0]
-            assert driver.waitFor(lambda: '😎' in str(message_object.object.unparsedText), timeout), \
-                f"Emoji not found in message text"
+            assert driver.waitFor(
+                lambda: (
+                    len(messages_screen.chat.messages(0)) > 0 and
+                    '😎' in str(messages_screen.chat.messages(0)[0].object.unparsedText)
+                ),
+                timeout
+            ), f"Emoji not found in message text"
 
         with step(f'User {user_two.name} send image to {user_one.name} and verify it was sent'):
             messages_screen.group_chat.send_image_to_chat(str(picture))
@@ -173,8 +177,6 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step(f'User {user_one.name}, received reply from {user_two.name}'):
             switch_to_aut(aut_one, main_window)
-            # Wait until the reply message appears and contains the expected text.
-            # Re-fetch message object inside lambda to ensure we always check the latest state
             assert driver.waitFor(
                 lambda: (
                     len(messages_screen.chat.messages(2)) > 0 and
@@ -184,9 +186,15 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             ), f"Message text is not found in the last message"
 
         with step(f'User {user_one.name}, received emoji from {user_two.name}'):
-            message_object = messages_screen.chat.messages(1)[0]
-            assert driver.waitFor(lambda: '😎' in str(message_object.object.unparsedText), timeout), \
-                f"Message text is not found in the last message"
+            # Re-fetch message object inside lambda to ensure we always check the latest state
+            # This handles timing issues on Windows CI VMs where message propagation may be delayed
+            assert driver.waitFor(
+                lambda: (
+                    len(messages_screen.chat.messages(1)) > 0 and
+                    '😎' in str(messages_screen.chat.messages(1)[0].object.unparsedText)
+                ),
+                timeout
+            ), f"Emoji not found in message text"
 
         with step(f'User {user_one.name}, received image from {user_two.name}'):
             # Re-check message object in case image wasn't found during initial init
