@@ -32,18 +32,27 @@ def find_free_port(start: int, step: int):
 
 
 @allure.step('Kill process')
-def kill_process(pid):
+def kill_process(pid, timeout_sec=5):
     LOG.debug(f'Terminating process {pid}')
 
     try:
         if get_platform() == "Windows":
-            subprocess.call(f"taskkill /F /T /PID {str(pid)}")
+            # Use subprocess.run with timeout to prevent hanging on Windows CI
+            subprocess.run(
+                f"taskkill /F /T /PID {str(pid)}",
+                shell=True,
+                timeout=timeout_sec,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
         elif get_platform() in ["Linux", "Darwin"]:
             os.kill(pid, signal.SIGKILL)
         else:
             raise NotImplementedError(f"Unsupported platform: {get_platform()}")
+    except subprocess.TimeoutExpired:
+        LOG.warning(f'taskkill timed out after {timeout_sec}s for process {pid}')
     except Exception as e:
-        print(f"Failed to terminate process {pid}: {e}")
+        LOG.warning(f"Failed to terminate process {pid}: {e}")
 
 
 @allure.step('System execute command')
