@@ -85,7 +85,8 @@ class AUT:
             if self.ctx is None:
                 self.ctx = context.get_context(self.aut_id)
             driver.setApplicationContext(self.ctx)
-            assert squish.waitFor(lambda: self.ctx.isRunning, configs.timeouts.PROCESS_TIMEOUT_SEC)
+            timeout = configs.timeouts.PROCESS_TIMEOUT_SEC_WINDOWS if get_platform() == "Windows" else configs.timeouts.PROCESS_TIMEOUT_SEC
+            assert squish.waitFor(lambda: self.ctx.isRunning, timeout)
         except Exception as err:
             LOG.error('Failed to attach AUT: %s', err)
             self.stop()
