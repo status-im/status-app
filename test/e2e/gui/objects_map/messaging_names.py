@@ -86,7 +86,7 @@ chatMessageViewDelegate_inputScrollView_StatusScrollView = {"container": chatLog
 edit_inputScrollView_messageInputField_TextArea = {"container": chatMessageViewDelegate_inputScrollView_StatusScrollView, "objectName": "messageInputField", "type": "TextArea", "visible": True}
 chatMessageViewDelegate_Save_StatusButton = {"checkable": False, "container": chatLogView_chatMessageViewDelegate_MessageView, "id": "saveBtn", "type": "StatusButton", "unnamed": 1, "visible": True}
 chatMessageViewDelegate_reply_icon_StatusIcon = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "reply-icon", "type": "StatusIcon", "visible": True}
-mainWindow_replyArea_StatusChatInputReplyArea = {"container": statusDesktop_mainWindow, "id": "replyArea", "type": "StatusChatInputReplyArea", "unnamed": 1, "visible": True}
+mainWindow_replyArea_StatusChatInputReplyArea = {"container": statusDesktop_mainWindow, "objectName": "statusChatInputReplyArea", "type": "StatusChatInputReplyArea", "visible": True}
 layout_recentMessagesButton_AnchorButton = {"checkable": False, "container": mainWindow_chatLogView_StatusListView, "id": "recentMessagesButton", "type": "AnchorButton", "unnamed": 1, "visible": True}
 
 # Message link preview

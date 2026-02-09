@@ -386,8 +386,7 @@ unpinButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow_overl
 headerActionsCloseButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow_overlay,
                                                   "objectName": "headerActionsCloseButton",
                                                   "type": "StatusFlatRoundButton", "visible": True}
-o_StatusPinMessageDetails = {"container": statusDesktop_mainWindow_overlay, "type": "StatusPinMessageDetails",
-                             "unnamed": 1, "visible": True}
+pinMessageDetails = {"container": statusDesktop_mainWindow_overlay, "objectName": "statusPinMessageDetails", "type": "StatusPinMessageDetails", "visible": True}
 
 # Introduce Yourself popup
 introduceYourselfPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "IntroduceYourselfPopup",

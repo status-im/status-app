@@ -12,7 +12,7 @@ class PinnedMessagesPopup(QObject):
         super().__init__(names.pinnedMessagesPopup)
         self._close_button = Button(names.headerActionsCloseButton_StatusFlatRoundButton)
         self._unpin_button = Button(names.unpinButton_StatusFlatRoundButton)
-        self._pinned_message_details = QObject(names.o_StatusPinMessageDetails)
+        self._pinned_message_details = QObject(names.pinMessageDetails)
 
     @allure.step('Wait until appears {0}')
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
