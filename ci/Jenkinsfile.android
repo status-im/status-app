@@ -61,7 +61,7 @@ pipeline {
     /* Control output the filename */
     APP_TYPE = "${utils.getAppType()}"
     PLATFORM = "android/arm64"
-    MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
+    MAKEFLAGS = "-j${utils.getProcCount()} V=1"
     QT_VERSION = "6.9.2"
     QT_ANDROID_PATH = "/opt/qt/${env.QT_VERSION}/android_arm64_v8a"
     QMAKE = "/opt/qt/${env.QT_VERSION}/android_arm64_v8a/bin/qmake"
@@ -108,7 +108,7 @@ pipeline {
     stage('Build Android') {
       steps {
         script {
-        app.buildSignedAndroid(target='mobile-build PACKAGE_TYPE=' + env.PACKAGE_TYPE, verbose=params.VERBOSE)
+        app.buildSignedAndroid(target='mobile-build PACKAGE_TYPE=' + env.PACKAGE_TYPE, verbose='1')
         }
       }
     }
