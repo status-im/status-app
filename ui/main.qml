@@ -779,4 +779,12 @@ Window {
     MobileUI {
         id: mobileUI
     }
+
+    //Workaround for QTBUG-140897
+    onKeyboardHeightChanged: {
+        if (applicationWindow.keyboardHeight > 0) {
+            SystemUtils.requestAndroidKeyboardShow()
+        }
+    }
+
 }

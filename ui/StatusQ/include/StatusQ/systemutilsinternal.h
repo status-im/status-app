@@ -34,6 +34,7 @@ public:
     // Get Android keyboard state (uses WindowInsets API, works Android 11-16+)
     Q_INVOKABLE int androidKeyboardHeight() const;
     Q_INVOKABLE bool androidKeyboardVisible() const;
+    Q_INVOKABLE void requestAndroidKeyboardShow();
     
     // Get iOS keyboard state
     Q_INVOKABLE int iosKeyboardHeight() const;

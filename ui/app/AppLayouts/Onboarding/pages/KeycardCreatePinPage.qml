@@ -31,7 +31,6 @@ KeycardBasePage {
 
             Component.onCompleted: {
                 statesInitialization()
-                forceFocus()
             }
         },
 

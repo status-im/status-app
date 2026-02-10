@@ -132,7 +132,6 @@ KeycardBasePage {
             StateChangeScript {
                 script: {
                     pukInput.statesInitialization()
-                    pukInput.forceFocus()
                     d.tempPuk = ""
                     d.pukValid = false
                 }

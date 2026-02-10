@@ -42,6 +42,15 @@ Control {
         txtPassword.forceActiveFocus()
     }
 
+    function clearInputFocus() {
+        if (!txtPassword.activeFocus) {
+            return
+        }
+
+        txtPassword.focus = false
+        Qt.inputMethod.hide()
+    }
+
     padding: 0
     background: null
     spacing: Theme.halfPadding
@@ -91,6 +100,18 @@ Control {
             }
 
             onClicked: root.loginRequested(txtPassword.text)
+        }
+    }
+
+    onVisibleChanged: {
+        if (!visible) {
+            clearInputFocus()
+        }
+    }
+
+    onEnabledChanged: {
+        if (!enabled) {
+            clearInputFocus()
         }
     }
 

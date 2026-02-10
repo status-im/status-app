@@ -25,7 +25,6 @@ Item {
         if (root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.wrongPin ||
                 root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.wrongKeychainPin) {
             pinInputField.statesInitialization()
-            pinInputField.forceFocus()
         }
     }
 
@@ -34,7 +33,6 @@ Item {
             pinInputField.setPin("123456") // we are free to set fake pin in this case
         } else {
             pinInputField.statesInitialization()
-            pinInputField.forceFocus()
         }
     }
 
@@ -51,7 +49,6 @@ Item {
         interval: 500
         onTriggered: {
             pinInputField.statesInitialization()
-            pinInputField.forceFocus()
         }
     }
 

@@ -23,7 +23,6 @@ Item {
             validator: StatusIntValidator { bottom: 0; top: 999999 }
             Component.onCompleted: {
                 statesInitialization()
-                forceFocus()
             }
         }
         StatusBaseText {

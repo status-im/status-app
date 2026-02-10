@@ -21,6 +21,7 @@ StatusTextField {
     rightPadding: Theme.padding + clearIcon.width + d.contentSpacing
     topPadding: Theme.smallPadding
     bottomPadding: Theme.smallPadding
+    inputMethodHints: Qt.ImhLowercaseOnly | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
 
     background: Rectangle {
         radius: Theme.radius

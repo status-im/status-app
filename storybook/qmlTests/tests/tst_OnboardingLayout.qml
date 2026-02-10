@@ -1048,6 +1048,8 @@ Item {
 
                 const keycardBox = findChild(page, "keycardBox")
                 verify(!!keycardBox)
+                waitForRendering(keycardBox)
+                waitForItemPolished(keycardBox)
 
                 if (data.biometrics) { // biometrics + PIN
                     if (data.pin === mockDriver.existingPin) { // expecting correct fingerprint

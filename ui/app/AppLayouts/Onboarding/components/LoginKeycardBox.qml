@@ -38,14 +38,12 @@ Control {
 
     function clear() {
         d.wrongPin = false
-        pinInputField.statesInitialization()
-        pinInputField.forceFocus()
+        pinInputField.clearPin()
     }
 
     function markAsWrongPin() {
         d.wrongPin = true
         pinInputField.statesInitialization()
-        pinInputField.forceFocus()
     }
 
     function setPin(pin: string) {
@@ -137,10 +135,19 @@ Control {
                 d.wrongPin = false
                 root.pinEditedManually()
             }
+
             onVisibleChanged: {
-                if (visible) {
-                    pinInputField.forceFocus()
+                if (!visible) {
+                    return
                 }
+                //Just delay for states to settle before setting focus or clearing focus
+                Qt.callLater(() => {
+                    if (visible) {
+                        pinInputField.statesInitialization()
+                    } else {
+                        pinInputField.clearInputFocus()
+                    }
+                })
             }
         }
     }
@@ -269,13 +276,12 @@ Control {
                 text: qsTr("Enter Keycard PIN")
             }
             PropertyChanges {
-                target: pinInputField
-                visible: true
-                focus: true
-            }
-            PropertyChanges {
                 target: background
                 border.color: Theme.palette.primaryColor1
+            }
+            PropertyChanges {
+                target: pinInputField
+                visible: true
             }
             PropertyChanges {
                 target: touchIdIcon
@@ -283,9 +289,4 @@ Control {
             }
         }
     ]
-
-    TapHandler {
-        enabled: pinInputField.visible
-        onTapped: pinInputField.forceFocus()
-    }
 }

@@ -45,7 +45,6 @@ KeycardBasePage {
                 StateChangeScript {
                     script: {
                         pinInput.statesInitialization()
-                        pinInput.forceFocus()
                     }
                 }
 

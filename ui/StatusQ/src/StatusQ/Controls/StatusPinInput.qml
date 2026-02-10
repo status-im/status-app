@@ -157,16 +157,7 @@ Item {
                 item.innerState = "EMPTY"
         }
         inputText.text = ""
-    }
-
-    /*
-        \qmlmethod StatusPinInput::forceFocus()
-
-        Convenient method to force active focus in case it gets stolen by any other component.
-    */
-    function forceFocus() {
         inputText.forceActiveFocus()
-        d.activateBlink()
     }
 
     /*
@@ -206,18 +197,39 @@ Item {
         }
     }
 
-    implicitWidth: childrenRect.width
-    implicitHeight: childrenRect.height
+    function clearInputFocus() {
+        if (!inputText.activeFocus) {
+            return
+        }
+
+        inputText.focus = false
+        Qt.inputMethod.hide()
+    }
+
+    implicitWidth: pinCirclesRow.implicitWidth
+    implicitHeight: pinCirclesRow.implicitHeight
+
+    onVisibleChanged: {
+        if (!visible) {
+            clearInputFocus()
+        }
+    }
+
+    onEnabledChanged: {
+        if (!enabled) {
+            clearInputFocus()
+        }
+    }
 
     // Pin input data management object:
     TextInput {
         id: inputText
         objectName: "pinInputTextInput"
-        visible: true
         // Set explicit dimensions for Android keyboard input to work
-        width: 1
-        height: 1
-        opacity: 0
+        anchors.fill: parent
+        enabled: root.enabled
+        // opacity 0 will disable the soft keyboard
+        opacity: 0.0000000000001
         maximumLength: root.pinLen
         inputMethodHints: root.inputMethodHints
         validator: d.statusValidator.validatorObj
@@ -245,7 +257,9 @@ Item {
             if(text.length !== d.currentPinIndex)
                 console.error("StatusPinInput input management error. Current pin length must be "+ text.length + " and is " + d.currentPinIndex)
         }
-        onFocusChanged: { if(!focus) { d.deactivateBlink () } }
+        onFocusChanged: {
+            focus ? d.activateBlink () : d.deactivateBlink ()
+        }
         onTextEdited: root.pinEditedManually()
 
         Keys.onShortcutOverride: (event) => event.accepted = event.matches(StandardKey.Paste)
@@ -258,6 +272,7 @@ Item {
 
     // Pin input visual objects:
     Row {
+        id: pinCirclesRow
         spacing: root.circleSpacing
 
         Repeater {
@@ -328,13 +343,7 @@ Item {
         }
     }
 
-    StatusMouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-
-        // StatusMouseArea behavior:
-        onClicked: forceFocus()
-        onContainsMouseChanged: { if(containsMouse) { cursorShape = Qt.PointingHandCursor } }
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
     }
 }

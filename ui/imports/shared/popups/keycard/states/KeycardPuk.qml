@@ -24,13 +24,11 @@ Item {
     onRemainingAttemptsChanged: {
         if (root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.wrongPuk) {
             pukInputField.statesInitialization()
-            pukInputField.forceFocus()
         }
     }
 
     onStateChanged: {
         pukInputField.statesInitialization()
-        pukInputField.forceFocus()
     }
 
     ColumnLayout {

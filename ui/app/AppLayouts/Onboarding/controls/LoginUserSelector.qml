@@ -91,7 +91,7 @@ Control {
         id: dropdown
         objectName: "dropdown"
 
-        bottomSheetAllowed: false
+        bottomSheetAllowed: true
 
         directParent: root
         relativeY: root.height + 2

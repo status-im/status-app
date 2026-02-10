@@ -315,6 +315,22 @@ bool SystemUtilsInternal::androidKeyboardVisible() const
     return m_androidKeyboardVisible;
 }
 
+void SystemUtilsInternal::requestAndroidKeyboardShow()
+{
+#ifdef Q_OS_ANDROID
+    auto activity = QNativeInterface::QAndroidApplication::context();
+    if (!activity.isValid()) {
+        return;
+    }
+    QJniObject::callStaticMethod<void>(
+        "app/status/mobile/KeyboardUtil",
+        "requestKeyboardShow",
+        "(Landroid/app/Activity;)V",
+        activity.object()
+    );
+#endif
+}
+
 int SystemUtilsInternal::iosKeyboardHeight() const
 {
 #ifdef Q_OS_IOS

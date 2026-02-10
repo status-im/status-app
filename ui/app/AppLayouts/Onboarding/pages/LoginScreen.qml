@@ -257,7 +257,7 @@ OnboardingPage {
                 id: passwordBox
                 objectName: "passwordBox"
                 visible: !d.currentProfileIsKeycard
-                enabled: !!loginUserSelector.selectedProfileKeyId
+                enabled: !!loginUserSelector.selectedProfileKeyId && !d.currentProfileIsKeycard
                 isBiometricsLogin: root.isBiometricsLogin
                 biometricsSuccessful: d.biometricsSuccessful
                 biometricsFailed: d.biometricsFailed
