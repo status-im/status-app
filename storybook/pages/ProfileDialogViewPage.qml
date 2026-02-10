@@ -27,10 +27,6 @@ SplitView {
 
     // globalUtilsInst mock
     QtObject {
-        function addTimestampToURL(url) {
-            return url
-        }
-
         function isCompressedPubKey() {
             return false
         }
@@ -61,6 +57,98 @@ SplitView {
             root.globalCommunitiesModuleInstReady = false
             Utils.communitiesModuleInst = {}
         }
+    }
+
+    SharedStores.UtilsStore {
+        id: mockUtilsStore
+        function getEmojiHash(publicKey) {
+            return ["👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮","🤷🏻‍♂️", "🤦🏻",
+                    "📣", "🤎", "👷🏽", "😺", "🥞", "🔃", "🧝🏽‍♂️"]
+        }
+
+        function getCompressedPk(publicKey) { return "zx3sh" + publicKey }
+
+        function isCompressedPubKey(publicKey) { return true }
+
+        function isAlias(name) { return false }
+    }
+
+    ProfileStores.ProfileStore {
+        id: mockProfileStore
+        function getQrCodeSource() {
+            return "https://upload.wikimedia.org/wikipedia/commons/4/41/QR_Code_Example.svg"
+        }
+    }
+
+    AppLayoutStores.ContactsStore {
+        id: mockContactsStore
+        function joinPrivateChat(publicKey) {
+            logs.logEvent("contactsStore::joinPrivateChat", ["publicKey"], arguments)
+        }
+
+        function markUntrustworthy(publicKey) {
+            logs.logEvent("contactsStore::markUntrustworthy", ["publicKey"], arguments)
+        }
+
+        function removeContact(publicKey) {
+            logs.logEvent("contactsStore::removeContact", ["publicKey"], arguments)
+        }
+
+        function acceptContactRequest(publicKey, contactRequestId) {
+            logs.logEvent("contactsStore::acceptContactRequest", ["publicKey, contactRequestId"], arguments)
+        }
+
+        function dismissContactRequest(publicKey, contactRequestId) {
+            logs.logEvent("contactsStore::dismissContactRequest", ["publicKey, contactRequestId"], arguments)
+        }
+
+        function removeTrustStatus(publicKey) {
+            logs.logEvent("contactsStore::removeTrustStatus", ["publicKey"], arguments)
+        }
+
+        function removeTrustVerificationStatus(publicKey) {
+            logs.logEvent("contactsStore::removeTrustVerificationStatus", ["publicKey"], arguments)
+        }
+
+        function verifiedUntrustworthy(publicKey) {
+            logs.logEvent("contactsStore::verifiedUntrustworthy", ["publicKey"], arguments)
+        }
+
+        function verifiedTrusted(publicKey) {
+            logs.logEvent("contactsStore::verifiedTrusted", ["publicKey"], arguments)
+            ctrlTrustStatus.currentIndex = ctrlTrustStatus.indexOfValue(Constants.trustStatus.trusted)
+        }
+
+        function cancelVerificationRequest(pubKey) {
+            logs.logEvent("contactsStore::cancelVerificationRequest", ["pubKey"], arguments)
+        }
+
+        function getLinkToProfile(publicKey) {
+            return Constants.userLinkPrefix + publicKey
+        }
+
+        function changeContactNickname(publicKey, newNickname, displayName, isEdit) {
+            logs.logEvent("contactsStore::changeContactNickname", ["publicKey", "newNickname", "displayName", "isEdit"], arguments)
+        }
+
+        function requestProfileShowcase(publicKey) {
+            logs.logEvent("contactsStore::requestProfileShowcase", ["publicKey"], arguments)
+        }
+    }
+
+    SharedStores.NetworksStore {
+        id: mockNetworksStore
+    }
+
+    Popups {
+        popupParent: root
+        sharedRootStore: SharedStores.RootStore {}
+        rootStore: AppLayoutStores.RootStore {}
+        communityTokensStore: SharedStores.CommunityTokensStore {}
+        networksStore: mockNetworksStore
+        utilsStore: mockUtilsStore
+        profileStore: mockProfileStore
+        contactsStore: mockContactsStore
     }
 
     ListModel {
@@ -184,84 +272,12 @@ SplitView {
                         assetsModel: AssetsModel {}
                         collectiblesModel: CollectiblesModel {}
 
-                        profileStore: ProfileStores.ProfileStore {
-                            function getQrCodeSource() {
-                                return "https://upload.wikimedia.org/wikipedia/commons/4/41/QR_Code_Example.svg"
-                            }
-                        }
+                        profileStore: mockProfileStore
 
-                        contactsStore: AppLayoutStores.ContactsStore {
-                            function joinPrivateChat(publicKey) {
-                                logs.logEvent("contactsStore::joinPrivateChat", ["publicKey"], arguments)
-                            }
+                        contactsStore: mockContactsStore
 
-                            function markUntrustworthy(publicKey) {
-                                logs.logEvent("contactsStore::markUntrustworthy", ["publicKey"], arguments)
-                            }
-
-                            function removeContact(publicKey) {
-                                logs.logEvent("contactsStore::removeContact", ["publicKey"], arguments)
-                            }
-
-                            function acceptContactRequest(publicKey, contactRequestId) {
-                                logs.logEvent("contactsStore::acceptContactRequest", ["publicKey, contactRequestId"], arguments)
-                            }
-
-                            function dismissContactRequest(publicKey, contactRequestId) {
-                                logs.logEvent("contactsStore::dismissContactRequest", ["publicKey, contactRequestId"], arguments)
-                            }
-
-                            function removeTrustStatus(publicKey) {
-                                logs.logEvent("contactsStore::removeTrustStatus", ["publicKey"], arguments)
-                            }
-
-                            function removeTrustVerificationStatus(publicKey) {
-                                logs.logEvent("contactsStore::removeTrustVerificationStatus", ["publicKey"], arguments)
-                            }
-
-                            function verifiedUntrustworthy(publicKey) {
-                                logs.logEvent("contactsStore::verifiedUntrustworthy", ["publicKey"], arguments)
-                            }
-
-                            function verifiedTrusted(publicKey) {
-                                logs.logEvent("contactsStore::verifiedTrusted", ["publicKey"], arguments)
-                                ctrlTrustStatus.currentIndex = ctrlTrustStatus.indexOfValue(Constants.trustStatus.trusted)
-                            }
-
-                            function cancelVerificationRequest(pubKey) {
-                                logs.logEvent("contactsStore::cancelVerificationRequest", ["pubKey"], arguments)
-                            }
-
-                            function getLinkToProfile(publicKey) {
-                                return Constants.userLinkPrefix + publicKey
-                            }
-
-                            function changeContactNickname(publicKey, newNickname, displayName, isEdit) {
-                                logs.logEvent("contactsStore::changeContactNickname", ["publicKey", "newNickname", "displayName", "isEdit"], arguments)
-                            }
-
-                            function requestProfileShowcase(publicKey) {
-                                logs.logEvent("contactsStore::requestProfileShowcase", ["publicKey"], arguments)
-                            }
-                        }
-
-                        utilsStore: SharedStores.UtilsStore {
-                            function getEmojiHash(publicKey) {
-                                return ["👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮","🤷🏻‍♂️", "🤦🏻",
-                                        "📣", "🤎", "👷🏽", "😺", "🥞", "🔃", "🧝🏽‍♂️"]
-                            }
-
-                            function getCompressedPk(publicKey) { return "zx3sh" + publicKey }
-
-
-                            function isCompressedPubKey(publicKey) { return true }
-
-                            function isAlias(name)  {
-                                return false
-                            }
-                        }
-
-                        networksStore: SharedStores.NetworksStore {}
+                        utilsStore: mockUtilsStore
+                        networksStore: mockNetworksStore
                         walletStore: WalletStores.RootStore
                     }
                 }

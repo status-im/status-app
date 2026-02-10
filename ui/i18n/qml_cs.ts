@@ -3495,8 +3495,8 @@ formát souboru</translation>
         </translation>
     </message>
     <message>
-        <source>Start chat</source>
-        <translation>Zahájit chat</translation>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4361,6 +4361,10 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     <message>
         <source>Open QR Scanner</source>
         <translation>Otevřít QR skener</translation>
+    </message>
+    <message>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11509,6 +11513,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>MessageReactionsRow</name>
+    <message>
+        <source>Add reaction</source>
+        <translation type="unfinished">Přidat reakci</translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -11892,6 +11903,13 @@ selhalo</translation>
     <message>
         <source>Retry mint</source>
         <translation>Zkusit mint znovu</translation>
+    </message>
+</context>
+<context>
+    <name>MobileAddressBar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -13894,14 +13912,6 @@ selhalo</translation>
         <translation>Sdílet profil</translation>
     </message>
     <message>
-        <source>Share your profile</source>
-        <translation>Sdílet svůj profil</translation>
-    </message>
-    <message>
-        <source>%1&apos;s profile</source>
-        <translation>Profil uživatele %1</translation>
-    </message>
-    <message>
         <source>Mark as trusted</source>
         <translation>Označit jako důvěryhodné</translation>
     </message>
@@ -15745,6 +15755,14 @@ přístup k vaší webkameře</translation>
         <source>Connect with %1 on Status: %2</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>%1&apos;s profile</source>
+        <translation type="unfinished">Profil uživatele %1</translation>
+    </message>
+    <message>
+        <source>Share profile to invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ShareUtils</name>
@@ -16343,6 +16361,17 @@ přístup k vaší webkameře</translation>
     <message>
         <source>Send message</source>
         <translation>Odeslat zprávu</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputReplyArea</name>
+    <message>
+        <source>Replying to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel reply</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18635,6 +18664,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <source>Set status automatically</source>
         <translation>Nastavit stav automaticky</translation>
     </message>
+    <message>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Utils</name>
@@ -19609,10 +19642,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Status Desktop</source>
         <translation>Status Desktop</translation>
-    </message>
-    <message>
-        <source>Hello World</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>

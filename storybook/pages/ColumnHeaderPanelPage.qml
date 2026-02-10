@@ -19,7 +19,6 @@ SplitView {
         property bool amISectionAdmin: false
         property color color: "orchid"
         property url image: Assets.png("tokens/UNI")
-        property bool openCreateChat: false
     }
 
     Logs { id: logs }
@@ -48,12 +47,8 @@ SplitView {
                     image: d.image
                     color: d.color
                     amISectionAdmin: d.amISectionAdmin
-                    openCreateChat: false
                     onInfoButtonClicked: logs.logEvent("ColumnHeaderPanel::onInfoButtonClicked()")
-                    onAdHocChatButtonClicked: {
-                        logs.logEvent("ColumnHeaderPanel::onAdHocChatButtonClicked(): " + openCreateChat.toString())
-                        openCreateChat = !openCreateChat
-                    }
+                    onShareOwnProfileRequested: logs.logEvent("ColumnHeaderPanel::onShareOwnProfileRequested()")
                 }
             }
         }

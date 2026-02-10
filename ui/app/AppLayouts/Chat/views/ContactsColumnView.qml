@@ -35,7 +35,7 @@ Item {
     property RootStore store
     property var emojiPopup
 
-    signal openProfileClicked()
+    signal shareOwnProfileRequested()
     signal openAppSearch()
     signal addRemoveGroupMemberClicked()
     signal chatItemClicked(string id)
@@ -56,7 +56,6 @@ Item {
 
             StatusNavigationPanelHeadline {
                 objectName: "ContactsColumnView_MessagesHeadline"
-                Layout.alignment: Qt.AlignVCenter
                 text: qsTr("Messages")
             }
 
@@ -65,11 +64,26 @@ Item {
             }
 
             StatusIconTabButton {
+                objectName: "shareProfileButton"
+                icon.name: "add-contact"
+                icon.color: Theme.palette.directColor1
+                checkable: false
+                onClicked: root.shareOwnProfileRequested()
+
+                StatusToolTip {
+                    text: qsTr("Invite contacts")
+                    visible: parent.hovered
+                    orientation: StatusToolTip.Orientation.Bottom
+                    y: parent.height + Theme.padding
+                }
+            }
+
+            StatusIconTabButton {
                 id: qrScannerButton
-                Layout.alignment: Qt.AlignVCenter
                 objectName: "qrScannerButton"
                 icon.name: "qr-scan"
                 icon.color: Theme.palette.directColor1
+                checkable: false
                 onClicked: Global.openQRScannerRequested()
 
                 StatusToolTip {
@@ -82,7 +96,6 @@ Item {
 
             StatusIconTabButton {
                 id: startChatButton
-                Layout.alignment: Qt.AlignVCenter
                 objectName: "startChatButton"
                 icon.name: "edit"
                 icon.color: Theme.palette.directColor1

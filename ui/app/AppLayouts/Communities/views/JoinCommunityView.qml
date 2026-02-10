@@ -21,7 +21,6 @@ StatusSectionLayout {
 
     // General properties:
     property bool amISectionAdmin: false
-    property bool openCreateChat: false
     property string name
     property string introMessage
     property string communityDesc
@@ -54,10 +53,8 @@ StatusSectionLayout {
     property var messagesModel
 
     signal infoButtonClicked
-    signal adHocChatButtonClicked
     signal requestToJoinClicked
     signal invitationPendingClicked
-
 
     QtObject {
         id: d
@@ -85,9 +82,7 @@ StatusSectionLayout {
             image: root.image
             color: root.color
             amISectionAdmin: root.amISectionAdmin
-            openCreateChat: root.openCreateChat
             onInfoButtonClicked: if(root.amISectionAdmin) root.infoButtonClicked()
-            onAdHocChatButtonClicked: root.adHocChatButtonClicked()
         }
 
         ColumnLayout {

@@ -3480,7 +3480,7 @@ file format</source>
         </translation>
     </message>
     <message>
-        <source>Start chat</source>
+        <source>Invite contacts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4338,6 +4338,10 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>Open QR Scanner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invite contacts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11418,6 +11422,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>MessageReactionsRow</name>
+    <message>
+        <source>Add reaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -11794,6 +11805,13 @@ to load</source>
     </message>
     <message>
         <source>Retry mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>MobileAddressBar</name>
+    <message>
+        <source>Search or enter address</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -13787,14 +13805,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Share your profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1&apos;s profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Mark as trusted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -15635,6 +15645,14 @@ access to your webcam</source>
         <source>Connect with %1 on Status: %2</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>%1&apos;s profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Share profile to invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ShareUtils</name>
@@ -16225,6 +16243,17 @@ access to your webcam</source>
     </message>
     <message>
         <source>Send message</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputReplyArea</name>
+    <message>
+        <source>Replying to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel reply</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -18509,6 +18538,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <source>Set status automatically</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Utils</name>
@@ -19476,10 +19509,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>main</name>
     <message>
         <source>Status Desktop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

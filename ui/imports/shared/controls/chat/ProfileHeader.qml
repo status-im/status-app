@@ -10,7 +10,6 @@ import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Popups
 import StatusQ.Core
-import StatusQ.Core.Utils as StatusQUtils
 import StatusQ.Core.Theme
 
 Item {

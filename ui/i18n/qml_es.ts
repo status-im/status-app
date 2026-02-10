@@ -3485,8 +3485,8 @@ no compatible</translation>
         </translation>
     </message>
     <message>
-        <source>Start chat</source>
-        <translation>Iniciar chat</translation>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4345,6 +4345,10 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     </message>
     <message>
         <source>Open QR Scanner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invite contacts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11435,6 +11439,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>MessageReactionsRow</name>
+    <message>
+        <source>Add reaction</source>
+        <translation type="unfinished">Agregar reacción</translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -11816,6 +11827,13 @@ al cargar</translation>
     <message>
         <source>Retry mint</source>
         <translation></translation>
+    </message>
+</context>
+<context>
+    <name>MobileAddressBar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -13810,14 +13828,6 @@ al cargar</translation>
         <translation>Compartir perfil</translation>
     </message>
     <message>
-        <source>Share your profile</source>
-        <translation>Comparte tu perfil</translation>
-    </message>
-    <message>
-        <source>%1&apos;s profile</source>
-        <translation>Perfil de %1</translation>
-    </message>
-    <message>
         <source>Mark as trusted</source>
         <translation>Marcar como confiable</translation>
     </message>
@@ -15659,6 +15669,14 @@ acceso a tu cámara web</translation>
         <source>Connect with %1 on Status: %2</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>%1&apos;s profile</source>
+        <translation type="unfinished">Perfil de %1</translation>
+    </message>
+    <message>
+        <source>Share profile to invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ShareUtils</name>
@@ -16250,6 +16268,17 @@ acceso a tu cámara web</translation>
     <message>
         <source>Send message</source>
         <translation>Enviar mensaje</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputReplyArea</name>
+    <message>
+        <source>Replying to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel reply</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18546,6 +18575,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
         <source>Set status automatically</source>
         <translation>Establecer estado automáticamente</translation>
     </message>
+    <message>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Utils</name>
@@ -19514,10 +19547,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Status Desktop</source>
         <translation>Escritorio de Status</translation>
-    </message>
-    <message>
-        <source>Hello World</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>

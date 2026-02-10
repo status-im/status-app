@@ -3474,8 +3474,8 @@ file format</source>
         </translation>
     </message>
     <message>
-        <source>Start chat</source>
-        <translation>채팅 시작</translation>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -4329,6 +4329,10 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>Open QR Scanner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invite contacts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11402,6 +11406,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>MessageReactionsRow</name>
+    <message>
+        <source>Add reaction</source>
+        <translation type="unfinished">반응 추가</translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -11781,6 +11792,13 @@ to load</source>
     <message>
         <source>Retry mint</source>
         <translation>민팅 다시 시도</translation>
+    </message>
+</context>
+<context>
+    <name>MobileAddressBar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -13767,14 +13785,6 @@ to load</source>
         <translation>프로필 공유</translation>
     </message>
     <message>
-        <source>Share your profile</source>
-        <translation>프로필 공유하기</translation>
-    </message>
-    <message>
-        <source>%1&apos;s profile</source>
-        <translation>%1의 프로필</translation>
-    </message>
-    <message>
         <source>Mark as trusted</source>
         <translation>신뢰 대상으로 표시</translation>
     </message>
@@ -15613,6 +15623,14 @@ access to your webcam</source>
         <source>Connect with %1 on Status: %2</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>%1&apos;s profile</source>
+        <translation type="unfinished">%1의 프로필</translation>
+    </message>
+    <message>
+        <source>Share profile to invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ShareUtils</name>
@@ -16197,6 +16215,17 @@ access to your webcam</source>
     <message>
         <source>Send message</source>
         <translation>메시지 보내기</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputReplyArea</name>
+    <message>
+        <source>Replying to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel reply</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18488,6 +18517,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <source>Set status automatically</source>
         <translation>자동으로 상태 설정</translation>
     </message>
+    <message>
+        <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Utils</name>
@@ -19451,10 +19484,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Status Desktop</source>
         <translation>스테이터스 데스크톱</translation>
-    </message>
-    <message>
-        <source>Hello World</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>

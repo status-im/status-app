@@ -34,6 +34,7 @@ import shared.popups
 import shared.status
 import shared.stores
 import shared.views
+import shared.views.profile
 
 import utils
 
@@ -146,6 +147,7 @@ QtObject {
         Global.quitAppRequested.connect(() => openPopup(quitConfirmPopupComponent))
         Global.openQRScannerRequested.connect(() => openPopup(qrCodeScannerDialogComponent))
         Global.openInfoPopup.connect(openInfoPopup)
+        Global.shareProfileDialogRequested.connect(openShareProfilePopup)
     }
 
     property var currentPopup
@@ -452,7 +454,17 @@ QtObject {
     }
 
     function openInfoPopup(title, message) {
-        openPopup(infoComponent, {title: title, message, message})
+        openPopup(infoComponent, {title, message})
+    }
+
+    function openShareProfilePopup(publicKey) {
+        const contactEntry = getContactModelEntry(publicKey)
+        const contactDetails = contactEntry.contactDetails
+        const emojiHash = root.utilsStore.getEmojiHash(publicKey)
+        const linkToProfile = root.contactsStore.getLinkToProfile(publicKey)
+
+        openPopup(shareProfileCmp, {isCurrentUser: contactDetails.isCurrentUser, publicKey, emojiHash, colorId: contactDetails.colorId,
+                      linkToProfile, displayName: contactDetails.displayName, usesDefaultName: contactDetails.usesDefaultName, largeImage: contactDetails.largeImage})
     }
 
     readonly property list<Component> _components: [
@@ -1467,6 +1479,14 @@ QtObject {
                         Global.requestOpenLink(tag)
                     }
                 }
+            }
+        },
+
+        Component {
+            id: shareProfileCmp
+            ShareProfileDialog {
+                destroyOnClose: true
+                qrCode: root.profileStore.getQrCodeSource(linkToProfile)
             }
         }
     ]

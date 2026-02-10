@@ -67,6 +67,7 @@ Item {
     signal infoButtonClicked
     signal manageButtonClicked
     signal chatItemClicked(string id)
+    signal shareOwnProfileRequested
 
     // Permissions Related requests:
     signal createPermissionRequested(var holdings, int permissionType, bool isPrivate, var channels)
@@ -97,9 +98,8 @@ Item {
         image: communityData.image
         color: communityData.color
         amISectionAdmin: root.isSectionAdmin
-        openCreateChat: root.store.openCreateChat
         onInfoButtonClicked: root.infoButtonClicked()
-        onAdHocChatButtonClicked: root.store.openCloseCreateChatView()
+        onShareOwnProfileRequested: root.shareOwnProfileRequested()
     }
 
     Loader {

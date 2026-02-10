@@ -396,10 +396,8 @@ StatusSectionLayout {
             chatSectionModule: root.rootStore.chatCommunitySectionModule
             store: root.rootStore
             emojiPopup: root.emojiPopup
-            onOpenProfileClicked: {
-                root.profileButtonClicked();
-            }
 
+            onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.myPublicKey)
             onOpenAppSearch: {
                 root.openAppSearch()
             }
@@ -431,6 +429,7 @@ StatusSectionLayout {
             onManageButtonClicked: root.communityManageButtonClicked()
             onFinaliseOwnershipClicked: root.finaliseOwnershipClicked()
             onChatItemClicked: (id) => root.goToNextPanel()
+            onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.myPublicKey)
 
             // Permissions Related requests:
             onCreatePermissionRequested: root.createPermissionRequested(holdings, permissionType, isPrivate, channels)

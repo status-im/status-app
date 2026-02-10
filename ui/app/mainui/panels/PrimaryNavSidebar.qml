@@ -63,6 +63,7 @@ Control {
     signal itemActivated(int sectionType, string sectionId)
     signal activityCenterRequested(bool shouldShow)
     signal viewProfileRequested(string pubKey)
+    signal shareOwnProfileRequested
     signal setCurrentUserStatusRequested(int status)
 
     Component.onCompleted: d.snapToMode()
@@ -254,6 +255,7 @@ Control {
 
                     onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
                     onViewProfileRequested: (pubKey) => root.viewProfileRequested(pubKey)
+                    onShareOwnProfileRequested: root.shareOwnProfileRequested()
                 }
             }
         }
@@ -308,7 +310,6 @@ Control {
         thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
         onClicked: {
-            print ("!!!! Clicked", model.name)
             d.popupMenuInstance?.close()
             root.itemActivated(model.sectionType, model.id)
             if (root.interactive)
@@ -431,7 +432,7 @@ Control {
         color: Theme.palette.baseColor1
     }
 
-        // Component that provides clipping for the indicator
+    // Component that provides clipping for the indicator
     Item {
         id: swipeIndicatorWrapper
         anchors.left: root.right
@@ -447,7 +448,7 @@ Control {
         NativeIndicator {
             width: swipeIndicatorWrapper.width
             height: swipeIndicatorWrapper.height
-            x: - width * root.position
+            x: -width * root.position
             source: Assets.svg("swipe-indicator")
         }
     }

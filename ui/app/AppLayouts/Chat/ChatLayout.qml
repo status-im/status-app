@@ -188,8 +188,6 @@ StackLayout {
             assetsModel: root.rootStore.assetsModel
             collectiblesModel: root.rootStore.collectiblesModel
             requestToJoinState: root.rootStore.chatCommunitySectionModule.requestToJoinState
-            openCreateChat: rootStore.openCreateChat
-            onAdHocChatButtonClicked: rootStore.openCloseCreateChatView()
             onRequestToJoinClicked: {
                 Global.communityIntroPopupRequested(joinCommunityView.communityId, sectionItemModel.name,
                                                     sectionItemModel.introMessage, sectionItemModel.image,
@@ -444,7 +442,6 @@ StackLayout {
             image: root.sectionItemModel.image
             membersCount: sectionItemModel.joinedMembersCount
             communityItemsModel: root.rootStore.communityItemsModel
-            onAdHocChatButtonClicked: rootStore.openCloseCreateChatView()
 
             // Floating panel
             leftFloatingPanelItem: root.leftFloatingPanelItem
@@ -462,7 +459,6 @@ StackLayout {
             image: root.sectionItemModel.image
             membersCount: sectionItemModel.joinedMembersCount
             communityItemsModel: root.rootStore.communityItemsModel
-            onAdHocChatButtonClicked: rootStore.openCloseCreateChatView()
 
             // Floating panel
             leftFloatingPanelItem: root.leftFloatingPanelItem

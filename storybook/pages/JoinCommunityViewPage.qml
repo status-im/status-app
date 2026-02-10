@@ -123,7 +123,6 @@ Nemo enim 😋 ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit,
                 membersCount: d.membersCount
                 image: d.image                
                 amISectionAdmin: d.amISectionAdmin
-                openCreateChat: false
                 communityItemsModel: d.communityItemsModel
                 chatDateTimeText: d.chatDateTimeText
                 listUsersText: d.listUsersText
@@ -142,10 +141,6 @@ Nemo enim 😋 ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit,
                 collectiblesModel: d.collectiblesModel
 
                 onInfoButtonClicked: logs.logEvent("JoinCommunityView::onInfoButtonClicked()")
-                onAdHocChatButtonClicked: {
-                    logs.logEvent("JoinCommunityView::store.openCloseCreateChatView(): " + openCreateChat.toString())
-                    openCreateChat = !openCreateChat
-                }
                 onRequestToJoinClicked: logs.logEvent("JoinCommunityView::onRequestToJoinClicked()")
                 onInvitationPendingClicked: logs.logEvent("JoinCommunityView::onInvitationPendingClicked()")
             }

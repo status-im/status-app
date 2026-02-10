@@ -182,24 +182,7 @@ Pane {
             objectName: "shareProfileButton"
             size: StatusButton.Size.Small
             text: qsTr("Share Profile")
-            onClicked: shareProfileCmp.createObject(root).open()
-        }
-    }
-
-    Component {
-        id: shareProfileCmp
-        ShareProfileDialog {
-            destroyOnClose: true
-            isCurrentUser: d.isCurrentUser
-            title: isCurrentUser ? qsTr("Share your profile") : qsTr("%1's profile").arg(StatusQUtils.Emoji.parse(d.mainDisplayName))
-            publicKey: root.publicKey
-            emojiHash: d.emojiHash
-            linkToProfile: d.linkToProfile
-            qrCode: root.profileStore.getQrCodeSource(linkToProfile)
-            displayName: userImage.name
-            usesDefaultName: userImage.usesDefaultName
-            largeImage: userImage.image
-            colorId: root.profileStore.colorId
+            onClicked: Global.shareProfileDialogRequested(root.publicKey)
         }
     }
 
@@ -320,7 +303,7 @@ Pane {
                         text: qsTr("Show QR code")
                         icon.name: "qr"
                         enabled: !d.isCurrentUser
-                        onTriggered: shareProfileCmp.createObject(root).open()
+                        onTriggered: Global.shareProfileDialogRequested(root.publicKey)
                     }
                     StatusAction {
                         text: qsTr("Copy link to profile")

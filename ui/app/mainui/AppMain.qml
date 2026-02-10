@@ -2255,6 +2255,7 @@ Item {
 
         onSetCurrentUserStatusRequested: status => appMain.rootStore.setCurrentUserStatus(status)
         onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
+        onShareOwnProfileRequested: Global.shareProfileDialogRequested(ownContactDetails.publicKey)
 
         onItemActivated: function(sectionType, sectionId) {
             prevSectionId = sectionId

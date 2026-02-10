@@ -24,6 +24,7 @@ StatusIconTabButton {
     property var getEmojiHashFn: function(pubKey) { console.error("IMPLEMENT ME"); return "" }
 
     signal viewProfileRequested(string pubKey)
+    signal shareOwnProfileRequested
     signal setCurrentUserStatusRequested(int status)
 
     name: root.name
@@ -82,9 +83,11 @@ StatusIconTabButton {
         headerIcon: root.iconSource
         usesDefaultName: root.usesDefaultName
 
+        isCurrentUser: true
         currentUserStatus: root.currentUserStatus
 
         onViewProfileRequested: root.viewProfileRequested(root.pubKey)
+        onShareOwnProfileRequested: root.shareOwnProfileRequested()
         onCopyLinkRequested: ClipboardUtils.setText(root.getLinkToProfileFn(root.pubKey))
         onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
     }

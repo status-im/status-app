@@ -77,6 +77,8 @@ QtObject {
     signal leaveCommunityRequested(string community, string communityId, string outroMessage)
     signal openEditSharedAddressesFlow(string communityId)
 
+    signal shareProfileDialogRequested(string publicKey)
+
     signal playSendMessageSound()
     signal playNotificationSound()
     signal playErrorSound()

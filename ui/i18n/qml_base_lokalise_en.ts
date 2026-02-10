@@ -4251,9 +4251,9 @@
       </translation>
     </message>
     <message>
-      <source>Start chat</source>
+      <source>Invite contacts</source>
       <comment>ColumnHeaderPanel</comment>
-      <translation>Start chat</translation>
+      <translation>Invite contacts</translation>
     </message>
   </context>
   <context>
@@ -5294,6 +5294,11 @@
       <source>Open QR Scanner</source>
       <comment>ContactsColumnView</comment>
       <translation>Open QR Scanner</translation>
+    </message>
+    <message>
+      <source>Invite contacts</source>
+      <comment>ContactsColumnView</comment>
+      <translation>Invite contacts</translation>
     </message>
   </context>
   <context>
@@ -13901,6 +13906,14 @@
     </message>
   </context>
   <context>
+    <name>MessageReactionsRow</name>
+    <message>
+      <source>Add reaction</source>
+      <comment>MessageReactionsRow</comment>
+      <translation>Add reaction</translation>
+    </message>
+  </context>
+  <context>
     <name>MessageView</name>
     <message>
       <source>You sent a contact request to %1</source>
@@ -14362,6 +14375,14 @@
       <source>Retry mint</source>
       <comment>MintedTokensView</comment>
       <translation>Retry mint</translation>
+    </message>
+  </context>
+  <context>
+    <name>MobileAddressBar</name>
+    <message>
+      <source>Search or enter address</source>
+      <comment>MobileAddressBar</comment>
+      <translation>Search or enter address</translation>
     </message>
   </context>
   <context>
@@ -16794,16 +16815,6 @@
       <translation>Share Profile</translation>
     </message>
     <message>
-      <source>Share your profile</source>
-      <comment>ProfileDialogView</comment>
-      <translation>Share your profile</translation>
-    </message>
-    <message>
-      <source>%1&#39;s profile</source>
-      <comment>ProfileDialogView</comment>
-      <translation>%1&#39;s profile</translation>
-    </message>
-    <message>
       <source>Mark as trusted</source>
       <comment>ProfileDialogView</comment>
       <translation>Mark as trusted</translation>
@@ -19039,6 +19050,16 @@
       <comment>ShareProfileDialog</comment>
       <translation>Connect with %1 on Status: %2</translation>
     </message>
+    <message>
+      <source>%1&#39;s profile</source>
+      <comment>ShareProfileDialog</comment>
+      <translation>%1&#39;s profile</translation>
+    </message>
+    <message>
+      <source>Share profile to invite contacts</source>
+      <comment>ShareProfileDialog</comment>
+      <translation>Share profile to invite contacts</translation>
+    </message>
   </context>
   <context>
     <name>ShareUtils</name>
@@ -19749,6 +19770,19 @@
       <source>Send message</source>
       <comment>StatusChatInput</comment>
       <translation>Send message</translation>
+    </message>
+  </context>
+  <context>
+    <name>StatusChatInputReplyArea</name>
+    <message>
+      <source>Replying to %1</source>
+      <comment>StatusChatInputReplyArea</comment>
+      <translation>Replying to %1</translation>
+    </message>
+    <message>
+      <source>Cancel reply</source>
+      <comment>StatusChatInputReplyArea</comment>
+      <translation>Cancel reply</translation>
     </message>
   </context>
   <context>
@@ -22511,6 +22545,11 @@
       <comment>UserStatusContextMenu</comment>
       <translation>Set status automatically</translation>
     </message>
+    <message>
+      <source>Invite contacts</source>
+      <comment>UserStatusContextMenu</comment>
+      <translation>Invite contacts</translation>
+    </message>
   </context>
   <context>
     <name>Utils</name>
@@ -23698,11 +23737,6 @@
       <source>Status Desktop</source>
       <comment>main</comment>
       <translation>Status Desktop</translation>
-    </message>
-    <message>
-      <source>Hello World</source>
-      <comment>main</comment>
-      <translation>Hello World</translation>
     </message>
     <message>
       <source>Share logs or report a bug?</source>

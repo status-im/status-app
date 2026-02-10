@@ -16,10 +16,9 @@ Control {
     property url image
     property color color
     property bool amISectionAdmin
-    property bool openCreateChat
 
     signal infoButtonClicked
-    signal adHocChatButtonClicked
+    signal shareOwnProfileRequested
 
     padding: Theme.halfPadding
     rightPadding: Theme.padding
@@ -40,19 +39,17 @@ Control {
         }
 
         StatusIconTabButton {
-            objectName: "startChatButton"
-            icon.name: "edit"
+            objectName: "shareProfileButton"
+            icon.name: "add-contact"
             icon.color: Theme.palette.directColor1
-            Layout.alignment: Qt.AlignVCenter
-            checked: root.openCreateChat
-            highlighted: root.openCreateChat
-            onClicked: root.adHocChatButtonClicked()
+            checkable: false
+            onClicked: root.shareOwnProfileRequested()
 
             StatusToolTip {
-                text: qsTr("Start chat")
+                text: qsTr("Invite contacts")
                 visible: parent.hovered
                 orientation: StatusToolTip.Orientation.Bottom
-                y: parent.height + 12
+                y: parent.height + Theme.padding
             }
         }
     }

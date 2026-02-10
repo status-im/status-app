@@ -1,4 +1,5 @@
 import StatusQ.Popups
+import StatusQ.Core.Utils as SQUtils
 
 import shared.controls.chat
 import shared.controls.chat.menuItems
@@ -14,12 +15,14 @@ StatusMenu {
     property alias headerIcon: header.icon
     property alias colorId: header.colorId
     property alias usesDefaultName: header.usesDefaultName
+    property alias isCurrentUser: header.isCurrentUser
 
     // Constants.currentUserStatus
     property int currentUserStatus
 
     signal viewProfileRequested
     signal copyLinkRequested
+    signal shareOwnProfileRequested
     signal setCurrentUserStatusRequested(int status)
 
     ProfileHeader {
@@ -42,10 +45,22 @@ StatusMenu {
 
     StatusAction {
         objectName: "userStatusCopyLinkAction"
+        enabled: !SQUtils.Utils.isMobile
         text: qsTr("Copy link to profile")
         icon.name: "copy"
         onTriggered: {
             root.copyLinkRequested()
+            root.close()
+        }
+    }
+
+    StatusAction {
+        objectName: "userStatusShareProfileAction"
+        enabled: root.isCurrentUser && SQUtils.Utils.isMobile
+        text: qsTr("Invite contacts")
+        icon.name: "add-contact"
+        onTriggered: {
+            root.shareOwnProfileRequested()
             root.close()
         }
     }

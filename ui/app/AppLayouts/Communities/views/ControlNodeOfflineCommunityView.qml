@@ -34,9 +34,6 @@ StatusSectionLayout {
     property string listUsersText
     property var messagesModel
 
-    signal adHocChatButtonClicked
-
-
     QtObject {
         id: d
 
@@ -62,8 +59,6 @@ StatusSectionLayout {
             image: root.image
             color: root.color
             amISectionAdmin: false
-            openCreateChat: false
-            onAdHocChatButtonClicked: root.adHocChatButtonClicked()
         }
 
         ColumnLayout {
