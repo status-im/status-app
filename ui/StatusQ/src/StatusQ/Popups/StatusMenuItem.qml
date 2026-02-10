@@ -93,7 +93,7 @@ MenuItem {
         }
 
         readonly property StatusFontSettings defaultFontSettings: StatusFontSettings {
-            pixelSize: Theme.additionalTextSize
+            pixelSize: root.Theme.additionalTextSize
             bold: false
             italic: false
         }

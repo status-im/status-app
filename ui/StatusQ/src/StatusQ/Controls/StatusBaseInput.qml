@@ -235,12 +235,12 @@ Item {
         width: 24
         height: 24
         name: ""
-        color: Theme.palette.baseColor1
+        color: root.Theme.palette.baseColor1
         emoji: ""
         letterSize: emoji ? 11 : 14
         bgWidth: 30
         bgHeight: 30
-        bgColor: Theme.palette.indirectColor1
+        bgColor: root.Theme.palette.indirectColor1
     }
 
     /*!

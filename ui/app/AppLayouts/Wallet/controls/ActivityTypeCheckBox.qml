@@ -19,8 +19,8 @@ StatusListItem {
         bgWidth: 0
         bgHeight: 0
         bgRadius: 0
-        bgColor: Theme.palette.primaryColor3
-        color: Theme.palette.primaryColor1
+        bgColor: root.Theme.palette.primaryColor3
+        color: root.Theme.palette.primaryColor1
     }
 
     signal actionTriggered()

@@ -33,6 +33,8 @@ import StatusQ.Popups
  */
 
 Menu {
+    Theme.style: parent?.Theme.style ?? Theme.Style.Light
+
     id: root
 
     property real maxImplicitWidth: 640
@@ -48,12 +50,12 @@ Menu {
         isImage: false
         color: {
             if (!root.enabled)
-                return Theme.palette.baseColor1
+                return root.Theme.palette.baseColor1
             if (root.type === StatusAction.Type.Danger)
-                return Theme.palette.dangerColor1
+                return root.Theme.palette.dangerColor1
             if (root.type === StatusAction.Type.Success)
-                return Theme.palette.successColor1
-            return Theme.palette.primaryColor1
+                return root.Theme.palette.successColor1
+            return root.Theme.palette.primaryColor1
         }
     }
 

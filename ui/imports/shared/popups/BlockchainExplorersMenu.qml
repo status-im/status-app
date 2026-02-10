@@ -38,6 +38,7 @@ StatusMenu {
                 anchors.rightMargin: parent.horizontalPadding
                 anchors.verticalCenter: parent.verticalCenter
                 icon: "external-link"
+                color: Theme.palette.primaryColor1
             }
         }
     }

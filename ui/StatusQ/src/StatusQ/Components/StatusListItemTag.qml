@@ -24,10 +24,10 @@ Control {
         rotation: 0
         isLetterIdenticon: false
         letterSize: 10
-        color: Theme.palette.primaryColor1
+        color: root.Theme.palette.primaryColor1
         bgWidth: 15
         bgHeight: 15
-        bgColor: Theme.palette.primaryColor3
+        bgColor: root.Theme.palette.primaryColor3
         bgRadius: bgWidth / 2
         imgIsIdenticon: false
     }

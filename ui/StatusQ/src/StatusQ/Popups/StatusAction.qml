@@ -5,6 +5,8 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 
 Action {
+    Theme.style: parent?.Theme.style ?? Theme.Style.Light
+
     id: root
 
     enum Type {
@@ -24,18 +26,18 @@ Action {
         imgIsIdenticon: false
         color: root.icon.color
         name: root.icon.name
-        hoverColor: Theme.palette.statusMenu.hoverBackgroundColor
+        hoverColor: root.Theme.palette.statusMenu.hoverBackgroundColor
     }
 
     property StatusFontSettings fontSettings: StatusFontSettings {}
 
     icon.color: {
         if (!root.enabled)
-            return Theme.palette.baseColor1
+            return root.Theme.palette.baseColor1
         if (type === StatusAction.Type.Danger)
-            return Theme.palette.dangerColor1
+            return root.Theme.palette.dangerColor1
         if (type === StatusAction.Type.Success)
-            return Theme.palette.successColor1
-        return Theme.palette.primaryColor1
+            return root.Theme.palette.successColor1
+        return root.Theme.palette.primaryColor1
     }
 }

@@ -25,7 +25,7 @@ Rectangle {
     property StatusAssetSettings asset: StatusAssetSettings {
         width: 24
         height: 24
-        color: Theme.palette.miscColor5
+        color: root.Theme.palette.miscColor5
         emoji: ""
         charactersLen: root.type === StatusChatListItem.Type.OneToOneChat ? 2 : 1
     }

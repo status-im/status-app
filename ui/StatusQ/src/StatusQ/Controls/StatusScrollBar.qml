@@ -46,7 +46,7 @@ T.ScrollBar {
     background: Item {}
 
     contentItem: Rectangle {
-        color: Theme.palette.primaryColor2
+        color: root.Theme.palette.primaryColor2
         opacity: enabled && (root.hovered || root.active || (root.policy === T.ScrollBar.AlwaysOn)) ? 1.0 : 0.0
         radius: Math.min(width, height) / 2
 

@@ -43,13 +43,13 @@ ColumnLayout {
             asset: StatusAssetSettings {
                 width: 24
                 height: 24
-                color: Theme.palette.primaryColor1
+                color: root.Theme.palette.primaryColor1
                 bgWidth: 40
                 bgHeight: 40
-                bgColor: Theme.palette.desktopBlue10
+                bgColor: root.Theme.palette.desktopBlue10
                 bgRadius: bgWidth / 2
                 bgBorderWidth: 2
-                bgBorderColor: Theme.palette.statusAppLayout.backgroundColor
+                bgBorderColor: root.Theme.palette.statusAppLayout.backgroundColor
                 source: Assets.svg("sign")
             }
         }

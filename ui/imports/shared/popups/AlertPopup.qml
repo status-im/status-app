@@ -26,10 +26,10 @@ StatusDialog {
         width: 24
         height: 24
         rotation: 0
-        color: Theme.palette.primaryColor1
+        color: root.Theme.palette.primaryColor1
         bgWidth: 40
         bgHeight: 40
-        bgColor: Theme.palette.primaryColor3
+        bgColor: root.Theme.palette.primaryColor3
         bgRadius: bgWidth / 2
     }
 
