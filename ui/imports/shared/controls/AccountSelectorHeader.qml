@@ -9,7 +9,7 @@ import utils
 
 AccountSelector {
     id: root
-    
+
     control.padding: 0
     control.rightInset: -6 //broken indicator positioning
     control.spacing: 4
@@ -29,6 +29,7 @@ AccountSelector {
     contentItem: RowLayout {
         id: contentItemRow
 
+        clip: true
         spacing: 0
 
         StatusSmartIdenticon {
