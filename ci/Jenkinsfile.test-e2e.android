@@ -167,6 +167,7 @@ pipeline {
       junit allowEmptyResults: true, testResults: "test/e2e_appium/reports/${env.BUILD_TAG}/pytest_results_*.xml"
       archiveArtifacts artifacts: "test/e2e_appium/reports/${env.BUILD_TAG}/**/*", allowEmptyArchive: true
       env.PKG_URL = "${env.BUILD_URL}testReport/"
+      updateGitHubStatus()
     } }
     success { script { github.notifyPR(true) } }
     failure { script { github.notifyPR(false) } }
