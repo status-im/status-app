@@ -11414,6 +11414,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>MessageReactionsRow</name>
+    <message>
+        <source>Add reaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -13596,6 +13603,13 @@ to load</source>
     </message>
     <message>
         <source>%1&apos;s profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>PrimaryNavSidebar</name>
+    <message>
+        <source>QR Scanner</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -16220,6 +16234,17 @@ to load</source>
     </message>
     <message>
         <source>Send message</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputReplyArea</name>
+    <message>
+        <source>Replying to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel reply</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -19475,10 +19500,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>main</name>
     <message>
         <source>Status Desktop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

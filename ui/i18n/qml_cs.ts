@@ -4358,10 +4358,6 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <source>Start chat</source>
         <translation>Zahájit chat</translation>
     </message>
-    <message>
-        <source>Open QR Scanner</source>
-        <translation>Otevřít QR skener</translation>
-    </message>
 </context>
 <context>
     <name>ContactsListPanel</name>
@@ -11509,6 +11505,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>MessageReactionsRow</name>
+    <message>
+        <source>Add reaction</source>
+        <translation type="unfinished">Přidat reakci</translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -13710,6 +13713,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>PrimaryNavSidebar</name>
+    <message>
+        <source>QR Scanner</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>PrivacyAndSecurityView</name>
     <message>
         <source>Privacy policy</source>
@@ -14487,10 +14497,6 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Camera access denied. Please enable it in system settings.</source>
-        <translation>Přístup k fotoaparátu odepřen. Prosím povolte jej v nastavení systému.</translation>
-    </message>
-    <message>
         <source>To scan QR codes, add contacts, send funds to wallets, and sync apps.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -14498,16 +14504,20 @@ selhalo</translation>
         <source>Open settings</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Scanned successfully</source>
+        <translation type="unfinished">Úspěšně naskenováno</translation>
+    </message>
 </context>
 <context>
     <name>QRCodeScannerDialog</name>
     <message>
-        <source>Status doesn&apos;t understand the QR code.</source>
-        <translation>Status nedokáže rozeznat tento QR kód.</translation>
+        <source>QR Scanner</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Scanned successfully</source>
-        <translation>Úspěšně naskenováno</translation>
+        <source>We cannot read that QR code.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16341,6 +16351,17 @@ selhalo</translation>
     <message>
         <source>Send message</source>
         <translation>Odeslat zprávu</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputReplyArea</name>
+    <message>
+        <source>Replying to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel reply</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19611,10 +19632,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Status Desktop</source>
         <translation>Status Desktop</translation>
-    </message>
-    <message>
-        <source>Hello World</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>
