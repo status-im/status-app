@@ -82,6 +82,7 @@ community_member = UserAccount('member', '1111111111', [None], None)
 
 wallet_load = UserAccount('wallet_load', '1111111111', [None], None)
 wallet_load_alex = UserAccount('wallet_load_alex', '1111111111', [None], None)
+status_community_member = UserAccount('status_community_member', '1111111111', [None], None)
 
 
 @dataclass

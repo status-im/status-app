@@ -13,7 +13,7 @@ def test_add_5_member_role_permissions(main_screen: MainWindow):
     with step('Create community and select it'):
         community = RandomCommunity()
         main_screen.left_panel.create_community(community_data=community)
-        community_screen = main_screen.left_panel.select_community(community.name)
+        community_screen = main_screen.left_panel.open_community(community.name)
 
     with step('Open add new permission page'):
         community_setting = community_screen.left_panel.open_community_settings()

@@ -19,7 +19,7 @@ from helpers.chat_helper import skip_message_backup_popup_if_visible
 def test_member_role_cannot_add_edit_or_delete_category(main_screen, user_data, user_account):
 
     with step('Choose community user is not owner of'):
-        community_screen = main_screen.left_panel.select_community('Community with 2 users')
+        community_screen = main_screen.left_panel.open_community('Community with 2 users')
 
     with step('Verify that member cannot add category'):
         if community_screen.left_panel._channel_or_category_button.exists:
@@ -51,7 +51,7 @@ def test_clicking_community_category(main_screen: MainWindow, category_name, gen
     with step('Create community and select it'):
         community = RandomCommunity()
         main_screen.left_panel.create_community(community_data=community)
-        community_screen = main_screen.left_panel.select_community(community.name)
+        community_screen = main_screen.left_panel.open_community(community.name)
 
     with step('Create community category and verify that it displays correctly'):
         community_screen.create_category(category_name, general_checkbox)

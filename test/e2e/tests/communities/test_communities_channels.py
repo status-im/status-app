@@ -29,7 +29,7 @@ def test_create_edit_remove_community_channel(main_screen, channel_name, channel
     with step('Create community and select it'):
         community = RandomCommunity()
         main_screen.left_panel.create_community(community_data=community)
-        community_screen = main_screen.left_panel.select_community(community.name)
+        community_screen = main_screen.left_panel.open_community(community.name)
 
     with step('Verify General channel is present for recently created community'):
         community_screen.verify_channel(
@@ -78,7 +78,7 @@ def test_create_edit_remove_community_channel(main_screen, channel_name, channel
 def test_member_role_cannot_add_edit_and_delete_channels(main_screen: MainWindow):
 
     with step('Choose community user is not owner of'):
-        community_screen = main_screen.left_panel.select_community('Community with 2 users')
+        community_screen = main_screen.left_panel.open_community('Community with 2 users')
     with step('Verify that member cannot add new channel'):
         with step('Verify that create channel or category button is not present'):
             assert not community_screen.left_panel.does_create_channel_or_category_button_exist()
@@ -129,7 +129,7 @@ def test_member_cannot_see_hidden_channel(multiple_instances, user_data_one, use
         with step(f'User {user_two.name}, select non-restricted channel and can send message'):
             aut_two.attach()
             main_screen.prepare()
-            community_screen = main_screen.left_panel.select_community('Community with 2 users')
+            community_screen = main_screen.left_panel.open_community('Community with 2 users')
 
         with step(f'User {user_two.name}, create hidden channel, verify that it is in the list'):
             create_channel_popup = community_screen.left_panel.open_create_channel_popup().create(channel_name,
@@ -176,7 +176,7 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
         with step(f'User {user_two.name}, select non-restricted channel and can send message'):
             aut_two.attach()
             main_screen.prepare()
-            community_screen = main_screen.left_panel.select_community('Community with 2 users')
+            community_screen = main_screen.left_panel.open_community('Community with 2 users')
             community_screen.create_channel(channel_name, channel_description, emoji=None)
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
@@ -188,7 +188,7 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
                 f'can send message'):
             aut_one.attach()
             main_screen.prepare()
-            community_screen = main_screen.left_panel.select_community('Community with 2 users')
+            community_screen = main_screen.left_panel.open_community('Community with 2 users')
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
             message_object = messages_screen.chat.messages(0)[0]

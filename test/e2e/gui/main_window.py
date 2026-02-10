@@ -197,7 +197,7 @@ class MainLeftPanel(QObject):
         raise LookupError(f'Community: {name} not found in {community_names}')
 
     @allure.step('Open community')
-    def select_community(self, name: str) -> CommunityScreen:
+    def open_community(self, name: str) -> CommunityScreen:
         driver.mouseClick(self._get_community(name))
         skip_message_backup_popup_if_visible()
         skip_intro_if_visible()

@@ -40,7 +40,7 @@ def test_mint_owner_and_tokenmaster_tokens(main_window, user_account, network_na
     with step('Create community and select it'):
         community = RandomCommunity()
         main_window.left_panel.create_community(community_data=community)
-        community_screen = main_window.left_panel.select_community(community.name)
+        community_screen = main_window.left_panel.open_community(community.name)
 
     with step('Open mint owner token view'):
         community_setting = community_screen.left_panel.open_community_settings()

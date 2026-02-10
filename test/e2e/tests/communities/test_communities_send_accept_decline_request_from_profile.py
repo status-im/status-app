@@ -87,7 +87,7 @@ def test_communities_send_accept_decline_request_remove_contact_from_profile(mul
             with step('Create community and select it'):
                 community = RandomCommunity()
                 main_screen.left_panel.create_community(community_data=community)
-                community_screen = main_screen.left_panel.select_community(community.name)
+                community_screen = main_screen.left_panel.open_community(community.name)
 
             add_popup = community_screen.left_panel.open_add_members_popup()
             add_popup.invite([user_one.name, user_three.name], message=random_text_message())
@@ -125,7 +125,7 @@ def test_communities_send_accept_decline_request_remove_contact_from_profile(mul
 
         with step(
                 f'User {user_one.name} send contact request to {user_three.name} from user profile from members list'):
-            community_screen = main_screen.left_panel.select_community(community.name)
+            community_screen = main_screen.left_panel.open_community(community.name)
             profile_popup = community_screen.right_panel.click_member(user_three.name)
             profile_popup.send_request().send(f'Hello {user_three.name}')
             ProfilePopupFromMembers().wait_until_appears()
@@ -134,7 +134,7 @@ def test_communities_send_accept_decline_request_remove_contact_from_profile(mul
                 f'User {user_three.name}, accept contact request from {user_one.name} from user profile from members list'):
             aut_three.attach()
             main_screen.prepare()
-            community_screen = main_screen.left_panel.select_community(community.name)
+            community_screen = main_screen.left_panel.open_community(community.name)
             profile_popup = community_screen.right_panel.click_member(user_one.name)
             profile_popup.review_contact_request().accept_button.wait_until_appears().click()
 

@@ -49,7 +49,7 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
                 main_screen.left_panel.create_community(community_data=community)
 
             with step('Verify community parameters in community overview'):
-                community_screen = main_screen.left_panel.select_community(community.name)
+                community_screen = main_screen.left_panel.open_community(community.name)
                 assert community_screen.left_panel.name == community.name
                 assert '1' in community_screen.left_panel.members
 
@@ -103,7 +103,7 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
             main_screen.left_panel.click()
 
             with step(f'Invite {user_one.name}'):
-                community_screen = main_screen.left_panel.select_community(new_name)
+                community_screen = main_screen.left_panel.open_community(new_name)
                 add_members = community_screen.left_panel.open_add_members_popup()
                 add_members.invite([user_one.name], message=random_text_message())
                 main_screen.minimize()
@@ -134,7 +134,7 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
             assert '2' in community_screen.left_panel.members
 
         with step(f'Go to edit community for {user_two.name} and check that pin message checkbox is not checked'):
-            community_screen = main_screen.left_panel.select_community(new_name)
+            community_screen = main_screen.left_panel.open_community(new_name)
             community_setting = community_screen.left_panel.open_community_settings()
             edit_community_form = community_setting.left_panel.open_overview().open_edit_community_view()
             assert not edit_community_form.pin_message_checkbox_state
