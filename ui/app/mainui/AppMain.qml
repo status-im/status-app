@@ -2256,13 +2256,14 @@ Item {
         onSetCurrentUserStatusRequested: status => appMain.rootStore.setCurrentUserStatus(status)
         onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
         onShareOwnProfileRequested: Global.shareProfileDialogRequested(ownContactDetails.publicKey)
+        onShowQrScannerRequested: () => {
+            Global.openQRScannerRequested()
+        }
 
         onItemActivated: function(sectionType, sectionId) {
             prevSectionId = sectionId
             if (sectionType === Constants.appSection.swap) {
                 popupRequestsHandler.swapModalHandler.launchSwap()
-            } else if (sectionType === Constants.appSection.qrCodeScanner) {
-                Global.openQRScannerRequested()
             } else {
                 changeAppSectionBySectionId(sectionId)
             }

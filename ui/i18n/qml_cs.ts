@@ -13720,6 +13720,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>PrimaryNavSidebar</name>
+    <message>
+        <source>QR Scanner</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>PrivacyAndSecurityView</name>
     <message>
         <source>Privacy policy</source>
@@ -14497,10 +14504,6 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Camera access denied. Please enable it in system settings.</source>
-        <translation>Přístup k fotoaparátu odepřen. Prosím povolte jej v nastavení systému.</translation>
-    </message>
-    <message>
         <source>To scan QR codes, add contacts, send funds to wallets, and sync apps.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -14508,16 +14511,20 @@ selhalo</translation>
         <source>Open settings</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Scanned successfully</source>
+        <translation type="unfinished">Úspěšně naskenováno</translation>
+    </message>
 </context>
 <context>
     <name>QRCodeScannerDialog</name>
     <message>
-        <source>Status doesn&apos;t understand the QR code.</source>
-        <translation>Status nedokáže rozeznat tento QR kód.</translation>
+        <source>QR Scanner</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Scanned successfully</source>
-        <translation>Úspěšně naskenováno</translation>
+        <source>We cannot read that QR code.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

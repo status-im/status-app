@@ -13595,6 +13595,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>PrimaryNavSidebar</name>
+    <message>
+        <source>QR Scanner</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>PrivacyAndSecurityView</name>
     <message>
         <source>Privacy policy</source>

@@ -13637,6 +13637,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>PrimaryNavSidebar</name>
+    <message>
+        <source>QR Scanner</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>PrivacyAndSecurityView</name>
     <message>
         <source>Receive Status News via RSS</source>

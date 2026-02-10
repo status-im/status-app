@@ -65,6 +65,7 @@ Control {
     signal viewProfileRequested(string pubKey)
     signal shareOwnProfileRequested
     signal setCurrentUserStatusRequested(int status)
+    signal showQrScannerRequested()
 
     Component.onCompleted: d.snapToMode()
     onAlwaysVisibleChanged: d.snapToMode()
@@ -248,6 +249,18 @@ Control {
                     delegate: BottomSectionButton {}
                 }
 
+                // QR code scanner
+                BottomSectionButton {
+                    objectName: "QRCodeScannerNavBarButton"
+                    tooltipText: qsTr("QR Scanner")
+                    icon.name: "qr-scan"
+                    onClicked: {
+                        root.showQrScannerRequested()
+                        if (root.interactive)
+                            root.close()
+                    }
+                }
+
                 // own profile
                 ProfileButton {
                     objectName: "statusProfileNavBarTabButton"
@@ -321,6 +334,8 @@ Control {
         thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
         onClicked: {
+            if (!model || !model.sectionType)
+                return
             d.popupMenuInstance?.close()
             root.itemActivated(model.sectionType, model.id)
             if (root.interactive)

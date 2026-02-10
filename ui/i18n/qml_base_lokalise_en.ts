@@ -16582,6 +16582,14 @@
     </message>
   </context>
   <context>
+    <name>PrimaryNavSidebar</name>
+    <message>
+      <source>QR Scanner</source>
+      <comment>PrimaryNavSidebar</comment>
+      <translation>QR Scanner</translation>
+    </message>
+  </context>
+  <context>
     <name>PrivacyAndSecurityView</name>
     <message>
       <source>Privacy policy</source>
