@@ -164,6 +164,12 @@ QtObject:
       ethRpcProxyUser: ETH_RPC_PROXY_USER_RESOLVED,
       ethRpcProxyPassword: ETH_RPC_PROXY_PASSWORD_RESOLVED,
       ethRpcProxyUrl: ETH_RPC_PROXY_URL_RESOLVED,
+      nftProxyUrl: NFT_PROXY_URL_RESOLVED,
+      nftProxyStageName: NFT_PROXY_STAGE_NAME_RESOLVED,
+      nftProxyUser: NFT_PROXY_USER_RESOLVED,
+      nftProxyPassword: NFT_PROXY_PASSWORD_RESOLVED,
+      nftProxyUsePuzzleAuth: NFT_PROXY_USE_PUZZLE_AUTH_RESOLVED,
+
     )
 
   proc buildWalletConfig(): WalletConfig =

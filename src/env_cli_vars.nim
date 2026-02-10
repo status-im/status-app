@@ -37,6 +37,11 @@ const BASE_NAME_API_LOGGING = "API_LOGGING"
 const BASE_NAME_ETH_RPC_PROXY_USER = "ETH_RPC_PROXY_USER"
 const BASE_NAME_ETH_RPC_PROXY_PASSWORD = "ETH_RPC_PROXY_PASSWORD"
 const BASE_NAME_ETH_RPC_PROXY_URL = "ETH_RPC_PROXY_URL"
+const BASE_NAME_NFT_PROXY_URL = "NFT_PROXY_URL"
+const BASE_NAME_NFT_PROXY_STAGE_NAME = "NFT_PROXY_STAGE_NAME"
+const BASE_NAME_NFT_PROXY_USER = "NFT_PROXY_USER"
+const BASE_NAME_NFT_PROXY_PASSWORD = "NFT_PROXY_PASSWORD"
+const BASE_NAME_NFT_PROXY_USE_PUZZLE_AUTH = "NFT_PROXY_USE_PUZZLE_AUTH"
 
 
 ################################################################################
@@ -75,6 +80,11 @@ const BUILD_MARKET_DATA_PRICES_REFRESH_INTERVAL = getEnv(BUILD_TIME_PREFIX & BAS
 const BUILD_ETH_RPC_PROXY_USER = getEnv(BUILD_TIME_PREFIX & BASE_NAME_ETH_RPC_PROXY_USER)
 const BUILD_ETH_RPC_PROXY_PASSWORD = getEnv(BUILD_TIME_PREFIX & BASE_NAME_ETH_RPC_PROXY_PASSWORD)
 const BUILD_ETH_RPC_PROXY_URL = getEnv(BUILD_TIME_PREFIX & BASE_NAME_ETH_RPC_PROXY_URL)
+const BUILD_NFT_PROXY_URL = getEnv(BUILD_TIME_PREFIX & BASE_NAME_NFT_PROXY_URL)
+const BUILD_NFT_PROXY_STAGE_NAME = getEnv(BUILD_TIME_PREFIX & BASE_NAME_NFT_PROXY_STAGE_NAME)
+const BUILD_NFT_PROXY_USER = getEnv(BUILD_TIME_PREFIX & BASE_NAME_NFT_PROXY_USER)
+const BUILD_NFT_PROXY_PASSWORD = getEnv(BUILD_TIME_PREFIX & BASE_NAME_NFT_PROXY_PASSWORD)
+const BUILD_NFT_PROXY_USE_PUZZLE_AUTH = getEnv(BUILD_TIME_PREFIX & BASE_NAME_NFT_PROXY_USE_PUZZLE_AUTH, "true") == "true"
 
 const
   DEFAULT_TENOR_API_KEY = "DU7DWZ27STB2"
@@ -220,6 +230,31 @@ type StatusDesktopConfig = object
     desc: "Sets custom ETH RPC proxy URL"
     name: $BASE_NAME_ETH_RPC_PROXY_URL
     abbr: "eth-rpc-proxy-url" .}: string
+  nftProxyUrl* {.
+    defaultValue: BUILD_NFT_PROXY_URL
+    desc: "Sets NFT proxy URL override"
+    name: $BASE_NAME_NFT_PROXY_URL
+    abbr: "nft-proxy-url" .}: string
+  nftProxyStageName* {.
+    defaultValue: BUILD_NFT_PROXY_STAGE_NAME
+    desc: "Sets NFT proxy stage name"
+    name: $BASE_NAME_NFT_PROXY_STAGE_NAME
+    abbr: "nft-proxy-stage-name" .}: string
+  nftProxyUser* {.
+    defaultValue: BUILD_NFT_PROXY_USER
+    desc: "Sets NFT proxy username"
+    name: $BASE_NAME_NFT_PROXY_USER
+    abbr: "nft-proxy-user" .}: string
+  nftProxyPassword* {.
+    defaultValue: BUILD_NFT_PROXY_PASSWORD
+    desc: "Sets NFT proxy password"
+    name: $BASE_NAME_NFT_PROXY_PASSWORD
+    abbr: "nft-proxy-password" .}: string
+  nftProxyUsePuzzleAuth* {.
+    defaultValue: BUILD_NFT_PROXY_USE_PUZZLE_AUTH
+    desc: "Enables puzzle authentication for NFT proxy"
+    name: $BASE_NAME_NFT_PROXY_USE_PUZZLE_AUTH
+    abbr: "nft-proxy-use-puzzle-auth" .}: bool
 
   # runtime vars
   dataDir* {.

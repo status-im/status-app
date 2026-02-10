@@ -20,6 +20,11 @@ type
     ethRpcProxyUser*: string
     ethRpcProxyPassword*: string
     ethRpcProxyUrl*: string
+    nftProxyUrl*: string
+    nftProxyStageName*: string
+    nftProxyUser*: string
+    nftProxyPassword*: string
+    nftProxyUsePuzzleAuth*: bool
 
 proc toJson*(self: WalletSecretsConfig): JsonNode =
   return %* {
@@ -41,4 +46,9 @@ proc toJson*(self: WalletSecretsConfig): JsonNode =
     "ethRpcProxyUser": self.ethRpcProxyUser,
     "ethRpcProxyPassword": self.ethRpcProxyPassword,
     "ethRpcProxyUrl": self.ethRpcProxyUrl,
+    "nftProxyUrl": self.nftProxyUrl,
+    "nftProxyStageName": self.nftProxyStageName,
+    "nftProxyUser": self.nftProxyUser,
+    "nftProxyPassword": self.nftProxyPassword,
+    "nftProxyUsePuzzleAuth": self.nftProxyUsePuzzleAuth,
   }

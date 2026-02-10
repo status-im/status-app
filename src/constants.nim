@@ -68,6 +68,11 @@ let
   ETH_RPC_PROXY_USER_RESOLVED* = desktopConfig.ethRpcProxyUser
   ETH_RPC_PROXY_PASSWORD_RESOLVED* = desktopConfig.ethRpcProxyPassword
   ETH_RPC_PROXY_URL_RESOLVED* = desktopConfig.ethRpcProxyUrl
+  NFT_PROXY_URL_RESOLVED* = desktopConfig.nftProxyUrl
+  NFT_PROXY_STAGE_NAME_RESOLVED* = desktopConfig.nftProxyStageName
+  NFT_PROXY_USER_RESOLVED* = desktopConfig.nftProxyUser
+  NFT_PROXY_PASSWORD_RESOLVED* = desktopConfig.nftProxyPassword
+  NFT_PROXY_USE_PUZZLE_AUTH_RESOLVED* = desktopConfig.nftProxyUsePuzzleAuth
 
   WALLET_CONNECT_PROJECT_ID* = BUILD_WALLET_CONNECT_PROJECT_ID
   MIXPANEL_APP_ID* = desktopConfig.mixpanelAppId
