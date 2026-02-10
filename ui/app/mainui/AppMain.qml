@@ -2605,7 +2605,7 @@ Item {
 
         active: false
 
-        property var params
+        property var params: ({})
 
         function open(params = {}) {
             deleteSavedAddress.params = params
@@ -2617,11 +2617,15 @@ Item {
         }
 
         onLoaded: {
-            deleteSavedAddress.item.initWithParams(deleteSavedAddress.params)
             deleteSavedAddress.item.open()
         }
 
         sourceComponent: WalletPopups.RemoveSavedAddressPopup {
+            name: deleteSavedAddress.params.name ?? ""
+            address: deleteSavedAddress.params.address ?? ""
+            ens: deleteSavedAddress.params.ens ?? ""
+            colorId: deleteSavedAddress.params.colorId ?? "blue"
+
             onClosed: {
                 deleteSavedAddress.close()
             }

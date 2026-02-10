@@ -66,17 +66,22 @@ StatusDialog {
         }
     }
 
-    contentItem: ColumnLayout {
-        spacing: Theme.halfPadding
+    contentItem: Item {
+        implicitHeight: 36
 
-        StatusBaseText {
-            objectName: "RemoveSavedAddressPopup-Notification"
-            Layout.preferredWidth: parent.width
-            wrapMode: Text.WordWrap
-            textFormat: Text.RichText
-            font.pixelSize: Theme.primaryTextFontSize
-            lineHeight: d.lineHeight
-            text: qsTr("Are you sure you want to remove %1 from your saved addresses?").arg("<b>%1</b>".arg(root.name))
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: Theme.halfPadding
+
+            StatusBaseText {
+                objectName: "RemoveSavedAddressPopup-Notification"
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                textFormat: Text.StyledText
+                font.pixelSize: Theme.primaryTextFontSize
+                lineHeight: d.lineHeight
+                text: qsTr("Are you sure you want to remove %1 from your saved addresses?").arg("<b>%1</b>".arg(root.name))
+            }
         }
     }
 
