@@ -457,7 +457,8 @@ Control {
     NativeSwipeHandler {
         id: navSwipeHandler
         anchors.verticalCenter: swipeIndicatorWrapper.verticalCenter
-        width: 2 * root.width
+        anchors.left: contentItem.right
+        width: root.width
         // Max 200px is allowed on Android
         height: swipeIndicatorWrapper.height * 2
         openDistance: root.width

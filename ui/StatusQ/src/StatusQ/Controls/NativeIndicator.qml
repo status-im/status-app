@@ -33,7 +33,7 @@ Item {
 
     QtObject {
         id: d
-        readonly property bool useNative: SQUtils.isMobile || SQUtils.isMacOS
+        readonly property bool useNative: SQUtils.Utils.isMobile || SQUtils.Utils.isMacOS
         property var implItem: null
 
         function destroyImpl() {

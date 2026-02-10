@@ -183,9 +183,7 @@ public class NativeSwipeHandlerHelper {
                         contentView.addView(touchOverlayView);
                     }
                 }
-                // If a swipe is active, don't move/resize the overlay underneath the finger.
-                // The view will continue receiving events anyway once it has captured ACTION_DOWN.
-                if (active) return;
+
                 ViewGroup.LayoutParams lp = touchOverlayView.getLayoutParams();
                 if (lp != null) {
                     lp.width = (int) Math.max(1, handlerWidth);
