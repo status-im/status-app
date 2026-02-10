@@ -133,5 +133,33 @@ Item {
             compare(dynamicSpy.signalArguments[0][1], gridBtn.sectionType)
             compare(dynamicSpy.signalArguments[0][2], gridBtn.itemId)
         }
+
+        function test_show_hide_dapps_data() {
+            return [
+                        { tag: "dapps enabled", showDapps: true },
+                        { tag: "dapps disabled", showDapps: false },
+                    ]
+        }
+
+        function test_show_hide_dapps(data) {
+            const dAppsVisible = data.showDapps
+            homePageAdaptor.showDapps = dAppsVisible
+
+            const gridView = findChild(controlUnderTest, "homePageGridView")
+            verify(!!gridView)
+            gridView.forceLayout()
+
+            var anyDappsFound = false
+            const count = gridView.count
+            for (var i = 0; i < count; i++) {
+                gridView.positionViewAtIndex(i, GridView.Visible)
+                const gridItem = gridView.itemAtIndex(i)
+                if (!!gridItem && gridItem.item.sectionType === Constants.appSection.dApp) {
+                    anyDappsFound = true
+                }
+            }
+
+            compare(anyDappsFound, dAppsVisible)
+        }
     }
 }

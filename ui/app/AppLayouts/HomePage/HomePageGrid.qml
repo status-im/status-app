@@ -68,6 +68,8 @@ Control {
         StatusGridView {
             id: gridView
 
+            objectName: "homePageGridView"
+
             readonly property int delegateCountPerRow: Math.trunc(parent.width / (root.delegateWidth + root.spacing))
 
             height: parent.height

@@ -1534,6 +1534,7 @@ Item {
                             showEnabledSectionsOnly: true
                             marketEnabled: appMain.featureFlagsStore.marketEnabled
                             browserEnabled: d.isBrowserEnabled
+                            showDapps: false // SEE https://github.com/status-im/status-app/issues/19580
 
                             syncingBadgeCount: d.syncingBadgeCount
                             messagingBadgeCount: contactsModelAdaptor.pendingReceivedRequestContacts.count
