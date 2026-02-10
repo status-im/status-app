@@ -18,6 +18,7 @@ Control {
     property alias oneAttachment: oneAttachment.checked
     property alias threeAttachments: threeAttachments.checked
     property alias sevenAttachments: sevenAttachments.checked
+    property alias showQuickActions: showQuickActions.checked
 
     property bool fullEditorVisible: true
 
@@ -129,6 +130,13 @@ Control {
             id: sevenAttachments
             Layout.leftMargin: Theme.padding
             text: "Seven"
+        }
+
+        CheckBox {
+            id: showQuickActions
+            Layout.leftMargin: Theme.padding
+            text: "Show Quick Actions?"
+            checked: false
         }
     }
 }

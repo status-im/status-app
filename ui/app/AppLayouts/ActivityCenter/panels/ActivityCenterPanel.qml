@@ -102,6 +102,10 @@ Control {
     signal redirectToSection(string sectionId)
     signal redirectToPopup(var notification)
 
+    // Emitted when quick actions are shown and user iteracts with the corresponding buttons
+    signal declineRequested(string avatarId, string actionId)
+    signal acceptRequested(string avatarId, string actionId)
+
     QtObject {
         id: d
 
@@ -204,7 +208,7 @@ Control {
 
             visible: !d.emptyNotificationsList && !d.isNewsPlaceholderActive
             enabled: !d.optionsMenuVisible
-            verticalScrollBar.implicitWidth: Theme.halfPadding
+            verticalScrollBar.implicitWidth: Math.max(Theme.halfPadding, 8)
 
             spacing: 4
             implicitHeight: contentHeight
@@ -214,7 +218,7 @@ Control {
 
                 anchors.left: listView.contentItem.left
                 anchors.right: listView.contentItem.right
-                anchors.margins: Theme.halfPadding
+                anchors.margins: Math.max(Theme.halfPadding, 8)
 
                 // Card states related
                 unread: model.unread
@@ -225,6 +229,7 @@ Control {
                 badgeIconName: model.badgeIconName
                 isCircularAvatar: model.isCircularAvatar
                 isAvatarClickable: model.isAvatarClickable
+                isBadgeClickable: model.isAvatarClickable
                 avatarLetterColor: model.avatarLetterColor
                 avatarLetterText: model.avatarLetterText
                 isAvatarLetterAcronym: model.isAvatarLetterAcronym
@@ -252,6 +257,7 @@ Control {
                 preImageRadius: model.preImageRadius
                 content: model.content
                 attachments: model.attachments
+                showQuickActions: model.showQuickActions
 
                 // Timestamp related
                 timestamp: model.timestamp
@@ -260,14 +266,29 @@ Control {
                 onClicked: {
                     if(model.redirectToDetails) {
                         root.redirectToDetails(model.sectionId, model.subsectionId, model.subsectionItemId)
+                        return
                     } else if (model.redirectToSection) {
                         root.redirectToSection(model.sectionId)
+                        return
                     } else if (model.redirectToLink) {
                         root.redirectToPopup(model)
+                        return
+                    }
+                    // If no specific redirection but avatarId has some value, redirection will be to
+                    // avatar information
+                    if(model.avatarId) {
+                        root.avatarClicked(model.avatarId)
+                        return
                     }
                     // No actions when clicked
                 }
                 onAvatarClicked: root.avatarClicked(model.avatarId)
+                onAcceptRequested: (avatarId, actionId) => {
+                    root.acceptRequested(avatarId, actionId)
+                }
+                onDeclineRequested: (avatarId, actionId) => {
+                    root.declineRequested(avatarId, actionId)
+                }
             }
 
             onContentYChanged: d.fetchMoreNotifications()

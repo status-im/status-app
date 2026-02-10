@@ -59,6 +59,7 @@ SplitView {
                 avatarSource: avatarEditor.changeAvatarImage ? "https://i.pravatar.cc/128?img=5" : Assets.png("status-logo-icon")
                 badgeIconName: avatarEditor.changeBadgeIcon ? "action-mention" : "action-reply"
                 isCircularAvatar: avatarEditor.isRoundedAvatar
+                isAvatarClickable: avatarEditor.isAvatarClickable
 
                 // Header row related
                 title: headerEditor.titleField
@@ -83,12 +84,16 @@ SplitView {
                 attachments: contentEditor.oneAttachment ? d.oneAttachment :
                                                            contentEditor.threeAttachments ? d.threeAttachments :
                                                                                             contentEditor.sevenAttachments ? d.sevenAttachments : []
+                showQuickActions: contentEditor.showQuickActions
 
                 // Timestamp related
                 timestamp: dateText.text
 
                 // Interactions
+                onAvatarClicked: logs.logEvent("NotificationCard::onAvatarClicked --> Avatar clicked")
                 onClicked: logs.logEvent("NotificationCard::onClicked --> Card clicked")
+                onDeclineRequested: logs.logEvent("NotificationCard::onDeclineRequested --> Decline button clicked")
+                onAcceptRequested: logs.logEvent("NotificationCard::onAcceptRequested --> Accept button clicked")
             }
         }
 

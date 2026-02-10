@@ -43,6 +43,7 @@ import QtQuick.Controls
 
 import StatusQ.Core.Theme
 import StatusQ.Components
+import StatusQ.Controls
 import StatusQ.Core
 
 import utils
@@ -69,6 +70,9 @@ Control {
 
     // Enables or disables avatar click interaction.
     property bool isAvatarClickable: false
+
+    // Enables or disables avatar badge click interaction.
+    property bool isBadgeClickable: false
 
     // Background color for letter-based avatars
     property color avatarLetterColor: Theme.palette.miscColor5
@@ -146,6 +150,9 @@ Control {
     // Media attachments (list/array of image URLs) for the content block.
     property var attachments: []
 
+    // The following property drives the quick actions row
+    property bool showQuickActions: false
+
     // ──────────────────────────────────────────────────────────────────────────
     // Card states
     // ──────────────────────────────────────────────────────────────────────────
@@ -161,10 +168,10 @@ Control {
     // ──────────────────────────────────────────────────────────────────────────
 
     // Horizontal spacing between avatar and content column.
-    spacing: Theme.halfPadding
+    spacing: Math.max(Theme.halfPadding, 8)
 
     // Vertical padding inside the card background.
-    verticalPadding: Theme.halfPadding
+    verticalPadding: Math.max(Theme.halfPadding, 8)
 
     // ──────────────────────────────────────────────────────────────────────────
     // Interactions
@@ -173,6 +180,10 @@ Control {
     // Emitted when the card surface is clicked.
     signal clicked()
     signal avatarClicked()
+
+    // Emitted when quick actions are shown and user iteracts with the corresponding buttons
+    signal declineRequested(string avatarId, string actionId)
+    signal acceptRequested(string avatarId, string actionId)
 
     QtObject {
         id: d
@@ -200,6 +211,10 @@ Control {
         // Fixed diameter (or the small unread dot (read-only convenience).
         readonly property int unreadBadgeSize: 18
 
+        // True when the pointer is over an interactive child (e.g. avatar),
+        // used to temporarily block the card tap handler in favor of the child one.
+        property bool hasInteractiveChildHovered: false
+
         // Returns the avatar scaling factor for a given font size enum value.
         function avatarFactorForFontSize(fs) {
             switch (fs) {
@@ -214,6 +229,8 @@ Control {
         }
     }
 
+    objectName: "notificationCard"
+
     // Card background and unread indicator.
     background: Rectangle {
         radius: Theme.radius
@@ -223,6 +240,7 @@ Control {
 
          // Unread indicator dot (top-right).
         Rectangle {
+            objectName: "notificationReadIndicator"
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: Math.max(Theme.halfPadding, 8)
@@ -231,6 +249,17 @@ Control {
             radius: width / 2
             color: d.unreadDotColor
             visible: root.unread
+        }
+
+        // Full-card click target
+        TapHandler {
+            enabled: !d.hasInteractiveChildHovered
+            onTapped: root.clicked()
+        }
+
+        HoverHandler {
+            enabled: !d.hasInteractiveChildHovered
+            cursorShape: Qt.PointingHandCursor
         }
     }
 
@@ -243,7 +272,9 @@ Control {
         // Avatar block (non-clickable here; card handles clicks).
         NotificationAvatar {
             Layout.alignment: Qt.AlignTop
-            Layout.leftMargin: Theme.halfPadding
+            Layout.leftMargin: Math.max(Theme.halfPadding, 8)
+
+            objectName: "notificationAvatar"
 
             // Scale avatar with current font size factor
             density: d.avatarFactorForFontSize(Theme.currentFontSize)
@@ -252,25 +283,36 @@ Control {
             badgeIconName: root.badgeIconName
             circular: root.isCircularAvatar
             isAvatarClickable: root.isAvatarClickable
-            isBadgeClickable: false
+            isBadgeClickable: root.isBadgeClickable
             avatarLetterColor: root.avatarLetterColor
             avatarLetterText: root.avatarLetterText
             isAvatarLetterAcronym: root.isAvatarLetterAcronym
             avatarMaxTextLen: root.avatarMaxTextLen
 
             onAvatarClicked: root.avatarClicked()
+
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+                onHoveredChanged: d.hasInteractiveChildHovered = hovered
+            }
         }
 
         // Main content area
         ColumnLayout {
             spacing: Theme.smallPadding / 2
             Layout.fillWidth: true
-            Layout.rightMargin: Theme.halfPadding
+            Layout.rightMargin: Math.max(Theme.halfPadding, 8)
+
+            HoverHandler {
+                enabled: !d.hasInteractiveChildHovered
+                cursorShape: Qt.PointingHandCursor
+            }
 
             // Header row: title + chat key + contact/trust badges.
             NotificationHeaderRow {
                 Layout.fillWidth: true
                 Layout.rightMargin: d.unreadBadgeSize / 2
+                objectName: "notificationHeader"
                 visible: root.title != ""
                 title: root.title
                 chatKey: root.chatKey
@@ -283,6 +325,7 @@ Control {
             NotificationContextRow {
                 Layout.fillWidth: true
                 Layout.rightMargin: d.unreadBadgeSize / 2
+                objectName: "notificationContext"
                 visible: root.primaryText != ""
                 primaryText: root.primaryText
                 contextAvatar: root.contextAvatar
@@ -294,6 +337,7 @@ Control {
             // Optional action hint/body line under context row.
             StatusBaseText {
                 Layout.fillWidth: true
+                objectName: "notificationActionText"
                 visible: root.actionText
                 text: root.actionText
                 font.pixelSize: Theme.fontSize(13)
@@ -304,6 +348,7 @@ Control {
             // Rich content block: HTML, banner, attachments.
             NotificationContentBlock {
                 Layout.fillWidth: true
+                objectName: "notificationContent"
                 contentText: root.content
                 preImageSource: root.preImageSource
                 preImageRadius: root.preImageRadius
@@ -311,24 +356,42 @@ Control {
                 thumbSpacing: 6
             }
 
+            RowLayout {
+                id: quickActions
+
+                visible: root.showQuickActions
+                Layout.fillWidth: true
+                spacing: Theme.halfPadding
+
+                StatusButton {
+                    Layout.fillWidth: true
+
+                    objectName: "notificationDeclineBtn"
+                    text: qsTr("Decline")
+                    size: StatusBaseButton.Size.Small
+                    type: StatusBaseButton.Type.Danger
+                    onClicked: root.declineRequested(model.avatarId, model.actionId)
+                }
+                StatusButton {
+                    Layout.fillWidth: true
+
+                    objectName: "notificationAcceptBtn"
+                    text: qsTr("Accept")
+                    size: StatusBaseButton.Size.Small
+                    type: StatusBaseButton.Type.Normal
+                    onClicked: root.acceptRequested(model.avatarId, model.actionId)
+                }
+            }
+
             // Timestamp row (falls back to "Just now").
             StatusBaseText {
                 Layout.fillWidth: true
+                objectName: "notificationTimestamp"
                 text: LocaleUtils.formatRelativeTimestamp(root.timestamp)
                 font.pixelSize: Theme.fontSize(11)
                 color: Theme.palette.directColor5
                 elide: Text.ElideRight
             }
         }
-    }
-
-    // Full-card click target
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        hoverEnabled: false
-        enabled: root.enabled
-
-        onClicked: root.clicked()
     }
 }

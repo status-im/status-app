@@ -138,7 +138,6 @@ Control {
             Layout.leftMargin: Theme.padding
             Layout.rightMargin: Theme.padding
             text: "Is Avatar Clickable?"
-            visible: root.isFullContentAvailable
         }
 
         CheckBox {
