@@ -61,9 +61,9 @@
     <key>NSLocalNetworkUsageDescription</key>
     <string>Status uses your local network to discover and connect to other nearby Status app instances (if any are available) for pairing, and uses router discovery to improve peer-to-peer messaging connectivity.</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>Photos access is required to give you the ability to save images.</string>
+    <string>Status needs access to your photo library so you can select and share photos and videos in chats, communities, and your profile.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Photos access is required to give you the ability to send images.</string>
+    <string>Status needs access to your photo library so you can select and share photos and videos in chats, communities, and your profile.</string>
     <key>NSAppleMusicUsageDescription</key>
     <string>Status uses Media Library to save and send Images. The Media Library module internally requires permissions to Apple Music</string>
     <key>NSFaceIDUsageDescription</key>
