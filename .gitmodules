@@ -127,3 +127,6 @@
 [submodule "vendor/status-keycard-qt"]
 	path = vendor/status-keycard-qt
 	url = https://github.com/status-im/status-keycard-qt
+[submodule "vendor/SCodes"]
+	path = vendor/SCodes
+	url = https://github.com/status-im/SCodes.git
