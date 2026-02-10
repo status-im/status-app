@@ -36,7 +36,7 @@ $(TARGET): $(STATUS_DESKTOP_NIM_FILES) $(STATUS_DESKTOP_UI_FILES) $(STATUS_Q_FIL
 		--platform linux/amd64 \
 		--entrypoint="" \
 		-v $(ROOT_DIR)/../..:/home/jenkins/workspace \
-		-w /home/jenkins/workspace/status-desktop \
+		-w /home/jenkins/workspace/$(shell basename $(shell git rev-parse --show-toplevel)) \
 		-e ARCH=$(ARCH) \
 		-e ANDROID_ABI=$(ANDROID_ABI) \
 		-e QT_VERSION=$(QT_VERSION) \
