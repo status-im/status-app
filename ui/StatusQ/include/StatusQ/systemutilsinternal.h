@@ -29,8 +29,8 @@ public:
 
     // Set Android status bar icon color (true = light/white icons, false = dark/black icons)
     Q_INVOKABLE void setAndroidStatusBarIconColor(bool lightIcons);
-    // Notify Android splash screen to hide (for custom activity)
-    Q_INVOKABLE void setAndroidSplashScreenReady();
+    // Notify Android that main window is ready (for custom activity) (hides the splash screen)
+    Q_INVOKABLE void setMainWindowReady();
     
     // Get Android keyboard state (uses WindowInsets API, works Android 11-16+)
     Q_INVOKABLE int androidKeyboardHeight() const;

@@ -112,7 +112,7 @@ Window {
 
     function contentLoaded() {
         if (SQUtils.Utils.isAndroid) {
-            SystemUtils.setAndroidSplashScreenReady()
+            SystemUtils.setMainWindowReady()
         }
     }
 

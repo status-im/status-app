@@ -60,7 +60,7 @@ public class StatusQtActivity extends QtActivity {
     }
 
     // Called from Qt via JNI when main window is visible
-    public static void hideSplashScreen() {
+    public static void mainWindowReady() {
         splashShouldHide.set(true);
         userLoggedIn.set(true);
         if (savedDeepLink != null) {

@@ -314,12 +314,12 @@ void SystemUtilsInternal::setAndroidStatusBarIconColor(bool lightIcons)
 #endif
 }
 
-void SystemUtilsInternal::setAndroidSplashScreenReady()
+void SystemUtilsInternal::setMainWindowReady()
 {
 #ifdef Q_OS_ANDROID
     QJniObject::callStaticMethod<void>(
         "app/status/mobile/StatusQtActivity",
-        "hideSplashScreen",
+        "mainWindowReady",
         "()V"
     );
 #endif
