@@ -13906,14 +13906,6 @@
     </message>
   </context>
   <context>
-    <name>MessageReactionsRow</name>
-    <message>
-      <source>Add reaction</source>
-      <comment>MessageReactionsRow</comment>
-      <translation>Add reaction</translation>
-    </message>
-  </context>
-  <context>
     <name>MessageView</name>
     <message>
       <source>You sent a contact request to %1</source>
@@ -16579,14 +16571,6 @@
       <source>Sign out &amp; Quit</source>
       <comment>Popups</comment>
       <translation>Sign out &amp; Quit</translation>
-    </message>
-  </context>
-  <context>
-    <name>PrimaryNavSidebar</name>
-    <message>
-      <source>QR Scanner</source>
-      <comment>PrimaryNavSidebar</comment>
-      <translation>QR Scanner</translation>
     </message>
   </context>
   <context>
@@ -19778,19 +19762,6 @@
       <source>Send message</source>
       <comment>StatusChatInput</comment>
       <translation>Send message</translation>
-    </message>
-  </context>
-  <context>
-    <name>StatusChatInputReplyArea</name>
-    <message>
-      <source>Replying to %1</source>
-      <comment>StatusChatInputReplyArea</comment>
-      <translation>Replying to %1</translation>
-    </message>
-    <message>
-      <source>Cancel reply</source>
-      <comment>StatusChatInputReplyArea</comment>
-      <translation>Cancel reply</translation>
     </message>
   </context>
   <context>
@@ -23745,6 +23716,11 @@
       <source>Status Desktop</source>
       <comment>main</comment>
       <translation>Status Desktop</translation>
+    </message>
+    <message>
+      <source>Hello World</source>
+      <comment>main</comment>
+      <translation>Hello World</translation>
     </message>
     <message>
       <source>Share logs or report a bug?</source>

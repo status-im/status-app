@@ -11406,13 +11406,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>MessageReactionsRow</name>
-    <message>
-        <source>Add reaction</source>
-        <translation type="unfinished">반응 추가</translation>
-    </message>
-</context>
-<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -13592,13 +13585,6 @@ to load</source>
     <message>
         <source>Sign out &amp; Quit</source>
         <translation>로그아웃 및 종료</translation>
-    </message>
-</context>
-<context>
-    <name>PrimaryNavSidebar</name>
-    <message>
-        <source>QR Scanner</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16221,17 +16207,6 @@ to load</source>
     <message>
         <source>Send message</source>
         <translation>메시지 보내기</translation>
-    </message>
-</context>
-<context>
-    <name>StatusChatInputReplyArea</name>
-    <message>
-        <source>Replying to %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel reply</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19490,6 +19465,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Status Desktop</source>
         <translation>스테이터스 데스크톱</translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>

@@ -787,6 +787,23 @@ method load*[T](
   if activeSectionId == nodeManagementSectionItem.id:
     activeSection = nodeManagementSectionItem
 
+  # QR Scanner Section
+  let qrScannerSectionItem = initSectionItem(
+    QR_SCANNER_SECTION_ID,
+    SectionType.QrCodeScanner,
+    QR_SCANNER_SECTION_NAME,
+    memberRole = MemberRole.Owner,
+    description = "",
+    image = "",
+    icon = QR_SCANNER_SECTION_ICON,
+    color = "",
+    hasNotification = false,
+    notificationsCount = 0,
+    active = false,
+    enabled = true,
+  )
+  self.view.model().addItem(qrScannerSectionItem)
+
   # Activity Center Section
   let activityCenterSectionItem = initSectionItem(
     ACTIVITYCENTER_SECTION_ID,

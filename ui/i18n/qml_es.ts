@@ -11439,13 +11439,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>MessageReactionsRow</name>
-    <message>
-        <source>Add reaction</source>
-        <translation type="unfinished">Agregar reacción</translation>
-    </message>
-</context>
-<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -13634,13 +13627,6 @@ al cargar</translation>
     <message>
         <source>Sign out &amp; Quit</source>
         <translation></translation>
-    </message>
-</context>
-<context>
-    <name>PrimaryNavSidebar</name>
-    <message>
-        <source>QR Scanner</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16273,17 +16259,6 @@ al cargar</translation>
     <message>
         <source>Send message</source>
         <translation>Enviar mensaje</translation>
-    </message>
-</context>
-<context>
-    <name>StatusChatInputReplyArea</name>
-    <message>
-        <source>Replying to %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel reply</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19552,6 +19527,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Status Desktop</source>
         <translation>Escritorio de Status</translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>
