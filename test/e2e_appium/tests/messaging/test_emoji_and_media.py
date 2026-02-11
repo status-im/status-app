@@ -14,6 +14,7 @@ def _unique_message(prefix: str) -> str:
 
 
 @pytest.mark.messaging
+@pytest.mark.smoke
 @pytest.mark.device_count(2)
 class TestEmojiAndMedia:
     """Emoji and media coverage for 1:1 chats."""
@@ -61,6 +62,8 @@ class TestEmojiAndMedia:
         emoji_search = "thumbsup"
         starting_count = chat_page.message_count()
 
+        chat_page.dump_page_source("before_emoji_click")
+
         assert chat_page.send_emoji_to_chat(
             emoji_search,
             timeout=self.UI_TIMEOUT,
@@ -91,6 +94,9 @@ class TestEmojiAndMedia:
 
         assert chat_page.send_message(reply_msg), "Failed to send reply message"
         assert chat_page.message_exists(reply_msg), "Reply message not visible"
+
+        chat_page.dump_page_source("before_reply_details_check")
+
         assert chat_page.is_element_visible(
             chat_page.locators.REPLY_DETAILS,
             timeout=self.UI_TIMEOUT,

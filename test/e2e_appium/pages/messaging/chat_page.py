@@ -247,9 +247,7 @@ class ChatPage(BasePage):
         """Return the count of message content elements in the chat log."""
         locator = (
             "xpath",
-            "//*[contains(@resource-id,'StatusMessage_textMessage') or "
-            "contains(@resource-id,'StatusMessage_imageAlbum') or "
-            "contains(@resource-id,'StatusSticker')]",
+            "//*[contains(@resource-id,'StatusTextMessage_chatText')]",
         )
         try:
             return len(self.driver.find_elements(*locator))
