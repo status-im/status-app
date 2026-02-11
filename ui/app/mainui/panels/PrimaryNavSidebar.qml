@@ -134,7 +134,8 @@ Control {
         }
     }
 
-    // Tap outside the sidebar to close it
+    // Overlay area outside the sidebar that captures the first tap
+    // to close it and prevents click-through to underlying content.
     Item {
         parent: Window.window?.contentItem
         readonly property point sidebarTopLeft: parent?.mapFromItem(root, 0, 0) ?? Qt.point(0, 0)
@@ -142,9 +143,19 @@ Control {
         height: parent?.height ?? 0
         x: Math.max(0, sidebarBottomRight.x)
         width: Math.max(0, (parent?.width ?? 0) - x)
+        visible: !root.alwaysVisible && root.position > 0.5
+        enabled: visible
+
         TapHandler {
-            enabled: !root.alwaysVisible && root.position > 0.5
-            onPressedChanged: root.close()
+            // Ensure this handler captures the gesture even if other handlers
+            // started processing it.
+            grabPermissions: PointerHandler.CanTakeOverFromAnything
+
+            // Only treat the interaction as a valid tap if the pointer is
+            // pressed and released within this overlay area.
+            gesturePolicy: TapHandler.ReleaseWithinBounds
+
+            onTapped: root.close()
         }
     }
 
