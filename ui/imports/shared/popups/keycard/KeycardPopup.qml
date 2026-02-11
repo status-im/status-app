@@ -17,13 +17,11 @@ StatusModal {
     property var sharedKeycardModule
     property var emojiPopup
 
-    fillHeightOnBottomSheet: true
-
     width: Constants.keycard.general.popupWidth
     closePolicy: root.sharedKeycardModule.forceFlow || d.disableActionPopupButtons || d.disableCloseButton?
                      Popup.NoAutoClose :
                      Popup.CloseOnEscape | Popup.CloseOnPressOutside
-    hasCloseButton: !root.sharedKeycardModule.forceFlow && !d.disableActionPopupButtons && !d.disableCloseButton
+    hasCloseButton: true
 
     headerSettings.title: {
         switch (root.sharedKeycardModule.currentState.flowType) {

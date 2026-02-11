@@ -119,6 +119,7 @@ Item {
             Layout.fillWidth: true
             Layout.topMargin: Theme.xlPadding
             validationMode: StatusInput.ValidationMode.Always
+            input.inputMethodHints: Qt.ImhLowercaseOnly | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
             label: qsTr("Word #%1").arg(root.store.currentState.stateType === Constants.addAccountPopup.state.enterSeedPhraseWord1?
                                             root.store.seedPhraseWord1WordNumber + 1 :
                                             root.store.seedPhraseWord2WordNumber + 1)

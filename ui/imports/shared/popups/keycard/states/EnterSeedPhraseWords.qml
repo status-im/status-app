@@ -106,6 +106,7 @@ Item {
             validationMode: StatusInput.ValidationMode.Always
             label: qsTr("Word #%1").arg(d.wordNumbers[1] + 1)
             placeholderText: qsTr("Enter word")
+            input.inputMethodHints: Qt.ImhLowercaseOnly | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
             validators: [
                 StatusValidator {
                     validate: function (t) {
@@ -141,6 +142,7 @@ Item {
             validationMode: StatusInput.ValidationMode.Always
             label: qsTr("Word #%1").arg(d.wordNumbers[2] + 1)
             placeholderText: qsTr("Enter word")
+            input.inputMethodHints: Qt.ImhLowercaseOnly | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
             validators: [
                 StatusValidator {
                     validate: function (t) {
