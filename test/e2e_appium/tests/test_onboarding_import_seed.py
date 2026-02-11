@@ -20,6 +20,7 @@ from utils.multi_device_helpers import StepMixin
 
 
 class TestOnboardingImportSeed(StepMixin):
+    @pytest.mark.gate
     @pytest.mark.smoke
     @pytest.mark.onboarding
     @pytest.mark.raw_devices

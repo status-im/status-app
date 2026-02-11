@@ -73,9 +73,9 @@ def main():
     parser.add_argument(
         "--category",
         "-c",
-        choices=["smoke", "tablet", "critical", "all"],
-        default="smoke",
-        help="Test category to run (default: smoke)",
+        choices=["gate", "smoke", "tablet", "critical", "all"],
+        default="gate",
+        help="Test category to run (default: gate). Use 'smoke' for full nightly set.",
     )
     parser.add_argument(
         "--parallel",

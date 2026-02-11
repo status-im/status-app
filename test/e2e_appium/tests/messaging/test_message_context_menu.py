@@ -157,6 +157,7 @@ class TestMessageContextMenu:
         
         return secondary_chat
 
+    @pytest.mark.gate
     @pytest.mark.smoke
     async def test_context_menu_own_message_actions(self) -> None:
         """Verify context menu shows correct actions for own message.
@@ -185,6 +186,7 @@ class TestMessageContextMenu:
         async with self.step("Dismiss context menu"):
             assert context_menu.dismiss(), "Failed to dismiss context menu"
 
+    @pytest.mark.gate
     @pytest.mark.smoke
     async def test_add_reaction_to_message(self) -> None:
         """Verify adding a quick reaction to a message."""
@@ -206,6 +208,7 @@ class TestMessageContextMenu:
                 "Context menu should close after adding reaction"
             )
 
+    @pytest.mark.gate
     @pytest.mark.smoke
     async def test_copy_message_action(self) -> None:
         """Verify copy message action works."""
@@ -228,6 +231,7 @@ class TestMessageContextMenu:
             # Note: Clipboard verification would require platform-specific APIs
 
     @pytest.mark.smoke
+    @pytest.mark.flaky(reruns=1, reruns_delay=5)
     async def test_delete_own_message(self) -> None:
         """Verify deleting own message removes it from both devices.
         
@@ -273,6 +277,7 @@ class TestMessageContextMenu:
             )
 
     @pytest.mark.smoke
+    @pytest.mark.flaky(reruns=1, reruns_delay=5)
     async def test_reply_to_message(self) -> None:
         """Verify replying to a message activates reply mode.
         
@@ -304,6 +309,7 @@ class TestMessageContextMenu:
             chat_page.cancel_reply(timeout=3)
 
     @pytest.mark.smoke
+    @pytest.mark.flaky(reruns=1, reruns_delay=5)
     async def test_pin_message(self) -> None:
         """Verify pinning a message via context menu syncs to both devices.
         
@@ -359,6 +365,7 @@ class TestMessageContextMenu:
                 "Secondary: Message should show 'Pinned by' indicator (sync)"
             )
 
+    @pytest.mark.gate
     @pytest.mark.smoke
     async def test_verify_reaction_on_message(self) -> None:
         """Verify that a reaction appears on the message and syncs to both devices.

@@ -10,6 +10,7 @@ from utils.multi_device_helpers import StepMixin
 
 
 class TestSettingsPasswordChange(StepMixin):
+    @pytest.mark.gate
     @pytest.mark.critical
     @pytest.mark.smoke
     @pytest.mark.flaky(reruns=2, reruns_delay=2)

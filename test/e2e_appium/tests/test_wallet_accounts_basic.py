@@ -8,6 +8,7 @@ from utils.multi_device_helpers import StepMixin
 
 
 class TestWalletAccountsBasic(StepMixin):
+    @pytest.mark.gate
     @pytest.mark.wallet
     @pytest.mark.smoke
     async def test_add_and_delete_generated_account(self):

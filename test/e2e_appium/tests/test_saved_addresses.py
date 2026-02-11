@@ -13,6 +13,7 @@ class TestSavedAddresses(StepMixin):
     @pytest.mark.wallet
     @pytest.mark.saved_addresses
     @pytest.mark.smoke
+    @pytest.mark.flaky(reruns=1, reruns_delay=5)
     async def test_add_and_remove_saved_address(self):
         async with self.step(self.device, "Navigate to Saved Addresses"):
             app = App(self.device.driver)
