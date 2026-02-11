@@ -2764,6 +2764,7 @@ Item {
         sourceComponent: WalletPopups.SavedAddressActivityPopup {
             networkConnectionStore: appMain.networkConnectionStore
             networksStore: appMain.networksStore
+            walletRootStore: WalletStores.RootStore
 
             onSendToAddressRequested: {
                 Global.sendToRecipientRequested(address)

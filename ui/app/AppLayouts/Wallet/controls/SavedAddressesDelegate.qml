@@ -25,6 +25,7 @@ StatusListItem {
 
     property SharedStores.NetworkConnectionStore networkConnectionStore
     property var activeNetworks
+    property var walletRootStore
     property string name
     property string address
     property string mixedcaseAddress
@@ -79,6 +80,8 @@ StatusListItem {
         id: d
 
         readonly property string visibleAddress: !!root.ens? root.ens : root.address
+        readonly property var savedAddr: root.walletRootStore ? root.walletRootStore.getSavedAddress(root.address) : null
+        readonly property bool isAddressSaved: !root.isFollowingAddress || (savedAddr && savedAddr.address !== "")
     }
 
     onClicked: {
@@ -159,7 +162,7 @@ StatusListItem {
             text: qsTr("Edit saved address")
             objectName: "editSavedAddress"
             assetSettings.name: "pencil-outline"
-            enabled: !root.isFollowingAddress
+            enabled: d.isAddressSaved
             onTriggered: {
                 if (root.usage === SavedAddressesDelegate.Usage.Item) {
                     root.aboutToOpenPopup()
@@ -223,15 +226,27 @@ StatusListItem {
         StatusMenuSeparator { }
 
         StatusAction {
-            text: qsTr("Remove saved address")
-            type: StatusAction.Type.Danger
-            assetSettings.name: "delete"
+            text: d.isAddressSaved ? qsTr("Remove saved address") : qsTr("Add to saved addresses")
+            type: d.isAddressSaved ? StatusAction.Type.Danger : StatusAction.Type.Normal
+            assetSettings.name: d.isAddressSaved ? "delete" : "star-icon-outline"
             objectName: "deleteSavedAddress"
-            enabled: !root.isFollowingAddress
             onTriggered: {
                 if (root.usage === SavedAddressesDelegate.Usage.Item) {
                     root.aboutToOpenPopup()
                 }
+
+                if (!d.isAddressSaved) {
+                    let nameToUse = menu.ens || menu.address
+                    if (menu.ens && menu.ens.includes("."))
+                        nameToUse = menu.ens.split(".")[0]
+                    return Global.openAddEditSavedAddressesPopup({
+                                                             addAddress: true,
+                                                             address: menu.address,
+                                                             name: nameToUse,
+                                                             ens: menu.ens
+                                                         })
+                }
+
                 Global.openDeleteSavedAddressesPopup({
                                                          name: menu.name,
                                                          address: menu.address,

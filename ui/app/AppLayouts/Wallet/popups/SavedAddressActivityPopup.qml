@@ -20,6 +20,7 @@ StatusDialog {
 
     property SharedStores.NetworkConnectionStore networkConnectionStore
     required property SharedStores.NetworksStore networksStore
+    property var walletRootStore
 
     signal sendToAddressRequested(string address)
 
@@ -83,6 +84,7 @@ StatusDialog {
 
             networkConnectionStore: root.networkConnectionStore
             activeNetworks: root.networksStore.activeNetworks
+            walletRootStore: root.walletRootStore
 
             name: d.name
             address: d.address

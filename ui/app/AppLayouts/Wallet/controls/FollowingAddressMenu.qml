@@ -90,12 +90,20 @@ StatusMenu {
     StatusAction {
         readonly property var savedAddr: root.rootStore ? root.rootStore.getSavedAddress(root.address) : null
         readonly property bool isSaved: savedAddr && savedAddr.address !== ""
-        
-        text: isSaved ? qsTr("Already in saved addresses") : qsTr("Add to saved addresses")
-        assetSettings.name: isSaved ? "star-icon" : "star-icon-outline"
+
+        text: isSaved ? qsTr("Remove from saved addresses") : qsTr("Add to saved addresses")
+        type: isSaved ? StatusAction.Type.Danger : StatusAction.Type.Normal
+        assetSettings.name: isSaved ? "delete" : "star-icon-outline"
         objectName: "addToSavedAddressesAction"
-        enabled: !isSaved
         onTriggered: {
+            if (isSaved)
+                return Global.openDeleteSavedAddressesPopup({
+                    name: root.ensName || root.address,
+                    address: root.address,
+                    ens: root.ensName,
+                    colorId: savedAddr ? savedAddr.colorId ?? "" : ""
+                })
+
             let nameToUse = root.ensName || root.address
             if (root.ensName && root.ensName.includes(".")) {
                 nameToUse = root.ensName.split(".")[0]
