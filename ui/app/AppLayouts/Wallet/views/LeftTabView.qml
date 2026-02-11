@@ -340,15 +340,15 @@ Rectangle {
 
                 header: Button {
                     id: header
-                    verticalPadding: Theme.padding
-                    horizontalPadding: Theme.padding
+                    verticalPadding: root.Theme.padding
+                    horizontalPadding: root.Theme.padding
                     highlighted: RootStore.showAllAccounts
                     objectName: "allAccountsBtn"
 
-                    leftInset: Theme.padding
-                    bottomInset: Theme.padding
-                    leftPadding: Theme.xlPadding
-                    bottomPadding: Theme.bigPadding
+                    leftInset: root.Theme.padding
+                    bottomInset: root.Theme.padding
+                    leftPadding: root.Theme.xlPadding
+                    bottomPadding: root.Theme.bigPadding
 
                     background: Rectangle {
                         radius: Theme.radius
