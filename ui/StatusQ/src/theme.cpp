@@ -1,7 +1,10 @@
 #include "StatusQ/theme.h"
 
+#include <QMetaObject>
+#include <QPointer>
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
+#include <QQuickItem>
 
 namespace {
 
@@ -279,9 +282,17 @@ void Theme::inheritPadding(qreal padding)
 
 void Theme::propagatePadding()
 {
-    const auto themes = attachedChildren();
-    for (QQuickAttachedPropertyPropagator *child : themes) {
-        auto theme = qobject_cast<Theme*>(child);
+    const auto children = attachedChildren();
+    QList<QPointer<QQuickAttachedPropertyPropagator>> childrenSnapshot;
+    childrenSnapshot.reserve(children.size());
+    for (QQuickAttachedPropertyPropagator *child : children)
+        childrenSnapshot.push_back(QPointer<QQuickAttachedPropertyPropagator>(child));
+
+    for (const QPointer<QQuickAttachedPropertyPropagator> &childGuard : childrenSnapshot) {
+        if (!childGuard)
+            continue;
+
+        auto theme = qobject_cast<Theme*>(childGuard.data());
         if (theme)
             theme->inheritPadding(m_padding);
     }
@@ -299,9 +310,17 @@ void Theme::inheritStyle(Style style)
 
 void Theme::propagateStyle()
 {
-    const auto themes = attachedChildren();
-    for (QQuickAttachedPropertyPropagator *child : themes) {
-        auto theme = qobject_cast<Theme*>(child);
+    const auto children = attachedChildren();
+    QList<QPointer<QQuickAttachedPropertyPropagator>> childrenSnapshot;
+    childrenSnapshot.reserve(children.size());
+    for (QQuickAttachedPropertyPropagator *child : children)
+        childrenSnapshot.push_back(QPointer<QQuickAttachedPropertyPropagator>(child));
+
+    for (const QPointer<QQuickAttachedPropertyPropagator> &childGuard : childrenSnapshot) {
+        if (!childGuard)
+            continue;
+
+        auto theme = qobject_cast<Theme*>(childGuard.data());
         if (theme)
             theme->inheritStyle(m_style);
     }
@@ -320,9 +339,17 @@ void Theme::inheritFontSizeOffset(int fontSizeOffset)
 
 void Theme::propagateFontSizeOffset()
 {
-    const auto themes = attachedChildren();
-    for (QQuickAttachedPropertyPropagator *child : themes) {
-        auto theme = qobject_cast<Theme*>(child);
+    const auto children = attachedChildren();
+    QList<QPointer<QQuickAttachedPropertyPropagator>> childrenSnapshot;
+    childrenSnapshot.reserve(children.size());
+    for (QQuickAttachedPropertyPropagator *child : children)
+        childrenSnapshot.push_back(QPointer<QQuickAttachedPropertyPropagator>(child));
+
+    for (const QPointer<QQuickAttachedPropertyPropagator> &childGuard : childrenSnapshot) {
+        if (!childGuard)
+            continue;
+
+        auto theme = qobject_cast<Theme*>(childGuard.data());
         if (theme)
             theme->inheritFontSizeOffset(m_fontSizeOffset);
     }
@@ -334,8 +361,25 @@ void Theme::attachedParentChange(QQuickAttachedPropertyPropagator* newParent,
     Q_UNUSED(oldParent);
     auto attachedParentTheme = qobject_cast<Theme*>(newParent);
     if (attachedParentTheme) {
-        inheritPadding(attachedParentTheme->padding());
-        inheritStyle(attachedParentTheme->style());
-        inheritFontSizeOffset(attachedParentTheme->fontSizeOffset());
+        const QPointer<Theme> expectedParent = attachedParentTheme;
+
+        // Defer inherited theme propagation to avoid re-entrant geometry/binding
+        // updates while the item is being reparented. Read inherited values from
+        // the current attached parent when the callback runs to avoid stale state
+        // if another reparent happens before the queued callback executes.
+        QMetaObject::invokeMethod(this,
+                                  [this, expectedParent]() {
+            auto currentParentTheme = qobject_cast<Theme*>(attachedParent());
+            if (!currentParentTheme || currentParentTheme != expectedParent.data())
+                return;
+
+            auto itemParent = qobject_cast<QQuickItem*>(parent());
+            if (itemParent && !itemParent->window())
+                return;
+
+            inheritPadding(currentParentTheme->padding());
+            inheritStyle(currentParentTheme->style());
+            inheritFontSizeOffset(currentParentTheme->fontSizeOffset());
+        }, Qt::QueuedConnection);
     }
 }
