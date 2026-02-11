@@ -110,10 +110,11 @@ Item {
 
     ColumnLayout {
         id: layout
-        anchors.centerIn: parent
-        width: parent.width
+        anchors.fill: parent
+        anchors.bottomMargin: Theme.halfPadding
         anchors.leftMargin: Theme.xlPadding
         anchors.rightMargin: Theme.xlPadding
+        spacing: Theme.padding
         clip: true
 
         KeycardImage {

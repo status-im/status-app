@@ -15,7 +15,7 @@ import shared.popups
 
 import "../helpers"
 
-Item {
+Control {
     id: root
 
     property var sharedKeycardModule
@@ -73,7 +73,9 @@ Item {
 
     Component.onCompleted: {
         d.updateValidity()
-        accountName.input.edit.forceActiveFocus()
+        if (!SQUtils.Utils.isMobile) {
+            accountName.input.edit.forceActiveFocus()
+        }
     }
 
     Connections {
@@ -101,37 +103,38 @@ Item {
         }
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.topMargin: Theme.xlPadding
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
+
+    contentItem: ColumnLayout {
         spacing: Theme.padding
 
         StatusStepper {
             id: stepper
-            Layout.preferredWidth: Constants.keycard.general.keycardNameInputWidth
-            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
         }
 
         TitleText {
             id: title
-            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
         }
 
         Rectangle {
             id: accountDetails
-            Layout.preferredWidth: Constants.keycard.general.keycardNameInputWidth
+            Layout.fillWidth: true
             Layout.alignment: Qt.AlignCenter
             visible: root.sharedKeycardModule.currentState.flowType === Constants.keycardSharedFlow.importFromKeycard
-            height: Theme.xlPadding * 2
+            implicitHeight: accountDetailsLayout.implicitHeight + Theme.padding * 2
             color: "transparent"
             border.color: Theme.palette.baseColor2
             border.width: 1
             radius: Theme.halfPadding
 
             RowLayout {
+                id: accountDetailsLayout
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -194,8 +197,8 @@ Item {
 
         StatusInput {
             id: accountName
-            Layout.preferredWidth: Constants.keycard.general.keycardNameInputWidth
-            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
             charLimit: Constants.keycard.general.keycardNameLength
             placeholderText: {
                 if (root.sharedKeycardModule.currentState.flowType === Constants.keycardSharedFlow.importFromKeycard) {
@@ -235,6 +238,7 @@ Item {
 
         StatusColorSelectorGrid {
             id: colorSelection
+            Layout.fillWidth: true
             Layout.alignment: Qt.AlignCenter
             title.text: qsTr("Colour")
             model: Theme.palette.customisationColorsArray
@@ -251,7 +255,7 @@ Item {
         }
 
         KeyPairItem {
-            Layout.preferredWidth: parent.width
+            Layout.fillWidth: true
             tagClickable: true
             tagDisplayRemoveAccountButton: root.sharedKeycardModule.currentState.flowType !== Constants.keycardSharedFlow.importFromKeycard
             keyPairType: root.sharedKeycardModule.keyPairForProcessing.pairType

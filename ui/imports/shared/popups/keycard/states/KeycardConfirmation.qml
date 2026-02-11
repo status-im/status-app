@@ -72,8 +72,8 @@ Item {
         StatusBaseText {
             id: title
             Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
-            Layout.preferredHeight: Constants.keycard.general.titleHeight
             text: {
                 if (!!root.sharedKeycardModule.keyPairForProcessing &&
                         root.sharedKeycardModule.keyPairForProcessing.keyUid === root.myKeyUid)
@@ -86,7 +86,6 @@ Item {
 
         StatusCheckBox {
             id: confirmation
-            Layout.preferredHeight: Constants.keycard.general.messageHeight
             Layout.alignment: Qt.AlignCenter
             Layout.fillWidth: true
             leftSide: false

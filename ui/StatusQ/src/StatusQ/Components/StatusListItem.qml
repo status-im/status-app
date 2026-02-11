@@ -415,6 +415,7 @@ Rectangle {
 
                 StatusTextWithLoadingState {
                     id: statusListItemBeneathTagsTitle
+                    Layout.fillWidth: true
                     visible: !!root.beneathTagsTitle
                     text: root.beneathTagsTitle
                     customColor: Theme.palette.baseColor1

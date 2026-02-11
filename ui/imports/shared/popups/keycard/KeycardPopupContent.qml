@@ -1,10 +1,11 @@
 import QtQuick
+import QtQuick.Controls
 
 import utils
 
 import "./states"
 
-Item {
+Control {
     id: root
 
     property string myKeyUid
@@ -20,7 +21,7 @@ Item {
         property bool primaryButtonEnabled: false
     }
 
-    Loader {
+    contentItem: Loader {
         id: loader
         anchors.fill: parent
         sourceComponent: {

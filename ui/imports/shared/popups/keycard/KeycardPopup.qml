@@ -1,15 +1,15 @@
 import QtQuick
 import QtQuick.Controls
+import QtQml.Models
 
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
-import StatusQ.Popups
 import StatusQ.Popups.Dialog
 
 import utils
 
-StatusModal {
+StatusDialog {
     id: root
 
     property alias myKeyUid: content.myKeyUid
@@ -21,9 +21,9 @@ StatusModal {
     closePolicy: root.sharedKeycardModule.forceFlow || d.disableActionPopupButtons || d.disableCloseButton?
                      Popup.NoAutoClose :
                      Popup.CloseOnEscape | Popup.CloseOnPressOutside
-    hasCloseButton: true
+    fullScreenSheet: true
 
-    headerSettings.title: {
+    title: {
         switch (root.sharedKeycardModule.currentState.flowType) {
         case Constants.keycardSharedFlow.setupNewKeycard:
             return qsTr("Set up a new Keycard with an existing account")
@@ -67,6 +67,14 @@ StatusModal {
 
         return ""
     }
+    subtitle: ""
+
+    header: StatusDialogHeader {
+        visible: root.title || root.subtitle
+        headline.title: root.title
+        headline.subtitle: root.subtitle
+        actions.closeButton.onClicked: root.closeHandler()
+    }
 
     KeycardPopupDetails {
         id: d
@@ -83,31 +91,36 @@ StatusModal {
         root.sharedKeycardModule.currentState.doCancelAction();
     }
 
-    StatusScrollView {
+    contentItem: StatusScrollView {
         id: scrollView
-        anchors.fill: parent
         contentWidth: availableWidth
-        horizontalPadding: 0
+        padding: 0
 
         KeycardPopupContent {
             id: content
             width: scrollView.availableWidth
             implicitHeight: {
+                let baseHeight = Constants.keycard.general.popupHeight
+
                 // for all flows
                 if (root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.keycardMetadataDisplay ||
                         root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.factoryResetConfirmationDisplayMetadata) {
                     if (!root.sharedKeycardModule.keyPairStoredOnKeycardIsKnown) {
-                        return Constants.keycard.general.popupBiggerHeight
+                        baseHeight = Constants.keycard.general.popupBiggerHeight
                     }
                 }
 
                 if (root.sharedKeycardModule.currentState.flowType === Constants.keycardSharedFlow.importFromKeycard &&
                         root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.manageKeycardAccounts &&
                         root.sharedKeycardModule.keyPairHelper.accounts.count > 1) {
-                    return Constants.keycard.general.popupBiggerHeight
+                    baseHeight = Constants.keycard.general.popupBiggerHeight
                 }
 
-                return Constants.keycard.general.popupHeight
+                if (root.fullScreenBottomSheet) {
+                    return Math.max(baseHeight, scrollView.availableHeight)
+                }
+
+                return baseHeight
             }
 
             sharedKeycardModule: root.sharedKeycardModule
@@ -139,6 +152,22 @@ StatusModal {
         }
     }
 
-    leftButtons: d.leftButtons
-    rightButtons: d.rightButtons
+    footer: StatusDialogFooter {
+        leftButtons: ObjectModel {
+            id: leftButtonsModel
+        }
+
+        rightButtons: ObjectModel {
+            id: rightButtonsModel
+        }
+    }
+
+    Component.onCompleted: {
+        for (let i = 0; i < d.leftButtons.length; i++) {
+            leftButtonsModel.append(d.leftButtons[i])
+        }
+        for (let j = 0; j < d.rightButtons.length; j++) {
+            rightButtonsModel.append(d.rightButtons[j])
+        }
+    }
 }

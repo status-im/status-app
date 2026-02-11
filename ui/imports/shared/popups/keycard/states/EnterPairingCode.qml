@@ -64,6 +64,7 @@ Item {
         TitleText {
             id: title
             Layout.preferredHeight: Constants.keycard.general.titleHeight
+            Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
             text: qsTr("Enter a new pairing code")
         }

@@ -88,7 +88,7 @@ StatusListItem {
 
     tagsDelegate: StatusListItemTag {
         bgColor: Utils.getColorForId(Theme.palette, model.account.colorId)
-        height: Theme.bigPadding
+        height: Theme.defaultBigPadding
         bgRadius: 6
         tagClickable: root.tagClickable
         closeButtonVisible: root.tagDisplayRemoveAccountButton?

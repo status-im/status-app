@@ -45,7 +45,9 @@ Item {
             accountName.input.asset.isLetterIdenticon = true;
         }
 
-        accountName.input.edit.forceActiveFocus()
+        if (!SQUtils.Utils.isMobile) {
+            accountName.input.edit.forceActiveFocus()
+        }
         accountName.validate(true)
     }
 
@@ -93,7 +95,7 @@ Item {
         spacing: 0
 
         Loader {
-            Layout.preferredHeight: Theme.padding
+            Layout.preferredHeight: root.Theme.defaultPadding
             Layout.fillWidth: true
             sourceComponent: spacer
         }
@@ -207,7 +209,6 @@ Item {
                 Layout.leftMargin: Theme.padding
                 Layout.rightMargin:  Theme.padding
 
-                anchors.horizontalCenter: parent.horizontalCenter
                 spacing: Theme.padding
                 visible: !root.store.editMode &&
                          root.store.selectedOrigin.pairType === Constants.addAccountPopup.keyPairType.unknown &&

@@ -55,6 +55,7 @@ StatusStackModal {
     property var getCurrencyAmount: function (balance, key){}
 
     property var canProfileProveOwnershipOfProvidedAddressesFn: function(addresses) { return false }
+    readonly property bool hasUserProfile: typeof userProfile !== "undefined" && !!userProfile
 
     readonly property bool profileProvesOwnershipOfSelectedAddresses: {
         d.selectedSharedAddressesMap // needed for binding
@@ -67,7 +68,7 @@ StatusStackModal {
         for (const [key, value] of d.selectedSharedAddressesMap) {
             keyUids.add(value.keyUid)
         }
-        return keyUids.size === 1 && !keyUids.has(userProfile.keyUid)
+        return keyUids.size === 1 && (!root.hasUserProfile || !keyUids.has(userProfile.keyUid))
     }
 
     signal prepareForSigning(string airdropAddress, var sharedAddresses)
@@ -126,11 +127,11 @@ StatusStackModal {
                 return ""
 
             if (root.profileProvesOwnershipOfSelectedAddresses) {
-                if (userProfile.usingBiometricLogin) {
+                if (root.hasUserProfile && userProfile.usingBiometricLogin) {
                     return "touch-id"
                 }
 
-                if (userProfile.isKeycardUser) {
+                if (root.hasUserProfile && userProfile.isKeycardUser) {
                     return "keycard"
                 }
 

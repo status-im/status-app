@@ -28,6 +28,7 @@ Item {
             id: title
             Layout.preferredHeight: Constants.keycard.general.titleHeight
             Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
 
             wrapMode: Text.WordWrap
         }
