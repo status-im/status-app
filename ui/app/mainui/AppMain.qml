@@ -2843,7 +2843,7 @@ Item {
 
                 formatBigNumber: (number, symbol, noSymbolOption) => appMain.currencyStore.formatBigNumber(number, symbol, noSymbolOption)
 
-                onDisconnectRequested: (connectionId) => dAppsService.disconnectDapp(connectionId)
+                onDisconnectRequested: (topic, url, connectorId, clientId) => dAppsService.disconnect(topic, url, connectorId, clientId || "")
                 onPairingRequested: (uri) => dAppsService.pair(uri)
                 onPairingValidationRequested: (uri) => dAppsService.validatePairingUri(uri)
                 onConnectionAccepted: (pairingId, chainIds, selectedAccount) => dAppsService.approvePairSession(pairingId, chainIds, selectedAccount)
@@ -2903,6 +2903,7 @@ Item {
                     }
                     bcSdk: DappsConnectorSDK {
                         enabled: featureFlagsStore.connectorEnabled && WalletStores.RootStore.walletSectionInst.walletReady
+                        excludeClientIds: ["walletconnect"]
                         store: SharedStores.BrowserConnectStore {
                             controller: WalletStores.RootStore.dappsConnectorController
                         }

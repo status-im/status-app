@@ -147,6 +147,7 @@ QtObject:
       of SignalType.ConnectorAccountChanged: ConnectorAccountChangedSignal.fromEvent(jsonSignal)
       of SignalType.WCSessionProposal: WCSessionProposalSignal.fromEvent(jsonSignal)
       of SignalType.WCSessionRequest: WCSessionRequestSignal.fromEvent(jsonSignal)
+      of SignalType.WCSessionDelete: WCSessionDeleteSignal.fromEvent(jsonSignal)
       # networks
       of SignalType.NetworksBlockchainHealthChanged: NetworksBlockchainHealthChangedSignal.fromEvent(jsonSignal)
       else:

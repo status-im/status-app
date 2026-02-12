@@ -79,7 +79,9 @@ type SignalType* {.pure.} = enum
   ConnectorAccountChanged = "connector.dAppAccountChanged"
   WCSessionProposal = "connector.wcSessionProposal"
   WCSessionRequest = "connector.wcSessionRequest"
+  WCSessionDelete = "connector.wcSessionDelete"
   LocalMessageBackupDone = "local.message.backup.done"
+  MediaServerStarted = "mediaserver.started"
   Unknown
 
 proc event*(self:SignalType):string =

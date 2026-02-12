@@ -7,26 +7,27 @@ DAppsModel {
     id: root
     
     required property WalletConnectSDKBase bcSDK
+    /// Array of clientIds to exclude from the model (e.g. ["walletconnect"])
+    property var excludeClientIds: []
 
     readonly property int connectorId: Constants.StatusConnect
+    readonly property string clientId: ""
     readonly property bool enabled: bcSDK.enabled
 
     signal connected(string pairingId, string topic, string dAppUrl)
-    signal disconnected(string topic, string dAppUrl)
+    signal disconnected(string dAppUrl)
 
     Connections {
         target: root.bcSDK
         enabled: root.enabled
 
-        function onSessionDelete(topic, err) {
-            const dapp = root.getByTopic(topic)
-            if (!dapp) {
-                console.warn("DApp not found for topic - cannot delete session", topic)
-                return
+        function onDisconnected(url, err) {
+            if (err) {
+                console.warn("Error disconnecting dApp:", url, err)
             }
 
-            root.remove(topic)
-            root.disconnected(topic, dapp.url)
+            d.resetModel()
+            root.disconnected(url)
         }
 
         function onApproveSessionResult(proposalId, session, error) {
@@ -55,6 +56,7 @@ DAppsModel {
             dapp.topic = session.topic
             dapp.rawSessions = [session]
             dapp.connectorId = root.connectorId
+            dapp.clientId = session.clientId || root.clientId || ""
             return dapp
         }
         function getPersistedDapps() {
@@ -69,6 +71,12 @@ DAppsModel {
 
                 for (const sessionID in allSessions) {
                     const session = allSessions[sessionID]
+                    const sessionClientId = session.clientId || (session.peer && session.peer.metadata && session.peer.metadata.clientId) || ""
+
+                    if (root.excludeClientIds.includes(sessionClientId)) {
+                        continue
+                    }
+
                     const dapp = sessionToDApp(session)
                     dapps.push(dapp)
                 }

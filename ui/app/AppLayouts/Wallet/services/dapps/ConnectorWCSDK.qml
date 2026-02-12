@@ -85,6 +85,10 @@ WalletConnectSDKBase {
             root.sessionProposal(proposalObj)
         }
 
+        function onWcSessionDelete(topic, dappUrl) {
+            root.disconnected(dappUrl, "")
+        }
+
         function onWcSessionRequest(topic, requestId, requestJson) {
             try {
                 const params = typeof requestJson === "string" ? JSON.parse(requestJson) : requestJson
@@ -140,10 +144,17 @@ WalletConnectSDKBase {
         callback(activeSessions)
     }
 
-    disconnectSession: function(topic) {
+    disconnect: function(url, clientId) {
+        if (connectorController) {
+            const success = connectorController.disconnect(url, clientId || "walletconnect")
+            root.disconnected(url, success ? "" : "Failed to disconnect")
+        }
+    }
+
+    disconnectByTopic: function(topic, url) {
         if (connectorController) {
             const success = connectorController.disconnectWCSession(topic)
-            root.sessionDelete(topic, success ? "" : "Failed to disconnect session")
+            root.disconnected(url, success ? "" : "Failed to disconnect")
         }
     }
 
@@ -154,10 +165,10 @@ WalletConnectSDKBase {
             return
         }
         const meta = pending.proposal?.params?.proposer?.metadata || {}
-        const chainId = (selectedChains && selectedChains.length > 0) ? selectedChains[0] : 1
+        const chains = (selectedChains && selectedChains.length > 0) ? selectedChains : [1]
         const sessionJson = connectorController.approveWCSession(
-            requestId, account, chainId,
-            meta.url || "", meta.name || "", (meta.icons && meta.icons[0]) || "")
+            requestId, account,
+            meta.url || "", meta.name || "", (meta.icons && meta.icons[0]) || "", JSON.stringify(chains))
         if (sessionJson) {
             try {
                 const session = JSON.parse(sessionJson)
@@ -204,4 +215,12 @@ WalletConnectSDKBase {
     disconnectPairing: function(topic) { }
     buildApprovedNamespaces: function(id, params, supportedNamespaces) { }
     ping: function(topic) { }
+
+    emitSessionEvent: function(topic, event, chainId) {
+        if (!connectorController) {
+            console.warn("[WC QML] ConnectorWCSDK: connectorController not available for emitSessionEvent")
+            return
+        }
+        connectorController.emitWCSessionEvent(topic, event.name, JSON.stringify(event.data), chainId)
+    }
 }

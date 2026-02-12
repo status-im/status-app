@@ -89,7 +89,7 @@ SQUtils.QObject {
 
     signal pairWCReady()
 
-    signal disconnectRequested(string connectionId)
+    signal disconnectRequested(string topic, string url, int connectorId, string clientId)
     signal pairingRequested(string uri)
     signal pairingValidationRequested(string uri)
     signal connectionAccepted(string pairingId, var chainIds, string selectedAccount)
@@ -129,25 +129,31 @@ SQUtils.QObject {
        dappConnectSelectLoader.active = true
     }
 
-    function disconnectDapp(dappUrl) {
-        disconnectdAppDialogLoader.dAppUrl = dappUrl
+    function disconnectDapp(topic) {
+        disconnectdAppDialogLoader.dAppTopic = topic
         disconnectdAppDialogLoader.active = true
     }
 
     Loader {
         id: disconnectdAppDialogLoader
 
-        property string dAppUrl
+        property string dAppTopic
+        property string dAppUrl: ""
+        property int dAppConnectorId: -1
+        property string dAppClientId: ""
 
         active: false
         parent: root.visualParent
 
         onLoaded: {
-            const dApp = SQUtils.ModelUtils.getByKey(root.dAppsModel, "url", dAppUrl);
+            const dApp = SQUtils.ModelUtils.getByKey(root.dAppsModel, "topic", dAppTopic);
             if (dApp) {
                 item.dappName = dApp.name;
                 item.dappIcon = dApp.iconUrl;
-                item.dappUrl = disconnectdAppDialogLoader.dAppUrl;
+                item.dappUrl = dApp.url;
+                dAppUrl = dApp.url;
+                dAppConnectorId = dApp.connectorId;
+                dAppClientId = dApp.clientId || "";
             }
 
             item.open();
@@ -162,11 +168,7 @@ SQUtils.QObject {
             }
 
             onAccepted: {
-                SQUtils.ModelUtils.forEach(root.dAppsModel, (dApp) => {
-                    if (dApp.url === dAppUrl) {
-                        root.disconnectRequested(dApp.topic)
-                    }
-                })
+                root.disconnectRequested(disconnectdAppDialogLoader.dAppTopic, disconnectdAppDialogLoader.dAppUrl, disconnectdAppDialogLoader.dAppConnectorId, disconnectdAppDialogLoader.dAppClientId)
             }
         }
     }
@@ -265,7 +267,7 @@ SQUtils.QObject {
         }
 
         function connectionFailed(id) {
-            if (connectDappLoader.key === key && connectDappLoader.item) {
+            if (connectDappLoader.key === id && connectDappLoader.item) {
                 connectDappLoader.item.pairFailed()
             }
         }
@@ -312,7 +314,7 @@ SQUtils.QObject {
             }
 
            onDisconnect: {
-                root.disconnectRequested(connectDappLoader.topic)
+                root.disconnectRequested(connectDappLoader.topic, connectDappLoader.dappUrl, Constants.DAppConnectors.WalletConnect, "walletconnect")
                 close()
             }
         }

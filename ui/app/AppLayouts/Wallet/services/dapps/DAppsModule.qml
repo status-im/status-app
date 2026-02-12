@@ -57,7 +57,7 @@ SQUtils.QObject {
     /// Emitted when a new DApp is connected
     signal dappConnected(string proposalId, string newTopic, string url, int connectorId)
     /// Emitted when a DApp is disconnected
-    signal dappDisconnected(string topic, string url)
+    signal dappDisconnected(string url)
     /// Emitted when a new DApp fails to connect
     signal newConnectionFailed(string key, string dappUrl, var error)
 
@@ -101,10 +101,17 @@ SQUtils.QObject {
         dappConnections.rejectAndLog(id)
     }
 
-    /// Disconnects the WC session with the given topic. Expected `dappDisconnected` signal
-    /// @param sessionTopic - the topic of the session to disconnect
-    function disconnectSession(sessionTopic) {
-        dappConnections.disconnect(sessionTopic)
+    /// Disconnects the dApp with the given topic/URL. Expected `dappDisconnected` signal
+    /// @param topic - the topic (for WC) or URL (for BC) of the dApp to disconnect
+    /// @param url - the URL of the dApp
+    /// @param connectorId - the connector type (Constants.DAppConnectors.WalletConnect or Constants.DAppConnectors.StatusConnect)
+    /// @param clientId - the clientId for BC sessions (e.g. "status-desktop/dapp-browser" for browser connections)
+    function disconnect(topic, url, connectorId, clientId) {
+        if (connectorId === Constants.DAppConnectors.WalletConnect) {
+            wcSdk.disconnectByTopic(topic, url)
+        } else {
+            bcSdk.disconnect(url, clientId || "")
+        }
     }
 
     /// Validates the pairing URI and emits the pairingValidated signal. Expected `pairingValidated` signal
@@ -134,28 +141,6 @@ SQUtils.QObject {
         });
     }
 
-    /// Returns the DApp with the given topic
-    /// @param topic - the topic of the DApp to return
-    /// @return the DApp with the given topic
-    /// DApp {
-    ///    name: string
-    ///    url: string
-    ///    iconUrl: string
-    ///    topic: string
-    ///    connectorId: int
-    ///    accountAddressses: [{address: string}]
-    ///    chains: string
-    ///    rawSessions: [{session: object}]
-    /// }
-    function getDApp(topic) {
-        return SQUtils.ModelUtils.getFirstModelEntryIf(dappsModel, (dapp) => {
-            return dapp.topic === topic
-            SQUtils.ModelUtils.getFirstModelEntryIf(dapp.rawSessions, (session) => {
-                return session.topic === topic
-            })
-        })
-    }
-
     DAppConnectionsPlugin {
         id: dappConnections
         wcSDK: root.wcSdk
@@ -168,8 +153,8 @@ SQUtils.QObject {
             root.dappConnected(proposalId, topic, url, connectorId)
             root.dappsMetrics.logDAppConnected(url, connectorId)
         }
-        onDisconnected: (topic, url, connectorId) => {
-            root.dappDisconnected(topic, url)
+        onDisconnected: (url, connectorId) => {
+            root.dappDisconnected(url)
             root.dappsMetrics.logDAppDisconnected(url, connectorId)
         }
         onNewConnectionProposed: (key, chains, dAppUrl, dAppName, dAppIcon, connectorId) => {

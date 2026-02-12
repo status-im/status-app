@@ -36,6 +36,7 @@ QtObject:
   proc emitAccountChanged*(self: Controller, payload: string)
   proc wcSessionProposal*(self: Controller, requestId: string, uri: string, proposal: string)
   proc wcSessionRequest*(self: Controller, topic: string, requestId: string, requestJson: string)
+  proc wcSessionDelete*(self: Controller, topic: string, dappUrl: string)
 
   proc newController*(service: connector_service.Service, events: EventEmitter): Controller =
     new(result, delete)
@@ -150,6 +151,13 @@ QtObject:
       except Exception as ex:
         error "error processing SIGNAL_WC_SESSION_REQUEST", error=ex.msg, exceptionName=ex.name
 
+    result.events.on(connector_service.SIGNAL_WC_SESSION_DELETE) do(e: Args):
+      try:
+        let params = WCSessionDeleteSignal(e)
+        controller.wcSessionDelete(params.topic, params.dappUrl)
+      except Exception as ex:
+        error "error processing SIGNAL_WC_SESSION_DELETE", error=ex.msg, exceptionName=ex.name
+
     result.QObject.setup
 
   proc connectRequested*(self: Controller, requestId: string, payload: string) {.signal.}
@@ -170,6 +178,7 @@ QtObject:
   proc rejectSignResponse*(self: Controller, topic: string, requestId: string, error: bool) {.signal.}
   proc wcSessionProposal*(self: Controller, requestId: string, uri: string, proposal: string) {.signal.}
   proc wcSessionRequest*(self: Controller, topic: string, requestId: string, requestJson: string) {.signal.}
+  proc wcSessionDelete*(self: Controller, topic: string, dappUrl: string) {.signal.}
 
   proc emitConnectRequested*(self: Controller, requestId: string, payload: string) =
     self.connectRequested(requestId, payload)
@@ -234,8 +243,9 @@ QtObject:
   proc pairWalletConnect*(self: Controller, uri: string): bool {.slot.} =
     return self.service.pairWalletConnect(uri)
 
-  proc approveWCSession*(self: Controller, proposalId: string, accountAddr: string, chainId: int, dappUrl: string, dappName: string, dappIcon: string): string {.slot.} =
-    return self.service.approveWCSession(proposalId, accountAddr, uint64(chainId), dappUrl, dappName, dappIcon)
+  proc approveWCSession*(self: Controller, proposalId: string, accountAddr: string, dappUrl: string, dappName: string, dappIcon: string, supportedChainsJson: string): string {.slot.} =
+    let chains = Json.decode(supportedChainsJson, seq[uint64])
+    return self.service.approveWCSession(proposalId, accountAddr, dappUrl, dappName, dappIcon, chains)
 
   proc rejectWCSession*(self: Controller, proposalId: string): bool {.slot.} =
     return self.service.rejectWCSession(proposalId)
@@ -251,6 +261,9 @@ QtObject:
 
   proc getWCActiveSessions*(self: Controller, validAtTimestamp: int): string {.slot.} =
     return self.service.getWCActiveSessions(int64(validAtTimestamp))
+
+  proc emitWCSessionEvent*(self: Controller, topic: string, name: string, dataJson: string, chainId: string): bool {.slot.} =
+    return self.service.emitWCSessionEvent(topic, name, dataJson, chainId)
 
   proc getDApps*(self: Controller): string {.slot.} =
     return self.service.getDApps()

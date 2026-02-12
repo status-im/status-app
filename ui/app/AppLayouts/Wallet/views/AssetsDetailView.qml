@@ -209,6 +209,9 @@ Item {
                         return {
                             maintainAspectRatio: false,
                             responsive: true,
+                            animation: {
+                                duration: 0
+                            },
                             legend: {
                                 display: false
                             },

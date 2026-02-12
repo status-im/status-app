@@ -93,11 +93,13 @@ SQUtils.QObject {
         dappsModule.rejectPairSession(id)
     }
 
-    /// Disconnects the dApp with the given topic
-    /// @param topic The topic of the dApp
-    /// @param source The source of the dApp; either "walletConnect" or "connector"
-    function disconnectDapp(topic) {
-        d.disconnectDapp(topic)
+    /// Disconnects the dApp with the given topic/URL
+    /// @param topic The topic (for WC) or URL (for BC)
+    /// @param url The URL of the dApp
+    /// @param connectorId The connector type (Constants.DAppConnectors.WalletConnect or Constants.DAppConnectors.StatusConnect)
+    /// @param clientId The clientId for BC sessions (e.g. "status-desktop/dapp-browser" for browser connections)
+    function disconnect(topic, url, connectorId, clientId) {
+        dappsModule.disconnect(topic, url, connectorId, clientId || "")
     }
 
     SQUtils.QObject {
@@ -131,10 +133,6 @@ SQUtils.QObject {
 
                 expectedRoles: "accountAddresses"
             }
-        }
-
-        function disconnectDapp(connectionId) {
-            dappsModule.disconnectSession(connectionId)
         }
 
         function validatePairingUri(uri) {
@@ -208,12 +206,12 @@ SQUtils.QObject {
 
         function onDappConnected(proposal, topic, url, connectorId) {
             const dappDomain = SQUtils.StringUtils.extractDomainFromLink(url)
-            const connectorName = connectorId === Constants.WalletConnect ? "WalletConnect" : "Status Connector"
+            const connectorName = connectorId === Constants.DAppConnectors.WalletConnect ? "WalletConnect" : "Status Connector"
             root.displayToastMessage(qsTr("Connected to %1 via %2").arg(dappDomain).arg(connectorName), Constants.ephemeralNotificationType.success)
             root.approveSessionResult(proposal, null, topic)
         }
 
-        function onDappDisconnected(topic, url) {
+        function onDappDisconnected(url) {
             const appDomain = SQUtils.StringUtils.extractDomainFromLink(url)
             root.displayToastMessage(qsTr("Disconnected from %1").arg(appDomain), Constants.ephemeralNotificationType.success)
         }

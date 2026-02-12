@@ -40,8 +40,8 @@ SQUtils.QObject {
         return controller.rejectTransaction(topic, requestId, error)
     }
 
-    function disconnect(id) {
-        return controller.disconnect(id)
+    function disconnect(id, clientId) {
+        return controller.disconnect(id, clientId || "")
     }
 
     function getDApps() {

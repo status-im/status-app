@@ -20,9 +20,10 @@ StatusMouseArea {
     required property url url
     required property url iconUrl
     required property url connectorBadge
+    required property string topic
     property bool clickable: true
 
-    signal disconnectDapp(string dappUrl)
+    signal disconnectDapp(string topic)
     signal dappClicked(string dappUrl)
 
     RowLayout {
@@ -75,7 +76,7 @@ StatusMouseArea {
                     StatusBaseText {
                         id: dAppCaption
 
-                        text: root.name ? root.name : SQUtils.StringUtils.extractDomainFromLink(root.url)
+                        text: root.name ? root.name : (root.url ? SQUtils.StringUtils.extractDomainFromLink(root.url) : "")
 
                         Layout.fillWidth: true
 
@@ -111,7 +112,7 @@ StatusMouseArea {
             tooltip.text: qsTr("Disconnect dApp")
 
             onClicked: {
-                root.disconnectDapp(root.url)
+                root.disconnectDapp(root.topic)
         }
         }
     }

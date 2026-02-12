@@ -23,7 +23,7 @@ StatusDialog {
     implicitWidth: 640
 
     contentItem: StatusBaseText {
-        text: qsTr("Are you sure you want to disconnect %1 from all accounts?").arg(StringUtils.extractDomainFromLink(dappUrl))
+        text: qsTr("Are you sure you want to disconnect %1 from all accounts?").arg(dappUrl ? StringUtils.extractDomainFromLink(dappUrl) : dappName)
 
         wrapMode: Text.WrapAnywhere
     }
@@ -36,7 +36,7 @@ StatusDialog {
             image.source: root.dappIcon
         }
         headline.title: qsTr("Disconnect %1").arg(root.dappName)
-        headline.subtitle: StringUtils.extractDomainFromLink(root.dappUrl)
+        headline.subtitle: root.dappUrl ? StringUtils.extractDomainFromLink(root.dappUrl) : ""
         actions.closeButton.visible: true
         actions.closeButton.onClicked: root.close()
     }
