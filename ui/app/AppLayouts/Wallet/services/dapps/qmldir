@@ -1,5 +1,6 @@
 BCDappsProvider 1.0 BCDappsProvider.qml
 BCBrowserDappsProvider 1.0 BCBrowserDappsProvider.qml
+ConnectorWCSDK 1.0 ConnectorWCSDK.qml
 DappsConnectorSDK 1.0 DappsConnectorSDK.qml
 DAppsHelpers 1.0 helpers.js
 DAppsMetrics 1.0 DAppsMetrics.qml
@@ -7,5 +8,4 @@ DAppsModel 1.0 DAppsModel.qml
 DAppsModule 1.0 DAppsModule.qml
 DAppsService 1.0 DAppsService.qml
 WalletConnectSDKBase 1.0 WalletConnectSDKBase.qml
-WalletConnectSDK 1.0 WalletConnectSDK.qml
 WCDappsProvider 1.0 WCDappsProvider.qml

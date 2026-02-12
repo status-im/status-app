@@ -9,14 +9,6 @@ TODO #14696: remove this workaround by moving SDK files to StatusQ and ensure th
 <!DOCTYPE RCC>
 <RCC version="1.0">
   <qresource>
-    <!-- WalletConnect SDK -->
-    <file alias="app/AppLayouts/Wallet/services/dapps/sdk/generated/bundle.js">../ui/app/AppLayouts/Wallet/services/dapps/sdk/generated/bundle.js</file>
-    <file alias="app/AppLayouts/Wallet/services/dapps/sdk/generated/bundle.js.LICENSE.txt">../ui/app/AppLayouts/Wallet/services/dapps/sdk/generated/bundle.js.LICENSE.txt</file>
-    <file alias="app/AppLayouts/Wallet/services/dapps/sdk/package-lock.json">../ui/app/AppLayouts/Wallet/services/dapps/sdk/package-lock.json</file>
-    <file alias="app/AppLayouts/Wallet/services/dapps/sdk/package.json">../ui/app/AppLayouts/Wallet/services/dapps/sdk/package.json</file>
-    <file alias="app/AppLayouts/Wallet/services/dapps/sdk/src/index.html">../ui/app/AppLayouts/Wallet/services/dapps/sdk/src/index.html</file>
-    <file alias="app/AppLayouts/Wallet/services/dapps/sdk/src/index.js">../ui/app/AppLayouts/Wallet/services/dapps/sdk/src/index.js</file>
-    <file alias="app/AppLayouts/Wallet/services/dapps/sdk/webpack.config.js">../ui/app/AppLayouts/Wallet/services/dapps/sdk/webpack.config.js</file>
     <!-- QWebChannel -->
     <file alias="StatusQ/Components/private/qwebchannel/qwebchannel.js">../ui/StatusQ/src/StatusQ/Components/private/qwebchannel/qwebchannel.js</file>
     <file alias="StatusQ/Components/private/qwebchannel/helpers.js">../ui/StatusQ/src/StatusQ/Components/private/qwebchannel/helpers.js</file>

@@ -35,7 +35,7 @@ DAppsModel {
                 return
             }
 
-            root.store.deactivateWalletConnectSession(topic)
+            // Disconnect already handled by connector via ConnectorWCSDK.disconnectSession
             d.updateDappsModel()
             root.disconnected(topic, dapp.url)
         }
@@ -50,7 +50,7 @@ DAppsModel {
                 return
             }
 
-            root.store.addWalletConnectSession(JSON.stringify(session))
+            // Session already persisted by connector via ConnectorWCSDK.approveSession
             d.updateDappsModel()
             root.connected(proposalId, session.topic, session.peer.metadata.url)
         }
@@ -83,49 +83,16 @@ DAppsModel {
     SQUtils.QObject {
         id: d
 
-        property var dappsListReceivedFn: null
-        property var getActiveSessionsFn: null
         function updateDappsModel()
         {
-            dappsListReceivedFn = (dappsJson) => {
-                root.store.dappsListReceived.disconnect(dappsListReceivedFn);
-                root.clear();
-
-                let dappsList = JSON.parse(dappsJson);
-                for (let i = 0; i < dappsList.length; i++) {
-                    const cachedEntry = dappsList[i];
-                    // TODO #15075: on SDK dApps refresh update the model that has data source from persistence instead of using reset
-                    const dappEntryWithRequiredRoles = {
-                        url: cachedEntry.url,
-                        name: cachedEntry.name,
-                        iconUrl: cachedEntry.iconUrl,
-                        accountAddresses: [],
-                        topic: cachedEntry.url,
-                        connectorId: root.connectorId, 
-                        rawSessions: []
-                    }
-                    root.append(dappEntryWithRequiredRoles);
-                }
-            }
-            root.store.dappsListReceived.connect(dappsListReceivedFn);
-
-            // triggers a potential fast response from store.dappsListReceived
-            if (!store.getDapps()) {
-                console.warn("Failed retrieving dapps from persistence")
-                root.store.dappsListReceived.disconnect(dappsListReceivedFn);
-            }
-
-            getActiveSessionsFn = () => {
+            function refreshFromConnector() {
                 sdk.getActiveSessions((allSessionsAllProfiles) => {
                     if (!allSessionsAllProfiles) {
                         console.warn("Failed to get active sessions")
                         return
                     }
 
-                    root.store.dappsListReceived.disconnect(dappsListReceivedFn);
-
                     const dAppsMap = {}
-                    const topics = []
                     const sessions = DAppsHelpers.filterActiveSessionsForKnownAccounts(allSessionsAllProfiles, root.supportedAccountsModel)
                     for (const sessionID in sessions) {
                         const session = sessions[sessionID]
@@ -139,7 +106,6 @@ DAppsModel {
                         const existingDApp = dAppsMap[dapp.url]
                         if (existingDApp) {
                             // In Qt5.15.2 this is the way to make a "union" of two arrays
-                            // more modern syntax (ES-6) is not available yet
                             const combinedAddresses = new Set(existingDApp.accountAddresses.concat(accounts));
                             existingDApp.accountAddresses = Array.from(combinedAddresses);
                             existingDApp.rawSessions = [...existingDApp.rawSessions, session]
@@ -149,34 +115,28 @@ DAppsModel {
                             dapp.rawSessions = [session]
                             dAppsMap[dapp.url] = dapp
                         }
-                        topics.push(sessionID)
                     }
 
-                    // TODO #15075: on SDK dApps refresh update the model that has data source from persistence instead of using reset
                     root.clear();
-
-                    // Iterate dAppsMap and fill dapps
                     for (const uri in dAppsMap) {
                         const dAppEntry = dAppsMap[uri];
-                        // Due to ListModel converting flat array to empty nested ListModel
-                        // having array of key value pair fixes the problem
                         dAppEntry.accountAddresses = dAppEntry.accountAddresses.filter(account => (!!account)).map(account => ({address: account}));
                         dAppEntry.connectorId = root.connectorId;
                         root.append(dAppEntry);
                     }
-
-                    root.store.updateWalletConnectSessions(JSON.stringify(topics))
                 });
             }
 
             if (root.sdk.sdkReady) {
-                getActiveSessionsFn()
+                refreshFromConnector()
             } else {
-                let conn = root.sdk.sdkReadyChanged.connect(() => {
+                function onSdkReady() {
                     if (root.sdk.sdkReady) {
-                        getActiveSessionsFn()
+                        root.sdk.sdkReadyChanged.disconnect(onSdkReady)
+                        refreshFromConnector()
                     }
-                });
+                }
+                root.sdk.sdkReadyChanged.connect(onSdkReady)
             }
         }
     }

@@ -1,6 +1,6 @@
 import QtQuick
 
-/// SDK requires a visible parent to embed WebEngineView
+/// Abstract base for WC/BC SDK implementations (ConnectorWCSDK, DappsConnectorSDK)
 Item {
     required property string projectId
     property bool enabled: true

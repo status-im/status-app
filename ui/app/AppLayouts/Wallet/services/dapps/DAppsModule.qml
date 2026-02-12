@@ -232,7 +232,8 @@ SQUtils.QObject {
         enabled: root.wcSdk.enabled
 
         function onPairResponse(ok, error) {
-            root.pairingResponse(ok)
+            // pairingResponse expects Pairing.errors int: uriOk (1) on success, not a boolean
+            root.pairingResponse(ok ? Pairing.errors.uriOk : Pairing.errors.unknownError)
             if (!ok) {
                 root.dappsMetrics.logHealthEvent(DAppsMetrics.DAppsHealthState.PairError, error)
             }
@@ -285,11 +286,7 @@ SQUtils.QObject {
 
         onSiweSuccessful: (id, topic) => {
             d.lookupSession(topic, function(session) {
-                // Persist session
-                if(!root.store.addWalletConnectSession(JSON.stringify(session))) {
-                    console.error("Failed to persist session")
-                }
-
+                // Session already persisted by connector when SIWE auth was approved
                 root.siweCompleted(topic, id, "")
             })
         }

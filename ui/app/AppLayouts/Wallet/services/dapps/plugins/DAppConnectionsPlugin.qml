@@ -147,17 +147,11 @@ SQUtils.QObject {
         }
     }
 
+    // Connector-style flow: approveSession(key, account, chains)
     QtObject {
         id: wcConnectionPromise
         function resolve(context, key, approvedChainIds, accountAddress) {
-            const approvedNamespaces = JSON.parse(
-                DAppsHelpers.buildSupportedNamespaces(approvedChainIds,
-                                                [accountAddress],
-                                                SessionRequest.getSupportedMethods()))
-            d.acceptedSessionProposal = context
-            d.acceptedNamespaces = approvedNamespaces
-
-            root.wcSDK.buildApprovedNamespaces(key, context.params, approvedNamespaces)
+            root.wcSDK.approveSession(key, accountAddress, approvedChainIds)
         }
         function reject(context, key) {
             root.wcSDK.rejectSession(key)
@@ -214,51 +208,25 @@ SQUtils.QObject {
         }
     }
 
-    // Flow for WalletConnect
-    // 1. onSessionProposal -> new connection proposal received
-    // 2. onBuildApprovedNamespacesResult -> get the supported namespaces to be sent for approval
-    // 3. onApproveSessionResult -> session approve result
-    // 4. onRejectSessionResult -> session reject result
+    // Flow for WalletConnect (ConnectorWCSDK)
+    // 1. onSessionProposal -> new connection proposal received -> newConnectionProposed
+    // 2. onApproveSessionResult -> session approve result
+    // 3. onRejectSessionResult -> session reject result
     Connections {
         target: root.wcSDK
 
         function onSessionProposal(sessionProposal) {
             const key = sessionProposal.id
+            const proposal = sessionProposal.params ? sessionProposal : { params: sessionProposal }
+            const meta = (proposal.params && proposal.params.proposer && proposal.params.proposer.metadata) ? proposal.params.proposer.metadata : {}
+            const chains = DAppsHelpers.extractChainsFromProposal(proposal)
+            const dAppUrl = meta.url || ""
+            const dAppName = meta.name || ""
+            const dAppIcons = meta.icons || []
+            const dAppIcon = dAppIcons.length > 0 ? dAppIcons[0] : ""
+
             d.activeProposals.set(key.toString(), { context: sessionProposal, promise: wcConnectionPromise, connectorId: Constants.DAppConnectors.WalletConnect })
-            const supportedNamespacesStr = DAppsHelpers.buildSupportedNamespacesFromModels(
-                  root.networksModel, root.accountsModel, SessionRequest.getSupportedMethods())
-            root.wcSDK.buildApprovedNamespaces(key, sessionProposal.params, JSON.parse(supportedNamespacesStr))
-        }
-
-        function onBuildApprovedNamespacesResult(key, approvedNamespaces, error) {
-            if (!d.activeProposals.has(key.toString())) {
-                console.error("No active proposal found for key: " + key)
-                return
-            }
-            const proposal = d.activeProposals.get(key.toString()).context
-            const dAppUrl = proposal.params.proposer.metadata.url
-
-            if(error || !approvedNamespaces || !approvedNamespaces.eip155) {
-                if (!approvedNamespaces.eip155 || error.includes("Non conforming namespaces")) {
-                    root.newConnectionFailed(proposal.id, dAppUrl, Pairing.errors.unsupportedNetwork)
-                } else {
-                    root.newConnectionFailed(proposal.id, dAppUrl, Pairing.errors.unknownError)
-                }
-                return
-            }
-
-            approvedNamespaces = d.applyChainAgnosticFix(approvedNamespaces)
-            if (d.acceptedSessionProposal) {
-                root.wcSDK.approveSession(d.acceptedSessionProposal, approvedNamespaces)
-            } else {
-                const res = DAppsHelpers.extractChainsAndAccountsFromApprovedNamespaces(approvedNamespaces)
-                const chains = res.chains
-                const dAppName = proposal.params.proposer.metadata.name
-                const dAppIcons = proposal.params.proposer.metadata.icons
-                const dAppIcon = dAppIcons && dAppIcons.length > 0 ? dAppIcons[0] : ""
-
-                root.newConnectionProposed(key, chains, dAppUrl, dAppName, dAppIcon, Constants.DAppConnectors.WalletConnect)
-            }
+            root.newConnectionProposed(key, chains, dAppUrl, dAppName, dAppIcon, Constants.DAppConnectors.WalletConnect)
         }
 
         function onApproveSessionResult(proposalId, session, err) {
@@ -306,7 +274,7 @@ SQUtils.QObject {
                 console.error("Disconnecting dApp: dApp not found")
                 return
             }
-            if (!dApp.connectorId == undefined) {
+            if (dApp.connectorId === undefined) {
                 console.error("Disconnecting dApp: connectorId not found")
                 return
             }

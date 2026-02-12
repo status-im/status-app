@@ -56,40 +56,6 @@ QtObject:
   proc userAuthenticationResult*(self: Controller, topic: string, id: string, error: bool, password: string, pin: string, payload: string) {.signal.}
   proc signingResultReceived*(self: Controller, topic: string, id: string, data: string) {.signal.}
 
-  proc addWalletConnectSession*(self: Controller, session_json: string): bool {.slot.} =
-    return self.service.addSession(session_json)
-
-  proc deactivateWalletConnectSession*(self: Controller, topic: string): bool {.slot.} =
-    return self.service.deactivateSession(topic)
-
-  proc updateSessionsMarkedAsActive*(self: Controller, activeTopicsJson: string) {.slot.} =
-    self.service.updateSessionsMarkedAsActive(activeTopicsJson)
-
-  proc dappsListReceived*(self: Controller, dappsJson: string) {.signal.}
-
-  # Emits signal dappsListReceived with the list of dApps
-  proc getDapps*(self: Controller): bool {.slot.} =
-    let res = self.service.getDapps()
-    if res.len == 0:
-      return false
-    else:
-      self.dappsListReceived(res)
-      return true
-
-  proc activeSessionsReceived(self: Controller, activeSessionsJson: string) {.signal.}
-
-  # Emits signal activeSessionsReceived with the list of active sessions
-  # TODO: make it async
-  proc getActiveSessions(self: Controller): bool {.slot.} =
-    let validAtTimestamp = now().toTime().toUnix()
-    let res = self.service.getActiveSessions(validAtTimestamp)
-    if res.isNil:
-      return false
-    else:
-      let resultStr = $res
-      self.activeSessionsReceived(resultStr)
-      return true
-
   # Beware, it will fail if an authentication is already in progress
   proc authenticateUser*(self: Controller, topic: string, id: string, address: string, payload: string): bool {.slot.} =
     let keypair = self.walletAccountService.getKeypairByAccountAddress(address)

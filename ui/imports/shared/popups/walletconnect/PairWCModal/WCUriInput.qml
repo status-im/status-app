@@ -20,6 +20,20 @@ ColumnLayout {
     property alias pending: input.pending
     property int errorState: Pairing.errors.notChecked
 
+    // Computed error message - separate from valid to avoid binding loop
+    readonly property string computedErrorText: {
+        if (input.text.length === 0) return ""
+        switch (root.errorState) {
+        case Pairing.errors.tooCool: return qsTr("WalletConnect URI too cool")
+        case Pairing.errors.invalidUri: return qsTr("WalletConnect URI invalid")
+        case Pairing.errors.alreadyUsed: return qsTr("WalletConnect URI already used")
+        case Pairing.errors.expired: return qsTr("WalletConnect URI has expired")
+        case Pairing.errors.unsupportedNetwork: return qsTr("dApp is requesting to connect on an unsupported network")
+        case Pairing.errors.unknownError: return qsTr("Unexpected error occurred. Try again.")
+        default: return ""
+        }
+    }
+
     StatusBaseInput {
         id: input
 
@@ -33,34 +47,7 @@ ColumnLayout {
         placeholderText: qsTr("Paste URI")
         verticalAlignment: TextInput.AlignTop
 
-        valid: {
-            let uri = input.text
-
-            errorText.text = ""
-            if(uri.length === 0) {
-                return true
-            }
-
-            if(root.errorState === Pairing.errors.tooCool) {
-                errorText.text = qsTr("WalletConnect URI too cool")
-            } else if(root.errorState === Pairing.errors.invalidUri) {
-                errorText.text = qsTr("WalletConnect URI invalid")
-            } else if(root.errorState === Pairing.errors.alreadyUsed) {
-                errorText.text = qsTr("WalletConnect URI already used")
-            } else if(root.errorState === Pairing.errors.expired) {
-                errorText.text = qsTr("WalletConnect URI has expired")
-            } else if(root.errorState === Pairing.errors.unsupportedNetwork) {
-                errorText.text = qsTr("dApp is requesting to connect on an unsupported network")
-            } else if(root.errorState === Pairing.errors.unknownError) {
-                errorText.text = qsTr("Unexpected error occurred. Try again.")
-            }
-
-            if (errorText.text.length > 0) {
-                return false
-            }
-
-            return true
-        }
+        valid: root.computedErrorText.length === 0
 
         rightComponent: Item {
             width: pasteButton.implicitWidth
@@ -70,7 +57,7 @@ ColumnLayout {
 
             StatusLoadingIndicator {
                 anchors.centerIn: parent
-                color: StatusColors.getColr("blue")
+                color: StatusColors.getColor("blue")
                 visible: showIcon && input.pending
             }
 
@@ -109,7 +96,8 @@ ColumnLayout {
     StatusBaseText {
         id: errorText
 
-        visible: !input.valid && input.text.length !== 0
+        text: root.computedErrorText
+        visible: text.length > 0
 
         Layout.alignment: Qt.AlignRight
 

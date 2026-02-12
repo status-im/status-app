@@ -19,28 +19,7 @@ Item {
                 }
             }
             store: DAppsStore {
-                signal dappsListReceived(string dappsJson)
-
-                property var addWalletConnectSessionCalls: []
-                function addWalletConnectSession(sessionJson) {
-                    addWalletConnectSessionCalls.push(sessionJson)
-                }
-
-                property var deactivateWalletConnectSessionCalls: []
-                function deactivateWalletConnectSession(topic) {
-                    deactivateWalletConnectSessionCalls.push(topic)
-                }
-
-                property var updateWalletConnectSessionsCalls: []
-                function updateWalletConnectSessions(topics) {
-                    updateWalletConnectSessionsCalls.push(topics)
-                }
-
-                property var getDAppsCalls: []
-                function getDapps() {
-                    getDAppsCalls.push(true)
-                    return []
-                }
+                controller: QtObject {}
             }
             sdk: WalletConnectSDKBase {
                 id: sdk
@@ -98,7 +77,7 @@ Item {
             componentUnderTest.sdk.activeSessions["https://example.com"] = newSession
             componentUnderTest.sdk.approveSessionResult("requestID", newSession, null)
 
-            compare(componentUnderTest.store.addWalletConnectSessionCalls.length, 1, "addWalletConnectSession should be called once")
+            // addWalletConnectSession no longer called - session persisted by connector
             compare(componentUnderTest.connectedSpy.count, 1, "Connected signal should be emitted once")
             compare(componentUnderTest.connectedSpy.signalArguments[0][0], "requestID", "Connected signal should have correct proposalId")
             compare(componentUnderTest.connectedSpy.signalArguments[0][1], "https://example.com", "Connected signal should have correct topic")
@@ -116,7 +95,7 @@ Item {
             compare(dapp.rawSessions.count, 1, "DApp should have correct rawSessions count")
 
             componentUnderTest.sdk.sessionDelete("https://example.com", "")
-            compare(componentUnderTest.store.deactivateWalletConnectSessionCalls.length, 1, "deactivateWalletConnectSession should be called once")
+            // deactivateWalletConnectSession no longer called - disconnect handled by connector
             compare(componentUnderTest.disconnectedSpy.count, 1, "Disconnected signal should be emitted once")
             compare(componentUnderTest.disconnectedSpy.signalArguments[0][0], "https://example.com", "Disconnected signal should have correct topic")
             compare(componentUnderTest.disconnectedSpy.signalArguments[0][1], "https://example.com", "Disconnected signal should have correct dAppUrl")
