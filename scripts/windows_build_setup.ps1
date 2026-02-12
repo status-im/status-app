@@ -28,15 +28,16 @@ function Install-Protobuf-Go {
 }
 
 function Scoop-Install([string]$package, [string]$version) {
+    $appName = ($package -split '/')[-1]
     $fullName = "$package@$version"
-    if (Test-Path "/ProgramData/scoop/apps/$package/$version" -PathType Container) {
+
+    if (Test-Path "C:\ProgramData\scoop\apps\$appName\$version") {
         Write-Host "Already installed: $fullName"
+        scoop list $appName
     } else {
         Write-Host "Installing: $fullName"
         scoop install --global "$fullName"
     }
-    scoop reset "$fullName"
-    scoop hold --global "$package"
 }
 
 # Install Git and other dependencies
@@ -45,21 +46,32 @@ function Install-Dependencies {
     if (!(scoop bucket list | Where { $_.Name -eq "extras" })) {
         scoop bucket add extras
     }
+    if (!(scoop bucket list | Where { $_.Name -eq "status" })) {
+        scoop bucket add status https://github.com/status-im/infra-scoop-bucket.git
+    }
     scoop update
     # Trying to 'hold' git breaks due to how hosts are bootstrapped.
     scoop install --global git 7zip innounp dos2unix findutils wget rcedit
     # Old versions can cause weird Scoop install errors.
     scoop update --global 7zip innounp
     # WARNING: Remember to update PATH in ci/Jenkinsfile.windows.
-    Scoop-Install 'go'            '1.24.7'
-    Scoop-Install 'nim'           '2.2.6'
-    Scoop-Install 'cmake'         '3.31.6'
-    Scoop-Install 'python'        '3.13.5'
-    Scoop-Install 'mingw-winlibs' '15.2.0-13.0.0-r5'
-    Scoop-Install 'vcredist2022'  '14.44.35211.0'
-    Scoop-Install 'protobuf'      '3.20.1'
-    Scoop-Install 'openssl-lts'   '3.0.18'
-    Scoop-Install 'inno-setup'    '6.5.4'
+    Scoop-Install 'status/go'            '1.24.7'
+    Scoop-Install 'status/nim'           '2.2.6'
+    Scoop-Install 'status/cmake'         '3.31.6'
+    Scoop-Install 'status/python'        '3.13.5'
+    Scoop-Install 'status/mingw-winlibs' '15.2.0-13.0.0-r5'
+    Scoop-Install 'status/vcredist2022'  '14.44.35211.0'
+    Scoop-Install 'status/protobuf'      '3.20.1'
+    Scoop-Install 'status/openssl-lts'   '3.0.19'
+    Scoop-Install 'status/inno-setup'    '6.7.0'
+    Scoop-Install 'status/msys2'         '2025-12-13'
+}
+
+function Install-MSYS2-Packages {
+    Write-Host "Installing MSYS2 MinGW64 packages..."
+    $msys2Bash = "C:\ProgramData\scoop\apps\msys2\current\usr\bin\bash.exe"
+    $packages = "mingw-w64-x86_64-rust mingw-w64-x86_64-postgresql"
+    & $msys2Bash -lc "pacman -S --noconfirm --needed $packages"
 }
 
 function Install-Qt-SDK {
@@ -125,6 +137,7 @@ $QtVersion = "6.9.2"
 If ($MyInvocation.InvocationName -ne ".") {
     Install-Scoop
     Install-Dependencies
+    Install-MSYS2-Packages
     Install-Protobuf-Go
     Install-Qt-SDK
     Install-VC-BuildTools
