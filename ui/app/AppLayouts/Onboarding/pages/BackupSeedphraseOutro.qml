@@ -14,44 +14,50 @@ OnboardingPage {
 
     signal backupSeedphraseRemovalConfirmed()
 
-    contentItem: Item {
-        ColumnLayout {
-            anchors.centerIn: parent
-            width: Math.min(440, root.availableWidth)
-            spacing: Theme.xlPadding
+    contentItem: ColumnLayout {
+        id: layout
+        spacing: Theme.xlPadding
 
-            StatusBaseText {
-                Layout.fillWidth: true
-                text: qsTr("Confirm backup")
-                font.pixelSize: Theme.fontSize(22)
-                font.bold: true
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-            }
+        StatusBaseText {
+            Layout.fillWidth: true
+            text: qsTr("Confirm backup")
+            font.pixelSize: Theme.fontSize(22)
+            font.bold: true
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
+        }
 
-            StatusBaseText {
-                Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-                text: qsTr("Ensure you have written down your recovery phrase and have a safe place to keep it. Remember, anyone who has your recovery phrase has access to your funds.")
-            }
+        StatusBaseText {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
+            text: qsTr("Ensure you have written down your recovery phrase and have a safe place to keep it. Remember, anyone who has your recovery phrase has access to your funds.")
+        }
 
-            Item { Layout.preferredHeight: 120 }
+        StatusImage {
+            Layout.preferredWidth: 296
+            Layout.preferredHeight: 260
+            Layout.alignment: Qt.AlignHCenter
+            source: Assets.png("keycard/card_inserted/reading")
+        }
 
-            StatusCheckBox {
-                objectName: "cbAck"
-                Layout.fillWidth: true
-                id: cbAck
-                text: qsTr("I understand my recovery phrase will now be removed and I will no longer be able to access it via Status")
-            }
+        StatusCheckBox {
+            objectName: "cbAck"
+            id: cbAck
+            text: qsTr("I understand my recovery phrase will now be removed and I will no longer be able to access it via Status")
+            Layout.alignment: Qt.AlignHCenter
+            Layout.maximumWidth: layout.width
+        }
 
-            StatusButton {
-                objectName: "btnContinue"
-                Layout.alignment: Qt.AlignHCenter
-                text: qsTr("Continue")
-                enabled: cbAck.checked
-                onClicked: root.backupSeedphraseRemovalConfirmed()
-            }
+        StatusButton {
+            objectName: "btnContinue"
+            Layout.alignment: Qt.AlignHCenter
+            text: qsTr("Continue")
+            enabled: cbAck.checked
+            onClicked: root.backupSeedphraseRemovalConfirmed()
+        }
+        Item {
+            Layout.fillHeight: true
         }
     }
 }

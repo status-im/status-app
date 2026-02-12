@@ -7,7 +7,7 @@ import utils
 
 import SortFilterProxyModel
 
-Item {
+Control {
     id: root
 
     property var keyPairModel
@@ -25,8 +25,11 @@ Item {
         sourceModel: root.keyPairModel
     }
 
-    ListView {
-        anchors.fill: parent
+    implicitHeight: listView.contentHeight
+    implicitWidth: listView.contentWidth
+
+    contentItem: ListView {
+        id: listView
         spacing: Theme.padding
         clip: true
         model: proxyModel

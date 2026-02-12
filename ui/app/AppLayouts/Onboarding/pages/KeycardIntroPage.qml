@@ -41,6 +41,7 @@ KeycardBasePage {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Theme.bigPadding
+        scale: Math.min(1, parent.width / 600)
 
         contentItem: RowLayout {
             spacing: 0
@@ -130,7 +131,7 @@ KeycardBasePage {
             PropertyChanges {
                 target: root
                 title: qsTr("Plug in your Keycard reader")
-                image.source: Assets.png("onboarding/keycard/empty")
+                image.source: Assets.png("keycard/card_insert/insert")
             }
             PropertyChanges {
                 target: promoBanner
@@ -142,12 +143,12 @@ KeycardBasePage {
             when: root.keycardState === Onboarding.KeycardState.InsertKeycard
             PropertyChanges {
                 target: root
-                title: qsTr("Insert your Keycard")
+                title: qsTr("Tap or insert your Keycard")
                 infoText.text: qsTr("Get help via %1 🔗").arg(Utils.getStyledLink("https://keycard.tech", "https://keycard.tech/docs/",
                                                                                 infoText.hoveredLink,
                                                                                 root.Theme.palette.baseColor1,
                                                                                 root.Theme.palette.primaryColor1))
-                image.source: Assets.png("onboarding/keycard/insert")
+                image.source: Assets.png("keycard/card_insert/insert")
             }
         },
         State {
@@ -156,7 +157,7 @@ KeycardBasePage {
             PropertyChanges {
                 target: root
                 title: qsTr("Reading Keycard...")
-                image.source: Assets.png("onboarding/keycard/reading")
+                image.source: Assets.png("keycard/card_inserted/reading")
             }
         },
         // error states
@@ -166,8 +167,8 @@ KeycardBasePage {
             PropertyChanges {
                 target: root
                 title: qsTr("Oops this isn’t a Keycard")
-                subtitle: qsTr("Remove card and insert a Keycard")
-                image.source: Assets.png("onboarding/keycard/invalid")
+                subtitle: qsTr("Remove card and use a Keycard")
+                image.source: Assets.png("keycard/wrong_card/not-keycard")
             }
         },
         State {
@@ -177,7 +178,7 @@ KeycardBasePage {
                 target: root
                 title: qsTr("Smartcard reader service unavailable")
                 subtitle: qsTr("The Smartcard reader service (PCSC service), required for using Keycard, is not currently working. Ensure PCSC is installed and running and try again.")
-                image.source: Assets.png("onboarding/keycard/error")
+                image.source: Assets.png("keycard/wrong_card/something-went-wrong")
             }
         },
         State {
@@ -186,8 +187,8 @@ KeycardBasePage {
             PropertyChanges {
                 target: root
                 title: qsTr("All pairing slots occupied")
-                subtitle: qsTr("Factory reset this Keycard or insert a different one")
-                image.source: Assets.png("onboarding/keycard/error")
+                subtitle: qsTr("Factory reset this Keycard or use a different one")
+                image.source: Assets.png("keycard/card_inserted/writing-negative")
             }
             PropertyChanges {
                 target: btnFactoryReset
@@ -200,8 +201,8 @@ KeycardBasePage {
             PropertyChanges {
                 target: root
                 title: "<font color='%1'>".arg(root.Theme.palette.dangerColor1) + qsTr("Keycard blocked") + "</font>"
-                subtitle: qsTr("The Keycard you have inserted is blocked, you will need to unblock it or insert a different one")
-                image.source: Assets.png("onboarding/keycard/error")
+                subtitle: qsTr("The Keycard you have used is blocked, you will need to unblock it or use a different one")
+                image.source: Assets.png("keycard/pin/unblock-negative")
             }
             PropertyChanges {
                 target: btnUnblockWithPuk
@@ -222,8 +223,8 @@ KeycardBasePage {
             PropertyChanges {
                 target: root
                 title: "<font color='%1'>".arg(root.Theme.palette.dangerColor1) + qsTr("Keycard blocked") + "</font>"
-                subtitle: qsTr("The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one")
-                image.source: Assets.png("onboarding/keycard/error")
+                subtitle: qsTr("The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one")
+                image.source: Assets.png("keycard/pin/unblock-negative")
             }
             PropertyChanges {
                 target: btnUnblockWithSeedphrase

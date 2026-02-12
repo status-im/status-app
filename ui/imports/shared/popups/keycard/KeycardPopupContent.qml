@@ -21,7 +21,10 @@ Control {
         property bool primaryButtonEnabled: false
     }
 
-    contentItem: Loader {
+    implicitHeight: loader.implicitHeight
+    implicitWidth: loader.implicitWidth
+
+    Loader {
         id: loader
         anchors.fill: parent
         sourceComponent: {

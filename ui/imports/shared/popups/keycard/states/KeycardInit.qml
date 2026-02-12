@@ -10,7 +10,7 @@ import utils
 
 import "../helpers"
 
-Item {
+Control {
     id: root
 
     property var sharedKeycardModule
@@ -41,14 +41,6 @@ Item {
 
         readonly property bool hideKeyPair: root.sharedKeycardModule.keycardData & Constants.predefinedKeycardData.hideKeyPair
         readonly property bool copyFromAKeycardPartDone: root.sharedKeycardModule.keycardData & Constants.predefinedKeycardData.copyFromAKeycardPartDone
-        readonly property bool continuousProcessingAnimation: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.keycardFlowStarted ||
-                                                              root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.migratingKeypairToKeycard ||
-                                                              root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.migratingKeypairToApp ||
-                                                              root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.creatingAccountNewSeedPhrase ||
-                                                              root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.creatingAccountOldSeedPhrase ||
-                                                              root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.importingFromKeycard ||
-                                                              root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.unlockingKeycard ||
-                                                              root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.copyingKeycard
         readonly property bool authenticationOrSigning: root.sharedKeycardModule.currentState.flowType === Constants.keycardSharedFlow.authentication ||
                                                         root.sharedKeycardModule.currentState.flowType === Constants.keycardSharedFlow.sign
     }
@@ -108,14 +100,14 @@ Item {
         }
     }
 
-    ColumnLayout {
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
+
+    contentItem: ColumnLayout {
         id: layout
-        anchors.fill: parent
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
         spacing: Theme.padding
-        clip: true
 
         KeycardImage {
             id: image
@@ -132,13 +124,13 @@ Item {
             }
         }
 
-        Row {
+        ColumnLayout {
             spacing: Theme.halfPadding
-            Layout.alignment: Qt.AlignHCenter
-            Layout.preferredHeight: Constants.keycard.general.titleHeight
+            Layout.fillWidth: true
 
             StatusIcon {
                 id: icon
+                Layout.alignment: Qt.AlignCenter
                 visible: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.recognizedKeycard
                 width: Theme.padding
                 height: Theme.padding
@@ -147,6 +139,7 @@ Item {
             }
             StatusLoadingIndicator {
                 id: loading
+                Layout.alignment: Qt.AlignCenter
                 visible: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.readingKeycard ||
                          root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.migratingKeypairToKeycard ||
                          root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.migratingKeypairToApp ||
@@ -162,15 +155,15 @@ Item {
             }
             TitleText {
                 id: title
-
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap
             }
         }
 
         StatusBaseText {
             id: message
-            Layout.alignment: Qt.AlignCenter
-            Layout.preferredWidth: parent.width
+            Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
         }
@@ -182,7 +175,7 @@ Item {
 
         Loader {
             id: loader
-            Layout.preferredWidth: parent.width - 2*Theme.xlPadding
+            Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
 
             active: {
@@ -566,7 +559,7 @@ Item {
             }
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/empty-reader")
+                source: Assets.png("keycard/wrong_card/something-went-wrong")
                 pattern: ""
             }
             PropertyChanges {
@@ -581,21 +574,16 @@ Item {
                 target: title
                 text: {
                     if (d.copyFromAKeycardPartDone) {
-                        return qsTr("Insert empty Keycard...")
+                        return qsTr("Tap or insert empty Keycard...")
                     }
-                    return qsTr("Insert Keycard...")
+                    return qsTr("Tap or insert Keycard...")
                 }
                 color: Theme.palette.directColor1
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.cardInsert.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.cardInsert.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.cardInsert.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.cardInsert.endImgIndex
-                duration: Constants.keycardAnimations.cardInsert.duration
-                loops: Constants.keycardAnimations.cardInsert.loops
+                pattern: ""
+                source: Assets.png("keycard/card_insert/insert")
             }
             PropertyChanges {
                 target: message
@@ -615,13 +603,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.cardInserted.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.cardInserted.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.cardInserted.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.cardInserted.endImgIndex
-                duration: Constants.keycardAnimations.cardInserted.duration
-                loops: Constants.keycardAnimations.cardInserted.loops
+                pattern: ""
+                source: Assets.png("keycard/card_inserted/inserted")
             }
             PropertyChanges {
                 target: message
@@ -692,25 +675,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: d.continuousProcessingAnimation?
-                             Constants.keycardAnimations.processing.pattern :
-                             Constants.keycardAnimations.warning.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: d.continuousProcessingAnimation?
-                                                  Constants.keycardAnimations.processing.startImgIndexForTheFirstLoop :
-                                                  Constants.keycardAnimations.warning.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: d.continuousProcessingAnimation?
-                                                Constants.keycardAnimations.processing.startImgIndexForOtherLoops :
-                                                Constants.keycardAnimations.warning.startImgIndexForOtherLoops
-                endImgIndex: d.continuousProcessingAnimation?
-                                 Constants.keycardAnimations.processing.endImgIndex :
-                                 Constants.keycardAnimations.warning.endImgIndex
-                duration: d.continuousProcessingAnimation?
-                              Constants.keycardAnimations.processing.duration :
-                              Constants.keycardAnimations.warning.duration
-                loops: d.continuousProcessingAnimation?
-                           Constants.keycardAnimations.processing.loops :
-                           Constants.keycardAnimations.warning.loops
+                pattern: ""
+                source: Assets.png("keycard/scanning/scanning")
             }
             PropertyChanges {
                 target: message
@@ -727,13 +693,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.strongError.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.strongError.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.strongError.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.strongError.endImgIndex
-                duration: Constants.keycardAnimations.strongError.duration
-                loops: Constants.keycardAnimations.strongError.loops
+                pattern: ""
+                source: Assets.png("keycard/card_inserted/writing-negative")
             }
             PropertyChanges {
                 target: message
@@ -751,20 +712,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: d.authenticationOrSigning?
-                             "" : Constants.keycardAnimations.strongError.pattern
-                source: d.authenticationOrSigning?
-                            Assets.png("keycard/plain-error") : ""
-                startImgIndexForTheFirstLoop: d.authenticationOrSigning?
-                                                  0 : Constants.keycardAnimations.strongError.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: d.authenticationOrSigning?
-                                                0 : Constants.keycardAnimations.strongError.startImgIndexForOtherLoops
-                endImgIndex: d.authenticationOrSigning?
-                                 0 : Constants.keycardAnimations.strongError.endImgIndex
-                duration: d.authenticationOrSigning?
-                              0 : Constants.keycardAnimations.strongError.duration
-                loops: d.authenticationOrSigning?
-                           -1 : Constants.keycardAnimations.strongError.loops
+                pattern: ""
+                source: Assets.png("keycard/wrong_card/not-keycard")
             }
             PropertyChanges {
                 target: message
@@ -782,13 +731,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.strongError.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.strongError.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.strongError.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.strongError.endImgIndex
-                duration: Constants.keycardAnimations.strongError.duration
-                loops: Constants.keycardAnimations.strongError.loops
+                pattern: ""
+                source: Assets.png("keycard/pin/unblock")
             }
             PropertyChanges {
                 target: message
@@ -812,7 +756,7 @@ Item {
             }
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/plain-error")
+                source: Assets.png("keycard/wrong_card/wrong-profile")
                 pattern: ""
             }
             PropertyChanges {
@@ -848,7 +792,7 @@ Item {
             }
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/card-inserted")
+                source: Assets.png("keycard/card_inserted/inserted")
                 pattern: ""
             }
             PropertyChanges {
@@ -873,7 +817,7 @@ Item {
             }
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/card-empty")
+                source: Assets.png("keycard/wrong_card/wrong-profile")
                 pattern: ""
             }
             PropertyChanges {
@@ -898,7 +842,7 @@ Item {
             }
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/card-inserted")
+                source: Assets.png("keycard/card_inserted/inserted")
                 pattern: ""
             }
             PropertyChanges {
@@ -942,13 +886,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.strongError.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.strongError.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.strongError.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.strongError.endImgIndex
-                duration: Constants.keycardAnimations.strongError.duration
-                loops: Constants.keycardAnimations.strongError.loops
+                pattern: ""
+                source: Assets.png("keycard/card_inserted/writing-negative")
             }
             PropertyChanges {
                 target: message
@@ -986,13 +925,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.success.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.success.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.success.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.success.endImgIndex
-                duration: Constants.keycardAnimations.success.duration
-                loops: Constants.keycardAnimations.success.loops
+                pattern: ""
+                source: Assets.png("keycard/card_inserted/writing-positive")
             }
             PropertyChanges {
                 target: message
@@ -1011,13 +945,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.success.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.success.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.success.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.success.endImgIndex
-                duration: Constants.keycardAnimations.success.duration
-                loops: Constants.keycardAnimations.success.loops
+                pattern: ""
+                source: Assets.png("keycard/profile/positive")
             }
             PropertyChanges {
                 target: message
@@ -1081,13 +1010,16 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.strongSuccess.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.strongSuccess.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.strongSuccess.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.strongSuccess.endImgIndex
-                duration: Constants.keycardAnimations.strongSuccess.duration
-                loops: Constants.keycardAnimations.strongSuccess.loops
+                pattern: ""
+                source: {
+                    if (root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.factoryResetSuccess) {
+                        return Assets.png("keycard/factory_reset/keycard-factory-reset-positive")
+                    }
+                    if (root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.keyPairMigrateSuccess) {
+                        return Assets.png("keycard/profile/positive")
+                    }
+                    return Assets.png("keycard/card_inserted/writing-positive")
+                }
             }
             PropertyChanges {
                 target: message
@@ -1162,13 +1094,14 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.strongError.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.strongError.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.strongError.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.strongError.endImgIndex
-                duration: Constants.keycardAnimations.strongError.duration
-                loops: Constants.keycardAnimations.strongError.loops
+                pattern: ""
+                source: {
+                    if (root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.keyPairMigrateFailure ||
+                    root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.creatingAccountNewSeedPhraseFailure) {
+                        return Assets.png("keycard/profile/negative")
+                    }
+                    return Assets.png("keycard/card_inserted/writing-negative")
+                }
             }
             PropertyChanges {
                 target: message
@@ -1185,7 +1118,7 @@ Item {
             }
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/card-inserted")
+                source: Assets.png("keycard/card_inserted/inserted")
                 pattern: ""
             }
             PropertyChanges {
@@ -1207,7 +1140,7 @@ Item {
             }
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/card-inserted")
+                source: Assets.png("keycard/card_inserted/inserted")
                 pattern: ""
             }
             PropertyChanges {
@@ -1239,7 +1172,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.biometricsPinFailed
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/plain-error")
+                source: Assets.png("keycard/card_inserted/writing-negative")
                 pattern: ""
             }
             PropertyChanges {
@@ -1258,7 +1191,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.biometricsPinInvalid
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/plain-error")
+                source: Assets.png("keycard/pin/negative")
                 pattern: ""
             }
             PropertyChanges {
@@ -1282,13 +1215,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.cardRemoved.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.cardRemoved.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.cardRemoved.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.cardRemoved.endImgIndex
-                duration: Constants.keycardAnimations.cardRemoved.duration
-                loops: Constants.keycardAnimations.cardRemoved.loops
+                pattern: ""
+                source: Assets.png("keycard/wrong_card/something-went-wrong")
             }
             PropertyChanges {
                 target: message
@@ -1305,13 +1233,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.strongError.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.strongError.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.strongError.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.strongError.endImgIndex
-                duration: Constants.keycardAnimations.strongError.duration
-                loops: Constants.keycardAnimations.strongError.loops
+                pattern: ""
+                source: Assets.png("keycard/profile/already-added")
             }
             PropertyChanges {
                 target: message
@@ -1330,7 +1253,7 @@ Item {
             }
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/card-inserted")
+                source: Assets.png("keycard/profile/in-progress")
                 pattern: ""
             }
             PropertyChanges {
@@ -1356,13 +1279,8 @@ Item {
             }
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.strongSuccess.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.strongSuccess.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.strongSuccess.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.strongSuccess.endImgIndex
-                duration: Constants.keycardAnimations.strongSuccess.duration
-                loops: Constants.keycardAnimations.strongSuccess.loops
+                pattern: ""
+                source: Assets.png("keycard/card_inserted/writing-positive")
             }
             PropertyChanges {
                 target: message
@@ -1441,7 +1359,7 @@ Item {
             PropertyChanges {
                 target: image
                 pattern: ""
-                source: ""
+                source: Assets.png("keycard/profile/positive")
             }
             PropertyChanges {
                 target: message

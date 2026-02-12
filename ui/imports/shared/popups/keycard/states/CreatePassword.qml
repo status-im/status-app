@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 
 import StatusQ.Core.Theme
 
@@ -8,25 +9,24 @@ import shared.views
 
 import utils
 
-Item {
+Control {
     id: root
 
     property var sharedKeycardModule
 
     signal passwordValid(bool valid)
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.topMargin: Theme.xlPadding
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
+
+    contentItem: ColumnLayout {
         spacing: Theme.padding
 
         PasswordView {
-            Layout.minimumWidth: 460
-            Layout.alignment: Qt.AlignHCenter
             Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
             Layout.fillHeight: true
             passwordStrengthScoreFunction: RootStore.getPasswordStrengthScore
             highSizeIntro: true

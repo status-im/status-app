@@ -12,7 +12,7 @@ import utils
 
 import "../helpers"
 
-Item {
+Control {
     id: root
 
     property var sharedKeycardModule
@@ -30,13 +30,12 @@ Item {
     onStateChanged: {
         pukInputField.statesInitialization()
     }
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.topMargin: Theme.xlPadding
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
+    contentItem: ColumnLayout {
         spacing: Theme.padding
 
         KeycardImage {
@@ -48,11 +47,14 @@ Item {
 
         TitleText {
             id: title
-            Layout.alignment: Qt.AlignCenter
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
         }
 
         StatusPinInput {
             id: pukInputField
+            Layout.fillWidth: true
+            Layout.maximumWidth: implicitWidth
             Layout.alignment: Qt.AlignHCenter
             validator: StatusRegularExpressionValidator { regularExpression: /[0-9]+/ }
             pinLen: Constants.keycard.general.keycardPukLength
@@ -63,7 +65,7 @@ Item {
                 root.pukUpdated(pinInput)
                 if (root.sharedKeycardModule.currentState.stateType !== Constants.keycardSharedState.enterPuk &&
                         root.sharedKeycardModule.currentState.stateType !== Constants.keycardSharedState.wrongPuk) {
-                    image.source = Assets.png("keycard/card-inserted")
+                    image.source = Assets.png("keycard/pin/in-progress")
                 }
                 if(pinInput.length == 0) {
                     return
@@ -81,7 +83,7 @@ Item {
                         root.sharedKeycardModule.currentState.doSecondaryAction()
                     } else {
                         info.text = qsTr("The PUK doesn’t match")
-                        image.source = Assets.png("keycard/plain-error")
+                        image.source = Assets.png("keycard/pin/negative")
                     }
                 }
             }
@@ -89,7 +91,8 @@ Item {
 
         StatusBaseText {
             id: info
-            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             visible: text !== ""
 
@@ -99,7 +102,8 @@ Item {
 
         StatusBaseText {
             id: message
-            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             visible: text !== ""
 
@@ -119,7 +123,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.enterPuk
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/card-inserted")
+                source: Assets.png("keycard/pin/in-progress")
                 pattern: ""
             }
             PropertyChanges {
@@ -140,7 +144,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.wrongPuk
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/plain-error")
+                source: Assets.png("keycard/pin/negative")
                 pattern: ""
             }
             PropertyChanges {
@@ -164,7 +168,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.createPuk
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/card-inserted")
+                source: Assets.png("keycard/pin/in-progress")
                 pattern: ""
             }
             PropertyChanges {
@@ -185,7 +189,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.repeatPuk
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/card-inserted")
+                source: Assets.png("keycard/pin/in-progress")
                 pattern: ""
             }
             PropertyChanges {

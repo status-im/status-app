@@ -39,7 +39,7 @@ ColumnLayout {
         Layout.preferredWidth: 350
         fillMode: Image.PreserveAspectFit
         antialiasing: true
-        source: Assets.png("keycard/keycard-security")
+        source: Assets.png("keycard/card_insert/insert")
         mipmap: true
         cache: false
     }

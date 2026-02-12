@@ -10943,16 +10943,6 @@
       <translation>Keycard operation completed successfully</translation>
     </message>
     <message>
-      <source>Keycard Error</source>
-      <comment>KeycardChannelDrawer</comment>
-      <translation>Keycard Error</translation>
-    </message>
-    <message>
-      <source>An error occurred. Please try again.</source>
-      <comment>KeycardChannelDrawer</comment>
-      <translation>An error occurred. Please try again.</translation>
-    </message>
-    <message>
       <source>Keycard Not Supported</source>
       <comment>KeycardChannelDrawer</comment>
       <translation>Keycard Not Supported</translation>
@@ -10976,6 +10966,11 @@
       <source>Dismiss</source>
       <comment>KeycardChannelDrawer</comment>
       <translation>Dismiss</translation>
+    </message>
+    <message>
+      <source>Try to keep your Keycard in place</source>
+      <comment>KeycardChannelDrawer</comment>
+      <translation>Try to keep your Keycard in place</translation>
     </message>
   </context>
   <context>
@@ -11232,16 +11227,6 @@
       <source>Plug in Keycard reader...</source>
       <comment>KeycardInit</comment>
       <translation>Plug in Keycard reader...</translation>
-    </message>
-    <message>
-      <source>Insert empty Keycard...</source>
-      <comment>KeycardInit</comment>
-      <translation>Insert empty Keycard...</translation>
-    </message>
-    <message>
-      <source>Insert Keycard...</source>
-      <comment>KeycardInit</comment>
-      <translation>Insert Keycard...</translation>
     </message>
     <message>
       <source>Check the card, it might be wrongly inserted</source>
@@ -11713,6 +11698,16 @@
       <comment>KeycardInit</comment>
       <translation>Would you like to use Touch ID&#xA;to login to Status?</translation>
     </message>
+    <message>
+      <source>Tap or insert empty Keycard...</source>
+      <comment>KeycardInit</comment>
+      <translation>Tap or insert empty Keycard...</translation>
+    </message>
+    <message>
+      <source>Tap or insert Keycard...</source>
+      <comment>KeycardInit</comment>
+      <translation>Tap or insert Keycard...</translation>
+    </message>
   </context>
   <context>
     <name>KeycardIntroPage</name>
@@ -11747,11 +11742,6 @@
       <translation>Plug in your Keycard reader</translation>
     </message>
     <message>
-      <source>Insert your Keycard</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Insert your Keycard</translation>
-    </message>
-    <message>
       <source>Get help via %1 🔗</source>
       <comment>KeycardIntroPage</comment>
       <translation>Get help via %1 🔗</translation>
@@ -11765,11 +11755,6 @@
       <source>Oops this isn’t a Keycard</source>
       <comment>KeycardIntroPage</comment>
       <translation>Oops this isn’t a Keycard</translation>
-    </message>
-    <message>
-      <source>Remove card and insert a Keycard</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Remove card and insert a Keycard</translation>
     </message>
     <message>
       <source>Smartcard reader service unavailable</source>
@@ -11787,29 +11772,39 @@
       <translation>All pairing slots occupied</translation>
     </message>
     <message>
-      <source>Factory reset this Keycard or insert a different one</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Factory reset this Keycard or insert a different one</translation>
-    </message>
-    <message>
       <source>Keycard blocked</source>
       <comment>KeycardIntroPage</comment>
       <translation>Keycard blocked</translation>
     </message>
     <message>
-      <source>The Keycard you have inserted is blocked, you will need to unblock it or insert a different one</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>The Keycard you have inserted is blocked, you will need to unblock it or insert a different one</translation>
-    </message>
-    <message>
-      <source>The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one</translation>
-    </message>
-    <message>
       <source>Unblock with recovery phrase</source>
       <comment>KeycardIntroPage</comment>
       <translation>Unblock with recovery phrase</translation>
+    </message>
+    <message>
+      <source>Tap or insert your Keycard</source>
+      <comment>KeycardIntroPage</comment>
+      <translation>Tap or insert your Keycard</translation>
+    </message>
+    <message>
+      <source>Remove card and use a Keycard</source>
+      <comment>KeycardIntroPage</comment>
+      <translation>Remove card and use a Keycard</translation>
+    </message>
+    <message>
+      <source>Factory reset this Keycard or use a different one</source>
+      <comment>KeycardIntroPage</comment>
+      <translation>Factory reset this Keycard or use a different one</translation>
+    </message>
+    <message>
+      <source>The Keycard you have used is blocked, you will need to unblock it or use a different one</source>
+      <comment>KeycardIntroPage</comment>
+      <translation>The Keycard you have used is blocked, you will need to unblock it or use a different one</translation>
+    </message>
+    <message>
+      <source>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</source>
+      <comment>KeycardIntroPage</comment>
+      <translation>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</translation>
     </message>
   </context>
   <context>
@@ -12768,11 +12763,6 @@
       <translation>Plug in Keycard reader...</translation>
     </message>
     <message>
-      <source>Insert your Keycard...</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Insert your Keycard...</translation>
-    </message>
-    <message>
       <source>Reading Keycard...</source>
       <comment>LoginKeycardBox</comment>
       <translation>Reading Keycard...</translation>
@@ -12829,6 +12819,11 @@
       <source>Enter Keycard PIN</source>
       <comment>LoginKeycardBox</comment>
       <translation>Enter Keycard PIN</translation>
+    </message>
+    <message>
+      <source>Tap or insert your Keycard...</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Tap or insert your Keycard...</translation>
     </message>
   </context>
   <context>
@@ -14413,16 +14408,6 @@
       <translation>Unplug Reader</translation>
     </message>
     <message>
-      <source>Insert Keycard 1</source>
-      <comment>MockedKeycardLibControllerWindow</comment>
-      <translation>Insert Keycard 1</translation>
-    </message>
-    <message>
-      <source>Insert Keycard 2</source>
-      <comment>MockedKeycardLibControllerWindow</comment>
-      <translation>Insert Keycard 2</translation>
-    </message>
-    <message>
       <source>Remove Keycard</source>
       <comment>MockedKeycardLibControllerWindow</comment>
       <translation>Remove Keycard</translation>
@@ -14471,6 +14456,16 @@
       <source>Register Keycard</source>
       <comment>MockedKeycardLibControllerWindow</comment>
       <translation>Register Keycard</translation>
+    </message>
+    <message>
+      <source>Tap or insert Keycard 1</source>
+      <comment>MockedKeycardLibControllerWindow</comment>
+      <translation>Tap or insert Keycard 1</translation>
+    </message>
+    <message>
+      <source>Tap or insert Keycard 2</source>
+      <comment>MockedKeycardLibControllerWindow</comment>
+      <translation>Tap or insert Keycard 2</translation>
     </message>
   </context>
   <context>
@@ -23787,6 +23782,11 @@
       <source>Report a bug on GitHub</source>
       <comment>main</comment>
       <translation>Report a bug on GitHub</translation>
+    </message>
+    <message>
+      <source>Hello World</source>
+      <comment>main</comment>
+      <translation>Hello World</translation>
     </message>
   </context>
   <context>

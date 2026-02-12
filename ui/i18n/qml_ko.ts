@@ -8944,14 +8944,6 @@ L2 수수료: %2</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Keycard Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An error occurred. Please try again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Keycard Not Supported</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8973,6 +8965,10 @@ L2 수수료: %2</translation>
     </message>
     <message>
         <source>Ready to scan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try to keep your Keycard in place</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9188,14 +9184,6 @@ Are you sure you want to do this?</source>
     <message>
         <source>Plug in Keycard reader...</source>
         <translation>Keycard 리더를 연결하세요...</translation>
-    </message>
-    <message>
-        <source>Insert empty Keycard...</source>
-        <translation>빈 Keycard를 삽입하세요...</translation>
-    </message>
-    <message>
-        <source>Insert Keycard...</source>
-        <translation>Keycard를 삽입하세요...</translation>
     </message>
     <message>
         <source>Check the card, it might be wrongly inserted</source>
@@ -9611,6 +9599,14 @@ to login to Status?</source>
         <translation>Touch ID로 Status에 로그인하시겠어요?
 </translation>
     </message>
+    <message>
+        <source>Tap or insert empty Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardIntroPage</name>
@@ -9639,10 +9635,6 @@ to login to Status?</source>
         <translation>Keycard 리더기를 연결하세요</translation>
     </message>
     <message>
-        <source>Insert your Keycard</source>
-        <translation>Keycard을 삽입하세요</translation>
-    </message>
-    <message>
         <source>Get help via %1 🔗</source>
         <translation>%1 통해 도움받기 🔗</translation>
     </message>
@@ -9653,10 +9645,6 @@ to login to Status?</source>
     <message>
         <source>Oops this isn’t a Keycard</source>
         <translation>이런, 이것은 Keycard가 아니에요</translation>
-    </message>
-    <message>
-        <source>Remove card and insert a Keycard</source>
-        <translation>카드를 제거하고 Keycard를 삽입하세요</translation>
     </message>
     <message>
         <source>Smartcard reader service unavailable</source>
@@ -9671,23 +9659,31 @@ to login to Status?</source>
         <translation>모든 페어링 슬롯이 사용 중입니다</translation>
     </message>
     <message>
-        <source>Factory reset this Keycard or insert a different one</source>
-        <translation>이 Keycard를 공장 초기화하거나 다른 것을 삽입하세요</translation>
-    </message>
-    <message>
         <source>Keycard blocked</source>
         <translation>Keycard가 차단됨</translation>
     </message>
     <message>
-        <source>The Keycard you have inserted is blocked, you will need to unblock it or insert a different one</source>
-        <translation>삽입한 Keycard가 차단되었습니다. 차단을 해제하거나 다른 카드를 삽입해야 합니다.</translation>
-    </message>
-    <message>
-        <source>The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one</source>
-        <translation>삽입한 Keycard가 차단되었습니다. 잠금을 해제하거나 초기화(공장 초기화)하시거나, 다른 카드를 삽입하세요</translation>
-    </message>
-    <message>
         <source>Unblock with recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert your Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove card and use a Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Factory reset this Keycard or use a different one</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Keycard you have used is blocked, you will need to unblock it or use a different one</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10477,10 +10473,6 @@ to load</source>
         <translation type="unfinished">Keycard 리더를 연결하세요...</translation>
     </message>
     <message>
-        <source>Insert your Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Reading Keycard...</source>
         <translation type="unfinished">Keycard 읽는 중...</translation>
     </message>
@@ -10524,6 +10516,10 @@ to load</source>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert your Keycard...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11824,14 +11820,6 @@ to load</source>
         <translation>리더 분리</translation>
     </message>
     <message>
-        <source>Insert Keycard 1</source>
-        <translation>Keycard 1을 삽입하세요</translation>
-    </message>
-    <message>
-        <source>Insert Keycard 2</source>
-        <translation>Keycard 2 삽입</translation>
-    </message>
-    <message>
         <source>Remove Keycard</source>
         <translation>Keycard 제거</translation>
     </message>
@@ -11870,6 +11858,14 @@ to load</source>
     <message>
         <source>Register Keycard</source>
         <translation>Keycard 등록</translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard 1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard 2</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19522,6 +19518,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Report a bug on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

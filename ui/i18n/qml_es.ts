@@ -8980,14 +8980,6 @@ Tarifa L2: %2</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Keycard Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An error occurred. Please try again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Keycard Not Supported</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9009,6 +9001,10 @@ Tarifa L2: %2</translation>
     </message>
     <message>
         <source>Ready to scan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try to keep your Keycard in place</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9224,14 +9220,6 @@ Are you sure you want to do this?</source>
     <message>
         <source>Plug in Keycard reader...</source>
         <translation>Conecta el lector de Keycard...</translation>
-    </message>
-    <message>
-        <source>Insert empty Keycard...</source>
-        <translation>Inserta un Keycard vacío...</translation>
-    </message>
-    <message>
-        <source>Insert Keycard...</source>
-        <translation>Inserta Keycard...</translation>
     </message>
     <message>
         <source>Check the card, it might be wrongly inserted</source>
@@ -9629,6 +9617,14 @@ migrated from Status to Keycard</source>
 to login to Status?</source>
         <translation>¿Te gustaría usar Touch ID para iniciar sesión en Status?</translation>
     </message>
+    <message>
+        <source>Tap or insert empty Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardIntroPage</name>
@@ -9657,10 +9653,6 @@ to login to Status?</source>
         <translation>Conecta tu lector de Keycard</translation>
     </message>
     <message>
-        <source>Insert your Keycard</source>
-        <translation>Inserta tu Keycard</translation>
-    </message>
-    <message>
         <source>Get help via %1 🔗</source>
         <translation>Obtén ayuda a través de %1 🔗</translation>
     </message>
@@ -9671,10 +9663,6 @@ to login to Status?</source>
     <message>
         <source>Oops this isn’t a Keycard</source>
         <translation>Ups, esto no es una Keycard</translation>
-    </message>
-    <message>
-        <source>Remove card and insert a Keycard</source>
-        <translation>Retira la tarjeta e inserta una Keycard</translation>
     </message>
     <message>
         <source>Smartcard reader service unavailable</source>
@@ -9689,23 +9677,31 @@ to login to Status?</source>
         <translation>Todas las ranuras de emparejamiento están ocupadas</translation>
     </message>
     <message>
-        <source>Factory reset this Keycard or insert a different one</source>
-        <translation>Restablece esta Keycard de fábrica o inserta una diferente</translation>
-    </message>
-    <message>
         <source>Keycard blocked</source>
         <translation></translation>
     </message>
     <message>
-        <source>The Keycard you have inserted is blocked, you will need to unblock it or insert a different one</source>
-        <translation>La Keycard que has insertado está bloqueada, necesitarás desbloquearla o insertar una diferente</translation>
-    </message>
-    <message>
-        <source>The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one</source>
-        <translation>La Keycard que has insertado está bloqueada, necesitarás desbloquearla, restablecerla de fábrica o insertar una diferente</translation>
-    </message>
-    <message>
         <source>Unblock with recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert your Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove card and use a Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Factory reset this Keycard or use a different one</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Keycard you have used is blocked, you will need to unblock it or use a different one</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10504,10 +10500,6 @@ al cargar</translation>
         <translation type="unfinished">Conecta el lector de Keycard...</translation>
     </message>
     <message>
-        <source>Insert your Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Reading Keycard...</source>
         <translation type="unfinished">Leyendo Keycard...</translation>
     </message>
@@ -10552,6 +10544,10 @@ al cargar</translation>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert your Keycard...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11859,14 +11855,6 @@ al cargar</translation>
         <translation>Desconectar lector</translation>
     </message>
     <message>
-        <source>Insert Keycard 1</source>
-        <translation>Insertar Keycard 1</translation>
-    </message>
-    <message>
-        <source>Insert Keycard 2</source>
-        <translation>Insertar Keycard 2</translation>
-    </message>
-    <message>
         <source>Remove Keycard</source>
         <translation>Retirar Keycard</translation>
     </message>
@@ -11905,6 +11893,14 @@ al cargar</translation>
     <message>
         <source>Register Keycard</source>
         <translation>Registrar Keycard</translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard 1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard 2</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19584,6 +19580,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Report a bug on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

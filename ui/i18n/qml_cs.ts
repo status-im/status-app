@@ -9015,14 +9015,6 @@ L2 poplatek: %2</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Keycard Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An error occurred. Please try again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Keycard Not Supported</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9044,6 +9036,10 @@ L2 poplatek: %2</translation>
     </message>
     <message>
         <source>Ready to scan</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try to keep your Keycard in place</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9263,14 +9259,6 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>Plug in Keycard reader...</source>
         <translation>Připojte čtečku Keycard...</translation>
-    </message>
-    <message>
-        <source>Insert empty Keycard...</source>
-        <translation>Vložte prázdnou Keycard...</translation>
-    </message>
-    <message>
-        <source>Insert Keycard...</source>
-        <translation>Vložte Keycard...</translation>
     </message>
     <message>
         <source>Check the card, it might be wrongly inserted</source>
@@ -9688,6 +9676,14 @@ to login to Status?</source>
         <translation>Chcete používat Touch ID
 k přihlášení do Statusu?</translation>
     </message>
+    <message>
+        <source>Tap or insert empty Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardIntroPage</name>
@@ -9716,10 +9712,6 @@ k přihlášení do Statusu?</translation>
         <translation>Připojte čtečku Keycard</translation>
     </message>
     <message>
-        <source>Insert your Keycard</source>
-        <translation>Vložte svou Keycard</translation>
-    </message>
-    <message>
         <source>Get help via %1 🔗</source>
         <translation>Získat pomoc přes %1 🔗</translation>
     </message>
@@ -9730,10 +9722,6 @@ k přihlášení do Statusu?</translation>
     <message>
         <source>Oops this isn’t a Keycard</source>
         <translation>Jejda, toto není Keycard</translation>
-    </message>
-    <message>
-        <source>Remove card and insert a Keycard</source>
-        <translation>Vyjměte kartu a vložte Keycard</translation>
     </message>
     <message>
         <source>Smartcard reader service unavailable</source>
@@ -9748,23 +9736,31 @@ k přihlášení do Statusu?</translation>
         <translation>Všechny párovací sloty obsazeny</translation>
     </message>
     <message>
-        <source>Factory reset this Keycard or insert a different one</source>
-        <translation>Proveďte tovární nastavení této Keycard nebo vložte jinou</translation>
-    </message>
-    <message>
         <source>Keycard blocked</source>
         <translation>Keycard zablokována</translation>
     </message>
     <message>
-        <source>The Keycard you have inserted is blocked, you will need to unblock it or insert a different one</source>
-        <translation>Vložená Keycard je zablokována, musíte ji odblokovat nebo vložit jinou</translation>
-    </message>
-    <message>
-        <source>The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one</source>
-        <translation>Vložená Keycard je zablokována, musíte ji odblokovat, provést tovární nastavení nebo vložit jinou</translation>
-    </message>
-    <message>
         <source>Unblock with recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert your Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove card and use a Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Factory reset this Keycard or use a different one</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Keycard you have used is blocked, you will need to unblock it or use a different one</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10572,10 +10568,6 @@ selhalo</translation>
         <translation type="unfinished">Připojte čtečku Keycard...</translation>
     </message>
     <message>
-        <source>Insert your Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Reading Keycard...</source>
         <translation type="unfinished">Načítání Keycard...</translation>
     </message>
@@ -10621,6 +10613,10 @@ selhalo</translation>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert your Keycard...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11935,14 +11931,6 @@ selhalo</translation>
         <translation>Odpojit čtečku</translation>
     </message>
     <message>
-        <source>Insert Keycard 1</source>
-        <translation>Vložit Keycard 1</translation>
-    </message>
-    <message>
-        <source>Insert Keycard 2</source>
-        <translation>Vložit Keycard 2</translation>
-    </message>
-    <message>
         <source>Remove Keycard</source>
         <translation>Vyjmout Keycard</translation>
     </message>
@@ -11981,6 +11969,14 @@ selhalo</translation>
     <message>
         <source>Register Keycard</source>
         <translation>Registrovat Keycard</translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard 1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard 2</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19679,6 +19675,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Report a bug on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

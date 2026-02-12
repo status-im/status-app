@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -7,7 +8,7 @@ import StatusQ.Controls
 
 import utils
 
-Item {
+Control {
     id: root
 
     property var sharedKeycardModule
@@ -52,12 +53,12 @@ Item {
         }
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.topMargin: Theme.xlPadding
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
+
+    contentItem: ColumnLayout {
         spacing: Theme.padding
         clip: true
 

@@ -1,3 +1,4 @@
+import QtCore
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -239,6 +240,68 @@ SplitView {
         { label: "Limit: max PIN retries", flow: Constants.keycardSharedFlow.unlockKeycard, state: Constants.keycardSharedState.maxPinRetriesReached }
     ]
 
+    readonly property var keycardInitStates: [
+        { label: "Flow started", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.keycardFlowStarted },
+        { label: "Plug reader", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.pluginReader },
+        { label: "Tap or insert Keycard", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.insertKeycard },
+        { label: "Keycard inserted", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.keycardInserted },
+        { label: "Reading Keycard", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.readingKeycard },
+        { label: "Recognized Keycard", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.recognizedKeycard },
+        { label: "No PCSC service", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.noPCSCService },
+        { label: "Not a Keycard", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.notKeycard },
+        { label: "Wrong Keycard", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.wrongKeycard },
+        { label: "Unlock options", flow: Constants.keycardSharedFlow.unlockKeycard, state: Constants.keycardSharedState.unlockKeycardOptions },
+        { label: "Keycard empty metadata", flow: Constants.keycardSharedFlow.migrateFromAppToKeycard, state: Constants.keycardSharedState.keycardEmptyMetadata },
+        { label: "Keycard empty", flow: Constants.keycardSharedFlow.authentication, state: Constants.keycardSharedState.keycardEmpty },
+        { label: "Keycard not empty", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.keycardNotEmpty },
+        { label: "Max PIN retries", flow: Constants.keycardSharedFlow.unlockKeycard, state: Constants.keycardSharedState.maxPinRetriesReached },
+        { label: "Max PUK retries", flow: Constants.keycardSharedFlow.unlockKeycard, state: Constants.keycardSharedState.maxPukRetriesReached },
+        { label: "Max pairing slots", flow: Constants.keycardSharedFlow.unlockKeycard, state: Constants.keycardSharedState.maxPairingSlotsReached },
+        { label: "Keycard already unlocked", flow: Constants.keycardSharedFlow.unlockKeycard, state: Constants.keycardSharedState.keycardAlreadyUnlocked },
+        { label: "Metadata display", flow: Constants.keycardSharedFlow.setupNewKeycard, state: Constants.keycardSharedState.keycardMetadataDisplay },
+        { label: "Migrate keypair to app", flow: Constants.keycardSharedFlow.migrateFromKeycardToApp, state: Constants.keycardSharedState.migrateKeypairToApp },
+        { label: "Migrating keypair to app", flow: Constants.keycardSharedFlow.migrateFromKeycardToApp, state: Constants.keycardSharedState.migratingKeypairToApp },
+        { label: "Migrate keypair to keycard", flow: Constants.keycardSharedFlow.migrateFromAppToKeycard, state: Constants.keycardSharedState.migrateKeypairToKeycard },
+        { label: "Migrating keypair to keycard", flow: Constants.keycardSharedFlow.migrateFromAppToKeycard, state: Constants.keycardSharedState.migratingKeypairToKeycard },
+        { label: "Keypair migrate success", flow: Constants.keycardSharedFlow.migrateFromKeycardToApp, state: Constants.keycardSharedState.keyPairMigrateSuccess },
+        { label: "Keypair migrate failure", flow: Constants.keycardSharedFlow.migrateFromKeycardToApp, state: Constants.keycardSharedState.keyPairMigrateFailure },
+        { label: "Creating account (new seed)", flow: Constants.keycardSharedFlow.setupNewKeycardNewSeedPhrase, state: Constants.keycardSharedState.creatingAccountNewSeedPhrase },
+        { label: "Creating account (new seed) success", flow: Constants.keycardSharedFlow.setupNewKeycardNewSeedPhrase, state: Constants.keycardSharedState.creatingAccountNewSeedPhraseSuccess },
+        { label: "Creating account (new seed) failure", flow: Constants.keycardSharedFlow.setupNewKeycardNewSeedPhrase, state: Constants.keycardSharedState.creatingAccountNewSeedPhraseFailure },
+        { label: "Creating account (old seed)", flow: Constants.keycardSharedFlow.setupNewKeycardOldSeedPhrase, state: Constants.keycardSharedState.creatingAccountOldSeedPhrase },
+        { label: "Creating account (old seed) success", flow: Constants.keycardSharedFlow.setupNewKeycardOldSeedPhrase, state: Constants.keycardSharedState.creatingAccountOldSeedPhraseSuccess },
+        { label: "Creating account (old seed) failure", flow: Constants.keycardSharedFlow.setupNewKeycardOldSeedPhrase, state: Constants.keycardSharedState.creatingAccountOldSeedPhraseFailure },
+        { label: "Seed phrase already in use", flow: Constants.keycardSharedFlow.setupNewKeycardOldSeedPhrase, state: Constants.keycardSharedState.seedPhraseAlreadyInUse },
+        { label: "Importing from Keycard", flow: Constants.keycardSharedFlow.importFromKeycard, state: Constants.keycardSharedState.importingFromKeycard },
+        { label: "Import from Keycard success", flow: Constants.keycardSharedFlow.importFromKeycard, state: Constants.keycardSharedState.importingFromKeycardSuccess },
+        { label: "Import from Keycard failure", flow: Constants.keycardSharedFlow.importFromKeycard, state: Constants.keycardSharedState.importingFromKeycardFailure },
+        { label: "Factory reset success", flow: Constants.keycardSharedFlow.factoryReset, state: Constants.keycardSharedState.factoryResetSuccess },
+        { label: "Unlocking Keycard", flow: Constants.keycardSharedFlow.unlockKeycard, state: Constants.keycardSharedState.unlockingKeycard },
+        { label: "Unlock Keycard success", flow: Constants.keycardSharedFlow.unlockKeycard, state: Constants.keycardSharedState.unlockKeycardSuccess },
+        { label: "Unlock Keycard failure", flow: Constants.keycardSharedFlow.unlockKeycard, state: Constants.keycardSharedState.unlockKeycardFailure },
+        { label: "Renaming Keycard", flow: Constants.keycardSharedFlow.renameKeycard, state: Constants.keycardSharedState.renamingKeycard },
+        { label: "Keycard rename success", flow: Constants.keycardSharedFlow.renameKeycard, state: Constants.keycardSharedState.keycardRenameSuccess },
+        { label: "Keycard rename failure", flow: Constants.keycardSharedFlow.renameKeycard, state: Constants.keycardSharedState.keycardRenameFailure },
+        { label: "Changing Keycard PIN", flow: Constants.keycardSharedFlow.changeKeycardPin, state: Constants.keycardSharedState.changingKeycardPin },
+        { label: "Changing Keycard PUK", flow: Constants.keycardSharedFlow.changeKeycardPuk, state: Constants.keycardSharedState.changingKeycardPuk },
+        { label: "Change Keycard PUK success", flow: Constants.keycardSharedFlow.changeKeycardPuk, state: Constants.keycardSharedState.changingKeycardPukSuccess },
+        { label: "Change Keycard PUK failure", flow: Constants.keycardSharedFlow.changeKeycardPuk, state: Constants.keycardSharedState.changingKeycardPukFailure },
+        { label: "Changing pairing code", flow: Constants.keycardSharedFlow.changePairingCode, state: Constants.keycardSharedState.changingKeycardPairingCode },
+        { label: "Change pairing code success", flow: Constants.keycardSharedFlow.changePairingCode, state: Constants.keycardSharedState.changingKeycardPairingCodeSuccess },
+        { label: "Change pairing code failure", flow: Constants.keycardSharedFlow.changePairingCode, state: Constants.keycardSharedState.changingKeycardPairingCodeFailure },
+        { label: "Remove Keycard", flow: Constants.keycardSharedFlow.createCopyOfAKeycard, state: Constants.keycardSharedState.removeKeycard },
+        { label: "Same Keycard", flow: Constants.keycardSharedFlow.createCopyOfAKeycard, state: Constants.keycardSharedState.sameKeycard },
+        { label: "Copy to Keycard", flow: Constants.keycardSharedFlow.createCopyOfAKeycard, state: Constants.keycardSharedState.copyToKeycard },
+        { label: "Copying Keycard", flow: Constants.keycardSharedFlow.createCopyOfAKeycard, state: Constants.keycardSharedState.copyingKeycard },
+        { label: "Copying Keycard success", flow: Constants.keycardSharedFlow.createCopyOfAKeycard, state: Constants.keycardSharedState.copyingKeycardSuccess },
+        { label: "Copying Keycard failure", flow: Constants.keycardSharedFlow.createCopyOfAKeycard, state: Constants.keycardSharedState.copyingKeycardFailure },
+        { label: "Biometrics", flow: Constants.keycardSharedFlow.authentication, state: Constants.keycardSharedState.biometrics },
+        { label: "Biometrics ready to sign", flow: Constants.keycardSharedFlow.sign, state: Constants.keycardSharedState.biometricsReadyToSign },
+        { label: "Biometrics password failed", flow: Constants.keycardSharedFlow.authentication, state: Constants.keycardSharedState.biometricsPasswordFailed },
+        { label: "Biometrics PIN failed", flow: Constants.keycardSharedFlow.sign, state: Constants.keycardSharedState.biometricsPinFailed },
+        { label: "Biometrics PIN invalid", flow: Constants.keycardSharedFlow.sign, state: Constants.keycardSharedState.biometricsPinInvalid }
+    ]
+
     function applyPreset(index) {
         if (index < 0 || index >= root.presets.length)
             return
@@ -249,6 +312,38 @@ SplitView {
         sharedKeycardModule.currentState.displayBackButton =
                 p.state !== Constants.keycardSharedState.keycardFlowStarted &&
                 p.state !== Constants.keycardSharedState.pluginReader
+    }
+
+    function applyKeycardInitState(index) {
+        if (index < 0 || index >= root.keycardInitStates.length)
+            return
+
+        const stateDef = root.keycardInitStates[index]
+        sharedKeycardModule.currentState.flowType = stateDef.flow
+        sharedKeycardModule.currentState.stateType = stateDef.state
+        sharedKeycardModule.currentState.displayBackButton =
+                stateDef.state !== Constants.keycardSharedState.keycardFlowStarted &&
+                stateDef.state !== Constants.keycardSharedState.pluginReader
+    }
+
+    function goToNextKeycardInitState() {
+        if (root.keycardInitStates.length === 0)
+            return
+
+        const current = Math.max(0, keycardInitSelector.currentIndex)
+        const nextIndex = (current + 1) % root.keycardInitStates.length
+        keycardInitSelector.currentIndex = nextIndex
+        root.applyKeycardInitState(nextIndex)
+    }
+
+    function goToPreviousKeycardInitState() {
+        if (root.keycardInitStates.length === 0)
+            return
+
+        const current = Math.max(0, keycardInitSelector.currentIndex)
+        const previousIndex = (current - 1 + root.keycardInitStates.length) % root.keycardInitStates.length
+        keycardInitSelector.currentIndex = previousIndex
+        root.applyKeycardInitState(previousIndex)
     }
 
     Item {
@@ -439,6 +534,31 @@ SplitView {
                 Component.onCompleted: root.applyPreset(currentIndex)
             }
 
+            Label { text: "KeycardInit state (all):" }
+            ComboBox {
+                id: keycardInitSelector
+                Layout.fillWidth: true
+                model: root.keycardInitStates
+                textRole: "label"
+                onCurrentIndexChanged: root.applyKeycardInitState(currentIndex)
+                Component.onCompleted: {
+                    if (currentIndex < 0)
+                        currentIndex = 0
+                    else
+                        root.applyKeycardInitState(currentIndex)
+                }
+            }
+            Button {
+                Layout.alignment: Qt.AlignLeft
+                text: "Back KeycardInit state"
+                onClicked: root.goToPreviousKeycardInitState()
+            }
+            Button {
+                Layout.alignment: Qt.AlignLeft
+                text: "Next KeycardInit state"
+                onClicked: root.goToNextKeycardInitState()
+            }
+
             CheckBox {
                 id: forceFlowCheck
                 text: "forceFlow"
@@ -542,6 +662,11 @@ SplitView {
                 }
             }
         }
+    }
+
+    Settings {
+        property alias generalViewPresetIndex: presetSelector.currentIndex
+        property alias keycardInitStateIndex: keycardInitSelector.currentIndex
     }
 }
 

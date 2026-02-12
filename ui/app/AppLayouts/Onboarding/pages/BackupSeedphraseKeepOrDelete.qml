@@ -34,7 +34,7 @@ OnboardingPage {
                 Layout.preferredHeight: 260
                 Layout.alignment: Qt.AlignHCenter
                 mipmap: true
-                source: Assets.png("onboarding/status_seedphrase")
+                source: Assets.png("onboarding/status_login_seedphrase")
             }
 
             StatusCheckBox {

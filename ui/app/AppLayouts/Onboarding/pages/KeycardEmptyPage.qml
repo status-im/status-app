@@ -11,7 +11,7 @@ KeycardBasePage {
 
     title: qsTr("Keycard is empty")
     subtitle: qsTr("There is no profile key pair on this Keycard")
-    image.source: Assets.png("onboarding/keycard/error")
+    image.source: Assets.png("keycard/wrong_card/empty")
 
     buttons: [
         MaybeOutlineButton {

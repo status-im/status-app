@@ -17,7 +17,7 @@ KeycardBasePage {
 
     signal setPinRequested(string pin)
 
-    image.source: Assets.png("onboarding/keycard/reading")
+    image.source: Assets.png("keycard/pin/in-progress")
 
     buttons: [
         StatusPinInput {
@@ -111,7 +111,7 @@ KeycardBasePage {
                 }
                 PropertyChanges {
                     target: root
-                    image.source: Assets.png("onboarding/keycard/error")
+                    image.source: Assets.png("keycard/pin/negative")
                 }
             },
             State {
@@ -152,7 +152,7 @@ KeycardBasePage {
                 }
                 PropertyChanges {
                     target: root
-                    image.source: Assets.png("onboarding/keycard/success")
+                    image.source: Assets.png("keycard/pin/positive")
                 }
             }
         ]

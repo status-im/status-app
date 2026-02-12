@@ -10,33 +10,29 @@ import StatusQ.Controls
 import utils
 import shared.panels as SharedPanels
 
-Item {
+Control {
     id: root
 
     property var sharedKeycardModule
     property alias seedPhraseRevealed: displaySeed.seedPhraseRevealed
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.topMargin: Theme.xlPadding
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
+
+    contentItem: ColumnLayout {
         spacing: Theme.padding
 
         TitleText {
             id: title
-            Layout.preferredHeight: Constants.keycard.general.titleHeight
-            Layout.alignment: Qt.AlignCenter
             Layout.fillWidth: true
-
+            horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
         }
 
         StatusBaseText {
             id: message
-            Layout.preferredHeight: Constants.keycard.general.messageHeight
-            Layout.alignment: Qt.AlignCenter
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
@@ -44,8 +40,7 @@ Item {
 
         SharedPanels.SeedPhrase {
             id: displaySeed
-            Layout.preferredWidth: parent.width
-            Layout.fillHeight: true
+            Layout.fillWidth: true
 
             seedPhrase: root.sharedKeycardModule.getMnemonic().split(" ")
         }

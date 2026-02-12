@@ -85,7 +85,7 @@ StatusDialog {
                     when: stateManager.displayState === stateManager.stateWaitingForCard
                     PropertyChanges {
                         target: stateDisplay
-                        iconSource: Assets.png("onboarding/carousel/keycard")
+                        iconSource: Assets.png("keycard/card_insert/insert-positive")
                         title: qsTr("Ready to scan")
                         description: qsTr("Please tap your Keycard to the back of your device")
                         isError: false
@@ -97,7 +97,7 @@ StatusDialog {
                     when: stateManager.displayState === stateManager.stateReading
                     PropertyChanges {
                         target: stateDisplay
-                        iconSource: Assets.png("onboarding/status_generate_keycard")
+                        iconSource: Assets.png("keycard/card_inserted/inserted")
                         title: qsTr("Reading Keycard")
                         description: qsTr("Please keep your Keycard in place")
                         isError: false
@@ -109,7 +109,7 @@ StatusDialog {
                     when: stateManager.displayState === stateManager.stateSuccess
                     PropertyChanges {
                         target: stateDisplay
-                        iconSource: Assets.png("onboarding/status_key")
+                        iconSource: Assets.png("keycard/card_inserted/reading-positive")
                         title: qsTr("Success")
                         description: qsTr("Keycard operation completed successfully")
                         isError: false
@@ -118,14 +118,11 @@ StatusDialog {
                 },
                 State {
                     name: "error"
-                when: stateManager.displayState === stateManager.stateError
+                    when: stateManager.displayState === stateManager.stateError
+                    extend: "reading"
                     PropertyChanges {
                         target: stateDisplay
-                        iconSource: Assets.png("onboarding/status_generate_keys")
-                        title: qsTr("Keycard Error")
-                        description: qsTr("An error occurred. Please try again.")
-                        isError: true
-                        showLoading: false
+                        description: qsTr("Try to keep your Keycard in place")
                     }
                 },
                 State {

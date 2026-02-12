@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -9,7 +10,7 @@ import utils
 
 import shared.panels as SharedPanels
 
-Item {
+Control {
     id: root
 
     property var sharedKeycardModule
@@ -26,56 +27,48 @@ Item {
 
     }
 
-    StatusScrollView {
-        id: scrollView
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
 
-        anchors.fill: parent
-        contentWidth: availableWidth
+    contentItem: ColumnLayout {
+        spacing: Theme.xlPadding
 
-        anchors.topMargin: Theme.padding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
+        TitleText {
+            id: title
 
-        ColumnLayout {
+            Layout.fillWidth: true
 
-            spacing: Theme.xlPadding
-            width: scrollView.availableWidth
+            visible: text !== ""
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+        }
 
-            TitleText {
-                id: title
+        SharedPanels.EnterSeedPhrase {
+            id: seedPhrase
 
-                Layout.fillWidth: true
+            Layout.fillWidth: true
 
-                visible: text !== ""
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.WordWrap
+            dictionary: BIP39_en {}
+            flickable: scrollView.flickable
+
+            onSeedPhraseProvided: seedPhrase => {
+                const phrase = seedPhrase.join(" ")
+                const valid = root.sharedKeycardModule.validSeedPhrase(phrase)
+
+                if (valid) {
+                    setError("")
+                    root.sharedKeycardModule.setSeedPhrase(phrase)
+                } else {
+                    setError(qsTr("Invalid recovery phrase"))
+                }
+
+                root.validation(valid)
             }
 
-            SharedPanels.EnterSeedPhrase {
-                id: seedPhrase
-
-                Layout.fillWidth: true
-
-                dictionary: BIP39_en {}
-                flickable: scrollView.flickable
-
-                onSeedPhraseProvided: seedPhrase => {
-                    const phrase = seedPhrase.join(" ")
-                    const valid = root.sharedKeycardModule.validSeedPhrase(phrase)
-
-                    if (valid) {
-                        setError("")
-                        root.sharedKeycardModule.setSeedPhrase(phrase)
-                    } else {
-                        setError(qsTr("Invalid recovery phrase"))
-                    }
-
-                    root.validation(valid)
-                }
-
-                onSeedPhraseAccepted: {
-                    root.sharedKeycardModule.currentState.doPrimaryAction()
-                }
+            onSeedPhraseAccepted: {
+                root.sharedKeycardModule.currentState.doPrimaryAction()
             }
         }
     }

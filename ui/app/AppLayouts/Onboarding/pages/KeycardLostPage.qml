@@ -15,12 +15,13 @@ KeycardBasePage {
 
     title: qsTr("Lost Keycard")
     subtitle: qsTr("Sorry you've lost your Keycard")
-    image.source: Assets.png("onboarding/keycard/empty")
+    image.source: Assets.png("keycard/wrong_card/empty")
 
     buttons: [
         StatusButton {
             objectName: "createReplacementButton"
             anchors.horizontalCenter: parent.horizontalCenter
+            width: Math.min(implicitWidth, parent.width - 2*Theme.bigPadding)
             text: qsTr("Create replacement Keycard using the same recovery phrase")
             onClicked: root.createReplacementKeycardRequested()
 

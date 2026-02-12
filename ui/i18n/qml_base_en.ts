@@ -8969,14 +8969,6 @@ L2 fee: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Keycard Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>An error occurred. Please try again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Keycard Not Supported</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8994,6 +8986,10 @@ L2 fee: %2</source>
     </message>
     <message>
         <source>Dismiss</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try to keep your Keycard in place</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9208,14 +9204,6 @@ Are you sure you want to do this?</source>
     <name>KeycardInit</name>
     <message>
         <source>Plug in Keycard reader...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Insert empty Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Insert Keycard...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -9614,6 +9602,14 @@ migrated from Status to Keycard</source>
 to login to Status?</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Tap or insert empty Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardIntroPage</name>
@@ -9642,10 +9638,6 @@ to login to Status?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Insert your Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Get help via %1 🔗</source>
         <translation type="unfinished"></translation>
     </message>
@@ -9655,10 +9647,6 @@ to login to Status?</source>
     </message>
     <message>
         <source>Oops this isn’t a Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Remove card and insert a Keycard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -9674,23 +9662,31 @@ to login to Status?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Factory reset this Keycard or insert a different one</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Keycard blocked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>The Keycard you have inserted is blocked, you will need to unblock it or insert a different one</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The Keycard you have inserted is blocked, you will need to unblock it, factory reset or insert a different one</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Unblock with recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert your Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove card and use a Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Factory reset this Keycard or use a different one</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Keycard you have used is blocked, you will need to unblock it or use a different one</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10487,10 +10483,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Insert your Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Reading Keycard...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10535,6 +10527,10 @@ to load</source>
     </message>
     <message>
         <source>Enter Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert your Keycard...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11838,14 +11834,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Insert Keycard 1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Insert Keycard 2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Remove Keycard</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11883,6 +11871,14 @@ to load</source>
     </message>
     <message>
         <source>Register Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard 1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard 2</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -19548,6 +19544,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Report a bug on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

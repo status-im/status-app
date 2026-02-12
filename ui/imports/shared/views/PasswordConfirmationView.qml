@@ -31,11 +31,13 @@ ColumnLayout {
     }
 
     StatusBaseText {
-        Layout.alignment: Qt.AlignHCenter
+        Layout.fillWidth: true
         text: qsTr("Have you written down your password?")
         font.bold: true
         color: Theme.palette.directColor1
         font.pixelSize: Theme.fontSize(22)
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
     }
 
     ColumnLayout {
@@ -43,24 +45,30 @@ ColumnLayout {
         spacing: 4
 
         StatusBaseText {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             text: qsTr("You will never be able to recover your password if you lose it.")
             color: Theme.palette.dangerColor1
             font.pixelSize: Theme.primaryTextFontSize
+            wrapMode: Text.WordWrap
         }
 
         StatusBaseText {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             text: qsTr("If you need to, write it using pen and paper and keep in a safe place.")
             color: Theme.palette.baseColor1
             font.pixelSize: Theme.primaryTextFontSize
+            wrapMode: Text.WordWrap
         }
 
         StatusBaseText {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             text: qsTr("If you lose your password you will lose access to your Status profile.")
             color: Theme.palette.baseColor1
             font.pixelSize: Theme.primaryTextFontSize
+            wrapMode: Text.WordWrap
         }
     }
 
@@ -70,7 +78,8 @@ ColumnLayout {
         property bool showPassword: false
 
         objectName: "confirmAgainPasswordInput"
-        Layout.preferredWidth: 416
+        Layout.fillWidth: true
+        Layout.maximumWidth: 416
         Layout.alignment: Qt.AlignHCenter
         placeholderText: qsTr("Confirm your password (again)")
         echoMode: showPassword ? TextInput.Normal : TextInput.Password
@@ -102,7 +111,8 @@ ColumnLayout {
 
     StatusBaseText {
         id: errorTxt
-        Layout.alignment: Qt.AlignHCenter
+        Layout.fillWidth: true
+        horizontalAlignment: Text.AlignHCenter
         Layout.fillHeight: true
         Layout.topMargin: -Theme.halfPadding
         color: Theme.palette.dangerColor1

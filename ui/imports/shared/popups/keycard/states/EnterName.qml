@@ -11,7 +11,7 @@ import utils
 
 import "../helpers"
 
-Item {
+Control {
     id: root
 
     property var sharedKeycardModule
@@ -52,12 +52,12 @@ Item {
         keycardName.input.edit.forceActiveFocus()
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.topMargin: Theme.xlPadding
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
+
+    contentItem: ColumnLayout {
         spacing: Theme.padding
 
         TitleText {

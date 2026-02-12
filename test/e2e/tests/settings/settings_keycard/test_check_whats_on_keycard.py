@@ -7,7 +7,7 @@ from allure import step
 import configs
 import driver
 from constants.images_paths import PLUG_IN_KEYCARD_IMAGE_PATH, INSERT_KEYCARD_IMAGE_PATH, EMPTY_KEYCARD_IMAGE_PATH, \
-    KEYCARD_SUCCESS_IMAGE_PATH, KEYCARD_INSERTED_IMAGE_PATH
+    KEYCARD_SUCCESS_IMAGE_PATH, KEYCARD_INSERTED_IMAGE_PATH, KEYCARD_PIN_SUCCESS_IMAGE_PATH
 from constants.keycard import Keycard
 from gui.main_window import MainWindow
 from gui.mocked_keycard_controller import MockedKeycardController
@@ -101,7 +101,7 @@ def test_check_whats_on_keycard(main_screen: MainWindow, user_account):
 
         time.sleep(2)
         actual_image_path = keycard_popup.keycard_image_source_path
-        assert KEYCARD_SUCCESS_IMAGE_PATH == actual_image_path, f"Image path {actual_image_path} is wrong"
+        assert KEYCARD_PIN_SUCCESS_IMAGE_PATH == actual_image_path, f"Image path {actual_image_path} is wrong"
 
     with step('Click next and verify keycard image source path is correct'):
         keycard_popup.click_next()

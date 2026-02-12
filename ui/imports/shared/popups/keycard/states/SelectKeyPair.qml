@@ -15,7 +15,7 @@ import SortFilterProxyModel
 
 import "../helpers"
 
-Item {
+Control {
     id: root
 
     property var sharedKeycardModule
@@ -27,12 +27,12 @@ Item {
         readonly property int profilePairTypeValue: Constants.keycard.keyPairType.profile
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.topMargin: Theme.xlPadding
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
+
+    contentItem: ColumnLayout {
         spacing: Theme.padding
         clip: true
 
@@ -42,42 +42,40 @@ Item {
 
         TitleText {
             id: title
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
             text: qsTr("Select a key pair")
             wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
         }
 
         StatusBaseText {
             id: subTitle
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
             text: qsTr("Select which key pair you’d like to move to this Keycard")
             color: Theme.palette.baseColor1
             wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
         }
 
         Item {
             Layout.fillWidth: true
             Layout.preferredHeight: Theme.halfPadding
-            Layout.fillHeight: root.sharedKeycardModule.keyPairModel.count === 0
         }
 
         StatusBaseText {
             visible: !userProfile.isKeycardUser
-            Layout.preferredWidth: parent.width - 2 * Theme.padding
+            Layout.fillWidth: true
             Layout.leftMargin: Theme.padding
             Layout.alignment: Qt.AlignLeft
             text: qsTr("Profile key pair")
             color: Theme.palette.baseColor1
             wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignLeft
         }
 
         KeyPairList {
             visible: !userProfile.isKeycardUser
             Layout.fillWidth: true
-            Layout.preferredHeight: 100
-            Layout.fillHeight: visible && root.sharedKeycardModule.keyPairModel.count === 1
-            Layout.alignment: Qt.AlignLeft
-            Layout.preferredWidth: parent.width
 
             modelFilters: ExpressionFilter {
                 expression: model.keyPair.pairType === d.profilePairTypeValue
@@ -94,9 +92,7 @@ Item {
         StatusBaseText {
             visible: userProfile.isKeycardUser && root.sharedKeycardModule.keyPairModel.count > 0 ||
                      !userProfile.isKeycardUser && root.sharedKeycardModule.keyPairModel.count > 1
-            Layout.preferredWidth: parent.width - 2 * Theme.padding
-            Layout.leftMargin: Theme.padding
-            Layout.alignment: Qt.AlignLeft
+            Layout.fillWidth: true
             text: qsTr("Other key pairs")
             color: Theme.palette.baseColor1
             wrapMode: Text.WordWrap
@@ -106,9 +102,6 @@ Item {
             visible: userProfile.isKeycardUser && root.sharedKeycardModule.keyPairModel.count > 0 ||
                      !userProfile.isKeycardUser && root.sharedKeycardModule.keyPairModel.count > 1
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.alignment: Qt.AlignLeft
-            Layout.preferredWidth: parent.width
 
             modelFilters: ExpressionFilter {
                 expression: model.keyPair.pairType === d.profilePairTypeValue
@@ -121,6 +114,9 @@ Item {
                 root.sharedKeycardModule.setSelectedKeyPair(keyUid)
                 root.keyPairSelected()
             }
+        }
+        Item {
+            Layout.fillHeight: true
         }
     }
 }

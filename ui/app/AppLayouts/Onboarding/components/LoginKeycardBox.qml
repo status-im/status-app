@@ -175,7 +175,7 @@ Control {
             when: root.keycardState === Onboarding.KeycardState.InsertKeycard && !SQUtils.Utils.isMobile
             PropertyChanges {
                 target: infoText
-                text: qsTr("Insert your Keycard...")
+                text: qsTr("Tap or insert your Keycard...")
             }
         },
         State {

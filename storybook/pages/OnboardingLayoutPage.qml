@@ -23,6 +23,9 @@ SplitView {
     id: root
 
     orientation: Qt.Vertical
+    readonly property bool landscapeMode: ctrlLandscapeMode.checked
+    readonly property real commonLandscapeAspectRatio: 16 / 9
+    readonly property real commonPortraitAspectRatio: 9 / 16
 
     Logs { id: logs }
 
@@ -57,13 +60,23 @@ SplitView {
         id: emptyModel
     }
 
-    OnboardingLayout {
-        id: onboarding
-
-        readonly property string focusedObjectName: Window?.activeFocusItem?.objectName ?? ""
-
+    Item {
+        id: onboardingViewport
         SplitView.fillWidth: true
         SplitView.fillHeight: true
+
+        OnboardingLayout {
+            id: onboarding
+
+            readonly property string focusedObjectName: Window?.activeFocusItem?.objectName ?? ""
+            readonly property real landscapeWidthFromHeight: onboardingViewport.height * root.commonLandscapeAspectRatio
+            readonly property real portraitWidthFromHeight: onboardingViewport.height * root.commonPortraitAspectRatio
+
+            anchors.centerIn: parent
+            height: onboardingViewport.height
+            width: root.landscapeMode
+                   ? Math.min(onboardingViewport.width, landscapeWidthFromHeight)
+                   : Math.min(onboardingViewport.width, portraitWidthFromHeight)
 
         readonly property Item currentPage: {
             if (stack.topLevelItem instanceof Loader)
@@ -331,6 +344,7 @@ SplitView {
                 }
             }
         }
+        }
     }
 
     KeychainMock {
@@ -449,6 +463,12 @@ SplitView {
                 Switch {
                     id: ctrlBiometrics
                     text: "Biometrics available"
+                    checked: true
+                }
+
+                Switch {
+                    id: ctrlLandscapeMode
+                    text: "Landscape mode"
                     checked: true
                 }
 
@@ -712,6 +732,7 @@ SplitView {
         property alias showLoginScreen: ctrlLoginScreen.checked
         property alias useTouchId: ctrlTouchIdUser.checked
         property alias keycardEnabled: ctrlKeycard.checked
+        property alias landscapeMode: ctrlLandscapeMode.checked
     }
 }
 

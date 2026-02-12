@@ -12,7 +12,7 @@ KeycardBasePage {
 
     title: qsTr("Communication with Keycard lost")
     subtitle: qsTr("There seems to be an issue communicating with your Keycard. Reinsert the card or reader and try again.")
-    image.source: Assets.png("onboarding/keycard/error")
+    image.source: Assets.png("keycard/wrong_card/something-went-wrong")
 
     buttons: [
         MaybeOutlineButton {

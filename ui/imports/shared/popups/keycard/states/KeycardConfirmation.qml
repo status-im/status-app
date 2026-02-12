@@ -10,7 +10,7 @@ import utils
 
 import "../helpers"
 
-Item {
+Control {
     id: root
 
     property string myKeyUid
@@ -46,27 +46,22 @@ Item {
         }
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.topMargin: Theme.xlPadding
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
+
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
+
+    contentItem: ColumnLayout {
         spacing: Theme.padding
-        clip: true
 
         KeycardImage {
             id: image
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredHeight: Constants.keycard.shared.imageHeight
             Layout.preferredWidth: Constants.keycard.shared.imageWidth
-            pattern: Constants.keycardAnimations.strongError.pattern
-            source: ""
-            startImgIndexForTheFirstLoop: Constants.keycardAnimations.strongError.startImgIndexForTheFirstLoop
-            startImgIndexForOtherLoops: Constants.keycardAnimations.strongError.startImgIndexForOtherLoops
-            endImgIndex: Constants.keycardAnimations.strongError.endImgIndex
-            duration: Constants.keycardAnimations.strongError.duration
-            loops: Constants.keycardAnimations.strongError.loops
+            pattern: ""
+            source: Assets.png("keycard/factory_reset/keycard-factory-reset")
         }
 
         StatusBaseText {
@@ -82,12 +77,13 @@ Item {
                 return qsTr("A factory reset will delete the key on this Keycard.\nAre you sure you want to do this?")
             }
             color: Theme.palette.dangerColor1
+            wrapMode: Text.WordWrap
         }
 
         StatusCheckBox {
             id: confirmation
             Layout.alignment: Qt.AlignCenter
-            Layout.fillWidth: true
+            Layout.maximumWidth: parent.width
             leftSide: false
             spacing: Theme.smallPadding
             text: qsTr("I understand the key pair on this Keycard will be deleted")

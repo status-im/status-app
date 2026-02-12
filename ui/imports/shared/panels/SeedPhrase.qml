@@ -6,19 +6,21 @@ import Qt5Compat.GraphicalEffects
 import StatusQ.Core
 import StatusQ.Controls
 
-Item {
+Control {
     id: root
 
     property var seedPhrase: []
     property bool seedPhraseRevealed: false
 
-    StatusGridView {
+    implicitHeight: grid.contentHeight
+    implicitWidth: grid.contentWidth
+
+    contentItem: StatusGridView {
         id: grid
-        anchors.fill: parent
-        visible: root.seedPhraseRevealed
         cellWidth: parent.width * 0.5
         cellHeight: 48
         interactive: false
+        visible: root.seedPhraseRevealed
         model: 12
         readonly property var wordIndex: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
         readonly property int spacing: 4
@@ -39,7 +41,7 @@ Item {
 
     GaussianBlur {
         id: blur
-        anchors.fill: grid
+        anchors.fill: contentItem
         visible: !root.seedPhraseRevealed
         source: grid
         radius: 16

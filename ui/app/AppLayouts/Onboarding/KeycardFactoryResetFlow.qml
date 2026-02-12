@@ -25,7 +25,7 @@ OnboardingStackView {
         id: keycardResetAcks
 
         KeycardBasePage {
-            image.source: Assets.png("onboarding/keycard/reading")
+            image.source: Assets.png("keycard/factory_reset/keycard-factory-reset")
             title: qsTr("Factory reset Keycard")
             subtitle: "<font color='%1'>".arg(Theme.palette.dangerColor1) +
                       qsTr("All data including the stored key pair and derived accounts will be removed from the Keycard") +
@@ -63,8 +63,8 @@ OnboardingStackView {
             readonly property bool backAvailableHint: false
             readonly property bool resetting: root.keycardState === Onboarding.KeycardState.FactoryResetting
 
-            image.source: resetting ? Assets.png("onboarding/keycard/empty")
-                                    : Assets.png("onboarding/keycard/success")
+            image.source: resetting ? Assets.png("keycard/factory_reset/keycard-factory-reset")
+                                    : Assets.png("keycard/factory_reset/keycard-factory-reset-positive")
             title: resetting ? qsTr("Reseting Keycard") : qsTr("Keycard successfully factory reset")
             subtitle: resetting ? "" : qsTr("You can now use this Keycard like it's a brand-new, empty Keycard")
             infoText.text: resetting ? qsTr("Do not remove your Keycard or reader") : ""

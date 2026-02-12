@@ -20,7 +20,7 @@ KeycardBasePage {
     signal keycardPukEntered(string puk)
     signal keycardFactoryResetRequested()
 
-    image.source: Assets.png("onboarding/keycard/reading")
+    image.source: Assets.png("keycard/pin/in-progress")
 
     QtObject {
         id: d
@@ -82,7 +82,7 @@ KeycardBasePage {
             }
             PropertyChanges {
                 target: image
-                source: Assets.png("onboarding/keycard/error")
+                source: Assets.png("keycard/pin/unblock-negative")
             }
             PropertyChanges {
                 target: btnFactoryReset

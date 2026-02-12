@@ -117,7 +117,7 @@ StatusDialog {
                 }
 
                 if (root.fullScreenBottomSheet) {
-                    return Math.max(baseHeight, scrollView.availableHeight)
+                    return Math.max(baseHeight, content.implicitHeight)
                 }
 
                 return baseHeight

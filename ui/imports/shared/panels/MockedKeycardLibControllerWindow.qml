@@ -67,7 +67,7 @@ ApplicationWindow {
             }
 
             StatusButton {
-                text: qsTr("Insert Keycard 1")
+                text: qsTr("Tap or insert Keycard 1")
                 objectName: "insertKeycard1Button"
 
                 onClicked: {
@@ -78,7 +78,7 @@ ApplicationWindow {
             }
 
             StatusButton {
-                text: qsTr("Insert Keycard 2")
+                text: qsTr("Tap or insert Keycard 2")
                 objectName: "insertKeycard2Button"
 
                 onClicked: {

@@ -12,7 +12,7 @@ import utils
 
 import "../helpers"
 
-Item {
+Control {
     id: root
 
     property var sharedKeycardModule
@@ -76,12 +76,12 @@ Item {
         }
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.topMargin: Theme.xlPadding
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.leftMargin: Theme.xlPadding
-        anchors.rightMargin: Theme.xlPadding
+    leftPadding: Theme.xlPadding
+    rightPadding: Theme.xlPadding
+    topPadding: Theme.xlPadding
+    bottomPadding: Theme.halfPadding
+
+    contentItem: ColumnLayout {
         spacing: root.sharedKeycardModule.currentState.flowType === Constants.keycardSharedFlow.authentication ||
                  root.sharedKeycardModule.currentState.flowType === Constants.keycardSharedFlow.sign?
                      Theme.halfPadding : Theme.padding
@@ -95,12 +95,15 @@ Item {
 
         TitleText {
             id: title
-            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
         }
 
         StatusBaseText {
             id: subTitle
-            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             visible: text !== ""
 
@@ -110,6 +113,8 @@ Item {
 
         StatusPinInput {
             id: pinInputField
+            Layout.fillWidth: true
+            Layout.maximumWidth: implicitWidth
             Layout.alignment: Qt.AlignHCenter
             validator: StatusIntValidator{bottom: 0; top: 999999;}
             pinLen: Constants.keycard.general.keycardPinLength
@@ -118,7 +123,7 @@ Item {
                 root.pinUpdated(pinInput)
                 if (root.sharedKeycardModule.currentState.stateType !== Constants.keycardSharedState.wrongPin &&
                         root.sharedKeycardModule.currentState.stateType !== Constants.keycardSharedState.wrongKeychainPin) {
-                    image.source = Assets.png("keycard/enter-pin-%1".arg(pinInput.length))
+                    image.source = Assets.png("keycard/pin/in-progress")
                 }
                 if(pinInput.length === 0) {
                     return
@@ -143,7 +148,7 @@ Item {
                         root.sharedKeycardModule.currentState.doSecondaryAction()
                     } else {
                         info.text = qsTr("PINs don't match")
-                        image.source = Assets.png("keycard/plain-error")
+                        image.source = Assets.png("keycard/pin/negative")
                     }
                 }
             }
@@ -151,7 +156,7 @@ Item {
 
         StatusBaseText {
             id: info
-            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             visible: text !== ""
@@ -162,7 +167,7 @@ Item {
 
         StatusBaseText {
             id: message
-            Layout.alignment: Qt.AlignCenter
+            Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             visible: text !== ""
@@ -172,7 +177,9 @@ Item {
 
         Loader {
             id: loader
-            Layout.preferredWidth: parent.width
+            Layout.fillWidth: true
+            Layout.maximumWidth: implicitWidth
+            Layout.alignment: Qt.AlignHCenter
             active: {
                 if (root.sharedKeycardModule.currentState.flowType === Constants.keycardSharedFlow.setupNewKeycard) {
                     if (root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.createPin ||
@@ -228,7 +235,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.enterPin
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/card-empty")
+                source: Assets.png("keycard/pin/in-progress")
                 pattern: ""
             }
             PropertyChanges {
@@ -258,7 +265,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.wrongPin
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/plain-error")
+                source: Assets.png("keycard/pin/negative")
                 pattern: ""
             }
             PropertyChanges {
@@ -286,7 +293,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.wrongKeychainPin
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/plain-error")
+                source: Assets.png("keycard/pin/negative")
                 pattern: ""
             }
             PropertyChanges {
@@ -314,7 +321,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.createPin
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/enter-pin-0")
+                source: Assets.png("keycard/pin/in-progress")
                 pattern: ""
             }
             PropertyChanges {
@@ -349,7 +356,7 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.repeatPin
             PropertyChanges {
                 target: image
-                source: Assets.png("keycard/enter-pin-0")
+                source: Assets.png("keycard/pin/in-progress")
                 pattern: ""
             }
             PropertyChanges {
@@ -386,13 +393,8 @@ Item {
                   root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.changingKeycardPinSuccess
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.strongSuccess.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.strongSuccess.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.strongSuccess.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.strongSuccess.endImgIndex
-                duration: Constants.keycardAnimations.strongSuccess.duration
-                loops: Constants.keycardAnimations.strongSuccess.loops
+                pattern: ""
+                source: Assets.png("keycard/pin/positive")
             }
             PropertyChanges {
                 target: title
@@ -427,13 +429,8 @@ Item {
             when: root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.changingKeycardPinFailure
             PropertyChanges {
                 target: image
-                pattern: Constants.keycardAnimations.strongError.pattern
-                source: ""
-                startImgIndexForTheFirstLoop: Constants.keycardAnimations.strongError.startImgIndexForTheFirstLoop
-                startImgIndexForOtherLoops: Constants.keycardAnimations.strongError.startImgIndexForOtherLoops
-                endImgIndex: Constants.keycardAnimations.strongError.endImgIndex
-                duration: Constants.keycardAnimations.strongError.duration
-                loops: Constants.keycardAnimations.strongError.loops
+                pattern: ""
+                source: Assets.png("keycard/pin/negative")
             }
             PropertyChanges {
                 target: title
