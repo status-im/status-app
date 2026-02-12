@@ -279,9 +279,17 @@ void Theme::inheritPadding(qreal padding)
 
 void Theme::propagatePadding()
 {
-    const auto themes = attachedChildren();
-    for (QQuickAttachedPropertyPropagator *child : themes) {
-        auto theme = qobject_cast<Theme*>(child);
+    const auto children = attachedChildren();
+    QList<QPointer<QQuickAttachedPropertyPropagator>> childrenSnapshot;
+    childrenSnapshot.reserve(children.size());
+    for (QQuickAttachedPropertyPropagator *child : children)
+        childrenSnapshot.push_back(QPointer<QQuickAttachedPropertyPropagator>(child));
+
+    for (const QPointer<QQuickAttachedPropertyPropagator> &childGuard : childrenSnapshot) {
+        if (!childGuard)
+            continue;
+
+        auto theme = qobject_cast<Theme*>(childGuard.data());
         if (theme)
             theme->inheritPadding(m_padding);
     }
