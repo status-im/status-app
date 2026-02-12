@@ -52,6 +52,7 @@ StatusDialog {
             Layout.preferredWidth: parent.width
             Layout.fillHeight: true
             Layout.maximumHeight: 420
+            Layout.minimumHeight: 200
 
             Timer {
                 interval: 300
@@ -70,7 +71,7 @@ StatusDialog {
             validators: [
                 StatusValidator {
                     name: "isValidQR"
-                    errorMessage: qsTr("We cannot read that QR code.")
+                    errorMessage: qsTr("We could not read that QR code.")
                     validate: function (tag) {
                         // We accept URLs and addresses
                         return Utils.isURL(tag) || Utils.isValidAddress(tag)

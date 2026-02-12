@@ -14413,10 +14413,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>We cannot read that QR code.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Contact request</source>
         <translation type="unfinished"></translation>
     </message>
@@ -14434,6 +14430,10 @@ to load</source>
     </message>
     <message>
         <source>WalletConnect to connect dApps</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>We could not read that QR code.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

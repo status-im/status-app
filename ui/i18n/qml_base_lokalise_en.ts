@@ -17557,11 +17557,6 @@
       <translation>QR Scanner</translation>
     </message>
     <message>
-      <source>We cannot read that QR code.</source>
-      <comment>QRCodeScannerDialog</comment>
-      <translation>We cannot read that QR code.</translation>
-    </message>
-    <message>
       <source>Contact request</source>
       <comment>QRCodeScannerDialog</comment>
       <translation>Contact request</translation>
@@ -17585,6 +17580,11 @@
       <source>WalletConnect to connect dApps</source>
       <comment>QRCodeScannerDialog</comment>
       <translation>WalletConnect to connect dApps</translation>
+    </message>
+    <message>
+      <source>We could not read that QR code.</source>
+      <comment>QRCodeScannerDialog</comment>
+      <translation>We could not read that QR code.</translation>
     </message>
   </context>
   <context>
