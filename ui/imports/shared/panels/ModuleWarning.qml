@@ -223,6 +223,9 @@ Item {
             Button {
                 id: button
                 objectName: "actionButton"
+                topPadding: Theme.halfPadding
+                bottomPadding: Theme.halfPadding
+                implicitHeight: 2 * contentItem.implicitHeight
                 visible: !!text
                 focusPolicy: Qt.NoFocus
                 onClicked: {
