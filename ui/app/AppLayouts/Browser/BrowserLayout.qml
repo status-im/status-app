@@ -734,7 +734,8 @@ StatusSectionLayout {
     BCBrowserDappsProvider {
         id: browserDappsProvider
         connectorController: root.connectorController
-        clientId: connectorBridge.clientId  // "status-desktop/dapp-browser"
+        clientId: connectorBridge.clientId
+        clientIdFilter: connectorBridge.clientId
     }
 
     Component {

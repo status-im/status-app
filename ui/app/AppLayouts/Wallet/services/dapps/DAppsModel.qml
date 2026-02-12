@@ -12,6 +12,7 @@ QObject {
     // topic: string
     // connectorId: int
     // connectorBadge: string
+    // clientId: string
     // accountAddressses: [{address: string}]
     // chains: string
     // rawSessions: [{session: object}]
@@ -19,18 +20,25 @@ QObject {
 
     // Appending a new DApp to the model
     // Required properties: url, topic, connectorId, accountAddresses
-    // Optional properties: name, iconUrl, connectorBadge, chains, rawSessions
+    // Optional properties: name, iconUrl, connectorBadge, clientId, chains, rawSessions
     function append(dapp) {
         try {
-            let {name, url, iconUrl, topic, accountAddresses, connectorId, connectorBadge, rawSessions } = dapp
-            if (!url || !topic || !connectorId || !accountAddresses) {
+            let {name, url, iconUrl, topic, accountAddresses, connectorId, connectorBadge, clientId, rawSessions } = dapp
+            if (!url || !topic || connectorId === undefined || !accountAddresses) {
                 console.warn("DAppsModel - Failed to append dapp, missing required fields", JSON.stringify(dapp))
+                return
+            }
+            
+            url = url.trim()
+            if (!url) {
+                console.warn("DAppsModel - Failed to append dapp, URL is empty after trim")
                 return
             }
 
             name = name || ""
             iconUrl = iconUrl || ""
             connectorBadge = connectorBadge || ""
+            clientId = clientId || ""
             accountAddresses = accountAddresses || []
             rawSessions = rawSessions || []
 
@@ -41,6 +49,7 @@ QObject {
                 topic,
                 connectorId,
                 connectorBadge,
+                clientId,
                 accountAddresses,
                 rawSessions
             })
@@ -50,22 +59,12 @@ QObject {
     }
 
     function remove(topic) {
-        const { dapp, index, sessionIndex } = findDapp(topic)
-        if (!dapp) {
+        const { index } = findDapp(topic)
+        if (index < 0) {
             console.warn("DAppsModel - Failed to remove dapp, not found", topic)
             return
         }
-
-        if (dapp.rawSessions.count === 1) {
-            root.model.remove(index)
-            return
-        }
-
-        const rawSession = dapp.rawSessions.get(sessionIndex)
-        dapp.rawSessions.remove(sessionIndex)
-        if (rawSession.topic == dapp.topic) {
-            root.model.setProperty(index, "topic", dapp.rawSessions.get(0).topic)
-        }
+        root.model.remove(index)
     }
 
     function clear() {
@@ -81,6 +80,7 @@ QObject {
                 topic: dapp.topic,
                 connectorId: dapp.connectorId,
                 connectorBadge: dapp.connectorBadge || "",
+                clientId: dapp.clientId || "",
                 accountAddresses: dapp.accountAddresses,
                 rawSessions: dapp.rawSessions
             }
@@ -95,15 +95,10 @@ QObject {
 
     function findDapp(topic) {
         for (let i = 0; i < root.model.count; i++) {
-            const dapp = root.model.get(i)
-            for (let j = 0; j < dapp.rawSessions.count; j++) {
-                if (dapp.rawSessions.get(j).topic == topic) {
-                    return { dapp, index: i, sessionIndex: j }
-                    break
-                }
+            if (root.model.get(i).topic === topic) {
+                return { dapp: root.model.get(i), index: i, sessionIndex: 0 }
             }
         }
-
         return { dapp: null, index: -1, sessionIndex: -1 }
     }
 }

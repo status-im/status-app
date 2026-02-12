@@ -26,6 +26,8 @@ WalletConnectSDKBase {
     required property BrowserConnectStore store
     /// Required roles: chainId
     required property var networksModel
+    /// Array of clientIds to exclude from getActiveSessions (e.g. ["walletconnect"])
+    property var excludeClientIds: []
     /// Required roles: address
     required property var accountsModel
 
@@ -84,7 +86,7 @@ WalletConnectSDKBase {
         function onDisconnected(dappInfoString) {
             try {
                 let dappItem = JSON.parse(dappInfoString)
-                root.sessionDelete(dappItem.url, false)
+                root.disconnected(dappItem.url, false)
             } catch (e) {
                 console.error("Failed to parse dappInfo for disconnection", e)
             }
@@ -189,8 +191,8 @@ WalletConnectSDKBase {
         }
     }
 
-    disconnectSession: function(topic) {
-        root.store.disconnect(topic)
+    disconnect: function(topic, clientId) {
+        root.store.disconnect(topic, clientId || "")
     }
 
     getActiveSessions: function(callback) {
@@ -200,7 +202,12 @@ WalletConnectSDKBase {
             let activeSessions = {}
             for (let i = 0; i < dapps.length; i++) {
                 const dapp = dapps[i]
-                activeSessions[dapp.url] = d.buildSession(dapp.url, dapp.name, dapp.iconUrl, "", dapp.sharedAccount, [dapp.chainId])
+
+                if (root.excludeClientIds.includes(dapp.clientId)) {
+                    continue
+                }
+
+                activeSessions[dapp.url] = d.buildSession(dapp.url, dapp.name, dapp.iconUrl, "", dapp.sharedAccount, [dapp.chainId], dapp.clientId)
             }
             callback(activeSessions)
         } catch (e) {
@@ -218,9 +225,9 @@ WalletConnectSDKBase {
     QtObject {
         id: d
         readonly property var sessionRequests: new Map()
-        function buildSession(dappUrl, dappName, dappIcon, proposalId, account, chains) {
-            let sessionTemplate = (dappUrl, dappName, dappIcon, proposalId, eipAccount, eipChains) => {
-                return {
+        function buildSession(dappUrl, dappName, dappIcon, proposalId, account, chains, clientId) {
+            let sessionTemplate = (dappUrl, dappName, dappIcon, proposalId, eipAccount, eipChains, clientId) => {
+                const session = {
                     peer: {
                         metadata: {
                             description: "-",
@@ -239,13 +246,17 @@ WalletConnectSDKBase {
                     },
                     pairingTopic: proposalId,
                     topic: dappUrl
-                };
+                }
+                if (clientId !== undefined && clientId !== null) {
+                    session.clientId = clientId
+                }
+                return session
             }
 
             const eipAccount = account ? `eip155:${account}` : ""
             const eipChains = chains ? chains.map((chain) => `eip155:${chain}`) : []
 
-            return sessionTemplate(dappUrl, dappName, dappIcon, proposalId, eipAccount, eipChains)
+            return sessionTemplate(dappUrl, dappName, dappIcon, proposalId, eipAccount, eipChains, clientId)
         }
 
         function buildTransactionRequest(requestId, topic, chainId, txArgs) {

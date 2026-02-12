@@ -77,10 +77,10 @@ rpc(getWCActiveSessions, "connector"):
 rpc(approveWCSession, "connector"):
   proposalId: string
   account: string
-  chainId: uint64
   dappUrl: string
   dappName: string
   dappIcon: string
+  supportedChains: seq[uint64]
 
 rpc(rejectWCSession, "connector"):
   proposalId: string
@@ -95,6 +95,12 @@ rpc(rejectWCSessionRequest, "connector"):
   requestId: string
   code: int
   message: string
+
+rpc(emitWCSessionEvent, "connector"):
+  topic: string
+  name: string
+  dataJson: string
+  chainId: string
 
 proc isSuccessResponse(rpcResponse: RpcResponse[JsonNode]): bool =
   return rpcResponse.error.isNil
@@ -135,8 +141,8 @@ proc disconnectWCSessionRpc*(topic: string): bool =
 proc getWCActiveSessionsRpc*(validAtTimestamp: int64): RpcResponse[JsonNode] {.raises: [Exception].} =
   return getWCActiveSessions(validAtTimestamp)
 
-proc approveWCSessionRpc*(proposalId, account: string, chainId: uint64, dappUrl, dappName, dappIcon: string): RpcResponse[JsonNode] {.raises: [Exception].} =
-  return approveWCSession(proposalId, account, chainId, dappUrl, dappName, dappIcon)
+proc approveWCSessionRpc*(proposalId, account: string, dappUrl, dappName, dappIcon: string, supportedChains: seq[uint64]): RpcResponse[JsonNode] {.raises: [Exception].} =
+  return approveWCSession(proposalId, account, dappUrl, dappName, dappIcon, supportedChains)
 
 proc rejectWCSessionRpc*(proposalId: string): bool =
   return isSuccessResponse(rejectWCSession(proposalId))
@@ -146,3 +152,6 @@ proc approveWCSessionRequestRpc*(topic, requestId, signature: string): bool =
 
 proc rejectWCSessionRequestRpc*(topic, requestId: string, code: int, message: string): bool =
   return isSuccessResponse(rejectWCSessionRequest(topic, requestId, code, message))
+
+proc emitWCSessionEventRpc*(topic, name, dataJson, chainId: string): bool =
+  return isSuccessResponse(emitWCSessionEvent(topic, name, dataJson, chainId))

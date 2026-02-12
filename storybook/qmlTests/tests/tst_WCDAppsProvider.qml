@@ -93,17 +93,16 @@ Item {
             compare(dapp.accountAddresses.get(0).address, "0x123", "DApp should have correct accountAddresses address")
             compare(dapp.rawSessions.count, 1, "DApp should have correct rawSessions count")
 
-            componentUnderTest.sdk.sessionDelete("https://example.com", "")
+            componentUnderTest.sdk.disconnected("https://example.com", "")
             compare(componentUnderTest.disconnectedSpy.count, 1, "Disconnected signal should be emitted once")
-            compare(componentUnderTest.disconnectedSpy.signalArguments[0][0], "https://example.com", "Disconnected signal should have correct topic")
-            compare(componentUnderTest.disconnectedSpy.signalArguments[0][1], "https://example.com", "Disconnected signal should have correct dAppUrl")
+            compare(componentUnderTest.disconnectedSpy.signalArguments[0][0], "https://example.com", "Disconnected signal should have correct dAppUrl")
         }
 
         function test_disabledSDK() {
             componentUnderTest.sdk.enabled = false
             componentUnderTest.sdk.approveSessionResult("requestID", buildSession("https://example.com", "Example", "https://example.com/icon.png", "123", "0x123", ["1"]), "")
             compare(componentUnderTest.connectedSpy.count, 0, "Connected signal should not be emitted")
-            componentUnderTest.sdk.sessionDelete("https://example.com", "")
+            componentUnderTest.sdk.disconnected("https://example.com", "")
             compare(componentUnderTest.disconnectedSpy.count, 0, "Disconnected signal should not be emitted")
         }
     }

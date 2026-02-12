@@ -17,6 +17,8 @@ AbstractButton {
 
     objectName: "collectibleViewControl"
 
+    enabled: !isLoading
+
     property string title: ""
     property string unknownTitle: "..."
     property string subTitle: ""

@@ -108,7 +108,7 @@ Item {
         }
 
         function test_disconnect() {
-            controlUnderTest.model.append({name: "Test dApp 1", url: "https://dapp.test/1", iconUrl: "https://se-sdk-dapp.vercel.app/assets/eip155:1.png", connectorBadge: "status"})
+            controlUnderTest.model.append({name: "Test dApp 1", url: "https://dapp.test/1", iconUrl: "https://se-sdk-dapp.vercel.app/assets/eip155:1.png", connectorBadge: "status", topic: "https://dapp.test/1"})
             mouseClick(controlUnderTest)
             waitForRendering(controlUnderTest, 200)
 

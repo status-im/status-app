@@ -1,5 +1,5 @@
 import nimqml
-import chronicles, times, json
+import chronicles, json
 
 import app/core/eventemitter
 import app/global/global_singleton
