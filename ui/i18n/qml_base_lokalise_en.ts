@@ -17552,14 +17552,39 @@
   <context>
     <name>QRCodeScannerDialog</name>
     <message>
+      <source>QR Scanner</source>
+      <comment>QRCodeScannerDialog</comment>
+      <translation>QR Scanner</translation>
+    </message>
+    <message>
       <source>We cannot read that QR code.</source>
       <comment>QRCodeScannerDialog</comment>
       <translation>We cannot read that QR code.</translation>
     </message>
     <message>
-      <source>QR Scanner</source>
+      <source>Contact request</source>
       <comment>QRCodeScannerDialog</comment>
-      <translation>QR Scanner</translation>
+      <translation>Contact request</translation>
+    </message>
+    <message>
+      <source>Join communities</source>
+      <comment>QRCodeScannerDialog</comment>
+      <translation>Join communities</translation>
+    </message>
+    <message>
+      <source>Send tokens</source>
+      <comment>QRCodeScannerDialog</comment>
+      <translation>Send tokens</translation>
+    </message>
+    <message>
+      <source>Open WEB links</source>
+      <comment>QRCodeScannerDialog</comment>
+      <translation>Open WEB links</translation>
+    </message>
+    <message>
+      <source>WalletConnect to connect dApps</source>
+      <comment>QRCodeScannerDialog</comment>
+      <translation>WalletConnect to connect dApps</translation>
     </message>
   </context>
   <context>

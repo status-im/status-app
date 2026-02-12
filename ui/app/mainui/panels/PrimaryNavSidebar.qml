@@ -321,7 +321,6 @@ Control {
         thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
         onClicked: {
-            print ("!!!! Clicked", model.name)
             d.popupMenuInstance?.close()
             root.itemActivated(model.sectionType, model.id)
             if (root.interactive)

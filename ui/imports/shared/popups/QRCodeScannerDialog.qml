@@ -10,6 +10,7 @@ import StatusQ.Controls.Validators
 import StatusQ.Popups.Dialog
 
 import utils
+import "./common"
 
 StatusDialog {
     id: root
@@ -18,7 +19,6 @@ StatusDialog {
     property alias cameraPermissionDenied: qrCodeScanner.cameraPermissionDenied
 
     width: 360
-    height: 500
     fillHeightOnBottomSheet: true
     leftPadding: Theme.smallPadding
     rightPadding: Theme.smallPadding
@@ -41,35 +41,75 @@ StatusDialog {
         property string validTag: ""
     }
 
-    contentItem: QRCodeScanner {
-        id: qrCodeScanner
+    contentItem: ColumnLayout {
+        width: parent.width
+        height: parent.height
+        spacing: Theme.smallPadding
+        Layout.maximumHeight: 690
 
-        Timer {
-            interval: 300
-            running: !!d.validTag
-            repeat: false
-            onTriggered: {
-                if (Utils.isURL(d.validTag)) {
-                    root.tagFound(QRCodeScannerDialog.TagType.Link, d.validTag)
-                } else if (Utils.isValidAddress(d.validTag)) {
-                    root.tagFound(QRCodeScannerDialog.TagType.Address, d.validTag)
+        QRCodeScanner {
+            id: qrCodeScanner
+            Layout.preferredWidth: parent.width
+            Layout.fillHeight: true
+            Layout.maximumHeight: 420
+
+            Timer {
+                interval: 300
+                running: !!d.validTag
+                repeat: false
+                onTriggered: {
+                    if (Utils.isURL(d.validTag)) {
+                        root.tagFound(QRCodeScannerDialog.TagType.Link, d.validTag)
+                    } else if (Utils.isValidAddress(d.validTag)) {
+                        root.tagFound(QRCodeScannerDialog.TagType.Address, d.validTag)
+                    }
+                    root.close()
                 }
-                root.close()
+            }
+
+            validators: [
+                StatusValidator {
+                    name: "isValidQR"
+                    errorMessage: qsTr("We cannot read that QR code.")
+                    validate: function (tag) {
+                        // We accept URLs and addresses
+                        return Utils.isURL(tag) || Utils.isValidAddress(tag)
+                    }
+                }
+            ]
+            onValidTagFound: tag => {
+                d.validTag = tag
             }
         }
 
-        validators: [
-            StatusValidator {
-                name: "isValidQR"
-                errorMessage: qsTr("We cannot read that QR code.")
-                validate: function (tag) {
-                    // We accept URLs and addresses
-                    return Utils.isURL(tag) || Utils.isValidAddress(tag)
-                }
-            }
-        ]
-        onValidTagFound: tag => {
-            d.validTag = tag
+        IconRow {
+            width: parent.width
+            text: qsTr("Contact request")
+            icon: "contact"
+        }
+
+        IconRow {
+            width: parent.width
+            text: qsTr("Join communities")
+            icon: "communities"
+        }
+
+        IconRow {
+            width: parent.width
+            text: qsTr("Send tokens")
+            icon: "token"
+        }
+
+        IconRow {
+            width: parent.width
+            text: qsTr("Open WEB links")
+            icon: "browser"
+        }
+
+        IconRow {
+            width: parent.width
+            text: qsTr("WalletConnect to connect dApps")
+            icon: "wallet"
         }
     }
 

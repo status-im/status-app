@@ -14409,11 +14409,31 @@ to load</source>
 <context>
     <name>QRCodeScannerDialog</name>
     <message>
+        <source>QR Scanner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>We cannot read that QR code.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>QR Scanner</source>
+        <source>Contact request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Join communities</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open WEB links</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WalletConnect to connect dApps</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

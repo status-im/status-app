@@ -14523,6 +14523,26 @@ selhalo</translation>
         <source>We cannot read that QR code.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Contact request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Join communities</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send tokens</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open WEB links</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WalletConnect to connect dApps</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>RPCStatsModal</name>
