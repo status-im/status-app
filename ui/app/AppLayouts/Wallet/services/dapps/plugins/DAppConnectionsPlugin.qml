@@ -39,7 +39,7 @@ SQUtils.QObject {
     readonly property ConcatModel dappsModel: dappsModel
     
     // Output signal when a dApp is disconnected
-    signal disconnected(string topic, string dAppUrl, int connectorId)
+    signal disconnected(string dAppUrl, int connectorId)
     // Output signal when a new connection is proposed
     signal connected(string proposalId, string topic, string dAppUrl, int connectorId)
     // Output signal when a new connection is proposed by the SDK
@@ -104,19 +104,20 @@ SQUtils.QObject {
         onConnected: (proposalId, topic, dappUrl) => {
             root.connected(proposalId, topic, dappUrl, Constants.DAppConnectors.WalletConnect)
         }
-        onDisconnected: (topic, dappUrl) => {
-            root.disconnected(topic, dappUrl, Constants.DAppConnectors.WalletConnect)
+        onDisconnected: (dappUrl) => {
+            root.disconnected(dappUrl, Constants.DAppConnectors.WalletConnect)
         }
     }
 
     BCDappsProvider {
         id: connectorDAppsProvider
         bcSDK: root.bcSDK
+        excludeClientIds: ["walletconnect"]
         onConnected: (pairingId, topic, dappUrl) => {
             root.connected(pairingId, topic, dappUrl, Constants.DAppConnectors.StatusConnect)
         }
-        onDisconnected: (topic, dappUrl) => {
-            root.disconnected(topic, dappUrl, Constants.DAppConnectors.StatusConnect)
+        onDisconnected: (dappUrl) => {
+            root.disconnected(dappUrl, Constants.DAppConnectors.StatusConnect)
         }
     }
 
@@ -268,28 +269,6 @@ SQUtils.QObject {
         property var acceptedSessionProposal: null
         property var acceptedNamespaces: null
 
-        function disconnect(connectionId) {
-            const dApp = d.getDAppByTopic(connectionId)
-            if (!dApp) {
-                console.error("Disconnecting dApp: dApp not found")
-                return
-            }
-            if (dApp.connectorId === undefined) {
-                console.error("Disconnecting dApp: connectorId not found")
-                return
-            }
-
-            const sdk = dApp.connectorId === Constants.DAppConnectors.WalletConnect ? root.wcSDK : root.bcSDK
-            sdkDisconnect(dApp, sdk)
-        }
-
-        // Disconnect all sessions for a dApp
-        function sdkDisconnect(dapp, sdk) {
-            SQUtils.ModelUtils.forEach(dapp.rawSessions, (session) => {
-                sdk.disconnectSession(session.topic)
-            })
-        }
-
         function reject(key) {
            if (!d.activeProposals.has(key.toString())) {
                 console.error("Rejecting dApp: dApp not found")
@@ -308,22 +287,6 @@ SQUtils.QObject {
 
             const proposal = d.activeProposals.get(key.toString())
             proposal.promise.resolve(proposal.context, key, chains, accoutAddress)
-        }
-
-        function getDAppByTopic(topic) {
-            return SQUtils.ModelUtils.getFirstModelEntryIf(dappsModel, (modelItem) => {
-                if (modelItem.topic == topic) {
-                    return true
-                }
-                if (!modelItem.rawSessions) {
-                    return false
-                }
-                for (let i = 0; i < modelItem.rawSessions.ModelCount.count; i++) {
-                    if (modelItem.rawSessions.get(i).topic == topic) {
-                        return true
-                    }
-                }
-            })
         }
 
         //Special case for chain agnostic dapps

@@ -4,7 +4,7 @@ import chronicles
 import io_interface, states
 import view, controller
 
-import constants as main_constants
+import ../../../constants as main_constants
 
 import app/global/feature_flags
 import app/global/global_singleton

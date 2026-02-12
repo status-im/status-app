@@ -63,6 +63,10 @@ type WCSessionRequestSignal* = ref object of Signal
   requestId*: int64
   requestJson*: string
 
+type WCSessionDeleteSignal* = ref object of Signal
+  topic*: string
+  dappUrl*: string
+
 proc fromEvent*(T: type ConnectorSendRequestAccountsSignal, event: JsonNode): ConnectorSendRequestAccountsSignal =
   result = ConnectorSendRequestAccountsSignal()
   result.signalType = SignalType.ConnectorSendRequestAccounts
@@ -140,3 +144,9 @@ proc fromEvent*(T: type WCSessionRequestSignal, event: JsonNode): WCSessionReque
   result.topic = event["event"]{"topic"}.getStr()
   result.requestId = event["event"]{"requestId"}.getInt(0)
   result.requestJson = event["event"]{"requestJson"}.getStr()
+
+proc fromEvent*(T: type WCSessionDeleteSignal, event: JsonNode): WCSessionDeleteSignal =
+  result = WCSessionDeleteSignal()
+  result.signalType = SignalType.WCSessionDelete
+  result.topic = event["event"]{"topic"}.getStr()
+  result.dappUrl = event["event"]{"dappUrl"}.getStr()

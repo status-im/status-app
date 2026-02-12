@@ -1,4 +1,4 @@
-import stint, web3/[encoding, eth_api_types]
+import stint, web3/eth_api_types
 
 type
   Transfer* = object

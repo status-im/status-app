@@ -12,32 +12,29 @@ import utils
 DAppsModel {
     id: root
 
-    // Input
     required property WalletConnectSDKBase sdk
     required property DAppsStore store
     required property var supportedAccountsModel
 
     readonly property int connectorId: Constants.WalletConnect
+    readonly property string clientId: "walletconnect"
 
     readonly property bool enabled: sdk.enabled
 
-    signal disconnected(string topic, string dAppUrl)
+    signal disconnected(string dAppUrl)
     signal connected(string proposalId, string topic, string dAppUrl)
 
     Connections {
         target: root.sdk
         enabled: root.enabled
 
-        function onSessionDelete(topic, err) {
-            const dapp = root.getByTopic(topic)
-            if (!dapp) {
-                console.warn("DApp not found for topic - cannot delete session", topic)
-                return
+        function onDisconnected(url, err) {
+            if (err) {
+                console.warn("Error disconnecting dApp:", url, err)
             }
 
-            // Disconnect already handled by connector via ConnectorWCSDK.disconnectSession
             d.updateDappsModel()
-            root.disconnected(topic, dapp.url)
+            root.disconnected(url)
         }
         function onSdkInit(success, result) {
             if (!success) {
@@ -50,7 +47,6 @@ DAppsModel {
                 return
             }
 
-            // Session already persisted by connector via ConnectorWCSDK.approveSession
             d.updateDappsModel()
             root.connected(proposalId, session.topic, session.peer.metadata.url)
         }
@@ -92,7 +88,8 @@ DAppsModel {
                         return
                     }
 
-                    const dAppsMap = {}
+                    root.clear();
+                    
                     const sessions = DAppsHelpers.filterActiveSessionsForKnownAccounts(allSessionsAllProfiles, root.supportedAccountsModel)
                     for (const sessionID in sessions) {
                         const session = sessions[sessionID]
@@ -103,26 +100,12 @@ DAppsModel {
                             dapp.iconUrl = ""
                         }
                         const accounts = DAppsHelpers.getAccountsInSession(session)
-                        const existingDApp = dAppsMap[dapp.url]
-                        if (existingDApp) {
-                            // In Qt5.15.2 this is the way to make a "union" of two arrays
-                            const combinedAddresses = new Set(existingDApp.accountAddresses.concat(accounts));
-                            existingDApp.accountAddresses = Array.from(combinedAddresses);
-                            existingDApp.rawSessions = [...existingDApp.rawSessions, session]
-                        } else {
-                            dapp.accountAddresses = accounts
-                            dapp.topic = sessionID
-                            dapp.rawSessions = [session]
-                            dAppsMap[dapp.url] = dapp
-                        }
-                    }
-
-                    root.clear();
-                    for (const uri in dAppsMap) {
-                        const dAppEntry = dAppsMap[uri];
-                        dAppEntry.accountAddresses = dAppEntry.accountAddresses.filter(account => (!!account)).map(account => ({address: account}));
-                        dAppEntry.connectorId = root.connectorId;
-                        root.append(dAppEntry);
+                        dapp.accountAddresses = accounts.filter(account => (!!account)).map(account => ({address: account}))
+                        dapp.topic = sessionID
+                        dapp.rawSessions = [session]
+                        dapp.connectorId = root.connectorId
+                        dapp.clientId = root.clientId
+                        root.append(dapp)
                     }
                 });
             }

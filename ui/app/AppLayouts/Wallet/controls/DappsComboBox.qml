@@ -18,7 +18,7 @@ ComboBox {
 
     signal dappListRequested()
     signal connectDapp()
-    signal disconnectDapp(string dappUrl)
+    signal disconnectDapp(string topic)
     signal dappClicked(string dappUrl)
 
     property bool showConnectButton: true
@@ -78,8 +78,8 @@ ComboBox {
         width: ListView.view.width
         clickable: root.dappClickable
 
-        onDisconnectDapp: (dappUrl) => {
-            root.disconnectDapp(dappUrl)
+        onDisconnectDapp: (topic) => {
+            root.disconnectDapp(topic)
         }
         
         onDappClicked: (dappUrl) => {

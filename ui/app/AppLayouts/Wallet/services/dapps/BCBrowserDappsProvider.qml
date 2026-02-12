@@ -10,9 +10,10 @@ DAppsModel {
     id: root
     
     required property var connectorController
-    property var clientId: null  // null = all dApps, "" or specific value = exact match filter
+    property var clientIdFilter: null
     
     readonly property int connectorId: Constants.StatusConnect
+    property string clientId: ""
     readonly property bool enabled: !!connectorController
     
     signal connected(string dappUrl)
@@ -41,7 +42,7 @@ DAppsModel {
         function handleSignal(payload, signalName) {
             try {
                 const data = JSON.parse(payload)
-                if (root.clientId !== null && data.clientId !== root.clientId) {
+                if (root.clientIdFilter !== null && data.clientId !== root.clientIdFilter) {
                     return
                 }
                 
@@ -52,10 +53,6 @@ DAppsModel {
         }
         
         function getConnectorBadge(connectorId) {
-            // Constants.dappImageByType mapping:
-            // 0: Status logo (StatusConnect)
-            // 1: WalletConnect icon
-            // 2: Status logo (Browser)
             const dappImageByType = [
                 "status-logo",
                 "network/Network=WalletConnect",
@@ -72,10 +69,10 @@ DAppsModel {
             root.clear()
             
             let dAppsJson
-            if (root.clientId === null) {
+            if (root.clientIdFilter === null) {
                 dAppsJson = root.connectorController.getDApps()
             } else {
-                dAppsJson = root.connectorController.getDAppsByClientId(root.clientId)
+                dAppsJson = root.connectorController.getDAppsByClientId(root.clientIdFilter)
             }
             
             const dApps = JSON.parse(dAppsJson)
@@ -88,9 +85,10 @@ DAppsModel {
                     url: dapp.url,
                     name: dapp.name,
                     iconUrl: dapp.iconUrl || "",
-                    topic: dapp.url,  // Use URL as topic for Browser Connector
+                    topic: dapp.url,
                     connectorId: root.connectorId,
                     connectorBadge: badge,
+                    clientId: root.clientId,
                     accountAddresses: dapp.sharedAccount ? [{address: dapp.sharedAccount}] : [],
                     rawSessions: []
                 }

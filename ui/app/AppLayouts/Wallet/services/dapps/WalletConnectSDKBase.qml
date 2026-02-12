@@ -23,7 +23,7 @@ Item {
     signal rejectSessionAuthenticateResult(string id, var result, string error)
     signal buildAuthObjectResult(string id, var authObject, string error)
 
-    signal sessionDelete(var topic, string error)
+    signal disconnected(string url, string error)
 
     property var pair: function(pairLink) {
         console.error("pair not implemented")
@@ -34,8 +34,11 @@ Item {
     property var getActiveSessions: function(callback) {
         console.error("getActiveSessions not implemented")
     }
-    property var disconnectSession: function(topic) {
-        console.error("disconnectSession not implemented")
+    property var disconnect: function(url, clientId) {
+        console.error("disconnect not implemented")
+    }
+    property var disconnectByTopic: function(topic, url) {
+        console.error("disconnectByTopic not implemented")
     }
     property var disconnectPairing: function(topic) {
         console.error("disconnectPairing not implemented")

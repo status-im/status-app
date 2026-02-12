@@ -25,6 +25,7 @@ const SIGNAL_CONNECTOR_DAPP_CHAIN_ID_SWITCHED* = "ConnectorDAppChainIdSwitched"
 const SIGNAL_CONNECTOR_ACCOUNT_CHANGED* = "ConnectorAccountChanged"
 const SIGNAL_WC_SESSION_PROPOSAL* = "WCSessionProposal"
 const SIGNAL_WC_SESSION_REQUEST* = "WCSessionRequest"
+const SIGNAL_WC_SESSION_DELETE* = "WCSessionDelete"
 
 # Enum with events
 type Event* = enum
@@ -149,6 +150,13 @@ QtObject:
         self.events.emit(SIGNAL_WC_SESSION_REQUEST, data)
       except Exception as ex:
         error "failed to process WCSessionRequest", error=ex.msg, exceptionName=ex.name
+    )
+    self.events.on(SignalType.WCSessionDelete.event, proc(e: Args) =
+      try:
+        let data = WCSessionDeleteSignal(e)
+        self.events.emit(SIGNAL_WC_SESSION_DELETE, data)
+      except Exception as ex:
+        error "failed to process WCSessionDelete", error=ex.msg, exceptionName=ex.name
     )
 
   proc registerEventsHandler*(self: Service, handler: EventHandlerFn) =
@@ -345,9 +353,9 @@ QtObject:
       error "rejectWCSessionRequest failed", error=e.msg
       return false
 
-  proc approveWCSession*(self: Service, proposalId, account: string, chainId: uint64, dappUrl, dappName, dappIcon: string): string =
+  proc approveWCSession*(self: Service, proposalId, account: string, dappUrl, dappName, dappIcon: string, supportedChains: seq[uint64]): string =
     try:
-      let response = status_go.approveWCSessionRpc(proposalId, account, chainId, dappUrl, dappName, dappIcon)
+      let response = status_go.approveWCSessionRpc(proposalId, account, dappUrl, dappName, dappIcon, supportedChains)
       if not response.error.isNil:
         return ""
       return response.result.getStr("")
@@ -360,6 +368,13 @@ QtObject:
       return status_go.rejectWCSessionRpc(proposalId)
     except Exception as e:
       error "rejectWCSession failed", error=e.msg
+      return false
+
+  proc emitWCSessionEvent*(self: Service, topic, name, dataJson, chainId: string): bool =
+    try:
+      return status_go.emitWCSessionEventRpc(topic, name, dataJson, chainId)
+    except Exception as e:
+      error "emitWCSessionEvent failed", error=e.msg
       return false
 
   proc delete*(self: Service) =
