@@ -418,6 +418,7 @@ QtObject:
       walletConfig: buildWalletConfig(),
       bandwidthStatsEnabled: true,
       apiConfig: defaultApiConfig(),
+      walletConnectProjectID: main_constants.WALLET_CONNECT_PROJECT_ID,
     )
 
     if main_constants.runtimeLogLevelSet():

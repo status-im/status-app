@@ -77,6 +77,8 @@ type SignalType* {.pure.} = enum
   ConnectorSign = "connector.Sign"
   ConnectorDAppChainIdSwitched = "connector.dAppChainIdSwitched"
   ConnectorAccountChanged = "connector.dAppAccountChanged"
+  WCSessionProposal = "connector.wcSessionProposal"
+  WCSessionRequest = "connector.wcSessionRequest"
   LocalMessageBackupDone = "local.message.backup.done"
   Unknown
 

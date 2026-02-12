@@ -53,6 +53,16 @@ type ConnectorAccountChangedSignal* = ref object of Signal
   clientId*: string
   sharedAccount*: string
 
+type WCSessionProposalSignal* = ref object of Signal
+  requestId*: string
+  uri*: string
+  proposal*: string
+
+type WCSessionRequestSignal* = ref object of Signal
+  topic*: string
+  requestId*: int64
+  requestJson*: string
+
 proc fromEvent*(T: type ConnectorSendRequestAccountsSignal, event: JsonNode): ConnectorSendRequestAccountsSignal =
   result = ConnectorSendRequestAccountsSignal()
   result.signalType = SignalType.ConnectorSendRequestAccounts
@@ -116,3 +126,17 @@ proc fromEvent*(T: type ConnectorAccountChangedSignal, event: JsonNode): Connect
   result.url = event["event"]{"url"}.getStr()
   result.clientId = event["event"]{"clientId"}.getStr()
   result.sharedAccount = event["event"]{"sharedAccount"}.getStr()
+
+proc fromEvent*(T: type WCSessionProposalSignal, event: JsonNode): WCSessionProposalSignal =
+  result = WCSessionProposalSignal()
+  result.signalType = SignalType.WCSessionProposal
+  result.requestId = event["event"]{"requestId"}.getStr()
+  result.uri = event["event"]{"uri"}.getStr()
+  result.proposal = event["event"]{"proposal"}.getStr()
+
+proc fromEvent*(T: type WCSessionRequestSignal, event: JsonNode): WCSessionRequestSignal =
+  result = WCSessionRequestSignal()
+  result.signalType = SignalType.WCSessionRequest
+  result.topic = event["event"]{"topic"}.getStr()
+  result.requestId = event["event"]{"requestId"}.getInt(0)
+  result.requestJson = event["event"]{"requestJson"}.getStr()

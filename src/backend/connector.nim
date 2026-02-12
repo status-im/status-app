@@ -64,6 +64,38 @@ rpc(callRPC, "connector"):
 rpc(changeAccount, "connector"):
   args: ChangeAccountArgs
 
+# WalletConnect (via connector)
+rpc(pairWalletConnect, "connector"):
+  uri: string
+
+rpc(disconnectWCSession, "connector"):
+  topic: string
+
+rpc(getWCActiveSessions, "connector"):
+  validAtTimestamp: int64
+
+rpc(approveWCSession, "connector"):
+  proposalId: string
+  account: string
+  chainId: uint64
+  dappUrl: string
+  dappName: string
+  dappIcon: string
+
+rpc(rejectWCSession, "connector"):
+  proposalId: string
+
+rpc(approveWCSessionRequest, "connector"):
+  topic: string
+  requestId: string
+  signature: string
+
+rpc(rejectWCSessionRequest, "connector"):
+  topic: string
+  requestId: string
+  code: int
+  message: string
+
 proc isSuccessResponse(rpcResponse: RpcResponse[JsonNode]): bool =
   return rpcResponse.error.isNil
 
@@ -93,3 +125,24 @@ proc connectorCallRPC*(inputJSON: string): RpcResponse[JsonNode] {.raises: [Exce
 
 proc changeAccountFinishedRpc*(args: ChangeAccountArgs): bool =
   return isSuccessResponse(changeAccount(args))
+
+proc pairWalletConnectRpc*(uri: string): RpcResponse[JsonNode] {.raises: [Exception].} =
+  return pairWalletConnect(uri)
+
+proc disconnectWCSessionRpc*(topic: string): bool =
+  return isSuccessResponse(disconnectWCSession(topic))
+
+proc getWCActiveSessionsRpc*(validAtTimestamp: int64): RpcResponse[JsonNode] {.raises: [Exception].} =
+  return getWCActiveSessions(validAtTimestamp)
+
+proc approveWCSessionRpc*(proposalId, account: string, chainId: uint64, dappUrl, dappName, dappIcon: string): RpcResponse[JsonNode] {.raises: [Exception].} =
+  return approveWCSession(proposalId, account, chainId, dappUrl, dappName, dappIcon)
+
+proc rejectWCSessionRpc*(proposalId: string): bool =
+  return isSuccessResponse(rejectWCSession(proposalId))
+
+proc approveWCSessionRequestRpc*(topic, requestId, signature: string): bool =
+  return isSuccessResponse(approveWCSessionRequest(topic, requestId, signature))
+
+proc rejectWCSessionRequestRpc*(topic, requestId: string, code: int, message: string): bool =
+  return isSuccessResponse(rejectWCSessionRequest(topic, requestId, code, message))

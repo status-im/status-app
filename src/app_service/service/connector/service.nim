@@ -23,6 +23,8 @@ const SIGNAL_CONNECTOR_EVENT_CONNECTOR_SIGN* = "ConnectorSign"
 const SIGNAL_CONNECTOR_CALL_RPC_RESULT* = "ConnectorCallRPCResult"
 const SIGNAL_CONNECTOR_DAPP_CHAIN_ID_SWITCHED* = "ConnectorDAppChainIdSwitched"
 const SIGNAL_CONNECTOR_ACCOUNT_CHANGED* = "ConnectorAccountChanged"
+const SIGNAL_WC_SESSION_PROPOSAL* = "WCSessionProposal"
+const SIGNAL_WC_SESSION_REQUEST* = "WCSessionRequest"
 
 # Enum with events
 type Event* = enum
@@ -129,6 +131,24 @@ QtObject:
         self.events.emit(SIGNAL_CONNECTOR_ACCOUNT_CHANGED, data)
       except Exception as ex:
         error "failed to process ConnectorAccountChanged", error=ex.msg, exceptionName=ex.name
+    )
+    self.events.on(SignalType.WCSessionProposal.event, proc(e: Args) =
+      if self.eventHandler == nil:
+        return
+      try:
+        let data = WCSessionProposalSignal(e)
+        self.events.emit(SIGNAL_WC_SESSION_PROPOSAL, data)
+      except Exception as ex:
+        error "failed to process WCSessionProposal", error=ex.msg, exceptionName=ex.name
+    )
+    self.events.on(SignalType.WCSessionRequest.event, proc(e: Args) =
+      if self.eventHandler == nil:
+        return
+      try:
+        let data = WCSessionRequestSignal(e)
+        self.events.emit(SIGNAL_WC_SESSION_REQUEST, data)
+      except Exception as ex:
+        error "failed to process WCSessionRequest", error=ex.msg, exceptionName=ex.name
     )
 
   proc registerEventsHandler*(self: Service, handler: EventHandlerFn) =
@@ -282,6 +302,64 @@ QtObject:
 
     except Exception as e:
       error "changeAccount failed", error=e.msg
+      return false
+
+  # WalletConnect (via connector)
+  proc pairWalletConnect*(self: Service, uri: string): bool =
+    try:
+      let response = status_go.pairWalletConnectRpc(uri)
+      return response.error.isNil
+    except Exception as e:
+      error "pairWalletConnect failed", error=e.msg
+      return false
+
+  proc disconnectWCSession*(self: Service, topic: string): bool =
+    try:
+      return status_go.disconnectWCSessionRpc(topic)
+    except Exception as e:
+      error "disconnectWCSession failed", error=e.msg
+      return false
+
+  proc getWCActiveSessions*(self: Service, validAtTimestamp: int64): string =
+    try:
+      let response = status_go.getWCActiveSessionsRpc(validAtTimestamp)
+      if not response.error.isNil:
+        return "[]"
+      let jsonArray = $response.result
+      return if jsonArray != "null": jsonArray else: "[]"
+    except Exception as e:
+      error "getWCActiveSessions failed", error=e.msg
+      return "[]"
+
+  proc approveWCSessionRequest*(self: Service, topic, requestId, signature: string): bool =
+    try:
+      return status_go.approveWCSessionRequestRpc(topic, requestId, signature)
+    except Exception as e:
+      error "approveWCSessionRequest failed", error=e.msg
+      return false
+
+  proc rejectWCSessionRequest*(self: Service, topic, requestId: string, code: int = 5000, message: string = "User rejected"): bool =
+    try:
+      return status_go.rejectWCSessionRequestRpc(topic, requestId, code, message)
+    except Exception as e:
+      error "rejectWCSessionRequest failed", error=e.msg
+      return false
+
+  proc approveWCSession*(self: Service, proposalId, account: string, chainId: uint64, dappUrl, dappName, dappIcon: string): string =
+    try:
+      let response = status_go.approveWCSessionRpc(proposalId, account, chainId, dappUrl, dappName, dappIcon)
+      if not response.error.isNil:
+        return ""
+      return response.result.getStr("")
+    except Exception as e:
+      error "approveWCSession failed", error=e.msg
+      return ""
+
+  proc rejectWCSession*(self: Service, proposalId: string): bool =
+    try:
+      return status_go.rejectWCSessionRpc(proposalId)
+    except Exception as e:
+      error "rejectWCSession failed", error=e.msg
       return false
 
   proc delete*(self: Service) =
