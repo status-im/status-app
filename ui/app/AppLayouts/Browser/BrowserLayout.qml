@@ -71,16 +71,7 @@ StatusSectionLayout {
     Connections {
         target: _internal.currentWebView
         function onUrlChanged() {
-            browserToolbar.setUrl(root.browserRootStore.obtainAddress(_internal.currentWebView.url))
-
-            // Update ConnectorBridge with current dApp metadata
-            if (_internal.currentWebView && _internal.currentWebView.url) {
-                connectorBridge.connectorManager.updateDAppUrl(
-                            _internal.currentWebView.url,
-                            _internal.currentWebView.title,
-                            _internal.currentWebView.icon
-                            )
-            }
+            _internal.onCurrentTabUrlChanged()
         }
     }
 
@@ -94,7 +85,7 @@ StatusSectionLayout {
     QtObject {
         id: _internal
 
-        property Item currentWebView: webViewContext.currentWebView
+        readonly property Item currentWebView: webViewContext.currentWebView
         readonly property bool currentTabIncognito: currentWebView?.offTheRecord ?? false
         property bool webViewHidden: false
 
@@ -107,16 +98,54 @@ StatusSectionLayout {
 
         function addNewTab() {
             var tab = webViewContext.createEmptyTab(tabs.count !== 0 ? currentWebView.profileParams : connectorBridge.defaultProfileParams);
-            browserToolbar.activateAddressBar()
+            browserToolbarLoader.activateAddressBar()
             return tab;
         }
 
-        onCurrentWebViewChanged: () => findBar.reset()
+        onCurrentWebViewChanged: {
+            onCurrentTabUrlChanged()
+            findBar.reset()
+        }
 
+        function onRequestLaunchInBrowser(url) {
+            if (localAccountSensitiveSettings.useBrowserEthereumExplorer !== Constants.browserEthereumExplorerNone && url.startsWith("0x")) {
+                webViewContext.setCurrentWebUrl(root.browserRootStore.get0xFormedUrl(localAccountSensitiveSettings.useBrowserEthereumExplorer, url))
+                return
+            }
+            if (localAccountSensitiveSettings.selectedBrowserSearchEngineId !== SearchEnginesConfig.browserSearchEngineNone && !Utils.isURL(url) && !Utils.isURLWithOptionalProtocol(url)) {
+                webViewContext.setCurrentWebUrl(root.browserRootStore.getFormedUrl(localAccountSensitiveSettings.selectedBrowserSearchEngineId, url))
+                return
+            } else if (Utils.isURLWithOptionalProtocol(url)) {
+                url = "https://" + url
+            }
+            webViewContext.setCurrentWebUrl(url);
+        }
+
+        function onCurrentTabUrlChanged() {
+            const rawUrl = _internal.currentWebView?.url ?? ""
+
+            if (!rawUrl)
+                return
+
+            // Update ConnectorBridge with current dApp metadata
+            if (_internal.currentWebView && rawUrl) {
+                connectorBridge.connectorManager.updateDAppUrl(
+                            rawUrl,
+                            _internal.currentWebView.title,
+                            _internal.currentWebView.icon
+                            )
+            }
+        }
+
+        function onRequestOpenDapp(url) {
+            if (currentWebView) {
+                webViewContext.setCurrentWebUrl(url)
+            }
+        }
     }
 
-    invertedLayout: root.isMobile
-    showFooter: false
+    invertedLayout: height > width && width <= 600
+    showFooter: invertedLayout
     headerPadding: 0
     backgroundColor: Theme.palette.statusAppNavBar.backgroundColor
 
@@ -156,8 +185,9 @@ StatusSectionLayout {
             id: tabs
 
             Layout.fillWidth: true
-            Layout.preferredHeight: 44
+            Layout.preferredHeight: tabHeight
 
+            isMobile: root.isMobile
             currentTabIncognito: _internal.currentTabIncognito
             determineRealURL: function(url) {
                 return root.browserRootStore.determineRealURL(url)
@@ -171,87 +201,129 @@ StatusSectionLayout {
                           }
         }
 
-        BrowserToolbar {
-            id: browserToolbar
-
-            Layout.fillWidth: true
-
-            showAllOpenTabsBtn: root.isMobile
-            bookmarksAvailable: !!_internal.currentWebView ? _internal.currentWebView.url : ""
-            canGoBack: (!!_internal.currentWebView && _internal.currentWebView.canGoBack)
-            canGoForward: (!!_internal.currentWebView && _internal.currentWebView.canGoForward)
-            reloadBtnAvailable: !root.isMobile
-            addressBarAvailable: !root.isMobile
-            dappBtnAvailable: !root.isMobile
-            walletAccountsBtnAvailable: !root.isMobile
-
-            openTabsCount: tabs.count
-            currentTabIncognito: _internal.currentWebView?.offTheRecord ?? false
-            currentTabIsBookmark: favoritesContext.currentTabIsBookmark
-            currentTabLoading: (!!_internal.currentWebView && _internal.currentWebView.loading)
-            browserDappsModel: browserDappsProvider.model
-
-            onRequestHistoryPopup: () => dialogsContext.openHistoryMenu(historyMenu)
-            onRequestGoBack: () => webViewContext.goBackCurrent()
-            onRequestGoForward: () => webViewContext.goForwardCurrent()
-            onRequestReloadPage: () => webViewContext.reloadCurrent()
-            onRequestStopLoadingPage: () => webViewContext.stopCurrent()
-            onRequestOpenDapp: (url) => {
-                                   if (_internal.currentWebView) {
-                                       webViewContext.setCurrentWebUrl(url)
-                                   }
-                               }
-            onRequestDisconnectDapp: (dappUrl) => {
-                                         connectorBridge.disconnect(dappUrl)
-                                     }
-            onAddBookmarkRequested: () => {
-                                        favoritesContext.openAddFavoritePopup(!!browserToolbar.currentTabIsBookmark)
-                                    }
-            onRequestLaunchInBrowser: (url) => {
-                                          if (localAccountSensitiveSettings.useBrowserEthereumExplorer !== Constants.browserEthereumExplorerNone && url.startsWith("0x")) {
-                                              webViewContext.setCurrentWebUrl(root.browserRootStore.get0xFormedUrl(localAccountSensitiveSettings.useBrowserEthereumExplorer, url))
-                                              return
-                                          }
-                                          if (localAccountSensitiveSettings.selectedBrowserSearchEngineId !== SearchEnginesConfig.browserSearchEngineNone && !Utils.isURL(url) && !Utils.isURLWithOptionalProtocol(url)) {
-                                              webViewContext.setCurrentWebUrl(root.browserRootStore.getFormedUrl(localAccountSensitiveSettings.selectedBrowserSearchEngineId, url))
-                                              return
-                                          } else if (Utils.isURLWithOptionalProtocol(url)) {
-                                              url = "https://" + url
-                                          }
-                                          webViewContext.setCurrentWebUrl(url);
-                                      }
-            onRequestWalletMenu: () => dialogsContext.openWalletMenu(browserWalletMenu)
-            onRequestAllOpenTabsView: () => {
-                                          // TODO: Launch All Tabs View
-                                          // https://github.com/status-im/status-app/issues/19569
-                                      }
-            onOpenSettingMenu: () => dialogsContext.openSettingsMenu(settingsMenu)
-        }
-
         Loader {
-            id: favoritesBarLoader
+            id: browserToolbarLoader
             Layout.fillWidth: true
-            Layout.preferredHeight: favoritesContext.favoritesBarActive ? 38 : 0
-            active: favoritesContext.favoritesBarActive
-            sourceComponent: FavoritesBar {
-                currentTabIncognito: _internal.currentTabIncognito
-                bookmarkModel: root.bookmarksStore.bookmarksModel
-                favoritesMenu: favoriteMenu
-                onSetAsCurrentWebUrl: (url) => webViewContext.setCurrentWebUrl(url)
-                onOpenInNewTab: (url) => root.openUrlInNewTab(url)
-                onAddFavModalRequested: {
-                    favoritesContext.openAddFavoritePopup(false)
+            sourceComponent: root.invertedLayout ? browserPortraitToolbar : browserLandscapeToolbar
+
+            function activateAddressBar() {
+                if (root.invertedLayout)
+                    footerLoader.item.activateAddressBar()
+                else
+                    item.activateAddressBar()
+            }
+
+            Connections {
+                target: browserToolbarLoader.item ?? null
+
+                function onRequestHistoryPopup() {
+                    dialogsContext.openHistoryMenu(historyMenu)
+                }
+                function onRequestGoBack() {
+                    webViewContext.goBackCurrent()
+                }
+                function onRequestGoForward() {
+                    webViewContext.goForwardCurrent()
+                }
+                function onRequestReloadPage() {
+                    webViewContext.reloadCurrent()
+                }
+                function onRequestStopLoadingPage() {
+                    webViewContext.stopCurrent()
+                }
+                function onRequestOpenDapp(url) {
+                    _internal.onRequestOpenDapp(url)
+                }
+                function onRequestDisconnectDapp(dappUrl) {
+                    connectorBridge.disconnect(dappUrl)
+                }
+                function onAddBookmarkRequested() {
+                    favoritesContext.openAddFavoritePopup(favoritesContext.currentTabIsBookmark)
+                }
+                function onRequestLaunchInBrowser(url) {
+                    _internal.onRequestLaunchInBrowser(url)
+                }
+                function onRequestWalletMenu() {
+                    dialogsContext.openWalletMenu(browserWalletMenu)
+                }
+                function onRequestAllOpenTabsView() {
+                    // TODO: Launch All Tabs view
+                    // https://github.com/status-im/status-app/issues/19569
+                }
+                function onOpenSettingMenu(target) {
+                    dialogsContext.openSettingsMenu(settingsMenu)
+                }
+                function onRequestSearch() {
+                    browserToolbarLoader.activateAddressBar()
+                }
+                function onGoIncognito(checked) {
+                    webViewContext.setIncognitoCurrent(checked)
+                }
+                function onRequestDownloadsView() {
+                    _internal.addNewDownloadTab()
                 }
             }
         }
 
-        // TODO: integrate into the toolbar as per new design https://www.figma.com/design/pJgiysu3rw8XvL4wS2Us7W/DS?node-id=3412-33124&m=dev
+        Component {
+            id: browserLandscapeToolbar
+            BrowserLandscapeToolbar {
+                url: root.browserRootStore.obtainAddress(_internal.currentWebView?.url ?? "")
+                canGoBack: _internal.currentWebView?.canGoBack ?? false
+                canGoForward: _internal.currentWebView?.canGoForward ?? false
+
+                isMobile: root.isMobile
+                openTabsCount: tabs.count
+                currentTabIncognito: _internal.currentTabIncognito
+                currentTabIsBookmark: favoritesContext.currentTabIsBookmark
+                currentTabLoading: _internal.currentWebView?.loading ?? false
+                currentTabIsDownloads: webStackView.children[tabs.currentIndex]?.isDownloadView ?? false
+                browserDappsModel: browserDappsProvider.model
+            }
+        }
+
+        Component {
+            id: browserPortraitToolbar
+            BrowserPortraitToolbar {
+                canGoBack: _internal.currentWebView?.canGoBack ?? false
+                canGoForward: _internal.currentWebView?.canGoForward ?? false
+
+                isMobile: root.isMobile
+                openTabsCount: tabs.count
+                currentTabIncognito: _internal.currentTabIncognito
+                currentTabIsBookmark: favoritesContext.currentTabIsBookmark
+                currentTabLoading: _internal.currentWebView?.loading ?? false
+                currentTabIsDownloads: webStackView.children[tabs.currentIndex]?.isDownloadView ?? false
+                browserDappsModel: browserDappsProvider.model
+            }
+        }
+
+        // TODO will be reworked as part of a dedicated Favorites popup (https://github.com/status-im/status-app/issues/19575)
+        // Loader {
+        //     Layout.fillWidth: true
+        //     Layout.preferredHeight: active ? 38: 0
+        //     active: localAccountSensitiveSettings.shouldShowFavoritesBar &&
+        //                       root.bookmarksStore.bookmarksModel.ModelCount.count > 0
+        //     sourceComponent: FavoritesBar {
+        //         currentTabIncognito: _internal.currentTabIncognito
+        //         bookmarkModel: root.bookmarksStore.bookmarksModel
+        //         favoritesMenu: favoriteMenu
+        //         onSetAsCurrentWebUrl: (url) => _internal.currentWebView.url = _internal.determineRealURL(url)
+        //         onOpenInNewTab: (url) => root.openUrlInNewTab(url)
+        //         onAddFavModalRequested: {
+        //             Global.openPopup(addFavoriteModal, {toolbarMode: true,
+        //                                  ogUrl: _internal.currentViewBookmarkEntry.item ? _internal.currentViewBookmarkEntry.item.url : _internal.currentWebView.url,
+        //                                  ogName: _internal.currentViewBookmarkEntry.item ? _internal.currentViewBookmarkEntry.item.name : _internal.currentWebView.title})
+        //         }
+        //     }
+        // }
+
         FindBar {
             id: findBar
             visible: false
 
-            Layout.preferredWidth: 300
-            Layout.preferredHeight: 40
+            Layout.preferredWidth: 400
+            Layout.preferredHeight: tabs.tabHeight
             Layout.alignment: Qt.AlignRight
             z: 60
 
@@ -267,11 +339,31 @@ StatusSectionLayout {
                 else if (!visible)
                     visible = true;
             }
+            onVisibleChanged: if (!visible) _internal.currentWebView?.findText("") // reset the highlight
         }
     }
 
     footer: Loader {
-        sourceComponent: downloadBar
+        id: footerLoader
+        sourceComponent: root.invertedLayout ? mobileAddressBar : downloadBar
+    }
+
+    Component {
+        id: mobileAddressBar
+        MobileAddressBar {
+            url: root.browserRootStore.obtainAddress(_internal.currentWebView?.url ?? "")
+            currentTabLoading: _internal.currentWebView?.loading ?? false
+            incognitoMode: _internal.currentTabIncognito
+            browserDappsModel: browserDappsProvider.model
+            faviconImage: _internal.currentWebView?.icon?.toString().replace("image://favicon/", "") ?? ""
+
+            onRequestReloadPage: webViewContext.reloadCurrent()
+            onRequestStopLoadingPage: webViewContext.stopCurrent()
+            onRequestLaunchInBrowser: url => _internal.onRequestLaunchInBrowser(url)
+            onRequestOpenDapp: url => _internal.onRequestOpenDapp(url)
+            onRequestDisconnectDapp: dappUrl => connectorBridge.disconnect(dappUrl)
+            onRequestWalletMenu: dialogsContext.openWalletMenu(browserWalletMenu)
+        }
     }
 
     BrowserWebViewContext {
@@ -315,7 +407,6 @@ StatusSectionLayout {
 
         // Overlay for DownloadView and EmptyWebPage
         Loader {
-            id: overlayLoader
             anchors.fill: parent
             z: 53
 
@@ -326,16 +417,18 @@ StatusSectionLayout {
                              ? downloadViewComponent
                              : emptyPageComponent
         }
+    }
 
-        // Non UI component
-        Loader {
-            // Only load the shortcuts when the browser is visible, to avoid interfering with other app sections
-            active: root.visible
-            sourceComponent: BrowserShortcutActions {
-                currentWebView: _internal.currentWebView
-                findBarComponent: findBar
-                browserHeaderComponent: browserToolbar
-            }
+    // Non UI component
+    Loader {
+        // Only load the shortcuts when the browser is visible, to avoid interfering with other app sections
+        active: root.visible
+        sourceComponent: BrowserShortcutActions {
+            currentWebView: _internal.currentWebView
+            onActivateAddressBar: browserToolbarLoader.activateAddressBar()
+            onHideFindBar: findBar.visible = false
+            onFindNextRequested: findBar.findNext()
+            onFindPreviousRequested: findBar.findPrevious()
         }
 
         StatusBubble {
@@ -386,13 +479,11 @@ StatusSectionLayout {
     Component  {
         id: browserWalletMenu
         BrowserWalletMenu {
-            id: walletMenu
+            parent: browserToolbarLoader
+            x: browserToolbarLoader.width - width - Theme.halfPadding
+            y: browserToolbarLoader.height + 4
 
-            parent: browserToolbar
-            x: browserToolbar.width - width - Theme.halfPadding
-            y: browserToolbar.height + 4
-
-            incognitoMode: _internal.currentWebView?.offTheRecord ?? false
+            incognitoMode: _internal.currentTabIncognito
             accounts: root.browserWalletStore.accounts
             currentAccount: root.browserWalletStore.dappBrowserAccount
             activityStore: root.browserActivityStore
@@ -407,12 +498,8 @@ StatusSectionLayout {
                 }
             }
 
-            onAccountSwitchRequested: (address) => {
-                                          root.browserWalletStore.switchAccountByAddress(address)
-                                      }
-            onFilterAddressesChangeRequested: (addressesJson) => {
-                                                  root.browserActivityStore.activityController.setFilterAddressesJson(addressesJson)
-                                              }
+            onAccountSwitchRequested: address => root.browserWalletStore.switchAccountByAddress(address)
+            onFilterAddressesChangeRequested: addressesJson => root.browserActivityStore.activityController.setFilterAddressesJson(addressesJson)
 
             Connections {
                 target: root.browserActivityStore.transactionActivityStatus
@@ -432,11 +519,9 @@ StatusSectionLayout {
     BrowserSettingsMenu {
         id: settingsMenu
 
-        parent: browserToolbar
-        x: parent.width - width - Theme.halfPadding
-        y: browserToolbar.height + 4
+        parent: browserToolbarLoader
 
-        incognitoMode: _internal.currentWebView?.offTheRecord ?? false
+        incognitoMode: _internal.currentTabIncognito
         zoomFactor: _internal.currentWebView ? _internal.currentWebView.zoomFactor : 1
         onAddNewTab: _internal.addNewTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
@@ -470,10 +555,10 @@ StatusSectionLayout {
     Component {
         id: addFavoriteModal
         AddFavoriteModal {
-            parent: browserToolbar
+            parent: browserToolbarLoader
             x: Theme.halfPadding
-            y: browserToolbar.height + 4
-            incognitoMode: _internal.currentWebView?.offTheRecord ?? false
+            y: browserToolbarLoader.height + 4
+            incognitoMode: _internal.currentTabIncognito
             bookmarksStore: root.bookmarksStore
         }
     }
@@ -518,15 +603,14 @@ StatusSectionLayout {
         onEditFavoriteTriggered: {
             favoritesContext.openAddFavoritePopup(true, favoriteMenu.currentFavorite)
         }
-
     }
 
     StatusMenu {
         id: historyMenu
 
-        parent: browserToolbar
-        x: browserToolbar.x + Theme.halfPadding
-        y: browserToolbar.height + 4
+        parent: browserToolbarLoader
+        x: browserToolbarLoader.x + Theme.halfPadding
+        y: browserToolbarLoader.height + 4
 
         Instantiator {
             model: _internal.currentWebView && _internal.currentWebView.history.items
@@ -551,6 +635,7 @@ StatusSectionLayout {
     Component {
         id: favoritesBar
         FavoritesBar {
+            currentTabIncognito: _internal.currentTabIncognito
             bookmarkModel: root.bookmarksStore.bookmarksModel
             favoritesMenu: favoriteMenu
             onSetAsCurrentWebUrl: (url) => webViewContext.setCurrentWebUrl(url)
@@ -607,7 +692,7 @@ StatusSectionLayout {
                 downloadsContext.openDownloadFromList(downloadComplete, index)
             }
             onAddNewDownloadTab: _internal.addNewDownloadTab()
-            onClose: root.showFooter = false
+            onClose: root.showFooter = Qt.binding(() => root.invertedLayout)
         }
     }
 

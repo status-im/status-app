@@ -2671,15 +2671,63 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
     </message>
 </context>
 <context>
+    <name>BrowserLandscapeToolbar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">Atrás</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <comment>web browser home page</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exit Incognito mode</source>
+        <translation type="unfinished">Salir del modo incógnito</translation>
+    </message>
+    <message>
+        <source>Go Incognito</source>
+        <translation type="unfinished">Ir a modo incógnito</translation>
+    </message>
+    <message>
+        <source>Favourited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to favourites</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Billetera</translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Descargas</translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserLayout</name>
-    <message>
-        <source>Error sending the transaction</source>
-        <translation>Error al enviar la transacción</translation>
-    </message>
-    <message>
-        <source>Error signing message</source>
-        <translation>Error al firmar el mensaje</translation>
-    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certificado del servidor no confiable</translation>
@@ -2697,6 +2745,42 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Add Favourite</source>
         <translation type="unfinished">Agregar favorito</translation>
+    </message>
+</context>
+<context>
+    <name>BrowserPortraitToolbar</name>
+    <message>
+        <source>Downloads View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Favourited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to favourites</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">Atrás</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Buscar</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <comment>web browser home page</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2798,13 +2882,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Downloads Page</source>
         <translation>Página de descargas</translation>
-    </message>
-</context>
-<context>
-    <name>BrowserToolbar</name>
-    <message>
-        <source>Enter URL</source>
-        <translation type="unfinished">Ingresa una URL</translation>
     </message>
 </context>
 <context>
@@ -11724,6 +11801,29 @@ al cargar</translation>
     <message>
         <source>Retry mint</source>
         <translation></translation>
+    </message>
+</context>
+<context>
+    <name>MobileAddressBar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Billetera</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">Cerrar</translation>
     </message>
 </context>
 <context>

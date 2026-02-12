@@ -1,7 +1,9 @@
 FavoritesList 1.0 FavoritesList.qml
 DownloadView 1.0 DownloadView.qml
 FavoritesBar 1.0 FavoritesBar.qml
-BrowserToolbar 1.0 BrowserToolbar.qml
+BrowserLandscapeToolbar 1.0 BrowserLandscapeToolbar.qml
+BrowserPortraitToolbar 1.0 BrowserPortraitToolbar.qml
 DownloadBar 1.0 DownloadBar.qml
 BrowserTabView 1.0 BrowserTabView.qml
 FindBar 1.0 FindBar.qml
+MobileAddressBar 1.0 MobileAddressBar.qml

@@ -44,8 +44,7 @@ StatusMenu {
     }
 
     StatusAction {
-        id: offTheRecordEnabled
-        icon.name: "hide"
+        icon.name: checked ? "privacy-activated" : "privacy"
         text: checked ? qsTr("Exit Incognito mode") : qsTr("Go Incognito")
         checkable: true
         checked: root.incognitoMode
@@ -118,7 +117,7 @@ StatusMenu {
 
     StatusAction {
         text: qsTr("Downloads")
-        icon.name: "download"
+        icon.name: "downloads"
         shortcut: "Ctrl+D"
         onTriggered: addNewDownloadTab()
     }
@@ -149,28 +148,27 @@ StatusMenu {
     }
 
     StatusMenuItem {
-        id: clearSiteDataItem
         text: qsTr("Clear site data")
         icon.name: "delete"
         icon.color: Theme.palette.primaryColor1
         onTriggered: clearSiteData()
 
         StatusToolTip {
-            visible: clearSiteDataItem.hovered
+            visible: parent.hovered
             text: qsTr("Use it to reset the current site if it doesn't load or work properly.")
         }
     }
 
     StatusMenuItem {
-        id: clearCacheItem
         text: root.clearingCache ? qsTr("Clearing cache...") : qsTr("Clear cache")
         icon.name: "broom"
         icon.color: Theme.palette.primaryColor1
         enabled: !root.clearingCache
+        visibleOnDisabled: true
         onTriggered: clearCache()
 
         StatusToolTip {
-            visible: clearCacheItem.hovered
+            visible: parent.hovered
             text: qsTr("Clears cached files, cookies, and history for the entire browser. Browsing is paused until it is done.")
         }
     }

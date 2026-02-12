@@ -2663,15 +2663,63 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
     </message>
 </context>
 <context>
+    <name>BrowserLandscapeToolbar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">뒤로</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <comment>web browser home page</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exit Incognito mode</source>
+        <translation type="unfinished">시크릿 모드 종료</translation>
+    </message>
+    <message>
+        <source>Go Incognito</source>
+        <translation type="unfinished">시크릿 모드로 전환</translation>
+    </message>
+    <message>
+        <source>Favourited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to favourites</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">지갑</translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">다운로드</translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserLayout</name>
-    <message>
-        <source>Error sending the transaction</source>
-        <translation>트랜잭션 전송 오류</translation>
-    </message>
-    <message>
-        <source>Error signing message</source>
-        <translation>메시지 서명 오류</translation>
-    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>서버의 인증서를 신뢰할 수 없습니다</translation>
@@ -2689,6 +2737,42 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Add Favourite</source>
         <translation type="unfinished">즐겨찾기 추가</translation>
+    </message>
+</context>
+<context>
+    <name>BrowserPortraitToolbar</name>
+    <message>
+        <source>Downloads View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Favourited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to favourites</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">뒤로</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">검색</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <comment>web browser home page</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2790,13 +2874,6 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Downloads Page</source>
         <translation>다운로드 페이지</translation>
-    </message>
-</context>
-<context>
-    <name>BrowserToolbar</name>
-    <message>
-        <source>Enter URL</source>
-        <translation type="unfinished">URL 입력</translation>
     </message>
 </context>
 <context>
@@ -11689,6 +11766,29 @@ to load</source>
     <message>
         <source>Retry mint</source>
         <translation>민팅 다시 시도</translation>
+    </message>
+</context>
+<context>
+    <name>MobileAddressBar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">지갑</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">닫기</translation>
     </message>
 </context>
 <context>

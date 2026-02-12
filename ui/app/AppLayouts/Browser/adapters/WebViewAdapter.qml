@@ -181,6 +181,12 @@ AbstractWebView {
         onCertificateError: (error) => root.certificateError(error)
         onJavaScriptDialogRequested: (request) => root.javaScriptDialogRequested(request)
         onFindTextFinished: (result) => root.findTextFinished(result)
+        onPermissionRequested: function(permission) {
+            if (permission.permissionType === WebEnginePermission.PermissionType.ClipboardReadWrite) {
+                console.log("Clipboard access granted")
+                permission.grant()
+            }
+        }
     }
 
     Connections {

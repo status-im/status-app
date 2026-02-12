@@ -250,7 +250,7 @@ Control {
                     width: parent.width
                     anchors.top: statusToolBar.bottom
                     anchors.bottom: footerSlot.top
-                    anchors.bottomMargin: !!root.footer ? Theme.halfPadding : 0
+                    anchors.bottomMargin: footerSlot.visible ? Theme.halfPadding : 0
                     target: root.centerPanel
                 }
 

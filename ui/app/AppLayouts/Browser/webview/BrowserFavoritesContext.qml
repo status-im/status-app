@@ -43,5 +43,4 @@ QtObject {
     function openAddFavoritePopup(modifyModal = false, fallbackItem = null) {
         openPopupFn(addFavoriteModal, buildAddFavoritePopupParams(modifyModal, fallbackItem))
     }
-
 }

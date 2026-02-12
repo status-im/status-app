@@ -2668,15 +2668,63 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
     </message>
 </context>
 <context>
+    <name>BrowserLandscapeToolbar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <comment>web browser home page</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exit Incognito mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Go Incognito</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Favourited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to favourites</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserLayout</name>
-    <message>
-        <source>Error sending the transaction</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error signing message</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation type="unfinished"></translation>
@@ -2692,6 +2740,42 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Add Favourite</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>BrowserPortraitToolbar</name>
+    <message>
+        <source>Downloads View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Favourited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to favourites</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <comment>web browser home page</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Menu</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2793,13 +2877,6 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Downloads Page</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>BrowserToolbar</name>
-    <message>
-        <source>Enter URL</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -11706,6 +11783,29 @@ to load</source>
     </message>
     <message>
         <source>Retry mint</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>MobileAddressBar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

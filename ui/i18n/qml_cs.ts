@@ -2678,15 +2678,63 @@ Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezp
     </message>
 </context>
 <context>
+    <name>BrowserLandscapeToolbar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">Zpět</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <comment>web browser home page</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Exit Incognito mode</source>
+        <translation type="unfinished">Ukončit anonymní režim</translation>
+    </message>
+    <message>
+        <source>Go Incognito</source>
+        <translation type="unfinished">Přejít do anonymního režimu</translation>
+    </message>
+    <message>
+        <source>Favourited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to favourites</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Peněženka</translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Stažené soubory</translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserLayout</name>
-    <message>
-        <source>Error sending the transaction</source>
-        <translation>Chyba při odesílání transakce</translation>
-    </message>
-    <message>
-        <source>Error signing message</source>
-        <translation>Chyba při podepisování zprávy</translation>
-    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certifikát serveru není důvěryhodný</translation>
@@ -2704,6 +2752,42 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Add Favourite</source>
         <translation>Přidat oblíbené</translation>
+    </message>
+</context>
+<context>
+    <name>BrowserPortraitToolbar</name>
+    <message>
+        <source>Downloads View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Favourited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to favourites</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">Zpět</translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Hledat</translation>
+    </message>
+    <message>
+        <source>Forward</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <comment>web browser home page</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2805,13 +2889,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Downloads Page</source>
         <translation>Stránka stahování</translation>
-    </message>
-</context>
-<context>
-    <name>BrowserToolbar</name>
-    <message>
-        <source>Enter URL</source>
-        <translation>Zadejte URL</translation>
     </message>
 </context>
 <context>
@@ -11800,6 +11877,29 @@ selhalo</translation>
     <message>
         <source>Retry mint</source>
         <translation>Zkusit mint znovu</translation>
+    </message>
+</context>
+<context>
+    <name>MobileAddressBar</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reload</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Peněženka</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">Zavřít</translation>
     </message>
 </context>
 <context>

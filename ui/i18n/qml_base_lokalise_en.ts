@@ -3269,17 +3269,75 @@
     </message>
   </context>
   <context>
+    <name>BrowserLandscapeToolbar</name>
+    <message>
+      <source>Search or enter address</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Search or enter address</translation>
+    </message>
+    <message>
+      <source>Back</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Back</translation>
+    </message>
+    <message>
+      <source>Forward</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Forward</translation>
+    </message>
+    <message>
+      <source>Stop</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Stop</translation>
+    </message>
+    <message>
+      <source>Reload</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Reload</translation>
+    </message>
+    <message>
+      <source>Home</source>
+      <comment>web browser home page</comment>
+      <translation>Home</translation>
+    </message>
+    <message>
+      <source>Exit Incognito mode</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Exit Incognito mode</translation>
+    </message>
+    <message>
+      <source>Go Incognito</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Go Incognito</translation>
+    </message>
+    <message>
+      <source>Favourited</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Favourited</translation>
+    </message>
+    <message>
+      <source>Add to favourites</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Add to favourites</translation>
+    </message>
+    <message>
+      <source>Wallet</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Wallet</translation>
+    </message>
+    <message>
+      <source>Downloads</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Downloads</translation>
+    </message>
+    <message>
+      <source>Menu</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Menu</translation>
+    </message>
+  </context>
+  <context>
     <name>BrowserLayout</name>
-    <message>
-      <source>Error sending the transaction</source>
-      <comment>BrowserLayout</comment>
-      <translation>Error sending the transaction</translation>
-    </message>
-    <message>
-      <source>Error signing message</source>
-      <comment>BrowserLayout</comment>
-      <translation>Error signing message</translation>
-    </message>
     <message>
       <source>Server&#39;s certificate not trusted</source>
       <comment>BrowserLayout</comment>
@@ -3299,6 +3357,49 @@
       <source>Add Favourite</source>
       <comment>BrowserLayout</comment>
       <translation>Add Favourite</translation>
+    </message>
+  </context>
+  <context>
+    <name>BrowserPortraitToolbar</name>
+    <message>
+      <source>Downloads View</source>
+      <comment>BrowserPortraitToolbar</comment>
+      <translation>Downloads View</translation>
+    </message>
+    <message>
+      <source>Favourited</source>
+      <comment>BrowserPortraitToolbar</comment>
+      <translation>Favourited</translation>
+    </message>
+    <message>
+      <source>Add to favourites</source>
+      <comment>BrowserPortraitToolbar</comment>
+      <translation>Add to favourites</translation>
+    </message>
+    <message>
+      <source>Back</source>
+      <comment>BrowserPortraitToolbar</comment>
+      <translation>Back</translation>
+    </message>
+    <message>
+      <source>Search</source>
+      <comment>BrowserPortraitToolbar</comment>
+      <translation>Search</translation>
+    </message>
+    <message>
+      <source>Forward</source>
+      <comment>BrowserPortraitToolbar</comment>
+      <translation>Forward</translation>
+    </message>
+    <message>
+      <source>Home</source>
+      <comment>web browser home page</comment>
+      <translation>Home</translation>
+    </message>
+    <message>
+      <source>Menu</source>
+      <comment>BrowserPortraitToolbar</comment>
+      <translation>Menu</translation>
     </message>
   </context>
   <context>
@@ -3423,14 +3524,6 @@
       <source>Downloads Page</source>
       <comment>BrowserTabView</comment>
       <translation>Downloads Page</translation>
-    </message>
-  </context>
-  <context>
-    <name>BrowserToolbar</name>
-    <message>
-      <source>Enter URL</source>
-      <comment>BrowserToolbar</comment>
-      <translation>Enter URL</translation>
     </message>
   </context>
   <context>
@@ -14257,6 +14350,34 @@
       <source>Retry mint</source>
       <comment>MintedTokensView</comment>
       <translation>Retry mint</translation>
+    </message>
+  </context>
+  <context>
+    <name>MobileAddressBar</name>
+    <message>
+      <source>Search or enter address</source>
+      <comment>MobileAddressBar</comment>
+      <translation>Search or enter address</translation>
+    </message>
+    <message>
+      <source>Stop</source>
+      <comment>MobileAddressBar</comment>
+      <translation>Stop</translation>
+    </message>
+    <message>
+      <source>Reload</source>
+      <comment>MobileAddressBar</comment>
+      <translation>Reload</translation>
+    </message>
+    <message>
+      <source>Wallet</source>
+      <comment>MobileAddressBar</comment>
+      <translation>Wallet</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <comment>MobileAddressBar</comment>
+      <translation>Close</translation>
     </message>
   </context>
   <context>

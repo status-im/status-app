@@ -55,19 +55,25 @@ import StatusQ.Core.Utils  // for QObject
 import AppLayouts.Browser.adapters
 
 QObject {
+    id: root
+
     property var currentWebView
-    property var findBarComponent
-    property var browserHeaderComponent
+
     function triggerWebAction(action) {
         if (!currentWebView)
             return
         currentWebView.triggerWebAction(action)
     }
 
+    signal activateAddressBar()
+    signal hideFindBar()
+    signal findNextRequested()
+    signal findPreviousRequested()
+
     Shortcut {
         sequences: ["Ctrl+L", "F6"]
         onActivated: {
-            browserHeaderComponent.activateAddressBar()
+            root.activateAddressBar()
         }
     }
     Shortcut {
@@ -85,8 +91,7 @@ QObject {
     Shortcut {
         sequence: "Escape"
         onActivated: {
-            if (findBarComponent.visible)
-                findBarComponent.visible = false;
+            root.hideFindBar()
             triggerWebAction(AbstractWebView.WebAction.Stop)
         }
     }
@@ -128,10 +133,10 @@ QObject {
     }
     Shortcut {
         sequences: [StandardKey.FindNext]
-        onActivated: findBarComponent.findNext()
+        onActivated: root.findNextRequested()
     }
     Shortcut {
         sequences: [StandardKey.FindPrevious]
-        onActivated: findBarComponent.findPrevious()
+        onActivated: root.findPreviousRequested()
     }
 }

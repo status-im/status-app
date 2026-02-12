@@ -29,7 +29,7 @@ SplitView {
         Layout.fillWidth: true
         Layout.fillHeight: true
 
-        isMobile: isMobile.checked
+        isMobile: ctrlIsMobile.checked
         userUID: "0xdeadbeef"
         transactionStore: TransactionStoreMock {}
         thirdpartyServicesEnabled: true
@@ -111,7 +111,12 @@ SplitView {
                 dappBrowserAccount.address = address
             }
         }
-        browserActivityStore: BrowserStores.BrowserActivityStore {}
+        browserActivityStore: BrowserStores.BrowserActivityStore {
+            property var activityController: QtObject {
+                function setFilterChainsJson(json, force) {}
+                function setFilterAddressesJson(json) {}
+            }
+        }
         networksStore: SharedStores.NetworksStore {}
         currencyStore: SharedStores.CurrenciesStore {}
 
@@ -128,7 +133,7 @@ SplitView {
             property bool errorPageEnabled: true
             property bool pluginsEnabled: true
             property bool autoLoadIconsForPage: true
-            property bool touchIconsEnabled: SQUtils.Utils.isMobile
+            property bool touchIconsEnabled: browserLayout.isMobile
             property bool webRTCPublicInterfacesOnly
             property bool pdfViewerEnabled: true
             property bool focusOnNavigationEnabled: true
@@ -139,7 +144,7 @@ SplitView {
 
     ColumnLayout {
         Layout.fillWidth: true
-        Layout.preferredHeight: 300
+        Layout.preferredHeight: 200
 
         RowLayout {
             Layout.fillWidth: true
@@ -160,7 +165,7 @@ SplitView {
         }
 
         Switch {
-            id: isMobile
+            id: ctrlIsMobile
             text: "is mobile"
             checked: false
         }

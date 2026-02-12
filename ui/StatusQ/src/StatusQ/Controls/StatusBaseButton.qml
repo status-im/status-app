@@ -147,9 +147,9 @@ AbstractButton {
         border.color: root.borderColor
         border.width: root.borderWidth
         color: {
-            if (!root.enabled || !root.interactive)
+            if ((!root.enabled || !root.interactive) && !root.checked)
                 return disabledColor
-            return !root.loading && !root.loadingWithText && (root.hovered || root.highlighted) ? hoverColor : normalColor
+            return !root.loading && !root.loadingWithText && (root.hovered || root.highlighted || root.checked) ? hoverColor : normalColor
         }
     }
 
@@ -238,7 +238,7 @@ AbstractButton {
     StatusToolTip {
         id: tooltip
         objectName: "buttonTooltip"
-        visible: tooltip.text !== "" && root.hovered
+        visible: tooltip.text !== "" && root.hovered && !root.pressed
         offset: -(tooltip.x + tooltip.width/2 - root.width/2)
     }
 

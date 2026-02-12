@@ -13,18 +13,15 @@ StatusFlatButton {
     implicitWidth: 36
     implicitHeight: 36
     radius: width/2
+    padding: 4
 
-    type: StatusFlatRoundButton.Type.Tertiary
     asset.color: {
-        if(root.enabled) {
+        if (!root.enabled || !root.interactive) {
             return root.incognitoMode ?
-                        Theme.palette.privacyColors.tertiary:
-                        Theme.palette.primaryColor1
-        } else {
-            root.incognitoMode ?
                         Theme.palette.privacyColors.tertiaryOpaque:
                         Theme.palette.baseColor1
         }
+        return root.incognitoMode ? Theme.palette.privacyColors.tertiary: Theme.palette.primaryColor1
     }
     hoverColor: root.incognitoMode ?
                     Theme.palette.privacyColors.secondary:

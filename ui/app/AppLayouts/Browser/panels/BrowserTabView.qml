@@ -18,6 +18,7 @@ FocusScope {
     property alias currentIndex: tabBar.currentIndex
     readonly property alias count: tabBar.count
     required property bool currentTabIncognito
+    required property bool isMobile
 
     property var fnGetWebView: (index) => {}
 
@@ -68,6 +69,8 @@ FocusScope {
         readonly property int minTabButtonWidth: 118
         readonly property int maxTabButtonWidth: 236
         readonly property bool tabBarOverflowing: tabBarListView.visibleArea.widthRatio < 1
+        readonly property color bgColor: root.currentTabIncognito ? root.Theme.palette.privacyColors.secondary
+                                                                  : root.Theme.palette.statusAppNavBar.backgroundColor
     }
 
     TabBar {
@@ -77,9 +80,7 @@ FocusScope {
         anchors.right: parent.right
         height: root.tabHeight
         background: Rectangle {
-            color: root.currentTabIncognito ?
-                       Theme.palette.privacyColors.secondary:
-                       Theme.palette.statusAppNavBar.backgroundColor
+            color: d.bgColor
         }
         contentItem: ListView {
             id: tabBarListView
@@ -108,12 +109,11 @@ FocusScope {
 
         anchors.top: parent.top
         anchors.right: parent.right
-        color: Theme.palette.statusAppNavBar.backgroundColor
         visible: d.tabBarOverflowing
     }
 
     component AddTabButton: Rectangle {
-        color: StatusColors.transparent
+        color: d.bgColor
         width: d.tabHeight
         height: d.tabHeight
         BrowserHeaderButton {
@@ -122,9 +122,7 @@ FocusScope {
             radius: Theme.radius
             icon.name: "add"
             incognitoMode: root.currentTabIncognito
-            hoverColor: root.currentTabIncognito ?
-                            Theme.palette.privacyColors.primary:
-                            Theme.palette.indirectColor1
+            hoverColor: incognitoMode ? Theme.palette.privacyColors.primary : Theme.palette.background
             onClicked: root.openNewTabTriggered()
         }
     }
@@ -194,7 +192,7 @@ FocusScope {
                     icon.color: hovered ? Theme.palette.directColor1 : Theme.palette.baseColor1
                     size: StatusBaseButton.Size.Small
                     radius: width/2
-                    opacity: tabButton.hovered ? 1 : 0
+                    opacity: root.isMobile || tabButton.hovered ? 1 : 0
                     visible: opacity > 0
                     onClicked: root.removeView(tabButton.TabBar.index)
                 }

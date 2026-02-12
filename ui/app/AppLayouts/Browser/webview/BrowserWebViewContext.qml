@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 import utils
 import StatusQ.Core.Utils as SQUtils

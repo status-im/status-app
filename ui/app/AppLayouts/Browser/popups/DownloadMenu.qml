@@ -17,8 +17,6 @@ StatusMenu {
     readonly property bool downloadCancelled: download?.state === AbstractWebView.DownloadState.DownloadCancelled ?? false
     readonly property bool downloadComplete: download?.state === AbstractWebView.DownloadState.DownloadCompleted ?? false
 
-    signal cancelClicked()
-
     StatusAction {
         enabled: downloadComplete
         icon.name: "file"
@@ -58,7 +56,6 @@ StatusMenu {
         text: qsTr("Cancel")
         onTriggered: {
             download.cancel()
-            cancelClicked()
         }
     }
 }
