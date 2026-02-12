@@ -7908,15 +7908,11 @@ Por favor, agrégala e intenta de nuevo.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>View activity</source>
-        <translation type="unfinished">Ver actividad</translation>
-    </message>
-    <message>
-        <source>Already in saved addresses</source>
+        <source>Add to saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to saved addresses</source>
+        <source>Remove from saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7935,11 +7931,26 @@ Por favor, agrégala e intenta de nuevo.</translation>
         <translation type="unfinished">Tu búsqueda contiene caracteres inválidos (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
     </message>
     <message>
-        <source>Your EFP onchain friends will appear here</source>
+        <source>No following addresses found. Check spelling or whether the address is correct.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No following addresses found. Check spelling or whether the address is correct.</source>
+        <source>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ethereum Follow Protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>FollowingAddressesDelegate</name>
+    <message>
+        <source>Remove from saved addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10257,12 +10268,12 @@ acceso a tus fondos.</translation>
         <translation>Direcciones guardadas</translation>
     </message>
     <message>
-        <source>EFP onchain friends</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Add account</source>
         <translation type="unfinished">Agregar cuenta</translation>
+    </message>
+    <message>
+        <source>Onchain friends</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11439,6 +11450,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>MessageReactionsRow</name>
+    <message>
+        <source>Add reaction</source>
+        <translation type="unfinished">Agregar reacción</translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -11820,13 +11838,6 @@ al cargar</translation>
     <message>
         <source>Retry mint</source>
         <translation></translation>
-    </message>
-</context>
-<context>
-    <name>MobileAddressBar</name>
-    <message>
-        <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14696,16 +14707,16 @@ al cargar</translation>
         <translation>Eliminar %1</translation>
     </message>
     <message>
-        <source>Are you sure you want to remove %1 from your saved addresses? Transaction history relating to this address will no longer be labelled %1.</source>
-        <translation>¿Estás seguro de que quieres eliminar %1 de tus direcciones guardadas? El historial de transacciones relacionado con esta dirección ya no se etiquetará como %1.</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
         <source>Remove saved address</source>
         <translation>Eliminar dirección guardada</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to remove %1 from your saved addresses?</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14929,12 +14940,12 @@ al cargar</translation>
         <translation></translation>
     </message>
     <message>
-        <source>View activity</source>
-        <translation>Ver actividad</translation>
-    </message>
-    <message>
         <source>Remove saved address</source>
         <translation>Eliminar dirección guardada</translation>
+    </message>
+    <message>
+        <source>Add to saved addresses</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16259,6 +16270,17 @@ al cargar</translation>
     <message>
         <source>Send message</source>
         <translation>Enviar mensaje</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputReplyArea</name>
+    <message>
+        <source>Replying to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel reply</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18872,16 +18894,16 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
 <context>
     <name>WalletFollowingAddressesHeader</name>
     <message>
-        <source>Add via EFP</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>EFP onchain friends</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Last refreshed %1</source>
         <translation type="unfinished">Última actualización %1</translation>
+    </message>
+    <message>
+        <source>Find a friend</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Onchain friends</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19527,10 +19549,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Status Desktop</source>
         <translation>Escritorio de Status</translation>
-    </message>
-    <message>
-        <source>Hello World</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>

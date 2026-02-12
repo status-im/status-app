@@ -9641,19 +9641,14 @@
       <translation>Show address QR</translation>
     </message>
     <message>
-      <source>View activity</source>
-      <comment>FollowingAddressMenu</comment>
-      <translation>View activity</translation>
-    </message>
-    <message>
-      <source>Already in saved addresses</source>
-      <comment>FollowingAddressMenu</comment>
-      <translation>Already in saved addresses</translation>
-    </message>
-    <message>
       <source>Add to saved addresses</source>
       <comment>FollowingAddressMenu</comment>
       <translation>Add to saved addresses</translation>
+    </message>
+    <message>
+      <source>Remove from saved addresses</source>
+      <comment>FollowingAddressMenu</comment>
+      <translation>Remove from saved addresses</translation>
     </message>
   </context>
   <context>
@@ -9674,14 +9669,32 @@
       <translation>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</translation>
     </message>
     <message>
-      <source>Your EFP onchain friends will appear here</source>
-      <comment>FollowingAddresses</comment>
-      <translation>Your EFP onchain friends will appear here</translation>
-    </message>
-    <message>
       <source>No following addresses found. Check spelling or whether the address is correct.</source>
       <comment>FollowingAddresses</comment>
       <translation>No following addresses found. Check spelling or whether the address is correct.</translation>
+    </message>
+    <message>
+      <source>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</source>
+      <comment>FollowingAddresses</comment>
+      <translation>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</translation>
+    </message>
+    <message>
+      <source>Ethereum Follow Protocol</source>
+      <comment>FollowingAddresses</comment>
+      <translation>Ethereum Follow Protocol</translation>
+    </message>
+  </context>
+  <context>
+    <name>FollowingAddressesDelegate</name>
+    <message>
+      <source>Remove from saved addresses</source>
+      <comment>FollowingAddressesDelegate</comment>
+      <translation>Remove from saved addresses</translation>
+    </message>
+    <message>
+      <source>Add to saved addresses</source>
+      <comment>FollowingAddressesDelegate</comment>
+      <translation>Add to saved addresses</translation>
     </message>
   </context>
   <context>
@@ -12484,14 +12497,14 @@
       <translation>Saved addresses</translation>
     </message>
     <message>
-      <source>EFP onchain friends</source>
-      <comment>LeftTabView</comment>
-      <translation>EFP onchain friends</translation>
-    </message>
-    <message>
       <source>Add account</source>
       <comment>LeftTabView</comment>
       <translation>Add account</translation>
+    </message>
+    <message>
+      <source>Onchain friends</source>
+      <comment>LeftTabView</comment>
+      <translation>Onchain friends</translation>
     </message>
   </context>
   <context>
@@ -13906,6 +13919,14 @@
     </message>
   </context>
   <context>
+    <name>MessageReactionsRow</name>
+    <message>
+      <source>Add reaction</source>
+      <comment>MessageReactionsRow</comment>
+      <translation>Add reaction</translation>
+    </message>
+  </context>
+  <context>
     <name>MessageView</name>
     <message>
       <source>You sent a contact request to %1</source>
@@ -14367,14 +14388,6 @@
       <source>Retry mint</source>
       <comment>MintedTokensView</comment>
       <translation>Retry mint</translation>
-    </message>
-  </context>
-  <context>
-    <name>MobileAddressBar</name>
-    <message>
-      <source>Search or enter address</source>
-      <comment>MobileAddressBar</comment>
-      <translation>Search or enter address</translation>
     </message>
   </context>
   <context>
@@ -17871,11 +17884,6 @@
       <translation>Remove %1</translation>
     </message>
     <message>
-      <source>Are you sure you want to remove %1 from your saved addresses? Transaction history relating to this address will no longer be labelled %1.</source>
-      <comment>RemoveSavedAddressPopup</comment>
-      <translation>Are you sure you want to remove %1 from your saved addresses? Transaction history relating to this address will no longer be labelled %1.</translation>
-    </message>
-    <message>
       <source>Cancel</source>
       <comment>RemoveSavedAddressPopup</comment>
       <translation>Cancel</translation>
@@ -17884,6 +17892,11 @@
       <source>Remove saved address</source>
       <comment>RemoveSavedAddressPopup</comment>
       <translation>Remove saved address</translation>
+    </message>
+    <message>
+      <source>Are you sure you want to remove %1 from your saved addresses?</source>
+      <comment>RemoveSavedAddressPopup</comment>
+      <translation>Are you sure you want to remove %1 from your saved addresses?</translation>
     </message>
   </context>
   <context>
@@ -18154,14 +18167,14 @@
       <translation>Show address QR</translation>
     </message>
     <message>
-      <source>View activity</source>
-      <comment>SavedAddressesDelegate</comment>
-      <translation>View activity</translation>
-    </message>
-    <message>
       <source>Remove saved address</source>
       <comment>SavedAddressesDelegate</comment>
       <translation>Remove saved address</translation>
+    </message>
+    <message>
+      <source>Add to saved addresses</source>
+      <comment>SavedAddressesDelegate</comment>
+      <translation>Add to saved addresses</translation>
     </message>
   </context>
   <context>
@@ -19762,6 +19775,19 @@
       <source>Send message</source>
       <comment>StatusChatInput</comment>
       <translation>Send message</translation>
+    </message>
+  </context>
+  <context>
+    <name>StatusChatInputReplyArea</name>
+    <message>
+      <source>Replying to %1</source>
+      <comment>StatusChatInputReplyArea</comment>
+      <translation>Replying to %1</translation>
+    </message>
+    <message>
+      <source>Cancel reply</source>
+      <comment>StatusChatInputReplyArea</comment>
+      <translation>Cancel reply</translation>
     </message>
   </context>
   <context>
@@ -22909,19 +22935,19 @@
   <context>
     <name>WalletFollowingAddressesHeader</name>
     <message>
-      <source>Add via EFP</source>
-      <comment>WalletFollowingAddressesHeader</comment>
-      <translation>Add via EFP</translation>
-    </message>
-    <message>
-      <source>EFP onchain friends</source>
-      <comment>WalletFollowingAddressesHeader</comment>
-      <translation>EFP onchain friends</translation>
-    </message>
-    <message>
       <source>Last refreshed %1</source>
       <comment>WalletFollowingAddressesHeader</comment>
       <translation>Last refreshed %1</translation>
+    </message>
+    <message>
+      <source>Find a friend</source>
+      <comment>WalletFollowingAddressesHeader</comment>
+      <translation>Find a friend</translation>
+    </message>
+    <message>
+      <source>Onchain friends</source>
+      <comment>WalletFollowingAddressesHeader</comment>
+      <translation>Onchain friends</translation>
     </message>
   </context>
   <context>
@@ -23716,11 +23742,6 @@
       <source>Status Desktop</source>
       <comment>main</comment>
       <translation>Status Desktop</translation>
-    </message>
-    <message>
-      <source>Hello World</source>
-      <comment>main</comment>
-      <translation>Hello World</translation>
     </message>
     <message>
       <source>Share logs or report a bug?</source>

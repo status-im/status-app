@@ -7880,15 +7880,11 @@ Please add it and try again.</source>
         <translation type="unfinished">주소 QR 표시</translation>
     </message>
     <message>
-        <source>View activity</source>
-        <translation type="unfinished">활동 보기</translation>
-    </message>
-    <message>
-        <source>Already in saved addresses</source>
+        <source>Add to saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to saved addresses</source>
+        <source>Remove from saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7907,11 +7903,26 @@ Please add it and try again.</source>
         <translation type="unfinished">검색어에 유효하지 않은 문자가 있습니다 (A-Z, 0-9, 단일 공백, 하이픈, 밑줄만 사용)</translation>
     </message>
     <message>
-        <source>Your EFP onchain friends will appear here</source>
+        <source>No following addresses found. Check spelling or whether the address is correct.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No following addresses found. Check spelling or whether the address is correct.</source>
+        <source>No onchain follows yet. Find and follow Ethereum accounts on %1 to see them here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ethereum Follow Protocol</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>FollowingAddressesDelegate</name>
+    <message>
+        <source>Remove from saved addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add to saved addresses</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10237,12 +10248,12 @@ access to your funds.</source>
         <translation>저장된 주소</translation>
     </message>
     <message>
-        <source>EFP onchain friends</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Add account</source>
         <translation type="unfinished">계정 추가</translation>
+    </message>
+    <message>
+        <source>Onchain friends</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11406,6 +11417,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>MessageReactionsRow</name>
+    <message>
+        <source>Add reaction</source>
+        <translation type="unfinished">반응 추가</translation>
+    </message>
+</context>
+<context>
     <name>MessageView</name>
     <message>
         <source>You sent a contact request to %1</source>
@@ -11785,13 +11803,6 @@ to load</source>
     <message>
         <source>Retry mint</source>
         <translation>민팅 다시 시도</translation>
-    </message>
-</context>
-<context>
-    <name>MobileAddressBar</name>
-    <message>
-        <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14652,16 +14663,16 @@ to load</source>
         <translation>%1 제거</translation>
     </message>
     <message>
-        <source>Are you sure you want to remove %1 from your saved addresses? Transaction history relating to this address will no longer be labelled %1.</source>
-        <translation>저장된 주소에서 %1을(를) 정말 삭제할까요? 이 주소와 관련된 거래 내역에는 더 이상 %1 레이블이 표시되지 않습니다.</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
     <message>
         <source>Remove saved address</source>
         <translation>저장된 주소 삭제</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to remove %1 from your saved addresses?</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14884,12 +14895,12 @@ to load</source>
         <translation>주소 QR 표시</translation>
     </message>
     <message>
-        <source>View activity</source>
-        <translation>활동 보기</translation>
-    </message>
-    <message>
         <source>Remove saved address</source>
         <translation>저장된 주소 제거</translation>
+    </message>
+    <message>
+        <source>Add to saved addresses</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16207,6 +16218,17 @@ to load</source>
     <message>
         <source>Send message</source>
         <translation>메시지 보내기</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputReplyArea</name>
+    <message>
+        <source>Replying to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel reply</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18810,16 +18832,16 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
 <context>
     <name>WalletFollowingAddressesHeader</name>
     <message>
-        <source>Add via EFP</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>EFP onchain friends</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Last refreshed %1</source>
         <translation type="unfinished">마지막 새로고침 %1</translation>
+    </message>
+    <message>
+        <source>Find a friend</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Onchain friends</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -19465,10 +19487,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Status Desktop</source>
         <translation>스테이터스 데스크톱</translation>
-    </message>
-    <message>
-        <source>Hello World</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Share logs or report a bug?</source>

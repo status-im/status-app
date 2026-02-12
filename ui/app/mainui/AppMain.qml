@@ -2256,9 +2256,6 @@ Item {
         onSetCurrentUserStatusRequested: status => appMain.rootStore.setCurrentUserStatus(status)
         onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
         onShareOwnProfileRequested: Global.shareProfileDialogRequested(ownContactDetails.publicKey)
-        onShowQrScannerRequested: () => {
-            Global.openQRScannerRequested()
-        }
 
         onItemActivated: function(sectionType, sectionId) {
             prevSectionId = sectionId
