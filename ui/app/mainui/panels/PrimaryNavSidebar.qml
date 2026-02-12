@@ -72,6 +72,10 @@ Control {
     // Slide in/out from the left.
     x: alwaysVisible ? 0 : (-width + width * position)
 
+    background: Rectangle {
+        color: alwaysVisible ? Theme.palette.baseColor4: Theme.palette.transparent
+    }
+
     // Animate snapping when not directly driven by a drag/swipe.
     Behavior on position {
         enabled: !d.dragActive && !root.alwaysVisible
@@ -90,10 +94,10 @@ Control {
     topPadding: parent.SafeArea.margins.top + Theme.defaultHalfPadding
     bottomPadding: parent.SafeArea.margins.bottom + Theme.defaultHalfPadding
     leftPadding: parent.SafeArea.margins.left + Theme.defaultHalfPadding
-    rightPadding: 0
+    rightPadding: alwaysVisible ? Theme.defaultHalfPadding : 0
     spacing: Theme.defaultHalfPadding
 
-    implicitWidth: 60 + leftPadding
+    implicitWidth: 60 + root.leftPadding + root.rightPadding // by design
 
     QtObject {
         id: d
@@ -211,8 +215,8 @@ Control {
 
             Layout.fillWidth: true
             Layout.fillHeight: true
-            topPadding: Theme.defaultSmallPadding
-            bottomPadding: Theme.defaultSmallPadding
+            topPadding: Theme.defaultHalfPadding
+            bottomPadding: Theme.defaultBigPadding
 
             background: Rectangle {
                 color: d.containerBgColor
@@ -229,7 +233,10 @@ Control {
                 }
 
                 // separator
-                SidebarSeparator {}
+                SidebarSeparator {
+                    Layout.topMargin: Theme.defaultHalfPadding
+                    Layout.bottomMargin: Theme.defaultHalfPadding
+                }
 
                 // communities
                 SidebarListView {
@@ -239,7 +246,10 @@ Control {
                 }
 
                 // separator
-                SidebarSeparator {}
+                SidebarSeparator {
+                    Layout.topMargin: Theme.defaultHalfPadding
+                    Layout.bottomMargin: Theme.defaultHalfPadding
+                }
 
                 // settings + community portal
                 SidebarListView {
@@ -450,8 +460,8 @@ Control {
         anchors.verticalCenter: root.verticalCenter
         anchors.verticalCenterOffset: Math.min((root.height - height) * 0.5, root.height * 0.25)
         // position the indicator closer to the natural position of the thumb
-        width: 5
-        height: 100
+        width: SQUtils.Utils.swipeIndicatorWidth
+        height: 160
         // Clip the indicator to create a hiding below the navbar effect
         clip: true
         visible: root.interactive
@@ -471,8 +481,7 @@ Control {
         anchors.verticalCenter: swipeIndicatorWrapper.verticalCenter
         anchors.left: contentItem.right
         width: root.width
-        // Max 200px is allowed on Android
-        height: swipeIndicatorWrapper.height * 2
+        height: 200 // Max 200px is allowed on Android
         openDistance: root.width
         enabled: root.interactive
         visible: enabled

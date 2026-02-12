@@ -83,7 +83,7 @@ SplitView {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 2
-            anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width + Constants.primaryNavSidebarHandleWidth/2 : undefined
+            anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width : undefined
             Behavior on anchors.leftMargin {PropertyAnimation {duration: ThemeUtils.AnimationDuration.Fast}}
 
             WebView {

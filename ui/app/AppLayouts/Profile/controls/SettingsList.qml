@@ -26,18 +26,26 @@ StatusListView {
 
     property int currenctSubsection
 
-    readonly property int availableWidth: width - leftMargin - rightMargin
-
     signal clicked(int subsection)
 
+    QtObject {
+        id: d
+        readonly property int horizontalMargins: Theme.halfPadding
+    }
+
     spacing: Theme.halfPadding
+
+    verticalScrollBar.implicitWidth: d.horizontalMargins
 
     delegate: StatusNavigationListItem {
         id: delegate
 
         objectName: model.subsection + "-MenuItem"
 
-        width: ListView.view.availableWidth
+        anchors.left: root.contentItem.left
+        anchors.right: root.contentItem.right
+        anchors.margins: d.horizontalMargins
+
         title: model.text
         Accessible.name: Utils.formatAccessibleName(title, objectName)
         asset.name: model.icon
@@ -55,10 +63,10 @@ StatusListView {
         text: section
         color: Theme.palette.baseColor1
 
-        width: ListView.view.availableWidth
+        anchors.left: root.contentItem.left
+        anchors.right: root.contentItem.right
+        anchors.margins: d.horizontalMargins
 
-        leftPadding: Theme.padding
-        rightPadding: Theme.padding
         topPadding: Theme.smallPadding
         bottomPadding: Theme.smallPadding
     }

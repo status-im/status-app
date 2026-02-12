@@ -21,7 +21,7 @@ Item {
         id: title
         text: qsTr("Settings")
         anchors.top: parent.top
-        anchors.topMargin: Theme.padding
+        anchors.topMargin: 2 * Theme.bigPadding
         anchors.left: parent.left
         anchors.leftMargin: Theme.bigPadding
     }
@@ -35,11 +35,7 @@ Item {
         anchors.bottom: parent.bottom
 
         anchors.topMargin: Theme.bigPadding
-        anchors.bottomMargin: Theme.padding
-
-        leftMargin: Constants.primaryNavSidebarHandleWidth
-        rightMargin: Theme.padding
-        bottomMargin: Theme.bigPadding
+        anchors.bottomMargin: Theme.bigPadding
 
         onClicked: function(subsection) {
             if (subsection === Constants.settingsSubsection.backUpSeed) {

@@ -99,7 +99,7 @@ Item {
         function test_basic_geometry() {
             verify(controlUnderTest.width > 0)
             verify(controlUnderTest.height > 0)
-            compare(controlUnderTest.implicitWidth, 68)
+            compare(controlUnderTest.implicitWidth, 60 + 8 + 8) // Main nav bar width + left and right margins
         }
 
         function test_sections_model_binding() {

@@ -937,8 +937,6 @@ QtObject {
 
     readonly property string newBookmark: " "
 
-    readonly property int primaryNavSidebarHandleWidth: 16
-
     readonly property var ensState: {
         "taken": qsTr("Username already taken :("),
         "taken-custom": qsTr("Username doesn’t belong to you :("),

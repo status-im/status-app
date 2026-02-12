@@ -5,6 +5,7 @@ import QtQuick.Controls
 import StatusQ.Components
 import StatusQ.Core.Theme
 import StatusQ.Popups.Dialog
+import StatusQ.Core.Utils
 
 /*!
      \qmltype StatusSectionLayoutPortrait
@@ -206,6 +207,9 @@ SwipeView {
         contentItem: RowLayout {
             spacing: 0
             LayoutItemProxy {
+                // Prevent content from overlapping the swipe indicator in portrait.
+                // Adds indicator width + standard padding as left margin.
+                Layout.leftMargin: Utils.swipeIndicatorWidth + Theme.halfPadding
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 target: baseProxyPanel.target

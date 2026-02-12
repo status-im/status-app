@@ -201,8 +201,6 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.leftMargin: Constants.primaryNavSidebarHandleWidth
-        anchors.rightMargin: Constants.primaryNavSidebarHandleWidth
         spacing: 0
 
         Item {
