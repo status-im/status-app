@@ -53,6 +53,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 
+import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
 
@@ -76,9 +77,6 @@ Rectangle {
     signal findNext()
     signal findPrevious()
 
-    radius: Theme.radius
-
-    border.width: 0
     color: Theme.palette.background
 
     layer.enabled: true
@@ -101,10 +99,11 @@ Rectangle {
     }
 
     onVisibleChanged: {
-        if (visible)
+        if (visible) {
             forceActiveFocus()
+            findNext()
+        }
     }
-
 
     RowLayout {
         anchors.fill: parent
@@ -115,21 +114,20 @@ Rectangle {
 
         spacing: 5
 
-        Rectangle {
+        StatusTextField {
+            id: findTextField
+            background: Rectangle {
+                color: Theme.palette.baseColor2
+                radius: Theme.radius
+            }
             Layout.fillWidth: true
             Layout.fillHeight: true
-
-            StatusTextField {
-                id: findTextField
-                anchors.fill: parent
-
-                onAccepted: root.findNext()
-                onTextChanged: root.findNext()
-                onActiveFocusChanged: activeFocus ? selectAll() : deselect()
-            }
+            onAccepted: root.findNext()
+            onTextChanged: root.findNext()
+            onActiveFocusChanged: activeFocus ? selectAll() : deselect()
         }
 
-        Label {
+        StatusBaseText {
             text: activeMatch + "/" + numberOfMatches
             visible: findTextField.text !== ""
         }
@@ -169,7 +167,7 @@ Rectangle {
             implicitHeight: 32
             icon.name: "close-circle"
             type: StatusFlatRoundButton.Type.Tertiary
-            onClicked:  root.visible = false
+            onClicked: root.visible = false
         }
     }
 }

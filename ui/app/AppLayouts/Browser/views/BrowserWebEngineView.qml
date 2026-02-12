@@ -87,7 +87,7 @@ WebEngineView {
     onLoadProgressChanged: function(progress) {
         if (progress >= 10) {
             // Some real content rendered
-            htmlPageLoaded = true
+            root.htmlPageLoaded = true
         }
     }
 
@@ -104,5 +104,12 @@ WebEngineView {
         if (isOurScript || root.enableJsLogs) {
             console.log("[WebEngine]", sourceID + ":" + lineNumber, message);
         }
-    }   
+    }
+
+    onPermissionRequested: function(permission) {
+        if (permission.permissionType === WebEnginePermission.PermissionType.ClipboardReadWrite) {
+            console.log("Clipboard access granted")
+            permission.grant()
+        }
+    }
 }

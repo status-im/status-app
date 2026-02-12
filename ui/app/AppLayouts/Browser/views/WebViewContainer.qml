@@ -3,9 +3,6 @@ import QtQuick.Layouts
 import QtWebEngine
 
 import StatusQ.Core
-import StatusQ.Core.Theme
-
-import AppLayouts.Browser.popups
 
 // TODO: Add WebView in this file for mobile platform
 // https://github.com/status-im/status-app/issues/19668
@@ -25,7 +22,7 @@ Item {
 
     signal showFindBar(int numberOfMatches, int activeMatch)
     signal resetFindBar()
-    signal removeView(int index)
+    signal removeView()
     signal showSslDialog(var error)
     signal showJsDialogComponent(var request)
     signal linkHovered(var hoveredUrl)
@@ -56,33 +53,33 @@ Item {
             inspectedView: !!root.inspectedView ? root.inspectedView: null
 
             onLinkHovered: (hoveredUrl) => root.linkHovered(hoveredUrl)
-            onWindowCloseRequested: root.removeView(StackLayout.index)
-            onNewWindowRequested: (request) => {
-                                      if (!request.userInitiated) {
-                                          console.warn("Warning: Blocked a popup window.");
-                                      } else if (request.destination === WebEngineNewWindowRequest.InNewTab) {
-                                          var tab = root.fnCreateEmptyTab(root.currentWebViewProfile, false, true, request.requestedUrl);
-                                          tab.acceptAsNewWindow(request);
-                                      } else if (request.destination === WebEngineNewWindowRequest.InNewBackgroundTab) {
-                                          var backgroundTab = root.fnCreateEmptyTab(root.currentWebViewProfile, false, false, request.requestedUrl);
-                                          backgroundTab.acceptAsNewWindow(request);
-                                          // Disabling popups temporarily since we need to set that webengineview settings / channel and other properties
-                                          /*} else if (request.destination === WebEngineNewWindowRequest.InNewDialog) {
+            onWindowCloseRequested: root.removeView()
+            onNewWindowRequested: function(request) {
+                if (!request.userInitiated) {
+                    console.warn("Warning: Blocked a popup window.");
+                } else if (request.destination === WebEngineNewWindowRequest.InNewTab) {
+                    var tab = root.fnCreateEmptyTab(root.currentWebViewProfile, false, true, request.requestedUrl);
+                    tab.acceptAsNewWindow(request);
+                } else if (request.destination === WebEngineNewWindowRequest.InNewBackgroundTab) {
+                    var backgroundTab = root.fnCreateEmptyTab(root.currentWebViewProfile, false, false, request.requestedUrl);
+                    backgroundTab.acceptAsNewWindow(request);
+                    // Disabling popups temporarily since we need to set that webengineview settings / channel and other properties
+                    /*} else if (request.destination === WebEngineNewWindowRequest.InNewDialog) {
                     var dialog = browserDialogComponent.createObject();
                     dialog.currentWebView.profile = currentWebView.profile;
                     dialog.currentWebView.webChannel = channel;
                     request.openIn(dialog.currentWebView);*/
-                                      } else {
-                                          // Instead of opening a new window, we open a new tab
-                                          // TODO: remove "open in new window" from context menu
-                                          var tab = root.fnCreateEmptyTab(root.currentWebViewProfile, false, true, request.requestedUrl);
-                                          tab.acceptAsNewWindow(request);
-                                      }
-                                  }
+                } else {
+                    // Instead of opening a new window, we open a new tab
+                    // TODO: remove "open in new window" from context menu
+                    var tab = root.fnCreateEmptyTab(root.currentWebViewProfile, false, true, request.requestedUrl);
+                    tab.acceptAsNewWindow(request);
+                }
+            }
             onCertificateError: (error) => root.showSslDialog(error)
             onJavaScriptDialogRequested: (request) => root.showJsDialogComponent(request)
             onShowFindBar: (numberOfMatches, activeMatch) => root.showFindBar(numberOfMatches, activeMatch)
-            onResetFindBar: () => root.resetFindBar()
+            onResetFindBar: root.resetFindBar()
         }
     }
 }

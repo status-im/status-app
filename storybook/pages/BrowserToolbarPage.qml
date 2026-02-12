@@ -23,72 +23,149 @@ SplitView {
         SplitView.fillWidth: true
         SplitView.fillHeight: true
         color: Theme.palette.directColor2
-        BrowserToolbar {
+
+        ColumnLayout {
             anchors.centerIn: parent
-            width: Number(toolbarWidth.text)
-            height: 50
 
-            openTabsCount: 24
-            currentTabIncognito: inConginto.checked
-            currentTabIsBookmark: false
-            currentTabLoading: false
+            BrowserLandscapeToolbar {
+                Layout.preferredWidth: Number(toolbarWidth.text)
+                Layout.preferredHeight: 50
 
-            bookmarksAvailable: true
-            canGoBack: true
-            canGoForward: true
-            reloadBtnAvailable: !isMobile.checked
-            addressBarAvailable: !isMobile.checked
-            dappBtnAvailable: !isMobile.checked
-            walletAccountsBtnAvailable: !isMobile.checked
-            showAllOpenTabsBtn: isMobile.checked
-            browserDappsModel: ListModel {
-                ListElement {name: "DApp One"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
-                ListElement {name: "DApp Two"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
-                ListElement {name: "DApp Three"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
+                isMobile: ctrlIsMobile.checked
+                currentTabIsDownloads: false
+                url: "https://status.app"
+                openTabsCount: 24
+                currentTabIncognito: inConginto.checked
+                currentTabIsBookmark: false
+                currentTabLoading: false
+
+                canGoBack: true
+                canGoForward: true
+                browserDappsModel: ListModel {
+                    ListElement {name: "DApp One"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
+                    ListElement {name: "DApp Two"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
+                    ListElement {name: "DApp Three"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
+                }
+
+                onRequestAllOpenTabsView: () => {
+                                              logs.logEvent("browser::requestAllOpenTabsView")
+                                          }
+                onAddBookmarkRequested: () => {
+                                            logs.logEvent("browser::onAddBookmarkRequested")
+                                            currentTabIsBookmark = !currentTabIsBookmark
+                                        }
+                onRequestStopLoadingPage: () => {
+                                              logs.logEvent("browser::requestStopLoadingPage")
+                                              currentTabLoading = false
+                                          }
+                onRequestReloadPage: () => {
+                                         logs.logEvent("browser::requestReloadPage")
+                                         currentTabLoading = true
+                                     }
+                onRequestHistoryPopup: () => {
+                                           logs.logEvent("browser::requestHistoryPopup")
+                                       }
+                onRequestGoForward: () => {
+                                        logs.logEvent("browser::requestGoForward")
+                                    }
+                onRequestGoBack: () => {
+                                     logs.logEvent("browser::requestGoBack")
+                                 }
+                onRequestLaunchInBrowser: (url) => {
+                                              logs.logEvent("browser::requestLaunchInBrowser: " + url)
+                                          }
+                onRequestSearch: () => {
+                                     logs.logEvent("browser::requestSearch")
+                                 }
+                onRequestOpenDapp: (url) => {
+                                       logs.logEvent("browser::requestOpenDapp: " + url)
+                                   }
+                onRequestDisconnectDapp: (dappUrl) => {
+                                             logs.logEvent("browser::requestDisconnectDapp: " + dappUrl)
+                                         }
+                onRequestWalletMenu: () => {
+                                         logs.logEvent("browser::requestWalletMenu")
+                                     }
+                onOpenSettingMenu: function(target) {
+                    logs.logEvent("browser::openSettingMenu; target: " + target)
+                }
+                onGoIncognito: function(checked) {
+                    logs.logEvent("browser::goIncognito; checked: " + checked)
+                }
+                onRequestDownloadsView: {
+                    logs.logEvent("browser::requestDownloadsView")
+                }
             }
 
-            onRequestAllOpenTabsView: () => {
-                                          logs.logEvent("browser::requestAllOpenTabsView")
-                                      }
-            onAddBookmarkRequested: () => {
-                                        logs.logEvent("browser::onAddBookmarkRequested")
-                                        currentTabIsBookmark = !currentTabIsBookmark
-                                    }
-            onRequestStopLoadingPage: () => {
-                                          logs.logEvent("browser::requestStopLoadingPage")
-                                          currentTabLoading = false
-                                      }
-            onRequestReloadPage: () => {
-                                     logs.logEvent("browser::requestReloadPage")
-                                     currentTabLoading = true
-                                 }
-            onRequestHistoryPopup: () => {
-                                       logs.logEvent("browser::requestHistoryPopup")
-                                   }
-            onRequestGoForward: () => {
-                                    logs.logEvent("browser::requestGoForward")
-                                }
-            onRequestGoBack: () => {
-                                 logs.logEvent("browser::requestGoBack")
-                             }
-            onRequestLaunchInBrowser: (url) => {
-                                         logs.logEvent("browser::requestLaunchInBrowser: " + url)
-                                      }
-            onRequestSearch: () => {
-                                   logs.logEvent("browser::requestSearch")
-                             }
-            onRequestOpenDapp: (url) => {
-                                   logs.logEvent("browser::requestOpenDapp: " + url)
-                               }
-            onRequestDisconnectDapp: (dappUrl) => {
-                                         logs.logEvent("browser::requestDisconnectDapp: " + dappUrl)
+            BrowserPortraitToolbar {
+                Layout.preferredWidth: Number(toolbarWidth.text) / 2
+                Layout.preferredHeight: 50
+                Layout.alignment: Qt.AlignHCenter
+
+                isMobile: ctrlIsMobile.checked
+                currentTabIsDownloads: false
+                openTabsCount: 24
+                currentTabIncognito: inConginto.checked
+                currentTabIsBookmark: false
+                currentTabLoading: false
+
+                canGoBack: true
+                canGoForward: true
+                browserDappsModel: ListModel {
+                    ListElement {name: "DApp One"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
+                    ListElement {name: "DApp Two"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
+                    ListElement {name: "DApp Three"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
+                }
+
+                onRequestAllOpenTabsView: () => {
+                                              logs.logEvent("browser::requestAllOpenTabsView")
+                                          }
+                onAddBookmarkRequested: () => {
+                                            logs.logEvent("browser::onAddBookmarkRequested")
+                                            currentTabIsBookmark = !currentTabIsBookmark
+                                        }
+                onRequestStopLoadingPage: () => {
+                                              logs.logEvent("browser::requestStopLoadingPage")
+                                              currentTabLoading = false
+                                          }
+                onRequestReloadPage: () => {
+                                         logs.logEvent("browser::requestReloadPage")
+                                         currentTabLoading = true
                                      }
-            onRequestWalletMenu: () => {
-                                    logs.logEvent("browser::requestWalletMenu")
+                onRequestHistoryPopup: () => {
+                                           logs.logEvent("browser::requestHistoryPopup")
+                                       }
+                onRequestGoForward: () => {
+                                        logs.logEvent("browser::requestGoForward")
+                                    }
+                onRequestGoBack: () => {
+                                     logs.logEvent("browser::requestGoBack")
                                  }
-            onOpenSettingMenu: () => {
-                                     logs.logEvent("browser::openSettingMenu")
-                               }
+                onRequestLaunchInBrowser: (url) => {
+                                              logs.logEvent("browser::requestLaunchInBrowser: " + url)
+                                          }
+                onRequestSearch: () => {
+                                     logs.logEvent("browser::requestSearch")
+                                 }
+                onRequestOpenDapp: (url) => {
+                                       logs.logEvent("browser::requestOpenDapp: " + url)
+                                   }
+                onRequestDisconnectDapp: (dappUrl) => {
+                                             logs.logEvent("browser::requestDisconnectDapp: " + dappUrl)
+                                         }
+                onRequestWalletMenu: () => {
+                                         logs.logEvent("browser::requestWalletMenu")
+                                     }
+                onOpenSettingMenu: function(target) {
+                    logs.logEvent("browser::openSettingMenu; target: " + target)
+                }
+                onGoIncognito: function(checked) {
+                    logs.logEvent("browser::goIncognito; checked: " + checked)
+                }
+                onRequestDownloadsView: {
+                    logs.logEvent("browser::requestDownloadsView")
+                }
+            }
         }
     }
 
@@ -103,7 +180,7 @@ SplitView {
         ColumnLayout {
 
             Switch {
-                id: isMobile
+                id: ctrlIsMobile
                 text: "Is Mobile"
                 checked: false
             }
@@ -115,13 +192,12 @@ SplitView {
             }
 
             RowLayout {
-                Text {
+                Label {
                     text: "Toolbar width:"
                 }
-                TextInput {
+                TextField {
                     id: toolbarWidth
-                    text: !isMobile.checked ? "1000": "400"
-                    color: Theme.palette.primaryColor1
+                    text: "1000"
                 }
             }
         }

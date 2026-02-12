@@ -101,6 +101,7 @@
         <file>icons/backspace.svg</file>
         <file>icons/bold.svg</file>
         <file>icons/bridge.svg</file>
+        <file>icons/broom.svg</file>
         <file>icons/browser.svg</file>
         <file>icons/calendar.svg</file>
         <file>icons/camera.svg</file>
@@ -134,6 +135,7 @@
         <file>icons/dots-icon.svg</file>
         <file>icons/double-checkmark.svg</file>
         <file>icons/download.svg</file>
+        <file>icons/downloads.svg</file>
         <file>icons/edit.svg</file>
         <file>icons/edit_pencil.svg</file>
         <file>icons/emojis.svg</file>
@@ -212,6 +214,8 @@
         <file>icons/play-filled.svg</file>
         <file>icons/play.svg</file>
         <file>icons/previous.svg</file>
+        <file>icons/privacy-activated.svg</file>
+        <file>icons/privacy.svg</file>
         <file>icons/private-chat.svg</file>
         <file>icons/profile.svg</file>
         <file>icons/public-chat.svg</file>
