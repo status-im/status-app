@@ -2897,10 +2897,11 @@ Item {
                             }
                         ]
                     }
-                    wcSdk: WalletConnectSDK {
+                    wcSdk: ConnectorWCSDK {
                         enabled: featureFlagsStore.dappsEnabled && WalletStores.RootStore.walletSectionInst.walletReady
-                        userUID: appMain.profileStore.pubKey
-                        projectId: WalletStores.RootStore.appSettings.walletConnectProjectID
+                        connectorController: WalletStores.RootStore.dappsConnectorController
+                        networksModel: appMain.networksStore.activeNetworks
+                        accountsModel: WalletStores.RootStore.nonWatchAccounts
                     }
                     bcSdk: DappsConnectorSDK {
                         enabled: featureFlagsStore.connectorEnabled && WalletStores.RootStore.walletSectionInst.walletReady

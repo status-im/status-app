@@ -370,6 +370,20 @@ Item {
         }
     }
 
+    QtObject {
+        id: mockConnectorController
+        function pairWalletConnect(uri) { return true }
+        function disconnectWCSession(topic) { return true }
+        function getWCActiveSessions(validAt) {
+            try {
+                const sessions = JSON.parse(settings.persistedSessions || "[]")
+                return JSON.stringify(sessions.map(s => ({ sessionJson: typeof s === "string" ? s : JSON.stringify(s) })))
+            } catch (e) {
+                return "[]"
+            }
+        }
+    }
+
     DAppsModule {
         id: dappModule
         dappsMetrics: DAppsMetrics {
@@ -379,10 +393,11 @@ Item {
                 }
             }
         }
-        wcSdk: WalletConnectSDK {
+        wcSdk: ConnectorWCSDK {
             enabled: settings.enableSDK && dappsService.walletConnectFeatureEnabled
-
-            projectId: projectIdText.projectId
+            connectorController: mockConnectorController
+            networksModel: dappModule.networksModel
+            accountsModel: dappModule.accountsModel
         }
 
         bcSdk: DappsConnectorSDK {
@@ -410,64 +425,14 @@ Item {
             }
         }
         store: SharedStores.DAppsStore {
-            signal dappsListReceived(string dappsJson)
+            controller: QtObject {}
             signal userAuthenticated(string topic, string id, string password, string pin)
             signal userAuthenticationFailed(string topic, string id)
             signal signingResult(string topic, string id, string data)
-            signal activeSessionsReceived(var activeSessionsJsonObj, bool success)
             // Fees and gas
             signal estimatedTimeResponse(string topic, int timeCategory, bool success)
             signal suggestedFeesResponse(string topic, var suggestedFeesJsonObj, bool success)
             signal estimatedGasResponse(string topic, string gasEstimate, bool success)
-
-            function addWalletConnectSession(sessionJson) {
-                console.info("Add Persisted Session", sessionJson)
-                let session = JSON.parse(sessionJson)
-                d.updateSessionsModelAndAddNewIfNotNull(session)
-                return true
-            }
-            
-            function getActiveSessions() {
-                console.info("Get Active Sessions")
-                let sessions = JSON.parse(settings.persistedSessions)
-                let response = sessions.map(function(session) {
-                    return {
-                        sessionJson: JSON.stringify(session),
-                    }
-                })
-                activeSessionsReceived(response, true)
-            }
-
-            function deactivateWalletConnectSession(topic) {
-                console.info("Deactivate Persisted Session", topic)
-
-                let sessions = JSON.parse(settings.persistedSessions)
-                let newSessions = sessions.filter(function(session) {
-                    return session.topic !== topic
-                })
-                settings.persistedSessions = JSON.stringify(newSessions)
-                d.updateSessionsModelAndAddNewIfNotNull(null)
-                return true
-            }
-
-            function updateWalletConnectSessions(activeTopicsJson) {
-                console.info("Update Persisted Sessions", activeTopicsJson)
-
-                let activeTopics = JSON.parse(activeTopicsJson)
-                let sessions = JSON.parse(settings.persistedSessions)
-                let newSessions = sessions.filter(function(session) {
-                    return activeTopics.includes(session.topic)
-                })
-                settings.persistedSessions = JSON.stringify(newSessions)
-                d.updateSessionsModelAndAddNewIfNotNull(null)
-                return true
-            }
-
-            function getDapps() {
-                let dappsJson = JSON.stringify(d.persistedDapps)
-                this.dappsListReceived(dappsJson)
-                return true
-            }
 
             function authenticateUser(topic, id, address) {
                 authMockDialog.topic = topic
