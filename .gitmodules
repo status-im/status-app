@@ -127,3 +127,9 @@
 [submodule "vendor/status-keycard-qt"]
 	path = vendor/status-keycard-qt
 	url = https://github.com/status-im/status-keycard-qt
+[submodule "vendor/nim-sds"]
+	path = vendor/nim-sds
+	url = https://github.com/logos-messaging/nim-sds.git
+[submodule "vendor/nim-libp2p"]
+	path = vendor/nim-libp2p
+	url = https://github.com/status-im/nim-libp2p.git

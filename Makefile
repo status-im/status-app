@@ -10,6 +10,9 @@ SHELL := bash # the shell used internally by Make
 # used inside the included makefiles
 BUILD_SYSTEM_DIR := vendor/nimbus-build-system
 
+# Avoid duplicate nim packages from nested nim-sds vendor tree.
+export EXCLUDED_NIM_PACKAGES := vendor/nim-sds/vendor
+
 GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 
 # we don't want an error here, so we can handle things later, in the ".DEFAULT" target
