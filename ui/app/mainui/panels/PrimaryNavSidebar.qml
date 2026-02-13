@@ -302,7 +302,7 @@ Control {
 
                 icon.name: "notification"
 
-                showBadge: root.acHasUnseenNotifications || root.acUnreadNotificationsCount
+                showBadge: (root.acHasUnseenNotifications || root.acUnreadNotificationsCount) && root.opened
                 badgeCount: root.acUnreadNotificationsCount
 
                 thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
