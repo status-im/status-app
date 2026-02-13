@@ -14456,7 +14456,7 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>We could not read that QR code.</source>
+        <source>We cannot read that QR code.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

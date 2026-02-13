@@ -17582,9 +17582,9 @@
       <translation>WalletConnect to connect dApps</translation>
     </message>
     <message>
-      <source>We could not read that QR code.</source>
+      <source>We cannot read that QR code.</source>
       <comment>QRCodeScannerDialog</comment>
-      <translation>We could not read that QR code.</translation>
+      <translation>We cannot read that QR code.</translation>
     </message>
   </context>
   <context>

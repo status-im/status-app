@@ -87,6 +87,16 @@ ColumnLayout {
         }
     }
 
+    Timer {
+        id: permissionTimer
+        interval: 500
+        running: false
+        repeat: false
+        onTriggered: {
+            cameraPermission.request()
+        }
+    }
+
     CameraPermission {
         id: cameraPermission
         Component.onCompleted: {
@@ -94,8 +104,11 @@ ColumnLayout {
                 return
             }
 
-            if (cameraPermission.status !== Qt.PermissionStatus.Granted)
-                cameraPermission.request()
+            if (cameraPermission.status !== Qt.PermissionStatus.Granted) {
+                // Wait before requestiing permisisons so that the view comes up after the animation before OS popup freezes the UI
+                permissionTimer.start()
+            }
+                
         }
     }
 

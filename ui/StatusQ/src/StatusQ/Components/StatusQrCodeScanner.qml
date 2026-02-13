@@ -53,12 +53,6 @@ Item {
         readonly property int radius: 16
     }
 
-    Rectangle {
-        anchors.fill: parent
-        color: Theme.palette.baseColor4
-        radius: d.radius
-    }
-
     Item {
         anchors.fill: parent
         visible: capture.cameraAvailable
@@ -74,20 +68,6 @@ Item {
             captureRectHeight: scanCorners.height
 
             onTagFound: (tag) => root.tagFound(tag)
-        }
-
-        Rectangle {
-            id: mask
-            anchors.fill: parent
-            radius: d.radius
-            visible: false
-            color: "black"
-        }
-
-        OpacityMask {
-            anchors.fill: parent
-            source: capture
-            maskSource: mask
         }
 
         Loader {
@@ -111,6 +91,7 @@ Item {
 
     StatusScanCorners {
         id: scanCorners
+        visible: !cameraUnavailableText.visible
         width: root.width / 1.4
         height: width
         anchors.centerIn: parent
@@ -135,7 +116,7 @@ Item {
         }
 
         width: Math.min(implicitWidth, parent.width / 2)
-        visible: capture.availableCameras.length > 0
+        visible: !cameraUnavailableText.visible && capture.availableCameras.length > 0
         opacity: 0.7
         model: capture.availableCameras
         control.textRole: "displayName"
@@ -174,5 +155,30 @@ Item {
             wrapMode: Text.WordWrap
         }
     }
-}
 
+    Loader {
+        id: loadingOverlay
+        active: true
+        anchors.fill: parent
+
+        sourceComponent: Rectangle {
+            anchors.fill: parent
+            color: Theme.palette.baseColor4
+            radius: d.radius
+            visible: !capture.cameraAvailable
+
+            StatusLoadingIndicator {
+                anchors.centerIn: parent
+            }
+
+            Timer {
+                interval: 2000
+                running: true
+                repeat: false
+                onTriggered: {
+                    loadingOverlay.active = false
+                }
+            }
+        }
+    }
+}

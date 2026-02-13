@@ -43,16 +43,14 @@ StatusDialog {
 
     contentItem: ColumnLayout {
         width: parent.width
-        height: parent.height
         spacing: Theme.padding
-        Layout.maximumHeight: 690
 
         QRCodeScanner {
             id: qrCodeScanner
             Layout.preferredWidth: parent.width
-            Layout.fillHeight: true
-            Layout.maximumHeight: 420
-            Layout.minimumHeight: 200
+            Layout.fillHeight: root.bottomSheet
+            Layout.maximumHeight: root.bottomSheet ? -1 : 420
+            Layout.minimumHeight: 420
 
             Timer {
                 interval: 300

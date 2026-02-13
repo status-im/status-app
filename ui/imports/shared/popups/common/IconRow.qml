@@ -12,7 +12,7 @@ RowLayout {
     required property string text
 
     height: d.iconSize
-    spacing: Theme.smallPadding
+    spacing: Theme.padding
 
     QtObject {
         id: d
@@ -21,18 +21,19 @@ RowLayout {
         readonly property color iconColor: Theme.palette.baseColor1
     }
 
-
     StatusIcon {
         icon: root.icon
         width: d.iconSize
         height: d.iconSize
         color: d.iconColor
         Layout.leftMargin: 6
+        Layout.alignment: Qt.AlignVCenter
     }
 
     StatusBaseText {
         text: root.text
         font.pixelSize: Theme.secondaryTextFontSize
         Layout.fillWidth: true
+        Layout.alignment: Qt.AlignVCenter
     }
 }
