@@ -74,7 +74,7 @@ QtObject {
     }
 
     function setBackupPath(path) {
-        if (SQUtils.Utils.isIOS) {
+        if (StatusQUtils.Utils.isIOS) {
             console.warn("setBackupPath on iOS is not supported, using default path")
             return
         }
