@@ -14429,11 +14429,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>WalletConnect to connect dApps</source>
+        <source>We cannot read that QR code.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>We cannot read that QR code.</source>
+        <source>WalletConnect to connect to dApps</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -19548,10 +19548,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Report a bug on GitHub</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

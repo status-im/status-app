@@ -56,7 +56,7 @@ Item {
         camera: camera
         scanning: true
 
-        captureRect: captureRect
+        captureRect: captureRectangle
 
         onCapturedChanged: (tag) => {
             d.lastTag = tag
@@ -82,7 +82,7 @@ Item {
     }
 
     Rectangle {
-        id: captureRect
+        id: captureRectangle
         width: root.captureRectWidth
         height: root.captureRectHeight
         anchors.centerIn: parent

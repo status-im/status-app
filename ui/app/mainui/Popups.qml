@@ -24,6 +24,7 @@ import AppLayouts.Wallet.popups.buy
 import AppLayouts.Wallet.popups
 import AppLayouts.Communities.stores
 import AppLayouts.Profile.helpers
+import AppLayouts.Wallet.services.dapps
 
 import AppLayouts.Wallet.stores as WalletStores
 import AppLayouts.Chat.stores as ChatStores
@@ -75,6 +76,7 @@ QtObject {
     signal saveDomainToUnfurledWhitelist(string domain)
     signal ownershipDeclined(string communityId, string communityName)
     signal transferOwnershipRequested(string tokenId, string senderAddress)
+    signal wcUriScanned(string uri)
 
     property var activePopupComponents: []
 
@@ -1477,6 +1479,8 @@ QtObject {
                             return
                         }
                         Global.requestOpenLink(tag)
+                    } else if (tagType === QRCodeScannerDialog.TagType.WCUri) {
+                        root.wcUriScanned(tag)
                     }
                 }
             }

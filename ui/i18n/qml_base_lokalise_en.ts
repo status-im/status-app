@@ -17577,14 +17577,14 @@
       <translation>Open WEB links</translation>
     </message>
     <message>
-      <source>WalletConnect to connect dApps</source>
-      <comment>QRCodeScannerDialog</comment>
-      <translation>WalletConnect to connect dApps</translation>
-    </message>
-    <message>
       <source>We cannot read that QR code.</source>
       <comment>QRCodeScannerDialog</comment>
       <translation>We cannot read that QR code.</translation>
+    </message>
+    <message>
+      <source>WalletConnect to connect to dApps</source>
+      <comment>QRCodeScannerDialog</comment>
+      <translation>WalletConnect to connect to dApps</translation>
     </message>
   </context>
   <context>
@@ -23787,11 +23787,6 @@
       <source>Report a bug on GitHub</source>
       <comment>main</comment>
       <translation>Report a bug on GitHub</translation>
-    </message>
-    <message>
-      <source>Hello World</source>
-      <comment>main</comment>
-      <translation>Hello World</translation>
     </message>
   </context>
   <context>

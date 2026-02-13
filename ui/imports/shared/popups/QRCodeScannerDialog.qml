@@ -9,6 +9,8 @@ import StatusQ.Components
 import StatusQ.Controls.Validators
 import StatusQ.Popups.Dialog
 
+import AppLayouts.Wallet.services.dapps
+
 import utils
 import "./common"
 
@@ -32,13 +34,15 @@ StatusDialog {
 
     enum TagType {
         Link,
-        Address
+        Address,
+        WCUri
     }
 
     QtObject {
         id: d
 
         property string validTag: ""
+        property int validTagType
     }
 
     contentItem: ColumnLayout {
@@ -57,11 +61,7 @@ StatusDialog {
                 running: !!d.validTag
                 repeat: false
                 onTriggered: {
-                    if (Utils.isURL(d.validTag)) {
-                        root.tagFound(QRCodeScannerDialog.TagType.Link, d.validTag)
-                    } else if (Utils.isValidAddress(d.validTag)) {
-                        root.tagFound(QRCodeScannerDialog.TagType.Address, d.validTag)
-                    }
+                    root.tagFound(d.validTagType, d.validTag)
                     root.close()
                 }
             }
@@ -71,8 +71,20 @@ StatusDialog {
                     name: "isValidQR"
                     errorMessage: qsTr("We cannot read that QR code.")
                     validate: function (tag) {
-                        // We accept URLs and addresses
-                        return Utils.isURL(tag) || Utils.isValidAddress(tag)
+                        // We accept URLs, addresses and WalletConnect URIs
+                        if (Utils.isURL(tag)) {
+                            d.validTagType = QRCodeScannerDialog.TagType.Link
+                            return true
+                        }
+                        if (Utils.isValidAddress(tag)) {
+                            d.validTagType = QRCodeScannerDialog.TagType.Address
+                            return true
+                        }
+                        if (DAppsHelpers.validURI(tag)) {
+                            d.validTagType = QRCodeScannerDialog.TagType.WCUri
+                            return true
+                        }
+                        return false
                     }
                 }
             ]
@@ -107,7 +119,7 @@ StatusDialog {
 
         IconRow {
             width: parent.width
-            text: qsTr("WalletConnect to connect dApps")
+            text: qsTr("WalletConnect to connect to dApps")
             icon: "wallet"
         }
     }
