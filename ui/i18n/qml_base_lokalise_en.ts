@@ -23788,11 +23788,6 @@
       <comment>main</comment>
       <translation>Report a bug on GitHub</translation>
     </message>
-    <message>
-      <source>Hello World</source>
-      <comment>main</comment>
-      <translation>Hello World</translation>
-    </message>
   </context>
   <context>
     <name>tst_StatusInput</name>

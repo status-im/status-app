@@ -77,30 +77,27 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <!-- Handles http and https URLs for status.app -->
-                <data android:scheme="http" android:host="status.app" />
-                <data android:scheme="https" android:host="status.app" />
                 <!-- Community paths -->
-                <data android:pathPrefix="/c/" android:host="status.app" android:scheme="http" />
-                <data android:pathPrefix="/c/" android:host="status.app" android:scheme="https" />
+                <data android:scheme="http" android:host="status.app" android:pathPrefix="/c/" />
+                <data android:scheme="https" android:host="status.app" android:pathPrefix="/c/" />
                 <!-- Community channel paths -->
-                <data android:pathPrefix="/cc/" android:host="status.app" android:scheme="http" />
-                <data android:pathPrefix="/cc/" android:host="status.app" android:scheme="https" />
+                <data android:scheme="http" android:host="status.app" android:pathPrefix="/cc/" />
+                <data android:scheme="https" android:host="status.app" android:pathPrefix="/cc/" />
                 <!-- User paths -->
-                <data android:pathPrefix="/u/" android:host="status.app" android:scheme="http" />
-                <data android:pathPrefix="/u/" android:host="status.app" android:scheme="https" />
+                <data android:scheme="http" android:host="status.app" android:pathPrefix="/u/" />
+                <data android:scheme="https" android:host="status.app" android:pathPrefix="/u/" />
                 <!-- Private chat paths -->
-                <data android:pathPrefix="/p/" android:host="status.app" android:scheme="http" />
-                <data android:pathPrefix="/p/" android:host="status.app" android:scheme="https" />
+                <data android:scheme="http" android:host="status.app" android:pathPrefix="/p/" />
+                <data android:scheme="https" android:host="status.app" android:pathPrefix="/p/" />
                 <!-- Community request paths -->
-                <data android:pathPrefix="/cr/" android:host="status.app" android:scheme="http" />
-                <data android:pathPrefix="/cr/" android:host="status.app" android:scheme="https" />
+                <data android:scheme="http" android:host="status.app" android:pathPrefix="/cr/" />
+                <data android:scheme="https" android:host="status.app" android:pathPrefix="/cr/" />
                 <!-- Group chat paths -->
-                <data android:pathPrefix="/g/" android:host="status.app" android:scheme="http" />
-                <data android:pathPrefix="/g/" android:host="status.app" android:scheme="https" />
+                <data android:scheme="http" android:host="status.app" android:pathPrefix="/g/" />
+                <data android:scheme="https" android:host="status.app" android:pathPrefix="/g/" />
                 <!-- Wallet paths -->
-                <data android:pathPrefix="/wallet/" android:host="status.app" android:scheme="http" />
-                <data android:pathPrefix="/wallet/" android:host="status.app" android:scheme="https" />
+                <data android:scheme="http" android:host="status.app" android:pathPrefix="/wallet/" />
+                <data android:scheme="https" android:host="status.app" android:pathPrefix="/wallet/" />
             </intent-filter>
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
