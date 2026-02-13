@@ -120,6 +120,9 @@ else
 
   "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec macx-ios-clang CONFIG+="$SDK" VERSION="$VERSION" "${QMAKE_DEFINES[@]}" -after
 
+  # Remove stale symlink from previous install that prevents xcodebuild mkdir
+  rm -f "${BUILD_DIR}/Release-${SDK}/${OUTPUT_NAME}.app"
+
   xcodebuild "${XCODE_FLAGS[@]}" -target "Qt Preprocess" | xcbeautify
   xcodebuild "${XCODE_FLAGS[@]}" -target "$OUTPUT_NAME" install DSTROOT="$BIN_DIR" INSTALL_PATH="/" TARGET_BUILD_DIR="$BIN_DIR" | xcbeautify
 
