@@ -18,7 +18,7 @@ RowLayout {
         id: d
 
         readonly property int iconSize: 20
-        readonly property color iconColor: Theme.palette.directColor4
+        readonly property color iconColor: Theme.palette.baseColor1
     }
 
 

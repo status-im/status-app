@@ -44,7 +44,7 @@ StatusDialog {
     contentItem: ColumnLayout {
         width: parent.width
         height: parent.height
-        spacing: Theme.smallPadding
+        spacing: Theme.padding
         Layout.maximumHeight: 690
 
         QRCodeScanner {
@@ -71,7 +71,7 @@ StatusDialog {
             validators: [
                 StatusValidator {
                     name: "isValidQR"
-                    errorMessage: qsTr("We could not read that QR code.")
+                    errorMessage: qsTr("We cannot read that QR code.")
                     validate: function (tag) {
                         // We accept URLs and addresses
                         return Utils.isURL(tag) || Utils.isValidAddress(tag)
@@ -98,7 +98,7 @@ StatusDialog {
         IconRow {
             width: parent.width
             text: qsTr("Send tokens")
-            icon: "token"
+            icon: "send"
         }
 
         IconRow {

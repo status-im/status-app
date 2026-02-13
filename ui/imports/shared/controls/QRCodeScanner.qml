@@ -49,7 +49,7 @@ ColumnLayout {
 
     signal validTagFound(string tag)
 
-    spacing: Theme.smallPadding
+    spacing: Theme.padding / 1.4
 
     QtObject {
         id: d
