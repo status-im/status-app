@@ -1006,6 +1006,7 @@ Item {
         function test_uriPairingSuccess() {
             const pairWCModal = openPairModal()
             tryVerify(() => pairWCModal.opened)
+            pairingValidationRequestedSpy.clear()
             //type: test url
             keyClick("a")
             keyClick("b")
@@ -1020,6 +1021,7 @@ Item {
         function test_uriPairingFail() {
             const pairWCModal = openPairModal()
             tryVerify(() => pairWCModal.opened)
+            pairingValidationRequestedSpy.clear()
 
             //type: test url
             keyClick("a")

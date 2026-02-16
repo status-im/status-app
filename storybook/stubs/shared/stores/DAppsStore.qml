@@ -1,3 +1,5 @@
 import QtQuick
 
-QtObject {}
+QtObject {
+    required property var controller
+}
