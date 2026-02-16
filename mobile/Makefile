@@ -10,6 +10,7 @@ STATUS_GO_LIB := $(LIB_PATH)/libstatus$(LIB_EXT)
 # - Set to 0: Build without NFC support
 # Usage: make build-ios FLAG_KEYCARD_ENABLED=1
 FLAG_KEYCARD_ENABLED ?= 1
+FLAG_DAPPS_ENABLED ?= 1
 
 $(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
 
