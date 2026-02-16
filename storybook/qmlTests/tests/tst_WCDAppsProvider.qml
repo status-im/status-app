@@ -77,7 +77,6 @@ Item {
             componentUnderTest.sdk.activeSessions["https://example.com"] = newSession
             componentUnderTest.sdk.approveSessionResult("requestID", newSession, null)
 
-            // addWalletConnectSession no longer called - session persisted by connector
             compare(componentUnderTest.connectedSpy.count, 1, "Connected signal should be emitted once")
             compare(componentUnderTest.connectedSpy.signalArguments[0][0], "requestID", "Connected signal should have correct proposalId")
             compare(componentUnderTest.connectedSpy.signalArguments[0][1], "https://example.com", "Connected signal should have correct topic")
@@ -95,7 +94,6 @@ Item {
             compare(dapp.rawSessions.count, 1, "DApp should have correct rawSessions count")
 
             componentUnderTest.sdk.sessionDelete("https://example.com", "")
-            // deactivateWalletConnectSession no longer called - disconnect handled by connector
             compare(componentUnderTest.disconnectedSpy.count, 1, "Disconnected signal should be emitted once")
             compare(componentUnderTest.disconnectedSpy.signalArguments[0][0], "https://example.com", "Disconnected signal should have correct topic")
             compare(componentUnderTest.disconnectedSpy.signalArguments[0][1], "https://example.com", "Disconnected signal should have correct dAppUrl")

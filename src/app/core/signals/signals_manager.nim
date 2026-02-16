@@ -46,7 +46,7 @@ QtObject:
       signal = self.decode(jsonSignal)
     except CatchableError:
       if allowLogging:
-        warn "Error decoding signal", err=getCurrentExceptionMsg(), data = jsonSignal{"type"}.getStr("?")
+        warn "Error decoding signal", err=getCurrentExceptionMsg()
       return
 
     if signal.signalType == SignalType.NodeLogin and NodeSignal(signal).error != "":
