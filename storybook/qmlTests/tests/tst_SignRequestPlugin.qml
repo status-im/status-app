@@ -41,6 +41,7 @@ Item {
                 }
             }
             store: DAppsStore {
+                controller: QtObject {}
                 id: dappsStore
 
                 signal userAuthenticated(string topic, string id, string password, string pin, string payload)

@@ -59,6 +59,7 @@ Item {
                 }
             }
             store: DAppsStore {
+                controller: QtObject {}
                 id: dappsStoreMock
                 signal userAuthenticated(string topic, string id, string password, string pin)
                 signal userAuthenticationFailed(string topic, string id)
@@ -76,12 +77,12 @@ Item {
             }
             request: buildSiweRequestMessage()
             accountsModel: ListModel {
-                ListElement { chainId: 1 }
-                ListElement { chainId: 2 }
-            }
-            networksModel: ListModel {
                 ListElement { address: "0x1" }
                 ListElement { address: "0x2" }
+            }
+            networksModel: ListModel {
+                ListElement { chainId: 1 }
+                ListElement { chainId: 2 }
             }
         }
     }

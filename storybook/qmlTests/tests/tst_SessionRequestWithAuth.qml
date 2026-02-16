@@ -36,6 +36,7 @@ Item {
             dappIcon: "dappIcon"
             dappName: "dappName"
             store: DAppsStore {
+                controller: QtObject {}
                 signal userAuthenticated(string topic, string id, string password, string pin)
                 signal userAuthenticationFailed(string topic, string id)
 
