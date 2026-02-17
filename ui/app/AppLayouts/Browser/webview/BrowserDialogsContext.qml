@@ -7,13 +7,8 @@ QtObject {
     required property var networksStore
     required property var browserActivityStore
     required property var browserWalletStore
-    required property var openPopupFn
     required property Component jsDialogComponent
     required property Item dialogParent
-
-    function openHistoryMenu(historyMenu) {
-        historyMenu.open()
-    }
 
     function openWalletMenu(browserWalletMenu) {
         // Initialize activity filters before opening popup.
@@ -27,7 +22,7 @@ QtObject {
         const currentAddress = browserWalletStore.dappBrowserAccount.address
         browserActivityStore.activityController.setFilterAddressesJson(
                     JSON.stringify([currentAddress]))
-        openPopupFn(browserWalletMenu)
+        browserWalletMenu.createObject(dialogParent).open()
     }
 
     function openJsDialog(request) {

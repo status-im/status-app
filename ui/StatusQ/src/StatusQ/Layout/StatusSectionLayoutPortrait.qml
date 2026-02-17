@@ -105,11 +105,17 @@ SwipeView {
     */
     property bool showFooter: true
     /*!
-        \qmlproperty int StatusSectionLayout::headerPadding
+        \qmlproperty real StatusSectionLayout::headerPadding
         This property sets the padding for the header component
         Default value is Theme.halfPadding.
     */
-    property int headerPadding: Theme.halfPadding
+    property real headerPadding: Theme.halfPadding
+    /*!
+        \qmlproperty int StatusSectionLayout::leftPadding
+        This property sets the left padding for the component
+        Default value is the indicator width + standard padding as left margin
+    */
+    leftPadding: Utils.swipeIndicatorWidth + Theme.halfPadding
     /*!
         \qmlproperty alias StatusSectionLayout::backButtonName
         This property holds a reference to the backButtonName property of the
@@ -207,9 +213,6 @@ SwipeView {
         contentItem: RowLayout {
             spacing: 0
             LayoutItemProxy {
-                // Prevent content from overlapping the swipe indicator in portrait.
-                // Adds indicator width + standard padding as left margin.
-                Layout.leftMargin: Utils.swipeIndicatorWidth + Theme.halfPadding
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 target: baseProxyPanel.target

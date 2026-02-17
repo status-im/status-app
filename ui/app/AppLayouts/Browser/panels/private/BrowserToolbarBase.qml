@@ -1,8 +1,10 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQml.Models
 
 import StatusQ.Core.Theme
+import StatusQ.Popups
 
 Control {
     id: root
@@ -20,11 +22,13 @@ Control {
     required property bool currentTabLoading
     required property var browserDappsModel
 
+    required property var historyModel
+
     signal requestAllOpenTabsView()
     signal addBookmarkRequested()
+    signal editBookmarkRequested()
     signal requestStopLoadingPage()
     signal requestReloadPage()
-    signal requestHistoryPopup()
     signal requestGoForward()
     signal requestGoBack()
     signal requestLaunchInBrowser(string url)
@@ -32,13 +36,46 @@ Control {
     signal requestOpenDapp(string url)
     signal requestDisconnectDapp(string dappUrl)
     signal requestWalletMenu()
-    signal openSettingMenu(var target)
+    signal openSettingMenu(var target, point pos)
     signal goIncognito(bool checked)
     signal requestDownloadsView()
+
+    signal goBackOrForwardRequested(int offset)
 
     padding: 6
 
     background: Rectangle {
         color: root.currentTabIncognito ? Theme.palette.privacyColors.primary : Theme.palette.background
+    }
+
+    function requestHistoryPopup(parent, pos) {
+        historyMenuComp.createObject(root).popup(parent, pos)
+    }
+
+    Component {
+        id: historyMenuComp
+
+        StatusMenu {
+            id: historyMenu
+
+            Instantiator {
+                model: root.historyModel
+                StatusMenuItem {
+                    text: model.title
+                    icon.source: model.icon
+                    onTriggered: root.goBackOrForwardRequested(model.offset)
+                    checkable: !enabled
+                    checked: !enabled
+                    enabled: model.offset
+                }
+                onObjectAdded: function(index, object) {
+                    historyMenu.insertItem(index, object)
+                }
+                onObjectRemoved: function(index, object) {
+                    historyMenu.removeItem(object)
+                }
+            }
+            onClosed: destroy()
+        }
     }
 }

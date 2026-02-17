@@ -1,5 +1,6 @@
 import QtQuick
 
+import StatusQ.Core
 import StatusQ.Components as StatusQ
 import StatusQ.Core.Theme
 
@@ -53,6 +54,7 @@ Item {
         text: root.text
         width: 67
         anchors.top: bookmarkImage.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: Text.AlignHCenter
         font.pixelSize: Theme.additionalTextSize
         wrapMode: Text.WordWrap
@@ -62,7 +64,7 @@ Item {
         textFormat: Text.PlainText
     }
 
-    MouseArea {
+    StatusMouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton

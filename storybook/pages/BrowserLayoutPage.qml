@@ -26,25 +26,60 @@ SplitView {
 
     BrowserLayout {
         id: browserLayout
-        Layout.fillWidth: true
-        Layout.fillHeight: true
+        SplitView.fillWidth: true
+        SplitView.fillHeight: true
 
         isMobile: ctrlIsMobile.checked
         userUID: "0xdeadbeef"
         transactionStore: TransactionStoreMock {}
-        thirdpartyServicesEnabled: true
         dappsEnabled: true
-        connectorController: null
-        platformOS: ctrlPlatformOS.currentValue
+        thirdpartyServicesEnabled: ctrl3rdPartyServices.checked
+        connectorController: QtObject {
+            function getDAppsByClientId(clientId) {
+                const rawModel = [
+                                   {
+                                       name: "",
+                                       url: "https://dapp.test/1",
+                                       iconUrl: "https://se-sdk-dapp.vercel.app/assets/eip155:1.png",
+                                       connectorBadge: "https://random.imagecdn.app/20/20"
+                                   },
+                                   {
+                                       name: "Test dApp 4 - very long name !!!!!!!!!!!!!!!!",
+                                       url: "https://dapp.test/4",
+                                       iconUrl: "https://react-app.walletconnect.com/assets/eip155-1.png",
+                                       connectorBadge: ""
+                                   },
+                                   {
+                                       name: "Test dApp 5 - very long url",
+                                       url: "https://dapp.test/very_long/url/unusual",
+                                       iconUrl: "https://react-app.walletconnect.com/assets/eip155-1.png",
+                                       connectorBadge: ""
+                                   },
+                                   {
+                                       name: "Test dApp 6",
+                                       url: "https://dapp.test/6",
+                                       iconUrl: "https://react-app.walletconnect.com/assets/eip155-1.png",
+                                       connectorBadge: ""
+                                   },
+                                   {
+                                       name: "Test dApp 8",
+                                       url: "https://dapp.test/8",
+                                       iconUrl: "",
+                                       connectorBadge: ""
+                                   }
+                        ]
+                return JSON.stringify(rawModel)
+            }
 
-        bookmarksStore: BrowserStores.BookmarksStore {
-            property var bookmarksModel: ListModel {}
-            function addBookmark(url, name) {}
-            function deleteBookmark(url) {}
-            function updateBookmark(originalUrl, newUrl, newName) {}
-            function getBookmarkIndexByUrl(url) {}
-            function getCurrentFavorite(url) {}
+            function disconnect(hostname) {
+                console.info("connectorController.disconnect", hostname)
+            }
         }
+
+        platformOS: ctrlPlatformOS.currentValue
+        leftPortraitPadding: 0
+
+        bookmarksStore: BrowserStores.BookmarksStore {}
         downloadsStore: BrowserStores.DownloadsStore {
             property ListModel downloadModel : ListModel {
                 property var downloads: []
@@ -123,7 +158,7 @@ SplitView {
         readonly property var localAccountSensitiveSettings: Settings {
             property bool devToolsEnabled
             property bool compatibilityMode: true
-            property bool shouldShowFavoritesBar
+            property alias shouldShowFavoritesBar: ctrlShowFavoritesBar.checked
             property int useBrowserEthereumExplorer: Constants.browserEthereumExplorerEtherscan
             property int selectedBrowserSearchEngineId: SearchEnginesConfig.browserSearchEngineDuckDuckGo
             property string customSearchEngineUrl: "https://example.com/search?q="
@@ -143,8 +178,8 @@ SplitView {
     }
 
     ColumnLayout {
-        Layout.fillWidth: true
-        Layout.preferredHeight: 200
+        SplitView.fillWidth: true
+        SplitView.preferredHeight: 200
 
         RowLayout {
             Layout.fillWidth: true
@@ -162,12 +197,39 @@ SplitView {
                 ]
                 onCurrentValueChanged: browserLayout.reloadCurrentTab()
             }
+            Label {
+                id: userAgentString
+                text: browserLayout.userAgent
+            }
+            Button {
+                icon.name: "edit-copy"
+                onClicked: ClipboardUtils.setText(userAgentString.text)
+            }
         }
 
         Switch {
             id: ctrlIsMobile
-            text: "is mobile"
-            checked: false
+            text: "Is mobile"
+        }
+
+        Switch {
+            id: ctrlShowFavoritesBar
+            text: "Show favorites bar"
+        }
+
+        Switch {
+            id: ctrl3rdPartyServices
+            text: "3rd party services enabled"
+            checked: true
+        }
+
+        Button {
+            text: "Open some tabs"
+            onClicked: {
+                browserLayout.openUrlInNewTab("https://www.kde.org")
+                browserLayout.openUrlInNewTab("https://status.app")
+                browserLayout.openUrlInNewTab("https://www.google.com")
+            }
         }
     }
 }

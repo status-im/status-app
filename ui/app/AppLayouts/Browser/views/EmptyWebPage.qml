@@ -11,11 +11,11 @@ Rectangle {
     id: root
 
     property alias bookmarksModel: bookmarkListContainer.model
-    required property var favMenu
-    required property var addFavModal
     property var determineRealURLFn: function(url){}
 
     signal setCurrentWebUrl(url url)
+    signal addBookmarkRequested()
+    signal favMenuRequested(var parent, point pos, string url, string name)
 
     color: Theme.palette.background
 
@@ -37,19 +37,17 @@ Rectangle {
 
         anchors.horizontalCenter: emptyPageImage.horizontalCenter
         anchors.top: emptyPageImage.bottom
+        anchors.bottom: parent.bottom
         anchors.topMargin: 30
 
-        width: (parent.width < 700) ? (Math.floor(parent.width/cellWidth)*cellWidth) : 700
-        height: parent.height - emptyPageImage.height - 20
+        width: (parent.width < 600) ? (Math.floor(parent.width/cellWidth)*cellWidth) : 600
 
-        favMenu: root.favMenu
-        addFavModal: root.addFavModal
         determineRealURLFn: function(url) {
             return root.determineRealURLFn(url)
         }
-        setAsCurrentWebUrl: function(url) {
-            root.setCurrentWebUrl(url)
-        }
+        onSetCurrentWebUrl: url => root.setCurrentWebUrl(url)
+        onAddBookmarkRequested: root.addBookmarkRequested()
+        onFavMenuRequested: (parent, pos, url, name) => root.favMenuRequested(parent, pos, url, name)
     }
 }
 

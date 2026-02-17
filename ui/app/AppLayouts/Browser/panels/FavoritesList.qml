@@ -7,33 +7,35 @@ import utils
 import "../controls"
 
 StatusGridView {
-    id: bookmarkGrid
+    id: root
 
     property var determineRealURLFn: function(url){}
-    property var setAsCurrentWebUrl: function(url){}
-    property var favMenu
-    property var addFavModal
+
+    signal setCurrentWebUrl(url url)
+    signal addBookmarkRequested()
+    signal favMenuRequested(var parent, point pos, string url, string name)
 
     cellWidth: 100
     cellHeight: 100
 
     delegate: BookmarkButton {
-        id: bookmarkBtn
-        text: name
-        source: imageUrl
-        webUrl: determineRealURLFn(url)
+        required property var model
+        readonly property bool isAddBookmarkButton: model.url === Constants.newBookmark
+
+        text: model.name
+        source: model.imageUrl
+        webUrl: root.determineRealURLFn(model.url)
         onClicked: function(mouse) {
-            if (!webUrl.toString()) {
-                Global.openPopup(addFavModal)
+            if (isAddBookmarkButton) {
+                root.addBookmarkRequested()
             } else {
-                setAsCurrentWebUrl(webUrl)
+                root.setCurrentWebUrl(webUrl)
             }
         }
         onRightClicked: function(mouse) {
-            favMenu.url = url
-            favMenu.x = bookmarkGrid.x + bookmarkBtn.x + mouse.x
-            favMenu.y = Qt.binding(function () {return bookmarkGrid.y + mouse.y + favMenu.height})
-            favMenu.open()
+            if (isAddBookmarkButton)
+                return
+            root.favMenuRequested(this, Qt.point(mouse.x, mouse.y), model.url, model.name)
         }
     }
 }

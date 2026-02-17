@@ -2,6 +2,7 @@ import QtQuick
 
 import AppLayouts.Wallet.services.dapps
 import StatusQ.Core.Utils
+import StatusQ.Core.Theme
 
 import shared.stores
 import utils
@@ -58,7 +59,7 @@ DAppsModel {
                 "network/Network=WalletConnect",
                 "status-logo"
             ]
-            return dappImageByType[connectorId] || ""
+            return Assets.svg(dappImageByType[connectorId]) || ""
         }
         
         function refreshModel() {

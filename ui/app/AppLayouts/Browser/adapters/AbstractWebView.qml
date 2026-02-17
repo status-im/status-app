@@ -21,6 +21,7 @@ Item {
     readonly property var history: null
     readonly property url icon: ""
     readonly property bool htmlPageLoaded: false
+    readonly property var scrollPosition: Qt.point(0, 0)
 
     // === Capability Flags ===
     readonly property bool supportsZoom: false

@@ -1053,16 +1053,12 @@
 <context>
     <name>AddFavoriteModal</name>
     <message>
-        <source>Favourite added</source>
-        <translation>Oblíbené přidáno</translation>
+        <source>Edit bookmark</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Edit favourite</source>
-        <translation>Upravit oblíbené</translation>
-    </message>
-    <message>
-        <source>Add favourite</source>
-        <translation>Přidat oblíbené</translation>
+        <source>Add bookmark</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>URL</source>
@@ -1093,20 +1089,16 @@
         <translation>Zadejte prosím název</translation>
     </message>
     <message>
-        <source>Remove</source>
-        <translation>Odstranit</translation>
+        <source>Delete</source>
+        <translation type="unfinished">Smazat</translation>
     </message>
     <message>
-        <source>Done</source>
-        <translation>Hotovo</translation>
+        <source>Save changes</source>
+        <translation type="unfinished">Uložit změny</translation>
     </message>
     <message>
         <source>Add</source>
         <translation>Přidat</translation>
-    </message>
-    <message>
-        <source>Add Favourite</source>
-        <translation>Přidat oblíbené</translation>
     </message>
 </context>
 <context>
@@ -2713,11 +2705,11 @@ Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezp
         <translation type="unfinished">Přejít do anonymního režimu</translation>
     </message>
     <message>
-        <source>Favourited</source>
+        <source>Bookmarked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to favourites</source>
+        <source>Add to bookmarks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2729,12 +2721,24 @@ Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezp
         <translation type="unfinished">Stažené soubory</translation>
     </message>
     <message>
+        <source>Open Tabs view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Menu</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>BrowserLayout</name>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Stažené soubory</translation>
+    </message>
+    <message>
+        <source>Empty</source>
+        <translation type="unfinished">Prázdné</translation>
+    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certifikát serveru není důvěryhodný</translation>
@@ -2750,22 +2754,22 @@ Do you wish to override the security check and continue?</source>
 Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     </message>
     <message>
-        <source>Add Favourite</source>
-        <translation>Přidat oblíbené</translation>
+        <source>Add bookmark</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>BrowserPortraitToolbar</name>
     <message>
-        <source>Downloads View</source>
+        <source>Open Tabs view</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Favourited</source>
+        <source>Bookmarked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to favourites</source>
+        <source>Add to bookmarks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2894,12 +2898,12 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
 <context>
     <name>BrowserView</name>
     <message>
-        <source>Show Favorites Bar</source>
-        <translation>Zobrazit lištu oblíbených</translation>
-    </message>
-    <message>
         <source>Search engine for address bar</source>
         <translation>Vyhledávač pro adresní řádek</translation>
+    </message>
+    <message>
+        <source>Show bookmarks bar</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7831,6 +7835,13 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     </message>
 </context>
 <context>
+    <name>FeeRow</name>
+    <message>
+        <source>Max.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -8787,17 +8798,6 @@ L2 poplatek: %2</translation>
     </message>
 </context>
 <context>
-    <name>IntentionPanel</name>
-    <message>
-        <source>%1 wants you to %2 with %3</source>
-        <translation>%1 chce, abyste %2 s %3</translation>
-    </message>
-    <message>
-        <source>Only sign if you trust the dApp</source>
-        <translation>Podepisujte pouze pokud důvěřujete dApp</translation>
-    </message>
-</context>
-<context>
     <name>IntroMessageInput</name>
     <message>
         <source>Dialog for new members</source>
@@ -9192,6 +9192,10 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>PIN correct</source>
         <translation>PIN správný</translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
+        <translation type="unfinished">Keycard zablokována</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
@@ -11348,17 +11352,6 @@ selhalo</translation>
     <message>
         <source>Market Cap</source>
         <translation>Tržní kapitalizace</translation>
-    </message>
-</context>
-<context>
-    <name>MaxFeesDisplay</name>
-    <message>
-        <source>Max fees:</source>
-        <translation>Max. poplatky:</translation>
-    </message>
-    <message>
-        <source>No fees</source>
-        <translation>Žádné poplatky</translation>
     </message>
 </context>
 <context>
@@ -17680,6 +17673,37 @@ selhalo</translation>
 This action cannot be undone.</source>
         <translation>Opravdu chcete smazat toto zařízení?
 Tuto akci nelze vzít zpět.</translation>
+    </message>
+</context>
+<context>
+    <name>TabsBookmarksOverviewModal</name>
+    <message>
+        <source>Open tabs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in open tabs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edit bookmark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Hledat</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation type="unfinished">Přidat</translation>
     </message>
 </context>
 <context>

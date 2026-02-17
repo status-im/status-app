@@ -102,7 +102,7 @@ SplitView {
             }
 
             CheckBox {
-                text: "Should show Favorites bar"
+                text: "Should show bookmarks bar"
                 checked: mockData.accountSettings.shouldShowFavoritesBar
                 onToggled: mockData.accountSettings.shouldShowFavoritesBar = !mockData.accountSettings.shouldShowFavoritesBar
             }

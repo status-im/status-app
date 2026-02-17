@@ -15,7 +15,7 @@ import utils
 FocusScope {
     id: root
 
-    property alias currentIndex: tabBar.currentIndex
+    readonly property alias currentIndex: tabBar.currentIndex
     readonly property alias count: tabBar.count
     required property bool currentTabIncognito
     required property bool isMobile
@@ -47,7 +47,7 @@ FocusScope {
         tabBar.addItem(newTabButton)
 
         if (focusOnNewTab) {
-            tabBar.currentIndex = tabBar.count - 1
+            activateTab(tabBar.count - 1)
         }
     }
 
@@ -57,7 +57,11 @@ FocusScope {
     }
 
     function removeTab(index) {
-        tabBar.removeItem(tabBar.itemAt(index))
+        tabBar.takeItem(index).destroy()
+    }
+
+    function activateTab(index) {
+        tabBar.setCurrentIndex(index)
     }
 
     QtObject {

@@ -1288,19 +1288,14 @@
   <context>
     <name>AddFavoriteModal</name>
     <message>
-      <source>Favourite added</source>
+      <source>Edit bookmark</source>
       <comment>AddFavoriteModal</comment>
-      <translation>Favourite added</translation>
+      <translation>Edit bookmark</translation>
     </message>
     <message>
-      <source>Edit favourite</source>
+      <source>Add bookmark</source>
       <comment>AddFavoriteModal</comment>
-      <translation>Edit favourite</translation>
-    </message>
-    <message>
-      <source>Add favourite</source>
-      <comment>AddFavoriteModal</comment>
-      <translation>Add favourite</translation>
+      <translation>Add bookmark</translation>
     </message>
     <message>
       <source>URL</source>
@@ -1338,24 +1333,19 @@
       <translation>Please enter a name</translation>
     </message>
     <message>
-      <source>Remove</source>
+      <source>Delete</source>
       <comment>AddFavoriteModal</comment>
-      <translation>Remove</translation>
+      <translation>Delete</translation>
     </message>
     <message>
-      <source>Done</source>
+      <source>Save changes</source>
       <comment>AddFavoriteModal</comment>
-      <translation>Done</translation>
+      <translation>Save changes</translation>
     </message>
     <message>
       <source>Add</source>
       <comment>AddFavoriteModal</comment>
       <translation>Add</translation>
-    </message>
-    <message>
-      <source>Add Favourite</source>
-      <comment>AddFavoriteModal</comment>
-      <translation>Add Favourite</translation>
     </message>
   </context>
   <context>
@@ -3311,14 +3301,14 @@
       <translation>Go Incognito</translation>
     </message>
     <message>
-      <source>Favourited</source>
+      <source>Bookmarked</source>
       <comment>BrowserLandscapeToolbar</comment>
-      <translation>Favourited</translation>
+      <translation>Bookmarked</translation>
     </message>
     <message>
-      <source>Add to favourites</source>
+      <source>Add to bookmarks</source>
       <comment>BrowserLandscapeToolbar</comment>
-      <translation>Add to favourites</translation>
+      <translation>Add to bookmarks</translation>
     </message>
     <message>
       <source>Wallet</source>
@@ -3331,6 +3321,11 @@
       <translation>Downloads</translation>
     </message>
     <message>
+      <source>Open Tabs view</source>
+      <comment>BrowserLandscapeToolbar</comment>
+      <translation>Open Tabs view</translation>
+    </message>
+    <message>
       <source>Menu</source>
       <comment>BrowserLandscapeToolbar</comment>
       <translation>Menu</translation>
@@ -3338,6 +3333,16 @@
   </context>
   <context>
     <name>BrowserLayout</name>
+    <message>
+      <source>Downloads</source>
+      <comment>BrowserLayout</comment>
+      <translation>Downloads</translation>
+    </message>
+    <message>
+      <source>Empty</source>
+      <comment>BrowserLayout</comment>
+      <translation>Empty</translation>
+    </message>
     <message>
       <source>Server&#39;s certificate not trusted</source>
       <comment>BrowserLayout</comment>
@@ -3354,27 +3359,27 @@
       <translation>If you wish so, you may continue with an unverified certificate. Accepting an unverified certificate means you may not be connected with the host you tried to connect to.&#xA;Do you wish to override the security check and continue?</translation>
     </message>
     <message>
-      <source>Add Favourite</source>
+      <source>Add bookmark</source>
       <comment>BrowserLayout</comment>
-      <translation>Add Favourite</translation>
+      <translation>Add bookmark</translation>
     </message>
   </context>
   <context>
     <name>BrowserPortraitToolbar</name>
     <message>
-      <source>Downloads View</source>
+      <source>Open Tabs view</source>
       <comment>BrowserPortraitToolbar</comment>
-      <translation>Downloads View</translation>
+      <translation>Open Tabs view</translation>
     </message>
     <message>
-      <source>Favourited</source>
+      <source>Bookmarked</source>
       <comment>BrowserPortraitToolbar</comment>
-      <translation>Favourited</translation>
+      <translation>Bookmarked</translation>
     </message>
     <message>
-      <source>Add to favourites</source>
+      <source>Add to bookmarks</source>
       <comment>BrowserPortraitToolbar</comment>
-      <translation>Add to favourites</translation>
+      <translation>Add to bookmarks</translation>
     </message>
     <message>
       <source>Back</source>
@@ -3529,14 +3534,14 @@
   <context>
     <name>BrowserView</name>
     <message>
-      <source>Show Favorites Bar</source>
-      <comment>BrowserView</comment>
-      <translation>Show Favorites Bar</translation>
-    </message>
-    <message>
       <source>Search engine for address bar</source>
       <comment>BrowserView</comment>
       <translation>Search engine for address bar</translation>
+    </message>
+    <message>
+      <source>Show bookmarks bar</source>
+      <comment>BrowserView</comment>
+      <translation>Show bookmarks bar</translation>
     </message>
   </context>
   <context>
@@ -9515,6 +9520,14 @@
     </message>
   </context>
   <context>
+    <name>FeeRow</name>
+    <message>
+      <source>Max.</source>
+      <comment>FeeRow</comment>
+      <translation>Max.</translation>
+    </message>
+  </context>
+  <context>
     <name>FeesBox</name>
     <message>
       <source>Fees</source>
@@ -10672,19 +10685,6 @@
     </message>
   </context>
   <context>
-    <name>IntentionPanel</name>
-    <message>
-      <source>%1 wants you to %2 with %3</source>
-      <comment>IntentionPanel</comment>
-      <translation>%1 wants you to %2 with %3</translation>
-    </message>
-    <message>
-      <source>Only sign if you trust the dApp</source>
-      <comment>IntentionPanel</comment>
-      <translation>Only sign if you trust the dApp</translation>
-    </message>
-  </context>
-  <context>
     <name>IntroMessageInput</name>
     <message>
       <source>Dialog for new members</source>
@@ -11147,6 +11147,11 @@
       <source>PIN correct</source>
       <comment>KeycardEnterPinPage</comment>
       <translation>PIN correct</translation>
+    </message>
+    <message>
+      <source>Keycard blocked</source>
+      <comment>KeycardEnterPinPage</comment>
+      <translation>Keycard blocked</translation>
     </message>
     <message numerus="yes">
       <source>%n attempt(s) remaining</source>
@@ -13708,19 +13713,6 @@
       <source>Market Cap</source>
       <comment>MarketTokenHeader</comment>
       <translation>Market Cap</translation>
-    </message>
-  </context>
-  <context>
-    <name>MaxFeesDisplay</name>
-    <message>
-      <source>Max fees:</source>
-      <comment>MaxFeesDisplay</comment>
-      <translation>Max fees:</translation>
-    </message>
-    <message>
-      <source>No fees</source>
-      <comment>MaxFeesDisplay</comment>
-      <translation>No fees</translation>
     </message>
   </context>
   <context>
@@ -21367,6 +21359,44 @@
       <source>Are you sure you want to delete this device?&#xA;This action cannot be undone.</source>
       <comment>SyncingView</comment>
       <translation>Are you sure you want to delete this device?&#xA;This action cannot be undone.</translation>
+    </message>
+  </context>
+  <context>
+    <name>TabsBookmarksOverviewModal</name>
+    <message>
+      <source>Open tabs</source>
+      <comment>TabsBookmarksOverviewModal</comment>
+      <translation>Open tabs</translation>
+    </message>
+    <message>
+      <source>Bookmarks</source>
+      <comment>TabsBookmarksOverviewModal</comment>
+      <translation>Bookmarks</translation>
+    </message>
+    <message>
+      <source>Search in open tabs</source>
+      <comment>TabsBookmarksOverviewModal</comment>
+      <translation>Search in open tabs</translation>
+    </message>
+    <message>
+      <source>Search in bookmarks</source>
+      <comment>TabsBookmarksOverviewModal</comment>
+      <translation>Search in bookmarks</translation>
+    </message>
+    <message>
+      <source>Edit bookmark</source>
+      <comment>TabsBookmarksOverviewModal</comment>
+      <translation>Edit bookmark</translation>
+    </message>
+    <message>
+      <source>Search</source>
+      <comment>TabsBookmarksOverviewModal</comment>
+      <translation>Search</translation>
+    </message>
+    <message>
+      <source>Add</source>
+      <comment>TabsBookmarksOverviewModal</comment>
+      <translation>Add</translation>
     </message>
   </context>
   <context>

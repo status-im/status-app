@@ -3,17 +3,16 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import utils
-import StatusQ.Core.Utils as SQUtils
 
 import AppLayouts.Browser.adapters
 
-Item {
+QtObject {
     id: root
-    visible: false
 
     required property bool thirdpartyServicesEnabled
     required property bool isDebugEnabled
     required property bool isMobile
+    required property bool hasPopups
 
     required property var browserSettings
     required property var webChannel
@@ -111,6 +110,12 @@ Item {
         currentWebView.goForward()
     }
 
+    function goBackOrForwardCurrent(offset) {
+        if (!currentWebView)
+            return
+        currentWebView.goBackOrForward(offset)
+    }
+
     function reloadCurrent() {
         if (!currentWebView)
             return
@@ -173,10 +178,9 @@ Item {
         view.destroy()
     }
 
-    Component {
-        id: webViewAdapterComponent
+    readonly property var webViewAdapterComponent: Component {
         WebViewAdapter {
-            visible: !SQUtils.Utils.hasPopups(root.Overlay.overlay.children) || !root.isMobile
+            visible: !root.hasPopups || !root.isMobile
             enabled: visible
 
             bookmarksStore: root.bookmarksStore

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import StatusQ.Components
+import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Popups.Dialog
 
@@ -15,6 +16,7 @@ StatusDialog {
 
     title: qsTr("Browser")
     padding: 0
+    verticalPadding: Theme.halfPadding
     footer: null
 
     contentItem: ColumnLayout {
@@ -43,6 +45,5 @@ StatusDialog {
                 root.close()
             }
         }
-        Item { Layout.fillHeight: true }
     }
 }

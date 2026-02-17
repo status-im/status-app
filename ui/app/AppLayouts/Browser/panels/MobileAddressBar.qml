@@ -74,7 +74,7 @@ Control {
                     selectAll()
                 } else {
                     if (text === "") // restore the old URL
-                        text = root.url
+                        text = Qt.binding(() => root.url)
                 }
             }
 
@@ -83,13 +83,14 @@ Control {
 
             StatusRoundedImage {
                 id: favicon
-                height: root.faviconImage ? parent.height : 20
+                height: parent.height/2
                 width: height
                 anchors.left: parent.left
-                anchors.leftMargin: root.faviconImage ? 0 : Theme.halfPadding
+                anchors.leftMargin: Theme.halfPadding
                 anchors.verticalCenter: parent.verticalCenter
                 image.sourceSize: Qt.size(width, height)
-                image.source: root.faviconImage || Assets.svg("globe") // FIXME include the search engine icon
+                image.source: root.url.toString() === "" || root.faviconImage === "" ? Assets.svg("globe")
+                                                                                     : root.faviconImage // FIXME include the search engine icon
             }
 
             StatusClearButton {

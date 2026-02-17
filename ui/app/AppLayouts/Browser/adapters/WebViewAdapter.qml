@@ -26,6 +26,7 @@ AbstractWebView {
     readonly property alias history: webView.history
     readonly property alias icon: webView.icon
     readonly property alias htmlPageLoaded: webView.htmlPageLoaded
+    readonly property alias scrollPosition: webView.scrollPosition
 
     // Capability flags for WebEngine
     readonly property bool supportsZoom: true

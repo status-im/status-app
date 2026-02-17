@@ -31,8 +31,7 @@ BrowserToolbarBase {
             tooltip.text: qsTr("Back")
 
             onClicked: root.requestGoBack()
-            onContextMenuRequested: root.requestHistoryPopup()
-            onPressAndHold: root.requestHistoryPopup()
+            onContextMenuRequested: (parent, pos) => root.requestHistoryPopup(parent, pos)
         }
 
         LandscapeToolbarButton {
@@ -42,8 +41,7 @@ BrowserToolbarBase {
             tooltip.text: qsTr("Forward")
 
             onClicked: root.requestGoForward()
-            onContextMenuRequested: root.requestHistoryPopup()
-            onPressAndHold: root.requestHistoryPopup()
+            onContextMenuRequested: (parent, pos) => root.requestHistoryPopup(parent, pos)
         }
 
         LandscapeToolbarButton {
@@ -97,7 +95,7 @@ BrowserToolbarBase {
                     selectAll()
                 } else {
                     if (text === "") // restore the old URL
-                        text = root.url
+                        text = Qt.binding(() => root.url)
                 }
             }
             onAccepted: root.requestLaunchInBrowser(text)
@@ -119,8 +117,8 @@ BrowserToolbarBase {
         LandscapeToolbarButton {
             incognitoMode: root.currentTabIncognito
             icon.name: root.currentTabIsBookmark ? "bookmark-added" : "bookmark"
-            tooltip.text: root.currentTabIsBookmark ? qsTr("Favourited") : qsTr("Add to favourites")
-            onClicked: root.addBookmarkRequested()
+            tooltip.text: root.currentTabIsBookmark ? qsTr("Bookmarked") : qsTr("Add to bookmarks")
+            onClicked: root.currentTabIsBookmark ? root.editBookmarkRequested() : root.addBookmarkRequested()
         }
 
         Divider {}
@@ -163,10 +161,28 @@ BrowserToolbarBase {
 
         LandscapeToolbarButton {
             incognitoMode: root.currentTabIncognito
+            icon.name: "open-tabs"
+            tooltip.text: qsTr("Open Tabs view")
+            onClicked: root.requestAllOpenTabsView()
+
+            StatusBaseText {
+                anchors.centerIn: parent
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+
+                font.pixelSize: Theme.fontSize(11)
+                color: parent.asset.color
+                font.weight: Font.DemiBold
+                text: root.openTabsCount
+            }
+        }
+
+        LandscapeToolbarButton {
+            incognitoMode: root.currentTabIncognito
             asset.rotation: 90
             icon.name: "more"
             tooltip.text: qsTr("Menu")
-            onClicked: root.openSettingMenu(this)
+            onClicked: root.openSettingMenu(this, Qt.point(pressX, pressY))
         }
     }
 
@@ -178,5 +194,6 @@ BrowserToolbarBase {
 
     component LandscapeToolbarButton: BrowserHeaderButton {
         tooltip.orientation: StatusToolTip.Orientation.Bottom
+        tooltip.y: height + Theme.padding
     }
 }

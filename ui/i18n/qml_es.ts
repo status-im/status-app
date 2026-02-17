@@ -1053,16 +1053,12 @@
 <context>
     <name>AddFavoriteModal</name>
     <message>
-        <source>Favourite added</source>
-        <translation>Favorito agregado</translation>
+        <source>Edit bookmark</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Edit favourite</source>
-        <translation>Editar favorito</translation>
-    </message>
-    <message>
-        <source>Add favourite</source>
-        <translation>Agregar favorito</translation>
+        <source>Add bookmark</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>URL</source>
@@ -1093,20 +1089,16 @@
         <translation>Por favor escribe un nombre</translation>
     </message>
     <message>
-        <source>Remove</source>
-        <translation>Eliminar</translation>
+        <source>Delete</source>
+        <translation type="unfinished">Eliminar</translation>
     </message>
     <message>
-        <source>Done</source>
-        <translation>Listo</translation>
+        <source>Save changes</source>
+        <translation type="unfinished">Guardar cambios</translation>
     </message>
     <message>
         <source>Add</source>
         <translation>Agregar</translation>
-    </message>
-    <message>
-        <source>Add Favourite</source>
-        <translation>Agregar favorito</translation>
     </message>
 </context>
 <context>
@@ -2706,11 +2698,11 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
         <translation type="unfinished">Ir a modo incógnito</translation>
     </message>
     <message>
-        <source>Favourited</source>
+        <source>Bookmarked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to favourites</source>
+        <source>Add to bookmarks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2722,12 +2714,24 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
         <translation type="unfinished">Descargas</translation>
     </message>
     <message>
+        <source>Open Tabs view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Menu</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>BrowserLayout</name>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Descargas</translation>
+    </message>
+    <message>
+        <source>Empty</source>
+        <translation type="unfinished">Vacío</translation>
+    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certificado del servidor no confiable</translation>
@@ -2743,22 +2747,22 @@ Do you wish to override the security check and continue?</source>
 ¿Deseas omitir la verificación de seguridad y continuar?</translation>
     </message>
     <message>
-        <source>Add Favourite</source>
-        <translation type="unfinished">Agregar favorito</translation>
+        <source>Add bookmark</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>BrowserPortraitToolbar</name>
     <message>
-        <source>Downloads View</source>
+        <source>Open Tabs view</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Favourited</source>
+        <source>Bookmarked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to favourites</source>
+        <source>Add to bookmarks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2891,8 +2895,8 @@ Do you wish to override the security check and continue?</source>
         <translation>Motor de búsqueda para la barra de direcciones</translation>
     </message>
     <message>
-        <source>Show Favorites Bar</source>
-        <translation>Mostrar barra de favoritos</translation>
+        <source>Show bookmarks bar</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7804,6 +7808,13 @@ Por favor, agrégala e intenta de nuevo.</translation>
     </message>
 </context>
 <context>
+    <name>FeeRow</name>
+    <message>
+        <source>Max.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -8758,17 +8769,6 @@ Tarifa L2: %2</translation>
     </message>
 </context>
 <context>
-    <name>IntentionPanel</name>
-    <message>
-        <source>%1 wants you to %2 with %3</source>
-        <translation>%1 quiere que %2 con %3</translation>
-    </message>
-    <message>
-        <source>Only sign if you trust the dApp</source>
-        <translation>Solo firma si confías en la dApp</translation>
-    </message>
-</context>
-<context>
     <name>IntroMessageInput</name>
     <message>
         <source>Dialog for new members</source>
@@ -9155,6 +9155,10 @@ Are you sure you want to do this?</source>
     <message>
         <source>PIN correct</source>
         <translation>PIN correcto</translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
@@ -11276,17 +11280,6 @@ al cargar</translation>
     <message>
         <source>Market Cap</source>
         <translation>Market Cap</translation>
-    </message>
-</context>
-<context>
-    <name>MaxFeesDisplay</name>
-    <message>
-        <source>Max fees:</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>No fees</source>
-        <translation>Sin comisiones</translation>
     </message>
 </context>
 <context>
@@ -17582,6 +17575,37 @@ al cargar</translation>
         <source>Are you sure you want to delete this device?
 This action cannot be undone.</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TabsBookmarksOverviewModal</name>
+    <message>
+        <source>Open tabs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in open tabs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edit bookmark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Buscar</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation type="unfinished">Agregar</translation>
     </message>
 </context>
 <context>

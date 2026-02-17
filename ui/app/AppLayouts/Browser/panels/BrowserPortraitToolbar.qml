@@ -25,6 +25,8 @@ BrowserToolbarBase {
 
             StatusBaseText {
                 anchors.centerIn: parent
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
 
                 font.pixelSize: Theme.fontSize(11)
                 color: parent.asset.color
@@ -38,8 +40,8 @@ BrowserToolbarBase {
         BrowserHeaderButton {
             incognitoMode: root.currentTabIncognito
             icon.name: root.currentTabIsBookmark ? "bookmark-added" : "bookmark"
-            tooltip.text: root.currentTabIsBookmark ? qsTr("Favourited") : qsTr("Add to favourites")
-            onClicked: root.addBookmarkRequested()
+            tooltip.text: root.currentTabIsBookmark ? qsTr("Bookmarked") : qsTr("Add to bookmarks")
+            onClicked: root.currentTabIsBookmark ? root.editBookmarkRequested() : root.addBookmarkRequested()
         }
 
         Item { Layout.fillWidth: true }
@@ -51,8 +53,7 @@ BrowserToolbarBase {
             tooltip.text: qsTr("Back")
 
             onClicked: root.requestGoBack()
-            onContextMenuRequested: root.requestHistoryPopup()
-            onPressAndHold: root.requestHistoryPopup()
+            onContextMenuRequested: (parent, pos) => root.requestHistoryPopup(parent, pos)
         }
 
         Item { Layout.fillWidth: true }
@@ -73,8 +74,7 @@ BrowserToolbarBase {
             tooltip.text: qsTr("Forward")
 
             onClicked: root.requestGoForward()
-            onContextMenuRequested: root.requestHistoryPopup()
-            onPressAndHold: root.requestHistoryPopup()
+            onContextMenuRequested: (parent, pos) => root.requestHistoryPopup(parent, pos)
         }
 
         Item { Layout.fillWidth: true }
@@ -93,7 +93,7 @@ BrowserToolbarBase {
             asset.rotation: 90
             icon.name: "more"
             tooltip.text: qsTr("Menu")
-            onClicked: root.openSettingMenu(this)
+            onClicked: root.openSettingMenu(this, Qt.point(pressX, pressY))
         }
     }
 }

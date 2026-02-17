@@ -6,6 +6,7 @@ import StatusQ.Core.Theme
 
 Action {
     Theme.style: parent?.Theme.style ?? Theme.Style.Light
+    Theme.fontSizeOffset: parent?.Theme.fontSizeOffset ?? 0
 
     id: root
 
@@ -29,7 +30,9 @@ Action {
         hoverColor: root.Theme.palette.statusMenu.hoverBackgroundColor
     }
 
-    property StatusFontSettings fontSettings: StatusFontSettings {}
+    property StatusFontSettings fontSettings: StatusFontSettings {
+        Theme.fontSizeOffset: root.Theme.fontSizeOffset
+    }
 
     icon.color: {
         if (!root.enabled)

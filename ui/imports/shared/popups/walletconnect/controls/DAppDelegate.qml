@@ -113,7 +113,7 @@ StatusMouseArea {
 
             onClicked: {
                 root.disconnectDapp(root.topic)
-        }
+            }
         }
     }
 }

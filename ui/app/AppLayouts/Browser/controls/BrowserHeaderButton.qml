@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 
 import StatusQ.Core.Theme
 import StatusQ.Controls
@@ -7,7 +8,7 @@ StatusFlatButton {
     id: root
 
     property bool incognitoMode: false
-    signal contextMenuRequested()
+    signal contextMenuRequested(var parent, point pos)
 
     // as per design
     implicitWidth: 36
@@ -27,13 +28,10 @@ StatusFlatButton {
                     Theme.palette.privacyColors.secondary:
                     Theme.palette.baseColor2
 
-    TapHandler {
-        acceptedButtons: Qt.RightButton
-        onTapped: function(eventPoint) {
-            /* prevents propagation, so that webengines
-            default context menus is not launched here */
-            eventPoint.accepted = true
-            root.contextMenuRequested()
-        }
+    ContextMenu.onRequested: function(pos) {
+        if (!root.enabled || !root.interactive)
+            return
+        root.contextMenuRequested(this, pos)
     }
+    onPressAndHold: root.contextMenuRequested(this, Qt.point(pressX, pressY))
 }

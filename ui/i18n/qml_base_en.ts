@@ -1053,15 +1053,11 @@
 <context>
     <name>AddFavoriteModal</name>
     <message>
-        <source>Favourite added</source>
+        <source>Edit bookmark</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Edit favourite</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Add favourite</source>
+        <source>Add bookmark</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1093,19 +1089,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Remove</source>
+        <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Done</source>
+        <source>Save changes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Add</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Add Favourite</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2703,11 +2695,11 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Favourited</source>
+        <source>Bookmarked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to favourites</source>
+        <source>Add to bookmarks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2719,12 +2711,24 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Open Tabs view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Menu</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>BrowserLayout</name>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Empty</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation type="unfinished"></translation>
@@ -2739,22 +2743,22 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add Favourite</source>
+        <source>Add bookmark</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>BrowserPortraitToolbar</name>
     <message>
-        <source>Downloads View</source>
+        <source>Open Tabs view</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Favourited</source>
+        <source>Bookmarked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to favourites</source>
+        <source>Add to bookmarks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2883,11 +2887,11 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>BrowserView</name>
     <message>
-        <source>Show Favorites Bar</source>
+        <source>Search engine for address bar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Search engine for address bar</source>
+        <source>Show bookmarks bar</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7790,6 +7794,13 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
+    <name>FeeRow</name>
+    <message>
+        <source>Max.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -8743,17 +8754,6 @@ L2 fee: %2</source>
     </message>
 </context>
 <context>
-    <name>IntentionPanel</name>
-    <message>
-        <source>%1 wants you to %2 with %3</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Only sign if you trust the dApp</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>IntroMessageInput</name>
     <message>
         <source>Dialog for new members</source>
@@ -9139,6 +9139,10 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>PIN correct</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -11258,17 +11262,6 @@ to load</source>
     </message>
     <message>
         <source>Market Cap</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>MaxFeesDisplay</name>
-    <message>
-        <source>Max fees:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>No fees</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -17561,6 +17554,37 @@ to load</source>
     <message>
         <source>Are you sure you want to delete this device?
 This action cannot be undone.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TabsBookmarksOverviewModal</name>
+    <message>
+        <source>Open tabs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in open tabs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edit bookmark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

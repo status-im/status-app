@@ -113,11 +113,17 @@ LayoutChooser {
     */
     property bool showFooter: true
     /*!
-        \qmlproperty int StatusSectionLayout::headerPadding
+        \qmlproperty real StatusSectionLayout::headerPadding
         This property sets the padding for the header component
         Default value is Theme.halfPadding.
     */
-    property int headerPadding: Theme.halfPadding
+    property real headerPadding: Theme.halfPadding
+    /*!
+        \qmlproperty int StatusSectionLayout::leftPadding
+        This property sets the left padding for the portrait view
+        Default value is the indicator width + standard padding as left margin
+    */
+    property alias leftPortraitPadding: portraitView.leftPadding
     /*!
         \qmlproperty string StatusSectionLayout::backButtonName
         This property holds a reference to the backButtonName property of the

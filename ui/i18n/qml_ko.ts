@@ -1053,16 +1053,12 @@
 <context>
     <name>AddFavoriteModal</name>
     <message>
-        <source>Favourite added</source>
-        <translation>즐겨찾기에 추가됨</translation>
+        <source>Edit bookmark</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Edit favourite</source>
-        <translation>즐겨찾기 편집</translation>
-    </message>
-    <message>
-        <source>Add favourite</source>
-        <translation>즐겨찾기 추가</translation>
+        <source>Add bookmark</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>URL</source>
@@ -1093,20 +1089,16 @@
         <translation>이름을 입력하세요</translation>
     </message>
     <message>
-        <source>Remove</source>
-        <translation>제거</translation>
+        <source>Delete</source>
+        <translation type="unfinished">삭제</translation>
     </message>
     <message>
-        <source>Done</source>
-        <translation>완료</translation>
+        <source>Save changes</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Add</source>
         <translation>추가</translation>
-    </message>
-    <message>
-        <source>Add Favourite</source>
-        <translation>즐겨찾기 추가</translation>
     </message>
 </context>
 <context>
@@ -2698,11 +2690,11 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
         <translation type="unfinished">시크릿 모드로 전환</translation>
     </message>
     <message>
-        <source>Favourited</source>
+        <source>Bookmarked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to favourites</source>
+        <source>Add to bookmarks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2714,12 +2706,24 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
         <translation type="unfinished">다운로드</translation>
     </message>
     <message>
+        <source>Open Tabs view</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Menu</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>BrowserLayout</name>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">다운로드</translation>
+    </message>
+    <message>
+        <source>Empty</source>
+        <translation type="unfinished">비어 있음</translation>
+    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>서버의 인증서를 신뢰할 수 없습니다</translation>
@@ -2735,22 +2739,22 @@ Do you wish to override the security check and continue?</source>
 보안 검사를 무시하고 계속하시겠습니까?</translation>
     </message>
     <message>
-        <source>Add Favourite</source>
-        <translation type="unfinished">즐겨찾기 추가</translation>
+        <source>Add bookmark</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>BrowserPortraitToolbar</name>
     <message>
-        <source>Downloads View</source>
+        <source>Open Tabs view</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Favourited</source>
+        <source>Bookmarked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add to favourites</source>
+        <source>Add to bookmarks</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2879,12 +2883,12 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>BrowserView</name>
     <message>
-        <source>Show Favorites Bar</source>
-        <translation>즐겨찾기 표시줄 표시</translation>
-    </message>
-    <message>
         <source>Search engine for address bar</source>
         <translation>주소 표시줄 검색 엔진</translation>
+    </message>
+    <message>
+        <source>Show bookmarks bar</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7776,6 +7780,13 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
+    <name>FeeRow</name>
+    <message>
+        <source>Max.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -8728,17 +8739,6 @@ L2 수수료: %2</translation>
     </message>
 </context>
 <context>
-    <name>IntentionPanel</name>
-    <message>
-        <source>%1 wants you to %2 with %3</source>
-        <translation>%1님이 %3와(과) 함께 %2 하자고 요청했어요</translation>
-    </message>
-    <message>
-        <source>Only sign if you trust the dApp</source>
-        <translation>신뢰하는 dApp에만 서명하세요</translation>
-    </message>
-</context>
-<context>
     <name>IntroMessageInput</name>
     <message>
         <source>Dialog for new members</source>
@@ -9121,6 +9121,10 @@ Are you sure you want to do this?</source>
     <message>
         <source>PIN correct</source>
         <translation>PIN이 올바릅니다</translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
+        <translation type="unfinished">Keycard가 차단됨</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
@@ -11245,17 +11249,6 @@ to load</source>
     <message>
         <source>Market Cap</source>
         <translation>시가총액</translation>
-    </message>
-</context>
-<context>
-    <name>MaxFeesDisplay</name>
-    <message>
-        <source>Max fees:</source>
-        <translation>최대 수수료:</translation>
-    </message>
-    <message>
-        <source>No fees</source>
-        <translation>수수료 없음</translation>
     </message>
 </context>
 <context>
@@ -17526,6 +17519,37 @@ to load</source>
         <source>Are you sure you want to delete this device?
 This action cannot be undone.</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TabsBookmarksOverviewModal</name>
+    <message>
+        <source>Open tabs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in open tabs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search in bookmarks</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Edit bookmark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">검색</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation type="unfinished">추가</translation>
     </message>
 </context>
 <context>

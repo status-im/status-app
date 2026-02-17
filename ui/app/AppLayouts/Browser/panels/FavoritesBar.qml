@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -13,11 +14,11 @@ Rectangle {
     property alias bookmarkModel: bookmarkList.model
 
     property bool currentTabIncognito: false
-    property var favoritesMenu
 
-    signal addFavModalRequested()
+    signal addBookmarkRequested()
     signal setAsCurrentWebUrl(url url)
     signal openInNewTab(url url)
+    signal favMenuRequested(var parent, point pos, string url, string name)
 
     color: root.currentTabIncognito ?
                Theme.palette.privacyColors.primary:
@@ -40,35 +41,30 @@ Rectangle {
             //  implicitWidth doesn't work. Also avoid breaking visualization by escaping HTML
             text: SQUtils.StringUtils.escapeHtml(Utils.elideIfTooLong(name, 40))
 
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                cursorShape: containsMouse ? Qt.PointingHandCursor : undefined
-                z: 51
-                onClicked: function (mouse) {
-                    const isAddBookmarkButton = model.url === Constants.newBookmark
-                    if (mouse.button === Qt.RightButton && isAddBookmarkButton) {
-                        return
-                    }
+            readonly property bool isAddBookmarkButton: model.url === Constants.newBookmark
 
-                    if (mouse.button === Qt.RightButton) {
-                        favoritesMenu.url = model.url
-                        favoritesMenu.x = favoriteBtn.x + mouse.x
-                        favoritesMenu.y = Qt.binding(function () {return mouse.y + favoritesMenu.height})
-                        favoritesMenu.open()
-                        return
-                    }
+            onClicked: {
+                if (isAddBookmarkButton)
+                    root.addBookmarkRequested()
+                else
+                    root.setAsCurrentWebUrl(model.url)
+            }
+            ContextMenu.onRequested: function(pos) {
+                if (favoriteBtn.isAddBookmarkButton)
+                    return
+                root.favMenuRequested(this, pos, model.url, model.name)
+            }
+            onPressAndHold: {
+                if (favoriteBtn.isAddBookmarkButton)
+                    return
+                root.favMenuRequested(this, Qt.point(pressX, pressY), model.url, model.name)
+            }
 
-                    if (isAddBookmarkButton) {
-                        root.addFavModalRequested()
-                        return
-                    }
-
-                    if (mouse.button === Qt.LeftButton)
-                        root.setAsCurrentWebUrl(model.url)
-                    else if (mouse.button === Qt.MiddleButton)
-                        root.openInNewTab(model.url)
+            TapHandler {
+                acceptedButtons: Qt.MiddleButton
+                onTapped: function(eventPoint) {
+                    eventPoint.accepted = true
+                    root.openInNewTab(model.url)
                 }
             }
         }

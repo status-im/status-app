@@ -7,3 +7,4 @@ FavoriteMenu 1.0 FavoriteMenu.qml
 BrowserWalletMenu 1.0 BrowserWalletMenu.qml
 DownloadMenu 1.0 DownloadMenu.qml
 MobileSettingsMenu 1.0 MobileSettingsMenu.qml
+TabsBookmarksOverviewModal 1.0 TabsBookmarksOverviewModal.qml

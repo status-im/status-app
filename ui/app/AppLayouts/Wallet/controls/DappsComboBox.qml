@@ -128,6 +128,6 @@ ComboBox {
         visible: root.hovered && !root.down
         text: qsTr("dApp connections")
         orientation: StatusToolTip.Orientation.Bottom
-        y: root.height + 14
+        y: root.height + Theme.padding
     }
 }

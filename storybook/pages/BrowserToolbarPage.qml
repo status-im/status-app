@@ -19,6 +19,20 @@ SplitView {
 
     orientation: Qt.Vertical
 
+    ListModel {
+        id: mockDAppModel
+        ListElement {name: "DApp One"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
+        ListElement {name: "DApp Two"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
+        ListElement {name: "DApp Three"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
+    }
+
+    ListModel {
+        id: mockHistoryModel
+        ListElement { title: "Previous item"; offset: -1 }
+        ListElement { title: "This item"; offset: 0 }
+        ListElement { title: "Next item"; offset: 1 }
+    }
+
     Rectangle {
         SplitView.fillWidth: true
         SplitView.fillHeight: true
@@ -41,11 +55,8 @@ SplitView {
 
                 canGoBack: true
                 canGoForward: true
-                browserDappsModel: ListModel {
-                    ListElement {name: "DApp One"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
-                    ListElement {name: "DApp Two"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
-                    ListElement {name: "DApp Three"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
-                }
+                browserDappsModel: mockDAppModel
+                historyModel: mockHistoryModel
 
                 onRequestAllOpenTabsView: () => {
                                               logs.logEvent("browser::requestAllOpenTabsView")
@@ -62,9 +73,6 @@ SplitView {
                                          logs.logEvent("browser::requestReloadPage")
                                          currentTabLoading = true
                                      }
-                onRequestHistoryPopup: () => {
-                                           logs.logEvent("browser::requestHistoryPopup")
-                                       }
                 onRequestGoForward: () => {
                                         logs.logEvent("browser::requestGoForward")
                                     }
@@ -111,11 +119,8 @@ SplitView {
 
                 canGoBack: true
                 canGoForward: true
-                browserDappsModel: ListModel {
-                    ListElement {name: "DApp One"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
-                    ListElement {name: "DApp Two"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
-                    ListElement {name: "DApp Three"; url: "https://dapp.one"; iconUrl: "qrc:/assets/dapp1.png"; connectorBadge: "qrc:/assets/walletconnect_badge.png" }
-                }
+                browserDappsModel: mockDAppModel
+                historyModel: mockHistoryModel
 
                 onRequestAllOpenTabsView: () => {
                                               logs.logEvent("browser::requestAllOpenTabsView")
@@ -132,9 +137,6 @@ SplitView {
                                          logs.logEvent("browser::requestReloadPage")
                                          currentTabLoading = true
                                      }
-                onRequestHistoryPopup: () => {
-                                           logs.logEvent("browser::requestHistoryPopup")
-                                       }
                 onRequestGoForward: () => {
                                         logs.logEvent("browser::requestGoForward")
                                     }

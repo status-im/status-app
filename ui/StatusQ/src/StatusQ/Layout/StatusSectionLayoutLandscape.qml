@@ -111,11 +111,11 @@ Control {
     property bool showFooter: true
 
     /*!
-        \qmlproperty int StatusSectionLayout::headerPadding
+        \qmlproperty real StatusSectionLayout::headerPadding
         This property sets the padding for the header component
         Default value is Theme.halfPadding.
     */
-    property int headerPadding: Theme.halfPadding
+    property real headerPadding: Theme.halfPadding
 
     /*!
         \qmlproperty alias StatusSectionLayout::backButtonName

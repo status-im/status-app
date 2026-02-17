@@ -9,7 +9,6 @@ import utils
 Pane {
     readonly property var assetsData: [
         {
-            tokensKey: "key_1",
             communityId: "",
             name: "Status Test Token",
             currencyBalanceAsString: "42,23 USD",
@@ -33,7 +32,6 @@ Pane {
             ]
         },
         {
-            tokensKey: "key_2",
             communityId: "",
             name: "Ether",
             currencyBalanceAsString: "4 276,86 USD",
@@ -57,7 +55,6 @@ Pane {
             ]
         },
         {
-            tokensKey: "key_2",
             communityId: "",
             name: "Dai Stablecoin",
             currencyBalanceAsString: "45,92 USD",

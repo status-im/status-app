@@ -1906,6 +1906,7 @@ Item {
                                 networksStore: appMain.networksStore
                                 connectorController: WalletStores.RootStore.dappsConnectorController
                                 isDebugEnabled: appMain.advancedStore.isDebugEnabled
+                                leftPortraitPadding: 0
 
                                 transactionStore: appMain.transactionStore
                                 onSendToRecipientRequested: (address) => popupRequestsHandler.sendModalHandler.sendToRecipient(address)

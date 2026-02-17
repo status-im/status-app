@@ -30,7 +30,7 @@ private slots:
     void onMeteredChanged();
 
 private:
-    QNetworkInformation* m_netinfo;
+    QNetworkInformation* m_netinfo{nullptr};
 
     bool m_online{true};
     bool isOnline() const;

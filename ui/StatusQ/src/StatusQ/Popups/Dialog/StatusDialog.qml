@@ -187,6 +187,7 @@ Dialog {
     header: StatusDialogHeader {
         id: dialogHeader
         visible: root.title || root.subtitle
+        color: root.backgroundColor
         headline.title: root.title
         headline.subtitle: root.subtitle
         actions.closeButton.onClicked: root.closeHandler()
@@ -201,7 +202,7 @@ Dialog {
                                                | Dialog.SaveAll | Dialog.Retry | Dialog.Ignore
         readonly property int yesRoleFlags: Dialog.Yes | Dialog.YesToAll
 
-        bottomPadding: root.padding + root.parent.SafeArea.margins.bottom
+        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
         visible: rightButtons
                  && root.standardButtons & (rejectRoleFlags | noRoleFlags | acceptRoleFlags
                                             | yesRoleFlags | Dialog.ApplyRole)
