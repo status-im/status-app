@@ -235,7 +235,7 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   result.marketService = market_service.newService(statusFoundation.events, result.settingsService)
 
   # Modules
-  result.keycardChannelModule = keycard_channel_module.newModule(statusFoundation.events)
+  result.keycardChannelModule = keycard_channel_module.newModule(statusFoundation.events, result.keycardServiceV2)
   result.onboardingModule = onboarding_module.newModule[AppController](
     result,
     statusFoundation.events,

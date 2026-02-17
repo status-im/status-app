@@ -6,14 +6,17 @@ type
   Controller* = ref object of RootObj
     delegate: io_interface.AccessInterface
     events: EventEmitter
+    keycardServiceV2: keycard_serviceV2.Service
 
 proc newController*(
   delegate: io_interface.AccessInterface,
-  events: EventEmitter
+  events: EventEmitter,
+  keycardServiceV2: keycard_serviceV2.Service
 ): Controller =
   result = Controller()
   result.delegate = delegate
   result.events = events
+  result.keycardServiceV2 = keycardServiceV2
 
 proc delete*(self: Controller) =
   discard
@@ -24,4 +27,5 @@ proc init*(self: Controller) =
     let args = keycard_serviceV2.KeycardChannelStateArg(e)
     self.delegate.setKeycardChannelState(args.state)
 
-
+proc cancelKeycardOperation*(self: Controller) =
+  self.keycardServiceV2.cancelCurrentOperation()

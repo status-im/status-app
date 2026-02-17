@@ -220,6 +220,12 @@ proc preActionActivities[T](self: Module[T], currFlowType: FlowType, currStateTy
       return
   self.view.setDisablePopup(true)
 
+proc isUserCancelledNfcEvent(keycardFlowType: string, keycardEvent: KeycardEvent): bool =
+  if keycardFlowType != ResponseTypeValueKeycardFlowResult:
+    return false
+  let normalizedError = keycardEvent.error.strip().toLowerAscii()
+  return normalizedError == "user cancelled nfc" or normalizedError == "user canceled nfc"
+
 proc preStateActivities[T](self: Module[T], currFlowType: FlowType, nextStateType: StateType) =
   if nextStateType == StateType.MaxPinRetriesReached or
     nextStateType == StateType.MaxPukRetriesReached or
@@ -422,6 +428,10 @@ method onTertiaryActionClicked*[T](self: Module[T]) =
   debug "sm_tertiary_action - set state", setCurrFlow=nextState.flowType(), setCurrState=nextState.stateType()
 
 method onKeycardResponse*[T](self: Module[T], keycardFlowType: string, keycardEvent: KeycardEvent) =
+  if isUserCancelledNfcEvent(keycardFlowType, keycardEvent):
+    info "nfc reader dismissed, terminating keycard flow", flowType=keycardFlowType, error=keycardEvent.error
+    self.controller.terminateCurrentFlow(lastStepInTheCurrentFlow = false, allowKeycardSync = false)
+    return
   if self.controller.keycardSyncingInProgress():
     self.handleKeycardSyncing()
     return

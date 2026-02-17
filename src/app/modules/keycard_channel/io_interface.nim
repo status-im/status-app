@@ -20,4 +20,6 @@ method viewDidLoad*(self: AccessInterface) {.base.} =
 method setKeycardChannelState*(self: AccessInterface, state: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method cancelKeycardOperation*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
 

@@ -18,6 +18,7 @@ type StateString* = enum
   FactoryResetting = "factory-resetting"
   Ready = "ready"
   Authorized = "authorized"
+  Cancelled = "cancelled" #user cancelled the operation
 
 # NOTE: Keep in sync with KeycardState in ui/StatusQ/src/onboarding/enums.h
 type KeycardState* = enum
@@ -33,7 +34,8 @@ type KeycardState* = enum
   FactoryResetting,
   NotEmpty,
   Empty,
-  Authorized
+  Authorized,
+  Cancelled
 
 type KeycardInfoDto* = object
   initialized*: bool
@@ -113,6 +115,8 @@ proc fromStringStateToInt*(state: StateString): KeycardState =
     result = KeycardState.NotEmpty
   of StateString.Authorized:
     result = KeycardState.Authorized
+  of StateString.Cancelled:
+    result = KeycardState.Cancelled
   else:
     result = KeycardState.UnknownReaderState
 

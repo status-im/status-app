@@ -1,6 +1,7 @@
 import nimqml
 
 import ./io_interface
+import app/global/feature_flags
 
 QtObject:
   type
@@ -33,6 +34,7 @@ QtObject:
 
   proc keycardDismissed*(self: View) {.slot.} =
     self.setKeycardChannelState("")
+    self.delegate.cancelKeycardOperation()
 
   proc setup(self: View) =
     self.QObject.setup
