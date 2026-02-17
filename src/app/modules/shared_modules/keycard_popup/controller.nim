@@ -601,7 +601,7 @@ proc finishFlowTermination(self: Controller) =
   self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_FLOW_TERMINATED, data)
 
 proc terminateCurrentFlow*(self: Controller, lastStepInTheCurrentFlow: bool, nextFlow = FlowType.General, forceFlow = false,
-  nextKeyUid = "", returnToFlow = FlowType.General) =
+  nextKeyUid = "", returnToFlow = FlowType.General, allowKeycardSync = true) =
   let flowType = self.delegate.getCurrentFlowType()
   self.cancelCurrentFlow()
   let (_, flowEvent) = self.getLastReceivedKeycardData()
@@ -640,7 +640,8 @@ proc terminateCurrentFlow*(self: Controller, lastStepInTheCurrentFlow: bool, nex
   ## - the keycard syncing is not already in progress
   ## - the flow which is terminating is one of the flows which we need to perform a sync process for
   ## - the pin is known
-  if not self.keycardSyncingInProgress() and
+  if allowKeycardSync and
+    not self.keycardSyncingInProgress() and
     not utils.arrayContains(FlowsWeShouldNotTryAKeycardSyncFor, flowType) and
     self.getPin().len == PINLengthForStatusApp and
     flowEvent.keyUid.len > 0:

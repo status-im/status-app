@@ -49,6 +49,7 @@ type KeycardAction {.pure.} = enum
   StoreMetadata = "StoreMetadata"
   Login = "Login"
   Recover = "Recover"
+  CancelCurrentOperation = "CancelCurrentOperation"
 
 type
   KeycardEventArg* = ref object of Args
@@ -349,6 +350,22 @@ QtObject:
 
   proc startDetection*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
     self.asyncStart(status_const.KEYCARDPAIRINGDATAFILE)
+  
+  proc cancelCurrentOperation*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
+    let params = %*{}
+    self.asyncCallRPC(KeycardAction.CancelCurrentOperation, params, proc (responseObj: JsonNode, err: string) =
+      if err.len > 0:
+        error "error canceling current keycard operation", reason=err
+        return
+      if responseObj.hasKey("error") and responseObj["error"].kind != JNull:
+        let errorObj = responseObj["error"]
+        if errorObj.hasKey("message"):
+          let reason = errorObj["message"].getStr()
+          error "error canceling current keycard operation", reason=reason
+        else:
+          let reason = $errorObj
+          error "error canceling current keycard operation", reason=reason
+    )
 
   proc delete*(self: Service) =
     self.QObject.delete
