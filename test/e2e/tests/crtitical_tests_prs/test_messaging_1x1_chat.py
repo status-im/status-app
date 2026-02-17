@@ -15,7 +15,7 @@ from helpers.multiple_instances_helper import (
 )
 from gui.screens.messages import MessagesScreen
 
-import configs.testpath
+import configs
 from constants import RandomUser, UserAccount
 from gui.main_window import MainWindow
 from scripts.utils.generators import random_text_message
@@ -33,11 +33,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
     messages_screen = MessagesScreen()
     emoji = 'sunglasses'
     timeout = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
-    local_picture = configs.testpath.TEST_IMAGES / 'comm_logo.jpeg'
-    picture = BASE_64_IMAGE_JPEG
 
-    # First five emojis in the reactions before there are custom ones
-    EMOJI_PATHES = ["1f600", "1f603", "1f604", "1f601", "1f606"]
 
     with (multiple_instances(user_data=None) as aut_one, multiple_instances(user_data=None) as aut_two):
         with step(f'Launch multiple instances with authorized users {user_one.name} and {user_two.name}'):
@@ -166,13 +162,11 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             ), f"Emoji not found in message text"
 
         with step(f'User {user_two.name} send image to {user_one.name} and verify it was sent'):
-            messages_screen.group_chat.send_image_to_chat(str(picture))
-            # Re-check message object in case image wasn't found during initial init
+            messages_screen.group_chat.send_image_to_chat(str(BASE_64_IMAGE_JPEG))
             assert driver.waitFor(lambda: (
                 messages_screen.chat.messages(0)[0].image_message is not None and
                 messages_screen.chat.messages(0)[0].image_message.visible
-            ), timeout), \
-                f"Image is not found in the last message"
+            ), timeout), f"Image is not found in the last message"
             main_window.minimize()
 
         with step(f'User {user_one.name}, received reply from {user_two.name}'):
@@ -197,12 +191,10 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             ), f"Emoji not found in message text"
 
         with step(f'User {user_one.name}, received image from {user_two.name}'):
-            # Re-check message object in case image wasn't found during initial init
             assert driver.waitFor(lambda: (
                 messages_screen.chat.messages(0)[0].image_message is not None and
                 messages_screen.chat.messages(0)[0].image_message.visible
-            ), timeout), \
-                f"There is no image in the last message"
+            ), timeout), f"There is no image in the last message"
 
         with step(f'User {user_one.name}, reply to own message and verify that message displayed as a reply'):
             chat_message_reply = random_text_message()

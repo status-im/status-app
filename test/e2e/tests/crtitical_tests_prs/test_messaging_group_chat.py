@@ -139,6 +139,13 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 assert driver.waitFor(lambda: _message_sent(chat_message), timeout), \
                     f"Message '{chat_message}' not found in group chat messages"
 
+            with step('Send local image to group chat and verify it was sent'):
+                messages_screen.group_chat.send_image_to_chat(str(path))
+                assert driver.waitFor(lambda: (
+                    messages_screen.chat.messages(0)[0].image_message is not None and
+                    messages_screen.chat.messages(0)[0].image_message.visible
+                ), timeout), f"Local image is not found in the last message"
+
             with step(f'Remove {user_three.name} from group'):
                 messages_screen.group_chat.remove_member_from_chat(user_three.name)
 
