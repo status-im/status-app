@@ -24,7 +24,7 @@ Dialog {
        \qmlproperty color backgroundColor
         This property decides the modal background color
     */
-    property color backgroundColor: Theme.palette.statusModal.backgroundColor
+    property alias backgroundColor: background.color
 
     /*!
        \qmlproperty var closeHandler
@@ -172,7 +172,9 @@ Dialog {
         color: Theme.palette.backdropColor
     }
 
-    background: StatusDialogBackground {}
+    background: StatusDialogBackground {
+        id: background
+    }
 
     header: StatusDialogHeader {
         id: dialogHeader

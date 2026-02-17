@@ -526,6 +526,7 @@ StatusDialog {
     horizontalPadding: Theme.xlPadding
     topMargin: margins + accountSelector.height + Theme.padding
     fillHeightOnBottomSheet: true
+    backgroundColor: Theme.palette.baseColor3
 
     Behavior on height {
         id: modalHeightBehavior
@@ -534,10 +535,6 @@ StatusDialog {
     }
 
     onOpened: d.enableAnimationTimer.start()
-
-    background: StatusDialogBackground {
-        color: Theme.palette.baseColor3
-    }
 
     // Bindings needed for exposing and setting raw values from AmountToSend
     onSelectedRawAmountChanged: d.setRawValue()
