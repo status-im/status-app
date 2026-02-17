@@ -213,6 +213,12 @@ StatusSectionLayout {
             browserWalletMenu.createObject(root).open()
         }
 
+        function onGoIncognito(checked) {
+            if (currentWebView) {
+                currentWebView.profile = checked ? connectorBridge.otrProfile : connectorBridge.defaultProfile;
+            }
+        }
+
         onCurrentWebViewChanged: {
             onCurrentTabUrlChanged()
             findBar.reset()
@@ -311,15 +317,16 @@ StatusSectionLayout {
                     // https://github.com/status-im/status-app/issues/19569
                 }
                 function onOpenSettingMenu(target) {
-                    settingsMenu.popup(target) // FIXME launch a different settings menu/popup on mobile (https://github.com/status-im/status-app/issues/19571)
+                    if (root.isMobile)
+                        mobileSettingsMenu.open()
+                    else
+                        settingsMenu.popup(target)
                 }
                 function onRequestSearch() {
                     browserToolbarLoader.activateAddressBar()
                 }
                 function onGoIncognito(checked) {
-                    if (_internal.currentWebView) {
-                        _internal.currentWebView.profile = checked ? connectorBridge.otrProfile : connectorBridge.defaultProfile;
-                    }
+                    _internal.onGoIncognito(checked)
                 }
                 function onRequestDownloadsView() {
                     _internal.addNewDownloadTab()
@@ -637,11 +644,7 @@ StatusSectionLayout {
         zoomFactor: _internal.currentWebView ? _internal.currentWebView.zoomFactor : 1
         onAddNewTab: _internal.addNewTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
-        onGoIncognito: function (checked) {
-            if (_internal.currentWebView) {
-                _internal.currentWebView.profile = checked ? connectorBridge.otrProfile : connectorBridge.defaultProfile;
-            }
-        }
+        onGoIncognito: checked => _internal.onGoIncognito(checked)
         onZoomIn: {
             const newZoom = _internal.currentWebView.zoomFactor + 0.1
             _internal.currentWebView.changeZoomFactor(newZoom)
@@ -671,6 +674,15 @@ StatusSectionLayout {
         onLaunchBrowserSettings: {
             Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings);
         }
+    }
+
+    MobileSettingsMenu {
+        id: mobileSettingsMenu
+
+        incognitoMode: _internal.currentTabIncognito
+
+        onGoIncognito: checked => _internal.onGoIncognito(checked)
+        onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)
     }
 
     Component {
