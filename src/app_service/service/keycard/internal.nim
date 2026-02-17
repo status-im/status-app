@@ -34,6 +34,7 @@ type
 
   KeycardEvent* = object
     error*: string
+    cancelled*: bool
     instanceUID*: string
     applicationInfo*: ApplicationInfo
     seedPhraseIndexes*: seq[int]
@@ -97,6 +98,7 @@ proc toTransactionSignature(jsonObj: JsonNode): TransactionSignature =
 
 proc toKeycardEvent*(jsonObj: JsonNode): KeycardEvent =
   discard jsonObj.getProp(ResponseParamErrorKey, result.error)
+  discard jsonObj.getProp(ResponseParamCancelled, result.cancelled)
   discard jsonObj.getProp(ResponseParamInstanceUID, result.instanceUID)
   discard jsonObj.getProp(ResponseParamFreeSlots, result.freePairingSlots)
   discard jsonObj.getProp(ResponseParamPINRetries, result.pinRetries)

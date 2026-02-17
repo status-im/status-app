@@ -67,7 +67,8 @@ public:
         // exit states
         NotEmpty,
         Empty,
-        Authorized
+        Authorized,
+        Cancelled
     };
 
     enum class ProgressState {

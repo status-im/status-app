@@ -93,6 +93,7 @@ const ResponseParamTxSignatureR* = "r"
 const ResponseParamTxSignatureS* = "s"
 const ResponseParamTxSignatureV* = "v"
 const ResponseParamErrorKey* = ErrorKey
+const ResponseParamCancelled* = "cancelled"
 const ResponseParamInstanceUID* =RequestParamInstanceUID
 const ResponseParamCardMeta* = RequestParamCardMeta
 const ResponseParamFreeSlots* = RequestParamFreeSlots
