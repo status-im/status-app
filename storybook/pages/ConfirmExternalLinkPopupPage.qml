@@ -32,8 +32,8 @@ SplitView {
             modal: false
             visible: true
 
-            link: "https://etherscan.io/token/0xdac17f958d2ee523a220622064597c13d831ec7"
-            domain: "etherscan.io"
+            link: "https://cdn.discordapp.com/attachments/1270081474036760627/1471435297182191719/Screenshot_2026-02-12_at_10.18.09.png?ex=69962ca8&is=6994db28&hm=72f720f7479d3b5fe21e484a0e8bdb7daad233abd90eef92e408bba4aa4d493a&"
+            domain: "discordapp.com"
 
             onOpenExternalLink: logs.logEvent("onOpenExternalLink called with link: " + link)
             onSaveDomainToUnfurledWhitelist: logs.logEvent("onSaveDomainToUnfurledWhitelist called with domain: " + domain)

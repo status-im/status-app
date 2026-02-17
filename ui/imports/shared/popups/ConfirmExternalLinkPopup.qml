@@ -34,12 +34,12 @@ StatusDialog {
         spacing: Theme.padding
         StatusBaseText {
             Layout.fillWidth: true
-            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            wrapMode: Text.Wrap
             text: qsTr("For your privacy, Status asks before opening links, as websites may collect your IP or device information. Copy the link to open it elsewhere, or tap Open to use the browser set in Settings>>Browser>>Open links in")
         }
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 66
+            Layout.preferredHeight: 100
             radius: Theme.halfPadding
             color: Theme.palette.baseColor4
 
@@ -53,19 +53,19 @@ StatusDialog {
                     Layout.fillWidth: true
                     text: root.link
                     wrapMode: Text.WrapAnywhere
+                    maximumLineCount: 3
                     elide: Text.ElideRight
                 }
                 CopyButton {
                     Layout.alignment: Qt.AlignTop
                     textToCopy: root.link
                 }
-
             }
         }
+
         StatusCheckBox {
             id: trustDomainCheckbox
 
-            Layout.margins: 12
             Layout.fillWidth: true
             text: qsTr("Always trust links to <b>%1</b>").arg(root.domain)
         }

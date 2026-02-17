@@ -9,7 +9,7 @@ import StatusQ.Components
 
 Item {
     id: root
-    Accessible.role: Accessible.Group
+    Accessible.role: Accessible.Grouping
     Accessible.name: Utils.formatAccessibleName("", root.objectName)
 
     property StatusMessageDetails replyDetails
