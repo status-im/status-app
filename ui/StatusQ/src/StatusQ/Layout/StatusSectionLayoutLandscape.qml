@@ -72,7 +72,7 @@ Control {
         \qmlproperty Item StatusSectionLayout::rightPanel
         This property holds the right panel of the component.
     */
-    property alias rightPanel: rightPanelProxy.target
+    property Item rightPanel
     /*!
         \qmlproperty Item StatusSectionLayout::footer
         This property holds the footer of the component.
@@ -209,7 +209,7 @@ Control {
             SplitView.preferredWidth: !!d.effectiveLeftPanel ? d.leftPanelWidth : 0
             SplitView.fillHeight: !!d.effectiveLeftPanel
             background: Rectangle {
-                color: Theme.palette.baseColor4
+                color: root.Theme.palette.baseColor4
             }
             contentItem: LayoutItemProxy {
                 target: d.effectiveLeftPanel
@@ -226,7 +226,6 @@ Control {
 
             contentItem: Item {
                 LayoutItemProxy {
-                    id: headerBackgroundSlot
                     anchors.top: parent.top
                     width: parent.width
                     target: root.headerBackground
@@ -241,7 +240,6 @@ Control {
                     padding: root.headerPadding
                     backButtonName: root.backButtonName
                     headerContent: LayoutItemProxy {
-                        id: headerContentProxy
                         target: root.headerContent
                     }
                     onBackButtonClicked: root.backButtonClicked()
@@ -273,10 +271,9 @@ Control {
             opacity: root.showRightPanel ? 1.0 : 0.0
             visible: (opacity > 0.1)
             background: Rectangle {
-                color: Theme.palette.baseColor4
+                color: root.Theme.palette.baseColor4
             }
             contentItem: LayoutItemProxy {
-                id: rightPanelProxy
                 target: root.rightPanel
             }
         }
