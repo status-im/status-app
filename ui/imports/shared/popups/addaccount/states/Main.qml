@@ -45,7 +45,7 @@ Item {
             accountName.input.asset.isLetterIdenticon = true;
         }
 
-        if (!SQUtils.Utils.isMobile) {
+        if (!StatusQUtils.Utils.isMobile) {
             accountName.input.edit.forceActiveFocus()
         }
         accountName.validate(true)

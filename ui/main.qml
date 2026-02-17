@@ -666,8 +666,10 @@ Window {
                 }
 
                 onKeycardStateChanged: {
-                    if (onboardingStore.loginRequestSent && keycardState === Onboarding.KeycardState.NotEmpty) {
+                if (onboardingStore.loginRequestSent && keycardState === Onboarding.KeycardState.NotEmpty) {
                         stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate) // we unwind on error
+                    } else if(keycardState === Onboarding.KeycardState.Cancelled) {
+                        onboardingLayout.unwindToLoginScreen()
                     }
                 }
             }
