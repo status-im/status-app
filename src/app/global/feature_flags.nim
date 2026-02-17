@@ -131,7 +131,7 @@ QtObject:
     read = getDappsEnabled
 
   proc getBrowserEnabled*(self: FeatureFlags): bool {.slot.} =
-    return self.dappsEnabled
+    return self.browserEnabled
 
   QtProperty[bool] browserEnabled:
     read = getBrowserEnabled
