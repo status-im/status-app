@@ -563,6 +563,15 @@ StatusSectionLayout {
         onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)
     }
 
+    MobileSettingsMenu {
+        id: mobileSettingsMenu
+
+        incognitoMode: _internal.currentTabIncognito
+
+        onGoIncognito: checked => _internal.onGoIncognito(checked)
+        onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)
+    }
+
     Component {
         id: addFavoriteModal
         AddFavoriteModal {
