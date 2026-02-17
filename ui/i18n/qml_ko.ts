@@ -11792,6 +11792,21 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>MobileSettingsMenu</name>
+    <message>
+        <source>Browser</source>
+        <translation type="unfinished">브라우저</translation>
+    </message>
+    <message>
+        <source>Incognito</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished">설정</translation>
+    </message>
+</context>
+<context>
     <name>MockedKeycardLibControllerWindow</name>
     <message>
         <source>Mocked Keycard Lib Controller</source>

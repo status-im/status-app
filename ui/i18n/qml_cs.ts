@@ -11903,6 +11903,21 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>MobileSettingsMenu</name>
+    <message>
+        <source>Browser</source>
+        <translation type="unfinished">Webový prohlížeč</translation>
+    </message>
+    <message>
+        <source>Incognito</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished">Nastavení</translation>
+    </message>
+</context>
+<context>
     <name>MockedKeycardLibControllerWindow</name>
     <message>
         <source>Mocked Keycard Lib Controller</source>

@@ -124,7 +124,7 @@ Item {
     }
 
     function findTextCurrent(text, backward = false) {
-        if (!currentWebView || !text)
+        if (!currentWebView)
             return
 
         if (backward) {
@@ -176,7 +176,7 @@ Item {
     Component {
         id: webViewAdapterComponent
         WebViewAdapter {
-            visible: !SQUtils.Utils.hasPopups(Overlay.overlay.children) || !root.isMobile
+            visible: !SQUtils.Utils.hasPopups(root.Overlay.overlay.children) || !root.isMobile
             enabled: visible
 
             bookmarksStore: root.bookmarksStore

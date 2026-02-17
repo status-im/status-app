@@ -20,7 +20,7 @@ BrowserToolbarBase {
         BrowserHeaderButton {
             incognitoMode: root.currentTabIncognito
             icon.name: "open-tabs"
-            tooltip.text: qsTr("Downloads View")
+            tooltip.text: qsTr("Open Tabs view")
             onClicked: root.requestAllOpenTabsView()
 
             StatusBaseText {

@@ -36,4 +36,3 @@ Rectangle {
         onTriggered: statusText.text = ""
     }
 }
-

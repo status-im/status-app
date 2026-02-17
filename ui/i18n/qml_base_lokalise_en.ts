@@ -14381,6 +14381,24 @@
     </message>
   </context>
   <context>
+    <name>MobileSettingsMenu</name>
+    <message>
+      <source>Browser</source>
+      <comment>MobileSettingsMenu</comment>
+      <translation>Browser</translation>
+    </message>
+    <message>
+      <source>Incognito</source>
+      <comment>MobileSettingsMenu</comment>
+      <translation>Incognito</translation>
+    </message>
+    <message>
+      <source>Settings</source>
+      <comment>MobileSettingsMenu</comment>
+      <translation>Settings</translation>
+    </message>
+  </context>
+  <context>
     <name>MockedKeycardLibControllerWindow</name>
     <message>
       <source>Mocked Keycard Lib Controller</source>

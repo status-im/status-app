@@ -87,6 +87,7 @@ StatusSectionLayout {
 
         readonly property Item currentWebView: webViewContext.currentWebView
         readonly property bool currentTabIncognito: currentWebView?.offTheRecord ?? false
+        readonly property bool currentTabLoading: currentWebView?.loading ?? false
         property bool webViewHidden: false
 
         property Component jsDialogComponent: JSDialogWindow {}
@@ -251,7 +252,10 @@ StatusSectionLayout {
                     // https://github.com/status-im/status-app/issues/19569
                 }
                 function onOpenSettingMenu(target) {
-                    dialogsContext.openSettingsMenu(settingsMenu)
+                    if (root.isMobile)
+                        mobileSettingsMenu.open()
+                    else
+                        settingsMenu.popup(target)
                 }
                 function onRequestSearch() {
                     browserToolbarLoader.activateAddressBar()
@@ -276,7 +280,7 @@ StatusSectionLayout {
                 openTabsCount: tabs.count
                 currentTabIncognito: _internal.currentTabIncognito
                 currentTabIsBookmark: favoritesContext.currentTabIsBookmark
-                currentTabLoading: _internal.currentWebView?.loading ?? false
+                currentTabLoading: _internal.currentTabLoading
                 currentTabIsDownloads: webStackView.children[tabs.currentIndex]?.isDownloadView ?? false
                 browserDappsModel: browserDappsProvider.model
             }
@@ -292,7 +296,7 @@ StatusSectionLayout {
                 openTabsCount: tabs.count
                 currentTabIncognito: _internal.currentTabIncognito
                 currentTabIsBookmark: favoritesContext.currentTabIsBookmark
-                currentTabLoading: _internal.currentWebView?.loading ?? false
+                currentTabLoading: _internal.currentTabLoading
                 currentTabIsDownloads: webStackView.children[tabs.currentIndex]?.isDownloadView ?? false
                 browserDappsModel: browserDappsProvider.model
             }
@@ -339,7 +343,7 @@ StatusSectionLayout {
                 else if (!visible)
                     visible = true;
             }
-            onVisibleChanged: if (!visible) _internal.currentWebView?.findText("") // reset the highlight
+            onVisibleChanged: if (!visible) webViewContext.findTextCurrent("") // reset the highlight
         }
     }
 
@@ -352,7 +356,7 @@ StatusSectionLayout {
         id: mobileAddressBar
         MobileAddressBar {
             url: root.browserRootStore.obtainAddress(_internal.currentWebView?.url ?? "")
-            currentTabLoading: _internal.currentWebView?.loading ?? false
+            currentTabLoading: _internal.currentTabLoading
             incognitoMode: _internal.currentTabIncognito
             browserDappsModel: browserDappsProvider.model
             faviconImage: _internal.currentWebView?.icon?.toString().replace("image://favicon/", "") ?? ""
@@ -386,8 +390,6 @@ StatusSectionLayout {
         }
         jsDialogHandler: (request) => dialogsContext.openJsDialog(request)
         findTextFinishedHandler: (result) => {
-            if (!findBar.visible)
-                findBar.visible = true
             findBar.numberOfMatches = result.numberOfMatches
             findBar.activeMatch = result.activeMatch
         }
@@ -552,6 +554,15 @@ StatusSectionLayout {
 
     }
 
+    MobileSettingsMenu {
+        id: mobileSettingsMenu
+
+        incognitoMode: _internal.currentTabIncognito
+
+        onGoIncognito: checked => webViewContext.setIncognitoCurrent(checked)
+        onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)
+    }
+
     Component {
         id: addFavoriteModal
         AddFavoriteModal {
@@ -693,13 +704,6 @@ StatusSectionLayout {
             }
             onAddNewDownloadTab: _internal.addNewDownloadTab()
             onClose: root.showFooter = Qt.binding(() => root.invertedLayout)
-        }
-    }
-
-    Connections {
-        target: typeof browserSection !== "undefined" ? browserSection : null
-        function onOpenUrl(url: string) {
-            root.openUrlInNewTab(url);
         }
     }
 }

@@ -15,10 +15,6 @@ QtObject {
         historyMenu.open()
     }
 
-    function openSettingsMenu(settingsMenu) {
-        settingsMenu.open()
-    }
-
     function openWalletMenu(browserWalletMenu) {
         // Initialize activity filters before opening popup.
         const activeChainIds = SQUtils.ModelUtils.modelToFlatArray(
