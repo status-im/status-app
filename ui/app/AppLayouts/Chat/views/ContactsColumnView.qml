@@ -40,6 +40,12 @@ Item {
     signal addRemoveGroupMemberClicked()
     signal chatItemClicked(string id)
 
+    component HeaderButton: StatusFlatButton {
+        icon.color: hovered || checked ? Theme.palette.primaryColor1 : Theme.palette.directColor1
+        isRoundIcon: true
+        tooltip.orientation: StatusToolTip.Orientation.Bottom
+    }
+
     // main layout
     ColumnLayout {
         anchors {
@@ -63,57 +69,32 @@ Item {
                 Layout.fillWidth: true
             }
 
-            StatusIconTabButton {
+            HeaderButton {
                 objectName: "shareProfileButton"
                 icon.name: "add-contact"
-                icon.color: Theme.palette.directColor1
-                checkable: false
+                tooltip.text: qsTr("Invite contacts")
                 onClicked: root.shareOwnProfileRequested()
-
-                StatusToolTip {
-                    text: qsTr("Invite contacts")
-                    visible: parent.hovered
-                    orientation: StatusToolTip.Orientation.Bottom
-                    y: parent.height + Theme.padding
-                }
             }
 
-            StatusIconTabButton {
-                id: qrScannerButton
+            HeaderButton {
                 objectName: "qrScannerButton"
                 icon.name: "qr-scan"
-                icon.color: Theme.palette.directColor1
-                checkable: false
+                tooltip.text: qsTr("Open QR Scanner")
                 onClicked: Global.openQRScannerRequested()
-
-                StatusToolTip {
-                    text: qsTr("Open QR Scanner")
-                    visible: parent.hovered
-                    orientation: StatusToolTip.Orientation.Bottom
-                    y: parent.height + Theme.padding
-                }
             }
 
-            StatusIconTabButton {
-                id: startChatButton
+            HeaderButton {
                 objectName: "startChatButton"
                 icon.name: "edit"
-                icon.color: Theme.palette.directColor1
+                checkable: true
                 checked: root.store.openCreateChat
-                highlighted: checked
+                tooltip.text: qsTr("Start chat")
                 onClicked: {
                     if (root.store.openCreateChat) {
                         Global.closeCreateChatView()
                     } else {
                         Global.openCreateChatView()
                     }
-                }
-
-                StatusToolTip {
-                    text: qsTr("Start chat")
-                    visible: parent.hovered
-                    orientation: StatusToolTip.Orientation.Bottom
-                    y: parent.height + 12
                 }
             }
         }
