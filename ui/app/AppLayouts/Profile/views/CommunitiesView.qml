@@ -198,29 +198,28 @@ SettingsContentBase {
             filters: panel.filters
         }
 
-        onCloseCommunityClicked: {
+        onCloseCommunityClicked: communityId => {
             root.leaveCommunityRequest(communityId)
         }
 
-        onLeaveCommunityClicked: {
+        onLeaveCommunityClicked: communityId => {
             Global.leaveCommunityRequested(community, communityId, outroMessage)
         }
 
-        onSetCommunityMutedClicked: {
+        onSetCommunityMutedClicked: communityId => {
             root.setCommunityMutedRequest(communityId, mutedType)
         }
 
-        onSetActiveCommunityClicked: {
+        onSetActiveCommunityClicked: communityId => {
             rootStore.setActiveCommunity(communityId)
         }
 
-        onInviteFriends: {
-            root.inviteFriends(communityData)
-        }
-        onShowCommunityMembershipSetupDialog: {
+        onInviteFriends: communityData => root.inviteFriends(communityData)
+
+        onShowCommunityMembershipSetupDialog: (communityId, name, introMessage, imageSrc, accessType) =>{
             Global.communityIntroPopupRequested(communityId, name, introMessage, imageSrc, root.fnIsMyCommunityRequestPending(communityId))
         }
-        onCancelMembershipRequest: {
+        onCancelMembershipRequest: communityId => {
             root.cancelPendingRequestRequested(communityId)
         }
     }

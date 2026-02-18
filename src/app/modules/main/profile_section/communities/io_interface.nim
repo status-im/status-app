@@ -22,9 +22,6 @@ method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
 method viewDidLoad*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method shareCommunityToUsers*(self: AccessInterface, communityID: string, pubKeysJSON: string, inviteMessage: string): string {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method leaveCommunity*(self: AccessInterface, communityID: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

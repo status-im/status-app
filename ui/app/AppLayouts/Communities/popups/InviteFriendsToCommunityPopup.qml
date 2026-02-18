@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import StatusQ.Core.Theme
+import StatusQ.Core.Backpressure
 import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Popups
@@ -18,12 +19,14 @@ StatusStackModal {
 
     property var contactsModel
     property var community
-    property var communitySectionModule
+    required property var membersModel
 
     property var pubKeys: ([])
     property string inviteMessage: ""
     property string validationError: ""
     property string successMessage: ""
+
+    required property var shareCommunityToUsers
 
     QtObject {
         id: d
@@ -33,7 +36,7 @@ StatusStackModal {
         readonly property int popupContentHeight: 551
 
         function shareCommunity(pubKeys, inviteMessage) {
-            const error = root.communitySectionModule.shareCommunityToUsers(JSON.stringify(pubKeys), inviteMessage);
+            const error = root.shareCommunityToUsers(JSON.stringify(pubKeys), inviteMessage);
             d.processInviteResult(error);
         }
 
@@ -44,6 +47,9 @@ StatusStackModal {
             } else {
                 root.validationError = "";
                 root.successMessage = qsTr("Invite successfully sent");
+                Backpressure.debounce(root, 500, () => {
+                    root.close()
+                })()
             }
         }
     }
@@ -78,7 +84,6 @@ StatusStackModal {
         text: qsTr("Send %n invite(s)", "", root.pubKeys.length)
         onClicked: {
             d.shareCommunity(root.pubKeys, root.inviteMessage);
-            root.close();
         }
     }
 
@@ -95,7 +100,7 @@ StatusStackModal {
         ProfilePopupInviteFriendsPanel {
 
             contactsModel: root.contactsModel
-            membersModel: root.communitySectionModule.membersModel
+            membersModel: root.membersModel
             communityId: root.community.id
 
             onPubKeysChanged: root.pubKeys = pubKeys
