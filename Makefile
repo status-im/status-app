@@ -187,7 +187,7 @@ export QT_ANDROID_DIR := $(QT_INSTALL_PREFIX)/src/android/java
 # separate DOS build dir, per Qt version
 DOTHERSIDE_BUILD_PATH := vendor/DOtherSide/build/Qt$(QT_VERSION)
 # separate StatusQ/storybook/... build dirs, per Qt version
-COMMON_CMAKE_CONFIG_PARAMS := -DCMAKE_PREFIX_PATH=$(QT_INSTALL_PREFIX)
+COMMON_CMAKE_CONFIG_PARAMS := -DCMAKE_PREFIX_PATH=$(QT_INSTALL_PREFIX) -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
 # Qt dirs (we can't indent with tabs here)
  QT_MAJOR_VERSION := $(shell $(QMAKE) -query QT_VERSION | head -c 1 2>/dev/null)
