@@ -149,10 +149,10 @@ QtObject {
             return root.walletRootStore.getOpenSeaUrl(networkShortName)
         }
 
-        onLaunchBuyFlowRequested: {
+        onLaunchBuyFlowRequested: function (accountAddress, chainId, groupKey) {
             buyFormData.selectedWalletAddress = accountAddress
             buyFormData.selectedNetworkChainId = chainId
-            buyFormData.selectedTokenKey = tokenKey
+            buyFormData.selectedTokenGroupKey = groupKey
             Global.openBuyCryptoModalRequested(buyFormData)
         }
 
