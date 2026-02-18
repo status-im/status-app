@@ -127,7 +127,7 @@ StatusModal {
         StatusInput {
             id: chatKeyInput
             input.edit.objectName: "SendContactRequestModal_ChatKey_Input"
-
+            width: parent.width
             placeholderText: qsTr("Enter chat key here")
             input.text: input.edit.focus? d.realChatKey : d.elidedChatKey
             input.rightComponent: {
@@ -150,7 +150,7 @@ StatusModal {
             id: messageInput
             input.edit.objectName: "SendContactRequestModal_SayWhoYouAre_Input"
             charLimit: d.maxMsgLength
-
+            width: parent.width
             placeholderText: qsTr("Say who you are / why you want to become a contact...")
             input.multiline: true
             minimumHeight: d.msgHeight
