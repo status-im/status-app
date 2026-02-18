@@ -11,7 +11,7 @@ QtObject {
 
     readonly property bool filledCorrectly: !!selectedWalletAddress && !!selectedTokenGroupKey && selectedNetworkChainId !== -1
 
-    property string defaultTokenGroupKey: Utils.getNativeTokenGroupKey(root.selectedNetworkChainId)
+    readonly property string defaultTokenGroupKey: Utils.getNativeTokenGroupKey(root.selectedNetworkChainId)
 
     function resetFormData() {
         selectedWalletAddress = ""
