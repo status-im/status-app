@@ -62,12 +62,12 @@ SplitView {
                     name: "community-name"
                 })
 
-                communitySectionModule: QtObject {
-                    function shareCommunityToUsers(keys, message) {
-                        logs.logEvent("communitySectionModule::shareCommunityToUsers",
-                                      ["keys", "message"], arguments)
-                    }
+                shareCommunityToUsers:  function shareCommunityToUsers(keys, message) {
+                    logs.logEvent("communitySectionModule::shareCommunityToUsers",
+                                  ["keys", "message"], arguments)
                 }
+
+                membersModel: []
 
                 contactsModel: ListModel {
                     Component.onCompleted: {
@@ -84,7 +84,7 @@ SplitView {
                                 localNickname: "",
                                 onlineStatus: 1,
                                 pubKey: key,
-                                compressedKey: "zx3sh" + key,
+                                compressedPubKey: "zx3sh" + key,
                             })
                         }
                     }
@@ -106,6 +106,7 @@ SplitView {
 }
 
 // category: Popups
+// status: good
 
 // https://www.figma.com/file/17fc13UBFvInrLgNUKJJg5/Kuba%E2%8E%9CDesktop?node-id=2927%3A343592
 // https://www.figma.com/file/17fc13UBFvInrLgNUKJJg5/Kuba%E2%8E%9CDesktop?node-id=2990%3A353179
