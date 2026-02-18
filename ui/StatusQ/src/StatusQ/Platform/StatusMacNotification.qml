@@ -12,9 +12,8 @@ Control {
     property string message: qsTr("My latest message\n with a return")
 
     background: Rectangle {
-        // TODO: what about dark theme?
-        color: "#F7F7F7"
-        radius: 8
+        color: Theme.palette.background
+        radius: Theme.radius
     }
 
     leftPadding: Theme.halfPadding
@@ -53,7 +52,7 @@ Control {
                 text: root.name
                 font.weight: Font.Medium
                 font.pixelSize: Theme.primaryTextFontSize
-                color: "#4b4b4b"
+                color: Theme.palette.secondaryText
             }
 
             StatusBaseText {
@@ -63,7 +62,7 @@ Control {
 
                 elide: Text.ElideRight
                 font.pixelSize: Theme.secondaryTextFontSize
-                color: "#4b4b4b"
+                color: Theme.palette.secondaryText
                 text: root.message
             }
         }
@@ -74,7 +73,7 @@ Control {
             Layout.topMargin: -Theme.padding
             Layout.bottomMargin: -Theme.padding
 
-            color: "#D9D9D9"
+            color: Theme.palette.separator
         }
 
         StatusBaseText {
@@ -89,7 +88,7 @@ Control {
             font.pixelSize: Theme.secondaryTextFontSize
 
             text: qsTr("Open")
-            color: "black"
+            color: Theme.palette.secondaryText
         }
     }
 }
