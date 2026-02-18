@@ -142,7 +142,13 @@ SettingsContentBase {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
-                    onClicked: logsFolderDialog.open()
+                    onClicked: {
+                        if (SQUtils.Utils.isMobile) {
+                            Global.openShakeToSharePopup()
+                            return
+                        }
+                        logsFolderDialog.open()
+                    }
                 }
             }
 
