@@ -524,13 +524,13 @@ StatusSectionLayout {
                                                    return false
                                                }
 
-                onLeaveCommunityRequest: root.leaveCommunityRequest(communityId)
-                onSetCommunityMutedRequest: root.setCommunityMutedRequest(communityId, mutedType)
-                onInviteFriends: root.inviteFriends(communityData)
+                onLeaveCommunityRequest: communityId => root.leaveCommunityRequest(communityId)
+                onSetCommunityMutedRequest: (communityId, mutedType) => root.setCommunityMutedRequest(communityId, mutedType)
+                onInviteFriends: communityData => root.inviteFriends(communityData)
                 onCancelPendingRequestRequested: (communityId) => {
                                                      const communityAccessStore = getSpecificCommunityAccessStore(communityId)
                                                      if(communityAccessStore) {
-                                                         communityAccessStore.cancelPendignRequest(communityId)
+                                                         communityAccessStore.cancelPendingRequest(communityId)
                                                      }
                                                  }
             }

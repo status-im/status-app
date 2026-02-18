@@ -105,6 +105,7 @@ Item {
                 objectName: "contactCheckbox-%1".arg(model.displayName)
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
+                anchors.rightMargin: Theme.halfPadding
                 checked: root.pubKeys.indexOf(model.pubKey) > -1
                 onClicked: {
                     root.contactClicked(model);

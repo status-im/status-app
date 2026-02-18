@@ -17,9 +17,6 @@ QtObject:
   proc load*(self: View) =
     self.delegate.viewDidLoad()
 
-  proc shareCommunityToUsers*(self: View, communityID: string, pubKeysJSON: string, inviteMessage: string): string {.slot.} =
-    result = self.delegate.shareCommunityToUsers(communityID, pubKeysJSON, inviteMessage)
-
   proc leaveCommunity*(self: View, communityID: string) {.slot.} =
     self.delegate.leaveCommunity(communityID)
 

@@ -1942,11 +1942,9 @@ Item {
                                 ThemeUtils.setPaddingFactor(appMain.Window.window, paddingFactor)
                             }
                             // Communities related settings view:
-                            onLeaveCommunityRequest: appMain.communitiesStore.leaveCommunity(communityId)
-                            onSetCommunityMutedRequest: appMain.communitiesStore.setCommunityMuted(communityId, mutedType)
-                            onInviteFriends: Global.openInviteFriendsToCommunityPopup(communityData,
-                                                                                      appMain.communitiesStore.communitiesProfileModule,
-                                                                                      null)
+                            onLeaveCommunityRequest: communityId => appMain.communitiesStore.leaveCommunity(communityId)
+                            onSetCommunityMutedRequest: (communityId, mutedType) => appMain.communitiesStore.setCommunityMuted(communityId, mutedType)
+                            onInviteFriends: communityData => Global.openInviteFriendsToCommunityByIdPopup(communityData.id, null)
                             onOpenThirdpartyServicesInfoPopupRequested: popupRequestsHandler.thirdpartyServicesPopupHandler.openPopup()
                             onOpenDiscussPageRequested: Global.requestOpenLink(Constants.statusDiscussPageUrl)
 

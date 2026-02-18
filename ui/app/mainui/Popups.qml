@@ -260,14 +260,26 @@ QtObject {
     }
 
     function openInviteFriendsToCommunityPopup(community, communitySectionModule, cb) {
-        openPopup(inviteFriendsToCommunityPopup, { community: community, communitySectionModule: communitySectionModule }, cb)
+        openPopup(inviteFriendsToCommunityPopup, {
+            community: community,
+            membersModel: communitySectionModule.membersModel,
+            shareCommunityToUsers: (pubkeysStr, inviteMessage) => {
+                communitySectionModule.shareCommunityToUsers(pubkeysStr, inviteMessage)
+            }
+        }, cb)
     }
 
     function openInviteFriendsToCommunityByIdPopup(communityId, cb) {
         const communitySectionModuleData = root.chatStore.getCommunitySectionModule(communityId)
         const communityData = root.communitiesStore.getCommunityDetails(communityId)
 
-        openPopup(inviteFriendsToCommunityPopup, { community: communityData, communitySectionModule: communitySectionModuleData }, cb)
+        openPopup(inviteFriendsToCommunityPopup, {
+            community: communityData,
+            membersModel: communitySectionModuleData.membersModel,
+            shareCommunityToUsers: (pubkeysStr, inviteMessage) => {
+                communitySectionModuleData.shareCommunityToUsers(pubkeysStr, inviteMessage)
+            }
+        }, cb)
     }
 
     function openContactRequestPopup(publicKey, cb) {

@@ -115,7 +115,7 @@ CalloutCard {
                 Layout.bottomMargin: 6
                 objectName: "linkPreviewEmojiHash"
                 visible: root.type === Constants.LinkPreviewType.StatusContact
-                emojiHash: JSON.parse(root.userData.emojiHash)
+                emojiHash: visible ? JSON.parse(root.userData.emojiHash) : []
                 oneRow: true
             }
             StatusBaseText {
