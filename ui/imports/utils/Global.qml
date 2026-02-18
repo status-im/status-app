@@ -95,6 +95,7 @@ QtObject {
     signal openNewsMessagePopupRequested(var notification, string notificationId)
 
     signal openInfoPopup(string title, string message)
+    signal openShakeToSharePopupRequested()
 
     // BuyCrypto
     signal openBuyCryptoModalRequested(var formDataParams)
@@ -150,5 +151,9 @@ QtObject {
             Constants.ephemeralNotificationType.success,
             ""
         )
+    }
+
+    function openShakeToSharePopup() {
+        root.openShakeToSharePopupRequested()
     }
 }

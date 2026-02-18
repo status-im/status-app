@@ -310,7 +310,7 @@ Window {
         function onShakeDetected() {
             const nowMs = Date.now()
             if (nowMs - d.lastShakeShareMs < 3000) {
-                shakeToShareLoader.active = true
+                openShakeToSharePopup()
                 return
             }
             d.lastShakeShareMs = nowMs
@@ -430,6 +430,7 @@ Window {
 
         Global.openMetricsEnablePopupRequested.connect(openMetricsEnablePopup)
         Global.addCentralizedMetricIfEnabled.connect(metricsStore.addCentralizedMetricIfEnabled)
+        Global.openShakeToSharePopupRequested.connect(openShakeToSharePopup)
 
         nativeSafeAreaBottom = MobileUI.safeAreaBottom + MobileUI.navbarHeight
 
@@ -472,6 +473,10 @@ Window {
         if(!localAppSettings.metricsPopupSeen) {
             localAppSettings.metricsPopupSeen = true
         }
+    }
+
+    function openShakeToSharePopup() {
+        shakeToShareLoader.active = true
     }
 
     StatusTrayIcon {
