@@ -213,10 +213,7 @@ StatusDialog {
     QtObject {
         id: d
 
-        readonly property bool selectedTokenExistsInAssetsModel: {
-            const tokenGroup = SQUtils.ModelUtils.getByKey(root.assetsModel, "key", root.selectedGroupKey)
-            return !!tokenGroup
-        }
+        readonly property bool selectedTokenExistsInAssetsModel: selectedAssetEntry.available
 
         readonly property var resolvedSelectedToken: {
             if (d.selectedTokenExistsInAssetsModel) {
