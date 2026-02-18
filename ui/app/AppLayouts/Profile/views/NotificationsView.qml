@@ -160,7 +160,7 @@ SettingsContentBase {
         Rectangle {
             Layout.preferredWidth: root.contentWidth
             implicitHeight: col1.height + 2 * Theme.padding
-            visible: Qt.platform.os === SQUtils.Utils.mac
+            visible: SQUtils.Utils.isMacOS
             radius: Constants.settingsSection.radius
             color: Theme.palette.primaryColor3
 
@@ -329,63 +329,68 @@ SettingsContentBase {
             Layout.preferredHeight: Theme.bigPadding
         }
 
-        StatusBaseText {
-            Layout.preferredWidth: root.contentWidth
-            Layout.leftMargin: Theme.padding
-            text: qsTr("Notification Content")
-            color: Theme.palette.directColor1
-        }
-
-        NotificationAppearancePreviewPanel {
-            id: notifNameAndMsg
-
+        ColumnLayout {
             Layout.preferredWidth: root.contentWidth - Theme.padding * 2
             Layout.leftMargin: Theme.padding
             Layout.rightMargin: Theme.padding
+            visible: !SQUtils.Utils.isMobile
 
-            name: qsTr("Show Name and Message")
-            notificationTitle: "Vitalik Buterin"
-            notificationMessage: qsTr("Hi there! So EIP-1559 will defini...")
-            buttonGroup: messageSetting
-            checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewNameAndMessage
-            onRadioCheckedChanged: {
-                if (checked) {
-                    d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewNameAndMessage
+            StatusBaseText {
+                Layout.fillWidth: true
+                text: qsTr("Notification Content")
+                color: Theme.palette.directColor1
+            }
+
+            NotificationAppearancePreviewPanel {
+                id: notifNameAndMsg
+
+                Layout.fillWidth: true
+
+                name: qsTr("Show Name and Message")
+                notificationTitle: "Vitalik Buterin"
+                notificationMessage: qsTr("Hi there! So EIP-1559 will defini...")
+                buttonGroup: messageSetting
+                checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewNameAndMessage
+                onRadioCheckedChanged: {
+                    if (checked) {
+                        d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewNameAndMessage
+                    }
                 }
             }
-        }
 
-        NotificationAppearancePreviewPanel {
-            Layout.preferredWidth: root.contentWidth - Theme.padding * 2
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
+            NotificationAppearancePreviewPanel {
+                Layout.fillWidth: true
 
-            name: qsTr("Name Only")
-            notificationTitle: "Vitalik Buterin"
-            notificationMessage: qsTr("You have a new message")
-            buttonGroup: messageSetting
-            checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewNameOnly
-            onRadioCheckedChanged: {
-                if (checked) {
-                    d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewNameOnly
+                name: qsTr("Name Only")
+                notificationTitle: "Vitalik Buterin"
+                notificationMessage: qsTr("You have a new message")
+                buttonGroup: messageSetting
+                checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewNameOnly
+                onRadioCheckedChanged: {
+                    if (checked) {
+                        d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewNameOnly
+                    }
                 }
             }
-        }
 
-        NotificationAppearancePreviewPanel {
-            Layout.preferredWidth: root.contentWidth - Theme.padding * 2
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
+            NotificationAppearancePreviewPanel {
+                Layout.fillWidth: true
 
-            name: qsTr("Anonymous")
-            notificationTitle: "Status"
-            notificationMessage: qsTr("You have a new message")
-            buttonGroup: messageSetting
-            checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewAnonymous
-            onRadioCheckedChanged: {
-                if (checked) {
-                    d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewAnonymous
+                name: qsTr("Anonymous")
+                notificationTitle: "Status"
+                notificationMessage: qsTr("You have a new message")
+                buttonGroup: messageSetting
+                checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewAnonymous
+                onRadioCheckedChanged: {
+                    if (checked) {
+                        d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewAnonymous
+                    }
                 }
+            }
+
+            Separator {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Theme.bigPadding
             }
         }
 
