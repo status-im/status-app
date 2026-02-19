@@ -327,19 +327,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(MobileUI)
 
-# iOS-specific configuration for SCodes and its ZXing dependency
-if(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
-    # Set CMake variables before fetching SCodes to ensure proper iOS compilation
-    # These flags must be set before FetchContent_MakeAvailable for iOS arm64 support
-    string(APPEND CMAKE_CXX_FLAGS " -fPIC")
-    string(APPEND CMAKE_C_FLAGS " -fPIC")
-    
-    # Ensure proper linking by disabling shared library mode for iOS
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries for iOS" FORCE)
-    
-    # Pass iOS-specific settings to dependencies
-    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_FIND_ROOT_PATH}")
+# Build SCodes and ZXing as static deps so StatusQ can be shipped standalone.
+# SCodes defaults BUILD_SHARED_LIBS to ON when it is undefined.
+set(_statusq_build_shared_libs_was_defined FALSE)
+if(DEFINED BUILD_SHARED_LIBS)
+    set(_statusq_build_shared_libs_was_defined TRUE)
+    set(_statusq_build_shared_libs_backup "${BUILD_SHARED_LIBS}")
 endif()
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build SCodes/ZXing as static dependencies" FORCE)
 
 FetchContent_Declare(
   SCodes
@@ -350,6 +345,12 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(SCodes)
+
+if(_statusq_build_shared_libs_was_defined)
+    set(BUILD_SHARED_LIBS "${_statusq_build_shared_libs_backup}" CACHE BOOL "Restore original shared/static policy" FORCE)
+else()
+    unset(BUILD_SHARED_LIBS CACHE)
+endif()
 
 target_link_libraries(StatusQ PRIVATE
         Qt::Core
@@ -365,24 +366,20 @@ target_link_libraries(StatusQ PRIVATE
         SCodes
         )
 
-# iOS-specific compiler settings for proper SCodes/ZXing compilation
-if(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
-    # Ensure SCodes and ZXing are compiled with proper settings for iOS arm64
-    if(TARGET SCodes)
-        set_target_properties(SCodes PROPERTIES
-            POSITION_INDEPENDENT_CODE ON
-            CXX_STANDARD 17
-            CXX_STANDARD_REQUIRED ON
-        )
-    endif()
-    
-    if(TARGET ZXing)
-        set_target_properties(ZXing PROPERTIES
-            POSITION_INDEPENDENT_CODE ON
-            CXX_STANDARD 17
-            CXX_STANDARD_REQUIRED ON
-        )
-    endif()
+if(TARGET SCodes)
+    set_target_properties(SCodes PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+    )
+endif()
+
+if(TARGET ZXing)
+    set_target_properties(ZXing PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+    )
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

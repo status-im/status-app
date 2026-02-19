@@ -49,8 +49,7 @@ android {
                         $$PWD/../lib/$$LIB_PREFIX/libDOtherSide$$(LIB_SUFFIX)$$(LIB_EXT) \
                         $$PWD/../lib/$$LIB_PREFIX/libstatus.so \
                         $$PWD/../lib/$$LIB_PREFIX/libsds.so \
-                        $$PWD/../lib/$$LIB_PREFIX/libStatusQ$$(LIB_SUFFIX)$$(LIB_EXT) \
-                        $$PWD/../lib/$$LIB_PREFIX/libZXing.so
+                        $$PWD/../lib/$$LIB_PREFIX/libStatusQ$$(LIB_SUFFIX)$$(LIB_EXT)
     contains(DEFINES, FLAG_KEYCARD_ENABLED) {
         ANDROID_EXTRA_LIBS += $$PWD/../lib/$$LIB_PREFIX/libstatus-keycard-qt.so
     }
