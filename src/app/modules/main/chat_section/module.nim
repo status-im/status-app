@@ -752,7 +752,8 @@ proc addNewChat(
 
   if insertIntoModel:
     self.view.chatsModel().appendItem(chatItem)
-  if setChatAsActive:
+  # Set active if it's the only chat or if specified
+  if setChatAsActive or self.chatContentModules.len == 1:
     self.setActiveItem(chatItem.id)
 
 method switchToChannel*(self: Module, channelName: string) =
