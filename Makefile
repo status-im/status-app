@@ -691,9 +691,6 @@ ifeq ($(mkspecs),win32)
  STATUSQ_LIB_PATH := $(STATUSQ_BUILD_PATH)/lib/$(COMMON_CMAKE_BUILD_TYPE)
 endif
 $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
-ifeq ($(mkspecs), linux)
- $(NIM_STATUS_CLIENT): NIM_EXTRA_PARAMS += --passL:"-l:libZXing.so.3"
-endif
 $(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(KEYCARD_LIB) $(QRCODEGEN) rcc deps
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \

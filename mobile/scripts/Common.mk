@@ -77,7 +77,6 @@ RUN_SCRIPT := $(SCRIPTS_PATH)/$(OS)/run.sh
 # lib files
 STATUS_GO_LIB := $(LIB_PATH)/libstatus$(LIB_EXT)
 STATUS_Q_LIB := $(LIB_PATH)/libStatusQ$(LIB_SUFFIX)$(LIB_EXT)
-LIB_ZXING := $(LIB_PATH)/libZXing$(LIB_SUFFIX)$(LIB_EXT)
 OPENSSL_LIB := $(LIB_PATH)/libssl_3$(LIB_EXT)
 QRCODEGEN_LIB := $(LIB_PATH)/libqrcodegen.a
 STATUS_KEYCARD_QT_LIB := $(LIB_PATH)/libstatus-keycard-qt$(LIB_EXT)
@@ -85,6 +84,7 @@ NIM_STATUS_CLIENT_LIB := $(LIB_PATH)/libnim_status_client$(LIB_EXT)
 STATUS_DESKTOP_RCC := $(STATUS_DESKTOP)/ui/resources.qrc
 ifeq ($(OS), ios)
 DOTHERSIDE_LIB := $(LIB_PATH)/libDOtherSideStatic$(LIB_SUFFIX)$(LIB_EXT)
+LIB_ZXING := $(LIB_PATH)/libZXing$(LIB_SUFFIX)$(LIB_EXT)
 else
 DOTHERSIDE_LIB := $(LIB_PATH)/libDOtherSide$(LIB_SUFFIX)$(LIB_EXT)
 endif
