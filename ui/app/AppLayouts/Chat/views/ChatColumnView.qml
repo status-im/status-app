@@ -510,10 +510,9 @@ Item {
 
                 ChatPermissionQualificationPanel {
                     id: channelPostRestrictions
-                    width: chatInput.textInput.width
-                    height: chatInput.textInput.height
-                    anchors.left: parent.left
-                    anchors.leftMargin: (2*Theme.bigPadding)
+
+                    parent: chatInput.textInput
+                    anchors.fill: parent
                     visible: (!!root.viewAndPostHoldingsModel && (root.viewAndPostHoldingsModel.count > 0)
                               && !root.amISectionAdmin && !root.canPost)
                     assetsModel: root.rootStore.assetsModel
