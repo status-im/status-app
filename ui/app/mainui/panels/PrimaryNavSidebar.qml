@@ -53,7 +53,6 @@ Control {
     property Component communityPopupMenu // required property var model
 
     required property bool profileSectionHasNotification
-    required property bool showCreateCommunityBadge
     required property bool thirdpartyServicesEnabled
 
     required property bool acVisible // FIXME AC should not be a section
@@ -402,13 +401,10 @@ Control {
     }
 
     component BottomSectionButton: RegularSectionButton {
-        readonly property bool displayCreateCommunityBadge: model.sectionType === Constants.appSection.communitiesPortal && root.showCreateCommunityBadge
-        showBadgeGradient: displayCreateCommunityBadge
+        showBadgeGradient: false
         showBadge: {
             if (model.sectionType === Constants.appSection.profile)
                 return root.profileSectionHasNotification
-            if (displayCreateCommunityBadge)
-                return true
             return model.hasNotification
         }
     }

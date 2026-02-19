@@ -34,7 +34,6 @@ StatusSectionLayout {
     property var collectiblesModel
 
     property bool createCommunityEnabled: true
-    property bool createCommunityBadgeVisible
 
     objectName: "communitiesPortalLayout"
 
@@ -211,12 +210,7 @@ StatusSectionLayout {
             type: StatusBaseButton.Type.Primary
             onClicked: {
                 // Global.openPopup(chooseCommunityCreationTypePopupComponent) // hidden as part of https://github.com/status-im/status-app/issues/17726
-                root.communitiesStore.setCreateCommunityPopupSeen()
                 Global.createCommunityPopupRequested(false /*isDiscordImport*/)
-            }
-
-            StatusNewBadge {
-                visible: root.createCommunityBadgeVisible
             }
         }
     }
