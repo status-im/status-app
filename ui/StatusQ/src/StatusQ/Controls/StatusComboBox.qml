@@ -143,11 +143,6 @@ Item {
             popup: StatusDropdown {
                 id: dropdown
 
-                // workaround for QTBUG-142248
-                Theme.style: root.Theme.style
-                Theme.padding: root.Theme.padding
-                Theme.fontSizeOffset: root.Theme.fontSizeOffset
-
                 directParent: comboBox
                 closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
                 relativeY: comboBox.height + 4

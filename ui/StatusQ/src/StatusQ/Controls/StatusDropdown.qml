@@ -92,6 +92,13 @@ QC.Popup {
        readonly property real bottomSheetHeightRatio: 0.85
     }
 
+    // workaround for QTBUG-142248
+    Binding on contentItem {
+        Theme.style: root.Theme.style
+        Theme.padding: root.Theme.padding
+        Theme.fontSizeOffset: root.Theme.fontSizeOffset
+    }
+
     Binding {
         when: !root.bottomSheet
 
