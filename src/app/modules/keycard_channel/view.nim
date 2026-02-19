@@ -1,7 +1,6 @@
 import nimqml
 
 import ./io_interface
-import app/global/feature_flags
 
 QtObject:
   type
