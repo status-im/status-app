@@ -565,6 +565,8 @@ status-keycard-qt-clean:
 ifeq ($(USE_STATUS_KEYCARD_QT),1)
   KEYCARD_LIB := $(STATUSKEYCARD_QT_LIB)
   KEYCARD_LIBDIR := $(STATUSKEYCARD_QT_LIBDIR)
+  # Set the feature flag to use the keycard qt library
+  export FLAG_USE_KEYCARD_QT := 1
 
 else
   KEYCARD_LIB := $(STATUSKEYCARDGO)

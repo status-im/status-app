@@ -6,6 +6,7 @@ import constants as status_const
 import app/core/eventemitter
 import app/core/signals/types
 import app/global/app_signals
+import app/global/feature_flags
 import app_service/service/general/service as general_service
 import app_service/service/accounts/service as accounts_service
 import app_service/service/accounts/dto/image_crop_rectangle
@@ -103,13 +104,24 @@ proc init*(self: Controller) =
     self.delegate.onKeycardExportRestoreKeysSuccess(args.exportedKeys)
   self.connectionIds.add(handlerId)
 
-  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_LOGIN_FINISHED) do(e: Args):
-    let args = KeycardLoginArgs(e)
-    if args.error.len > 0:
+  featureGuard USE_KEYCARD_QT:
+    handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_LOGIN_FINISHED) do(e: Args):
+      let args = KeycardLoginArgs(e)
+      if args.error.len > 0:
+        self.delegate.onKeycardExportLoginKeysFailure(args.error)
+      else:
+        self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
+    self.connectionIds.add(handlerId)
+  else:
+    handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_FAILURE) do(e: Args):
+      let args = KeycardErrorArg(e)
       self.delegate.onKeycardExportLoginKeysFailure(args.error)
-    else:
+    self.connectionIds.add(handlerId)
+
+    handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_SUCCESS) do(e: Args):
+      let args = KeycardExportedKeysArg(e)
       self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
-  self.connectionIds.add(handlerId)
+    self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SIGNAL_LOGIN_ERROR) do(e: Args):
     let args = LoginErrorArgs(e)
