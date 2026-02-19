@@ -269,4 +269,11 @@ Dialog {
             root.destroy()
         }
     }
+
+    Component.onCompleted: {
+        // workaround for QTBUG-142248
+        contentItem.Theme.style = Qt.binding(() => root.Theme.style)
+        contentItem.Theme.padding = Qt.binding(() => root.Theme.padding)
+        contentItem.Theme.fontSizeOffset = Qt.binding(() => root.Theme.fontSizeOffset)
+    }
 }
