@@ -6,7 +6,7 @@ mainWindow_chatView_ChatView = {"container": statusDesktop_mainWindow, "objectNa
 
 # Left Panel
 mainWindow_contactColumnLoader_Loader = {"container": mainWindow_chatView_ChatView, "id": "contactColumnLoader", "type": "Loader", "unnamed": 1, "visible": True}
-mainWindow_startChatButton_StatusIconTabButton = {"checkable": True, "container": mainWindow_contactColumnLoader_Loader, "objectName": "startChatButton", "type": "StatusIconTabButton", "visible": True}
+mainWindow_startChatButton_StatusIconTabButton = {"container": statusDesktop_mainWindow, "objectName": "startChatButton", "type": "HeaderButton", "visible": True}
 mainWindow_search_edit_TextEdit = {"container": mainWindow_contactColumnLoader_Loader, "id": "edit", "type": "TextEdit", "unnamed": 1, "visible": True}
 mainWindow_scrollView_StatusScrollView = {"container": mainWindow_contactColumnLoader_Loader, "id": "scrollView", "type": "StatusScrollView", "unnamed": 1, "visible": True}
 scrollView_Flickable = {"container": mainWindow_scrollView_StatusScrollView, "type": "Flickable", "unnamed": 1, "visible": True}
