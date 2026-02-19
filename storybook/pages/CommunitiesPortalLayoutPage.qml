@@ -36,18 +36,11 @@ SplitView {
             SplitView.fillHeight: true
 
             createCommunityEnabled: ctrlCommunityCreationEnabled.checked
-            createCommunityBadgeVisible: !communitiesStore.createCommunityPopupSeen
 
             assetsModel: AssetsModel {}
             collectiblesModel: CollectiblesModel {}
             communitiesStore: CommunitiesStore {
                 readonly property string communityTags: ModelsData.communityTags
-
-                property bool createCommunityPopupSeen
-                function setCreateCommunityPopupSeen() {
-                    createCommunityPopupSeen = true
-                    logs.logEvent("CommunitiesStore::setCreateCommunityPopupSeen")
-                }
 
                 readonly property var curatedCommunitiesModel: SortFilterProxyModel {
                     sourceModel: CommunitiesPortalDummyModel { id: mockedModel }

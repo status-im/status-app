@@ -56,7 +56,6 @@ Item {
             }
 
             profileSectionHasNotification: false
-            showCreateCommunityBadge: false
             thirdpartyServicesEnabled: true
 
             acVisible: false
@@ -283,18 +282,6 @@ Item {
             // Settings button should show notification when profileSectionHasNotification is true
             tryCompare(settingsBtn, "showBadge", true)
             tryCompare(settingsBtn, "badgeVisible", true)
-        }
-
-        function test_create_community_badge() {
-            controlUnderTest.showCreateCommunityBadge = true
-
-            const communitiesBtn = findChild(controlUnderTest, "Communities-navbar")
-            verify(!!communitiesBtn)
-
-            // Communities button should show badge gradient
-            tryCompare(communitiesBtn, "showBadgeGradient", true)
-            tryCompare(communitiesBtn, "showBadge", true)
-            tryCompare(communitiesBtn, "badgeVisible", true)
         }
 
         function test_community_buttons_have_object_name() {
