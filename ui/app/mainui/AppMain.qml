@@ -1748,7 +1748,6 @@ Item {
                             communitiesStore: appMain.communitiesStore
                             assetsModel: appMain.rootStore.globalAssetsModel
                             collectiblesModel: appMain.rootStore.globalCollectiblesModel
-                            createCommunityBadgeVisible: !appMain.communitiesStore.createCommunityPopupSeen
 
                             // Floating panel
                             leftFloatingPanelItem: appMain.activityCenterPanel
@@ -2240,7 +2239,6 @@ Item {
 
                 communityPopupMenu: communityContextMenuComponent
 
-                showCreateCommunityBadge: !appMain.communitiesStore.createCommunityPopupSeen
                 profileSectionHasNotification: {
                     if (contactsModelAdaptor.pendingReceivedRequestContacts.ModelCount.count > 0) // pending contact request
                         return true

@@ -37,11 +37,6 @@ QtObject {
 
     readonly property bool testEnvironment: localAppSettings.testEnvironment ?? false
 
-    readonly property bool createCommunityPopupSeen: localAccountSensitiveSettings.createCommunityPopupSeen ?? false
-    function setCreateCommunityPopupSeen() {
-        localAccountSensitiveSettings.createCommunityPopupSeen = true
-    }
-
     property string communityTags: communitiesModuleInst.tags
 
     readonly property QtObject _d: QtObject {

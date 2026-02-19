@@ -248,7 +248,6 @@ SplitView {
             }
 
             thirdpartyServicesEnabled: ctrlThirdPartyServices.checked
-            showCreateCommunityBadge: ctrlShowCreateCommunityBadge.checked
             profileSectionHasNotification: ctrlSettingsHasNotification.checked
 
             onItemActivated: function (sectionType, sectionId) {
@@ -309,10 +308,6 @@ SplitView {
                 Switch {
                     id: ctrlSettingsHasNotification
                     text: "Settings has notification"
-                }
-                Switch {
-                    id: ctrlShowCreateCommunityBadge
-                    text: "Show create community badge"
                 }
             }
 
