@@ -105,6 +105,8 @@ QtObject:
     result.threadpool = threadpool
 
   include queued_async_calls
+  
+  proc startDetection*(self: Service) {.featureGuard(KEYCARD_ENABLED).}
 
   proc init*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
     debug "KeycardServiceV2 init"
@@ -114,6 +116,8 @@ QtObject:
     if status_const.IS_MACOS and status_const.IS_INTEL:
       sleep 700
     self.initializeRPC()
+    featureGuard (not USE_KEYCARD_QT):
+      self.startDetection()
     discard
 
   proc initializeRPC(self: Service) {.slot, featureGuard(KEYCARD_ENABLED).} =
