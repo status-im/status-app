@@ -499,11 +499,6 @@ Item {
         ListDropdownContent {
             id: assetDelegate
 
-            // workaround for QTBUG-142248
-            Theme.style: root.Theme.style
-            Theme.padding: root.Theme.padding
-            Theme.fontSizeOffset: root.Theme.fontSizeOffset
-
             availableData: d.availableData
             noDataText: root.noDataText
             areHeaderButtonsVisible: root.state === d.depth1_ListState
@@ -549,11 +544,6 @@ Item {
 
         ListDropdownContent {
             id: collectibleDelegate
-
-            // workaround for QTBUG-142248
-            Theme.style: root.Theme.style
-            Theme.padding: root.Theme.padding
-            Theme.fontSizeOffset: root.Theme.fontSizeOffset
 
             availableData: d.availableData
             noDataText: root.noDataText
