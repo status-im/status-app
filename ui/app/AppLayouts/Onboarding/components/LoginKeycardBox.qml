@@ -179,6 +179,16 @@ Control {
             }
         },
         State {
+            name: "insertMobile"
+            when: root.keycardState === Onboarding.KeycardState.InsertKeycard && SQUtils.Utils.isMobile
+            extend: "notEmpty"
+        },
+        State {
+            name: "cancelledMobile"
+            when: root.keycardState === Onboarding.KeycardState.Cancelled && SQUtils.Utils.isMobile
+            extend: "notEmpty"
+        },
+        State {
             name: "reading"
             when: root.keycardState === Onboarding.KeycardState.ReadingKeycard && !SQUtils.Utils.isMobile
             PropertyChanges {
@@ -274,7 +284,7 @@ Control {
         // exit states
         State {
             name: "notEmpty"
-            when: root.keycardState === Onboarding.KeycardState.UnknownReaderState && !d.wrongPin
+            when: (root.keycardState === Onboarding.KeycardState.UnknownReaderState || root.keycardState === Onboarding.KeycardState.NotEmpty) && !d.wrongPin
             PropertyChanges {
                 target: infoText
                 text: qsTr("Enter Keycard PIN")
