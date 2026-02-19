@@ -34,6 +34,7 @@ const DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED = true
 const DEFAULT_FLAG_BUY_ENABLED = true
 const DEFAULT_FLAG_SWAP_ENABLED = true
 const DEFAULT_FLAG_BRIDGE_ENABLED = true
+const DEFAULT_FLAG_USE_KEYCARD_QT = false
 
 # Public feature flags
 featureFlag("SEND_VIA_PERSONAL_CHAT_ENABLED", DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED)
@@ -53,6 +54,7 @@ featureFlag("SINGLE_STATUS_INSTANCE_ENABLED", DEFAULT_FLAG_SINGLE_STATUS_INSTANC
 featureFlag("BUY_ENABLED",                    DEFAULT_FLAG_BUY_ENABLED, true)
 featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED, true)
 featureFlag("BRIDGE_ENABLED",                 DEFAULT_FLAG_BRIDGE_ENABLED, true)
+featureFlag("USE_KEYCARD_QT",                 DEFAULT_FLAG_USE_KEYCARD_QT, true)
 # The `featureGuard` macro conditionally replaces the guarded code
 # There are two main usages:
 # 1. With a statement list:
