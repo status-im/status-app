@@ -19,7 +19,7 @@ QtObject {
     readonly property bool isAndroid: Qt.platform.os === android
     readonly property bool isMacOS: Qt.platform.os === mac
 
-    readonly property int swipeIndicatorWidth: 6
+    readonly property int swipeIndicatorWidth: 8
 
     function getAbsolutePosition(node) {
         var returnPos = {};
