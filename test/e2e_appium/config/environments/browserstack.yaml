@@ -78,6 +78,31 @@ devices:
         platformName: "android"
         platformVersion: "13"
         deviceName: "Samsung Galaxy S23"
+    # --- iOS devices ---
+    - id: "ipad_10th_gen_ios_16"
+      display_name: "iPad 10th Gen – iOS 16"
+      tags: ["ios", "tablet", "cloud"]
+      capabilities:
+        platformName: "iOS"
+        automationName: "XCUITest"
+        platformVersion: "16"
+        deviceName: "iPad 10th"
+    - id: "ipad_air_6th_gen_ios_18"
+      display_name: "iPad Air 6th Gen – iOS 18"
+      tags: ["ios", "tablet", "cloud"]
+      capabilities:
+        platformName: "iOS"
+        automationName: "XCUITest"
+        platformVersion: "18"
+        deviceName: "iPad Air (6th generation)"
+    - id: "iphone_15_ios_17"
+      display_name: "iPhone 15 – iOS 17"
+      tags: ["ios", "phone", "cloud"]
+      capabilities:
+        platformName: "iOS"
+        automationName: "XCUITest"
+        platformVersion: "17"
+        deviceName: "iPhone 15"
 
 execution:
   concurrency:

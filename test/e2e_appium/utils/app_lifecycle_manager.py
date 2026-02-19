@@ -11,6 +11,7 @@ import time
 from typing import Optional, Tuple
 
 from config.logging_config import get_logger
+from utils.platform import is_ios as _is_ios_driver
 
 
 class AppLifecycleManager:
@@ -25,6 +26,7 @@ class AppLifecycleManager:
     def __init__(self, driver):
         self.driver = driver
         self.logger = get_logger("app_lifecycle")
+        self._is_ios = _is_ios_driver(driver)
         self._default_package, self._default_activity = self._resolve_app_identifiers()
 
     @property
@@ -156,6 +158,10 @@ class AppLifecycleManager:
             self._activate_app(package)
             return True
         except Exception as e:
+            # start_activity is Android-only; skip on iOS
+            if self._is_ios:
+                self.logger.error("activate_app failed on iOS for %s: %s", package, e)
+                return False
             self.logger.debug(
                 "activate_app failed for %s: %s; attempting start_activity", package, e
             )
@@ -241,7 +247,12 @@ class AppLifecycleManager:
         return False
 
     def _restart_via_mobile_commands(self, app_package: str) -> bool:
-        """Restart the app using Appium mobile: terminateApp / launchApp commands."""
+        """Restart the app using Appium mobile: terminateApp / activateApp.
+
+        On Android, falls back to ``start_activity`` if ``activate_app``
+        fails.  ``start_activity`` does not exist on iOS so the fallback
+        is skipped there.
+        """
         try:
             self.logger.debug("Attempting mobile restart for %s", app_package)
             try:
@@ -259,6 +270,13 @@ class AppLifecycleManager:
                 self.logger.info("App restart completed via activate_app")
                 return True
             except Exception as activate_err:
+                if self._is_ios:
+                    self.logger.error(
+                        "activate_app failed on iOS for %s: %s",
+                        app_package,
+                        activate_err,
+                    )
+                    return False
                 self.logger.debug(
                     "activate_app failed for %s: %s; attempting start_activity",
                     app_package,
@@ -274,7 +292,7 @@ class AppLifecycleManager:
                 return False
         except Exception:
             self.logger.exception(
-                "App restart via activate_app/start_activity failed for %s",
+                "App restart failed for %s",
                 app_package,
             )
             return False
@@ -283,17 +301,21 @@ class AppLifecycleManager:
         package = override or self._default_package
         if package:
             return package
+        cap_hint = "bundleId" if self._is_ios else "appPackage"
         self.logger.error(
-            "Unable to determine app package. Ensure appPackage capability is set."
+            "Unable to determine app identifier. Ensure %s capability is set.",
+            cap_hint,
         )
         return None
 
     def _resolve_app_identifiers(self) -> Tuple[Optional[str], Optional[str]]:
-        """
-        Extract the application package and activity from driver capabilities.
+        """Extract the application package/bundleId and activity from capabilities.
+
+        On iOS the relevant identifier is ``bundleId`` (no activity concept).
+        On Android the identifiers are ``appPackage`` and ``appActivity``.
 
         Returns:
-            tuple(package, activity)
+            ``(package_or_bundle_id, activity_or_none)``
         """
         capability_sources = [
             getattr(self.driver, "capabilities", None),
@@ -306,23 +328,43 @@ class AppLifecycleManager:
         for caps in capability_sources:
             if not caps:
                 continue
-            package = caps.get("appium:appPackage") or caps.get("appPackage") or package
-            activity = (
-                caps.get("appium:appActivity") or caps.get("appActivity") or activity
-            )
-            if package and activity:
+
+            if self._is_ios:
+                # iOS: read bundleId
+                package = (
+                    caps.get("appium:bundleId")
+                    or caps.get("bundleId")
+                    or caps.get("CFBundleIdentifier")
+                    or package
+                )
+            else:
+                # Android: read appPackage / appActivity
+                package = (
+                    caps.get("appium:appPackage")
+                    or caps.get("appPackage")
+                    or package
+                )
+                activity = (
+                    caps.get("appium:appActivity")
+                    or caps.get("appActivity")
+                    or activity
+                )
+
+            if package and (self._is_ios or activity):
                 break
 
         if package:
-            self.logger.debug(f"Detected AUT package from capabilities: {package}")
+            id_type = "bundleId" if self._is_ios else "appPackage"
+            self.logger.debug("Detected AUT %s from capabilities: %s", id_type, package)
         else:
+            default = "app.status.mobile"
             self.logger.warning(
-                "AUT package not found in capabilities; falling back to legacy default"
+                "AUT identifier not found in capabilities; falling back to %s", default
             )
-            package = "app.status.mobile"
+            package = default
 
         if activity:
-            self.logger.debug(f"Detected AUT launch activity: {activity}")
+            self.logger.debug("Detected AUT launch activity: %s", activity)
 
         return package, activity
 

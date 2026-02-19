@@ -109,3 +109,43 @@ class BaseLocators:
     @staticmethod
     def any_element_with_text(text: str) -> tuple:
         return (BaseLocators.BY_XPATH, f"//*[@text='{text}' or @content-desc='{text}']")
+
+    # ------------------------------------------------------------------
+    # Cross-platform locators (Android + iOS)
+    #
+    # Qt/QML maps Accessible.name → content-desc (Android) / label (iOS)
+    # Qt/QML maps objectName      → resource-id (Android) / name  (iOS)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def label_contains(value: str) -> tuple:
+        """Cross-platform: find by Accessible.name substring.
+
+        Searches ``content-desc`` on Android and ``label`` on iOS.
+        """
+        return (
+            BaseLocators.BY_XPATH,
+            f"//*[contains(@content-desc, '{value}') or contains(@label, '{value}')]",
+        )
+
+    @staticmethod
+    def label_exact(value: str) -> tuple:
+        """Cross-platform: find by exact Accessible.name.
+
+        Searches ``content-desc`` on Android and ``label`` on iOS.
+        """
+        return (
+            BaseLocators.BY_XPATH,
+            f"//*[@content-desc='{value}' or @label='{value}']",
+        )
+
+    @staticmethod
+    def object_name_contains(value: str) -> tuple:
+        """Cross-platform: find by QML objectName substring.
+
+        Searches ``resource-id`` on Android and ``name`` on iOS.
+        """
+        return (
+            BaseLocators.BY_XPATH,
+            f"//*[contains(@resource-id, '{value}') or contains(@name, '{value}')]",
+        )

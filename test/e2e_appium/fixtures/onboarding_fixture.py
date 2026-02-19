@@ -207,7 +207,8 @@ class OnboardingFlow:
                 time.sleep(1)
         
         try:
-            self.app.driver.tap([(500, 300)])  
+            from utils.gestures import Gestures
+            Gestures(self.app.driver).tap(500, 300)
             time.sleep(1)
         except Exception:
             self.logger.debug("Initial tap attempt skipped", exc_info=True)

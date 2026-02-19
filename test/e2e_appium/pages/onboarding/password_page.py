@@ -36,7 +36,16 @@ class PasswordPage(BasePage):
 
         button = self.find_element_safe(self.locators.CONFIRM_PASSWORD_BUTTON, timeout=10)
         if not button:
+            # On iOS the app may auto-advance past the password screen if
+            # both fields were filled and validated before we reach this
+            # point.  Check whether we've already moved forward.
+            if not self.is_element_visible(self.IDENTITY_LOCATOR, timeout=2):
+                self.logger.info(
+                    "Password screen no longer visible — app appears to have advanced"
+                )
+                return True
             self.logger.error("Confirm password button not found")
+            self.dump_page_source("password_confirm_button_not_found")
             return False
 
         return self.gestures.element_center_tap(button)

@@ -19,6 +19,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from config import get_config, log_element_action
 from utils.exceptions import ElementInteractionError
 from utils.gestures import Gestures
+from utils.platform import is_ios as _is_ios_driver
 from utils.screenshot import save_screenshot, save_page_source
 from utils.app_lifecycle_manager import AppLifecycleManager
 from utils.keyboard_manager import KeyboardManager
@@ -51,6 +52,7 @@ class BasePage:
             self._screenshots_dir = "screenshots"
 
         self.wait = WebDriverWait(driver, element_wait_timeout)
+        self._is_ios = _is_ios_driver(driver)
 
         self.logger = logging.getLogger(
             self.__class__.__module__ + "." + self.__class__.__name__
@@ -253,10 +255,12 @@ class BasePage:
 
                 element.clear()
 
-                self.driver.update_settings({
-                    "sendKeyStrategy": "oneByOne",
-                    "interKeyDelay": inter_key_delay,
-                })
+                # sendKeyStrategy / interKeyDelay are UiAutomator2-only settings
+                if not self._is_ios:
+                    self.driver.update_settings({
+                        "sendKeyStrategy": "oneByOne",
+                        "interKeyDelay": inter_key_delay,
+                    })
                 actions = ActionChains(self.driver)
                 actions.send_keys(text).perform()
 
@@ -317,8 +321,9 @@ class BasePage:
 
     def _verify_input_success(self, element, expected_text: str) -> bool:
         try:
-            # Android UIAutomator2 exposes entered value via 'text'
-            actual_text = element.get_attribute("text")
+            # Android exposes entered value via 'text'; iOS uses 'value'
+            attr = "value" if self._is_ios else "text"
+            actual_text = element.get_attribute(attr)
             if actual_text is None:
                 return True
             return len(actual_text) > 0
@@ -328,8 +333,9 @@ class BasePage:
     def _clear_input_field(self, locator: tuple, timeout: int = 5) -> bool:
         """Clear text from an input field using select-all + delete.
 
-        Uses Ctrl+A to select all text, then Backspace to delete.
-        More reliable than element.clear() for Qt/QML fields.
+        Uses Ctrl+A (Android) or Cmd+A (iOS) to select all text, then
+        Backspace to delete.  More reliable than ``element.clear()`` for
+        Qt/QML fields.
 
         Args:
             locator: Element locator tuple.
@@ -347,18 +353,47 @@ class BasePage:
         try:
             element.click()
 
-            # Select all with Ctrl+A, then delete (Ctrl is correct for Android)
+            # iOS uses Command (META); Android uses Ctrl
+            modifier = Keys.META if self._is_ios else Keys.CONTROL
             actions = ActionChains(self.driver)
-            actions.key_down(Keys.CONTROL).send_keys("a").key_up(Keys.CONTROL)
+            actions.key_down(modifier).send_keys("a").key_up(modifier)
             actions.send_keys(Keys.BACKSPACE)
             actions.perform()
 
-            self.logger.debug("Cleared input field via Ctrl+A + Backspace")
+            self.logger.debug("Cleared input field via select-all + Backspace")
             return True
         except Exception as exc:
             self.logger.debug(f"Select-all clear failed: {exc}")
             return False
 
+    def _read_element_text(self, locator: tuple, timeout: int = 4) -> str | None:
+        """Read the visible text from an element, trying multiple attributes.
+
+        Android: checks ``text``, ``content-desc``, ``value``.
+        iOS:     checks ``value``, ``label``, ``name``.
+
+        Returns the first non-empty string found, or ``None`` if the
+        element is missing or has no readable text.
+        """
+        element = self.find_element_safe(locator, timeout=timeout)
+        if not element:
+            return None
+
+        attrs = ("value", "label", "name") if self._is_ios else ("text", "content-desc", "value")
+        for attr in attrs:
+            try:
+                raw = element.get_attribute(attr)
+                if not raw or raw == "null":
+                    continue
+                value = raw.strip()
+                # Strip [tid:...] suffix from Accessible.name values
+                if " [tid:" in value:
+                    value = value.split(" [tid:")[0].strip()
+                if value:
+                    return value
+            except Exception:
+                continue
+        return None
     def long_press_element(self, element, duration: int = 800) -> bool:
         """Perform long-press gesture on element to trigger context menu.
 
@@ -436,6 +471,44 @@ class BasePage:
             time.sleep(poll_interval)
         return False
 
+    def _collect_element_text(self, root_element) -> str:
+        """Collect all visible text from an element and its descendants.
+
+        Harvests both 'text' and 'content-desc' attributes, deduplicating values.
+        """
+        values: list[str] = []
+        self._append_element_text(root_element, values)
+
+        try:
+            descendants = root_element.find_elements("xpath", ".//*")
+        except Exception:
+            descendants = []
+
+        for element in descendants:
+            self._append_element_text(element, values)
+
+        return " ".join(values).strip()
+
+    def _append_element_text(self, element, target: list[str]) -> None:
+        """Append non-empty text values from element to target list.
+
+        Uses platform-appropriate attributes (Android: ``text``,
+        ``content-desc``; iOS: ``value``, ``label``).
+        """
+        attrs = ("value", "label") if self._is_ios else ("text", "content-desc")
+        for attr in attrs:
+            try:
+                raw = element.get_attribute(attr)
+                if not raw or raw == "null":
+                    continue
+                value = raw.strip()
+                # Strip [tid:...] suffix from Accessible.name values
+                if " [tid:" in value:
+                    value = value.split(" [tid:")[0].strip()
+            except Exception:
+                continue
+            if value and value not in target:
+                target.append(value)
     def _wait_between_attempts(self, base_delay: float = 0.5) -> None:
         env_name = os.getenv("CURRENT_TEST_ENVIRONMENT", "browserstack").lower()
         if env_name in ("browserstack",):

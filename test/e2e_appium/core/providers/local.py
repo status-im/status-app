@@ -29,7 +29,7 @@ class LocalProvider(Provider):
 
         if not capabilities.get("app") and not capabilities.get("noReset", False):
             raise ConfigurationError(
-                "Local provider requires either an APK path (set LOCAL_APP_PATH or "
+                "Local provider requires either an app path (set LOCAL_APP_PATH or "
                 "update path_template) or noReset=true for preinstalled apps."
             )
 

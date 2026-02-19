@@ -85,7 +85,12 @@ def _local_env_overrides(device_count: int) -> Optional[List[Dict[str, Any]]]:
 
 def _parse_device_markers(request, test_environment) -> tuple:
     """
-    Extract device configuration from pytest markers.
+    Extract device configuration from pytest markers and environment.
+
+    Also respects the ``TEST_DEVICE_ID`` environment variable.  When set,
+    the named device's capabilities are loaded from the YAML config and
+    used as the device override — this allows selecting iOS or specific
+    Android devices without modifying test markers.
 
     Returns:
         Tuple of (device_count, device_overrides, device_tags)
@@ -102,6 +107,22 @@ def _parse_device_markers(request, test_environment) -> tuple:
         device_overrides = list(device_overrides)[:device_count]
     elif test_environment == "local":
         device_overrides = _local_env_overrides(device_count)
+
+    # Honour TEST_DEVICE_ID env var: resolve the named device from YAML
+    # and inject its capabilities as an override so SessionManager picks
+    # the correct platform (e.g. iOS instead of the default Android).
+    env_device_id = os.getenv("TEST_DEVICE_ID")
+    if env_device_id and not device_overrides:
+        try:
+            cfg_mgr = ConfigurationManager()
+            env_cfg = cfg_mgr.load_environment(test_environment)
+            device_cfg = env_cfg.get_device(env_device_id)
+            defaults = env_cfg.device_defaults.get("capabilities", {})
+            merged = device_cfg.merged_capabilities(defaults)
+            device_overrides = [{"capabilities": merged}] * device_count
+        except Exception:
+            # Fall through to tag-based or default selection
+            pass
 
     if device_tags and not device_overrides:
         cfg_mgr = ConfigurationManager()

@@ -3,11 +3,14 @@ from ..base_locators import BaseLocators
 class WelcomeScreenLocators(BaseLocators):
 
     # Screen identification
-    WELCOME_PAGE = BaseLocators.content_desc_contains("Welcome to Status")
+    WELCOME_PAGE = BaseLocators.label_contains("Welcome to Status")
 
-    CREATE_PROFILE_BUTTON = BaseLocators.content_desc_contains("[tid:btnCreateProfile]")
-    LOGIN_BUTTON = BaseLocators.accessibility_id("Log in")
-
-    ONBOARDING_LAYOUT = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'startupOnboardingLayout')]"
+    # On Android content-desc is "Create profile [tid:btnCreateProfile]";
+    # on iOS label is "Create profile" and name contains "btnCreateProfile".
+    CREATE_PROFILE_BUTTON = BaseLocators.xpath(
+        "//*[contains(@content-desc, '[tid:btnCreateProfile]') "
+        "or contains(@name, 'btnCreateProfile')]"
     )
+    LOGIN_BUTTON = BaseLocators.label_exact("Log in")
+
+    ONBOARDING_LAYOUT = BaseLocators.object_name_contains("startupOnboardingLayout")

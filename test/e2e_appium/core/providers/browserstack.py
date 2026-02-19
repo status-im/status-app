@@ -63,6 +63,11 @@ class BrowserStackProvider(Provider):
         if app_id:
             capabilities["app"] = app_id
 
+        # Strip Android-only capabilities when targeting iOS
+        platform = (capabilities.get("platformName") or "").lower()
+        if platform == "ios":
+            self._strip_android_capabilities(capabilities)
+
         bstack_options = capabilities.setdefault("bstack:options", {})
         self._populate_metadata(bstack_options, metadata, device)
 
@@ -203,6 +208,27 @@ class BrowserStackProvider(Provider):
         merged_caps = device.merged_capabilities(defaults)
         bstack_options.setdefault("osVersion", merged_caps.get("platformVersion"))
         bstack_options.setdefault("deviceName", merged_caps.get("deviceName"))
+
+    # Capabilities that are valid only for Android / UiAutomator2 sessions.
+    _ANDROID_ONLY_CAPS = frozenset({
+        "appium:unicodeKeyboard",
+        "appium:resetKeyboard",
+        "appium:systemPort",
+        "appPackage",
+        "appActivity",
+        "appium:appPackage",
+        "appium:appActivity",
+        # Legacy short-form keys that may leak from device_defaults
+        "unicodeKeyboard",
+        "resetKeyboard",
+    })
+
+    def _strip_android_capabilities(self, capabilities: Dict[str, str]) -> None:
+        """Remove capabilities that are invalid for iOS / XCUITest sessions."""
+        for key in list(capabilities):
+            if key in self._ANDROID_ONLY_CAPS:
+                logger.debug("Stripped Android-only capability for iOS session: %s", key)
+                del capabilities[key]
 
     def _resolve_with_overrides(self, template: str, overrides: Dict[str, str]) -> str:
         original: Dict[str, Optional[str]] = {}
