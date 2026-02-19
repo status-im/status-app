@@ -679,7 +679,10 @@ proc signRevealedAddressesForNonKeycardKeypairs(self: Module): bool =
   return true
 
 proc signRevealedAddressesForNonKeycardKeypairsAndEmitSignal(self: Module) =
-  if self.signRevealedAddressesForNonKeycardKeypairs() and self.joiningCommunityDetails.allSigned():
+  let wereAllSigned = self.joiningCommunityDetails.allSigned()
+  if not self.signRevealedAddressesForNonKeycardKeypairs():
+    return
+  if not wereAllSigned and self.joiningCommunityDetails.allSigned():
     self.view.sendAllSharedAddressesSignedSignal()
 
 proc anyProfileKeyPairAddressSelectedToBeRevealed(self: Module): bool =
