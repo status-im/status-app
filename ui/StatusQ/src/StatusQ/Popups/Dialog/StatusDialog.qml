@@ -193,6 +193,7 @@ Dialog {
                                                | Dialog.SaveAll | Dialog.Retry | Dialog.Ignore
         readonly property int yesRoleFlags: Dialog.Yes | Dialog.YesToAll
 
+        bottomPadding: root.padding + root.parent.SafeArea.margins.bottom
         visible: rightButtons
                  && root.standardButtons & (rejectRoleFlags | noRoleFlags | acceptRoleFlags
                                             | yesRoleFlags | Dialog.ApplyRole)

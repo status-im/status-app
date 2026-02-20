@@ -141,6 +141,7 @@ StatusDialog {
     }
 
     footer: StatusDialogFooter {
+        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
         StatusDialogDivider {
             anchors.top: parent.top
             width: parent.width

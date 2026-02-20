@@ -260,6 +260,7 @@ StatusDialog {
 
     footer: StatusDialogFooter {
         id: footer
+        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
         visible: !!root.messageToPin
         rightButtons: ObjectModel {
             StatusButton {

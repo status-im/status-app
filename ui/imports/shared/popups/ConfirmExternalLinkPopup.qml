@@ -72,6 +72,7 @@ StatusDialog {
     }
 
     footer: StatusDialogFooter {
+        bottomPadding: root.padding + root.parent.SafeArea.margins.bottom
         rightButtons: ObjectModel {
             StatusFlatButton {
                 text: qsTr("Cancel")
