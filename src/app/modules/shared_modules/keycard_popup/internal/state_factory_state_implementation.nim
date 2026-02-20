@@ -271,7 +271,7 @@ proc ensureReaderAndCardPresenceAndResolveNextState*(state: State, keycardFlowTy
           controller.setKeycardData(updatePredefinedKeycardData(controller.getKeycardData(), PredefinedKeycardData.UseGeneralMessageForLockedState, add = true))
           return createState(StateType.MaxPukRetriesReached, state.flowType, nil)
     if keycardFlowType == ResponseTypeValueEnterPIN:
-      if keycardEvent.keyUid == controller.getKeyUidWhichIsBeingAuthenticating():
+      if keycardEvent.keyUid == controller.getKeyUidWhichIsBeingAuthenticating() or keycardEvent.keyUid.len == 0:
         if singletonInstance.userProfile.getUsingBiometricLogin():
           if keycardEvent.error.len > 0 and
             keycardEvent.error == ErrorPIN:
@@ -310,7 +310,7 @@ proc ensureReaderAndCardPresenceAndResolveNextState*(state: State, keycardFlowTy
           controller.setKeycardData(updatePredefinedKeycardData(controller.getKeycardData(), PredefinedKeycardData.UseGeneralMessageForLockedState, add = true))
           return createState(StateType.MaxPukRetriesReached, state.flowType, nil)
     if keycardFlowType == ResponseTypeValueEnterPIN:
-      if keycardEvent.keyUid == controller.getKeyUidWhichIsBeingSigning():
+      if keycardEvent.keyUid == controller.getKeyUidWhichIsBeingSigning() or keycardEvent.keyUid.len == 0:
         if singletonInstance.userProfile.getUsingBiometricLogin():
           if keycardEvent.error.len > 0 and
             keycardEvent.error == ErrorPIN:

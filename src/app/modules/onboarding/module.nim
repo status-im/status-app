@@ -298,9 +298,6 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
     self.view.accountLoginError(e.msg, wrongPassword = false)
 
 proc syncAppAndKeycardState[T](self: Module[T]) =
-  # don't sync on mobile devices (requires one keycard tap more)
-  if main_constants.IS_MOBILE:
-    return
   let kcEvent = self.view.getKeycardEvent()
   if kcEvent.keycardInfo.keyUID == "":
     return
@@ -322,7 +319,6 @@ proc syncAppAndKeycardState[T](self: Module[T]) =
     kcName = singletonInstance.userProfile.getName()
   if kcName.len == 0:
     kcName = "Status Keycard"
-  self.controller.storeMetadata(kcName, pathsToStore)
 
   var kcDto = KeycardDto(keycardUid: kcEvent.keycardInfo.instanceUID,
     keycardName: kcName,
@@ -330,6 +326,9 @@ proc syncAppAndKeycardState[T](self: Module[T]) =
     accountsAddresses: addressesToStore,
     keyUid: kcEvent.keycardInfo.keyUID)
   self.controller.addKeycardOrAccounts(kcDto, password = "")
+  if main_constants.IS_MOBILE:
+    return
+  self.controller.storeMetadata(kcName, pathsToStore)
 
 proc finishAppLoading2[T](self: Module[T]) =
 
