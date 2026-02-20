@@ -14,4 +14,7 @@ QtObject {
     function emoji(name) {
         return assetPath + "twemoji/svg/" + name + ".svg"
     }
+    function svgImg(name) {
+        return assetPath + "img/" + name + ".svg"
+    }
 }
