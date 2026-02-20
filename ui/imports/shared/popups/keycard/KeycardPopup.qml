@@ -96,6 +96,9 @@ StatusDialog {
         contentWidth: availableWidth
         padding: 0
 
+        // keep content visible on mobile when keyboard activated
+        onHeightChanged: scrollView.scrollEnd()
+
         KeycardPopupContent {
             id: content
             width: scrollView.availableWidth
