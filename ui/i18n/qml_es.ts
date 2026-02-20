@@ -12097,6 +12097,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>NavigationEducationDialog</name>
+    <message>
+        <source>Open app menu</source>
+        <translation>Abrir menú</translation>
+    </message>
+</context>
+<context>
     <name>NetworkCardsComponent</name>
     <message>
         <source>Your Balances</source>

@@ -473,5 +473,7 @@
         <file>icons/open-tabs.svg</file>
         <file>icons/bookmark-added.svg</file>
         <file>icons/webhomepage.svg</file>
+        <file>open-menu-education-dark.svg</file>
+        <file>open-menu-education-light.svg</file>
     </qresource>
 </RCC>

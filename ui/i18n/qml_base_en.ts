@@ -12076,6 +12076,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>NavigationEducationDialog</name>
+    <message>
+        <source>Open app menu</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>NetworkCardsComponent</name>
     <message>
         <source>Your Balances</source>
