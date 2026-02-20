@@ -217,7 +217,24 @@ QtObject:
         let event = KeycardAuthorizeEvent(error: err, authorized: false)
         self.events.emit(SIGNAL_KEYCARD_AUTHORIZE_FINISHED, event)
         return
+
+      if responseObj.hasKey("error") and responseObj["error"].kind != JNull:
+        let rpcErrorObj = responseObj["error"]
+        let rpcError = if rpcErrorObj.kind == JString: rpcErrorObj.getStr() else: $rpcErrorObj
+        if rpcError.len > 0:
+          error "error authorizing", err=rpcError
+          let event = KeycardAuthorizeEvent(error: rpcError, authorized: false)
+          self.events.emit(SIGNAL_KEYCARD_AUTHORIZE_FINISHED, event)
+          return
+
       let resultObj = responseObj{"result"}
+      if resultObj.kind == JNull or resultObj{"authorized"}.kind == JNull:
+        let reason = "missing authorize result"
+        error "error authorizing", err=reason
+        let event = KeycardAuthorizeEvent(error: reason, authorized: false)
+        self.events.emit(SIGNAL_KEYCARD_AUTHORIZE_FINISHED, event)
+        return
+
       let event = KeycardAuthorizeEvent(
         error: "",
         authorized: resultObj{"authorized"}.getBool(),

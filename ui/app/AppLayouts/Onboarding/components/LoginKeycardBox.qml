@@ -200,6 +200,7 @@ Control {
         State {
             name: "notKeycard"
             when: root.keycardState === Onboarding.KeycardState.NotKeycard
+            extend: "notEmpty"
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
@@ -209,6 +210,7 @@ Control {
         State {
             name: "wrongKeycard"
             when: root.isWrongKeycard
+            extend: "notEmpty"
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
@@ -219,6 +221,7 @@ Control {
             name: "genericError"
             when: (root.keycardState === Onboarding.KeycardState.NoPCSCService ||
                   root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached ) && !SQUtils.Utils.isMobile// TODO add a generic/fallback keycard error here too
+            extend: "notEmpty"
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
@@ -228,6 +231,7 @@ Control {
         State {
             name: "maxPairingSlotsReached"
             when: root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached && SQUtils.Utils.isMobile
+            extend: "notEmpty"
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
@@ -256,6 +260,7 @@ Control {
         State {
             name: "empty"
             when: root.keycardState === Onboarding.KeycardState.Empty
+            extend: "notEmpty"
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
@@ -275,6 +280,7 @@ Control {
         State {
             name: "errorDuringLogin"
             when: !!root.loginError
+            extend: "notEmpty"
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
@@ -284,7 +290,8 @@ Control {
         // exit states
         State {
             name: "notEmpty"
-            when: (root.keycardState === Onboarding.KeycardState.UnknownReaderState || root.keycardState === Onboarding.KeycardState.NotEmpty) && !d.wrongPin
+            // Mobile UnknownReaderState just means the keycard was never tapped, so we show the PIN input
+            when: (root.keycardState === Onboarding.KeycardState.UnknownReaderState && SQUtils.Utils.isMobile) || (root.keycardState === Onboarding.KeycardState.NotEmpty) && !d.wrongPin
             PropertyChanges {
                 target: infoText
                 text: qsTr("Enter Keycard PIN")

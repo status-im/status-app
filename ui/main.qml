@@ -707,7 +707,9 @@ Window {
                     return
                 }
                 localAppSettings.selectedProfileKeyUid = keyUid
-                onboardingStore.resetKeycardProgressStates()
+                if (SQUtils.Utils.isMobile) {
+                    onboardingStore.resetKeycardProgressStates()
+                }
             }
 
             onLoginRequested: function (keyUid, method, data) {
@@ -717,10 +719,7 @@ Window {
                     return
                 }
 
-                if (!selectedProfile.keycardPairing) {
-                    // if it's a keycard profile, display splash screen once the keycard is provided, otherwise display it now
-                    stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate) // we unwind on error
-                }
+                stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate) // we unwind on error
 
                 onboardingStore.loginRequestSent = true
                 onboardingStore.loginRequested(keyUid, method, data)
