@@ -16817,6 +16817,14 @@ to load</source>
         <source>Get Stickers</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Enable third-party services</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable third-party services for stickers feature to work.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>StatusSyncCodeInput</name>

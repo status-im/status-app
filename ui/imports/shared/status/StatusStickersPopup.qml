@@ -20,6 +20,8 @@ StatusDropdown {
     property ChatStores.RootStore store
 
     property alias isWalletEnabled: stickerMarket.isWalletEnabled
+    property bool thirdpartyServicesEnabled
+    signal enableThirdpartyServicesRequested
 
     signal stickerSelected(string hashId, string packId, string url)
     signal buyClicked(string packId, string price)
@@ -99,7 +101,8 @@ StatusDropdown {
             store: root.store
             stickerPacks: d.stickerPackList
             packId: stickerPackListView.selectedPackId
-            marketVisible: d.stickerPacksLoaded && d.online
+            marketVisible: root.thirdpartyServicesEnabled && d.stickerPacksLoaded
+                           && d.online
             onInstallClicked: {
                 //starts async task
                 stickersModule.install(packId)
@@ -139,11 +142,20 @@ StatusDropdown {
             ColumnLayout {
                 id: failedToLoadStickersInfo
 
-                anchors.centerIn: parent
-                visible: d.stickerPacksLoadFailed || !d.online
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: Theme.padding
+
+                visible: root.thirdpartyServicesEnabled && d.stickerPacksLoadFailed || !d.online
+                spacing: Theme.padding
 
                 StatusBaseText {
+                    Layout.fillWidth: true
+
+                    wrapMode: Text.Wrap
                     text: qsTr("Failed to load stickers")
+                    horizontalAlignment: Text.AlignHCenter
                     color: Theme.palette.dangerColor1
                 }
 
@@ -154,6 +166,38 @@ StatusDropdown {
                     enabled: d.online
 
                     onClicked: d.loadStickers()
+                }
+            }
+
+
+            ColumnLayout {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: Theme.padding
+
+                visible: !root.thirdpartyServicesEnabled
+                spacing: Theme.padding
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+
+                    wrapMode: Text.Wrap
+                    text: qsTr("Enable third-party services for stickers feature to work.")
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Theme.palette.dangerColor1
+                }
+
+                StatusButton {
+                    Layout.alignment: Qt.AlignHCenter
+
+                    type: StatusBaseButton.Type.Primary
+                    normalColor: Theme.palette.privacyColors.primary
+                    textColor: Theme.palette.privacyColors.tertiary
+
+                    text: qsTr("Enable third-party services")
+
+                    onClicked: root.enableThirdpartyServicesRequested()
                 }
             }
         }
