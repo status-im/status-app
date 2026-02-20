@@ -144,6 +144,19 @@ Item {
 
     required property bool systemTrayIconAvailable
 
+
+    readonly property bool isPortraitMode: appMain.width < ThemeUtils.portraitBreakpoint.width
+
+    // Indicates whether the user has already seen the education popup
+    // for the new navigation menu.
+    readonly property bool newMenuEducationPopupSeenSetting: appMainLocalSettings.newMenuEducationPopupSeen
+
+    // Marks the navigation education popup as seen (or unseen).
+    // Persists the value in local settings.
+    function setNewMenuEducationPopupSeenSetting(value) {
+        appMainLocalSettings.newMenuEducationPopupSeen = value
+    }
+
     function showEnableBiometricsFlow() {
         popupRequestsHandler.enableBiometricsPopupHandler.openPopup()
     }
@@ -889,17 +902,18 @@ Item {
         property var whitelistedUnfurledDomains: []
         property bool introduceYourselfPopupSeen
         property bool enableMessageBackupPopupSeen
+        property bool newMenuEducationPopupSeen
         property var recentEmojis
         property string skinColor // NB: must be a string for the twemoji lib to work; we don't want the `#` in the name
         property int theme: ThemeUtils.Style.System
         property int fontSize: {
-            if (appMain.width < ThemeUtils.portraitBreakpoint.width) {
+            if (appMain.isPortraitMode) {
                 return ThemeUtils.FontSize.FontSizeS
             }
             return ThemeUtils.FontSize.FontSizeM
         }
         property int paddingFactor: {
-            if (appMain.width < ThemeUtils.portraitBreakpoint.width) {
+            if (appMain.isPortraitMode) {
                 return ThemeUtils.PaddingFactor.PaddingXXS
             }
             return ThemeUtils.PaddingFactor.PaddingM
@@ -2176,7 +2190,6 @@ Item {
                 Loader {
                     id: createChatView
 
-                    readonly property bool isPortraitMode: appMain.width < ThemeUtils.portraitBreakpoint.width
                     property bool opened: false
                     readonly property real defaultWidth: parent.width - Constants.chatSectionLeftColumnWidth -
                              anchors.rightMargin - anchors.leftMargin
@@ -2188,7 +2201,7 @@ Item {
                     anchors.leftMargin: Theme.halfPadding
                     anchors.bottom: parent.bottom
                     anchors.right: parent.right
-                    anchors.left: isPortraitMode ? parent.left : undefined
+                    anchors.left: appMain.isPortraitMode ? parent.left : undefined
 
                     sourceComponent: CreateChatView {
                         width: Math.min(Math.max(implicitWidth, createChatView.defaultWidth), createChatView.parent.width)

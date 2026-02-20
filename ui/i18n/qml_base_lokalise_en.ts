@@ -14705,6 +14705,14 @@
     </message>
   </context>
   <context>
+    <name>NavigationEducationDialog</name>
+    <message>
+      <source>Open app menu</source>
+      <comment>NavigationEducationDialog</comment>
+      <translation>Open app menu</translation>
+    </message>
+  </context>
+  <context>
     <name>NetworkCardsComponent</name>
     <message>
       <source>Your Balances</source>
