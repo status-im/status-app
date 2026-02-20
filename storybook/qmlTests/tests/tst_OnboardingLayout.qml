@@ -1076,7 +1076,7 @@ Item {
                         expectFail(data.tag, "Biometrics failed, expected to fail to login")
                     }
                 } else { // manual PIN
-                    mockDriver.keycardState = Onboarding.KeycardState.UnknownReaderState // shows PIN input
+                    mockDriver.keycardState = Onboarding.KeycardState.NotEmpty // shows PIN input
                     tryCompare(pinInput, "visible", true)
                     compare(pinInput.pinInput, "")
 

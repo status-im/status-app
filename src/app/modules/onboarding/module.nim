@@ -472,7 +472,8 @@ method requestDeleteBiometrics*[T](self: Module[T], account: string) =
   self.view.deleteBiometricsRequested(account)
 
 method startKeycardDetection*[T](self: Module[T]) =
-  self.resetKeycardProgressStates()
+  if main_constants.IS_MOBILE:
+    self.resetKeycardProgressStates()
   self.controller.startKeycardDetection()
 
 method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
