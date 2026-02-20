@@ -113,6 +113,7 @@ StatusDialog {
     }
 
     footer: StatusDialogFooter {
+        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
         rightButtons: ObjectModel {
             StatusButton {
                 objectName: "joinStatusDialogFooterButton"

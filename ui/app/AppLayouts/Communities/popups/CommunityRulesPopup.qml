@@ -6,6 +6,7 @@ import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Popups.Dialog
+import StatusQ.Core.Theme
 
 StatusDialog {
     id: root
@@ -53,6 +54,7 @@ StatusDialog {
     }
 
     footer: StatusDialogFooter {
+        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
         rightButtons: ObjectModel {
             StatusButton {
                 text: qsTr("Done")

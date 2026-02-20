@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQml.Models
 
 import utils
 
@@ -10,18 +11,19 @@ import StatusQ.Controls.Validators
 import StatusQ.Core
 import StatusQ.Core.Backpressure
 import StatusQ.Core.Theme
-import StatusQ.Popups
+import StatusQ.Popups.Dialog
 
 import AppLayouts.Profile.stores
 import AppLayouts.stores as AppLayoutStores
 
-StatusModal {
+StatusDialog {
     id: root
 
     property AppLayoutStores.ContactsStore contactsStore
 
-    headerSettings.title: qsTr("Send Contact Request to chat key")
+    title: qsTr("Send Contact Request to chat key")
     padding: d.contentMargins
+    fullScreenSheet: true
 
     QtObject {
         id: d
@@ -120,14 +122,15 @@ StatusModal {
         }
     }
 
-    contentItem: Column {
+    contentItem: ColumnLayout {
         id: content
         spacing: d.contentSpacing
+        width: root.width
 
         StatusInput {
             id: chatKeyInput
             input.edit.objectName: "SendContactRequestModal_ChatKey_Input"
-            width: parent.width
+            Layout.preferredWidth: parent.width
             placeholderText: qsTr("Enter chat key here")
             input.text: input.edit.focus? d.realChatKey : d.elidedChatKey
             input.rightComponent: {
@@ -150,7 +153,7 @@ StatusModal {
             id: messageInput
             input.edit.objectName: "SendContactRequestModal_SayWhoYouAre_Input"
             charLimit: d.maxMsgLength
-            width: parent.width
+            Layout.preferredWidth: parent.width
             placeholderText: qsTr("Say who you are / why you want to become a contact...")
             input.multiline: true
             minimumHeight: d.msgHeight
@@ -162,17 +165,25 @@ StatusModal {
                     errorMessage: Utils.getErrorMessage(messageInput.errors, qsTr("who are you"))
                 }]
         }
+
+        Item {
+            Layout.fillHeight: true
+        }
     }
 
-    rightButtons: [
-        StatusButton {
-            enabled: d.validChatKey && messageInput.valid
-            objectName: "SendContactRequestModal_Send_Button"
-            text: qsTr("Send Contact Request")
-            onClicked: {
-                root.contactsStore.sendContactRequest(d.resolvedPubKey, messageInput.text)
-                root.close()
+    footer: StatusDialogFooter {
+        spacing: Theme.padding
+
+        rightButtons: ObjectModel {
+            StatusButton {
+                enabled: d.validChatKey && messageInput.valid
+                objectName: "SendContactRequestModal_Send_Button"
+                text: qsTr("Send Contact Request")
+                onClicked: {
+                    root.contactsStore.sendContactRequest(d.resolvedPubKey, messageInput.text)
+                    root.close()
+                }
             }
         }
-    ]
+    }
 }
