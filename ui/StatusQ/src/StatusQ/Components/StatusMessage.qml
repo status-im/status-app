@@ -358,7 +358,7 @@ Control {
                         id: linksLoader
                         Layout.fillWidth: true
                         Layout.preferredHeight: implicitHeight
-                        active: !root.editMode &&
+                        active: parent.visible && !root.editMode &&
                                 ((!!root.linkPreviewModel && root.linkPreviewModel.count > 0)
                                 || (!!root.gifLinks && root.gifLinks.length > 0)
                                 || (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0))
