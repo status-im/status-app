@@ -20459,6 +20459,16 @@
       <comment>StatusStickersPopup</comment>
       <translation>Get Stickers</translation>
     </message>
+    <message>
+      <source>Enable third-party services</source>
+      <comment>StatusStickersPopup</comment>
+      <translation>Enable third-party services</translation>
+    </message>
+    <message>
+      <source>Enable third-party services for stickers feature to work.</source>
+      <comment>StatusStickersPopup</comment>
+      <translation>Enable third-party services for stickers feature to work.</translation>
+    </message>
   </context>
   <context>
     <name>StatusSyncCodeInput</name>

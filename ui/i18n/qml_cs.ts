@@ -16935,6 +16935,14 @@ selhalo</translation>
         <source>Get Stickers</source>
         <translation>Získat nálepky</translation>
     </message>
+    <message>
+        <source>Enable third-party services</source>
+        <translation type="unfinished">Povolit služby třetích stran</translation>
+    </message>
+    <message>
+        <source>Enable third-party services for stickers feature to work.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>StatusSyncCodeInput</name>

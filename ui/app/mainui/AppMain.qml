@@ -1248,7 +1248,10 @@ Item {
             directParent: appMain.Window.contentItem
             store: appMain.rootChatStore
             isWalletEnabled: appMain.walletProfileStore.isWalletEnabled
+            thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
+
             onBuyClicked: popupRequestsHandler.sendModalHandler.buyStickerPack(packId, price)
+            onEnableThirdpartyServicesRequested: popupRequestsHandler.thirdpartyServicesPopupHandler.openPopup()
         }
     }
 

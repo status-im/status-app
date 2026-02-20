@@ -16788,6 +16788,14 @@ to load</source>
         <source>Get Stickers</source>
         <translation>이모티콘 가져오기</translation>
     </message>
+    <message>
+        <source>Enable third-party services</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable third-party services for stickers feature to work.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>StatusSyncCodeInput</name>
