@@ -429,13 +429,10 @@ proc connectKeycardReponseSignal(self: Controller) =
     let currentFlow = self.keycardService.getCurrentFlow()
     if currentFlow != KCSFlowType.Sign:
       return
-    let keyUid = self.silentSigningKeyUid
-    let path = self.silentSigningPath
-    let pin = self.silentSigningPin
+    self.delegate.onDataSigned(self.silentSigningKeyUid, self.silentSigningPath, args.flowEvent.txSignature.r, args.flowEvent.txSignature.s, args.flowEvent.txSignature.v, self.silentSigningPin)
     self.silentSigningKeyUid = ""
     self.silentSigningPath = ""
     self.silentSigningPin = ""
-    self.delegate.onDataSigned(keyUid, path, args.flowEvent.txSignature.r, args.flowEvent.txSignature.s, args.flowEvent.txSignature.v, pin)
 
 proc cancelCurrentFlow*(self: Controller) =
   self.keycardService.cancelCurrentFlow()
