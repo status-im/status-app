@@ -43,7 +43,9 @@ T.ScrollBar {
     implicitWidth: 14
     implicitHeight: 14
 
-    background: Item {}
+    background: Item{
+        width: 0 // Needed to prevent a white background from showing on Windows
+    }
 
     contentItem: Rectangle {
         color: root.Theme.palette.primaryColor2
