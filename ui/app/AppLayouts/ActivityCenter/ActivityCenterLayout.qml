@@ -629,6 +629,7 @@ StatusSectionLayout {
             }
 
             footer: StatusDialogFooter {
+                bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
                 leftButtons: ObjectModel {
                     StatusFlatButton {
                         text: qsTr("Cancel")

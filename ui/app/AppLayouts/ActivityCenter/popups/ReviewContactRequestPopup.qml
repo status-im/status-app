@@ -76,6 +76,7 @@ StatusDialog {
         }
     }
     footer: StatusDialogFooter {
+        bottomPadding: root.padding + root.parent.SafeArea.margins.bottom
         rightButtons: ObjectModel {
             StatusButton {
                 text: qsTr("Accept Contact Request")

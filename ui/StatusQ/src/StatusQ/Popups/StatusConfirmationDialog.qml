@@ -19,6 +19,7 @@ StatusDialog {
     closePolicy: Popup.NoAutoClose
     
     footer: StatusDialogFooter {
+        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
         spacing: 16
         rightButtons: ObjectModel {
             StatusButton {

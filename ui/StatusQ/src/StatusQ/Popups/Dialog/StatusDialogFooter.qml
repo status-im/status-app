@@ -18,7 +18,7 @@ Control {
 
     spacing: Theme.halfPadding
     padding: Theme.padding
-    bottomPadding: padding + root.SafeArea.margins.bottom
+    bottomPadding: padding + root.parent.SafeArea.margins.bottom
 
     background: Rectangle {
         color: root.color

@@ -116,6 +116,7 @@ StatusDialog {
 
     footer: StatusDialogFooter {
         spacing: Theme.padding
+        bottomPadding: root.padding + root.parent.SafeArea.margins.bottom
         rightButtons: ObjectModel {
             StatusFlatButton {
                 objectName: "RemoveAccountPopup-CancelButton"

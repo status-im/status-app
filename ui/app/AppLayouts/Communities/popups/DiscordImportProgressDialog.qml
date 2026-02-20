@@ -32,6 +32,7 @@ StatusDialog {
 
     footer: StatusDialogFooter {
         id: footer
+        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
         rightButtons: ObjectModel {}
     }
 
