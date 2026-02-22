@@ -96,42 +96,40 @@ StatusDropdown {
 
     padding: 0
 
+    QtObject {
+        id: d
+
+        readonly property int headerMargin: root.Theme.halfPadding
+    }
+
     contentItem: Item {
         implicitWidth: parent.width
         implicitHeight: childrenRect.height
 
         ColumnLayout {
-            width: parent.width
+            anchors.fill: parent
             spacing: 0
 
-            Item {
-                readonly property int headerMargin: 8
+            SearchBox {
+                id: searchBox
+                placeholderText: qsTr("Search")
+                enabled: root.gifUnfurlingEnabled
 
-                id: gifHeader
                 Layout.fillWidth: true
-                Layout.preferredHeight: searchBox.height + gifHeader.headerMargin
+                Layout.topMargin: d.headerMargin
+                Layout.rightMargin: d.headerMargin
+                Layout.leftMargin: d.headerMargin
 
-                SearchBox {
-                    id: searchBox
-                    placeholderText: qsTr("Search")
-                    enabled: root.gifUnfurlingEnabled
-                    anchors.right: parent.right
-                    anchors.rightMargin: gifHeader.headerMargin
-                    anchors.top: parent.top
-                    anchors.topMargin: gifHeader.headerMargin
-                    anchors.left: parent.left
-                    anchors.leftMargin: gifHeader.headerMargin
-                    input.edit.onTextChanged: {
-                        if (searchBox.text === "") {
-                            toggleCategory(GifPopupDefinitions.Category.Trending)
-                            return
-                        }
-                        if (root.currentCategory !== GifPopupDefinitions.Category.Search) {
-                            root.previousCategory = root.currentCategory
-                            root.currentCategory = GifPopupDefinitions.Category.Search
-                        }
-                        Qt.callLater(searchGif, searchBox.text)
+                input.edit.onTextChanged: {
+                    if (searchBox.text === "") {
+                        toggleCategory(GifPopupDefinitions.Category.Trending)
+                        return
                     }
+                    if (root.currentCategory !== GifPopupDefinitions.Category.Search) {
+                        root.previousCategory = root.currentCategory
+                        root.currentCategory = GifPopupDefinitions.Category.Search
+                    }
+                    Qt.callLater(searchGif, searchBox.text)
                 }
             }
 
@@ -150,20 +148,18 @@ StatusDropdown {
                 visible: searchBox.text === ""
                 color: Theme.palette.secondaryText
                 font.pixelSize: Theme.additionalTextSize
-                topPadding: gifHeader.headerMargin
-                leftPadding: gifHeader.headerMargin
+                topPadding: d.headerMargin
+                leftPadding: d.headerMargin
             }
 
             Loader {
                 id: gifsLoader
                 active: root.opened && root.gifUnfurlingEnabled
                 Layout.fillWidth: true
-                Layout.alignment: Qt.AlignTop | Qt.AlignLeft
-                Layout.preferredHeight: {
-                    const headerTextHeight = searchBox.text === "" ? headerText.height : 0
-                    return 400 - gifHeader.height - headerTextHeight
-                }
-                sourceComponent: root.gifColumnA.rowCount() === 0 ? emptyPlaceholderComponent : gifItemsComponent
+                Layout.fillHeight: true
+
+                sourceComponent: root.gifColumnA.rowCount() === 0 ?
+                                     emptyPlaceholderComponent : gifItemsComponent
             }
 
             Row {
