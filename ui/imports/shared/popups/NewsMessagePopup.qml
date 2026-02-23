@@ -23,6 +23,16 @@ StatusDialog {
     property var activityCenterNotifications
     signal linkClicked(string link)
 
+    QtObject {
+        id: d
+
+        readonly property StatusDateGroupLabel dateGroupLabel : StatusDateGroupLabel {
+            messageTimestamp: notification ? notification.timestamp : 0
+            // Hidden label to get the string
+            visible: false
+        }
+    }
+
     Component.onCompleted: {
         if (!root.notification && root.notificationId) {
             notificationModelEntryLoader.active = true
@@ -34,15 +44,8 @@ StatusDialog {
     padding: Theme.bigPadding
 
     header: StatusDialogHeader {
-        StatusDateGroupLabel {
-            id: dateGroupLabel
-            messageTimestamp: notification ? notification.timestamp : 0
-            // Hidden label to get the string
-            visible: false
-        }
-
         headline.title: notification.newsTitle
-        headline.subtitle: dateGroupLabel.text
+        headline.subtitle: d.dateGroupLabel.text
         actions.closeButton.onClicked: root.close()
         leftComponent: Item {
             width: 40
