@@ -195,6 +195,60 @@ Item {
             verify(amountToSend.valid)
         }
 
+        function test_dotTypedInCommaLocale() {
+            amountToSend.multiplierIndex = 18
+            amountToSend.locale = Qt.locale("pl_PL")
+
+            tryCompare(amountToSend, "decimalPoint", ",")
+
+            const textField = findChild(amountToSend, "amountToSend_textField")
+            verify(!!textField)
+            textField.forceActiveFocus()
+
+            keyClick(Qt.Key_1)
+            keyClick(Qt.Key_Period)
+            keyClick(Qt.Key_5)
+
+            tryCompare(textField, "text", "1,5")
+            verify(amountToSend.valid)
+            compare(amountToSend.delocalized, "1.5")
+            compare(amountToSend.amount, "1500000000000000000")
+        }
+
+        function test_delocalizedProperty() {
+            amountToSend.multiplierIndex = 3
+
+            amountToSend.setValue("2.5")
+            compare(amountToSend.delocalized, "2.5")
+
+            amountToSend.locale = Qt.locale("de_DE")
+            tryCompare(amountToSend, "decimalPoint", ",")
+            amountToSend.setValue("2.5")
+
+            const textField = findChild(amountToSend, "amountToSend_textField")
+            tryCompare(textField, "text", "2,5")
+            compare(amountToSend.delocalized, "2.5")
+            compare(amountToSend.amount, "2500")
+        }
+
+        function test_pasteCommaInCommaLocale() {
+            amountToSend.multiplierIndex = 18
+            amountToSend.locale = Qt.locale("pl_PL")
+            tryCompare(amountToSend, "decimalPoint", ",")
+
+            ClipboardUtils.setText("1,5")
+            const textField = findChild(amountToSend, "amountToSend_textField")
+            verify(!!textField)
+            verify(textField.canPaste)
+            mouseClick(textField)
+            keySequence(StandardKey.Paste)
+
+            tryCompare(textField, "text", "1,5")
+            verify(amountToSend.valid)
+            compare(amountToSend.delocalized, "1.5")
+            compare(amountToSend.amount, "1500000000000000000")
+        }
+
         function test_pasteChangesAmount() {
             compare(amountToSend.valid, false)
             compare(amountToSend.empty, true)

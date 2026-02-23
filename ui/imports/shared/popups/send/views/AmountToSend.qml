@@ -38,9 +38,23 @@ Control {
     // detail of that component.
     readonly property alias text: textField.text
 
+    //  Normalized (delocalized) string representation: always uses "." as the decimal separator
+    readonly property alias delocalized: d.inputDelocalized
+
     /* Decimal point character to be displayed. Both "." and "," will be
-     * replaced by the provided decimal point on the fly */
-    property alias decimalPoint: validator.decimalPoint
+     * replaced by the provided decimal point on the fly.
+     * Uses Qt.locale().decimalPoint directly (on mac number format can differ from region default format)
+     * Setting locale externally will override this to that locale's separator
+     */
+    property string decimalPoint: {
+        const controlName = root.locale.name
+        const systemName  = Qt.locale().name
+        // First try externally-set locale if it was intentionally overridden
+        if (controlName.length > 1 && controlName !== "C" && controlName !== systemName)
+            return Qt.locale(controlName).decimalPoint
+        // Otherwise - system locale
+        return Qt.locale().decimalPoint
+    }
 
     /* Number of fiat decimal places used to limit allowed decimal places in
      * fiatMode */
@@ -257,7 +271,7 @@ Control {
                     maxIntegralDigits: 100
                     maxDecimalDigits: d.fiatMode ? root.fiatDecimalPlaces
                                                  : root.multiplierIndex
-                    locale: root.locale.name
+                    decimalPoint: root.decimalPoint
                 }
                 visible: !root.mainInputLoading
 
