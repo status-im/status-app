@@ -18463,6 +18463,11 @@
       <comment>SelectKeyPair</comment>
       <translation>Other key pairs</translation>
     </message>
+    <message>
+      <source>If a paired device (like a tablet without NFC) can’t use a Keycard, unpair it before migrating your Status profile. Otherwise, Status will stop working on that device.</source>
+      <comment>SelectKeyPair</comment>
+      <translation>If a paired device (like a tablet without NFC) can’t use a Keycard, unpair it before migrating your Status profile. Otherwise, Status will stop working on that device.</translation>
+    </message>
   </context>
   <context>
     <name>SelectKeypair</name>
