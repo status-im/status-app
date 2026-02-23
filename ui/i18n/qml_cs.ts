@@ -15271,6 +15271,10 @@ selhalo</translation>
         <source>Other key pairs</source>
         <translation>Ostatní páry klíčů</translation>
     </message>
+    <message>
+        <source>If a paired device (like a tablet without NFC) can’t use a Keycard, unpair it before migrating your Status profile. Otherwise, Status will stop working on that device.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SelectKeypair</name>

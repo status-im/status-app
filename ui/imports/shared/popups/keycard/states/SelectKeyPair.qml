@@ -115,6 +115,25 @@ Control {
                 root.keyPairSelected()
             }
         }
+
+        Control {
+            Layout.fillWidth: true
+            Layout.topMargin: Theme.padding
+            padding: Theme.padding
+            background: Rectangle {
+                radius: Theme.radius
+                color: Theme.palette.warningColor3
+                border.width: 1
+                border.color: Theme.palette.warningColor2
+            }
+            contentItem: StatusBaseText {
+                id: noKeyPairsText
+                text: qsTr("If a paired device (like a tablet without NFC) can’t use a Keycard, unpair it before migrating your Status profile. Otherwise, Status will stop working on that device.")
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                color: Theme.palette.warningColor1
+            }
+        }
         Item {
             Layout.fillHeight: true
         }
