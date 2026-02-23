@@ -56,6 +56,7 @@ QtObject:
         "icon": params.iconUrl,
         "name": params.name,
         "url": params.url,
+        "clientId": params.clientId,
       }
 
       controller.emitConnectRequested(params.requestId, dappInfo.toJson())

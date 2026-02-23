@@ -137,7 +137,7 @@ WalletConnectSDKBase {
             }
             const dappInfo = d.sessionRequests.get(requestId)
             root.store.approveConnection(requestId, account, JSON.stringify(selectedChains))
-            const newSession = d.buildSession(dappInfo.url, dappInfo.name, dappInfo.icon, requestId, account, selectedChains)
+            const newSession = d.buildSession(dappInfo.url, dappInfo.name, dappInfo.icon, requestId, account, selectedChains, dappInfo.clientId)
             root.approveSessionResult(requestId, newSession, "")
             d.sessionRequests.delete(requestId)
         } catch (e) {

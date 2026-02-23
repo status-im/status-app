@@ -836,7 +836,7 @@ QtObject {
     readonly property string deepLinkPrefix: 'status-app://'
     readonly property string externalStatusLink: 'status.app'
     readonly property string externalStatusLinkWithHttps: 'https://' + externalStatusLink
-    readonly property string browserDefaultHomepage: 'https://hub.status.network/dashboard'
+    readonly property string browserDefaultHomepage: 'https://hub.status.network/'
     readonly property string communityLinkPrefix: externalStatusLinkWithHttps + '/c/'
     readonly property string userLinkPrefix: externalStatusLinkWithHttps + '/u/'
     readonly property string statusLinkPrefix: 'https://status.im/'
