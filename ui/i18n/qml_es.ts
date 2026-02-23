@@ -16556,6 +16556,14 @@ al cargar</translation>
         <source>RECENT</source>
         <translation>RECIENTES</translation>
     </message>
+    <message>
+        <source>Enable third-party services for gifs feature to work.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable third-party services</source>
+        <translation type="unfinished">Habilitar servicios de terceros</translation>
+    </message>
 </context>
 <context>
     <name>StatusImageSelector</name>
