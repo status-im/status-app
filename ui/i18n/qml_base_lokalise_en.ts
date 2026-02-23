@@ -20121,6 +20121,16 @@
       <comment>StatusGifPopup</comment>
       <translation>RECENT</translation>
     </message>
+    <message>
+      <source>Enable third-party services for gifs feature to work.</source>
+      <comment>StatusGifPopup</comment>
+      <translation>Enable third-party services for gifs feature to work.</translation>
+    </message>
+    <message>
+      <source>Enable third-party services</source>
+      <comment>StatusGifPopup</comment>
+      <translation>Enable third-party services</translation>
+    </message>
   </context>
   <context>
     <name>StatusImageSelector</name>

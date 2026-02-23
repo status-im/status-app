@@ -21,6 +21,7 @@ StatusDropdown {
     id: root
 
     property bool gifUnfurlingEnabled
+    property bool thirdpartyServicesEnabled
 
     property var searchGif: Backpressure.debounce(searchBox, 500, function (query) {
         root.searchGifsRequest(query)
@@ -59,6 +60,7 @@ StatusDropdown {
     property var setGifUnfurlingEnabled: function () {}
 
     signal gifSelected(var event, var url)
+    signal enableThirdpartyServicesRequested
 
     width: 360
 
@@ -112,6 +114,8 @@ StatusDropdown {
 
             SearchBox {
                 id: searchBox
+
+                visible: root.thirdpartyServicesEnabled
                 placeholderText: qsTr("Search")
                 enabled: root.gifUnfurlingEnabled
 
@@ -135,6 +139,7 @@ StatusDropdown {
 
             StatusBaseText {
                 id: headerText
+
                 text: {
                     if (currentCategory === GifPopupDefinitions.Category.Trending) {
                         return qsTr("TRENDING")
@@ -145,7 +150,7 @@ StatusDropdown {
                     }
                     return ""
                 }
-                visible: searchBox.text === ""
+                visible: root.thirdpartyServicesEnabled && searchBox.text === ""
                 color: Theme.palette.secondaryText
                 font.pixelSize: Theme.additionalTextSize
                 topPadding: d.headerMargin
@@ -154,7 +159,9 @@ StatusDropdown {
 
             Loader {
                 id: gifsLoader
-                active: root.opened && root.gifUnfurlingEnabled
+
+                active: root.thirdpartyServicesEnabled && root.opened && root.gifUnfurlingEnabled
+                visible: active
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
@@ -164,11 +171,13 @@ StatusDropdown {
 
             Row {
                 id: categorySelector
+
                 Layout.fillWidth: true
+
+                visible: root.thirdpartyServicesEnabled
                 leftPadding: Theme.smallPadding / 2
                 rightPadding: Theme.smallPadding / 2
                 spacing: 0
-
 
                 StatusTabBarIconButton {
                     icon.name: "flash"
@@ -195,6 +204,35 @@ StatusDropdown {
                         toggleCategory(GifPopupDefinitions.Category.Favorite)
                     }
                     enabled: root.gifUnfurlingEnabled
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                visible: !root.thirdpartyServicesEnabled
+                spacing: Theme.padding
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+
+                    wrapMode: Text.Wrap
+                    text: qsTr("Enable third-party services for gifs feature to work.")
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Theme.palette.dangerColor1
+                }
+
+                StatusButton {
+                    Layout.alignment: Qt.AlignHCenter
+
+                    type: StatusBaseButton.Type.Primary
+                    normalColor: Theme.palette.privacyColors.primary
+                    textColor: Theme.palette.privacyColors.tertiary
+
+                    text: qsTr("Enable third-party services")
+
+                    onClicked: root.enableThirdpartyServicesRequested()
                 }
             }
         }
