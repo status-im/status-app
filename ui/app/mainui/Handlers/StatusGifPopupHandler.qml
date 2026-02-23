@@ -11,6 +11,9 @@ QtObject {
 
     required property GifStore gifStore
     required property bool gifUnfurlingEnabled
+    required property bool thirdpartyServicesEnabled
+
+    signal enableThirdpartyServicesRequested
 
     property QtObject _d: QtObject {
         property var cbOnGifSelected: function () {} // It stores callback for gifSelected
@@ -41,6 +44,8 @@ QtObject {
             relativeY: -popup.height
 
             gifUnfurlingEnabled: root.gifUnfurlingEnabled
+            thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+
             loading: root.gifStore.gifLoading
             gifColumnA: root.gifStore.gifColumnA
             gifColumnB: root.gifStore.gifColumnB
@@ -62,6 +67,7 @@ QtObject {
                     close()
                 }
             }
+            onEnableThirdpartyServicesRequested: root.enableThirdpartyServicesRequested()
             onClosed: {
                 _d.cbOnClose()
                 destroy()

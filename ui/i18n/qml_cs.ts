@@ -16649,6 +16649,14 @@ selhalo</translation>
         <source>RECENT</source>
         <translation>NEDÁVNÉ</translation>
     </message>
+    <message>
+        <source>Enable third-party services for gifs feature to work.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable third-party services</source>
+        <translation type="unfinished">Povolit služby třetích stran</translation>
+    </message>
 </context>
 <context>
     <name>StatusImageSelector</name>

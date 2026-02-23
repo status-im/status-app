@@ -168,6 +168,9 @@ QtObject {
     readonly property StatusGifPopupHandler statusGifPopupHandler: StatusGifPopupHandler {
         gifStore: sharedRootStore.gifStore
         gifUnfurlingEnabled: sharedRootStore.gifUnfurlingEnabled
+        thirdpartyServicesEnabled: root.privacyStore.thirdpartyServicesEnabled
+
+        onEnableThirdpartyServicesRequested: root.thirdpartyServicesPopupHandler.openPopup()
     }
 
     readonly property ThirdpartyServicesPopupHandler thirdpartyServicesPopupHandler: ThirdpartyServicesPopupHandler {
