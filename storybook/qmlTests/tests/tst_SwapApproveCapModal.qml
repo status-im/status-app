@@ -68,6 +68,12 @@ Item {
 
         function init() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root)
+
+            // Open the dialog and wait until it is fully initialized so geometry bindings resolve correctly
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened === true, 1000)
+
             signalSpyAccepted.clear()
             signalSpyRejected.clear()
         }
@@ -95,11 +101,9 @@ Item {
                     .arg(controlUnderTest.formatBigNumber(controlUnderTest.fromTokenAmount, controlUnderTest.fromTokenSymbol))
                     .arg(controlUnderTest.accountName).arg(controlUnderTest.serviceProviderHostname).arg(controlUnderTest.networkName))
 
-            const fromImageHidden = findChild(controlUnderTest.contentItem, "fromImageIdenticon")
-            compare(fromImageHidden.visible, false)
-
             const fromImage = findChild(controlUnderTest.contentItem, "fromImageIdenticon")
             verify(!!fromImage)
+            compare(fromImage.visible, true)
             compare(fromImage.asset.emoji, controlUnderTest.accountEmoji)
             compare(fromImage.asset.color, controlUnderTest.accountColor)
             const toImage = findChild(controlUnderTest.contentItem, "toImageIdenticon")
