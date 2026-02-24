@@ -75,7 +75,7 @@ SignTransactionModalBase {
 
         bridgeBadge.visible: true
         bridgeBadge.border.width: 2
-        bridgeBadge.color: Theme.palette.darkBlue
+        bridgeBadge.color: StatusColors.darkDesktopBlue10
         bridgeBadge.image.source: Assets.svg("sign")
     }
 
