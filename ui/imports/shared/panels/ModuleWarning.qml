@@ -223,9 +223,7 @@ Item {
             Button {
                 id: button
                 objectName: "actionButton"
-                topPadding: Theme.halfPadding
-                bottomPadding: Theme.halfPadding
-                implicitHeight: 2 * contentItem.implicitHeight
+                Layout.fillHeight: true
                 visible: !!text
                 focusPolicy: Qt.NoFocus
                 onClicked: {
@@ -235,7 +233,6 @@ Item {
                     text: button.text
                     font.pixelSize: Theme.additionalTextSize
                     font.weight: Font.Medium
-                    font.family: Fonts.baseFont.family
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     color: Theme.palette.indirectColor1
@@ -244,7 +241,7 @@ Item {
                     radius: 4
                     border.width: 1
                     border.color: Theme.palette.indirectColor3
-                    color: StatusColors.getColor("white", button.hovered ? 0.4 : 0.1)
+                    color: StatusColors.alphaColor(StatusColors.white, button.hovered ? 0.4 : 0.1)
                 }
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
