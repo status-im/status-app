@@ -605,7 +605,7 @@ StatusDialog {
                             if (!valid)
                                 return 0
 
-                            return parseFloat(text.replace(LocaleUtils.userInputLocale.decimalPoint, "."))
+                            return parseFloat(delocalized)
                         }
                         readonly property int minSendCryptoDecimals:
                             !fiatMode ? LocaleUtils.fractionalPartLength(asNumber) : 0

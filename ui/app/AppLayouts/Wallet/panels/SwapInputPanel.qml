@@ -171,7 +171,7 @@ Control {
             and thats why we compare with toFixed()
             also when deleting a numbers last digit, we should not update the text to 0
             instead it should remain empty as entered by the user */
-            let currentInputTextAmount = SQUtils.AmountsArithmetic.fromString(amountToSendInput.text.replace(amountToSendInput.locale.decimalPoint,'.')).toFixed()
+            let currentInputTextAmount = SQUtils.AmountsArithmetic.fromString(amountToSendInput.delocalized).toFixed()
             if (currentInputTextAmount !== amountToSet &&
                     !(amountToSet === "0" && !amountToSendInput.text)) {
                 amountToSendInput.setValue(tokenAmount)
@@ -270,7 +270,7 @@ Control {
                     if (!valid)
                         return 0
 
-                    return parseFloat(text.replace(LocaleUtils.userInputLocale.decimalPoint, "."))
+                    return parseFloat(delocalized)
                 }
 
                 Layout.fillWidth: true
