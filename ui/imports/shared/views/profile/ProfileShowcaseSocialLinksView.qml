@@ -92,18 +92,25 @@ Item {
             radius: 30
             border.color: Theme.palette.baseColor2
         }
-        Row {
-            anchors.centerIn: parent
+        RowLayout {
+            anchors.fill: parent
+            anchors.margins: Theme.halfPadding
             spacing: 4
+
             StatusIcon {
-                width: 16
-                height: 16
+                Layout.preferredWidth: 16
+                Layout.preferredHeight: 16
                 icon: "info"
                 color: Theme.palette.directColor1
             }
+
             StatusBaseText {
+                Layout.fillWidth: true
                 font.pixelSize: Theme.additionalTextSize
                 text: qsTr("Social handles and links are unverified")
+                elide: Text.ElideRight
+                maximumLineCount: 1
+                verticalAlignment: Text.AlignVCenter
             }
         }
     }
