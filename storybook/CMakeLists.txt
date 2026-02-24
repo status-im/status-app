@@ -157,5 +157,10 @@ if (APPLE)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation})
 endif()
 
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in
+)
+
 qt_import_qml_plugins(${PROJECT_NAME})
 qt_finalize_executable(${PROJECT_NAME})
