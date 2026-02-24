@@ -66,8 +66,8 @@ Control {
 
         function getTagColor(isReadonly) {
             if(isReadonly)
-                return Theme.palette.baseColor1
-            return root.hovered ? Theme.palette.miscColor1 : Theme.palette.primaryColor1
+                return root.Theme.palette.baseColor1
+            return root.hovered ? root.Theme.palette.miscColor1 : root.Theme.palette.primaryColor1
         }
     }
 
