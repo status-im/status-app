@@ -4,6 +4,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ.Core.Theme
+
 import shared.popups.walletconnect
 
 import utils
@@ -16,6 +18,9 @@ SplitView {
     PopupBackground {
         SplitView.fillWidth: true
         SplitView.fillHeight: true
+
+        color: Theme.palette.background
+
         Button {
             anchors.centerIn: parent
             text: "Open"
@@ -50,7 +55,7 @@ SplitView {
             estimatedTimeLoading: feesLoading.checked
             hasFees: hasFees.checked
             enoughFundsForTransaction: enoughFeesForTransaction.checked
-            enoughFundsForFees: enoughFeesForGas.checked  || !feesLoading.checked
+            enoughFundsForFees: enoughFeesForGas.checked
 
             // sun emoji
             accountEmoji: "\u2600"
