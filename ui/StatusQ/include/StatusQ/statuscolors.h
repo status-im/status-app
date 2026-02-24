@@ -97,7 +97,7 @@ public:
 
     static const QVariantMap& colors();
 
-    Q_INVOKABLE static QColor getColor(const QString& name, qreal alpha = -1);
+    Q_INVOKABLE static QColor getColor(const QString& name, qreal alpha = 1);
     Q_INVOKABLE static QColor alphaColor(const QColor& color, qreal alpha);
 
     static constexpr QColor black = QColorConstants::Black; // #000000
