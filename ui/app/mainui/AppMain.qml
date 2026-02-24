@@ -853,7 +853,15 @@ Item {
         id: d
 
         // strict online/offline checker, doesn't care about the wallet services
-        readonly property var networkChecker: NetworkChecker {}
+        readonly property var networkChecker: NetworkChecker {
+            active: {
+                if (!appMain.rootStore.thirdpartyServicesEnabled) // the connectivity checks might leak our IP
+                    return false
+                if (SQUtils.Utils.isMobile) // on mobile, suspend the checks when in background
+                    return appMain.Window.window.active
+                return true
+            }
+        }
 
         readonly property int activeSectionType: appMain.rootStore.activeSectionType
         readonly property bool isWalletRelatedSectionType: activeSectionType === Constants.appSection.wallet ||
@@ -1288,7 +1296,7 @@ Item {
             GlobalBanner {
                 Layout.fillWidth: true
 
-                isOnline: appMain.rootStore.isOnline
+                isOnline: d.networkChecker.isOnline
                 testnetEnabled: appMain.networksStore.areTestNetworksEnabled
                 seedphraseBackedUp: appMain.privacyStore.mnemonicBackedUp || appMain.profileStore.userDeclinedBackupBanner
 
