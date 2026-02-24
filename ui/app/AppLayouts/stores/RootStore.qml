@@ -184,6 +184,10 @@ QtObject {
                 root.openUrl(url)
             }
 
+            function onWcLinkActivated(url) {
+                root.wcLinkActivated(url)
+            }
+
             function onDisplayUserProfile(publicKey: string) {
                 root.displayUserProfile(publicKey)
             }
@@ -206,6 +210,7 @@ QtObject {
 
     signal ensNameResolved(string resolvedPubKey, string resolvedAddress, string uuid)
     signal openUrl(string link)
+    signal wcLinkActivated(string link)
     signal displayUserProfile(string publicKey)
     signal showToastPairingFallbackCompleted()
     // End of Settings related stuff

@@ -2030,6 +2030,9 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
   if not self.chatsLoaded:
     self.statusDeepLinkToActivate = statusDeepLink
     return
+  if statusDeepLink.contains("/wc?"):
+    self.view.wcLinkActivated(statusDeepLink)
+    return
   let urlData = self.sharedUrlsModule.parseSharedUrl(statusDeepLink)
   if urlData.notASupportedStatusLink:
     # Just open it in the browser

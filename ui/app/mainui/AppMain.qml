@@ -71,6 +71,12 @@ Item {
         thirdpartyServicesEnabled: appMain.featureFlagsStore.privacyModeFeatureEnabled ?
                                    appMain.privacyStore.thirdpartyServicesEnabled: true
         onOpenUrl: (link) => Global.requestOpenLink(link)
+        onWcLinkActivated: (link) => {
+            const wcUri = Utils.walletConnectUriFromStatusLink(link)
+            if (!!wcUri) {
+                d.pairWalletConnectUri(wcUri)
+            }
+        }
         keychain: appMain.keychain
         palette: appMain.Theme.palette
     }
@@ -891,6 +897,18 @@ Item {
             return username
         }
 
+        function pairWalletConnectUri(uri: string) {
+            if (!dAppsServiceLoader.active || !dAppsServiceLoader.item || !uri) {
+                return
+            }
+            function pairingHandler() {
+                dAppsServiceLoader.item.dappsModule.pair(uri)
+                dAppsServiceLoader.item.pairingValidated.disconnect(pairingHandler)
+            }
+            dAppsServiceLoader.item.pairingValidated.connect(pairingHandler)
+            dAppsServiceLoader.item.validatePairingUri(uri)
+        }
+
         function openLinkInBrowser(link: string) {
             if (!appMain.rootStore.openLinksInStatus ||
                     !d.isBrowserEnabled ||
@@ -974,17 +992,7 @@ Item {
             }
         }
         onTransferOwnershipRequested: (tokenId, senderAddress) => popupRequestsHandler.sendModalHandler.transferOwnership(tokenId, senderAddress)
-        onWcUriScanned: uri => {
-            if (!dAppsServiceLoader.active || !dAppsServiceLoader.item) {
-                return
-            }
-            function pairingHandler() {
-                dAppsServiceLoader.item.dappsModule.pair(uri)
-                dAppsServiceLoader.item.pairingValidated.disconnect(pairingHandler)
-            }
-            dAppsServiceLoader.item.pairingValidated.connect(pairingHandler)
-            dAppsServiceLoader.item.validatePairingUri(uri)
-        }
+        onWcUriScanned: uri => d.pairWalletConnectUri(uri)
     }
 
     HandlersManager {
