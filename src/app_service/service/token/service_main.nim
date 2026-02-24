@@ -24,6 +24,10 @@ proc sortTokenGroupsByName(groups: var seq[TokenGroupItem]) =
       return a.name.cmp(b.name)
   )
 
+proc addNewTokensToGroupsOfInterest(self: Service, tokens: seq[TokenItem]) =
+  createTokenGroupsFromTokens(tokens, self.groupsOfInterestByKey)
+  self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
+
 proc refreshTokens(self: Service) =
   self.allTokenLists = getAllTokenLists()
 
@@ -36,8 +40,7 @@ proc refreshTokens(self: Service) =
   for token in tokens:
     self.tokensOfInterestByKey[token.key] = token
 
-  createTokenGroupsFromTokens(tokens, self.groupsOfInterestByKey)
-  self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
+  self.addNewTokensToGroupsOfInterest(tokens)
 
   self.rebuildMarketData()
   self.fetchTokensDetails() # TODO: if the only place where we can see these details is account's details page, we should fetch this on demand, no need to have local cache
@@ -140,6 +143,9 @@ proc getTokenByKey*(self: Service, key: string): TokenItem =
     return self.tokensOfInterestByKey[key]
   let tokens = getTokensByKeys(@[key])
   if tokens.len > 0:
+    # add newly found tokens to the groups of interest
+    self.addNewTokensToGroupsOfInterest(tokens)
+
     self.tokensOfInterestByKey[key] = tokens[0]
     return self.tokensOfInterestByKey[key]
   return nil

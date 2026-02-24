@@ -53,6 +53,8 @@ method load*(self: Module) =
   self.events.on(SIGNAL_TOKENS_LIST_UPDATED) do(e: Args):
     self.view.modelsUpdated()
     self.view.emitTokenListUpdatedAtSignal()
+  self.events.on(SIGNAL_WALLET_ACCOUNT_TOKENS_REBUILT) do(e:Args):
+    self.view.modelsUpdated()
   self.events.on(SIGNAL_TOKENS_DETAILS_UPDATED) do(e: Args):
     self.view.tokensDetailsUpdated()
   self.events.on(SIGNAL_TOKENS_MARKET_VALUES_ABOUT_TO_BE_UPDATED) do(e: Args):
