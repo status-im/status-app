@@ -146,7 +146,12 @@ Item {
         }
 
         function test_basicGeometry() {
+
+            // Open the dialog and wait until it is fully initialized so geometry bindings resolve correctly
             verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened === true, 1000)
+
             verify(controlUnderTest.width > 0)
             verify(controlUnderTest.height > 0)
         }
