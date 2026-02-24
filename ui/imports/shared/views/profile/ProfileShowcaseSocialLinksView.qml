@@ -22,14 +22,18 @@ Item {
 
     signal copyToClipboard(string text)
 
+
     StatusBaseText {
         anchors.centerIn: parent
         visible: (webView.count === 0)
+        width: parent.width - (2 * Theme.bigPadding * 2)
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+        wrapMode: Text.WordWrap
         color: Theme.palette.directColor1
         text: qsTr("%1 has not shared any links").arg(root.mainDisplayName)
     }
+
     StatusGridView {
         id: webView
 

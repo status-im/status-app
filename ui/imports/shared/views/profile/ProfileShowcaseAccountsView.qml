@@ -30,8 +30,10 @@ Item {
     StatusBaseText {
         anchors.centerIn: parent
         visible: (accountsView.count === 0)
+        width: parent.width - (2 * Theme.bigPadding)
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+        wrapMode: Text.WordWrap
         color: Theme.palette.directColor1
         text: qsTr("%1 has not shared any accounts").arg(root.mainDisplayName)
     }
