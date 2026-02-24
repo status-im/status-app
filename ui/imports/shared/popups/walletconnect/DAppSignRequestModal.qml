@@ -102,31 +102,11 @@ SignTransactionModalBase {
                     id: maxFees
                     Layout.fillWidth: true
                     objectName: "footerFiatFeesText"
-                    text: formatBigNumber(root.fiatFees, root.fiatSymbol)
+                    text: root.hasFees ? formatBigNumber(root.fiatFees, root.fiatSymbol) : qsTr("No fees")
                     loading: root.feesLoading && root.hasFees
                     elide: Qt.ElideMiddle
-                    Binding on text {
-                        when: !root.hasFees
-                        value: qsTr("No fees")
-                    }
-                    Binding on customColor {
-                        value: !root.hasFees || root.enoughFundsForFees ? Theme.palette.directColor1 : Theme.palette.dangerColor1
-                    }
-
-                    onTextChanged: function(text) {
-                        if (text === "" || loading) {
-                            return
-                        }
-                        maxFeesAnimation.restart()
-                    }
-
-                    StatusColorAnimation {
-                        id: maxFeesAnimation
-                        target: maxFees
-                        targetProperty: "customColor"
-                        running: !maxFees.loading && root.hasFees
-                        fromColor: maxFees.customColor
-                    }
+                    customColor: !root.hasFees || root.enoughFundsForFees ? Theme.palette.directColor1 : Theme.palette.dangerColor1
+                    ColorTransition on customColor {}
                 }
             }
             ColumnLayout {
@@ -142,20 +122,7 @@ SignTransactionModalBase {
                     objectName: "footerEstimatedTime"
                     text: root.estimatedTime
                     loading: root.estimatedTimeLoading
-
-                    onTextChanged: function(text) {
-                        if (text === "" || loading) {
-                            return
-                        }
-                        estimatedTimeAnimation.restart()
-                    }
-
-                    StatusColorAnimation {
-                        id: estimatedTimeAnimation
-                        target: estimatedTime
-                        targetProperty: "customColor"
-                        running: !estimatedTime.loading
-                    }
+                    ColorTransition on customColor {}
                 }
             }
         }
@@ -216,22 +183,8 @@ SignTransactionModalBase {
                     font.pixelSize: Theme.additionalTextSize
                     loading: root.feesLoading
 
-                    Binding on customColor {
-                        value: root.enoughFundsForFees ? Theme.palette.directColor1 : Theme.palette.dangerColor1
-                    }
-                    onTextChanged: function(text) {
-                        if (text === "" || loading) {
-                            return
-                        }
-                        fiatFeesAnimation.restart()
-                    }
-
-                    StatusColorAnimation {
-                        id: fiatFeesAnimation
-                        target: fiatFees
-                        targetProperty: "customColor"
-                        fromColor: fiatFees.customColor
-                    }
+                    customColor: root.enoughFundsForFees ? Theme.palette.directColor1 : Theme.palette.dangerColor1
+                    ColorTransition on customColor {}
                 }
                 StatusTextWithLoadingState {
                     id: cryptoFees
@@ -242,25 +195,37 @@ SignTransactionModalBase {
                     font.pixelSize: Theme.additionalTextSize
                     loading: root.feesLoading
 
-                    Binding on customColor {
-                        value: root.enoughFundsForFees ? Theme.palette.baseColor1 : Theme.palette.dangerColor1
-                    }
-                    onTextChanged: function(text) {
-                        if (text === "" || loading) {
-                            return
-                        }
-                        cryptoFeesAnimation.restart()
-                    }
-
-                    StatusColorAnimation {
-                        id: cryptoFeesAnimation
-                        target: cryptoFees
-                        fromColor: cryptoFees.customColor
-                        targetProperty: "customColor"
-                        running: !maxFees.loading && root.hasFees
-                    }
+                    customColor: root.enoughFundsForFees ? Theme.palette.baseColor1 : Theme.palette.dangerColor1
+                    ColorTransition on customColor {}
                 }
             }
         ]
+    }
+
+    component ColorTransition: Behavior {
+        id: colorTransition
+
+        SequentialAnimation {
+            loops: 3
+            alwaysRunToEnd: true
+
+            PropertyAnimation {
+                target: colorTransition.targetProperty.object
+                property: "opacity"
+                to: 0.3
+            }
+            PropertyAction { } // actually change the controlled property
+            ParallelAnimation {
+                ColorAnimation {
+                    target: colorTransition.targetProperty.object
+                    property: colorTransition.targetProperty.name
+                }
+                PropertyAnimation {
+                    target: colorTransition.targetProperty.object
+                    property: "opacity"
+                    to: 1
+                }
+            }
+        }
     }
 }
