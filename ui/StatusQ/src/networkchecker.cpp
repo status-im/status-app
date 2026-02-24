@@ -1,75 +1,76 @@
 #include "StatusQ/networkchecker.h"
 
-namespace {
-using namespace std::chrono_literals;
-
-constexpr static auto checkInterval = 30s;
-}
+#include <QDebug>
 
 NetworkChecker::NetworkChecker(QObject *parent)
     : QObject(parent)
 {
-    manager.setTransferTimeout();
-    connect(&manager, &QNetworkAccessManager::finished, this, &NetworkChecker::onFinished);
-    connect(&timer, &QTimer::timeout, this, &NetworkChecker::checkNetwork);
+    qInfo() << "!!! QNetworkInformation backends:" << QNetworkInformation::availableBackends();
+
+    if (!QNetworkInformation::loadDefaultBackend()) {
+        qWarning() << "QNetworkInformation is not supported on this platform or backend.";
+        return;
+    }
+
+    m_netinfo = QNetworkInformation::instance();
+    qInfo() << "!!! Using QNetworkInformation backend:" << m_netinfo->backendName();
+
+    // subscribe for updates
+    connect(m_netinfo, &QNetworkInformation::reachabilityChanged, this, &NetworkChecker::onReachabilityChanged);
+
+    // initial update
+    onReachabilityChanged(m_netinfo->reachability());
+
+    connect(this, &NetworkChecker::isOnlineChanged, this, [](bool online) {
+        qInfo() << "!!! ONLINE CHANGED:" << online;
+    });
+}
+
+void NetworkChecker::onReachabilityChanged(QNetworkInformation::Reachability reachability)
+{
+    qInfo() << "!!! REACHABILITY CHANGED:" << reachability;
+    if (m_active) {
+        setOnline(reachability == QNetworkInformation::Reachability::Online);
+    }
 }
 
 bool NetworkChecker::isOnline() const
 {
-    return online;
+    return m_online;
+}
+
+void NetworkChecker::setOnline(bool online)
+{
+    if (m_online == online)
+        return;
+    m_online = online;
+    emit isOnlineChanged(m_online);
 }
 
 void NetworkChecker::checkNetwork()
 {
-    QNetworkRequest request(QUrl(QStringLiteral("http://fedoraproject.org/static/hotspot.txt")));
-    manager.get(request);
     setChecking(true);
-}
-
-void NetworkChecker::classBegin()
-{
-    // empty on purpose
-}
-
-void NetworkChecker::componentComplete() {
-    updateRegularCheck(active);
-}
-
-void NetworkChecker::onFinished(QNetworkReply *reply)
-{
-    setChecking(false);
-    const auto wasOnline = online;
-    online = (reply->error() == QNetworkReply::NoError);
-    reply->deleteLater();
-
-    if (wasOnline != online) {
-        emit isOnlineChanged(online);
-    }
+    setActive(true);
 }
 
 bool NetworkChecker::isActive() const
 {
-    return active;
+    return m_active;
 }
 
 void NetworkChecker::setActive(bool active)
 {
-    if (active == this->active)
+    setChecking(false);
+
+    if (active == m_active)
         return;
 
-    this->active = active;
+    m_active = active;
     emit activeChanged(active);
 
-    updateRegularCheck(active);
-}
-
-void NetworkChecker::updateRegularCheck(bool active)
-{
-    if (active) {
-        checkNetwork();
-        timer.start(checkInterval);
-    } else {
-        timer.stop();
+    // check immediately, when re-activating, or when called from checkNetwork()
+    if (m_active) {
+        setOnline(m_netinfo && m_netinfo->reachability() == QNetworkInformation::Reachability::Online);
     }
 }
 
@@ -84,5 +85,5 @@ void NetworkChecker::setChecking(bool checking)
         return;
 
     m_checking = checking;
-    emit checkingChanged();
+    emit checkingChanged(m_checking);
 }

@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
+
 import Storybook
 
 import utils
@@ -17,6 +19,10 @@ SplitView {
         id: d
         property bool userDeclinedBackupBanner
         property bool testnetEnabled
+
+        readonly property var networkChecker: NetworkChecker {
+            active: ctrlUseOnlineChecker.checked
+        }
     }
 
     Item {
@@ -66,9 +72,21 @@ SplitView {
 
         RowLayout {
             Switch {
+                id: ctrlUseOnlineChecker
+                text: "Use real online checker"
+                checked: false
+            }
+
+            Switch {
                 id: ctrlIsOnline
                 text: "Online"
                 checked: true
+                enabled: !ctrlUseOnlineChecker.checked
+
+                Binding on checked {
+                    when: ctrlUseOnlineChecker.checked
+                    value: d.networkChecker.isOnline
+                }
             }
 
             Switch {
