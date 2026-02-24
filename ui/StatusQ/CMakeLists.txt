@@ -246,6 +246,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_library(WebKit WebKit)
     find_library(QuartzCore QuartzCore)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${QuartzCore})
+    qt_import_plugins(${PROJECT_NAME} INCLUDE Qt6::QDarwinCameraPermissionPlugin)
     target_sources(StatusQ PRIVATE
         src/keychain_apple.mm
         src/shareutils_other.cpp
