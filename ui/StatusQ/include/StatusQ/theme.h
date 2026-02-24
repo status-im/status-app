@@ -3,8 +3,11 @@
 #include "StatusQ/themepalette.h"
 
 #include <QJSValue>
+#include <QMetaObject>
 #include <QQmlEngine>
 #include <QQuickAttachedPropertyPropagator>
+
+class QQuickItem;
 
 class Theme : public QQuickAttachedPropertyPropagator
 {
@@ -140,6 +143,8 @@ protected:
         QQuickAttachedPropertyPropagator *oldParent) override;
 
 private:
+    void attachWindowReadySync(QQuickItem *itemParent);
+
     bool m_explicitPadding = false;
     qreal m_padding = 0.0;
 
@@ -149,6 +154,8 @@ private:
     bool m_explicitFontSizeOffset = false;
     int m_fontSizeOffset = 0;
     mutable QJSValue m_fontSizeFn;
+
+    QMetaObject::Connection m_windowChangedConnection;
 };
 
 QML_DECLARE_TYPEINFO(Theme, QML_HAS_ATTACHED_PROPERTIES)

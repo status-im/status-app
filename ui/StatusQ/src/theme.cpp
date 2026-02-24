@@ -1,10 +1,9 @@
 #include "StatusQ/theme.h"
 
-#include <QMetaObject>
-#include <QPointer>
 #include <QQmlApplicationEngine>
 #include <QQmlEngine>
 #include <QQuickItem>
+#include <QQuickWindow>
 
 namespace {
 
@@ -341,18 +340,49 @@ void Theme::propagateFontSizeOffset()
     });
 }
 
+void Theme::attachWindowReadySync(QQuickItem *itemParent)
+{
+    if (m_windowChangedConnection) {
+        QObject::disconnect(m_windowChangedConnection);
+        m_windowChangedConnection = {};
+    }
+
+    m_windowChangedConnection = connect(itemParent, &QQuickItem::windowChanged, this,
+                                        [this](QQuickWindow *window) {
+        if (!window)
+            return;
+        //just wait for a valid window before giving up the connection                                
+        QObject::disconnect(m_windowChangedConnection);
+        m_windowChangedConnection = {};
+        attachedParentChange(attachedParent(), nullptr);
+    });
+}
+
 void Theme::attachedParentChange(QQuickAttachedPropertyPropagator* newParent,
                                  QQuickAttachedPropertyPropagator* oldParent)
 {
     Q_UNUSED(oldParent);
+
     auto attachedParentTheme = qobject_cast<Theme*>(newParent);
+    auto selfItem = qobject_cast<QQuickItem*>(parent());
+
     if (attachedParentTheme) {
-        auto itemParent = qobject_cast<QQuickItem*>(parent());
-        if (itemParent && !itemParent->window())
+        // apply style immediately to avoid a light->dark visual flash.
+        // the style is usually safe (as this is already implemented and tested by qt default themes)
+        // the geometry change seems to pose problems 
+        inheritStyle(attachedParentTheme->style());
+
+        if (selfItem && !selfItem->window()) {
+            attachWindowReadySync(selfItem);
             return;
+        }
+
+        if (m_windowChangedConnection) {
+            QObject::disconnect(m_windowChangedConnection);
+            m_windowChangedConnection = {};
+        }
 
         inheritPadding(attachedParentTheme->padding());
-        inheritStyle(attachedParentTheme->style());
         inheritFontSizeOffset(attachedParentTheme->fontSizeOffset());
     }
 }
