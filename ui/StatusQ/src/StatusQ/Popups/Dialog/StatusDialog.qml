@@ -137,6 +137,14 @@ Dialog {
         value: d.windowHeight
     }
 
+    // Landscape mode: dialogs should not take the full height.
+    // Limit the height to the smaller value between the content’s implicitHeight
+    // and 80% of the window height (leaving 10% margin top and bottom)
+    Binding on height {
+        when: !root.bottomSheet
+        value: Math.min(implicitHeight, d.windowHeight * 0.8)
+    }
+
     Binding on y {
         when: root.bottomSheet && !enterTransition.running && !root.fullScreenSheet
         value: root.desiredY

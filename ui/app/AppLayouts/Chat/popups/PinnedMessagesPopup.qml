@@ -40,7 +40,7 @@ StatusDialog {
     signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
 
     width: 800
-    height: 428
+    implicitHeight: 428
     padding: 0
     fillHeightOnBottomSheet: true
 

@@ -22,7 +22,7 @@ import Mocks
 Item {
     id: root
     width: 800
-    height: 600
+    height: 700
 
     readonly property string ethGroupKey: Constants.ethGroupKey
     readonly property string sttGroupKey: Constants.sttGroupKey
