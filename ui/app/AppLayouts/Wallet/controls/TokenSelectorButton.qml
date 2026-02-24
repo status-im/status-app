@@ -94,7 +94,7 @@ Control {
                 font.pixelSize: root.size === TokenSelectorButton.Size.Normal ? 28 : 22
                 lineHeightMode: Text.FixedHeight
                 lineHeight: root.size === TokenSelectorButton.Size.Normal ? 38 : 30
-                color: root.hovered ? StatusColors.getColor("blue", 1) : StatusColors.getColor("darkBlue", 1)
+                color: root.hovered ? Theme.palette.hoverColor(Theme.palette.primaryColor1) : Theme.palette.primaryColor1
 
                 elide: Text.ElideRight
                 text: root.name

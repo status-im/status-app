@@ -15,7 +15,7 @@ Pane {
             currencyBalanceAsString: "42,23 USD",
             symbol: "STT",
             iconSource: Constants.tokenIcon("STT"),
-            tokensKey: "STT",
+            key: "STT",
 
             balances: [
                 {
@@ -39,7 +39,7 @@ Pane {
             currencyBalanceAsString: "4 276,86 USD",
             symbol: "ETH",
             iconSource: Constants.tokenIcon("ETH"),
-            tokensKey: "ETH",
+            key: "ETH",
 
             balances: [
                 {
@@ -63,7 +63,7 @@ Pane {
             currencyBalanceAsString: "45,92 USD",
             symbol: "DAI",
             iconSource: Constants.tokenIcon("DAI"),
-            tokensKey: "DAI",
+            key: "DAI",
 
             balances: [
                 {
