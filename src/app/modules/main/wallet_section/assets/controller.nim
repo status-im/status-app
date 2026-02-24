@@ -30,7 +30,6 @@ proc delete*(self: Controller) =
   discard
 
 proc init*(self: Controller) =
-  let walletAddresses = self.walletAccountService.getWalletAddresses()
   discard
 
 proc getChainIds*(self: Controller): seq[int] =

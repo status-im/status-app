@@ -103,7 +103,7 @@ proc getWalletAccounts*(self: Service, excludeWatchOnly: bool = false): seq[Wall
   result.sort(walletAccountsCmp)
 
 proc getWalletAddresses*(self: Service): seq[string] =
-  return self.getWalletAccounts().filter(a => not a.hideFromTotalBalance).map(a => a.address)
+  return self.getWalletAccounts().map(a => a.address)
 
 proc updateAssetsLoadingState(self: Service, address: string, loading: bool) =
   var acc = self.getAccountByAddress(address)
