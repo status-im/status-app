@@ -43,18 +43,9 @@ Control {
 
     /* Decimal point character to be displayed. Both "." and "," will be
      * replaced by the provided decimal point on the fly.
-     * Uses Qt.locale().decimalPoint directly (on mac number format can differ from region default format)
-     * Setting locale externally will override this to that locale's separator
-     */
-    property string decimalPoint: {
-        const controlName = root.locale.name
-        const systemName  = Qt.locale().name
-        // First try externally-set locale if it was intentionally overridden
-        if (controlName.length > 1 && controlName !== "C" && controlName !== systemName)
-            return Qt.locale(controlName).decimalPoint
-        // Otherwise - system locale
-        return Qt.locale().decimalPoint
-    }
+     * Uses Qt.locale().decimalPoint directly (on mac number format can differ from region default format).
+     * Setting locale externally will override this to that locale's separator. */
+    property string decimalPoint: d.effectiveLocale.decimalPoint
 
     /* Number of fiat decimal places used to limit allowed decimal places in
      * fiatMode */
@@ -165,6 +156,13 @@ Control {
         id: d
 
         property bool fiatMode: false
+
+        readonly property var effectiveLocale: {
+            const name = root.locale.name
+            if (name.length > 1 && name !== "C" && name !== Qt.locale().name)
+                return Qt.locale(name)
+            return Qt.locale()
+        }
 
         readonly property string inputDelocalized:
             textField.length !== 0
