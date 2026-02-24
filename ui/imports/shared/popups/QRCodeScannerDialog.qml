@@ -53,7 +53,7 @@ StatusDialog {
             id: qrCodeScanner
             Layout.preferredWidth: parent.width
             Layout.fillHeight: root.bottomSheet
-            Layout.maximumHeight: root.bottomSheet ? -1 : 420
+            Layout.maximumHeight: root.bottomSheet ? -1 : 350
             Layout.minimumHeight: 420
 
             Timer {
@@ -94,31 +94,36 @@ StatusDialog {
         }
 
         IconRow {
-            width: parent.width
+            Layout.fillWidth: true
+
             text: qsTr("Contact request")
             icon: "contact"
         }
 
         IconRow {
-            width: parent.width
+            Layout.fillWidth: true
+
             text: qsTr("Join communities")
             icon: "communities"
         }
 
         IconRow {
-            width: parent.width
+            Layout.fillWidth: true
+
             text: qsTr("Send tokens")
             icon: "send"
         }
 
         IconRow {
-            width: parent.width
+            Layout.fillWidth: true
+
             text: qsTr("Open WEB links")
             icon: "browser"
         }
 
         IconRow {
-            width: parent.width
+            Layout.fillWidth: true
+
             text: qsTr("WalletConnect to connect to dApps")
             icon: "wallet"
         }
