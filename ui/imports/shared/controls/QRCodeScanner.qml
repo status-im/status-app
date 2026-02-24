@@ -204,9 +204,9 @@ ColumnLayout {
     }
 
     StatusBaseText {
+        Layout.fillWidth: true
+
         visible: !!text
-        width: parent.width
-        height: visible ? implicitHeight : 0
         wrapMode: Text.WordWrap
         color: Theme.palette.dangerColor1
         Layout.alignment: Qt.AlignHCenter
@@ -220,9 +220,9 @@ ColumnLayout {
     }
 
     StatusBaseText {
+        Layout.fillWidth: true
+
         visible: d.cameraReady && !!cameraLoader.item?.cameraAvailable && root.state === StatusQrCodeScanner.State.None
-        width: parent.width
-        height: visible ? implicitHeight : 0
         wrapMode: Text.WordWrap
         color: Theme.palette.baseColor1
         Layout.alignment: Qt.AlignHCenter
