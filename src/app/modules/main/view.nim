@@ -403,6 +403,8 @@ QtObject:
   proc emitOpenUrlSignal*(self: View, url: string) =
     self.openUrl(url)
 
+  proc wcLinkActivated*(self: View, url: string) {.signal.}
+
   proc loadMembersForSectionId*(self: View, communityId: string) {.slot.} =
     self.delegate.loadMembersForSectionId(communityId)
 

@@ -1069,6 +1069,43 @@ QtObject {
         }
     }
 
+    function walletConnectUriFromStatusLink(link: string): string {
+        if (!link || !link.includes("/wc?")) {
+            return ""
+        }
+
+        const queryStart = link.indexOf("?")
+        if (queryStart < 0 || queryStart >= link.length - 1) {
+            return ""
+        }
+
+        const query = link.slice(queryStart + 1)
+        const params = query.split("&")
+        for (let i = 0; i < params.length; i++) {
+            const keyValue = params[i].split("=")
+            if (keyValue.length < 2) {
+                continue
+            }
+
+            if (keyValue[0] !== "uri") {
+                continue
+            }
+
+            const encodedUri = keyValue.slice(1).join("=")
+            if (!encodedUri) {
+                return ""
+            }
+
+            try {
+                return decodeURIComponent(encodedUri)
+            } catch (e) {
+                return encodedUri
+            }
+        }
+
+        return ""
+    }
+
     // TODO: remove when getElidedCompressedPk moved to utilsStore
     function _getCompressedPk(publicKey) {
         if (publicKey === "") {
