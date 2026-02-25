@@ -394,22 +394,76 @@ ListModel {
     ]
 
     property bool skipInitialLoad: false
-
-    Component.onCompleted: {
-        if (!skipInitialLoad) {
-            append(data)
-        }
-    }
+    property bool fetchMode: false
+    property int fetchBatchSize: 15
+    property int fetchInitialCount: fetchBatchSize
 
     property bool hasMoreItems: false
     property bool isLoadingMore: false
+    property string searchKeyword: ""
 
     property var tokenGroupsForChainModel // used for search only
 
-    function search(keyword) {
-        clear() // clear the existing model
+    property var _filteredItems: []
 
-        if (!keyword || keyword.trim() === "") {
+    Component.onCompleted: {
+        if (!skipInitialLoad) {
+            _filteredItems = data.slice()
+            _updateVisibleItems(Math.max(fetchInitialCount, 0))
+        }
+    }
+
+    function _relevanceScore(item, keywordLower) {
+        if (!keywordLower) {
+            return 0
+        }
+
+        const symbol = (item.symbol || "").toLowerCase()
+        const name = (item.name || "").toLowerCase()
+        const key = (item.key || "").toLowerCase()
+
+        if (symbol === keywordLower)
+            return 100
+        if (name === keywordLower)
+            return 95
+        if (symbol.startsWith(keywordLower))
+            return 90
+        if (name.startsWith(keywordLower))
+            return 85
+
+        const symbolIndex = symbol.indexOf(keywordLower)
+        if (symbolIndex > 0)
+            return 70 - Math.min(symbolIndex, 20)
+
+        const nameIndex = name.indexOf(keywordLower)
+        if (nameIndex > 0)
+            return 60 - Math.min(nameIndex, 20)
+
+        const keyIndex = key.indexOf(keywordLower)
+        if (keyIndex === 0)
+            return 50
+        if (keyIndex > 0)
+            return 40 - Math.min(keyIndex, 20)
+
+        return -1
+    }
+
+    function _updateVisibleItems(maxItemCount) {
+        clear()
+        const targetCount = fetchMode ? Math.min(maxItemCount, _filteredItems.length) : _filteredItems.length
+        for (let i = 0; i < targetCount; i++) {
+            append(_filteredItems[i])
+        }
+        hasMoreItems = count < _filteredItems.length
+    }
+
+    function search(keyword) {
+        searchKeyword = (keyword || "").trim()
+        _filteredItems = []
+        clear()
+        hasMoreItems = false
+
+        if (searchKeyword === "") {
             return
         }
 
@@ -418,17 +472,38 @@ ListModel {
             return
         }
 
-        const lowerKeyword = keyword.toLowerCase()
+        const keywordLower = searchKeyword.toLowerCase()
+        const scoredResults = []
         for (let i = 0; i < tokenGroupsForChainModel.ModelCount.count; i++) {
             const item = ModelUtils.get(tokenGroupsForChainModel, i)
-            const symbolMatch = item.symbol && item.symbol.toLowerCase().includes(lowerKeyword)
-            const nameMatch = item.name && item.name.toLowerCase().includes(lowerKeyword)
-            if (symbolMatch || nameMatch) {
-                append(item)
+            const score = _relevanceScore(item, keywordLower)
+            if (score >= 0) {
+                scoredResults.push({
+                    score: score,
+                    index: i,
+                    item: item
+                })
             }
         }
+
+        scoredResults.sort((a, b) => {
+            if (a.score !== b.score)
+                return b.score - a.score
+            return a.index - b.index
+        })
+
+        _filteredItems = scoredResults.map(entry => entry.item)
+        _updateVisibleItems(Math.max(fetchInitialCount, 0))
     }
 
     function fetchMore() {
+        if (!fetchMode || isLoadingMore || !hasMoreItems) {
+            return
+        }
+
+        isLoadingMore = true
+        const nextVisibleCount = count + Math.max(fetchBatchSize, 1)
+        _updateVisibleItems(nextVisibleCount)
+        isLoadingMore = false
     }
 }

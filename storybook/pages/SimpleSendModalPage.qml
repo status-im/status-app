@@ -37,6 +37,16 @@ SplitView {
         readonly property WalletAssetsStoreMock walletAssetStore: WalletAssetsStoreMock {
             walletTokensStore: TokensStoreMock {
                 tokenGroupsModel: TokenGroupsModel{}
+                tokenGroupsForChainModel: TokenGroupsModel {
+                    skipInitialLoad: true
+                }
+                searchResultModel: TokenGroupsModel {
+                    skipInitialLoad: true
+                    fetchMode: true
+                    fetchBatchSize: 8
+                    fetchInitialCount: 8
+                    tokenGroupsForChainModel: d.walletAssetStore.walletTokensStore.tokenGroupsForChainModel
+                }
                 _displayAssetsBelowBalanceThresholdDisplayAmountFunc: () => 0
             }
         }
@@ -167,6 +177,13 @@ SplitView {
 
         onReviewSendClicked: console.log("Review send clicked")
         onLaunchBuyFlow: console.log("launch buy flow clicked")
+        onSearchInAssets: (keyword) => {
+            if (assetsSelectorViewAdaptor.searchString === "" && keyword !== "") {
+                d.walletAssetStore.walletTokensStore.buildGroupsForChain(simpleSend.selectedChainId)
+            }
+            assetsSelectorViewAdaptor.search(keyword)
+        }
+        onFetchMoreAssets: assetsSelectorViewAdaptor.loadMoreItems()
 
         Binding on selectedAccountAddress {
             value: accountsCombobox.currentValue ?? ""
@@ -219,6 +236,7 @@ SplitView {
 
         accountAddress: simpleSend.selectedAccountAddress
         enabledChainIds: [simpleSend.selectedChainId]
+        searchResultModel: d.walletAssetStore.walletTokensStore.searchResultModel
     }
 
     CollectiblesSelectionAdaptor {
