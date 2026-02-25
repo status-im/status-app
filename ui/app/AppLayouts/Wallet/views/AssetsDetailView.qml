@@ -43,6 +43,14 @@ Item {
         id: marketValueData
     }
 
+    // Clear stale price history whenever the displayed token changes so we never
+    // show data from the previous token while waiting for new responses.
+    onTokenGroupChanged: {
+        marketValueData.clear()
+        d.fetchedRanges = ({})
+        Qt.callLater(() => d.fetchRangeIfNeeded(ChartDataBase.TimeRange.All))
+    }
+
     QtObject {
         id: d
 
@@ -50,6 +58,25 @@ Item {
         property bool marketDetailsLoading: !!root.tokenGroup? root.tokenGroup.marketDetailsLoading?? false : false
         property bool tokenDetailsLoading: !!root.tokenGroup? root.tokenGroup.detailsLoading?? false: false
         property bool isCommunityAsset: !!root.tokenGroup && !!tokenGroup.communityId
+
+        // Cache. Cleared on every tokenGroup change to avoid serving stale cached ranges.
+        property var fetchedRanges: ({})
+
+        function fetchRangeIfNeeded(range) {
+            const key = d.historicalDataTokenKey
+            if (!key || d.fetchedRanges[range])
+                return
+            d.fetchedRanges = Object.assign({}, d.fetchedRanges, {[range]: true})
+            root.tokensStore.getHistoricalDataForTokenByRange(key, root.currencyStore.currentCurrency, range)
+        }
+
+        // The key used when requesting historical data from the backend
+        readonly property string historicalDataTokenKey: {
+            if (!root.tokenGroup || !root.tokenGroup.tokens)
+                return ""
+            const first = SQUtils.ModelUtils.get(root.tokenGroup.tokens, 0)
+            return first ? first.key ?? "" : ""
+        }
 
         readonly property LeftJoinModel addressPerChainModel: LeftJoinModel {
             leftModel: tokenGroup && tokenGroup.tokens ? tokenGroup.tokens: null
@@ -77,8 +104,14 @@ Item {
                 console.debug("error parsing json message for tokenHistoricalDataReady")
                 return
             }
-            if(response.historicalData === null || response.historicalData <= 0)
+            const expectedKey = d.historicalDataTokenKey
+            // Discard responses for tokens other than the one currently displayed
+            if (expectedKey !== "" && response.tokenKey !== expectedKey) {
                 return
+            }
+            if (response.historicalData === null || response.historicalData <= 0) {
+                return
+            }
 
             marketValueData.setTimeAndValueData(response.historicalData, response.range)
         }
@@ -185,6 +218,10 @@ Item {
 
                                             if(!isTimeRange) {
                                                 graphDetail.selectedStore = marketValueData
+                                            } else {
+                                                const rangeEnum = marketValueData.timeRangeStrToEnum(privateIdentifier)
+                                                if (rangeEnum !== undefined)
+                                                    d.fetchRangeIfNeeded(rangeEnum)
                                             }
 
                                             chart.refresh()
@@ -281,8 +318,8 @@ Item {
                                             axis.paddingBottom = 0;
                                         },
                                         afterDataLimits: (axis) => {
-                                            if(axis.min < 0)
-                                            axis.min = 0;
+                                            if (axis.min < 0)
+                                                axis.min = 0;
                                         },
                                         ticks: {
                                             fontSize: Theme.asideTextFontSize,

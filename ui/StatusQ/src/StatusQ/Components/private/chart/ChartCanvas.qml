@@ -136,6 +136,9 @@ Canvas {
                 instance = null
             }
             var ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return
+            }
             const config = {
                 type: canvas.type,
                 options: canvas.options,
