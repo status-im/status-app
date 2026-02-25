@@ -10,6 +10,8 @@ import driver
 from configs.timeouts import APP_LOAD_TIMEOUT_MSEC
 from constants import UserAccount, CommunityData
 from gui.components.activity_center import ActivityCenter
+from gui.components.education_popup import EducationPopup
+from gui.objects_map.names import continue_StatusButton
 from gui.screens.market import MarketScreen
 from helpers.chat_helper import skip_message_backup_popup_if_visible, skip_intro_if_visible
 from gui.components.context_menu import ContextMenu
@@ -27,6 +29,7 @@ from gui.screens.onboarding import OnboardingWelcomeToStatusView, ReturningLogin
 from gui.screens.settings import SettingsScreen
 from gui.screens.wallet import WalletScreen
 from gui.screens.home import HomeScreen
+from helpers.onboarding_helper import skip_education_popup_if_visible
 from scripts.tools.image import Image
 from scripts.utils.decorators import open_with_retries
 
@@ -228,7 +231,7 @@ class MainWindow(Window):
         create_password_view = profile_view.open_password_view()
         create_password_view.create_password(user_account.password)
         SplashScreen().wait_until_appears().wait_until_hidden(APP_LOAD_TIMEOUT_MSEC)
-
+        skip_education_popup_if_visible()
         # since we now struggle with 3 words names, I need to change display name first
         left_panel = MainLeftPanel()
         settings_screen = left_panel.open_settings()
@@ -242,6 +245,7 @@ class MainWindow(Window):
         splash_screen = ReturningLoginView().log_in(user_account)
         splash_screen.wait_until_appears()
         splash_screen.wait_until_hidden(APP_LOAD_TIMEOUT_MSEC)
+        skip_education_popup_if_visible()
         return self
 
     @allure.step('Authorize user')

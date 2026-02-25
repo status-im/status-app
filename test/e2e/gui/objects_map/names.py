@@ -600,6 +600,10 @@ confirmationDeleteMessagePopup = {"container": statusDesktop_mainWindow_overlay,
                                   "objectName": "DeleteMessageConfirmationPopup", "type": "PopupItem", "visible": True}
 unpairButton =  {"container": statusDesktop_mainWindow_overlay, "id": "confirmButton", "type": "StatusButton", "unnamed": 1, "visible": True}
 
+# Education popup
+educationPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "NavigationEducationDialog", "type": "PopupItem", "visible": True}
+educationPopupCloseButton = {"container": educationPopup, "objectName": "headerActionsCloseButton", "type": "StatusFlatRoundButton", "visible": True}
+
 # Authenticate Popup
 authenticatePopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "KeycardPopup", "type": "PopupItem",
                      "visible": True}
