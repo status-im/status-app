@@ -132,7 +132,7 @@ Control {
 
             visible: root.allChannelsAreHiddenBecauseNotPermitted
             horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
             text: d.allChannelsAreHiddenBecauseNotPermittedText
             textFormat: Text.StyledText
         }
@@ -160,6 +160,9 @@ Control {
 
         StatusButton {
             Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            Layout.maximumWidth: implicitWidth
+
             visible: !root.showOnlyPanels
                                  && !root.isJoinRequestRejected
                                  && root.requiresRequest
@@ -174,7 +177,7 @@ Control {
         }
 
         StatusBaseText {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
             visible: !root.showOnlyPanels
                      && !root.requirementsCheckPending
                      && !root.missingEncryptionKey
@@ -183,11 +186,16 @@ Control {
                      && !root.allChannelsAreHiddenBecauseNotPermitted
             text: root.isJoinRequestRejected ? d.membershipRequestRejectedText
                                              : (root.joinCommunity ? d.communityRequirementsNotMetText : d.channelRequirementsNotMetText)
+            wrapMode: Text.Wrap
             color: Theme.palette.dangerColor1
+            horizontalAlignment: Text.AlignHCenter
         }
 
         BlinkingText {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+
+            wrapMode: Text.Wrap
+            horizontalAlignment: Text.AlignHCenter
             visible: root.requirementsCheckPending || root.missingEncryptionKey
             text: root.missingEncryptionKey ? d.missingEncryptionKeyText : d.requirementsCheckPendingText
         }

@@ -127,19 +127,23 @@ ColumnLayout {
         }
 
         StatusScrollView {
+            id: scrollView
+
             anchors.fill: parent
             padding: 0
 
+            contentWidth: availableWidth
+
             Item {
-                implicitHeight: Math.max(overlayPanel.implicitHeight,
-                                         panelBase.height)
-                implicitWidth: Math.max(overlayPanel.implicitWidth,
-                                        panelBase.width)
+                width: scrollView.availableWidth
+                height: Math.max(overlayPanel.implicitHeight, panelBase.height)
 
                 JoinPermissionsOverlayPanel {
                     id: overlayPanel
 
-                    anchors.centerIn: parent
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
 
                     topPadding: 2 * bottomPadding
                     joinCommunity: root.joinCommunity
