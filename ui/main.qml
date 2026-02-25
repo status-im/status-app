@@ -8,7 +8,6 @@ import shared.popups
 import shared.stores
 
 import mainui
-import mainui.popups
 import AppLayouts.stores as AppStores
 import AppLayouts.Profile.stores
 
@@ -561,8 +560,6 @@ Window {
     Component {
         id: app
         AppMain {
-            id:appItem
-
             objectName: "appMain"
 
             utilsStore: applicationWindow.utilsStore
@@ -577,18 +574,6 @@ Window {
             keychain: appKeychain
             Component.onCompleted: {
                 applicationWindow.contentLoaded()
-
-                // Show the navigation education dialog the first time the app
-                // is opened after the new menu is introduced
-                if(!appItem.newMenuEducationPopupSeenSetting) {
-                    showNavigationEducation.open()
-                }
-            }
-
-            NavigationEducationDialog {
-                id: showNavigationEducation
-                destroyOnClose: true
-                onClosed: appItem.setNewMenuEducationPopupSeenSetting(true)
             }
         }
     }

@@ -12078,7 +12078,7 @@ to load</source>
 <context>
     <name>NavigationEducationDialog</name>
     <message>
-        <source>Open app menu</source>
+        <source>To open app menu</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

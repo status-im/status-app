@@ -12099,8 +12099,8 @@ al cargar</translation>
 <context>
     <name>NavigationEducationDialog</name>
     <message>
-        <source>Open app menu</source>
-        <translation>Abrir menú</translation>
+        <source>To open app menu</source>
+        <translation>Para abrir el menú de la app</translation>
     </message>
 </context>
 <context>
