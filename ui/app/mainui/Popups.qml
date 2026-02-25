@@ -25,6 +25,7 @@ import AppLayouts.Wallet.popups
 import AppLayouts.Communities.stores
 import AppLayouts.Profile.helpers
 import AppLayouts.Wallet.services.dapps
+import mainui.popups
 
 import AppLayouts.Wallet.stores as WalletStores
 import AppLayouts.Chat.stores as ChatStores
@@ -77,6 +78,7 @@ QtObject {
     signal ownershipDeclined(string communityId, string communityName)
     signal transferOwnershipRequested(string tokenId, string senderAddress)
     signal wcUriScanned(string uri)
+    signal navigationEducationDialogSeenRequested()
 
     property var activePopupComponents: []
 
@@ -150,6 +152,7 @@ QtObject {
         Global.openQRScannerRequested.connect(() => openPopup(qrCodeScannerDialogComponent))
         Global.openInfoPopup.connect(openInfoPopup)
         Global.shareProfileDialogRequested.connect(openShareProfilePopup)
+        Global.openNavigationEducationPopupRequested.connect(openNavigationEducationPopup)
     }
 
     property var currentPopup
@@ -479,6 +482,10 @@ QtObject {
 
         openPopup(shareProfileCmp, {isCurrentUser: contactDetails.isCurrentUser, publicKey, emojiHash, colorId: contactDetails.colorId,
                       linkToProfile, displayName: contactDetails.displayName, usesDefaultName: contactDetails.usesDefaultName, largeImage: contactDetails.largeImage})
+    }
+
+    function openNavigationEducationPopup() {
+        openPopup(openNavigationEducationComponent)
     }
 
     readonly property list<Component> _components: [
@@ -1503,6 +1510,15 @@ QtObject {
             ShareProfileDialog {
                 destroyOnClose: true
                 qrCode: root.profileStore.getQrCodeSource(linkToProfile)
+            }
+        },
+
+        Component {
+            id: openNavigationEducationComponent
+            NavigationEducationDialog {
+
+                destroyOnClose: true
+                onClosed: root.navigationEducationDialogSeenRequested()
             }
         }
     ]

@@ -7,7 +7,7 @@ import shared.panels
 
 StatusDialog {
     width: 600
-    title: qsTr("Open app menu")
+    title: qsTr("To open app menu")
     implicitHeight: 420 + 2 * Theme.padding
     contentItem: SVGImage {
         height: parent.height

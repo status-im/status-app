@@ -14707,9 +14707,9 @@
   <context>
     <name>NavigationEducationDialog</name>
     <message>
-      <source>Open app menu</source>
+      <source>To open app menu</source>
       <comment>NavigationEducationDialog</comment>
-      <translation>Open app menu</translation>
+      <translation>To open app menu</translation>
     </message>
   </context>
   <context>

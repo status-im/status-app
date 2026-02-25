@@ -78,6 +78,7 @@ QtObject {
     signal openEditSharedAddressesFlow(string communityId)
 
     signal shareProfileDialogRequested(string publicKey)
+    signal openNavigationEducationPopupRequested()
 
     signal playSendMessageSound()
     signal playNotificationSound()
