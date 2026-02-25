@@ -150,8 +150,8 @@ Window {
         if (visibility === Window.Windowed) {
             applicationWindow.x = geometry.x;
             applicationWindow.y = geometry.y;
-            applicationWindow.width = Math.max(geometry.width, ThemeUtils.portraitBreakpoint.width)
-            applicationWindow.height = Math.max(geometry.height, ThemeUtils.portraitBreakpoint.height)
+            applicationWindow.width = Math.max(geometry.width, ThemeUtils.minimumDesktopSize.width)
+            applicationWindow.height = Math.max(geometry.height, ThemeUtils.minimumDesktopSize.height)
         }
     }
 
@@ -238,13 +238,13 @@ Window {
         target: applicationWindow
         property: "minimumWidth"
         when: !SQUtils.Utils.isMobile
-        value: ThemeUtils.portraitBreakpoint.width
+        value: ThemeUtils.minimumDesktopSize.width
     }
     Binding {
         target: applicationWindow
         property: "minimumHeight"
         when: !SQUtils.Utils.isMobile
-        value: ThemeUtils.portraitBreakpoint.height
+        value: ThemeUtils.minimumDesktopSize.height
     }
 
     Action {
