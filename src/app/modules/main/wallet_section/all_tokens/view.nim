@@ -73,6 +73,10 @@ QtObject:
     self.setMarketHistoryIsLoading(true)
     self.delegate.getHistoricalDataForToken(tokenKey, currency)
 
+  proc getHistoricalDataForTokenByRange*(self: View, tokenKey: string, currency: string, range: int) {.slot.} =
+    self.setMarketHistoryIsLoading(true)
+    self.delegate.getHistoricalDataForTokenByRange(tokenKey, currency, range)
+
   proc tokenHistoricalDataReady*(self: View, tokenDetails: string) {.signal.}
 
   proc setTokenHistoricalDataReady*(self: View, tokenDetails: string) =

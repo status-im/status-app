@@ -10,12 +10,19 @@ ChartDataBase {
     function setTimeAndValueData(data, range) {
         var marketValues = []
         var timeRanges = []
+        var skipped = 0
         for (var i = 0; i < data.length; ++i) {
-            marketValues[i] = data[i].close;
+            var closeValue = Number(data[i].close)
+            if (isNaN(closeValue) || typeof data[i].close === "undefined" || closeValue === 0) {
+                skipped++
+                continue
+            }
 
-            timeRanges[i] = range === ChartDataBase.TimeRange.Weekly || range === ChartDataBase.TimeRange.Monthly ?
+            var label = range === ChartDataBase.TimeRange.Weekly || range === ChartDataBase.TimeRange.Monthly ?
                         LocaleUtils.getDayMonth(data[i].time * 1000):
                         LocaleUtils.getMonthYear(data[i].time * 1000)
+            marketValues.push(closeValue)
+            timeRanges.push(label)
         }
 
         switch(range) {

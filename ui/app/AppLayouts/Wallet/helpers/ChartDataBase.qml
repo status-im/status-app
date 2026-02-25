@@ -68,6 +68,20 @@ QtObject {
     /// \timeRange is the time range of the data that was updated
     signal newDataReady(string address, string tokenSymbol, string currencySymbol, int timeRange)
 
+    function clear() {
+        weeklyData = []
+        weeklyTimeRange = []
+        monthlyData = []
+        monthlyTimeRange = []
+        halfYearlyData = []
+        halfYearlyTimeRange = []
+        yearlyData = []
+        yearlyTimeRange = []
+        allData = []
+        allTimeRange = []
+        allTimeRangeTicks = 0
+    }
+
     function timeRangeEnumToStr(enumVal) {
         return d.timeRangeEnumToPropertiesMap.get(enumVal).text
     }

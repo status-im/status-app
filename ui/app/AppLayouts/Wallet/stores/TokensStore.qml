@@ -147,6 +147,10 @@ QtObject {
         root._allTokensModule.getHistoricalDataForToken(tokenKey, currency)
     }
 
+    function getHistoricalDataForTokenByRange(tokenKey, currency, range) {
+        root._allTokensModule.getHistoricalDataForTokenByRange(tokenKey, currency, range)
+    }
+
     function getDisplayAssetsBelowBalanceThresholdCurrency() {
         return root._allTokensModule.displayAssetsBelowBalanceThreshold
     }

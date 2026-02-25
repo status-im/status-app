@@ -48,6 +48,9 @@ method isLoaded*(self: AccessInterface): bool {.base.} =
 method getHistoricalDataForToken*(self: AccessInterface, tokenKey: string, currency: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method getHistoricalDataForTokenByRange*(self: AccessInterface, tokenKey: string, currency: string, range: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method tokenHistoricalDataResolved*(self: AccessInterface, tokenDetails: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
