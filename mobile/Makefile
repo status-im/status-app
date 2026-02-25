@@ -11,6 +11,7 @@ STATUS_GO_LIB := $(LIB_PATH)/libstatus$(LIB_EXT)
 # Usage: make build-ios FLAG_KEYCARD_ENABLED=1
 FLAG_KEYCARD_ENABLED ?= 1
 FLAG_DAPPS_ENABLED ?= 1
+FLAG_CONNECTOR_ENABLED ?= 0
 
 $(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
 

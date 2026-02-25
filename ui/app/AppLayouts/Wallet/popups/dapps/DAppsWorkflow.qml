@@ -474,6 +474,7 @@ SQUtils.QObject {
                     title: "Status Connector"
                     asset.name: Assets.png("status-logo")
                     asset.isImage: true
+                    visible: root.connectorEnabled
                     enabled: root.connectorEnabled
                     components: [
                         StatusIcon {
