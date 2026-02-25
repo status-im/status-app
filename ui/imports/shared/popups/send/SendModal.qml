@@ -479,6 +479,9 @@ StatusDialog {
                                            ? collectiblesAdaptorLoader.item.model : null
                         Layout.fillWidth: true
                         Layout.maximumWidth: implicitWidth
+                        onSearchInAssets: function(keyword) {
+                            assetsAdaptor.search(keyword)
+                        }
 
                         TokenSelectorViewAdaptor {
                             id: assetsAdaptor

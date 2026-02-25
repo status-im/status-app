@@ -28,6 +28,8 @@ Control {
     signal assetSelected(string key)
     signal collectionSelected(string key)
     signal collectibleSelected(string key)
+    signal searchInAssets(string keyword)
+    signal fetchMoreAssets()
 
     // Index of the current tab, indexes ​​correspond to the
     // TokensSelectorPanel.Tabs enum values.
@@ -135,6 +137,14 @@ Control {
                     setCurrentAndClose(subitem.name, subitem.icon)
 
                     root.collectionSelected(key)
+                }
+
+                onSearchInAssets: function(keyword) {
+                    root.searchInAssets(keyword)
+                }
+
+                onFetchMoreAssets: function() {
+                    root.fetchMoreAssets()
                 }
             }
         }
