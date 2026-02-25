@@ -1,4 +1,4 @@
-import nimqml, tables, strutils
+import nimqml, tables, strutils, algorithm
 
 import io_interface, tokens_model, market_details_item
 
@@ -274,14 +274,65 @@ QtObject:
     for index in countup(first, last):
       self.addMarketDetailsItem(index, tokensList, currencyFormat)
 
+  proc getSearchRelevance(item: TokenGroupItem, keywordLower: string): int =
+    if keywordLower.len == 0:
+      return 0
+
+    let symbol = item.symbol.toLowerAscii()
+    let name = item.name.toLowerAscii()
+    let key = item.key.toLowerAscii()
+
+    if symbol == keywordLower:
+      return 100
+    if name == keywordLower:
+      return 95
+    if symbol.startsWith(keywordLower):
+      return 90
+    if name.startsWith(keywordLower):
+      return 85
+
+    let symbolIndex = symbol.find(keywordLower)
+    if symbolIndex > 0:
+      return 70 - min(symbolIndex, 20)
+
+    let nameIndex = name.find(keywordLower)
+    if nameIndex > 0:
+      return 60 - min(nameIndex, 20)
+
+    let keyIndex = key.find(keywordLower)
+    if keyIndex == 0:
+      return 50
+    if keyIndex > 0:
+      return 40 - min(keyIndex, 20)
+
+    return -1
+
   proc search*(self: TokenGroupsModel, keyword: string) {.slot.} =
-    self.searchKeyword = keyword
+    self.searchKeyword = keyword.strip()
     self.fullSearchResults = @[]
     if self.searchKeyword.len > 0:
-      for item in self.delegate.getAllTokenGroups():
-        if item.name.toLowerAscii().contains(self.searchKeyword.toLowerAscii()) or
-          item.symbol.toLowerAscii().contains(self.searchKeyword.toLowerAscii()):
-          self.fullSearchResults.add(item)
+      let keywordLower = self.searchKeyword.toLowerAscii()
+      var scoredResults: seq[(int, int, TokenGroupItem)] = @[]
+      for index, item in self.delegate.getAllTokenGroups():
+        let relevance = getSearchRelevance(item, keywordLower)
+        if relevance >= 0:
+          scoredResults.add((relevance, index, item))
+
+      scoredResults.sort(proc(a, b: (int, int, TokenGroupItem)): int =
+        if a[0] > b[0]:
+          return -1
+        if a[0] < b[0]:
+          return 1
+        if a[1] < b[1]:
+          return -1
+        if a[1] > b[1]:
+          return 1
+        return 0
+      )
+
+      for scoredItem in scoredResults:
+        self.fullSearchResults.add(scoredItem[2])
+
     self.modelsUpdated(resetModelSize = true)
 
   proc tokensMarketValuesUpdated*(self: TokenGroupsModel) =
