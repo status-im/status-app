@@ -68,7 +68,7 @@ Control {
             root.loadMoreRequested()
         })
 
-        property var debounceSearch: Backpressure.debounce(root, 1000, function(keyword) {
+        property var debounceSearch: Backpressure.debounce(root, 500, function(keyword) {
             root.search(keyword)
         })
 

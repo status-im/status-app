@@ -166,6 +166,9 @@ QtObject {
     /** input property to indicate if buy action is enabled **/
     property bool buyEnabled
 
+    /** search result model for assets */
+    property var searchResultModel
+
     /** signal to request launch of buy crypto modal **/
     signal launchBuyFlowRequested(string accountAddress, int chainId, string groupKey)
 
@@ -588,6 +591,18 @@ QtObject {
                 root.launchBuyFlowRequested(selectedAccountAddress, selectedChainId, selectedGroupKey)
             }
 
+            onSearchInAssets: (keyword) => {
+                if (handler.assetsSelectorViewAdaptor.searchString === "" && keyword !== "") {
+                    // Request searchable assets
+                    WalletStores.RootStore.tokensStore.buildGroupsForChain(simpleSendModal.selectedChainId)
+                }
+                handler.assetsSelectorViewAdaptor.search(keyword)
+            }
+
+            onFetchMoreAssets: {
+                handler.assetsSelectorViewAdaptor.loadMoreItems()
+            }
+
             ModelEntry {
                 id: txPathUnderReviewEntry
                 sourceModel: handler.fetchedPathModel
@@ -760,6 +775,7 @@ QtObject {
 
                     accountAddress: simpleSendModal.selectedAccountAddress
                     enabledChainIds: [simpleSendModal.selectedChainId]
+                    searchResultModel: root.searchResultModel
                 }
 
                 readonly property var collectiblesSelectionAdaptor: CollectiblesSelectionAdaptor {
