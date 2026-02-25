@@ -87,6 +87,9 @@ method getHistoricalDataForToken*(self: Module, tokenKey: string, currency: stri
   self.controller.getHistoricalDataForToken(tokenKey, currency, YEARLY_TIME_RANGE)
   self.controller.getHistoricalDataForToken(tokenKey, currency, ALL_TIME_RANGE)
 
+method getHistoricalDataForTokenByRange*(self: Module, tokenKey: string, currency: string, range: int) =
+  self.controller.getHistoricalDataForToken(tokenKey, currency, range)
+
 method tokenHistoricalDataResolved*(self: Module, tokenDetails: string) =
   self.view.setTokenHistoricalDataReady(tokenDetails)
 

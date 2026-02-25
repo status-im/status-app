@@ -93,6 +93,9 @@
             return Color(c)
         },
         getHoverColor: function(c) {
+            if (!SQTheme || !SQTheme.Theme || !SQTheme.Theme.palette) {
+                return Color(c)
+            }
             const hoverColor = SQTheme.Theme.palette.hoverColor(c)
             if (!hoverColor) {
                 return Color(c)

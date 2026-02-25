@@ -427,10 +427,6 @@ RightTabBaseView {
                         onAssetClicked: (key) => {
                             const tokenGroup = SQUtils.ModelUtils.getByKey(model, "key", key)
 
-                            const firstTokenInGroup = SQUtils.ModelUtils.get(tokenGroup.tokens, 0) // for fetching market data a token key of the first token from the list of grouped tokens can be used, cause they share the same set of data
-
-                            RootStore.tokensStore.getHistoricalDataForToken(firstTokenInGroup.key, RootStore.currencyStore.currentCurrency)
-
                             assetDetailView.tokenGroup = tokenGroup
                             RootStore.setCurrentViewedHolding(tokenGroup.key, Constants.TokenType.ERC20, tokenGroup.communityId ?? "")
                             stack.currentIndex = 2
