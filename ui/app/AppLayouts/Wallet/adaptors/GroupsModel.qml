@@ -24,6 +24,7 @@ SortFilterProxyModel {
 
     property var onSearchCallback: null
     property var sourceModelConnectionTarget: null
+    property bool sort: true
 
     objectName: modelObjectName
 
@@ -70,6 +71,7 @@ SortFilterProxyModel {
     sorters: [
         RoleSorter {
             roleName: "name"
+            enabled: root.sort
         }
     ]
     filters: [

@@ -106,6 +106,7 @@ QObject {
                 root.searchResultModel.search(keyword)
             }
             sourceModelConnectionTarget: root.searchResultModel
+            sort: false
         }
     }
 
