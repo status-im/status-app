@@ -75,6 +75,10 @@ RowLayout {
     signal collectibleSelected(string key)
     /** signal to propagate that a network was selected **/
     signal networkSelected(int chainId)
+    /** signal to propagate that a search in assets was performed **/
+    signal searchInAssets(string keyword)
+    /** signal to propagate that more assets should be fetched **/
+    signal fetchMoreAssets()
 
     /** input function for programatic selection of token
     (asset/collectible/collection) **/
@@ -128,6 +132,8 @@ RowLayout {
         onCollectibleSelected: (key) => root.collectibleSelected(key)
         onCollectionSelected: (key) => root.collectionSelected(key)
         onAssetSelected: (key) => root.assetSelected(key)
+        onSearchInAssets: (keyword) => root.searchInAssets(keyword)
+        onFetchMoreAssets: root.fetchMoreAssets()
     }
 
     // Horizontal spacer

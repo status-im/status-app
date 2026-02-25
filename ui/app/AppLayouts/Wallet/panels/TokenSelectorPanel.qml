@@ -41,6 +41,8 @@ Control {
     signal assetSelected(string key)
     signal collectionSelected(string key)
     signal collectibleSelected(string key)
+    signal searchInAssets(string keyword)
+    signal fetchMoreAssets()
 
     property string highlightedKey: ""
 
@@ -100,6 +102,8 @@ Control {
             showSectionName: root.showSectionName
 
             onSelected: (key) => root.assetSelected(key)
+            onSearch: (keyword) => root.searchInAssets(keyword)
+            onLoadMoreRequested: root.fetchMoreAssets()
         }
 
         SearchableCollectiblesPanel {

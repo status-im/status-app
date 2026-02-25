@@ -53,6 +53,11 @@ QObject {
     // Incase of SendModal we show SNT, ETH and DAI with 0 balance
     property bool showZeroBalanceForDefaultTokens: false
 
+    // Page size for the lazy loaded models
+    property int pageSize: 15
+
+    readonly property alias searchString: d.searchKeyword
+
     function loadMoreItems() {
         root.outputAssetsModel.fetchMore()
     }
@@ -66,6 +71,9 @@ QObject {
             d.searchKeyword = kw
             root.outputAssetsModel.search(kw)
         }
+        if (root.outputAssetsModel.hasMoreItems && !root.outputAssetsModel.isLoadingMore) {
+            root.outputAssetsModel.fetchMore()
+        }
     }
 
     // output model - lazy loaded subset for display
@@ -77,6 +85,23 @@ QObject {
         return !!d.searchKeyword ? d.outputSearchResultAssetsModel : root.fullOutputAssetsModel
     }
 
+    // Auto fetch more the model is not busy
+    // The search result needs to be fetched manually for complete results
+    Connections {
+        target: root.outputAssetsModel
+        enabled: root.outputAssetsModel === d.outputSearchResultAssetsModel && root.searchString !== "" && root.outputAssetsModel.ModelCount.count < root.pageSize
+        function onHasMoreItemsChanged() {
+            if (root.outputAssetsModel.hasMoreItems && !root.outputAssetsModel.isLoadingMore) {
+               root.outputAssetsModel.fetchMore()
+            }
+        }
+        function onIsLoadingMoreChanged() {
+            if (!root.outputAssetsModel.isLoadingMore) {
+                root.outputAssetsModel.fetchMore()
+            }
+        }
+    }
+
     Loader {
         id: allTokensLoader
         active: root.showAllTokens && !!root.allTokenGroupsForChainModel
@@ -85,7 +110,7 @@ QObject {
 
     Loader {
         id: searchResultTokensLoader
-        active: root.showAllTokens && !!root.searchResultModel
+        active: !!root.searchResultModel
         sourceComponent: searchResultTokensComponent
     }
 
@@ -301,10 +326,6 @@ QObject {
                 RoleSorter {
                     roleName: "sectionName"
                     ascendingOrder: false
-                },
-                RoleSorter {
-                    roleName: "currencyBalance"
-                    ascendingOrder: false
                 }
             ]
             filters: [
@@ -312,6 +333,11 @@ QObject {
                     roleName: "communityId"
                     value: ""
                     enabled: !root.showCommunityAssets
+                },
+                UndefinedFilter {
+                    roleName: "currentBalance"
+                    inverted: true
+                    enabled: !root.showAllTokens
                 }
             ]
 

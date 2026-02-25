@@ -209,6 +209,10 @@ StatusDialog {
     signal formChanged()
     /** Output signal to launch buy flow **/
     signal launchBuyFlow()
+    /** Output signal to search in assets **/
+    signal searchInAssets(string keyword)
+    /** Output signal to fetch more assets **/
+    signal fetchMoreAssets()
 
     QtObject {
         id: d
@@ -668,6 +672,12 @@ StatusDialog {
                     onNetworkSelected: (chainId) => {
                                            root.selectedChainId = chainId
                                        }
+                    onSearchInAssets: (keyword) => {
+                                          root.searchInAssets(keyword)
+                                      }
+                    onFetchMoreAssets: {
+                                          root.fetchMoreAssets()
+                                      }
                 }
 
                 // Amount to send entry

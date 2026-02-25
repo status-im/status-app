@@ -111,6 +111,7 @@ QtObject {
 
         // for simple send
         walletAccountsModel: root.walletRootStore.accounts
+        searchResultModel: root.tokensStore.searchResultModel
         filteredFlatNetworksModel: root.networksStore.activeNetworks
         flatNetworksModel: root.networksStore.allNetworks
         areTestNetworksEnabled: root.networksStore.areTestNetworksEnabled
