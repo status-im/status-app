@@ -150,18 +150,7 @@ Item {
 
     required property bool systemTrayIconAvailable
 
-
     readonly property bool isPortraitMode: appMain.width < ThemeUtils.portraitBreakpoint.width
-
-    // Indicates whether the user has already seen the education popup
-    // for the new navigation menu.
-    readonly property bool newMenuEducationPopupSeenSetting: appMainLocalSettings.newMenuEducationPopupSeen
-
-    // Marks the navigation education popup as seen (or unseen).
-    // Persists the value in local settings.
-    function setNewMenuEducationPopupSeenSetting(value) {
-        appMainLocalSettings.newMenuEducationPopupSeen = value
-    }
 
     function showEnableBiometricsFlow() {
         popupRequestsHandler.enableBiometricsPopupHandler.openPopup()
@@ -920,6 +909,12 @@ Item {
             changeAppSectionBySectionId(Constants.appSection.browser)
             Qt.callLater(() => browserLayoutContainer.item.openUrlInNewTab(link))
         }
+
+        function tryOpenNavigationEducationPopup() {
+            if(!appMainLocalSettings.newMenuEducationPopupSeen && !sidebar.alwaysVisible) {
+                Global.openNavigationEducationPopupRequested()
+            }
+        }
     }
 
     Settings {
@@ -949,6 +944,10 @@ Item {
             ThemeUtils.setTheme(appMain.Window.window, appMainLocalSettings.theme)
             ThemeUtils.setFontSize(appMain.Window.window, appMainLocalSettings.fontSize)
             ThemeUtils.setPaddingFactor(appMain.Window.window, appMainLocalSettings.paddingFactor)
+
+            // Show the navigation education dialog the first time the app
+            // is opened after the new menu is introduce, if the nav bar is in collapsed mode
+            d.tryOpenNavigationEducationPopup()
         }
     }
 
@@ -993,6 +992,7 @@ Item {
         }
         onTransferOwnershipRequested: (tokenId, senderAddress) => popupRequestsHandler.sendModalHandler.transferOwnership(tokenId, senderAddress)
         onWcUriScanned: uri => d.pairWalletConnectUri(uri)
+        onNavigationEducationDialogSeenRequested: appMainLocalSettings.newMenuEducationPopupSeen = true
     }
 
     HandlersManager {
@@ -2306,6 +2306,14 @@ Item {
                         Global.openQRScannerRequested()
                     } else {
                         changeAppSectionBySectionId(sectionId)
+                    }
+                }
+
+                onAlwaysVisibleChanged: {
+                    if(!alwaysVisible) {
+                        // Show the navigation education dialog, the first time the new collapsed menu bar
+                        // is shown after it's been introduced
+                        d.tryOpenNavigationEducationPopup()
                     }
                 }
             }
