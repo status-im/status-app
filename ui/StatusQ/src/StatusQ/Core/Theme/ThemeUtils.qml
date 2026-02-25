@@ -35,6 +35,7 @@ QtObject {
         Slow = 400
     }
 
+    readonly property size minimumDesktopSize: Qt.size(360, 680)
     readonly property size portraitBreakpoint: Qt.size(1200, 680)
     readonly property real disabledOpacity: 0.3
     readonly property real pressedOpacity: 0.7
