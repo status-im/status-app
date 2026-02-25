@@ -83,6 +83,10 @@ pipeline {
     NIM_SDS_SOURCE_DIR = "${env.WORKSPACE_TMP}/nim-sds"
     /* Build variant: used by mobile/scripts/App.sh and mobile/fastlane/Fastfile */
     BUILD_VARIANT = "${utils.isReleaseBuild() ? 'release' : 'pr'}"
+    /* Build flags */
+    FLAG_BUY_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
+    FLAG_SWAP_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
+    FLAG_BRIDGE_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
   }
 
   stages {
