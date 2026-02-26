@@ -117,20 +117,22 @@ SplitView {
                 Label { text: "Connection state:" }
                 ComboBox {
                     id: ctrlConnectionState
-                    enabled: ctrlIsOnline.checked
                     textRole: "text"
                     valueRole: "value"
                     model: [
                         { value: Constants.ConnectionStatus.Success, text: "Success" },
                         { value: Constants.ConnectionStatus.Failure, text: "Failure" },
-                        { value: Constants.ConnectionStatus.Retrying, text: "Retrying" }
+                        { value: Constants.ConnectionStatus.Retrying, text: "Retrying" },
+                        { value: Constants.ConnectionStatus.Unknown, text: "Unknown" }
                     ]
-                    currentIndex: Constants.ConnectionStatus.Retrying
+                    currentIndex: Constants.ConnectionStatus.Unknown
                     onActivated: {
                         const isSuccess = currentValue === Constants.ConnectionStatus.Success
-                        banner.completelyDown = isSuccess ? false : Math.round(Math.random())
-                        banner.withCache = isSuccess ? false : Math.round(Math.random())
-                        banner.updateBanner()
+                        const completelyDown = isSuccess ? false : Math.round(Math.random())
+                        const chainIdsDown = isSuccess ? [] : [1, 10, 8453]
+                        // SIMULATE THE CHANGE WITH EMITTING THE BACKEND SIGNAL; IGNORED WHEN OFFLINE
+                        banner.networkConnectionStore.networkConnectionModuleInst.networkConnectionStatusUpdate(ctrlWebsiteDown.currentValue, completelyDown, ctrlConnectionState.currentValue,
+                                                                                                                chainIdsDown, new Date()/1000)
                     }
                 }
             }
@@ -139,7 +141,6 @@ SplitView {
                 Label { text: "Website down:" }
                 ComboBox {
                     id: ctrlWebsiteDown
-                    enabled: ctrlIsOnline.checked
                     model: [Constants.walletConnections.collectibles, Constants.walletConnections.blockchains, Constants.walletConnections.market]
                 }
             }
