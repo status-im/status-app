@@ -42,7 +42,7 @@ pipeline {
   options {
     timestamps()
     /* Prevent Jenkins jobs from running forever */
-    timeout(time: 120, unit: 'MINUTES')
+    timeout(time: 30, unit: 'MINUTES')
     disableConcurrentBuilds()
     disableRestartFromStage()
     /* manage how many builds we keep */
@@ -168,7 +168,7 @@ pipeline {
 
                   """
                   bat"""
-                    ${VIRTUAL_ENV}\\Scripts\\python.exe -m pytest -m "not keycard" -v --reruns=1 --timeout=300 ${flagStr} --disable-warnings --alluredir=./allure-results -o timeout_func_only=true
+                    ${VIRTUAL_ENV}\\Scripts\\python.exe -m pytest -m benchmark -v --reruns=1 --timeout=300 ${flagStr} --disable-warnings --alluredir=./allure-results -o timeout_func_only=true
                   """
                 }
               }
