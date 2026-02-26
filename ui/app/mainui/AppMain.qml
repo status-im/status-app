@@ -911,10 +911,15 @@ Item {
         }
 
         function tryOpenNavigationEducationPopup() {
-            if(!appMainLocalSettings.newMenuEducationPopupSeen && !sidebar.alwaysVisible) {
+            if(!appMainGlobalSettings.newMenuEducationPopupSeen && !sidebar.alwaysVisible) {
                 Global.openNavigationEducationPopupRequested()
             }
         }
+    }
+
+    Settings {
+        id: appMainGlobalSettings
+        property bool newMenuEducationPopupSeen
     }
 
     Settings {
@@ -923,7 +928,6 @@ Item {
         property var whitelistedUnfurledDomains: []
         property bool introduceYourselfPopupSeen
         property bool enableMessageBackupPopupSeen
-        property bool newMenuEducationPopupSeen
         property var recentEmojis
         property string skinColor // NB: must be a string for the twemoji lib to work; we don't want the `#` in the name
         property int theme: ThemeUtils.Style.System
@@ -992,7 +996,7 @@ Item {
         }
         onTransferOwnershipRequested: (tokenId, senderAddress) => popupRequestsHandler.sendModalHandler.transferOwnership(tokenId, senderAddress)
         onWcUriScanned: uri => d.pairWalletConnectUri(uri)
-        onNavigationEducationDialogSeenRequested: appMainLocalSettings.newMenuEducationPopupSeen = true
+        onNavigationEducationDialogSeenRequested: appMainGlobalSettings.newMenuEducationPopupSeen = true
     }
 
     HandlersManager {
