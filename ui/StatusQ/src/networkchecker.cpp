@@ -28,7 +28,6 @@ NetworkChecker::NetworkChecker(QObject *parent)
 
 void NetworkChecker::onReachabilityChanged(QNetworkInformation::Reachability reachability)
 {
-    qInfo() << "!!! REACHABILITY CHANGED:" << reachability;
     if (m_active) {
         setOnline(reachability == QNetworkInformation::Reachability::Online);
     }
