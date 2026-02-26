@@ -109,7 +109,11 @@ Control {
                                                                                  : root.Theme.palette.privacyColors.primary
         readonly property int containerBgRadius: root.Theme.defaultPadding
 
-        readonly property bool hasPopups: root.Overlay.overlay.children.filter(item => item.toString().includes("QQuickPopupItem")).length
+        readonly property bool hasPopups: root.Overlay.overlay.children.filter(
+                                              item => {
+                                                  const str = item.toString()
+                                                  return str.includes("QQuickPopupItem") && !str.includes("StatusToolTip")
+                                              }).length
 
         onHasPopupsChanged: {
             if (d.hasPopups) {
