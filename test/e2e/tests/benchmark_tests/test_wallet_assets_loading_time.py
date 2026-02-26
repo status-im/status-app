@@ -80,6 +80,7 @@ def record_assets_loading_time(
     ],
 )
 @pytest.mark.skipif(get_platform() != "Windows", reason="Windows only test")
+@pytest.mark.benchmark
 def test_wallet_assets_loading_time(
     main_screen, user_data, user_account, first_account_name, second_account_name, tmp_path
 ):
