@@ -102,7 +102,7 @@ StatusDialog {
             if (!chainAvailableForSwapViaParaswap) {
                 console.warn("swap via paraswap not supported for chain", chainId)
                 const networkName = Utils.getNetworkName(chainId)
-                Global.openInfoPopup(qsTr("Info"), qsTr("Swap on %1 is not supported by ParaSwap.").arg(networkName))
+                Global.openInfoPopup(qsTr("Info"), qsTr("Swaps on %1 are coming soon.").arg(networkName))
 
                 Qt.callLater(() => {
                                  // by default set ethereum chain
