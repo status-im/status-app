@@ -60,11 +60,11 @@ Window {
     readonly property KeycardStateStore keycardStateStore: KeycardStateStore {}
     readonly property bool portraitLayout: height > width
     property bool biometricFlowPending: false
-    
+
     // Store the native SafeArea bottom margin (e.g., iOS home indicator)
     // Must be set in Component.onCompleted before any additionalMargins are applied
     property real nativeSafeAreaBottom: 0
-    
+
     // Use native Android keyboard tracking via WindowInsets API
     // This bypasses Qt's unreliable inputMethod and works with any windowSoftInputMode
     // Both Android and iOS keyboard heights are in physical pixels and need devicePixelRatio conversion
@@ -73,7 +73,7 @@ Window {
     readonly property real keyboardHeight: SQUtils.Utils.isAndroid ? SystemUtils.androidKeyboardHeight / Screen.devicePixelRatio :
                                                                      SQUtils.Utils.isIOS ? SystemUtils.iosKeyboardHeight / Screen.devicePixelRatio :
                                                                                            Qt.inputMethod.visible ? Qt.inputMethod.keyboardRectangle.height : 0
-    
+
     // Calculate additional margin so that total = max(nativeSafeAreaBottom, keyboardHeight)
     // When keyboard shows, we want the keyboard height to replace the native safe area, not add to it
     // The Behavior animation ensures smooth transitions even during rapid keyboard show/hide sequences
@@ -407,7 +407,7 @@ Window {
     }
 
     Component.onCompleted: {
-        
+
         console.info(">>> %1 %2 started, using Qt version %3, QPA: %4".arg(Application.name).arg(Application.version).arg(SystemUtils.qtRuntimeVersion()).arg(Qt.platform.pluginName))
 
         if (languageStore.currentLanguage === "") { // if we haven't configured the language yet...
@@ -538,9 +538,10 @@ Window {
         id: loader
 
         anchors.fill: parent
-        anchors.topMargin: Qt.platform.os === SQUtils.Utils.mac ? 0 : parent.SafeArea.margins.top
+        anchors.topMargin: Qt.platform.os === SQUtils.Utils.mac && !applicationWindow.portraitLayout ?
+                               0 : parent.SafeArea.margins.top
         anchors.bottomMargin: parent.SafeArea.margins.bottom
-        anchors.leftMargin: parent.portraitLayout ? parent.SafeArea.margins.left
+        anchors.leftMargin: applicationWindow.portraitLayout ? parent.SafeArea.margins.left
                                                   : 0 // the PrimaryNavSidebar is visible in landscape and already has it
         anchors.rightMargin: parent.SafeArea.margins.right
         opacity: active ? 1.0 : 0.0
@@ -776,7 +777,7 @@ Window {
         }
     }
 
-    
+
     Loader {
         active: SQUtils.Utils.isAndroid
         sourceComponent: KeycardChannelDrawer {
