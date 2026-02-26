@@ -105,7 +105,7 @@ ToolButton {
         id: statusTooltip
         text: root.tooltipText
         delay: 50
-        visible: (root.hovered || root.pressed) && !!text && hoverHandler.point.device.pointerType == PointerDevice.Generic
+        visible: (root.hovered || root.pressed) && !!text && !SQUtils.Utils.isMobile
         orientation: StatusToolTip.Orientation.Right
         x: root.width + Theme.padding
         y: root.height / 2 - height / 2 + 4
