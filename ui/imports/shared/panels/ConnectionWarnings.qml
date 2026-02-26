@@ -27,7 +27,10 @@ Loader {
     onRelevantForCurrentSectionChanged: updateBanner(false)
 
     required property bool isOnline // strict online/offline check, doesn't care about the wallet services
-    onIsOnlineChanged: updateBanner()
+    onIsOnlineChanged: {
+        connectionState = Constants.ConnectionStatus.Unknown // reset the state; wait for real status change from backend
+        updateBanner()
+    }
 
     function updateBanner(showOnlineBanners = true) {
         // if offline or irrelevant, hide the item
@@ -73,6 +76,7 @@ Loader {
     }
 
     Connections {
+        enabled: root.isOnline // suspend the updates while offline; https://github.com/status-im/status-app/issues/20124
         target: root.networkConnectionStore.networkConnectionModuleInst
         function onNetworkConnectionStatusUpdate(website: string, completelyDown: bool, connectionState: int, chainIds: string, lastCheckedAtUnix: double) {
             if (website === websiteDown) {
