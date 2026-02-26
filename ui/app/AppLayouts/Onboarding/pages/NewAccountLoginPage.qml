@@ -174,6 +174,7 @@ OnboardingPage {
                 }
             }
             footer: StatusDialogFooter {
+                bottomPadding: Theme.padding + loginWithSyncAckPopup.parent.SafeArea.margins.bottom
                 spacing: Theme.padding
                 rightButtons: ObjectModel {
                     StatusFlatButton {
