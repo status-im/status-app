@@ -912,21 +912,4 @@ ListModel {
         selected: false
         isToken: false
     }
-
-    function setSelected(shortName) {
-        let isSelected = false
-
-        for(let i = 0; i < count; i++) {
-            if(shortName === get(i).shortName) {
-                get(i).selected = true
-                isSelected = true
-            } else {
-                get(i).selected = false
-            }
-        }
-
-        // Set default:
-        if(!isSelected)
-            get(0).selected = true
-    }
 }

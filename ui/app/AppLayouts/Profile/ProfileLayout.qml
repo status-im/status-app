@@ -394,7 +394,8 @@ StatusSectionLayout {
                 languageSelectionEnabled: localAppSettings.translationsEnabled
                 currentLanguage: root.languageStore.currentLanguage
                 availableLanguages: root.languageStore.availableLanguages
-                currencyStore: root.currencyStore
+                currentCurrency: root.currencyStore.currentCurrency
+                currenciesModel: root.currencyStore.currenciesModel
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.language)
                 contentWidth: d.contentWidth
                 onChangeLanguageRequested: function (newLanguageCode) {
@@ -404,6 +405,7 @@ StatusSectionLayout {
                     else
                         console.warn("Failed setting language to:", newLanguageCode)
                 }
+                onChangeCurrencyRequested: shortName => root.currencyStore.updateCurrency(shortName)
             }
         }
 

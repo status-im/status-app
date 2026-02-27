@@ -13,12 +13,9 @@ QtObject {
     // We should probably refactor this and move those functions to some Wallet module.
     property var _profileSectionModuleInst: profileSectionModule
 
-    readonly property var currenciesModel: CurrenciesModel {
-        Component.onCompleted: setSelected(root.currentCurrency)
-    }
+    readonly property var currenciesModel: CurrenciesModel {}
 
-    readonly property string currentCurrency: Global.appIsReady ? walletSection.currentCurrency : ""
-    onCurrentCurrencyChanged: currenciesModel.setSelected(root.currentCurrency)
+    readonly property string currentCurrency: Global.appIsReady ? walletSection.currentCurrency : "USD"
 
     function updateCurrency(shortName) {
         walletSection.updateCurrency(shortName)

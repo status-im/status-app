@@ -9,8 +9,6 @@ import Storybook
 
 import utils
 
-import shared.stores as SharedStores
-
 SplitView {
     id: root
 
@@ -34,48 +32,44 @@ SplitView {
                 currentLanguage = newLanguageCode
             }
 
-            currencyStore: SharedStores.CurrenciesStore {
-                property string currentCurrency: "EUR"
-
-                function updateCurrency(shortName) {
-                    logs.logEvent("currencyStore::updateCurrency", ["currencyKey"], arguments)
-                    currentCurrency = shortName
+            currentCurrency: "USD"
+            currenciesModel: ListModel {
+                ListElement {
+                    key: "usd"
+                    shortName: "USD"
+                    name: qsTr("US Dollars")
+                    symbol: "$"
+                    category: ""
+                    imageSource: "../../assets/twemoji/svg/1f1fa-1f1f8.svg"
+                    selected: false
+                    isToken: false
                 }
 
-                readonly property var currenciesModel: ListModel {
-                    ListElement {
-                        key: "usd"
-                        shortName: "USD"
-                        name: qsTr("US Dollars")
-                        symbol: "$"
-                        category: ""
-                        imageSource: "../../assets/twemoji/svg/1f1fa-1f1f8.svg"
-                        selected: false
-                        isToken: false
-                    }
-
-                    ListElement {
-                        key: "gbp"
-                        shortName: "GBP"
-                        name: qsTr("British Pound")
-                        symbol: "£"
-                        category: ""
-                        imageSource: "../../assets/twemoji/svg/1f1ec-1f1e7.svg"
-                        selected: false
-                        isToken: false
-                    }
-
-                    ListElement {
-                        key: "eur"
-                        shortName: "EUR"
-                        name: qsTr("Euros")
-                        symbol: "€"
-                        category: ""
-                        imageSource: "../../assets/twemoji/svg/1f1ea-1f1fa.svg"
-                        selected: true
-                        isToken: false
-                    }
+                ListElement {
+                    key: "gbp"
+                    shortName: "GBP"
+                    name: qsTr("British Pound")
+                    symbol: "£"
+                    category: ""
+                    imageSource: "../../assets/twemoji/svg/1f1ec-1f1e7.svg"
+                    selected: false
+                    isToken: false
                 }
+
+                ListElement {
+                    key: "eur"
+                    shortName: "EUR"
+                    name: qsTr("Euros")
+                    symbol: "€"
+                    category: ""
+                    imageSource: "../../assets/twemoji/svg/1f1ea-1f1fa.svg"
+                    selected: true
+                    isToken: false
+                }
+            }
+            onChangeCurrencyRequested: function(newCurrency) {
+                logs.logEvent("onChangeCurrencyRequested", ["newCurrency"], arguments)
+                currentCurrency = newCurrency
             }
         }
 

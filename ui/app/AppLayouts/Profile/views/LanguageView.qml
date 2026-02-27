@@ -5,16 +5,12 @@ import QtQuick.Layouts
 import utils
 import shared.panels
 import shared.popups
-import shared.stores as SharedStores
 
 import StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils as StatusQUtils
 import StatusQ.Components
 import StatusQ.Controls
-
-import "../popups"
 
 SettingsContentBase {
     id: root
@@ -23,20 +19,15 @@ SettingsContentBase {
     required property var availableLanguages
     // language currently selected for translations, e.g. "cs"
     required property string currentLanguage
-
-    property SharedStores.CurrenciesStore currencyStore
     property bool languageSelectionEnabled
 
+    required property string currentCurrency
+    required property var currenciesModel
+
     objectName: "languageView"
-    onVisibleChanged: { if(!visible) root.setViewIdleState()}
-    onBaseAreaClicked: { root.setViewIdleState() }
 
     signal changeLanguageRequested(string newLanguageCode)
-
-    function setViewIdleState() {
-        currencyPicker.close()
-        languagePicker.close()
-    }
+    signal changeCurrencyRequested(string newCurrency)
 
     ColumnLayout {
         spacing: Constants.settingsSection.itemSpacing
@@ -44,7 +35,6 @@ SettingsContentBase {
 
         RowLayout {
             Layout.fillWidth: true
-            z: root.z + 2
 
             StatusBaseText {
                 Layout.fillWidth: true
@@ -53,44 +43,16 @@ SettingsContentBase {
                 wrapMode: Text.Wrap
             }
 
-            StatusListPicker {
+            StatusCurrencySelector {
                 id: currencyPicker
-
-                property string newKey
-
-                // updateCurrency function operation blocks a little bit the UI
-                // so getting around it with a small pause (timer) in order to get
-                // the desired visual behavior
-                Timer {
-                    id: currencyPause
-                    interval: 100
-                    onTriggered: {
-                        const idx = StatusQUtils.ModelUtils.indexOf(root.currencyStore.currenciesModel, "key", currencyPicker.newKey)
-                        const shortName = root.currencyStore.currenciesModel.get(idx === -1 ? 0 : idx).shortName
-                        root.currencyStore.updateCurrency(shortName)
-                    }
-                }
-
-                z: root.z + 2
-
-                inputList: root.currencyStore.currenciesModel
-
-                printSymbol: true
-                placeholderSearchText: qsTr("Search Currencies")
-                maxPickerHeight: 350
-
-                onItemPickerChanged: (key, selected) => {
-                    if(selected) {
-                        currencyPicker.newKey = key
-                        currencyPause.start()
-                    }
-                }
+                currentCurrency: root.currentCurrency
+                currenciesModel: root.currenciesModel
+                onCurrencySelected: shortName => root.changeCurrencyRequested(shortName)
             }
         }
 
         RowLayout {
             Layout.fillWidth: true
-            z: root.z + 1
 
             StatusBaseText {
                 Layout.fillWidth: true

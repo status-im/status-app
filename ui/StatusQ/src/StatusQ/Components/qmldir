@@ -18,6 +18,7 @@ StatusCommunityTags 0.1 StatusCommunityTags.qml
 StatusContactRequestsIndicatorListItem 0.1 StatusContactRequestsIndicatorListItem.qml
 StatusContactVerificationIcons 0.1 StatusContactVerificationIcons.qml
 StatusCursorDelegate 0.1 StatusCursorDelegate.qml
+StatusCurrencySelector 0.1 StatusCurrencySelector.qml
 StatusDateGroupLabel 0.1 StatusDateGroupLabel.qml
 StatusDatePicker 0.1 StatusDatePicker.qml
 StatusDescriptionListItem 0.1 StatusDescriptionListItem.qml
@@ -35,7 +36,6 @@ StatusLetterIdenticon 0.1 StatusLetterIdenticon.qml
 StatusListItem 0.1 StatusListItem.qml
 StatusListItemBadge 0.1 StatusListItemBadge.qml
 StatusListItemTag 0.1 StatusListItemTag.qml
-StatusListPicker 0.1 StatusListPicker.qml
 StatusListSectionHeadline 0.1 StatusListSectionHeadline.qml
 StatusLoadingIndicator 0.1 StatusLoadingIndicator.qml
 StatusMacWindowButtons 0.1 StatusMacWindowButtons.qml

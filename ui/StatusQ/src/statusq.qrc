@@ -20,6 +20,7 @@
         <file>StatusQ/Components/StatusContactRequestsIndicatorListItem.qml</file>
         <file>StatusQ/Components/StatusContactVerificationIcons.qml</file>
         <file>StatusQ/Components/StatusCursorDelegate.qml</file>
+        <file>StatusQ/Components/StatusCurrencySelector.qml</file>
         <file>StatusQ/Components/StatusDateGroupLabel.qml</file>
         <file>StatusQ/Components/StatusDatePicker.qml</file>
         <file>StatusQ/Components/StatusDescriptionListItem.qml</file>
@@ -37,8 +38,6 @@
         <file>StatusQ/Components/StatusListItem.qml</file>
         <file>StatusQ/Components/StatusListItemBadge.qml</file>
         <file>StatusQ/Components/StatusListItemTag.qml</file>
-        <file>StatusQ/Components/StatusListPicker.qml</file>
-        <file>StatusQ/Components/StatusListPickerProxies.qml</file>
         <file>StatusQ/Components/StatusListSectionHeadline.qml</file>
         <file>StatusQ/Components/StatusLoadingIndicator.qml</file>
         <file>StatusQ/Components/StatusMemberListItem.qml</file>

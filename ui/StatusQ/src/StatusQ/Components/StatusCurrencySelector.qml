@@ -9,19 +9,17 @@ import StatusQ.Core.Utils
 import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Core.Theme
-import StatusQ.Models
 
 import SortFilterProxyModel
+import QtModelsToolkit
 
 Button {
     id: root
 
-    // language currently selected for translations, e.g. "cs"
-    required property string currentLanguage
-    // list of language/locale codes, e.g. ["cs_CZ","ko","fr"]
-    required property var languageCodes
+    required property string currentCurrency
+    required property var currenciesModel
 
-    signal languageSelected(string languageCode)
+    signal currencySelected(string shortName)
 
     function close() {
         dropdown.close()
@@ -37,45 +35,42 @@ Button {
 
     opacity: enabled ? 1.0 : ThemeUtils.disabledOpacity
 
-    text: d.beautifyIsoCode(d.selectedLanguage)
+    icon.source: d.currentEntry?.imageSource ?? ""
 
     QtObject {
         id: d
 
-        readonly property string selectedLanguage: root.currentLanguage || "en" // TODO extend with ISO code validation; fallback to "en"
+        readonly property string selectedCurrency: root.currentCurrency || "USD"
 
         readonly property int maxPopupHeight: 400
         readonly property int delegateHeight: 70
 
-        readonly property SortFilterProxyModel languageModel: SortFilterProxyModel {
-            id: languageModel
-            sourceModel: LanguageModel {
-                languageCodes: root.languageCodes
-            }
+        readonly property var currentEntry: itemData?.item ?? null
+        readonly property var itemData: ModelEntry {
+            id: itemData
+            sourceModel: root.currenciesModel
+            key: "shortName"
+            value: d.selectedCurrency
+        }
+
+        readonly property SortFilterProxyModel searchableModel: SortFilterProxyModel {
+            sourceModel: root.currenciesModel
             filters: [
                 AnyOf {
                     enabled: searchField.text !== ""
-                    SearchFilter {
-                        roleName: "code"
-                        searchPhrase: searchField.text
-                    }
                     SearchFilter {
                         roleName: "name"
                         searchPhrase: searchField.text
                     }
                     SearchFilter {
-                        roleName: "nativeName"
+                        roleName: "shortName"
                         searchPhrase: searchField.text
                     }
                 }
             ]
             sorters: StringSorter {
-                roleName: "nativeName"
+                roleName: "name"
             }
-        }
-
-        function beautifyIsoCode(code) {
-            return code.replace('_', '-').toUpperCase()
         }
     }
 
@@ -87,16 +82,15 @@ Button {
 
     contentItem: RowLayout {
         spacing: root.spacing
-        StatusIcon {
+        StatusImage {
             Layout.preferredWidth: 20
             Layout.preferredHeight: 20
-            icon: "globe"
-            color: Theme.palette.primaryColor1
+            source: root.icon.source
         }
         StatusBaseText {
             Layout.fillWidth: true
             horizontalAlignment: Qt.AlignHCenter
-            text: root.text
+            text: d.currentEntry?.shortName ?? "???"
             color: Theme.palette.primaryColor1
             font: root.font
         }
@@ -122,7 +116,11 @@ Button {
         margins: Theme.halfPadding
         padding: Theme.padding
 
-        onOpened: if (!Utils.isMobile) searchField.forceActiveFocus()
+        onOpened: {
+            if (!Utils.isMobile)
+                searchField.forceActiveFocus()
+            currencySelectorPanel.positionViewAtIndex(d.searchableModel.mapFromSource(d.itemData?.row ?? 0), ListView.Visible)
+        }
         onClosed: searchField.input.edit.clear()
 
         contentItem: ColumnLayout {
@@ -133,7 +131,7 @@ Button {
                 placeholderText: qsTr("Search")
                 input.asset.name: "search"
                 input.clearable: true
-                KeyNavigation.tab: userSelectorPanel
+                KeyNavigation.tab: currencySelectorPanel
             }
             StatusListView {
                 Layout.fillWidth: true
@@ -141,38 +139,44 @@ Button {
                 Layout.preferredHeight: contentHeight
                 Layout.maximumHeight: dropdown.bottomSheet ? -1 : d.maxPopupHeight
 
-                id: userSelectorPanel
-                model: d.languageModel
+                id: currencySelectorPanel
+                model: d.searchableModel
                 highlightFollowsCurrentItem: true
                 highlight: Rectangle {
                     radius: Theme.radius
-                    color: userSelectorPanel.activeFocus ? Theme.palette.primaryColor2 : "transparent"
+                    color: currencySelectorPanel.activeFocus ? Theme.palette.primaryColor2 : "transparent"
                 }
 
                 delegate: ItemDelegate {
-                    objectName: "itemDelegate_" + model.code
+                    objectName: "itemDelegate_" + model.shortName
                     width: ListView.view.width
                     height: d.delegateHeight
-                    checked: model.code === d.selectedLanguage
+                    checked: model.shortName === d.selectedCurrency
                     background: Rectangle {
                         radius: Theme.radius
-                        color: userSelectorPanel.activeFocus ? "transparent" : hovered ? Theme.palette.primaryColor2 : "transparent"
+                        color: currencySelectorPanel.activeFocus ? "transparent" : hovered ? Theme.palette.primaryColor2 : "transparent"
                     }
                     contentItem: RowLayout {
                         ColumnLayout {
                             Layout.fillWidth: true
-                            StatusBaseText {
+                            RowLayout {
                                 Layout.fillWidth: true
-                                horizontalAlignment: Qt.AlignLeft // force LTR
-                                text: model.nativeName
-                                font.capitalization: Font.Capitalize
-                                font.pixelSize: root.font.pixelSize
-                                font.weight: root.font.weight
+                                StatusImage {
+                                    Layout.preferredWidth: 16
+                                    Layout.preferredHeight: 16
+                                    source: model.imageSource
+                                }
+                                StatusBaseText {
+                                    Layout.fillWidth: true
+                                    text: model.name
+                                    font.pixelSize: root.font.pixelSize
+                                    font.weight: root.font.weight
+                                }
                             }
                             StatusBaseText {
                                 Layout.fillWidth: true
-                                text: "%1 (%2)".arg(model.name).arg(d.beautifyIsoCode(model.code))
-                                font: root.font
+                                text: model.symbol ? "%1 (%2)".arg(model.shortName).arg(model.symbol) : model.shortName
+                                font.pixelSize: root.font.pixelSize
                                 color: Theme.palette.baseColor1
                             }
                         }
@@ -186,17 +190,12 @@ Button {
                     }
                     onClicked: {
                         dropdown.close()
-                        root.languageSelected(model.code)
+                        root.currencySelected(model.shortName)
                     }
                     HoverHandler {
                         cursorShape: hovered ? Qt.PointingHandCursor : undefined
                     }
                 }
-            }
-
-            // Just a filler
-            Item {
-                Layout.fillHeight: true
             }
         }
     }
