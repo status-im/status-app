@@ -26,6 +26,13 @@ const SIGNAL_CONNECTOR_ACCOUNT_CHANGED* = "ConnectorAccountChanged"
 const SIGNAL_WC_SESSION_PROPOSAL* = "WCSessionProposal"
 const SIGNAL_WC_SESSION_REQUEST* = "WCSessionRequest"
 const SIGNAL_WC_SESSION_DELETE* = "WCSessionDelete"
+const SIGNAL_WC_PAIR_RESULT* = "WCPairResult"
+const SIGNAL_WC_APPROVE_SESSION_RESULT* = "WCApproveSessionResult"
+const SIGNAL_WC_REJECT_SESSION_RESULT* = "WCRejectSessionResult"
+const SIGNAL_WC_SESSION_REQUEST_ANSWER_RESULT* = "WCSessionRequestAnswerResult"
+const SIGNAL_WC_EMIT_EVENT_RESULT* = "WCEmitEventResult"
+const SIGNAL_WC_GET_ACTIVE_SESSIONS_RESULT* = "WCGetActiveSessionsResult"
+const SIGNAL_WC_DISCONNECT_SESSION_RESULT* = "WCDisconnectSessionResult"
 
 # Enum with events
 type Event* = enum
@@ -33,6 +40,10 @@ type Event* = enum
 
 type ConnectorCallRPCResultArgs* = ref object of Args
   requestId*: int
+  payload*: string
+
+type WCAsyncResultArgs* = ref object of Args
+  requestId*: string
   payload*: string
 
 # Event handler function
@@ -298,6 +309,183 @@ QtObject:
     except Exception as e:
       error "connectorCallRPC: starting async background task failed", requestId=requestId, error=e.msg
 
+  proc emitWCAsyncResult*(self: Service, signalName: string, responseObj: JsonNode) =
+    var data = WCAsyncResultArgs()
+    data.requestId = responseObj{"requestId"}.getStr("")
+    data.payload = $responseObj
+    self.events.emit(signalName, data)
+
+  proc onPairWalletConnectResolved*(self: Service, response: string) {.slot.} =
+    try:
+      self.emitWCAsyncResult(SIGNAL_WC_PAIR_RESULT, response.parseJson)
+    except Exception as e:
+      error "onPairWalletConnectResolved failed", error=e.msg
+
+  proc onApproveWCSessionResolved*(self: Service, response: string) {.slot.} =
+    try:
+      self.emitWCAsyncResult(SIGNAL_WC_APPROVE_SESSION_RESULT, response.parseJson)
+    except Exception as e:
+      error "onApproveWCSessionResolved failed", error=e.msg
+
+  proc onRejectWCSessionResolved*(self: Service, response: string) {.slot.} =
+    try:
+      self.emitWCAsyncResult(SIGNAL_WC_REJECT_SESSION_RESULT, response.parseJson)
+    except Exception as e:
+      error "onRejectWCSessionResolved failed", error=e.msg
+
+  proc onApproveWCSessionRequestResolved*(self: Service, response: string) {.slot.} =
+    try:
+      self.emitWCAsyncResult(SIGNAL_WC_SESSION_REQUEST_ANSWER_RESULT, response.parseJson)
+    except Exception as e:
+      error "onApproveWCSessionRequestResolved failed", error=e.msg
+
+  proc onRejectWCSessionRequestResolved*(self: Service, response: string) {.slot.} =
+    try:
+      self.emitWCAsyncResult(SIGNAL_WC_SESSION_REQUEST_ANSWER_RESULT, response.parseJson)
+    except Exception as e:
+      error "onRejectWCSessionRequestResolved failed", error=e.msg
+
+  proc onEmitWCSessionEventResolved*(self: Service, response: string) {.slot.} =
+    try:
+      self.emitWCAsyncResult(SIGNAL_WC_EMIT_EVENT_RESULT, response.parseJson)
+    except Exception as e:
+      error "onEmitWCSessionEventResolved failed", error=e.msg
+
+  proc onGetWCActiveSessionsResolved*(self: Service, response: string) {.slot.} =
+    try:
+      self.emitWCAsyncResult(SIGNAL_WC_GET_ACTIVE_SESSIONS_RESULT, response.parseJson)
+    except Exception as e:
+      error "onGetWCActiveSessionsResolved failed", error=e.msg
+
+  proc onDisconnectWCSessionResolved*(self: Service, response: string) {.slot.} =
+    try:
+      self.emitWCAsyncResult(SIGNAL_WC_DISCONNECT_SESSION_RESULT, response.parseJson)
+    except Exception as e:
+      error "onDisconnectWCSessionResolved failed", error=e.msg
+
+  proc pairWalletConnectAsync*(self: Service, requestId: string, uri: string) =
+    try:
+      let arg = PairWalletConnectTaskArg(
+        tptr: pairWalletConnectTask,
+        vptr: cast[uint](self.vptr),
+        slot: "onPairWalletConnectResolved",
+        requestId: requestId,
+        uri: uri
+      )
+      self.threadpool.start(arg)
+    except Exception as e:
+      error "pairWalletConnectAsync failed to enqueue", requestId=requestId, error=e.msg
+      self.emitWCAsyncResult(SIGNAL_WC_PAIR_RESULT, %* {"requestId": requestId, "ok": false, "error": e.msg})
+
+  proc disconnectWCSessionAsync*(self: Service, requestId: string, topic: string) =
+    try:
+      let arg = DisconnectWCSessionTaskArg(
+        tptr: disconnectWCSessionTask,
+        vptr: cast[uint](self.vptr),
+        slot: "onDisconnectWCSessionResolved",
+        requestId: requestId,
+        topic: topic
+      )
+      self.threadpool.start(arg)
+    except Exception as e:
+      error "disconnectWCSessionAsync failed to enqueue", requestId=requestId, error=e.msg
+      self.emitWCAsyncResult(SIGNAL_WC_DISCONNECT_SESSION_RESULT, %* {"requestId": requestId, "topic": topic, "ok": false, "error": e.msg})
+
+  proc getWCActiveSessionsAsync*(self: Service, requestId: string, validAtTimestamp: int64) =
+    try:
+      let arg = GetWCActiveSessionsTaskArg(
+        tptr: getWCActiveSessionsTask,
+        vptr: cast[uint](self.vptr),
+        slot: "onGetWCActiveSessionsResolved",
+        requestId: requestId,
+        validAtTimestamp: validAtTimestamp
+      )
+      self.threadpool.start(arg)
+    except Exception as e:
+      error "getWCActiveSessionsAsync failed to enqueue", requestId=requestId, error=e.msg
+      self.emitWCAsyncResult(SIGNAL_WC_GET_ACTIVE_SESSIONS_RESULT, %* {"requestId": requestId, "validAtTimestamp": validAtTimestamp, "sessionsJson": "[]", "ok": false, "error": e.msg})
+
+  proc approveWCSessionRequestAsync*(self: Service, requestId: string, topic, sessionRequestId, signature: string) =
+    try:
+      let arg = ApproveWCSessionRequestTaskArg(
+        tptr: approveWCSessionRequestTask,
+        vptr: cast[uint](self.vptr),
+        slot: "onApproveWCSessionRequestResolved",
+        requestId: requestId,
+        topic: topic,
+        sessionRequestId: sessionRequestId,
+        signature: signature
+      )
+      self.threadpool.start(arg)
+    except Exception as e:
+      error "approveWCSessionRequestAsync failed to enqueue", requestId=requestId, error=e.msg
+      self.emitWCAsyncResult(SIGNAL_WC_SESSION_REQUEST_ANSWER_RESULT, %* {"requestId": requestId, "topic": topic, "sessionRequestId": sessionRequestId, "accept": true, "ok": false, "error": e.msg})
+
+  proc rejectWCSessionRequestAsync*(self: Service, requestId: string, topic, sessionRequestId: string) =
+    try:
+      let arg = RejectWCSessionRequestTaskArg(
+        tptr: rejectWCSessionRequestTask,
+        vptr: cast[uint](self.vptr),
+        slot: "onRejectWCSessionRequestResolved",
+        requestId: requestId,
+        topic: topic,
+        sessionRequestId: sessionRequestId
+      )
+      self.threadpool.start(arg)
+    except Exception as e:
+      error "rejectWCSessionRequestAsync failed to enqueue", requestId=requestId, error=e.msg
+      self.emitWCAsyncResult(SIGNAL_WC_SESSION_REQUEST_ANSWER_RESULT, %* {"requestId": requestId, "topic": topic, "sessionRequestId": sessionRequestId, "accept": false, "ok": false, "error": e.msg})
+
+  proc approveWCSessionAsync*(self: Service, requestId: string, proposalId, account: string, dappUrl, dappName, dappIcon: string, supportedChainsJson: string) =
+    try:
+      let arg = ApproveWCSessionTaskArg(
+        tptr: approveWCSessionTask,
+        vptr: cast[uint](self.vptr),
+        slot: "onApproveWCSessionResolved",
+        requestId: requestId,
+        proposalId: proposalId,
+        account: account,
+        dappUrl: dappUrl,
+        dappName: dappName,
+        dappIcon: dappIcon,
+        supportedChainsJson: supportedChainsJson
+      )
+      self.threadpool.start(arg)
+    except Exception as e:
+      error "approveWCSessionAsync failed to enqueue", requestId=requestId, error=e.msg
+      self.emitWCAsyncResult(SIGNAL_WC_APPROVE_SESSION_RESULT, %* {"requestId": requestId, "proposalId": proposalId, "sessionJson": "", "ok": false, "error": e.msg})
+
+  proc rejectWCSessionAsync*(self: Service, requestId: string, proposalId: string) =
+    try:
+      let arg = RejectWCSessionTaskArg(
+        tptr: rejectWCSessionTask,
+        vptr: cast[uint](self.vptr),
+        slot: "onRejectWCSessionResolved",
+        requestId: requestId,
+        proposalId: proposalId
+      )
+      self.threadpool.start(arg)
+    except Exception as e:
+      error "rejectWCSessionAsync failed to enqueue", requestId=requestId, error=e.msg
+      self.emitWCAsyncResult(SIGNAL_WC_REJECT_SESSION_RESULT, %* {"requestId": requestId, "proposalId": proposalId, "ok": false, "error": e.msg})
+
+  proc emitWCSessionEventAsync*(self: Service, requestId: string, topic, name, dataJson, chainId: string) =
+    try:
+      let arg = EmitWCSessionEventTaskArg(
+        tptr: emitWCSessionEventTask,
+        vptr: cast[uint](self.vptr),
+        slot: "onEmitWCSessionEventResolved",
+        requestId: requestId,
+        topic: topic,
+        name: name,
+        dataJson: dataJson,
+        chainId: chainId
+      )
+      self.threadpool.start(arg)
+    except Exception as e:
+      error "emitWCSessionEventAsync failed to enqueue", requestId=requestId, error=e.msg
+      self.emitWCAsyncResult(SIGNAL_WC_EMIT_EVENT_RESULT, %* {"requestId": requestId, "topic": topic, "name": name, "ok": false, "error": e.msg})
+
   proc changeAccount*(self: Service, url: string, clientId: string, newAccount: string): bool =
     try:
       var args = ChangeAccountArgs(
@@ -310,71 +498,6 @@ QtObject:
 
     except Exception as e:
       error "changeAccount failed", error=e.msg
-      return false
-
-  # WalletConnect (via connector)
-  proc pairWalletConnect*(self: Service, uri: string): bool =
-    try:
-      let response = status_go.pairWalletConnectRpc(uri)
-      return response.error.isNil
-    except Exception as e:
-      error "pairWalletConnect failed", error=e.msg
-      return false
-
-  proc disconnectWCSession*(self: Service, topic: string): bool =
-    try:
-      return status_go.disconnectWCSessionRpc(topic)
-    except Exception as e:
-      error "disconnectWCSession failed", error=e.msg
-      return false
-
-  proc getWCActiveSessions*(self: Service, validAtTimestamp: int64): string =
-    try:
-      let response = status_go.getWCActiveSessionsRpc(validAtTimestamp)
-      if not response.error.isNil:
-        return "[]"
-      let jsonArray = $response.result
-      return if jsonArray != "null": jsonArray else: "[]"
-    except Exception as e:
-      error "getWCActiveSessions failed", error=e.msg
-      return "[]"
-
-  proc approveWCSessionRequest*(self: Service, topic, requestId, signature: string): bool =
-    try:
-      return status_go.approveWCSessionRequestRpc(topic, requestId, signature)
-    except Exception as e:
-      error "approveWCSessionRequest failed", error=e.msg
-      return false
-
-  proc rejectWCSessionRequest*(self: Service, topic, requestId: string, code: int = 5000, message: string = "User rejected"): bool =
-    try:
-      return status_go.rejectWCSessionRequestRpc(topic, requestId, code, message)
-    except Exception as e:
-      error "rejectWCSessionRequest failed", error=e.msg
-      return false
-
-  proc approveWCSession*(self: Service, proposalId, account: string, dappUrl, dappName, dappIcon: string, supportedChains: seq[uint64]): string =
-    try:
-      let response = status_go.approveWCSessionRpc(proposalId, account, dappUrl, dappName, dappIcon, supportedChains)
-      if not response.error.isNil:
-        return ""
-      return response.result.getStr("")
-    except Exception as e:
-      error "approveWCSession failed", error=e.msg
-      return ""
-
-  proc rejectWCSession*(self: Service, proposalId: string): bool =
-    try:
-      return status_go.rejectWCSessionRpc(proposalId)
-    except Exception as e:
-      error "rejectWCSession failed", error=e.msg
-      return false
-
-  proc emitWCSessionEvent*(self: Service, topic, name, dataJson, chainId: string): bool =
-    try:
-      return status_go.emitWCSessionEventRpc(topic, name, dataJson, chainId)
-    except Exception as e:
-      error "emitWCSessionEvent failed", error=e.msg
       return false
 
   proc delete*(self: Service) =

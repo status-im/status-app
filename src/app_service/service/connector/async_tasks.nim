@@ -1,9 +1,5 @@
 import json, json_serialization, chronicles
 import backend/connector as status_go
-import app/core/tasks/qt
-
-logScope:
-  topics = "connector-async-tasks"
 
 type
   ConnectorCallRPCTaskArg* = ref object of QObjectTaskArg
@@ -27,4 +23,5 @@ proc connectorCallRPCTask*(argEncoded: string) {.gcsafe, nimcall.} =
       "requestId": arg.requestId,
       "error": e.msg
     })
+include async_tasks_wc
 
