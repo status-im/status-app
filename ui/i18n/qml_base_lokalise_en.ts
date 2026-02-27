@@ -20820,9 +20820,9 @@
       <translation>Info</translation>
     </message>
     <message>
-      <source>Swap on %1 is not supported by ParaSwap.</source>
+      <source>Swaps on %1 are coming soon.</source>
       <comment>SwapModal</comment>
-      <translation>Swap on %1 is not supported by ParaSwap.</translation>
+      <translation>Swaps on %1 are coming soon.</translation>
     </message>
   </context>
   <context>
