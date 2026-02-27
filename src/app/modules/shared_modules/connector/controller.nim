@@ -1,5 +1,5 @@
 import nimqml
-import json, strutils
+import json, strutils, tables
 import chronicles, json_serialization
 import app/core/eventemitter
 
@@ -24,6 +24,9 @@ QtObject:
     Controller* = ref object of QObject
       service: connector_service.Service
       events: EventEmitter
+      wcRequestCounter: uint64
+      latestGetActiveSessionsRequestId: string
+      pendingDisconnectUrls: Table[string, string]
 
   proc delete*(self: Controller)
   proc emitConnectRequested*(self: Controller, requestId: string, payload: string)
@@ -37,12 +40,14 @@ QtObject:
   proc wcSessionProposal*(self: Controller, requestId: string, uri: string, proposal: string)
   proc wcSessionRequest*(self: Controller, topic: string, requestId: string, requestJson: string)
   proc wcSessionDelete*(self: Controller, topic: string, dappUrl: string)
+  proc setupWcEvents*(self: Controller)
 
   proc newController*(service: connector_service.Service, events: EventEmitter): Controller =
     new(result, delete)
 
     result.events = events
     result.service = service
+    result.pendingDisconnectUrls = initTable[string, string]()
 
     let controller = result  # Capture result in a local variable
 
@@ -138,26 +143,7 @@ QtObject:
       except Exception as ex:
         error "error processing SIGNAL_CONNECTOR_ACCOUNT_CHANGED", error=ex.msg, exceptionName=ex.name
 
-    result.events.on(connector_service.SIGNAL_WC_SESSION_PROPOSAL) do(e: Args):
-      try:
-        let params = WCSessionProposalSignal(e)
-        controller.wcSessionProposal(params.requestId, params.uri, params.proposal)
-      except Exception as ex:
-        error "error processing SIGNAL_WC_SESSION_PROPOSAL", error=ex.msg, exceptionName=ex.name
-
-    result.events.on(connector_service.SIGNAL_WC_SESSION_REQUEST) do(e: Args):
-      try:
-        let params = WCSessionRequestSignal(e)
-        controller.wcSessionRequest(params.topic, $params.requestId, params.requestJson)
-      except Exception as ex:
-        error "error processing SIGNAL_WC_SESSION_REQUEST", error=ex.msg, exceptionName=ex.name
-
-    result.events.on(connector_service.SIGNAL_WC_SESSION_DELETE) do(e: Args):
-      try:
-        let params = WCSessionDeleteSignal(e)
-        controller.wcSessionDelete(params.topic, params.dappUrl)
-      except Exception as ex:
-        error "error processing SIGNAL_WC_SESSION_DELETE", error=ex.msg, exceptionName=ex.name
+    controller.setupWcEvents()
 
     result.QObject.setup
 
@@ -180,7 +166,15 @@ QtObject:
   proc wcSessionProposal*(self: Controller, requestId: string, uri: string, proposal: string) {.signal.}
   proc wcSessionRequest*(self: Controller, topic: string, requestId: string, requestJson: string) {.signal.}
   proc wcSessionDelete*(self: Controller, topic: string, dappUrl: string) {.signal.}
+  proc wcPairWalletConnectDone*(self: Controller, success: bool, error: string) {.signal.}
+  proc wcApproveSessionDone*(self: Controller, proposalId: string, sessionJson: string, error: string) {.signal.}
+  proc wcRejectSessionDone*(self: Controller, proposalId: string, error: string) {.signal.}
+  proc wcSessionRequestAnswerDone*(self: Controller, topic: string, requestId: string, accept: bool, error: string) {.signal.}
+  proc wcEmitSessionEventDone*(self: Controller, topic: string, name: string, error: string) {.signal.}
+  proc wcGetActiveSessionsDone*(self: Controller, sessionsJson: string, error: string) {.signal.}
+  proc wcDisconnectSessionDone*(self: Controller, topic: string, dappUrl: string, error: string) {.signal.}
 
+  include controller_wc_events
   proc emitConnectRequested*(self: Controller, requestId: string, payload: string) =
     self.connectRequested(requestId, payload)
 
@@ -240,31 +234,43 @@ QtObject:
   proc disconnect*(self: Controller, dAppUrl: string, clientId: string = ""): bool {.slot.} =
     result = self.service.recallDAppPermission(dAppUrl, clientId)
 
-  # WalletConnect (via connector)
-  proc pairWalletConnect*(self: Controller, uri: string): bool {.slot.} =
-    return self.service.pairWalletConnect(uri)
+  proc nextWcRequestId(self: Controller, prefix: string): string =
+    self.wcRequestCounter += 1
+    return prefix & "-" & $self.wcRequestCounter
 
-  proc approveWCSession*(self: Controller, proposalId: string, accountAddr: string, dappUrl: string, dappName: string, dappIcon: string, supportedChainsJson: string): string {.slot.} =
-    let chains = Json.decode(supportedChainsJson, seq[uint64])
-    return self.service.approveWCSession(proposalId, accountAddr, dappUrl, dappName, dappIcon, chains)
+  proc pairWalletConnect*(self: Controller, uri: string) {.slot.} =
+    let requestId = self.nextWcRequestId("pair")
+    self.service.pairWalletConnectAsync(requestId, uri)
 
-  proc rejectWCSession*(self: Controller, proposalId: string): bool {.slot.} =
-    return self.service.rejectWCSession(proposalId)
+  proc approveWCSession*(self: Controller, proposalId: string, accountAddr: string, dappUrl: string, dappName: string, dappIcon: string, supportedChainsJson: string) {.slot.} =
+    let requestId = self.nextWcRequestId("approve-session")
+    self.service.approveWCSessionAsync(requestId, proposalId, accountAddr, dappUrl, dappName, dappIcon, supportedChainsJson)
 
-  proc approveWCSessionRequest*(self: Controller, topic: string, requestId: string, signature: string): bool {.slot.} =
-    return self.service.approveWCSessionRequest(topic, requestId, signature)
+  proc rejectWCSession*(self: Controller, proposalId: string) {.slot.} =
+    let requestId = self.nextWcRequestId("reject-session")
+    self.service.rejectWCSessionAsync(requestId, proposalId)
 
-  proc rejectWCSessionRequest*(self: Controller, topic: string, requestId: string): bool {.slot.} =
-    return self.service.rejectWCSessionRequest(topic, requestId)
+  proc approveWCSessionRequest*(self: Controller, topic: string, requestId: string, signature: string) {.slot.} =
+    let internalRequestId = self.nextWcRequestId("approve-request")
+    self.service.approveWCSessionRequestAsync(internalRequestId, topic, requestId, signature)
 
-  proc disconnectWCSession*(self: Controller, topic: string): bool {.slot.} =
-    return self.service.disconnectWCSession(topic)
+  proc rejectWCSessionRequest*(self: Controller, topic: string, requestId: string) {.slot.} =
+    let internalRequestId = self.nextWcRequestId("reject-request")
+    self.service.rejectWCSessionRequestAsync(internalRequestId, topic, requestId)
 
-  proc getWCActiveSessions*(self: Controller, validAtTimestamp: int): string {.slot.} =
-    return self.service.getWCActiveSessions(int64(validAtTimestamp))
+  proc disconnectWCSession*(self: Controller, topic: string, dappUrl: string) {.slot.} =
+    let requestId = self.nextWcRequestId("disconnect")
+    self.pendingDisconnectUrls[requestId] = dappUrl
+    self.service.disconnectWCSessionAsync(requestId, topic)
 
-  proc emitWCSessionEvent*(self: Controller, topic: string, name: string, dataJson: string, chainId: string): bool {.slot.} =
-    return self.service.emitWCSessionEvent(topic, name, dataJson, chainId)
+  proc getWCActiveSessions*(self: Controller, validAtTimestamp: int) {.slot.} =
+    let requestId = self.nextWcRequestId("get-sessions")
+    self.latestGetActiveSessionsRequestId = requestId
+    self.service.getWCActiveSessionsAsync(requestId, int64(validAtTimestamp))
+
+  proc emitWCSessionEvent*(self: Controller, topic: string, name: string, dataJson: string, chainId: string) {.slot.} =
+    let requestId = self.nextWcRequestId("emit-event")
+    self.service.emitWCSessionEventAsync(requestId, topic, name, dataJson, chainId)
 
   proc getDApps*(self: Controller): string {.slot.} =
     return self.service.getDApps()
