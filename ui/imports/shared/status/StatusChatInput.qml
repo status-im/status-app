@@ -679,7 +679,7 @@ Rectangle {
                     icon.name: "italic"
                     checked: {
                         const text = d.getSelectedTextWithFormationChars(messageInputField)
-                        return (surroundedBy(text, "*") && !surroundedBy(text, "**")) || surroundedBy(text, "***")
+                        return (d.surroundedBy(text, "*") && !d.surroundedBy(text, "**")) || d.surroundedBy(text, "***")
                     }
                     shortcut: StandardKey.Italic
                 }
