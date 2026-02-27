@@ -17237,8 +17237,8 @@ selhalo</translation>
         <translation>Info</translation>
     </message>
     <message>
-        <source>Swap on %1 is not supported by ParaSwap.</source>
-        <translation>Směna na %1 není podporována ParaSwap.</translation>
+        <source>Swaps on %1 are coming soon.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

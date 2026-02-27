@@ -17140,7 +17140,7 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Swap on %1 is not supported by ParaSwap.</source>
+        <source>Swaps on %1 are coming soon.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
