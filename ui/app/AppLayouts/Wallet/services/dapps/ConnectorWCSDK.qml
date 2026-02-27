@@ -25,6 +25,7 @@ WalletConnectSDKBase {
     QtObject {
         id: d
         readonly property var sessionRequests: new Map()
+        property var pendingGetActiveSessionsCallback: null
 
         function buildSessionFromWCSession(wcSession) {
             try {
@@ -69,6 +70,23 @@ WalletConnectSDKBase {
                 topic: url
             }
         }
+
+        function parseSessionsJson(sessionsJson) {
+            const activeSessions = {}
+            try {
+                const sessions = JSON.parse(sessionsJson || "[]")
+                for (let i = 0; i < sessions.length; i++) {
+                    const s = sessions[i]
+                    const session = d.buildSessionFromWCSession(s.sessionJson || s)
+                    if (session && session.topic) {
+                        activeSessions[session.topic] = session
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to parse WC sessions", e)
+            }
+            return activeSessions
+        }
     }
 
     Connections {
@@ -109,6 +127,63 @@ WalletConnectSDKBase {
                 }
             }
         }
+
+        function onWcPairWalletConnectDone(success, error) {
+            root.pairResponse(success, success ? "" : (error || "Pair failed"))
+        }
+
+        function onWcGetActiveSessionsDone(sessionsJson, error) {
+            const callback = d.pendingGetActiveSessionsCallback
+            d.pendingGetActiveSessionsCallback = null
+            if (!callback) {
+                return
+            }
+
+            if (error) {
+                callback({})
+                return
+            }
+            callback(d.parseSessionsJson(sessionsJson))
+        }
+
+        function onWcApproveSessionDone(proposalId, sessionJson, error) {
+            d.sessionRequests.delete(proposalId)
+            if (error || !sessionJson) {
+                root.approveSessionResult(proposalId, {}, error || "Approval failed")
+                return
+            }
+
+            try {
+                const session = JSON.parse(sessionJson)
+                root.approveSessionResult(proposalId, session, "")
+            } catch (e) {
+                console.error("Failed to parse approve session result", e)
+                root.approveSessionResult(proposalId, {}, "Approval failed")
+            }
+        }
+
+        function onWcRejectSessionDone(proposalId, error) {
+            d.sessionRequests.delete(proposalId)
+            root.rejectSessionResult(proposalId, error || "")
+        }
+
+        function onWcSessionRequestAnswerDone(topic, requestId, accept, error) {
+            const reqId = String(requestId)
+            if (d.sessionRequests.has(reqId)) {
+                d.sessionRequests.delete(reqId)
+            }
+            root.sessionRequestUserAnswerResult(topic, requestId, accept, error || "")
+        }
+
+        function onWcEmitSessionEventDone(topic, name, error) {
+            if (error) {
+                console.warn("[WC QML] emit session event failed", topic, name, error)
+            }
+        }
+
+        function onWcDisconnectSessionDone(topic, dappUrl, error) {
+            root.disconnected(dappUrl, error || "")
+        }
     }
 
     pair: function(uri) {
@@ -117,8 +192,7 @@ WalletConnectSDKBase {
             root.pairResponse(false, "Connector not available")
             return
         }
-        const success = connectorController.pairWalletConnect(uri)
-        root.pairResponse(success, success ? "" : "Pair failed")
+        connectorController.pairWalletConnect(uri)
     }
 
     getActiveSessions: function(callback) {
@@ -126,22 +200,13 @@ WalletConnectSDKBase {
             callback({})
             return
         }
-        const validAt = Math.floor(Date.now() / 1000)
-        const sessionsJson = connectorController.getWCActiveSessions(validAt)
-        let activeSessions = {}
-        try {
-            const sessions = JSON.parse(sessionsJson || "[]")
-            for (let i = 0; i < sessions.length; i++) {
-                const s = sessions[i]
-                const session = d.buildSessionFromWCSession(s.sessionJson || s)
-                if (session && session.topic) {
-                    activeSessions[session.topic] = session
-                }
-            }
-        } catch (e) {
-            console.error("Failed to parse WC sessions", e)
+        const previousCallback = d.pendingGetActiveSessionsCallback
+        if (previousCallback) {
+            previousCallback({})
         }
-        callback(activeSessions)
+        const validAt = Math.floor(Date.now() / 1000)
+        d.pendingGetActiveSessionsCallback = callback
+        connectorController.getWCActiveSessions(validAt)
     }
 
     disconnect: function(url, clientId) {
@@ -153,12 +218,15 @@ WalletConnectSDKBase {
 
     disconnectByTopic: function(topic, url) {
         if (connectorController) {
-            const success = connectorController.disconnectWCSession(topic)
-            root.disconnected(url, success ? "" : "Failed to disconnect")
+            connectorController.disconnectWCSession(topic, url)
         }
     }
 
     approveSession: function(requestId, account, selectedChains) {
+        if (!connectorController) {
+            console.error("[WC QML] ConnectorWCSDK: connectorController not available")
+            return
+        }
         const pending = d.sessionRequests.get(requestId)
         if (!pending) {
             console.error("Session request not found for approval", requestId)
@@ -166,29 +234,17 @@ WalletConnectSDKBase {
         }
         const meta = pending.proposal?.params?.proposer?.metadata || {}
         const chains = (selectedChains && selectedChains.length > 0) ? selectedChains : [1]
-        const sessionJson = connectorController.approveWCSession(
+        connectorController.approveWCSession(
             requestId, account,
             meta.url || "", meta.name || "", (meta.icons && meta.icons[0]) || "", JSON.stringify(chains))
-        if (sessionJson) {
-            try {
-                const session = JSON.parse(sessionJson)
-                root.approveSessionResult(requestId, session, "")
-            } catch (e) {
-                console.error("Failed to parse approve session result", e)
-                root.approveSessionResult(requestId, {}, "Approval failed")
-            }
-        } else {
-            root.approveSessionResult(requestId, {}, "Approval failed")
-        }
-        d.sessionRequests.delete(requestId)
     }
 
     rejectSession: function(requestId) {
-        if (connectorController) {
-            connectorController.rejectWCSession(requestId)
+        if (!connectorController) {
+            root.rejectSessionResult(requestId, "Connector not available")
+            return
         }
-        d.sessionRequests.delete(requestId)
-        root.rejectSessionResult(requestId, "")
+        connectorController.rejectWCSession(requestId)
     }
 
     acceptSessionRequest: function(topic, id, signature) {
@@ -196,9 +252,8 @@ WalletConnectSDKBase {
             root.sessionRequestUserAnswerResult(topic, id, false, "Connector not available")
             return
         }
-        const ok = connectorController.approveWCSessionRequest(topic, (typeof id === "string" ? id : String(id)), signature)
-        root.sessionRequestUserAnswerResult(topic, id, ok, ok ? "" : "Failed to send signature")
-        d.sessionRequests.delete(String(id))
+        const reqId = (typeof id === "string" ? id : String(id))
+        connectorController.approveWCSessionRequest(topic, reqId, signature)
     }
 
     rejectSessionRequest: function(topic, id, error) {
@@ -206,9 +261,8 @@ WalletConnectSDKBase {
             root.sessionRequestUserAnswerResult(topic, id, false, "Connector not available")
             return
         }
-        const ok = connectorController.rejectWCSessionRequest(topic, (typeof id === "string" ? id : String(id)))
-        root.sessionRequestUserAnswerResult(topic, id, false, ok ? (error || "") : "Failed to reject")
-        d.sessionRequests.delete(String(id))
+        const reqId = (typeof id === "string" ? id : String(id))
+        connectorController.rejectWCSessionRequest(topic, reqId)
     }
 
     getPairings: function(callback) { callback([]) }
