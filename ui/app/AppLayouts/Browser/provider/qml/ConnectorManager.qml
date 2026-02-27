@@ -147,7 +147,8 @@ QtObject {
         dappUrl = urlStr
         dappOrigin = Utils.normalizeOrigin(urlStr)
         dappName = name || Utils.extractDomainName(urlStr)
-        dappIconUrl = iconUrl ? iconUrl.toString() : ""
+        const validatedIcon = Utils.validateDAppIcon(iconUrl, urlStr)
+        dappIconUrl = validatedIcon.valid ? validatedIcon.iconUrl : ""
         dappChainId = 1
     }
 
