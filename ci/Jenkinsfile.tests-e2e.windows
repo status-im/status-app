@@ -192,7 +192,7 @@ pipeline {
 
                   """
                   bat"""
-                    ${VIRTUAL_ENV}\\Scripts\\python.exe -m pytest -m "not keycard" -v --reruns=1 --timeout=300 ${flagStr} --disable-warnings --alluredir=./allure-results -o timeout_func_only=true
+                    ${VIRTUAL_ENV}\\Scripts\\python.exe -m pytest -m "not keycard and not benchmark" -v --reruns=1 --timeout=300 ${flagStr} --disable-warnings --alluredir=./allure-results -o timeout_func_only=true
                   """
                 }
               }
