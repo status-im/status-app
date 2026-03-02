@@ -23,6 +23,7 @@ QtObject {
     property string icon: userProfile.icon
     property string preferredUsername: userProfile.preferredName
     readonly property string chainId: mainModule.appNetworkId
+    readonly property string ensRegisteredAddress: root.ensUsernamesModule ? ensUsernamesModule.ensRegisteredAddress : ""
 
     property string username: userProfile.username
 
@@ -67,12 +68,6 @@ QtObject {
         if(!root.ensUsernamesModule)
             return
         ensUsernamesModule.connectOwnedUsername(name, isStatus)
-    }
-
-    function getEnsRegisteredAddress() {
-        if(!root.ensUsernamesModule)
-            return ""
-        return ensUsernamesModule.getEnsRegisteredAddress()
     }
 
     function getEnsRegistry() {

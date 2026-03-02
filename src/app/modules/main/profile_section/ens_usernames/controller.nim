@@ -63,6 +63,10 @@ proc init*(self: Controller) =
     let args = EnsTransactionArgs(e)
     self.delegate.ensTransactionReverted(args.transactionType, args.ensUsername, args.txHash)
 
+  self.events.on(SIGNAL_ENS_REGISTERED_ADDRESS_FETCHED) do(e:Args):
+    let args = EnsRegisteredAddressArgs(e)
+    self.delegate.ensRegisteredAddressFetched(args.registeredAddress, args.error)
+
 proc getAppNetwork*(self: Controller): NetworkItem =
   return self.networkService.getAppNetwork()
 
@@ -105,9 +109,6 @@ proc fixPreferredName*(self: Controller, ignoreCurrentValue: bool = false) =
       firstEnsName = ensUsername.username
       break
   self.setPreferredName(firstEnsName)
-
-proc getEnsRegisteredAddress*(self: Controller): string =
-  return self.ensService.getEnsRegisteredAddress()
 
 proc getWalletDefaultAddress*(self: Controller): string =
   return self.walletAccountService.getWalletAccount(0).address

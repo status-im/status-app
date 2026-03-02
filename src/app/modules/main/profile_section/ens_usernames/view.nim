@@ -13,6 +13,7 @@ QtObject:
       modelVariant: QVariant
       etherscanTxLink: string
       etherscanAddressLink: string
+      ensRegisteredAddress: string
 
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface): View =
@@ -82,8 +83,16 @@ QtObject:
   proc connectOwnedUsername*(self: View, ensUsername: string, isStatus: bool) {.slot.} =
     self.delegate.connectOwnedUsername(ensUsername, isStatus)
 
-  proc getEnsRegisteredAddress*(self: View): string {.slot.} =
-    return self.delegate.getEnsRegisteredAddress()
+  proc ensRegisteredAddressChanged*(self: View) {.signal.}
+  proc getEnsRegisteredAddress(self: View): string {.slot.} =
+    return self.ensRegisteredAddress
+  proc setEnsRegisteredAddress*(self: View, address: string) =
+    if self.ensRegisteredAddress != address:
+      self.ensRegisteredAddress = address
+      self.ensRegisteredAddressChanged()
+  QtProperty[string] ensRegisteredAddress:
+    read = getEnsRegisteredAddress
+    notify = ensRegisteredAddressChanged
 
   proc getWalletDefaultAddress*(self: View): string {.slot.} =
     return self.delegate.getWalletDefaultAddress()
