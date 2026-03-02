@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Status</string>
     <string name="notification_reply">Reply</string>
+    <string name="notification_reply_failed">Reply could not be sent</string>
+    <string name="notification_accept_contact_request">Accept</string>
+    <string name="notification_reject_contact_request">Reject</string>
 </resources>

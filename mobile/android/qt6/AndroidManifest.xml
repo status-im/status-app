@@ -129,7 +129,7 @@
                 android:resource="@xml/qtprovider_paths"/>
         </provider>
 
-        <!-- Handles inline reply from message notifications. Runs in statusgo process to call status-go RPC. -->
+        <!-- Handles inline reply, dismiss, and contact request Accept/Reject from notifications. Runs in statusgo process. -->
         <receiver
             android:name=".ipc.NotificationReplyReceiver"
             android:exported="false"
