@@ -23047,11 +23047,6 @@
       <translation>Home Page</translation>
     </message>
     <message>
-      <source>Activity Center</source>
-      <comment>Utils</comment>
-      <translation>Activity Center</translation>
-    </message>
-    <message>
       <source>QR Scanner</source>
       <comment>Utils</comment>
       <translation>QR Scanner</translation>

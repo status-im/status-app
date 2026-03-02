@@ -1781,8 +1781,6 @@ Item {
                             return Constants.appViewStackIndex.node
                         case Constants.appSection.market:
                             return Constants.appViewStackIndex.market
-                        case Constants.appSection.activityCenter:
-                            return Constants.appViewStackIndex.activityCenter
                         default:
                             // We should never end up here
                             console.error("AppMain: Unknown section type")
@@ -2291,34 +2289,6 @@ Item {
                             }
                         }
                         onLoaded: item.resetView()
-                    }
-
-                    Loader {
-                        active: appView.currentIndex === Constants.appViewStackIndex.activityCenter
-                        sourceComponent: ActivityCenterLayout {
-                            id: activityCenterPopup
-
-                            objectName: "activityCenterLayout"
-
-                            contactsStore: appMain.contactsStore
-                            store: ChatStores.RootStore {
-                                contactsStore: appMain.contactsStore
-                                currencyStore: appMain.currencyStore
-                                communityTokensStore: appMain.communityTokensStore
-                                openCreateChat: createChatView.opened
-                                walletStore: WalletStores.RootStore
-                                isChatSectionModule: true
-                            }
-                            activityCenterStore: appMain.activityCenterStore
-                            privacyStore: appMain.privacyStore
-                            notificationsStore: appMain.notificationsStore
-                            messagingRootStore: appMain.messagingRootStore
-
-                            onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
-
-                            // Floating panel
-                            leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
-                        }
                     }
 
                     Repeater {

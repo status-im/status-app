@@ -18914,10 +18914,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>홈 페이지</translation>
     </message>
     <message>
-        <source>Activity Center</source>
-        <translation>활동 센터</translation>
-    </message>
-    <message>
         <source>QR Scanner</source>
         <translation type="unfinished"></translation>
     </message>

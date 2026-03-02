@@ -19070,10 +19070,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>Domovská stránka</translation>
     </message>
     <message>
-        <source>Activity Center</source>
-        <translation>Centrum aktivit</translation>
-    </message>
-    <message>
         <source>QR Scanner</source>
         <translation type="unfinished"></translation>
     </message>

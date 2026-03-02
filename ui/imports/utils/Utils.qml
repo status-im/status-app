@@ -435,8 +435,6 @@ QtObject {
             return qsTr("dApp")
         case Constants.appSection.homePage:
             return qsTr("Home Page")
-        case Constants.appSection.activityCenter:
-            return qsTr("Activity Center")
         case Constants.appSection.qrCodeScanner:
             return qsTr("QR Scanner")
         default:
@@ -1000,8 +998,6 @@ QtObject {
             return Constants.settingsSubsection.browser
         case Constants.appSection.node:
             return Constants.settingsSubsection.advanced
-        case Constants.appSection.activityCenter:
-            return Constants.settingsSubsection.notifications
         default:
             return Constants.settingsSubsection.profile // default
         }

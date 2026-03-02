@@ -18981,10 +18981,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
         <translation>Página de inicio</translation>
     </message>
     <message>
-        <source>Activity Center</source>
-        <translation>Centro de actividad</translation>
-    </message>
-    <message>
         <source>QR Scanner</source>
         <translation type="unfinished"></translation>
     </message>
