@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Status</string>
+    <string name="notification_reply">Reply</string>
 </resources>

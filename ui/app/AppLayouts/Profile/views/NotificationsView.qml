@@ -368,7 +368,7 @@ SettingsContentBase {
             Layout.preferredWidth: root.contentWidth - Theme.padding * 2
             Layout.leftMargin: Theme.padding
             Layout.rightMargin: Theme.padding
-            visible: !SQUtils.Utils.isMobile
+            visible: !SQUtils.Utils.isIOS
 
             StatusBaseText {
                 Layout.fillWidth: true

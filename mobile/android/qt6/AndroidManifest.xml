@@ -129,6 +129,12 @@
                 android:resource="@xml/qtprovider_paths"/>
         </provider>
 
+        <!-- Handles inline reply from message notifications. Runs in statusgo process to call status-go RPC. -->
+        <receiver
+            android:name=".ipc.NotificationReplyReceiver"
+            android:exported="false"
+            android:process=":statusgo" />
+
         <!-- Separate-process status-go host service -->
         <service
             android:name=".ipc.StatusGoService"
