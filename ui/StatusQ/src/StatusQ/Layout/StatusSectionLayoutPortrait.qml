@@ -55,11 +55,6 @@ SwipeView {
     */
     property alias leftPanel: leftPanelProxy.target
     /*!
-        \qmlproperty Item StatusSectionLayout::leftFloatingPanelItem
-        This property holds the left floating panel of the component.
-    */
-    property Item leftFloatingPanelItem
-    /*!
         \qmlproperty Item StatusSectionLayout::centerPanel
         This property holds the center panel of the component.
     */
@@ -294,70 +289,5 @@ SwipeView {
         padding: root.headerPadding
         backButtonVisible: root.currentIndex !== 0
         onBackButtonClicked: d.handleBackAction()
-    }
-
-    // --------------------------------------------------------------
-    // Floating overlay: Just a bottom sheet popup.
-    // Open/close is driven from outsite of the component.
-    // --------------------------------------------------------------
-    StatusDialog {
-        id: floatingPopup
-        parent: Overlay.overlay
-        modal: true
-        focus: true
-
-        padding: 0
-        margins: 0
-        bottomPadding: 0
-        topPadding: 0
-
-        closePolicy: Popup.CloseOnPressOutside | Popup.CloseOnEscape
-        fillHeightOnBottomSheet: true
-
-        width: root.width
-        height: root.height - 2 * Theme.padding
-
-        header: null
-        footer: null
-        contentItem: LayoutItemProxy { target: root.leftFloatingPanelItem }
-
-        onClosed: {
-            if(root.leftFloatingPanelItem) {
-                root.leftFloatingPanelItem.StatusLayoutState.opened = false
-            }
-        }
-    }
-
-    onVisibleChanged: {
-        // Important: if portrait becomes inactive, ensure popup is closed
-        if (!root.visible && root.leftFloatingPanelItem.StatusLayoutState.opened) {
-            floatingPopup.close()
-        }
-        else if (root.visible && root.leftFloatingPanelItem) {
-            // Sync when becoming visible
-            if (root.leftFloatingPanelItem.StatusLayoutState.opened)
-                floatingPopup.open()
-        }
-    }
-
-    // Sync floating panel state with imperative open/close calls
-    Connections {
-        target: root.leftFloatingPanelItem
-                ? root.leftFloatingPanelItem.StatusLayoutState
-                : null
-
-        function onOpenedChanged() {
-
-            // Guard against inactive layouts reacting to the floating panel state.
-            // Only the visible layout should handle open/close.
-            if (!root.visible)
-                return
-
-            if (root.leftFloatingPanelItem.StatusLayoutState.opened) {
-                floatingPopup.open()
-            } else {
-                floatingPopup.close()
-            }
-        }
     }
 }

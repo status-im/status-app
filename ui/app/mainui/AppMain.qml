@@ -18,6 +18,9 @@ import AppLayouts.Market
 import AppLayouts.Market.stores
 import AppLayouts.Wallet.services.dapps
 import AppLayouts.HomePage
+import AppLayouts.ActivityCenter.helpers
+import AppLayouts.ActivityCenter.panels
+import AppLayouts.ActivityCenter.adaptors
 
 import utils
 import shared
@@ -1291,16 +1294,6 @@ Item {
         }
     }
 
-    // Provides the section-specific content rendered in the left floating panel.
-    // This is the only instance of the floating panel content and is shared
-    // across layouts by being reparented internally via a LayoutItemProxy.
-    // TODO(#18908): Replace this inline Item with a dedicated `ActivityCenterPanel` component.
-    readonly property Item activityCenterPanel: Item {
-        id: activityCenterPanelItem
-
-        anchors.fill: parent
-    }
-
     ColumnLayout {
         anchors.fill: parent        
 
@@ -1515,12 +1508,238 @@ Item {
         }
 
         Item {
+            id: mainLayoutItem
+
+            readonly property bool isPortraitMode: !sidebar.alwaysVisible
+
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             objectName: "mainRightView"
 
+            property bool openACCenterPanel: false
+
+            // By design, width of the left panel when expanded while the floating panel is open.
+            readonly property int extendedLeftPanelWidth: 344
+
+            readonly property int leftPanelWidthOverride: openACCenterPanel ? extendedLeftPanelWidth : 0
+
+            // Management of open/close AC popup in case of portrait mode
+            onOpenACCenterPanelChanged: {
+                if(isPortraitMode && openACCenterPanel) {
+                    acPortraitPopup.open()
+                } else if (isPortraitMode && !openACCenterPanel) {
+                    acPortraitPopup.close()
+                }
+            }
+
+            // Ensure closing the popup when changing from portrait to landscape,
+            // and reset panel state when changing from landscape to portrait
+            onIsPortraitModeChanged: {
+                if(!isPortraitMode) {
+                    acPortraitPopup.close()
+                } else {
+                    openACCenterPanel = false
+                }
+            }
+
+            // Container for the Activity Center Area in Landscape
+            Rectangle {
+                readonly property bool openPanel: !mainLayoutItem.isPortraitMode ? mainLayoutItem.openACCenterPanel : false
+
+                // Keep alive while closing animation
+                property bool _shown: openPanel
+
+                // Layout
+                z: sectionLayout.z + 1
+                color: Theme.palette.transparent
+                height: parent.height
+                width: parent.extendedLeftPanelWidth
+                clip: true
+                visible: _shown
+                anchors.left: sectionLayout.left
+
+                // For animating it on open and close
+                y: openPanel ? 0 : height
+
+                // Open / Close animation
+                Behavior on y {
+                    NumberAnimation {
+                        duration: ThemeUtils.AnimationDuration.VerySlow
+                        easing.type: Easing.OutCubic
+                    }
+                }
+                // When close finishe, finally hide, no more inputs to capture
+                onYChanged: {
+                    if (!openPanel && y >= height) {
+                        // Ensure the slide to bottom has been finished
+                        _shown = false
+                    }
+                }
+                // Drives animation
+                onOpenPanelChanged: {
+                    if (openPanel) _shown = true
+                }
+
+                LayoutItemProxy {
+                    anchors.fill: parent
+                    anchors.topMargin: Theme.halfPadding
+                    anchors.rightMargin: Theme.halfPadding
+                    target: acPanelItem
+                }
+            }
+
+            // Container for the Activity Center Area in Portrait
+            Popup {
+                id: acPortraitPopup
+                parent: Overlay.overlay
+                modal: true
+                focus: true
+                padding: 0
+                closePolicy: Popup.CloseOnPressOutside | Popup.CloseOnEscape
+                width: parent.width
+                height: parent.height * 0.9
+                y: parent.height - height
+
+                enter: Transition {
+                    ParallelAnimation {
+                        NumberAnimation {
+                            property: "opacity"
+                            from: 0.0; to: 1.0
+                            duration: ThemeUtils.AnimationDuration.Slow
+                        }
+                        NumberAnimation {
+                            property: "y"
+                            from: acPortraitPopup.parent.height
+                            to: acPortraitPopup.parent.height - acPortraitPopup.height
+                            duration: ThemeUtils.AnimationDuration.Slow
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                }
+
+                exit: Transition {
+                    ParallelAnimation {
+                        NumberAnimation {
+                            property: "opacity"
+                            from: 1.0; to: 0.0
+                            duration: ThemeUtils.AnimationDuration.Slow
+                        }
+                        NumberAnimation {
+                            property: "y"
+                            from: acPortraitPopup.parent.height - acPortraitPopup.height
+                            to: acPortraitPopup.parent.height
+                            duration: ThemeUtils.AnimationDuration.Slow
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                }
+
+                Overlay.modal: Rectangle {
+                    color: Theme.palette.backdropColor
+                }
+
+                contentItem: LayoutItemProxy {
+                    target: acPanelItem
+                    anchors.fill: parent
+                }
+
+                // Sync the main property when autoclose
+                onClosed: { mainLayoutItem.openACCenterPanel = false }
+            }
+
+            ActivityCenterPanel {
+                id: acPanelItem
+
+                readonly property ActivityCenterAdaptor adaptor: ActivityCenterAdaptor {
+                    contactsModel: appMain.contactsStore.contactsModel
+                    userProfileName: appMain.profileStore.name
+                    notifications: appMain.activityCenterStore.activityCenterNotifications
+                    getCommunityDetails: function(communityId) {
+                        return appMain.rootChatStore.getCommunityDetailsAsJson(communityId)
+                    }
+                    getChatDetails: function(chatId) {
+                        return appMain.rootChatStore.getChatDetails(chatId)
+                    }
+                    onPopulateContactDetailsRequested: (contactId) => appMain.contactsStore.populateContactDetails(contactId)
+                }
+
+                backgroundColor: Theme.palette.statusAppLayout.backgroundColor
+
+                hasAdmin: appMain.activityCenterStore.adminCount > 0
+                hasReplies: appMain.activityCenterStore.repliesCount > 0
+                hasMentions: appMain.activityCenterStore.mentionsCount > 0
+                hasContactRequests: appMain.activityCenterStore.contactRequestsCount > 0
+                hasMembership: appMain.activityCenterStore.membershipCount > 0
+                activeGroup: appMain.activityCenterStore.activeNotificationGroup
+
+                hasUnreadNotifications: appMain.activityCenterStore.unreadNotificationsCount > 0
+                readNotificationsStatus: appMain.activityCenterStore.activityCenterReadType
+                notificationsModel: adaptor.model
+                newsSettingsStatus: appMain.notificationsStore.notificationsSettings.notifSettingStatusNews
+                newsEnabledViaRSS: appMain.privacyStore.isStatusNewsViaRSSEnabled
+
+                onMoreOptionsRequested: console.warn("TODO: ActivityCenterPanel::onMoreOptionsRequested")
+                onCloseRequested: mainLayoutItem.openACCenterPanel = false
+                onMarkAllAsReadRequested: appMain.activityCenterStore.markAllActivityCenterNotificationsRead()
+                onHideShowReadNotificationsRequested: (hideReadNotifications) => {
+                                                          appMain.activityCenterStore.setActivityCenterReadType(!hideReadNotifications ?
+                                                                                                                    ActivityCenterTypes.ActivityCenterReadType.Unread :
+                                                                                                                    ActivityCenterTypes.ActivityCenterReadType.All)
+                                                      }
+                onSetActiveGroupRequested: (group) => {
+                                               appMain.activityCenterStore.setActiveNotificationGroup(group)
+                                           }
+                onFetchMoreNotificationsRequested: appMain.activityCenterStore.fetchActivityCenterNotifications()
+                onEnableNewsViaRSSRequested: appMain.privacyStore.setNewsRSSEnabled(true)
+                onEnableNewsRequested: appMain.notificationsStore.notificationsSettings.notifSettingStatusNews = Constants.settingsSection.notifications.sendAlertsValue
+
+                // Card Interactions
+                onAvatarClicked: (avatarId) => { Global.openProfilePopup(avatarId) }
+                onRedirectToDetails: (sectionId, subsectionId, subsectionItemId) => {
+                                         appMain.rootStore.setNavToMsgDetailsFlag(true) // It covers in-app link navigation in portrait mode
+                                         appMain.activityCenterStore.switchTo(sectionId, subsectionId, subsectionItemId)
+
+                                         // Guard in case of portrait
+                                         acPortraitPopup.close()
+                                     }
+                onRedirectToSection: (sectionId) => {
+                                         appMain.changeAppSectionBySectionId(sectionId)
+
+                                         // Guard in case of portrait
+                                         acPortraitPopup.close()
+                                     }
+                onRedirectToPopup: (notification) => {
+                                       // Right now, this is the only popup open, when more, we can add a popup type to determine it
+                                       Global.openNewsMessagePopupRequested(notification)
+
+                                       // Guard in case of portrait
+                                       acPortraitPopup.close()
+                                   }
+                onRedirectToWallet: (address, txHash) => {
+                                        Global.changeAppSectionBySectionType(Constants.appSection.wallet,
+                                                                             WalletLayout.LeftPanelSelection.Address,
+                                                                             WalletLayout.RightPanelSelection.Activity,
+                                                                             {
+                                                                                 address: address,
+                                                                                 txHash: txHash
+                                                                             })
+                                    }
+
+                // Quick actions
+                // NOTE: These are now just quick actions specific for `Contact Requests`, if more quick actions are introduced,
+                // this will need some generalization rule / implementation
+                onAcceptRequested: (avatarId, actionId) => {
+                                       appMain.contactsStore.acceptContactRequest(avatarId, actionId)
+                                   }
+
+                onDeclineRequested: (avatarId, actionId) => {
+                                        appMain.contactsStore.dismissContactRequest(avatarId, actionId)
+                                    }
+            }
+
             Item {
+                id: sectionLayout
                 anchors.fill: parent
                 readonly property bool offsetBySidebar: sidebar.alwaysVisible
                                                       || d.activeSectionType === Constants.appSection.browser
@@ -1792,7 +2011,7 @@ Item {
                                 onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
 
                                 // Floating panel
-                                leftFloatingPanelItem: appMain.activityCenterPanel
+                                leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
                             }
                         }
                     }
@@ -1807,7 +2026,7 @@ Item {
                             collectiblesModel: appMain.rootStore.globalCollectiblesModel
 
                             // Floating panel
-                            leftFloatingPanelItem: appMain.activityCenterPanel
+                            leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
                         }
                     }
 
@@ -1857,7 +2076,7 @@ Item {
                                 onOpenSwapModalRequested: (swapFormData) => popupRequestsHandler.swapModalHandler.launchSwapSpecific(swapFormData)
 
                                 // Floating panel
-                                leftFloatingPanelItem: appMain.activityCenterPanel
+                                leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
                             }
                         }
                         onLoaded: {
@@ -1908,7 +2127,7 @@ Item {
                                 onSendToRecipientRequested: (address) => popupRequestsHandler.sendModalHandler.sendToRecipient(address)
 
                                 // Floating panel
-                                leftFloatingPanelItem: appMain.activityCenterPanel
+                                leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
                             }
                         }
                     }
@@ -2008,7 +2227,7 @@ Item {
                             }
 
                             // Floating panel
-                            leftFloatingPanelItem: appMain.activityCenterPanel
+                            leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
                         }
                         onLoaded: {
                             item.settingsSubsection = profileLoader.settingsSubsection
@@ -2062,7 +2281,7 @@ Item {
                                                      }
 
                                 // Floating panel
-                                leftFloatingPanelItem: appMain.activityCenterPanel
+                                leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
                             }
                         }
 
@@ -2098,7 +2317,7 @@ Item {
                             onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
 
                             // Floating panel
-                            leftFloatingPanelItem: appMain.activityCenterPanel
+                            leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
                         }
                     }
 
@@ -2218,7 +2437,7 @@ Item {
                                 onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
 
                                 // Floating panel
-                                leftFloatingPanelItem: appMain.activityCenterPanel
+                                leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
                             }
                         }
                     }
@@ -2260,6 +2479,7 @@ Item {
                     }
                 }
             }
+
             PrimaryNavSidebar {
                 id: sidebar
                 height: parent.height
@@ -2279,7 +2499,7 @@ Item {
                 bottomItemsModel: sidebarAdaptor.bottomItemsModel
 
 
-                acVisible: d.activeSectionType === Constants.appSection.activityCenter // FIXME AC should not be a section
+                acVisible: mainLayoutItem.openACCenterPanel
                 acHasUnseenNotifications: appMain.activityCenterStore.hasUnseenNotifications
                 acUnreadNotificationsCount: appMain.activityCenterStore.unreadNotificationsCount
 
@@ -2300,24 +2520,15 @@ Item {
                 }
                 thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
 
-                // FIXME AC should not be a section; remove `prevSectionId` then
-                property string prevSectionId: appMain.rootStore.activeSectionId
-                onActivityCenterRequested: function(shouldShow) {
-                    // TODO(#18908): This will be the connection needed:
-                    // activityCenterPanelItem.StatusLayoutState.opened = shouldShow
-                    if (shouldShow) {
-                        appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.activityCenter)
-                    } else {
-                        changeAppSectionBySectionId(prevSectionId)
-                    }
-                }
-
+                onActivityCenterRequested: function(shouldShow) { mainLayoutItem.openACCenterPanel = shouldShow }
                 onSetCurrentUserStatusRequested: status => appMain.rootStore.setCurrentUserStatus(status)
                 onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
                 onShareOwnProfileRequested: Global.shareProfileDialogRequested(ownContactDetails.publicKey)
 
                 onItemActivated: function(sectionType, sectionId) {
-                    prevSectionId = sectionId
+                    // Ensure Activity Center Panel is closed when manual navigation done
+                    mainLayoutItem.openACCenterPanel = false
+
                     if (sectionType === Constants.appSection.swap) {
                         popupRequestsHandler.swapModalHandler.launchSwap()
                     } else if (sectionType === Constants.appSection.qrCodeScanner) {

@@ -111,22 +111,6 @@ ListModel {
         active: false
     },
     {
-        id: "id42",
-        sectionType: Constants.appSection.activityCenter,
-        icon: "notification",
-        image: "",
-        bannerImageData: "",
-        color: "pink",
-        name: "Activity Center",
-        description: "",
-        allMembers: [],
-        activeMembersCount: 0,
-        enabled: true,
-        hasNotification: true,
-        notificationsCount: 42,
-        active: false
-    },
-    {
         id: "id5",
         sectionType: Constants.appSection.communitiesPortal,
         icon: "communities",

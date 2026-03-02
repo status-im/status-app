@@ -1449,7 +1449,10 @@ QtObject {
 
             NewsMessagePopup {
                 activityCenterNotifications: root.activityCenterStore.activityCenterNotifications
-                onLinkClicked: (link) => Global.requestOpenLink(link)
+                onLinkClicked: (link) => {
+                                   Global.requestOpenLink(link)
+                                   close()
+                               }
             }
         },
         Component {

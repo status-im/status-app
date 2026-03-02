@@ -55,14 +55,14 @@ LayoutChooser {
     property alias handle: landscapeView.handle
 
     /*!
-        \qmlproperty Item StatusSectionLayout::leftFloatingPanelItem
-        This property holds the left floating panel of the component.
+        \qmlproperty int StatusSectionLayout::leftPanelWidthOverride
+        This property provides an external override for the left panel width.
 
-        The layout observes and reacts to the attached
-        \c StatusLayoutState.opened property of this item in order to
-        open or close the floating panel.
+        When greater than 0, the layout uses this value to temporarily expand the
+        left panel area. When set to 0, the override is cleared and the layout
+        collapses the left panel back to its default width.
     */
-    property Item leftFloatingPanelItem
+    property int leftPanelWidthOverride: 0
     /*!
         \qmlproperty Item StatusSectionLayout::leftPanel
         This property holds the left panel of the component.
@@ -194,7 +194,7 @@ LayoutChooser {
     StatusSectionLayoutLandscape {
         id: landscapeView
         anchors.fill: parent
-        leftFloatingPanelItem: root.leftFloatingPanelItem
+        leftPanelWidthOverride: root.leftPanelWidthOverride
         leftPanel: root.leftPanel
         centerPanel: root.centerPanel
         rightPanel: root.rightPanel
@@ -215,8 +215,6 @@ LayoutChooser {
     StatusSectionLayoutPortrait {
         id: portraitView
         anchors.fill: parent
-
-        leftFloatingPanelItem: root.leftFloatingPanelItem
         leftPanel: root.leftPanel
         centerPanel: root.centerPanel
         rightPanel: root.rightPanel

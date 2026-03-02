@@ -35,10 +35,6 @@ import StatusQ.Core.Theme
         rightPanel: Item {
             ...
         }
-
-        leftFloatingPanelItem: Item {
-            ...
-        }
      }
      \endqml
 
@@ -52,12 +48,15 @@ Control {
 
     // Keep same “API surface” used by StatusSectionLayout.qml
     property Component handle: Item { }
-
     /*!
-        \qmlproperty Item StatusSectionLayout::leftFloatingPanelItem
-        This property holds the left floating panel of the component.
+        \qmlproperty int StatusSectionLayoutLandscape::leftPanelWidthOverride
+        This property provides an external override for the left panel width.
+
+        When greater than 0, the layout uses this value to temporarily expand the
+        left panel area. When set to 0, the override is cleared and the layout
+        collapses the left panel back to its default width.
     */
-    property Item leftFloatingPanelItem
+    property int leftPanelWidthOverride: root.leftPanel ? d.defaultLeftPanelWidth : 0
     /*!
         \qmlproperty Item StatusSectionLayout::leftPanel
         This property holds the left panel of the component.
@@ -148,38 +147,25 @@ Control {
     QtObject {
         id: d
 
-        // Indicates whether the active layout has completed its initialization
-        // and is ready to apply layout state changes (i.e floating panel state changes).
-        property bool isLayoutReady: false
-
         // Default width of the left panel in its collapsed state.
         readonly property int defaultLeftPanelWidth: 306
 
-        // Width of the left panel when expanded while the floating panel is open.
-        readonly property int extendedLeftPanelWidth: 344
-
-        // Effective left panel width when the floating panel is closed and no real
-        // leftPanel exists, allowing smooth center panel animation.
-        readonly property int collapsedLeftPanelWidth: root.leftPanel ? d.defaultLeftPanelWidth : 0
-
-        // Current left panel width used by the layout and animated by state changes.
-        property int leftPanelWidth: d.defaultLeftPanelWidth
-
-        // Whenever “floating panel is relevant”
-        readonly property bool floatingPanelActive: (d.floatingPanelOpen || floatingPanel.y < floatingPanel.closedY())
-
-        // Keeps the virtual left panel in the layout during collapse animations
-        // to avoid abrupt center panel repositioning when no real leftPanel exists.
-        property bool keepVirtualLeftPanel: false
-
         // Effective left panel used for geometry reference:
         // - If real leftPanel if provided
-        // - else virtualLeftPanel while floating is active
-        property Item effectiveLeftPanel: root.leftPanel ? root.leftPanel
-                                                         : (d.keepVirtualLeftPanel ? virtualLeftPanel : null)
+        // - else virtualLeftPanel while leftPanelWidth is provided
+        readonly property Item effectiveLeftPanel: root.leftPanel ? root.leftPanel
+                                                                  : (root.leftPanelWidthOverride != 0 ? virtualLeftPanel : null)
 
-        // State
-        property bool floatingPanelOpen: false
+        // Resolved left panel width used by the layout, taking overrides into account.
+        property int effectiveLeftPanelWidth: root.leftPanelWidthOverride != 0 ? root.leftPanelWidthOverride :
+                                                                                 (root.leftPanel ? d.defaultLeftPanelWidth : 0)
+
+        Behavior on effectiveLeftPanelWidth {
+            NumberAnimation {
+                duration: ThemeUtils.AnimationDuration.Slow
+                easing.type: Easing.InOutCubic
+            }
+        }
     }
 
     // ------------------------------------------------------------------------------------
@@ -191,12 +177,11 @@ Control {
         anchors.fill: parent
         handle: root.handle
 
-        // Use effectiveLeftPanel so geometry exists when leftPanel == null but floating is active
+        // Use effectiveLeftPanel so geometry exists when leftPanel == null but a leftPanelWidth value is provided
         Control {
             id: leftPanelSlot
-            SplitView.minimumWidth: !!d.effectiveLeftPanel ? d.leftPanelWidth : 0
-            SplitView.preferredWidth: !!d.effectiveLeftPanel ? d.leftPanelWidth : 0
-            SplitView.fillHeight: !!d.effectiveLeftPanel
+            SplitView.preferredWidth: d.effectiveLeftPanelWidth
+            SplitView.fillHeight: true
             background: Rectangle {
                 color: root.Theme.palette.baseColor4
             }
@@ -270,150 +255,14 @@ Control {
 
     // -------------------------------------------------------------------------------------------------------------
     // Virtual left panel is a real item in the scene graph.
-    // It exists only to give geometry/anchor reference when no leftPanel is provided and floating panel is ac.
+    // It exists only to give geometry/anchor reference when no leftPanel is provided but there's a need
+    // of expanding the left panel area
     // -------------------------------------------------------------------------------------------------------------
     Rectangle {
         id: virtualLeftPanel
-        visible: d.keepVirtualLeftPanel && !root.leftPanel
-        width: d.leftPanelWidth
+        visible: !root.leftPanel && root.leftPanelWidthOverride != 0
+        width: root.leftPanelWidthOverride
         height: root.height
         color: Theme.palette.baseColor4
-    }
-
-    // --------------------------------------------------------------------------------------------------
-    // Floating panel overlay (driven from outside openFloatingPanel / closeFloatingPanel)
-    // --------------------------------------------------------------------------------------------------
-    LayoutItemProxy {
-        id: floatingPanel
-
-        // State
-        property bool openAnimationEnabled: true
-
-        // Public API
-        function openPanel(isAnimated)  {
-            openAnimationEnabled = isAnimated
-            if (!!root.leftFloatingPanelItem) {
-                if (!root.leftPanel) d.keepVirtualLeftPanel = true
-                d.floatingPanelOpen = true
-            }
-        }
-
-        function closeAnimated() {
-            d.floatingPanelOpen = false
-        }
-
-        // Helpers
-
-        // Computes the horizontal position of the floating left panel.
-        // The position is derived from the SplitView slot geometry
-        // (`leftPanelSlot.x` / `leftPanelSlot.width`) instead of using `mapFromItem()`
-        // to ensure the binding is correctly re-evaluated on SplitView relayouts
-        // (e.g. window resize or dynamic column width changes).
-        function targetX() {
-            if (!d.effectiveLeftPanel) {
-                return 0
-            }
-            return splitView.x
-                    + leftPanelSlot.x
-                    + leftPanelSlot.width
-                    - width
-                    - Theme.halfPadding
-        }
-
-        function targetY() {
-            return Theme.halfPadding
-        }
-
-        function closedY() {
-            return root.height
-        }
-
-        width: d.leftPanelWidth - Theme.halfPadding
-        height: d.effectiveLeftPanel
-                ? Math.min(root.height - Theme.halfPadding, d.effectiveLeftPanel.height - Theme.halfPadding)
-                : (root.height - Theme.halfPadding)
-
-        x: targetX()
-        y: closedY()
-
-        visible: d.floatingPanelOpen || y < closedY()
-        target: root.leftFloatingPanelItem
-
-        // State machine (controls `Y` and `leftPanelWidth`)
-        states: [
-            State {
-                name: "open"
-                when: d.floatingPanelOpen
-                PropertyChanges { target: floatingPanel; y: floatingPanel.targetY() }
-                PropertyChanges { target: d; leftPanelWidth: d.extendedLeftPanelWidth }
-            },
-            State {
-                name: "closed"
-                when: !d.floatingPanelOpen
-                PropertyChanges { target: floatingPanel; y: floatingPanel.closedY() }
-                PropertyChanges { target: d; leftPanelWidth: d.collapsedLeftPanelWidth }
-            }
-        ]
-
-        // Animate `Y` and `leftPanelCollapsed`/ `leftPanelExpanded`
-        transitions: [
-            Transition {
-                enabled: floatingPanel.openAnimationEnabled
-                from: "closed"
-                to: "open"
-                NumberAnimation { properties: "y, leftPanelWidth"; duration: ThemeUtils.AnimationDuration.Slow; easing.type: Easing.OutCubic }
-            },
-            Transition {
-                from: "open"
-                to: "closed"
-                SequentialAnimation {
-                    NumberAnimation { properties: "y"; duration: ThemeUtils.AnimationDuration.Slow; easing.type: Easing.InCubic }
-                    NumberAnimation { properties: "leftPanelWidth"; duration: ThemeUtils.AnimationDuration.Slow; easing.type: Easing.OutCubic }
-                    ScriptAction {
-                        script: {
-                            if (!root.leftPanel)
-                                d.keepVirtualLeftPanel = false
-                        }
-                    }
-                }
-            }
-        ]
-    }
-
-    // Sync floating panel state with imperative open/close calls
-    Connections {
-        target: root.leftFloatingPanelItem
-                ? root.leftFloatingPanelItem.StatusLayoutState
-                : null
-
-        function onOpenedChanged() {
-
-            // Guard against inactive layouts reacting to the floating panel state.
-            // Only the visible layout should handle open/close.
-            if (!root.visible)
-                return
-
-            // While this is false, initial binding evaluations are intentionally ignored
-            // to prevent opening the floating panel before its content has been properly
-            // reparented into the layout.
-            if (!d.isLayoutReady)
-                return
-
-            if (root.leftFloatingPanelItem.StatusLayoutState.opened) {
-                floatingPanel.openPanel(true)
-            } else {
-                floatingPanel.closeAnimated()
-            }
-        }
-    }
-
-    Component.onCompleted: {
-        d.isLayoutReady = true
-
-        // Initialize the floating panel in an open state when required,
-        // skipping animation to prevent startup transitions.
-        if(root.leftFloatingPanelItem?.StatusLayoutState.opened) {
-            floatingPanel.openPanel(false) // No animation
-        }
     }
 }

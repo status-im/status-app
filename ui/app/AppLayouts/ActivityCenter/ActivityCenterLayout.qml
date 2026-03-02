@@ -510,7 +510,7 @@ StatusSectionLayout {
             onReadMoreClicked: {
                 d.callLaterMarkAsSeen()
                 root.activityCenterStore.markActivityCenterNotificationRead(parent.notification.id)
-                Global.openNewsMessagePopupRequested(parent.notification, parent.notification.id)
+                Global.openNewsMessagePopupRequested(parent.notification)
 
             }
             onMarkActivityCenterNotificationReadRequested: (notificationId) => {

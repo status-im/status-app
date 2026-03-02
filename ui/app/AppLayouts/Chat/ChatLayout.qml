@@ -116,17 +116,15 @@ StackLayout {
     signal showUsersListRequested(bool show)
     signal navToMsgDetailsRequested(bool navigate)
 
-    // Floating panel interaction:
-    // Added here since this layout does not directly inherit from `StatusSectionLayout`.
     /*!
-        \qmlproperty Item ChatLayout::leftFloatingPanelItem
-        This property holds the left floating panel of the component.
+        \qmlproperty int StatusSectionLayoutLandscape::leftPanelWidthOverride
+        This property provides an external override for the left panel width.
 
-        The layout observes and reacts to the attached
-        \c StatusLayoutState.opened property of this item in order to
-        open or close the floating panel.
+        When greater than 0, the layout uses this value to temporarily expand the
+        left panel area. When set to 0, the override is cleared and the layout
+        collapses the left panel back to its default width.
     */
-    property Item leftFloatingPanelItem
+    property int leftPanelWidthOverride: 0
 
     onCurrentIndexChanged: {
         Global.closeCreateChatView()
@@ -198,8 +196,8 @@ StackLayout {
                                                     sectionItemModel.image, root.isInvitationPending)
             }
 
-            // Floating panel
-            leftFloatingPanelItem: root.leftFloatingPanelItem
+            // Layout
+            leftPanelWidthOverride: root.leftPanelWidthOverride
         }
     }
 
@@ -303,8 +301,8 @@ StackLayout {
             // Navigation:
             navToMsgDetails: root.navToMsgDetails
 
-            // Floating panel
-            leftFloatingPanelItem: root.leftFloatingPanelItem
+            // Layout
+            leftPanelWidthOverride: root.leftPanelWidthOverride
 
             onGroupMembersUpdateRequested: root.groupMembersUpdateRequested(membersPubKeysList)
 
@@ -427,8 +425,8 @@ StackLayout {
                 root.communityAccessStore.declineRequestToJoinCommunityRequested(requestId, communityId)
             }
 
-            // Floating panel
-            leftFloatingPanelItem: root.leftFloatingPanelItem
+            // Layout
+            leftPanelWidthOverride: root.leftPanelWidthOverride
         }
     }
 
@@ -443,8 +441,8 @@ StackLayout {
             membersCount: sectionItemModel.joinedMembersCount
             communityItemsModel: root.rootStore.communityItemsModel
 
-            // Floating panel
-            leftFloatingPanelItem: root.leftFloatingPanelItem
+            // Layout
+            leftPanelWidthOverride: root.leftPanelWidthOverride
         }
     }
 
@@ -460,8 +458,8 @@ StackLayout {
             membersCount: sectionItemModel.joinedMembersCount
             communityItemsModel: root.rootStore.communityItemsModel
 
-            // Floating panel
-            leftFloatingPanelItem: root.leftFloatingPanelItem
+            // Layout
+            leftPanelWidthOverride: root.leftPanelWidthOverride
         }
     }
 }

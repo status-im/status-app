@@ -32,7 +32,8 @@ QtObject {
     enum AnimationDuration {
         Fast = 100,
         Default = 250, // https://doc.qt.io/qt-5/qml-qtquick-propertyanimation.html#duration-prop
-        Slow = 400
+        Slow = 400,
+        VerySlow = 600
     }
 
     readonly property size minimumDesktopSize: Qt.size(360, 680)

@@ -73,22 +73,6 @@ Page {
     }
 
     Page {
-        id: leftFloatingPanel
-        objectName: "leftFloatingPanel"
-        title: "Left Floating Panel"
-        anchors.fill: parent
-        Rectangle {
-            color: "grey"
-            anchors.fill: parent
-            radius: 8
-        }
-        Label {
-            text: "This is the left floating panel"
-            anchors.centerIn: parent
-        }
-    }
-
-    Page {
         id: centerPanel
         objectName: "centerPanel"
         title: "Center Panel"
@@ -166,7 +150,6 @@ Page {
             implicitWidth: 800
             implicitHeight: 400
             invertedLayout: inverted.checked
-            leftFloatingPanelItem: leftFloatingPanel
             leftPanel: leftPanelCheckBox.checked ? leftPanel : null
             centerPanel: centerPanelCheckBox.checked ? centerPanel : null
             rightPanel: rightPanel
