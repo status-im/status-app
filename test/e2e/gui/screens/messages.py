@@ -9,8 +9,7 @@ import allure
 import configs
 import driver
 from driver.objects_access import walk_children
-from gui.components.activity_center import ActivityCenter
-from helpers.chat_helper import skip_message_backup_popup_if_visible
+from gui.components.settings.send_contact_request_popup import SendContactRequestFromProfile
 from gui.components.community.pinned_messages_popup import PinnedMessagesPopup
 from gui.components.context_menu import ContextMenu
 from gui.components.delete_popup import ConfirmationMessagePopup
@@ -369,6 +368,7 @@ class CreateChatView(QObject):
         self._confirm_button = Button(messaging_names.createChatView_confirmBtn)
         self._cancel_button = Button(messaging_names.mainWindow_Cancel_StatusButton)
         self._create_chat_contacts_list = List(messaging_names.createChatView_contactsList)
+        self.recipient_input = QObject(messaging_names.createChatViewRecipientInput)
 
     @property
     @allure.step('Get contacts')
@@ -394,6 +394,11 @@ class CreateChatView(QObject):
             self.select_contact(member)
         self._confirm_button.click()
         return ChatMessagesView().wait_until_appears()
+
+    @allure.step('Create chat by sending a chat key')
+    def create_chat_with_chat_key(self, chat_key):
+        self.recipient_input.set_text_property(chat_key)
+        return SendContactRequestFromProfile().wait_until_appears()
 
 
 class ChatMessagesView(QObject):

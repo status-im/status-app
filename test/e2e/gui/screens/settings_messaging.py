@@ -33,6 +33,11 @@ class MessagingSettingsView(QObject):
         self.allow_contact_requests_section = QObject(settings_names.allowNewContactRequestsSection)
         self.allow_contact_requests_toggle = CheckBox(settings_names.allowNewContactRequestsSectionToggle)
 
+    @property
+    @allure.step('Get pending contact requests count')
+    def pending_requests_count(self) -> int:
+        return int(self.contacts_button.object.requestsCount)
+
     @allure.step('Open contacts settings')
     def open_contacts_settings(self) -> 'ContactsSettingsView':
         self.contacts_button.click()
@@ -157,7 +162,7 @@ class ContactsSettingsView(QObject):
 
     @allure.step('Open pending requests tab')
     def open_pending_requests(self):
-        self._pending_request_tab.click()
+        self._pending_request_tab.wait_until_appears(timeout_msec=10000).click()
         return self
 
     @allure.step('Open contacts tab')

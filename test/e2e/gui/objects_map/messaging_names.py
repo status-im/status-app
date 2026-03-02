@@ -1,4 +1,5 @@
 from gui.objects_map.names import statusDesktop_mainWindow
+from gui.objects_map.names import statusDesktop_mainWindow_overlay
 
 # Map for messaging screens, views locators
 
@@ -29,6 +30,8 @@ mainWindow_CreateChatView = {"container": statusDesktop_mainWindow, "type": "Cre
 createChatView_confirmBtn = {"container": statusDesktop_mainWindow, "objectName": "inlineSelectorConfirmButton", "type": "StatusButton"}
 createChatView_contactsList = {"container": statusDesktop_mainWindow, "objectName": "createChatContactsList", "type": "StatusListView", "visible": True}
 mainWindow_Cancel_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow, "text": "Cancel", "type": "StatusButton", "unnamed": 1, "visible": True}
+createChatViewRecipientInput = {"container": statusDesktop_mainWindow, "objectName": "chatRecipientInput", "type": "TextInput", "visible": True}
+
 
 # Chat Messages View
 mainWindow_ChatMessagesView = {"container": statusDesktop_mainWindow, "type": "ChatMessagesView", "unnamed": 1, "visible": True}
