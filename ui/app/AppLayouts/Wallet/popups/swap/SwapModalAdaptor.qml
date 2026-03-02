@@ -97,6 +97,11 @@ QObject {
                         return qsTr("Not enough liquidity. Lower token amount or try again later.")
                     case Constants.routerErrorCodes.processor.errPriceImpactTooHigh:
                         return qsTr("Price impact too high. Lower token amount or try again later.")
+                    case Constants.routerErrorCodes.processor.errSwapParaswapCustomError:
+                        const errMsg = qsTr("No routes found with enough liquidity")
+                        if (root.swapOutputData.errDescription.indexOf(errMsg) !== -1) {
+                            return qsTr("Not enough liquidity. Lower token amount or try again later.")
+                        }
                 }
                 return qsTr("Something went wrong. Change amount, token or try again later.")
             }
