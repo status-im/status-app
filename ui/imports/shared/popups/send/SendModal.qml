@@ -859,12 +859,13 @@ StatusDialog {
             popup.bestRoutes =  txRoutes.suggestedRoutes
 
             // We take the chain from the first route, assuming the native token is the same for all routes
-            let gasSymbol = Constants.ethToken
             let firstRoute = SQUtils.ModelUtils.get(txRoutes.suggestedRoutes, 0, "route")
-            if (!!firstRoute) {
-                let firstRouteFromNetwork = firstRoute.fromNetwork
-                gasSymbol = Utils.getNativeTokenSymbol(firstRouteFromNetwork)
+            if (!firstRoute) {
+                return console.error("cannot get the route from the suggested routes")
             }
+
+            let firstRouteFromNetwork = firstRoute.fromNetwork
+            let gasTokenKey = Utils.getNativeTokenKey(firstRouteFromNetwork)
 
             d.routerError = WalletUtils.getRouterErrorBasedOnCode(errCode)
             d.routerErrorDetails = "%1 - %2".arg(errCode).arg(WalletUtils.getRouterErrorDetailsOnCode(errCode, errDescription))
@@ -874,7 +875,7 @@ StatusDialog {
             let totalTokenFeesInFiat = 0
             if (!!d.selectedHolding && !!d.selectedHolding.marketDetails && !!d.selectedHolding.marketDetails.currencyPrice)
                 totalTokenFeesInFiat = gasTimeEstimate.totalTokenFees * d.selectedHolding.marketDetails.currencyPrice.amount
-            d.totalFeesInFiat = d.currencyStore.getFiatValue(gasTimeEstimate.totalFeesInNativeCrypto, gasSymbol) + totalTokenFeesInFiat
+            d.totalFeesInFiat = d.currencyStore.getFiatValue(gasTimeEstimate.totalFeesInNativeCrypto, gasTokenKey) + totalTokenFeesInFiat
 
             if (d.selectedHolding.type === Constants.TokenType.ERC20 || d.selectedHolding.type === Constants.TokenType.Native) {
                 // If assets
