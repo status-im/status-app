@@ -379,9 +379,6 @@ QtObject {
 
     property string currentCurrency: walletSection.currentCurrency
 
-    function getFiatValue(balance, cryptoSymbol, fiatSymbol) {
-        return profileSectionStore.ensUsernamesStore.getFiatValue(balance, cryptoSymbol, fiatSymbol)
-    }
 
     signal showToastAccountAdded(string name)
     signal showToastAccountRemoved(string name)

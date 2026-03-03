@@ -9,6 +9,7 @@ import shared.controls.chat
 import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
 
 Item {
@@ -50,6 +51,7 @@ Item {
                 statusListItemIcon.opacity: modelData.isFirstSimpleTx
                 title: qsTr("%1 transaction fee").arg(root.getNetworkName(modelData.fromNetwork))
                 property string gasSymbol: Utils.getNativeTokenSymbol(modelData.fromNetwork)
+                property string gasTokenKey: Utils.getNativeTokenKey(modelData.fromNetwork)
                 subTitle: {
                     let primaryFee = root.formatCurrencyAmount(decimalTotalGasAmount, gasSymbol)
                     if (modelData.gasFees.eip1559Enabled && modelData.gasFees.l1GasFee > 0) {
@@ -71,7 +73,7 @@ Item {
                     return root.getGasNativeCryptoValue(gasPrice, modelData.gasAmount, modelData.fromNetwork)
                 }
 
-                property double totalGasAmountFiat: root.getFiatValue(decimalTotalGasAmount, gasSymbol) + root.getFiatValue(decimalTotalGasAmountL1, gasSymbol)
+                property double totalGasAmountFiat: root.getFiatValue(decimalTotalGasAmount, gasTokenKey) + root.getFiatValue(decimalTotalGasAmountL1, gasTokenKey)
 
                 statusListItemSubTitle.width: listItem.width/2 - Theme.smallPadding
                 statusListItemSubTitle.elide: Text.ElideMiddle
@@ -101,7 +103,8 @@ Item {
                 title: qsTr("Approve %1 %2 Bridge").arg(root.getNetworkName(modelData.fromNetwork)).arg(root.selectedAsset.symbol)
                 property double approvalGasFees: modelData.approvalGasFees
                 property string approvalGasFeesSymbol: Utils.getNativeTokenSymbol(modelData.fromNetwork)
-                property double approvalGasFeesFiat: root.getFiatValue(approvalGasFees, approvalGasFeesSymbol)
+                property string approvalGasFeesTokenKey: Utils.getNativeTokenKey(modelData.fromNetwork)
+                property double approvalGasFeesFiat: root.getFiatValue(approvalGasFees, approvalGasFeesTokenKey)
                 subTitle: root.formatCurrencyAmount(approvalGasFees, approvalGasFeesSymbol)
                 statusListItemSubTitle.width: listItem1.width/2 - Theme.smallPadding
                 statusListItemSubTitle.elide: Text.ElideMiddle
@@ -132,7 +135,10 @@ Item {
                 statusListItemIcon.opacity: modelData.isFirstBridgeTx
                 title: qsTr("%1 -> %2 bridge").arg(root.getNetworkName(modelData.fromNetwork)).arg(root.getNetworkName(modelData.toNetwork))
                 property double tokenFees: modelData.tokenFees
-                property double tokenFeesFiat: root.getFiatValue(tokenFees, root.selectedAsset.symbol)
+                property double tokenFeesFiat: {
+                    const selectedAssetTokenKey = SQUtils.ModelUtils.get(root.selectedAsset.tokens, modelData.fromNetwork, "key")
+                    return root.getFiatValue(tokenFees, selectedAssetTokenKey)
+                }
                 subTitle: root.formatCurrencyAmount(tokenFees, root.selectedAsset.symbol)
                 visible: modelData.bridgeName !== "Transfer"
                 statusListItemSubTitle.width: 100

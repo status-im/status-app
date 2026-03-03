@@ -359,7 +359,8 @@ StatusDialog {
                 readonly property string quote: !!lhsAmount && !!rhsAmount ? SQUtils.AmountsArithmetic.div(
                                                     SQUtils.AmountsArithmetic.fromNumber(rhsAmount),
                                                     SQUtils.AmountsArithmetic.fromNumber(lhsAmount)).toFixed(rhsDecimals) : 1
-                readonly property string price: root.swapAdaptor.currencyStore.getFiatValue(1, lhsSymbol)
+
+                readonly property string price: root.swapAdaptor.currencyStore.getFiatValue(1, leftPanel.selectedHoldingTokenKey)
 
                 function formatCurrency(amount, symbol) {
                     return root.swapAdaptor.currencyStore.formatCurrencyAmount(amount, symbol,
@@ -450,9 +451,9 @@ StatusDialog {
                     // value dont update correctly if not done from here
                     d.buyFormData.selectedWalletAddress = root.swapInputParamsForm.selectedAccountAddress
                     d.buyFormData.selectedNetworkChainId = root.swapInputParamsForm.selectedNetworkChainId
-                    d.buyFormData.selectedTokenKey = root.swapAdaptor.isTokenBalanceInsufficient ?
+                    d.buyFormData.selectedTokenGroupKey = root.swapAdaptor.isTokenBalanceInsufficient ?
                                 root.swapInputParamsForm.fromGroupKey :
-                                d.nativeTokenSymbol
+                                Utils.getNativeTokenGroupKey(root.swapInputParamsForm.selectedNetworkChainId)
                     Global.openBuyCryptoModalRequested(d.buyFormData)
                 }
             }
@@ -609,18 +610,8 @@ StatusDialog {
             fromTokenSymbol: root.swapAdaptor.fromToken.symbol
             fromTokenAmount: root.swapInputParamsForm.fromTokenAmount
             fromTokenContractAddress: {
-                let selectedGroup = SQUtils.ModelUtils.getByKey(payPanel.tokenGroupsModel,
-                                                                "key",
-                                                                root.swapAdaptor.swapFormData.fromGroupKey)
-                if (!selectedGroup.tokens) {
-                    return ""
-                }
-
-                let tokenAddress = SQUtils.ModelUtils.getByKey(selectedGroup.tokens,
-                                                               "chainId",
-                                                               root.swapInputParamsForm.selectedNetworkChainId,
-                                                               "address")
-                return tokenAddress
+                let details = Utils.getChainAndAddressFromTokenKey(payPanel.selectedHoldingTokenKey)
+                return details.address
             }
 
             accountName: d.selectedAccount.name
@@ -675,35 +666,16 @@ StatusDialog {
             fromTokenSymbol: root.swapAdaptor.fromToken.symbol
             fromTokenAmount: root.swapInputParamsForm.fromTokenAmount
             fromTokenContractAddress: {
-                let selectedGroup = SQUtils.ModelUtils.getByKey(payPanel.tokenGroupsModel,
-                                                                "key",
-                                                                root.swapAdaptor.swapFormData.fromGroupKey)
-                if (!selectedGroup.tokens) {
-                    return ""
-                }
+                let details = Utils.getChainAndAddressFromTokenKey(payPanel.selectedHoldingTokenKey)
+                return details.address
 
-                let tokenAddress = SQUtils.ModelUtils.getByKey(selectedGroup.tokens,
-                                                               "chainId",
-                                                               root.swapInputParamsForm.selectedNetworkChainId,
-                                                               "address")
-                return tokenAddress
             }
 
             toTokenSymbol: root.swapAdaptor.toToken.symbol
             toTokenAmount: root.swapAdaptor.swapOutputData.toTokenAmount
             toTokenContractAddress: {
-                let selectedGroup = SQUtils.ModelUtils.getByKey(receivePanel.tokenGroupsModel,
-                                                                "key",
-                                                                root.swapAdaptor.swapFormData.toGroupKey)
-                if (!selectedGroup.tokens) {
-                    return ""
-                }
-
-                let tokenAddress = SQUtils.ModelUtils.getByKey(selectedGroup.tokens,
-                                                               "chainId",
-                                                               root.swapInputParamsForm.selectedNetworkChainId,
-                                                               "address")
-                return tokenAddress
+                let details = Utils.getChainAndAddressFromTokenKey(receivePanel.selectedHoldingTokenKey)
+                return details.address
             }
 
             accountName: d.selectedAccount.name

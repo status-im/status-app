@@ -60,11 +60,11 @@ StatusListItem {
     readonly property bool isMultiTransaction: isModelDataValid && modelData.isMultiTransaction
     readonly property string currentCurrency: currenciesStore.currentCurrency
     readonly property double cryptoValue: isModelDataValid ? modelData.amount : 0.0
-    readonly property double fiatValue: isModelDataValid ? currenciesStore.getFiatValue(cryptoValue, modelData.symbol) : 0.0
+    readonly property double fiatValue: isModelDataValid ? currenciesStore.getFiatValue(cryptoValue, Utils.composeTokenKey(modelData.chainId, modelData.tokenAddress)) : 0.0
     readonly property double inCryptoValue: isModelDataValid ? modelData.inAmount : 0.0
-    readonly property double inFiatValue: isModelDataValid && isMultiTransaction ? currenciesStore.getFiatValue(inCryptoValue, modelData.inSymbol): 0.0
+    readonly property double inFiatValue: isModelDataValid ? currenciesStore.getFiatValue(inCryptoValue, Utils.composeTokenKey(modelData.chainIdIn, modelData.tokenInAddress)): 0.0
     readonly property double outCryptoValue: isModelDataValid ? modelData.outAmount : 0.0
-    readonly property double outFiatValue: isModelDataValid && isMultiTransaction ? currenciesStore.getFiatValue(outCryptoValue, modelData.outSymbol): 0.0
+    readonly property double outFiatValue: isModelDataValid ? currenciesStore.getFiatValue(outCryptoValue, Utils.composeTokenKey(modelData.chainIdOut, modelData.tokenOutAddress)): 0.0
     readonly property string networkColor: isModelDataValid ? SQUtils.ModelUtils.getByKey(flatNetworks, "chainId", modelData.chainId, "chainColor") : ""
     readonly property string networkName: isModelDataValid ? SQUtils.ModelUtils.getByKey(flatNetworks, "chainId", modelData.chainId, "chainName") : ""
     readonly property string networkNameIn: isMultiTransaction ? SQUtils.ModelUtils.getByKey(flatNetworks, "chainId", modelData.chainIdIn, "chainName") : ""
