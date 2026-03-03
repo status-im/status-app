@@ -101,7 +101,7 @@ We welcome contributions from the community! To get started:
 - [🏛️ Architecture Docs](docs/architecture.md)
 - [🤝 Contributing Guide](CONTRIBUTING.md)
 - [💡 You have an idea for a cool feature or improvement?](https://discuss.status.app/c/features/51)
-- [🗺️ Status Roadmap](/docs/roadmap.md)
+- [🗺️ Status Roadmap](/docs/roadmap)
   - [🌟 Feature FURPS](/docs/FURPS)
 
 
