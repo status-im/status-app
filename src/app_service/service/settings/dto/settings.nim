@@ -19,6 +19,7 @@ const KEY_KEY_UID* = "key-uid"
 const KEY_LATEST_DERIVED_PATH* = "latest-derived-path"
 const KEY_LINK_PREVIEW_REQUEST_ENABLED* = "link-preview-request-enabled"
 const KEY_MESSAGES_FROM_CONTACTS_ONLY* = "messages-from-contacts-only"
+const KEY_SYNCING_ON_MOBILE_NETWORK* = "syncing-on-mobile-network?"
 const KEY_MNEMONIC* = "mnemonic"
 const KEY_NAME* = "name"
 const KEY_PHOTO_PATH* = "photo-path"
@@ -127,6 +128,7 @@ type
     latestDerivedPath*: int
     linkPreviewRequestEnabled*: bool
     messagesFromContactsOnly*: bool
+    syncingOnMobileNetwork*: bool
     mnemonic*: string
     name*: string # user alias
     photoPath*: string
@@ -207,6 +209,7 @@ proc toSettingsDto*(jsonObj: JsonNode): SettingsDto =
   discard jsonObj.getProp(KEY_LATEST_DERIVED_PATH, result.latestDerivedPath)
   discard jsonObj.getProp(KEY_LINK_PREVIEW_REQUEST_ENABLED, result.linkPreviewRequestEnabled)
   discard jsonObj.getProp(KEY_MESSAGES_FROM_CONTACTS_ONLY, result.messagesFromContactsOnly)
+  discard jsonObj.getProp(KEY_SYNCING_ON_MOBILE_NETWORK, result.syncingOnMobileNetwork)
   discard jsonObj.getProp(KEY_MNEMONIC, result.mnemonic)
   discard jsonObj.getProp(KEY_NAME, result.name)
   discard jsonObj.getProp(KEY_PHOTO_PATH, result.photoPath)

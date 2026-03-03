@@ -80,6 +80,13 @@ method setMessagesFromContactsOnly*(self: Module, value: bool) =
   if(not self.controller.setMessagesFromContactsOnly(value)):
     error "an error occurred while saving messages from contacts only flag"
 
+method getSyncingOnMobileNetwork*(self: Module): bool =
+  return self.controller.getSyncingOnMobileNetwork()
+
+method setSyncingOnMobileNetwork*(self: Module, value: bool) =
+  if(not self.controller.setSyncingOnMobileNetwork(value)):
+    error "an error occurred while saving syncing on mobile network flag"
+
 method urlUnfurlingMode*(self: Module): int =
   return self.controller.urlUnfurlingMode()
 

@@ -14124,6 +14124,36 @@
       <comment>MessagingView</comment>
       <translation>Receive community messages &amp; requests from non-contacts</translation>
     </message>
+    <message>
+      <source>Mobile data and Wi-Fi</source>
+      <comment>MessagingView</comment>
+      <translation>Mobile data and Wi-Fi</translation>
+    </message>
+    <message>
+      <source>Wi-Fi only</source>
+      <comment>MessagingView</comment>
+      <translation>Wi-Fi only</translation>
+    </message>
+    <message>
+      <source>Sync messages on mobile data?</source>
+      <comment>MessagingView</comment>
+      <translation>Sync messages on mobile data?</translation>
+    </message>
+    <message>
+      <source>If you choose to sync over Wi-Fi only, messages sent to you while you are offline will be delivered once you connect to Wi-Fi.</source>
+      <comment>MessagingView</comment>
+      <translation>If you choose to sync over Wi-Fi only, messages sent to you while you are offline will be delivered once you connect to Wi-Fi.</translation>
+    </message>
+    <message>
+      <source>The Status App uses a lot of data when fetching missed messages. If you have a limited data plan, consider syncing over Wi-Fi only.</source>
+      <comment>MessagingView</comment>
+      <translation>The Status App uses a lot of data when fetching missed messages. If you have a limited data plan, consider syncing over Wi-Fi only.</translation>
+    </message>
+    <message>
+      <source>Message syncing</source>
+      <comment>MessagingView</comment>
+      <translation>Message syncing</translation>
+    </message>
   </context>
   <context>
     <name>MintTokensFooterPanel</name>

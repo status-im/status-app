@@ -50,6 +50,12 @@ method getMessagesFromContactsOnly*(self: AccessInterface): bool {.base.} =
 method setMessagesFromContactsOnly*(self: AccessInterface, value: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method getSyncingOnMobileNetwork*(self: AccessInterface): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method setSyncingOnMobileNetwork*(self: AccessInterface, value: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method urlUnfurlingMode*(self: AccessInterface): int {.base.} =
   raise newException(ValueError, "No implementation available")
 

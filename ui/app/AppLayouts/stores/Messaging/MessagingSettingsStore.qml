@@ -16,6 +16,7 @@ StatusQUtils.QObject {
 
     // Privacy module related
     readonly property bool messagesFromContactsOnly: d.privacyModule.messagesFromContactsOnly
+    readonly property bool syncingOnMobileNetwork: d.privacyModule.syncingOnMobileNetwork
     readonly property int urlUnfurlingMode: d.privacyModule.urlUnfurlingMode
 
     function toggleUseMailservers(value) {
@@ -24,6 +25,10 @@ StatusQUtils.QObject {
 
     function setMessagesFromContactsOnly(value) {
         d.privacyModule.messagesFromContactsOnly = value
+    }
+
+    function setSyncingOnMobileNetwork(value) {
+        d.privacyModule.syncingOnMobileNetwork = value
     }
 
     function setUrlUnfurlingMode(value) {

@@ -73,6 +73,12 @@ proc getMessagesFromContactsOnly*(self: Controller): bool =
 proc setMessagesFromContactsOnly*(self: Controller, value: bool): bool =
   return self.settingsService.saveMessagesFromContactsOnly(value)
 
+proc getSyncingOnMobileNetwork*(self: Controller): bool =
+  return self.settingsService.getSyncingOnMobileNetwork()
+
+proc setSyncingOnMobileNetwork*(self: Controller, value: bool): bool =
+  return self.settingsService.saveSyncingOnMobileNetwork(value)
+
 proc urlUnfurlingMode*(self: Controller): int =
   return int(self.settingsService.urlUnfurlingMode())
 

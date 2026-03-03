@@ -55,6 +55,19 @@ QtObject:
     write = setMessagesFromContactsOnly
     notify = messagesFromContactsOnlyChanged
 
+  proc syncingOnMobileNetworkChanged*(self: View) {.signal.}
+  proc getSyncingOnMobileNetwork(self: View): bool {.slot.} =
+    return self.delegate.getSyncingOnMobileNetwork()
+  proc setSyncingOnMobileNetwork(self: View, value: bool) {.slot.} =
+    if self.getSyncingOnMobileNetwork() == value:
+      return
+    self.delegate.setSyncingOnMobileNetwork(value)
+    self.syncingOnMobileNetworkChanged()
+  QtProperty[bool] syncingOnMobileNetwork:
+    read = getSyncingOnMobileNetwork
+    write = setSyncingOnMobileNetwork
+    notify = syncingOnMobileNetworkChanged
+
   proc urlUnfurlingModeChanged(self: View) {.signal.}
   proc getUrlUnfurlingMode(self: View): int {.slot.} =
     return self.delegate.urlUnfurlingMode()

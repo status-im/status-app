@@ -8,13 +8,13 @@ QString connectionTypeFromTransport(QNetworkInformation::TransportMedium transpo
 {
     switch (transportMedium) {
     case QNetworkInformation::TransportMedium::Cellular:
-        return "cellular";
+        return QStringLiteral("cellular");
     case QNetworkInformation::TransportMedium::Ethernet:
-        return "wifi"; // Set as wifi as we do not distinguish between ethernet and wifi in the UI, and ethernet is not supported on all platforms
+        return QStringLiteral("wifi"); // Set as wifi as we do not distinguish between ethernet and wifi in the UI, and ethernet is not supported on all platforms
     case QNetworkInformation::TransportMedium::WiFi:
-        return "wifi";
+        return QStringLiteral("wifi");
     default:
-        return "unknown";
+        return QStringLiteral("unknown");
     }
 }
 }
@@ -22,15 +22,12 @@ QString connectionTypeFromTransport(QNetworkInformation::TransportMedium transpo
 NetworkChecker::NetworkChecker(QObject *parent)
     : QObject(parent)
 {
-    qInfo() << "!!! QNetworkInformation backends:" << QNetworkInformation::availableBackends();
-
     if (!QNetworkInformation::loadDefaultBackend()) {
         qWarning() << "QNetworkInformation is not supported on this platform or backend.";
         return;
     }
 
     m_netinfo = QNetworkInformation::instance();
-    qInfo() << "!!! Using QNetworkInformation backend:" << m_netinfo->backendName();
 
     // subscribe for updates
     connect(m_netinfo, &QNetworkInformation::reachabilityChanged, this, &NetworkChecker::onReachabilityChanged);
@@ -40,10 +37,6 @@ NetworkChecker::NetworkChecker(QObject *parent)
     // initial update
     onReachabilityChanged(m_netinfo->reachability());
     updateConnectionDetails();
-
-    connect(this, &NetworkChecker::isOnlineChanged, this, [](bool online) {
-        qInfo() << "!!! ONLINE CHANGED:" << online;
-    });
 }
 
 void NetworkChecker::onReachabilityChanged(QNetworkInformation::Reachability reachability)
@@ -54,19 +47,15 @@ void NetworkChecker::onReachabilityChanged(QNetworkInformation::Reachability rea
     }
 }
 
-void NetworkChecker::onTransportMediumChanged(QNetworkInformation::TransportMedium transportMedium)
+void NetworkChecker::onTransportMediumChanged()
 {
-    Q_UNUSED(transportMedium)
-
     if (m_active) {
         updateConnectionDetails();
     }
 }
 
-void NetworkChecker::onMeteredChanged(bool isMetered)
+void NetworkChecker::onMeteredChanged()
 {
-    Q_UNUSED(isMetered)
-
     if (m_active) {
         updateConnectionDetails();
     }
@@ -87,51 +76,24 @@ void NetworkChecker::setOnline(bool online)
 
 QString NetworkChecker::connectionType() const
 {
-    return m_connectionType;
-}
+    if (!m_netinfo) {
+        return QStringLiteral("unknown");
+    }
 
-void NetworkChecker::setConnectionType(const QString& connectionType)
-{
-    if (m_connectionType == connectionType)
-        return;
-
-    m_connectionType = connectionType;
-    emit connectionTypeChanged(m_connectionType);
+    if (!m_online) {
+        return QStringLiteral("none");
+    }
+    return connectionTypeFromTransport(m_netinfo->transportMedium());
 }
 
 bool NetworkChecker::isExpensive() const
 {
-    return m_isExpensive;
-}
-
-void NetworkChecker::setExpensive(bool isExpensive)
-{
-    if (m_isExpensive == isExpensive)
-        return;
-
-    m_isExpensive = isExpensive;
-    emit isExpensiveChanged(m_isExpensive);
+    return m_netinfo->isMetered() || m_netinfo->transportMedium() == QNetworkInformation::TransportMedium::Cellular;
 }
 
 void NetworkChecker::updateConnectionDetails()
 {
-    if (!m_netinfo) {
-        setConnectionType("unknown");
-        setExpensive(false);
-        return;
-    }
-
-    if (!m_online) {
-        setConnectionType("none");
-        setExpensive(false);
-        return;
-    }
-
-    const auto newConnectionType = connectionTypeFromTransport(m_netinfo->transportMedium());
-    const bool expensive = m_netinfo->isMetered() || newConnectionType == "cellular";
-
-    setConnectionType(newConnectionType);
-    setExpensive(expensive);
+    emit connectionTypeChanged();
 }
 
 void NetworkChecker::checkNetwork()

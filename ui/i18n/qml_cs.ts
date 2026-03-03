@@ -11692,6 +11692,30 @@ selhalo</translation>
         <source>Receive community messages &amp; requests from non-contacts</source>
         <translation>Dostávat komunitní zprávy a výzvy od ne-kontaktů</translation>
     </message>
+    <message>
+        <source>Mobile data and Wi-Fi</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wi-Fi only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sync messages on mobile data?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you choose to sync over Wi-Fi only, messages sent to you while you are offline will be delivered once you connect to Wi-Fi.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The Status App uses a lot of data when fetching missed messages. If you have a limited data plan, consider syncing over Wi-Fi only.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message syncing</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MintTokensFooterPanel</name>

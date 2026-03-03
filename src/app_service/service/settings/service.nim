@@ -297,6 +297,15 @@ QtObject:
   proc getMessagesFromContactsOnly*(self: Service): bool =
     self.settings.messagesFromContactsOnly
 
+  proc saveSyncingOnMobileNetwork*(self: Service, value: bool): bool =
+    if(self.saveSetting(KEY_SYNCING_ON_MOBILE_NETWORK, value)):
+      self.settings.syncingOnMobileNetwork = value
+      return true
+    return false
+
+  proc getSyncingOnMobileNetwork*(self: Service): bool =
+    self.settings.syncingOnMobileNetwork
+
   proc saveMnemonic*(self: Service, value: string): bool =
     if(self.saveSetting(KEY_MNEMONIC, value)):
       self.settings.mnemonic = value

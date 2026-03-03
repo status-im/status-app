@@ -12,8 +12,10 @@ import shared.stores
 
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Components
 import StatusQ.Controls
+import StatusQ.Popups.Dialog
 
 import AppLayouts.stores.Messaging 1.0
 
@@ -69,6 +71,19 @@ SettingsContentBase {
             onClicked: {
                 switch3.checked = !switch3.checked
             }
+        }
+
+        StatusListItem {
+            id: allowSyncingOnMobileNetwork
+
+            Layout.fillWidth: true
+            implicitHeight: 64
+
+            title: qsTr("Message syncing")
+            label: root.messagingSettingsStore.syncingOnMobileNetwork
+                   ? qsTr("Mobile data and Wi-Fi")
+                   : qsTr("Wi-Fi only")
+            onClicked: Global.openPopup(syncingOnMobileNetworkPopupComponent)
         }
 
         Separator {
@@ -172,6 +187,73 @@ SettingsContentBase {
             checked: root.messagingSettingsStore.urlUnfurlingMode === Constants.UrlUnfurlingModeDisableAll
             onClicked: {
                 root.messagingSettingsStore.setUrlUnfurlingMode(Constants.UrlUnfurlingModeDisableAll)
+            }
+        }
+    }
+
+    Component {
+        id: syncingOnMobileNetworkPopupComponent
+
+        StatusDialog {
+        id: syncingOnMobileNetworkPopup
+            width: 420
+            padding: Theme.padding
+            modal: true
+            title: qsTr("Sync messages on mobile data?")
+            destroyOnClose: true
+
+            contentItem: ColumnLayout {
+                spacing: Theme.padding
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    text: qsTr("The Status App uses a lot of data when fetching missed messages. If you have a limited data plan, consider syncing over Wi-Fi only.")
+                    wrapMode: Text.WordWrap
+                    color: Theme.palette.baseColor1
+                    font.pixelSize: Theme.secondaryAdditionalTextSize
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    radius: Theme.radius
+                    border.width: 1
+                    border.color: Theme.palette.baseColor2
+                    color: Theme.palette.baseColor4
+                    implicitHeight: infoText.implicitHeight + Theme.padding * 2
+
+                    StatusBaseText {
+                        id: infoText
+                        anchors.fill: parent
+                        anchors.margins: Theme.padding
+                        text: qsTr("If you choose to sync over Wi-Fi only, messages sent to you while you are offline will be delivered once you connect to Wi-Fi.")
+                        wrapMode: Text.WordWrap
+                        color: Theme.palette.baseColor1
+                    }
+                }
+            }
+
+            footer: StatusDialogFooter {
+                leftButtons: ObjectModel {
+                    StatusButton {
+                        text: qsTr("Mobile data and Wi-Fi")
+                        icon.name: root.messagingSettingsStore.syncingOnMobileNetwork ? "check-circle" : ""
+                        onClicked: {
+                            root.messagingSettingsStore.setSyncingOnMobileNetwork(true)
+                            syncingOnMobileNetworkPopup.close()
+                        }
+                    }
+                }
+
+                rightButtons: ObjectModel {
+                    StatusButton {
+                        text: qsTr("Wi-Fi only")
+                        icon.name: !root.messagingSettingsStore.syncingOnMobileNetwork ? "check-circle" : ""
+                        onClicked: {
+                            root.messagingSettingsStore.setSyncingOnMobileNetwork(false)
+                            syncingOnMobileNetworkPopup.close()
+                        }
+                    }
+                }
             }
         }
     }
