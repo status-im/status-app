@@ -1724,10 +1724,28 @@ Item {
                                     }
 
                 // Quick actions
-                // NOTE: These are now just quick actions specific for `Contact Requests`, if more quick actions are introduced,
-                // this will need some generalization rule / implementation
-                onAcceptRequested: (avatarId, actionId) => { appMain.contactsStore.acceptContactRequest(avatarId, actionId) }
-                onDeclineRequested: (avatarId, actionId) => { appMain.contactsStore.dismissContactRequest(avatarId, actionId) }
+                // NOTE: There are now just quick actions specific for `Contact Requests`, OR generally to accept / decline notification.
+                // If more quick actions are introduced, this will need some generalization rule / implementation
+                onAcceptRequested: (avatarId, actionId) => {
+                                       // This means, Contact Requests
+                                       if(avatarId) {
+                                           appMain.contactsStore.acceptContactRequest(avatarId, actionId)
+                                       }
+                                       // This means, generic accept notification by id
+                                       else {
+                                            appMain.activityCenterStore.acceptActivityCenterNotification(actionId)
+                                       }
+                                   }
+                onDeclineRequested: (avatarId, actionId) => {
+                                        // This means, Contact Requests
+                                        if(avatarId) {
+                                            appMain.contactsStore.dismissContactRequest(avatarId, actionId)
+                                        }
+                                        // This means, generic dismiss notification by id
+                                        else {
+                                             appMain.activityCenterStore.dismissActivityCenterNotification(actionId)
+                                        }
+                                    }
             }
 
             Item {
