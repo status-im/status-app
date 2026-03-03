@@ -208,7 +208,6 @@ SplitView {
                     newsSettingsStatus: newsSettingsTurnOff.checked ? Constants.settingsSection.notifications.turnOffValue : Constants.settingsSection.notifications.sendAlertsValue
                     newsEnabledViaRSS: enabledViaRSS.checked
 
-                    onMoreOptionsRequested: logs.logEvent("ActivityCenterPanel::onMoreOptionsRequested")
                     onCloseRequested: logs.logEvent("ActivityCenterPanel::onCloseRequested")
                     onMarkAllAsReadRequested: {
                         logs.logEvent("ActivityCenterPanel::onMarkAllAsReadRequested")

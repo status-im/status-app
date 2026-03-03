@@ -87,7 +87,6 @@ Control {
     property color backgroundColor: Theme.palette.baseColor2
 
     // Notifications Interactions
-    signal moreOptionsRequested()
     signal closeRequested()
     signal markAllAsReadRequested()
     signal hideShowReadNotificationsRequested()
@@ -107,6 +106,10 @@ Control {
     signal declineRequested(string avatarId, string actionId)
     signal acceptRequested(string avatarId, string actionId)
 
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+    }
+
     QtObject {
         id: d
 
@@ -114,13 +117,17 @@ Control {
         readonly property bool newsDisabledBySettings: !root.newsEnabledViaRSS || root.newsSettingsStatus === Constants.settingsSection.notifications.turnOffValue
         readonly property bool isNewsPlaceholderActive: root.activeGroup === ActivityCenterTypes.ActivityCenterGroup.NewsMessage && d.newsDisabledBySettings
 
-        property bool optionsMenuVisible: false
-
         readonly property var fetchMoreNotifications: Backpressure.oneInTimeQueued(root, 100, function() {
             if (listView.contentY >= listView.contentHeight - listView.height - 1) {
                 root.fetchMoreNotificationsRequested()
             }
         })
+    }
+
+    objectName: "activityCenterPanel"
+    background: Rectangle {
+        color: parent.backgroundColor
+        radius: Theme.radius
     }
 
     contentItem: ColumnLayout {
@@ -152,35 +159,23 @@ Control {
             }
 
             StatusFlatRoundButton {
-                id: moreBtn
-                objectName: "moreOptionsButton"
-                icon.name: "more"
-                onClicked: options.open()
+                id: markAllReadBtn
+                objectName: "markAllReadButton"
+                icon.name: "double-checkmark"
+                onClicked: root.markAllAsReadRequested()
+            }
 
-                // It will be reworked on task https://github.com/status-im/status-app/issues/18906
-                ActivityCenterOptionsPanel {
-                    id: options
-
-                    y: panelHeader.height
-                    x: -implicitWidth + moreBtn.width
-
-                    hasUnreadNotifications: root.hasUnreadNotifications
-                    hideReadNotifications: root.hideReadNotifications
-
-                    onMarkAllAsReadRequested: root.markAllAsReadRequested()
-                    onHideShowReadNotificationsRequested: root.hideShowReadNotificationsRequested()
-                    onOpened: d.optionsMenuVisible = true
-                    onClosed: d.optionsMenuVisible = false
-                }
+            StatusFlatRoundButton {
+                id: hideReadNotificationsBtn
+                objectName: "hideShowButton"
+                icon.name: root.hideReadNotifications ? "show" : "hide"
+                onClicked: root.hideShowReadNotificationsRequested()
             }
 
             StatusFlatRoundButton {
                 objectName: "closeButton"
                 icon.name: "close"
-                onClicked: {
-                    d.optionsMenuVisible = false
-                    root.closeRequested()
-                }
+                onClicked: root.closeRequested()
             }
         }
 
@@ -208,22 +203,18 @@ Control {
             Layout.topMargin: 2
 
             visible: !d.emptyNotificationsList && !d.isNewsPlaceholderActive
-            enabled: !d.optionsMenuVisible
             verticalScrollBar.implicitWidth: Math.max(Theme.halfPadding, 8)
 
             spacing: 4
             implicitHeight: contentHeight
             model: root.notificationsModel
             delegate: NotificationCard {
-                enabled: !d.optionsMenuVisible
-
                 anchors.left: listView.contentItem.left
                 anchors.right: listView.contentItem.right
                 anchors.margins: Math.max(Theme.halfPadding, 8)
 
                 // Card states related
                 unread: model.unread
-                selected: model.selected
 
                 // Avatar related
                 avatarSource: model.avatarSource
@@ -265,25 +256,23 @@ Control {
 
                 // Interactions
                 onClicked: {
-                    if(model.redirectToDetails) {
-                        root.redirectToDetails(model.sectionId, model.subsectionId, model.subsectionItemId)
-                        return
-                    } else if (model.redirectToSection) {
-                        root.redirectToSection(model.sectionId)
-                        return
-                    } else if (model.redirectToLink) {
-                        root.redirectToPopup(model)
-                        return
-                    } else if(model.redirectToWallet) {
-                        root.redirectToWallet(model.tokenData.walletAddress, model.tokenData.txHash)
-                        return
-                    }
+                    if(model.redirectToDetails)
+                        return root.redirectToDetails(model.sectionId, model.subsectionId, model.subsectionItemId)
+
+                    if (model.redirectToSection)
+                        return root.redirectToSection(model.sectionId)
+
+                    if (model.redirectToLink)
+                        return root.redirectToPopup(model)
+
+                    if(model.redirectToWallet)
+                        return root.redirectToWallet(model.tokenData.walletAddress, model.tokenData.txHash)
+
                     // If no specific redirection but avatarId has some value, redirection will be to
                     // avatar information
-                    if(model.avatarId) {
-                        root.avatarClicked(model.avatarId)
-                        return
-                    }
+                    if(model.avatarId)
+                        return root.avatarClicked(model.avatarId)
+
                     // No actions when clicked
                 }
                 onAvatarClicked: root.avatarClicked(model.avatarId)
@@ -296,14 +285,6 @@ Control {
             }
 
             onContentYChanged: d.fetchMoreNotifications()
-
-            // Overlay
-            Rectangle {
-                visible: d.optionsMenuVisible
-                anchors.fill: parent
-                color: root.backgroundColor
-                opacity: 0.8
-            }
         }
 
         // Placeholder for the status news when their settings are disabled

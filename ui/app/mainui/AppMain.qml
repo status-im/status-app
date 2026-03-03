@@ -1679,17 +1679,14 @@ Item {
                 newsSettingsStatus: appMain.notificationsStore.notificationsSettings.notifSettingStatusNews
                 newsEnabledViaRSS: appMain.privacyStore.isStatusNewsViaRSSEnabled
 
-                onMoreOptionsRequested: console.warn("TODO: ActivityCenterPanel::onMoreOptionsRequested")
                 onCloseRequested: mainLayoutItem.openACCenterPanel = false
                 onMarkAllAsReadRequested: appMain.activityCenterStore.markAllActivityCenterNotificationsRead()
-                onHideShowReadNotificationsRequested: (hideReadNotifications) => {
-                                                          appMain.activityCenterStore.setActivityCenterReadType(!hideReadNotifications ?
-                                                                                                                    ActivityCenterTypes.ActivityCenterReadType.Unread :
-                                                                                                                    ActivityCenterTypes.ActivityCenterReadType.All)
-                                                      }
-                onSetActiveGroupRequested: (group) => {
-                                               appMain.activityCenterStore.setActiveNotificationGroup(group)
-                                           }
+                onHideShowReadNotificationsRequested: {
+                    appMain.activityCenterStore.setActivityCenterReadType(!hideReadNotifications ?
+                                                                              ActivityCenterTypes.ActivityCenterReadType.Unread :
+                                                                              ActivityCenterTypes.ActivityCenterReadType.All)
+                }
+                onSetActiveGroupRequested: (group) => { appMain.activityCenterStore.setActiveNotificationGroup(group) }
                 onFetchMoreNotificationsRequested: appMain.activityCenterStore.fetchActivityCenterNotifications()
                 onEnableNewsViaRSSRequested: appMain.privacyStore.setNewsRSSEnabled(true)
                 onEnableNewsRequested: appMain.notificationsStore.notificationsSettings.notifSettingStatusNews = Constants.settingsSection.notifications.sendAlertsValue
@@ -1729,13 +1726,8 @@ Item {
                 // Quick actions
                 // NOTE: These are now just quick actions specific for `Contact Requests`, if more quick actions are introduced,
                 // this will need some generalization rule / implementation
-                onAcceptRequested: (avatarId, actionId) => {
-                                       appMain.contactsStore.acceptContactRequest(avatarId, actionId)
-                                   }
-
-                onDeclineRequested: (avatarId, actionId) => {
-                                        appMain.contactsStore.dismissContactRequest(avatarId, actionId)
-                                    }
+                onAcceptRequested: (avatarId, actionId) => { appMain.contactsStore.acceptContactRequest(avatarId, actionId) }
+                onDeclineRequested: (avatarId, actionId) => { appMain.contactsStore.dismissContactRequest(avatarId, actionId) }
             }
 
             Item {
