@@ -5,6 +5,7 @@ import app/core/signals/types as signal_types
 import app/core/eventemitter
 import app/core/notifications/notifications_manager
 import app_service/common/types
+import app_service/service/general/service as general_service
 import app_service/service/settings/service as settings_service
 import app_service/service/node_configuration/service as node_configuration_service
 import app_service/service/accounts/service as accounts_service
@@ -41,6 +42,7 @@ type
   Controller* = ref object of RootObj
     delegate: io_interface.AccessInterface
     events: EventEmitter
+    generalService: general_service.Service
     settingsService: settings_service.Service
     nodeConfigurationService: node_configuration_service.Service
     accountsService: accounts_service.Service
@@ -67,6 +69,7 @@ proc getRemoteDestructedAmount*(self: Controller, chainId: int, contractAddress:
 
 proc newController*(delegate: io_interface.AccessInterface,
   events: EventEmitter,
+  generalService: general_service.Service,
   settingsService: settings_service.Service,
   nodeConfigurationService: node_configuration_service.Service,
   accountsService: accounts_service.Service,
@@ -88,6 +91,7 @@ proc newController*(delegate: io_interface.AccessInterface,
   result = Controller()
   result.delegate = delegate
   result.events = events
+  result.generalService = generalService
   result.settingsService = settingsService
   result.nodeConfigurationService = nodeConfigurationService
   result.accountsService = accountsService
@@ -643,3 +647,6 @@ proc startTokenHoldersManagement*(self: Controller, chainId: int, contractAddres
 
 proc stopTokenHoldersManagement*(self: Controller) =
   self.communityTokensService.stopTokenHoldersManagement()
+
+proc connectionChange*(self: Controller, connectionType: string, isExpensive: bool) =
+  self.generalService.connectionChange(connectionType, isExpensive)

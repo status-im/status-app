@@ -854,6 +854,11 @@ Item {
                     return appMain.Window.window.active
                 return true
             }
+
+            Component.onCompleted: d.connectionChange()
+            onIsOnlineChanged: d.connectionChange()
+            onConnectionTypeChanged: d.connectionChange()
+            onIsExpensiveChanged: d.connectionChange()
         }
 
         readonly property int activeSectionType: appMain.rootStore.activeSectionType
@@ -894,6 +899,10 @@ Item {
             }
             dAppsServiceLoader.item.pairingValidated.connect(pairingHandler)
             dAppsServiceLoader.item.validatePairingUri(uri)
+        }
+
+        function connectionChange() {
+            appMain.rootStore.connectionChange(d.networkChecker.connectionType, d.networkChecker.isExpensive)
         }
 
         function openLinkInBrowser(link: string) {

@@ -185,6 +185,7 @@ proc newModule*[T](
   result.controller = controller.newController(
     result,
     events,
+    generalService,
     settingsService,
     nodeConfigurationService,
     accountsService,
@@ -2051,6 +2052,9 @@ method windowActivated*[T](self: Module[T]) =
 
 method windowDeactivated*[T](self: Module[T]) =
   self.controller.speedupArchivesImport()
+
+method connectionChange*[T](self: Module[T], connectionType: string, isExpensive: bool) =
+  self.controller.connectionChange(connectionType, isExpensive)
 
 method communityMembersRevealedAccountsLoaded*[T](self: Module[T], communityId: string, membersRevealedAccounts: MembersRevealedAccounts) =
   var  communityMembersAirdropAddress: Table[string, string]

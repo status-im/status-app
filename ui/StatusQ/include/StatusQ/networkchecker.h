@@ -8,6 +8,8 @@ class NetworkChecker : public QObject
     Q_OBJECT
 
     Q_PROPERTY(bool isOnline READ isOnline NOTIFY isOnlineChanged FINAL)
+    Q_PROPERTY(QString connectionType READ connectionType NOTIFY connectionTypeChanged FINAL)
+    Q_PROPERTY(bool isExpensive READ isExpensive NOTIFY isExpensiveChanged FINAL)
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
     Q_PROPERTY(bool checking READ checking NOTIFY checkingChanged FINAL)
 
@@ -18,11 +20,15 @@ public:
 
 signals:
     void isOnlineChanged(bool online);
+    void connectionTypeChanged(const QString& connectionType);
+    void isExpensiveChanged(bool isExpensive);
     void activeChanged(bool active);
     void checkingChanged(bool checking);
 
 private slots:
     void onReachabilityChanged(QNetworkInformation::Reachability reachability);
+    void onTransportMediumChanged(QNetworkInformation::TransportMedium transportMedium);
+    void onMeteredChanged(bool isMetered);
 
 private:
     QNetworkInformation* m_netinfo;
@@ -30,6 +36,15 @@ private:
     bool m_online{true};
     bool isOnline() const;
     void setOnline(bool online);
+
+    QString m_connectionType{"unknown"};
+    QString connectionType() const;
+    void setConnectionType(const QString& connectionType);
+
+    bool m_isExpensive{false};
+    bool isExpensive() const;
+    void setExpensive(bool isExpensive);
+    void updateConnectionDetails();
 
     bool m_active{true};
     bool isActive() const;

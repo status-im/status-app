@@ -88,6 +88,15 @@ QtObject:
       error "error:", procName="asyncImportLocalBackupFile", errName = e.name, errDesription = e.msg
       self.events.emit(SIGNAL_LOCAL_BACKUP_IMPORT_COMPLETED, LocalBackupImportArg(error: e.msg))
 
+  proc connectionChange*(self: Service, connectionType: string, isExpensive: bool) =
+    try:
+      let response = status_go.connectionChange($(%* {"type": connectionType, "expensive": isExpensive}))
+      let rpcResponseObj = response.parseJson
+      if rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != "":
+          raise newException(CatchableError, rpcResponseObj{"error"}.getStr)
+    except Exception as e:
+      error "error:", procName="connectionChange", errName = e.name, errDesription = e.msg
+
   proc delete*(self: Service) =
     self.QObject.delete
 

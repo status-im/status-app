@@ -410,6 +410,9 @@ method windowActivated*(self: AccessInterface) {.base.} =
 method windowDeactivated*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method connectionChange*(self: AccessInterface, connectionType: string, isExpensive: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method communityMembersRevealedAccountsLoaded*(self: AccessInterface, communityId: string, membersRevealedAccounts: MembersRevealedAccounts) {.base.} =
   raise newException(ValueError, "No implementation available")
 
