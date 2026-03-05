@@ -14,7 +14,7 @@ class BasePopup(QObject):
 
     def __init__(self):
         super().__init__(names.basePopupItem)
-        self.wait_until_enabled()
+        QObject.wait_until_appears(self)
 
     @allure.step('Close')
     def close(self):

@@ -144,7 +144,7 @@ class AccountPopup(QObject):
     def set_derivation_path(self, value: str, index: int, password: str):
         self._edit_derivation_path_button.hover().click()
         AuthenticatePopup().wait_until_appears().authenticate(password)
-        self._scroll.vertical_scroll_down(self._derivation_path_text_edit)
+        self._scroll.vertical_scroll_down(self._derivation_path_text_edit, timeout_sec=15)
         if value in [_.value for _ in DerivationPathName]:
             self._derivation_path_combobox_button.click()
             self._derivation_path_list_item.real_name[
@@ -154,7 +154,7 @@ class AccountPopup(QObject):
             self._address_combobox_button.click()
             GeneratedAddressesList().select(index)
             if value != DerivationPathName.ETHEREUM.value:
-                self._scroll.vertical_scroll_down(self._non_eth_checkbox)
+                self._scroll.vertical_scroll_down(self._non_eth_checkbox, timeout_sec=15)
                 self.non_ethereum_checkbox_indicator.click()
         else:
             self._derivation_path_text_edit.type_text(str(index))

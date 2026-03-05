@@ -13,6 +13,15 @@ communityPortal_JoinCommunityButton = {"checkable": False, "container": communit
 importCommunityPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "ImportCommunityPopup", "type": "PopupItem", "visible": True}
 importCommunityPopup_KeyInput = {"container": statusDesktop_mainWindow_overlay, "id": "keyInput", "type": "StatusTextArea", "unnamed": 1, "visible": True}
 importCommunityPopup_JoinButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "joinStatusDialogFooterButton", "type": "StatusButton", "visible": True}
+
+# Community color popup
+# Hex input has unique objectName - use Overlay to find it in any context (Create or Edit flow)
+communityColorPopup_HexInput = {"container": statusDesktop_mainWindow_overlay,
+                                "objectName": "communityColorPanelHexInput", "type": "TextEdit"}
+communityColorPopup_SaveButton = {"container": statusDesktop_mainWindow_overlay,
+                                   "objectName": "communityColorPanelSelectColorButton",
+                                   "type": "StatusButton", "visible": True}
+
 # Community View
 mainWindow_communityLoader_Loader = {"container": statusDesktop_mainWindow, "objectName": "SplitView", "type": "ContentItem", "visible": True}
 

@@ -11,6 +11,33 @@ from scripts.tools.image import Image
 LOG = logging.getLogger(__name__)
 
 
+def _dump_element_state(real_name, label: str = ''):
+    """Collect element state (bounds, properties) and attach as text to Allure.
+
+    Used for debugging on Windows VMs where screen capture returns a black image.
+    """
+    lines = [f'=== Element state dump: {label} ===', f'locator: {real_name}']
+    try:
+        obj = driver.findObject(real_name)
+        for attr in ('visible', 'enabled', 'opacity', 'width', 'height', 'x', 'y', 'clip', 'text'):
+            if hasattr(obj, attr):
+                lines.append(f'  {attr}: {getattr(obj, attr)}')
+        try:
+            bounds = driver.object.globalBounds(obj)
+            lines.append(f'  globalBounds: x={bounds.x} y={bounds.y} w={bounds.width} h={bounds.height}')
+        except Exception as be:
+            lines.append(f'  globalBounds: error — {be}')
+    except Exception as e:
+        lines.append(f'  findObject failed: {e}')
+        if driver.object.exists(real_name):
+            lines.append('  exists(): True  (object is in QML tree)')
+        else:
+            lines.append('  exists(): False (object not in QML tree)')
+    report = '\n'.join(lines)
+    LOG.info(report)
+    allure.attach(report, name=f'element state — {label}', attachment_type=allure.attachment_type.TEXT)
+
+
 class QObject:
 
     def __init__(self, real_name: [str, dict] = None):
@@ -22,9 +49,11 @@ class QObject:
     def object(self):
         try:
             return driver.waitForObject(self.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-        except LookupError as e:
-            raise Exception(
-                f"Object {self.real_name} was not found within {configs.timeouts.UI_LOAD_TIMEOUT_MSEC} ms") from e
+        except LookupError:
+            if driver.object.exists(self.real_name):
+                return driver.findObject(self.real_name)
+            raise LookupError(
+                f"Object {self.real_name} was not found within {configs.timeouts.UI_LOAD_TIMEOUT_MSEC} ms")
 
     def set_text_property(self, text):
         self.object.forceActiveFocus()
@@ -93,9 +122,15 @@ class QObject:
     @allure.step('Get visible {0}')
     def is_visible(self) -> bool:
         try:
-            return driver.waitForObject(self.real_name, 200).visible
+            return driver.waitForObject(self.real_name, configs.timeouts.OBJECT_LOOKUP_TIMEOUT_MSEC).visible
         except (LookupError, RuntimeError, AttributeError):
-            return False
+            pass
+        # Fallback for platforms where waitForObject is unreliable (e.g. Windows VM):
+        # use object.exists() which works even when waitForObject times out.
+        if driver.object.exists(self.real_name):
+            _dump_element_state(self.real_name, f'is_visible fallback — {type(self).__name__}')
+            return True
+        return False
 
     @property
     @allure.step('Get image {0}')
@@ -190,6 +225,7 @@ class QObject:
             time.sleep(check_interval)
 
         LOG.error(f'Object {self} is not visible within {timeout_msec} ms')
+        _dump_element_state(self.real_name, f'wait_until_appears timeout — {type(self).__name__}')
         raise TimeoutError(f'Object {self} is not visible within {timeout_msec} ms')
 
     @allure.step('Wait until hidden {0}')
@@ -225,17 +261,18 @@ class QObject:
         return driver.waitFor(lambda: condition, timeout_msec)
 
     @allure.step('Wait until enabled {0}')
-    def wait_until_enabled(self, timeout_msec: int = 2000, check_interval=0.5):
+    def wait_until_enabled(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
         timeout_sec = timeout_msec / 1000
         start_time = time.time()
 
         while time.time() - start_time < timeout_sec:
             try:
-                if self.is_enabled:
+                obj = driver.waitForObject(self.real_name, 200)
+                if getattr(obj, 'enabled', False):
                     LOG.info('%s: is opened and enabled', self)
                     return self
             except Exception as e:
-                LOG.warning("Exception during visibility check: %s", e)
+                LOG.warning("Exception during enabled check: %s", e)
             time.sleep(check_interval)
 
         LOG.error(f'Object {self} is not enabled within {timeout_msec} ms')

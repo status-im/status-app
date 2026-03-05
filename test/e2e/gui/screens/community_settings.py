@@ -219,25 +219,25 @@ class EditCommunityView(QObject):
     @property
     @allure.step('Get community intro')
     def intro(self) -> str:
-        self._scroll.vertical_scroll_down(self._intro_text_edit)
+        self._scroll.vertical_scroll_down(self._intro_text_edit, timeout_sec=15)
         return self._intro_text_edit.text
 
     @intro.setter
     @allure.step('Set community intro')
     def intro(self, value: str):
-        self._scroll.vertical_scroll_down(self._intro_text_edit)
+        self._scroll.vertical_scroll_down(self._intro_text_edit, timeout_sec=15)
         self._intro_text_edit.text = value
 
     @property
     @allure.step('Get community outro')
     def outro(self) -> str:
-        self._scroll.vertical_scroll_down(self._outro_text_edit)
+        self._scroll.vertical_scroll_down(self._outro_text_edit, timeout_sec=15)
         return self._outro_text_edit.text
 
     @outro.setter
     @allure.step('Set community outro')
     def outro(self, value: str):
-        self._scroll.vertical_scroll_down(self._outro_text_edit)
+        self._scroll.vertical_scroll_down(self._outro_text_edit, timeout_sec=15)
         self._outro_text_edit.text = value
 
     @property

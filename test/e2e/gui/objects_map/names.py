@@ -462,9 +462,7 @@ renameKeypairPopup = {"container": statusDesktop_mainWindow_overlay, "objectName
 edit_TextEdit = {"container": statusDesktop_mainWindow_overlay, "type": "TextEdit", "unnamed": 1, "visible": True}
 
 # Select Color Popup
-communitySettings_ColorPanel_HexColor_Input = {"container": statusDesktop_mainWindow_overlay,
-                                               "objectName": "communityColorPanelHexInput", "type": "TextEdit",
-                                               "visible": True}
+communitySettings_ColorPanel_HexColor_Input = {"container": statusDesktop_mainWindow_overlay, "objectName": "communityColorPanelHexInput", "type": "TextEdit", "visible": True}
 communitySettings_SaveColor_Button = {"container": statusDesktop_mainWindow_overlay,
                                       "objectName": "communityColorPanelSelectColorButton", "type": "StatusButton",
                                       "visible": True}

@@ -2,6 +2,7 @@
 
 UI_LOAD_TIMEOUT_SEC = 5
 UI_LOAD_TIMEOUT_MSEC = UI_LOAD_TIMEOUT_SEC * 1000
+OBJECT_LOOKUP_TIMEOUT_MSEC = 1000  # Per-attempt timeout for object lookup in is_visible polling
 LOADING_LIST_TIMEOUT_MSEC = 20000
 PROCESS_TIMEOUT_SEC = 10
 PROCESS_TIMEOUT_SEC_WINDOWS = 20  # Longer timeout for slow first startup on Windows VMs

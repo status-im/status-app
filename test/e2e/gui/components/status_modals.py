@@ -10,10 +10,9 @@ class StatusModal(QObject):
 
     def __init__(self):
         super().__init__(names.statusModal)
-        self.wait_until_enabled()
+        self.wait_until_appears()
 
 
 class StatusStackModal(QObject):
     def __init__(self):
         super().__init__(names.statusStackModal)
-        self.wait_until_enabled()
