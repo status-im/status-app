@@ -1504,7 +1504,12 @@ Item {
 
             Item {
                 anchors.fill: parent
-                anchors.leftMargin: sidebar.alwaysVisible ? sidebar.width : undefined
+                readonly property bool offsetBySidebar: sidebar.alwaysVisible
+                                                      || d.activeSectionType === Constants.appSection.browser
+                readonly property real sidebarOffset: offsetBySidebar
+                                                    ? sidebar.width * (sidebar.alwaysVisible ? 1.0 : sidebar.position)
+                                                    : 0
+                anchors.leftMargin: sidebarOffset
 
                 StackLayout {
                     id: appView
