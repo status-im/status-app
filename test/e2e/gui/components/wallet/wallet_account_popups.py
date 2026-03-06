@@ -34,7 +34,7 @@ class AccountPopup(QObject):
         self._existing_origin_item = QObject(names.addAccountPopup_OriginOption_StatusListItem)
         self._use_keycard_button = QObject(names.mainWallet_AddEditAccountPopup_MasterKey_GoToKeycardSettingsOption)
         # derivation
-        self._address_text_edit = TextEdit(names.mainWallet_AddEditAccountPopup_AccountWatchOnlyAddress)
+        self._address_text_edit = TextEdit(names.mainWallet_AddEditAccountPopup_AccountWatchOnlyAddressComponent)
         self._add_save_account_confirmation_button = Button(names.mainWallet_AddEditAccountPopup_PrimaryButton)
         self.copy_derivation_path_button = Button(names.mainWallet_AddEditAccountPopup_CopyDerivationPathButton)
         self._edit_derivation_path_button = Button(names.mainWallet_AddEditAccountPopup_EditDerivationPathButton)
@@ -103,6 +103,7 @@ class AccountPopup(QObject):
 
     @allure.step('Set eth address for account added from context menu')
     def set_eth_address(self, value: str):
+        self._scroll.vertical_scroll_down(self._address_text_edit)
         self._address_text_edit.text = value
         return self
 
@@ -111,6 +112,7 @@ class AccountPopup(QObject):
         self._origin_combobox.click()
         self._watched_address_origin_item.click()
         assert getattr(self._origin_combobox.object, 'title') == WalletOrigin.WATCHED_ADDRESS_ORIGIN.value
+        self._scroll.vertical_scroll_down(self._address_text_edit)
         self._address_text_edit.text = value
         return self
 
