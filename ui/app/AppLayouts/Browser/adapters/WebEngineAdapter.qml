@@ -3,17 +3,18 @@ import QtWebEngine
 
 import StatusQ.Core.Theme
 
-import AppLayouts.Browser.views
 import AppLayouts.Browser.provider.qml
+import "../views/ScriptUtils.js" as ScriptUtils
 
 AbstractWebView {
     id: root
 
     property bool enableJsLogs: false
+    required property var localAccountSensitiveSettings
 
     property var profile: ProfileManager.getProfile(root.profileParams)
 
-    // Expose BrowserWebEngineView properties
+    // Expose internal WebEngineView properties
     property alias url: webView.url
     readonly property alias title: webView.title
     readonly property alias loading: webView.loading
@@ -76,17 +77,86 @@ AbstractWebView {
         }
     }
 
-    BrowserWebEngineView {
+    WebEngineView {
         id: webView
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: root.devToolsEnabled ? devToolsView.top : parent.bottom
+        focus: true
+
+        property bool htmlPageLoaded: false
+        backgroundColor: Theme.palette.background
+
+        settings.autoLoadImages: root.localAccountSensitiveSettings.autoLoadImages
+        settings.javascriptEnabled: root.localAccountSensitiveSettings.javaScriptEnabled
+        settings.errorPageEnabled: root.localAccountSensitiveSettings.errorPageEnabled
+        settings.pluginsEnabled: root.localAccountSensitiveSettings.pluginsEnabled
+        settings.autoLoadIconsForPage: root.localAccountSensitiveSettings.autoLoadIconsForPage
+        settings.touchIconsEnabled: root.localAccountSensitiveSettings.touchIconsEnabled
+        settings.webRTCPublicInterfacesOnly: root.localAccountSensitiveSettings.webRTCPublicInterfacesOnly
+        settings.pdfViewerEnabled: root.localAccountSensitiveSettings.pdfViewerEnabled
+        settings.focusOnNavigationEnabled: true
+        settings.forceDarkMode: Application.styleHints.colorScheme === Qt.ColorScheme.Dark
 
         webChannel: root.webChannel
         profile: root.profile
-        enableJsLogs: root.enableJsLogs
 
+        onQuotaRequested: function(request) {
+            if (request.requestedSize <= 5 * 1024 * 1024)
+                request.accept()
+            else
+                request.reject()
+        }
+        onRegisterProtocolHandlerRequested: function(request) {
+            console.log("accepting registerProtocolHandler request for "
+                        + request.scheme + " from " + request.origin)
+            request.accept()
+        }
+        onRenderProcessTerminated: function(terminationStatus, exitCode) {
+            var status = ""
+            switch (terminationStatus) {
+            case WebEngineView.NormalTerminationStatus:
+                status = "(normal exit)"
+                break
+            case WebEngineView.AbnormalTerminationStatus:
+                status = "(abnormal exit)"
+                break
+            case WebEngineView.CrashedTerminationStatus:
+                status = "(crashed)"
+                break
+            case WebEngineView.KilledTerminationStatus:
+                status = "(killed)"
+                break
+            }
+            console.warn("Render process exited with code " + exitCode + " " + status)
+        }
+        onSelectClientCertificate: function(selection) {
+            selection.certificates[0].select()
+        }
+        onLoadingChanged: function(loadRequest) {
+            if (loadRequest.status === WebEngineView.LoadStartedStatus) {
+                webView.htmlPageLoaded = false
+            }
+            if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
+                webView.htmlPageLoaded = true
+            }
+        }
+        onLoadProgressChanged: function(progress) {
+            if (progress >= 10)
+                webView.htmlPageLoaded = true
+        }
+        onNavigationRequested: function(request) {
+            if (request.url.toString().startsWith("file:/")) {
+                console.log("Local file browsing is disabled")
+                request.reject()
+            }
+        }
+        onJavaScriptConsoleMessage: function(level, message, lineNumber, sourceID) {
+            const isOurScript = ScriptUtils.isOurInjectedScript(sourceID, root.profile)
+            if (isOurScript || root.enableJsLogs)
+                console.log("[WebEngine]", sourceID + ":" + lineNumber, message)
+        }
         onLinkHovered: (hoveredUrl) => root.linkHovered(hoveredUrl)
         onWindowCloseRequested: root.windowCloseRequested()
         onNewWindowRequested: (request) => {
@@ -100,7 +170,19 @@ AbstractWebView {
         onCertificateError: (error) => root.certificateError(error)
         onJavaScriptDialogRequested: (request) => root.javaScriptDialogRequested(request)
         onFindTextFinished: (result) => root.findTextFinished(result)
-        onShowFindBar: (numberOfMatches, activeMatch) => root.findTextFinished({numberOfMatches, activeMatch})
+    }
+
+    Connections {
+        target: root.profile
+        function onDownloadRequested(download) {
+            // Profile emits for all tabs sharing it; forward only owner view.
+            if (download?.view && download.view !== webView)
+                return
+            // For viewless downloads, only visible adapter forwards to avoid fan-out.
+            if (!download?.view && !root.visible)
+                return
+            root.downloadRequested(download)
+        }
     }
 
     WebEngineView {
@@ -115,13 +197,6 @@ AbstractWebView {
 
         onWindowCloseRequested: {
             root.devToolsEnabled = false
-        }
-    }
-
-    Connections {
-        target: root.profile
-        function onDownloadRequested(download) {
-            root.downloadRequested(download)
         }
     }
 

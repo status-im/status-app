@@ -26,6 +26,7 @@ import AppLayouts.Browser.popups
 import AppLayouts.Browser.controls
 import AppLayouts.Browser.views
 import AppLayouts.Browser.panels
+import AppLayouts.Browser.webview
 
 // Code based on https://code.qt.io/cgit/qt/qtwebengine.git/tree/examples/webengine/quicknanobrowser/BrowserWindow.qml?h=5.15
 // Licensed under BSD
@@ -49,22 +50,21 @@ StatusSectionLayout {
 
     property bool isDebugEnabled: false
     property string platformOS: Qt.platform.os
-    property bool useWebViewAdapter: root.isMobile
-    readonly property Component webViewAdapterComponent: useWebViewAdapter ? mobileWebViewAdapterComponent : webEngineAdapterComponent
+    property bool useWebViewAdapter: false
 
     signal sendToRecipientRequested(string address)
 
     function openUrlInNewTab(url) {
         var tab = _internal.addNewTab()
-        tab.url = _internal.determineRealURL(url)
+        tab.url = root.browserRootStore.determineRealURL(url)
     }
 
     function reloadCurrentTab() {
-        _internal.currentWebView?.reload()
+        webViewContext.reloadCurrent()
     }
 
     Component.onCompleted: {
-        var tab = webStackView.createEmptyTab(connectorBridge.defaultProfileParams, true);
+        var tab = webViewContext.createEmptyTab(connectorBridge.defaultProfileParams, true);
         // For Devs: Uncomment the next line if you want to use the simpledapp on first load
         // tab.url = root.browserRootStore.determineRealURL("https://simpledapp.eth");
     }
@@ -95,97 +95,59 @@ StatusSectionLayout {
     QtObject {
         id: _internal
 
-        property Item currentWebView: tabs.currentIndex < tabs.count ? webStackView.getCurrentWebView() : null
-        readonly property bool currentTabIncognito: webStackView.getCurrentWebView()?.offTheRecord ?? false
+        property Item currentWebView: webViewContext.currentWebView
+        readonly property bool currentTabIncognito: currentWebView?.offTheRecord ?? false
         property bool webViewHidden: false
 
         property Component jsDialogComponent: JSDialogWindow {}
 
-        property Component accessDialogComponent: BrowserConnectionModal {
-            browserRootStore: root.browserRootStore
-            browserWalletStore: root.browserWalletStore
-
-            parent: mainView
-            x: mainView.width - width - Theme.halfPadding
-            y: mainView.y + browserToolbar.height + Theme.halfPadding
-        }
-
-        property Component sendTransactionModalComponent: SendModal {
-            anchors.centerIn: parent
-            preSelectedHoldingID: "ETH"
-            preSelectedHoldingType: Constants.TokenType.ERC20
-            store: root.transactionStore
-        }
-
-        property Component signMessageModalComponent: SignMessageModal {
-            browserRootStore: root.browserRootStore
-            signingPhrase: root.browserWalletStore.signingPhrase
-        }
-
-        property StatusMessageDialog sendingError: StatusMessageDialog {
-            title: qsTr("Error sending the transaction")
-            icon: StatusMessageDialog.StandardIcon.Critical
-            standardButtons: Dialog.Ok
-        }
-
-        property StatusMessageDialog signingError: StatusMessageDialog {
-            title: qsTr("Error signing message")
-            icon: StatusMessageDialog.StandardIcon.Critical
-            standardButtons: Dialog.Ok
-        }
-
         function addNewDownloadTab() {
-            webStackView.createDownloadTab(tabs.count !== 0 ? currentWebView.profileParams : connectorBridge.defaultProfileParams);
+            webViewContext.createDownloadTab(tabs.count !== 0 ? currentWebView.profileParams : connectorBridge.defaultProfileParams);
             tabs.currentIndex = tabs.count - 1;
         }
 
         function addNewTab() {
-            var tab = webStackView.createEmptyTab(tabs.count !== 0 ? currentWebView.profileParams : connectorBridge.defaultProfileParams);
+            var tab = webViewContext.createEmptyTab(tabs.count !== 0 ? currentWebView.profileParams : connectorBridge.defaultProfileParams);
             browserToolbar.activateAddressBar()
             return tab;
         }
 
-        function onDownloadRequested(download) {
-            download.accept();
-            root.downloadsStore.addDownload(download)
-            root.showFooter = true
-
-            // close the tab launched only for starting download
-            if (!download.view)
-                return
-
-            // find tab for this view
-            for (var i = 0; i < tabs.count; ++i) {
-                var tab = webStackView.getWebView(i)
-                // close the “download-only” tab
-                if (tab === download.view &&
-                        !tab.htmlPageLoaded &&
-                        tab.title === "") {
-                    webStackView.removeView(i)
-                    break
-                }
-            }
-        }
-
-        function determineRealURL(url) {
-            return root.browserRootStore.determineRealURL(url)
-        }
-
         onCurrentWebViewChanged: () => findBar.reset()
 
-        readonly property var currentViewBookmarkEntry: ModelEntry {
-            sourceModel: root.bookmarksStore.bookmarksModel
-            key: "url"
-            value: (_internal.currentWebView && _internal.currentWebView.url)
-                   ? _internal.currentWebView.url.toString()
-                   : ""
-        }
     }
 
     invertedLayout: root.isMobile
     showFooter: false
     headerPadding: 0
     backgroundColor: Theme.palette.statusAppNavBar.backgroundColor
+
+    BrowserFavoritesContext {
+        id: favoritesContext
+        currentWebView: _internal.currentWebView
+        bookmarksStore: root.bookmarksStore
+        shouldShowFavoritesBar: localAccountSensitiveSettings.shouldShowFavoritesBar
+        openPopupFn: (popup, params) => Global.openPopup(popup, params)
+        addFavoriteModal: addFavoriteModal
+    }
+
+    BrowserDialogsContext {
+        id: dialogsContext
+        networksStore: root.networksStore
+        browserActivityStore: root.browserActivityStore
+        browserWalletStore: root.browserWalletStore
+        openPopupFn: (popup, params) => Global.openPopup(popup, params)
+        jsDialogComponent: _internal.jsDialogComponent
+        dialogParent: root
+    }
+
+    BrowserDownloadsContext {
+        id: downloadsContext
+        downloadsStore: root.downloadsStore
+        tabsModel: tabs
+        getWebViewFn: (index) => webViewContext.getWebView(index)
+        removeViewFn: (index) => webViewContext.removeView(index)
+        setFooterVisibleFn: (visible) => root.showFooter = visible
+    }
 
     // TODO: move this to a single browser header qml file
     headerContent: ColumnLayout {
@@ -199,14 +161,14 @@ StatusSectionLayout {
 
             currentTabIncognito: _internal.currentTabIncognito
             determineRealURL: function(url) {
-                return _internal.determineRealURL(url)
+                return root.browserRootStore.determineRealURL(url)
             }
             onOpenNewTabTriggered: _internal.addNewTab()
             fnGetWebView: (index) => {
-                              return webStackView.getWebView(index)
+                              return webViewContext.getWebView(index)
                           }
             onRemoveView: (index) => {
-                              webStackView.removeView(index)
+                              webViewContext.removeView(index)
                           }
         }
 
@@ -226,86 +188,60 @@ StatusSectionLayout {
 
             openTabsCount: tabs.count
             currentTabIncognito: _internal.currentWebView?.profile.offTheRecord ?? false
-            currentTabIsBookmark: _internal.currentViewBookmarkEntry.available &&_internal.currentViewBookmarkEntry.item
+            currentTabIsBookmark: favoritesContext.currentTabIsBookmark
             currentTabLoading: (!!_internal.currentWebView && _internal.currentWebView.loading)
             browserDappsModel: browserDappsProvider.model
 
-            onRequestHistoryPopup: () => historyMenu.open()
-            onRequestGoBack: () => _internal.currentWebView.goBack()
-            onRequestGoForward: () => _internal.currentWebView.goForward()
-            onRequestReloadPage: () => _internal.currentWebView.reload()
-            onRequestStopLoadingPage: () => _internal.currentWebView.stop()
+            onRequestHistoryPopup: () => dialogsContext.openHistoryMenu(historyMenu)
+            onRequestGoBack: () => webViewContext.goBackCurrent()
+            onRequestGoForward: () => webViewContext.goForwardCurrent()
+            onRequestReloadPage: () => webViewContext.reloadCurrent()
+            onRequestStopLoadingPage: () => webViewContext.stopCurrent()
             onRequestOpenDapp: (url) => {
                                    if (_internal.currentWebView) {
-                                       _internal.currentWebView.url = _internal.determineRealURL(url)
+                                       webViewContext.setCurrentWebUrl(url)
                                    }
                                }
             onRequestDisconnectDapp: (dappUrl) => {
                                          connectorBridge.disconnect(dappUrl)
                                      }
             onAddBookmarkRequested: () => {
-                                        Global.openPopup(addFavoriteModal,
-                                                         {
-                                                             modifiyModal: !!browserToolbar.currentTabIsBookmark,
-                                                             toolbarMode: true,
-                                                             ogUrl: _internal.currentViewBookmarkEntry.item && _internal.currentViewBookmarkEntry.available ?
-                                                                        _internal.currentViewBookmarkEntry.item.url : _internal.currentWebView.url,
-                                                             ogName: _internal.currentViewBookmarkEntry.item && _internal.currentViewBookmarkEntry.available ?
-                                                                         _internal.currentViewBookmarkEntry.item.name : _internal.currentWebView.title
-                                                         })
+                                        favoritesContext.openAddFavoritePopup(!!browserToolbar.currentTabIsBookmark)
                                     }
             onRequestLaunchInBrowser: (url) => {
                                           if (localAccountSensitiveSettings.useBrowserEthereumExplorer !== Constants.browserEthereumExplorerNone && url.startsWith("0x")) {
-                                              _internal.currentWebView.url = root.browserRootStore.get0xFormedUrl(localAccountSensitiveSettings.useBrowserEthereumExplorer, url)
+                                              webViewContext.setCurrentWebUrl(root.browserRootStore.get0xFormedUrl(localAccountSensitiveSettings.useBrowserEthereumExplorer, url))
                                               return
                                           }
                                           if (localAccountSensitiveSettings.selectedBrowserSearchEngineId !== SearchEnginesConfig.browserSearchEngineNone && !Utils.isURL(url) && !Utils.isURLWithOptionalProtocol(url)) {
-                                              _internal.currentWebView.url = root.browserRootStore.getFormedUrl(localAccountSensitiveSettings.selectedBrowserSearchEngineId, url)
+                                              webViewContext.setCurrentWebUrl(root.browserRootStore.getFormedUrl(localAccountSensitiveSettings.selectedBrowserSearchEngineId, url))
                                               return
                                           } else if (Utils.isURLWithOptionalProtocol(url)) {
                                               url = "https://" + url
                                           }
-                                          _internal.currentWebView.url = _internal.determineRealURL(url);
+                                          webViewContext.setCurrentWebUrl(url);
                                       }
-            onRequestWalletMenu: () => {
-                                     // Initialize activity filters before opening popup
-                                     const activeChainIds = SQUtils.ModelUtils.modelToFlatArray(
-                                         root.networksStore.activeNetworks, "chainId")
-                                     if (activeChainIds.length > 0) {
-                                         root.browserActivityStore.activityController.setFilterChainsJson(
-                                             JSON.stringify(activeChainIds), true)
-                                     }
-                                     const currentAddress = root.browserWalletStore.dappBrowserAccount.address
-                                     root.browserActivityStore.activityController.setFilterAddressesJson(
-                                         JSON.stringify([currentAddress]))
-
-                                     Global.openPopup(browserWalletMenu)
-                                 }
+            onRequestWalletMenu: () => dialogsContext.openWalletMenu(browserWalletMenu)
             onRequestAllOpenTabsView: () => {
                                           // TODO: Launch All Tabs View
                                           // https://github.com/status-im/status-app/issues/19569
                                       }
-            onOpenSettingMenu: () => {
-                                   settingsMenu.open()
-                               }
+            onOpenSettingMenu: () => dialogsContext.openSettingsMenu(settingsMenu)
         }
 
         Loader {
             id: favoritesBarLoader
             Layout.fillWidth: true
-            Layout.preferredHeight: active ? 38: 0
-            active: localAccountSensitiveSettings.shouldShowFavoritesBar &&
-                              root.bookmarksStore.bookmarksModel.ModelCount.count > 0
+            Layout.preferredHeight: favoritesContext.favoritesBarActive ? 38 : 0
+            active: favoritesContext.favoritesBarActive
             sourceComponent: FavoritesBar {
                 currentTabIncognito: _internal.currentTabIncognito
                 bookmarkModel: root.bookmarksStore.bookmarksModel
                 favoritesMenu: favoriteMenu
-                onSetAsCurrentWebUrl: (url) => _internal.currentWebView.url = _internal.determineRealURL(url)
+                onSetAsCurrentWebUrl: (url) => webViewContext.setCurrentWebUrl(url)
                 onOpenInNewTab: (url) => root.openUrlInNewTab(url)
                 onAddFavModalRequested: {
-                    Global.openPopup(addFavoriteModal, {toolbarMode: true,
-                                         ogUrl: _internal.currentViewBookmarkEntry.item ? _internal.currentViewBookmarkEntry.item.url : _internal.currentWebView.url,
-                                         ogName: _internal.currentViewBookmarkEntry.item ? _internal.currentViewBookmarkEntry.item.name : _internal.currentWebView.title})
+                    favoritesContext.openAddFavoritePopup(false)
                 }
             }
         }
@@ -322,13 +258,13 @@ StatusSectionLayout {
 
             onFindNext: {
                 if (text)
-                    _internal.currentWebView && _internal.currentWebView.findText(text);
+                    webViewContext.findTextCurrent(text)
                 else if (!visible)
                     visible = true;
             }
             onFindPrevious: {
                 if (text)
-                    _internal.currentWebView && _internal.currentWebView.findText(text, WebEngineView.FindBackward);
+                    webViewContext.findTextCurrent(text, true)
                 else if (!visible)
                     visible = true;
             }
@@ -337,6 +273,33 @@ StatusSectionLayout {
 
     footer: Loader {
         sourceComponent: downloadBar
+    }
+
+    BrowserWebViewContext {
+        id: webViewContext
+        useMobileAdapter: root.useWebViewAdapter
+        thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+        isDebugEnabled: root.isDebugEnabled
+        browserSettings: localAccountSensitiveSettings
+        webChannel: connectorBridge.channel
+        hostStackLayout: webStackView
+        tabsModel: tabs
+        defaultProfileParams: connectorBridge.defaultProfileParams
+        bookmarksStore: root.bookmarksStore
+        downloadsStore: root.downloadsStore
+        determineRealURLFn: (url) => root.browserRootStore.determineRealURL(url)
+        downloadRequestHandler: (download) => downloadsContext.handleDownloadRequest(download)
+        sslErrorHandler: (error) => {
+            error.defer()
+            sslDialog.enqueue(error)
+        }
+        jsDialogHandler: (request) => dialogsContext.openJsDialog(request)
+        findTextFinishedHandler: (result) => {
+            if (!findBar.visible)
+                findBar.visible = true
+            findBar.numberOfMatches = result.numberOfMatches
+            findBar.activeMatch = result.activeMatch
+        }
     }
 
     centerPanel: ColumnLayout {
@@ -349,54 +312,6 @@ StatusSectionLayout {
 
             Layout.fillHeight: true
             Layout.fillWidth: true
-
-            function createEmptyTab(profileParams, createAsStartPage = false, focusOnNewTab = true, url = undefined) {
-                focusOnNewTab = focusOnNewTab && !createAsStartPage
-
-                var webview = root.webViewAdapterComponent.createObject(webStackView, {
-                    profileParams: profileParams,
-                    isDownloadView: false
-                })
-
-                tabs.createEmptyTab(createAsStartPage, focusOnNewTab, webview)
-
-                if (createAsStartPage && root.thirdpartyServicesEnabled) {
-                    webview.url = Constants.browserDefaultHomepage
-                } else if (url !== undefined) {
-                    webview.url = url;
-                } else if (!!localAccountSensitiveSettings.browserHomepage) {
-                    webview.url = _internal.determineRealURL(localAccountSensitiveSettings.browserHomepage)
-                }
-
-                return webview;
-            }
-
-            function createDownloadTab(profileParams) {
-                var webview = root.webViewAdapterComponent.createObject(webStackView, {
-                    profileParams: profileParams,
-                    isDownloadView: true
-                })
-                tabs.createDownloadTab()
-                return webview;
-            }
-
-            function getCurrentWebView() { // -> WebEngineView/WebView
-                return getWebView(tabs.currentIndex)
-            }
-
-            function getWebView(index) { // -> WebEngineView/WebView
-                return webStackView.children[index]
-            }
-
-            function removeView(index) {
-                if (tabs.count <= 1) {
-                    createEmptyTab(_internal.currentWebView.profileParams, true)
-                }
-                tabs.removeTab(index)
-                var view = getWebView(index)
-                view.stop()
-                view.destroy()
-            }
         }
 
         // Overlay for DownloadView and EmptyWebPage
@@ -404,12 +319,13 @@ StatusSectionLayout {
             id: overlayLoader
             anchors.fill: parent
             z: 53
-            
-            readonly property bool showDownloadView: _internal.currentWebView?.isDownloadView ?? false
-            readonly property bool showEmptyPage: !showDownloadView && (!_internal.currentWebView?.url?.toString())
-            
-            active: showDownloadView || showEmptyPage
-            sourceComponent: showDownloadView ? downloadViewComponent : emptyPageComponent
+
+            readonly property int contentMode: webViewContext.currentContentMode
+
+            active: contentMode !== BrowserWebViewContext.ContentMode.WebContent
+            sourceComponent: contentMode === BrowserWebViewContext.ContentMode.DownloadContent
+                             ? downloadViewComponent
+                             : emptyPageComponent
         }
 
         // Non UI component
@@ -439,51 +355,12 @@ StatusSectionLayout {
     }
 
     Component {
-        id: webEngineAdapterComponent
-        WebEngineAdapter {
-            id: webEngineAdapterItem
-            anchors.fill: parent
-            webChannel: connectorBridge.channel
-            enableJsLogs: root.isDebugEnabled
-            devToolsEnabled: localAccountSensitiveSettings.devToolsEnabled
-
-            onWindowCloseRequested: webStackView.removeView(StackLayout.index)
-            onNewWindowRequested: (makeCurrent, requestedUrl, callback) => {
-                var tab = webStackView.createEmptyTab(_internal.currentWebView.profileParams, false, makeCurrent, requestedUrl);
-                callback(tab);
-            }
-            onDownloadRequested: (download) => {
-                _internal.onDownloadRequested(download)
-            }
-            onCertificateError: (error) => {
-                error.defer()
-                sslDialog.enqueue(error)
-            }
-            onJavaScriptDialogRequested: (request) => {
-                request.accepted = true;
-                var dialog = _internal.jsDialogComponent.createObject(root, {"request": request})
-                dialog.open()
-            }
-            onFindTextFinished: (result) => {
-                if (!findBar.visible)
-                    findBar.visible = true
-                findBar.numberOfMatches = result.numberOfMatches;
-                findBar.activeMatch = result.activeMatch;
-            }
-        }
-    }
-
-
-    Component {
         id: downloadViewComponent
         DownloadView {
             downloadsModel: root.downloadsStore.downloadModel
             downloadsMenu: downloadMenuInst
             onOpenDownloadClicked: function(downloadComplete, index) {
-                if (downloadComplete) {
-                    return root.downloadsStore.openFile(index)
-                }
-                root.downloadsStore.openDirectory(index)
+                downloadsContext.openDownloadFromList(downloadComplete, index)
             }
         }
     }
@@ -495,11 +372,9 @@ StatusSectionLayout {
             favMenu: favoriteMenu
             addFavModal: addFavoriteModal
             determineRealURLFn: function(url) {
-                return _internal.determineRealURL(url)
+                return root.browserRootStore.determineRealURL(url)
             }
-            onSetCurrentWebUrl: (url) => {
-                                    _internal.currentWebView.url = url
-                                }
+            onSetCurrentWebUrl: (url) => webViewContext.setCurrentWebUrl(url)
             Component.onCompleted: {
                 // Add fav button at the end of the grid
                 var index = root.bookmarksStore.getBookmarkIndexByUrl(Constants.newBookmark)
@@ -527,7 +402,7 @@ StatusSectionLayout {
             onAccountChanged: (newAddress) => connectorBridge.connectorManager.changeAccount(newAddress)
             onReload: {
                 for (let i = 0; i < tabs.count; ++i){
-                    webStackView.getWebView(i).reload();
+                    webViewContext.getWebView(i).reload();
                 }
             }
 
@@ -563,20 +438,10 @@ StatusSectionLayout {
         zoomFactor: _internal.currentWebView ? _internal.currentWebView.zoomFactor : 1
         onAddNewTab: _internal.addNewTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
-        onGoIncognito: function (checked) {
-            if (_internal.currentWebView) {
-                _internal.currentWebView.offTheRecord = checked;
-            }
-        }
-        onZoomIn: {
-            const newZoom = _internal.currentWebView.zoomFactor + 0.1
-            _internal.currentWebView.changeZoomFactor(newZoom)
-        }
-        onZoomOut: {
-            const newZoom = _internal.currentWebView.zoomFactor - 0.1
-            _internal.currentWebView.changeZoomFactor(newZoom)
-        }
-        onResetZoomFactor: _internal.currentWebView.changeZoomFactor(1.0)
+        onGoIncognito: (checked) => webViewContext.setIncognitoCurrent(checked)
+        onZoomIn: webViewContext.changeZoomCurrent(0.1)
+        onZoomOut: webViewContext.changeZoomCurrent(-0.1)
+        onResetZoomFactor: webViewContext.resetZoomCurrent()
         onLaunchFindBar: {
             if (!findBar.visible) {
                 findBar.visible = true;
@@ -585,13 +450,13 @@ StatusSectionLayout {
         }
         onToggleCompatibilityMode: function(checked) {
             for (let i = 0; i < tabs.count; ++i){
-                webStackView.getWebView(i).stop() // Stop all loading tabs
+                webViewContext.getWebView(i).stop() // Stop all loading tabs
             }
 
             localAccountSensitiveSettings.compatibilityMode = checked;
 
             for (let i = 0; i < tabs.count; ++i){
-                webStackView.getWebView(i).reload() // Reload them with new user agent
+                webViewContext.getWebView(i).reload() // Reload them with new user agent
             }
         }
         onLaunchBrowserSettings: {
@@ -648,10 +513,7 @@ StatusSectionLayout {
         bookmarksStore: root.bookmarksStore
         onOpenInNewTab: (url) => root.openUrlInNewTab(url)
         onEditFavoriteTriggered: {
-            Global.openPopup(addFavoriteModal, {
-                                 modifiyModal: true,
-                                 ogUrl: favoriteMenu.currentFavorite ? favoriteMenu.currentFavorite.url : _internal.currentWebView.url,
-                                 ogName: favoriteMenu.currentFavorite ? favoriteMenu.currentFavorite.name : _internal.currentWebView.title})
+            favoritesContext.openAddFavoritePopup(true, favoriteMenu.currentFavorite)
         }
     }
 
@@ -686,23 +548,10 @@ StatusSectionLayout {
         FavoritesBar {
             bookmarkModel: root.bookmarksStore.bookmarksModel
             favoritesMenu: favoriteMenu
-            onSetAsCurrentWebUrl: (url) => {
-                if (!_internal.currentWebView) {
-                    console.error("[Browser] currentWebView is null, cannot set URL")
-                    return
-                }
-                const newUrl = _internal.determineRealURL(url)
-                Qt.callLater(function() {
-                    if (_internal.currentWebView) {
-                        _internal.currentWebView.url = newUrl
-                    }
-                })
-            }
+            onSetAsCurrentWebUrl: (url) => webViewContext.setCurrentWebUrl(url)
             onOpenInNewTab: (url) => root.openUrlInNewTab(url)
             onAddFavModalRequested: {
-                Global.openPopup(addFavoriteModal, {toolbarMode: true,
-                                     ogUrl: browserHeader.currentFavorite ? browserHeader.currentFavorite.url : _internal.currentWebView.url,
-                                     ogName: browserHeader.currentFavorite ? browserHeader.currentFavorite.name : _internal.currentWebView.title})
+                favoritesContext.openAddFavoritePopup(false)
             }
         }
     }
@@ -749,36 +598,10 @@ StatusSectionLayout {
             downloadsModel: root.downloadsStore.downloadModel
             downloadsMenu: downloadMenuInst
             onOpenDownloadClicked: function (downloadComplete, index) {
-                if (downloadComplete) {
-                    return root.downloadsStore.openFile(index)
-                }
-                root.downloadsStore.openDirectory(index)
+                downloadsContext.openDownloadFromList(downloadComplete, index)
             }
             onAddNewDownloadTab: _internal.addNewDownloadTab()
             onClose: root.showFooter = false
-        }
-    }
-
-    Connections {
-        target: _internal.currentWebView
-        function onUrlChanged() {
-            browserHeader.addressBar.text = root.browserRootStore.obtainAddress(_internal.currentWebView.url)
-
-            // Update ConnectorBridge with current dApp metadata
-            if (_internal.currentWebView && _internal.currentWebView.url) {
-                connectorBridge.connectorManager.updateDAppUrl(
-                            _internal.currentWebView.url,
-                            _internal.currentWebView.title,
-                            _internal.currentWebView.icon
-                            )
-            }
-        }
-    }
-
-    Connections {
-        target: root.bookmarksStore.bookmarksModel
-        function onModelChanged() {
-            browserHeader.currentFavorite = Qt.binding(function () {return root.bookmarksStore.getCurrentFavorite(_internal.currentWebView.url)})
         }
     }
 
