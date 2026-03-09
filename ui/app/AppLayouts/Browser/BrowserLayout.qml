@@ -387,6 +387,8 @@ StatusSectionLayout {
     Component  {
         id: browserWalletMenu
         BrowserWalletMenu {
+            id: walletMenu
+
             parent: browserToolbar
             x: browserToolbar.width - width - Theme.halfPadding
             y: browserToolbar.height + 4
@@ -423,6 +425,10 @@ StatusSectionLayout {
                     root.browserActivityStore.currentActivityFiltersStore.updateCollectiblesModel()
                     root.browserActivityStore.currentActivityFiltersStore.updateRecipientsModel()
                 }
+            }
+
+            OpenedDialogsTracker {
+                trackedDialog: walletMenu
             }
         }
     }
@@ -461,6 +467,10 @@ StatusSectionLayout {
         }
         onLaunchBrowserSettings: {
             Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings);
+        }
+
+        OpenedDialogsTracker {
+            trackedDialog: settingsMenu
         }
     }
 
@@ -515,6 +525,10 @@ StatusSectionLayout {
         onEditFavoriteTriggered: {
             favoritesContext.openAddFavoritePopup(true, favoriteMenu.currentFavorite)
         }
+
+        OpenedDialogsTracker {
+            trackedDialog: favoriteMenu
+        }
     }
 
     StatusMenu {
@@ -540,6 +554,10 @@ StatusSectionLayout {
             onObjectRemoved: function(index, object) {
                 historyMenu.removeItem(object)
             }
+        }
+
+        OpenedDialogsTracker {
+            trackedDialog: historyMenu
         }
     }
 

@@ -1,6 +1,7 @@
 import QtQuick
 
 import utils
+import StatusQ.Popups.Dialog
 
 import AppLayouts.Browser.adapters
 
@@ -195,6 +196,9 @@ Item {
     Component {
         id: mobileWebViewAdapterComponent
         MobileWebViewAdapter {
+            visible: DialogCounter.openedDialogsCount === 0
+            enabled: visible
+
             bookmarksStore: root.bookmarksStore
             downloadsStore: root.downloadsStore
             webChannel: root.webChannel
