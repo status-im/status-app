@@ -18,7 +18,9 @@ const EthereumWrapper = (function() {
 
             this.listeners = new Map(); // event -> Set<handler>
             this.nativeEthereum = nativeEthereum;
-            this.requestIdCounter = 1; // async requests
+            // Start from a per-instance random base to avoid requestId collisions
+            // between different frames/tabs that share connector callbacks.
+            this.requestIdCounter = Math.floor(Math.random() * 1000000000) + 1;
             this.pendingRequests = new Map(); // requestId -> { resolve, reject, timestamp }
             this.requestTimeout = 600000; // 10min timeout for pending requests. (nim side has it's own timeouts)
             this.timeoutCheckInterval = 10000;

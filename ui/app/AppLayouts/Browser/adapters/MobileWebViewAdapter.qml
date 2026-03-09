@@ -85,6 +85,9 @@ AbstractWebView {
         console.warn("MobileWebViewAdapter: acceptAsNewWindow not supported")
     }
 
+    function detachView() {
+    }
+
     function triggerWebAction(action) {
         switch (action) {
             case AbstractWebView.WebAction.Back:

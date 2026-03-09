@@ -152,15 +152,22 @@ Item {
     }
 
     function removeView(index) {
+        if (index < 0 || index >= tabsModel.count)
+            return
+
+        var view = getWebView(index)
         if (tabsModel.count <= 1) {
             var fallbackProfileParams = currentWebView ? currentWebView.profileParams : defaultProfileParams
             createEmptyTab(fallbackProfileParams, true)
         }
         tabsModel.removeTab(index)
-        var view = getWebView(index)
         if (!view)
             return
-        view.stop()
+        view.visible = false
+        view.enabled = false
+        view.focus = false
+        view.detachView()
+        view.parent = null
         view.destroy()
     }
 

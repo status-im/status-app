@@ -43,6 +43,16 @@ AbstractWebView {
     function findText(text, flags) { webView.findText(text, flags) }
     function changeZoomFactor(factor) { webView.changeZoomFactor(factor) }
     function acceptAsNewWindow(request) { request.openIn(webView) }
+    function detachView() {
+        // Detach internal views from scene graph before destroy.
+        webView.webChannel = null
+        devToolsView.inspectedView = null
+        webView.stop()
+        webView.visible = false
+        webView.parent = null
+        devToolsView.visible = false
+        devToolsView.parent = null
+    }
     function triggerWebAction(action) {
         // Map AbstractWebView.WebAction to WebEngineView.WebAction
         switch (action) {

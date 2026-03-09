@@ -76,6 +76,7 @@ Item {
     function findText(text, flags) {}
     function changeZoomFactor(factor) {}
     function acceptAsNewWindow(request) {}
+    function detachView() {}
 
     function triggerWebAction(action) { console.warn("AbstractWebView: triggerWebAction not implemented") }
 }
