@@ -9,6 +9,7 @@ AbstractWebView {
 
     required property BrowserStores.BookmarksStore bookmarksStore
     required property BrowserStores.DownloadsStore downloadsStore
+    required property var localAccountSensitiveSettings
 
     property var findBarComp
     property var favMenu
@@ -52,15 +53,15 @@ AbstractWebView {
     }
 
     function goBack() {
-        console.warn("MobileWebViewAdapter: goBack not supported yet")
+        console.warn("WebViewAdapter: goBack not supported yet")
     }
 
     function goForward() {
-        console.warn("MobileWebViewAdapter: goForward not supported yet")
+        console.warn("WebViewAdapter: goForward not supported yet")
     }
 
     function goBackOrForward(offset) {
-        console.warn("MobileWebViewAdapter: goBackOrForward not supported yet")
+        console.warn("WebViewAdapter: goBackOrForward not supported yet")
     }
 
     function reload() {
@@ -70,7 +71,7 @@ AbstractWebView {
     }
 
     function stop() {
-        console.warn("MobileWebViewAdapter: stop not supported yet")
+        console.warn("WebViewAdapter: stop not supported yet")
     }
 
     function findText(text, flags) {
@@ -82,7 +83,7 @@ AbstractWebView {
     }
 
     function acceptAsNewWindow(request) {
-        console.warn("MobileWebViewAdapter: acceptAsNewWindow not supported")
+        console.warn("WebViewAdapter: acceptAsNewWindow not supported")
     }
 
     function detachView() {
@@ -103,7 +104,7 @@ AbstractWebView {
                 reload()
                 break
             default:
-                console.warn("MobileWebViewAdapter: Web action not supported:", action)
+                console.warn("WebViewAdapter: Web action not supported:", action)
         }
     }
 }

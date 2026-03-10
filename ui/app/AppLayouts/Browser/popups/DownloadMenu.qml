@@ -1,9 +1,9 @@
 import QtQuick
 import QtQuick.Controls
-import QtWebEngine
 
 import StatusQ.Popups
 
+import AppLayouts.Browser.adapters
 import AppLayouts.Browser.stores as BrowserStores
 
 StatusMenu {
@@ -14,8 +14,8 @@ StatusMenu {
     property int index: -1
     property var download: root.downloadsStore.getDownload(index)
 
-    readonly property bool downloadCancelled: download?.state === WebEngineDownloadRequest.DownloadCancelled ?? false
-    readonly property bool downloadComplete: download?.state === WebEngineDownloadRequest.DownloadCompleted ?? false
+    readonly property bool downloadCancelled: download?.state === AbstractWebView.DownloadState.DownloadCancelled ?? false
+    readonly property bool downloadComplete: download?.state === AbstractWebView.DownloadState.DownloadCompleted ?? false
 
     signal cancelClicked()
 

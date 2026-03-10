@@ -9,9 +9,9 @@ Item {
     id: root
     visible: false
 
-    required property bool useMobileAdapter
     required property bool thirdpartyServicesEnabled
     required property bool isDebugEnabled
+    required property bool isMobile
 
     required property var browserSettings
     required property var webChannel
@@ -35,7 +35,6 @@ Item {
         EmptyContent
     }
 
-    readonly property Component webViewAdapterComponent: useMobileAdapter ? mobileWebViewAdapterComponent : webEngineAdapterComponent
     readonly property Item currentWebView: tabsModel.currentIndex < tabsModel.count ? getCurrentWebView() : null
     readonly property int currentContentMode: {
         if (!currentWebView)
@@ -173,8 +172,13 @@ Item {
     }
 
     Component {
-        id: webEngineAdapterComponent
-        WebEngineAdapter {
+        id: webViewAdapterComponent
+        WebViewAdapter {
+            visible: DialogCounter.openedDialogsCount === 0 || !root.isMobile
+            enabled: visible
+
+            bookmarksStore: root.bookmarksStore
+            downloadsStore: root.downloadsStore
             webChannel: root.webChannel
             enableJsLogs: root.isDebugEnabled
             localAccountSensitiveSettings: root.browserSettings
@@ -190,29 +194,6 @@ Item {
             onCertificateError: (error) => root.sslErrorHandler(error)
             onJavaScriptDialogRequested: (request) => root.jsDialogHandler(request)
             onFindTextFinished: (result) => root.findTextFinishedHandler(result)
-        }
-    }
-
-    Component {
-        id: mobileWebViewAdapterComponent
-        MobileWebViewAdapter {
-            visible: DialogCounter.openedDialogsCount === 0
-            enabled: visible
-
-            bookmarksStore: root.bookmarksStore
-            downloadsStore: root.downloadsStore
-            webChannel: root.webChannel
-            enableJsLogs: root.isDebugEnabled
-
-            onWindowCloseRequested: root.removeView(StackLayout.index)
-            onNewWindowRequested: (makeCurrent, requestedUrl, callback) => {
-                var profileParams = root.currentWebView ? root.currentWebView.profileParams : root.defaultProfileParams
-                var tab = root.createEmptyTab(profileParams, false, makeCurrent, requestedUrl)
-                callback(tab)
-            }
-            onDownloadRequested: (download) => root.downloadRequestHandler(download)
-            onCertificateError: (error) => root.sslErrorHandler(error)
-            onJavaScriptDialogRequested: (request) => root.jsDialogHandler(request)
         }
     }
 }

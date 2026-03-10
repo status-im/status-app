@@ -52,6 +52,25 @@ Item {
         RequestClose = 35
     }
 
+    // === Download States (constants for cross-platform compatibility) ===
+    // These map to WebEngineDownloadRequest.DownloadState enum on desktop
+    enum DownloadState {
+        DownloadRequested = 0,
+        DownloadInProgress = 1,
+        DownloadCompleted = 2,
+        DownloadCancelled = 3,
+        DownloadInterrupted = 4
+    }
+
+    // === JavaScript Dialog Types (constants for cross-platform compatibility) ===
+    // These map to JavaScriptDialogRequest.DialogType enum on desktop
+    enum JavaScriptDialogType {
+        DialogTypeAlert = 0,
+        DialogTypeConfirm = 1,
+        DialogTypePrompt = 2,
+        DialogTypeUnload = 3
+    }
+
     signal linkHovered(string hoveredUrl)
     signal windowCloseRequested()
     signal downloadRequested(var download)

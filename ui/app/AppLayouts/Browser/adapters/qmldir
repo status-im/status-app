@@ -1,4 +1,4 @@
+singleton ProfileManager 1.0 ProfileManager.qml
 AbstractWebView 1.0 AbstractWebView.qml
 ProfileParams 1.0 ProfileParams.qml
-WebEngineAdapter 1.0 WebEngineAdapter.qml
-MobileWebViewAdapter 1.0 MobileWebViewAdapter.qml
+WebViewAdapter 1.0 WebViewAdapter.qml

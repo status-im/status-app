@@ -38,6 +38,12 @@ fi
 if [[ "${OS}" == "android" ]]; then
   [[ -z "${JAVA_HOME}" ]] && { echo "JAVA_HOME is not set"; exit 1; }
 
+  STATUSQ_DIR=${STATUSQ:-"${STATUS_DESKTOP}/ui/StatusQ"}
+  MOBILEWEBVIEW_JAVA_DIR_FILE="${STATUSQ_DIR}/build/${OS}/StatusQ/mobilewebview_java_dir.txt"
+  if [[ -z "${MOBILEWEBVIEW_ANDROID_JAVA_SRC}" && -f "${MOBILEWEBVIEW_JAVA_DIR_FILE}" ]]; then
+    MOBILEWEBVIEW_ANDROID_JAVA_SRC="$(<"${MOBILEWEBVIEW_JAVA_DIR_FILE}")"
+  fi
+
   # Export BUILD_VARIANT for build.gradle to pick up
   export BUILD_VARIANT
 
@@ -61,6 +67,12 @@ if [[ "${OS}" == "android" ]]; then
   cp "$CWD/../android/qt${QT_MAJOR}"/{AndroidManifest.xml,build.gradle,settings.gradle,gradle.properties} "$BUILD_DIR/android-build/"
   rsync -a --exclude='libs.xml' "$CWD/../android/qt${QT_MAJOR}/res/" "$BUILD_DIR/android-build/res/" 2>/dev/null || true
   rsync -a "$CWD/../android/qt${QT_MAJOR}/src/" "$BUILD_DIR/android-build/src/" 2>/dev/null || true
+
+  if [[ -n "${MOBILEWEBVIEW_ANDROID_JAVA_SRC}" && \
+        -f "${MOBILEWEBVIEW_ANDROID_JAVA_SRC}/org/mobilewebview/MobileWebView.java" ]]; then
+    echo "Including MobileWebView Java sources from: ${MOBILEWEBVIEW_ANDROID_JAVA_SRC}"
+    rsync -a "${MOBILEWEBVIEW_ANDROID_JAVA_SRC}/org/" "$BUILD_DIR/android-build/src/org/"
+  fi
 
   cd "$BUILD_DIR/android-build"
 

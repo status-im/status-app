@@ -67,7 +67,6 @@
         <file>StatusQ/Components/StatusToolBar.qml</file>
         <file>StatusQ/Components/StatusUserImage.qml</file>
         <file>StatusQ/Components/StatusVideo.qml</file>
-        <file>StatusQ/Components/WebEngineLoader.qml</file>
         <file>StatusQ/Components/private/LoadingDotItem.qml</file>
         <file>StatusQ/Components/private/StatusComboboxBackground.qml</file>
         <file>StatusQ/Components/private/StatusComboboxIndicator.qml</file>

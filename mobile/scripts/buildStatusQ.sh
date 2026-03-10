@@ -34,6 +34,12 @@ cmake -S "${STATUSQ}" -B "${BUILD_DIR}" \
 make -C "${BUILD_DIR}" SCodes -j "$(nproc)"
 make -C "${BUILD_DIR}" StatusQ -j "$(nproc)"
 
+MOBILEWEBVIEW_JAVA_DIR_FILE="${BUILD_DIR}/mobilewebview_java_dir.txt"
+if [[ -f "${MOBILEWEBVIEW_JAVA_DIR_FILE}" ]]; then
+    export MOBILEWEBVIEW_ANDROID_JAVA_SRC
+    MOBILEWEBVIEW_ANDROID_JAVA_SRC="$(<"${MOBILEWEBVIEW_JAVA_DIR_FILE}")"
+fi
+
 mkdir -p "${LIB_DIR}"
 
 STATUSQ_LIB=$(find "${BUILD_DIR}" -name "libStatusQ${LIB_SUFFIX}${LIB_EXT}")

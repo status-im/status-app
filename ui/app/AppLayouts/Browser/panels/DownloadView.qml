@@ -1,11 +1,11 @@
 import QtQuick
-import QtWebEngine
 
 import StatusQ.Core
 import StatusQ.Core.Theme
 
 import utils
 
+import AppLayouts.Browser.adapters
 import AppLayouts.Browser.controls
 
 Rectangle {
@@ -40,7 +40,7 @@ Rectangle {
 
             width: parent.width
             isPaused: downloadItem?.isPaused ?? false
-            isCanceled: downloadItem?.state === WebEngineDownloadRequest.DownloadCancelled ?? false
+            isCanceled: downloadItem?.state === AbstractWebView.DownloadState.DownloadCancelled ?? false
             primaryText: downloadItem?.downloadFileName ?? ""
             downloadText: {
                 if (isCanceled) {
@@ -52,7 +52,7 @@ Rectangle {
                 return "%1/%2".arg(Qt.locale().formattedDataSize(downloadItem?.receivedBytes ?? 0, 2, Locale.DataSizeTraditionalFormat)) //e.g. 14.4/109 MB
                               .arg(Qt.locale().formattedDataSize(downloadItem?.totalBytes ?? 0, 2, Locale.DataSizeTraditionalFormat))
             }
-            downloadComplete: downloadItem?.state === WebEngineDownloadRequest.DownloadCompleted ?? false
+            downloadComplete: downloadItem?.state === AbstractWebView.DownloadState.DownloadCompleted ?? false
             onItemClicked: {
                 openDownloadClicked(downloadComplete, index)
             }

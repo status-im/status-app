@@ -3,7 +3,6 @@ import QtWebEngine
 
 import StatusQ.Core.Theme
 
-import AppLayouts.Browser.provider.qml
 import "../views/ScriptUtils.js" as ScriptUtils
 
 AbstractWebView {
@@ -11,6 +10,8 @@ AbstractWebView {
 
     property bool enableJsLogs: false
     required property var localAccountSensitiveSettings
+    property var bookmarksStore
+    property var downloadsStore
 
     property var profile: ProfileManager.getProfile(root.profileParams)
 
@@ -83,7 +84,7 @@ AbstractWebView {
             case AbstractWebView.WebAction.PasteAndMatchStyle:
                 webView.triggerWebAction(WebEngineView.PasteAndMatchStyle); break
             default:
-                console.warn("WebEngineAdapter: Unknown web action:", action)
+                console.warn("WebViewAdapter: Unknown web action:", action)
         }
     }
 
@@ -171,7 +172,7 @@ AbstractWebView {
         onWindowCloseRequested: root.windowCloseRequested()
         onNewWindowRequested: (request) => {
             if (!request.userInitiated) {
-                console.warn("Warning: Blocked a popup window.");
+                console.warn("Warning: Blocked a popup window.")
             } else {
                 const makeCurrent = request.destination !== WebEngineNewWindowRequest.InNewBackgroundTab
                 root.newWindowRequested(makeCurrent, request.requestedUrl, (tab) => tab.acceptAsNewWindow(request))

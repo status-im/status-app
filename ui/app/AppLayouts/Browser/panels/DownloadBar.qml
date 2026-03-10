@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtWebEngine
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -8,6 +7,7 @@ import StatusQ.Controls
 
 import utils
 
+import AppLayouts.Browser.adapters
 import AppLayouts.Browser.controls
 
 Rectangle {
@@ -44,8 +44,8 @@ Rectangle {
                 readonly property var downloadItem: downloadsModel.downloads[index]
 
                 isPaused: downloadItem?.isPaused ?? false
-                isCanceled: downloadItem?.state === WebEngineDownloadRequest.DownloadCancelled ?? false
-                downloadComplete: downloadItem?.state === WebEngineDownloadRequest.DownloadCompleted ?? false
+                isCanceled: downloadItem?.state === AbstractWebView.DownloadState.DownloadCancelled ?? false
+                downloadComplete: downloadItem?.state === AbstractWebView.DownloadState.DownloadCompleted ?? false
                 primaryText: downloadItem?.downloadFileName ?? ""
                 downloadText: {
                     if (isCanceled) {

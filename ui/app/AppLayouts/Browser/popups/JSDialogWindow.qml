@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtWebEngine
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -11,6 +10,8 @@ import shared.controls
 import shared.popups
 
 import utils
+
+import AppLayouts.Browser.adapters
 
 // TODO: replace with StatusDialog
 ModalPopup {
@@ -28,10 +29,10 @@ ModalPopup {
     Component.onCompleted: {
         root.title = request.securityOrigin;
         message.text = request.message;
-        if(request.type === JavaScriptDialogRequest.DialogTypeAlert) {
+        if(request.type === AbstractWebView.JavaScriptDialogType.DialogTypeAlert) {
             cancelButton.visible = false;
         }
-        if(request.type === JavaScriptDialogRequest.DialogTypePrompt) {
+        if(request.type === AbstractWebView.JavaScriptDialogType.DialogTypePrompt) {
             prompt.text = request.defaultText;
             prompt.visible = true;
             svMessage.height = 75;

@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtWebEngine
 
 import QtModelsToolkit
 
@@ -50,7 +49,6 @@ StatusSectionLayout {
 
     property bool isDebugEnabled: false
     property string platformOS: Qt.platform.os
-    property bool useWebViewAdapter: false
 
     signal sendToRecipientRequested(string address)
 
@@ -277,9 +275,9 @@ StatusSectionLayout {
 
     BrowserWebViewContext {
         id: webViewContext
-        useMobileAdapter: root.useWebViewAdapter
         thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
         isDebugEnabled: root.isDebugEnabled
+        isMobile: root.isMobile
         browserSettings: localAccountSensitiveSettings
         webChannel: connectorBridge.channel
         hostStackLayout: webStackView
