@@ -237,6 +237,7 @@ Item {
 
                 StatusButton {
                     id: acceptButton
+                    objectName: "MemberListItem_AcceptButton"
                     anchors.verticalCenter: parent.verticalCenter
                     visible: acceptButtonVisible
                     text: qsTr("Accept")
@@ -251,6 +252,7 @@ Item {
 
                 StatusButton {
                     id: rejectButton
+                    objectName: "MemberListItem_RejectButton"
                     visible: rejectButtonVisible
                     text: qsTr("Reject")
                     type: StatusBaseButton.Type.Danger
