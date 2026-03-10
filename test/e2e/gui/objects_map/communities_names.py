@@ -110,10 +110,18 @@ communityOverviewSettingsCommunityDescription_StatusBaseText = {"container": mai
 mainWindow_Edit_Community_StatusButton = {"container": statusDesktop_mainWindow, "objectName": "communityOverviewSettingsEditCommunityButton", "type": "StatusButton", "visible": True}
 
 # Members Settings View
-mainWindow_MembersSettingsPanel = {"container": mainWindow_communityLoader_Loader, "type": "MembersSettingsPanel", "unnamed": 1, "visible": True}
+manageCommunityMembersTab = {"container": statusDesktop_mainWindow, "id": "membersTabBar", "type": "StatusTabBar", "unnamed": 1, "visible": True}
+membersTab_AllMembers = {"container": manageCommunityMembersTab, "objectName": "allMembersButton", "type": "StatusTabButton", "visible": True}
+membersTab_PendingRequests = {"container": manageCommunityMembersTab, "objectName": "pendingRequestsButton", "type": "StatusTabButton", "visible": True}
+membersTabPanel = {"container": statusDesktop_mainWindow, "type": "MembersTabPanel", "unnamed": 1, "visible": True}
 membersListViews_ListView = {"container": statusDesktop_mainWindow, "objectName": "CommunityMembersTabPanel_MembersListViews", "type": "StatusListView", "visible": True}
 memberItem_StatusMemberListItem = {"container": membersListViews_ListView, "id": "memberItem", "type": "ContactListItemDelegate", "unnamed": 1, "visible": True}
 communitySettings_MembersTab_Member_Kick_Button = {"container": membersListViews_ListView, "objectName": "MemberListItem_KickButton", "type": "StatusButton", "visible": True}
+
+
+acceptMemberButton = {"container": memberItem_StatusMemberListItem, "objectName": "MemberListItem_AcceptButton", "type": "StatusButton", "visible": True}
+rejectMemberButton = {"container": memberItem_StatusMemberListItem, "objectName": "MemberListItem_RejectButton", "type": "StatusButton", "visible": True}
+
 memberItem_Ban_StatusButton = {"container": membersListViews_ListView, "objectName": "MemberListItem_BanButton", "type": "StatusButton", "visible": True}
 memberItem_Unban_StatusButton = {"container": membersListViews_ListView, "objectName": "MemberListItem_UnbanButton", "type": "StatusButton", "visible": True}
 

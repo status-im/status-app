@@ -161,6 +161,11 @@ class CreateNewCommunityPopup(QObject):
         assert not self.is_request_to_join_checkbox_checked()
         assert not self.is_pin_messages_checkbox_checked()
 
+    @allure.step('Set request to join checkbox')
+    def set_request_to_join(self, value: bool):
+        self._scroll.vertical_scroll_down(self._request_to_join_checkbox)
+        self._request_to_join_checkbox.set(value)
+
     @allure.step('Verify community create popup fields and create community without file upload dialog usage')
     def create_community(self, community_data: CommunityData):
         self.set_name(community_data.name)
@@ -174,7 +179,11 @@ class CreateNewCommunityPopup(QObject):
         # self.verify_color(community_data.color)
         self.set_tags(community_data.tags)
         self.verify_tags(community_data.tags)
-        self.verify_checkboxes_values()
+        request_to_join = getattr(community_data, 'request_to_join', False)
+        if request_to_join:
+            self.set_request_to_join(True)
+        else:
+            self.verify_checkboxes_values()
         self.next_button.click()
         self.set_intro(community_data.introduction)
         self.set_outro(community_data.leaving_message)

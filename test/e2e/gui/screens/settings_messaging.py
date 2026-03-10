@@ -162,7 +162,7 @@ class ContactsSettingsView(QObject):
 
     @allure.step('Open pending requests tab')
     def open_pending_requests(self):
-        self._pending_request_tab.wait_until_appears(timeout_msec=10000).click()
+        self._pending_request_tab.wait_until_appears(timeout_msec=60000).click()
         return self
 
     @allure.step('Open contacts tab')

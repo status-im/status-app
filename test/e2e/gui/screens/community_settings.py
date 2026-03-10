@@ -260,15 +260,13 @@ class EditCommunityView(QObject):
         self._save_changes_button.click()
         self.wait_until_hidden()
 
-
-class MembersView(QObject):
+class PendingRequestsTabView(QObject):
 
     def __init__(self):
-        super().__init__(communities_names.mainWindow_MembersSettingsPanel)
+        super().__init__(communities_names.membersTabPanel)
         self.member_list_item = QObject(communities_names.memberItem_StatusMemberListItem)
-        self.kick_member_button = Button(communities_names.communitySettings_MembersTab_Member_Kick_Button)
-        self.ban_member_button = Button(communities_names.memberItem_Ban_StatusButton)
-        self.unban_member_button = Button(communities_names.memberItem_Unban_StatusButton)
+        self.accept_member_button = Button(communities_names.acceptMemberButton)
+        self.reject_member_button = Button(communities_names.rejectMemberButton)
 
     @property
     @allure.step('Get community members names')
@@ -291,6 +289,89 @@ class MembersView(QObject):
                 if member_name in str(_member.userName):
                     member = _member
                     break
+            if time.monotonic() - started_at > configs.timeouts.MESSAGING_TIMEOUT_SEC:
+                raise LookupError(f'Member not found')
+        return member
+
+
+
+    @allure.step('Accept pending community join request')
+    def accept_pending_request(self, member_name: str, attempts: int = 3):
+        for _ in range(attempts):
+            try:
+                member = self.get_member_object(member_name)
+                QObject(real_name=driver.objectMap.realName(member)).hover()
+                time.sleep(0.5)  # wait for Accept button to appear on hover
+                member_container = driver.objectMap.realName(member)
+                self.accept_member_button.real_name['container'] = member_container
+                self.accept_member_button.wait_until_appears(timeout_msec=5000)
+                self.accept_member_button.hover()
+                self.accept_member_button.native_mouse_click()
+                return self
+            except Exception:
+                pass
+        raise LookupError(f"Could not accept pending request for {member_name} within {attempts} attempts")
+
+    @allure.step('Decline pending community join request')
+    def decline_pending_request(self, member_name: str, attempts: int = 3):
+        for _ in range(attempts):
+            try:
+                member = self.get_member_object(member_name)
+                QObject(real_name=driver.objectMap.realName(member)).hover()
+                time.sleep(0.5)  # wait for Reject button to appear on hover
+                member_container = driver.objectMap.realName(member)
+                self.reject_member_button.real_name['container'] = member_container
+                self.reject_member_button.wait_until_appears(timeout_msec=5000)
+                self.reject_member_button.hover()
+                self.reject_member_button.native_mouse_click()
+                return self
+            except Exception:
+                pass
+        raise LookupError(f"Could not decline pending request for {member_name} within {attempts} attempts")
+
+class MembersView(QObject):
+
+    def __init__(self):
+        super().__init__(communities_names.manageCommunityMembersTab)
+        self._all_members_tab_button = Button(
+            communities_names.membersTab_AllMembers)
+        self._pending_requests_tab_button = Button(
+            communities_names.membersTab_PendingRequests)
+        self.member_list_item = QObject(communities_names.memberItem_StatusMemberListItem)
+        self.kick_member_button = Button(communities_names.communitySettings_MembersTab_Member_Kick_Button)
+        self.ban_member_button = Button(communities_names.memberItem_Ban_StatusButton)
+        self.unban_member_button = Button(communities_names.memberItem_Unban_StatusButton)
+
+    @property
+    @allure.step('Get community members names')
+    def members_names(self) -> typing.List[str]:
+        names = []
+        for member in driver.findAllObjects(self.member_list_item.real_name):
+            try:
+                name = getattr(member, 'userName', None) or getattr(member, 'title', None)
+                if name is not None:
+                    names.append(str(name))
+            except (AttributeError, RuntimeError, TypeError):
+                continue
+        return names
+
+    @allure.step('Get community member objects')
+    def get_member_objects(self) -> typing.List:
+        return list(driver.findAllObjects(self.member_list_item.real_name))
+
+    @allure.step('Find community member by name')
+    def get_member_object(self, member_name: str):
+        member = None
+        started_at = time.monotonic()
+        while member is None:
+            for _member in self.get_member_objects():
+                try:
+                    name = getattr(_member, 'userName', None) or getattr(_member, 'title', None)
+                    if name and member_name in str(name):
+                        member = _member
+                        break
+                except (AttributeError, RuntimeError, TypeError):
+                    continue
             if time.monotonic() - started_at > configs.timeouts.MESSAGING_TIMEOUT_SEC:
                 raise LookupError(f'Member not found')
         return member
@@ -333,6 +414,15 @@ class MembersView(QObject):
             except Exception:
                 pass
         raise LookupError(f"Could not unban member within {attempts} attempts")
+
+    @allure.step('Open all members tab')
+    def open_all_members_tab(self):
+        self._all_members_tab_button.click()
+
+    @allure.step('Open pending requests tab')
+    def open_pending_requests_tab(self) -> PendingRequestsTabView:
+        self._pending_requests_tab_button.wait_until_appears(timeout_msec=60000).click()
+        return PendingRequestsTabView().wait_until_appears()
 
 
 class AirdropsView(QObject):
