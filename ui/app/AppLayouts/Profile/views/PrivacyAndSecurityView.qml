@@ -15,7 +15,6 @@ SettingsContentBase {
     id: root
 
     property bool isStatusNewsViaRSSEnabled
-    required property bool isCentralizedMetricsEnabled
     required property bool thirdpartyServicesEnabled
     required property bool privacyModeFeatureEnabled
     required property var whitelistedDomainsModel
@@ -27,10 +26,6 @@ SettingsContentBase {
     signal openThirdpartyServicesInfoPopupRequested()
     signal openDiscussPageRequested()
     signal removeWhitelistedDomain(int index)
-
-    function refreshSwitch() {
-        enableMetricsSwitch.checked = Qt.binding(function() { return root.isCentralizedMetricsEnabled })
-    }
 
     function resetStack() {
             stackContainer.currentIndex = 0
@@ -101,35 +96,6 @@ SettingsContentBase {
                     .arg(Utils.getStyledLink("Discuss page", "#", tagPrimaryLabel.hoveredLink, Theme.palette.primaryColor1, Theme.palette.primaryColor1, false))
                 tagPrimaryLabel.onLinkActivated: root.openDiscussPageRequested()
                 visible: root.privacyModeFeatureEnabled
-            }
-
-            // Divider
-            Rectangle {
-                Layout.preferredWidth: root.contentWidth
-                Layout.preferredHeight: 1
-                color: Theme.palette.baseColor2
-                visible: root.privacyModeFeatureEnabled
-            }
-
-            StatusListItem {
-                Layout.preferredWidth: root.contentWidth
-                title: qsTr("Share usage data with Status")
-                subTitle: qsTr("From all profiles on device")
-                components: [
-                    StatusSwitch {
-                        id: enableMetricsSwitch
-                        checked: root.isCentralizedMetricsEnabled
-                        onToggled: {
-                            Global.openMetricsEnablePopupRequested(Constants.metricsEnablePlacement.privacyAndSecurity, null)
-                            refreshSwitch()
-                        }
-                    }
-                ]
-                onClicked: {
-                    Global.openMetricsEnablePopupRequested(Constants.metricsEnablePlacement.privacyAndSecurity, null)
-                    refreshSwitch()
-                }
-                enabled: root.thirdpartyServicesEnabled
             }
 
             // Divider

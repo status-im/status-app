@@ -8236,61 +8236,6 @@ Tarifa L2: %2</translation>
     </message>
 </context>
 <context>
-    <name>HelpUsImproveStatusPage</name>
-    <message>
-        <source>Help us improve Status</source>
-        <translation>Ayúdanos a mejorar Status</translation>
-    </message>
-    <message>
-        <source>Your usage data helps us make Status better</source>
-        <translation>Tus datos de uso nos ayudan a mejorar Status</translation>
-    </message>
-    <message>
-        <source>Share usage data</source>
-        <translation>Compartir datos de uso</translation>
-    </message>
-    <message>
-        <source>Got it</source>
-        <translation>Entendido</translation>
-    </message>
-    <message>
-        <source>We’ll collect anonymous analytics and diagnostics from your app to enhance Status’s quality and performance.</source>
-        <translation>Recopilaremos análisis y diagnósticos anónimos de tu aplicación para mejorar la calidad y el rendimiento de Status.</translation>
-    </message>
-    <message>
-        <source>Gather basic usage data, like clicks and page views</source>
-        <translation>Recopilar datos básicos de uso, como clics y visualizaciones de página</translation>
-    </message>
-    <message>
-        <source>Gather core diagnostics, like bandwidth usage</source>
-        <translation>Recopilar diagnósticos principales, como el uso de ancho de banda</translation>
-    </message>
-    <message>
-        <source>Never collect your profile information or wallet address</source>
-        <translation>Nunca recopilamos tu información de perfil o dirección de billetera</translation>
-    </message>
-    <message>
-        <source>Never collect information you input or send</source>
-        <translation>Nunca recopilamos la información que introduces o envías</translation>
-    </message>
-    <message>
-        <source>Never sell your usage analytics data</source>
-        <translation>Nunca vendemos tus datos de análisis de uso</translation>
-    </message>
-    <message>
-        <source>For more details and other cases where we handle your data, refer to our %1.</source>
-        <translation>Para más detalles y otros casos en los que manejamos tus datos, consulta nuestra %1.</translation>
-    </message>
-    <message>
-        <source>Privacy Policy</source>
-        <translation>Política de privacidad</translation>
-    </message>
-    <message>
-        <source>Skip sharing</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>Helpers</name>
     <message>
         <source>Community minted</source>
@@ -11571,61 +11516,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>MetricsEnablePopup</name>
-    <message>
-        <source>Help us improve Status</source>
-        <translation>Ayúdanos a mejorar Status</translation>
-    </message>
-    <message>
-        <source>Collecting usage data helps us improve Status.</source>
-        <translation>Recopilar datos de uso nos ayuda a mejorar Status.</translation>
-    </message>
-    <message>
-        <source>What we will receive:</source>
-        <translation>Lo que recibiremos:</translation>
-    </message>
-    <message>
-        <source> •  IP address
- •  Universally Unique Identifiers of device
- •  Logs of actions within the app, including button presses and screen visits</source>
-        <translation> •  Dirección IP
- •  Identificadores únicos universales del dispositivo
- •  Registros de acciones dentro de la aplicación, incluyendo pulsaciones de botones y visitas a pantallas</translation>
-    </message>
-    <message>
-        <source>What we won’t receive:</source>
-        <translation>Lo que no recibiremos:</translation>
-    </message>
-    <message>
-        <source> •  Your profile information
- •  Your addresses
- •  Information you input and send</source>
-        <translation> •  Tu información de perfil
- •  Tus direcciones
- •  Información que facilitas y envías</translation>
-    </message>
-    <message>
-        <source>Usage data will be shared from all profiles added to device. %1 %2</source>
-        <translation>Los datos de uso se compartirán de todos los perfiles agregados al dispositivo. %1 %2</translation>
-    </message>
-    <message>
-        <source>Sharing usage data can be turned off anytime in Settings / Privacy and Security.</source>
-        <translation>Compartir datos de uso se puede desactivar en cualquier momento en Configuración / Privacidad y Seguridad.</translation>
-    </message>
-    <message>
-        <source>For more details refer to our %1.</source>
-        <translation>Para más detalles, consulta nuestro %1.</translation>
-    </message>
-    <message>
-        <source>Do not share</source>
-        <translation>No compartir</translation>
-    </message>
-    <message>
-        <source>Share usage data</source>
-        <translation>Compartir datos de uso</translation>
-    </message>
-</context>
-<context>
     <name>MintTokensFooterPanel</name>
     <message>
         <source>Send Owner token to transfer %1 Community ownership</source>
@@ -13664,14 +13554,6 @@ al cargar</translation>
     <message>
         <source>Share feedback or suggest improvements on our %1.</source>
         <translation>Comparte comentarios o sugiere mejoras en nuestro %1.</translation>
-    </message>
-    <message>
-        <source>Share usage data with Status</source>
-        <translation>Compartir datos de uso con Status</translation>
-    </message>
-    <message>
-        <source>From all profiles on device</source>
-        <translation>De todos los perfiles en el dispositivo</translation>
     </message>
     <message>
         <source>Trusted sites</source>

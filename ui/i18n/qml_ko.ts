@@ -8208,61 +8208,6 @@ L2 수수료: %2</translation>
     </message>
 </context>
 <context>
-    <name>HelpUsImproveStatusPage</name>
-    <message>
-        <source>Help us improve Status</source>
-        <translation>Status를 더 좋게 만드는 데 함께해 주세요</translation>
-    </message>
-    <message>
-        <source>Your usage data helps us make Status better</source>
-        <translation>사용 데이터는 Status를 더 나아지게 만드는 데 도움이 됩니다</translation>
-    </message>
-    <message>
-        <source>Share usage data</source>
-        <translation>사용 데이터 공유</translation>
-    </message>
-    <message>
-        <source>Got it</source>
-        <translation>확인했습니다</translation>
-    </message>
-    <message>
-        <source>We’ll collect anonymous analytics and diagnostics from your app to enhance Status’s quality and performance.</source>
-        <translation>Status의 품질과 성능을 개선하기 위해, 앱에서 익명 분석 및 진단 데이터를 수집합니다.</translation>
-    </message>
-    <message>
-        <source>Gather basic usage data, like clicks and page views</source>
-        <translation>클릭, 페이지 조회수 같은 기본 사용 데이터를 수집합니다</translation>
-    </message>
-    <message>
-        <source>Gather core diagnostics, like bandwidth usage</source>
-        <translation>대역폭 사용량 같은 핵심 진단 정보 수집</translation>
-    </message>
-    <message>
-        <source>Never collect your profile information or wallet address</source>
-        <translation>프로필 정보나 지갑 주소를 절대 수집하지 않습니다</translation>
-    </message>
-    <message>
-        <source>Never collect information you input or send</source>
-        <translation>입력하거나 전송한 정보를 절대 수집하지 않습니다</translation>
-    </message>
-    <message>
-        <source>Never sell your usage analytics data</source>
-        <translation>사용 분석 데이터는 절대 판매하지 않습니다</translation>
-    </message>
-    <message>
-        <source>For more details and other cases where we handle your data, refer to our %1.</source>
-        <translation>자세한 내용과 우리가 데이터를 처리하는 다른 경우에 대해서는 %1을 참조하세요.</translation>
-    </message>
-    <message>
-        <source>Privacy Policy</source>
-        <translation>개인 정보 보호 정책</translation>
-    </message>
-    <message>
-        <source>Skip sharing</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>Helpers</name>
     <message>
         <source>Community minted</source>
@@ -11538,61 +11483,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>MetricsEnablePopup</name>
-    <message>
-        <source>Help us improve Status</source>
-        <translation>Status 개선에 함께해 주세요</translation>
-    </message>
-    <message>
-        <source>Collecting usage data helps us improve Status.</source>
-        <translation>사용 데이터 수집은 Status를 개선하는 데 도움이 됩니다.</translation>
-    </message>
-    <message>
-        <source>What we will receive:</source>
-        <translation>우리가 받게 될 것:</translation>
-    </message>
-    <message>
-        <source> •  IP address
- •  Universally Unique Identifiers of device
- •  Logs of actions within the app, including button presses and screen visits</source>
-        <translation> •  IP 주소
- •  기기의 범용 고유 식별자(UUID)
- •  버튼 클릭, 화면 방문 등 앱 내 작업 로그</translation>
-    </message>
-    <message>
-        <source>What we won’t receive:</source>
-        <translation>우리가 받지 않는 것:</translation>
-    </message>
-    <message>
-        <source> •  Your profile information
- •  Your addresses
- •  Information you input and send</source>
-        <translation> •  프로필 정보
- •  주소
- •  입력하고 보내는 정보</translation>
-    </message>
-    <message>
-        <source>Usage data will be shared from all profiles added to device. %1 %2</source>
-        <translation>기기에 추가된 모든 프로필의 사용 데이터가 공유됩니다. %1 %2</translation>
-    </message>
-    <message>
-        <source>Sharing usage data can be turned off anytime in Settings / Privacy and Security.</source>
-        <translation>사용 데이터 공유는 설정 / 개인정보 및 보안에서 언제든지 끌 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>For more details refer to our %1.</source>
-        <translation>자세한 내용은 %1을(를) 참고하세요.</translation>
-    </message>
-    <message>
-        <source>Do not share</source>
-        <translation>공유하지 마세요</translation>
-    </message>
-    <message>
-        <source>Share usage data</source>
-        <translation>사용 데이터 공유</translation>
-    </message>
-</context>
-<context>
     <name>MintTokensFooterPanel</name>
     <message>
         <source>Send Owner token to transfer %1 Community ownership</source>
@@ -13626,14 +13516,6 @@ to load</source>
     <message>
         <source>Share feedback or suggest improvements on our %1.</source>
         <translation>%1에서 피드백을 공유하거나 개선 사항을 제안하세요.</translation>
-    </message>
-    <message>
-        <source>Share usage data with Status</source>
-        <translation>Status와 사용 데이터 공유</translation>
-    </message>
-    <message>
-        <source>From all profiles on device</source>
-        <translation>이 기기의 모든 프로필에서</translation>
     </message>
     <message>
         <source>Trusted sites</source>

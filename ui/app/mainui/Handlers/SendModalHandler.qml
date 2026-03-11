@@ -528,14 +528,6 @@ QtObject {
                 if(isValidParameter(root.simpleSendParams.transferOwnership)) {
                     transferOwnership = root.simpleSendParams.transferOwnership
                 }
-                let metricsData = ""
-                if(isValidParameter(root.simpleSendParams.openReason)) {
-                    metricsData = root.simpleSendParams.openReason
-                } else {
-                    metricsData = handler.getSendTypeString()
-                }
-
-                handler.sendMetricsEvent("popup opened", metricsData)
             }
 
             function isValidParameter(param) {
@@ -543,7 +535,6 @@ QtObject {
             }
 
             onClosed: {
-                handler.sendMetricsEvent("popup closed", "")
                 destroy()
                 root.transactionStoreNew.resetData()
             }
@@ -568,7 +559,6 @@ QtObject {
             }
 
             onReviewSendClicked: {
-                handler.sendMetricsEvent("review send clicked", handler.getSendTypeString())
                 if(sendType === Constants.SendType.ERC1155Transfer ||
                         sendType === Constants.SendType.ERC721Transfer) {
                     const selectedCollectible =
@@ -687,10 +677,8 @@ QtObject {
                             return
                         }
                         simpleSendModal.routerError = error
-                        sendMetricsEvent("transaction error")
                         return
                     }
-                    sendMetricsEvent("transaction successful")
                     simpleSendModal.close()
                 }
 
@@ -700,47 +688,6 @@ QtObject {
                     }
                     // TODO: commented this out as closing this popup rests the variables on nim side and tx fails
                     // simpleSendModal.close()
-                }
-
-                function sendMetricsEvent(eventName, data = "") {
-                    Global.addCentralizedMetricIfEnabled("send", {subEvent: eventName, data: data})
-                }
-
-                function getSendTypeString() {
-                    switch(simpleSendModal.sendType) {
-                        case Constants.SendType.Transfer:
-                            return "Transfer"
-                        case Constants.SendType.ENSRegister:
-                            return "ENS Register"
-                        case Constants.SendType.ENSRelease:
-                            return "ENS Release"
-                        case Constants.SendType.ENSSetPubKey:
-                            return "ENS Set Public Key"
-                        case Constants.SendType.StickersBuy:
-                            return "Stickers Buy"
-                        case Constants.SendType.ERC721Transfer:
-                            return "ERC721 Transfer"
-                        case Constants.SendType.ERC1155Transfer:
-                            return "ERC1155 Transfer"
-                        case Constants.SendType.CommunityBurn:
-                            return "Community Burn"
-                        case Constants.SendType.CommunityDeployAssets:
-                            return "Community Deploy Assets"
-                        case Constants.SendType.CommunityDeployCollectibles:
-                            return "Community Deploy Collectibles"
-                        case Constants.SendType.CommunityDeployOwnerToken:
-                            return "Community Deploy Owner Token"
-                        case Constants.SendType.CommunityMintTokens:
-                            return "Community Mint Tokens"
-                        case Constants.SendType.CommunityRemoteBurn:
-                            return "Community Remote Burn"
-                        case Constants.SendType.CommunitySetSignerPubKey:
-                            return "Community Set Signer Public Key"
-                        case Constants.SendType.Approve:
-                            return "Approve"
-                        default:
-                            return ""
-                    }
                 }
 
                 readonly property var recipientViewAdaptor: RecipientViewAdaptor {
@@ -1192,7 +1139,6 @@ QtObject {
                         handler.refreshTxSettings.connect(refreshTxSettings)
                     }
 
-                    onOpened: handler.sendMetricsEvent("sign modal opened")
                     closeHandler: function() {
                         handler.handleReject()
                         close()
@@ -1229,12 +1175,10 @@ QtObject {
                     }
 
                     onRejected: {
-                        handler.sendMetricsEvent("sign modal rejected")
                         handler.handleReject()
                     }
 
                     onAccepted: {
-                        handler.sendMetricsEvent("sign modal accepted")
                         if (handler.reviewingLastTxPath) {
                             root.transactionStoreNew.authenticateAndTransfer(handler.uuid, simpleSendModal.selectedAccountAddress)
                             return

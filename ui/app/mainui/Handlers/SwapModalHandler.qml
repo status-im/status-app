@@ -64,10 +64,6 @@ QtObject {
     readonly property QtObject _d: QtObject {
         id: d
 
-        function addMetricsEvent(subEvent) {
-            Global.addCentralizedMetricIfEnabled("swap", {subEvent: subEvent})
-        }
-
         function isValidParameter(param) {
             return param !== undefined && param !== null
         }
@@ -76,12 +72,6 @@ QtObject {
             onTransactionSent: (returnedUuid, chainId, approvalTx, txHash, error) => {
                                    if(returnedUuid !== d.lastUuid || approvalTx) {
                                        return
-                                   }
-
-                                   if (!!error) {
-                                       d.addMetricsEvent("transaction error")
-                                   } else {
-                                       d.addMetricsEvent("transaction successful")
                                    }
                                }
         }
@@ -109,7 +99,6 @@ QtObject {
             }
             swapInputParamsForm: d.swapInputParams
             loginType: root.rootStore.getLoginType()
-            onAddMetricsEvent: (subEvent) => d.addMetricsEvent(subEvent)
             onClosed: {
                 destroy()
                 swapInputParamsForm.resetFormData()

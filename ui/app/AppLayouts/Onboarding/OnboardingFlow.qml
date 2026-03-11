@@ -67,7 +67,6 @@ OnboardingStackView {
     signal recoverKeycardRequested(string pin, string seedphrase)
     signal setPinRequested(string pin)
     signal enableBiometricsRequested(bool enable)
-    signal shareUsageDataRequested(bool enabled)
     signal syncProceedWithConnectionString(string connectionString)
     signal seedphraseSubmitted(string seedphrase)
     signal keyUidSubmitted(string keyUid)
@@ -191,13 +190,7 @@ OnboardingStackView {
         }
     }
 
-    function startWithProxy(component) {
-        const page = root.push(helpUsImproveStatusPage)
 
-        page.shareUsageDataRequested.connect(enabled => {
-            root.push(component)
-        })
-    }
 
     Component {
         id: welcomePage
@@ -210,8 +203,8 @@ OnboardingStackView {
             privacyModeFeatureEnabled: root.privacyModeFeatureEnabled
             thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
-            onCreateProfileRequested: startWithProxy(createProfilePage)
-            onLoginRequested: startWithProxy(loginPage)
+            onCreateProfileRequested: root.push(createProfilePage)
+            onLoginRequested: root.push(loginPage)
 
             onPrivacyPolicyRequested: d.openPrivacyPolicyPopup()
             onTermsOfUseRequested: d.openTermsOfUsePopup()
@@ -248,8 +241,8 @@ OnboardingStackView {
             }
             onDismissBiometricsRequested: root.dismissBiometricsRequested()
             onLoginRequested: (keyUid, method, data) => root.loginRequested(keyUid, method, data)
-            onOnboardingCreateProfileFlowRequested: startWithProxy(createProfilePage)
-            onOnboardingLoginFlowRequested: startWithProxy(loginPage)
+            onOnboardingCreateProfileFlowRequested: root.push(createProfilePage)
+            onOnboardingLoginFlowRequested: root.push(loginPage)
             onLostKeycardFlowRequested: {
                 root.keyUidSubmitted(loginScreen.selectedProfileKeyId)
                 root.push(keycardLostPage)
@@ -273,15 +266,6 @@ OnboardingStackView {
                 property: "loginScreen"
                 value: loginScreen
             }
-        }
-    }
-
-    Component {
-        id: helpUsImproveStatusPage
-
-        HelpUsImproveStatusPage {
-            onPrivacyPolicyRequested: d.openPrivacyPolicyPopup()
-            onShareUsageDataRequested: (enabled) => root.shareUsageDataRequested(enabled)
         }
     }
 
@@ -549,8 +533,7 @@ OnboardingStackView {
             onLoadMnemonicRequested: root.loadMnemonicRequested()
 
             onCreateProfileWithoutKeycardRequested: {
-                const page = root.find(item => item instanceof HelpUsImproveStatusPage)
-                root.replace(page, createProfilePage, StackView.PopTransition)
+                root.push(createProfilePage)
             }
 
             onSeedphraseSubmitted: (seedphrase) => root.seedphraseSubmitted(seedphrase)

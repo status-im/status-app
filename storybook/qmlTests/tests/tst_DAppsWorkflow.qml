@@ -311,11 +311,6 @@ Item {
 
         DAppsModule {
             currenciesStore: CurrenciesStore {}
-            dappsMetrics: DAppsMetrics {
-                metricsStore: MetricsStore {
-                    function addCentralizedMetricIfEnabled(eventName, eventValue = null) {}
-                }
-            }
             groupedAccountAssetsModel: assetsStoreMock.groupedAccountAssetsModel
         }
     }

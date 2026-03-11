@@ -46,7 +46,6 @@ Page {
 
     signal changeLanguageRequested(string newLanguageCode)
 
-    signal shareUsageDataRequested(bool enabled)
     signal skippedBiometricFlow()
 
     // flow: Onboarding.OnboardingFlow
@@ -196,7 +195,6 @@ Page {
         onLoadMnemonicRequested: d.loadMnemonic()
         onRecoverKeycardRequested: (pin, seedphrase) => root.onboardingStore.recoverKeycardRequested(pin, seedphrase)
         onAuthorizationRequested: (pin) => d.authorize(pin)
-        onShareUsageDataRequested: (enabled) => root.shareUsageDataRequested(enabled)
         onPerformKeycardFactoryResetRequested: root.onboardingStore.startKeycardFactoryReset()
         onSyncProceedWithConnectionString: (connectionString) =>
             root.onboardingStore.inputConnectionStringForBootstrapping(connectionString)

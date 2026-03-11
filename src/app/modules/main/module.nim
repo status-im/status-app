@@ -1241,15 +1241,6 @@ method activeSectionSet*[T](self: Module[T], sectionId: string, skipSavingInSett
     of BROWSER_SECTION_ID:
       self.browserSectionModule.onActivated()
 
-  # If metrics are enabled, send a navigation event
-  var sectionIdToSend = sectionId
-  if sectionId == singletonInstance.userProfile.getPubKey():
-    sectionIdToSend = CHAT_SECTION_NAME
-  elif sectionId.startsWith("0x"):
-    # This is a community
-    sectionIdToSend = "community"
-  singletonInstance.globalEvents.addCentralizedMetricIfEnabled("navigation", $(%*{"viewId": sectionIdToSend}))
-
   self.view.model().setActiveSection(sectionId)
   self.view.activeSectionSet(item)
 

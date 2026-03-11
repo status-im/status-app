@@ -14,7 +14,6 @@ from driver.objects_access import walk_children
 from gui.components.onboarding.language_selector import LanguageSelector
 from gui.components.onboarding.login_by_syncing_checklist import LogInBySyncingDialog
 from gui.components.onboarding.login_users_list_popup import OnboardingLoginUsersPopup
-from gui.components.onboarding.share_usage_data_popup import HelpUsImproveStatusView
 from gui.components.os.open_file_dialogs import OpenFileDialog
 from gui.components.picture_edit_popup import PictureEditPopup
 from gui.components.splash_screen import SplashScreen
@@ -46,17 +45,11 @@ class OnboardingWelcomeToStatusView(QObject):
     @allure.step('Open Create your profile view')
     def open_create_your_profile_view(self) -> 'CreateYourProfileViewOnboarding':
         self.create_profile_button.click()
-        help_us_view = HelpUsImproveStatusView()
-        info_popup = help_us_view.open_info_popup()
-        assert info_popup
-        info_popup.close()
-        help_us_view.not_now_button.click()
         return CreateYourProfileViewOnboarding().wait_until_appears()
 
     @allure.step('Open Sign by syncing form')
     def sync_existing_user(self) -> 'OnboardingSyncCodeView':
         self.log_in_button.click()
-        HelpUsImproveStatusView().wait_until_appears().not_now_button.click()
         OnboardingLogIn().wait_until_appears().log_in_by_syncing_button.click()
         LogInBySyncingDialog().wait_until_appears().complete()
         return OnboardingSyncCodeView().wait_until_appears()
@@ -705,7 +698,6 @@ class ReturningLoginView(QObject):
     def add_existing_status_user(self):
         self.user_selector_button.click()
         OnboardingLoginUsersPopup().wait_until_appears().create_profile_button.click()
-        HelpUsImproveStatusView().not_now_button.click()
         return CreateYourProfileViewOnboarding().wait_until_appears()
 
     @allure.step('Select user by name')

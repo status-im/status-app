@@ -197,10 +197,6 @@ StatusDialog {
             }
         }
 
-        function addMetricsEvent(subEventName) {
-            Global.addCentralizedMetricIfEnabled(d.isBridgeTx ? "bridge" : "send", {subEvent: subEventName})
-        }
-
         function areInputParametersValid() {
             return !!popup.selectedAccount && !!popup.selectedAccount.address && !!holdingSelector.selectedItem
                 && recipientInputLoader.ready && (amountToSend.ready || d.isCollectiblesTransfer)
@@ -387,12 +383,10 @@ StatusDialog {
             .arg(popup.publicKey)
         }
 
-        d.addMetricsEvent("popup opened")
     }
 
     onClosed: {
         popup.store.resetData()
-        d.addMetricsEvent("popup closed")
     }
 
     header: Item {
@@ -844,7 +838,6 @@ StatusDialog {
         onNextButtonClicked: {
             d.sendError = ""
             popup.sendTransaction()
-            d.addMetricsEvent("next button clicked")
         }
     }
 
@@ -895,10 +888,8 @@ StatusDialog {
                     return
                 }
                 d.sendError = error
-                d.addMetricsEvent("tx send error")
                 return
             }
-            d.addMetricsEvent("tx send successful")
             popup.close()
         }
     }

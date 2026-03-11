@@ -16,8 +16,6 @@ const DEFAULT_CUSTOM_MOUSE_SCROLLING_ENABLED = false
 const LAS_KEY_TRANSLATIONS_ENABLED = "global/translations_enabled"
 const DEFAULT_LAS_KEY_TRANSLATIONS_ENABLED = true
 const LAS_KEY_REFRESH_TOKEN_ENABLED = "global/refresh_token_enabled"
-const LAS_KEY_METRICS_POPUP_SEEN = "global/metrics_popup_seen"
-const DEFAULT_LAS_KEY_METRICS_POPUP_SEEN = false
 const LS_KEY_SEEN_NETWORK_CHAINS = "global/seenNetworkChains"
 const DEFAULT_SEEN_NETWORK_CHAINS = "[]"
 const LAS_KEY_SELECTED_PROFILE_KEY_UID = "global/selected_profile_key_uid"
@@ -174,19 +172,6 @@ QtObject:
 
   QtProperty[string] walletConnectProjectID:
     read = getWalletConnectProjectID
-
-
-  proc refreshMetricsPopupSeen*(self: LocalAppSettings) {.signal.}
-  proc getMetricsPopupSeen*(self: LocalAppSettings): bool {.slot.} =
-    self.settings.value(LAS_KEY_METRICS_POPUP_SEEN, newQVariant(DEFAULT_LAS_KEY_METRICS_POPUP_SEEN)).boolVal
-  proc setMetricsPopupSeen*(self: LocalAppSettings, enabled: bool) {.slot.} =
-    self.settings.setValue(LAS_KEY_METRICS_POPUP_SEEN, newQVariant(enabled))
-    self.refreshMetricsPopupSeen()
-
-  QtProperty[bool] metricsPopupSeen:
-    read = getMetricsPopupSeen
-    write = setMetricsPopupSeen
-    notify = refreshMetricsPopupSeen
 
   proc seenNetworkChainsChanged*(self: LocalAppSettings) {.signal.}
 

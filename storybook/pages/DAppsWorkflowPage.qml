@@ -386,13 +386,6 @@ Item {
 
     DAppsModule {
         id: dappModule
-        dappsMetrics: DAppsMetrics {
-            metricsStore: SharedStores.MetricsStore {
-                function addCentralizedMetricIfEnabled(eventName, eventValue = null) {
-                    print ("Metrics Event", JSON.stringify(arguments))
-                }
-            }
-        }
         wcSdk: ConnectorWCSDK {
             enabled: settings.enableSDK && dappsService.walletConnectFeatureEnabled
             connectorController: mockConnectorController

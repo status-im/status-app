@@ -8263,61 +8263,6 @@ L2 poplatek: %2</translation>
     </message>
 </context>
 <context>
-    <name>HelpUsImproveStatusPage</name>
-    <message>
-        <source>Help us improve Status</source>
-        <translation>Pomozte nám vylepšit Status</translation>
-    </message>
-    <message>
-        <source>Your usage data helps us make Status better</source>
-        <translation>Vaše data o používání nám pomáhají vylepšovat Status</translation>
-    </message>
-    <message>
-        <source>Share usage data</source>
-        <translation>Sdílet data o používání</translation>
-    </message>
-    <message>
-        <source>Got it</source>
-        <translation>Rozumím</translation>
-    </message>
-    <message>
-        <source>We’ll collect anonymous analytics and diagnostics from your app to enhance Status’s quality and performance.</source>
-        <translation>Budeme shromažďovat anonymní analytická a diagnostická data z vaší aplikace, abychom zlepšili kvalitu a výkon Statusu.</translation>
-    </message>
-    <message>
-        <source>Gather basic usage data, like clicks and page views</source>
-        <translation>Shromažďovat základní data o používání, jako jsou kliknutí a zobrazení stránek</translation>
-    </message>
-    <message>
-        <source>Gather core diagnostics, like bandwidth usage</source>
-        <translation>Shromažďovat základní diagnostiku, jako je využití šířky pásma</translation>
-    </message>
-    <message>
-        <source>Never collect your profile information or wallet address</source>
-        <translation>Nikdy neshromažďovat informace o vašem profilu nebo adresu peněženky</translation>
-    </message>
-    <message>
-        <source>Never collect information you input or send</source>
-        <translation>Nikdy neshromažďovat informace, které zadáváte nebo odesíláte</translation>
-    </message>
-    <message>
-        <source>Never sell your usage analytics data</source>
-        <translation>Nikdy neprodávat vaše analytická data o používání</translation>
-    </message>
-    <message>
-        <source>For more details and other cases where we handle your data, refer to our %1.</source>
-        <translation>Pro více podrobností a další případy, kdy nakládáme s vašimi daty, viz naše %1.</translation>
-    </message>
-    <message>
-        <source>Privacy Policy</source>
-        <translation>Zásady ochrany osobních údajů</translation>
-    </message>
-    <message>
-        <source>Skip sharing</source>
-        <translation>Přeskočit sdílení</translation>
-    </message>
-</context>
-<context>
     <name>Helpers</name>
     <message>
         <source>Community minted</source>
@@ -11645,61 +11590,6 @@ selhalo</translation>
     </message>
 </context>
 <context>
-    <name>MetricsEnablePopup</name>
-    <message>
-        <source>Help us improve Status</source>
-        <translation>Pomozte nám zlepšit Status</translation>
-    </message>
-    <message>
-        <source>Collecting usage data helps us improve Status.</source>
-        <translation>Shromažďování údajů o používání nám pomáhá zlepšovat Status.</translation>
-    </message>
-    <message>
-        <source>What we will receive:</source>
-        <translation>Co obdržíme:</translation>
-    </message>
-    <message>
-        <source> •  IP address
- •  Universally Unique Identifiers of device
- •  Logs of actions within the app, including button presses and screen visits</source>
-        <translation> •  IP adresa
- •  Univerzálně jedinečné identifikátory zařízení (UUID)
- •  Záznamy akcí v aplikaci, včetně stisknutí tlačítek a návštěv obrazovek</translation>
-    </message>
-    <message>
-        <source>What we won’t receive:</source>
-        <translation>Co neobdržíme:</translation>
-    </message>
-    <message>
-        <source> •  Your profile information
- •  Your addresses
- •  Information you input and send</source>
-        <translation> •  Informace o vašem profilu
- •  Vaše adresy
- •  Informace, které zadáváte a odesíláte</translation>
-    </message>
-    <message>
-        <source>Usage data will be shared from all profiles added to device. %1 %2</source>
-        <translation>Údaje o používání budou sdíleny ze všech profilů přidaných do zařízení. %1 %2</translation>
-    </message>
-    <message>
-        <source>Sharing usage data can be turned off anytime in Settings / Privacy and Security.</source>
-        <translation>Sdílení údajů o používání lze kdykoli vypnout v Nastavení / Soukromí a zabezpečení.</translation>
-    </message>
-    <message>
-        <source>For more details refer to our %1.</source>
-        <translation>Další podrobnosti naleznete v našich %1.</translation>
-    </message>
-    <message>
-        <source>Do not share</source>
-        <translation>Nesdílet</translation>
-    </message>
-    <message>
-        <source>Share usage data</source>
-        <translation>Sdílet údaje o používání</translation>
-    </message>
-</context>
-<context>
     <name>MintTokensFooterPanel</name>
     <message>
         <source>Send Owner token to transfer %1 Community ownership</source>
@@ -13751,14 +13641,6 @@ selhalo</translation>
     <message>
         <source>Share feedback or suggest improvements on our %1.</source>
         <translation>Sdílejte zpětnou vazbu nebo navrhněte vylepšení na našem %1.</translation>
-    </message>
-    <message>
-        <source>Share usage data with Status</source>
-        <translation>Sdílet údaje o používání se Statusem</translation>
-    </message>
-    <message>
-        <source>From all profiles on device</source>
-        <translation>Ze všech profilů na zařízení</translation>
     </message>
     <message>
         <source>Trusted sites</source>

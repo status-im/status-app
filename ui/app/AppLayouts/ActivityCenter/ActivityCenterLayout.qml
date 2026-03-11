@@ -511,8 +511,6 @@ StatusSectionLayout {
                 d.callLaterMarkAsSeen()
                 root.activityCenterStore.markActivityCenterNotificationRead(parent.notification.id)
                 Global.openNewsMessagePopupRequested(parent.notification, parent.notification.id)
-                // TODO figure out if we want the link
-                Global.addCentralizedMetricIfEnabled("news-info-opened", {"news-link": parent.notification.link})
 
             }
             onMarkActivityCenterNotificationReadRequested: (notificationId) => {

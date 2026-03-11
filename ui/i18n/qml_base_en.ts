@@ -8221,61 +8221,6 @@ L2 fee: %2</source>
     </message>
 </context>
 <context>
-    <name>HelpUsImproveStatusPage</name>
-    <message>
-        <source>Help us improve Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your usage data helps us make Status better</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Share usage data</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Got it</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>We’ll collect anonymous analytics and diagnostics from your app to enhance Status’s quality and performance.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Gather basic usage data, like clicks and page views</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Gather core diagnostics, like bandwidth usage</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Never collect your profile information or wallet address</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Never collect information you input or send</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Never sell your usage analytics data</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>For more details and other cases where we handle your data, refer to our %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Privacy Policy</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Skip sharing</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>Helpers</name>
     <message>
         <source>Community minted</source>
@@ -11554,57 +11499,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>MetricsEnablePopup</name>
-    <message>
-        <source>Help us improve Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Collecting usage data helps us improve Status.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>What we will receive:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source> •  IP address
- •  Universally Unique Identifiers of device
- •  Logs of actions within the app, including button presses and screen visits</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>What we won’t receive:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source> •  Your profile information
- •  Your addresses
- •  Information you input and send</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Usage data will be shared from all profiles added to device. %1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sharing usage data can be turned off anytime in Settings / Privacy and Security.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>For more details refer to our %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Do not share</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Share usage data</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>MintTokensFooterPanel</name>
     <message>
         <source>Send Owner token to transfer %1 Community ownership</source>
@@ -13644,14 +13538,6 @@ to load</source>
     </message>
     <message>
         <source>Share feedback or suggest improvements on our %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Share usage data with Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>From all profiles on device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

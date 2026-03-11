@@ -1265,14 +1265,6 @@ QtObject {
         readonly property string undefinedAccount: "undefined"
     }
 
-    readonly property QtObject metricsEnablePlacement: QtObject {
-        readonly property string unknown: "unknown"
-        readonly property string welcome: "welcome_view"
-        readonly property string privacyAndSecurity: "privacy_and_security_view"
-        readonly property string startApp: "start_app_after_upgrade"
-        readonly property string onboarding: "onboarding"
-    }
-
     enum MutingVariations {
         For15min = 1,
         For1hr = 2,

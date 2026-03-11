@@ -146,8 +146,6 @@ Item {
 
     required property Keychain keychain
 
-    required property bool isCentralizedMetricsEnabled
-
     required property bool systemTrayIconAvailable
 
     readonly property bool isPortraitMode: appMain.width < ThemeUtils.portraitBreakpoint.width
@@ -1638,7 +1636,6 @@ Item {
                                     homePageAdaptor.setTimestamp(key, new Date().valueOf()) // update the timestamp so that the pinned dock items are sorted by their recency
                             }
                             onDappDisconnectRequested: function(dappUrl) {
-                                dappMetrics.logNavigationEvent(DAppsMetrics.DAppsNavigationAction.DAppDisconnectInitiated)
                                 dAppsServiceLoader.dappDisconnectRequested(dappUrl)
                             }
                         }
@@ -1826,13 +1823,10 @@ Item {
                                 dAppsEnabled: dAppsServiceLoader.item ? dAppsServiceLoader.item.isServiceOnline : false
                                 dAppsModel: dAppsServiceLoader.item ? dAppsServiceLoader.item.dappsModel : null
                                 isKeycardEnabled: featureFlagsStore.keycardEnabled
-                                onDappListRequested: dappMetrics.logNavigationEvent(DAppsMetrics.DAppsNavigationAction.DAppListOpened)
                                 onDappConnectRequested: {
-                                    dappMetrics.logNavigationEvent(DAppsMetrics.DAppsNavigationAction.DAppConnectInitiated)
                                     dAppsServiceLoader.dappConnectRequested()
                                 }
                                 onDappDisconnectRequested: function(dappUrl) {
-                                    dappMetrics.logNavigationEvent(DAppsMetrics.DAppsNavigationAction.DAppDisconnectInitiated)
                                     dAppsServiceLoader.dappDisconnectRequested(dappUrl)
                                 }
                                 onSendTokenRequested: (senderAddress, gorupKey, tokenType) => popupRequestsHandler.sendModalHandler.sendToken(senderAddress, gorupKey, tokenType)
@@ -1939,7 +1933,6 @@ Item {
                             networksStore: appMain.networksStore
                             messagingRootStore: appMain.messagingRootStore
 
-                            isCentralizedMetricsEnabled: appMain.isCentralizedMetricsEnabled
                             keychain: appMain.keychain
                             emojiPopup: statusEmojiPopup.item
 
@@ -2850,11 +2843,6 @@ Item {
         }
     }
 
-    DAppsMetrics {
-        id: dappMetrics
-        metricsStore: SharedStores.MetricsStore {}
-    }
-
     Loader {
         id: dAppsServiceLoader
 
@@ -2894,7 +2882,6 @@ Item {
                 onSignRequestRejected: (connectionId, requestId) => dAppsService.rejectSign(connectionId, requestId, false /*hasError*/)
                 onSignRequestIsLive: (connectionId, requestId) => dAppsService.signRequestIsLive(connectionId, requestId)
                 onPairWithConnectorRequested: (connectorId) => {
-                    dappMetrics.logNavigationEvent(DAppsMetrics.DAppsNavigationAction.DAppPairInitiated, connectorId)
                     if (connectorId == Constants.DAppConnectors.WalletConnect) {
                         dappsWorkflow.openPairing()
                     } else if (connectorId == Constants.DAppConnectors.StatusConnect) {
@@ -2926,7 +2913,6 @@ Item {
                     currenciesStore: appMain.currencyStore
                     groupedAccountAssetsModel: appMain.walletAssetsStore.groupedAccountAssetsModel
                     accountsModel: WalletStores.RootStore.nonWatchAccounts
-                    dappsMetrics: dappMetrics
                     networksModel: SortFilterProxyModel {
                         sourceModel: appMain.networksStore.activeNetworks
                         proxyRoles: [

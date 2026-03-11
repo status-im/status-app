@@ -10040,74 +10040,6 @@
     </message>
   </context>
   <context>
-    <name>HelpUsImproveStatusPage</name>
-    <message>
-      <source>Help us improve Status</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Help us improve Status</translation>
-    </message>
-    <message>
-      <source>Your usage data helps us make Status better</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Your usage data helps us make Status better</translation>
-    </message>
-    <message>
-      <source>Share usage data</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Share usage data</translation>
-    </message>
-    <message>
-      <source>Got it</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Got it</translation>
-    </message>
-    <message>
-      <source>We’ll collect anonymous analytics and diagnostics from your app to enhance Status’s quality and performance.</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>We’ll collect anonymous analytics and diagnostics from your app to enhance Status’s quality and performance.</translation>
-    </message>
-    <message>
-      <source>Gather basic usage data, like clicks and page views</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Gather basic usage data, like clicks and page views</translation>
-    </message>
-    <message>
-      <source>Gather core diagnostics, like bandwidth usage</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Gather core diagnostics, like bandwidth usage</translation>
-    </message>
-    <message>
-      <source>Never collect your profile information or wallet address</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Never collect your profile information or wallet address</translation>
-    </message>
-    <message>
-      <source>Never collect information you input or send</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Never collect information you input or send</translation>
-    </message>
-    <message>
-      <source>Never sell your usage analytics data</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Never sell your usage analytics data</translation>
-    </message>
-    <message>
-      <source>For more details and other cases where we handle your data, refer to our %1.</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>For more details and other cases where we handle your data, refer to our %1.</translation>
-    </message>
-    <message>
-      <source>Privacy Policy</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Privacy Policy</translation>
-    </message>
-    <message>
-      <source>Skip sharing</source>
-      <comment>HelpUsImproveStatusPage</comment>
-      <translation>Skip sharing</translation>
-    </message>
-  </context>
-  <context>
     <name>Helpers</name>
     <message>
       <source>Community minted</source>
@@ -14068,64 +14000,6 @@
     </message>
   </context>
   <context>
-    <name>MetricsEnablePopup</name>
-    <message>
-      <source>Help us improve Status</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>Help us improve Status</translation>
-    </message>
-    <message>
-      <source>Collecting usage data helps us improve Status.</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>Collecting usage data helps us improve Status.</translation>
-    </message>
-    <message>
-      <source>What we will receive:</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>What we will receive:</translation>
-    </message>
-    <message>
-      <source> •  IP address&#xA; •  Universally Unique Identifiers of device&#xA; •  Logs of actions within the app, including button presses and screen visits</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>•  IP address&#xA; •  Universally Unique Identifiers of device&#xA; •  Logs of actions within the app, including button presses and screen visits</translation>
-    </message>
-    <message>
-      <source>What we won’t receive:</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>What we won’t receive:</translation>
-    </message>
-    <message>
-      <source> •  Your profile information&#xA; •  Your addresses&#xA; •  Information you input and send</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>•  Your profile information&#xA; •  Your addresses&#xA; •  Information you input and send</translation>
-    </message>
-    <message>
-      <source>Usage data will be shared from all profiles added to device. %1 %2</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>Usage data will be shared from all profiles added to device. %1 %2</translation>
-    </message>
-    <message>
-      <source>Sharing usage data can be turned off anytime in Settings / Privacy and Security.</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>Sharing usage data can be turned off anytime in Settings / Privacy and Security.</translation>
-    </message>
-    <message>
-      <source>For more details refer to our %1.</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>For more details refer to our %1.</translation>
-    </message>
-    <message>
-      <source>Do not share</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>Do not share</translation>
-    </message>
-    <message>
-      <source>Share usage data</source>
-      <comment>MetricsEnablePopup</comment>
-      <translation>Share usage data</translation>
-    </message>
-  </context>
-  <context>
     <name>MintTokensFooterPanel</name>
     <message>
       <source>Send Owner token to transfer %1 Community ownership</source>
@@ -16620,16 +16494,6 @@
       <source>Share feedback or suggest improvements on our %1.</source>
       <comment>PrivacyAndSecurityView</comment>
       <translation>Share feedback or suggest improvements on our %1.</translation>
-    </message>
-    <message>
-      <source>Share usage data with Status</source>
-      <comment>PrivacyAndSecurityView</comment>
-      <translation>Share usage data with Status</translation>
-    </message>
-    <message>
-      <source>From all profiles on device</source>
-      <comment>PrivacyAndSecurityView</comment>
-      <translation>From all profiles on device</translation>
     </message>
     <message>
       <source>Trusted sites</source>

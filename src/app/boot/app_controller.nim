@@ -34,7 +34,6 @@ import app_service/service/ens/service as ens_service
 import app_service/service/community_tokens/service as tokens_service
 import app_service/service/network_connection/service as network_connection_service
 import app_service/service/shared_urls/service as shared_urls_service
-import app_service/service/metrics/service as metrics_service
 import app_service/service/market/service as market_service
 
 import app/modules/onboarding/module as onboarding_module
@@ -63,7 +62,6 @@ type
     localAccountSensitiveSettingsVariant: QVariant
     userProfileVariant: QVariant
     globalUtilsVariant: QVariant
-    metricsVariant: QVariant
 
     # Services
     generalService: general_service.Service
@@ -100,7 +98,6 @@ type
     tokensService: tokens_service.Service
     networkConnectionService: network_connection_service.Service
     sharedUrlsService: shared_urls_service.Service
-    metricsService: metrics_service.MetricsService
     marketService: market_service.Service
 
     # Modules
@@ -148,8 +145,6 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   result.settingsService = settings_service.newService(statusFoundation.events)
   result.appSettingsVariant = newQVariant(result.settingsService)
   result.notificationsManager = newNotificationsManager(statusFoundation.events, result.settingsService)
-  result.metricsService = metrics_service.newService(statusFoundation.threadpool)
-  result.metricsVariant = newQVariant(result.metricsService)
 
   # Global
   result.localAppSettingsVariant = newQVariant(singletonInstance.localAppSettings)
@@ -312,7 +307,6 @@ proc delete*(self: AppController) =
   self.localAccountSensitiveSettingsVariant.delete
   self.userProfileVariant.delete
   self.globalUtilsVariant.delete
-  self.metricsVariant.delete
 
   self.accountsService.delete
   self.chatService.delete
@@ -343,14 +337,12 @@ proc delete*(self: AppController) =
   self.keycardService.delete
   self.keycardServiceV2.delete
   self.networkConnectionService.delete
-  self.metricsService.delete
   self.marketService.delete
 
 proc initializeQmlContext(self: AppController) =
   singletonInstance.engine.setRootContextProperty("localAppSettings", self.localAppSettingsVariant)
   singletonInstance.engine.setRootContextProperty("localAccountSettings", self.localAccountSettingsVariant)
   singletonInstance.engine.setRootContextProperty("globalUtils", self.globalUtilsVariant)
-  singletonInstance.engine.setRootContextProperty("metrics", self.metricsVariant)
 
   # Load keycard channel module (available before login for Session API)
   self.keycardChannelModule.load()

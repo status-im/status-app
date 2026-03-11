@@ -37,8 +37,6 @@ StatusDialog {
     /** input property to indicate if buy action is enabled **/
     property bool buyEnabled
 
-    signal addMetricsEvent(string subEvent)
-
     objectName: "swapModal"
 
     implicitWidth: 556
@@ -162,11 +160,9 @@ StatusDialog {
 
     onOpened: {
         payPanel.forceActiveFocus()
-        root.addMetricsEvent("popup opened")
     }
     onClosed: {
         root.swapAdaptor.resetData()
-        root.addMetricsEvent("popup closed")
     }
 
     header: Item {
@@ -584,7 +580,6 @@ StatusDialog {
                                  !root.swapAdaptor.approvalPending
                     onClicked: {
                         if (root.swapAdaptor.validSwapProposalReceived) {
-                            root.addMetricsEvent("next button pressed")
                             if (root.swapAdaptor.swapOutputData.approvalNeeded && !root.swapAdaptor.approvalSuccessful)
                                 Global.openPopup(swapApproveModalComponent)
                             else
@@ -651,9 +646,7 @@ StatusDialog {
             serviceProviderContractAddress: root.swapAdaptor.swapOutputData.approvalContractAddress
             serviceProviderHostname: Constants.swap.paraswapHostname
 
-            onRejected: root.addMetricsEvent("rejected approve")
             onAccepted: {
-                root.addMetricsEvent("send approve tx")
                 root.swapAdaptor.sendApproveTx()
             }
         }
@@ -739,9 +732,7 @@ StatusDialog {
             serviceProviderURL: Constants.swap.paraswapUrl // TODO https://github.com/status-im/status-app/issues/15329
             serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl // TODO https://github.com/status-im/status-app/issues/15329
 
-            onRejected: root.addMetricsEvent("rejected sign")
             onAccepted: {
-                root.addMetricsEvent("send swap tx")
                 root.swapAdaptor.sendSwapTx()
                 root.close()
             }

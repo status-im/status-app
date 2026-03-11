@@ -3,7 +3,6 @@ BCBrowserDappsProvider 1.0 BCBrowserDappsProvider.qml
 ConnectorWCSDK 1.0 ConnectorWCSDK.qml
 DappsConnectorSDK 1.0 DappsConnectorSDK.qml
 DAppsHelpers 1.0 helpers.js
-DAppsMetrics 1.0 DAppsMetrics.qml
 DAppsModel 1.0 DAppsModel.qml
 DAppsModule 1.0 DAppsModule.qml
 DAppsService 1.0 DAppsService.qml

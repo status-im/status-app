@@ -331,12 +331,6 @@ proc syncAppAndKeycardState[T](self: Module[T]) =
   self.controller.storeMetadata(kcName, pathsToStore)
 
 proc finishAppLoading2[T](self: Module[T]) =
-
-  let isOnboarding = self.loginFlow == LoginMethod.Unknown
-  let eventType = if isOnboarding: "onboarding-completed" else: "user-logged-in"
-  let flowType = if isOnboarding: repr(self.onboardingFlow) else : repr(self.loginFlow)
-  singletonInstance.globalEvents.addCentralizedMetricIfEnabled(eventType, $(%*{"flowType": flowType}))
-
   self.syncAppAndKeycardState()
 
   self.controller.stopKeycardService()

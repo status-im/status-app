@@ -53,7 +53,6 @@ Window {
         bridgeEnabled: featureFlags ? featureFlags.bridgeEnabled : false
     }
 
-    readonly property MetricsStore metricsStore: MetricsStore {}
     readonly property UtilsStore utilsStore: UtilsStore {}
     readonly property LanguageStore languageStore: LanguageStore {}
     readonly property bool appThemeDark: Theme.style === Theme.Style.Dark
@@ -428,8 +427,6 @@ Window {
 
         restoreAppState()
 
-        Global.openMetricsEnablePopupRequested.connect(openMetricsEnablePopup)
-        Global.addCentralizedMetricIfEnabled.connect(metricsStore.addCentralizedMetricIfEnabled)
         Global.openShakeToSharePopupRequested.connect(openShakeToSharePopup)
 
         nativeSafeAreaBottom = MobileUI.safeAreaBottom + MobileUI.navbarHeight
@@ -462,17 +459,6 @@ Window {
         d.restoreWindowState()
         applicationWindow.raise()
         applicationWindow.requestActivate()
-    }
-
-    function openMetricsEnablePopup(placement, cb = null) {
-        metricsPopupLoader.active = true
-        metricsPopupLoader.item.visible = true
-        metricsPopupLoader.item.placement = placement
-        if (cb)
-            cb(metricsPopupLoader.item)
-        if(!localAppSettings.metricsPopupSeen) {
-            localAppSettings.metricsPopupSeen = true
-        }
     }
 
     function openShakeToSharePopup() {
@@ -568,7 +554,6 @@ Window {
             languageStore: applicationWindow.languageStore
 
             visible: !startupOnboardingLoader.active
-            isCentralizedMetricsEnabled: metricsStore.isCentralizedMetricsEnabled
 
             systemTrayIconAvailable: systemTray.available
 
@@ -726,18 +711,6 @@ Window {
                 onboardingStore.loginRequested(keyUid, method, data)
             }
 
-            onShareUsageDataRequested: function(enabled) {
-                applicationWindow.metricsStore.toggleCentralizedMetrics(enabled)
-                if (enabled) {
-                    Global.addCentralizedMetricIfEnabled("usage_data_shared", {placement: Constants.metricsEnablePlacement.onboarding})
-                }
-            }
-            onCurrentPageNameChanged: {
-                if (currentPageName !== "") {
-                    Global.addCentralizedMetricIfEnabled("navigation", {viewId: currentPageName})
-                }
-            }
-
             onSkippedBiometricFlow: () => {
                                         d.showSkippedBiometricFlow = appKeychain.available
                                     }
@@ -761,22 +734,6 @@ Window {
             }
         }
     }
-
-    Loader {
-        id: metricsPopupLoader
-        active: false
-        sourceComponent: MetricsEnablePopup {
-            visible: true
-            onClosed: metricsPopupLoader.active = false
-            onSetMetricsEnabledRequested: function(enabled) {
-                applicationWindow.metricsStore.toggleCentralizedMetrics(enabled)
-                if (enabled) {
-                    Global.addCentralizedMetricIfEnabled("usage_data_shared", {placement: metricsPopupLoader.item.placement})
-                }
-            }
-        }
-    }
-
 
     Loader {
         active: SQUtils.Utils.isAndroid
