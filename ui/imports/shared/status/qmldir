@@ -11,6 +11,7 @@ StatusChatInputReplyArea 1.0 StatusChatInputReplyArea.qml
 StatusChatInputSelectionMarker 1.0 StatusChatInputSelectionMarker.qml
 StatusChatInputSendButton 1.0 StatusChatInputSendButton.qml
 StatusChatInputTextArea 1.0 StatusChatInputTextArea.qml
+StatusChatInputToolBar 1.0 StatusChatInputToolBar.qml
 StatusEmojiPopup 1.0 StatusEmojiPopup.qml
 StatusEmojiSuggestionPopup 1.0 StatusEmojiSuggestionPopup.qml
 StatusGifPopup 1.0 StatusGifPopup.qml
