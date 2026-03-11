@@ -8,11 +8,12 @@ StatusChatImageValidator 1.0 StatusChatImageValidator.qml
 StatusChatInput 1.0 StatusChatInput.qml
 StatusChatInputImageArea 1.0 StatusChatInputImageArea.qml
 StatusChatInputReplyArea 1.0 StatusChatInputReplyArea.qml
+StatusChatInputSendButton 1.0 StatusChatInputSendButton.qml
+StatusChatInputTextArea 1.0 StatusChatInputTextArea.qml
 StatusEmojiPopup 1.0 StatusEmojiPopup.qml
 StatusEmojiSuggestionPopup 1.0 StatusEmojiSuggestionPopup.qml
 StatusGifPopup 1.0 StatusGifPopup.qml
 StatusImageModal 1.0 StatusImageModal.qml
-StatusVideoModal 1.0 StatusVideoModal.qml
 StatusImageRadioButton 1.0 StatusImageRadioButton.qml
 StatusInputListPopup 1.0 StatusInputListPopup.qml
 StatusSearchListPopup 1.0 StatusSearchListPopup.qml
@@ -27,3 +28,4 @@ StatusStickerPackDetails 1.0 StatusStickerPackDetails.qml
 StatusStickerPackIconWithIndicator 1.0 StatusStickerPackIconWithIndicator.qml
 StatusStickersPopup 1.0 StatusStickersPopup.qml
 StatusTextFormatMenu 1.0 StatusTextFormatMenu.qml
+StatusVideoModal 1.0 StatusVideoModal.qml
