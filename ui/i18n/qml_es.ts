@@ -13641,6 +13641,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>PrimaryNavSidebar</name>
+    <message>
+        <source>Activity Center</source>
+        <translation type="unfinished">Centro de actividad</translation>
+    </message>
+</context>
+<context>
     <name>PrivacyAndSecurityView</name>
     <message>
         <source>Receive Status News via RSS</source>
@@ -18747,6 +18754,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Activity Center</source>
         <translation>Centro de actividad</translation>
+    </message>
+    <message>
+        <source>QR Scanner</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Add new user</source>

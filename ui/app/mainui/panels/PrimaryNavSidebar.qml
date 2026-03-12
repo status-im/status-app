@@ -223,12 +223,18 @@ Control {
             }
 
             contentItem: ColumnLayout {
-                // regular sections
+                // regular sections + communities
                 SidebarListView {
                     Layout.fillHeight: true
                     Layout.maximumHeight: contentHeight
                     model: root.regularItemsModel
-                    delegate: RegularSectionButton {}
+                    delegate: Loader {
+                        required property int index
+                        required property var model
+                        anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
+                        sourceComponent: model.sectionType === Constants.appSection.community ? communitySectionButtonComponent
+                                                                                              : regularSectionButtonComponent
+                    }
                 }
 
                 // separator
@@ -237,20 +243,7 @@ Control {
                     Layout.bottomMargin: Theme.defaultHalfPadding
                 }
 
-                // communities
-                SidebarListView {
-                    Layout.fillHeight: true
-                    model: root.communityItemsModel
-                    delegate: CommunitySectionButton {}
-                }
-
-                // separator
-                SidebarSeparator {
-                    Layout.topMargin: Theme.defaultHalfPadding
-                    Layout.bottomMargin: Theme.defaultHalfPadding
-                }
-
-                // settings + community portal
+                // qr + settings
                 SidebarListView {
                     Layout.preferredHeight: contentHeight
                     model: root.bottomItemsModel
@@ -290,7 +283,6 @@ Control {
             radius: d.containerBgRadius
 
             PrimaryNavSidebarButton {
-                id: acButton
                 anchors.fill: parent
                 bgRadius: parent.radius
 
@@ -298,6 +290,7 @@ Control {
 
                 checkable: true
                 checked: root.acVisible
+                tooltipText: qsTr("Activity Center")
 
                 icon.name: "notification"
 
@@ -335,6 +328,11 @@ Control {
             if (root.interactive)
                 root.close()
         }
+    }
+
+    Component {
+        id: regularSectionButtonComponent
+        RegularSectionButton {}
     }
 
     component CommunitySectionButton: RegularSectionButton {
@@ -400,8 +398,12 @@ Control {
         }
     }
 
+    Component {
+        id: communitySectionButtonComponent
+        CommunitySectionButton {}
+    }
+
     component BottomSectionButton: RegularSectionButton {
-        showBadgeGradient: false
         showBadge: {
             if (model.sectionType === Constants.appSection.profile)
                 return root.profileSectionHasNotification

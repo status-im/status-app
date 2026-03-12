@@ -16593,6 +16593,14 @@
     </message>
   </context>
   <context>
+    <name>PrimaryNavSidebar</name>
+    <message>
+      <source>Activity Center</source>
+      <comment>PrimaryNavSidebar</comment>
+      <translation>Activity Center</translation>
+    </message>
+  </context>
+  <context>
     <name>PrivacyAndSecurityView</name>
     <message>
       <source>Privacy policy</source>
@@ -22758,6 +22766,11 @@
       <source>Activity Center</source>
       <comment>Utils</comment>
       <translation>Activity Center</translation>
+    </message>
+    <message>
+      <source>QR Scanner</source>
+      <comment>Utils</comment>
+      <translation>QR Scanner</translation>
     </message>
     <message>
       <source>Add new user</source>

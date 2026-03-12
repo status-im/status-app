@@ -116,8 +116,8 @@ SplitView {
             StatusBaseText {
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
-                text: sidebar.alwaysVisible ? "alwaysVisible: <b>true</b> (%1)".arg("pushes the content; background not dimmed")
-                                            : "alwaysVisible: <b>false</b> (%1)".arg("open the sidebar by dragging on the left edge, or click the above button; background dimmed")
+                text: sidebar.alwaysVisible ? "alwaysVisible: <b>true</b> (%1)".arg("pushes the content")
+                                            : "alwaysVisible: <b>false</b> (%1)".arg("open the sidebar by dragging on the left edge, or click the above button")
             }
             StatusBaseText {
                 Layout.fillWidth: true
@@ -264,7 +264,9 @@ SplitView {
                 selfContactDetails.onlineStatus = status
                 logs.logEvent("onSetCurrentUserStatusRequested", ["status"], arguments) // <- root.rootStore.setCurrentUserStatus(status)
             }
-            onViewProfileRequested: logs.logEvent("onViewProfileRequested", ["pubKey"], arguments) // <- Global.openProfilePopup(pubKey)
+            onViewProfileRequested: function(pubKey) {
+                logs.logEvent("onViewProfileRequested", ["pubKey"], arguments) // <- Global.openProfilePopup(pubKey)
+            }
         }
     }
 

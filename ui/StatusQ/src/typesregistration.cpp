@@ -21,6 +21,7 @@
 #include "StatusQ/theme.h"
 #include "StatusQ/undefinedfilter.h"
 #include "StatusQ/urlutils.h"
+#include "StatusQ/stablearraysorter.h"
 #include "StatusQ/statuslayoutstate.h"
 #include "StatusQ/NativeSwipeHandlerItem.h"
 #include "StatusQ/NativeIndicatorItem.h"
@@ -73,6 +74,7 @@ void registerStatusQTypes() {
     qmlRegisterType<FastExpressionFilter>("StatusQ", 0, 1, "FastExpressionFilter");
     qmlRegisterType<FastExpressionRole>("StatusQ", 0, 1, "FastExpressionRole");
     qmlRegisterType<FastExpressionSorter>("StatusQ", 0, 1, "FastExpressionSorter");
+    qmlRegisterType<StableArraySorter>("StatusQ", 0, 1, "StableArraySorter");
     qmlRegisterType<OneOfFilter>("StatusQ", 0, 1, "OneOfFilter");
     qmlRegisterType<UndefinedFilter>("StatusQ", 0, 1, "UndefinedFilter");
     qmlRegisterType<ConstantRole>("StatusQ", 0, 1, "ConstantRole");

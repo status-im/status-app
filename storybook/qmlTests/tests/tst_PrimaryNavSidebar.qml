@@ -104,8 +104,6 @@ Item {
         function test_sections_model_binding() {
             verify(!!controlUnderTest.regularItemsModel)
             verify(controlUnderTest.regularItemsModel.count > 0)
-            verify(!!controlUnderTest.communityItemsModel)
-            verify(controlUnderTest.communityItemsModel.count > 0)
             verify(!!controlUnderTest.bottomItemsModel)
             verify(controlUnderTest.bottomItemsModel.count > 0)
         }
@@ -261,9 +259,9 @@ Item {
         function test_show_enabled_sections_only() {
             sidebarAdaptor.showEnabledSectionsOnly = true
 
-            // Home section is disabled in SectionsModel, should not be visible
-            const homeBtn = findChild(controlUnderTest, "Home-navbar")
-            compare(homeBtn, null)
+            // dApps disabled in SectionsModel, should not be visible
+            const dappBtn = findChild(controlUnderTest, "dApp-navbar")
+            compare(dappBtn, null)
 
             sidebarAdaptor.showEnabledSectionsOnly = false
 

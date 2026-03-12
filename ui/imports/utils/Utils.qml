@@ -437,6 +437,8 @@ QtObject {
             return qsTr("Home Page")
         case Constants.appSection.activityCenter:
             return qsTr("Activity Center")
+        case Constants.appSection.qrCodeScanner:
+            return qsTr("QR Scanner")
         default:
             return fallback
         }

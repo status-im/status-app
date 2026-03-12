@@ -13599,6 +13599,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>PrimaryNavSidebar</name>
+    <message>
+        <source>Activity Center</source>
+        <translation type="unfinished">활동 센터</translation>
+    </message>
+</context>
+<context>
     <name>PrivacyAndSecurityView</name>
     <message>
         <source>Privacy policy</source>
@@ -18680,6 +18687,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Activity Center</source>
         <translation>활동 센터</translation>
+    </message>
+    <message>
+        <source>QR Scanner</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Add new user</source>

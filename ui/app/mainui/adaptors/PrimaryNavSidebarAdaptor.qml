@@ -1,5 +1,6 @@
 import QtQml
 
+import StatusQ
 import StatusQ.Core.Utils as SQUtils
 
 import SortFilterProxyModel
@@ -63,29 +64,23 @@ SQUtils.QObject {
             }
             ValueFilter {
                 roleName: "sectionType"
+                value: Constants.appSection.communitiesPortal
+            }
+            ValueFilter {
+                roleName: "sectionType"
                 value: Constants.appSection.node
                 enabled: root.nodeEnabled
             }
-        }
-    }
-
-    readonly property var communityItemsModel: SortFilterProxyModel {
-        sourceModel: sectionsModelInternal
-        filters: [
             ValueFilter {
                 roleName: "sectionType"
                 value: Constants.appSection.community
             }
-        ]
+        }
     }
 
     readonly property var bottomItemsModel: SortFilterProxyModel {
         sourceModel: sectionsModelInternal
         filters: AnyOf {
-            ValueFilter {
-                roleName: "sectionType"
-                value: Constants.appSection.communitiesPortal
-            }
             ValueFilter {
                 roleName: "sectionType"
                 value: Constants.appSection.qrCodeScanner
@@ -95,12 +90,6 @@ SQUtils.QObject {
                 value: Constants.appSection.profile
             }
         }
-        sorters: [
-            RoleSorter {
-                roleName: "sectionType"
-                sortOrder: Qt.DescendingOrder
-            }
-        ]
     }
 
     // internal
@@ -120,7 +109,19 @@ SQUtils.QObject {
             }
         ]
         sorters: [
-            RoleSorter { roleName: "sectionType" }
+            StableArraySorter {
+                roleName: "sectionType"
+                array: [
+                    Constants.appSection.homePage,
+                    Constants.appSection.wallet,
+                    Constants.appSection.market,
+                    Constants.appSection.swap,
+                    Constants.appSection.chat,
+                    Constants.appSection.browser,
+                    Constants.appSection.communitiesPortal,
+                    Constants.appSection.node
+                ]
+            }
         ]
     }
 }
