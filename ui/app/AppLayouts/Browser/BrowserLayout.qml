@@ -35,6 +35,7 @@ StatusSectionLayout {
     required property bool isMobile
     required property string userUID
     required property bool thirdpartyServicesEnabled
+    required property bool dappsEnabled
 
     required property TransactionStore transactionStore
 
@@ -576,7 +577,8 @@ StatusSectionLayout {
         id: connectorBridge
 
         userUID: root.userUID
-        connectorController: root.connectorController
+        featureEnabled: root.dappsEnabled
+        connectorController: root.dappsEnabled ? root.connectorController : null
         httpUserAgent: {
             if (localAccountSensitiveSettings.compatibilityMode) {
                 // Google doesn't let you connect if the user agent is Chrome-ish and doesn't satisfy some sort of hidden requirement
@@ -603,7 +605,7 @@ StatusSectionLayout {
 
     BCBrowserDappsProvider {
         id: browserDappsProvider
-        connectorController: root.connectorController
+        connectorController: root.dappsEnabled ? root.connectorController : null
         clientId: connectorBridge.clientId
         clientIdFilter: connectorBridge.clientId
     }

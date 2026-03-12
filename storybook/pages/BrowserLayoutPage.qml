@@ -33,6 +33,7 @@ SplitView {
         userUID: "0xdeadbeef"
         transactionStore: TransactionStoreMock {}
         thirdpartyServicesEnabled: true
+        dappsEnabled: true
         connectorController: null
         platformOS: ctrlPlatformOS.currentValue
 

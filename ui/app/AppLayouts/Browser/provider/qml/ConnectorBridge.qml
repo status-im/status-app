@@ -17,6 +17,7 @@ QtObject {
     id: root
 
     required property string userUID
+    property bool featureEnabled: true
     required property var connectorController
     property string httpUserAgent: ""          // Custom user agent for web profiles
 
@@ -34,12 +35,12 @@ QtObject {
         offTheRecord: true
     }
 
-    readonly property var scriptPaths: [
+    readonly property var scriptPaths: root.featureEnabled ? [
         { path: Qt.resolvedUrl("../js/qwebchannel.js"), runOnSubFrames: true },
         { path: Qt.resolvedUrl("../js/ethereum_wrapper.js"), runOnSubFrames: true },
         { path: Qt.resolvedUrl("../js/eip6963_announcer.js"), runOnSubFrames: false },
         { path: Qt.resolvedUrl("../js/ethereum_injector.js"), runOnSubFrames: true }
-    ]
+    ] : []
 
     readonly property alias dappUrl: connectorManager.dappUrl
     readonly property alias dappOrigin: connectorManager.dappOrigin

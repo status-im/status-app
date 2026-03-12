@@ -1213,7 +1213,7 @@ Item {
             verify(!!wcButton)
 
             compare(controlUnderTest.walletConnectEnabled, true)
-            compare(controlUnderTest.connectorEnabled, true)
+            compare(controlUnderTest.dappsEnabled, true)
 
             controlUnderTest.walletConnectEnabled = false
             compare(wcButton.enabled, false)
@@ -1221,10 +1221,10 @@ Item {
             controlUnderTest.walletConnectEnabled = true
             compare(wcButton.enabled, true)
 
-            controlUnderTest.connectorEnabled = false
+            controlUnderTest.dappsEnabled = false
             compare(connectorButton.enabled, false)
 
-            controlUnderTest.connectorEnabled = true
+            controlUnderTest.dappsEnabled = true
             compare(connectorButton.enabled, true)
         }
 

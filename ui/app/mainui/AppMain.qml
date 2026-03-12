@@ -1878,6 +1878,7 @@ Item {
                                 isMobile: SQUtils.Utils.isMobile
                                 userUID: appMain.profileStore.pubKey
                                 thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
+                                dappsEnabled: featureFlagsStore.dappsEnabled
                                 bookmarksStore: BrowserStores.BookmarksStore {}
                                 downloadsStore: BrowserStores.DownloadsStore {}
                                 browserRootStore: BrowserStores.BrowserRootStore {}
@@ -2937,7 +2938,7 @@ Item {
                         accountsModel: WalletStores.RootStore.nonWatchAccounts
                     }
                     bcSdk: DappsConnectorSDK {
-                        enabled: featureFlagsStore.connectorEnabled && WalletStores.RootStore.walletSectionInst.walletReady
+                        enabled: featureFlagsStore.dappsEnabled && WalletStores.RootStore.walletSectionInst.walletReady
                         excludeClientIds: ["walletconnect"]
                         store: SharedStores.BrowserConnectStore {
                             controller: WalletStores.RootStore.dappsConnectorController
