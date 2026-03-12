@@ -48,12 +48,28 @@ public final class NotificationBuilder {
     /** Action for rejecting a contact request from notification. */
     public static final String ACTION_REJECT_CONTACT_REQUEST = "app.status.mobile.ipc.NOTIFICATION_REJECT_CONTACT_REQUEST";
 
-    /** Status logo (monochrome for tinting). */
-    private static final int NOTIFICATION_SMALL_ICON = R.mipmap.ic_foreground;
+    /** App icon for notifications (Status logo, from status-logo-white.svg). */
+    private static final int NOTIFICATION_SMALL_ICON = R.drawable.ic_notification_status_logo;
     /** ID for "reply failed" notifications. */
     private static final int REPLY_FAILED_NOTIFICATION_ID = 4243;
 
+    /** Message item used to build MessagingStyle entries. */
+    public static final class MessageEntry {
+        public final String text;
+        public final long timestamp;
+        public final String senderName;
+        public final String senderIconUri;
+
+        public MessageEntry(String text, long timestamp, String senderName, String senderIconUri) {
+            this.text = text;
+            this.timestamp = timestamp;
+            this.senderName = senderName;
+            this.senderIconUri = senderIconUri;
+        }
+    }
+
     private NotificationBuilder() {}
+
 
     // ── Notification channels ─────────────────────────────────────────────────
 
@@ -89,7 +105,8 @@ public final class NotificationBuilder {
      */
     public static void postMessageNotification(Context context, String title,
             String conversationId, int notificationId, String deepLink,
-            Bitmap largeIcon, List<MessageBufferManager.MessageEntry> messages) {
+            Bitmap largeIcon, List<MessageEntry> messages,
+            boolean isOneToOne) {
 
         Intent intent = buildTapIntent(context, deepLink);
         if (intent == null) return;
@@ -102,60 +119,28 @@ public final class NotificationBuilder {
                 .setSmallIcon(NOTIFICATION_SMALL_ICON)
                 .setContentTitle(title)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setAutoCancel(true)
+                .setAutoCancel(false)
                 .setContentIntent(pendingIntent);
         if (largeIcon != null) builder.setLargeIcon(largeIcon);
 
-        buildMessagingStyle(builder, title, messages);
+        buildMessagingStyle(context, builder, title, messages, isOneToOne);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && largeIcon != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             String shortcutId = "conv_" + conversationId;
-            pushConversationShortcut(context, shortcutId, title, largeIcon, intent);
+            // For 1-1 chats: pin the first (contact's) message sender as the shortcut Person so
+            // the contact avatar is stable and does not change when the user replies.
+            // For group/community: no Person — the largeIcon (group/community icon) is used instead.
+            Person senderPerson = isOneToOne ? buildSenderPerson(context, messages) : null;
+            pushConversationShortcut(context, shortcutId, title, largeIcon, intent, senderPerson);
             builder.setShortcutId(shortcutId);
         }
 
-        // Delete intent: clear buffer when user swipes away
+        // Delete intent: clear per-conversation state when user swipes away
         addDismissIntent(context, builder, conversationId, notificationId);
 
         // Reply action
         addReplyAction(context, builder, conversationId, notificationId);
 
-        builder.setGroup("conv_" + conversationId);
-
-        NotificationManagerCompat.from(context).notify(notificationId, builder.build());
-    }
-
-    /**
-     * Refreshes a message notification after inline reply (appends user's reply
-     * to the existing conversation).
-     */
-    public static void refreshMessageNotification(Context context,
-            String conversationId, int notificationId,
-            MessageBufferManager.ConversationMeta meta,
-            List<MessageBufferManager.MessageEntry> messages) {
-
-        if (messages == null || messages.isEmpty()) return;
-
-        Intent intent = buildTapIntent(context, meta.deepLink);
-        if (intent == null) return;
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                context, notificationId, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-        Bitmap largeIcon = NotificationIconHelper.parseToBitmap(meta.largeIconUri);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID_MESSAGES)
-                .setSmallIcon(NOTIFICATION_SMALL_ICON)
-                .setContentTitle(meta.title)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent);
-        if (largeIcon != null) builder.setLargeIcon(largeIcon);
-
-        buildMessagingStyle(builder, meta.title, messages);
-        addDismissIntent(context, builder, conversationId, notificationId);
-        addReplyAction(context, builder, conversationId, notificationId);
         builder.setGroup("conv_" + conversationId);
 
         NotificationManagerCompat.from(context).notify(notificationId, builder.build());
@@ -254,45 +239,96 @@ public final class NotificationBuilder {
 
     // ── Internal helpers ──────────────────────────────────────────────────────
 
-    private static void buildMessagingStyle(NotificationCompat.Builder builder,
-            String conversationTitle, List<MessageBufferManager.MessageEntry> messages) {
+    private static void buildMessagingStyle(Context context, NotificationCompat.Builder builder,
+            String conversationTitle, List<MessageEntry> messages, boolean isOneToOne) {
         if (messages == null || messages.isEmpty()) return;
 
-        Person me = new Person.Builder().setName("Me").build();
-        NotificationCompat.MessagingStyle style = new NotificationCompat.MessagingStyle(me)
-                .setConversationTitle(conversationTitle);
+        Person self = new Person.Builder().setName("You").build();
+        NotificationCompat.MessagingStyle style = new NotificationCompat.MessagingStyle(self);
+        if (!isOneToOne) {
+            style.setConversationTitle(conversationTitle);
+        }
 
         Set<String> senderNames = new HashSet<>();
-        for (MessageBufferManager.MessageEntry entry : messages) {
-            Person sender = entry.isFromMe ? me : null;
-            if (!entry.isFromMe && entry.senderName != null && !entry.senderName.isEmpty()) {
+        for (MessageEntry entry : messages) {
+            Person sender = null;
+            if (entry.senderName != null && !entry.senderName.isEmpty()) {
                 senderNames.add(entry.senderName);
                 Person.Builder pb = new Person.Builder().setName(entry.senderName);
-                if (entry.senderIconUri != null && !entry.senderIconUri.isEmpty()) {
-                    Bitmap avatar = NotificationIconHelper.parseToBitmap(entry.senderIconUri);
-                    if (avatar != null) pb.setIcon(IconCompat.createWithBitmap(avatar));
+                Bitmap avatar = (entry.senderIconUri != null && !entry.senderIconUri.isEmpty())
+                        ? NotificationIconHelper.parseToBitmap(entry.senderIconUri)
+                        : null;
+                if (avatar != null) {
+                    pb.setIcon(IconCompat.createWithBitmap(avatar));
+                } else {
+                    Bitmap initialsAvatar = NotificationIconHelper.createInitialsAvatar(
+                            entry.senderName, 64);
+                    pb.setIcon(initialsAvatar != null
+                            ? IconCompat.createWithBitmap(initialsAvatar)
+                            : IconCompat.createWithResource(context, NOTIFICATION_SMALL_ICON));
                 }
                 sender = pb.build();
             }
             style.addMessage(entry.text, entry.timestamp, sender);
         }
-        if (senderNames.size() > 1) style.setGroupConversation(true);
+        // 1-1 chats should never be marked as group conversations even if
+        // both "contact" and "you" send messages.
+        if (!isOneToOne && senderNames.size() > 1) {
+            style.setGroupConversation(true);
+        } else if (isOneToOne) {
+            style.setGroupConversation(false);
+        }
 
-        MessageBufferManager.MessageEntry latest = messages.get(messages.size() - 1);
+        MessageEntry latest = messages.get(messages.size() - 1);
         builder.setContentText(latest.text).setStyle(style);
     }
 
+    /**
+     * Builds a {@link Person} from the first message sender for use in conversation shortcuts.
+     * Using the first sender keeps the contact's avatar stable — subsequent messages from "me"
+     * (inline replies) do not overwrite the shortcut icon.
+     * Returns null if messages is empty or the first sender has no name.
+     */
+    private static Person buildSenderPerson(Context context,
+            List<MessageEntry> messages) {
+        if (messages == null || messages.isEmpty()) return null;
+        MessageEntry first = messages.get(0);
+        if (first.senderName == null || first.senderName.isEmpty()) return null;
+        Person.Builder pb = new Person.Builder().setName(first.senderName);
+        Bitmap avatar = (first.senderIconUri != null && !first.senderIconUri.isEmpty())
+                ? NotificationIconHelper.parseToBitmap(first.senderIconUri)
+                : null;
+        if (avatar != null) {
+            pb.setIcon(IconCompat.createWithBitmap(avatar));
+        } else {
+            Bitmap initialsAvatar = NotificationIconHelper.createInitialsAvatar(first.senderName, 64);
+            pb.setIcon(initialsAvatar != null
+                    ? IconCompat.createWithBitmap(initialsAvatar)
+                    : IconCompat.createWithResource(context, NOTIFICATION_SMALL_ICON));
+        }
+        return pb.build();
+    }
+
     private static void pushConversationShortcut(Context context, String shortcutId,
-            String shortLabel, Bitmap icon, Intent intent) {
+            String shortLabel, Bitmap icon, Intent intent, Person senderPerson) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return;
         try {
-            ShortcutInfoCompat shortcut = new ShortcutInfoCompat.Builder(context, shortcutId)
+            Intent resolvedIntent = intent != null ? intent
+                    : context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+            if (resolvedIntent == null) return;
+
+            ShortcutInfoCompat.Builder b = new ShortcutInfoCompat.Builder(context, shortcutId)
                     .setLongLived(true)
                     .setShortLabel(shortLabel)
-                    .setIcon(IconCompat.createWithBitmap(icon))
-                    .setIntent(intent != null ? intent
-                            : context.getPackageManager().getLaunchIntentForPackage(context.getPackageName()))
-                    .build();
-            ShortcutManagerCompat.pushDynamicShortcut(context, shortcut);
+                    .setIntent(resolvedIntent);
+
+            if (icon != null) {
+                b.setIcon(IconCompat.createWithBitmap(icon));
+            } else if (senderPerson != null && senderPerson.getIcon() != null) {
+                b.setIcon(senderPerson.getIcon());
+            }
+
+            ShortcutManagerCompat.pushDynamicShortcut(context, b.build());
         } catch (Throwable t) {
             Log.w(TAG, "pushConversationShortcut failed", t);
         }

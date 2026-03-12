@@ -1,12 +1,22 @@
 package app.status.mobile.ipc.notifications;
 
+import android.app.Notification;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Icon;
 import android.os.Build;
+import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.List;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.Person;
 
 import org.json.JSONObject;
 
@@ -16,7 +26,7 @@ import im.status.mobileui.PushNotificationHelper;
  * Central orchestrator for Android local notifications.
  *
  * Receives status-go signals, decides whether to show/suppress notifications,
- * and delegates to {@link NotificationBuilder}, {@link MessageBufferManager},
+ * and delegates to {@link NotificationBuilder},
  * and {@link NotificationIconHelper} for the actual work.
  *
  * Initialized once by {@link app.status.mobile.ipc.StatusGoService#onCreate()};
@@ -29,8 +39,17 @@ public final class StatusNotificationManager {
     private static WeakReference<StatusNotificationManager> sInstanceRef;
 
     private final WeakReference<Context> contextRef;
-    private final MessageBufferManager bufferManager = new MessageBufferManager();
     private volatile boolean uiVisible = false;
+
+    private static final class ActiveNotificationVisual {
+        final String title;
+        final Bitmap largeIcon;
+
+        ActiveNotificationVisual(String title, Bitmap largeIcon) {
+            this.title = title;
+            this.largeIcon = largeIcon;
+        }
+    }
 
     public StatusNotificationManager(Context serviceContext) {
         this.contextRef = new WeakReference<>(serviceContext);
@@ -55,7 +74,7 @@ public final class StatusNotificationManager {
         if (visible) {
             Context ctx = contextRef.get();
             if (ctx != null) {
-                bufferManager.clearAllAndCancelNotifications(ctx);
+                clearManagedNotifications(ctx);
             }
         }
     }
@@ -108,6 +127,7 @@ public final class StatusNotificationManager {
         final String category = eventWrap.optString("category", "");
         final String communityIcon = eventWrap.optString("communityIcon", "");
         final String chatIcon = eventWrap.optString("chatIcon", "");
+        final boolean isFromMe = eventWrap.optBoolean("isFromMe", false);
 
         String senderIcon = "";
         String senderName = "";
@@ -126,6 +146,10 @@ public final class StatusNotificationManager {
         String largeIconUri = NotificationIconHelper.pickLargeIconUri(
                 category, communityIcon, chatIcon, senderIcon);
 
+        // 1-1 chats have neither a community icon nor a chat/group icon.
+        // This determines whether the sender's avatar is used for the conversation shortcut.
+        final boolean isOneToOne = communityIcon.isEmpty() && chatIcon.isEmpty();
+
         showNotification(
                 context,
                 title.isEmpty() ? "Status" : title,
@@ -137,7 +161,9 @@ public final class StatusNotificationManager {
                 category,
                 timestamp,
                 senderName,
-                senderIcon
+                senderIcon,
+                isOneToOne,
+                isFromMe
         );
     }
 
@@ -146,7 +172,8 @@ public final class StatusNotificationManager {
     private void showNotification(Context context, String title, String message,
             String deepLink, String conversationId, String notificationId,
             String largeIconUri, String category, long timestamp,
-            String senderName, String personAvatarUri) {
+            String senderName, String personAvatarUri, boolean isOneToOne,
+            boolean isFromMe) {
         try {
             NotificationBuilder.createMessagesChannel(context);
 
@@ -162,41 +189,66 @@ public final class StatusNotificationManager {
                         : (conversationId != null ? conversationId : title + message))
                         + "_" + timestamp;
                 notifIdInt = Math.abs(idBase.hashCode());
-                Bitmap largeIcon = NotificationIconHelper.parseToBitmap(largeIconUri);
+                final boolean hasContactIcon = largeIconUri != null && !largeIconUri.isEmpty();
+                Bitmap largeIcon = hasContactIcon
+                        ? NotificationIconHelper.parseToBitmap(largeIconUri)
+                        : NotificationIconHelper.appIconBitmap(context, 256);
                 String contactRequestId = notificationId != null ? notificationId : "";
                 NotificationBuilder.postContactRequestNotification(
                         context, title, message, notifIdInt,
                         deepLink != null ? deepLink : "",
                         largeIcon, conversationId, contactRequestId);
-                bufferManager.trackNotification(notifIdInt);
                 return;
             } else if (isMessage) {
                 notifIdInt = Math.abs(conversationId.hashCode());
-                bufferManager.addMessage(conversationId, message, timestamp,
-                        senderName, personAvatarUri);
-                bufferManager.putMeta(conversationId, title, deepLink, largeIconUri);
+                // Rebuild message history from the currently active notification.
+                List<NotificationBuilder.MessageEntry> messages =
+                        getConversationMessagesFromActiveNotification(context, notifIdInt);
+                final boolean conversationAlreadyActive = isNotificationActive(context, notifIdInt);
+                ActiveNotificationVisual activeVisual = getActiveNotificationVisual(context, notifIdInt);
+                String oneToOneContactTitle = isOneToOne
+                        ? getOneToOneContactTitle(messages)
+                        : null;
+                messages.add(new NotificationBuilder.MessageEntry(
+                        message,
+                        timestamp,
+                        senderName != null ? senderName : "",
+                        personAvatarUri != null ? personAvatarUri : ""));
+                while (messages.size() > NotificationCompat.MessagingStyle.MAXIMUM_RETAINED_MESSAGES) {
+                    messages.remove(0);
+                }
+                if (isFromMe && !conversationAlreadyActive) return;
+                String notificationTitle = (isOneToOne
+                        && oneToOneContactTitle != null
+                        && !oneToOneContactTitle.isEmpty())
+                        ? oneToOneContactTitle
+                        : ((activeVisual != null
+                        && activeVisual.title != null
+                        && !activeVisual.title.isEmpty())
+                        ? activeVisual.title : title);
+                final boolean hasMessageIcon =
+                        largeIconUri != null && !largeIconUri.isEmpty();
+                Bitmap largeIconFromEvent = hasMessageIcon
+                        ? NotificationIconHelper.parseToBitmap(largeIconUri)
+                        : NotificationIconHelper.appIconBitmap(context, 256);
+                Bitmap largeIcon = activeVisual != null && activeVisual.largeIcon != null
+                        ? activeVisual.largeIcon : largeIconFromEvent;
+                NotificationBuilder.postMessageNotification(
+                        context, notificationTitle, conversationId, notifIdInt,
+                        deepLink, largeIcon, messages, isOneToOne);
             } else {
                 String idBase = (notificationId != null ? notificationId
                         : (conversationId != null ? conversationId : title + message))
                         + "_" + timestamp;
                 notifIdInt = Math.abs(idBase.hashCode());
-            }
-
-            Bitmap largeIcon = NotificationIconHelper.parseToBitmap(largeIconUri);
-
-            if (isMessage) {
-                List<MessageBufferManager.MessageEntry> messages =
-                        bufferManager.getMessages(conversationId);
-                NotificationBuilder.postMessageNotification(
-                        context, title, conversationId, notifIdInt,
-                        deepLink, largeIcon, messages);
-            } else {
+                final boolean hasSimpleIcon = largeIconUri != null && !largeIconUri.isEmpty();
+                Bitmap largeIcon = hasSimpleIcon
+                        ? NotificationIconHelper.parseToBitmap(largeIconUri)
+                        : NotificationIconHelper.appIconBitmap(context, 256);
                 NotificationBuilder.postSimpleNotification(
                         context, title, message, notifIdInt,
                         deepLink, largeIcon, conversationId);
             }
-
-            bufferManager.trackNotification(notifIdInt);
         } catch (Throwable t) {
             Log.w(TAG, "showNotification failed", t);
         }
@@ -204,9 +256,12 @@ public final class StatusNotificationManager {
 
     // ── Public API for NotificationReplyReceiver ──────────────────────────────
 
-    /** Clears message buffer for a conversation (called when notification dismissed). */
+    /** Clears state for a conversation (called when notification dismissed). */
     public void clearConversation(String conversationId) {
-        bufferManager.clearConversation(conversationId);
+        if (conversationId == null || conversationId.isEmpty()) return;
+        Context context = contextRef.get();
+        if (context == null) return;
+        NotificationManagerCompat.from(context).cancel(Math.abs(conversationId.hashCode()));
     }
 
     /**
@@ -216,24 +271,136 @@ public final class StatusNotificationManager {
         NotificationBuilder.postReplyFailed(context);
     }
 
-    /**
-     * Appends the user's reply to the buffer and refreshes the notification
-     * to include the sent message in the conversation history.
-     */
-    public void appendReplyAndRefresh(Context context, String conversationId,
-            String replyText, int androidNotificationId) {
-        if (context == null || conversationId == null || conversationId.isEmpty()
-                || replyText == null || replyText.trim().isEmpty()) return;
+    private boolean isNotificationActive(Context context, int notificationId) {
         try {
-            bufferManager.addReply(conversationId, replyText);
-            MessageBufferManager.ConversationMeta meta = bufferManager.getMeta(conversationId);
-            if (meta == null) return;
-            List<MessageBufferManager.MessageEntry> messages =
-                    bufferManager.getMessages(conversationId);
-            NotificationBuilder.refreshMessageNotification(
-                    context, conversationId, androidNotificationId, meta, messages);
+            List<StatusBarNotification> active = NotificationManagerCompat.from(context)
+                    .getActiveNotifications();
+            for (StatusBarNotification sbn : active) {
+                if (sbn.getId() == notificationId) {
+                    return true;
+                }
+            }
         } catch (Throwable t) {
-            Log.w(TAG, "appendReplyAndRefresh failed", t);
+            Log.w(TAG, "isNotificationActive failed", t);
+        }
+        return false;
+    }
+
+    private List<NotificationBuilder.MessageEntry> getConversationMessagesFromActiveNotification(
+            Context context, int notificationId) {
+        List<NotificationBuilder.MessageEntry> messages = new ArrayList<>();
+        try {
+            List<StatusBarNotification> active = NotificationManagerCompat.from(context)
+                    .getActiveNotifications();
+            for (StatusBarNotification sbn : active) {
+                if (sbn.getId() != notificationId) continue;
+                Notification n = sbn.getNotification();
+                NotificationCompat.MessagingStyle style =
+                        NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(n);
+                if (style == null) return messages;
+                for (NotificationCompat.MessagingStyle.Message msg : style.getMessages()) {
+                    Person sender = msg.getPerson();
+                    messages.add(new NotificationBuilder.MessageEntry(
+                            msg.getText() != null ? msg.getText().toString() : "",
+                            msg.getTimestamp(),
+                            sender != null && sender.getName() != null
+                                    ? sender.getName().toString() : "",
+                            ""));
+                }
+                return messages;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "getConversationMessagesFromActiveNotification failed", t);
+        }
+        return messages;
+    }
+
+    private ActiveNotificationVisual getActiveNotificationVisual(Context context, int notificationId) {
+        try {
+            List<StatusBarNotification> active = NotificationManagerCompat.from(context)
+                    .getActiveNotifications();
+            for (StatusBarNotification sbn : active) {
+                if (sbn.getId() != notificationId) continue;
+                Notification n = sbn.getNotification();
+                if (n == null) return null;
+
+                String title = null;
+                NotificationCompat.MessagingStyle style =
+                        NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(n);
+                if (style != null && style.getConversationTitle() != null) {
+                    title = style.getConversationTitle().toString();
+                }
+                if (n.extras != null) {
+                    if (title == null || title.isEmpty()) {
+                        CharSequence conversationTitleCs =
+                                n.extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE);
+                        if (conversationTitleCs != null) {
+                            title = conversationTitleCs.toString();
+                        }
+                    }
+                    if (title == null || title.isEmpty()) {
+                        CharSequence titleCs = n.extras.getCharSequence(Notification.EXTRA_TITLE);
+                        title = titleCs != null ? titleCs.toString() : null;
+                    }
+                }
+
+                Bitmap largeIcon = null;
+                if (n.extras != null) {
+                    Object largeIconObj = n.extras.get(Notification.EXTRA_LARGE_ICON);
+                    if (largeIconObj instanceof Bitmap) {
+                        largeIcon = (Bitmap) largeIconObj;
+                    }
+                }
+                if (largeIcon == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Icon notificationLargeIcon = n.getLargeIcon();
+                    if (notificationLargeIcon != null) {
+                        Drawable d = notificationLargeIcon.loadDrawable(context);
+                        largeIcon = drawableToBitmap(d);
+                    }
+                }
+                return new ActiveNotificationVisual(title, largeIcon);
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "getActiveNotificationVisual failed", t);
+        }
+        return null;
+    }
+
+    private static Bitmap drawableToBitmap(Drawable drawable) {
+        if (drawable == null) return null;
+        int width = Math.max(1, drawable.getIntrinsicWidth());
+        int height = Math.max(1, drawable.getIntrinsicHeight());
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bitmap;
+    }
+
+    private static String getOneToOneContactTitle(List<NotificationBuilder.MessageEntry> messages) {
+        if (messages == null) return null;
+        for (NotificationBuilder.MessageEntry entry : messages) {
+            if (entry == null || entry.senderName == null || entry.senderName.isEmpty()) continue;
+            if (!"You".equals(entry.senderName)) {
+                return entry.senderName;
+            }
+        }
+        return null;
+    }
+
+    private void clearManagedNotifications(Context context) {
+        try {
+            List<StatusBarNotification> active = NotificationManagerCompat.from(context)
+                    .getActiveNotifications();
+            NotificationManagerCompat nm = NotificationManagerCompat.from(context);
+            for (StatusBarNotification sbn : active) {
+                Notification n = sbn.getNotification();
+                if (n != null && NotificationBuilder.CHANNEL_ID_MESSAGES.equals(n.getChannelId())) {
+                    nm.cancel(sbn.getId());
+                }
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "clearManagedNotifications failed", t);
         }
     }
 }

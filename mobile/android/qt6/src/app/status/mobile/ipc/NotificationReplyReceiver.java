@@ -109,11 +109,6 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                     if (androidNotificationId != 0) {
                         NotificationManagerCompat.from(appContext).cancel(androidNotificationId);
                     }
-                } else {
-                    if (mgr != null) {
-                        mgr.appendReplyAndRefresh(
-                                appContext, conversationId, replyTextStr, androidNotificationId);
-                    }
                 }
             } catch (Exception e) {
                 Log.w(TAG, "failed to send reply", e);

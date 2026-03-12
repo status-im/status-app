@@ -214,6 +214,17 @@ public final class StatusGoServiceClient {
         final Context app = context.getApplicationContext();
         ensureStartedAndBound(app);
         IStatusGoService s;
+        CountDownLatch latch;
+        synchronized (lock) {
+            s = service;
+            latch = connectedLatch;
+        }
+        if (s == null && latch != null) {
+            try {
+                latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ignored) {
+            }
+        }
         synchronized (lock) {
             s = service;
         }

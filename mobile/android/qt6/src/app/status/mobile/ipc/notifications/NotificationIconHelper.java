@@ -1,5 +1,6 @@
 package app.status.mobile.ipc.notifications;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -7,6 +8,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.util.Base64;
 import android.util.Log;
 
@@ -54,6 +57,48 @@ public final class NotificationIconHelper {
     }
 
     /**
+     * Creates a circular identicon avatar with the first 2 letters of the name
+     * as initials. Background color is derived from the name hash for consistency.
+     *
+     * @param name display name (uses first 2 chars, or 1 if shorter)
+     * @param size width/height of the output bitmap
+     * @return circular bitmap with initials, or null if name is empty
+     */
+    public static Bitmap createInitialsAvatar(String name, int size) {
+        if (name == null || name.isEmpty()) return null;
+        String initials = name.trim();
+        if (initials.isEmpty()) return null;
+        initials = initials.length() >= 2
+                ? initials.substring(0, 2).toUpperCase()
+                : initials.substring(0, 1).toUpperCase();
+
+        int hash = Math.abs(name.hashCode());
+        float hue = (hash % 360) / 360f;
+        float[] hsv = {hue * 360f, 0.5f, 0.85f};
+        int bgColor = Color.HSVToColor(hsv);
+
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        bgPaint.setColor(bgColor);
+        canvas.drawCircle(size / 2f, size / 2f, size / 2f, bgPaint);
+
+        Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        textPaint.setTextSize(size * 0.45f);
+
+        Rect bounds = new Rect();
+        textPaint.getTextBounds(initials, 0, initials.length(), bounds);
+        float x = size / 2f;
+        float y = size / 2f - (bounds.top + bounds.bottom) / 2f;
+        canvas.drawText(initials, x, y, textPaint);
+
+        return bitmap;
+    }
+
+    /**
      * Crops a bitmap to a circle so opaque sources (e.g. JPEG) render as
      * true circles with transparent corners.
      */
@@ -75,6 +120,27 @@ public final class NotificationIconHelper {
         canvas.drawBitmap(source, src, dst, paint);
         if (source != output) source.recycle();
         return output;
+    }
+
+    /**
+     * Returns the app's launcher icon as a {@code sizePx × sizePx} {@link Bitmap} — the same
+     * icon the user sees in the app list. Used as the large-icon when no sender/community/chat
+     * icon is available so the notification has a recognisable image.
+     *
+     * @return app launcher icon bitmap, or {@code null} on failure.
+     */
+    public static Bitmap appIconBitmap(Context context, int sizePx) {
+        try {
+            Drawable d = context.getPackageManager().getApplicationIcon(context.getPackageName());
+            Bitmap bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bmp);
+            d.setBounds(0, 0, sizePx, sizePx);
+            d.draw(canvas);
+            return bmp;
+        } catch (Throwable t) {
+            Log.w(TAG, "appIconBitmap failed", t);
+            return null;
+        }
     }
 
     /**

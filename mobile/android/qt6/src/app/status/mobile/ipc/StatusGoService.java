@@ -41,8 +41,8 @@ public final class StatusGoService extends Service {
     private static final String CHANNEL_ID = "statusgo";
     private static final int NOTIFICATION_ID = 4242;
 
-    /** Status logo as notification icon (ic_launcher_monochrome is white/alpha for tinting). */
-    private static final int NOTIFICATION_SMALL_ICON = R.mipmap.ic_launcher_monochrome;
+    /** App icon for notifications (Status logo, from status-logo-white.svg). */
+    private static final int NOTIFICATION_SMALL_ICON = R.drawable.ic_notification_status_logo;
 
     private final RemoteCallbackList<IStatusGoSignalListener> listeners = new RemoteCallbackList<>();
     private volatile boolean foregroundStarted = false;
