@@ -6,10 +6,14 @@ import allure
 from objectmaphelper import RegularExpression
 
 import configs.timeouts
-import constants
 import driver
-from constants import wallet_account_list_item
-from constants.wallet import WalletNetworkSettings, WalletNetworkDefaultValues, DefaultNetworksList
+from constants.wallet import (
+    DefaultNetworksList,
+    TokenListItem,
+    WalletAccountListItem,
+    WalletNetworkDefaultValues,
+    WalletNetworkSettings,
+)
 from driver import objects_access
 from driver.objects_access import walk_children
 from gui.components.context_menu import ContextMenu
@@ -630,7 +634,7 @@ class EditAccountOrderSettings(WalletSettingsView):
 
     @property
     @allure.step('Get accounts')
-    def accounts(self) -> typing.List[wallet_account_list_item]:
+    def accounts(self) -> typing.List[WalletAccountListItem]:
         _accounts = []
         for account_item in driver.findAllObjects(self._account_item.real_name):
             element = QObject(real_name=driver.objectMap.realName(account_item))
@@ -642,7 +646,7 @@ class EditAccountOrderSettings(WalletSettingsView):
                     icon_color = str(child.color.name)
                     icon_emoji = str(child.emoji)
                     break
-            _accounts.append(wallet_account_list_item(name, icon_color, icon_emoji, element))
+            _accounts.append(WalletAccountListItem(name, icon_color, icon_emoji, element))
 
         return sorted(_accounts, key=lambda account: account.object.y)
 
@@ -688,12 +692,12 @@ class ManageTokensSettingsView(WalletSettingsView):
 
     @property
     @allure.step('Get tokens')
-    def tokens(self) -> typing.List[constants.token_list_item]:
+    def tokens(self) -> typing.List[TokenListItem]:
         _tokens = []
         for token_item in driver.findAllObjects(self._token_item.real_name):
             element = QObject(real_name=driver.objectMap.realName(token_item))
             name = str(token_item.title)
-            _tokens.append(constants.token_list_item(name, element))
+            _tokens.append(TokenListItem(name, element))
 
         return sorted(_tokens, key=lambda token: token.object.y)
 

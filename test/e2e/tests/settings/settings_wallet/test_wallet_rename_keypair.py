@@ -18,7 +18,7 @@ from gui.main_window import MainWindow
 @pytest.mark.parametrize(
     'emoji',
     [pytest.param('sunglasses')])
-@pytest.mark.parametrize('address_pair', [constants.user.private_key_address_pair_1])
+@pytest.mark.parametrize('address_pair', [constants.wallet.private_key_address_pair_1])
 def test_rename_keypair_test(main_screen: MainWindow, user_account, emoji: str, address_pair):
 
     with step('Get display name'):

@@ -6,7 +6,16 @@ from zpywallet.network import EthereumMainNet
 from eth_account.hdaccount import generate_mnemonic, Mnemonic
 
 import configs
-from constants import user, WalletAccountColors
+from constants import WalletAccountColors
+
+COMMUNITY_TAGS = [
+    'Activism', 'Art', 'Blockchain', 'Books & blogs', 'Career', 'Collaboration', 'Commerce', 'Culture',
+    'DAO', 'DIY', 'DeFi', 'Design', 'Education', 'Entertainment', 'Environment', 'Ethereum', 'Event',
+    'Fantasy', 'Fashion', 'Food', 'Gaming', 'Global', 'Health', 'Hobby', 'Innovation', 'Language',
+    'Lifestyle', 'Local', 'Love', 'Markets', 'Movies & TV', 'Music', 'NFT', 'NSFW', 'News', 'Non-profit',
+    'Org', 'Pets', 'Play', 'Podcast', 'Politics', 'Privacy', 'Product', 'Psyche', 'Security', 'Social',
+    'Software dev', 'Sports', 'Tech', 'Travel', 'Vehicles', 'Web3'
+]
 
 
 def random_name_string():
@@ -59,7 +68,7 @@ def random_community_leave_message():
 
 def random_community_tags():
     num_tags = random.randint(1, 3)
-    return random.sample(user.community_tags, num_tags)
+    return random.sample(COMMUNITY_TAGS, num_tags)
 
 
 def random_color():

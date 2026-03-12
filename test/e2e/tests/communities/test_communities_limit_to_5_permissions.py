@@ -23,10 +23,10 @@ def test_add_5_member_role_permissions(main_screen: MainWindow):
         permission_data = permission_data_member
         for index, item in enumerate(permission_data):
             permissions_settings = permissions_intro_view.add_new_permission()
-            permissions_settings.set_who_holds_checkbox_state(permission_data[index]['checkbox_state'])
-            permissions_settings.set_who_holds_asset_and_amount(permission_data[index]['first_asset'],
-                                                                permission_data[index]['amount'])
-            permissions_settings.set_is_allowed_to(permission_data[index]['allowed_to'])
+            permissions_settings.set_who_holds_checkbox_state(permission_data[index].checkbox_state)
+            permissions_settings.set_who_holds_asset_and_amount(permission_data[index].first_asset,
+                                                                permission_data[index].amount)
+            permissions_settings.set_is_allowed_to(permission_data[index].allowed_to)
             permissions_settings.create_permission()
 
         # with step('Created permission is displayed on permission page'):

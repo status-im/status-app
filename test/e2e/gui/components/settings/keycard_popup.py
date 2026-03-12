@@ -5,7 +5,7 @@ import allure
 
 import configs
 import driver
-from constants import wallet_account_list_item
+from constants.wallet import WalletAccountListItem
 from gui.components.base_popup import BasePopup
 from gui.components.emoji_popup import EmojiPopup
 from gui.elements.button import Button
@@ -85,14 +85,14 @@ class KeycardPopup(QObject):
 
     @property
     @allure.step('Get accounts on keycard')
-    def account_tags(self) -> typing.List[wallet_account_list_item]:
+    def account_tags(self) -> typing.List[WalletAccountListItem]:
         _account_tags = []
         for account_tag_item in driver.findAllObjects(self._keypair_tag.real_name):
             element = QObject(real_name=driver.objectMap.realName(account_tag_item))
             name = str(account_tag_item.title)
             icon_emoji = str(account_tag_item.asset.emoji)
             icon_color = str(account_tag_item.bgColor.name)
-            _account_tags.append(wallet_account_list_item(name, icon_color, icon_emoji, element))
+            _account_tags.append(WalletAccountListItem(name, icon_color, icon_emoji, element))
         return sorted(_account_tags, key=lambda account: account.object.x)
 
     @property

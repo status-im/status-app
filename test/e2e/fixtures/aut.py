@@ -3,6 +3,7 @@ import os
 
 import pytest
 import logging
+import configs
 import constants
 from constants.user import *
 from driver.aut import AUT

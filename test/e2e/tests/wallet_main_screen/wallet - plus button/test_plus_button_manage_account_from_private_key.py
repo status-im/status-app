@@ -12,7 +12,7 @@ from gui.main_window import MainWindow
 
 
 @pytest.mark.case(703029)
-@pytest.mark.parametrize('address_pair', [constants.user.private_key_address_pair_1])
+@pytest.mark.parametrize('address_pair', [constants.wallet.private_key_address_pair_1])
 def test_plus_button_manage_account_from_private_key(main_screen: MainWindow, user_account, address_pair):
     wallet_account = RandomWalletAccount()
     new_name = random_wallet_acc_keypair_name()

@@ -1,5 +1,54 @@
 import random
+from dataclasses import dataclass
 from enum import Enum
+
+from scripts.utils.generators import (
+    random_emoji_with_unicode,
+    random_wallet_acc_keypair_name,
+    random_wallet_account_color,
+)
+
+
+@dataclass
+class WalletAccount:
+    name: str = None
+    color: str = None
+    emoji: str = None
+
+
+class RandomWalletAccount(WalletAccount):
+    def __init__(self):
+        super().__init__(
+            name=random_wallet_acc_keypair_name(),
+            color=random_wallet_account_color(),
+            emoji=random_emoji_with_unicode()
+        )
+
+
+@dataclass
+class WalletAccountListItem:
+    name: str
+    icon_color: str
+    icon_emoji: str
+    object: object
+
+
+@dataclass
+class TokenListItem:
+    title: str
+    object: object
+
+
+@dataclass
+class PrivateKeyAddressPair:
+    private_key: str
+    wallet_address: str
+
+
+private_key_address_pair_1 = PrivateKeyAddressPair(
+    '2daa36a3abe381a9c01610bf10fda272fbc1b8a22179a39f782c512346e3e470',
+    '0xd89b48cbcb4244f84a4fb5d3369c120e8f8aa74e'
+)
 
 
 class DerivationPathName(Enum):

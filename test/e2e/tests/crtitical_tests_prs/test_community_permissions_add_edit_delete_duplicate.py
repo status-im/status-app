@@ -30,13 +30,13 @@ def test_add_edit_remove_duplicate_permissions(main_screen: MainWindow):
     with step('Create new permission'):
         permission_set = random.choice(permission_data)
         permissions_settings = permissions_intro_view.add_new_permission()
-        permissions_settings.set_who_holds_checkbox_state(permission_set['checkbox_state'])
-        permissions_settings.set_who_holds_asset_and_amount(permission_set['first_asset'],
-                                                            permission_set['amount'])
-        permissions_settings.set_who_holds_asset_and_amount(permission_set['second_asset'],
-                                                            permission_set['amount'])
-        permissions_settings.set_is_allowed_to(permission_set['allowed_to'])
-        permissions_settings.set_in(permission_set['in_channel'])
+        permissions_settings.set_who_holds_checkbox_state(permission_set.checkbox_state)
+        permissions_settings.set_who_holds_asset_and_amount(permission_set.first_asset,
+                                                            permission_set.amount)
+        permissions_settings.set_who_holds_asset_and_amount(permission_set.second_asset,
+                                                            permission_set.amount)
+        permissions_settings.set_is_allowed_to(permission_set.allowed_to)
+        permissions_settings.set_in(permission_set.in_channel)
         permissions_settings.create_permission()
 
     with step('Check toast message for permission creation'):
@@ -71,9 +71,9 @@ def test_add_edit_remove_duplicate_permissions(main_screen: MainWindow):
 
     with step('Edit permission'):
         edit_permission_view = permissions_intro_view.open_edit_permission_view()
-        if permission_set['allowed_to'] is 'becomeAdmin' and permission_set['checkbox_state'] is True:
+        if permission_set.allowed_to is 'becomeAdmin' and permission_set.checkbox_state is True:
             permissions_settings.set_who_holds_checkbox_state(False)
-        elif permission_set['checkbox_state'] is False:
+        elif permission_set.checkbox_state is False:
             permissions_settings.set_allowed_to_from_permission('becomeMember')
         else:
             edit_permission_view.switch_hide_permission_checkbox(True)
@@ -82,18 +82,15 @@ def test_add_edit_remove_duplicate_permissions(main_screen: MainWindow):
     with step('Confirm changes and verify that permission was changed'):
         changes_popup = PermissionsChangesDetectedToastMessage().wait_until_appears()
         changes_popup.update_permission()
-        if permission_set['allowed_to'] is 'becomeAdmin' and permission_set[
-            'checkbox_state'] is True:
-            if permission_set['asset_title'] is not False:
-                assert driver.waitFor(lambda: permission_set[
-                                                  'asset_title'] not in permissions_settings.get_who_holds_tags_titles(),
+        if permission_set.allowed_to is 'becomeAdmin' and permission_set.checkbox_state is True:
+            if permission_set.asset_title is not False:
+                assert driver.waitFor(lambda: permission_set.asset_title not in permissions_settings.get_who_holds_tags_titles(),
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-            if permission_set['second_asset_title'] is not False:
+            if permission_set.second_asset_title is not False:
                 assert driver.waitFor(
-                    lambda: permission_set[
-                                'second_asset_title'] not in permissions_settings.get_who_holds_tags_titles(),
+                    lambda: permission_set.second_asset_title not in permissions_settings.get_who_holds_tags_titles(),
                     configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-        elif permission_set['checkbox_state'] is False:
+        elif permission_set.checkbox_state is False:
             assert driver.waitFor(lambda: 'Become member' in permissions_settings.get_is_allowed_tags_titles(),
                                   configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
         else:
