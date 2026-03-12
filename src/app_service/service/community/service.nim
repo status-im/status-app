@@ -1972,6 +1972,7 @@ QtObject:
     var community = self.getCommunityById(communityId)
 
     if (indexPending != -1):
+      community.pendingRequestsToJoin[indexPending].state = newState.int
       if @[RequestToJoinType.Declined, RequestToJoinType.Accepted, RequestToJoinType.Canceled].any(x => x == newState):
         # If the state is now declined, add to the declined requests
         if newState == RequestToJoinType.Declined:
@@ -1987,8 +1988,7 @@ QtObject:
 
         # If the state is no longer pending, delete the request
         community.pendingRequestsToJoin.delete(indexPending)
-      else:
-        community.pendingRequestsToJoin[indexPending].state = newState.int
+
     elif indexDeclined != -1:
       community.declinedRequestsToJoin.delete(indexDeclined)
     elif indexAwaitingAddresses != -1 and newState != RequestToJoinType.AwaitingAddress:
@@ -2041,8 +2041,9 @@ QtObject:
     try:
       let response = status_go.declineRequestToJoinCommunity(requestId)
       let requestToJoin = response.result["requestsToJoinCommunity"][0].toCommunityMembershipRequestDto
+      let updatedCommunity = response.result["communities"][0].toCommunityDto
 
-      self.updateMembershipRequestToNewState(communityId, requestId, self.communities[communityId],
+      self.updateMembershipRequestToNewState(communityId, requestId, updatedCommunity,
         RequestToJoinType(requestToJoin.state))
 
       self.events.emit(SIGNAL_COMMUNITY_EDITED, CommunityArgs(community: self.communities[communityId]))

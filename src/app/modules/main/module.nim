@@ -348,7 +348,11 @@ proc createCommunitySectionItem[T](self: Module[T], communityDetails: CommunityD
 
   if not existingCommunity.isEmpty() and
       (communityDetails.memberRole == MemberRole.Owner or communityDetails.memberRole == MemberRole.TokenMaster):
-    if existingCommunity.joinedMembersCount != communityDetails.members.len:
+    let existingDeclinedRequestsCount = existingCommunity.members.getItems().countIt(
+      it.membershipRequestState == MembershipRequestState.Declined
+    )
+    if existingCommunity.joinedMembersCount != communityDetails.members.len or
+        existingDeclinedRequestsCount != communityDetails.declinedRequestsToJoin.len:
       # If the number of joined members has changed, we need to update the members list
       # There is the slight chance that the number stays the same if someone left at the same tme as someone joined,
       # but it's not a big deal, it will correct itself on the next community update
