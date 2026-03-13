@@ -778,6 +778,9 @@ Control {
         StatusChatInputToolBar {
             id: toolBar
 
+            styleButtonVisible: false
+            showFormatting: !!messageInputField.selectedText
+
             cameraButton.visible: false
 
             imageButton.checked: imageDialog.visible
@@ -800,17 +803,37 @@ Control {
             boldButton.checked: isFormatted("**")
             boldButton.onClicked: toggleFormatting("**")
 
-            italicButton.checked: {
-                const text = d.getSelectedTextWithFormationChars(messageInputField)
-                return (d.surroundedBy(text, "*") && !d.surroundedBy(text, "**")) || d.surroundedBy(text, "***")
-            }
+            italicButton.checked: isFormatted("*")
 
             italicButton.onClicked: toggleFormatting("*")
 
             strikeThroughButton.checked: isFormatted("~~")
             strikeThroughButton.onClicked: toggleFormatting("~~")
 
+            quoteButton.checked: !!messageInputField.selectedText
+                && messageInputField.isSelectedLinePrefixedBy(messageInputField.selectionStart, "> ")
+            quoteButton.onClicked: {
+                if (messageInputField.isSelectedLinePrefixedBy(messageInputField.selectionStart, "> "))
+                    messageInputField.unprefixSelectedLine("> ")
+                else
+                    messageInputField.prefixSelectedLine("> ")
+            }
+
+            codeButton.checked: isFormatted(codeWrapper)
+            codeButton.onClicked: toggleFormatting(codeWrapper)
+
+            readonly property bool multilineSelection:
+                messageInputField.positionToRectangle(messageInputField.selectionEnd).y >
+                messageInputField.positionToRectangle(messageInputField.selectionStart).y
+
+            readonly property string codeWrapper: multilineSelection ? "```" : "`"
+
             function isFormatted(wrapper: string) : bool {
+                if (wrapper === "*") {
+                    const text = d.getSelectedTextWithFormationChars(messageInputField)
+                    return (d.surroundedBy(text, "*") && !d.surroundedBy(text, "**")) || d.surroundedBy(text, "***")
+                }
+
                 return d.surroundedBy(d.getSelectedTextWithFormationChars(messageInputField), wrapper)
             }
 
