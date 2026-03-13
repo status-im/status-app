@@ -136,7 +136,7 @@ Item {
     function setIncognitoCurrent(checked) {
         if (!currentWebView)
             return
-        currentWebView.offTheRecord = checked
+        currentWebView.profileParams.offTheRecord = checked
     }
 
     function changeZoomCurrent(delta) {

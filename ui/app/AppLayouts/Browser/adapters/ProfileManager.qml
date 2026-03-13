@@ -20,11 +20,14 @@ QtObject {
             sourceUrl: path,
             injectionPoint: WebEngineScript.DocumentCreation,
             worldId: WebEngineScript.MainWorld,
-            runsOnSubframes: runOnSubFrames
+            runsOnSubFrames: runOnSubFrames
         }
     }
 
     function _getProfilePrototype(storageName, offTheRecord) {
+        const storageNameProp = offTheRecord
+            ? ""
+            : `storageName: "${storageName.replace(/"/g, '\\"')}"`
         const persistentCookiesPolicy = offTheRecord
             ? "persistentCookiesPolicy: WebEngineProfile.NoPersistentCookies"
             : ""
@@ -32,7 +35,7 @@ QtObject {
         return Qt.createQmlObject(`
             import QtWebEngine
             WebEngineProfilePrototype {
-                storageName: "${storageName.replace(/"/g, '\\"')}"
+                ${storageNameProp}
                 ${persistentCookiesPolicy}
             }
         `, root, "ProfilePrototype_" + storageName)

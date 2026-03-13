@@ -88,7 +88,7 @@ Item {
                     networksModel: dappModule.networksModel
                     sessionRequestsModel: wcService.sessionRequestsModel
                     walletConnectEnabled: dappsService.walletConnectFeatureEnabled
-                    dappsEnabled: dappsService.walletConnectFeatureEnabled
+                    connectorEnabled: dappsService.connectorFeatureEnabled
 
                     formatBigNumber: (number, symbol, noSymbolOption) => {
                         print ("formatBigNumber", number, symbol, noSymbolOption)

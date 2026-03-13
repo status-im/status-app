@@ -58,6 +58,11 @@ QObject {
     property var currentWebView
     property var findBarComponent
     property var browserHeaderComponent
+    function triggerWebAction(action) {
+        if (!currentWebView)
+            return
+        currentWebView.triggerWebAction(action)
+    }
 
     Shortcut {
         sequences: ["Ctrl+L", "F6"]
@@ -68,16 +73,13 @@ QObject {
     Shortcut {
         sequences: [StandardKey.Refresh]
         onActivated: {
-            if (currentWebView)
-                currentWebView.triggerWebAction(AbstractWebView.WebAction.Reload)
+            triggerWebAction(AbstractWebView.WebAction.Reload)
         }
     }
     Shortcut {
         sequences: [StandardKey.Close]
         onActivated: {
-            if (currentWebView) {
-                currentWebView.triggerWebAction(AbstractWebView.WebAction.RequestClose)
-            }
+            triggerWebAction(AbstractWebView.WebAction.RequestClose)
         }
     }
     Shortcut {
@@ -85,45 +87,44 @@ QObject {
         onActivated: {
             if (findBarComponent.visible)
                 findBarComponent.visible = false;
-            if (currentWebView)
-                currentWebView.triggerWebAction(AbstractWebView.WebAction.Stop)
+            triggerWebAction(AbstractWebView.WebAction.Stop)
         }
     }
     Shortcut {
         sequences: [StandardKey.Copy]
-        onActivated: currentWebView.triggerWebAction(AbstractWebView.WebAction.Copy)
+        onActivated: triggerWebAction(AbstractWebView.WebAction.Copy)
     }
     Shortcut {
         sequences: [StandardKey.Cut]
-        onActivated: currentWebView.triggerWebAction(AbstractWebView.WebAction.Cut)
+        onActivated: triggerWebAction(AbstractWebView.WebAction.Cut)
     }
     Shortcut {
         sequences: [StandardKey.Paste]
-        onActivated: currentWebView.triggerWebAction(AbstractWebView.WebAction.Paste)
+        onActivated: triggerWebAction(AbstractWebView.WebAction.Paste)
     }
     Shortcut {
         sequence: "Shift+"+StandardKey.Paste
-        onActivated: currentWebView.triggerWebAction(AbstractWebView.WebAction.PasteAndMatchStyle)
+        onActivated: triggerWebAction(AbstractWebView.WebAction.PasteAndMatchStyle)
     }
     Shortcut {
         sequences: [StandardKey.SelectAll]
-        onActivated: currentWebView.triggerWebAction(AbstractWebView.WebAction.SelectAll)
+        onActivated: triggerWebAction(AbstractWebView.WebAction.SelectAll)
     }
     Shortcut {
         sequences: [StandardKey.Undo]
-        onActivated: currentWebView.triggerWebAction(AbstractWebView.WebAction.Undo)
+        onActivated: triggerWebAction(AbstractWebView.WebAction.Undo)
     }
     Shortcut {
         sequences: [StandardKey.Redo]
-        onActivated: currentWebView.triggerWebAction(AbstractWebView.WebAction.Redo)
+        onActivated: triggerWebAction(AbstractWebView.WebAction.Redo)
     }
     Shortcut {
         sequences: [StandardKey.Back]
-        onActivated: currentWebView.triggerWebAction(AbstractWebView.WebAction.Back)
+        onActivated: triggerWebAction(AbstractWebView.WebAction.Back)
     }
     Shortcut {
         sequences: [StandardKey.Forward]
-        onActivated: currentWebView.triggerWebAction(AbstractWebView.WebAction.Forward)
+        onActivated: triggerWebAction(AbstractWebView.WebAction.Forward)
     }
     Shortcut {
         sequences: [StandardKey.FindNext]

@@ -133,12 +133,12 @@ QtObject {
         }
     }
 
-	function changeAccount(newAccount) {
-		if (connectorController) {
-			connectorController.disconnect(dappOrigin, clientId)
-			connectorController.changeAccount(dappOrigin, clientId, newAccount)
-		}
-	}
+    function changeAccount(newAccount) {
+        if (connectorController) {
+            connectorController.disconnect(dappOrigin, clientId)
+            connectorController.changeAccount(dappOrigin, clientId, newAccount)
+        }
+    }
 
     function updateDAppUrl(url, name, iconUrl) {
         if (!url) return

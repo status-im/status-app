@@ -217,5 +217,14 @@ AbstractWebView {
         function onOffTheRecordChanged() {
             root.profile = ProfileManager.getProfile(root.profileParams)
         }
+        function onUserAgentChanged() {
+            root.profile = ProfileManager.getProfile(root.profileParams)
+        }
+        function onScriptsChanged() {
+            root.profile = ProfileManager.getProfile(root.profileParams)
+        }
+        function onUserIdChanged() {
+            root.profile = ProfileManager.getProfile(root.profileParams)
+        }
     }
 }
