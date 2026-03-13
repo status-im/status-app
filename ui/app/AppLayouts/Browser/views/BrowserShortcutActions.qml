@@ -52,7 +52,7 @@ import QtQuick
 
 import StatusQ.Core.Utils  // for QObject
 
-import "../adapters"
+import AppLayouts.Browser.adapters
 
 QObject {
     property var currentWebView

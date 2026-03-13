@@ -49,7 +49,7 @@ StatusSectionLayout {
 
     property bool isDebugEnabled: false
     property string platformOS: Qt.platform.os
-    property bool useWebViewAdapter: true
+    property bool useWebViewAdapter: root.isMobile
     readonly property Component webViewAdapterComponent: useWebViewAdapter ? mobileWebViewAdapterComponent : webEngineAdapterComponent
 
     signal sendToRecipientRequested(string address)
@@ -545,7 +545,7 @@ StatusSectionLayout {
             x: browserToolbar.width - width - Theme.halfPadding
             y: browserToolbar.height + 4
 
-            incognitoMode: _internal.currentWebView && _internal.currentWebView.offTheRecord
+            incognitoMode: _internal.currentWebView?.offTheRecord ?? false
             accounts: root.browserWalletStore.accounts
             currentAccount: root.browserWalletStore.dappBrowserAccount
             activityStore: root.browserActivityStore
@@ -588,7 +588,7 @@ StatusSectionLayout {
         x: parent.width - width - Theme.halfPadding
         y: browserToolbar.height + 4
 
-        incognitoMode: _internal.currentWebView && _internal.currentWebView.offTheRecord
+        incognitoMode: _internal.currentWebView?.offTheRecord ?? false
         zoomFactor: _internal.currentWebView ? _internal.currentWebView.zoomFactor : 1
         onAddNewTab: _internal.addNewTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
@@ -634,7 +634,7 @@ StatusSectionLayout {
             parent: browserToolbar
             x: Theme.halfPadding
             y: browserToolbar.height + 4
-            incognitoMode: _internal.currentWebView && _internal.currentWebView.offTheRecord
+            incognitoMode: _internal.currentWebView?.offTheRecord ?? false
             bookmarksStore: root.bookmarksStore
         }
     }

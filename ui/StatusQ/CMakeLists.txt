@@ -77,7 +77,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 add_subdirectory(../../vendor/SortFilterProxyModel SortFilterProxyModel)
-add_subdirectory(../../vendor/qzxing/src qzxing)
 
 target_compile_options(SortFilterProxyModel PRIVATE -w)
 
@@ -290,14 +289,26 @@ endif ()
 include(FetchContent)
 set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
 
-FetchContent_Declare(
-  MobileWebView
+if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    FetchContent_Declare(
+      MobileWebView
 
-  GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
-  GIT_TAG 551b1610deceec99b5b99e9612ab4947faa8c332
-  SOURCE_SUBDIR mobilewebview
-)
-FetchContent_MakeAvailable(MobileWebView)
+      GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
+      GIT_TAG 551b1610deceec99b5b99e9612ab4947faa8c332
+      SOURCE_SUBDIR mobilewebview
+    )
+    FetchContent_MakeAvailable(MobileWebView)
+
+    if(TARGET MobileWebView)
+        target_link_libraries(StatusQ PRIVATE MobileWebView)
+        target_compile_definitions(StatusQ PRIVATE STATUSQ_HAS_MOBILEWEBVIEW=1)
+        install(TARGETS MobileWebView
+                RUNTIME DESTINATION StatusQ
+                LIBRARY DESTINATION StatusQ
+                ARCHIVE DESTINATION StatusQ
+                )
+    endif()
+endif()
 
 FetchContent_Declare(
   QtModelsToolkit
@@ -352,14 +363,8 @@ target_link_libraries(StatusQ PRIVATE
         SortFilterProxyModel
         QtModelsToolkit
         MobileUI
-        qzxing
         SCodes
         )
-
-if(TARGET MobileWebView)
-    target_link_libraries(StatusQ PRIVATE MobileWebView)
-    target_compile_definitions(StatusQ PRIVATE STATUSQ_HAS_MOBILEWEBVIEW=1)
-endif()
 
 if(TARGET SCodes)
     set_target_properties(SCodes PROPERTIES
@@ -389,14 +394,6 @@ install(TARGETS StatusQ
         RUNTIME DESTINATION StatusQ
         LIBRARY DESTINATION StatusQ
         )
-
-if(TARGET MobileWebView)
-    install(TARGETS MobileWebView
-            RUNTIME DESTINATION StatusQ
-            LIBRARY DESTINATION StatusQ
-            ARCHIVE DESTINATION StatusQ
-            )
-endif()
 
 # https://doc.qt.io/qtcreator/creator-qml-modules-with-plugins.html#importing-qml-modules
 set(QML_IMPORT_PATH
