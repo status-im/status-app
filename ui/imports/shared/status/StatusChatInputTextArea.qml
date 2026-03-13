@@ -372,28 +372,22 @@ StatusQ.StatusTextArea {
         if (root.selectionStart - root.selectionEnd === 0)
             return
 
-        // Calculate the new selection start and end positions
-        const newSelectionStart = root.selectionStart -  unwrapWith.length
-        const newSelectionEnd = root.selectionEnd-root.selectionStart + newSelectionStart
-
         selectedTextWithFormationChars = selectedTextWithFormationChars.trim()
-        // Check if the selectedTextWithFormationChars has formation chars and if so, calculate how many so we can adapt the start and end pos
         const selectTextDiff = (selectedTextWithFormationChars.length - root.selectedText.length) / 2
 
-        // Remove the deselected option from the before and after the selected text
-        const prefixChars = root.getText((root.selectionStart - selectTextDiff), root.selectionStart)
-        const updatedPrefixChars = prefixChars.replace(unwrapWith, '')
-        const postfixChars = root.getText(root.selectionEnd, (root.selectionEnd + selectTextDiff))
-        const updatedPostfixChars = postfixChars.replace(unwrapWith, '')
+        const prefixStart = root.selectionStart - selectTextDiff
+        const prefixChars = root.getText(prefixStart, root.selectionStart)
+        const prefixIdx = prefixChars.indexOf(unwrapWith)
 
-        // Create updated selected string with pre and post formatting characters
-        const updatedSelectedStringWithFormatChars = updatedPrefixChars + root.selectedText + updatedPostfixChars
+        const postfixChars = root.getText(root.selectionEnd, root.selectionEnd + selectTextDiff)
+        const postfixIdx = postfixChars.indexOf(unwrapWith)
 
-        root.remove(root.selectionStart - selectTextDiff, root.selectionEnd + selectTextDiff)
+        // Remove suffix first (higher index) to avoid shifting prefix position
+        if (postfixIdx !== -1)
+            root.remove(root.selectionEnd + postfixIdx, root.selectionEnd + postfixIdx + unwrapWith.length)
 
-        insertInTextInput(root.selectionStart, updatedSelectedStringWithFormatChars)
-
-        root.select(newSelectionStart, newSelectionEnd)
+        if (prefixIdx !== -1)
+            root.remove(prefixStart + prefixIdx, prefixStart + prefixIdx + unwrapWith.length)
     }
 
     function prefixSelectedLine(prefix) {
