@@ -426,9 +426,6 @@ StatusSectionLayout {
                 }
             }
 
-            OpenedDialogsTracker {
-                trackedDialog: walletMenu
-            }
         }
     }
 
@@ -468,9 +465,6 @@ StatusSectionLayout {
             Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings);
         }
 
-        OpenedDialogsTracker {
-            trackedDialog: settingsMenu
-        }
     }
 
     Component {
@@ -525,9 +519,6 @@ StatusSectionLayout {
             favoritesContext.openAddFavoritePopup(true, favoriteMenu.currentFavorite)
         }
 
-        OpenedDialogsTracker {
-            trackedDialog: favoriteMenu
-        }
     }
 
     StatusMenu {
@@ -555,9 +546,6 @@ StatusSectionLayout {
             }
         }
 
-        OpenedDialogsTracker {
-            trackedDialog: historyMenu
-        }
     }
 
     Component {

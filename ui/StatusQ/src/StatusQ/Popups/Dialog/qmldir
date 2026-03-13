@@ -1,7 +1,5 @@
 module StatusQ.Popups.Dialog
 
-singleton DialogCounter 0.1 DialogCounter.qml
-OpenedDialogsTracker 0.1 OpenedDialogsTracker.qml
 StatusDialog 0.1 StatusDialog.qml
 StatusDialogBackground 0.1 StatusDialogBackground.qml
 StatusDialogDivider 0.1 StatusDialogDivider.qml

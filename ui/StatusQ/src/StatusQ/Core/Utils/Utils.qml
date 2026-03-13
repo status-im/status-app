@@ -332,4 +332,15 @@ QtObject {
         
         return content.length > 0 ? (content + tidSuffix) : tidSuffix
     }
+
+    function hasPopups(overlayChildren) {
+        if (!overlayChildren)
+            return false
+
+        return overlayChildren.filter(
+            item => {
+                const str = item.toString()
+                return str.includes("QQuickPopupItem") && !str.includes("StatusToolTip")
+            }).length > 0
+    }
 }

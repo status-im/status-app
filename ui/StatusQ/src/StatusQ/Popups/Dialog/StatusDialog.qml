@@ -12,8 +12,6 @@ import StatusQ.Core.Theme
 Dialog {
     id: root
 
-    OpenedDialogsTracker {}
-
     property string subtitle
 
     /*!

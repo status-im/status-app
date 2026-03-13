@@ -1,7 +1,8 @@
 import QtQuick
+import QtQuick.Controls
 
 import utils
-import StatusQ.Popups.Dialog
+import StatusQ.Core.Utils as SQUtils
 
 import AppLayouts.Browser.adapters
 
@@ -174,7 +175,7 @@ Item {
     Component {
         id: webViewAdapterComponent
         WebViewAdapter {
-            visible: DialogCounter.openedDialogsCount === 0 || !root.isMobile
+            visible: !SQUtils.Utils.hasPopups(Overlay.overlay.children) || !root.isMobile
             enabled: visible
 
             bookmarksStore: root.bookmarksStore

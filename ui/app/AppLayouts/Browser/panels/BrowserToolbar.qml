@@ -205,9 +205,6 @@ Control {
                 // Can open a modal or use DAppsWorkflow in the future
             }
 
-            OpenedDialogsTracker {
-                trackedDialog: dappsComboBox.popup
-            }
         }
 
         Item { Layout.fillWidth: true; visible: root.dappBtnAvailable }
