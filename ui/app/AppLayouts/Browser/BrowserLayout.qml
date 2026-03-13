@@ -49,9 +49,8 @@ StatusSectionLayout {
 
     property bool isDebugEnabled: false
     property string platformOS: Qt.platform.os
-    // FIXME: restore in the next PR
-    property bool useWebViewAdapter: false
-    readonly property Component webViewAdapterComponent: webEngineAdapterComponent
+    property bool useWebViewAdapter: root.isMobile
+    readonly property Component webViewAdapterComponent: useWebViewAdapter ? mobileWebViewAdapterComponent : webEngineAdapterComponent
 
     signal sendToRecipientRequested(string address)
 
