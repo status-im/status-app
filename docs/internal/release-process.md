@@ -6,18 +6,21 @@ This guide is meant to explain the flow and rules of the release process, i.e. t
    1. The format for the status-app branch is `release/MAJOR.MINOR.x`, eg. `release/2.36.x`
    2. The format for the status-go branch is automatically done using the Release script. Ask a status-go maintainer to create it.
    3. The status-app release branch **must** always point to the status-go release branch.
+2. The first RC of the release branch **should** be sent to the Apple App Store immediately
+   1. This ensures that any question from the Apple review team can be answered and addressed as soon as possible
+   2. Once the release is ready, the final build will be sent to the App Store and **should** pass easily
    
-2. Issues needing to be fixed on the RC **must** be added to the [Release Board](https://github.com/orgs/status-im/projects/97/views/1).
+3. Issues needing to be fixed on the RC **must** be added to the [Release Board](https://github.com/orgs/status-im/projects/97/views/1).
    
-3. Only bug fixes **must** be provided to the release branch.
+4. Only bug fixes **must** be provided to the release branch.
    
-4. Moreover, only **critical** bug fixes **should** be added to the [Release Board](https://github.com/orgs/status-im/projects/97/views/1) and committed to the release branch.
+5. Moreover, only **critical** bug fixes **should** be added to the [Release Board](https://github.com/orgs/status-im/projects/97/views/1) and committed to the release branch.
    1. Critical bugs are issues that affect:
       1. security
       2. potential data or funds loss
       3. crashes
       4. full regressions
-5. One or more testing days **should** be done by the entire Status team to find any regressions.
+6. One or more testing days **should** be done by the entire Status team to find any regressions.
    1. The Status team **should** split in testing groups to help test features.
    2. Testing groups **should** contain people from different teams to spread the knowledge.
    3. Testing days **must** use a list of current features to test.
@@ -27,21 +30,25 @@ This guide is meant to explain the flow and rules of the release process, i.e. t
    7. The recently added or refactored features **should** be the most tested.
    8. Features on the list **can** be tested by multiple testing groups.
 
-6. Regressions **should** be mentioned to the QA team so that they can plan and implement e2e tests to prevent further regressions of the sorts (to be implemented on master).
+7. Regressions **should** be mentioned to the QA team so that they can plan and implement e2e tests to prevent further regressions of the sorts (to be implemented on master).
 
-7. Code coverage does **not** need to be met on the release branch.
+8. Code coverage does **not** need to be met on the release branch.
 
-8. Features **must not** be allowed to be added to the release branch under any circumstances.
+9.  Features **must not** be allowed to be added to the release branch under any circumstances.
 
-9. Fixes for issues identified during the RC phase **must** be worked on and committed on the release branch **first**.
-
-10. Once a fix has been applied to the release branch, it **must** be ported to the master branch by the author of the commit.
+10. Fixes for issues identified during the RC phase **must** be worked on and committed on the release branch **first**.
 
 11. A new RC build **can** be triggered every day, if there are new fixes in the release branch.
+
 12. Releases and RCs **must** have unique semantic numbers in the `VERSION` file and `tag`.
     1.  Release format: `2.36.0`
     2.  RC format: `2.36.0-rc.1`
+
 13. The commit updating the `VERSION` file **must** have a `tag` matching the same version number on it.
+
+14. The release branch **must** be rebased on top of the master branch each time a new RC is cut
+    1.  This ensures that the master branch stays up to date with the release branch
+    2.  It also lowers the amount of effort needed by devs, as no one needs to cherry-pick
 
 
 ## Frequently asked questions

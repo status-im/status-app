@@ -18,21 +18,21 @@ This guide documents the optimal steps to create and work on Feature Epics in a 
 
 * An **EPIC** is created for any new feature or major improvement (by product, dev or design teams).
 * The EPIC includes:
-    * Feature requirements
-    * High-level scope
-    * Known constraints or assumptions
+  * Feature requirements
+  * High-level scope
+  * Known constraints or assumptions
 * The epic is assigned to the **Design Team** with the label **<code>needs-design</code>**.
 
 
 ## 2. Design Exploration Phase
 
-* The designer changes the epic status to **“In Progress”** once exploration begins.
+* The designer changes the Epic status to **“In Progress”** once exploration begins.
 * The designer starts drafting early concepts / prototypes.
 * The designer is responsible for **pinging the Dev owner** early to initiate collaboration.
 * Multiple review iterations may happen with: 
-    * Dev / Product / (Optionally) other stakeholders (eg QA engineers)
+  * Dev / Product / QA engineers
 * Syncs may be:
-    * **Async** (chat / comments) / **Sync calls**, as needed
+  * **Async** (chat / comments) / **Sync calls**, as needed
 * Communication should be **frequent**, potentially more than once per week for complex features.
 
 
@@ -40,7 +40,7 @@ This guide documents the optimal steps to create and work on Feature Epics in a 
 
 * Last meeting to present the final design
 * Once iterated and aligned, the final design direction is agreed by:
-    * Design / Product / Dev
+  * Design / Product / Dev
 * The designer prepares and delivers the **Figma handoff package**.
   * Includes adding a link to the Figma files to the Epic's description.
 * The designer **removes the <code>needs-design</code> label** from the epic.
@@ -52,32 +52,33 @@ This guide documents the optimal steps to create and work on Feature Epics in a 
 * The Dev owner reviews the final design.
 * The Dev owner breaks down the epic into **small, actionable subtasks**.
 * Subtasks include:
-    * UI components / Interactions / Edge states
-    * Integration work
-    * Non-visual logic affected by UI
-    * Automation test to be implemented by a QA engineer
-    * Design QA task
+  * UI components / Interactions / Edge states
+  * Integration work
+  * Non-visual logic affected by UI
+  * Automation test to be implemented by a QA engineer
+  * Design QA task
 * The Dev owner assigns subtasks within the team (if needed) and starts implementation.
 * It should have acceptance criteria
 
 
 ## 5. Design QA (Post-Implementation Review)
 
-* Once the implementation is complete, **Dev notifies Design**.
+* Once the implementation is complete, **Dev notifies Design** and put the Status as `QA`.
 * Designer reviews the built feature to ensure:
-    * Visual fidelity
-    * Correct interactions
-    * Proper responsive handling
-    * Consistency with the agreed design
+  * Visual fidelity
+  * Correct interactions
+  * Proper responsive handling
+  * Consistency with the agreed design
+* Designer to document all found issues in the Pull Request.
 * Any necessary follow-ups are captured as subtasks and addressed by Dev.
 
 
 ## 6. Epic Completion
 
 * When:
-    * All dev subtasks are done
-    * Design QA is approved
-    * Product is aligned
+  * All dev subtasks are done
+  * Design QA is approved
+  * Product is aligned
 
 * The epic is marked as **Completed** and closed.
 
