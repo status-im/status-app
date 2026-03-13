@@ -30,6 +30,8 @@ Control {
     readonly property alias sendButton: sendButton
 
     property bool sendButtonVisible: true
+    property bool showFormatting: false
+    property bool styleButtonVisible: true
 
     component ChatIcon: AbstractButton {
         id: chatIconRoot
@@ -143,11 +145,13 @@ Control {
                     ChatIcon {
                         id: styleButton
 
+                        visible: root.styleButtonVisible
+                        width: root.styleButtonVisible ? implicitWidth : 0
                         anchors.verticalCenter: parent.verticalCenter
                         icon.name: "chat/style"
                     }
 
-                    state: styleButton.checked ? "formatting" : "noformatting"
+                    state: (root.showFormatting || styleButton.checked) ? "formatting" : "noformatting"
 
                     states: [
                         State {
@@ -197,7 +201,7 @@ Control {
                         id: formattingRowLayout
 
                         spacing: d.padding
-                        anchors.leftMargin: d.padding
+                        anchors.leftMargin: root.styleButtonVisible ? d.padding : 0
                         anchors.verticalCenter: parent.verticalCenter
 
                         Behavior on opacity {
@@ -242,7 +246,8 @@ Control {
                         id: actionsRowLayout
 
                         spacing: d.padding
-                        anchors.leftMargin: d.padding
+                        anchors.leftMargin: root.styleButtonVisible || root.showFormatting
+                                            ? d.padding : 0
                         anchors.verticalCenter: parent.verticalCenter
 
                         ChatIcon {

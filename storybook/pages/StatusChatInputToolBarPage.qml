@@ -19,6 +19,8 @@ Item {
         id: chatToolbar
 
         sendButtonVisible: sendButtonVisibleCheckBox.checked
+        showFormatting: showFormattingCheckBox.checked
+        styleButtonVisible: styleButtonVisibleCheckBox.checked
 
         sendButton.enabled: enabledCheckBox.checked
         sendButton.limitText: limitSlider.value > 0 ? limitSlider.value.toString() : ""
@@ -52,6 +54,20 @@ Item {
             id: sendButtonVisibleCheckBox
 
             text: "send button visible"
+            checked: true
+        }
+
+        CheckBox {
+            id: showFormattingCheckBox
+
+            text: "show formatting"
+            checked: false
+        }
+
+        CheckBox {
+            id: styleButtonVisibleCheckBox
+
+            text: "style button visible"
             checked: true
         }
 
