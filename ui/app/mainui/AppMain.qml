@@ -464,13 +464,6 @@ Item {
                     toastTitle = qsTr("Purchasing %1 sticker pack using %2").arg(stickersPackName).arg(sender)
                     break
                 }
-                case Constants.SendType.Bridge: {
-                    toastTitle = qsTr("Bridging %1 from %2 to %3 in %4").arg(sentAmount).arg(senderChainName).arg(recipientChainName).arg(sender)
-                    if (approvalTx) {
-                        toastTitle = qsTr("Setting spending cap: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
-                    }
-                    break
-                }
                 case Constants.SendType.ERC721Transfer: {
                     toastTitle = toastTitle.arg(assetName).arg(sender).arg(recipient)
                     break
@@ -582,13 +575,6 @@ Item {
                     toastTitle = qsTr("Purchased %1 sticker pack using %2").arg(stickersPackName).arg(sender)
                     break
                 }
-                case Constants.SendType.Bridge: {
-                    toastTitle = qsTr("Bridged %1 from %2 to %3 in %4").arg(sentAmount).arg(senderChainName).arg(recipientChainName).arg(sender)
-                    if (approvalTx) {
-                        toastTitle = qsTr("Spending spending cap: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
-                    }
-                    break
-                }
                 case Constants.SendType.ERC721Transfer: {
                     toastTitle = toastTitle.arg(assetName).arg(sender).arg(recipient)
                     break
@@ -696,13 +682,6 @@ Item {
                 }
                 case Constants.SendType.StickersBuy: {
                     toastTitle = qsTr("Sticker pack purchase failed: %1 using %2").arg(stickersPackName).arg(sender)
-                    break
-                }
-                case Constants.SendType.Bridge: {
-                    toastTitle = qsTr("Bridge failed: %1 from %2 to %3 in %4").arg(sentAmount).arg(senderChainName).arg(recipientChainName).arg(sender)
-                    if (approvalTx) {
-                        toastTitle = qsTr("Spending spending failed: %1 in %2 for %3").arg(sentAmount).arg(sender).arg(txRecipient)
-                    }
                     break
                 }
                 case Constants.SendType.ERC721Transfer: {
@@ -1967,8 +1946,8 @@ Item {
                                 emojiPopup: statusEmojiPopup.item
                                 stickersPopup: statusStickersPopupLoader.item
                                 sendViaPersonalChatEnabled: featureFlagsStore.sendViaPersonalChatEnabled
-                                disabledTooltipText: !appMain.networkConnectionStore.sendBuyBridgeEnabled ?
-                                                         appMain.networkConnectionStore.sendBuyBridgeToolTipText : ""
+                                disabledTooltipText: !appMain.networkConnectionStore.walletReadyForTransactionsEnabled ?
+                                                         appMain.networkConnectionStore.walletReadyForTransactionsToolTipText : ""
                                 paymentRequestFeatureEnabled: featureFlagsStore.paymentRequestEnabled
 
                                 mutualContactsModel: contactsModelAdaptor.mutualContacts
@@ -2066,7 +2045,6 @@ Item {
                                 appMainVisible: appMain.visible
                                 swapEnabled: featureFlagsStore.swapEnabled
                                 buyEnabled: featureFlagsStore.buyEnabled
-                                bridgeEnabled: featureFlagsStore.bridgeEnabled
                                 dAppsVisible: dAppsServiceLoader.item ? dAppsServiceLoader.item.serviceAvailableToCurrentAddress : false
                                 dAppsEnabled: dAppsServiceLoader.item ? dAppsServiceLoader.item.isServiceOnline : false
                                 dAppsModel: dAppsServiceLoader.item ? dAppsServiceLoader.item.dappsModel : null
@@ -2078,7 +2056,7 @@ Item {
                                     dAppsServiceLoader.dappDisconnectRequested(dappUrl)
                                 }
                                 onSendTokenRequested: (senderAddress, gorupKey, tokenType) => popupRequestsHandler.sendModalHandler.sendToken(senderAddress, gorupKey, tokenType)
-                                onBridgeTokenRequested: (tokenId, tokenType) => popupRequestsHandler.sendModalHandler.bridgeToken(tokenId, tokenType)
+
                                 onOpenSwapModalRequested: (swapFormData) => popupRequestsHandler.swapModalHandler.launchSwapSpecific(swapFormData)
 
                                 // Floating panel

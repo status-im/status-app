@@ -103,32 +103,5 @@ QtObject {
         rightModel: _tokenGroupsModelWithCommunityInfo
         joinRole: "key" // this key refers to group key
     }
-
-    readonly property SortFilterProxyModel bridgeableGroupedAccountAssetsModel: SortFilterProxyModel {
-        objectName: "bridgeableGroupedAccountAssetsModel"
-        sourceModel: root.groupedAccountAssetsModel
-
-        filters: [
-            FastExpressionFilter {
-                function isBSC(chainId) {
-                    return chainId === Constants.chains.binanceSmartChainMainnetChainId ||
-                            chainId === Constants.chains.binanceSmartChainTestnetChainId
-                }
-
-                // this function returns true if the token group item contains at least one token which can be bridged via Hop
-                function supportedByHopBridge(tokens) {
-                    return !!SQUtils.ModelUtils.getFirstModelEntryIf(
-                                tokens,
-                                (t) => {
-                                    return !isBSC(t.chainId) && root.walletTokensStore.tokenAvailableForBridgingViaHop(t.chainId, t.address)
-                                })
-                }
-                expression: {
-                    return supportedByHopBridge(model.tokens)
-                }
-                expectedRoles: ["tokens"]
-            }
-        ]
-    }
 }
 

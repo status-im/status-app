@@ -161,7 +161,7 @@ StatusDialog {
             radius: Theme.radius
             text: qsTr("Send")
             icon.name: "send"
-            enabled: root.networkConnectionStore.sendBuyBridgeEnabled
+            enabled: root.networkConnectionStore.walletReadyForTransactionsEnabled
             onClicked: {
                 root.sendToAddressRequested(d.visibleAddress)
                 root.close()

@@ -237,9 +237,6 @@ QtObject:
     read = getAutoRefreshTokensLists
     notify = autoRefreshTokensListsChanged
 
-  proc tokenAvailableForBridgingViaHop(self: View, tokenChainId: int, tokenAddress: string): bool {.slot.} =
-    return self.delegate.tokenAvailableForBridgingViaHop(tokenChainId, tokenAddress)
-
   proc isChainSupportedForSwapViaParaswap*(self: View, chainId: int): bool {.slot.} =
     return self.delegate.isChainSupportedForSwapViaParaswap(chainId)
 

@@ -23,7 +23,6 @@ Loader {
 
     property TransactionStore store
     property bool isCollectiblesTransfer
-    property bool isBridgeTx: false
     property bool interactive: true
     property var selectedAsset
     property var selectedRecipient: null
@@ -79,10 +78,7 @@ Loader {
 
             // set preferred chains
             if(!isCollectiblesTransfer) {
-                if(root.isBridgeTx)
-                    root.store.setAllNetworksAsRoutePreferredChains()
-                else
-                    root.store.updateRoutePreferredChains([])
+                root.store.updateRoutePreferredChains([])
             }
 
             recalculateRoutesAndFees()
@@ -110,7 +106,7 @@ Loader {
         function evaluateAndSetPreferredChains() {
             const plainText = StatusQUtils.StringUtils.plainText(root.item.input.text)
             const address = !!root.item.input && !!plainText ? plainText: ""
-            const result = root.store.splitAndFormatAddressPrefix(address, !root.isBridgeTx && !root.isCollectiblesTransfer)
+            const result = root.store.splitAndFormatAddressPrefix(address, !root.isCollectiblesTransfer)
             if(!!result.address) {
                 root.addressText = result.address
                 if(!!root.item.input) {
@@ -184,7 +180,6 @@ Loader {
         SendRecipientInput {
             width: parent.width
             height: visible ? implicitHeight: 0
-            visible: !root.isBridgeTx
             text: root.addressText
 
             function validateInput() {

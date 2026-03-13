@@ -193,10 +193,6 @@ QtObject {
         return root._allTokensModule.getTokenPreferencesJson(jsonData)
     }
 
-    function tokenAvailableForBridgingViaHop(tokenChainId, tokenAddress) {
-        return root._allTokensModule.tokenAvailableForBridgingViaHop(tokenChainId, tokenAddress)
-    }
-
     function isChainSupportedForSwapViaParaswap(chainId) {
         return root._allTokensModule.isChainSupportedForSwapViaParaswap(chainId)
     }

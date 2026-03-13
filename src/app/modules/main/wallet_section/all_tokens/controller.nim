@@ -147,9 +147,6 @@ proc getAutoRefreshTokensLists*(self: Controller): bool =
 proc toggleAutoRefreshTokensLists*(self: Controller): bool =
   return self.settingsService.toggleAutoRefreshTokens()
 
-proc tokenAvailableForBridgingViaHop*(self: Controller, tokenChainId: int, tokenAddress: string): bool =
-  return self.tokenService.tokenAvailableForBridgingViaHop(tokenChainId, tokenAddress)
-
 proc getMandatoryTokenGroupKeys*(self: Controller): seq[string] =
   return self.tokenService.getMandatoryTokenGroupKeys()
 

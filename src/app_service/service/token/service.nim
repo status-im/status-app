@@ -40,7 +40,6 @@ QtObject:
     rebuildMarketDataDebouncer: debouncer_service.Debouncer
 
     # local storage, fulfilled by need, empty at the start
-    tokensForBridgingViaHop: Table[string, bool] # [tokenKey, bool]
     chainsSupportedForSwapViaParaswap: Table[int, bool] # [chainId, bool]
     # local storage
     tokensOfInterestByKey: Table[string, TokenItem] # [tokenKey, TokenItem]

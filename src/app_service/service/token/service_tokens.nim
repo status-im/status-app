@@ -16,19 +16,6 @@ proc getMandatoryTokenKeys(): seq[string] =
     let errDesription = e.msg
     error "error: ", errDesription
 
-proc tokenAvailableForBridgingViaHop(tokenChainId: int, tokenAddress: string): bool =
-  try:
-    var response: JsonNode
-    var err = status_go_tokens.tokenAvailableForBridgingViaHop(response, tokenChainId, tokenAddress)
-    if err.len > 0:
-      raise newException(CatchableError, "failed" & err)
-    if response.isNil or response.kind != JsonNodeKind.JBool:
-      raise newException(CatchableError, "unexpected response")
-    result = response.getBool()
-  except Exception as e:
-    let errDesription = e.msg
-    error "error: ", errDesription
-
 proc isChainSupportedForSwapViaParaswap(chainId: int): bool =
   try:
     var response: JsonNode

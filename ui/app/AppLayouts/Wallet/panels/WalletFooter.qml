@@ -31,7 +31,6 @@ Rectangle {
 
     property bool swapEnabled
     property bool buyEnabled
-    property bool bridgeEnabled
 
     // Community-token related properties:
     required property bool isCommunityOwnershipTransfer
@@ -41,7 +40,6 @@ Rectangle {
 
     signal launchShareAddressModal()
     signal launchSendModal(string fromAddress)
-    signal launchBridgeModal()
     signal launchSwapModal()
     signal launchBuyCryptoModal()
 
@@ -68,7 +66,6 @@ Rectangle {
         /// Actions available
         readonly property bool anyActionAvailable: sendActionAvailable
                                                     || receiveActionAvailable
-                                                    || bridgeActionAvailable
                                                     || buyActionAvailable
                                                     || swapActionAvailable
 
@@ -77,14 +74,6 @@ Rectangle {
                                                     && !d.hideCollectibleTransferActions
         
         readonly property bool receiveActionAvailable: !walletStore.showAllAccounts
-
-        readonly property bool bridgeActionAvailable: root.bridgeEnabled
-                                                        && !walletStore.overview.isWatchOnlyAccount
-                                                        && !root.isCommunityOwnershipTransfer
-                                                        && walletStore.overview.canSend
-                                                        && !root.walletStore.showAllAccounts
-                                                        && !d.isCollectibleViewed
-                                                        && !d.isCommunityAsset
 
         readonly property bool buyActionAvailable: !isCollectibleViewed && root.buyEnabled
 
@@ -126,12 +115,12 @@ Rectangle {
             objectName: "walletFooterSendButton"
             icon.name: "send"
             text: root.isCommunityOwnershipTransfer ? qsTr("Send Owner token to transfer %1 Community ownership").arg(root.communityName) : qsTr("Send")
-            interactive: !d.isCollectibleSoulbound && networkConnectionStore.sendBuyBridgeEnabled
+            interactive: !d.isCollectibleSoulbound && networkConnectionStore.walletReadyForTransactionsEnabled
             onClicked: {
                 root.transactionStore.setSenderAccount(root.walletStore.selectedAddress)
                 root.launchSendModal(d.isCollectibleViewed ? d.userOwnedAddressForCollectible: root.walletStore.selectedAddress)
             }
-            tooltip.text: d.isCollectibleSoulbound ? qsTr("Soulbound collectibles cannot be sent to another wallet") : networkConnectionStore.sendBuyBridgeToolTipText
+            tooltip.text: d.isCollectibleSoulbound ? qsTr("Soulbound collectibles cannot be sent to another wallet") : networkConnectionStore.walletReadyForTransactionsToolTipText
             visible: d.sendActionAvailable
             display: layout.showText ? StatusFlatButton.TextBesideIcon : StatusFlatButton.IconOnly
         }
@@ -145,17 +134,6 @@ Rectangle {
                 root.transactionStore.setReceiverAccount(root.walletStore.selectedAddress)
                 launchShareAddressModal()
             }
-            display: layout.showText ? StatusFlatButton.TextBesideIcon : StatusFlatButton.IconOnly
-        }
-
-        StatusFlatButton {
-            objectName: "walletFooterBridgeButton"
-            icon.name: "bridge"
-            text: qsTr("Bridge")
-            interactive: !d.isCollectibleSoulbound && networkConnectionStore.sendBuyBridgeEnabled
-            onClicked: root.launchBridgeModal()
-            tooltip.text: d.isCollectibleSoulbound ? qsTr("Soulbound collectibles cannot be bridged to another wallet") :  networkConnectionStore.sendBuyBridgeToolTipText
-            visible: d.bridgeActionAvailable
             display: layout.showText ? StatusFlatButton.TextBesideIcon : StatusFlatButton.IconOnly
         }
 
@@ -174,9 +152,9 @@ Rectangle {
             id: swap
             objectName: "walletFooterSwapButton"
 
-            interactive: networkConnectionStore.sendBuyBridgeEnabled
+            interactive: networkConnectionStore.walletReadyForTransactionsEnabled
             visible: d.swapActionAvailable
-            tooltip.text: networkConnectionStore.sendBuyBridgeToolTipText
+            tooltip.text: networkConnectionStore.walletReadyForTransactionsToolTipText
             icon.name: "swap"
             text: qsTr("Swap")
             onClicked: root.launchSwapModal()

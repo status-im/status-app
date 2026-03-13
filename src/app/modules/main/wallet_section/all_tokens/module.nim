@@ -190,9 +190,6 @@ method displayAssetsBelowBalanceThresholdChanged*(self: Module) =
 method showCommunityAssetWhenSendingTokensChanged*(self: Module) =
   self.view.showCommunityAssetWhenSendingTokensChanged()
 
-method tokenAvailableForBridgingViaHop*(self: Module, tokenChainId: int, tokenAddress: string): bool =
-  return self.controller.tokenAvailableForBridgingViaHop(tokenChainId, tokenAddress)
-
 method getMandatoryTokenGroupKeys*(self: Module): seq[string] =
   return self.controller.getMandatoryTokenGroupKeys()
 

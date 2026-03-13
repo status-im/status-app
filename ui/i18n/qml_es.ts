@@ -1300,17 +1300,6 @@
     </message>
 </context>
 <context>
-    <name>AmountToReceive</name>
-    <message>
-        <source>Amount Bridged</source>
-        <translation>Importe transferido vía bridge</translation>
-    </message>
-    <message>
-        <source>Recipient will get</source>
-        <translation>El destinatario recibirá</translation>
-    </message>
-</context>
-<context>
     <name>AppMain</name>
     <message>
         <source>&quot;%1&quot; successfully added</source>
@@ -1384,10 +1373,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <message>
         <source>Purchasing %1 sticker pack using %2</source>
         <translation>Comprando paquete de stickers %1 usando %2</translation>
-    </message>
-    <message>
-        <source>Bridging %1 from %2 to %3 in %4</source>
-        <translation>Transfiriendo por bridge %1 de %2 a %3 en %4</translation>
     </message>
     <message>
         <source>Setting spending cap: %1 in %2 for %3</source>
@@ -1470,14 +1455,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Paquete de stickers %1 comprado usando %2</translation>
     </message>
     <message>
-        <source>Bridged %1 from %2 to %3 in %4</source>
-        <translation>Transferido por bridge %1 de %2 a %3 en %4</translation>
-    </message>
-    <message>
-        <source>Spending spending cap: %1 in %2 for %3</source>
-        <translation>Límite de gasto: %1 en %2 para %3</translation>
-    </message>
-    <message>
         <source>Sent %1 %2 from %3 to %4</source>
         <translation>Enviado %1 %2 de %3 a %4</translation>
     </message>
@@ -1556,14 +1533,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <message>
         <source>Sticker pack purchase failed: %1 using %2</source>
         <translation>Compra de paquete de stickers fallida: %1 usando %2</translation>
-    </message>
-    <message>
-        <source>Bridge failed: %1 from %2 to %3 in %4</source>
-        <translation>Transferencia por bridge fallida: %1 de %2 a %3 en %4</translation>
-    </message>
-    <message>
-        <source>Spending spending failed: %1 in %2 for %3</source>
-        <translation>Gasto fallido: %1 en %2 para %3</translation>
     </message>
     <message>
         <source>Send failed: %1 %2 from %3 to %4</source>
@@ -7573,13 +7542,6 @@ Por favor, agrégala e intenta de nuevo.</translation>
     </message>
 </context>
 <context>
-    <name>FeesView</name>
-    <message>
-        <source>Fees</source>
-        <translation></translation>
-    </message>
-</context>
-<context>
     <name>FilterComboBox</name>
     <message>
         <source>Collection</source>
@@ -7815,38 +7777,6 @@ Por favor, agrégala e intenta de nuevo.</translation>
     <message>
         <source>Between %1 and %2</source>
         <translation>Entre %1 y %2</translation>
-    </message>
-</context>
-<context>
-    <name>GasSelector</name>
-    <message>
-        <source>%1 transaction fee</source>
-        <translation>Comisión de transacción %1</translation>
-    </message>
-    <message>
-        <source>L1 fee: %1
-L2 fee: %2</source>
-        <translation>Comisión L1: %1
-Tarifa L2: %2</translation>
-    </message>
-    <message>
-        <source>Approve %1 %2 Bridge</source>
-        <translation>Aprobar bridge %1 %2</translation>
-    </message>
-    <message>
-        <source>%1 -&gt; %2 bridge</source>
-        <translation>Bridge %1 -&gt; %2</translation>
-    </message>
-</context>
-<context>
-    <name>GasValidator</name>
-    <message>
-        <source>Balance exceeded</source>
-        <translation>Saldo excedido</translation>
-    </message>
-    <message>
-        <source>No route found</source>
-        <translation>No se encontró ruta</translation>
     </message>
 </context>
 <context>
@@ -11863,49 +11793,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>NetworkCardsComponent</name>
-    <message>
-        <source>Your Balances</source>
-        <translation>Tus saldos</translation>
-    </message>
-    <message>
-        <source>No Balance</source>
-        <translation>Sin saldo</translation>
-    </message>
-    <message>
-        <source>No Gas</source>
-        <translation>Sin gas</translation>
-    </message>
-    <message>
-        <source>EXCEEDS SEND AMOUNT</source>
-        <translation>EXCEDE EL IMPORTE A ENVIAR</translation>
-    </message>
-    <message>
-        <source>BALANCE: %1</source>
-        <translation>SALDO: %1</translation>
-    </message>
-    <message>
-        <source>Disabled</source>
-        <translation>Deshabilitado</translation>
-    </message>
-    <message>
-        <source>Disable</source>
-        <translation>Deshabilitar</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>Habilitar</translation>
-    </message>
-    <message>
-        <source>WILL RECEIVE</source>
-        <translation>RECIBIRÁ</translation>
-    </message>
-    <message>
-        <source>UNPREFERRED</source>
-        <translation>NO PREFERIDA</translation>
-    </message>
-</context>
-<context>
     <name>NetworkConnectionStore</name>
     <message>
         <source>Requires internet connection</source>
@@ -11962,17 +11849,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>NetworkSelector</name>
-    <message>
-        <source>hide details</source>
-        <translation>ocultar detalles</translation>
-    </message>
-    <message>
-        <source>show details</source>
-        <translation>mostrar detalles</translation>
-    </message>
-</context>
-<context>
     <name>NetworkWarningPanel</name>
     <message>
         <source>The owner token is minted on a network that isn&apos;t selected. Click here to enable it:</source>
@@ -11981,29 +11857,6 @@ al cargar</translation>
     <message>
         <source>Enable %1</source>
         <translation>Habilitar %1</translation>
-    </message>
-</context>
-<context>
-    <name>NetworksAdvancedCustomRoutingView</name>
-    <message>
-        <source>Networks</source>
-        <translation>Redes</translation>
-    </message>
-    <message>
-        <source>Hide Unpreferred Networks</source>
-        <translation>Ocultar redes no preferidas</translation>
-    </message>
-    <message>
-        <source>Show Unpreferred Networks</source>
-        <translation>Mostrar redes no preferidas</translation>
-    </message>
-    <message>
-        <source>Routes will be automatically calculated to give you the lowest cost.</source>
-        <translation>Las rutas se calcularán automáticamente para darte el menor costo.</translation>
-    </message>
-    <message>
-        <source>The networks where the recipient will receive tokens. Amounts calculated automatically for the lowest cost.</source>
-        <translation>Las redes donde el destinatario recibirá tokens. Los importes se calculan automáticamente para el menor costo.</translation>
     </message>
 </context>
 <context>
@@ -15127,45 +14980,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>SendModal</name>
-    <message>
-        <source>Bridge</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Register Ens</source>
-        <translation>Registrar ENS</translation>
-    </message>
-    <message>
-        <source>Connect username</source>
-        <translation>Conectar nombre de usuario</translation>
-    </message>
-    <message>
-        <source>Release username</source>
-        <translation>Liberar nombre de usuario</translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation>Enviar</translation>
-    </message>
-    <message>
-        <source>Amount to bridge</source>
-        <translation>Cantidad para bridge</translation>
-    </message>
-    <message>
-        <source>Amount to send</source>
-        <translation>Cantidad a enviar</translation>
-    </message>
-    <message>
-        <source>To</source>
-        <translation>Para</translation>
-    </message>
-    <message>
-        <source>Error sending the transaction</source>
-        <translation>Error al enviar la transacción</translation>
-    </message>
-</context>
-<context>
     <name>SendModalFooter</name>
     <message>
         <source>Est time</source>
@@ -18039,21 +17853,6 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
-    <name>TransactionModalFooter</name>
-    <message>
-        <source>Next</source>
-        <translation>Siguiente</translation>
-    </message>
-    <message>
-        <source>Estimated time:</source>
-        <translation>Tiempo estimado:</translation>
-    </message>
-    <message>
-        <source>Max fees:</source>
-        <translation></translation>
-    </message>
-</context>
-<context>
     <name>TransactionSettings</name>
     <message>
         <source>Got it</source>
@@ -18789,14 +18588,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Receive</source>
         <translation>Recibir</translation>
-    </message>
-    <message>
-        <source>Bridge</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Soulbound collectibles cannot be bridged to another wallet</source>
-        <translation>Los coleccionables Soulbound no se pueden transferir mediante bridge a otra billetera</translation>
     </message>
     <message>
         <source>Buy</source>

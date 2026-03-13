@@ -1,10 +1,3 @@
-AmountToReceive 1.0 AmountToReceive.qml
 AmountToSend 1.0 AmountToSend.qml
-FeesView 1.0 FeesView.qml
-NetworkCardsComponent 1.0 NetworkCardsComponent.qml
-NetworkSelector 1.0 NetworkSelector.qml
-NetworksAdvancedCustomRoutingView 1.0 NetworksAdvancedCustomRoutingView.qml
-NetworksSimpleRoutingView 1.0 NetworksSimpleRoutingView.qml
 RecipientView 1.0 RecipientView.qml
 TabAddressSelectorView 1.0 TabAddressSelectorView.qml
-TransactionModalFooter 1.0 TransactionModalFooter.qml

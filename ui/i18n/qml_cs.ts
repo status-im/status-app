@@ -1305,17 +1305,6 @@
     </message>
 </context>
 <context>
-    <name>AmountToReceive</name>
-    <message>
-        <source>Amount Bridged</source>
-        <translation>Přemostěná částka</translation>
-    </message>
-    <message>
-        <source>Recipient will get</source>
-        <translation>Příjemce obdrží</translation>
-    </message>
-</context>
-<context>
     <name>AppMain</name>
     <message>
         <source>&quot;%1&quot; successfully added</source>
@@ -1390,10 +1379,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>Purchasing %1 sticker pack using %2</source>
         <translation>Nákup balíčku nálepek %1 pomocí %2</translation>
-    </message>
-    <message>
-        <source>Bridging %1 from %2 to %3 in %4</source>
-        <translation>Přemostění %1 z %2 na %3 v %4</translation>
     </message>
     <message>
         <source>Setting spending cap: %1 in %2 for %3</source>
@@ -1476,14 +1461,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Zakoupen balíček nálepek %1 pomocí %2</translation>
     </message>
     <message>
-        <source>Bridged %1 from %2 to %3 in %4</source>
-        <translation>Přemostěno %1 z %2 na %3 v %4</translation>
-    </message>
-    <message>
-        <source>Spending spending cap: %1 in %2 for %3</source>
-        <translation>Limit útraty: %1 v %2 pro %3</translation>
-    </message>
-    <message>
         <source>Sent %1 %2 from %3 to %4</source>
         <translation>Odesláno %1 %2 z %3 na %4</translation>
     </message>
@@ -1562,14 +1539,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>Sticker pack purchase failed: %1 using %2</source>
         <translation>Nákup balíčku nálepek selhal: %1 pomocí %2</translation>
-    </message>
-    <message>
-        <source>Bridge failed: %1 from %2 to %3 in %4</source>
-        <translation>Přemostění selhalo: %1 z %2 na %3 v %4</translation>
-    </message>
-    <message>
-        <source>Spending spending failed: %1 in %2 for %3</source>
-        <translation>Útrata selhala: %1 v %2 pro %3</translation>
     </message>
     <message>
         <source>Send failed: %1 %2 from %3 to %4</source>
@@ -7600,13 +7569,6 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     </message>
 </context>
 <context>
-    <name>FeesView</name>
-    <message>
-        <source>Fees</source>
-        <translation>Poplatky</translation>
-    </message>
-</context>
-<context>
     <name>FilterComboBox</name>
     <message>
         <source>Collection</source>
@@ -7842,38 +7804,6 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     <message>
         <source>Between %1 and %2</source>
         <translation>Mezi %1 a %2</translation>
-    </message>
-</context>
-<context>
-    <name>GasSelector</name>
-    <message>
-        <source>%1 transaction fee</source>
-        <translation>Poplatek za transakci v %1</translation>
-    </message>
-    <message>
-        <source>L1 fee: %1
-L2 fee: %2</source>
-        <translation>L1 poplatek: %1
-L2 poplatek: %2</translation>
-    </message>
-    <message>
-        <source>Approve %1 %2 Bridge</source>
-        <translation>Schválit přemostění %2 v %1</translation>
-    </message>
-    <message>
-        <source>%1 -&gt; %2 bridge</source>
-        <translation>Přemostění %1 -&gt; %2</translation>
-    </message>
-</context>
-<context>
-    <name>GasValidator</name>
-    <message>
-        <source>Balance exceeded</source>
-        <translation>Zůstatek překročen</translation>
-    </message>
-    <message>
-        <source>No route found</source>
-        <translation>Trasa nenalezena</translation>
     </message>
 </context>
 <context>
@@ -11939,49 +11869,6 @@ selhalo</translation>
     </message>
 </context>
 <context>
-    <name>NetworkCardsComponent</name>
-    <message>
-        <source>Your Balances</source>
-        <translation>Vaše zůstatky</translation>
-    </message>
-    <message>
-        <source>No Balance</source>
-        <translation>Žádný zůstatek</translation>
-    </message>
-    <message>
-        <source>No Gas</source>
-        <translation>Žádný Gas</translation>
-    </message>
-    <message>
-        <source>EXCEEDS SEND AMOUNT</source>
-        <translation>PŘEKRAČUJE ČÁSTKU K ODESLÁNÍ</translation>
-    </message>
-    <message>
-        <source>BALANCE: %1</source>
-        <translation>ZŮSTATEK: %1</translation>
-    </message>
-    <message>
-        <source>Disabled</source>
-        <translation>Zakázáno</translation>
-    </message>
-    <message>
-        <source>Disable</source>
-        <translation>Zakázat</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>Povolit</translation>
-    </message>
-    <message>
-        <source>WILL RECEIVE</source>
-        <translation>OBDRŽÍ</translation>
-    </message>
-    <message>
-        <source>UNPREFERRED</source>
-        <translation>NEPREFEROVANÉ</translation>
-    </message>
-</context>
-<context>
     <name>NetworkConnectionStore</name>
     <message>
         <source>Requires internet connection</source>
@@ -12038,17 +11925,6 @@ selhalo</translation>
     </message>
 </context>
 <context>
-    <name>NetworkSelector</name>
-    <message>
-        <source>hide details</source>
-        <translation>skrýt podrobnosti</translation>
-    </message>
-    <message>
-        <source>show details</source>
-        <translation>zobrazit podrobnosti</translation>
-    </message>
-</context>
-<context>
     <name>NetworkWarningPanel</name>
     <message>
         <source>The owner token is minted on a network that isn&apos;t selected. Click here to enable it:</source>
@@ -12057,29 +11933,6 @@ selhalo</translation>
     <message>
         <source>Enable %1</source>
         <translation>Povolit %1</translation>
-    </message>
-</context>
-<context>
-    <name>NetworksAdvancedCustomRoutingView</name>
-    <message>
-        <source>Networks</source>
-        <translation>Sítě</translation>
-    </message>
-    <message>
-        <source>Hide Unpreferred Networks</source>
-        <translation>Skrýt nepreferované sítě</translation>
-    </message>
-    <message>
-        <source>Show Unpreferred Networks</source>
-        <translation>Zobrazit nepreferované sítě</translation>
-    </message>
-    <message>
-        <source>Routes will be automatically calculated to give you the lowest cost.</source>
-        <translation>Trasy budou automaticky vypočítány tak, aby vám poskytly nejnižší náklady.</translation>
-    </message>
-    <message>
-        <source>The networks where the recipient will receive tokens. Amounts calculated automatically for the lowest cost.</source>
-        <translation>Sítě, kde příjemce obdrží tokeny. Částky vypočítány automaticky pro nejnižší náklady.</translation>
     </message>
 </context>
 <context>
@@ -15213,45 +15066,6 @@ selhalo</translation>
     </message>
 </context>
 <context>
-    <name>SendModal</name>
-    <message>
-        <source>Bridge</source>
-        <translation>Most (Bridge)</translation>
-    </message>
-    <message>
-        <source>Register Ens</source>
-        <translation>Registrovat ENS</translation>
-    </message>
-    <message>
-        <source>Connect username</source>
-        <translation>Připojit uživatelské jméno</translation>
-    </message>
-    <message>
-        <source>Release username</source>
-        <translation>Uvolnit uživatelské jméno</translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation>Odeslat</translation>
-    </message>
-    <message>
-        <source>Amount to bridge</source>
-        <translation>Částka k přemostění</translation>
-    </message>
-    <message>
-        <source>Amount to send</source>
-        <translation>Částka k odeslání</translation>
-    </message>
-    <message>
-        <source>To</source>
-        <translation>Komu</translation>
-    </message>
-    <message>
-        <source>Error sending the transaction</source>
-        <translation>Chyba při odesílání transakce</translation>
-    </message>
-</context>
-<context>
     <name>SendModalFooter</name>
     <message>
         <source>Est time</source>
@@ -18138,21 +17952,6 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
 </context>
 <context>
-    <name>TransactionModalFooter</name>
-    <message>
-        <source>Next</source>
-        <translation>Další</translation>
-    </message>
-    <message>
-        <source>Estimated time:</source>
-        <translation>Odhadovaný čas:</translation>
-    </message>
-    <message>
-        <source>Max fees:</source>
-        <translation>Max poplatky:</translation>
-    </message>
-</context>
-<context>
     <name>TransactionSettings</name>
     <message>
         <source>Got it</source>
@@ -18883,14 +18682,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Receive</source>
         <translation>Přijmout</translation>
-    </message>
-    <message>
-        <source>Bridge</source>
-        <translation>Přemostit</translation>
-    </message>
-    <message>
-        <source>Soulbound collectibles cannot be bridged to another wallet</source>
-        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Buy</source>

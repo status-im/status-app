@@ -392,7 +392,7 @@ RightTabBaseView {
                         formatFiat: balance => RootStore.currencyStore.formatCurrencyAmount(
                                         balance, RootStore.currencyStore.currentCurrency)
 
-                        sendEnabled: root.networkConnectionStore.sendBuyBridgeEnabled &&
+                        sendEnabled: root.networkConnectionStore.walletReadyForTransactionsEnabled &&
                                      !RootStore.overview.isWatchOnlyAccount && RootStore.overview.canSend
                         communitySendEnabled: RootStore.tokensStore.showCommunityAssetsInSend
                         swapEnabled: !RootStore.overview.isWatchOnlyAccount
@@ -481,7 +481,7 @@ RightTabBaseView {
                         activeNetworks: root.networksStore.activeNetworks
                         networkFilters: root.networksStore.networkFilters
                         addressFilters: RootStore.addressFilters
-                        sendEnabled: root.networkConnectionStore.sendBuyBridgeEnabled && !RootStore.overview.isWatchOnlyAccount && RootStore.overview.canSend
+                        sendEnabled: root.networkConnectionStore.walletReadyForTransactionsEnabled && !RootStore.overview.isWatchOnlyAccount && RootStore.overview.canSend
                         filterVisible: filterButton.checked
                         customOrderAvailable: controller.hasSettings
                         bannerComponent: buyReceiveBannerComponent

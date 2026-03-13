@@ -49,7 +49,6 @@ Item {
     property bool dAppsEnabled
     property bool dAppsVisible
     property bool buyEnabled
-    property bool bridgeEnabled
 
     property var dAppsModel
 
@@ -63,7 +62,6 @@ Item {
 
     // TODO: remove tokenType parameter from signals below
     signal sendTokenRequested(string senderAddress, string gorupKey, int tokenType)
-    signal bridgeTokenRequested(string tokenId, int tokenType)
 
     signal openSwapModalRequested(var swapFormData)
 
@@ -394,7 +392,6 @@ Item {
             transactionStore: root.transactionStore
             swapEnabled: root.swapEnabled
             buyEnabled: root.buyEnabled
-            bridgeEnabled: root.bridgeEnabled
             networkConnectionStore: root.networkConnectionStore
             isCommunityOwnershipTransfer: footer.isHoldingSelected && footer.isOwnerCommunityCollectible
             communityName: {
@@ -434,10 +431,7 @@ Item {
                                                              walletStore.currentViewedHoldingTokenGroupKey,
                                                              walletStore.currentViewedHoldingType)
                                }
-            onLaunchBridgeModal: {
-                root.bridgeTokenRequested(walletStore.currentViewedHoldingTokenGroupKey,
-                                          walletStore.currentViewedHoldingType)
-            }
+
             onLaunchSwapModal: {
                 let params = {
                     selectedAccountAddress: d.getSelectedOrFirstNonWatchedAddress(),

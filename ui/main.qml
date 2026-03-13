@@ -48,14 +48,12 @@ Window {
         swapEnabled: featureFlags ? featureFlags.swapEnabled : false
         sendViaPersonalChatEnabled: featureFlags ? featureFlags.sendViaPersonalChatEnabled : false
         paymentRequestEnabled: featureFlags ? featureFlags.paymentRequestEnabled : false
-        simpleSendEnabled: featureFlags ? featureFlags.simpleSendEnabled : false
         keycardEnabled: featureFlags ? featureFlags.keycardEnabled : false
         marketEnabled: featureFlags ? featureFlags.marketEnabled : false
         homePageEnabled: featureFlags ? featureFlags.homePageEnabled : false
         localBackupEnabled: featureFlags ? featureFlags.localBackupEnabled : false
         privacyModeFeatureEnabled: featureFlags ? featureFlags.privacyModeFeatureEnabled : false
         buyEnabled: featureFlags ? featureFlags.buyEnabled : false
-        bridgeEnabled: featureFlags ? featureFlags.bridgeEnabled : false
     }
 
     readonly property UtilsStore utilsStore: UtilsStore {}

@@ -104,7 +104,7 @@ StatusListItem {
             type: StatusRoundButton.Type.Quinary
             radius: 8
             icon.name: "send"
-            enabled: root.networkConnectionStore.sendBuyBridgeEnabled
+            enabled: root.networkConnectionStore.walletReadyForTransactionsEnabled
             onClicked: root.openSendModal(d.visibleAddress)
         },
         StatusRoundButton {

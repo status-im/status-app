@@ -1,6 +1,4 @@
 WalletAccountListItem 1.0 WalletAccountListItem.qml
-GasSelector 1.0 GasSelector.qml
-GasValidator 1.0 GasValidator.qml
 ClearButton 1.0 ClearButton.qml
 SavedAddressListItem 1.0 SavedAddressListItem.qml
 SearchBoxWithRightIcon 1.0 SearchBoxWithRightIcon.qml

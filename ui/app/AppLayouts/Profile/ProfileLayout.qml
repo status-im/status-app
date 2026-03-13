@@ -234,7 +234,7 @@ StatusSectionLayout {
                 utilsStore: root.utilsStore
                 networksStore: root.networksStore
 
-                sendToAccountEnabled: root.networkConnectionStore.sendBuyBridgeEnabled
+                sendToAccountEnabled: root.networkConnectionStore.walletReadyForTransactionsEnabled
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.profile)
                 contentWidth: d.contentWidth
                 sideBySidePreview: d.sideBySidePreviewAvailable

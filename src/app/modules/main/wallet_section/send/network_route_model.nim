@@ -184,12 +184,6 @@ QtObject:
         self.items[i].isRouteEnabled = true
         self.dataChanged(index, index, @[ModelRole.IsRouteEnabled.int])
 
-  proc setAllNetworksAsRoutePreferredChains*(self: NetworkRouteModel) {.slot.} =
-    for i in 0 ..< self.items.len:
-      let index = self.createIndex(i, 0, nil)
-      defer: index.delete
-      self.items[i].isRoutePreferred = true
-      self.dataChanged(index, index, @[ModelRole.IsRoutePreferred.int])
 
   proc setRouteEnabledChain*(self: NetworkRouteModel, chainId: int) {.slot.} =
     for i in 0 ..< self.items.len:

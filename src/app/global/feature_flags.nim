@@ -18,7 +18,6 @@ macro featureFlag(name: string, defaultValue: bool, buildFlag: static bool = fal
 
 const DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED  = true
 const DEFAULT_FLAG_PAYMENT_REQUEST_ENABLED = true
-const DEFAULT_FLAG_SIMPLE_SEND_ENABLED = true
 const DEFAULT_FLAG_MARKET_ENABLED = true
 const DEFAULT_FLAG_HOMEPAGE_ENABLED = true
 const DEFAULT_FLAG_LOCAL_BACKUP_ENABLED = true
@@ -33,13 +32,11 @@ const DEFAULT_FLAG_THREADPOOL_ENABLED = true
 const DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED = true
 const DEFAULT_FLAG_BUY_ENABLED = true
 const DEFAULT_FLAG_SWAP_ENABLED = true
-const DEFAULT_FLAG_BRIDGE_ENABLED = true
 const DEFAULT_FLAG_USE_KEYCARD_QT = false
 
 # Public feature flags
 featureFlag("SEND_VIA_PERSONAL_CHAT_ENABLED", DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED)
 featureFlag("PAYMENT_REQUEST_ENABLED",        DEFAULT_FLAG_PAYMENT_REQUEST_ENABLED)
-featureFlag("SIMPLE_SEND_ENABLED",            DEFAULT_FLAG_SIMPLE_SEND_ENABLED)
 featureFlag("MARKET_ENABLED",                 DEFAULT_FLAG_MARKET_ENABLED)
 featureFlag("HOMEPAGE_ENABLED",               DEFAULT_FLAG_HOMEPAGE_ENABLED)
 featureFlag("LOCAL_BACKUP_ENABLED",           DEFAULT_FLAG_LOCAL_BACKUP_ENABLED)
@@ -53,7 +50,6 @@ featureFlag("THREADPOOL_ENABLED",             DEFAULT_FLAG_THREADPOOL_ENABLED, t
 featureFlag("SINGLE_STATUS_INSTANCE_ENABLED", DEFAULT_FLAG_SINGLE_STATUS_INSTANCE_ENABLED, true)
 featureFlag("BUY_ENABLED",                    DEFAULT_FLAG_BUY_ENABLED, true)
 featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED, true)
-featureFlag("BRIDGE_ENABLED",                 DEFAULT_FLAG_BRIDGE_ENABLED, true)
 featureFlag("USE_KEYCARD_QT",                 DEFAULT_FLAG_USE_KEYCARD_QT, true)
 # The `featureGuard` macro conditionally replaces the guarded code
 # There are two main usages:
@@ -93,14 +89,12 @@ QtObject:
     connectorEnabled: bool
     sendViaPersonalChatEnabled: bool
     paymentRequestEnabled: bool
-    simpleSendEnabled: bool
     keycardEnabled: bool
     marketEnabled: bool
     homePageEnabled: bool
     localBackupEnabled: bool
     privacyModeFeatureEnabled: bool
     buyEnabled: bool
-    bridgeEnabled: bool
 
   proc setup(self: FeatureFlags) =
     self.QObject.setup()
@@ -110,14 +104,12 @@ QtObject:
     self.connectorEnabled = CONNECTOR_ENABLED
     self.sendViaPersonalChatEnabled = SEND_VIA_PERSONAL_CHAT_ENABLED
     self.paymentRequestEnabled = PAYMENT_REQUEST_ENABLED
-    self.simpleSendEnabled = SIMPLE_SEND_ENABLED
     self.keycardEnabled = KEYCARD_ENABLED
     self.marketEnabled = MARKET_ENABLED
     self.homePageEnabled = HOMEPAGE_ENABLED
     self.localBackupEnabled = LOCAL_BACKUP_ENABLED
     self.privacyModeFeatureEnabled = PRIVACY_MODE_FEATURE_ENABLED
     self.buyEnabled = BUY_ENABLED
-    self.bridgeEnabled = BRIDGE_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -162,12 +154,6 @@ QtObject:
   QtProperty[bool] paymentRequestEnabled:
     read = getPaymentRequestEnabled
 
-  proc getSimpleSendEnabled*(self: FeatureFlags): bool {.slot.} =
-    return self.simpleSendEnabled
-
-  QtProperty[bool] simpleSendEnabled:
-    read = getSimpleSendEnabled
-
   QtProperty[bool] keycardEnabled:
     read = getKeycardEnabled
 
@@ -203,9 +189,3 @@ QtObject:
 
   proc getBuyEnabled*(self: FeatureFlags): bool {.slot.} =
     return self.buyEnabled
-
-  QtProperty[bool] bridgeEnabled:
-    read = getBridgeEnabled
-
-  proc getBridgeEnabled*(self: FeatureFlags): bool {.slot.} =
-    return self.bridgeEnabled

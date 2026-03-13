@@ -647,7 +647,7 @@ QtObject {
                 utilsStore: root.utilsStore
                 networksStore: root.networksStore
 
-                sendToAccountEnabled: root.networkConnectionStore.sendBuyBridgeEnabled
+                sendToAccountEnabled: root.networkConnectionStore.walletReadyForTransactions
 
                 showcaseCommunitiesModel: isCurrentUser ? root.profileStore.ownShowcaseCommunitiesModel
                                                         : root.contactsStore.contactShowcaseCommunitiesModel

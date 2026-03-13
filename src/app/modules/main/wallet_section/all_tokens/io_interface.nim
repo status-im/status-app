@@ -132,9 +132,6 @@ method displayAssetsBelowBalanceThresholdChanged*(self: AccessInterface) {.base.
 method showCommunityAssetWhenSendingTokensChanged*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method tokenAvailableForBridgingViaHop*(self: AccessInterface, tokenChainId: int, tokenAddress: string): bool {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method getMandatoryTokenGroupKeys*(self: AccessInterface): seq[string] {.base.} =
   raise newException(ValueError, "No implementation available")
 

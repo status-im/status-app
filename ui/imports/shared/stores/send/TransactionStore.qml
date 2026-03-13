@@ -130,10 +130,6 @@ QtObject {
         walletSectionSendInst.toggleShowUnPreferredChains()
     }
 
-    function setAllNetworksAsRoutePreferredChains() {
-        walletSectionSendInst.toNetworksRouteModel.setAllNetworksAsRoutePreferredChains()
-    }
-
     function lockCard(chainId, amount, lock) {
         walletSectionSendInst.fromNetworksRouteModel.lockCard(chainId, amount, lock)
     }

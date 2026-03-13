@@ -1592,19 +1592,6 @@
     </message>
   </context>
   <context>
-    <name>AmountToReceive</name>
-    <message>
-      <source>Amount Bridged</source>
-      <comment>AmountToReceive</comment>
-      <translation>Amount Bridged</translation>
-    </message>
-    <message>
-      <source>Recipient will get</source>
-      <comment>AmountToReceive</comment>
-      <translation>Recipient will get</translation>
-    </message>
-  </context>
-  <context>
     <name>AppMain</name>
     <message>
       <source>&#34;%1&#34; successfully added</source>
@@ -1693,11 +1680,6 @@
       <source>Purchasing %1 sticker pack using %2</source>
       <comment>AppMain</comment>
       <translation>Purchasing %1 sticker pack using %2</translation>
-    </message>
-    <message>
-      <source>Bridging %1 from %2 to %3 in %4</source>
-      <comment>AppMain</comment>
-      <translation>Bridging %1 from %2 to %3 in %4</translation>
     </message>
     <message>
       <source>Setting spending cap: %1 in %2 for %3</source>
@@ -1800,16 +1782,6 @@
       <translation>Purchased %1 sticker pack using %2</translation>
     </message>
     <message>
-      <source>Bridged %1 from %2 to %3 in %4</source>
-      <comment>AppMain</comment>
-      <translation>Bridged %1 from %2 to %3 in %4</translation>
-    </message>
-    <message>
-      <source>Spending spending cap: %1 in %2 for %3</source>
-      <comment>AppMain</comment>
-      <translation>Spending spending cap: %1 in %2 for %3</translation>
-    </message>
-    <message>
       <source>Sent %1 %2 from %3 to %4</source>
       <comment>AppMain</comment>
       <translation>Sent %1 %2 from %3 to %4</translation>
@@ -1908,16 +1880,6 @@
       <source>Sticker pack purchase failed: %1 using %2</source>
       <comment>AppMain</comment>
       <translation>Sticker pack purchase failed: %1 using %2</translation>
-    </message>
-    <message>
-      <source>Bridge failed: %1 from %2 to %3 in %4</source>
-      <comment>AppMain</comment>
-      <translation>Bridge failed: %1 from %2 to %3 in %4</translation>
-    </message>
-    <message>
-      <source>Spending spending failed: %1 in %2 for %3</source>
-      <comment>AppMain</comment>
-      <translation>Spending spending failed: %1 in %2 for %3</translation>
     </message>
     <message>
       <source>Send failed: %1 %2 from %3 to %4</source>
@@ -9236,14 +9198,6 @@
     </message>
   </context>
   <context>
-    <name>FeesView</name>
-    <message>
-      <source>Fees</source>
-      <comment>FeesView</comment>
-      <translation>Fees</translation>
-    </message>
-  </context>
-  <context>
     <name>FilterComboBox</name>
     <message>
       <source>Collection</source>
@@ -9531,42 +9485,6 @@
       <source>Between %1 and %2</source>
       <comment>GapComponent</comment>
       <translation>Between %1 and %2</translation>
-    </message>
-  </context>
-  <context>
-    <name>GasSelector</name>
-    <message>
-      <source>%1 transaction fee</source>
-      <comment>GasSelector</comment>
-      <translation>%1 transaction fee</translation>
-    </message>
-    <message>
-      <source>L1 fee: %1&#xA;L2 fee: %2</source>
-      <comment>GasSelector</comment>
-      <translation>L1 fee: %1&#xA;L2 fee: %2</translation>
-    </message>
-    <message>
-      <source>Approve %1 %2 Bridge</source>
-      <comment>GasSelector</comment>
-      <translation>Approve %1 %2 Bridge</translation>
-    </message>
-    <message>
-      <source>%1 -&gt; %2 bridge</source>
-      <comment>GasSelector</comment>
-      <translation>%1 -&gt; %2 bridge</translation>
-    </message>
-  </context>
-  <context>
-    <name>GasValidator</name>
-    <message>
-      <source>Balance exceeded</source>
-      <comment>GasValidator</comment>
-      <translation>Balance exceeded</translation>
-    </message>
-    <message>
-      <source>No route found</source>
-      <comment>GasValidator</comment>
-      <translation>No route found</translation>
     </message>
   </context>
   <context>
@@ -14432,59 +14350,6 @@
     </message>
   </context>
   <context>
-    <name>NetworkCardsComponent</name>
-    <message>
-      <source>Your Balances</source>
-      <comment>NetworkCardsComponent</comment>
-      <translation>Your Balances</translation>
-    </message>
-    <message>
-      <source>No Balance</source>
-      <comment>NetworkCardsComponent</comment>
-      <translation>No Balance</translation>
-    </message>
-    <message>
-      <source>No Gas</source>
-      <comment>NetworkCardsComponent</comment>
-      <translation>No Gas</translation>
-    </message>
-    <message>
-      <source>EXCEEDS SEND AMOUNT</source>
-      <comment>NetworkCardsComponent</comment>
-      <translation>EXCEEDS SEND AMOUNT</translation>
-    </message>
-    <message>
-      <source>BALANCE: %1</source>
-      <comment>NetworkCardsComponent</comment>
-      <translation>BALANCE: %1</translation>
-    </message>
-    <message>
-      <source>Disabled</source>
-      <comment>NetworkCardsComponent</comment>
-      <translation>Disabled</translation>
-    </message>
-    <message>
-      <source>Disable</source>
-      <comment>NetworkCardsComponent</comment>
-      <translation>Disable</translation>
-    </message>
-    <message>
-      <source>Enable</source>
-      <comment>NetworkCardsComponent</comment>
-      <translation>Enable</translation>
-    </message>
-    <message>
-      <source>WILL RECEIVE</source>
-      <comment>NetworkCardsComponent</comment>
-      <translation>WILL RECEIVE</translation>
-    </message>
-    <message>
-      <source>UNPREFERRED</source>
-      <comment>NetworkCardsComponent</comment>
-      <translation>UNPREFERRED</translation>
-    </message>
-  </context>
-  <context>
     <name>NetworkConnectionStore</name>
     <message>
       <source>Requires internet connection</source>
@@ -14552,19 +14417,6 @@
     </message>
   </context>
   <context>
-    <name>NetworkSelector</name>
-    <message>
-      <source>hide details</source>
-      <comment>NetworkSelector</comment>
-      <translation>hide details</translation>
-    </message>
-    <message>
-      <source>show details</source>
-      <comment>NetworkSelector</comment>
-      <translation>show details</translation>
-    </message>
-  </context>
-  <context>
     <name>NetworkWarningPanel</name>
     <message>
       <source>The owner token is minted on a network that isn&#39;t selected. Click here to enable it:</source>
@@ -14575,34 +14427,6 @@
       <source>Enable %1</source>
       <comment>NetworkWarningPanel</comment>
       <translation>Enable %1</translation>
-    </message>
-  </context>
-  <context>
-    <name>NetworksAdvancedCustomRoutingView</name>
-    <message>
-      <source>Networks</source>
-      <comment>NetworksAdvancedCustomRoutingView</comment>
-      <translation>Networks</translation>
-    </message>
-    <message>
-      <source>Hide Unpreferred Networks</source>
-      <comment>NetworksAdvancedCustomRoutingView</comment>
-      <translation>Hide Unpreferred Networks</translation>
-    </message>
-    <message>
-      <source>Show Unpreferred Networks</source>
-      <comment>NetworksAdvancedCustomRoutingView</comment>
-      <translation>Show Unpreferred Networks</translation>
-    </message>
-    <message>
-      <source>Routes will be automatically calculated to give you the lowest cost.</source>
-      <comment>NetworksAdvancedCustomRoutingView</comment>
-      <translation>Routes will be automatically calculated to give you the lowest cost.</translation>
-    </message>
-    <message>
-      <source>The networks where the recipient will receive tokens. Amounts calculated automatically for the lowest cost.</source>
-      <comment>NetworksAdvancedCustomRoutingView</comment>
-      <translation>The networks where the recipient will receive tokens. Amounts calculated automatically for the lowest cost.</translation>
     </message>
   </context>
   <context>
@@ -18402,54 +18226,6 @@
     </message>
   </context>
   <context>
-    <name>SendModal</name>
-    <message>
-      <source>Bridge</source>
-      <comment>SendModal</comment>
-      <translation>Bridge</translation>
-    </message>
-    <message>
-      <source>Register Ens</source>
-      <comment>SendModal</comment>
-      <translation>Register Ens</translation>
-    </message>
-    <message>
-      <source>Connect username</source>
-      <comment>SendModal</comment>
-      <translation>Connect username</translation>
-    </message>
-    <message>
-      <source>Release username</source>
-      <comment>SendModal</comment>
-      <translation>Release username</translation>
-    </message>
-    <message>
-      <source>Send</source>
-      <comment>SendModal</comment>
-      <translation>Send</translation>
-    </message>
-    <message>
-      <source>Amount to bridge</source>
-      <comment>SendModal</comment>
-      <translation>Amount to bridge</translation>
-    </message>
-    <message>
-      <source>Amount to send</source>
-      <comment>SendModal</comment>
-      <translation>Amount to send</translation>
-    </message>
-    <message>
-      <source>To</source>
-      <comment>SendModal</comment>
-      <translation>To</translation>
-    </message>
-    <message>
-      <source>Error sending the transaction</source>
-      <comment>SendModal</comment>
-      <translation>Error sending the transaction</translation>
-    </message>
-  </context>
-  <context>
     <name>SendModalFooter</name>
     <message>
       <source>Est time</source>
@@ -21930,24 +21706,6 @@
     </message>
   </context>
   <context>
-    <name>TransactionModalFooter</name>
-    <message>
-      <source>Next</source>
-      <comment>TransactionModalFooter</comment>
-      <translation>Next</translation>
-    </message>
-    <message>
-      <source>Estimated time:</source>
-      <comment>TransactionModalFooter</comment>
-      <translation>Estimated time:</translation>
-    </message>
-    <message>
-      <source>Max fees:</source>
-      <comment>TransactionModalFooter</comment>
-      <translation>Max fees:</translation>
-    </message>
-  </context>
-  <context>
     <name>TransactionSettings</name>
     <message>
       <source>Got it</source>
@@ -22820,16 +22578,6 @@
       <source>Receive</source>
       <comment>WalletFooter</comment>
       <translation>Receive</translation>
-    </message>
-    <message>
-      <source>Bridge</source>
-      <comment>WalletFooter</comment>
-      <translation>Bridge</translation>
-    </message>
-    <message>
-      <source>Soulbound collectibles cannot be bridged to another wallet</source>
-      <comment>WalletFooter</comment>
-      <translation>Soulbound collectibles cannot be bridged to another wallet</translation>
     </message>
     <message>
       <source>Buy</source>

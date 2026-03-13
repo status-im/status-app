@@ -198,14 +198,6 @@ proc getTokenByGroupKeyAndChainId*(self: Service, groupKey: string, chainId: int
         return token
   return nil
 
-proc tokenAvailableForBridgingViaHop*(self: Service, tokenChainId: int, tokenAddress: string): bool =
-  let key = common_utils.createTokenKey(tokenChainId, tokenAddress)
-  if self.tokensForBridgingViaHop.hasKey(key):
-    return self.tokensForBridgingViaHop[key]
-  let available = tokenAvailableForBridgingViaHop(tokenChainId, tokenAddress)
-  self.tokensForBridgingViaHop[key] = available
-  return available
-
 ## Checks if the chain is supported for swap via Paraswap
 proc isChainSupportedForSwapViaParaswap*(self: Service, chainId: int): bool =
   if chainId <= 0:

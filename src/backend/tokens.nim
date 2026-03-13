@@ -31,10 +31,6 @@ rpc(getTokensByChain, "wallet"):
 rpc(getTokensByKeys, "wallet"):
   keys: seq[string]
 
-rpc(tokenAvailableForBridgingViaHop, "wallet"):
-  tokenChainId: int
-  tokenAddress: string
-
 rpc(isChainSupportedForSwapViaParaswap, "wallet"):
   chainId: int
 
@@ -50,19 +46,6 @@ proc getMandatoryTokenKeys*(resultOut: var JsonNode): string =
     warn "error getting all mandatory token keys", err = e.msg
     return e.msg
 
-
-## Checks if the token is available for bridging via Hop
-## `resultOut` represents a json object that contains the bool if the call was successful, or `nil`
-## `tokenChainId` is the chain id of the network
-## `tokenAddress` is the address of the token
-## returns the error message if any, or an empty strings
-proc tokenAvailableForBridgingViaHop*(resultOut: var JsonNode, tokenChainId: int, tokenAddress: string): string =
-  try:
-    let response = tokenAvailableForBridgingViaHop(tokenChainId, tokenAddress)
-    return prepareResponse(resultOut, response)
-  except Exception as e:
-    warn "error checking if token is available for bridging via Hop", err = e.msg
-    return e.msg
 
 ## Checks if the chain is supported for swap via Paraswap
 ## `resultOut` represents a json object that contains the bool if the call was successful, or `nil`

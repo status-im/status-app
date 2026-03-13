@@ -43,9 +43,6 @@ QtObject {
     required property string stickersMarketAddress
     required property string stickersNetworkId
 
-    /** Feature flag for single network send until its feature complete **/
-    required property bool simpleSendEnabled
-
     /** For simple send modal flows, decoupling from transaction store **/
 
     /** Expected model structure:
@@ -172,181 +169,96 @@ QtObject {
     /** signal to request launch of buy crypto modal **/
     signal launchBuyFlowRequested(string accountAddress, int chainId, string groupKey)
 
-    function openSend(params = {}, forceLaunchOldSend = false) {
-        // TODO remove once simple send is feature complete
-        if(root.simpleSendEnabled && !forceLaunchOldSend) {
-            root.simpleSendParams = params
-            let sendModalInst = simpleSendModalComponent.createObject(popupParent)
-            sendModalInst.open()
-        } else {
-            let sendModalInst = sendModalComponent.createObject(popupParent, params)
-            sendModalInst.open()
-        }
+    function openSend(params = {}) {
+        root.simpleSendParams = params
+        let sendModalInst = simpleSendModalComponent.createObject(popupParent)
+        sendModalInst.open()
     }
 
     function connectUsername(ensName, ownerAddress) {
         let resolverAddress = root.fnGetEnsnameResolverAddress(ensName)
         resolverAddress = !!resolverAddress ? resolverAddress : root.ensRegisteredAddress
-        let params = {}
-        if (root.simpleSendEnabled) {
-            params = {
-                sendType: Constants.SendType.ENSSetPubKey,
-                selectedAccountAddress: ownerAddress,
-                selectedGroupKey: root.getStatusTokenGroupKey(),
-                selectedRawAmount: "0",
-                selectedRecipientAddress: resolverAddress,
-                interactive: false,
-                publicKey: root.myPublicKey,
-                ensName: ensName
-            }
-        } else {
-            params = {
-                preSelectedSendType: Constants.SendType.ENSSetPubKey,
-                preSelectedHoldingID: Constants.ethToken ,
-                preSelectedHoldingType: Constants.TokenType.Native,
-                preDefinedAmountToSend: LocaleUtils.numberToLocaleString(0),
-                preSelectedRecipient: resolverAddress,
-                interactive: false,
-                publicKey: root.myPublicKey,
-                ensName: ensName
-            }
+        let params = {
+            sendType: Constants.SendType.ENSSetPubKey,
+            selectedAccountAddress: ownerAddress,
+            selectedGroupKey: root.getStatusTokenGroupKey(),
+            selectedRawAmount: "0",
+            selectedRecipientAddress: resolverAddress,
+            interactive: false,
+            publicKey: root.myPublicKey,
+            ensName: ensName
         }
+
         openSend(params)
     }
 
     function registerUsername(ensName, chainId) {
-        let params = {}
-        if (root.simpleSendEnabled) {
-            params = {
-                sendType: Constants.SendType.ENSRegister,
-                selectedChainId: chainId,
-                selectedGroupKey: root.getStatusTokenGroupKey(),
-                // TODO this should come from backend.To be fixed when ENS is reworked
-                selectedRawAmount: SQUtils.AmountsArithmetic.fromNumber(10, 18).toString(),
-                selectedRecipientAddress: root.ensRegisteredAddress,
-                interactive: false,
-                publicKey: root.myPublicKey,
-                ensName: ensName
-            }
-        } else {
-            params = {
-                preSelectedSendType: Constants.SendType.ENSRegister,
-                preSelectedHoldingID: root.getStatusTokenGroupKey(),
-                preSelectedHoldingType: Constants.TokenType.ERC20,
-                preDefinedAmountToSend: LocaleUtils.numberToLocaleString(10),
-                preSelectedRecipient: root.ensRegisteredAddress,
-                interactive: false,
-                publicKey: root.myPublicKey,
-                ensName: ensName
-            }
+        let params = {
+            sendType: Constants.SendType.ENSRegister,
+            selectedChainId: chainId,
+            selectedGroupKey: root.getStatusTokenGroupKey(),
+            // TODO this should come from backend.To be fixed when ENS is reworked
+            selectedRawAmount: SQUtils.AmountsArithmetic.fromNumber(10, 18).toString(),
+            selectedRecipientAddress: root.ensRegisteredAddress,
+            interactive: false,
+            publicKey: root.myPublicKey,
+            ensName: ensName
         }
+
         openSend(params)
     }
 
     function releaseUsername(ensName, senderAddress, chainId) {
-        let params = {}
-        if (root.simpleSendEnabled) {
-            params = {
-                sendType: Constants.SendType.ENSRelease,
-                selectedAccountAddress: senderAddress,
-                selectedGroupKey: root.getStatusTokenGroupKey(),
-                selectedRawAmount: "0",
-                selectedChainId: chainId,
-                selectedRecipientAddress: root.ensRegisteredAddress,
-                interactive: false,
-                publicKey: root.myPublicKey,
-                ensName: ensName
-            }
-        } else {
-            params = {
-                preSelectedSendType: Constants.SendType.ENSRelease,
-                preSelectedAccountAddress: senderAddress,
-                preSelectedHoldingID: Constants.ethToken ,
-                preSelectedHoldingType: Constants.TokenType.Native,
-                preDefinedAmountToSend: LocaleUtils.numberToLocaleString(0),
-                preSelectedChainId: chainId,
-                preSelectedRecipient: root.ensRegisteredAddress,
-                interactive: false,
-                publicKey: root.myPublicKey,
-                ensName: ensName
-            }
+        let params = {
+            sendType: Constants.SendType.ENSRelease,
+            selectedAccountAddress: senderAddress,
+            selectedGroupKey: root.getStatusTokenGroupKey(),
+            selectedRawAmount: "0",
+            selectedChainId: chainId,
+            selectedRecipientAddress: root.ensRegisteredAddress,
+            interactive: false,
+            publicKey: root.myPublicKey,
+            ensName: ensName
         }
+
         openSend(params)
     }
 
     function buyStickerPack(packId, price) {
-        let params = {}
-        if (root.simpleSendEnabled) {
-            params = {
-                sendType: Constants.SendType.StickersBuy,
-                selectedGroupKey: root.getStatusTokenGroupKey(),
-                selectedRawAmount: SQUtils.AmountsArithmetic.fromNumber(price, 18).toString(),
-                selectedChainId: root.stickersNetworkId,
-                selectedRecipientAddress: root.stickersMarketAddress,
-                interactive: false,
-                stickersPackId: packId
-            }
-        } else {
-            params = {
-                preSelectedSendType: Constants.SendType.StickersBuy,
-                preSelectedHoldingID: root.getStatusTokenGroupKey(),
-                preSelectedHoldingType: Constants.TokenType.ERC20,
-                preDefinedAmountToSend: LocaleUtils.numberToLocaleString(price),
-                preSelectedChainId: root.stickersNetworkId,
-                preSelectedRecipient: root.stickersMarketAddress,
-                interactive: false,
-                stickersPackId: packId
-            }
+        let params = {
+            sendType: Constants.SendType.StickersBuy,
+            selectedGroupKey: root.getStatusTokenGroupKey(),
+            selectedRawAmount: SQUtils.AmountsArithmetic.fromNumber(price, 18).toString(),
+            selectedChainId: root.stickersNetworkId,
+            selectedRecipientAddress: root.stickersMarketAddress,
+            interactive: false,
+            stickersPackId: packId
         }
+
         openSend(params)
     }
 
     function transferOwnership(tokenId, senderAddress) {
         let selectedChainId =
                     SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "key", tokenId, "chainId")
-        let params = {}
-        if (root.simpleSendEnabled) {
-            params = {
-                sendType: Constants.SendType.ERC721Transfer,
-                selectedAccountAddress: senderAddress,
-                selectedGroupKey: tokenId,
-                selectedChainId: selectedChainId,
-                transferOwnership: true
-            }
-        } else {
-            params = {
-                preSelectedSendType: Constants.SendType.ERC721Transfer,
-                preSelectedAccountAddress: senderAddress,
-                preSelectedHoldingID: tokenId,
-                preSelectedHoldingType:  Constants.TokenType.ERC721,
-            }
+        let params = {
+            sendType: Constants.SendType.ERC721Transfer,
+            selectedAccountAddress: senderAddress,
+            selectedGroupKey: tokenId,
+            selectedChainId: selectedChainId,
+            transferOwnership: true
         }
+
         openSend(params)
     }
 
     function sendToRecipient(recipientAddress) {
-        let params = {}
-        if (root.simpleSendEnabled) {
-            params = {
-                openReason: "send to recipient"
-            }
-            params.selectedRecipientAddress = recipientAddress
-        } else {
-            params = {
-                preSelectedRecipient: recipientAddress
-            }
-        }
-        openSend(params)
-    }
-
-    function bridgeToken(tokenId, tokenType) {
         let params = {
-            preSelectedSendType: Constants.SendType.Bridge,
-            preSelectedHoldingID: tokenId ,
-            preSelectedHoldingType: tokenType,
-            onlyAssets: true
+            openReason: "send to recipient",
+            selectedRecipientAddress: recipientAddress
         }
-        openSend(params, true)
+
+        openSend(params)
     }
 
     function sendToken(senderAddress, gorupKey, tokenType) {
@@ -383,22 +295,13 @@ QtObject {
                             })
             }
         }
-        let params = {}
-        if (root.simpleSendEnabled) {
-            params = {
-                sendType: sendType,
-                selectedAccountAddress: senderAddress,
-                selectedGroupKey: gorupKey,
-                selectedChainId: selectedChainId,
-            }
-        } else {
-            params = {
-                preSelectedSendType: sendType,
-                preSelectedAccountAddress: senderAddress,
-                selectedGroupKey: gorupKey,
-                preSelectedHoldingType: tokenType,
-            }
+        let params = {
+            sendType: sendType,
+            selectedAccountAddress: senderAddress,
+            selectedGroupKey: gorupKey,
+            selectedChainId: selectedChainId,
         }
+
         openSend(params)
     }
 
@@ -429,41 +332,16 @@ QtObject {
             }
         }
 
-
-        let params = {}
-        if (root.simpleSendEnabled) {
-            params = {
-                selectedGroupKey: groupKey,
-                selectedRawAmount: rawAmount,
-                selectedChainId: chainId,
-                selectedRecipientAddress: recipientAddress,
-                interactive: false,
-                openReason: "token payment request"
-            }
-        } else {
-            params = {
-                selectedGroupKey: groupKey,
-                preSelectedHoldingType: Constants.TokenType.ERC20,
-                preDefinedRawAmountToSend: rawAmount,
-                preSelectedChainId: chainId,
-                preSelectedRecipient: recipientAddress
-            }
+        let params = {
+            selectedGroupKey: groupKey,
+            selectedRawAmount: rawAmount,
+            selectedChainId: chainId,
+            selectedRecipientAddress: recipientAddress,
+            interactive: false,
+            openReason: "token payment request"
         }
+
         openSend(params)
-    }
-
-    readonly property Component sendModalComponent: Component {
-
-        // TODO: Update the API to be explicit and avoid direct store access
-        SendModal {
-            loginType: root.fnGetLoginType()
-
-            store: root.transactionStore
-            collectiblesStore: root.walletCollectiblesStore
-            networksStore: root.networksStore
-
-            onClosed: destroy()
-        }
     }
 
     readonly property Component simpleSendModalComponent: Component {

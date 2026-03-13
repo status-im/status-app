@@ -111,7 +111,6 @@ QtObject {
         stickersMarketAddress: root.rootChatStore.stickersStore.getStickersMarketAddress()
         stickersNetworkId: root.rootChatStore.appNetworkId
 
-        simpleSendEnabled: root.featureFlagsStore.simpleSendEnabled
         buyEnabled: root.featureFlagsStore.buyEnabled
 
         // for simple send

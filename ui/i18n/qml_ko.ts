@@ -1295,17 +1295,6 @@
     </message>
 </context>
 <context>
-    <name>AmountToReceive</name>
-    <message>
-        <source>Amount Bridged</source>
-        <translation>브릿지된 수량</translation>
-    </message>
-    <message>
-        <source>Recipient will get</source>
-        <translation>수신자가 받게 됩니다</translation>
-    </message>
-</context>
-<context>
     <name>AppMain</name>
     <message>
         <source>&quot;%1&quot; successfully added</source>
@@ -1377,10 +1366,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>Purchasing %1 sticker pack using %2</source>
         <translation>%2로 %1 스티커 팩 구매 중</translation>
-    </message>
-    <message>
-        <source>Bridging %1 from %2 to %3 in %4</source>
-        <translation>%4 안에 %2에서 %3(으)로 %1 브릿지 중</translation>
     </message>
     <message>
         <source>Setting spending cap: %1 in %2 for %3</source>
@@ -1463,14 +1448,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>%2로 %1 스티커 팩을 구매함</translation>
     </message>
     <message>
-        <source>Bridged %1 from %2 to %3 in %4</source>
-        <translation>%2에서 %3로 %1 브릿지 완료, 소요 시간 %4</translation>
-    </message>
-    <message>
-        <source>Spending spending cap: %1 in %2 for %3</source>
-        <translation>지출 한도: %3에 대해 %2에서 %1</translation>
-    </message>
-    <message>
         <source>Sent %1 %2 from %3 to %4</source>
         <translation>%3에서 %4로 %1 %2 전송함</translation>
     </message>
@@ -1549,14 +1526,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>Sticker pack purchase failed: %1 using %2</source>
         <translation>스티커 팩 구매 실패: %1 을(를) %2로 사용</translation>
-    </message>
-    <message>
-        <source>Bridge failed: %1 from %2 to %3 in %4</source>
-        <translation>브릿지 실패: %2에서 %3로 %1 전송 중, %4에서 오류 발생</translation>
-    </message>
-    <message>
-        <source>Spending spending failed: %1 in %2 for %3</source>
-        <translation>지출 실패: %1, %2에서 %3</translation>
     </message>
     <message>
         <source>Send failed: %1 %2 from %3 to %4</source>
@@ -7545,13 +7514,6 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
-    <name>FeesView</name>
-    <message>
-        <source>Fees</source>
-        <translation>수수료</translation>
-    </message>
-</context>
-<context>
     <name>FilterComboBox</name>
     <message>
         <source>Collection</source>
@@ -7787,38 +7749,6 @@ Please add it and try again.</source>
     <message>
         <source>Between %1 and %2</source>
         <translation>%1과 %2 사이</translation>
-    </message>
-</context>
-<context>
-    <name>GasSelector</name>
-    <message>
-        <source>%1 transaction fee</source>
-        <translation>%1 거래 수수료</translation>
-    </message>
-    <message>
-        <source>L1 fee: %1
-L2 fee: %2</source>
-        <translation>L1 수수료: %1
-L2 수수료: %2</translation>
-    </message>
-    <message>
-        <source>Approve %1 %2 Bridge</source>
-        <translation>%1 %2 브리지 승인</translation>
-    </message>
-    <message>
-        <source>%1 -&gt; %2 bridge</source>
-        <translation>%1 -&gt; %2 브리지</translation>
-    </message>
-</context>
-<context>
-    <name>GasValidator</name>
-    <message>
-        <source>Balance exceeded</source>
-        <translation>잔액 초과</translation>
-    </message>
-    <message>
-        <source>No route found</source>
-        <translation>경로를 찾을 수 없습니다</translation>
     </message>
 </context>
 <context>
@@ -11828,49 +11758,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>NetworkCardsComponent</name>
-    <message>
-        <source>Your Balances</source>
-        <translation>내 잔액</translation>
-    </message>
-    <message>
-        <source>No Balance</source>
-        <translation>잔액 없음</translation>
-    </message>
-    <message>
-        <source>No Gas</source>
-        <translation>가스 없음</translation>
-    </message>
-    <message>
-        <source>EXCEEDS SEND AMOUNT</source>
-        <translation>보낼 수 있는 금액을 초과했습니다</translation>
-    </message>
-    <message>
-        <source>BALANCE: %1</source>
-        <translation>잔액: %1</translation>
-    </message>
-    <message>
-        <source>Disabled</source>
-        <translation>비활성화</translation>
-    </message>
-    <message>
-        <source>Disable</source>
-        <translation>비활성화</translation>
-    </message>
-    <message>
-        <source>Enable</source>
-        <translation>사용</translation>
-    </message>
-    <message>
-        <source>WILL RECEIVE</source>
-        <translation>수신 예정</translation>
-    </message>
-    <message>
-        <source>UNPREFERRED</source>
-        <translation>비선호</translation>
-    </message>
-</context>
-<context>
     <name>NetworkConnectionStore</name>
     <message>
         <source>Requires internet connection</source>
@@ -11927,17 +11814,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>NetworkSelector</name>
-    <message>
-        <source>hide details</source>
-        <translation>세부 정보 숨기기</translation>
-    </message>
-    <message>
-        <source>show details</source>
-        <translation>세부 정보 보기</translation>
-    </message>
-</context>
-<context>
     <name>NetworkWarningPanel</name>
     <message>
         <source>The owner token is minted on a network that isn&apos;t selected. Click here to enable it:</source>
@@ -11946,29 +11822,6 @@ to load</source>
     <message>
         <source>Enable %1</source>
         <translation>%1 사용 설정</translation>
-    </message>
-</context>
-<context>
-    <name>NetworksAdvancedCustomRoutingView</name>
-    <message>
-        <source>Networks</source>
-        <translation>네트워크</translation>
-    </message>
-    <message>
-        <source>Hide Unpreferred Networks</source>
-        <translation>선호하지 않는 네트워크 숨기기</translation>
-    </message>
-    <message>
-        <source>Show Unpreferred Networks</source>
-        <translation>선호하지 않는 네트워크 표시</translation>
-    </message>
-    <message>
-        <source>Routes will be automatically calculated to give you the lowest cost.</source>
-        <translation>가장 낮은 비용을 위해 경로가 자동으로 계산됩니다.</translation>
-    </message>
-    <message>
-        <source>The networks where the recipient will receive tokens. Amounts calculated automatically for the lowest cost.</source>
-        <translation>받는 사람이 토큰을 받을 네트워크입니다. 최저 비용이 되도록 금액을 자동 계산합니다.</translation>
     </message>
 </context>
 <context>
@@ -15082,45 +14935,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>SendModal</name>
-    <message>
-        <source>Bridge</source>
-        <translation>브리지</translation>
-    </message>
-    <message>
-        <source>Register Ens</source>
-        <translation>ENS 등록</translation>
-    </message>
-    <message>
-        <source>Connect username</source>
-        <translation>사용자 이름 연결</translation>
-    </message>
-    <message>
-        <source>Release username</source>
-        <translation>사용자 이름 계약 해지</translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation>보내기</translation>
-    </message>
-    <message>
-        <source>Amount to bridge</source>
-        <translation>브리지할 금액</translation>
-    </message>
-    <message>
-        <source>Amount to send</source>
-        <translation>보낼 금액</translation>
-    </message>
-    <message>
-        <source>To</source>
-        <translation>수신</translation>
-    </message>
-    <message>
-        <source>Error sending the transaction</source>
-        <translation>트랜잭션 전송 중 오류가 발생했습니다</translation>
-    </message>
-</context>
-<context>
     <name>SendModalFooter</name>
     <message>
         <source>Est time</source>
@@ -17982,21 +17796,6 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
-    <name>TransactionModalFooter</name>
-    <message>
-        <source>Next</source>
-        <translation>다음</translation>
-    </message>
-    <message>
-        <source>Estimated time:</source>
-        <translation>예상 시간:</translation>
-    </message>
-    <message>
-        <source>Max fees:</source>
-        <translation>최대 수수료:</translation>
-    </message>
-</context>
-<context>
     <name>TransactionSettings</name>
     <message>
         <source>Got it</source>
@@ -18727,14 +18526,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Receive</source>
         <translation>받기</translation>
-    </message>
-    <message>
-        <source>Bridge</source>
-        <translation>브리지</translation>
-    </message>
-    <message>
-        <source>Soulbound collectibles cannot be bridged to another wallet</source>
-        <translation>소울바운드 컬렉터블은 다른 지갑으로 브리지할 수 없습니다</translation>
     </message>
     <message>
         <source>Buy</source>
