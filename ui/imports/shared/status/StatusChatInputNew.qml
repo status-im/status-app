@@ -32,7 +32,7 @@ Control {
     signal disableLinkPreview()
     signal dismissLinkPreviewSettings()
     signal dismissLinkPreview(int index)
-    signal openPaymentRequestModal()
+    signal openPaymentRequestModal(var callback)
     signal removePaymentRequestPreview(int index)
     signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
 
@@ -795,7 +795,11 @@ Control {
 
             tokenButton.visible: !root.areTestNetworksEnabled && root.paymentRequestFeatureEnabled
             tokenButton.onClicked: {
-                root.openPaymentRequestModal()
+                root.openPaymentRequestModal(popup => {
+                    popup.closed.connect(() => {
+                        tokenButton.checked = false
+                    })
+                })
             }
 
             Layout.fillWidth: true

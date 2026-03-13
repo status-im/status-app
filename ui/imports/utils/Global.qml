@@ -91,7 +91,7 @@ QtObject {
     signal privacyPolicyRequested()
     signal termsOfUseRequested()
 
-    signal openPaymentRequestModalRequested(var callback)
+    signal openPaymentRequestModalRequested(var onPaymentRequested, var callback)
 
     signal openNewsMessagePopupRequested(var notification)
 

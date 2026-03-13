@@ -494,8 +494,11 @@ QtObject {
         })
     }
 
-    function openPaymentRequestModal(callback) {
-        openPopup(paymentRequestModalComponent, {callback: callback})
+    function openPaymentRequestModal(onPaymentRequested, callback) {
+        openPopup(paymentRequestModalComponent, {}, popup => {
+                    popup.paymentRequested.connect(onPaymentRequested)
+                    callback(popup)
+                  })
     }
 
     function openNewsMessagePopup(notification, notificationId) {
@@ -1496,7 +1499,9 @@ QtObject {
             PaymentRequestModal {
                 id: paymentRequestModal
 
-                property var callback: null
+                signal paymentRequested(string address, string amount, string tokenKey,
+                                        string symbol, string tokenLogoUri)
+
                 currentCurrency: root.currencyStore.currentCurrency
                 formatCurrencyAmount: root.currencyStore.formatCurrencyAmount
                 flatNetworksModel: root.networksStore.activeNetworks
@@ -1510,11 +1515,9 @@ QtObject {
                 }
 
                 onAccepted: {
-                    if (!callback) {
-                        console.error("No callback set for Payment Request")
-                        return
-                    }
-                    callback(selectedAccountAddress, amount, selectedTokenKey, selectedSymbol, selectedTokenLogoUri)
+                    paymentRequested(selectedAccountAddress, amount,
+                                     selectedTokenKey, selectedSymbol,
+                                     selectedTokenLogoUri)
                 }
                 destroyOnClose: true
             }
