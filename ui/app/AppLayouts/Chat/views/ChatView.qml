@@ -57,9 +57,9 @@ StatusSectionLayout {
     property bool stickersLoaded: false
 
     readonly property var chatContentModule: rootStore.currentChatContentModule() || null
-    readonly property bool canView: chatContentModule.chatDetails.canView
-    readonly property bool canPost: chatContentModule.chatDetails.canPost
-    readonly property bool missingEncryptionKey: chatContentModule.chatDetails.missingEncryptionKey
+    readonly property bool canView: chatContentModule?.chatDetails.canView || false
+    readonly property bool canPost: chatContentModule?.chatDetails.canPost || false
+    readonly property bool missingEncryptionKey: chatContentModule?.chatDetails.missingEncryptionKey || false
 
     property bool hasViewOnlyPermissions: false
     property bool hasUnrestrictedViewOnlyPermission: false
@@ -220,8 +220,8 @@ StatusSectionLayout {
     rightPanel: UserListPanel {
         anchors.fill: parent
 
-        chatType: root.chatContentModule.chatDetails.type
-        isAdmin: root.chatContentModule.amIChatAdmin()
+        chatType: root.chatContentModule?.chatDetails.type || Constants.chatType.unknown
+        isAdmin: root.chatContentModule?.amIChatAdmin() || false
 
         label: qsTr("Members")
         communityMemberReevaluationStatus: root.communityMemberReevaluationStatus
@@ -308,9 +308,9 @@ StatusSectionLayout {
         JoinCommunityHeaderPanel {
             readonly property var chatContentModule: root.rootStore.currentChatContentModule() || null
             joinCommunity: false
-            color: chatContentModule.chatDetails.color
-            channelName: chatContentModule.chatDetails.name
-            channelDesc: chatContentModule.chatDetails.description
+            color: chatContentModule?.chatDetails.color || "transparent"
+            channelName: chatContentModule?.chatDetails.name || ""
+            channelDesc: chatContentModule?.chatDetails.description || ""
         }
     }
 
@@ -373,7 +373,7 @@ StatusSectionLayout {
             joinCommunity: false
             allChannelsAreHiddenBecauseNotPermitted: root.allChannelsAreHiddenBecauseNotPermitted
             name: sectionItemModel.name
-            channelName: root.chatContentModule.chatDetails.name
+            channelName: root.chatContentModule?.chatDetails.name || ""
             viewOnlyHoldingsModel: root.viewOnlyPermissionsModel
             viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
             assetsModel: root.assetsModel

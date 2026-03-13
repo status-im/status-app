@@ -79,7 +79,7 @@ QtObject {
     readonly property UsersStore usersStore: UsersStore {
         property var chatDetails: !!root.activeChatContentModule ? root.activeChatContentModule.chatDetails : null
 
-        isFullCommunityMembers: chatDetails.belongsToCommunity && !chatDetails.requiresPermissions
+        isFullCommunityMembers: (chatDetails?.belongsToCommunity && !chatDetails?.requiresPermissions) || false
         usersModule: !!root.activeChatContentModule ? root.activeChatContentModule.usersModule : null
         chatCommunitySectionModule: root.chatCommunitySectionModule
     }
@@ -232,7 +232,7 @@ QtObject {
     }
 
     function amIChatAdmin() {
-        return currentChatContentModule().amIChatAdmin()
+        return currentChatContentModule()?.amIChatAdmin() || false
     }
 
     function loadMembersForSectionId(sectionId) {

@@ -1171,6 +1171,7 @@ Item {
     }
 
     function changeAppSectionBySectionId(sectionId) {
+        chatLayoutFakeLoader.showSectionLoading(sectionId)
         appMain.rootStore.setActiveSectionById(sectionId)
     }
 
@@ -1648,6 +1649,12 @@ Item {
 
                     Loader {
                         active: false
+                        onActiveChanged: {
+                            if (active) {
+                                chatLayoutFakeLoader.showSectionLoading("", true)
+                            }
+                        }
+                        asynchronous: true
                         sourceComponent: {
                             if (appMain.rootChatStore.chatsLoadingFailed) {
                                 return errorStateComponent
@@ -1666,6 +1673,8 @@ Item {
                             value: true
                             restoreMode: Binding.RestoreNone
                         }
+
+                        onLoaded: chatLayoutFakeLoader.hideSectionLoading()
 
                         Component {
                             id: loadingStateComponent
@@ -2104,6 +2113,12 @@ Item {
                             Layout.fillHeight: true
 
                             active: false
+                            onActiveChanged: {
+                                if (active) {
+                                    chatLayoutFakeLoader.showSectionLoading(sectionId, true)
+                                }
+                            }
+                            asynchronous: true
 
                             // Do not unload section data from the memory in order not
                             // to reset scroll, not send text input and etc during the
@@ -2113,6 +2128,8 @@ Item {
                                 value: true
                                 restoreMode: Binding.RestoreNone
                             }
+
+                            onLoaded: chatLayoutFakeLoader.hideSectionLoading()
 
                             sourceComponent: ChatLayout {
                                 id: chatLayoutComponent
@@ -2318,6 +2335,55 @@ Item {
                         // is shown after it's been introduced
                         d.tryOpenNavigationEducationPopup()
                     }
+                }
+            }
+
+            Loader {
+                id: chatLayoutFakeLoader
+                active: false
+                anchors.left: sidebar.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+
+                function showSectionLoading(sectionId, forceActive = false) {
+                    if (forceActive || shouldShowSectionLoading(sectionId)) {
+                        chatLayoutFakeLoader.active = true
+                    }
+                }
+
+                function hideSectionLoading() {
+                    chatLayoutFakeLoader.active = false
+                }
+
+                function shouldShowSectionLoading(sectionId: string): bool {
+                    if (!sectionId || sectionId === appMain.rootStore.activeSectionId) {
+                        return false
+                    }
+
+                    // Only skip the loading overlay for sections whose Loader is kept alive.
+                    const sectionType = SQUtils.ModelUtils.getByKey(appMain.rootStore.sectionsModel, "id", sectionId, "sectionType")
+                    if (sectionType === Constants.appSection.chat) {
+                        const chatLoader = appView.children[Constants.appViewStackIndex.chat]
+                        return !chatLoader.active
+                    }
+
+                    if (sectionType === Constants.appSection.community) {
+                        for (let i = appView.children.length - 1; i >= 0; i--) {
+                            const sectionLoader = appView.children[i]
+                            if (sectionLoader && sectionLoader.sectionId && sectionLoader.sectionId === sectionId) {
+                                return !sectionLoader.active
+                            }
+                        }
+                        return true
+                    }
+
+                    return false
+                }
+                
+                sourceComponent: ChatLayoutLoading {
+                    anchors.fill: parent
+                    showMembersPanel: appMain.accountSettingsStore.showUsersList
                 }
             }
         }
