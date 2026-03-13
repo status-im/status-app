@@ -24,7 +24,6 @@ Popup {
     property int imageHeight: 22
     property string title
     property bool showSearchBox: false
-    property var messageInput
 
     function openPopup(listParam) {
         modelList = listParam
@@ -43,7 +42,6 @@ Popup {
 
     id: popup
     padding: Theme.smallPadding
-    width: messageInput.width
     height: {
         let possibleHeight = listView.contentHeight + Theme.smallPadding * 2
         if (popupTitle.visible) {
@@ -55,7 +53,6 @@ Popup {
 
         return Math.min(400, possibleHeight)
     }
-    x: messageInput.x
     y: -height
     background: Rectangle {
         id: bgRectangle

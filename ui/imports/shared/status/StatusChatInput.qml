@@ -530,7 +530,9 @@ Rectangle {
     StatusEmojiSuggestionPopup {
         id: emojiSuggestions
 
-        messageInput: messageInput
+        x: messageInput.x
+        width: messageInput.width
+
         onClicked: index => {
             if (index === undefined) {
                 index = emojiSuggestions.listView.currentIndex
