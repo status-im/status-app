@@ -7,62 +7,34 @@ import StatusQ.Core.Theme
 Row {
     id: root
 
+    // Contact Verification States:
     property bool isContact: false
     property int trustIndicator: StatusContactVerificationIcons.TrustedType.None
     property bool isBlocked
+
+    /*!
+        Controls the default icon size.
+
+        If true, the icon size is 10.
+        If false, the icon size is 16.
+    */
     property bool tiny: true
 
-    property StatusAssetSettings mutualConnectionIcon: StatusAssetSettings {
-        name: root.tiny ? "tiny/tiny-contact" : "tiny/contact"
-        color: root.Theme.palette.indirectColor1
-        width: Math.min(bgWidth, dummyImage.width)
-        height: Math.min(bgHeight, dummyImage.height)
-        bgWidth: root.tiny ? 10 : 16.5
-        bgHeight: root.tiny ? 10 : 16.5
-        bgRadius: bgWidth / 2
-        bgColor: root.Theme.palette.primaryColor1
-        // Only used to get implicit width and height from the actual image
-        property Image dummyImage: Image {
-            source: mutualConnectionIcon.name ? Qt.resolvedUrl("../../assets/img/icons/" + mutualConnectionIcon.name + ".svg"): ""
-            visible: false
-            cache: false
-        }
-    }
+    /*!
+        Overrides the default icon size.
 
-    property StatusAssetSettings trustContactIcon: StatusAssetSettings {
-        // None and Untrustworthy types, same aspect (Icon will not be visible in case of None type):
-        name: root.trustIndicator === StatusContactVerificationIcons.TrustedType.Verified ? root.tiny ? "tiny/tiny-checkmark" : "tiny/checkmark"
-                                                                                          : root.tiny ? "tiny/tiny-exclamation" : "tiny/exclamation"
-        color: root.Theme.palette.indirectColor1
-        width: Math.min(bgWidth, dummyImage.width)
-        height: Math.min(bgHeight, dummyImage.height)
-        bgWidth: root.tiny ? 10 : 16
-        bgHeight: root.tiny ? 10 : 16
-        bgRadius: bgWidth / 2
-        bgColor: root.trustIndicator === StatusContactVerificationIcons.TrustedType.Verified ? root.Theme.palette.successColor1
-                                                                                             : root.Theme.palette.dangerColor1
-        // Only used to get implicit width and height from the actual image
-        property Image dummyImage: Image {
-            source: trustContactIcon.name ? Qt.resolvedUrl("../../assets/img/icons/" + trustContactIcon.name + ".svg"): ""
-            visible: false
-            cache: false
-        }
-    }
+        When 0, the component uses the default tiny/normal size.
+    */
+    property int customIconSize: 0
 
-    property StatusAssetSettings blockedContactIcon: StatusAssetSettings {
-        name: root.isBlocked ? "cancel" : ""
-        color: root.Theme.palette.dangerColor1
-        width: Math.min(bgWidth, dummyImage.width)
-        height: Math.min(bgHeight, dummyImage.height)
-        bgWidth: root.tiny ? 10 : 16
-        bgHeight: root.tiny ? 10 : 16
-        bgRadius: bgWidth / 2
-        // Only used to get implicit width and height from the actual image
-        property Image dummyImage: Image {
-            source: blockedContactIcon.name ? Qt.resolvedUrl("../../assets/img/icons/" + blockedContactIcon.name + ".svg"): ""
-            visible: false
-            cache: false
-        }
+    QtObject {
+        id: d
+
+        readonly property int tinySize: Theme.fontSize(10)      // By design
+        readonly property int normalSize: Theme.fontSize(16)    // By design
+
+        readonly property int currentSize: root.customIconSize > 0 ? root.customIconSize :
+                                                                     root.tiny ? tinySize : normalSize
     }
 
     enum TrustedType {
@@ -71,8 +43,10 @@ Row {
         Untrustworthy //2
     }
 
-    spacing: 4
-    visible: root.isContact || root.isBlocked || (root.trustIndicator !== StatusContactVerificationIcons.TrustedType.None)
+    spacing: Theme.halfPadding / 2
+    visible: root.isContact ||
+             root.isBlocked ||
+             (root.trustIndicator !== StatusContactVerificationIcons.TrustedType.None)
 
     HoverHandler {
         id: hoverHandler
@@ -98,21 +72,29 @@ Row {
     }
 
     // blocked
-    StatusRoundIcon {
+    StatusIcon {
         visible: root.isBlocked
-        asset: root.blockedContactIcon
+        icon: root.isBlocked ? "cancel" : ""
+        width: d.currentSize
+        height: width
+        color: Theme.palette.directColor1
     }
 
     // (un)trusted
-    StatusRoundIcon {
+    StatusIcon {
         visible: !root.isBlocked && (root.trustIndicator === StatusContactVerificationIcons.TrustedType.Untrustworthy ||
-                                     (root.isContact && trustIndicator === StatusContactVerificationIcons.TrustedType.Verified))
-        asset: root.trustContactIcon
+                                     (root.isContact && root.trustIndicator === StatusContactVerificationIcons.TrustedType.Verified))
+        icon: root.trustIndicator === StatusContactVerificationIcons.TrustedType.Verified ? "trustedContact"
+                                                                                          : "untrustworthyContact"
+        width: d.currentSize
+        height: width
     }
 
     // contact?
-    StatusRoundIcon {
+    StatusIcon {
         visible: !root.isBlocked && root.isContact && root.trustIndicator !== StatusContactVerificationIcons.TrustedType.Verified
-        asset: root.mutualConnectionIcon
+        icon: "justContact"
+        width: d.currentSize
+        height: width
     }
 }

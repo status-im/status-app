@@ -495,5 +495,8 @@
         <file>icons/chat/up.svg</file>
         <file>icons/action-sent.svg</file>
         <file>icons/action-decline.svg</file>
+        <file>icons/justContact.svg</file>
+        <file>icons/trustedContact.svg</file>
+        <file>icons/untrustworthyContact.svg</file>
     </qresource>
 </RCC>
