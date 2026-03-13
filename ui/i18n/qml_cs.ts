@@ -16501,18 +16501,6 @@ selhalo</translation>
         <translation>Soubory s obrázky (%1)</translation>
     </message>
     <message>
-        <source>Add image</source>
-        <translation>Přidat obrázek</translation>
-    </message>
-    <message>
-        <source>Not available in Testnet mode</source>
-        <translation>Nedostupné v režimu Testnet</translation>
-    </message>
-    <message>
-        <source>Add payment request</source>
-        <translation>Přidat požadavek na platbu</translation>
-    </message>
-    <message>
         <source>Please reduce the message length</source>
         <translation>Prosím zkraťte délku zprávy</translation>
     </message>
@@ -16525,12 +16513,16 @@ selhalo</translation>
         </translation>
     </message>
     <message>
-        <source>Quote (%1)</source>
-        <translation>Odsazení (%1)</translation>
+        <source>Add image</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Send message</source>
-        <translation>Odeslat zprávu</translation>
+        <source>Not available in Testnet mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add payment request</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Bold</source>
@@ -16547,6 +16539,53 @@ selhalo</translation>
     <message>
         <source>Code</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quote (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send message</source>
+        <translation type="unfinished">Odeslat zprávu</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputNew</name>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished">Zpráva</translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n Image(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Please choose an image</source>
+        <translation type="unfinished">Prosím vyberte obrázek</translation>
+    </message>
+    <message>
+        <source>Image files (%1)</source>
+        <translation type="unfinished">Soubory s obrázky (%1)</translation>
+    </message>
+    <message>
+        <source>Please reduce the message length</source>
+        <translation type="unfinished">Prosím zkraťte délku zprávy</translation>
+    </message>
+    <message numerus="yes">
+        <source>Maximum message character count is %n</source>
+        <translation type="unfinished">
+            <numerusform>Maximální počet znaků je %n</numerusform>
+            <numerusform>Maximální počet znaků je %n</numerusform>
+            <numerusform>Maximální počet znaků je %n</numerusform>
+        </translation>
     </message>
 </context>
 <context>

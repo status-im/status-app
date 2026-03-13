@@ -161,7 +161,7 @@ Page {
                 }
             }
 
-            StatusChatInput {
+            StatusChatInputNew {
                 id: chatInput
                 Layout.alignment: Qt.AlignBottom
                 Layout.fillWidth: true

@@ -692,6 +692,23 @@
     </message>
 </context>
 <context>
+    <name>StatusChatInputNew</name>
+    <message numerus="yes">
+        <source>%n Image(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Maximum message character count is %n</source>
+        <translation type="unfinished">
+            <numerusform>Maximum message character count is %n</numerusform>
+            <numerusform>Maximum message character count is %n</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>StatusMinLengthValidator</name>
     <message numerus="yes">
         <source>The value must be at least %n character(s).</source>

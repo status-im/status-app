@@ -146,8 +146,12 @@ Item {
             const obj = d.activeMessagesStore.getMessageByIdAsJson(messageId)
             if (!obj)
                 return
-            chatInput.showReplyArea(messageId,
-                                    obj.senderDisplayName,
+
+            if (!!d.activeChatContentModule)
+                d.activeChatContentModule.inputAreaModule.preservedProperties.replyMessageId = messageId
+
+            chatInput.replyMessageId = messageId
+            chatInput.showReplyArea(obj.senderDisplayName,
                                     obj.messageText,
                                     obj.contentType,
                                     obj.messageImage,
@@ -371,7 +375,6 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.margins: Theme.smallPadding
             Layout.preferredHeight: chatInputItem.height
 
             Item {
@@ -379,10 +382,12 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: chatInput.height
 
-                StatusChatInput {
+                StatusChatInputNew {
                     id: chatInput
                     width: parent.width
                     visible: !!d.activeChatContentModule
+
+                    property string replyMessageId
 
                     // When `enabled` is switched true->false, `textInput.text` is cleared before d.activeChatContentModule updates.
                     // We delay the binding so that the `inputAreaModule.preservedProperties.text` doesn't get overriden with empty value.
@@ -439,11 +444,6 @@ Item {
                         }
                     }
 
-                    onReplyMessageIdChanged: {
-                        if (!!d.activeChatContentModule)
-                            d.activeChatContentModule.inputAreaModule.preservedProperties.replyMessageId = replyMessageId
-                    }
-
                     onFileUrlsAndSourcesChanged: {
                         if (!!d.activeChatContentModule)
                             d.activeChatContentModule.inputAreaModule.preservedProperties.fileUrlsAndSourcesJson = JSON.stringify(chatInput.fileUrlsAndSources)
@@ -455,6 +455,11 @@ Item {
                                                    chatInput.isReply ? chatInput.replyMessageId : "",
                                                    packId,
                                                    url)
+                    }
+
+                    onIsReplyChanged: {
+                        if (!isReply)
+                            replyMessageId = ""
                     }
 
                     onSendMessageRequested: {

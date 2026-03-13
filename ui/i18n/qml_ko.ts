@@ -16350,18 +16350,6 @@ to load</source>
         <translation>이미지 파일(%1)</translation>
     </message>
     <message>
-        <source>Add image</source>
-        <translation>이미지 추가</translation>
-    </message>
-    <message>
-        <source>Not available in Testnet mode</source>
-        <translation>Testnet 모드에서는 사용할 수 없음</translation>
-    </message>
-    <message>
-        <source>Add payment request</source>
-        <translation>결제 요청 추가</translation>
-    </message>
-    <message>
         <source>Please reduce the message length</source>
         <translation>메시지 길이를 줄여 주세요</translation>
     </message>
@@ -16372,12 +16360,16 @@ to load</source>
         </translation>
     </message>
     <message>
-        <source>Quote (%1)</source>
-        <translation>인용 (%1)</translation>
+        <source>Add image</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Send message</source>
-        <translation>메시지 보내기</translation>
+        <source>Not available in Testnet mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add payment request</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Bold</source>
@@ -16394,6 +16386,49 @@ to load</source>
     <message>
         <source>Code</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quote (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send message</source>
+        <translation type="unfinished">메시지 보내기</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputNew</name>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished">메시지</translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n Image(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Please choose an image</source>
+        <translation type="unfinished">이미지를 선택하세요</translation>
+    </message>
+    <message>
+        <source>Image files (%1)</source>
+        <translation type="unfinished">이미지 파일(%1)</translation>
+    </message>
+    <message>
+        <source>Please reduce the message length</source>
+        <translation type="unfinished">메시지 길이를 줄여 주세요</translation>
+    </message>
+    <message numerus="yes">
+        <source>Maximum message character count is %n</source>
+        <translation type="unfinished">
+            <numerusform>최대 메시지 글자 수는 %n자입니다</numerusform>
+        </translation>
     </message>
 </context>
 <context>

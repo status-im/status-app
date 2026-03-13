@@ -16386,18 +16386,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Add image</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Not available in Testnet mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Add payment request</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Please reduce the message length</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16409,11 +16397,15 @@ to load</source>
         </translation>
     </message>
     <message>
-        <source>Quote (%1)</source>
+        <source>Add image</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Send message</source>
+        <source>Not available in Testnet mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add payment request</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16431,6 +16423,51 @@ to load</source>
     <message>
         <source>Code</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quote (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Send message</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatInputNew</name>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sticker</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n Image(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Please choose an image</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image files (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please reduce the message length</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Maximum message character count is %n</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
 </context>
 <context>

@@ -19954,21 +19954,6 @@
       <translation>Image files (%1)</translation>
     </message>
     <message>
-      <source>Add image</source>
-      <comment>StatusChatInput</comment>
-      <translation>Add image</translation>
-    </message>
-    <message>
-      <source>Not available in Testnet mode</source>
-      <comment>StatusChatInput</comment>
-      <translation>Not available in Testnet mode</translation>
-    </message>
-    <message>
-      <source>Add payment request</source>
-      <comment>StatusChatInput</comment>
-      <translation>Add payment request</translation>
-    </message>
-    <message>
       <source>Please reduce the message length</source>
       <comment>StatusChatInput</comment>
       <translation>Please reduce the message length</translation>
@@ -19982,14 +19967,19 @@
       </translation>
     </message>
     <message>
-      <source>Quote (%1)</source>
+      <source>Add image</source>
       <comment>StatusChatInput</comment>
-      <translation>Quote (%1)</translation>
+      <translation>Add image</translation>
     </message>
     <message>
-      <source>Send message</source>
+      <source>Not available in Testnet mode</source>
       <comment>StatusChatInput</comment>
-      <translation>Send message</translation>
+      <translation>Not available in Testnet mode</translation>
+    </message>
+    <message>
+      <source>Add payment request</source>
+      <comment>StatusChatInput</comment>
+      <translation>Add payment request</translation>
     </message>
     <message>
       <source>Bold</source>
@@ -20010,6 +20000,60 @@
       <source>Code</source>
       <comment>StatusChatInput</comment>
       <translation>Code</translation>
+    </message>
+    <message>
+      <source>Quote (%1)</source>
+      <comment>StatusChatInput</comment>
+      <translation>Quote (%1)</translation>
+    </message>
+    <message>
+      <source>Send message</source>
+      <comment>StatusChatInput</comment>
+      <translation>Send message</translation>
+    </message>
+  </context>
+  <context>
+    <name>StatusChatInputNew</name>
+    <message>
+      <source>Message</source>
+      <comment>StatusChatInputNew</comment>
+      <translation>Message</translation>
+    </message>
+    <message>
+      <source>Sticker</source>
+      <comment>StatusChatInputNew</comment>
+      <translation>Sticker</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n Image(s)</source>
+      <comment>StatusChatInputNew</comment>
+      <translation>
+        <numerusform></numerusform>
+        <numerusform></numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Please choose an image</source>
+      <comment>StatusChatInputNew</comment>
+      <translation>Please choose an image</translation>
+    </message>
+    <message>
+      <source>Image files (%1)</source>
+      <comment>StatusChatInputNew</comment>
+      <translation>Image files (%1)</translation>
+    </message>
+    <message>
+      <source>Please reduce the message length</source>
+      <comment>StatusChatInputNew</comment>
+      <translation>Please reduce the message length</translation>
+    </message>
+    <message numerus="yes">
+      <source>Maximum message character count is %n</source>
+      <comment>StatusChatInputNew</comment>
+      <translation>
+        <numerusform>Maximum message character count is %n</numerusform>
+        <numerusform>Maximum message character count is %n</numerusform>
+      </translation>
     </message>
   </context>
   <context>
