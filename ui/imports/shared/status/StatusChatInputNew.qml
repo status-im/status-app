@@ -174,9 +174,9 @@ Control {
                 PropertyChanges {
                     target: stickersPopup
 
-                    directParent: stickersBtn
-                    relativeX: d.stickersPopupPosition.x
-                    relativeY: d.stickersPopupPosition.y
+                    directParent: toolBar.stickersButton
+                    relativeX: 0
+                    relativeY: -stickersPopup.height - root.Theme.halfPadding
                 }
             }
         }
@@ -846,6 +846,18 @@ Control {
                     messageInputField.unwrapSelection(wrapper, d.getSelectedTextWithFormationChars(messageInputField))
                 else
                     messageInputField.wrapSelection(wrapper)
+            }
+
+            stickersButton.checked: d.stickersPopupOpened
+            stickersButton.onClicked: {
+                if (d.stickersPopupOpened) {
+                    root.stickersPopup.close()
+                    return
+                }
+                if (root.stickersPopup) {
+                    root.stickersPopup.open()
+                    d.stickersPopupOpened = true
+                }
             }
 
             emojiButton.checked: d.emojiPopupOpened
