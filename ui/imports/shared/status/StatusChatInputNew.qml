@@ -860,6 +860,30 @@ Control {
                 }
             }
 
+            gifButton.checked: false
+            gifButton.onClicked: {
+                gifButton.checked = true
+
+                const properties = {
+                    popupParent: toolBar.gifButton,
+                    closeAfterSelection: root.closeGifPopupAfterSelection,
+                    relativeX: 0
+                }
+
+                const onGifSelectedCb = url => {
+                    messageInputField.text += "\n" + url
+                    root.sendMessageRequested()
+                    root.isReply = false
+                    messageInputField.forceActiveFocus()
+                }
+
+                const onCloseCb = () => {
+                    gifButton.checked = false
+                }
+
+                root.openGifPopupRequest(properties, onGifSelectedCb, onCloseCb)
+            }
+
             emojiButton.checked: d.emojiPopupOpened
             emojiButton.onClicked: {
                 if (d.emojiPopupOpened) {
