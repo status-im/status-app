@@ -38,7 +38,12 @@ public final class StatusGoServiceClient {
     private final Object lock = new Object();
     private IStatusGoService service;
     private CountDownLatch connectedLatch;
+    private boolean bindingInProgress = false;
     private boolean bound = false;
+    // Last known UI visibility intent from app process. Replayed on (re)connect.
+    private volatile boolean desiredUiVisible = false;
+    // Set once UI process has explicitly reported visibility at least once.
+    private volatile boolean hasUiVisibilityHint = false;
 
     private final IStatusGoSignalListener signalListener = new IStatusGoSignalListener.Stub() {
         @Override
@@ -53,11 +58,17 @@ public final class StatusGoServiceClient {
         public void onServiceConnected(ComponentName name, IBinder binder) {
             synchronized (lock) {
                 service = IStatusGoService.Stub.asInterface(binder);
+                bindingInProgress = false;
                 bound = true;
                 try {
                     service.registerSignalListener(signalListener);
+                    // Re-apply lifecycle state only after explicit UI visibility callback.
+                    // This avoids an implicit initial "background" transition on cold bind.
+                    if (hasUiVisibilityHint) {
+                        service.setUiVisible(desiredUiVisible);
+                    }
                 } catch (RemoteException e) {
-                    Log.w(TAG, "registerSignalListener failed", e);
+                    Log.w(TAG, "onServiceConnected setup failed", e);
                 }
                 if (connectedLatch != null) connectedLatch.countDown();
             }
@@ -68,6 +79,7 @@ public final class StatusGoServiceClient {
             synchronized (lock) {
                 service = null;
                 connectedLatch = null;
+                bindingInProgress = false;
                 bound = false;
             }
         }
@@ -76,12 +88,15 @@ public final class StatusGoServiceClient {
     private StatusGoServiceClient() {}
 
     private void resetConnection(Context appContext) {
+        final boolean shouldUnbind;
         synchronized (lock) {
             service = null;
             connectedLatch = null;
+            shouldUnbind = bound || bindingInProgress;
+            bindingInProgress = false;
         }
         try {
-            if (bound) {
+            if (shouldUnbind) {
                 appContext.getApplicationContext().unbindService(conn);
             }
         } catch (Throwable ignored) {
@@ -94,10 +109,16 @@ public final class StatusGoServiceClient {
 
     public void ensureStartedAndBound(Context context) {
         final Context app = context.getApplicationContext();
+        boolean shouldAttemptBind = false;
         synchronized (lock) {
             if (service != null) return;
             if (connectedLatch == null) connectedLatch = new CountDownLatch(1);
+            if (!bound && !bindingInProgress) {
+                bindingInProgress = true;
+                shouldAttemptBind = true;
+            }
         }
+        if (!shouldAttemptBind) return;
 
         Intent i = new Intent(app, StatusGoService.class);
         i.setAction(StatusGoService.ACTION_START);
@@ -113,8 +134,27 @@ public final class StatusGoServiceClient {
                 app.startService(i);
             }
         }
-        // Bind for request/response
-        app.bindService(i, conn, Context.BIND_AUTO_CREATE);
+        boolean bindOk = false;
+        try {
+            // Bind for request/response.
+            bindOk = app.bindService(i, conn, Context.BIND_AUTO_CREATE);
+        } catch (Throwable t) {
+            Log.w(TAG, "bindService failed", t);
+        }
+        if (!bindOk) {
+            synchronized (lock) {
+                bindingInProgress = false;
+                bound = false;
+                if (connectedLatch != null) {
+                    connectedLatch.countDown();
+                    connectedLatch = null;
+                }
+            }
+        } else {
+            synchronized (lock) {
+                bound = true;
+            }
+        }
     }
 
     public String call(Context context, String method, String argsJson) {
@@ -216,6 +256,8 @@ public final class StatusGoServiceClient {
      * blocked by the service-connection latch or the Binder call.
      */
     public void setUiVisible(Context context, boolean visible) {
+        desiredUiVisible = visible;
+        hasUiVisibilityHint = true;
         final Context app = context.getApplicationContext();
         ensureStartedAndBound(app);
         Executors.newSingleThreadExecutor().execute(() -> {
@@ -244,6 +286,28 @@ public final class StatusGoServiceClient {
                 if (e instanceof android.os.DeadObjectException) {
                     resetConnection(app);
                     ensureStartedAndBound(app);
+                    synchronized (lock) {
+                        s = service;
+                        latch = connectedLatch;
+                    }
+                    if (s == null && latch != null) {
+                        try {
+                            latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            return;
+                        }
+                    }
+                    synchronized (lock) {
+                        s = service;
+                    }
+                    if (s != null) {
+                        try {
+                            s.setUiVisible(visible);
+                        } catch (RemoteException e2) {
+                            Log.w(TAG, "setUiVisible retry failed", e2);
+                        }
+                    }
                 }
             }
         });

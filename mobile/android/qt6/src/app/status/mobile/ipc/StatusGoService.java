@@ -46,6 +46,7 @@ public final class StatusGoService extends Service {
 
     private final RemoteCallbackList<IStatusGoSignalListener> listeners = new RemoteCallbackList<>();
     private volatile boolean foregroundStarted = false;
+    private volatile boolean uiVisible = false;
 
     private StatusNotificationManager notificationManager;
 
@@ -146,6 +147,22 @@ public final class StatusGoService extends Service {
         }
     }
 
+    private void updateBackendLifecycleForUiVisibility(boolean visible) {
+        final String method = "AppStateChange";
+        final String argsJson = visible ? "[\"active\"]" : "[\"background\"]";
+        try {
+            final String response = nativeCall(method, argsJson);
+            if (response == null || response.isEmpty()) return;
+            final JSONObject parsed = new JSONObject(response);
+            final String error = parsed.optString("error", "");
+            if (!error.isEmpty()) {
+                Log.w(TAG, method + " returned error: " + error);
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to update backend lifecycle for UI visibility", t);
+        }
+    }
+
     private final IStatusGoService.Stub binder = new IStatusGoService.Stub() {
         @Override
         public String call(String method, String argsJson) {
@@ -198,7 +215,9 @@ public final class StatusGoService extends Service {
         @Override
         public void setUiVisible(boolean visible) {
             enforceCallerIsSameApp();
+            uiVisible = visible;
             notificationManager.setUiVisible(visible);
+            updateBackendLifecycleForUiVisibility(visible);
         }
     };
 
