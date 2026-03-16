@@ -111,34 +111,6 @@ SettingsContentBase {
                 visible: root.privacyModeFeatureEnabled
             }
 
-            StatusListItem {
-                Layout.preferredWidth: root.contentWidth
-                title: qsTr("Share usage data with Status")
-                subTitle: qsTr("From all profiles on device")
-                components: [
-                    StatusSwitch {
-                        id: enableMetricsSwitch
-                        checked: root.isCentralizedMetricsEnabled
-                        onToggled: {
-                            Global.openMetricsEnablePopupRequested(Constants.metricsEnablePlacement.privacyAndSecurity, null)
-                            refreshSwitch()
-                        }
-                    }
-                ]
-                onClicked: {
-                    Global.openMetricsEnablePopupRequested(Constants.metricsEnablePlacement.privacyAndSecurity, null)
-                    refreshSwitch()
-                }
-                enabled: root.thirdpartyServicesEnabled
-            }
-
-            // Divider
-            Rectangle {
-                Layout.preferredWidth: root.contentWidth
-                Layout.preferredHeight: 1
-                color: Theme.palette.baseColor2
-            }
-
             // Trusted Sites
             StatusListItem {
                 Layout.preferredWidth: root.contentWidth

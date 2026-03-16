@@ -16622,16 +16622,6 @@
       <translation>Share feedback or suggest improvements on our %1.</translation>
     </message>
     <message>
-      <source>Share usage data with Status</source>
-      <comment>PrivacyAndSecurityView</comment>
-      <translation>Share usage data with Status</translation>
-    </message>
-    <message>
-      <source>From all profiles on device</source>
-      <comment>PrivacyAndSecurityView</comment>
-      <translation>From all profiles on device</translation>
-    </message>
-    <message>
       <source>Trusted sites</source>
       <comment>PrivacyAndSecurityView</comment>
       <translation>Trusted sites</translation>

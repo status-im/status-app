@@ -13753,14 +13753,6 @@ selhalo</translation>
         <translation>Sdílejte zpětnou vazbu nebo navrhněte vylepšení na našem %1.</translation>
     </message>
     <message>
-        <source>Share usage data with Status</source>
-        <translation>Sdílet údaje o používání se Statusem</translation>
-    </message>
-    <message>
-        <source>From all profiles on device</source>
-        <translation>Ze všech profilů na zařízení</translation>
-    </message>
-    <message>
         <source>Trusted sites</source>
         <translation>Důvěryhodné stránky</translation>
     </message>

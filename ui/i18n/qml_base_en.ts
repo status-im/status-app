@@ -13647,14 +13647,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Share usage data with Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>From all profiles on device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Trusted sites</source>
         <translation type="unfinished"></translation>
     </message>
