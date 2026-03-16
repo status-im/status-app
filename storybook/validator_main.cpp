@@ -13,10 +13,6 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    // FIXME: revert when full integration is done
-    // (https://github.com/status-im/status-app/pull/20178)
-    qputenv("QT_FILE_SELECTORS", "noWebEngine");
-
     QGuiApplication::setOrganizationName(u"Status"_s);
     QGuiApplication::setOrganizationDomain(u"status.im"_s);
 
