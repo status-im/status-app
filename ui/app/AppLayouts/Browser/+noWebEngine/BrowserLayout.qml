@@ -23,7 +23,10 @@ StatusSectionLayout {
 
     required property var connectorController
     property bool isDebugEnabled: false
+    property string platformOS: Qt.platform.os
     property bool isMobile
+
+    function reloadCurrentTab() {}
 
     signal sendToRecipientRequested(string address)
 }

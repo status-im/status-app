@@ -142,7 +142,7 @@ SplitView {
 
         RowLayout {
             Layout.fillWidth: true
-            Label { text: "Spoof user-agent:" }
+            Label { text: "Spoof platform OS:" }
             ComboBox {
                 id: ctrlPlatformOS
                 textRole: "text"
@@ -155,19 +155,6 @@ SplitView {
                     { value: SQUtils.Utils.ios, text: "iOS" }
                 ]
                 onCurrentValueChanged: browserLayout.reloadCurrentTab()
-            }
-            TextInput {
-                id: userAgentString
-                text: browserLayout.userAgent
-                selectByMouse: true
-                readOnly: true
-            }
-            Button {
-                icon.name: "edit-copy"
-                onClicked: {
-                    userAgentString.selectAll()
-                    userAgentString.copy()
-                }
             }
         }
 
