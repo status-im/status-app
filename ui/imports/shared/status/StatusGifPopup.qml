@@ -91,9 +91,8 @@ StatusDropdown {
         root.currentCategory = GifPopupDefinitions.Category.Trending
         root.previousCategory = GifPopupDefinitions.Category.Trending
 
-        if (confirmationPopupLoader.active) {
-            confirmationPopupLoader.active = false
-        }
+        if (confirmationPopupLoader.item)
+            confirmationPopupLoader.item.close()
     }
 
     padding: 0
