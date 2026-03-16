@@ -1,10 +1,10 @@
-from typing import Optional
 import time
 
-from .base_page import BasePage
 from locators.app_locators import AppLocators
-from utils.screenshot import save_page_source
 from utils.element_state_checker import ElementStateChecker
+from utils.screenshot import save_page_source
+
+from .base_page import BasePage
 
 
 class App(BasePage):
@@ -12,7 +12,7 @@ class App(BasePage):
         super().__init__(driver)
         self.locators = AppLocators()
 
-    def has_left_nav(self, timeout: Optional[int] = 1) -> bool:
+    def has_left_nav(self, timeout: int | None = 1) -> bool:
         return self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=timeout)
 
     def active_section(self) -> str:
@@ -41,37 +41,185 @@ class App(BasePage):
         return "unknown"
 
     def click_settings_left_nav(self) -> bool:
-        self.gestures.tap(500, 200)
-        return self.safe_click(
-            self.locators.LEFT_NAV_SETTINGS, timeout=10, max_attempts=2
-        )
+        self._ensure_main_nav_visible()
+        return self._click_nav_item(self.locators.LEFT_NAV_SETTINGS)
 
     def click_messages_button(self) -> bool:
         self.logger.info("Clicking Messages button")
-        return self.safe_click(self.locators.LEFT_NAV_MESSAGES)
+        if self.active_section() == "messaging":
+            self.logger.info("Already in Messages section — skipping nav")
+            return True
+        self._ensure_main_nav_visible()
+        return self._click_nav_item(self.locators.LEFT_NAV_MESSAGES)
+
+    def click_communities_button(self) -> bool:
+        self.logger.info("Clicking Communities button")
+        self._ensure_main_nav_visible()
+        return self._click_nav_item(self.locators.LEFT_NAV_COMMUNITIES)
 
     def click_wallet_button(self) -> bool:
         self.logger.info("Clicking Wallet button")
+        if self.active_section() == "wallet":
+            self.logger.info("Already in Wallet section — skipping nav")
+            return True
         self._ensure_main_nav_visible()
-        return self.safe_click(self.locators.LEFT_NAV_WALLET, timeout=10)
+        return self._click_nav_item(self.locators.LEFT_NAV_WALLET)
+
+    def click_market_button(self) -> bool:
+        self.logger.info("Clicking Market button")
+        self._ensure_main_nav_visible()
+        return self._click_nav_item(self.locators.LEFT_NAV_MARKET)
+
+    def _click_nav_item(self, locator: tuple, timeout: int = 10) -> bool:
+        """Click a nav-bar item and, in portrait mode, wait for the drawer to close.
+
+        After the click the PrimaryNavSidebar drawer plays a close animation.
+        If the caller checks for the target section immediately it may not be
+        visible yet.  This helper waits for the nav bar to disappear before
+        returning.
+        """
+        clicked = self.safe_click(locator, timeout=timeout, max_attempts=2)
+        if not clicked:
+            return False
+
+        if self.is_portrait_mode():
+            # Wait for the drawer to close — nav items should disappear
+            self.wait_for_invisibility(self.locators.LEFT_NAV_ANY, timeout=5)
+            # Allow destination page to begin rendering after drawer animation
+            time.sleep(0.5)
+
+        return True
 
     def _ensure_main_nav_visible(self) -> bool:
-        if self.is_portrait_mode() and self.is_element_visible(
-            self.locators.TOOLBAR_BACK_BUTTON, timeout=2
-        ):
+        """Ensure the left navigation bar is visible.
+
+        In landscape the nav bar is always visible.  In portrait it is a
+        drawer that slides from the left edge.  This method first presses
+        back buttons to unwind deep navigation, then swipes from the left
+        edge to open the drawer.
+        """
+        if self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=2):
+            return True
+
+        if not self.is_portrait_mode():
+            return self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=5)
+
+        # Phase 1: unwind deep navigation stack via back button
+        for _ in range(5):
+            if self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=1):
+                return True
+            if not self.is_element_visible(
+                self.locators.TOOLBAR_BACK_BUTTON, timeout=1
+            ):
+                break
             self.safe_click(self.locators.TOOLBAR_BACK_BUTTON, timeout=2)
+
+        if self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=1):
+            return True
+
+        # Phase 2: drag the drawer handle to open the nav drawer
+        for attempt in range(3):
+            if self._open_nav_drawer():
+                break
+            self.logger.debug("Nav drawer open attempt %d did not reveal nav", attempt + 1)
+
         return self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=5)
+
+    # Locator for the drawer swipe-indicator handle visible in portrait mode.
+    NAV_DRAWER_HANDLE = (
+        "xpath",
+        "//android.view.View[@clickable='true' and @bounds]"
+        "[number(substring-before(substring-after(@bounds,'['),','))<=10]",
+    )
+
+    def _open_nav_drawer(self) -> bool:
+        """Open the left navigation drawer in portrait mode.
+
+        Strategies tried in order:
+        1. mobile: dragGesture with elementId (Pixel-friendly).
+        2. W3C pointer actions from handle position (Samsung-friendly,
+           avoids system gesture zones).
+        3. Coordinate-based drag fallback.
+        """
+        try:
+            size = self.driver.get_window_size()
+            w = size["width"]
+            h = size["height"]
+
+            # Strategy 1: element-based mobile: dragGesture
+            handle = self.find_element_safe(self.NAV_DRAWER_HANDLE, timeout=2)
+            if handle:
+                handle_rect = handle.rect
+                try:
+                    self.driver.execute_script("mobile: dragGesture", {
+                        "elementId": handle.id,
+                        "endX": int(w * 0.7),
+                        "endY": int(handle_rect["y"] + handle_rect["height"] / 2),
+                    })
+                    if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=3):
+                        return True
+                except Exception as e:
+                    self.logger.debug("Strategy 1 (element drag) failed: %s", e)
+
+                # Strategy 2: W3C touch actions from handle centre
+                try:
+                    from selenium.webdriver.common.actions import interaction
+                    from selenium.webdriver.common.actions.action_builder import ActionBuilder
+                    from selenium.webdriver.common.actions.pointer_input import PointerInput
+
+                    start_x = int(handle_rect["x"] + handle_rect["width"] / 2)
+                    start_y = int(handle_rect["y"] + handle_rect["height"] / 2)
+                    end_x = int(w * 0.7)
+
+                    actions = ActionBuilder(
+                        self.driver,
+                        mouse=PointerInput(interaction.POINTER_TOUCH, "finger"),
+                    )
+                    actions.pointer_action.move_to_location(start_x, start_y)
+                    actions.pointer_action.pointer_down()
+                    actions.pointer_action.pause(0.1)
+                    actions.pointer_action.move_to_location(end_x, start_y)
+                    actions.pointer_action.pause(0.05)
+                    actions.pointer_action.pointer_up()
+                    actions.perform()
+
+                    if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=3):
+                        return True
+                except Exception as e:
+                    self.logger.debug("Strategy 2 (W3C actions) failed: %s", e)
+
+            # Strategy 3: coordinate-based drag from left-centre area
+            try:
+                self.driver.execute_script("mobile: dragGesture", {
+                    "startX": int(w * 0.08),
+                    "startY": int(h * 0.5),
+                    "endX": int(w * 0.7),
+                    "endY": int(h * 0.5),
+                })
+                if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=3):
+                    return True
+            except Exception as e:
+                self.logger.debug("Strategy 3 (coordinate drag) failed: %s", e)
+
+            return False
+        except Exception as e:
+            self.logger.debug("_open_nav_drawer failed: %s", e)
+            return False
 
     def click_settings_button(self) -> bool:
         self.logger.info("Clicking Settings button")
+        if self.active_section() == "settings":
+            self.logger.info("Already in Settings section — skipping nav")
+            return True
         self._ensure_main_nav_visible()
-        return self.safe_click(self.locators.LEFT_NAV_SETTINGS, timeout=10)
+        return self._click_nav_item(self.locators.LEFT_NAV_SETTINGS)
 
     def open_profile_menu(self) -> bool:
         self.logger.info("Opening profile menu from main navigation")
+        self._ensure_main_nav_visible()
         return self.safe_click(self.locators.PROFILE_NAV_BUTTON, timeout=5)
 
-    def copy_profile_link_from_menu(self, timeout: int = 5) -> Optional[str]:
+    def copy_profile_link_from_menu(self, timeout: int = 5) -> str | None:
         if not self.open_profile_menu():
             self.logger.error("Failed to open profile menu")
             return None
@@ -104,11 +252,11 @@ class App(BasePage):
 
     def wait_for_toast(
         self,
-        expected_substring: Optional[str] = None,
+        expected_substring: str | None = None,
         timeout: float = 6.0,
         poll_interval: float = 0.2,
         stability: float = 0.0,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Poll for a toast message and optionally match its content.
 
         Args:
@@ -121,7 +269,7 @@ class App(BasePage):
             Toast text if found and matched, None otherwise.
         """
         deadline = time.time() + timeout
-        last_seen: Optional[str] = None
+        last_seen: str | None = None
 
         while time.time() < deadline:
             desc = self.get_toast_content_desc(timeout=max(deadline - time.time(), 0.3))
@@ -163,10 +311,10 @@ class App(BasePage):
         except Exception as e:
             self.logger.debug("Toast page source save failed: %s", e)
 
-    def is_toast_present(self, timeout: Optional[int] = 3) -> bool:
+    def is_toast_present(self, timeout: int | None = 3) -> bool:
         return self.wait_for_toast(timeout=timeout or 3.0) is not None
 
-    def get_toast_content_desc(self, timeout: Optional[int] = 3) -> Optional[str]:
+    def get_toast_content_desc(self, timeout: int | None = 3) -> str | None:
         """Return toast's content-desc, polling until non-empty or timeout."""
         try:
             el = self.find_element_safe(self.locators.ANY_TOAST, timeout=timeout)

@@ -1,6 +1,6 @@
-import time
 import logging
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import NoReturn
@@ -13,17 +13,17 @@ from selenium.common.exceptions import (
     TimeoutException,
 )
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from config import get_config, log_element_action
+from utils.app_lifecycle_manager import AppLifecycleManager
+from utils.element_state_checker import ElementStateChecker
 from utils.exceptions import ElementInteractionError
 from utils.gestures import Gestures
-from utils.platform import is_ios as _is_ios_driver
-from utils.screenshot import save_screenshot, save_page_source
-from utils.app_lifecycle_manager import AppLifecycleManager
 from utils.keyboard_manager import KeyboardManager
-from utils.element_state_checker import ElementStateChecker
+from utils.screenshot import save_page_source, save_screenshot
 
 
 class BasePage:
@@ -52,7 +52,6 @@ class BasePage:
             self._screenshots_dir = "screenshots"
 
         self.wait = WebDriverWait(driver, element_wait_timeout)
-        self._is_ios = _is_ios_driver(driver)
 
         self.logger = logging.getLogger(
             self.__class__.__module__ + "." + self.__class__.__name__
@@ -78,7 +77,7 @@ class BasePage:
         except Exception:
             return None
 
-    def wait_for_invisibility(self, locator, timeout: int | None = None) -> bool:
+    def wait_for_invisibility(self, locator: tuple, timeout: int | None = None) -> bool:
         """Wait until the element located by locator becomes invisible or detached."""
         try:
             wait = self._create_wait(timeout, "element_find")
@@ -91,7 +90,7 @@ class BasePage:
         effective_timeout = timeout or self.timeouts.get(config_key, 30)
         return WebDriverWait(self.driver, effective_timeout)
 
-    def is_screen_displayed(self, timeout: int | None = None):
+    def is_screen_displayed(self, timeout: int | None = None) -> bool:
         """Check if this page/screen is currently displayed.
         
         Subclasses must define IDENTITY_LOCATOR as a class attribute - this is
@@ -99,7 +98,7 @@ class BasePage:
         """
         return self.is_element_visible(self.IDENTITY_LOCATOR, timeout=timeout)
 
-    def find_element(self, locator, timeout: int | None = None):
+    def find_element(self, locator: tuple, timeout: int | None = None) -> WebElement:
         """Find element with configurable timeout.
 
         Args:
@@ -128,7 +127,7 @@ class BasePage:
 
     def is_element_visible(
         self,
-        locator,
+        locator: tuple,
         fallback_locators: list[tuple] | None = None,
         timeout: int | None = None,
     ) -> bool:
@@ -164,6 +163,7 @@ class BasePage:
 
         for loc in all_locators:
             for attempt in range(1, max_attempts + 1):
+                element = None
                 try:
                     element = self._wait_for_clickable(loc, timeout)
                     element.click()
@@ -175,10 +175,14 @@ class BasePage:
                     InvalidElementStateException,
                 ) as e:
                     self.logger.debug(f"Click failed ({e}); trying gesture fallback.")
-                    if self._gesture_tap_fallback(element, loc):
+                    if element and self._gesture_tap_fallback(element, loc):
                         return True
                 except (TimeoutException, NoSuchElementException) as e:
                     self.logger.debug(f"Element not ready ({loc[1]}): {e}")
+                except AttributeError as e:
+                    # Transient Appium serialization issue — driver returns
+                    # a string instead of a WebElement.  Retry on next attempt.
+                    self.logger.debug(f"Driver returned invalid element ({loc[1]}): {e}")
 
                 self.logger.debug(
                     f"Click attempt {attempt}/{max_attempts} failed: {loc[1]}"
@@ -190,7 +194,7 @@ class BasePage:
 
         self._raise_click_failure(all_locators)
 
-    def _wait_for_clickable(self, locator: tuple, timeout: int | None = None):
+    def _wait_for_clickable(self, locator: tuple, timeout: int | None = None) -> WebElement:
         """Wait for element to be clickable and return it."""
         wait = self._create_wait(timeout, "element_click")
         return wait.until(EC.element_to_be_clickable(locator))
@@ -207,25 +211,74 @@ class BasePage:
         self.dump_page_source(f"click_failure_{locator_desc}")
         raise ElementInteractionError(message, str(locators[0] if locators else ""), "click")
 
-    def find_element_safe(self, locator, timeout: int | None = None):
+    def find_element_safe(self, locator: tuple, timeout: int | None = None) -> WebElement | None:
         """Find element and return None instead of raising on failure."""
         try:
             wait = self._create_wait(timeout, "element_find")
-            return wait.until(EC.presence_of_element_located(locator))
+            result = wait.until(EC.presence_of_element_located(locator))
+            # Guard against Appium serialization bug where the driver
+            # returns a raw string instead of a WebElement.
+            if not isinstance(result, WebElement):
+                self.logger.debug(
+                    "find_element_safe got %s instead of WebElement for %s",
+                    type(result).__name__, locator[1],
+                )
+                return None
+            return result
         except Exception:
             return None
 
     def hide_keyboard(self) -> bool:
         return self.keyboard.hide_keyboard()
 
-    def ensure_element_visible(self, locator, timeout=10) -> bool:
+    def ensure_element_visible(self, locator: tuple, timeout: int = 10) -> bool:
         return self.keyboard.ensure_element_visible(
             locator, self.is_element_visible, timeout
         )
 
+    def scroll_to_element(
+        self,
+        locator: tuple,
+        *,
+        container_locator: tuple | None = None,
+        max_swipes: int = 10,
+        timeout: int = 2,
+    ) -> bool:
+        """Scroll within a container until ``locator`` is visible.
+
+        Uses ``driver.swipe()`` which works reliably with Qt/QML views
+        (unlike ``mobile: swipeGesture`` which can be ignored by Flickables).
+        If ``container_locator`` is provided, swipes are constrained to that
+        element's bounds; otherwise uses the left portion of the screen.
+
+        Returns True if the element becomes visible.
+        """
+        for _ in range(max_swipes):
+            if self.is_element_visible(locator, timeout=timeout):
+                return True
+            try:
+                if container_locator:
+                    container = self.find_element_safe(container_locator, timeout=2)
+                    if container:
+                        rect = container.rect
+                        cx = int(rect["x"] + rect["width"] * 0.5)
+                        start_y = int(rect["y"] + rect["height"] * 0.8)
+                        end_y = int(rect["y"] + rect["height"] * 0.2)
+                        self.driver.swipe(cx, start_y, cx, end_y, duration=300)
+                        continue
+                # Fallback: swipe in the left 30% of the screen
+                size = self.driver.get_window_size()
+                cx = int(size["width"] * 0.2)
+                start_y = int(size["height"] * 0.8)
+                end_y = int(size["height"] * 0.2)
+                self.driver.swipe(cx, start_y, cx, end_y, duration=300)
+            except Exception as exc:
+                self.logger.debug("scroll_to_element swipe failed: %s", exc)
+        return self.is_element_visible(locator, timeout=timeout)
+
     def qt_safe_input(
         self,
-        locator,
+        locator: tuple,
         text: str,
         timeout: int | None = None,
         max_retries: int = 3,
@@ -255,12 +308,10 @@ class BasePage:
 
                 element.clear()
 
-                # sendKeyStrategy / interKeyDelay are UiAutomator2-only settings
-                if not self._is_ios:
-                    self.driver.update_settings({
-                        "sendKeyStrategy": "oneByOne",
-                        "interKeyDelay": inter_key_delay,
-                    })
+                self.driver.update_settings({
+                    "sendKeyStrategy": "oneByOne",
+                    "interKeyDelay": inter_key_delay,
+                })
                 actions = ActionChains(self.driver)
                 actions.send_keys(text).perform()
 
@@ -321,9 +372,8 @@ class BasePage:
 
     def _verify_input_success(self, element, expected_text: str) -> bool:
         try:
-            # Android exposes entered value via 'text'; iOS uses 'value'
-            attr = "value" if self._is_ios else "text"
-            actual_text = element.get_attribute(attr)
+            # Android UIAutomator2 exposes entered value via 'text'
+            actual_text = element.get_attribute("text")
             if actual_text is None:
                 return True
             return len(actual_text) > 0
@@ -333,9 +383,8 @@ class BasePage:
     def _clear_input_field(self, locator: tuple, timeout: int = 5) -> bool:
         """Clear text from an input field using select-all + delete.
 
-        Uses Ctrl+A (Android) or Cmd+A (iOS) to select all text, then
-        Backspace to delete.  More reliable than ``element.clear()`` for
-        Qt/QML fields.
+        Uses Ctrl+A to select all text, then Backspace to delete.
+        More reliable than element.clear() for Qt/QML fields.
 
         Args:
             locator: Element locator tuple.
@@ -353,14 +402,13 @@ class BasePage:
         try:
             element.click()
 
-            # iOS uses Command (META); Android uses Ctrl
-            modifier = Keys.META if self._is_ios else Keys.CONTROL
+            # Select all with Ctrl+A, then delete (Ctrl is correct for Android)
             actions = ActionChains(self.driver)
-            actions.key_down(modifier).send_keys("a").key_up(modifier)
+            actions.key_down(Keys.CONTROL).send_keys("a").key_up(Keys.CONTROL)
             actions.send_keys(Keys.BACKSPACE)
             actions.perform()
 
-            self.logger.debug("Cleared input field via select-all + Backspace")
+            self.logger.debug("Cleared input field via Ctrl+A + Backspace")
             return True
         except Exception as exc:
             self.logger.debug(f"Select-all clear failed: {exc}")
@@ -369,18 +417,22 @@ class BasePage:
     def _read_element_text(self, locator: tuple, timeout: int = 4) -> str | None:
         """Read the visible text from an element, trying multiple attributes.
 
-        Android: checks ``text``, ``content-desc``, ``value``.
-        iOS:     checks ``value``, ``label``, ``name``.
+        Checks text, content-desc, and value in order. Returns the first
+        non-empty string found, or None if the element is missing or has
+        no readable text.
 
-        Returns the first non-empty string found, or ``None`` if the
-        element is missing or has no readable text.
+        Args:
+            locator: Element locator tuple.
+            timeout: Timeout for finding the element.
+
+        Returns:
+            The element's text, or None.
         """
         element = self.find_element_safe(locator, timeout=timeout)
         if not element:
             return None
 
-        attrs = ("value", "label", "name") if self._is_ios else ("text", "content-desc", "value")
-        for attr in attrs:
+        for attr in ("text", "content-desc", "value"):
             try:
                 raw = element.get_attribute(attr)
                 if not raw or raw == "null":
@@ -394,6 +446,7 @@ class BasePage:
             except Exception:
                 continue
         return None
+
     def long_press_element(self, element, duration: int = 800) -> bool:
         """Perform long-press gesture on element to trigger context menu.
 
@@ -490,13 +543,8 @@ class BasePage:
         return " ".join(values).strip()
 
     def _append_element_text(self, element, target: list[str]) -> None:
-        """Append non-empty text values from element to target list.
-
-        Uses platform-appropriate attributes (Android: ``text``,
-        ``content-desc``; iOS: ``value``, ``label``).
-        """
-        attrs = ("value", "label") if self._is_ios else ("text", "content-desc")
-        for attr in attrs:
+        """Append non-empty text/content-desc values from element to target list."""
+        for attr in ("text", "content-desc"):
             try:
                 raw = element.get_attribute(attr)
                 if not raw or raw == "null":
@@ -509,6 +557,7 @@ class BasePage:
                 continue
             if value and value not in target:
                 target.append(value)
+
     def _wait_between_attempts(self, base_delay: float = 0.5) -> None:
         env_name = os.getenv("CURRENT_TEST_ENVIRONMENT", "browserstack").lower()
         if env_name in ("browserstack",):
@@ -516,16 +565,16 @@ class BasePage:
         else:
             time.sleep(base_delay * 0.5)
 
-    def _is_element_enabled(self, locator) -> bool:
+    def _is_element_enabled(self, locator: tuple, timeout: int = 1) -> bool:
         try:
-            element = self.find_element_safe(locator, timeout=1)
+            element = self.find_element_safe(locator, timeout=timeout)
             if not element:
                 return False
             return ElementStateChecker.is_enabled(element)
         except Exception:
             return False
 
-    def _is_element_checked(self, locator) -> bool:
+    def _is_element_checked(self, locator: tuple) -> bool:
         try:
             element = self.find_element_safe(locator, timeout=1)
             if not element:
@@ -534,7 +583,7 @@ class BasePage:
         except Exception:
             return False
 
-    def wait_for_element_enabled(self, locator, timeout: int | None = None) -> bool:
+    def wait_for_element_enabled(self, locator: tuple, timeout: int | None = None) -> bool:
         """Wait until element is present and enabled."""
         effective_timeout = timeout or self.timeouts.get("element_wait", 10)
 
@@ -551,7 +600,7 @@ class BasePage:
         except Exception:
             return False
 
-    def wait_for_element_checked(self, locator, timeout: int | None = None) -> bool:
+    def wait_for_element_checked(self, locator: tuple, timeout: int | None = None) -> bool:
         """Wait until element is present and checked."""
         effective_timeout = timeout or self.timeouts.get("element_wait", 10)
 

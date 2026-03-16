@@ -39,8 +39,8 @@ pipeline {
     )
     string(
       name: 'PYTEST_ARGS',
-      description: 'Pytest flags. Default runs gate tests for PRs. Use "-n=5 -m smoke tests" for nightly/full runs.',
-      defaultValue: '-n=5 -m gate tests'
+      description: 'Pytest flags. Default runs gate tests for PRs. Use "-n=2 -m smoke tests" for nightly/full runs.',
+      defaultValue: '-n=2 -m gate tests'
     )
   }
 

@@ -162,7 +162,7 @@ pipeline {
                   parameters: jenkins.mapToParams([
                     GIT_REF:      env.BRANCH_NAME,
                     BUILD_SOURCE: urls['Android/arm64'],
-                    PYTEST_ARGS:  '-n=5 -m smoke tests',
+                    PYTEST_ARGS:  '-n=2 -m smoke tests',
                   ]),
                 )
               } }

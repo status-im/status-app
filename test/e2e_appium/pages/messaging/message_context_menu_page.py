@@ -1,16 +1,15 @@
-from typing import Optional
 
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.actions import interaction
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.pointer_input import PointerInput
 
-from ..base_page import BasePage
-from locators.messaging.message_context_menu_locators import (
-    MessageContextMenuLocators,
-    EmojiPickerLocators,
-)
 from locators.messaging.chat_locators import ChatLocators
+from locators.messaging.message_context_menu_locators import (
+    EmojiPickerLocators,
+    MessageContextMenuLocators,
+)
+
+from ..base_page import BasePage
 
 
 class MessageContextMenuPage(BasePage):
@@ -83,29 +82,36 @@ class MessageContextMenuPage(BasePage):
             self.logger.error(f"Message '{message_content}' not found")
             return False
 
-        try:
-            # Use W3C Actions for long-press
-            actions = ActionBuilder(
-                self.driver,
-                mouse=PointerInput(interaction.POINTER_TOUCH, "finger"),
-            )
-            actions.pointer_action.move_to(element)
-            actions.pointer_action.pointer_down()
-            actions.pointer_action.pause(duration_ms / 1000)
-            actions.pointer_action.pointer_up()
-            actions.perform()
-            
-            # Wait for menu to appear
+        # Try W3C Actions first, then mobile: longClickGesture as fallback.
+        # Different BrowserStack devices respond to different gesture APIs.
+        for attempt, strategy in enumerate(("w3c", "mobile_gesture"), start=1):
+            try:
+                if strategy == "w3c":
+                    actions = ActionBuilder(
+                        self.driver,
+                        mouse=PointerInput(interaction.POINTER_TOUCH, "finger"),
+                    )
+                    actions.pointer_action.move_to(element)
+                    actions.pointer_action.pointer_down()
+                    actions.pointer_action.pause(duration_ms / 1000)
+                    actions.pointer_action.pointer_up()
+                    actions.perform()
+                else:
+                    self.driver.execute_script(
+                        "mobile: longClickGesture",
+                        {"elementId": element.id, "duration": duration_ms + 500},
+                    )
+            except Exception as e:
+                self.logger.debug("Long-press strategy %s failed: %s", strategy, e)
+                continue
+
             if self.is_displayed(timeout=5):
-                self.logger.info(f"Context menu opened for message '{message_content}'")
+                self.logger.info("Context menu opened for message '%s' (strategy=%s)", message_content, strategy)
                 return True
-            
-            self.logger.warning("Context menu did not appear after long-press")
-            return False
-            
-        except Exception as e:
-            self.logger.error(f"Long-press failed: {e}")
-            return False
+            self.logger.debug("Context menu not visible after %s long-press (attempt %d)", strategy, attempt)
+
+        self.logger.warning("Context menu did not appear after all long-press strategies")
+        return False
 
     def long_press_message_by_element(
         self,

@@ -7,29 +7,29 @@ provides flexible configuration options.
 """
 
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional, Dict, Any
-import pytest
-import time
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
-from pages.onboarding import (
-    WelcomePage,
-    AnalyticsPage,
-    CreateProfilePage,
-    SeedPhraseInputPage,
-    PasswordPage,
-    SplashScreen,
-    BiometricsPage,
-)
-from pages.app import App
-from utils.generators import generate_seed_phrase
-from models.user_model import User, UserProfile
+import pytest
+
 from config import get_config
 from config.logging_config import get_logger
 from core.models import DEFAULT_USER_PASSWORD
 from locators.wallet.accounts_locators import WalletAccountsLocators
+from models.user_model import User, UserProfile
+from pages.app import App
+from pages.onboarding import (
+    AnalyticsPage,
+    BiometricsPage,
+    CreateProfilePage,
+    PasswordPage,
+    SeedPhraseInputPage,
+    SplashScreen,
+    WelcomePage,
+)
 from services.app_initialization_manager import AppInitializationManager
+from utils.generators import generate_seed_phrase
 
 
 @dataclass
@@ -38,26 +38,26 @@ class OnboardingConfig:
 
     skip_analytics: bool = True
     skip_profile_creation: bool = False
-    custom_user_data: Optional[Dict[str, Any]] = None
+    custom_user_data: dict[str, Any] | None = None
     timeout_per_step: int = 30
     take_screenshots: bool = False
-    screenshot_path: Optional[str] = None
+    screenshot_path: str | None = None
     validate_each_step: bool = True
 
     # Advanced options
-    custom_password: Optional[str] = None
-    custom_display_name: Optional[str] = None
+    custom_password: str | None = None
+    custom_display_name: str | None = None
     wait_for_complete_loading: bool = True
     verify_main_app: bool = True
 
     # Seed phrase import options
     use_seed_phrase: bool = False
-    seed_phrase: Optional[str] = None
+    seed_phrase: str | None = None
     seed_phrase_autocomplete: bool = False
 
     # Test context
     test_environment: str = "e2e_test"
-    test_metadata: Dict[str, Any] = field(default_factory=dict)
+    test_metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class OnboardingFlow:
@@ -126,7 +126,7 @@ class OnboardingFlow:
             test_context=self.config.test_metadata,
         )
 
-    def execute_complete_flow(self) -> Dict[str, Any]:
+    def execute_complete_flow(self) -> dict[str, Any]:
         """
         Execute the complete onboarding flow.
 
@@ -176,10 +176,10 @@ class OnboardingFlow:
         except Exception as e:
             error_result = self._build_error_result(e)
             self.logger.error(
-                f"❌ Onboarding flow failed at step '{self.current_step}': {str(e)}"
+                f"❌ Onboarding flow failed at step '{self.current_step}': {e!s}"
             )
             raise OnboardingFlowError(
-                f"Onboarding failed at step '{self.current_step}': {str(e)}",
+                f"Onboarding failed at step '{self.current_step}': {e!s}",
                 step=self.current_step,
                 results=error_result,
             )
@@ -196,20 +196,15 @@ class OnboardingFlow:
         except Exception as exc:
             self.logger.debug("Session readiness check skipped: %s", exc)
 
-        max_wait = 10
-        for attempt in range(max_wait):
-            try:
-                elements = self.app.driver.find_elements("xpath", "//*")
-                if len(elements) > 5:
-                    break
-                time.sleep(1)
-            except Exception:
-                time.sleep(1)
-        
+        # Best-effort wait for the UI tree to populate before interacting
+        self.app.wait_for_condition(
+            lambda: len(self.app.driver.find_elements("xpath", "//*")) > 5,
+            timeout=10,
+            poll_interval=1.0,
+        )
+
         try:
-            from utils.gestures import Gestures
-            Gestures(self.app.driver).tap(500, 300)
-            time.sleep(1)
+            self.app.driver.tap([(500, 300)])
         except Exception:
             self.logger.debug("Initial tap attempt skipped", exc_info=True)
 
@@ -223,8 +218,7 @@ class OnboardingFlow:
                     self.logger.debug(
                         f"Welcome screen not visible yet (attempt {attempt + 1}/3), waiting..."
                     )
-                    time.sleep(2)
-            
+
             assert welcome_visible, (
                 "Welcome screen should be displayed"
             )
@@ -330,6 +324,7 @@ class OnboardingFlow:
     def _execute_password_step(self):
         self.current_step = "password_screen"
         self.logger.info("Step 4: Password Screen")
+        step_start = datetime.now()
 
         if self.config.validate_each_step:
             assert self.password_page.is_screen_displayed(), (
@@ -339,6 +334,8 @@ class OnboardingFlow:
         success = self.password_page.create_password(self.test_user.password)
         assert success, "Should successfully create password"
 
+        elapsed = (datetime.now() - step_start).total_seconds()
+        self.logger.info("Step 4 completed in %.1fs", elapsed)
         self.step_results["password_screen"] = {
             "success": True,
             "password_length": len(self.test_user.password),
@@ -352,7 +349,9 @@ class OnboardingFlow:
         """Dismiss biometrics prompt if it appears after password confirmation."""
         self.current_step = "biometrics_screen"
         self.logger.info("Step 5: Biometrics Screen (dismiss if present)")
+        step_start = datetime.now()
 
+        self.logger.info("Checking for biometrics prompt (timeout=3s)")
         if self.biometrics_page.is_screen_displayed(timeout=3):
             self.logger.info("Biometrics prompt detected, selecting 'Maybe later'")
             dismissed = self.biometrics_page.select_maybe_later()
@@ -371,6 +370,9 @@ class OnboardingFlow:
                 "timestamp": datetime.now(),
             }
 
+        elapsed = (datetime.now() - step_start).total_seconds()
+        self.logger.info("Step 5 completed in %.1fs", elapsed)
+
         if self.config.take_screenshots:
             self._take_screenshot("biometrics_handled")
 
@@ -378,9 +380,17 @@ class OnboardingFlow:
         """Execute loading screen wait"""
         self.current_step = "loading_screen"
         self.logger.info("Step 6: Loading Screen")
+        step_start = datetime.now()
 
         if self.config.wait_for_complete_loading:
+            self.logger.info(
+                "Waiting for loading completion (timeout=120s)"
+            )
             success = self.loading_page.wait_for_loading_completion(timeout=120)
+            elapsed = (datetime.now() - step_start).total_seconds()
+            self.logger.info(
+                "Loading wait finished in %.1fs (success=%s)", elapsed, success
+            )
             assert success, "Should successfully complete loading"
 
         self.step_results["loading_screen"] = {
@@ -389,14 +399,47 @@ class OnboardingFlow:
         }
 
     def _execute_main_app_verification(self):
-        """Execute main app verification"""
+        """Execute main app verification with multi-locator fallback.
+
+        The primary ADD_ACCOUNT_BUTTON may not be visible on all device
+        form-factors (portrait tablets, phones). Fall back through
+        several wallet indicators before failing.
+        """
         self.current_step = "wallet_verification"
         self.logger.info("Step 7: Wallet Landing Verification")
+        step_start = datetime.now()
 
-        assert self.app.is_element_visible(
-            WalletAccountsLocators.ADD_ACCOUNT_BUTTON
-        ), "Wallet landing screen should be visible after onboarding"
+        from locators.app_locators import AppLocators
 
+        wallet_visible = (
+            self.app.is_element_visible(
+                WalletAccountsLocators.ADD_ACCOUNT_BUTTON, timeout=15
+            )
+            or self.app.is_element_visible(
+                AppLocators().LEFT_NAV_WALLET, timeout=5
+            )
+            or self.app.is_element_visible(
+                WalletAccountsLocators.WALLET_HEADER_ADDRESS, timeout=5
+            )
+            or self.app.is_element_visible(
+                WalletAccountsLocators.FOOTER_SEND, timeout=5
+            )
+        )
+
+        if not wallet_visible:
+            is_portrait = self.app.is_portrait_mode()
+            self.logger.error(
+                "Wallet not detected after onboarding "
+                f"(portrait={is_portrait})"
+            )
+            self.app.dump_page_source("wallet_verification_failure")
+
+        assert wallet_visible, (
+            "Wallet landing screen should be visible after onboarding"
+        )
+
+        elapsed = (datetime.now() - step_start).total_seconds()
+        self.logger.info("Step 7 completed in %.1fs", elapsed)
         self.step_results["wallet_verification"] = {
             "success": True,
             "timestamp": datetime.now(),
@@ -426,7 +469,7 @@ class OnboardingFlow:
             except Exception as e:
                 self.logger.warning(f"⚠️ Failed to take screenshot '{name}': {e}")
 
-    def _build_success_result(self) -> Dict[str, Any]:
+    def _build_success_result(self) -> dict[str, Any]:
         """Build success result dictionary"""
         end_time = datetime.now()
         duration = (end_time - self.start_time).total_seconds()
@@ -442,7 +485,7 @@ class OnboardingFlow:
             "end_time": end_time.isoformat(),
         }
 
-    def _build_error_result(self, error: Exception) -> Dict[str, Any]:
+    def _build_error_result(self, error: Exception) -> dict[str, Any]:
         """Build error result dictionary"""
         end_time = datetime.now()
         duration = (end_time - self.start_time).total_seconds()
@@ -465,7 +508,7 @@ class OnboardingFlow:
 class OnboardingFlowError(Exception):
     """Custom exception for onboarding flow failures"""
 
-    def __init__(self, message: str, step: str = None, results: Dict[str, Any] = None):
+    def __init__(self, message: str, step: str = None, results: dict[str, Any] = None):
         super().__init__(message)
         self.step = step
         self.results = results
@@ -527,8 +570,9 @@ def user_account():
 
     Creates user account data compatible with existing framework patterns.
     """
-    from models.user_model import User, UserProfile
     from datetime import datetime
+
+    from models.user_model import User, UserProfile
 
     # Create consistent user account similar to e2e pattern
     profile = UserProfile(

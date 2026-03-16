@@ -2,6 +2,14 @@ from ..base_locators import BaseLocators
 
 
 class ChatLocators(BaseLocators):
+    """Locators for 1x1/group chat list, composer, and chat actions.
+
+    QML sources:
+    - ui/imports/shared/status/StatusChatInput.qml
+    - ui/app/AppLayouts/Chat/views/ChatHeaderContentView.qml
+    - ui/imports/shared/views/chat/ChatContextMenuView.qml
+    """
+
     CHAT_LIST = BaseLocators.xpath("//*[contains(@resource-id,'ContactsColumnView_chatList')]")
     CHAT_SEARCH_BOX = BaseLocators.content_desc_contains("tid:statusBaseInput")
     CHAT_HEADER = BaseLocators.content_desc_contains(
@@ -10,9 +18,7 @@ class ChatLocators(BaseLocators):
     TOOLBAR_BACK_BUTTON = BaseLocators.xpath(
         "//android.widget.Button[@content-desc=' [tid:toolBarBackButton]']"
     )
-    MESSAGE_INPUT = BaseLocators.xpath(
-        "//*[contains(@resource-id,'messageInputField') or contains(@content-desc,'Message')]"
-    )
+    MESSAGE_INPUT = BaseLocators.resource_id_contains("messageInputField")
     SEND_BUTTON = BaseLocators.xpath(
         "//*[contains(@resource-id,'statusChatInputSendButton')]"
     )
@@ -23,6 +29,23 @@ class ChatLocators(BaseLocators):
     COMMAND_BUTTON = BaseLocators.xpath(
         "//*[contains(@content-desc, '[tid:statusChatInputCommandButton]') or "
         "contains(@resource-id,'statusChatInputCommandButton')]"
+    )
+    CHAT_MORE_OPTIONS_BUTTON = BaseLocators.resource_id_contains("chatToolbarMoreOptionsButton")
+    CHAT_MORE_OPTIONS_MENU = BaseLocators.resource_id_contains("moreOptionsContextMenu")
+    # Use the 1:1 chat variant (clearHistoryMenuItem) — not the group variant
+    # (clearHistoryGroupMenuItem). resource_id ends with the objectName.
+    CLEAR_HISTORY_MENU_ITEM = BaseLocators.xpath(
+        "//*[contains(@resource-id,'clearHistoryMenuItem') "
+        "and not(contains(@resource-id,'GroupMenuItem'))]"
+    )
+    CLEAR_HISTORY_CONFIRM_BUTTON = BaseLocators.resource_id_contains(
+        "clearChatConfirmationDialogClearButton"
+    )
+    # QML objectName: "deleteOrLeaveMenuItem" -- renders as "Close Chat" for 1x1 chats
+    CLOSE_CHAT_MENU_ITEM = BaseLocators.resource_id_contains("deleteOrLeaveMenuItem")
+    # QML confirmButtonObjectName in deleteChatConfirmationDialogComponent
+    CLOSE_CHAT_CONFIRM_BUTTON = BaseLocators.resource_id_contains(
+        "deleteChatConfirmationDialogDeleteButton"
     )
     ADD_IMAGE_ACTION = BaseLocators.xpath(
         "//*[contains(@content-desc, '[tid:chatCommandMenu_addImage]') or "
@@ -80,6 +103,16 @@ class ChatLocators(BaseLocators):
             f"[@content-desc=\"{escaped}\"]"
         )
         return BaseLocators.xpath(xpath)
+
+    @staticmethod
+    def message_content_desc_any(content: str) -> tuple:
+        """Match any element whose content-desc contains the message text.
+
+        Broader fallback for devices where the sent message renders as
+        a different element type than ``EditText``.
+        """
+        escaped = content.replace('"', '\\"')
+        return BaseLocators.xpath(f"//*[contains(@content-desc,\"{escaped}\")]")
 
     # Reply mode indicator - when replying, there's a reply preview bar
     # QML: StatusChatInputReplyArea has objectName "statusChatInputReplyArea"

@@ -1,7 +1,9 @@
-from typing import Optional
+
+import time
+
+from locators.messaging.chat_locators import ChatLocators
 
 from ..base_page import BasePage
-from locators.messaging.chat_locators import ChatLocators
 
 
 class ChatPage(BasePage):
@@ -23,7 +25,7 @@ class ChatPage(BasePage):
             return self._is_chat_list_visible(timeout=timeout)
         return False
 
-    def is_loaded(self, timeout: Optional[int] = 15) -> bool:
+    def is_loaded(self, timeout: int | None = 15) -> bool:
         self.dismiss_introduce_prompt(timeout=2)
         return self._ensure_chat_list_visible(timeout=timeout)
 
@@ -40,6 +42,36 @@ class ChatPage(BasePage):
         self._ensure_chat_list_visible()
         return self.is_element_visible(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
 
+    def get_first_chat_name(self, timeout: int = 5) -> str | None:
+        """Read the display text or content-desc of the first chat in the list.
+
+        Useful for capturing the actual name of a chat before opening it via
+        ``open_first_chat()`` so that later assertions (e.g. gone-from-list
+        checks) can use a meaningful identifier rather than a potentially
+        stale or unsynchronised name.
+
+        Returns:
+            The chat name string, or ``None`` if no chat is visible or the
+            name cannot be read.
+        """
+        self._ensure_chat_list_visible()
+        element = self.find_element_safe(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
+        if not element:
+            return None
+        for attr in ("content-desc", "text"):
+            try:
+                raw = element.get_attribute(attr)
+                if not raw or raw == "null":
+                    continue
+                value = raw.strip()
+                if " [tid:" in value:
+                    value = value.split(" [tid:")[0].strip()
+                if value:
+                    return value
+            except Exception:
+                continue
+        return None
+
     def open_first_chat(self, timeout: int = 10) -> bool:
         """Open the first chat in the chat list.
         
@@ -54,7 +86,7 @@ class ChatPage(BasePage):
             return False
         return self.safe_click(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
 
-    def _resolve_chat_locators(self, chat_identifier: str, display_name: Optional[str] = None):
+    def _resolve_chat_locators(self, chat_identifier: str, display_name: str | None = None):
         locators = [self.locators.dm_row_button(chat_identifier)]
         if display_name:
             locators.append(self.locators.chat_list_item(display_name))
@@ -64,36 +96,78 @@ class ChatPage(BasePage):
         self,
         chat_identifier: str,
         *,
-        display_name: Optional[str] = None,
-        timeout: Optional[int] = 15,
+        display_name: str | None = None,
+        timeout: int | None = 15,
     ) -> bool:
         self._ensure_chat_list_visible()
-        for locator in self._resolve_chat_locators(chat_identifier, display_name):
+        locators = self._resolve_chat_locators(chat_identifier, display_name)
+        for locator in locators:
             if self.is_element_visible(locator, timeout=timeout):
+                return self.safe_click(locator, timeout=timeout, max_attempts=3)
+        # Chat row may be below the fold — scroll and retry
+        self.logger.debug("Chat not visible; attempting scroll in chat list")
+        for locator in locators:
+            if self.scroll_to_element(locator, max_swipes=3, timeout=3):
                 return self.safe_click(locator, timeout=timeout, max_attempts=3)
         return False
 
-    def wait_for_message_input(self, timeout: Optional[int] = 10) -> bool:
+    def chat_exists_in_list(
+        self,
+        chat_identifier: str,
+        *,
+        display_name: str | None = None,
+        timeout: int = 10,
+    ) -> bool:
+        """Check if a chat row exists in the messages list."""
+        try:
+            if not self._ensure_chat_list_visible(timeout=timeout):
+                return False
+        except Exception as exc:
+            self.logger.debug(f"Failed to show chat list: {exc}")
+            return False
+
+        locators = self._resolve_chat_locators(chat_identifier, display_name)
+        return self.wait_for_condition(
+            lambda: any(self.find_element_safe(loc, timeout=1) for loc in locators),
+            timeout=timeout,
+            poll_interval=0.5,
+        )
+
+    def wait_for_message_input(self, timeout: int | None = 10) -> bool:
         return self.is_element_visible(self.locators.MESSAGE_INPUT, timeout=timeout)
 
-    def tap_start_chat(self, timeout: Optional[int] = 5) -> bool:
+    def tap_start_chat(self, timeout: int | None = 5) -> bool:
         self.dismiss_backup_prompt(timeout=2)
         return self.safe_click(self.locators.START_CHAT_BUTTON, timeout=timeout)
 
-    def send_message(self, message: str, timeout: Optional[int] = None) -> bool:
+    def send_message(self, message: str, timeout: int | None = None) -> bool:
         self.dismiss_introduce_prompt(timeout=2)
         payload = f"{message}\n"
-        return self.qt_safe_input(
+        result = self.qt_safe_input(
             self.locators.MESSAGE_INPUT,
             payload,
             verify=False,
             timeout=timeout,
         )
+        if result:
+            # Brief wait for Qt a11y tree to reflect the sent message.
+            # The message bubble renders asynchronously after input clears.
+            time.sleep(1)
+        return result
 
-    def message_exists(self, content: str, timeout: Optional[int] = 10) -> bool:
+    def submit_message_edit(self, updated_text: str, timeout: int = 10) -> bool:
+        """Replace current edit text and submit the edited message."""
+        # Pre-clear via Ctrl+A+Backspace for Qt/QML edit fields where element.clear()
+        # (called internally by send_message -> qt_safe_input) is unreliable.
+        if not self._clear_input_field(self.locators.MESSAGE_INPUT, timeout=timeout):
+            self.logger.debug("Could not pre-clear edit input; relying on qt_safe_input clear")
+        return self.send_message(updated_text, timeout=timeout)
+
+    def message_exists(self, content: str, timeout: int | None = 10) -> bool:
         locators = (
             self.locators.message_text_exact(content),
             self.locators.message_text(content),
+            self.locators.message_content_desc_any(content),
         )
 
         def _found_message() -> bool:
@@ -101,7 +175,7 @@ class ChatPage(BasePage):
 
         return self.wait_for_condition(_found_message, timeout=timeout)
 
-    def dismiss_introduce_prompt(self, timeout: Optional[int] = 2) -> bool:
+    def dismiss_introduce_prompt(self, timeout: int | None = 2) -> bool:
         element = self.find_element_safe(self.locators.INTRODUCE_SKIP_BUTTON, timeout=timeout)
         if not element:
             return False
@@ -116,7 +190,7 @@ class ChatPage(BasePage):
                 self.logger.debug(f"dismiss_introduce_prompt click also failed: {e2}")
                 return False
 
-    def dismiss_backup_prompt(self, timeout: Optional[int] = 2) -> bool:
+    def dismiss_backup_prompt(self, timeout: int | None = 2) -> bool:
         element = self.find_element_safe(self.locators.BACKUP_SKIP_BUTTON, timeout=timeout)
         if not element:
             return False
@@ -135,7 +209,7 @@ class ChatPage(BasePage):
         self,
         chat_identifier: str,
         *,
-        display_name: Optional[str] = None,
+        display_name: str | None = None,
         timeout: int = 60,
     ) -> bool:
         self.dismiss_introduce_prompt(timeout=2)
@@ -155,8 +229,8 @@ class ChatPage(BasePage):
         self,
         chat_identifier: str,
         *,
-        display_name: Optional[str] = None,
-        timeout: Optional[int] = 4,
+        display_name: str | None = None,
+        timeout: int | None = 4,
     ) -> bool:
         locators = self._resolve_chat_locators(chat_identifier, display_name)
         element = None
@@ -220,7 +294,8 @@ class ChatPage(BasePage):
         # (Accessible.name = pinnedMsgInfoText + " " + pinnedBy, e.g., "Pinned by Alice")
         element = self.find_element_safe(self.locators.PINNED_INDICATOR, timeout=2)
         if element:
-            content_desc = element.get_attribute("content-desc") or ""
+            raw_desc = element.get_attribute("content-desc")
+            content_desc = "" if (not raw_desc or raw_desc == "null") else raw_desc
             if "Pinned" in content_desc:
                 self.logger.info(f"Found pinned indicator: {content_desc}")
                 return True
@@ -306,5 +381,56 @@ class ChatPage(BasePage):
             self.logger.error("Failed to click command button")
             return False
         return self.safe_click(self.locators.ADD_IMAGE_ACTION, timeout=5)
+
+    def open_chat_options_menu(self, timeout: int = 10) -> bool:
+        """Open the chat header context menu (More options)."""
+        try:
+            self.safe_click(self.locators.CHAT_MORE_OPTIONS_BUTTON, timeout=timeout)
+            menu_visible = self.is_element_visible(
+                self.locators.CHAT_MORE_OPTIONS_MENU, timeout=5,
+            )
+            if not menu_visible:
+                self.logger.warning(
+                    "Chat options menu container not visible after clicking more button"
+                )
+                # The menu might open as a popup that isn't captured by the
+                # container locator. Try finding a known menu item directly.
+                menu_visible = self.is_element_visible(
+                    self.locators.CLOSE_CHAT_MENU_ITEM, timeout=3,
+                ) or self.is_element_visible(
+                    self.locators.CLEAR_HISTORY_MENU_ITEM, timeout=3,
+                )
+            return menu_visible
+        except Exception as exc:
+            self.logger.error("Failed to open chat options menu: %s", exc)
+            return False
+
+    def clear_history(self, timeout: int = 10) -> bool:
+        """Clear the current chat history for this user only."""
+        if not self.open_chat_options_menu(timeout=timeout):
+            self.logger.error("Chat options menu did not open for clear history")
+            return False
+
+        try:
+            self.safe_click(self.locators.CLEAR_HISTORY_MENU_ITEM, timeout=timeout)
+            self.safe_click(self.locators.CLEAR_HISTORY_CONFIRM_BUTTON, timeout=timeout)
+            return True
+        except Exception as exc:
+            self.logger.error("Failed to clear chat history: %s", exc)
+            return False
+
+    def close_chat(self, timeout: int = 10) -> bool:
+        """Close the current chat from the chat options menu."""
+        if not self.open_chat_options_menu(timeout=timeout):
+            self.logger.error("Chat options menu did not open for close chat")
+            return False
+
+        try:
+            self.safe_click(self.locators.CLOSE_CHAT_MENU_ITEM, timeout=timeout)
+            self.safe_click(self.locators.CLOSE_CHAT_CONFIRM_BUTTON, timeout=timeout)
+            return True
+        except Exception as exc:
+            self.logger.error("Failed to close chat: %s", exc)
+            return False
 
 

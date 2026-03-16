@@ -2,7 +2,7 @@ from ..base_locators import BaseLocators
 
 
 class WalletAccountsLocators(BaseLocators):
-    ADD_ACCOUNT_BUTTON = BaseLocators.object_name_contains("addAccountButton")
+    ADD_ACCOUNT_BUTTON = BaseLocators.resource_id_contains("addAccountButton")
     ALL_ACCOUNTS_BUTTON = BaseLocators.xpath(
         "//*[contains(@resource-id,'allAccountsBtn')]"
     )
@@ -28,8 +28,9 @@ class WalletAccountsLocators(BaseLocators):
     KEYCARD_PASSWORD_INPUT_FALLBACK = BaseLocators.xpath(
         "//*[contains(@resource-id,'keycardPasswordInput')]"
     )
-    KEYCARD_AUTHENTICATE_BUTTON = BaseLocators.content_desc_contains(
-        "Authenticate"
+    KEYCARD_AUTHENTICATE_BUTTON = BaseLocators.xpath(
+        "//*[contains(@resource-id,'KeycardPopup')]"
+        "//android.widget.Button[contains(@content-desc,'Authenticate')]"
     )
     KEYCARD_CANCEL_BUTTON = BaseLocators.content_desc_exact("Cancel")
     REMOVE_ACCOUNT_MODAL = BaseLocators.xpath(
@@ -67,3 +68,16 @@ class WalletAccountsLocators(BaseLocators):
     FOOTER_RECEIVE = BaseLocators.resource_id_contains("walletFooterReceiveButton")
     FOOTER_BUY = BaseLocators.content_desc_contains("[tid:walletFooterBuyButton]")
     FOOTER_SWAP = BaseLocators.content_desc_contains("[tid:walletFooterSwapButton]")
+
+    # Add account modal — origin selector
+    ORIGIN_SELECTOR = BaseLocators.xpath(
+        "//*[contains(@resource-id,'AddAccountPopup')]"
+        "//*[contains(@content-desc, 'origin') or contains(@resource-id, 'AddAccountPopup-Origin')]"
+    )
+    ORIGIN_WATCHED_ADDRESS = BaseLocators.xpath(
+        "//*[contains(@content-desc, 'Watch-only') or contains(@content-desc, 'Watched address')]"
+    )
+    WATCHED_ADDRESS_INPUT = BaseLocators.xpath(
+        "//*[contains(@resource-id,'AddAccountPopup')]"
+        "//*[contains(@resource-id, 'statusBaseInput') or contains(@content-desc, 'address')]"
+    )
