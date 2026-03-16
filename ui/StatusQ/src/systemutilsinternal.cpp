@@ -96,47 +96,11 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
         }
     });
     keyboardTimer->start();
-
-    // Set up Android shake detection and event-driven native callback
-    QJniObject activity = QNativeInterface::QAndroidApplication::context();
-    if (activity.isValid()) {
-        QJniObject::callStaticMethod<void>(
-            "app/status/mobile/ShakeDetector",
-            "start",
-            "(Landroid/app/Activity;)V",
-            activity.object<jobject>()
-        );
-    }
-
-    static std::once_flag regOnce;
-    std::call_once(regOnce, []{
-        QJniEnvironment env;
-        jclass clazz = env->FindClass("app/status/mobile/ShakeDetector");
-        if (!clazz) return;
-
-        const JNINativeMethod methods[] = {
-            { const_cast<char*>("nativeShakeDetected"),
-              const_cast<char*>("()V"),
-              reinterpret_cast<void*>(jni_nativeShakeDetected) },
-        };
-
-        jint rc = env->RegisterNatives(clazz, methods, jint(std::size(methods)));
-        env->DeleteLocalRef(clazz);
-
-        if (rc != 0) {
-            qWarning() << "[Android Shake] RegisterNatives failed:" << rc;
-        }
-    });
 #endif
 
 #ifdef Q_OS_IOS
     // Set up iOS keyboard tracking
     ::setupIOSKeyboardTracking();
-
-    ::setIOSShakeCallback(&iosShakeDetected);
-    ::setIOSShakeToEditEnabled(false);
-    // Set up iOS shake detection
-    ::setupIOSShakeDetection();
     
     // Poll iOS keyboard state and emit property change signals
     m_iosKeyboardPollTimer = new QTimer(this);
@@ -481,6 +445,48 @@ void SystemUtilsInternal::sharePaths(const QStringList& filePaths) const
 void SystemUtilsInternal::debugLog(const QString& message) const
 {
     qInfo() << "[QML]" << message;
+}
+
+void SystemUtilsInternal::startShakeDetection()
+{
+#ifdef Q_OS_ANDROID
+    static std::once_flag regOnce;
+    std::call_once(regOnce, []{
+        // Set up Android shake detection and event-driven native callback
+        QJniObject activity = QNativeInterface::QAndroidApplication::context();
+        if (activity.isValid()) {
+            QJniObject::callStaticMethod<void>(
+                "app/status/mobile/ShakeDetector",
+                "start",
+                "(Landroid/app/Activity;)V",
+                activity.object<jobject>()
+            );
+        }
+        QJniEnvironment env;
+        jclass clazz = env->FindClass("app/status/mobile/ShakeDetector");
+        if (!clazz) return;
+
+        const JNINativeMethod methods[] = {
+            { const_cast<char*>("nativeShakeDetected"),
+              const_cast<char*>("()V"),
+              reinterpret_cast<void*>(jni_nativeShakeDetected) },
+        };
+
+        jint rc = env->RegisterNatives(clazz, methods, jint(std::size(methods)));
+        env->DeleteLocalRef(clazz);
+
+        if (rc != 0) {
+            qWarning() << "[Android Shake] RegisterNatives failed:" << rc;
+        }
+    });
+#endif
+
+#ifdef Q_OS_IOS
+    ::setIOSShakeCallback(&iosShakeDetected);
+    ::setIOSShakeToEditEnabled(false);
+    // Set up iOS shake detection
+    ::setupIOSShakeDetection();
+#endif
 }
 
 #include "systemutilsinternal.moc"

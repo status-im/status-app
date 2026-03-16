@@ -55,6 +55,10 @@ public:
     // Debug helper (used from QML to verify signal handlers fire on device)
     Q_INVOKABLE void debugLog(const QString& message) const;
 
+    // Start mobile shake detection
+    // emits shakeDetected signal when shake is detected
+    Q_INVOKABLE void startShakeDetection();
+
 signals:
     // Emitted when event of type QEvent::Quit is detected by event filter on
     // QGuiApplication. It's helpful to handle close requests on mac coming from

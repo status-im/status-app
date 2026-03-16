@@ -319,6 +319,12 @@ Window {
             }
             d.lastShakeShareMs = nowMs
         }
+
+        Component.onCompleted: {
+            if (SQUtils.Utils.isMobile) {
+                SystemUtils.startShakeDetection()
+            }
+        }
     }
 
     Connections {
