@@ -13666,14 +13666,6 @@ al cargar</translation>
         <translation>Comparte comentarios o sugiere mejoras en nuestro %1.</translation>
     </message>
     <message>
-        <source>Share usage data with Status</source>
-        <translation>Compartir datos de uso con Status</translation>
-    </message>
-    <message>
-        <source>From all profiles on device</source>
-        <translation>De todos los perfiles en el dispositivo</translation>
-    </message>
-    <message>
         <source>Trusted sites</source>
         <translation></translation>
     </message>

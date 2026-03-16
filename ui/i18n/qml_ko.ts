@@ -13628,14 +13628,6 @@ to load</source>
         <translation>%1에서 피드백을 공유하거나 개선 사항을 제안하세요.</translation>
     </message>
     <message>
-        <source>Share usage data with Status</source>
-        <translation>Status와 사용 데이터 공유</translation>
-    </message>
-    <message>
-        <source>From all profiles on device</source>
-        <translation>이 기기의 모든 프로필에서</translation>
-    </message>
-    <message>
         <source>Trusted sites</source>
         <translation>신뢰할 수 있는 사이트</translation>
     </message>

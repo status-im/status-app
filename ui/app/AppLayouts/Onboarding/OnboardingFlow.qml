@@ -191,14 +191,6 @@ OnboardingStackView {
         }
     }
 
-    function startWithProxy(component) {
-        const page = root.push(helpUsImproveStatusPage)
-
-        page.shareUsageDataRequested.connect(enabled => {
-            root.push(component)
-        })
-    }
-
     Component {
         id: welcomePage
 
@@ -210,8 +202,8 @@ OnboardingStackView {
             privacyModeFeatureEnabled: root.privacyModeFeatureEnabled
             thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
-            onCreateProfileRequested: startWithProxy(createProfilePage)
-            onLoginRequested: startWithProxy(loginPage)
+            onCreateProfileRequested: root.push(createProfilePage)
+            onLoginRequested: root.push(loginPage)
 
             onPrivacyPolicyRequested: d.openPrivacyPolicyPopup()
             onTermsOfUseRequested: d.openTermsOfUsePopup()
@@ -248,8 +240,8 @@ OnboardingStackView {
             }
             onDismissBiometricsRequested: root.dismissBiometricsRequested()
             onLoginRequested: (keyUid, method, data) => root.loginRequested(keyUid, method, data)
-            onOnboardingCreateProfileFlowRequested: startWithProxy(createProfilePage)
-            onOnboardingLoginFlowRequested: startWithProxy(loginPage)
+            onOnboardingCreateProfileFlowRequested: root.push(createProfilePage)
+            onOnboardingLoginFlowRequested: root.push(loginPage)
             onLostKeycardFlowRequested: {
                 root.keyUidSubmitted(loginScreen.selectedProfileKeyId)
                 root.push(keycardLostPage)

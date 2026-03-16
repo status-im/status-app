@@ -39,16 +39,9 @@ QtObject:
     signalConnect(singletonInstance.globalEvents, "addCentralizedMetricIfEnabled(QString, QString)",
       result, "addCentralizedMetricIfEnabled(QString, QString)", 2)
 
-  # eventValueJson is a json string
   proc addCentralizedMetricIfEnabled*(self: MetricsService, eventName: string, eventValueJson: string) {.slot.} =
-    let arg = AsyncAddCentralizedMetricIfEnabledTaskArg(
-      tptr: asyncAddCentralizedMetricIfEnabledTask,
-      vptr: cast[uint](self.vptr),
-      slot: "onCentralizedMetricAddedIdEnabled",
-      eventName: eventName,
-      eventValueJson: eventValueJson,
-    )
-    self.threadpool.start(arg)
+    # Disabled for now. Will be completely removed in 2.38
+    discard
 
   proc onCentralizedMetricAddedIdEnabled*(self: MetricsService, response: string) {.slot.} =
     try:
