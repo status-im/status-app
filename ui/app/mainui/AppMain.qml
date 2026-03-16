@@ -864,6 +864,8 @@ Item {
                                                  localAccountSensitiveSettings.isBrowserEnabled
         readonly property int syncingBadgeCount: appMain.devicesStore.totalDevicesCount - appMain.devicesStore.pairedDevicesCount
 
+        readonly property int minLoaderDisplayTime: 600
+
         function openHomePage() {
             appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.homePage)
             homePageLoader.item.focusSearch()
@@ -1704,8 +1706,15 @@ Item {
                                 anchors.fill: parent
 
                                 Loader {
-                                    active: personalChatLayoutLoader.status === Loader.Loading
+                                    id: personalChatLayoutLoadingStateLoader
+                                    active: personalChatLayoutLoader.status === Loader.Loading || minLoadingTimer.running
                                     anchors.fill: parent
+
+                                    Timer {
+                                        id: minLoadingTimer
+                                        interval: d.minLoaderDisplayTime
+                                        running: true
+                                    }
                                     
                                     sourceComponent: ChatLayoutLoading {
                                         anchors.fill: parent
@@ -1717,7 +1726,7 @@ Item {
                                     id: chatLayoutContainer
 
                                     anchors.fill: parent
-                                    visible: personalChatLayoutLoader.status === Loader.Ready
+                                    visible: !personalChatLayoutLoadingStateLoader.active
                                     showUsersList: appMain.accountSettingsStore.showUsersList
                                     onShowUsersListRequested:
                                         show => appMain.accountSettingsStore.setShowUsersList(show)
@@ -2139,9 +2148,16 @@ Item {
                                 anchors.fill: parent
 
                                 Loader {
-                                    active: communityChatLayoutLoader.status === Loader.Loading
+                                    id: communityLoadingStateLoader
+                                    active: communityChatLayoutLoader.status === Loader.Loading || minLoadingTimer.running
                                     anchors.fill: parent
-                                    
+
+                                    Timer {
+                                        id: minLoadingTimer
+                                        interval: d.minLoaderDisplayTime
+                                        running: true
+                                    }
+
                                     sourceComponent: ChatLayoutLoading {
                                         anchors.fill: parent
                                         showMembersPanel: appMain.accountSettingsStore.showUsersList
@@ -2168,7 +2184,7 @@ Item {
                                     }
 
                                     anchors.fill: parent
-                                    visible: communityChatLayoutLoader.status === Loader.Ready
+                                    visible: !communityLoadingStateLoader.active
                                     showUsersList: appMain.accountSettingsStore.showUsersList
                                     onShowUsersListRequested:
                                         show => appMain.accountSettingsStore.setShowUsersList(show)
