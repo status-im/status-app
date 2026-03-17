@@ -302,6 +302,10 @@ if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
     if(TARGET MobileWebView)
         target_link_libraries(StatusQ PRIVATE MobileWebView)
         target_compile_definitions(StatusQ PRIVATE STATUSQ_HAS_MOBILEWEBVIEW=1)
+        if(ANDROID AND DEFINED MOBILEWEBVIEW_ANDROID_JAVA_DIR)
+            file(WRITE "${CMAKE_BINARY_DIR}/mobilewebview_java_dir.txt"
+                "${MOBILEWEBVIEW_ANDROID_JAVA_DIR}/src")
+        endif()
         install(TARGETS MobileWebView
                 RUNTIME DESTINATION StatusQ
                 LIBRARY DESTINATION StatusQ

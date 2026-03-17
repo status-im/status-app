@@ -186,7 +186,7 @@ StatusSectionLayout {
             walletAccountsBtnAvailable: !root.isMobile
 
             openTabsCount: tabs.count
-            currentTabIncognito: _internal.currentWebView?.profile.offTheRecord ?? false
+            currentTabIncognito: _internal.currentWebView?.offTheRecord ?? false
             currentTabIsBookmark: favoritesContext.currentTabIsBookmark
             currentTabLoading: (!!_internal.currentWebView && _internal.currentWebView.loading)
             browserDappsModel: browserDappsProvider.model
