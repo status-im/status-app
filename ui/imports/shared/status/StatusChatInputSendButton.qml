@@ -25,10 +25,15 @@ Control {
                                                    - d.implicitHeight / 2, 0)
         implicitHeight: d.implicitHeight
 
+        FontMetrics {
+            id: fontMetrics
+            font: limitText.font
+        }
+
         Rectangle {
             id: limitOutlineRectangle
 
-            width: limitText.implicitWidth
+            width: fontMetrics.averageCharacterWidth * root.limitText.length
                    + (baseBackgroundRectangle.width / 2 + Theme.halfPadding * 2)
                     * !!root.limitText
             height: parent.height
