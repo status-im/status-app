@@ -738,6 +738,22 @@ Control {
                             sequences: ["Ctrl+Meta+Space", "Ctrl+E"]
                             onActivated: toolBar.emojiButton.clicked(null)
                         }
+
+                        StatusChatInputSelectionMarker {
+                            anchors.fill: parent
+                            clip: true
+
+                            selectionStartRect: {
+                                messageInputField.font
+                                messageInputField.positionToRectangle(
+                                            messageInputField.selectionStart)
+                            }
+                            selectionEndRect: {
+                                messageInputField.font
+                                messageInputField.positionToRectangle(
+                                            messageInputField.selectionEnd)
+                            }
+                        }
                     }
 
                     Column {
