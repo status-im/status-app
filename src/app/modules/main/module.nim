@@ -1103,9 +1103,6 @@ method onContactsLoaded*[T](
     networkService,
   )
 
-method onChatsLoadingFailed*[T](self: Module[T]) =
-  self.view.chatsLoadingFailed()
-
 proc checkIfModuleDidLoad [T](self: Module[T]) =
   if self.moduleLoaded:
     return

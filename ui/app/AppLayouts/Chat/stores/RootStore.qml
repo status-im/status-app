@@ -53,7 +53,6 @@ QtObject {
     }
 
     readonly property var chatSectionModuleModel: root.mainModuleInst.getChatSectionModule().model
-    readonly property bool chatsLoadingFailed: root.mainModuleInst.chatsLoadingFailed
 
     // Meanwhile cleanup and refactor of this store is not done, use the following
     // property to distinguish if store is currently related to chat or to community

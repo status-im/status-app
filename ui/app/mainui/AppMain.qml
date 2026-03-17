@@ -1652,15 +1652,7 @@ Item {
                         id: personalChatLayoutLoader
                         active: false
                         asynchronous: true
-                        sourceComponent: {
-                            if (appMain.rootChatStore.chatsLoadingFailed) {
-                                return errorStateComponent
-                            }
-                            if (appMain.rootStore.sectionsLoaded) {
-                                return personalChatLayoutComponent
-                            }
-                            return loadingStateComponent
-                        }
+                        sourceComponent: personalChatLayoutComponent
 
                         Loader {
                             id: personalChatLayoutLoadingStateLoader
@@ -1687,34 +1679,6 @@ Item {
                             when: appView.currentIndex === Constants.appViewStackIndex.chat
                             value: true
                             restoreMode: Binding.RestoreNone
-                        }
-
-                        Component {
-                            id: loadingStateComponent
-                            Item {
-                                anchors.fill: parent
-
-                                Row {
-                                    anchors.centerIn: parent
-                                    spacing: 6
-                                    StatusBaseText {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: qsTr("Loading sections...")
-                                    }
-                                    LoadingAnimation { anchors.verticalCenter: parent.verticalCenter }
-                                }
-                            }
-                        }
-
-                        Component {
-                            id: errorStateComponent
-                            Item {
-                                anchors.fill: parent
-                                StatusBaseText {
-                                    text: qsTr("Error loading chats, try closing the app and restarting")
-                                    anchors.centerIn: parent
-                                }
-                            }
                         }
 
                         Component {

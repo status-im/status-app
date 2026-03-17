@@ -15,7 +15,6 @@ QtObject:
       model: section_model.SectionModel
       modelVariant: QVariant
       sectionsLoaded: bool
-      chatsLoadingFailed: bool
       notificationAvailable: bool
       activeSection: SectionDetails
       activeSectionVariant: QVariant
@@ -33,7 +32,6 @@ QtObject:
     result.delegate = delegate
     result.model = section_model.newModel()
     result.sectionsLoaded = false
-    result.chatsLoadingFailed = false
     result.notificationAvailable = false
     result.modelVariant = newQVariant(result.model)
     result.activeSection = newActiveSection()
@@ -179,18 +177,6 @@ QtObject:
   QtProperty[bool] sectionsLoaded:
     read = getSectionsLoaded
     notify = sectionsLoadedChanged
-
-  proc chatsLoadingFailedChanged(self: View) {.signal.}
-
-  proc chatsLoadingFailed*(self: View) =
-    self.chatsLoadingFailed = true
-    self.chatsLoadingFailedChanged()
-
-  proc getChatsLoadingFailed(self: View): bool {.slot.} =
-    return self.chatsLoadingFailed
-  QtProperty[bool] chatsLoadingFailed:
-    read = getChatsLoadingFailed
-    notify = chatsLoadingFailedChanged
 
   # Since we cannot return QVariant from the proc which has arguments, so cannot have proc like this:
   # prepareCommunitySectionModuleForCommunityId(self: View, communityId: string): QVariant {.slot.}

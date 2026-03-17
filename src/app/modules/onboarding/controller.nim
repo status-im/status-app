@@ -13,6 +13,7 @@ import app_service/service/devices/service as devices_service
 import app_service/service/keycardV2/service as keycard_serviceV2
 import app_service/common/utils
 from app_service/service/keycardV2/dto import KeycardExportedKeysDto
+from app_service/service/chat/service import SIGNAL_CHATS_LOADING_FAILED
 
 logScope:
   topics = "onboarding-controller"
@@ -141,6 +142,10 @@ proc init*(self: Controller) =
 
   handlerId = self.events.onWithUUID(SIGNAL_MAIN_LOADED) do(e: Args):
     self.delegate.onMainLoaded()
+  self.connectionIds.add(handlerId)
+
+  handlerId = self.events.onWithUUID(SIGNAL_CHATS_LOADING_FAILED) do(e: Args):
+    self.delegate.onMainFailedToLoad()
   self.connectionIds.add(handlerId)
 
 proc initialize*(self: Controller, pin: string) =

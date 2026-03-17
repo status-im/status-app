@@ -2098,14 +2098,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Reintentando conexión a CryptoCompare y CoinGecko...</translation>
     </message>
     <message>
-        <source>Loading sections...</source>
-        <translation>Cargando secciones...</translation>
-    </message>
-    <message>
-        <source>Error loading chats, try closing the app and restarting</source>
-        <translation>Error al cargar chats, intenta cerrar la aplicación y reiniciarla</translation>
-    </message>
-    <message>
         <source>%1 was removed from your trusted sites.</source>
         <translation>%1 fue eliminado de tus sitios de confianza.</translation>
     </message>

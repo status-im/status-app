@@ -2086,14 +2086,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>Cryptocompare 및 Coingecko에 다시 연결 시도 중...</translation>
     </message>
     <message>
-        <source>Loading sections...</source>
-        <translation>섹션 불러오는 중...</translation>
-    </message>
-    <message>
-        <source>Error loading chats, try closing the app and restarting</source>
-        <translation>채팅을 불러오지 못했습니다. 앱을 닫았다가 다시 시작해 주세요</translation>
-    </message>
-    <message>
         <source>Where do you want to go?</source>
         <translation>어디로 가고 싶어요?</translation>
     </message>

@@ -160,9 +160,6 @@ proc init*(self: Controller) =
       self.networksService,
     )
 
-  self.events.on(SIGNAL_CHATS_LOADING_FAILED) do(e:Args):
-    self.delegate.onChatsLoadingFailed()
-
   self.events.on(SIGNAL_ACTIVE_MAILSERVER_CHANGED) do(e:Args):
     let args = ActiveMailserverChangedArgs(e)
     if args.nodeAddress == "":

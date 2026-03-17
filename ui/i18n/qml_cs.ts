@@ -2105,14 +2105,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Opakování připojení k CryptoCompare a CoinGecko...</translation>
     </message>
     <message>
-        <source>Loading sections...</source>
-        <translation>Načítání sekcí...</translation>
-    </message>
-    <message>
-        <source>Error loading chats, try closing the app and restarting</source>
-        <translation>Chyba při načítání chatů, zkuste zavřít aplikaci a restartovat</translation>
-    </message>
-    <message>
         <source>%1 was removed from your trusted sites.</source>
         <translation>%1 bylo odstraněno z vašich důvěryhodných stránek.</translation>
     </message>
