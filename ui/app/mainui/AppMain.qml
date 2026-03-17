@@ -1662,6 +1662,24 @@ Item {
                             return loadingStateComponent
                         }
 
+                        Loader {
+                            id: personalChatLayoutLoadingStateLoader
+                            active: appMain.rootStore.sectionsLoaded &&
+                                (personalChatLayoutLoader.status === Loader.Loading || minLoadingTimer.running)
+                            anchors.fill: parent
+
+                            Timer {
+                                id: minLoadingTimer
+                                interval: d.minLoaderDisplayTime
+                                running: true
+                            }
+                            
+                            sourceComponent: ChatLayoutLoading {
+                                anchors.fill: parent
+                                showMembersPanel: appMain.accountSettingsStore.showUsersList
+                            }
+                        }
+
                         // Do not unload section data from the memory in order not
                         // to reset scroll, not send text input and etc during the
                         // sections switching
@@ -1702,106 +1720,85 @@ Item {
                         Component {
                             id: personalChatLayoutComponent
 
-                            Item {
+                            ChatLayout {
+                                id: chatLayoutContainer
+
                                 anchors.fill: parent
+                                visible: !personalChatLayoutLoadingStateLoader.active
+                                showUsersList: appMain.accountSettingsStore.showUsersList
+                                onShowUsersListRequested:
+                                    show => appMain.accountSettingsStore.setShowUsersList(show)
 
-                                Loader {
-                                    id: personalChatLayoutLoadingStateLoader
-                                    active: personalChatLayoutLoader.status === Loader.Loading || minLoadingTimer.running
-                                    anchors.fill: parent
-
-                                    Timer {
-                                        id: minLoadingTimer
-                                        interval: d.minLoaderDisplayTime
-                                        running: true
-                                    }
-                                    
-                                    sourceComponent: ChatLayoutLoading {
-                                        anchors.fill: parent
-                                        showMembersPanel: appMain.accountSettingsStore.showUsersList
-                                    }
-                                }
-
-                                ChatLayout {
-                                    id: chatLayoutContainer
-
-                                    anchors.fill: parent
-                                    visible: !personalChatLayoutLoadingStateLoader.active
-                                    showUsersList: appMain.accountSettingsStore.showUsersList
-                                    onShowUsersListRequested:
-                                        show => appMain.accountSettingsStore.setShowUsersList(show)
-
-                                    isChatView: true
-                                    rootStore: ChatStores.RootStore {
-                                        contactsStore: appMain.contactsStore
-                                        currencyStore: appMain.currencyStore
-                                        communityTokensStore: appMain.communityTokensStore
-                                        openCreateChat: createChatView.opened
-                                        networkConnectionStore: appMain.networkConnectionStore
-                                        isChatSectionModule: true
-                                    }
-                                    createChatPropertiesStore: appMain.createChatPropertiesStore
-                                    tokensStore: appMain.tokensStore
-                                    transactionStore: appMain.transactionStore
-                                    walletAssetsStore: appMain.walletAssetsStore
+                                isChatView: true
+                                rootStore: ChatStores.RootStore {
+                                    contactsStore: appMain.contactsStore
                                     currencyStore: appMain.currencyStore
-                                    networksStore: appMain.networksStore
-                                    advancedStore: appMain.advancedStore
-                                    emojiPopup: statusEmojiPopup.item
-                                    stickersPopup: statusStickersPopupLoader.item
-                                    sendViaPersonalChatEnabled: featureFlagsStore.sendViaPersonalChatEnabled
-                                    disabledTooltipText: !appMain.networkConnectionStore.sendBuyBridgeEnabled ?
-                                                            appMain.networkConnectionStore.sendBuyBridgeToolTipText : ""
-                                    paymentRequestFeatureEnabled: featureFlagsStore.paymentRequestEnabled
-
-                                    mutualContactsModel: contactsModelAdaptor.mutualContacts
-
-                                    // Unfurling related data:
-                                    gifUnfurlingEnabled: appMain.sharedRootStore.gifUnfurlingEnabled
-                                    neverAskAboutUnfurlingAgain: appMain.sharedRootStore.neverAskAboutUnfurlingAgain
-
-                                    // Users related data
-                                    usersModel: rootStore.usersStore.usersModel
-
-                                    // Contacts related data:
-                                    myPublicKey: appMain.contactsStore.myPublicKey
-
-                                    // Navigation: Temporary solution that keeps ui navigation state when in-app links
-                                    // are triggered and allow messaging details navigation in portrait
-                                    navToMsgDetails: appMain.rootStore.navToMsgDetails
-
-                                    onProfileButtonClicked: {
-                                        Global.changeAppSectionBySectionType(Constants.appSection.profile);
-                                    }
-
-                                    onOpenAppSearch: {
-                                        appSearch.openSearchPopup()
-                                    }
-
-                                    onBuyStickerPackRequested: popupRequestsHandler.sendModalHandler.buyStickerPack(packId, price)
-                                    onTokenPaymentRequested: popupRequestsHandler.sendModalHandler.openTokenPaymentRequest(recipientAddress, tokenKey, rawAmount)
-
-                                    // Unfurling related requests:
-                                    onSetNeverAskAboutUnfurlingAgain: appMain.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain)
-
-                                    onOpenGifPopupRequest: popupRequestsHandler.statusGifPopupHandler.openGifs(params, cbOnGifSelected, cbOnClose)
-
-                                    // Edit group chat members signals:
-                                    onGroupMembersUpdateRequested: rootStore.usersStore.groupMembersUpdateRequested(membersPubKeysList)
-
-                                    // Contacts related requests:
-                                    onChangeContactNicknameRequest: appMain.contactsStore.changeContactNickname(pubKey, nickname, displayName, isEdit)
-                                    onRemoveTrustStatusRequest: appMain.contactsStore.removeTrustStatus(pubKey)
-                                    onDismissContactRequest: appMain.contactsStore.dismissContactRequest(chatId, contactRequestId)
-                                    onAcceptContactRequest: appMain.contactsStore.acceptContactRequest(chatId, contactRequestId)
-
-                                    // Navigation: Temporary solution that keeps ui navigation state when in-app links
-                                    // are triggered and allow messaging details navigation in portrait
-                                    onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
-
-                                    // Floating panel
-                                    leftFloatingPanelItem: appMain.activityCenterPanel
+                                    communityTokensStore: appMain.communityTokensStore
+                                    openCreateChat: createChatView.opened
+                                    networkConnectionStore: appMain.networkConnectionStore
+                                    isChatSectionModule: true
                                 }
+                                createChatPropertiesStore: appMain.createChatPropertiesStore
+                                tokensStore: appMain.tokensStore
+                                transactionStore: appMain.transactionStore
+                                walletAssetsStore: appMain.walletAssetsStore
+                                currencyStore: appMain.currencyStore
+                                networksStore: appMain.networksStore
+                                advancedStore: appMain.advancedStore
+                                emojiPopup: statusEmojiPopup.item
+                                stickersPopup: statusStickersPopupLoader.item
+                                sendViaPersonalChatEnabled: featureFlagsStore.sendViaPersonalChatEnabled
+                                disabledTooltipText: !appMain.networkConnectionStore.sendBuyBridgeEnabled ?
+                                                        appMain.networkConnectionStore.sendBuyBridgeToolTipText : ""
+                                paymentRequestFeatureEnabled: featureFlagsStore.paymentRequestEnabled
+
+                                mutualContactsModel: contactsModelAdaptor.mutualContacts
+
+                                // Unfurling related data:
+                                gifUnfurlingEnabled: appMain.sharedRootStore.gifUnfurlingEnabled
+                                neverAskAboutUnfurlingAgain: appMain.sharedRootStore.neverAskAboutUnfurlingAgain
+
+                                // Users related data
+                                usersModel: rootStore.usersStore.usersModel
+
+                                // Contacts related data:
+                                myPublicKey: appMain.contactsStore.myPublicKey
+
+                                // Navigation: Temporary solution that keeps ui navigation state when in-app links
+                                // are triggered and allow messaging details navigation in portrait
+                                navToMsgDetails: appMain.rootStore.navToMsgDetails
+
+                                onProfileButtonClicked: {
+                                    Global.changeAppSectionBySectionType(Constants.appSection.profile);
+                                }
+
+                                onOpenAppSearch: {
+                                    appSearch.openSearchPopup()
+                                }
+
+                                onBuyStickerPackRequested: popupRequestsHandler.sendModalHandler.buyStickerPack(packId, price)
+                                onTokenPaymentRequested: popupRequestsHandler.sendModalHandler.openTokenPaymentRequest(recipientAddress, tokenKey, rawAmount)
+
+                                // Unfurling related requests:
+                                onSetNeverAskAboutUnfurlingAgain: appMain.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+
+                                onOpenGifPopupRequest: popupRequestsHandler.statusGifPopupHandler.openGifs(params, cbOnGifSelected, cbOnClose)
+
+                                // Edit group chat members signals:
+                                onGroupMembersUpdateRequested: rootStore.usersStore.groupMembersUpdateRequested(membersPubKeysList)
+
+                                // Contacts related requests:
+                                onChangeContactNicknameRequest: appMain.contactsStore.changeContactNickname(pubKey, nickname, displayName, isEdit)
+                                onRemoveTrustStatusRequest: appMain.contactsStore.removeTrustStatus(pubKey)
+                                onDismissContactRequest: appMain.contactsStore.dismissContactRequest(chatId, contactRequestId)
+                                onAcceptContactRequest: appMain.contactsStore.acceptContactRequest(chatId, contactRequestId)
+
+                                // Navigation: Temporary solution that keeps ui navigation state when in-app links
+                                // are triggered and allow messaging details navigation in portrait
+                                onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
+
+                                // Floating panel
+                                leftFloatingPanelItem: appMain.activityCenterPanel
                             }
                         }
                     }
@@ -2135,6 +2132,23 @@ Item {
                             active: false
                             asynchronous: true
 
+                            Loader {
+                                id: communityLoadingStateLoader
+                                active: communityChatLayoutLoader.status === Loader.Loading || minLoadingTimer.running
+                                anchors.fill: parent
+
+                                Timer {
+                                    id: minLoadingTimer
+                                    interval: d.minLoaderDisplayTime
+                                    running: true
+                                }
+
+                                sourceComponent: ChatLayoutLoading {
+                                    anchors.fill: parent
+                                    showMembersPanel: appMain.accountSettingsStore.showUsersList
+                                }
+                            }
+
                             // Do not unload section data from the memory in order not
                             // to reset scroll, not send text input and etc during the
                             // sections switching
@@ -2144,119 +2158,98 @@ Item {
                                 restoreMode: Binding.RestoreNone
                             }
 
-                            sourceComponent: Item {
+                            sourceComponent: ChatLayout {
+                                id: chatLayoutComponent
+
+                                readonly property bool isManageCommunityEnabledInAdvanced: appMain.advancedStore.isManageCommunityOnTestModeEnabled
+
+                                Connections {
+                                    target: Global
+                                    function onSwitchToCommunitySettings(communityId: string) {
+                                        if (communityId !== model.id)
+                                            return
+                                        chatLayoutComponent.currentIndex = 1 // Settings
+                                    }
+                                    function onSwitchToCommunityChannelsView(communityId: string) {
+                                        if (communityId !== model.id)
+                                            return
+                                        chatLayoutComponent.currentIndex = 0
+                                    }
+                                }
+
                                 anchors.fill: parent
+                                visible: !communityLoadingStateLoader.active
+                                showUsersList: appMain.accountSettingsStore.showUsersList
+                                onShowUsersListRequested:
+                                    show => appMain.accountSettingsStore.setShowUsersList(show)
 
-                                Loader {
-                                    id: communityLoadingStateLoader
-                                    active: communityChatLayoutLoader.status === Loader.Loading || minLoadingTimer.running
-                                    anchors.fill: parent
+                                isChatView: false // This will be a community view
+                                emojiPopup: statusEmojiPopup.item
+                                stickersPopup: statusStickersPopupLoader.item
+                                sectionItemModel: model
+                                createChatPropertiesStore: appMain.createChatPropertiesStore
+                                communitiesStore: appMain.communitiesStore
+                                communitySettingsDisabled: !chatLayoutComponent.isManageCommunityEnabledInAdvanced &&
+                                                        (appMain.rootStore.isProduction && appMain.networksStore.areTestNetworksEnabled)
 
-                                    Timer {
-                                        id: minLoadingTimer
-                                        interval: d.minLoaderDisplayTime
-                                        running: true
-                                    }
-
-                                    sourceComponent: ChatLayoutLoading {
-                                        anchors.fill: parent
-                                        showMembersPanel: appMain.accountSettingsStore.showUsersList
-                                    }
-                                }
-
-                                ChatLayout {
-                                    id: chatLayoutComponent
-
-                                    readonly property bool isManageCommunityEnabledInAdvanced: appMain.advancedStore.isManageCommunityOnTestModeEnabled
-
-                                    Connections {
-                                        target: Global
-                                        function onSwitchToCommunitySettings(communityId: string) {
-                                            if (communityId !== model.id)
-                                                return
-                                            chatLayoutComponent.currentIndex = 1 // Settings
-                                        }
-                                        function onSwitchToCommunityChannelsView(communityId: string) {
-                                            if (communityId !== model.id)
-                                                return
-                                            chatLayoutComponent.currentIndex = 0
-                                        }
-                                    }
-
-                                    anchors.fill: parent
-                                    visible: !communityLoadingStateLoader.active
-                                    showUsersList: appMain.accountSettingsStore.showUsersList
-                                    onShowUsersListRequested:
-                                        show => appMain.accountSettingsStore.setShowUsersList(show)
-
-                                    isChatView: false // This will be a community view
-                                    emojiPopup: statusEmojiPopup.item
-                                    stickersPopup: statusStickersPopupLoader.item
-                                    sectionItemModel: model
-                                    createChatPropertiesStore: appMain.createChatPropertiesStore
-                                    communitiesStore: appMain.communitiesStore
-                                    communitySettingsDisabled: !chatLayoutComponent.isManageCommunityEnabledInAdvanced &&
-                                                            (appMain.rootStore.isProduction && appMain.networksStore.areTestNetworksEnabled)
-
-                                    newCommnityStore: appMain.messagingRootStore.createCommunityRootStore(this, model.id)
-                                    rootStore: ChatStores.RootStore {
-                                        contactsStore: appMain.contactsStore
-                                        currencyStore: appMain.currencyStore
-                                        communityTokensStore: appMain.communityTokensStore
-                                        openCreateChat: createChatView.opened
-                                        isChatSectionModule: false
-                                        communityId: model.id
-                                    }
-                                    tokensStore: appMain.tokensStore
-                                    transactionStore: appMain.transactionStore
-                                    walletAssetsStore: appMain.walletAssetsStore
+                                newCommnityStore: appMain.messagingRootStore.createCommunityRootStore(this, model.id)
+                                rootStore: ChatStores.RootStore {
+                                    contactsStore: appMain.contactsStore
                                     currencyStore: appMain.currencyStore
-                                    networksStore: appMain.networksStore
-                                    advancedStore: appMain.advancedStore
-                                    paymentRequestFeatureEnabled: featureFlagsStore.paymentRequestEnabled
-
-                                    mutualContactsModel: contactsModelAdaptor.mutualContacts
-
-                                    // Unfurling related data:
-                                    gifUnfurlingEnabled: appMain.sharedRootStore.gifUnfurlingEnabled
-                                    neverAskAboutUnfurlingAgain: appMain.sharedRootStore.neverAskAboutUnfurlingAgain
-
-                                    usersModel: rootStore.usersStore.usersModel
-
-                                    // Contacts related data:
-                                    myPublicKey: appMain.contactsStore.myPublicKey
-
-                                    // Navigation:
-                                    navToMsgDetails: appMain.rootStore.navToMsgDetails
-
-                                    onProfileButtonClicked: {
-                                        Global.changeAppSectionBySectionType(Constants.appSection.profile);
-                                    }
-
-                                    onOpenAppSearch: {
-                                        appSearch.openSearchPopup()
-                                    }
-
-                                    onBuyStickerPackRequested: popupRequestsHandler.sendModalHandler.buyStickerPack(packId, price)
-                                    onTokenPaymentRequested: popupRequestsHandler.sendModalHandler.openTokenPaymentRequest(recipientAddress, tokenKey, rawAmount)
-
-                                    // Unfurling related requests:
-                                    onSetNeverAskAboutUnfurlingAgain: appMain.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain)
-
-                                    onOpenGifPopupRequest: popupRequestsHandler.statusGifPopupHandler.openGifs(params, cbOnGifSelected, cbOnClose)
-
-                                    // Contacts related requests:
-                                    onChangeContactNicknameRequest: appMain.contactsStore.changeContactNickname(pubKey, nickname, displayName, isEdit)
-                                    onRemoveTrustStatusRequest: appMain.contactsStore.removeTrustStatus(pubKey)
-                                    onDismissContactRequest: appMain.contactsStore.dismissContactRequest(chatId, contactRequestId)
-                                    onAcceptContactRequest: appMain.contactsStore.acceptContactRequest(chatId, contactRequestId)
-
-                                    // Navigation:
-                                    onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
-
-                                    // Floating panel
-                                    leftFloatingPanelItem: appMain.activityCenterPanel
+                                    communityTokensStore: appMain.communityTokensStore
+                                    openCreateChat: createChatView.opened
+                                    isChatSectionModule: false
+                                    communityId: model.id
                                 }
+                                tokensStore: appMain.tokensStore
+                                transactionStore: appMain.transactionStore
+                                walletAssetsStore: appMain.walletAssetsStore
+                                currencyStore: appMain.currencyStore
+                                networksStore: appMain.networksStore
+                                advancedStore: appMain.advancedStore
+                                paymentRequestFeatureEnabled: featureFlagsStore.paymentRequestEnabled
+
+                                mutualContactsModel: contactsModelAdaptor.mutualContacts
+
+                                // Unfurling related data:
+                                gifUnfurlingEnabled: appMain.sharedRootStore.gifUnfurlingEnabled
+                                neverAskAboutUnfurlingAgain: appMain.sharedRootStore.neverAskAboutUnfurlingAgain
+
+                                usersModel: rootStore.usersStore.usersModel
+
+                                // Contacts related data:
+                                myPublicKey: appMain.contactsStore.myPublicKey
+
+                                // Navigation:
+                                navToMsgDetails: appMain.rootStore.navToMsgDetails
+
+                                onProfileButtonClicked: {
+                                    Global.changeAppSectionBySectionType(Constants.appSection.profile);
+                                }
+
+                                onOpenAppSearch: {
+                                    appSearch.openSearchPopup()
+                                }
+
+                                onBuyStickerPackRequested: popupRequestsHandler.sendModalHandler.buyStickerPack(packId, price)
+                                onTokenPaymentRequested: popupRequestsHandler.sendModalHandler.openTokenPaymentRequest(recipientAddress, tokenKey, rawAmount)
+
+                                // Unfurling related requests:
+                                onSetNeverAskAboutUnfurlingAgain: appMain.sharedRootStore.setNeverAskAboutUnfurlingAgain(neverAskAgain)
+
+                                onOpenGifPopupRequest: popupRequestsHandler.statusGifPopupHandler.openGifs(params, cbOnGifSelected, cbOnClose)
+
+                                // Contacts related requests:
+                                onChangeContactNicknameRequest: appMain.contactsStore.changeContactNickname(pubKey, nickname, displayName, isEdit)
+                                onRemoveTrustStatusRequest: appMain.contactsStore.removeTrustStatus(pubKey)
+                                onDismissContactRequest: appMain.contactsStore.dismissContactRequest(chatId, contactRequestId)
+                                onAcceptContactRequest: appMain.contactsStore.acceptContactRequest(chatId, contactRequestId)
+
+                                // Navigation:
+                                onNavToMsgDetailsRequested: navigate => appMain.rootStore.setNavToMsgDetailsFlag(navigate)
+
+                                // Floating panel
+                                leftFloatingPanelItem: appMain.activityCenterPanel
                             }
                         }
                     }
