@@ -16430,6 +16430,14 @@ to load</source>
             <numerusform>최대 메시지 글자 수는 %n자입니다</numerusform>
         </translation>
     </message>
+    <message>
+        <source>Multiple payment requests</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Payment request %1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>StatusChatInputReplyArea</name>

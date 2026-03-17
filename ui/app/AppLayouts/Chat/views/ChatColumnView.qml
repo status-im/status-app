@@ -150,6 +150,8 @@ Item {
             if (!!d.activeChatContentModule)
                 d.activeChatContentModule.inputAreaModule.preservedProperties.replyMessageId = messageId
 
+            const msg = ModelUtils.getByKey(d.activeMessagesStore.messagesModel, "id", messageId)
+
             chatInput.replyMessageId = messageId
             chatInput.showReplyArea(obj.senderDisplayName,
                                     obj.senderIcon,
@@ -158,7 +160,8 @@ Item {
                                     obj.messageImage,
                                     obj.albumMessageImages,
                                     obj.albumImagesCount,
-                                    obj.sticker)
+                                    obj.sticker,
+                                    msg?.paymentRequestModel || null)
         }
 
         function restoreInputReply() {

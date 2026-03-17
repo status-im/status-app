@@ -16587,6 +16587,14 @@ selhalo</translation>
             <numerusform>Maximální počet znaků je %n</numerusform>
         </translation>
     </message>
+    <message>
+        <source>Multiple payment requests</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Payment request %1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>StatusChatInputReplyArea</name>

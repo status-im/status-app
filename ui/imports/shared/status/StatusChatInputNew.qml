@@ -425,7 +425,7 @@ Control {
         return isImage
     }
 
-    function showReplyArea(userName, senderIcon, message, contentType, image, album, albumCount, sticker) {
+    function showReplyArea(userName, senderIcon, message, contentType, image, album, albumCount, sticker, paymentRequests) {
         isReply = true
 
         replyPanel.nameText = userName
@@ -434,9 +434,26 @@ Control {
                 ? "" : StatusQUtils.Utils.stripHtmlTags(message)
 
         const imageCount = albumCount || (image ? 1 : 0)
+        const paymentRequestCount = paymentRequests ? paymentRequests.ModelCount.count : 0
 
-        replyPanel.extraContentText = sticker ? qsTr("Sticker")
-                                              : (imageCount ? qsTr("%n Image(s)", "", imageCount) : "")
+        const parts = []
+
+        if (sticker)
+            parts.push(qsTr("Sticker"))
+
+        if (paymentRequestCount > 1) {
+            parts.push(qsTr("Multiple payment requests"))
+        } else if (paymentRequestCount === 1) {
+            const request = StatusQUtils.ModelUtils.get(paymentRequests, 0)
+            const formattedAmount = root.formatBalance ? root.formatBalance(request.amount, request.tokenKey)
+                                                       : request.amount
+            parts.push(qsTr("Payment request %1 %2").arg(formattedAmount).arg(request.symbol))
+        }
+
+        if (imageCount)
+            parts.push(qsTr("%n Image(s)", "", imageCount))
+
+        replyPanel.extraContentText = parts.join(", ")
 
         messageInputField.forceActiveFocus();
     }

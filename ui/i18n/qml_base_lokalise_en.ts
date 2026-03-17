@@ -20055,6 +20055,16 @@
         <numerusform>Maximum message character count is %n</numerusform>
       </translation>
     </message>
+    <message>
+      <source>Multiple payment requests</source>
+      <comment>StatusChatInputNew</comment>
+      <translation>Multiple payment requests</translation>
+    </message>
+    <message>
+      <source>Payment request %1 %2</source>
+      <comment>StatusChatInputNew</comment>
+      <translation>Payment request %1 %2</translation>
+    </message>
   </context>
   <context>
     <name>StatusChatInputReplyArea</name>
