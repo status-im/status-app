@@ -755,39 +755,6 @@ Control {
                             }
                         }
                     }
-
-                    Column {
-                        Layout.alignment: Qt.AlignBottom
-                        Layout.bottomMargin: 3
-
-                        StyledText {
-                            id: lengthLimitText
-
-                            readonly property int remainingChars:
-                                messageInputField.messageLimit - messageInputField.length
-
-                            leftPadding: Theme.halfPadding
-                            rightPadding: Theme.halfPadding
-                            visible: messageInputField.length >= root.messageLimit - root.messageLimitSoft
-
-                            color: remainingChars >= 0 ? Theme.palette.textColor
-                                                       : Theme.palette.dangerColor1
-
-                            text: visible ? remainingChars.toString() : ""
-
-                            StatusMouseArea {
-                                id: mouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onEntered: {
-                                    lengthLimitTooltip.open()
-                                }
-                                onExited: {
-                                    lengthLimitTooltip.hide()
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -804,6 +771,10 @@ Control {
             imageButton.onClicked: {
                 imageDialog.open()
             }
+
+            sendButton.limitText: messageInputField.length >= root.messageLimit - root.messageLimitSoft
+                                  ? (root.messageLimit - messageInputField.length).toString()
+                                  : ""
 
             sendButton.onClicked: {
                 InputMethod.commit()
