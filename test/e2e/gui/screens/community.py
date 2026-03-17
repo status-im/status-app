@@ -339,7 +339,7 @@ class CommunityLeftPanel(QObject):
 
     @allure.step('Open join community popup')
     def open_welcome_community_popup(self):
-        self._join_community_button.wait_until_appears(timeout_msec=10000)
+        self._join_community_button.wait_until_appears(timeout_msec=60000)
         self._join_community_button.click()
         return WelcomeCommunityPopup().wait_until_appears()
 

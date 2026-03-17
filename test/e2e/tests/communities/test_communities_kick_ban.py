@@ -14,9 +14,7 @@ from gui.main_window import MainWindow
 from helpers.multiple_instances_helper import switch_to_aut, authorize_user_in_aut, get_chat_key, send_contact_request_from_settings, accept_contact_request_from_settings
 
 
-@pytest.mark.case(703252, 703252, 736991)
 @pytest.mark.communities
-# TODO: investigate the reason of failures on CI https://github.com/status-im/status-desktop/issues/19284
 def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
     user_one: UserAccount = RandomUser()
     user_two: UserAccount = RandomUser()
@@ -68,8 +66,11 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
 
         with step(f'User {user_two.name}, ban {user_one.name} from the community'):
             switch_to_aut(aut_two, main_screen)
+            community_screen = main_screen.left_panel.open_community(community.name)
             community_setting = community_screen.left_panel.open_community_settings()
             members = community_setting.left_panel.open_members()
+            members.open_all_members_tab()
+            time.sleep(1)  # Allow list to load (CI timing)
             members.ban_member(user_one.name).confirm_banning()
 
         with step('Check toast message about banned member'):

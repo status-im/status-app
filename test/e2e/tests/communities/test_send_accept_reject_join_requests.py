@@ -19,7 +19,6 @@ def test_send_accept_reject_join_requests(multiple_instances):
     user_one: UserAccount = RandomUser()
     user_two: UserAccount = RandomUser()
     user_three: UserAccount = RandomUser()
-    timeout = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
     main_screen = MainWindow()
 
     with (multiple_instances(user_data=None) as aut_one, multiple_instances(
@@ -136,10 +135,12 @@ def test_send_accept_reject_join_requests(multiple_instances):
 
         with step(f'Verify {user_three.name} did not join the community'):
             members_view.open_all_members_tab()
+            time.sleep(1)  # Allow tab switch to complete before next action (CI timing)
             assert user_three.name not in members_view.members_names, \
                 f'{user_three.name} should not be in community members after decline'
 
         with step(f'User {user_two.name}, accept {user_one.name} pending request'):
+            time.sleep(0.5)  # Ensure tab bar is stable before opening Pending Requests (CI timing)
             pending_tab = members_view.open_pending_requests_tab()
             pending_tab.accept_pending_request(user_one.name)
             time.sleep(1) # To allow list to be rebuilt

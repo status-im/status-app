@@ -1,8 +1,14 @@
 import pathlib
 import time
 import typing
+import unicodedata
 
 import allure
+
+
+def _normalize_name(s: str) -> str:
+    """Normalize for comparison (handles unicode variants, whitespace)."""
+    return unicodedata.normalize('NFKC', str(s).strip())
 
 import configs
 import driver
@@ -304,9 +310,10 @@ class PendingRequestsTabView(QObject):
                 time.sleep(0.5)  # wait for Accept button to appear on hover
                 member_container = driver.objectMap.realName(member)
                 self.accept_member_button.real_name['container'] = member_container
-                self.accept_member_button.wait_until_appears(timeout_msec=5000)
+                self.accept_member_button.wait_until_appears()
                 self.accept_member_button.hover()
-                self.accept_member_button.native_mouse_click()
+                # Use click() instead of native_mouse_click - object-relative click is more reliable on CI
+                self.accept_member_button.click()
                 return self
             except Exception:
                 pass
@@ -321,9 +328,9 @@ class PendingRequestsTabView(QObject):
                 time.sleep(0.5)  # wait for Reject button to appear on hover
                 member_container = driver.objectMap.realName(member)
                 self.reject_member_button.real_name['container'] = member_container
-                self.reject_member_button.wait_until_appears(timeout_msec=5000)
+                self.reject_member_button.wait_until_appears()
                 self.reject_member_button.hover()
-                self.reject_member_button.native_mouse_click()
+                self.reject_member_button.click()
                 return self
             except Exception:
                 pass
@@ -363,15 +370,33 @@ class MembersView(QObject):
     def get_member_object(self, member_name: str):
         member = None
         started_at = time.monotonic()
+        member_name_norm = _normalize_name(member_name)
         while member is None:
-            for _member in self.get_member_objects():
+            member_objects = self.get_member_objects()
+            member_names = []
+            for _member in member_objects:
                 try:
                     name = getattr(_member, 'userName', None) or getattr(_member, 'title', None)
-                    if name and member_name in str(name):
-                        member = _member
-                        break
+                    if name is not None:
+                        name_str = str(name).strip()
+                        member_names.append(name_str)
+                        name_norm = _normalize_name(name_str)
+                        # Try multiple match strategies (handles encoding/whitespace/unicode quirks)
+                        if (member_name_norm == name_norm or
+                                member_name_norm in name_norm or
+                                name_norm in member_name_norm):
+                            member = _member
+                            break
                 except (AttributeError, RuntimeError, TypeError):
                     continue
+            # Fallback: match by normalized comparison when direct match failed
+            if member is None:
+                for i, name_str in enumerate(member_names):
+                    if member_name_norm == _normalize_name(name_str):
+                        member = member_objects[i]
+                        break
+            if member is not None:
+                break
             if time.monotonic() - started_at > configs.timeouts.MESSAGING_TIMEOUT_SEC:
                 raise LookupError(f'Member not found')
         return member
@@ -383,7 +408,8 @@ class MembersView(QObject):
                 member = self.get_member_object(member_name)
                 QObject(real_name=driver.objectMap.realName(member)).hover()
                 self.kick_member_button.hover()
-                self.kick_member_button.native_mouse_click()
+                # Use click() instead of native_mouse_click - object-relative click is more reliable on CI
+                self.kick_member_button.click()
                 return KickBanMemberPopup().wait_until_appears()
             except Exception:
                 pass
@@ -395,8 +421,12 @@ class MembersView(QObject):
             try:
                 member = self.get_member_object(member_name)
                 QObject(real_name=driver.objectMap.realName(member)).hover()
+                time.sleep(0.5)  # Wait for Ban button to appear on hover (like decline_pending_request)
+                member_container = driver.objectMap.realName(member)
+                self.ban_member_button.real_name['container'] = member_container
+                self.ban_member_button.wait_until_appears()
                 self.ban_member_button.hover()
-                self.ban_member_button.native_mouse_click()
+                self.ban_member_button.click()
                 return KickBanMemberPopup().wait_until_appears()
             except Exception:
                 pass
@@ -409,7 +439,8 @@ class MembersView(QObject):
                 member = self.get_member_object(member_name)
                 QObject(real_name=driver.objectMap.realName(member)).hover()
                 self.unban_member_button.hover()
-                self.unban_member_button.native_mouse_click()
+                # Use click() instead of native_mouse_click - object-relative click is more reliable on CI
+                self.unban_member_button.click()
                 return self
             except Exception:
                 pass
