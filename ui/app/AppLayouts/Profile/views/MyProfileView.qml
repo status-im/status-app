@@ -69,7 +69,7 @@ SettingsContentBase {
 
     dirty: priv.isIdentityTabDirty ||
            priv.hasAnyProfileShowcaseChanges
-    saveChangesButtonEnabled: !!descriptionPanel.displayName.text && descriptionPanel.displayName.valid && (descriptionPanel.bio.valid || descriptionPanel.bio.text === '')
+    saveChangesButtonEnabled: descriptionPanel.displayName.valid && (descriptionPanel.bio.valid || descriptionPanel.bio.text === '')
 
     toast.saveChangesTooltipText: saveChangesButtonEnabled ? "" : qsTr("Invalid changes made to Identity")
     autoscrollWhenDirty: profileTabBar.currentIndex === MyProfileView.Identity
@@ -304,6 +304,7 @@ SettingsContentBase {
                 displayName.focus: !isEnsName && !Utils.isMobile
                 displayName.input.edit.readOnly: isEnsName
                 displayName.text: profileStore.displayName
+                displayName.placeholderText: profileStore.compressedPubKey
                 displayName.validationMode: StatusInput.ValidationMode.Always
                 displayName.validators: isEnsName || (profileStore.displayName === displayName.text) ? [] : displayNameValidators.validators
                 bio.text: profileStore.bio
