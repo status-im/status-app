@@ -243,10 +243,12 @@ proc checkIfMessageLoadedAndScroll(self: Module) =
   if index == -1:
     self.controller.increaseLoadingMessagesPerPageFactor()
     if self.controller.loadMoreMessages():
-      warn "failed to start loading more messages"
+      # Wait for more messages to be fetched before checking for the searched message again
       return
-    # If failed to `loadMoreMessages`, then the most recent message is already loaded.
-    # Then message is not found.
+    else:
+      warn "failed to start loading more messages"
+      # If it failed to `loadMoreMessages`, then the most recent messages are already loaded.
+      # It means the message is not found or was already loaded. We can clear the search
 
   self.controller.clearSearchedMessageId()
   self.controller.resetLoadingMessagesPerPageFactor()
@@ -294,6 +296,7 @@ method messagesAdded*(self: Module, messages: seq[MessageDto]) =
   let items = self.createMessageItemsFromMessageDtos(messages)
 
   self.view.model().insertItemsBasedOnClock(items)
+  self.checkIfMessageLoadedAndScroll()
 
 method removeNewMessagesMarker*(self: Module)
 
@@ -535,7 +538,6 @@ method onGetMessageById*(self: Module, requestId: UUID, messageId: string, messa
     return
 
   self.checkIfMessageLoadedAndScroll()
-  self.reevaluateViewLoadingState()
 
 method fillGaps*(self: Module, messageId: string) =
   self.controller.fillGaps(messageId)

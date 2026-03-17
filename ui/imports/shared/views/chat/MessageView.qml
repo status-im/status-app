@@ -290,7 +290,7 @@ Loader {
 
 
     function startMessageFoundAnimation() {
-        if (root.active && root.item.startMessageFoundAnimation) {
+        if (root.active && root.item && root.item.startMessageFoundAnimation) {
             root.item.startMessageFoundAnimation()
         }
     }
