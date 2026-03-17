@@ -152,6 +152,7 @@ Item {
 
             chatInput.replyMessageId = messageId
             chatInput.showReplyArea(obj.senderDisplayName,
+                                    obj.senderIcon,
                                     obj.messageText,
                                     obj.contentType,
                                     obj.messageImage,

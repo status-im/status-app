@@ -425,10 +425,11 @@ Control {
         return isImage
     }
 
-    function showReplyArea(/*messageId,*/ userName, message, contentType, image, album, albumCount, sticker) {
+    function showReplyArea(userName, senderIcon, message, contentType, image, album, albumCount, sticker) {
         isReply = true
 
         replyPanel.nameText = userName
+        replyPanel.avatarImage = senderIcon
         replyPanel.messageText = contentType === Constants.messageContentType.stickerType
                 ? "" : StatusQUtils.Utils.stripHtmlTags(message)
 
