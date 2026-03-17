@@ -14,13 +14,32 @@ Control {
     property string messageText
     property string extraContentText
 
-    property alias avatarImage: avatarImg.source
+    property url avatarImage
+    property color avatarColor: Theme.palette.miscColor5
 
     signal closeClicked
 
     onNameTextChanged: replyText.updateText()
     onMessageTextChanged: replyText.updateText()
     onExtraContentTextChanged: replyText.updateText()
+
+    QtObject {
+        id: d
+
+        readonly property bool hasImage: avatarImg.status === Image.Ready
+
+        readonly property string avatarLetterText: {
+            const words = root.nameText.trim().split(/\s+/)
+            if (words.length >= 2)
+                return (words[0][0] + words[1][0]).toUpperCase()
+            return root.nameText.trim().charAt(0).toUpperCase()
+        }
+
+        readonly property color avatarLetterColor: {
+            const lum = ColorUtils.luminance(root.avatarColor)
+            return lum > 0.5 ? Qt.rgba(0, 0, 0, 0.5) : Qt.rgba(1, 1, 1, 0.7)
+        }
+    }
 
     contentItem: RowLayout {
         Item {
@@ -51,12 +70,14 @@ Control {
             Layout.preferredHeight: 16
             radius: width / 2
 
-            color: Theme.palette.baseColor1
+            color: d.hasImage ? Theme.palette.baseColor1 : root.avatarColor
 
             Image {
                 id: avatarImg
 
                 anchors.fill: parent
+
+                source: root.avatarImage
 
                 smooth: true
                 mipmap: true
@@ -83,6 +104,20 @@ Control {
                     radius: width / 2
                     visible: false
                 }
+            }
+
+            StatusBaseText {
+                anchors.fill: parent
+
+                horizontalAlignment: Qt.AlignHCenter
+                verticalAlignment: Qt.AlignVCenter
+
+                visible: !d.hasImage
+
+                text: d.avatarLetterText
+                color: d.avatarLetterColor
+                font.pixelSize: parent.height / 2
+                font.weight: Font.Medium
             }
         }
 

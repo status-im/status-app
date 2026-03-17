@@ -152,9 +152,12 @@ Item {
 
             const msg = ModelUtils.getByKey(d.activeMessagesStore.messagesModel, "id", messageId)
 
+            const senderColor = Theme.palette.userCustomizationColors[Utils.colorIdForPubkey(obj.senderId)]
+
             chatInput.replyMessageId = messageId
             chatInput.showReplyArea(obj.senderDisplayName,
                                     obj.senderIcon,
+                                    senderColor,
                                     obj.messageText,
                                     obj.contentType,
                                     obj.messageImage,
