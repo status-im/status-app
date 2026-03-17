@@ -171,6 +171,11 @@ Control {
     */
     property int charLimit: 0
     /*!
+        \qmlproperty bool StatusInput::allowEmpty
+        This property allows the input to be considered valid when empty, bypassing validators for blank content.
+    */
+    property bool allowEmpty: false
+    /*!
         \qmlproperty string StatusInput::charLimitLabel
         This property overrides the default char limit text.
     */
@@ -328,6 +333,19 @@ Control {
 
         let valid = true
         const rawText = statusBaseInput.edit.getText(0, statusBaseInput.edit.length)
+
+        if (root.allowEmpty && rawText.length === 0) {
+            errors = ({})
+            asyncErrors = ({})
+            errorMessage.text = ""
+            pendingValidators = []
+            root.pending = false
+            root.validatedValue = rawText
+            statusBaseInput.valid = true
+            _previousText = text
+            return
+        }
+
         if (validators.length) {
             for (let idx in validators) {
                 let validator = validators[idx]
