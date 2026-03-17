@@ -120,7 +120,7 @@ class CreateNewCommunityPopup(QObject):
 
     @allure.step('Set community tags')
     def set_tags(self, values: typing.List[str]):
-        self._scroll.vertical_scroll_down(self._choose_tag_button)
+        self._scroll.vertical_scroll_down(self._choose_tag_button, extra_scrolls_after=4)
         self._choose_tag_button.click()
         TagsSelectPopup().wait_until_appears().select_tags(values)
 

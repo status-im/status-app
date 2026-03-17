@@ -225,7 +225,7 @@ class QObject:
         return driver.waitFor(lambda: condition, timeout_msec)
 
     @allure.step('Wait until enabled {0}')
-    def wait_until_enabled(self, timeout_msec: int = 2000, check_interval=0.5):
+    def wait_until_enabled(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
         timeout_sec = timeout_msec / 1000
         start_time = time.time()
 

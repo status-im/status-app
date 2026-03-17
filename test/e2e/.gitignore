@@ -14,3 +14,5 @@ tmp/
 squish.ini
 .envrc
 
+ext/allure_files/environment.properties
+

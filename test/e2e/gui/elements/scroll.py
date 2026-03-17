@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 class Scroll(QObject):
 
     @allure.step('Scroll vertical down to object {1}')
-    def vertical_scroll_down(self, element: QObject, timeout_sec: int = 5):
+    def vertical_scroll_down(self, element: QObject, timeout_sec: int = 5, extra_scrolls_after: int = 0):
         # First wait for element to exist (UI might need time to update after authentication)
         started_at = time.monotonic()
         while not element.exists:
@@ -26,6 +26,11 @@ class Scroll(QObject):
             driver.mouse.scroll(self.object, self.object.width / 2, self.object.height / 2, 0, -30, 1, 0.1)
             if time.monotonic() - started_at > timeout_sec:
                 raise LookupError(f'Object not found: {element}')
+
+        # Optional: scroll more to center element (e.g. for popups that need space below to open fully)
+        for _ in range(extra_scrolls_after):
+            driver.mouse.scroll(self.object, self.object.width / 2, self.object.height / 2, 0, -30, 1, 0.1)
+            time.sleep(0.1)
 
     @allure.step('Scroll vertical up to object {1}')
     def vertical_scroll_up(self, element: QObject, timeout_sec: int = 5):
