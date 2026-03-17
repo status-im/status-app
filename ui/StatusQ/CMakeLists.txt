@@ -294,7 +294,7 @@ if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
       MobileWebView
 
       GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
-      GIT_TAG 551b1610deceec99b5b99e9612ab4947faa8c332
+      GIT_TAG feb2db5a5374ef75c1c11162b6892189c199f954
       SOURCE_SUBDIR mobilewebview
     )
     FetchContent_MakeAvailable(MobileWebView)
@@ -302,9 +302,9 @@ if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
     if(TARGET MobileWebView)
         target_link_libraries(StatusQ PRIVATE MobileWebView)
         target_compile_definitions(StatusQ PRIVATE STATUSQ_HAS_MOBILEWEBVIEW=1)
-        if(ANDROID AND DEFINED MOBILEWEBVIEW_ANDROID_JAVA_DIR)
+        if(ANDROID AND DEFINED mobilewebview_SOURCE_DIR)
             file(WRITE "${CMAKE_BINARY_DIR}/mobilewebview_java_dir.txt"
-                "${MOBILEWEBVIEW_ANDROID_JAVA_DIR}/src")
+                "${mobilewebview_SOURCE_DIR}/mobilewebview/android/src")
         endif()
         install(TARGETS MobileWebView
                 RUNTIME DESTINATION StatusQ

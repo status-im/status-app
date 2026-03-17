@@ -6,7 +6,6 @@ import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
-import StatusQ.Popups.Dialog
 
 import AppLayouts.Wallet.controls
 import AppLayouts.Browser.controls
@@ -183,8 +182,6 @@ Control {
         Item { Layout.fillWidth: true }
 
         DappsComboBox {
-            id: dappsComboBox
-
             Layout.preferredWidth: openTabsButton.width
             Layout.preferredHeight: openTabsButton.height
             spacing: 8
@@ -204,7 +201,6 @@ Control {
                 console.log("[Browser] Connect new dApp requested")
                 // Can open a modal or use DAppsWorkflow in the future
             }
-
         }
 
         Item { Layout.fillWidth: true; visible: root.dappBtnAvailable }

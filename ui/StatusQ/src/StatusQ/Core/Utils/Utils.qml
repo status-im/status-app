@@ -339,6 +339,8 @@ QtObject {
 
         return overlayChildren.filter(
             item => {
+                if (!item)
+                    return false
                 const str = item.toString()
                 return str.includes("QQuickPopupItem") && !str.includes("StatusToolTip")
             }).length > 0

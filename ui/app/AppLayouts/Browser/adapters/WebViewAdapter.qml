@@ -3,7 +3,7 @@ import QtWebEngine
 
 import StatusQ.Core.Theme
 
-import "../views/ScriptUtils.js" as ScriptUtils
+import AppLayouts.Browser.views
 
 AbstractWebView {
     id: root
