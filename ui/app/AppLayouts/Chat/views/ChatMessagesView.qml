@@ -231,6 +231,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         spacing: 0
+        bottomMargin: Theme.halfPadding
         verticalLayoutDirection: ListView.BottomToTop
         cacheBuffer: height > 0 ? height * 2 : 0 // cache 2 screens worth of items
 
