@@ -49,8 +49,9 @@ StatusSectionLayout {
 
     property bool isDebugEnabled: false
     property string platformOS: Qt.platform.os
-    property bool useWebViewAdapter: root.isMobile
-    readonly property Component webViewAdapterComponent: useWebViewAdapter ? mobileWebViewAdapterComponent : webEngineAdapterComponent
+    // FIXME: restore in the next PR
+    property bool useWebViewAdapter: false
+    readonly property Component webViewAdapterComponent: webEngineAdapterComponent
 
     signal sendToRecipientRequested(string address)
 
@@ -473,35 +474,6 @@ StatusSectionLayout {
         }
     }
 
-    Component {
-        id: mobileWebViewAdapterComponent
-        MobileWebViewAdapter {
-            id: mobileWebViewAdapterItem
-            anchors.fill: parent
-            bookmarksStore: root.bookmarksStore
-            downloadsStore: root.downloadsStore
-            webChannel: connectorBridge.channel
-            enableJsLogs: root.isDebugEnabled
-
-            onWindowCloseRequested: webStackView.removeView(StackLayout.index)
-            onNewWindowRequested: (makeCurrent, requestedUrl, callback) => {
-                var tab = webStackView.createEmptyTab(_internal.currentWebView.profileParams, false, makeCurrent, requestedUrl);
-                callback(tab);
-            }
-            onDownloadRequested: (download) => {
-                _internal.onDownloadRequested(download)
-            }
-            onCertificateError: (error) => {
-                error.defer()
-                sslDialog.enqueue(error)
-            }
-            onJavaScriptDialogRequested: (request) => {
-                request.accepted = true;
-                var dialog = _internal.jsDialogComponent.createObject(root, {"request": request})
-                dialog.open()
-            }
-        }
-    }
 
     Component {
         id: downloadViewComponent

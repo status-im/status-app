@@ -1851,7 +1851,9 @@ Item {
                             restoreMode: Binding.RestoreNone
                         }
 
-                        sourceComponent: appMain.rootStore.thirdpartyServicesEnabled ? browserLayout: browserPrivacyWall
+                        sourceComponent: (appMain.rootStore.thirdpartyServicesEnabled && !SQUtils.Utils.isMobile)
+                                         ? browserLayout
+                                         : browserPrivacyWall
 
                         Component {
                             id: browserPrivacyWall
