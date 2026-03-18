@@ -864,8 +864,6 @@ Item {
                                                  localAccountSensitiveSettings.isBrowserEnabled
         readonly property int syncingBadgeCount: appMain.devicesStore.totalDevicesCount - appMain.devicesStore.pairedDevicesCount
 
-        readonly property int minLoaderDisplayTime: 600
-
         function openHomePage() {
             appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.homePage)
             homePageLoader.item.focusSearch()
@@ -1656,15 +1654,8 @@ Item {
 
                         Loader {
                             id: personalChatLayoutLoadingStateLoader
-                            active: appMain.rootStore.sectionsLoaded &&
-                                (personalChatLayoutLoader.status === Loader.Loading || minLoadingTimer.running)
+                            active: personalChatLayoutLoader.status === Loader.Loading
                             anchors.fill: parent
-
-                            Timer {
-                                id: minLoadingTimer
-                                interval: d.minLoaderDisplayTime
-                                running: true
-                            }
                             
                             sourceComponent: ChatLayoutLoading {
                                 anchors.fill: parent
@@ -2098,14 +2089,8 @@ Item {
 
                             Loader {
                                 id: communityLoadingStateLoader
-                                active: communityChatLayoutLoader.status === Loader.Loading || minLoadingTimer.running
+                                active: communityChatLayoutLoader.status === Loader.Loading
                                 anchors.fill: parent
-
-                                Timer {
-                                    id: minLoadingTimer
-                                    interval: d.minLoaderDisplayTime
-                                    running: true
-                                }
 
                                 sourceComponent: ChatLayoutLoading {
                                     anchors.fill: parent
