@@ -328,6 +328,7 @@ StatusSectionLayout {
             viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
             canPost: !root.rootStore.chatCommunitySectionModule.isCommunity() || root.canPost
             amISectionAdmin: root.amISectionAdmin
+            amIBanned: root.sectionItemModel ? root.sectionItemModel.amIBanned : false
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
