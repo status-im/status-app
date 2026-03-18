@@ -15193,8 +15193,8 @@ selhalo</translation>
         <translation>Přidejte %1 jako kontakt pro odeslání zprávy</translation>
     </message>
     <message>
-        <source>Message</source>
-        <translation>Zpráva</translation>
+        <source>Type something</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16552,10 +16552,6 @@ selhalo</translation>
 <context>
     <name>StatusChatInputNew</name>
     <message>
-        <source>Message</source>
-        <translation type="unfinished">Zpráva</translation>
-    </message>
-    <message>
         <source>Sticker</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16593,6 +16589,10 @@ selhalo</translation>
     </message>
     <message>
         <source>Payment request %1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Type something</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

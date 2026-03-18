@@ -18383,9 +18383,9 @@
       <translation>Add %1 as a contact to send a message</translation>
     </message>
     <message>
-      <source>Message</source>
+      <source>Type something</source>
       <comment>RootStore</comment>
-      <translation>Message</translation>
+      <translation>Type something</translation>
     </message>
   </context>
   <context>
@@ -20015,11 +20015,6 @@
   <context>
     <name>StatusChatInputNew</name>
     <message>
-      <source>Message</source>
-      <comment>StatusChatInputNew</comment>
-      <translation>Message</translation>
-    </message>
-    <message>
       <source>Sticker</source>
       <comment>StatusChatInputNew</comment>
       <translation>Sticker</translation>
@@ -20064,6 +20059,11 @@
       <source>Payment request %1 %2</source>
       <comment>StatusChatInputNew</comment>
       <translation>Payment request %1 %2</translation>
+    </message>
+    <message>
+      <source>Type something</source>
+      <comment>StatusChatInputNew</comment>
+      <translation>Type something</translation>
     </message>
   </context>
   <context>

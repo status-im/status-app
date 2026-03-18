@@ -72,7 +72,7 @@ TextArea {
     }
 
     persistentSelection: true
-    wrapMode: TextEdit.WordWrap
+    wrapMode: TextEdit.Wrap
 
     activeFocusOnTab: enabled
     KeyNavigation.priority: KeyNavigation.BeforeItem

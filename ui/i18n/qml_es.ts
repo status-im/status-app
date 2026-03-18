@@ -15102,8 +15102,8 @@ al cargar</translation>
         <translation>Agrega %1 como contacto para enviar un mensaje</translation>
     </message>
     <message>
-        <source>Message</source>
-        <translation>Mensaje</translation>
+        <source>Type something</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16454,10 +16454,6 @@ al cargar</translation>
 <context>
     <name>StatusChatInputNew</name>
     <message>
-        <source>Message</source>
-        <translation type="unfinished">Mensaje</translation>
-    </message>
-    <message>
         <source>Sticker</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16493,6 +16489,10 @@ al cargar</translation>
     </message>
     <message>
         <source>Payment request %1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Type something</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
