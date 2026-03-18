@@ -581,13 +581,15 @@ Control {
     }
 
     background: Item {
-        clip: true
-
         Rectangle {
             anchors.fill: parent
 
             topLeftRadius: 20
             topRightRadius: 20
+
+            anchors.leftMargin: -1
+            anchors.rightMargin: -1
+            anchors.bottomMargin: -1
 
             border.color: Theme.palette.directColor7
             color: StatusColors.transparent
@@ -662,6 +664,7 @@ Control {
 
                 ChatInputLinksPreviewArea {
                     id: linkPreviewArea
+
                     Layout.fillWidth: true
                     visible: hasContent
                     horizontalPadding: 12
@@ -702,9 +705,9 @@ Control {
                     Layout.leftMargin: 12
                     Layout.rightMargin: 12
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    ScrollBar.vertical.implicitWidth: Theme.halfPadding
 
                     padding: 0
-                    rightPadding: Theme.padding // for the scrollbar
                     contentWidth: availableWidth
 
                     StatusChatInputTextArea {
@@ -716,7 +719,7 @@ Control {
                         topPadding: 9
                         bottomPadding: 9
                         leftPadding: 0
-                        rightPadding: 0
+                        rightPadding: Theme.halfPadding // for the scrollbar
 
                         messageLimit: root.messageLimit
                         messageLimitHard: root.messageLimitHard
