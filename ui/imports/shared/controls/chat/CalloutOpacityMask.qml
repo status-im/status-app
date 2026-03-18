@@ -1,45 +1,30 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import StatusQ.Core.Theme
 
-import utils
-
-OpacityMask {
+MultiEffect {
     id: root
-    property bool leftTail: true
-    readonly property int smallCorner: Theme.radius / 2
-    readonly property int bigCorner: Theme.radius * 2
-    readonly property int fakeCornerSize: bigCorner * 2
 
-    cached: true
-    maskSource: Item {
+    property bool leftTail: true
+    readonly property real smallCorner: Theme.radius / 2
+    readonly property real bigCorner: Theme.radius * 2
+
+    maskEnabled: true
+    maskThresholdMin: 0.5
+    maskSpreadAtMin: 1.0
+
+    maskSource: Rectangle {
+        parent: root.parent
+
         width: root.width
         height: root.height
+        visible: false
+        layer.enabled: true
 
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            width: parent.width
-            height: parent.height
-            radius: root.bigCorner
-        }
-
-        Rectangle {
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            width: root.fakeCornerSize
-            height: root.fakeCornerSize
-            radius: root.smallCorner
-            visible: root.leftTail
-        }
-        Rectangle {
-            anchors.bottom: parent.bottom
-            anchors.right: parent.right
-            width: root.fakeCornerSize
-            height: root.fakeCornerSize
-            radius: root.smallCorner
-            visible: !root.leftTail
-        }
+        topLeftRadius: root.bigCorner
+        topRightRadius: root.bigCorner
+        bottomLeftRadius: root.leftTail ? root.smallCorner : root.bigCorner
+        bottomRightRadius: root.leftTail ? root.bigCorner : root.smallCorner
     }
 }
