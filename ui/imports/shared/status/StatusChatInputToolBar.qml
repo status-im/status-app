@@ -37,7 +37,7 @@ Control {
         id: chatIconRoot
 
         checkable: true
-        padding: Theme.halfPadding / 2
+        padding: Math.round(Theme.halfPadding / 2)
 
         background: Rectangle {
             radius: Theme.radius
@@ -74,7 +74,7 @@ Control {
     QtObject {
         id: d
 
-        readonly property int padding: root.Theme.padding * 3 / 4
+        readonly property int padding: Math.round(root.Theme.padding * 3 / 4)
     }
 
     Rectangle {
