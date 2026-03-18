@@ -1,9 +1,9 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
 import QtQuick.Controls
 
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 
 import utils
 import shared
@@ -66,7 +66,7 @@ Row {
                 anchors.top: chatImage.top
                 anchors.topMargin: -height / 3
                 hoverEnabled: false
-                opacity: mouseArea.containsMouse || buttonMouseArea.containsMouse ? 1 : 0
+                opacity: SQUtils.Utils.isMobile || mouseArea.containsMouse || buttonMouseArea.containsMouse ? 1 : 0
                 contentItem: SVGImage {
                     source: Assets.svg( !buttonMouseArea.containsMouse ? "close-filled" : "close-filled-hovered")
                     width: closeBtn.width
