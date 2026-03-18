@@ -44,16 +44,10 @@ Item {
                 spacing: d.sectionSpacing
 
                 // Chat list header
-                Rectangle {
+                LoadingComponent {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 54
+                    Layout.preferredHeight: 45
                     radius: 8
-                    color: "transparent"
-
-                    LoadingComponent {
-                        anchors.fill: parent
-                        radius: parent.radius
-                    }
                 }
 
                 // Chat list items
@@ -62,28 +56,16 @@ Item {
                     delegate: RowLayout {
                         spacing: d.compactSpacing
 
-                        Rectangle {
+                        LoadingComponent {
                             Layout.preferredWidth: 28
                             Layout.preferredHeight: 28
                             radius: 15
-                            color: "transparent"
-
-                            LoadingComponent {
-                                anchors.fill: parent
-                                radius: parent.radius
-                            }
                         }
 
-                        Rectangle {
+                        LoadingComponent {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 30
                             radius: 6
-                            color: "transparent"
-
-                            LoadingComponent {
-                                anchors.fill: parent
-                                radius: parent.radius
-                            }
                         }
                     }
                 }
@@ -100,47 +82,14 @@ Item {
                 anchors.fill: parent
                 spacing: 0
 
-                // Chat Header
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 55
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: d.sectionInset
-                        anchors.rightMargin: d.sectionInset
-                        spacing: d.sectionSpacing
-
-                        Rectangle {
-                            width: 30
-                            height: 30
-                            radius: 15
-                            Layout.alignment: Qt.AlignVCenter
-                            color: "transparent"
-
-                            LoadingComponent {
-                                anchors.fill: parent
-                                radius: parent.radius
-                            }
-                        }
-
-                        Rectangle {
-                            Layout.preferredWidth: 220
-                            Layout.preferredHeight: 18
-                            Layout.alignment: Qt.AlignVCenter
-                            radius: 6
-                            color: "transparent"
-
-                            LoadingComponent {
-                                anchors.fill: parent
-                                radius: parent.radius
-                            }
-                        }
-
-                        Item {
-                            Layout.fillWidth: true
-                        }
-                    }
+                // Chat header
+                LoadingComponent {
+                    Layout.preferredWidth: 270
+                    Layout.preferredHeight: 35
+                    Layout.alignment: Qt.AlignVCenter
+                    radius: 6
+                    Layout.leftMargin: d.sectionInset
+                    Layout.topMargin: d.compactSpacing
                 }
 
                 // Chat Content
@@ -148,25 +97,20 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.leftMargin: d.sectionInset
-                    Layout.topMargin: d.sectionInset
+                    Layout.topMargin: d.compactSpacing
                 }
 
                 // ChatInput
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 90
+                    Layout.preferredHeight: fakeInput.height + Theme.smallPadding * 2
 
-                    Rectangle {
+                    LoadingComponent {
+                        id: fakeInput
                         anchors.centerIn: parent
                         width: parent.width - (2 * d.sectionInset)
-                        height: 44
-                        radius: 12
-                        color: "transparent"
-
-                        LoadingComponent {
-                            anchors.fill: parent
-                            radius: parent.radius
-                        }
+                        height: 35
+                        radius: 17
                     }
                 }
             }
@@ -187,16 +131,10 @@ Item {
                 spacing: d.sectionSpacing
 
                 // Members Header
-                Rectangle {
+                LoadingComponent {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 28
                     radius: 6
-                    color: "transparent"
-
-                    LoadingComponent {
-                        anchors.fill: parent
-                        radius: parent.radius
-                    }
                 }
 
                 // Members list
@@ -205,40 +143,22 @@ Item {
                     delegate: RowLayout {
                         spacing: d.compactSpacing
 
-                        Rectangle {
+                        LoadingComponent {
                             width: 34
                             height: 34
                             radius: 17
-                            color: "transparent"
-
-                            LoadingComponent {
-                                anchors.fill: parent
-                                radius: parent.radius
-                            }
                         }
 
-                        Rectangle {
+                        LoadingComponent {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 34
                             radius: 8
-                            color: "transparent"
 
                             LoadingComponent {
-                                anchors.fill: parent
-                                radius: parent.radius
-                            }
-
-                            Rectangle {
                                 width: parent.width - (2 * d.compactSpacing)
                                 height: 12
                                 anchors.centerIn: parent
                                 radius: 4
-                                color: "transparent"
-
-                                LoadingComponent {
-                                    anchors.fill: parent
-                                    radius: parent.radius
-                                }
                             }
                         }
                     }
