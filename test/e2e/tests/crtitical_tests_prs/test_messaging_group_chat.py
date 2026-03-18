@@ -249,15 +249,13 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                     messages_screen.chat.messages(0)[0].image_message is not None and
                     messages_screen.chat.messages(0)[0].image_message.visible
                 ), timeout), f"Image is not found in the last message"
-                # Re-fetch message object in lambda to ensure we're checking the latest state
                 assert driver.waitFor(lambda: messages_screen.chat.messages(0)[0].delegate_button.is_visible,
                                       timeout), f"Link preview is not found in the last message"
-                # Re-check message object in case banner wasn't found during initial init
+                # Banner loads from external URL (e.g. github.com) - needs longer timeout than UI elements
                 assert driver.waitFor(lambda: (
                     messages_screen.chat.messages(0)[0].banner_image is not None and
                     messages_screen.chat.messages(0)[0].banner_image.is_visible
-                ), timeout), f"Banner image is not found in the last message"
-                # Re-fetch message object in lambda to ensure init_ui() is re-run if needed
+                ), configs.timeouts.LINK_PREVIEW_BANNER_TIMEOUT_MSEC), f"Banner image is not found in the last message"
                 assert driver.waitFor(
                     lambda: domain_link_2 == messages_screen.chat.messages(0)[0].get_link_domain(),
                     configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
