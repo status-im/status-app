@@ -226,7 +226,6 @@ Control {
                 // regular sections + communities
                 SidebarListView {
                     Layout.fillHeight: true
-                    Layout.maximumHeight: contentHeight
                     model: root.regularItemsModel
                     delegate: Loader {
                         required property int index
