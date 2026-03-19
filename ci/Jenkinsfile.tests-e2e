@@ -110,6 +110,10 @@ pipeline {
     /* Set to a non-zero value to make Qt print out diagnostic information about the each (C++) plugin it tries to load. */
     /* QT_DEBUG_PLUGINS = 0 */
 
+    /* Use local waku fleet */
+    STATUS_FLEET = 'status-desktop.test'
+    STATUS_FLEET_CONFIG_FILE = "${WORKSPACE}/assets/local-waku-fleets-config.json"
+
     /* Hack fix for params not being set in job on first run */
     BUILD_SOURCE =      "${params.BUILD_SOURCE}"
     TEST_NAME =         "${params.TEST_NAME}"
@@ -182,6 +186,13 @@ pipeline {
       } } } }
     }
 
+    stage('Start Local Fleet') {
+      steps { timeout(2) { script {
+        sh 'docker compose -f docker-compose.waku.yml up -d'
+        sh 'sleep 15'
+      } } }
+    }
+
     stage('Test') {
       steps { timeout(getTestStageTimeout()) { script { dir('test/e2e') {
         def flags = []
@@ -219,23 +230,28 @@ pipeline {
   }
 
   post {
-    always { script { dir('test/e2e') {
-      archiveArtifacts('aut/*.log')
+    always { script {
+      /* Stop local waku fleet */
+      sh 'docker compose -f docker-compose.waku.yml down || true'
 
-      /* Needed to categorize types of errors and add environment section in allure report. */
-      sh 'cp ext/allure_files/categories.json allure-results'
-      sh 'cp ext/allure_files/environment.properties allure-results'
+      dir('test/e2e') {
+        archiveArtifacts('aut/*.log')
 
-      allure([
-        results: [[path: 'allure-results']],
-        reportBuildPolicy: 'ALWAYS',
-        properties: [],
-        jdk: '',
-      ])
-      /* Link for Jenkins Builds GitHub comment. */
-      env.PKG_URL = "${env.BUILD_URL}allure/"
-      updateGitHubStatus()
-    } } }
+        /* Needed to categorize types of errors and add environment section in allure report. */
+        sh 'cp ext/allure_files/categories.json allure-results'
+        sh 'cp ext/allure_files/environment.properties allure-results'
+
+        allure([
+          results: [[path: 'allure-results']],
+          reportBuildPolicy: 'ALWAYS',
+          properties: [],
+          jdk: '',
+        ])
+        /* Link for Jenkins Builds GitHub comment. */
+        env.PKG_URL = "${env.BUILD_URL}allure/"
+        updateGitHubStatus()
+      }
+    } }
     success { script {
       github.notifyPR(true)
     } }

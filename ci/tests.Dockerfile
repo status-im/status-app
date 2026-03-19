@@ -22,6 +22,8 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --ba
     pcscd \
 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN groupadd -g 999 docker && usermod -aG docker jenkins
+
 USER jenkins
 
 LABEL maintainer="marko@status.im"

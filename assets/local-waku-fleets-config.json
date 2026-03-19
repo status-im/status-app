@@ -1,16 +1,19 @@
 {
-    "status-desktop.test": {
-      "clusterId": 16,
-      "wakuNodes": [
-        "enr:-La4QPTs3q_umVW06q5r1a3pmnG0ahbvDJCyccAqwQxBSvbGcQAlsWokcsqWyfPABqowZHvJ1YIzVcLy1GZ1T0bQ3wgBgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc40ACzYGYm9vdC0xBuphgnJzhwAQAgAgAECJc2VjcDI1NmsxoQOGH0cGbQrDKGJKZUReERKxvaIcSk_pZ3lILaIL90iZAoN0Y3CC6mGDdWRwgiMohXdha3UyDQ"
-      ],
-      "discV5BootstrapNodes": [],
-      "storeNodes": [
-        {
-          "id": "store-1",
-          "enr": "enr:-LW4QP-PB5tg4cTQB2FvYFhPu3yG9jilownIJmz5w8DvMZZOWBWWLHv3jCr88xUjLxr_Cei3-YzsmKhkQJBexiuRSpEBgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4wACjYFc3RvcmUG6mKCcnOHABACACAAQIlzZWNwMjU2azGhAo3JozGxzJ2AeSAtgU0YzmxURKi6sveikwnF2cvZAhY1g3RjcILqYoN1ZHCCIyiFd2FrdTID",
-          "fleet": "status-desktop.test"
-        }
-      ]
-    }
+  "status-desktop.test": {
+    "clusterId": 16,
+    "wakuNodes": [
+      "enr:-La4QPTs3q_umVW06q5r1a3pmnG0ahbvDJCyccAqwQxBSvbGcQAlsWokcsqWyfPABqowZHvJ1YIzVcLy1GZ1T0bQ3wgBgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc40ACzYGYm9vdC0xBuphgnJzhwAQAgAgAECJc2VjcDI1NmsxoQOGH0cGbQrDKGJKZUReERKxvaIcSk_pZ3lILaIL90iZAoN0Y3CC6mGDdWRwgiMohXdha3UyDQ"
+    ],
+    "discV5BootstrapNodes": [
+      "enr:-La4QPTs3q_umVW06q5r1a3pmnG0ahbvDJCyccAqwQxBSvbGcQAlsWokcsqWyfPABqowZHvJ1YIzVcLy1GZ1T0bQ3wgBgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc40ACzYGYm9vdC0xBuphgnJzhwAQAgAgAECJc2VjcDI1NmsxoQOGH0cGbQrDKGJKZUReERKxvaIcSk_pZ3lILaIL90iZAoN0Y3CC6mGDdWRwgiMohXdha3UyDQ"
+    ],
+    "storeNodes": [
+      {
+        "id": "store-1",
+        "enr": "enr:-LW4QP-PB5tg4cTQB2FvYFhPu3yG9jilownIJmz5w8DvMZZOWBWWLHv3jCr88xUjLxr_Cei3-YzsmKhkQJBexiuRSpEBgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4wACjYFc3RvcmUG6mKCcnOHABACACAAQIlzZWNwMjU2azGhAo3JozGxzJ2AeSAtgU0YzmxURKi6sveikwnF2cvZAhY1g3RjcILqYoN1ZHCCIyiFd2FrdTID",
+        "addr": "/ip4/127.0.0.1/tcp/60002/p2p/16Uiu2HAm4y9o3GARfphq8jN1wsVhezCHPMmRuekHCCKJ1EsgzVBi",
+        "fleet": "status-desktop.test"
+      }
+    ]
   }
+}
