@@ -34,10 +34,11 @@ class CommunityData:
     tags: list = field(default_factory=list)
     introduction: str = None
     leaving_message: str = None
+    request_to_join: bool = False
 
 
 class RandomCommunity(CommunityData):
-    def __init__(self):
+    def __init__(self, request_to_join: bool = False):
         super().__init__(
             name=random_community_name(),
             description=random_community_description(),
@@ -46,7 +47,8 @@ class RandomCommunity(CommunityData):
             color=random_color(),
             tags=random_community_tags(),
             introduction=random_community_introduction(),
-            leaving_message=random_community_leave_message()
+            leaving_message=random_community_leave_message(),
+            request_to_join=request_to_join
         )
 
 
