@@ -25,6 +25,7 @@ public class NativeIndicatorHelper {
             container = new FrameLayout(activity);
             container.setClipChildren(false);
             container.setClipToPadding(false);
+            container.setElevation(1f);
 
             imageView = new ImageView(activity);
             imageView.setScaleType(ImageView.ScaleType.FIT_XY);

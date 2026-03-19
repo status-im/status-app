@@ -65,6 +65,7 @@ public class NativeSwipeHandlerHelper {
             touchOverlayView.setY(handlerY);
             touchOverlayView.setClickable(true);
             touchOverlayView.setLongClickable(false);
+            touchOverlayView.setElevation(1f);
 
             touchOverlayView.setOnTouchListener((v, event) -> {
                 final int action = event.getActionMasked();
