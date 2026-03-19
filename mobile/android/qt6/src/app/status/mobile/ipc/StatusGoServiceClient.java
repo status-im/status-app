@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Process;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -14,7 +15,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import app.status.mobile.StatusGoStub;
@@ -25,6 +25,14 @@ public final class StatusGoServiceClient {
     private static final long CONNECT_TIMEOUT_MS = 8000;
 
     private static volatile StatusGoServiceClient sInstance;
+
+    /** Fire-and-forget background thread (dies when work finishes); avoids a long-lived executor. */
+    private static void runUiVisibilityAsync(Runnable r) {
+        new Thread(() -> {
+            Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+            r.run();
+        }, "StatusGo-UiVisibility").start();
+    }
 
     public static StatusGoServiceClient get() {
         if (sInstance == null) {
@@ -62,15 +70,28 @@ public final class StatusGoServiceClient {
                 bound = true;
                 try {
                     service.registerSignalListener(signalListener);
-                    // Re-apply lifecycle state only after explicit UI visibility callback.
-                    // This avoids an implicit initial "background" transition on cold bind.
-                    if (hasUiVisibilityHint) {
-                        service.setUiVisible(desiredUiVisible);
-                    }
                 } catch (RemoteException e) {
-                    Log.w(TAG, "onServiceConnected setup failed", e);
+                    Log.w(TAG, "onServiceConnected: registerSignalListener failed", e);
                 }
                 if (connectedLatch != null) connectedLatch.countDown();
+            }
+            // Replay UI visibility on a background thread — the Binder call
+            // reaches nativeCall("AppStateChange") which can block for seconds
+            // if the Go runtime's memory was paged out (major faults).
+            if (hasUiVisibilityHint) {
+                final IStatusGoService s;
+                synchronized (lock) {
+                    s = service;
+                }
+                if (s != null) {
+                    runUiVisibilityAsync(() -> {
+                        try {
+                            s.setUiVisible(desiredUiVisible);
+                        } catch (RemoteException e) {
+                            Log.w(TAG, "onServiceConnected: setUiVisible replay failed", e);
+                        }
+                    });
+                }
             }
         }
 
@@ -259,58 +280,60 @@ public final class StatusGoServiceClient {
         desiredUiVisible = visible;
         hasUiVisibilityHint = true;
         final Context app = context.getApplicationContext();
+        runUiVisibilityAsync(() -> setUiVisibleSync(app, visible));
+    }
+
+    private void setUiVisibleSync(Context app, boolean visible) {
         ensureStartedAndBound(app);
-        Executors.newSingleThreadExecutor().execute(() -> {
-            IStatusGoService s;
-            CountDownLatch latch;
-            synchronized (lock) {
-                s = service;
-                latch = connectedLatch;
-            }
-            if (s == null && latch != null) {
-                try {
-                    latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return;
-                }
-            }
-            synchronized (lock) {
-                s = service;
-            }
-            if (s == null) return;
+        IStatusGoService s;
+        CountDownLatch latch;
+        synchronized (lock) {
+            s = service;
+            latch = connectedLatch;
+        }
+        if (s == null && latch != null) {
             try {
-                s.setUiVisible(visible);
-            } catch (RemoteException e) {
-                Log.w(TAG, "setUiVisible failed", e);
-                if (e instanceof android.os.DeadObjectException) {
-                    resetConnection(app);
-                    ensureStartedAndBound(app);
-                    synchronized (lock) {
-                        s = service;
-                        latch = connectedLatch;
+                latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+        synchronized (lock) {
+            s = service;
+        }
+        if (s == null) return;
+        try {
+            s.setUiVisible(visible);
+        } catch (RemoteException e) {
+            Log.w(TAG, "setUiVisible failed", e);
+            if (e instanceof android.os.DeadObjectException) {
+                resetConnection(app);
+                ensureStartedAndBound(app);
+                synchronized (lock) {
+                    s = service;
+                    latch = connectedLatch;
+                }
+                if (s == null && latch != null) {
+                    try {
+                        latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return;
                     }
-                    if (s == null && latch != null) {
-                        try {
-                            latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                            return;
-                        }
-                    }
-                    synchronized (lock) {
-                        s = service;
-                    }
-                    if (s != null) {
-                        try {
-                            s.setUiVisible(visible);
-                        } catch (RemoteException e2) {
-                            Log.w(TAG, "setUiVisible retry failed", e2);
-                        }
+                }
+                synchronized (lock) {
+                    s = service;
+                }
+                if (s != null) {
+                    try {
+                        s.setUiVisible(visible);
+                    } catch (RemoteException e2) {
+                        Log.w(TAG, "setUiVisible retry failed", e2);
                     }
                 }
             }
-        });
+        }
     }
 }
 
