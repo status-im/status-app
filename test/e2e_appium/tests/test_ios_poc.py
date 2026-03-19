@@ -38,12 +38,11 @@ class TestIOSOnboarding(StepMixin):
     ``OnboardingFlow`` fixture end-to-end, which covers:
 
     1. Welcome screen → Create Profile
-    2. Analytics screen → Skip
-    3. Create Profile → Let's go
-    4. Password screen → enter + confirm password
-    5. Biometrics → dismiss
-    6. Loading / splash screen → wait for completion
-    7. Wallet landing → verify ADD_ACCOUNT_BUTTON visible
+    2. Create Profile → Let's go
+    3. Password screen → enter + confirm password
+    4. Biometrics → dismiss
+    5. Loading / splash screen → wait for completion
+    6. Wallet landing → verify ADD_ACCOUNT_BUTTON visible
     """
 
     async def test_ios_onboarding_flow(self):

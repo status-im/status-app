@@ -5,7 +5,6 @@ from .app import App
 from .onboarding import (
     HomePage,
     WelcomePage,
-    AnalyticsPage,
     CreateProfilePage,
     PasswordPage,
     SplashScreen,
@@ -17,7 +16,6 @@ __all__ = [
     "HomePage",
     "App",
     "WelcomePage",
-    "AnalyticsPage",
     "CreateProfilePage",
     "PasswordPage",
     "SplashScreen",

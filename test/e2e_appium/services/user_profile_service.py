@@ -189,7 +189,6 @@ class UserProfileService:
                 seed_phrase=user.seed_phrase if use_seed else None,
                 password=user.password,
                 display_name=user.display_name,
-                skip_analytics=True,
                 validate_each_step=config.get("validate_steps", True)
                 if config
                 else True,

@@ -4,7 +4,6 @@ import pytest
 
 from pages.onboarding import (
     WelcomePage,
-    AnalyticsPage,
     CreateProfilePage,
     SeedPhraseInputPage,
     PasswordPage,
@@ -42,11 +41,6 @@ class TestOnboardingImportSeed(StepMixin):
                 "Welcome screen should be visible"
             )
             assert welcome.click_create_profile(), "Failed to click Create profile"
-
-        async with self.step(self.device, "Skip analytics"):
-            analytics = AnalyticsPage(driver)
-            assert analytics.is_screen_displayed(), "Analytics screen should be visible"
-            assert analytics.skip_analytics_sharing(), "Failed to click Not now"
 
         async with self.step(self.device, "Select recovery phrase import"):
             create = CreateProfilePage(driver)
@@ -137,13 +131,6 @@ class TestOnboardingImportSeed(StepMixin):
                 assert base.gestures.element_tap(el), (
                     "Failed to tap Create profile dropdown item"
                 )
-
-        async with self.step(self.device, "Skip analytics (re-import)"):
-            analytics = AnalyticsPage(driver)
-            assert analytics.is_screen_displayed(), (
-                "Analytics screen should be visible after choosing Create profile"
-            )
-            analytics.skip_analytics_sharing()
 
         async with self.step(self.device, "Select recovery phrase (re-import)"):
             create = CreateProfilePage(driver)

@@ -20,7 +20,6 @@ from locators.wallet.accounts_locators import WalletAccountsLocators
 from models.user_model import User, UserProfile
 from pages.app import App
 from pages.onboarding import (
-    AnalyticsPage,
     BiometricsPage,
     CreateProfilePage,
     PasswordPage,
@@ -36,7 +35,6 @@ from utils.generators import generate_seed_phrase
 class OnboardingConfig:
     """Configuration options for onboarding flow execution"""
 
-    skip_analytics: bool = True
     skip_profile_creation: bool = False
     custom_user_data: dict[str, Any] | None = None
     timeout_per_step: int = 30
@@ -84,7 +82,6 @@ class OnboardingFlow:
 
         # Initialize page objects
         self.welcome_page = WelcomePage(self.driver)
-        self.analytics_page = AnalyticsPage(self.driver)
         self.create_profile_page = CreateProfilePage(self.driver)
         self.seed_phrase_page = SeedPhraseInputPage(self.driver)
         self.password_page = PasswordPage(self.driver)
@@ -145,12 +142,6 @@ class OnboardingFlow:
         try:
             # Step 1: Welcome Screen
             self._execute_welcome_step()
-
-            # Step 2: Analytics Screen (conditionally skip)
-            if not self.config.skip_analytics:
-                self._execute_analytics_step()
-            else:
-                self._execute_analytics_skip_step()
 
             if self.config.use_seed_phrase:
                 self._execute_seed_phrase_import_step()
@@ -235,7 +226,7 @@ class OnboardingFlow:
 
     def _execute_seed_phrase_import_step(self):
         self.current_step = "seed_phrase_import"
-        self.logger.info("Step 3: Seed Phrase Import")
+        self.logger.info("Step 2: Seed Phrase Import")
 
         if self.config.validate_each_step:
             assert self.create_profile_page.is_screen_displayed(), (
@@ -265,46 +256,9 @@ class OnboardingFlow:
         if self.config.take_screenshots:
             self._take_screenshot("seed_phrase_import_completed")
 
-    def _execute_analytics_step(self):
-        self.current_step = "analytics_screen"
-        self.logger.info("Step 2: Analytics Screen (interacting)")
-
-        if self.config.validate_each_step:
-            assert self.analytics_page.is_screen_displayed(), (
-                "Analytics screen should be displayed"
-            )
-
-        self.analytics_page.accept_analytics_sharing()
-
-        self.step_results["analytics_screen"] = {
-            "success": True,
-            "action": "shared",
-            "timestamp": datetime.now(),
-        }
-
-    def _execute_analytics_skip_step(self):
-        self.current_step = "analytics_screen_skip"
-        self.logger.info("Step 2: Analytics Screen (skipping)")
-
-        if self.config.validate_each_step:
-            assert self.analytics_page.is_screen_displayed(), (
-                "Analytics screen should be displayed"
-            )
-
-        self.analytics_page.skip_analytics_sharing()
-
-        self.step_results["analytics_screen"] = {
-            "success": True,
-            "action": "skipped",
-            "timestamp": datetime.now(),
-        }
-
-        if self.config.take_screenshots:
-            self._take_screenshot("analytics_skipped")
-
     def _execute_create_profile_step(self):
         self.current_step = "create_profile_screen"
-        self.logger.info("Step 3: Create Profile Screen")
+        self.logger.info("Step 2: Create Profile Screen")
 
         if self.config.validate_each_step:
             assert self.create_profile_page.is_screen_displayed(), (
@@ -323,7 +277,7 @@ class OnboardingFlow:
 
     def _execute_password_step(self):
         self.current_step = "password_screen"
-        self.logger.info("Step 4: Password Screen")
+        self.logger.info("Step 3: Password Screen")
         step_start = datetime.now()
 
         if self.config.validate_each_step:
@@ -335,7 +289,7 @@ class OnboardingFlow:
         assert success, "Should successfully create password"
 
         elapsed = (datetime.now() - step_start).total_seconds()
-        self.logger.info("Step 4 completed in %.1fs", elapsed)
+        self.logger.info("Step 3 completed in %.1fs", elapsed)
         self.step_results["password_screen"] = {
             "success": True,
             "password_length": len(self.test_user.password),
@@ -348,7 +302,7 @@ class OnboardingFlow:
     def _execute_biometrics_step(self):
         """Dismiss biometrics prompt if it appears after password confirmation."""
         self.current_step = "biometrics_screen"
-        self.logger.info("Step 5: Biometrics Screen (dismiss if present)")
+        self.logger.info("Step 4: Biometrics Screen (dismiss if present)")
         step_start = datetime.now()
 
         self.logger.info("Checking for biometrics prompt (timeout=3s)")
@@ -371,7 +325,7 @@ class OnboardingFlow:
             }
 
         elapsed = (datetime.now() - step_start).total_seconds()
-        self.logger.info("Step 5 completed in %.1fs", elapsed)
+        self.logger.info("Step 4 completed in %.1fs", elapsed)
 
         if self.config.take_screenshots:
             self._take_screenshot("biometrics_handled")
@@ -379,7 +333,7 @@ class OnboardingFlow:
     def _execute_loading_step(self):
         """Execute loading screen wait"""
         self.current_step = "loading_screen"
-        self.logger.info("Step 6: Loading Screen")
+        self.logger.info("Step 5: Loading Screen")
         step_start = datetime.now()
 
         if self.config.wait_for_complete_loading:
@@ -406,7 +360,7 @@ class OnboardingFlow:
         several wallet indicators before failing.
         """
         self.current_step = "wallet_verification"
-        self.logger.info("Step 7: Wallet Landing Verification")
+        self.logger.info("Step 6: Wallet Landing Verification")
         step_start = datetime.now()
 
         from locators.app_locators import AppLocators
@@ -439,7 +393,7 @@ class OnboardingFlow:
         )
 
         elapsed = (datetime.now() - step_start).total_seconds()
-        self.logger.info("Step 7 completed in %.1fs", elapsed)
+        self.logger.info("Step 6 completed in %.1fs", elapsed)
         self.step_results["wallet_verification"] = {
             "success": True,
             "timestamp": datetime.now(),
@@ -542,7 +496,7 @@ def onboarding_flow_factory(test_environment):
 
     Usage:
         def test_custom_onboarding(onboarding_flow_factory):
-            config = OnboardingConfig(skip_analytics=False, custom_display_name="CustomUser")
+            config = OnboardingConfig(custom_display_name="CustomUser")
             flow = onboarding_flow_factory(config)
             result = flow.execute_complete_flow()
     """

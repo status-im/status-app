@@ -5,7 +5,6 @@ from typing import Optional, Dict, Any
 
 from pages.onboarding import (
     WelcomePage,
-    AnalyticsPage,
     CreateProfilePage,
     SeedPhraseInputPage,
     PasswordPage,
@@ -25,7 +24,6 @@ class ProfileCreationConfig:
     seed_phrase: Optional[str] = None
     password: str = DEFAULT_USER_PASSWORD
     display_name: str = "AutoTestUser"
-    skip_analytics: bool = True
     validate_each_step: bool = True
     take_screenshots: bool = False
     timeout_seconds: int = 60
@@ -50,7 +48,6 @@ class ProfileCreationFlow:
 
         # Initialize page objects
         self.welcome_page = WelcomePage(driver)
-        self.analytics_page = AnalyticsPage(driver)
         self.create_profile_page = CreateProfilePage(driver)
         self.seed_phrase_page = SeedPhraseInputPage(driver)
         self.password_page = PasswordPage(driver)
@@ -68,7 +65,6 @@ class ProfileCreationFlow:
             self.logger.info("🚀 Starting complete onboarding flow execution")
 
             self._execute_welcome_step()
-            self._execute_analytics_step(skip=self.config.skip_analytics)
 
             if self.config.use_seed_phrase:
                 self._execute_seed_phrase_step()
@@ -108,36 +104,6 @@ class ProfileCreationFlow:
             "duration_seconds": (datetime.now() - start_time).total_seconds(),
         }
         self.logger.debug("✓ Welcome screen step completed")
-
-    def _execute_analytics_step(self, skip: bool = True):
-        self.current_step = "analytics_screen"
-        start_time = datetime.now()
-
-        if self.analytics_page.is_screen_displayed(timeout=10):
-            self.logger.debug("📊 Analytics screen displayed")
-
-            if skip:
-                if not self.analytics_page.skip_analytics_sharing():
-                    raise ProfileCreationFlowError("Failed to skip analytics")
-                action = "skipped"
-            else:
-                if not self.analytics_page.enable_analytics_sharing():
-                    raise ProfileCreationFlowError("Failed to enable analytics")
-                action = "enabled"
-
-            self.step_results[self.current_step] = {
-                "success": True,
-                "action": action,
-                "duration_seconds": (datetime.now() - start_time).total_seconds(),
-            }
-            self.logger.debug(f"✓ Analytics screen {action}")
-        else:
-            self.logger.debug("📊 No analytics screen found - continuing")
-            self.step_results[self.current_step] = {
-                "success": True,
-                "action": "not_displayed",
-                "duration_seconds": (datetime.now() - start_time).total_seconds(),
-            }
 
     def _execute_create_profile_step(self):
         self.current_step = "create_profile_screen"
