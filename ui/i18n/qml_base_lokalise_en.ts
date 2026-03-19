@@ -3521,6 +3521,11 @@
       <comment>BrowserPortraitToolbar</comment>
       <translation>Menu</translation>
     </message>
+    <message>
+      <source>Open Tabs view</source>
+      <comment>BrowserPortraitToolbar</comment>
+      <translation>Open Tabs view</translation>
+    </message>
   </context>
   <context>
     <name>BrowserPrivacyWall</name>

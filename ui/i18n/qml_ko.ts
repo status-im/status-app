@@ -2870,6 +2870,10 @@ Do you wish to override the security check and continue?</source>
         <source>Menu</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Open Tabs view</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BrowserPrivacyWall</name>
