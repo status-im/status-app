@@ -23,7 +23,6 @@ public:
     Q_INVOKABLE void openAppSettings();
     Q_INVOKABLE void downloadImageByUrl(const QUrl& url, const QString& path) const;
     Q_INVOKABLE void synthetizeRightClick(QQuickItem* item, qreal x, qreal y, Qt::KeyboardModifiers modifiers) const;
-    Q_INVOKABLE void androidMinimizeToBackground();
     Q_INVOKABLE Qt::KeyboardModifiers queryKeyboardModifiers();
     Q_INVOKABLE Qt::MouseButtons mouseButtons();
 

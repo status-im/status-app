@@ -276,16 +276,6 @@ void SystemUtilsInternal::synthetizeRightClick(QQuickItem* item, qreal x, qreal 
     QCoreApplication::postEvent(item, rightClickRelease);
 }
 
-void SystemUtilsInternal::androidMinimizeToBackground()
-{
-#ifdef Q_OS_ANDROID
-    QJniObject activity = QNativeInterface::QAndroidApplication::context();
-    if (activity.isValid()) {
-        activity.callMethod<jboolean>("moveTaskToBack", "(Z)Z", jboolean(true));
-    }
-#endif
-}
-
 Qt::KeyboardModifiers SystemUtilsInternal::queryKeyboardModifiers()
 {
     return QGuiApplication::queryKeyboardModifiers();

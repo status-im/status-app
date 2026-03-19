@@ -58,7 +58,7 @@ $(STATUS_GO_STUB_LIB): $(STATUS_GO_LIB)
 	@echo "Building status-go stub library (UI process)"
 	@mkdir -p $(LIB_PATH)
 	@$(MAKE) $(STATUS_GO_STUB_GEN)
-	@$(CXX) -shared -fPIC -O2 \
+	@$(CXX) -shared -fPIC $(CXX_OPT_FLAGS) \
 		-o $(STATUS_GO_STUB_LIB) \
 		$(STATUS_DESKTOP)/mobile/statusgo_stub/statusgo_stub.cpp \
 		$(STATUS_GO_STUB_GEN) \
@@ -68,7 +68,7 @@ $(STATUS_GO_SERVICE_LIB): $(STATUS_GO_LIB)
 	@echo "Building status-go service JNI library (service process)"
 	@mkdir -p $(LIB_PATH)
 	@$(MAKE) $(STATUS_GO_STUB_GEN)
-	@$(CXX) -shared -fPIC -O2 \
+	@$(CXX) -shared -fPIC $(CXX_OPT_FLAGS) \
 		-o $(STATUS_GO_SERVICE_LIB) \
 		$(STATUS_DESKTOP)/mobile/statusgo_service/statusgo_service_jni.cpp \
 		$(STATUS_GO_SERVICE_GEN) \

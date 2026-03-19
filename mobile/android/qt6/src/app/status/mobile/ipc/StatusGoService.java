@@ -118,8 +118,6 @@ public final class StatusGoService extends Service {
                 final String deepLink = eventWrap.optString("deepLink", "");
                 final String conversationId = eventWrap.optString("conversationId", "");
 
-                Log.d(TAG, "local-notifications received: title=" + title + " conversationId=" + conversationId);
-
                 final JSONObject identifier = new JSONObject();
                 if (deepLink != null) identifier.put("deepLink", deepLink);
                 if (conversationId != null) identifier.put("conversationId", conversationId);
@@ -182,7 +180,6 @@ public final class StatusGoService extends Service {
             } catch (Throwable ignored) {}
             foregroundStarted = false;
             stopSelf();
-            Log.i(TAG, "stopped after logout");
         } catch (Throwable t) {
             // Best-effort only.
         }
@@ -238,7 +235,6 @@ public final class StatusGoService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i(TAG, "onCreate()");
         // Do not automatically become a foreground service on creation. We only need to be
         // foreground while the user is logged in (then we survive swipe-away from Recents).
         PushNotificationHelper.initialize(this);
@@ -248,7 +244,6 @@ public final class StatusGoService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         final String action = intent != null ? intent.getAction() : null;
-        Log.i(TAG, "onStartCommand action=" + action);
         if (ACTION_STOP.equals(action)) {
             try {
                 stopForeground(true);
@@ -270,7 +265,6 @@ public final class StatusGoService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.i(TAG, "onDestroy()");
         listeners.kill();
         super.onDestroy();
     }

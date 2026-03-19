@@ -60,9 +60,16 @@ CC := $(abspath $(MAKEFILE_DIR)/$(OS)/clangWrap.sh)
 $(info Using CC=$(CC))
 CXX := $(CC)
 
+ifeq ($(DEBUG),1)
+CXX_OPT_FLAGS := -g -O0
+else
+CXX_OPT_FLAGS := -O3
+endif
+
 export COMPILER
 export CC
 export CXX
+export CXX_OPT_FLAGS
 export ARCH
 export OS
 export HOST_OS
