@@ -60,7 +60,7 @@ Rectangle {
             if (root.backgroundWithAlpha)
                 return root.letterIdenticonColor
 
-            return d.luminance(root.letterIdenticonColor) > 0.5 ? Qt.rgba(0, 0, 0, 0.5) : Qt.rgba(1, 1, 1, 0.7)
+            return ColorUtils.luminance(root.letterIdenticonColor) > 0.5 ? Qt.rgba(0, 0, 0, 0.5) : Qt.rgba(1, 1, 1, 0.7)
         }
 
         text: {
@@ -85,13 +85,5 @@ Rectangle {
         }
     }
 
-    QtObject {
-        id: d
-        function luminance(color) {
-            let r = Math.pow(color.r, 2.2) * 0.2126
-            let g = Math.pow(color.g, 2.2) * 0.7151
-            let b = Math.pow(color.b, 2.2) * 0.0721
-            return r + g + b
-        }
-    }
+
 }

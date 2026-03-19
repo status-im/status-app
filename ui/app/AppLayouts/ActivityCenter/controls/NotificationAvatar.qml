@@ -103,13 +103,6 @@ Control {
         // Dynamic size properties
         readonly property int avatarSize: Math.round(baseAvatarSize * density)
         readonly property int badgeSize:  Math.round(baseBadgeSize  * density)
-
-        function luminance(color) {
-            let r = Math.pow(color.r, 2.2) * 0.2126
-            let g = Math.pow(color.g, 2.2) * 0.7151
-            let b = Math.pow(color.b, 2.2) * 0.0721
-            return r + g + b
-        }
     }
 
     contentItem: Item {
@@ -263,7 +256,7 @@ Control {
                     return text.substring(offset, offset + root.avatarMaxTextLen)
                 }
 
-                color: d.luminance(root.avatarLetterColor) > 0.5 ?
+                color: ColorUtils.luminance(root.avatarLetterColor) > 0.5 ?
                            Qt.rgba(0, 0, 0, 0.5) :
                            Qt.rgba(1, 1, 1, 0.7)
             }

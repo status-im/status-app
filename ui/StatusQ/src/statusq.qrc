@@ -170,6 +170,7 @@
         <file>StatusQ/Core/Backpressure/LICENSE</file>
         <file>StatusQ/Core/Backpressure/README.md</file>
         <file>StatusQ/Core/Backpressure/qmldir</file>
+        <file>StatusQ/Core/ColorUtils.qml</file>
         <file>StatusQ/Core/LocaleUtils.qml</file>
         <file>StatusQ/Core/StatusAnimatedStack.qml</file>
         <file>StatusQ/Core/StatusAssetSettings.qml</file>
