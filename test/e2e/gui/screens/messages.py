@@ -470,6 +470,7 @@ class ChatMessagesView(QObject):
 
     @allure.step('Send message to group chat')
     def send_message_to_group_chat(self, message: str):
+        self._message_field.click()
         self.type_message(message)
         self.confirm_sending_message()
 

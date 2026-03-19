@@ -1,8 +1,6 @@
 import random
 import string
-import time
 
-import allure
 import pytest
 from allure_commons._allure import step
 
@@ -10,13 +8,11 @@ import configs
 import constants
 import driver
 from constants import UserAccount, RandomCommunity
-from constants.dock_buttons import DockButtons
 from gui.main_window import MainWindow
 from gui.screens.messages import MessagesScreen
 from scripts.utils.parsers import remove_tags
 
 
-@pytest.mark.case(703049, 703050, 703051)
 @pytest.mark.communities
 @pytest.mark.parametrize(
     'channel_name, channel_description, channel_emoji, channel_emoji_image, channel_color, new_channel_name, '
@@ -72,9 +68,9 @@ def test_create_edit_remove_community_channel(main_screen, channel_name, channel
         assert len(community_screen.left_panel.channels) == 0
 
 
-@pytest.mark.case(703269, 703270, 703271)
 @pytest.mark.parametrize('user_data', [configs.testpath.TEST_USER_DATA / 'member'])
 @pytest.mark.parametrize('user_account', [constants.user.community_member])
+@pytest.mark.communities
 def test_member_role_cannot_add_edit_and_delete_channels(main_screen: MainWindow):
 
     with step('Choose community user is not owner of'):
@@ -105,12 +101,11 @@ def test_member_role_cannot_add_edit_and_delete_channels(main_screen: MainWindow
                 f'Delete channel option is present when it should not'
 
 
-@pytest.mark.case(737079)
+@pytest.mark.communities
 @pytest.mark.parametrize('user_data_one, user_data_two, asset, amount, channel_description', [
-    (configs.testpath.TEST_USER_DATA / 'squisher', configs.testpath.TEST_USER_DATA / 'athletic', 'ETH', '10',
+    (configs.testpath.TEST_USER_DATA / 'community_owner', configs.testpath.TEST_USER_DATA / 'community_member', 'ETH', '10',
      'description')
 ])
-@pytest.mark.skip(reason='tests with user data are not working')
 def test_member_cannot_see_hidden_channel(multiple_instances, user_data_one, user_data_two, asset, amount,
                                           channel_description):
     user_one: UserAccount = constants.user_account_one
@@ -127,16 +122,15 @@ def test_member_cannot_see_hidden_channel(multiple_instances, user_data_one, use
                 main_screen.authorize_user(account)
 
         with step(f'User {user_two.name}, select non-restricted channel and can send message'):
-            aut_two.attach()
+            aut_one.attach()
             main_screen.prepare()
-            community_screen = main_screen.left_panel.open_community('Community with 2 users')
+            community_screen = main_screen.left_panel.open_community('My awesome community')
 
-        with step(f'User {user_two.name}, create hidden channel, verify that it is in the list'):
+        with step(f'User {user_one.name}, create hidden channel, verify that it is in the list'):
             create_channel_popup = community_screen.left_panel.open_create_channel_popup().create(channel_name,
                                                                                               channel_description,
                                                                                               emoji=None)
             permission_popup = create_channel_popup.add_permission()
-            time.sleep(3)
             permission_popup.set_who_holds_asset_and_amount(asset, amount)
             permission_popup.set_is_allowed_to('viewOnly')
             permission_popup.switch_hide_permission_checkbox(True)
@@ -146,19 +140,18 @@ def test_member_cannot_see_hidden_channel(multiple_instances, user_data_one, use
             assert driver.waitFor(lambda: channel in community_screen.left_panel.channels,
                                   configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
-        with step(f'User {user_one.name}, cannot see hidden channel in the list'):
-            aut_one.attach()
+        with step(f'User {user_two.name}, cannot see hidden channel in the list'):
+            aut_two.attach()
             main_screen.prepare()
             assert driver.waitFor(lambda: channel not in community_screen.left_panel.channels,
                                   configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
 
-@pytest.mark.case(737070, 737074)
 @pytest.mark.parametrize('user_data_one, user_data_two, channel_name, channel_description', [
-    (configs.testpath.TEST_USER_DATA / 'squisher', configs.testpath.TEST_USER_DATA / 'athletic', 'Channel_',
+    (configs.testpath.TEST_USER_DATA / 'community_owner', configs.testpath.TEST_USER_DATA / 'community_member', 'Channel_',
      'Description')
 ])
-@pytest.mark.skip(reason='tests with user data are not working')
+@pytest.mark.communities
 def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_one, user_data_two, channel_name,
                                                  channel_description):
     user_one: UserAccount = constants.user_account_one
@@ -173,34 +166,42 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
                 main_screen.wait_until_appears(configs.timeouts.APP_LOAD_TIMEOUT_MSEC).prepare()
                 main_screen.authorize_user(account)
 
-        with step(f'User {user_two.name}, select non-restricted channel and can send message'):
-            aut_two.attach()
+        with step(f'User {user_one.name}, create non-restricted channel and can send message'):
+            aut_one.attach()
             main_screen.prepare()
-            community_screen = main_screen.left_panel.open_community('Community with 2 users')
+            community_screen = main_screen.left_panel.open_community('My awesome community')
             community_screen.create_channel(channel_name, channel_description, emoji=None)
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
             message_text = "Hi"
             messages_screen.group_chat.send_message_to_group_chat(message_text)
+            main_screen.minimize()
 
         with step(
-                f'User {user_one.name}, select non-restricted channel, verify that can view other messages and also '
+                f'User {user_two.name}, select non-restricted channel, verify that can view other messages and also '
                 f'can send message'):
-            aut_one.attach()
+            aut_two.attach()
             main_screen.prepare()
-            community_screen = main_screen.left_panel.open_community('Community with 2 users')
+            community_screen = main_screen.left_panel.open_community('My awesome community')
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
             message_object = messages_screen.chat.messages(0)[0]
             assert 'Hi' in str(message_object.text), f"Message text is not found in last message"
             message_text = "Hi hi"
             messages_screen.group_chat.send_message_to_group_chat(message_text)
+            assert driver.waitFor(
+                lambda: any('Hi hi' in remove_tags(str(m.text)) for m in messages_screen.chat.messages(0)),
+                configs.timeouts.UI_LOAD_TIMEOUT_MSEC), f"User {user_two.name} message 'Hi hi' was not sent"
+            main_screen.minimize()
 
-        with step(f'User {user_two.name}, verify that can see sent by member message'):
-            aut_two.attach()
+        with step(f'User {user_one.name}, verify that can see sent by member message'):
+            aut_one.attach()
             main_screen.prepare()
-            message_object = messages_screen.chat.messages(0)[0]
-            assert driver.waitFor(lambda: 'Hi hi' in remove_tags(str(message_object.text)),
-                                  configs.timeouts.UI_LOAD_TIMEOUT_MSEC), f"Message text is not found in last message"
-
+            community_screen = main_screen.left_panel.open_community('My awesome community')
+            community_screen.left_panel.select_channel(channel_name)
+            messages_screen = MessagesScreen()
+            assert driver.waitFor(
+                lambda: any('Hi hi' in remove_tags(str(m.text)) for m in messages_screen.chat.messages(0)),
+                configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000), f"Message text is not found in last message"
+        with step('Delete channel'):
             community_screen.delete_channel(channel_name)
