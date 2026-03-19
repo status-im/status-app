@@ -1868,11 +1868,7 @@ Item {
                     Loader {
                         id: browserLayoutContainer
 
-                        Binding on active {
-                            when: appView.currentIndex === Constants.appViewStackIndex.browser
-                            value: d.isBrowserEnabled && !localAppSettings.testEnvironment
-                            restoreMode: Binding.RestoreNone
-                        }
+                        active: d.isBrowserEnabled && appView.currentIndex === Constants.appViewStackIndex.browser
 
                         sourceComponent: appMain.rootStore.thirdpartyServicesEnabled ? browserLayout: browserPrivacyWall
 
