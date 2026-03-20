@@ -184,7 +184,7 @@ StatusSectionLayout {
         }
     }
 
-    invertedLayout: height > width && width <= 600
+    invertedLayout: height > width
     showFooter: false
     headerPadding: 0
     backgroundColor: Theme.palette.statusAppNavBar.backgroundColor
