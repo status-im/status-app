@@ -16,9 +16,6 @@ method onAppLoaded*(self: AccessInterface, keyUid: string) {.base.} =
 method onMainLoaded*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onMainFailedToLoad*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method onNodeLogin*(self: AccessInterface, error: string, account: AccountDto, settings: SettingsDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 

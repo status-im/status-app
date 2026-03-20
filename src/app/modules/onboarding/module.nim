@@ -98,9 +98,6 @@ method onMainLoaded*[T](self: Module[T]) =
   if self.resumeLogin:
     self.delegate.onboardingDidLoad()
 
-method onMainFailedToLoad*[T](self: Module[T]) =
-  self.view.accountLoginError("Failed to load main module, please restart the app and try again.", wrongPassword = false)
-
 method load*[T](self: Module[T]) =
   singletonInstance.engine.setRootContextProperty("onboardingModule", self.viewVariant)
   self.controller.init()

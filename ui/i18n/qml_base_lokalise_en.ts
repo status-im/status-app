@@ -2573,6 +2573,16 @@
       <translation>Retrying connection to CryptoCompare and CoinGecko...</translation>
     </message>
     <message>
+      <source>Loading sections...</source>
+      <comment>AppMain</comment>
+      <translation>Loading sections...</translation>
+    </message>
+    <message>
+      <source>Error loading chats, try closing the app and restarting</source>
+      <comment>AppMain</comment>
+      <translation>Error loading chats, try closing the app and restarting</translation>
+    </message>
+    <message>
       <source>%1 was removed from your trusted sites.</source>
       <comment>AppMain</comment>
       <translation>%1 was removed from your trusted sites.</translation>
