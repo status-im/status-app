@@ -180,7 +180,7 @@ QtObject {
 
     readonly property var webViewAdapterComponent: Component {
         WebViewAdapter {
-            visible: !root.hasPopups || !root.isMobile
+            visible: !root.isMobile || !root.hasPopups
             enabled: visible
 
             bookmarksStore: root.bookmarksStore
