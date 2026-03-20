@@ -69,6 +69,8 @@ Control {
             placeholderText: qsTr("Search or enter address")
             font.pixelSize: Theme.additionalTextSize
             color: root.incognitoMode ? Theme.palette.privacyColors.tertiary : Theme.palette.textColor
+            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+            EnterKey.type: Qt.EnterKeyGo
             onActiveFocusChanged: {
                 if (activeFocus) {
                     selectAll()
