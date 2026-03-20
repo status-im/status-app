@@ -13,17 +13,27 @@ from configs.system import get_platform
 from fixtures.path import generate_test_info
 from scripts.utils.system_path import SystemPath
 
-# Send logs to pytest.log as well
-# Ensure log directory exists
+# Root logging: pytest.ini uses -p no:logging, so we configure file + stderr here.
+_log_level_name = os.getenv('LOG_LEVEL', 'INFO').upper()
+_log_level = getattr(logging, _log_level_name, logging.INFO)
+
 log_dir = os.path.dirname(configs.PYTEST_LOG)
 os.makedirs(log_dir, exist_ok=True)
-handler = logging.FileHandler(filename=configs.PYTEST_LOG)
+_log_fmt = logging.Formatter(
+    '[%(asctime)s] (%(filename)18s:%(lineno)-3s) [%(levelname)-7s] %(name)s --- %(message)s'
+)
+_file_handler = logging.FileHandler(filename=configs.PYTEST_LOG, encoding='utf-8')
+_file_handler.setFormatter(_log_fmt)
+_stream_handler = logging.StreamHandler(sys.stderr)
+_stream_handler.setFormatter(_log_fmt)
+
 logging.basicConfig(
-    level=os.getenv('LOG_LEVEL', 'INFO'),
-    format='[%(asctime)s] (%(filename)18s:%(lineno)-3s) [%(levelname)-7s] --- %(message)s',
-    handlers=[handler],
+    level=_log_level,
+    handlers=[_file_handler, _stream_handler],
+    force=True,
 )
 LOG = logging.getLogger(__name__)
+LOG.info('Logging to stderr and %s (level=%s)', configs.PYTEST_LOG, _log_level_name)
 
 pytest_plugins = [
     'fixtures.aut',
