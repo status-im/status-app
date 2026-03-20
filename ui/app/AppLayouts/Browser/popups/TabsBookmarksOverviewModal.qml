@@ -118,6 +118,8 @@ StatusDialog {
             placeholderText: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs ? qsTr("Search in open tabs")
                                                                                                   : qsTr("Search in bookmarks")
             font.pixelSize: Theme.fontSize(13)
+            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+            EnterKey.type: Qt.EnterKeySearch
 
             StatusIcon {
                 id: searchIcon
