@@ -2,16 +2,22 @@
   "status-desktop.test": {
     "clusterId": 16,
     "wakuNodes": [
-      "enr:-La4QPTs3q_umVW06q5r1a3pmnG0ahbvDJCyccAqwQxBSvbGcQAlsWokcsqWyfPABqowZHvJ1YIzVcLy1GZ1T0bQ3wgBgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc40ACzYGYm9vdC0xBuphgnJzhwAQAgAgAECJc2VjcDI1NmsxoQOGH0cGbQrDKGJKZUReERKxvaIcSk_pZ3lILaIL90iZAoN0Y3CC6mGDdWRwgiMohXdha3UyDQ"
+      "enr:-K-4QCaLys0F9CWHiXr9igN3oYGf3iWW-S444Xt49rCTpyiQQwMyfjCX52UeXPVG8vPGSSkP0mISMw-an-0HMhlZ-C4BgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4CCcnONABAFAAEAIABAAIABAIlzZWNwMjU2azGhA4YfRwZtCsMoYkplRF4RErG9ohxKT-lneUgtogv3SJkCg3RjcILqYYN1ZHCCv2iFd2FrdTIN"
     ],
     "discV5BootstrapNodes": [
-      "enr:-La4QPTs3q_umVW06q5r1a3pmnG0ahbvDJCyccAqwQxBSvbGcQAlsWokcsqWyfPABqowZHvJ1YIzVcLy1GZ1T0bQ3wgBgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc40ACzYGYm9vdC0xBuphgnJzhwAQAgAgAECJc2VjcDI1NmsxoQOGH0cGbQrDKGJKZUReERKxvaIcSk_pZ3lILaIL90iZAoN0Y3CC6mGDdWRwgiMohXdha3UyDQ"
+      "enr:-K-4QCaLys0F9CWHiXr9igN3oYGf3iWW-S444Xt49rCTpyiQQwMyfjCX52UeXPVG8vPGSSkP0mISMw-an-0HMhlZ-C4BgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4CCcnONABAFAAEAIABAAIABAIlzZWNwMjU2azGhA4YfRwZtCsMoYkplRF4RErG9ohxKT-lneUgtogv3SJkCg3RjcILqYYN1ZHCCv2iFd2FrdTIN"
     ],
     "storeNodes": [
       {
         "id": "store-1",
-        "enr": "enr:-LW4QP-PB5tg4cTQB2FvYFhPu3yG9jilownIJmz5w8DvMZZOWBWWLHv3jCr88xUjLxr_Cei3-YzsmKhkQJBexiuRSpEBgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4wACjYFc3RvcmUG6mKCcnOHABACACAAQIlzZWNwMjU2azGhAo3JozGxzJ2AeSAtgU0YzmxURKi6sveikwnF2cvZAhY1g3RjcILqYoN1ZHCCIyiFd2FrdTID",
+        "enr": "enr:-K-4QI3LQZZaLyS6kA5lvmIcroksqNBZ1fRozAT9t_3yBVT6Vu5VHeNKa9u4eST4yGJ7M8K7Py53ZH7Zb6S6g2WbFrUBgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4CCcnONABAFAAEAIABAAIABAIlzZWNwMjU2azGhAo3JozGxzJ2AeSAtgU0YzmxURKi6sveikwnF2cvZAhY1g3RjcILqYoN1ZHCCv2mFd2FrdTID",
         "addr": "/ip4/127.0.0.1/tcp/60002/p2p/16Uiu2HAm4y9o3GARfphq8jN1wsVhezCHPMmRuekHCCKJ1EsgzVBi",
+        "fleet": "status-desktop.test"
+      },
+      {
+        "id": "store-2",
+        "enr": "enr:-K-4QP3hbp7CDP7Gn6NuVAtrrYRdqIiq-vX-Ofp-DY3UiRehM1kY2irkHLCfrTMQAwU8imS2A1SSPDV6pIvDrnRsJFABgmlkgnY0gmlwhH8AAAGKbXVsdGlhZGRyc4CCcnONABAFAAEAIABAAIABAIlzZWNwMjU2azGhAl0GSz7dmpanBV_zsW3Jwlp4CAf7-Vh2SMU4-NZt23Cpg3RjcILqY4N1ZHCCv2qFd2FrdTID",
+        "addr": "/ip4/127.0.0.1/tcp/60003/p2p/16Uiu2HAm1goTmM1zjARKFw82u71Zxhj5gvQDXPFEPW9xea4Zt6dv",
         "fleet": "status-desktop.test"
       }
     ]
