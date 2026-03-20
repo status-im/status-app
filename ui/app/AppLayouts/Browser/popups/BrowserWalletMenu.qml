@@ -36,7 +36,7 @@ Dialog {
 
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     parent: Overlay.overlay
-    width: 720
+    implicitWidth: 720
     height: 480
     background: Rectangle {
         id: bgPopup

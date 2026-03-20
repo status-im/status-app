@@ -527,9 +527,9 @@ StatusSectionLayout {
     Component  {
         id: browserWalletMenu
         BrowserWalletMenu {
-            parent: browserToolbarLoader
-            x: browserToolbarLoader.width - width - Theme.halfPadding
-            y: browserToolbarLoader.height + 4
+            parent: root.invertedLayout ? mobileAddressBar : browserToolbarLoader
+            x: parent.width - width - Theme.halfPadding
+            y: parent.height + 4
 
             incognitoMode: _internal.currentTabIncognito
             accounts: root.browserWalletStore.accounts
