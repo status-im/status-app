@@ -49,10 +49,10 @@ NotificationAdaptorMessenger {
     actionText: {
         if(root.isOutgoingMessage) {
             if(d.accepted)
-                return qsTr("<font color='%1'>Accepted your contact request</font>").arg(Theme.palette.successColor1)
+                return "<font color='%1'>".arg(Theme.palette.successColor1) + qsTr("Accepted your contact request") + "</font>"
 
             if(d.declined)
-                return qsTr("<font color='%1'>Declined your contact request</font>").arg(Theme.palette.dangerColor1)
+                return "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Declined your contact request") + "</font>"
 
             if(d.pending)
                 return qsTr("You’ve sent request to contact")
@@ -60,10 +60,10 @@ NotificationAdaptorMessenger {
         }
         else {
             if(d.accepted)
-                return qsTr("<font color='%1'>Contact request accepted</font>").arg(Theme.palette.successColor1)
+                return "<font color='%1'>".arg(Theme.palette.successColor1) + qsTr("Contact request accepted") + "</font>"
 
             if(d.declined)
-                return qsTr("<font color='%1'>Contact request declined</font>").arg(Theme.palette.dangerColor1)
+                return "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Contact request declined") + "</font>"
 
             if(d.pending) {
                 return qsTr("New contact request")

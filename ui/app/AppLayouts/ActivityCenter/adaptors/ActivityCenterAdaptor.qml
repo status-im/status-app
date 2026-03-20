@@ -586,10 +586,11 @@ QtObject {
 
                         content: {
                             if(notification.accepted)
-                                return qsTr("<font color='%1'>Accepted</font>").arg(Theme.palette.successColor1)
+                                return "<font color='%1'>".arg(Theme.palette.successColor1) + qsTr("Accepted") + "</font>"
 
                             if(notification.dismissed)
-                                return qsTr("<font color='%1'>Declined</font>").arg(Theme.palette.dangerColor1)
+                                return "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Decline") + "</font>"
+
                             return ""
                         }
 
@@ -683,10 +684,10 @@ QtObject {
                         // Content options
                         content: {
                             if(accepted)
-                                return qsTr("<font color='%1'>Accepted</font>").arg(Theme.palette.successColor1)
+                                return "<font color='%1'>".arg(Theme.palette.successColor1) + qsTr("Accepted") + "</font>"
 
                             if(dismissed)
-                                return qsTr("<font color='%1'>Declined</font>").arg(Theme.palette.dangerColor1)
+                                return "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Decline") + "</font>"
 
                             if(pending)
                                 return qsTr("In progress")
@@ -809,7 +810,7 @@ QtObject {
                         actionText: qsTr("Ownership transfer")
 
                         // Content related
-                        content: qsTr("<font color='%1'>You are now the owner of the community</font>").arg(String(Theme.palette.successColor1))
+                        content: "<font color='%1'>".arg(Theme.palette.successColor1) + qsTr("You are now the owner of the community") + "</font>"
                     }
                 }
 
@@ -828,7 +829,7 @@ QtObject {
                         actionText: qsTr("Ownership transfer")
 
                         // Content related
-                        content: qsTr("<font color='%1'>You no longer control the community</font>").arg(String(Theme.palette.dangerColor1))
+                        content: "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("You no longer control the community") + "</font>"
                     }
                 }
 
@@ -847,7 +848,7 @@ QtObject {
                         actionText: qsTr("Ownership transfer")
 
                         // Content related
-                        content: qsTr("<font color='%1'>Failed</font>").arg(String(Theme.palette.dangerColor1))
+                        content: "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Failed") + "</font>"
                     }
                 }
 
@@ -866,7 +867,7 @@ QtObject {
                         actionText: qsTr("Ownership transfer")
 
                         // Content related
-                        content: qsTr("<font color='%1'>Declined</font>").arg(String(Theme.palette.dangerColor1))
+                        content: "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Declined") + "</font>"
                     }
                 }
 

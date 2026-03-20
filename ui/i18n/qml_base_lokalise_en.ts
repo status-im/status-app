@@ -314,16 +314,6 @@
       <translation>You’re added to private group chat</translation>
     </message>
     <message>
-      <source>&lt;font color=&#39;%1&#39;&gt;Accepted&lt;/font&gt;</source>
-      <comment>ActivityCenterAdaptor</comment>
-      <translation>&lt;font color=&#39;%1&#39;&gt;Accepted&lt;/font&gt;</translation>
-    </message>
-    <message>
-      <source>&lt;font color=&#39;%1&#39;&gt;Declined&lt;/font&gt;</source>
-      <comment>ActivityCenterAdaptor</comment>
-      <translation>&lt;font color=&#39;%1&#39;&gt;Declined&lt;/font&gt;</translation>
-    </message>
-    <message>
       <source>Invitation to join community</source>
       <comment>ActivityCenterAdaptor</comment>
       <translation>Invitation to join community</translation>
@@ -389,21 +379,6 @@
       <translation>Ownership transfer</translation>
     </message>
     <message>
-      <source>&lt;font color=&#39;%1&#39;&gt;You are now the owner of the community&lt;/font&gt;</source>
-      <comment>ActivityCenterAdaptor</comment>
-      <translation>&lt;font color=&#39;%1&#39;&gt;You are now the owner of the community&lt;/font&gt;</translation>
-    </message>
-    <message>
-      <source>&lt;font color=&#39;%1&#39;&gt;You no longer control the community&lt;/font&gt;</source>
-      <comment>ActivityCenterAdaptor</comment>
-      <translation>&lt;font color=&#39;%1&#39;&gt;You no longer control the community&lt;/font&gt;</translation>
-    </message>
-    <message>
-      <source>&lt;font color=&#39;%1&#39;&gt;Failed&lt;/font&gt;</source>
-      <comment>ActivityCenterAdaptor</comment>
-      <translation>&lt;font color=&#39;%1&#39;&gt;Failed&lt;/font&gt;</translation>
-    </message>
-    <message>
       <source>To continue to be a member of community, you need to share your accounts</source>
       <comment>ActivityCenterAdaptor</comment>
       <translation>To continue to be a member of community, you need to share your accounts</translation>
@@ -432,6 +407,36 @@
       <source>Check your other device for a pairing request.</source>
       <comment>ActivityCenterAdaptor</comment>
       <translation>Check your other device for a pairing request.</translation>
+    </message>
+    <message>
+      <source>Accepted</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Accepted</translation>
+    </message>
+    <message>
+      <source>Decline</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Decline</translation>
+    </message>
+    <message>
+      <source>You are now the owner of the community</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>You are now the owner of the community</translation>
+    </message>
+    <message>
+      <source>You no longer control the community</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>You no longer control the community</translation>
+    </message>
+    <message>
+      <source>Failed</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Failed</translation>
+    </message>
+    <message>
+      <source>Declined</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Declined</translation>
     </message>
   </context>
   <context>
@@ -15390,29 +15395,29 @@
       <translation>New contact request</translation>
     </message>
     <message>
-      <source>&lt;font color=&#39;%1&#39;&gt;Accepted your contact request&lt;/font&gt;</source>
-      <comment>NotificationAdaptorContactRequest</comment>
-      <translation>&lt;font color=&#39;%1&#39;&gt;Accepted your contact request&lt;/font&gt;</translation>
-    </message>
-    <message>
-      <source>&lt;font color=&#39;%1&#39;&gt;Declined your contact request&lt;/font&gt;</source>
-      <comment>NotificationAdaptorContactRequest</comment>
-      <translation>&lt;font color=&#39;%1&#39;&gt;Declined your contact request&lt;/font&gt;</translation>
-    </message>
-    <message>
       <source>You’ve sent request to contact</source>
       <comment>NotificationAdaptorContactRequest</comment>
       <translation>You’ve sent request to contact</translation>
     </message>
     <message>
-      <source>&lt;font color=&#39;%1&#39;&gt;Contact request accepted&lt;/font&gt;</source>
+      <source>Accepted your contact request</source>
       <comment>NotificationAdaptorContactRequest</comment>
-      <translation>&lt;font color=&#39;%1&#39;&gt;Contact request accepted&lt;/font&gt;</translation>
+      <translation>Accepted your contact request</translation>
     </message>
     <message>
-      <source>&lt;font color=&#39;%1&#39;&gt;Contact request declined&lt;/font&gt;</source>
+      <source>Declined your contact request</source>
       <comment>NotificationAdaptorContactRequest</comment>
-      <translation>&lt;font color=&#39;%1&#39;&gt;Contact request declined&lt;/font&gt;</translation>
+      <translation>Declined your contact request</translation>
+    </message>
+    <message>
+      <source>Contact request accepted</source>
+      <comment>NotificationAdaptorContactRequest</comment>
+      <translation>Contact request accepted</translation>
+    </message>
+    <message>
+      <source>Contact request declined</source>
+      <comment>NotificationAdaptorContactRequest</comment>
+      <translation>Contact request declined</translation>
     </message>
   </context>
   <context>

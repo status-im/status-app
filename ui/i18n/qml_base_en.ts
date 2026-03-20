@@ -257,14 +257,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;Accepted&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;Declined&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Invitation to join community</source>
         <translation type="unfinished"></translation>
     </message>
@@ -317,18 +309,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;You are now the owner of the community&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;You no longer control the community&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;Failed&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>To continue to be a member of community, you need to share your accounts</source>
         <translation type="unfinished"></translation>
     </message>
@@ -350,6 +330,30 @@
     </message>
     <message>
         <source>Check your other device for a pairing request.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accepted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Decline</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are now the owner of the community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You no longer control the community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Declined</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -12636,23 +12640,23 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;Accepted your contact request&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;Declined your contact request&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>You’ve sent request to contact</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;Contact request accepted&lt;/font&gt;</source>
+        <source>Accepted your contact request</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;Contact request declined&lt;/font&gt;</source>
+        <source>Declined your contact request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Contact request accepted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Contact request declined</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
