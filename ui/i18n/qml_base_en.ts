@@ -12300,7 +12300,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable mobile push notifications in the app</source>
+        <source>Enable mobile push notifications</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

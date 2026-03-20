@@ -14987,9 +14987,9 @@
       <translation>&lt;font color=&#39;%1&#39;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</translation>
     </message>
     <message>
-      <source>Enable mobile push notifications in the app</source>
+      <source>Enable mobile push notifications</source>
       <comment>NotificationsView</comment>
-      <translation>Enable mobile push notifications in the app</translation>
+      <translation>Enable mobile push notifications</translation>
     </message>
   </context>
   <context>

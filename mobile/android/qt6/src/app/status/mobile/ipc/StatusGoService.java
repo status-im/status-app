@@ -176,7 +176,17 @@ public final class StatusGoService extends Service {
         @Override
         public void registerSignalListener(IStatusGoSignalListener listener) {
             enforceCallerIsSameApp();
-            if (listener != null) listeners.register(listener);
+            if (listener == null) return;
+            listeners.register(listener);
+            // Reset uiVisible if the UI process dies unexpectedly (crash, OOM, force-stop).
+            // RemoteCallbackList.unregister() calls unlinkToDeath internally, so clean
+            // unregistration does not trigger this callback.
+            try {
+                listener.asBinder().linkToDeath(
+                        () -> notificationManager.setUiVisible(false), 0);
+            } catch (RemoteException ignored) {
+                // Binder already dead — notification suppression is not a concern.
+            }
         }
 
         @Override

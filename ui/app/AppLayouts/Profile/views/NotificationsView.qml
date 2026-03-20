@@ -226,7 +226,7 @@ SettingsContentBase {
         StatusListItem {
             Layout.preferredWidth: root.contentWidth
             title: SQUtils.Utils.isMobile
-                   ? qsTr("Enable mobile push notifications in the app")
+                   ? qsTr("Enable mobile push notifications")
                    : qsTr("Allow Notification Bubbles")
             components: [
                 StatusSwitch {

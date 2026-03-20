@@ -72,7 +72,7 @@ public final class NotificationIconHelper {
                 ? initials.substring(0, 2).toUpperCase()
                 : initials.substring(0, 1).toUpperCase();
 
-        int hash = Math.abs(name.hashCode());
+        int hash = name.hashCode() & 0x7fffffff;
         float hue = (hash % 360) / 360f;
         float[] hsv = {hue * 360f, 0.5f, 0.85f};
         int bgColor = Color.HSVToColor(hsv);

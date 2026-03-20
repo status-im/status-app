@@ -98,12 +98,28 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 String argsJson = args.toString();
 
                 String result = StatusGoService.callRpc("CallPrivateRPC", argsJson);
-                boolean failed = result != null && result.contains("\"error\"");
+                boolean failed = false;
+                String errorMsg = null;
+                if (result != null) {
+                    try {
+                        JSONObject resp = new JSONObject(result);
+                        if (resp.has("error") && !resp.isNull("error")) {
+                            Object err = resp.get("error");
+                            failed = true;
+                            errorMsg = err instanceof JSONObject
+                                    ? ((JSONObject) err).optString("message", "rpc error")
+                                    : err.toString();
+                        }
+                    } catch (Exception ignored) {
+                        failed = true;
+                        errorMsg = "unparseable response";
+                    }
+                }
 
                 StatusNotificationManager mgr = StatusNotificationManager.getInstance();
 
                 if (failed) {
-                    Log.w(TAG, "sendChatMessage failed: " + result);
+                    Log.w(TAG, "sendChatMessage failed: " + errorMsg);
                     if (mgr != null) mgr.clearConversation(conversationId);
                     StatusNotificationManager.showReplyFailed(appContext);
                     if (androidNotificationId != 0) {
@@ -158,7 +174,23 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 String argsJson = args.toString();
 
                 String result = StatusGoService.callRpc("CallPrivateRPC", argsJson);
-                boolean failed = result != null && result.contains("\"error\"");
+                boolean failed = false;
+                String errorMsg = null;
+                if (result != null) {
+                    try {
+                        JSONObject resp = new JSONObject(result);
+                        if (resp.has("error") && !resp.isNull("error")) {
+                            Object err = resp.get("error");
+                            failed = true;
+                            errorMsg = err instanceof JSONObject
+                                    ? ((JSONObject) err).optString("message", "rpc error")
+                                    : err.toString();
+                        }
+                    } catch (Exception ignored) {
+                        failed = true;
+                        errorMsg = "unparseable response";
+                    }
+                }
 
                 StatusNotificationManager mgr = StatusNotificationManager.getInstance();
                 if (mgr != null) mgr.clearConversation(conversationId);
@@ -166,7 +198,7 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                     NotificationManagerCompat.from(appContext).cancel(androidNotificationId);
                 }
                 if (failed) {
-                    Log.w(TAG, method + " failed: " + result);
+                    Log.w(TAG, method + " failed: " + errorMsg);
                 }
             } catch (Exception e) {
                 Log.w(TAG, "failed to " + (isAccept ? "accept" : "reject") + " contact request", e);

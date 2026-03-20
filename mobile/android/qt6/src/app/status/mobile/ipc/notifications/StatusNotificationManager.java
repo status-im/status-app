@@ -146,9 +146,10 @@ public final class StatusNotificationManager {
         String largeIconUri = NotificationIconHelper.pickLargeIconUri(
                 category, communityIcon, chatIcon, senderIcon);
 
-        // 1-1 chats have neither a community icon nor a chat/group icon.
-        // This determines whether the sender's avatar is used for the conversation shortcut.
-        final boolean isOneToOne = communityIcon.isEmpty() && chatIcon.isEmpty();
+        // Mirrors status-go local_notifications.Notification.IsGroupConversation (not inferrable
+        // from icons: group/community chats may have no custom avatar).
+        final boolean isGroupConversation = eventWrap.optBoolean("isGroupConversation", false);
+        final boolean isOneToOne = !isGroupConversation;
 
         showNotification(
                 context,
@@ -188,7 +189,7 @@ public final class StatusNotificationManager {
                 String idBase = (notificationId != null ? notificationId
                         : (conversationId != null ? conversationId : title + message))
                         + "_" + timestamp;
-                notifIdInt = Math.abs(idBase.hashCode());
+                notifIdInt = idBase.hashCode() & 0x7fffffff;
                 final boolean hasContactIcon = largeIconUri != null && !largeIconUri.isEmpty();
                 Bitmap largeIcon = hasContactIcon
                         ? NotificationIconHelper.parseToBitmap(largeIconUri)
@@ -200,7 +201,7 @@ public final class StatusNotificationManager {
                         largeIcon, conversationId, contactRequestId);
                 return;
             } else if (isMessage) {
-                notifIdInt = Math.abs(conversationId.hashCode());
+                notifIdInt = conversationId.hashCode() & 0x7fffffff;
                 // Rebuild message history from the currently active notification.
                 List<NotificationBuilder.MessageEntry> messages =
                         getConversationMessagesFromActiveNotification(context, notifIdInt);
@@ -240,7 +241,7 @@ public final class StatusNotificationManager {
                 String idBase = (notificationId != null ? notificationId
                         : (conversationId != null ? conversationId : title + message))
                         + "_" + timestamp;
-                notifIdInt = Math.abs(idBase.hashCode());
+                notifIdInt = idBase.hashCode() & 0x7fffffff;
                 final boolean hasSimpleIcon = largeIconUri != null && !largeIconUri.isEmpty();
                 Bitmap largeIcon = hasSimpleIcon
                         ? NotificationIconHelper.parseToBitmap(largeIconUri)
@@ -261,7 +262,7 @@ public final class StatusNotificationManager {
         if (conversationId == null || conversationId.isEmpty()) return;
         Context context = contextRef.get();
         if (context == null) return;
-        NotificationManagerCompat.from(context).cancel(Math.abs(conversationId.hashCode()));
+        NotificationManagerCompat.from(context).cancel(conversationId.hashCode() & 0x7fffffff);
     }
 
     /**

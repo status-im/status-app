@@ -1,4 +1,4 @@
-# ADR-0003: Android Waku-Driven Local Notifications
+# ADR-0002: Android Waku-Driven Local Notifications
 
 ## Status
 - **Proposed**
@@ -101,7 +101,7 @@ Message notifications use `NotificationCompat.MessagingStyle` rather than plain 
 - Supports inline reply via `RemoteInput` without opening the app.
 - Enables Android conversation shortcuts and bubbles (API 30+) via `ShortcutInfoCompat`.
 
-`MessageBufferManager` maintains a per-conversation `LinkedList<MessageEntry>` (capped at 5 messages) that survives multiple incoming notifications. Access to each list is `synchronized` on the list instance; `getMessages()` returns a snapshot `ArrayList` to prevent `ConcurrentModificationException` during iteration.
+No in-process conversation buffer is maintained. Instead, conversation state is stored directly in the OS notification itself: when a new message arrives for an active conversation, `StatusNotificationManager` extracts the existing `MessagingStyle` from the active `StatusBarNotification` via `NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification()`, appends the new message with its sender `Person` (including icon), and re-posts the updated notification. This preserves all historical `Person` icons without any in-process caching and automatically ties the conversation thread lifetime to the notification's lifetime — swiping the notification away discards the thread state.
 
 ---
 
@@ -202,7 +202,7 @@ Rejected. Duplicates logic, is harder to test in isolation, and creates a diverg
 - **Light mode for status-go:** Whenever the app is either killed or in background status-go should stop all the background work except for waku. Resume will re-enable the services
 - **Proper sign out:**  Shut down the android service whenever the user will manually sign out and quit
 - **Speed-up the app loading:** The app loading time is quite high when restoring the logged-in state
-- **Keep status-go in-process when push notifications are disabled** Status-go could potentially be keps in-process whenever the push notifications are not enabled.
+- **Keep status-go in-process when push notifications are disabled** Status-go could potentially be kept in-process whenever the push notifications are not enabled.
 ---
 
 ## References (code)

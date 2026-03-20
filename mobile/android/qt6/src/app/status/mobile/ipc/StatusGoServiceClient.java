@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import app.status.mobile.StatusGoStub;
@@ -209,35 +210,43 @@ public final class StatusGoServiceClient {
         }
     }
 
-    /** Best-effort hint for whether UI is currently in foreground. */
+    /**
+     * Best-effort hint for whether UI is currently in foreground.
+     * Dispatched to a background thread so the caller (including the UI thread) is never
+     * blocked by the service-connection latch or the Binder call.
+     */
     public void setUiVisible(Context context, boolean visible) {
         final Context app = context.getApplicationContext();
         ensureStartedAndBound(app);
-        IStatusGoService s;
-        CountDownLatch latch;
-        synchronized (lock) {
-            s = service;
-            latch = connectedLatch;
-        }
-        if (s == null && latch != null) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            IStatusGoService s;
+            CountDownLatch latch;
+            synchronized (lock) {
+                s = service;
+                latch = connectedLatch;
+            }
+            if (s == null && latch != null) {
+                try {
+                    latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            synchronized (lock) {
+                s = service;
+            }
+            if (s == null) return;
             try {
-                latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ignored) {
+                s.setUiVisible(visible);
+            } catch (RemoteException e) {
+                Log.w(TAG, "setUiVisible failed", e);
+                if (e instanceof android.os.DeadObjectException) {
+                    resetConnection(app);
+                    ensureStartedAndBound(app);
+                }
             }
-        }
-        synchronized (lock) {
-            s = service;
-        }
-        if (s == null) return;
-        try {
-            s.setUiVisible(visible);
-        } catch (RemoteException e) {
-            Log.w(TAG, "setUiVisible failed", e);
-            if (e instanceof android.os.DeadObjectException) {
-                resetConnection(app);
-                ensureStartedAndBound(app);
-            }
-        }
+        });
     }
 }
 
