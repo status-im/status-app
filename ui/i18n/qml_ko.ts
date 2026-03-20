@@ -2383,6 +2383,13 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
     </message>
 </context>
 <context>
+    <name>BrowserAddressField</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserConnectionModal</name>
     <message>
         <source>&apos;%1&apos; would like to connect to</source>
@@ -2411,10 +2418,6 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
 </context>
 <context>
     <name>BrowserLandscapeToolbar</name>
-    <message>
-        <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Back</source>
         <translation type="unfinished">뒤로</translation>
@@ -11524,10 +11527,6 @@ to load</source>
 </context>
 <context>
     <name>MobileAddressBar</name>
-    <message>
-        <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Stop</source>
         <translation type="unfinished"></translation>

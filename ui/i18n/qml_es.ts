@@ -2391,6 +2391,13 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
     </message>
 </context>
 <context>
+    <name>BrowserAddressField</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserConnectionModal</name>
     <message>
         <source>&apos;%1&apos; would like to connect to</source>
@@ -2419,10 +2426,6 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
 </context>
 <context>
     <name>BrowserLandscapeToolbar</name>
-    <message>
-        <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Back</source>
         <translation type="unfinished">Atrás</translation>
@@ -11559,10 +11562,6 @@ al cargar</translation>
 </context>
 <context>
     <name>MobileAddressBar</name>
-    <message>
-        <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Stop</source>
         <translation type="unfinished"></translation>

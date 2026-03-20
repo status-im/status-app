@@ -113,6 +113,11 @@ QtObject {
         return engine ? engine.description : ""
     }
 
+    function getEngineIcon(engineId = "") {
+        const engine = getEngineByIdOrDefault(engineId)
+        return engine ? engine.iconUrl : ""
+    }
+
     function formatSearchUrl(engineId, query, customUrl) {
         const engine = getEngineByIdOrDefault(engineId)
         if (!engine) {

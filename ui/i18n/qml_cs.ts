@@ -2398,6 +2398,13 @@ Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezp
     </message>
 </context>
 <context>
+    <name>BrowserAddressField</name>
+    <message>
+        <source>Search or enter address</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserConnectionModal</name>
     <message>
         <source>&apos;%1&apos; would like to connect to</source>
@@ -2426,10 +2433,6 @@ Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezp
 </context>
 <context>
     <name>BrowserLandscapeToolbar</name>
-    <message>
-        <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Back</source>
         <translation type="unfinished">Zpět</translation>
@@ -11635,10 +11638,6 @@ selhalo</translation>
 </context>
 <context>
     <name>MobileAddressBar</name>
-    <message>
-        <source>Search or enter address</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Stop</source>
         <translation type="unfinished"></translation>

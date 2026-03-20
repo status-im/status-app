@@ -23,7 +23,7 @@ StatusGridView {
         readonly property bool isAddBookmarkButton: model.url === Constants.newBookmark
 
         text: model.name
-        source: model.imageUrl
+        source: model.imageUrl || ""
         webUrl: root.determineRealURLFn(model.url)
         onClicked: function(mouse) {
             if (isAddBookmarkButton) {

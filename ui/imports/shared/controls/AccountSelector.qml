@@ -127,7 +127,7 @@ StatusComboBox {
                    !!currentAccount && currentAccount.name === model.name ? Theme.palette.statusListItem.highlightColor : "transparent"
         onClicked: {
             d.currentAccountSelection = model.address
-            control.popup.close()
+            root.control.popup.close()
         }
     }
 

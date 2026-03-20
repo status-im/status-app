@@ -19,7 +19,7 @@ Control {
     required property bool incognitoMode
     required property var browserDappsModel
     required property url url
-    property string faviconImage
+    property url faviconUrl
 
     signal requestStopLoadingPage()
     signal requestReloadPage()
@@ -50,62 +50,21 @@ Control {
     contentItem: RowLayout {
         spacing: 4
 
-        StatusTextField {
+        BrowserAddressField {
             id: addressBar
-
-            Layout.preferredHeight: 36
             Layout.fillWidth: true
 
-            background: Rectangle {
-                color: {
-                    if (root.incognitoMode)
-                        return addressBar.cursorVisible ? Theme.palette.privacyColors.primary : Theme.palette.privacyColors.secondary
-                    return addressBar.cursorVisible ? Theme.palette.baseColor2 : Theme.palette.background
-                }
-                radius: 40
+            url: root.url
+            incognitoMode: root.incognitoMode
+            faviconUrl: root.faviconUrl
+            showFavicon: true
+            loading: root.currentTabLoading
+            bgColor: {
+                if (incognitoMode)
+                    return addressBar.cursorVisible ? Theme.palette.privacyColors.primary : Theme.palette.privacyColors.secondary
+                return addressBar.cursorVisible ? Theme.palette.baseColor2 : Theme.palette.background
             }
-            leftPadding: Theme.halfPadding + favicon.width + favicon.anchors.leftMargin
-            rightPadding: Theme.halfPadding + clearButton.width
-            placeholderText: qsTr("Search or enter address")
-            font.pixelSize: Theme.additionalTextSize
-            color: root.incognitoMode ? Theme.palette.privacyColors.tertiary : Theme.palette.textColor
-            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
-            EnterKey.type: Qt.EnterKeyGo
-            onActiveFocusChanged: {
-                if (activeFocus) {
-                    selectAll()
-                } else {
-                    if (text === "") // restore the old URL
-                        text = Qt.binding(() => root.url)
-                }
-            }
-
             onAccepted: root.requestLaunchInBrowser(text)
-            text: root.url
-
-            StatusRoundedImage {
-                id: favicon
-                height: parent.height/2
-                width: height
-                anchors.left: parent.left
-                anchors.leftMargin: Theme.halfPadding
-                anchors.verticalCenter: parent.verticalCenter
-                image.sourceSize: Qt.size(width, height)
-                image.source: root.url.toString() === "" || root.faviconImage === "" ? Assets.svg("globe")
-                                                                                     : root.faviconImage // FIXME include the search engine icon
-            }
-
-            StatusClearButton {
-                id: clearButton
-                anchors.right: parent.right
-                anchors.rightMargin: Theme.halfPadding
-                anchors.verticalCenter: parent.verticalCenter
-                visible: parent.cursorVisible && !!parent.text
-                onClicked: {
-                    parent.forceActiveFocus()
-                    parent.clear()
-                }
-            }
         }
 
         BrowserHeaderButton {
@@ -114,6 +73,7 @@ Control {
 
             incognitoMode: root.incognitoMode
             icon.name: root.currentTabLoading ? "close-circle" : "refresh"
+            interactive: root.url.toString() !== ""
             tooltip.text: root.currentTabLoading ? qsTr("Stop") : qsTr("Reload")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
             onClicked: root.currentTabLoading ? root.requestStopLoadingPage(): root.requestReloadPage()

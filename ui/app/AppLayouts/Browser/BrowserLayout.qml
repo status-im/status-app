@@ -434,7 +434,7 @@ StatusSectionLayout {
             currentTabLoading: _internal.currentTabLoading
             incognitoMode: _internal.currentTabIncognito
             browserDappsModel: browserDappsProvider.model
-            faviconImage: _internal.currentWebView?.icon?.toString().replace("image://favicon/", "") ?? ""
+            faviconUrl: _internal.currentWebView?.icon ?? ""
 
             onRequestReloadPage: webViewContext.reloadCurrent()
             onRequestStopLoadingPage: webViewContext.stopCurrent()
@@ -622,7 +622,7 @@ StatusSectionLayout {
                 if (!webView)
                     return Assets.svg("globe")
 
-                return root.browserRootStore.determineRealURL(webView.icon.toString().replace("image://favicon/", "") || Assets.svg("globe"))
+                return root.browserRootStore.determineRealURL(webView.icon?.toString() || Assets.svg("globe"))
             }
             getWebViewScreenshot: function (tabIndex, targetImage, targetSize) {
                 const webView = webViewContext.getWebView(tabIndex)

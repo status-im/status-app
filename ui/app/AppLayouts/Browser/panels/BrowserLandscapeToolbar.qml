@@ -47,6 +47,7 @@ BrowserToolbarBase {
         LandscapeToolbarButton {
             incognitoMode: root.currentTabIncognito
             icon.name: root.currentTabLoading ? "close-circle" : "refresh"
+            interactive: root.url.toString() !== ""
             tooltip.text: root.currentTabLoading ? qsTr("Stop") : qsTr("Reload")
             onClicked: root.currentTabLoading ? root.requestStopLoadingPage(): root.requestReloadPage()
         }
@@ -69,51 +70,18 @@ BrowserToolbarBase {
             onToggled: root.goIncognito(checked)
         }
 
-        // TODO: should be reworked as a separate component as per deisgn for mobile here
-        // https://github.com/status-im/status-app/issues/19564
-        StatusTextField {
+        BrowserAddressField {
             id: addressBar
-
-            Layout.preferredHeight: 36
             Layout.fillWidth: true
 
-            background: Rectangle {
-                color: {
-                    if (!addressBar.cursorVisible)
-                        return StatusColors.transparent
-                    return root.currentTabIncognito ? Theme.palette.privacyColors.secondary : Theme.palette.baseColor2
-                }
-                radius: 40
-            }
-            leftPadding: Theme.padding
-            rightPadding: Theme.padding
-            placeholderText: qsTr("Search or enter address")
-            font.pixelSize: Theme.additionalTextSize
-            color: root.currentTabIncognito ? Theme.palette.privacyColors.tertiary : Theme.palette.textColor
-            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
-            EnterKey.type: Qt.EnterKeyGo
-            onActiveFocusChanged: {
-                if (activeFocus) {
-                    selectAll()
-                } else {
-                    if (text === "") // restore the old URL
-                        text = Qt.binding(() => root.url)
-                }
+            url: root.url
+            incognitoMode: root.currentTabIncognito
+            bgColor: {
+                if (!addressBar.cursorVisible)
+                    return StatusColors.transparent
+                return incognitoMode ? Theme.palette.privacyColors.secondary : Theme.palette.baseColor2
             }
             onAccepted: root.requestLaunchInBrowser(text)
-            text: root.url
-
-            StatusClearButton {
-                id: clearButton
-                anchors.right: parent.right
-                anchors.rightMargin: Theme.halfPadding
-                anchors.verticalCenter: parent.verticalCenter
-                visible: parent.cursorVisible && !!parent.text
-                onClicked: {
-                    parent.forceActiveFocus()
-                    parent.clear()
-                }
-            }
         }
 
         LandscapeToolbarButton {

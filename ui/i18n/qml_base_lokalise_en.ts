@@ -2931,6 +2931,14 @@
     </message>
   </context>
   <context>
+    <name>BrowserAddressField</name>
+    <message>
+      <source>Search or enter address</source>
+      <comment>BrowserAddressField</comment>
+      <translation>Search or enter address</translation>
+    </message>
+  </context>
+  <context>
     <name>BrowserConnectionModal</name>
     <message>
       <source>&#39;%1&#39; would like to connect to</source>
@@ -2965,11 +2973,6 @@
   </context>
   <context>
     <name>BrowserLandscapeToolbar</name>
-    <message>
-      <source>Search or enter address</source>
-      <comment>BrowserLandscapeToolbar</comment>
-      <translation>Search or enter address</translation>
-    </message>
     <message>
       <source>Back</source>
       <comment>BrowserLandscapeToolbar</comment>
@@ -14060,11 +14063,6 @@
   </context>
   <context>
     <name>MobileAddressBar</name>
-    <message>
-      <source>Search or enter address</source>
-      <comment>MobileAddressBar</comment>
-      <translation>Search or enter address</translation>
-    </message>
     <message>
       <source>Stop</source>
       <comment>MobileAddressBar</comment>

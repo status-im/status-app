@@ -10,6 +10,10 @@ QtObject {
             url: "https://hub.status.network/" // Constants.browserDefaultHomepage
         }
         ListElement {
+            name: "Status App"
+            url: "https://status.app/"
+        }
+        ListElement {
             name: "Seznam"
             url: "https://www.seznam.cz/"
         }
