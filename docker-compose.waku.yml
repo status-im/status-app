@@ -1,6 +1,6 @@
 services:
   boot-1:
-    image: wakuorg/nwaku:v0.34.0
+    image: wakuorg/nwaku:v0.36.0
     network_mode: host
     entrypoint: [
       "/usr/bin/wakunode",
@@ -8,11 +8,14 @@ services:
       "--discv5-enr-auto-update=True",
       "--discv5-udp-port=49000",
       "--cluster-id=16",
+      "--num-shards-in-network=0",
       "--filter=true",
       "--keep-alive=true",
       "--lightpush=true",
       "--log-level=INFO",
       "--max-connections=18000",
+      "--max-msg-size=1024KiB",
+      "--ip-colocation-limit=100",
       "--nodekey=697b008f979c8ae38c1e4e0b9bc3712dd39e2355f49eaf6c63d92f7edd13704d",
       "--peer-exchange=true",
       "--relay=true",
@@ -30,13 +33,13 @@ services:
       "--nat=extip:127.0.0.1",
     ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:8645/debug/v1/info || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8645/debug/v1/info || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 10
 
   store:
-    image: wakuorg/nwaku:v0.34.0
+    image: wakuorg/nwaku:v0.36.0
     network_mode: host
     entrypoint: [
       "/usr/bin/wakunode",
@@ -44,9 +47,13 @@ services:
       "--discv5-enr-auto-update=True",
       "--discv5-udp-port=49001",
       "--cluster-id=16",
+      "--num-shards-in-network=0",
       "--keep-alive=true",
       "--log-level=INFO",
+      "--legacy-store=true",
       "--max-connections=18000",
+      "--max-msg-size=1024KiB",
+      "--ip-colocation-limit=100",
       "--nodekey=ba4e531d4ef543fabd838ef4e731d35dfa4deceea8f4a5992ad7f29764c70035",
       "--peer-exchange=false",
       "--relay=true",
@@ -60,17 +67,19 @@ services:
       "--shard=256",
       "--staticnode=/ip4/127.0.0.1/tcp/60001/p2p/16Uiu2HAmMgYeJrjruJGCgL96aaP2nf85PGsRVkXLyhG2joJMH4pH",
       "--store=true",
+      "--store-message-db-url=sqlite:///tmp/store1.db",
+      "--store-message-retention-policy=time:86400",
       "--tcp-port=60002",
       "--nat=extip:127.0.0.1",
     ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:8646/debug/v1/info || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8646/debug/v1/info || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 10
 
   store-2:
-    image: wakuorg/nwaku:v0.34.0
+    image: wakuorg/nwaku:v0.36.0
     network_mode: host
     entrypoint: [
       "/usr/bin/wakunode",
@@ -78,9 +87,13 @@ services:
       "--discv5-enr-auto-update=True",
       "--discv5-udp-port=49002",
       "--cluster-id=16",
+      "--num-shards-in-network=0",
       "--keep-alive=true",
       "--log-level=INFO",
+      "--legacy-store=true",
       "--max-connections=18000",
+      "--max-msg-size=1024KiB",
+      "--ip-colocation-limit=100",
       "--nodekey=c2a4e44652cd44b2b73093e7d2dba0a1e841e24e59db4a3a8c8e660e6e4d1b3a",
       "--peer-exchange=false",
       "--relay=true",
@@ -94,11 +107,13 @@ services:
       "--shard=256",
       "--staticnode=/ip4/127.0.0.1/tcp/60001/p2p/16Uiu2HAmMgYeJrjruJGCgL96aaP2nf85PGsRVkXLyhG2joJMH4pH",
       "--store=true",
+      "--store-message-db-url=sqlite:///tmp/store2.db",
+      "--store-message-retention-policy=time:86400",
       "--tcp-port=60003",
       "--nat=extip:127.0.0.1",
     ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:8647/debug/v1/info || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8647/debug/v1/info || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 10

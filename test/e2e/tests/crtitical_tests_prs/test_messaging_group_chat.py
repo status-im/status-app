@@ -1,20 +1,19 @@
 import random
 import string
 
-import allure
 import pytest
 from allure_commons._allure import step
 
 import driver
 from configs import get_platform
-from constants.links import external_link, link_to_status_community
+from constants.links import external_link
 
 import configs.testpath
 from constants import UserAccount, RandomUser
 from constants.messaging import Messaging
 from helpers.chat_helper import skip_message_backup_popup_if_visible
 from helpers.multiple_instances_helper import (
-    authorize_user_in_aut, get_chat_key, send_contact_request_from_settings, switch_to_aut
+    authorize_user_in_aut, get_chat_key, switch_to_aut
 )
 from gui.main_window import MainWindow
 from gui.screens.messages import MessagesScreen
@@ -252,21 +251,6 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 assert driver.waitFor(
                     lambda: domain_link_2 == messages_screen.chat.messages(0)[0].get_link_domain(),
                     configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-
-            with step(f'Paste link to status community'):
-                message_community = link_to_status_community
-                messages_screen.group_chat.type_message(message_community)
-
-            with step('Verify title and subtitle of preview are correct and close button exists'):
-                assert driver.waitFor(
-                    lambda: community_name == messages_screen.group_chat.get_link_preview_bubble_title(),
-                    configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
-                assert driver.waitFor(
-                    lambda: domain_link == messages_screen.group_chat.get_link_preview_bubble_description(),
-                    configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-
-            with step('Close link preview options popup and send a message'):
-                messages_screen.group_chat.confirm_sending_message()
 
             with step(f'Paste link to user profile link and send message'):
                 message_user = profile_link

@@ -111,7 +111,7 @@ pipeline {
     /* QT_DEBUG_PLUGINS = 0 */
 
     /* Use local waku fleet */
-    STATUS_FLEET = 'status-desktop.test'
+    STATUS_FLEET = 'status-app.test'
     STATUS_FLEET_CONFIG_FILE = "${WORKSPACE}/assets/local-waku-fleets-config.json"
 
     /* Hack fix for params not being set in job on first run */
@@ -188,6 +188,7 @@ pipeline {
 
     stage('Start Local Fleet') {
       steps { timeout(2) { script {
+        /* Clean up any leftover containers from a previous aborted run */
         sh 'docker compose -f docker-compose.waku.yml down || true'
         sh 'docker compose -f docker-compose.waku.yml up -d'
         sh 'sleep 15'
@@ -233,13 +234,7 @@ pipeline {
   post {
     always { script {
       /* Stop local waku fleet */
-      sh 'docker compose -f docker-compose.waku.yml logs boot-1 > test/e2e/aut/waku-boot-1.log 2>&1 || true'
-      sh 'docker compose -f docker-compose.waku.yml logs store > test/e2e/aut/waku-store.log 2>&1 || true'
-      sh 'docker compose -f docker-compose.waku.yml logs store-2 > test/e2e/aut/waku-store-2.log 2>&1 || true'
-      sh 'curl -s http://localhost:8647/admin/v1/peers > test/e2e/aut/waku-store-2-peers.json 2>&1 || true'
-      sh 'curl -s http://localhost:8645/admin/v1/peers > test/e2e/aut/waku-boot-1-peers.json 2>&1 || true'
-      sh 'curl -s http://localhost:8646/admin/v1/peers > test/e2e/aut/waku-store-peers.json 2>&1 || true'
-      sh 'docker compose -f docker-compose.waku.yml down || true'
+      sh 'docker compose -f docker-compose.waku.yml down --remove-orphans || true'
 
       dir('test/e2e') {
         archiveArtifacts('aut/*.*')
