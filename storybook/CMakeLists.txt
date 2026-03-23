@@ -49,7 +49,7 @@ FetchContent_Declare(
   QmlStorybook
 
   GIT_REPOSITORY https://github.com/status-im/QmlStorybook.git
-  GIT_TAG eb3481c9e210c7631a65540ee2551c528a3f8522
+  GIT_TAG fc13fc5fdba86da17e71e5985178d2a8fdb5cb3e
 )
 FetchContent_MakeAvailable(QmlStorybook)
 
