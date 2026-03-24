@@ -515,6 +515,8 @@ Item {
                     onRemovePaymentRequestPreview: (index) => d.activeChatContentModule.inputAreaModule.removePaymentRequestPreviewData(index)
 
                     onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
+                    onImageClicked: image => Global.openImagePopup(image, "", false)
+                    onLinkClicked: link => Global.requestOpenLink(link)
                 }
 
                 ChatPermissionQualificationPanel {

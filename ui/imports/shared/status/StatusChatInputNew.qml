@@ -35,6 +35,8 @@ Control {
     signal openPaymentRequestModal(var callback)
     signal removePaymentRequestPreview(int index)
     signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
+    signal imageClicked(var image)
+    signal linkClicked(string link)
 
     property var usersModel
 
@@ -704,9 +706,9 @@ Control {
                         root.fileUrlsAndSources = urls
                         validateImages(root.fileUrlsAndSources)
                     }
-                    onImageClicked: (chatImage) => Global.openImagePopup(chatImage, "", false)
+                    onImageClicked: (image) => root.imageClicked(image)
                     onLinkReload: (link) => root.linkPreviewReloaded(link)
-                    onLinkClicked: (link) => Global.requestOpenLink(link)
+                    onLinkClicked: (link) => root.linkClicked(link)
                     onEnableLinkPreview: () => root.enableLinkPreview()
                     onEnableLinkPreviewForThisMessage: () => root.enableLinkPreviewForThisMessage()
                     onDisableLinkPreview: () => root.disableLinkPreview()
