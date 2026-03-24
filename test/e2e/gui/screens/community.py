@@ -19,6 +19,7 @@ from gui.components.profile_popup import ProfilePopupFromMembers
 from gui.elements.button import Button
 from gui.elements.list import List
 from gui.elements.object import QObject
+from gui.elements.scroll import Scroll
 from gui.elements.text_label import TextLabel
 from gui.objects_map import names, communities_names, messaging_names
 from gui.screens.community_settings import CommunitySettingsScreen
@@ -236,6 +237,8 @@ class CommunityLeftPanel(QObject):
         self.add_members_button = Button(communities_names.welcomeBannerAddMembersButton)
         self.manage_community_button = Button(communities_names.welcomeBannerManageCommunityButton)
 
+        self._channels_scroll = Scroll(communities_names.mainWindow_scrollView_StatusScrollView)
+
     @property
     @allure.step('Get community logo')
     def logo(self) -> Image:
@@ -309,12 +312,53 @@ class CommunityLeftPanel(QObject):
 
     @allure.step('Select channel')
     def select_channel(self, name: str):
-        time.sleep(3)
-        for obj in driver.findAllObjects(self.chatListItemDropAreaItem.real_name):
-            if str(obj.objectName) == name:
+        def find_channel_drop_object():
+            for obj in driver.findAllObjects(self.chatListItemDropAreaItem.real_name):
+                if str(obj.objectName) == name:
+                    return obj
+            return None
+
+        scroll_timeout_sec = configs.timeouts.LOADING_LIST_TIMEOUT_MSEC // 1000
+        click_deadline = time.monotonic() + max(
+            15.0, configs.timeouts.UI_LOAD_TIMEOUT_SEC * 3)
+        last_error: typing.Optional[BaseException] = None
+
+        obj = find_channel_drop_object()
+        if obj is None:
+            raise LookupError('Channel not found')
+
+        while time.monotonic() < click_deadline:
+            channel_item = QObject(real_name=driver.objectMap.realName(obj))
+            if not channel_item.is_visible:
+                self._channels_scroll.vertical_scroll_down(
+                    channel_item, timeout_sec=scroll_timeout_sec, extra_scrolls_after=3)
+                obj = find_channel_drop_object()
+                if obj is None:
+                    time.sleep(0.15)
+                    continue
+
+            try:
                 driver.mouseClick(obj)
                 return obj
-        raise LookupError('Channel not found')
+            except RuntimeError as e:
+                last_error = e
+                err = str(e).lower()
+                if 'not ready' not in err and 'clipped' not in err:
+                    raise
+                time.sleep(0.25)
+                obj = find_channel_drop_object()
+                if obj is None:
+                    continue
+                if 'clipped' in err:
+                    clipped_item = QObject(real_name=driver.objectMap.realName(obj))
+                    self._channels_scroll.vertical_scroll_down(
+                        clipped_item, timeout_sec=scroll_timeout_sec, extra_scrolls_after=3)
+                    obj = find_channel_drop_object()
+
+        if last_error is not None:
+            raise RuntimeError(
+                f'Could not click channel {name!r} after retries') from last_error
+        raise LookupError(f'Channel {name!r} disappeared before click')
 
     @allure.step('Open general channel context menu')
     def open_general_channel_context_menu(self):

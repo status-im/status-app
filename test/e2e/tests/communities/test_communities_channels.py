@@ -185,8 +185,7 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
             community_screen = main_screen.left_panel.open_community('My awesome community')
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
-            message_object = messages_screen.chat.messages(0)[0]
-            assert 'Hi' in str(message_object.text), f"Message text is not found in last message"
+            messages_screen.chat.find_message_by_text('Hi', 0)
             message_text = "Hi hi"
             messages_screen.group_chat.send_message_to_group_chat(message_text)
             assert driver.waitFor(
