@@ -37,6 +37,9 @@ LIB_PREFIX = $$(APP_VARIANT)
 android {
     message("Configuring for android $${QT_ARCH}, $$(ANDROID_ABI)")
 
+    QMAKE_LFLAGS += -Wl,-z,max-page-size=16384
+    QMAKE_LFLAGS_SHLIB += -Wl,-z,max-page-size=16384
+
     ANDROID_VERSION_NAME = $$VERSION
 
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/../android/qt$$QT_MAJOR_VERSION

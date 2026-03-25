@@ -4,7 +4,9 @@ import StatusQ.CustomWebView 1.0
 
 import AppLayouts.Browser.stores as BrowserStores
 
-AbstractWebView {
+import "../" as Base
+
+Base.AbstractWebView {
     id: root
 
     required property BrowserStores.BookmarksStore bookmarksStore

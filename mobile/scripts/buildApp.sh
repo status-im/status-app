@@ -97,7 +97,7 @@ if [[ "${OS}" == "android" ]]; then
 
   # Build with specified gradle targets
   # shellcheck disable=SC2086 # intentional word splitting for multiple gradle tasks
-  ./gradlew ${GRADLE_TARGETS} --no-daemon --console=plain
+  $("$QMAKE_BIN" -query QT_INSTALL_PREFIX)/src/3rdparty/gradle/gradlew ${GRADLE_TARGETS} --no-daemon --console=plain
 
   echo "APK outputs:"
   find build/outputs/apk -name '*.apk' 2>/dev/null || echo "No APKs found"

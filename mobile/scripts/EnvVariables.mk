@@ -98,6 +98,10 @@ else
         export ANDROID_ABI=x86_64
     endif
     export LIB_EXT := .so
+
+    export LDFLAGS := -Wl,-z,max-page-size=16384
+    export NIMFLAGS := --passL:"$(LDFLAGS)"
+    export CGO_LDFLAGS := $(LDFLAGS)
 endif
 
 

@@ -33,7 +33,7 @@ endif()
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
-        Core Qml Gui Quick QuickControls2 WebChannel Svg REQUIRED)
+        Core CorePrivate Qml Gui Quick QuickControls2 WebChannel Svg REQUIRED)
 
 # --- QML test hooks flag and TestConfig generation ---
 option(STATUSQ_TESTMODE "Enable QML test hooks (TestConfig.testMode)" OFF)

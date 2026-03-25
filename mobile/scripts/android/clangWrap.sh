@@ -27,4 +27,6 @@ fi
 TARGET="$CARCH-linux-android${TARGET_SUFFIX}${ANDROID_API}"
 EXTRA_ARGS="-fembed-bitcode"
 
-exec "$CLANG" --target="$TARGET" "$EXTRA_ARGS" --sysroot="$SYSROOT" -v "$@"
+LINK_PAGE_SIZE_ARGS="-Wl,-z,max-page-size=16384"
+
+exec "$CLANG" --target="$TARGET" "$EXTRA_ARGS" --sysroot="$SYSROOT" "${LINK_PAGE_SIZE_ARGS}" -v "$@"
