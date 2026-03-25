@@ -240,20 +240,23 @@ Item {
         }
 
         function test_market_swap_sections() {
-            const swapBtn = findChild(controlUnderTest, "Swap-navbar")
-            verify(!!swapBtn)
-            tryCompare(swapBtn, "visible", true)
+            // Swap button should be visible before market is enabled
+            const swapBtnBefore = findChild(controlUnderTest, "Swap-navbar")
+            verify(!!swapBtnBefore)
+            tryCompare(swapBtnBefore, "visible", true)
 
             // When marketEnabled is true, Market section should be present, Swap not
             sidebarAdaptor.marketEnabled = true
-
             waitForRendering(controlUnderTest)
 
             // Should have market-related functionality
             const marketBtn = findChild(controlUnderTest, "Market-navbar")
             verify(!!marketBtn)
             tryCompare(marketBtn, "visible", true)
-            compare(swapBtn.visible, undefined)
+
+            // Swap delegate may be destroyed by the ListView; re-query after model change
+            const swapBtnAfter = findChild(controlUnderTest, "Swap-navbar")
+            verify(!swapBtnAfter || !swapBtnAfter.visible)
         }
 
         function test_show_enabled_sections_only() {

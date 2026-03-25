@@ -250,6 +250,8 @@ Control {
                 content: model.content
                 attachments: model.attachments
                 showQuickActions: model.showQuickActions
+                avatarId: model.avatarId ?? ""
+                actionId: model.actionId ?? ""
 
                 // Timestamp related
                 timestamp: model.timestamp

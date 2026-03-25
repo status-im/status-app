@@ -153,6 +153,10 @@ Control {
     // The following property drives the quick actions row
     property bool showQuickActions: false
 
+    // Identifiers forwarded to declineRequested / acceptRequested signals
+    property string avatarId: ""
+    property string actionId: ""
+
     // ──────────────────────────────────────────────────────────────────────────
     // Card states
     // ──────────────────────────────────────────────────────────────────────────
@@ -370,7 +374,7 @@ Control {
                     text: qsTr("Decline")
                     size: StatusBaseButton.Size.Small
                     type: StatusBaseButton.Type.Danger
-                    onClicked: root.declineRequested(model.avatarId, model.actionId)
+                    onClicked: root.declineRequested(root.avatarId, root.actionId)
                 }
                 StatusButton {
                     Layout.fillWidth: true
@@ -379,7 +383,7 @@ Control {
                     text: qsTr("Accept")
                     size: StatusBaseButton.Size.Small
                     type: StatusBaseButton.Type.Normal
-                    onClicked: root.acceptRequested(model.avatarId, model.actionId)
+                    onClicked: root.acceptRequested(root.avatarId, root.actionId)
                 }
             }
 
