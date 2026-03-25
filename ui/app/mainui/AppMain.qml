@@ -1854,6 +1854,9 @@ Item {
                             sectionsModel: homePageAdaptor.sectionsModel
                             pinnedModel: homePageAdaptor.pinnedModel
 
+                            // Floating panel
+                            leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
+
                             onItemActivated: function(key, sectionType, itemId) {
                                 homePageAdaptor.setTimestamp(key, new Date().valueOf())
 
