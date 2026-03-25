@@ -2248,7 +2248,10 @@ Item {
 
                     Loader {
                         active: appView.currentIndex === Constants.appViewStackIndex.node
-                        sourceComponent: NodeLayout {}
+                        sourceComponent: NodeLayout {
+                            // Floating panel
+                            leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
+                        }
                     }
 
                     Loader {
