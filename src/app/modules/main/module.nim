@@ -684,7 +684,7 @@ method load*[T](
 
   # Default to Wallet section if no active section is set or if the active section is the settings section
   # or if the active section is the home page section but home page is not enabled
-  if activeSectionId == "" or activeSectionId == SETTINGS_SECTION_ID or activeSectionId == ACTIVITYCENTER_SECTION_ID or
+  if activeSectionId == "" or activeSectionId == SETTINGS_SECTION_ID or
     (activeSectionId == HOMEPAGE_SECTION_ID and not homePageEnabled):
     activeSectionId = WALLET_SECTION_ID
 
@@ -808,25 +808,6 @@ method load*[T](
     enabled = true,
   )
   self.view.model().addItem(qrScannerSectionItem)
-
-  # Activity Center Section
-  let activityCenterSectionItem = initSectionItem(
-    ACTIVITYCENTER_SECTION_ID,
-    SectionType.ActivityCenter,
-    ACTIVITYCENTER_SECTION_NAME,
-    memberRole = MemberRole.Owner,
-    description = "",
-    image = "",
-    icon = ACTIVITYCENTER_SECTION_ICON,
-    color = "",
-    hasNotification = false,
-    notificationsCount = 0,
-    active = false,
-    enabled = true,
-  )
-  self.view.model().addItem(activityCenterSectionItem)
-  if activeSectionId == activityCenterSectionItem.id:
-    activeSection = activityCenterSectionItem
 
   # Profile Section
   let profileSettingsSectionItem = initSectionItem(
@@ -1295,13 +1276,6 @@ proc checkIfWeHaveNotifications[T](self: Module[T]) =
   let sectionWithUnread = self.view.model().isThereASectionWithUnreadMessages()
   let activtyCenterNotifications = self.activityCenterModule.unreadActivityCenterNotificationsCountFromView() > 0
   self.view.setNotificationAvailable(sectionWithUnread or activtyCenterNotifications)
-
-  # Update Activity Center section item related notifications properties
-  let activityCenterNotificationsCount = self.activityCenterModule.unreadActivityCenterNotificationsCount()
-  self.view.model().updateNotifications(
-    ACTIVITYCENTER_SECTION_ID,
-    hasNotification = activtyCenterNotifications,
-    notificationsCount = activityCenterNotificationsCount)
 
 method onActivityNotificationsUpdated[T](self: Module[T]) =
   self.checkIfWeHaveNotifications()

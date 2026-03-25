@@ -29,10 +29,6 @@ const QR_SCANNER_SECTION_ID* = "qrScannerDialog"
 const QR_SCANNER_SECTION_NAME* = "QR Scanner"
 const QR_SCANNER_SECTION_ICON* = "qr-scan"
 
-const ACTIVITYCENTER_SECTION_ID* = "activityCenterPage"
-const ACTIVITYCENTER_SECTION_NAME* = "Activity Center"
-const ACTIVITYCENTER_SECTION_ICON* = "notification"
-
 const SETTINGS_SECTION_ID* = "profileSettings"
 const SETTINGS_SECTION_NAME* = "Settings"
 const SETTINGS_SECTION_ICON* = "settings"
