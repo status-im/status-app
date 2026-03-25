@@ -44,7 +44,7 @@ ColumnLayout {
         readonly property SortFilterProxyModel userRpcProvidersModel: SortFilterProxyModel {
             sourceModel: root.rpcProviders
             filters: [
-                ValueFilter { roleName: "chainId"; value: network.chainId },
+                ValueFilter { roleName: "chainId"; value: root.network.chainId },
                 ValueFilter { roleName: "providerType"; value: Constants.rpcProviderTypes.user }
             ]
         }

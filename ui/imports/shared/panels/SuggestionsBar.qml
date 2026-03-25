@@ -54,7 +54,8 @@ Control {
 
                 MouseArea {
                     anchors.fill: parent
-
+                    hoverEnabled: true
+                    cursorShape: containsMouse ? Qt.PointingHandCursor : undefined
                     onClicked: root.wordSelected(seedWord)
                 }
             }

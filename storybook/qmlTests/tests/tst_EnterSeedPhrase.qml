@@ -66,7 +66,6 @@ Item {
             //Type the seed phrase except the last word
             const str = expectedSeedPhrase.join(" ")
             for (let i = 0; i < str.length - commonPrefixToTest.length; i++) {
-                console.log(str.charAt(i))
                 keyPress(str.charAt(i))
             }
 
@@ -196,12 +195,23 @@ Item {
             // Suggestions dialog is expected to receive key events when there's multiple suggestions
             let downKeyEvents = 0
             for (let i = 0; i < expectedSeedPhrase.length; i++) {
+                const input = findChild(itemUnderTest, "enterSeedPhraseInputField%1".arg(i+1))
+                verify(!!input)
+                tryCompare(input, "visible", true)
+                tryCompare(input, "activeFocus", true)
+
                 keySequence(expectedSeedPhrase[i].substring(0, 4).split('').join(','))
 
-                const bar = findChild(itemUnderTest, "suggestionsBar")
+                const bar = findChild(input, "suggestionsBar")
+                verify(!!bar)
                 waitForRendering(bar)
+                tryCompare(bar, "visible", true)
 
                 const suggestion = findChild(bar, `seedWordSuggestion${downKeyEvents}`)
+                verify(!!suggestion)
+                waitForRendering(suggestion)
+                tryCompare(suggestion, "visible", true)
+                mouseMove(suggestion)
                 mouseClick(suggestion)
 
                 downKeyEvents = downKeyEvents === 3 ? 0 : downKeyEvents + 1
@@ -328,17 +338,26 @@ Item {
             // Suggestions panel is expected to receive events when there's multiple suggestions
             let downKeyEvents = 0
             for (let i = 0; i < expectedSeedPhrase.length; i++) {
+                const input = findChild(itemUnderTest, "enterSeedPhraseInputField%1".arg(i+1))
+                verify(!!input)
+                tryCompare(input, "visible", true)
+                tryCompare(input, "activeFocus", true)
+
                 keySequence(expectedSeedPhrase[i].substring(0, 4).split('').join(','))
 
-                const bar = findChild(itemUnderTest, "suggestionsBar")
+                const bar = findChild(input, "suggestionsBar")
                 waitForRendering(bar)
 
                 const suggestion = findChild(bar, `seedWordSuggestion${downKeyEvents}`)
                 mouseClick(suggestion)
             }
 
-            const bar = findChild(itemUnderTest, "suggestionsBar")
+            const input = findChild(itemUnderTest, "enterSeedPhraseInputField12")
+            verify(!!input)
+            tryCompare(input, "visible", true)
+            tryCompare(input, "activeFocus", true)
 
+            const bar = findChild(input, "suggestionsBar")
             tryCompare(bar, "visible", false)
 
             keyPress(Qt.Key_Backspace)
@@ -359,9 +378,14 @@ Item {
             // Suggestions bar is expected to receive events when there's multiple suggestions
             let downKeyEvents = 0
             for (let i = 0; i < expectedSeedPhrase.length; i++) {
+                const input = findChild(itemUnderTest, "enterSeedPhraseInputField%1".arg(i+1))
+                verify(!!input)
+                tryCompare(input, "visible", true)
+                tryCompare(input, "activeFocus", true)
+
                 keySequence(expectedSeedPhrase[i].substring(0, 4).split('').join(','))
 
-                const bar = findChild(itemUnderTest, "suggestionsBar")
+                const bar = findChild(input, "suggestionsBar")
                 waitForRendering(bar)
 
                 const suggestion = findChild(bar, `seedWordSuggestion${downKeyEvents}`)
@@ -371,9 +395,13 @@ Item {
             keyPress(Qt.Key_Backspace)
             keyPress(Qt.Key_Backspace)
 
-            const bar = findChild(itemUnderTest, "suggestionsBar")
-            waitForRendering(bar)
+            const input = findChild(itemUnderTest, "enterSeedPhraseInputField12")
+            verify(!!input)
+            tryCompare(input, "visible", true)
+            tryCompare(input, "activeFocus", true)
 
+            const bar = findChild(input, "suggestionsBar")
+            waitForRendering(bar)
             tryCompare(bar, "visible", true)
 
             keyClick(Qt.Key_Tab)

@@ -66,6 +66,7 @@ Item {
             const button = findChild(controlUnderTest, "rightComponentButton")
             verify(!!button)
             tryCompare(button, "visible", true)
+            waitForRendering(controlUnderTest)
             mouseClick(button)
             tryCompare(signalSpy, "count", 1)
         }

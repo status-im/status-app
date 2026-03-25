@@ -96,5 +96,5 @@ SplitView {
 }
 
 // category: Controls
-
+// status: good
 // https://www.figma.com/design/TS0eQX9dAZXqZtELiwKIoK/Swap---Milestone-1?node-id=3413-311788&t=D3qGKqNjDBuLEEaD-0

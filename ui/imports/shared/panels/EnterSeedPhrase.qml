@@ -159,30 +159,6 @@ Control {
         }
     }
 
-    SuggestionsBar {
-        id: suggestionsBar
-        objectName: "suggestionsBar"
-
-        visible: false
-
-        model: suggestionsModel
-
-        onWordSelected: word => {
-            inputModel.setEntry(d.currentIndex, word, true)
-
-            // don't lose focus on the list entry, close suggestions
-            if (d.currentIndex === repeater.count - 1) {
-                d.filteringPrefix = ""
-                return
-            }
-
-            const next = d.currentItem.nextItemInFocusChain(true)
-            if (next)
-                next.forceActiveFocus()
-        }
-    }
-
-
     contentItem: ColumnLayout {
         spacing: d.spacing
 
@@ -245,17 +221,31 @@ Control {
                             model.currentPhrase = text
                     }
 
-                    LayoutItemProxy {
-                        id: proxy
-
-                        visible: parent.activeFocus && suggestionsModel.count
-
+                    SuggestionsBar {
+                        id: suggestionsBar
+                        objectName: "suggestionsBar"
                         x: -parent.x
                         y: -parent.height - grid.rowSpacing
                         width: grid.width
                         height: parent.height
 
-                        target: suggestionsBar
+                        visible: parent.activeFocus && suggestionsModel.count
+
+                        model: suggestionsModel
+
+                        onWordSelected: word => {
+                            inputModel.setEntry(d.currentIndex, word, true)
+
+                            // don't lose focus on the list entry, close suggestions
+                            if (d.currentIndex === repeater.count - 1) {
+                                d.filteringPrefix = ""
+                                return
+                            }
+
+                            const next = d.currentItem.nextItemInFocusChain(true)
+                            if (next)
+                                next.forceActiveFocus()
+                        }
                     }
 
                     property bool backspaceOrDeletePressed
