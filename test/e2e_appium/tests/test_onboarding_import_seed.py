@@ -11,6 +11,8 @@ from pages.onboarding import (
 )
 from pages.base_page import BasePage
 from pages.app import App
+from pages.onboarding.push_notifications_page import PushNotificationsPage
+from pages.wallet.wallet_left_panel import WalletLeftPanel
 from locators.app_locators import AppLocators
 from locators.onboarding.wallet.wallet_locators import WalletLocators
 from locators.onboarding.returning_login_locators import ReturningLoginLocators
@@ -67,30 +69,29 @@ class TestOnboardingImportSeed(StepMixin):
                 "App did not finish loading"
             )
 
+        async with self.step(self.device, "Dismiss push notifications if present"):
+            PushNotificationsPage(driver).dismiss_if_present(timeout=5)
+
         async with self.step(self.device, "Verify wallet address"):
-            wallet_locators = WalletLocators()
-            base = BasePage(driver)
             app = App(driver)
             app_locators = AppLocators()
+            base = BasePage(driver)
 
             base.safe_click(app_locators.LEFT_NAV_WALLET, timeout=5)
 
-            try:
-                base.safe_click(wallet_locators.ACCOUNT_LIST_ITEM_ANY)
-            except Exception:
-                base.safe_click(wallet_locators.ACCOUNT_1_BY_TEXT)
+            # The QML account row has clickable=false in the Android a11y
+            # tree, so selecting an individual account is unreliable.
+            # Instead, copy the address via context menu (proven reliable)
+            # and compare against the expected address from the seed phrase.
+            panel = WalletLeftPanel(driver)
+            assert panel.is_loaded(timeout=10), "Wallet panel not loaded"
 
-            header_el = base.find_element_safe(
-                wallet_locators.WALLET_HEADER_ADDRESS, timeout=10
-            )
-            assert header_el is not None, "Wallet header address button not found"
-            header_desc = header_el.get_attribute("content-desc") or ""
-            assert header_desc, "Header content-desc is empty"
+            copied_addr = panel.copy_account_address_via_context_menu(index=0)
+            assert copied_addr is not None, "Failed to copy wallet address via context menu"
 
             full_addr = get_wallet_address_from_mnemonic(seed_phrase)
-            expected_display = f"0×{full_addr[2:6]}…{full_addr[-4:]}"
-            assert header_desc.startswith(expected_display), (
-                f"Header address display mismatch. Expected prefix '{expected_display}', got '{header_desc}'"
+            assert copied_addr.lower() == full_addr.lower(), (
+                f"Wallet address mismatch. Expected '{full_addr}', got '{copied_addr}'"
             )
 
         async with self.step(self.device, "Restart app"):

@@ -74,9 +74,17 @@ class ChangePasswordModal(BasePage):
             self.logger.error("Change password modal remained visible after restart attempts")
             return False
 
-        if not self.app_lifecycle.wait_for_app_not_running(timeout=30):
-            self.logger.error("App never reached NOT_RUNNING state after tapping restart")
-            return False
+        # SystemUtils.restartApplication() on Android may leave the app in
+        # RUNNING_IN_BACKGROUND rather than NOT_RUNNING.  Give it a short
+        # window to terminate on its own, then force-terminate if needed.
+        if not self.app_lifecycle.wait_for_app_not_running(timeout=10):
+            self.logger.info(
+                "App still running after restart button; force-terminating"
+            )
+            self.app_lifecycle.terminate_app()
+            if not self.app_lifecycle.wait_for_app_not_running(timeout=10):
+                self.logger.error("App never reached NOT_RUNNING after force-terminate")
+                return False
 
         if not self.app_lifecycle.activate_app_with_ui_ready():
             self.logger.error("App activation with UI ready failed after password change")

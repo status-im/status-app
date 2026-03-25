@@ -213,10 +213,6 @@ class ChatPage(BasePage):
         timeout: int = 60,
     ) -> bool:
         self.dismiss_introduce_prompt(timeout=2)
-
-        if self.is_element_visible(self.locators.MESSAGE_INPUT, timeout=2):
-            return True
-
         self._ensure_chat_list_visible()
         locators = self._resolve_chat_locators(chat_identifier, display_name)
         return self.wait_for_condition(

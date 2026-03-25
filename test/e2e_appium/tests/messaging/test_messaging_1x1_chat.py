@@ -190,19 +190,31 @@ class TestMessaging1x1Chat(StepMixin):
         secondary_chat_page = ChatPage(secondary_device.driver)
         primary_chat_page = ChatPage(primary_device.driver)
 
-        async with self.step(secondary_device, "Dismiss backup prompt if visible"):
+        async with self.step(secondary_device, "Navigate to messages from secondary"):
+            # After accepting a contact request the app may auto-navigate
+            # to the chat, but message history isn't always loaded.
+            # Navigate explicitly to the Messages section for a clean state.
+            secondary_app = App(secondary_device.driver)
             secondary_chat_page.dismiss_backup_prompt(timeout=4)
+            assert secondary_app.click_messages_button(), (
+                "Failed to navigate to messages on secondary"
+            )
 
-        async with self.step(secondary_device, "Verify contact request message received"):
+        async with self.step(secondary_device, "Open chat and verify contact request message"):
             assert secondary_chat_page.wait_for_new_chat_to_arrive(
                 primary_suffix,
                 display_name=primary_display_name,
+                timeout=self.DM_TIMEOUT,
             ), (
                 "Secondary did not show DM row for the primary contact"
             )
+            assert secondary_chat_page.open_chat_by_suffix(
+                primary_suffix,
+                display_name=primary_display_name,
+            ), "Failed to open chat with primary on secondary device"
             assert secondary_chat_page.message_exists(
                 contact_request_message,
-                timeout=self.UI_TIMEOUT,
+                timeout=self.DM_TIMEOUT,
             ), "Contact request message not visible on secondary"
 
         async with self.step(secondary_device, "Send greeting to primary"):

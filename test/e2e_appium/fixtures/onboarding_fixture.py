@@ -23,6 +23,7 @@ from pages.onboarding import (
     BiometricsPage,
     CreateProfilePage,
     PasswordPage,
+    PushNotificationsPage,
     SeedPhraseInputPage,
     SplashScreen,
     WelcomePage,
@@ -86,6 +87,7 @@ class OnboardingFlow:
         self.seed_phrase_page = SeedPhraseInputPage(self.driver)
         self.password_page = PasswordPage(self.driver)
         self.biometrics_page = BiometricsPage(self.driver)
+        self.push_notifications_page = PushNotificationsPage(self.driver)
         self.loading_page = SplashScreen(self.driver)
         self.app = App(self.driver)
 
@@ -157,6 +159,8 @@ class OnboardingFlow:
 
             if self.config.verify_main_app:
                 self._execute_main_app_verification()
+
+            self._dismiss_push_notifications()
 
             execution_result = self._build_success_result()
             self.logger.info(
@@ -401,6 +405,43 @@ class OnboardingFlow:
 
         if self.config.take_screenshots:
             self._take_screenshot("onboarding_completed")
+
+    def _dismiss_push_notifications(self):
+        """Dismiss the 'Enable push notifications' dialog if it appears.
+
+        This dialog can appear after the wallet landing screen loads and
+        blocks all interaction with the underlying UI.  We dismiss it
+        with 'Maybe later' so subsequent test steps can proceed.
+        """
+        self.current_step = "push_notifications"
+        self.logger.info("Step 7: Push Notifications Dialog (dismiss if present)")
+        step_start = datetime.now()
+
+        if self.push_notifications_page.is_screen_displayed(timeout=5):
+            self.logger.info(
+                "Push notifications dialog detected, selecting 'Maybe later'"
+            )
+            dismissed = self.push_notifications_page.select_maybe_later()
+            if not dismissed:
+                self.logger.error("Failed to dismiss push notifications dialog")
+            self.step_results["push_notifications"] = {
+                "success": dismissed,
+                "action": "dismissed" if dismissed else "dismiss_failed",
+                "timestamp": datetime.now(),
+            }
+        else:
+            self.logger.info("Push notifications dialog not displayed, skipping")
+            self.step_results["push_notifications"] = {
+                "success": True,
+                "action": "not_displayed",
+                "timestamp": datetime.now(),
+            }
+
+        elapsed = (datetime.now() - step_start).total_seconds()
+        self.logger.info("Step 7 completed in %.1fs", elapsed)
+
+        if self.config.take_screenshots:
+            self._take_screenshot("push_notifications_handled")
 
     def _take_screenshot(self, name: str):
         """Take screenshot during flow execution"""

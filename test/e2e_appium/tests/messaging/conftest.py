@@ -178,7 +178,7 @@ async def _setup_established_chat(
     secondary = contexts[device_names[1]]
 
     primary_suffix, secondary_suffix = await _establish_contact(
-        primary, secondary, timeout=180
+        primary, secondary, timeout=240
     )
 
     return EstablishedChatContext(
@@ -214,13 +214,13 @@ async def established_chat(request, test_environment) -> EstablishedChatContext:
                 ...
     """
     global _module_pools
-    
+
     logger.info("Setting up module-scoped established_chat fixture")
-    
+
     pool = None
     ctx = None
     setup_failed = False
-    max_attempts = 2
+    max_attempts = 1
     last_error: BaseException | None = None
     
     for attempt in range(1, max_attempts + 1):

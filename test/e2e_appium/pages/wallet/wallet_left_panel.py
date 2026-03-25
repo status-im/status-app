@@ -134,9 +134,18 @@ class WalletLeftPanel(BasePage):
         return None
 
     def open_add_account_popup(self) -> AddEditAccountModal | None:
-        self.safe_click(self.locators.ADD_ACCOUNT_BUTTON, timeout=5)
+        try:
+            self.safe_click(self.locators.ADD_ACCOUNT_BUTTON, timeout=5)
+        except Exception as e:
+            self.logger.error("Add account button not clickable: %s", e)
+            self.take_screenshot("add_account_button_not_clickable")
+            return None
         modal = AddEditAccountModal(self.driver)
-        return modal if modal.is_displayed(timeout=10) else None
+        if not modal.is_displayed(timeout=10):
+            self.logger.error("Add account modal did not appear after clicking button")
+            self.take_screenshot("add_account_modal_not_displayed")
+            return None
+        return modal
 
     def add_account(self, name: str, auth_password: str | None = None) -> bool:
         modal = self.open_add_account_popup()

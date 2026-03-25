@@ -159,8 +159,10 @@ class DeviceContext:
         self.logger.info("Using Invite contacts path for profile link")
         profile_link = self._capture_via_settings(main_app)
 
-        # Re-activate app after overlay dismissal
-        main_app.app_lifecycle.activate_app()
+        # Re-activate app and verify the main UI is usable.
+        # The overlay cleanup uses driver.back() which can over-navigate
+        # and send the app to the background on Android.
+        self._restore_main_ui(main_app)
 
         if not profile_link:
             self.logger.error("All profile-link capture paths failed")
@@ -234,11 +236,56 @@ class DeviceContext:
 
             return link
         finally:
-            for i in range(overlays_to_dismiss):
-                try:
-                    self.driver.back()
-                except Exception:
+            # Dismiss overlays cautiously — verify each one is still
+            # present before pressing back, to avoid navigating out of
+            # the app entirely.
+            dialog_locator = ("xpath", "//*[contains(@resource-id,'ShareProfileDialog')]")
+            popup_locator = ("xpath", "//*[contains(@resource-id,'userStatusShareProfileAction') "
+                             "or contains(@resource-id,'ProfileMenu')]")
+
+            for i, check_locator in enumerate(
+                [dialog_locator, popup_locator][:overlays_to_dismiss]
+            ):
+                if app.is_element_visible(check_locator, timeout=1):
+                    try:
+                        self.driver.back()
+                        self.logger.debug("driver.back() #%d dismissed overlay", i + 1)
+                    except Exception:
+                        self.logger.debug(
+                            "driver.back() #%d suppressed during overlay cleanup", i + 1
+                        )
+                else:
                     self.logger.debug(
-                        "driver.back() #%d suppressed during overlay cleanup", i + 1
+                        "Overlay #%d already gone, skipping back()", i + 1
                     )
+
+    def _restore_main_ui(self, app) -> None:
+        """Ensure the Status app is in the foreground with the main nav visible.
+
+        After overlay cleanup the app may have been sent to the background
+        by an extra ``driver.back()``.  This method re-activates the app
+        and waits for the left navigation bar to become visible.
+        """
+        from locators.app_locators import AppLocators
+
+        locators = AppLocators()
+
+        app.app_lifecycle.activate_app()
+
+        # Quick check — if the nav bar is already there, we're done.
+        if app.is_element_visible(locators.LEFT_NAV_WALLET, timeout=3):
+            self.logger.debug("Main UI already visible after activate_app()")
+            return
+
+        # The app may need a moment to fully resume.  Try activating once
+        # more, then give it a longer wait.
+        self.logger.info("Main nav not visible after activate_app(), retrying")
+        app.app_lifecycle.activate_app()
+
+        if not app.is_element_visible(locators.LEFT_NAV_WALLET, timeout=10):
+            self.logger.warning(
+                "Main nav still not visible after second activate_app() — "
+                "subsequent steps may fail"
+            )
+            app.dump_page_source("restore_main_ui_failure")
 

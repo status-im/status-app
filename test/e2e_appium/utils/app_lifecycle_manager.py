@@ -67,6 +67,14 @@ class AppLifecycleManager:
             self.logger.error("UI activation failed after restart: %s", err)
             return False
 
+        # Dismiss overlays that may re-appear after restart
+        try:
+            from pages.onboarding.push_notifications_page import PushNotificationsPage
+
+            PushNotificationsPage(self.driver).dismiss_if_present(timeout=3)
+        except Exception as err:
+            self.logger.debug("Push notification dismiss check skipped: %s", err)
+
         return True
 
     def restart_app_with_data_cleared(self, app_package: Optional[str] = None) -> bool:

@@ -1,6 +1,7 @@
 import pytest
 
 from pages.app import App
+from pages.onboarding.push_notifications_page import PushNotificationsPage
 from pages.onboarding.welcome_back_page import WelcomeBackPage
 from pages.wallet.wallet_left_panel import WalletLeftPanel
 from utils.generators import generate_account_name
@@ -96,6 +97,8 @@ class TestWalletAccountsBasic(StepMixin):
             panel = WalletLeftPanel(self.device.driver)
             app = App(self.device.driver)
             assert panel.is_loaded(timeout=20), "Wallet panel not visible after restart"
+            # Push notification dialog may re-appear after restart + login
+            PushNotificationsPage(self.device.driver).dismiss_if_present(timeout=5)
 
         async with self.step(self.device, "Verify renamed account persists after restart"):
             assert panel.wait_for_account_name(renamed_name, timeout=10), (

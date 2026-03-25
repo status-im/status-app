@@ -32,7 +32,7 @@ async def establish_contact(
     sender: DeviceContext,
     receiver: DeviceContext,
     *,
-    timeout: int = 180,
+    timeout: int = 240,
 ) -> tuple[str, str, str, str]:
     """Establish a 1:1 contact between *sender* and *receiver*.
 

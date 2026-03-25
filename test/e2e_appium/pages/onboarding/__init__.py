@@ -8,6 +8,7 @@ from .home_page import HomePage
 from .seed_phrase_input_page import SeedPhraseInputPage
 from .welcome_back_page import WelcomeBackPage
 from .biometrics_page import BiometricsPage
+from .push_notifications_page import PushNotificationsPage
 
 __all__ = [
     "WelcomePage",
@@ -18,4 +19,5 @@ __all__ = [
     "SeedPhraseInputPage",
     "WelcomeBackPage",
     "BiometricsPage",
+    "PushNotificationsPage",
 ]
