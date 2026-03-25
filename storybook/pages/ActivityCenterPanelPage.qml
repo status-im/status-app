@@ -334,7 +334,7 @@ SplitView {
     }
 }
 
-// category: Panels
+// category: Activity Center
 // status: good
 // https://www.figma.com/design/SGyfSjxs5EbzimHDXTlj8B/Qt-Responsive---v?node-id=1868-52013&m=dev
 // https://www.figma.com/design/SGyfSjxs5EbzimHDXTlj8B/Qt-Responsive---v?node-id=1902-48455&m=dev

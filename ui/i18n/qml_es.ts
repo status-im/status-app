@@ -358,77 +358,6 @@
     </message>
 </context>
 <context>
-    <name>ActivityCenterLayout</name>
-    <message>
-        <source>Notifications</source>
-        <translation>Notificaciones</translation>
-    </message>
-    <message>
-        <source>Mark all as Read</source>
-        <translation>Marcar todo como leído</translation>
-    </message>
-    <message>
-        <source>Show read notifications</source>
-        <translation>Mostrar notificaciones leídas</translation>
-    </message>
-    <message>
-        <source>Hide read notifications</source>
-        <translation>Ocultar notificaciones leídas</translation>
-    </message>
-    <message>
-        <source>Pair new device and sync profile</source>
-        <translation>Emparejar nuevo dispositivo y sincronizar perfil</translation>
-    </message>
-    <message>
-        <source>New device with %1 profile has been detected. You can see the device ID below and on your other device. Only confirm the request if the device ID matches.</source>
-        <translation>Se detectó un nuevo dispositivo con el perfil %1. Puedes ver el ID del dispositivo a continuación y en tu otro dispositivo. Solo confirma la solicitud si el ID del dispositivo coincide.</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancelar</translation>
-    </message>
-    <message>
-        <source>Pair and Sync</source>
-        <translation>Emparejar y sincronizar</translation>
-    </message>
-    <message>
-        <source>Pair this device and sync profile</source>
-        <translation>Emparejar este dispositivo y sincronizar perfil</translation>
-    </message>
-    <message>
-        <source>Check your other device for a pairing request. Ensure that the this device ID displayed on your other device. Only proceed with pairing and syncing if the IDs are identical.</source>
-        <translation>Revisa tu otro dispositivo para una solicitud de emparejamiento. Asegúrate de que el ID de este dispositivo se muestre en tu otro dispositivo. Solo procede con el emparejamiento y la sincronización si los ID son idénticos.</translation>
-    </message>
-    <message>
-        <source>Enable RSS to receive Status News notifications</source>
-        <translation>Habilitar RSS para recibir notificaciones de Status News</translation>
-    </message>
-    <message>
-        <source>Enable Status News notifications</source>
-        <translation>Habilitar notificaciones de Status News</translation>
-    </message>
-    <message>
-        <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
-        <translation>RSS está deshabilitado actualmente a través de tu configuración de Privacidad y Seguridad. Habilita RSS para recibir notificaciones de Status News sobre próximas funciones y anuncios importantes.</translation>
-    </message>
-    <message>
-        <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
-        <translation>Esta función está desactivada actualmente. Habilita las notificaciones de Status News para recibir notificaciones sobre próximas funciones y anuncios importantes</translation>
-    </message>
-    <message>
-        <source>Enable RSS</source>
-        <translation>Habilitar RSS</translation>
-    </message>
-    <message>
-        <source>You&apos;re all caught up</source>
-        <translation>Estás al día</translation>
-    </message>
-    <message>
-        <source>Your notifications will appear here</source>
-        <translation>Tus notificaciones aparecerán aquí</translation>
-    </message>
-</context>
-<context>
     <name>ActivityCenterPanel</name>
     <message>
         <source>Notifications</source>
@@ -617,276 +546,6 @@
     <message>
         <source>Clear all filters</source>
         <translation>Limpiar todos los filtros</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityBanUnban</name>
-    <message>
-        <source>You were &lt;font color=&apos;%1&apos;&gt;banned&lt;/font&gt; from community</source>
-        <translation>Fuiste &lt;font color=&apos;%1&apos;&gt;bloqueado&lt;/font&gt; de la comunidad</translation>
-    </message>
-    <message>
-        <source>You have been  &lt;font color=&apos;%1&apos;&gt;unbanned&lt;/font&gt; from community</source>
-        <translation>Has sido &lt;font color=&apos;%1&apos;&gt;desbloqueado&lt;/font&gt; de la comunidad</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityKicked</name>
-    <message>
-        <source>You were &lt;font color=&apos;%1&apos;&gt;kicked&lt;/font&gt; from community</source>
-        <translation>Fuiste &lt;font color=&apos;%1&apos;&gt;expulsado&lt;/font&gt; de la comunidad</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityMembershipRequest</name>
-    <message>
-        <source>accepted</source>
-        <translation>aceptado</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>rechazado</translation>
-    </message>
-    <message>
-        <source>accepted pending</source>
-        <translation>aceptado pendiente</translation>
-    </message>
-    <message>
-        <source>declined pending</source>
-        <translation>rechazado pendiente</translation>
-    </message>
-    <message>
-        <source>Requested membership in your community &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>Solicitó membresía en tu comunidad &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityRequest</name>
-    <message>
-        <source>Request to join &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>Solicitud para unirse a &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</translation>
-    </message>
-    <message>
-        <source>pending</source>
-        <translation>pendiente</translation>
-    </message>
-    <message>
-        <source>accepted</source>
-        <translation>aceptado</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>rechazado</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityShareAddresses</name>
-    <message>
-        <source>%1 requires you to share your Accounts</source>
-        <translation>%1 requiere que compartas tus cuentas</translation>
-    </message>
-    <message>
-        <source>To continue to be a member of %1, you need to share your accounts</source>
-        <translation>Para continuar siendo miembro de %1, necesitas compartir tus cuentas</translation>
-    </message>
-    <message>
-        <source>Share</source>
-        <translation>Compartir</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityTokenReceived</name>
-    <message>
-        <source>Learn more</source>
-        <translation>Ver más</translation>
-    </message>
-    <message>
-        <source>Transaction details</source>
-        <translation>Detalles de la transacción</translation>
-    </message>
-    <message>
-        <source>You received your first community asset</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>You received your first community collectible</source>
-        <translation>Recibiste tu primer coleccionable de comunidad</translation>
-    </message>
-    <message>
-        <source>Tokens received</source>
-        <translation>Tokens recibidos</translation>
-    </message>
-    <message>
-        <source>%1 %2 was airdropped to you from the %3 community</source>
-        <translation>%1 %2 fueron enviados por airdrop desde la comunidad %3</translation>
-    </message>
-    <message>
-        <source>You were airdropped %1 %2 from %3 to %4</source>
-        <translation></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationContactRemoved</name>
-    <message>
-        <source>Removed you as a contact</source>
-        <translation>Te eliminó como contacto</translation>
-    </message>
-    <message>
-        <source>Send Contact Request</source>
-        <translation>Enviar solicitud de contacto</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationContactRequest</name>
-    <message>
-        <source>accepted</source>
-        <translation>aceptado</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>rechazado</translation>
-    </message>
-    <message>
-        <source>pending</source>
-        <translation>pendiente</translation>
-    </message>
-    <message>
-        <source>Contact request sent to %1 &lt;font color=&apos;%2&apos;&gt;%3&lt;/font&gt;</source>
-        <translation>Solicitud de contacto enviada a %1 &lt;font color=&apos;%2&apos;&gt;%3&lt;/font&gt;</translation>
-    </message>
-    <message>
-        <source>Contact request &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>Solicitud de contacto &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewDevice</name>
-    <message>
-        <source>More details</source>
-        <translation>Más detalles</translation>
-    </message>
-    <message>
-        <source>New device detected</source>
-        <translation>Nuevo dispositivo detectado</translation>
-    </message>
-    <message>
-        <source>New device with %1 profile has been detected.</source>
-        <translation>Se detectó un nuevo dispositivo con el perfil %1.</translation>
-    </message>
-    <message>
-        <source>Sync your profile</source>
-        <translation>Sincronizar tu perfil</translation>
-    </message>
-    <message>
-        <source>Check your other device for a pairing request.</source>
-        <translation>Revisa tu otro dispositivo para una solicitud de emparejamiento.</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewKeypairFromPairedDevice</name>
-    <message>
-        <source>View key pair import options</source>
-        <translation>Ver opciones de importación de par de claves</translation>
-    </message>
-    <message>
-        <source>New key pair added</source>
-        <translation>Nuevo par de claves agregado</translation>
-    </message>
-    <message>
-        <source>%1 key pair was added to one of your synced devices</source>
-        <translation>El par de claves %1 fue agregado a uno de tus dispositivos sincronizados</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewsMessage</name>
-    <message>
-        <source>Learn more</source>
-        <translation>Ver más</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationReply</name>
-    <message>
-        <source>sticker</source>
-        <translation>sticker</translation>
-    </message>
-    <message>
-        <source>emoji</source>
-        <translation>emoji</translation>
-    </message>
-    <message>
-        <source>transaction</source>
-        <translation>transacción</translation>
-    </message>
-    <message>
-        <source>image</source>
-        <translation>imagen</translation>
-    </message>
-    <message>
-        <source>audio</source>
-        <translation>audio</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationTransferOwnership</name>
-    <message>
-        <source>You received the owner token from %1</source>
-        <translation>Recibiste el token de propietario de %1</translation>
-    </message>
-    <message>
-        <source>To finalise your ownership of the %1 Community, make your device the control node</source>
-        <translation>Para finalizar tu propiedad de la Comunidad %1, convierte tu dispositivo en el nodo de control</translation>
-    </message>
-    <message>
-        <source>Finalise ownership</source>
-        <translation>Finalizar propiedad</translation>
-    </message>
-    <message>
-        <source>Ownership Declined</source>
-        <translation>Propiedad rechazada</translation>
-    </message>
-    <message>
-        <source>Your device is now the control node for %1</source>
-        <translation>Tu dispositivo es ahora el nodo de control para %1</translation>
-    </message>
-    <message>
-        <source>Congratulations, you are now the official owner of the %1 Community with full admin rights</source>
-        <translation>Felicidades, ahora eres el propietario oficial de la Comunidad %1 con derechos de administrador completos</translation>
-    </message>
-    <message>
-        <source>Community admin</source>
-        <translation>Administrador de la comunidad</translation>
-    </message>
-    <message>
-        <source>%1 smart contract update failed</source>
-        <translation>La actualización del contrato inteligente %1 falló</translation>
-    </message>
-    <message>
-        <source>You will need to retry the transaction in order to finalise your ownership of the %1 community</source>
-        <translation>Necesitarás reintentar la transacción para finalmente obtener la propiedad de la comunidad %1</translation>
-    </message>
-    <message>
-        <source>Your device is no longer the control node for %1</source>
-        <translation>Tu dispositivo ya no es el nodo de control para %1</translation>
-    </message>
-    <message>
-        <source>Your ownership and admin rights for %1 have been removed and transferred to the new owner</source>
-        <translation>Tu propiedad y derechos de administrador para %1 han sido eliminados y transferidos al nuevo propietario</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationUnknownGroupChatInvitation</name>
-    <message>
-        <source>accepted</source>
-        <translation>aceptado</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>rechazado</translation>
-    </message>
-    <message>
-        <source>Invitation to an unknown group &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>Invitación a un grupo desconocido &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</translation>
     </message>
 </context>
 <context>
@@ -2882,10 +2541,6 @@ Do you wish to override the security check and continue?</source>
         <source>Menu</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Open Tabs view</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>BrowserPrivacyWall</name>
@@ -4497,25 +4152,6 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <message>
         <source>Remove Rejection</source>
         <translation>Eliminar rechazo</translation>
-    </message>
-</context>
-<context>
-    <name>ContactRequestCta</name>
-    <message>
-        <source>Accepted</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Pending</source>
-        <translation>Pendiente</translation>
-    </message>
-    <message>
-        <source>Declined &amp; Blocked</source>
-        <translation>Rechazada y bloqueada</translation>
-    </message>
-    <message>
-        <source>Declined</source>
-        <translation></translation>
     </message>
 </context>
 <context>
@@ -7908,13 +7544,6 @@ Por favor, agrégala e intenta de nuevo.</translation>
     </message>
 </context>
 <context>
-    <name>FeeRow</name>
-    <message>
-        <source>Max.</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -9256,10 +8885,6 @@ Are you sure you want to do this?</source>
         <source>PIN correct</source>
         <translation>PIN correcto</translation>
     </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
         <translation>
@@ -10368,10 +9993,6 @@ acceso a tus fondos.</translation>
     <message>
         <source>Set Display Currency</source>
         <translation>Establecer moneda de visualización</translation>
-    </message>
-    <message>
-        <source>Search Currencies</source>
-        <translation>Buscar monedas</translation>
     </message>
     <message>
         <source>Language</source>
@@ -11532,25 +11153,6 @@ al cargar</translation>
     <message>
         <source>Reject</source>
         <translation>Rechazar</translation>
-    </message>
-</context>
-<context>
-    <name>MembershipCta</name>
-    <message>
-        <source>Accepted</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Declined</source>
-        <translation>Rechazado</translation>
-    </message>
-    <message>
-        <source>Accept pending</source>
-        <translation>Aceptar pendiente</translation>
-    </message>
-    <message>
-        <source>Reject pending</source>
-        <translation>Rechazar pendiente</translation>
     </message>
 </context>
 <context>
@@ -15047,18 +14649,6 @@ al cargar</translation>
 <context>
     <name>ReviewContactRequestPopup</name>
     <message>
-        <source>Review Contact Request</source>
-        <translation>Revisar solicitud de contacto</translation>
-    </message>
-    <message>
-        <source>Accept Contact Request</source>
-        <translation>Aceptar solicitud de contacto</translation>
-    </message>
-    <message>
-        <source>Reject Contact Request</source>
-        <translation>Rechazar solicitud de contacto</translation>
-    </message>
-    <message>
         <source>Review contact request</source>
         <translation>Revisar solicitud de contacto</translation>
     </message>
@@ -16580,6 +16170,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>StatusCurrencySelector</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Buscar</translation>
+    </message>
+</context>
+<context>
     <name>StatusDatePicker</name>
     <message>
         <source>Today</source>
@@ -16783,13 +16380,6 @@ al cargar</translation>
 </context>
 <context>
     <name>StatusLanguageSelector</name>
-    <message>
-        <source>Search</source>
-        <translation>Buscar</translation>
-    </message>
-</context>
-<context>
-    <name>StatusListPicker</name>
     <message>
         <source>Search</source>
         <translation>Buscar</translation>
@@ -19824,10 +19414,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <name>main</name>
     <message>
         <source>Status Desktop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

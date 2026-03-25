@@ -1,9 +1,6 @@
-ChannelBadge 1.0 ChannelBadge.qml
-CommunityBadge 1.0 CommunityBadge.qml
 NotificationAvatar 1.0 NotificationAvatar.qml
 NotificationBaseHeaderRow 1.0 NotificationBaseHeaderRow.qml
 NotificationHeaderRow 1.0 NotificationHeaderRow.qml
 NotificationCard 1.0 NotificationCard.qml
 NotificationContentBlock 1.0 NotificationContentBlock.qml
 NotificationContextRow 1.0 NotificationContextRow.qml
-ReplyBadge 1.0 ReplyBadge.qml

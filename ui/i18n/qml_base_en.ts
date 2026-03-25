@@ -358,77 +358,6 @@
     </message>
 </context>
 <context>
-    <name>ActivityCenterLayout</name>
-    <message>
-        <source>Notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mark all as Read</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Show read notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hide read notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Pair new device and sync profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>New device with %1 profile has been detected. You can see the device ID below and on your other device. Only confirm the request if the device ID matches.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Pair and Sync</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Pair this device and sync profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Check your other device for a pairing request. Ensure that the this device ID displayed on your other device. Only proceed with pairing and syncing if the IDs are identical.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable RSS to receive Status News notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable Status News notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable RSS</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You&apos;re all caught up</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your notifications will appear here</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ActivityCenterPanel</name>
     <message>
         <source>Notifications</source>
@@ -616,276 +545,6 @@
     </message>
     <message>
         <source>Contract Interaction</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityBanUnban</name>
-    <message>
-        <source>You were &lt;font color=&apos;%1&apos;&gt;banned&lt;/font&gt; from community</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You have been  &lt;font color=&apos;%1&apos;&gt;unbanned&lt;/font&gt; from community</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityKicked</name>
-    <message>
-        <source>You were &lt;font color=&apos;%1&apos;&gt;kicked&lt;/font&gt; from community</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityMembershipRequest</name>
-    <message>
-        <source>accepted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>accepted pending</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>declined pending</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Requested membership in your community &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityRequest</name>
-    <message>
-        <source>Request to join &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>pending</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>accepted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityShareAddresses</name>
-    <message>
-        <source>%1 requires you to share your Accounts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>To continue to be a member of %1, you need to share your accounts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Share</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityTokenReceived</name>
-    <message>
-        <source>Learn more</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Transaction details</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You received your first community asset</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You received your first community collectible</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Tokens received</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 %2 was airdropped to you from the %3 community</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You were airdropped %1 %2 from %3 to %4</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationContactRemoved</name>
-    <message>
-        <source>Removed you as a contact</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Send Contact Request</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationContactRequest</name>
-    <message>
-        <source>accepted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>pending</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Contact request sent to %1 &lt;font color=&apos;%2&apos;&gt;%3&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Contact request &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewDevice</name>
-    <message>
-        <source>More details</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>New device detected</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>New device with %1 profile has been detected.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sync your profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Check your other device for a pairing request.</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewKeypairFromPairedDevice</name>
-    <message>
-        <source>View key pair import options</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>New key pair added</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 key pair was added to one of your synced devices</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewsMessage</name>
-    <message>
-        <source>Learn more</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationReply</name>
-    <message>
-        <source>sticker</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>emoji</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>transaction</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>image</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>audio</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationTransferOwnership</name>
-    <message>
-        <source>You received the owner token from %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>To finalise your ownership of the %1 Community, make your device the control node</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Finalise ownership</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ownership Declined</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your device is now the control node for %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Congratulations, you are now the official owner of the %1 Community with full admin rights</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Community admin</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 smart contract update failed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>You will need to retry the transaction in order to finalise your ownership of the %1 community</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your device is no longer the control node for %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your ownership and admin rights for %1 have been removed and transferred to the new owner</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationUnknownGroupChatInvitation</name>
-    <message>
-        <source>accepted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Invitation to an unknown group &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2878,10 +2537,6 @@ Do you wish to override the security check and continue?</source>
         <source>Menu</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Open Tabs view</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>BrowserPrivacyWall</name>
@@ -4489,25 +4144,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     </message>
     <message>
         <source>Remove Rejection</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>ContactRequestCta</name>
-    <message>
-        <source>Accepted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Pending</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Declined &amp; Blocked</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Declined</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7894,13 +7530,6 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
-    <name>FeeRow</name>
-    <message>
-        <source>Max.</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -9241,10 +8870,6 @@ Are you sure you want to do this?</source>
         <source>PIN correct</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
         <translation type="unfinished">
@@ -10351,10 +9976,6 @@ access to your funds.</source>
     <name>LanguageView</name>
     <message>
         <source>Set Display Currency</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Search Currencies</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -11514,25 +11135,6 @@ to load</source>
     </message>
     <message>
         <source>Reject</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>MembershipCta</name>
-    <message>
-        <source>Accepted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Declined</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Accept pending</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reject pending</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15028,18 +14630,6 @@ to load</source>
 <context>
     <name>ReviewContactRequestPopup</name>
     <message>
-        <source>Review Contact Request</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Accept Contact Request</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reject Contact Request</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Review contact request</source>
         <translation type="unfinished"></translation>
     </message>
@@ -16561,6 +16151,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StatusCurrencySelector</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>StatusDatePicker</name>
     <message>
         <source>Today</source>
@@ -16764,13 +16361,6 @@ to load</source>
 </context>
 <context>
     <name>StatusLanguageSelector</name>
-    <message>
-        <source>Search</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>StatusListPicker</name>
     <message>
         <source>Search</source>
         <translation type="unfinished"></translation>
@@ -19808,10 +19398,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Report a bug on GitHub</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

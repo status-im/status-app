@@ -440,94 +440,6 @@
     </message>
   </context>
   <context>
-    <name>ActivityCenterLayout</name>
-    <message>
-      <source>Notifications</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Notifications</translation>
-    </message>
-    <message>
-      <source>Mark all as Read</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Mark all as Read</translation>
-    </message>
-    <message>
-      <source>Show read notifications</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Show read notifications</translation>
-    </message>
-    <message>
-      <source>Hide read notifications</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Hide read notifications</translation>
-    </message>
-    <message>
-      <source>Pair new device and sync profile</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Pair new device and sync profile</translation>
-    </message>
-    <message>
-      <source>New device with %1 profile has been detected. You can see the device ID below and on your other device. Only confirm the request if the device ID matches.</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>New device with %1 profile has been detected. You can see the device ID below and on your other device. Only confirm the request if the device ID matches.</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Cancel</translation>
-    </message>
-    <message>
-      <source>Pair and Sync</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Pair and Sync</translation>
-    </message>
-    <message>
-      <source>Pair this device and sync profile</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Pair this device and sync profile</translation>
-    </message>
-    <message>
-      <source>Check your other device for a pairing request. Ensure that the this device ID displayed on your other device. Only proceed with pairing and syncing if the IDs are identical.</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Check your other device for a pairing request. Ensure that the this device ID displayed on your other device. Only proceed with pairing and syncing if the IDs are identical.</translation>
-    </message>
-    <message>
-      <source>Enable RSS to receive Status News notifications</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Enable RSS to receive Status News notifications</translation>
-    </message>
-    <message>
-      <source>Enable Status News notifications</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Enable Status News notifications</translation>
-    </message>
-    <message>
-      <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</translation>
-    </message>
-    <message>
-      <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</translation>
-    </message>
-    <message>
-      <source>Enable RSS</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Enable RSS</translation>
-    </message>
-    <message>
-      <source>You&#39;re all caught up</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>You&#39;re all caught up</translation>
-    </message>
-    <message>
-      <source>Your notifications will appear here</source>
-      <comment>ActivityCenterLayout</comment>
-      <translation>Your notifications will appear here</translation>
-    </message>
-  </context>
-  <context>
     <name>ActivityCenterPanel</name>
     <message>
       <source>Notifications</source>
@@ -760,333 +672,6 @@
       <source>Contract Interaction</source>
       <comment>ActivityFilterPanel</comment>
       <translation>Contract Interaction</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationCommunityBanUnban</name>
-    <message>
-      <source>You were &lt;font color=&#39;%1&#39;&gt;banned&lt;/font&gt; from community</source>
-      <comment>ActivityNotificationCommunityBanUnban</comment>
-      <translation>You were &lt;font color=&#39;%1&#39;&gt;banned&lt;/font&gt; from community</translation>
-    </message>
-    <message>
-      <source>You have been  &lt;font color=&#39;%1&#39;&gt;unbanned&lt;/font&gt; from community</source>
-      <comment>ActivityNotificationCommunityBanUnban</comment>
-      <translation>You have been  &lt;font color=&#39;%1&#39;&gt;unbanned&lt;/font&gt; from community</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationCommunityKicked</name>
-    <message>
-      <source>You were &lt;font color=&#39;%1&#39;&gt;kicked&lt;/font&gt; from community</source>
-      <comment>ActivityNotificationCommunityKicked</comment>
-      <translation>You were &lt;font color=&#39;%1&#39;&gt;kicked&lt;/font&gt; from community</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationCommunityMembershipRequest</name>
-    <message>
-      <source>accepted</source>
-      <comment>ActivityNotificationCommunityMembershipRequest</comment>
-      <translation>accepted</translation>
-    </message>
-    <message>
-      <source>declined</source>
-      <comment>ActivityNotificationCommunityMembershipRequest</comment>
-      <translation>declined</translation>
-    </message>
-    <message>
-      <source>accepted pending</source>
-      <comment>ActivityNotificationCommunityMembershipRequest</comment>
-      <translation>accepted pending</translation>
-    </message>
-    <message>
-      <source>declined pending</source>
-      <comment>ActivityNotificationCommunityMembershipRequest</comment>
-      <translation>declined pending</translation>
-    </message>
-    <message>
-      <source>Requested membership in your community &lt;font color=&#39;%1&#39;&gt;%2&lt;/font&gt;</source>
-      <comment>ActivityNotificationCommunityMembershipRequest</comment>
-      <translation>Requested membership in your community &lt;font color=&#39;%1&#39;&gt;%2&lt;/font&gt;</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationCommunityRequest</name>
-    <message>
-      <source>Request to join &lt;font color=&#39;%1&#39;&gt;%2&lt;/font&gt;</source>
-      <comment>ActivityNotificationCommunityRequest</comment>
-      <translation>Request to join &lt;font color=&#39;%1&#39;&gt;%2&lt;/font&gt;</translation>
-    </message>
-    <message>
-      <source>pending</source>
-      <comment>ActivityNotificationCommunityRequest</comment>
-      <translation>pending</translation>
-    </message>
-    <message>
-      <source>accepted</source>
-      <comment>ActivityNotificationCommunityRequest</comment>
-      <translation>accepted</translation>
-    </message>
-    <message>
-      <source>declined</source>
-      <comment>ActivityNotificationCommunityRequest</comment>
-      <translation>declined</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationCommunityShareAddresses</name>
-    <message>
-      <source>%1 requires you to share your Accounts</source>
-      <comment>ActivityNotificationCommunityShareAddresses</comment>
-      <translation>%1 requires you to share your Accounts</translation>
-    </message>
-    <message>
-      <source>To continue to be a member of %1, you need to share your accounts</source>
-      <comment>ActivityNotificationCommunityShareAddresses</comment>
-      <translation>To continue to be a member of %1, you need to share your accounts</translation>
-    </message>
-    <message>
-      <source>Share</source>
-      <comment>ActivityNotificationCommunityShareAddresses</comment>
-      <translation>Share</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationCommunityTokenReceived</name>
-    <message>
-      <source>Learn more</source>
-      <comment>ActivityNotificationCommunityTokenReceived</comment>
-      <translation>Learn more</translation>
-    </message>
-    <message>
-      <source>Transaction details</source>
-      <comment>ActivityNotificationCommunityTokenReceived</comment>
-      <translation>Transaction details</translation>
-    </message>
-    <message>
-      <source>You received your first community asset</source>
-      <comment>ActivityNotificationCommunityTokenReceived</comment>
-      <translation>You received your first community asset</translation>
-    </message>
-    <message>
-      <source>You received your first community collectible</source>
-      <comment>ActivityNotificationCommunityTokenReceived</comment>
-      <translation>You received your first community collectible</translation>
-    </message>
-    <message>
-      <source>Tokens received</source>
-      <comment>ActivityNotificationCommunityTokenReceived</comment>
-      <translation>Tokens received</translation>
-    </message>
-    <message>
-      <source>%1 %2 was airdropped to you from the %3 community</source>
-      <comment>ActivityNotificationCommunityTokenReceived</comment>
-      <translation>%1 %2 was airdropped to you from the %3 community</translation>
-    </message>
-    <message>
-      <source>You were airdropped %1 %2 from %3 to %4</source>
-      <comment>ActivityNotificationCommunityTokenReceived</comment>
-      <translation>You were airdropped %1 %2 from %3 to %4</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationContactRemoved</name>
-    <message>
-      <source>Removed you as a contact</source>
-      <comment>ActivityNotificationContactRemoved</comment>
-      <translation>Removed you as a contact</translation>
-    </message>
-    <message>
-      <source>Send Contact Request</source>
-      <comment>ActivityNotificationContactRemoved</comment>
-      <translation>Send Contact Request</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationContactRequest</name>
-    <message>
-      <source>accepted</source>
-      <comment>ActivityNotificationContactRequest</comment>
-      <translation>accepted</translation>
-    </message>
-    <message>
-      <source>declined</source>
-      <comment>ActivityNotificationContactRequest</comment>
-      <translation>declined</translation>
-    </message>
-    <message>
-      <source>pending</source>
-      <comment>ActivityNotificationContactRequest</comment>
-      <translation>pending</translation>
-    </message>
-    <message>
-      <source>Contact request sent to %1 &lt;font color=&#39;%2&#39;&gt;%3&lt;/font&gt;</source>
-      <comment>ActivityNotificationContactRequest</comment>
-      <translation>Contact request sent to %1 &lt;font color=&#39;%2&#39;&gt;%3&lt;/font&gt;</translation>
-    </message>
-    <message>
-      <source>Contact request &lt;font color=&#39;%1&#39;&gt;%2&lt;/font&gt;</source>
-      <comment>ActivityNotificationContactRequest</comment>
-      <translation>Contact request &lt;font color=&#39;%1&#39;&gt;%2&lt;/font&gt;</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationNewDevice</name>
-    <message>
-      <source>More details</source>
-      <comment>ActivityNotificationNewDevice</comment>
-      <translation>More details</translation>
-    </message>
-    <message>
-      <source>New device detected</source>
-      <comment>ActivityNotificationNewDevice</comment>
-      <translation>New device detected</translation>
-    </message>
-    <message>
-      <source>New device with %1 profile has been detected.</source>
-      <comment>ActivityNotificationNewDevice</comment>
-      <translation>New device with %1 profile has been detected.</translation>
-    </message>
-    <message>
-      <source>Sync your profile</source>
-      <comment>ActivityNotificationNewDevice</comment>
-      <translation>Sync your profile</translation>
-    </message>
-    <message>
-      <source>Check your other device for a pairing request.</source>
-      <comment>ActivityNotificationNewDevice</comment>
-      <translation>Check your other device for a pairing request.</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationNewKeypairFromPairedDevice</name>
-    <message>
-      <source>View key pair import options</source>
-      <comment>ActivityNotificationNewKeypairFromPairedDevice</comment>
-      <translation>View key pair import options</translation>
-    </message>
-    <message>
-      <source>New key pair added</source>
-      <comment>ActivityNotificationNewKeypairFromPairedDevice</comment>
-      <translation>New key pair added</translation>
-    </message>
-    <message>
-      <source>%1 key pair was added to one of your synced devices</source>
-      <comment>ActivityNotificationNewKeypairFromPairedDevice</comment>
-      <translation>%1 key pair was added to one of your synced devices</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationNewsMessage</name>
-    <message>
-      <source>Learn more</source>
-      <comment>ActivityNotificationNewsMessage</comment>
-      <translation>Learn more</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationReply</name>
-    <message>
-      <source>sticker</source>
-      <comment>ActivityNotificationReply</comment>
-      <translation>sticker</translation>
-    </message>
-    <message>
-      <source>emoji</source>
-      <comment>ActivityNotificationReply</comment>
-      <translation>emoji</translation>
-    </message>
-    <message>
-      <source>transaction</source>
-      <comment>ActivityNotificationReply</comment>
-      <translation>transaction</translation>
-    </message>
-    <message>
-      <source>image</source>
-      <comment>ActivityNotificationReply</comment>
-      <translation>image</translation>
-    </message>
-    <message>
-      <source>audio</source>
-      <comment>ActivityNotificationReply</comment>
-      <translation>audio</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationTransferOwnership</name>
-    <message>
-      <source>You received the owner token from %1</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>You received the owner token from %1</translation>
-    </message>
-    <message>
-      <source>To finalise your ownership of the %1 Community, make your device the control node</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>To finalise your ownership of the %1 Community, make your device the control node</translation>
-    </message>
-    <message>
-      <source>Finalise ownership</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>Finalise ownership</translation>
-    </message>
-    <message>
-      <source>Ownership Declined</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>Ownership Declined</translation>
-    </message>
-    <message>
-      <source>Your device is now the control node for %1</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>Your device is now the control node for %1</translation>
-    </message>
-    <message>
-      <source>Congratulations, you are now the official owner of the %1 Community with full admin rights</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>Congratulations, you are now the official owner of the %1 Community with full admin rights</translation>
-    </message>
-    <message>
-      <source>Community admin</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>Community admin</translation>
-    </message>
-    <message>
-      <source>%1 smart contract update failed</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>%1 smart contract update failed</translation>
-    </message>
-    <message>
-      <source>You will need to retry the transaction in order to finalise your ownership of the %1 community</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>You will need to retry the transaction in order to finalise your ownership of the %1 community</translation>
-    </message>
-    <message>
-      <source>Your device is no longer the control node for %1</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>Your device is no longer the control node for %1</translation>
-    </message>
-    <message>
-      <source>Your ownership and admin rights for %1 have been removed and transferred to the new owner</source>
-      <comment>ActivityNotificationTransferOwnership</comment>
-      <translation>Your ownership and admin rights for %1 have been removed and transferred to the new owner</translation>
-    </message>
-  </context>
-  <context>
-    <name>ActivityNotificationUnknownGroupChatInvitation</name>
-    <message>
-      <source>accepted</source>
-      <comment>ActivityNotificationUnknownGroupChatInvitation</comment>
-      <translation>accepted</translation>
-    </message>
-    <message>
-      <source>declined</source>
-      <comment>ActivityNotificationUnknownGroupChatInvitation</comment>
-      <translation>declined</translation>
-    </message>
-    <message>
-      <source>Invitation to an unknown group &lt;font color=&#39;%1&#39;&gt;%2&lt;/font&gt;</source>
-      <comment>ActivityNotificationUnknownGroupChatInvitation</comment>
-      <translation>Invitation to an unknown group &lt;font color=&#39;%1&#39;&gt;%2&lt;/font&gt;</translation>
     </message>
   </context>
   <context>
@@ -3526,11 +3111,6 @@
       <comment>BrowserPortraitToolbar</comment>
       <translation>Menu</translation>
     </message>
-    <message>
-      <source>Open Tabs view</source>
-      <comment>BrowserPortraitToolbar</comment>
-      <translation>Open Tabs view</translation>
-    </message>
   </context>
   <context>
     <name>BrowserPrivacyWall</name>
@@ -5481,29 +5061,6 @@
       <source>Remove Rejection</source>
       <comment>ContactPanel</comment>
       <translation>Remove Rejection</translation>
-    </message>
-  </context>
-  <context>
-    <name>ContactRequestCta</name>
-    <message>
-      <source>Accepted</source>
-      <comment>ContactRequestCta</comment>
-      <translation>Accepted</translation>
-    </message>
-    <message>
-      <source>Pending</source>
-      <comment>ContactRequestCta</comment>
-      <translation>Pending</translation>
-    </message>
-    <message>
-      <source>Declined &amp; Blocked</source>
-      <comment>ContactRequestCta</comment>
-      <translation>Declined &amp; Blocked</translation>
-    </message>
-    <message>
-      <source>Declined</source>
-      <comment>ContactRequestCta</comment>
-      <translation>Declined</translation>
     </message>
   </context>
   <context>
@@ -9645,14 +9202,6 @@
     </message>
   </context>
   <context>
-    <name>FeeRow</name>
-    <message>
-      <source>Max.</source>
-      <comment>FeeRow</comment>
-      <translation>Max.</translation>
-    </message>
-  </context>
-  <context>
     <name>FeesBox</name>
     <message>
       <source>Fees</source>
@@ -11273,11 +10822,6 @@
       <comment>KeycardEnterPinPage</comment>
       <translation>PIN correct</translation>
     </message>
-    <message>
-      <source>Keycard blocked</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>Keycard blocked</translation>
-    </message>
     <message numerus="yes">
       <source>%n attempt(s) remaining</source>
       <comment>KeycardEnterPinPage</comment>
@@ -12620,11 +12164,6 @@
       <source>Set Display Currency</source>
       <comment>LanguageView</comment>
       <translation>Set Display Currency</translation>
-    </message>
-    <message>
-      <source>Search Currencies</source>
-      <comment>LanguageView</comment>
-      <translation>Search Currencies</translation>
     </message>
     <message>
       <source>Language</source>
@@ -14022,29 +13561,6 @@
       <source>Reject</source>
       <comment>MembersTabPanel</comment>
       <translation>Reject</translation>
-    </message>
-  </context>
-  <context>
-    <name>MembershipCta</name>
-    <message>
-      <source>Accepted</source>
-      <comment>MembershipCta</comment>
-      <translation>Accepted</translation>
-    </message>
-    <message>
-      <source>Declined</source>
-      <comment>MembershipCta</comment>
-      <translation>Declined</translation>
-    </message>
-    <message>
-      <source>Accept pending</source>
-      <comment>MembershipCta</comment>
-      <translation>Accept pending</translation>
-    </message>
-    <message>
-      <source>Reject pending</source>
-      <comment>MembershipCta</comment>
-      <translation>Reject pending</translation>
     </message>
   </context>
   <context>
@@ -18309,21 +17825,6 @@
   <context>
     <name>ReviewContactRequestPopup</name>
     <message>
-      <source>Review Contact Request</source>
-      <comment>ReviewContactRequestPopup</comment>
-      <translation>Review Contact Request</translation>
-    </message>
-    <message>
-      <source>Accept Contact Request</source>
-      <comment>ReviewContactRequestPopup</comment>
-      <translation>Accept Contact Request</translation>
-    </message>
-    <message>
-      <source>Reject Contact Request</source>
-      <comment>ReviewContactRequestPopup</comment>
-      <translation>Reject Contact Request</translation>
-    </message>
-    <message>
       <source>Review contact request</source>
       <comment>ReviewContactRequestPopup</comment>
       <translation>Review contact request</translation>
@@ -20161,6 +19662,14 @@
     </message>
   </context>
   <context>
+    <name>StatusCurrencySelector</name>
+    <message>
+      <source>Search</source>
+      <comment>StatusCurrencySelector</comment>
+      <translation>Search</translation>
+    </message>
+  </context>
+  <context>
     <name>StatusDatePicker</name>
     <message>
       <source>Today</source>
@@ -20410,14 +19919,6 @@
     <message>
       <source>Search</source>
       <comment>StatusLanguageSelector</comment>
-      <translation>Search</translation>
-    </message>
-  </context>
-  <context>
-    <name>StatusListPicker</name>
-    <message>
-      <source>Search</source>
-      <comment>StatusListPicker</comment>
       <translation>Search</translation>
     </message>
   </context>
@@ -24110,11 +23611,6 @@
       <source>Report a bug on GitHub</source>
       <comment>main</comment>
       <translation>Report a bug on GitHub</translation>
-    </message>
-    <message>
-      <source>Hello World</source>
-      <comment>main</comment>
-      <translation>Hello World</translation>
     </message>
   </context>
   <context>

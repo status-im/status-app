@@ -358,77 +358,6 @@
     </message>
 </context>
 <context>
-    <name>ActivityCenterLayout</name>
-    <message>
-        <source>Notifications</source>
-        <translation>Oznámení</translation>
-    </message>
-    <message>
-        <source>Mark all as Read</source>
-        <translation>Označit vše jako přečtené</translation>
-    </message>
-    <message>
-        <source>Show read notifications</source>
-        <translation>Zobrazit přečtená oznámení</translation>
-    </message>
-    <message>
-        <source>Hide read notifications</source>
-        <translation>Skrýt přečtená oznámení</translation>
-    </message>
-    <message>
-        <source>Pair new device and sync profile</source>
-        <translation>Spárovat nové zařízení a synchronizovat profil</translation>
-    </message>
-    <message>
-        <source>New device with %1 profile has been detected. You can see the device ID below and on your other device. Only confirm the request if the device ID matches.</source>
-        <translation>Bylo detekováno nové zařízení s profilem %1. ID zařízení můžete vidět níže a na svém druhém zařízení. Žádost potvrďte pouze v případě, že se ID zařízení shodují.</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Zrušit</translation>
-    </message>
-    <message>
-        <source>Pair and Sync</source>
-        <translation>Spárovat a synchronizovat</translation>
-    </message>
-    <message>
-        <source>Pair this device and sync profile</source>
-        <translation>Spárovat toto zařízení a synchronizovat profil</translation>
-    </message>
-    <message>
-        <source>Check your other device for a pairing request. Ensure that the this device ID displayed on your other device. Only proceed with pairing and syncing if the IDs are identical.</source>
-        <translation>Zkontrolujte své druhé zařízení pro žádost o spárování. Ujistěte se, že ID tohoto zařízení je zobrazeno na vašem druhém zařízení. Pokračujte v párování a synchronizaci pouze v případě, že jsou ID shodná.</translation>
-    </message>
-    <message>
-        <source>Enable RSS to receive Status News notifications</source>
-        <translation>Povolit RSS pro příjem oznámení Status News</translation>
-    </message>
-    <message>
-        <source>Enable Status News notifications</source>
-        <translation>Povolit oznámení Status News</translation>
-    </message>
-    <message>
-        <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
-        <translation>RSS je momentálně zakázáno v nastavení Soukromí a zabezpečení. Povolte RSS pro příjem oznámení Status News o nadcházejících funkcích a důležitých oznámeních.</translation>
-    </message>
-    <message>
-        <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
-        <translation>Tato funkce je momentálně vypnutá. Povolte oznámení Status News pro příjem oznámení o nadcházejících funkcích a důležitých oznámeních</translation>
-    </message>
-    <message>
-        <source>Enable RSS</source>
-        <translation>Povolit RSS</translation>
-    </message>
-    <message>
-        <source>You&apos;re all caught up</source>
-        <translation>Vše máte přečtené</translation>
-    </message>
-    <message>
-        <source>Your notifications will appear here</source>
-        <translation>Zde se zobrazí vaše oznámení</translation>
-    </message>
-</context>
-<context>
     <name>ActivityCenterPanel</name>
     <message>
         <source>Notifications</source>
@@ -617,276 +546,6 @@
     <message>
         <source>Contract Interaction</source>
         <translation>Interakce s kontraktem</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityBanUnban</name>
-    <message>
-        <source>You were &lt;font color=&apos;%1&apos;&gt;banned&lt;/font&gt; from community</source>
-        <translation>Byli jste &lt;font color=&apos;%1&apos;&gt;zabanováni&lt;/font&gt; v komunitě</translation>
-    </message>
-    <message>
-        <source>You have been  &lt;font color=&apos;%1&apos;&gt;unbanned&lt;/font&gt; from community</source>
-        <translation>Byl vám zrušen &lt;font color=&apos;%1&apos;&gt;ban&lt;/font&gt; v komunitě</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityKicked</name>
-    <message>
-        <source>You were &lt;font color=&apos;%1&apos;&gt;kicked&lt;/font&gt; from community</source>
-        <translation>Byli jste &lt;font color=&apos;%1&apos;&gt;vyhozeni&lt;/font&gt; z komunity</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityMembershipRequest</name>
-    <message>
-        <source>accepted</source>
-        <translation>přijato</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>zamítnuto</translation>
-    </message>
-    <message>
-        <source>accepted pending</source>
-        <translation>přijetí čeká na vyřízení</translation>
-    </message>
-    <message>
-        <source>declined pending</source>
-        <translation>zamítnutí čeká na vyřízení</translation>
-    </message>
-    <message>
-        <source>Requested membership in your community &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>Požádal o členství ve vaší komunitě &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityRequest</name>
-    <message>
-        <source>Request to join &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>Žádost o připojení k &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</translation>
-    </message>
-    <message>
-        <source>pending</source>
-        <translation>čekající</translation>
-    </message>
-    <message>
-        <source>accepted</source>
-        <translation>přijato</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>zamítnuto</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityShareAddresses</name>
-    <message>
-        <source>%1 requires you to share your Accounts</source>
-        <translation>%1 vyžaduje sdílení vašich účtů</translation>
-    </message>
-    <message>
-        <source>To continue to be a member of %1, you need to share your accounts</source>
-        <translation>Abyste mohli zůstat členem %1, musíte sdílet své účty</translation>
-    </message>
-    <message>
-        <source>Share</source>
-        <translation>Sdílet</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityTokenReceived</name>
-    <message>
-        <source>Learn more</source>
-        <translation>Dozvědět se více</translation>
-    </message>
-    <message>
-        <source>Transaction details</source>
-        <translation>Podrobnosti transakce</translation>
-    </message>
-    <message>
-        <source>You received your first community asset</source>
-        <translation>Obdrželi jste své první komunitní aktivum</translation>
-    </message>
-    <message>
-        <source>You received your first community collectible</source>
-        <translation>Obdrželi jste svůj první komunitní sběratelský předmět</translation>
-    </message>
-    <message>
-        <source>Tokens received</source>
-        <translation>Přijaté tokeny</translation>
-    </message>
-    <message>
-        <source>%1 %2 was airdropped to you from the %3 community</source>
-        <translation>%1 %2 vám bylo zasláno formou airdropu z komunity %3</translation>
-    </message>
-    <message>
-        <source>You were airdropped %1 %2 from %3 to %4</source>
-        <translation>Obdrželi jste airdrop %1 %2 od %3 na %4</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationContactRemoved</name>
-    <message>
-        <source>Removed you as a contact</source>
-        <translation>Odebral vás z kontaktů</translation>
-    </message>
-    <message>
-        <source>Send Contact Request</source>
-        <translation>Odeslat žádost o kontakt</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationContactRequest</name>
-    <message>
-        <source>accepted</source>
-        <translation>přijato</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>zamítnuto</translation>
-    </message>
-    <message>
-        <source>pending</source>
-        <translation>čekající</translation>
-    </message>
-    <message>
-        <source>Contact request sent to %1 &lt;font color=&apos;%2&apos;&gt;%3&lt;/font&gt;</source>
-        <translation>Žádost o kontakt odeslána %1 &lt;font color=&apos;%2&apos;&gt;%3&lt;/font&gt;</translation>
-    </message>
-    <message>
-        <source>Contact request &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>Žádost o kontakt &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewDevice</name>
-    <message>
-        <source>More details</source>
-        <translation>Více podrobností</translation>
-    </message>
-    <message>
-        <source>New device detected</source>
-        <translation>Detekováno nové zařízení</translation>
-    </message>
-    <message>
-        <source>New device with %1 profile has been detected.</source>
-        <translation>Bylo detekováno nové zařízení s profilem %1.</translation>
-    </message>
-    <message>
-        <source>Sync your profile</source>
-        <translation>Synchronizovat váš profil</translation>
-    </message>
-    <message>
-        <source>Check your other device for a pairing request.</source>
-        <translation>Zkontrolujte své druhé zařízení pro žádost o spárování.</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewKeypairFromPairedDevice</name>
-    <message>
-        <source>View key pair import options</source>
-        <translation>Zobrazit možnosti importu páru klíčů</translation>
-    </message>
-    <message>
-        <source>New key pair added</source>
-        <translation>Přidán nový pár klíčů</translation>
-    </message>
-    <message>
-        <source>%1 key pair was added to one of your synced devices</source>
-        <translation>Pár klíčů %1 byl přidán do jednoho z vašich synchronizovaných zařízení</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewsMessage</name>
-    <message>
-        <source>Learn more</source>
-        <translation>Dozvědět se více</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationReply</name>
-    <message>
-        <source>sticker</source>
-        <translation>nálepka</translation>
-    </message>
-    <message>
-        <source>emoji</source>
-        <translation>emoji</translation>
-    </message>
-    <message>
-        <source>transaction</source>
-        <translation>transakce</translation>
-    </message>
-    <message>
-        <source>image</source>
-        <translation>obrázek</translation>
-    </message>
-    <message>
-        <source>audio</source>
-        <translation>zvuk</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationTransferOwnership</name>
-    <message>
-        <source>You received the owner token from %1</source>
-        <translation>Obdrželi jste vlastnický token od %1</translation>
-    </message>
-    <message>
-        <source>To finalise your ownership of the %1 Community, make your device the control node</source>
-        <translation>Pro dokončení vlastnictví komunity %1 udělejte ze svého zařízení kontrolní uzel</translation>
-    </message>
-    <message>
-        <source>Finalise ownership</source>
-        <translation>Dokončit vlastnictví</translation>
-    </message>
-    <message>
-        <source>Ownership Declined</source>
-        <translation>Vlastnictví odmítnuto</translation>
-    </message>
-    <message>
-        <source>Your device is now the control node for %1</source>
-        <translation>Vaše zařízení je nyní kontrolním uzlem pro %1</translation>
-    </message>
-    <message>
-        <source>Congratulations, you are now the official owner of the %1 Community with full admin rights</source>
-        <translation>Gratulujeme, nyní jste oficiálním vlastníkem komunity %1 s plnými administrátorskými právy</translation>
-    </message>
-    <message>
-        <source>Community admin</source>
-        <translation>Správce komunity</translation>
-    </message>
-    <message>
-        <source>%1 smart contract update failed</source>
-        <translation>Aktualizace chytrého kontraktu %1 selhala</translation>
-    </message>
-    <message>
-        <source>You will need to retry the transaction in order to finalise your ownership of the %1 community</source>
-        <translation>Budete muset transakci zopakovat, abyste dokončili vlastnictví komunity %1</translation>
-    </message>
-    <message>
-        <source>Your device is no longer the control node for %1</source>
-        <translation>Vaše zařízení již není kontrolním uzlem pro %1</translation>
-    </message>
-    <message>
-        <source>Your ownership and admin rights for %1 have been removed and transferred to the new owner</source>
-        <translation>Vaše vlastnická a administrátorská práva pro %1 byla odebrána a převedena na nového vlastníka</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationUnknownGroupChatInvitation</name>
-    <message>
-        <source>accepted</source>
-        <translation>přijato</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>zamítnuto</translation>
-    </message>
-    <message>
-        <source>Invitation to an unknown group &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>Pozvánka do neznámé skupiny &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</translation>
     </message>
 </context>
 <context>
@@ -2889,10 +2548,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <source>Menu</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Open Tabs view</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>BrowserPrivacyWall</name>
@@ -4512,25 +4167,6 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     <message>
         <source>Remove Rejection</source>
         <translation>Odstranit zamítnutí</translation>
-    </message>
-</context>
-<context>
-    <name>ContactRequestCta</name>
-    <message>
-        <source>Accepted</source>
-        <translation>Přijato</translation>
-    </message>
-    <message>
-        <source>Pending</source>
-        <translation>Nevyřízeno</translation>
-    </message>
-    <message>
-        <source>Declined &amp; Blocked</source>
-        <translation>Odmítnuto a zablokováno</translation>
-    </message>
-    <message>
-        <source>Declined</source>
-        <translation>Odmítnuto</translation>
     </message>
 </context>
 <context>
@@ -7935,13 +7571,6 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     </message>
 </context>
 <context>
-    <name>FeeRow</name>
-    <message>
-        <source>Max.</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -9293,10 +8922,6 @@ Opravdu to chcete udělat?</translation>
         <source>PIN correct</source>
         <translation>PIN správný</translation>
     </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation type="unfinished">Keycard zablokována</translation>
-    </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
         <translation>
@@ -10429,10 +10054,6 @@ přístup ke svým prostředkům.</translation>
     <message>
         <source>Set Display Currency</source>
         <translation>Nastavit měnu zobrazení</translation>
-    </message>
-    <message>
-        <source>Search Currencies</source>
-        <translation>Hledat měny</translation>
     </message>
     <message>
         <source>Language</source>
@@ -11606,25 +11227,6 @@ selhalo</translation>
     <message>
         <source>Reject</source>
         <translation>Odmítnout</translation>
-    </message>
-</context>
-<context>
-    <name>MembershipCta</name>
-    <message>
-        <source>Accepted</source>
-        <translation>Přijato</translation>
-    </message>
-    <message>
-        <source>Declined</source>
-        <translation>Odmítnuto</translation>
-    </message>
-    <message>
-        <source>Accept pending</source>
-        <translation>Přijetí nevyřízeno</translation>
-    </message>
-    <message>
-        <source>Reject pending</source>
-        <translation>Zamítnutí nevyřízeno</translation>
     </message>
 </context>
 <context>
@@ -15133,18 +14735,6 @@ selhalo</translation>
 <context>
     <name>ReviewContactRequestPopup</name>
     <message>
-        <source>Review Contact Request</source>
-        <translation>Zkontrolovat žádost o kontakt</translation>
-    </message>
-    <message>
-        <source>Accept Contact Request</source>
-        <translation>Přijmout žádost o kontakt</translation>
-    </message>
-    <message>
-        <source>Reject Contact Request</source>
-        <translation>Odmítnout žádost o kontakt</translation>
-    </message>
-    <message>
         <source>Review contact request</source>
         <translation>Zkontrolovat žádost o kontakt</translation>
     </message>
@@ -16673,6 +16263,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>StatusCurrencySelector</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Hledat</translation>
+    </message>
+</context>
+<context>
     <name>StatusDatePicker</name>
     <message>
         <source>Today</source>
@@ -16876,13 +16473,6 @@ selhalo</translation>
 </context>
 <context>
     <name>StatusLanguageSelector</name>
-    <message>
-        <source>Search</source>
-        <translation>Hledat</translation>
-    </message>
-</context>
-<context>
-    <name>StatusListPicker</name>
     <message>
         <source>Search</source>
         <translation>Hledat</translation>
@@ -19919,10 +19509,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>main</name>
     <message>
         <source>Status Desktop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

@@ -358,77 +358,6 @@
     </message>
 </context>
 <context>
-    <name>ActivityCenterLayout</name>
-    <message>
-        <source>Notifications</source>
-        <translation>알림</translation>
-    </message>
-    <message>
-        <source>Mark all as Read</source>
-        <translation>모두 읽은 것으로 표시</translation>
-    </message>
-    <message>
-        <source>Show read notifications</source>
-        <translation>읽음 알림 표시</translation>
-    </message>
-    <message>
-        <source>Hide read notifications</source>
-        <translation>읽은 알림 숨기기</translation>
-    </message>
-    <message>
-        <source>Pair new device and sync profile</source>
-        <translation>새 기기 페어링 및 프로필 동기화</translation>
-    </message>
-    <message>
-        <source>New device with %1 profile has been detected. You can see the device ID below and on your other device. Only confirm the request if the device ID matches.</source>
-        <translation>%1 프로필을 가진 새 기기가 감지되었습니다. 아래와 다른 기기에서 기기 ID를 확인할 수 있습니다. 기기 ID가 일치하는 경우에만 요청을 승인하세요.</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>취소</translation>
-    </message>
-    <message>
-        <source>Pair and Sync</source>
-        <translation>페어링 및 동기화</translation>
-    </message>
-    <message>
-        <source>Pair this device and sync profile</source>
-        <translation>이 기기를 페어링하고 프로필 동기화</translation>
-    </message>
-    <message>
-        <source>Check your other device for a pairing request. Ensure that the this device ID displayed on your other device. Only proceed with pairing and syncing if the IDs are identical.</source>
-        <translation>다른 기기에서 페어링 요청을 확인하세요. 다른 기기에 표시된 기기 ID가 이 기기 ID와 일치하는지 확인하세요. ID가 동일한 경우에만 페어링 및 동기화를 진행하세요.</translation>
-    </message>
-    <message>
-        <source>Enable RSS to receive Status News notifications</source>
-        <translation>RSS를 활성화하여 Status 뉴스 알림 받기</translation>
-    </message>
-    <message>
-        <source>Enable Status News notifications</source>
-        <translation>Status 뉴스 알림 활성화</translation>
-    </message>
-    <message>
-        <source>RSS is currently disabled via your Privacy &amp; Security settings. Enable RSS to receive Status News notifications about upcoming features and important announcements.</source>
-        <translation>RSS가 현재 개인정보 보호 및 보안 설정에서 비활성화되어 있습니다. RSS를 활성화하여 향후 기능 및 중요한 공지사항에 대한 Status 뉴스 알림을 받으세요.</translation>
-    </message>
-    <message>
-        <source>This feature is currently turned off. Enable Status News notifications to receive notifications about upcoming features and important announcements</source>
-        <translation>이 기능은 현재 비활성화되어 있습니다. Status 뉴스 알림을 활성화하여 예정된 기능과 중요한 공지사항에 대한 알림을 받으세요</translation>
-    </message>
-    <message>
-        <source>Enable RSS</source>
-        <translation>RSS 활성화</translation>
-    </message>
-    <message>
-        <source>You&apos;re all caught up</source>
-        <translation>모든 알림을 확인했습니다</translation>
-    </message>
-    <message>
-        <source>Your notifications will appear here</source>
-        <translation>알림이 여기에 표시됩니다</translation>
-    </message>
-</context>
-<context>
     <name>ActivityCenterPanel</name>
     <message>
         <source>Notifications</source>
@@ -617,276 +546,6 @@
     <message>
         <source>Contract Interaction</source>
         <translation>컨트랙트 상호작용</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityBanUnban</name>
-    <message>
-        <source>You were &lt;font color=&apos;%1&apos;&gt;banned&lt;/font&gt; from community</source>
-        <translation>커뮤니티에서 &lt;font color=&apos;%1&apos;&gt;차단되었습니다&lt;/font&gt;</translation>
-    </message>
-    <message>
-        <source>You have been  &lt;font color=&apos;%1&apos;&gt;unbanned&lt;/font&gt; from community</source>
-        <translation>커뮤니티에서  &lt;font color=&apos;%1&apos;&gt;차단 해제됨&lt;/font&gt;</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityKicked</name>
-    <message>
-        <source>You were &lt;font color=&apos;%1&apos;&gt;kicked&lt;/font&gt; from community</source>
-        <translation>커뮤니티에서 &lt;font color=&apos;%1&apos;&gt;강퇴되었습니다&lt;/font&gt;</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityMembershipRequest</name>
-    <message>
-        <source>accepted</source>
-        <translation>승인됨</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>거절됨</translation>
-    </message>
-    <message>
-        <source>accepted pending</source>
-        <translation>수락됨, 보류 중</translation>
-    </message>
-    <message>
-        <source>declined pending</source>
-        <translation>거절됨 대기 중</translation>
-    </message>
-    <message>
-        <source>Requested membership in your community &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>당신의 커뮤니티 &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt; 멤버십을 요청했습니다</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityRequest</name>
-    <message>
-        <source>Request to join &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>&lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;에 참여 요청</translation>
-    </message>
-    <message>
-        <source>pending</source>
-        <translation>대기 중</translation>
-    </message>
-    <message>
-        <source>accepted</source>
-        <translation>승인됨</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>거절됨</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityShareAddresses</name>
-    <message>
-        <source>%1 requires you to share your Accounts</source>
-        <translation>%1에서 내 계정을 공유하라고 요청합니다</translation>
-    </message>
-    <message>
-        <source>To continue to be a member of %1, you need to share your accounts</source>
-        <translation>%1의 멤버로 계속 있으려면 계정을 공유해야 합니다</translation>
-    </message>
-    <message>
-        <source>Share</source>
-        <translation>공유하기</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationCommunityTokenReceived</name>
-    <message>
-        <source>Learn more</source>
-        <translation>더 알아보기</translation>
-    </message>
-    <message>
-        <source>Transaction details</source>
-        <translation>트랜잭션 세부정보</translation>
-    </message>
-    <message>
-        <source>You received your first community asset</source>
-        <translation>첫 커뮤니티 자산을 받았어요</translation>
-    </message>
-    <message>
-        <source>You received your first community collectible</source>
-        <translation>첫 커뮤니티 수집품을 받았어요</translation>
-    </message>
-    <message>
-        <source>Tokens received</source>
-        <translation>토큰을 받았어요</translation>
-    </message>
-    <message>
-        <source>%1 %2 was airdropped to you from the %3 community</source>
-        <translation>%3 커뮤니티에서 %1 %2가 Airdrop으로 전송되었습니다</translation>
-    </message>
-    <message>
-        <source>You were airdropped %1 %2 from %3 to %4</source>
-        <translation>%3에서 %4로 %1 %2 Airdrop을 받았습니다</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationContactRemoved</name>
-    <message>
-        <source>Removed you as a contact</source>
-        <translation>연락처에서 당신을 제거했습니다</translation>
-    </message>
-    <message>
-        <source>Send Contact Request</source>
-        <translation>연락처 요청 보내기</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationContactRequest</name>
-    <message>
-        <source>accepted</source>
-        <translation>수락됨</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>거절됨</translation>
-    </message>
-    <message>
-        <source>pending</source>
-        <translation>대기 중</translation>
-    </message>
-    <message>
-        <source>Contact request sent to %1 &lt;font color=&apos;%2&apos;&gt;%3&lt;/font&gt;</source>
-        <translation>연락처 요청이 %1 &lt;font color=&apos;%2&apos;&gt;%3&lt;/font&gt;에게 전송되었습니다</translation>
-    </message>
-    <message>
-        <source>Contact request &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>연락처 요청 &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewDevice</name>
-    <message>
-        <source>More details</source>
-        <translation>자세히 보기</translation>
-    </message>
-    <message>
-        <source>New device detected</source>
-        <translation>새 기기 감지</translation>
-    </message>
-    <message>
-        <source>New device with %1 profile has been detected.</source>
-        <translation>%1 프로필을 가진 새로운 기기가 감지되었습니다.</translation>
-    </message>
-    <message>
-        <source>Sync your profile</source>
-        <translation>프로필 동기화</translation>
-    </message>
-    <message>
-        <source>Check your other device for a pairing request.</source>
-        <translation>다른 기기에서 페어링 요청을 확인하세요.</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewKeypairFromPairedDevice</name>
-    <message>
-        <source>View key pair import options</source>
-        <translation>키 페어 가져오기 옵션 보기</translation>
-    </message>
-    <message>
-        <source>New key pair added</source>
-        <translation>새 키 페어가 추가됨</translation>
-    </message>
-    <message>
-        <source>%1 key pair was added to one of your synced devices</source>
-        <translation>%1 키 페어가 동기화된 기기 중 하나에 추가되었습니다</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationNewsMessage</name>
-    <message>
-        <source>Learn more</source>
-        <translation>더 알아보기</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationReply</name>
-    <message>
-        <source>sticker</source>
-        <translation>스티커</translation>
-    </message>
-    <message>
-        <source>emoji</source>
-        <translation>이모지</translation>
-    </message>
-    <message>
-        <source>transaction</source>
-        <translation>거래</translation>
-    </message>
-    <message>
-        <source>image</source>
-        <translation>이미지</translation>
-    </message>
-    <message>
-        <source>audio</source>
-        <translation>오디오</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationTransferOwnership</name>
-    <message>
-        <source>You received the owner token from %1</source>
-        <translation>%1로부터 소유자 토큰을 받았습니다</translation>
-    </message>
-    <message>
-        <source>To finalise your ownership of the %1 Community, make your device the control node</source>
-        <translation>%1 커뮤니티의 소유권을 완료하려면 기기를 컨트롤 Node로 설정하세요</translation>
-    </message>
-    <message>
-        <source>Finalise ownership</source>
-        <translation>소유권 확정</translation>
-    </message>
-    <message>
-        <source>Ownership Declined</source>
-        <translation>소유권 거부됨</translation>
-    </message>
-    <message>
-        <source>Your device is now the control node for %1</source>
-        <translation>이제 당신의 기기가 %1의 제어 Node입니다</translation>
-    </message>
-    <message>
-        <source>Congratulations, you are now the official owner of the %1 Community with full admin rights</source>
-        <translation>축하합니다! 이제 %1 커뮤니티의 공식 소유자가 되어 모든 관리자 권한을 갖게 되었습니다</translation>
-    </message>
-    <message>
-        <source>Community admin</source>
-        <translation>커뮤니티 관리자</translation>
-    </message>
-    <message>
-        <source>%1 smart contract update failed</source>
-        <translation>%1 스마트 컨트랙트 업데이트 실패</translation>
-    </message>
-    <message>
-        <source>You will need to retry the transaction in order to finalise your ownership of the %1 community</source>
-        <translation>%1 커뮤니티의 소유권을 확정하려면 트랜잭션을 다시 시도해야 합니다</translation>
-    </message>
-    <message>
-        <source>Your device is no longer the control node for %1</source>
-        <translation>이제 이 기기는 %1의 제어 Node가 아닙니다</translation>
-    </message>
-    <message>
-        <source>Your ownership and admin rights for %1 have been removed and transferred to the new owner</source>
-        <translation>%1에 대한 귀하의 소유권과 관리자 권한이 제거되어 새 소유자에게 이전되었습니다</translation>
-    </message>
-</context>
-<context>
-    <name>ActivityNotificationUnknownGroupChatInvitation</name>
-    <message>
-        <source>accepted</source>
-        <translation>수락됨</translation>
-    </message>
-    <message>
-        <source>declined</source>
-        <translation>거절됨</translation>
-    </message>
-    <message>
-        <source>Invitation to an unknown group &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</source>
-        <translation>알 수 없는 그룹에 대한 초대 &lt;font color=&apos;%1&apos;&gt;%2&lt;/font&gt;</translation>
     </message>
 </context>
 <context>
@@ -2874,10 +2533,6 @@ Do you wish to override the security check and continue?</source>
         <source>Menu</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Open Tabs view</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>BrowserPrivacyWall</name>
@@ -4481,25 +4136,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <message>
         <source>Remove Rejection</source>
         <translation>거절 제거</translation>
-    </message>
-</context>
-<context>
-    <name>ContactRequestCta</name>
-    <message>
-        <source>Accepted</source>
-        <translation>수락됨</translation>
-    </message>
-    <message>
-        <source>Pending</source>
-        <translation>대기 중</translation>
-    </message>
-    <message>
-        <source>Declined &amp; Blocked</source>
-        <translation>거절됨 및 차단됨</translation>
-    </message>
-    <message>
-        <source>Declined</source>
-        <translation>거부됨</translation>
     </message>
 </context>
 <context>
@@ -7880,13 +7516,6 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
-    <name>FeeRow</name>
-    <message>
-        <source>Max.</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -9222,10 +8851,6 @@ Are you sure you want to do this?</source>
         <source>PIN correct</source>
         <translation>PIN이 올바릅니다</translation>
     </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation type="unfinished">Keycard가 차단됨</translation>
-    </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
         <translation>
@@ -10348,10 +9973,6 @@ access to your funds.</source>
     <message>
         <source>Set Display Currency</source>
         <translation>표시 통화 설정</translation>
-    </message>
-    <message>
-        <source>Search Currencies</source>
-        <translation>통화 검색</translation>
     </message>
     <message>
         <source>Language</source>
@@ -11499,25 +11120,6 @@ to load</source>
     <message>
         <source>Reject</source>
         <translation>거절</translation>
-    </message>
-</context>
-<context>
-    <name>MembershipCta</name>
-    <message>
-        <source>Accepted</source>
-        <translation>수락됨</translation>
-    </message>
-    <message>
-        <source>Declined</source>
-        <translation>거부됨</translation>
-    </message>
-    <message>
-        <source>Accept pending</source>
-        <translation>보류 수락</translation>
-    </message>
-    <message>
-        <source>Reject pending</source>
-        <translation>보류 중 거부</translation>
     </message>
 </context>
 <context>
@@ -15002,18 +14604,6 @@ to load</source>
 <context>
     <name>ReviewContactRequestPopup</name>
     <message>
-        <source>Review Contact Request</source>
-        <translation>연락처 요청 검토</translation>
-    </message>
-    <message>
-        <source>Accept Contact Request</source>
-        <translation>연락처 요청 수락</translation>
-    </message>
-    <message>
-        <source>Reject Contact Request</source>
-        <translation>연락처 요청 거절</translation>
-    </message>
-    <message>
         <source>Review contact request</source>
         <translation>연락처 요청 검토</translation>
     </message>
@@ -16528,6 +16118,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StatusCurrencySelector</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">검색</translation>
+    </message>
+</context>
+<context>
     <name>StatusDatePicker</name>
     <message>
         <source>Today</source>
@@ -16731,13 +16328,6 @@ to load</source>
 </context>
 <context>
     <name>StatusLanguageSelector</name>
-    <message>
-        <source>Search</source>
-        <translation>검색</translation>
-    </message>
-</context>
-<context>
-    <name>StatusListPicker</name>
     <message>
         <source>Search</source>
         <translation>검색</translation>
@@ -19762,10 +19352,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <name>main</name>
     <message>
         <source>Status Desktop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

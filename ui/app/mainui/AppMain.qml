@@ -56,8 +56,6 @@ import AppLayouts.Wallet.stores as WalletStores
 import AppLayouts.stores as AppStores
 import AppLayouts.stores.Messaging as MessagingStores
 import AppLayouts.Browser.stores as BrowserStores
-import AppLayouts.ActivityCenter
-import AppLayouts.ActivityCenter.popups
 
 import mainui.adaptors
 import mainui.Handlers
