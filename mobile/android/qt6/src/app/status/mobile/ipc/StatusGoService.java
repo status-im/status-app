@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import app.status.mobile.R;
@@ -153,19 +154,49 @@ public final class StatusGoService extends Service {
         }
     }
 
+    // Services to pause when going to the background.
+    // Messaging ("messaging") is intentionally excluded so push notifications keep working.
     /**
-     * Schedules an AppStateChange call on a dedicated single thread. Uses a generation
-     * counter to coalesce rapid/piled-up calls: if a newer setUiVisible arrives before
-     * an older one starts executing, the older one is skipped. This reduces redundant
-     * lifecycle updates and avoids executing stale calls in the Go runtime after repeated ANR restarts.
+     * Fetches the names of all currently registered pausable services from status-go.
+     * Returns null if the node is not running or the response cannot be parsed.
+     */
+    private String fetchPausableServiceNames() throws org.json.JSONException {
+        final String response = nativeCall("PausableServices", "[]");
+        if (response == null || response.isEmpty()) return null;
+        final JSONArray services = new JSONArray(response);
+        if (services.length() == 0) return null;
+        final JSONArray names = new JSONArray();
+        for (int i = 0; i < services.length(); i++) {
+            names.put(services.getJSONObject(i).getString("name"));
+        }
+        return names.toString();
+    }
+
+    /**
+     * Schedules PauseServices/ResumeServices calls on a dedicated single thread.
+     * Uses a generation counter to coalesce rapid/piled-up calls: if a newer setUiVisible
+     * arrives before an older one starts executing, the older one is skipped.
+     *
+     * The service list is fetched dynamically from PausableServices() so that any
+     * service registered in status-go is automatically included without requiring
+     * client-side changes.
+     *
+     * Waku light client receive is event-driven and independent of all registered
+     * services — messages continue to arrive and be processed regardless of pause state.
+     *
+     * The nativeCall bridge expects argsJson as a JSON array of string arguments.
+     * PauseServices/ResumeServices each take a single string parameter (a JSON-encoded
+     * list of service names), so argsJson must be: ["<escaped-names-json>"].
      */
     private void scheduleBackendLifecycleUpdate(boolean visible) {
         final int gen = lifecycleGen.incrementAndGet();
         lifecycleExecutor.execute(() -> {
             if (lifecycleGen.get() != gen) return;
-            final String method = "AppStateChange";
-            final String argsJson = visible ? "[\"active\"]" : "[\"background\"]";
             try {
+                final String namesJson = fetchPausableServiceNames();
+                if (namesJson == null) return;
+                final String method = visible ? "ResumeServices" : "PauseServices";
+                final String argsJson = "[" + JSONObject.quote(namesJson) + "]";
                 final String response = nativeCall(method, argsJson);
                 if (response == null || response.isEmpty()) return;
                 final JSONObject parsed = new JSONObject(response);
