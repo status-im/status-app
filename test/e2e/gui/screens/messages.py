@@ -588,7 +588,7 @@ class MessageQuickActions(QObject):
             messaging_names.chatMessageViewDelegate_chatDeleteMessageButton_StatusFlatRoundButton)
         self._reply_button = Button(messaging_names.chatMessageViewDelegate_reply_icon_StatusIcon)
         self._edit_message_field = TextEdit(messaging_names.edit_inputScrollView_messageInputField_TextArea)
-        self._reply_area = QObject(messaging_names.mainWindow_replyArea_StatusChatInputReplyArea)
+        self._reply_panel = QObject(messaging_names.mainWindow_replyPanel_StatusChatInputReplyPanel)
         self._save_text_button = Button(messaging_names.chatMessageViewDelegate_Save_StatusButton)
         self._message_input_area = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
 
@@ -614,7 +614,7 @@ class MessageQuickActions(QObject):
     @allure.step('Reply to own message')
     def reply_own_message(self, text: str):
         self._reply_button.click()
-        assert self._reply_area.exists
+        assert self._reply_panel.exists
         self._message_input_area.type_text(text)
         for i in range(2):
             driver.nativeType('<Return>')

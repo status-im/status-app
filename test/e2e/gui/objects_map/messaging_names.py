@@ -54,9 +54,9 @@ tiny_pin_icon_StatusIcon = {"container": chatLogView_chatMessageViewDelegate_Mes
 add_remove_from_group_StatusMenuItem = {"container": mainWindow_Overlay, "enabled": True, "objectName": "addRemoveFromGroupStatusAction", "type": "StatusMenuItem", "visible": True}
 mainWindow_inputScrollView_StatusScrollView = {"container": statusDesktop_mainWindow, "id": "inputScrollView", "type": "StatusScrollView", "unnamed": 1, "visible": True}
 inputScrollView_messageInputField_TextArea = {"container": mainWindow_inputScrollView_StatusScrollView, "objectName": "messageInputField", "type": "TextArea", "visible": True}
-mainWindow_statusChatInputEmojiButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow, "objectName": "statusChatInputEmojiButton", "type": "StatusFlatRoundButton", "visible": True}
+mainWindow_statusChatInputEmojiButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow, "id": "emojiButton", "type": "ChatIcon", "unnamed": 1, "visible": True}
 mainWindow_imageBtn_StatusFlatRoundButton = {"container": statusDesktop_mainWindow, "id": "imageBtn", "type": "StatusFlatRoundButton", "unnamed": 1, "visible": True}
-mainWindow_statusChatInput_StatusChatInput = {"container": statusDesktop_mainWindow, "objectName": "statusChatInput", "type": "Rectangle", "visible": True}
+mainWindow_statusChatInput_StatusChatInput = {"container": statusDesktop_mainWindow, "objectName": "statusChatInput", "type": "StatusChatInputNew", "visible": True}
 mark_as_Read_StatusMenuItem = {"checkable": False, "container": mainWindow_Overlay, "enabled": True, "objectName": "chatMarkAsReadMenuItem", "type": "StatusMenuItem", "visible": True}
 clear_History_StatusMenuItem = {"checkable": False, "container": mainWindow_Overlay, "enabled": True, "objectName": "clearHistoryMenuItem", "type": "StatusMenuItem", "visible": True}
 clear_group_chat_history_item = {"checkable": False, "container": mainWindow_Overlay, "enabled": True, "objectName": "clearHistoryGroupMenuItem", "type": "StatusMenuItem", "visible": True}
@@ -89,7 +89,7 @@ chatMessageViewDelegate_inputScrollView_StatusScrollView = {"container": chatLog
 edit_inputScrollView_messageInputField_TextArea = {"container": chatMessageViewDelegate_inputScrollView_StatusScrollView, "objectName": "messageInputField", "type": "TextArea", "visible": True}
 chatMessageViewDelegate_Save_StatusButton = {"checkable": False, "container": chatLogView_chatMessageViewDelegate_MessageView, "id": "saveBtn", "type": "StatusButton", "unnamed": 1, "visible": True}
 chatMessageViewDelegate_reply_icon_StatusIcon = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "reply-icon", "type": "StatusIcon", "visible": True}
-mainWindow_replyArea_StatusChatInputReplyArea = {"container": statusDesktop_mainWindow, "objectName": "statusChatInputReplyArea", "type": "StatusChatInputReplyArea", "visible": True}
+mainWindow_replyPanel_StatusChatInputReplyPanel = {"container": statusDesktop_mainWindow, "id": "replyPanel", "type": "StatusChatInputReplyPanel", "unnamed": 1, "visible": True}
 layout_recentMessagesButton_AnchorButton = {"checkable": False, "container": mainWindow_chatLogView_StatusListView, "id": "recentMessagesButton", "type": "AnchorButton", "unnamed": 1, "visible": True}
 
 # Message link preview
