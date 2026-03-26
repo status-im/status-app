@@ -25,22 +25,26 @@ Base.AbstractWebView {
 
     property alias url: backend.url
     readonly property alias loading: backend.loading
-    readonly property string title: ""
-    readonly property bool canGoBack: false
-    readonly property bool canGoForward: false
-    readonly property real loadProgress: backend.loading ? 50 : 100
+    readonly property alias title: backend.title
+    readonly property alias canGoBack: backend.canGoBack
+    readonly property alias canGoForward: backend.canGoForward
+    readonly property alias loadProgress: backend.loadProgress
     readonly property alias htmlPageLoaded: backend.loaded
 
-    readonly property var history: null
-    readonly property url icon: ""
+    ListModel {
+        id: historyModel
+    }
 
-    readonly property bool supportsZoom: false
+    readonly property var history: ({ items: historyModel })
+    readonly property url icon: backend.favicon
+
+    readonly property bool supportsZoom: true
     readonly property bool supportsDevTools: false
-    readonly property bool supportsFindInPage: false
+    readonly property bool supportsFindInPage: backend.findSupported
     readonly property bool supportsIncognito: false
-    readonly property bool supportsHistory: false
+    readonly property bool supportsHistory: true
 
-    readonly property real zoomFactor: 1.0
+    readonly property alias zoomFactor: backend.zoomFactor
 
     MobileWebViewBackend {
         id: backend
@@ -50,20 +54,55 @@ Base.AbstractWebView {
         webChannel: root.webChannel
     }
 
+    Connections {
+        target: backend
+        function onNewWindowRequested(requestedUrl, userInitiated) {
+            const makeCurrent = userInitiated !== false
+            root.newWindowRequested(makeCurrent, requestedUrl, function(tab) {
+                if (tab && tab.loadUrl)
+                    tab.loadUrl(requestedUrl)
+            })
+        }
+
+        function onFindTextResult(activeMatchIndex, matchCount) {
+            root.findTextFinished({
+                numberOfMatches: matchCount,
+                activeMatch: matchCount > 0 ? activeMatchIndex + 1 : 0
+            })
+        }
+
+        function onHistoryItemsChanged() { root.rebuildHistoryModel() }
+        function onCurrentHistoryIndexChanged() { root.rebuildHistoryModel() }
+    }
+
+    function rebuildHistoryModel() {
+        historyModel.clear()
+        const items = backend.historyItems
+        const currentIdx = backend.currentHistoryIndex
+        for (let i = 0; i < items.length; ++i) {
+            const entry = items[i]
+            historyModel.append({
+                title: entry.title ?? "",
+                icon: "",
+                offset: i - currentIdx
+            })
+        }
+    }
+
     function loadUrl(newUrl) {
         backend.loadUrl(newUrl)
     }
 
     function goBack() {
-        console.warn("WebViewAdapter: goBack not supported yet")
+        backend.goBack()
     }
 
     function goForward() {
-        console.warn("WebViewAdapter: goForward not supported yet")
+        backend.goForward()
     }
 
     function goBackOrForward(offset) {
-        console.warn("WebViewAdapter: goBackOrForward not supported yet")
+        backend.goBackOrForward(offset)
     }
 
     function reload() {
@@ -73,15 +112,21 @@ Base.AbstractWebView {
     }
 
     function stop() {
-        console.warn("WebViewAdapter: stop not supported yet")
+        backend.stop()
     }
 
     function findText(text, flags) {
-        // No-op: find in page not supported
+        if (!text) {
+            backend.stopFind()
+            return
+        }
+
+        const findFlags = flags === undefined ? 0 : flags
+        backend.findText(text, findFlags)
     }
 
     function changeZoomFactor(factor) {
-        // No-op: zoom not supported
+        backend.zoomFactor = factor
     }
 
     function acceptAsNewWindow(request) {
@@ -104,6 +149,30 @@ Base.AbstractWebView {
                 break
             case AbstractWebView.WebAction.Reload:
                 reload()
+                break
+            case AbstractWebView.WebAction.Cut:
+                backend.runJavaScript("document.execCommand('cut')")
+                break
+            case AbstractWebView.WebAction.Copy:
+                backend.runJavaScript("document.execCommand('copy')")
+                break
+            case AbstractWebView.WebAction.Paste:
+                backend.runJavaScript("document.execCommand('paste')")
+                break
+            case AbstractWebView.WebAction.Undo:
+                backend.runJavaScript("document.execCommand('undo')")
+                break
+            case AbstractWebView.WebAction.Redo:
+                backend.runJavaScript("document.execCommand('redo')")
+                break
+            case AbstractWebView.WebAction.SelectAll:
+                backend.runJavaScript("document.execCommand('selectAll')")
+                break
+            case AbstractWebView.WebAction.PasteAndMatchStyle:
+                backend.runJavaScript("document.execCommand('paste')")
+                break
+            case AbstractWebView.WebAction.RequestClose:
+                root.windowCloseRequested()
                 break
             default:
                 console.warn("WebViewAdapter: Web action not supported:", action)
