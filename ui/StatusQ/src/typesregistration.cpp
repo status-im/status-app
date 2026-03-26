@@ -16,6 +16,7 @@
 #include "StatusQ/shareutils.h"
 #include "StatusQ/statuscolors.h"
 #include "StatusQ/statusemojimodel.h"
+#include "StatusQ/chatinputhighlighter.h"
 #include "StatusQ/statussyntaxhighlighter.h"
 #include "StatusQ/stringutilsinternal.h"
 #include "StatusQ/systemutilsinternal.h"
@@ -55,6 +56,7 @@ extern void registerNativeIndicatorItemType();
 #include <QQmlEngine>
 
 void registerStatusQTypes() {
+    qmlRegisterType<ChatInputHighlighter>("StatusQ", 0, 1, "ChatInputHighlighter");
     qmlRegisterType<StatusSyntaxHighlighter>("StatusQ", 0, 1, "StatusSyntaxHighlighter");
     qmlRegisterType<RXValidator>("StatusQ", 0, 1, "RXValidator");
 
