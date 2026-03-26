@@ -90,6 +90,7 @@ SplitView {
 
             property int keycardState: Onboarding.KeycardState.NoPCSCService
             readonly property string keycardUID: "uid_4"
+            readonly property string keycardKeyUID: "uid_4"
             property int addKeyPairState: Onboarding.ProgressState.Idle
             property int pinSettingState: Onboarding.ProgressState.Idle
             property int authorizationState: Onboarding.AuthorizationState.Idle
@@ -142,6 +143,10 @@ SplitView {
 
             function exportRecoverKeys() {
                 logs.logEvent("OnboardingStore.exportRecoverKeys")
+            }
+
+            function startKeycardDetection() {
+                logs.logEvent("OnboardingStore.startKeycardDetection")
             }
 
             function startKeycardFactoryReset() {
