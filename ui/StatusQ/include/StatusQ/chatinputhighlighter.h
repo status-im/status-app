@@ -26,6 +26,10 @@ public:
     // Returns {bold, italic, strikethrough} booleans for the given document position
     Q_INVOKABLE QVariantMap emphasisAt(int position) const;
 
+    // Returns {bold, italic, strikethrough} booleans for what a character inserted
+    // at `position` would receive (re-parses the block with a dummy char inserted)
+    Q_INVOKABLE QVariantMap emphasisAtInsertion(int position) const;
+
 signals:
     void quickTextDocumentChanged();
 

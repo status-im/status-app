@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import StatusQ
 
 Item {
@@ -11,6 +12,7 @@ Item {
     }
 
     readonly property var emph: highlighter.emphasisAt(textArea.cursorPosition)
+    readonly property var vemph: highlighter.emphasisAtInsertion(textArea.cursorPosition)
 
     Rectangle {
         anchors.fill: parent
@@ -25,16 +27,26 @@ Item {
             text: "**bold** text\n*italic* text\n~~strikethrough~~\n***bold italic***\n**bold** and *italic* together"
         }
 
-        Row {
+        ColumnLayout {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.margins: 8
-            spacing: 16
 
+            Row {
+                spacing: 16
+                Text { text: "emphasis at:\t"}
+                Text { text: "bold: "          + emph.bold }
+                Text { text: "italic: "        + emph.italic }
+                Text { text: "strikethrough: " + emph.strikethrough }
+            }
+            Row {
+                spacing: 16
 
-            Text { text: "bold: "          + emph.bold }
-            Text { text: "italic: "        + emph.italic }
-            Text { text: "strikethrough: " + emph.strikethrough }
+                Text { text: "emphasis at insertion:\t"}
+                Text { text: "bold: "          + vemph.bold }
+                Text { text: "italic: "        + vemph.italic }
+                Text { text: "strikethrough: " + vemph.strikethrough }
+            }
         }
     }
 }

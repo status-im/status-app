@@ -289,6 +289,42 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
     }
 }
 
+QVariantMap ChatInputHighlighter::emphasisAtInsertion(int position) const
+{
+    const auto allFalse = []() -> QVariantMap {
+        return {
+            {QStringLiteral("bold"),          false},
+            {QStringLiteral("italic"),        false},
+            {QStringLiteral("strikethrough"), false},
+        };
+    };
+
+    if (!document())
+        return allFalse();
+
+    QTextBlock block = document()->findBlock(position);
+    if (!block.isValid())
+        return allFalse();
+
+    const int posInBlock = position - block.position();
+    QString modified = block.text();
+    modified.insert(posInBlock, QLatin1Char('a'));
+
+    const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(modified));
+
+    int bits = 0;
+    for (const EmphSpan& s : spans) {
+        if (posInBlock >= s.start && posInBlock < s.end)
+            bits |= s.formatBits;
+    }
+
+    return {
+        {QStringLiteral("bold"),          bool(bits & kBold)},
+        {QStringLiteral("italic"),        bool(bits & kItalic)},
+        {QStringLiteral("strikethrough"), bool(bits & kStrikeThrough)},
+    };
+}
+
 QVariantMap ChatInputHighlighter::emphasisAt(int position) const
 {
     const int bits = (position >= 0 && position < m_flags.size())
