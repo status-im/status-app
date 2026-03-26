@@ -250,24 +250,52 @@ QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
 
 void ChatInputHighlighter::highlightBlock(const QString& text)
 {
+    const int docLen = document()->characterCount() - 1;
+    if (m_flags.size() != docLen)
+        m_flags.assign(docLen, 0);
+
+    const int blockStart = currentBlock().position();
+
+    for (int i = blockStart; i < blockStart + text.length() && i < m_flags.size(); ++i)
+        m_flags[i] = 0;
+
     QVector<Delimiter> delimiters = scanDelimiters(text);
     QVector<EmphSpan>  spans      = processEmphasis(delimiters);
 
-    QVector<int> flags(text.length(), 0);
+    for (const EmphSpan& s : spans) {
+        int start = qMax(0, s.start);
+        int end   = qMin(text.length(), s.end + 1);
+        for (int i = start; i < end; ++i)
+            if (blockStart + i < m_flags.size())
+                m_flags[blockStart + i] |= s.formatBits;
+    }
+
+    QVector<int> localFlags(text.length(), 0);
     for (const EmphSpan& s : spans) {
         int start = qMax(0, s.start);
         int end   = qMin(text.length(), s.end);
         for (int i = start; i < end; ++i)
-            flags[i] |= s.formatBits;
+            localFlags[i] |= s.formatBits;
     }
 
     int i = 0;
     while (i < text.length()) {
         int start = i;
-        int f = flags[i];
-        while (i < text.length() && flags[i] == f)
+        int f = localFlags[i];
+        while (i < text.length() && localFlags[i] == f)
             ++i;
         if (f)
             setFormat(start, i - start, buildFormat(f));
     }
+}
+
+QVariantMap ChatInputHighlighter::emphasisAt(int position) const
+{
+    const int bits = (position >= 0 && position < m_flags.size())
+                     ? m_flags[position] : 0;
+    return {
+        {QStringLiteral("bold"),          bool(bits & kBold)},
+        {QStringLiteral("italic"),        bool(bits & kItalic)},
+        {QStringLiteral("strikethrough"), bool(bits & kStrikeThrough)},
+    };
 }

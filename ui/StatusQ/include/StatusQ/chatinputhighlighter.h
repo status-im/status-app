@@ -4,6 +4,8 @@
 #include <QQuickTextDocument>
 #include <QSyntaxHighlighter>
 #include <QVariantList>
+#include <QVariantMap>
+#include <QVector>
 
 class ChatInputHighlighter : public QSyntaxHighlighter
 {
@@ -21,6 +23,9 @@ public:
     // Returns [{start, end, bold, italic, strikethrough}, ...] — for unit tests
     Q_INVOKABLE QVariantList parseFormats(const QString& text) const;
 
+    // Returns {bold, italic, strikethrough} booleans for the given document position
+    Q_INVOKABLE QVariantMap emphasisAt(int position) const;
+
 signals:
     void quickTextDocumentChanged();
 
@@ -29,4 +34,5 @@ protected:
 
 private:
     QQuickTextDocument* m_quickTextDocument{nullptr};
+    QVector<int> m_flags; // per-document-character emphasis bits
 };
