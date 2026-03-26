@@ -29,6 +29,7 @@ Item {
     readonly property bool supportsFindInPage: false
     readonly property bool supportsIncognito: false
     readonly property bool supportsHistory: false
+    readonly property bool hasNativeFindPanel: false
 
     readonly property int devToolsHeight: 400
 
@@ -94,6 +95,8 @@ Item {
     function stop() { console.warn("AbstractWebView: stop not implemented") }
 
     function findText(text, flags) {}
+    function showFindPanel() {}
+    function hideFindPanel() {}
     function changeZoomFactor(factor) {}
     function acceptAsNewWindow(request) {}
     function detachView() {}

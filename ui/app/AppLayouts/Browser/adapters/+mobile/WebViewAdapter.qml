@@ -43,6 +43,7 @@ Base.AbstractWebView {
     readonly property bool supportsFindInPage: backend.findSupported
     readonly property bool supportsIncognito: false
     readonly property bool supportsHistory: true
+    readonly property bool hasNativeFindPanel: backend.hasNativeFindPanel
 
     readonly property alias zoomFactor: backend.zoomFactor
 
@@ -123,6 +124,14 @@ Base.AbstractWebView {
 
         const findFlags = flags === undefined ? 0 : flags
         backend.findText(text, findFlags)
+    }
+
+    function showFindPanel() {
+        backend.showFindPanel()
+    }
+
+    function hideFindPanel() {
+        backend.hideFindPanel()
     }
 
     function changeZoomFactor(factor) {
