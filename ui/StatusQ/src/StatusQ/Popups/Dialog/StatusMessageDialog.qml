@@ -124,10 +124,11 @@ StatusDialog {
                     return ""
                 }
             }
+            color: Theme.palette.directColor1
 
             Binding on color {
                 when: root.icon === StatusMessageDialog.StandardIcon.Warning || root.icon === StatusMessageDialog.StandardIcon.Critical
-                value: root.icon === StatusMessageDialog.StandardIcon.Critical ? Theme.palette.dangerColor1 : Theme.palette.warningColor1
+                value: root.icon === StatusMessageDialog.StandardIcon.Critical ? root.Theme.palette.dangerColor1 : root.Theme.palette.warningColor1
                 restoreMode: Binding.RestoreBindingOrValue
             }
         }

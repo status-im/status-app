@@ -27,7 +27,7 @@ StatusListItem {
 
     Binding on asset.color {
         when: !root.enabled
-        value: Theme.palette.darkGrey
+        value: root.Theme.palette.darkGrey
     }
 
     components: [

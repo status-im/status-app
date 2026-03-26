@@ -61,6 +61,7 @@ AbstractButton {
             Layout.preferredWidth: 16
             Layout.preferredHeight: 16
             icon: "tiny/chevron-right"
+            color: Theme.palette.directColor1
         }
     }
 }

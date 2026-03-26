@@ -26,19 +26,19 @@ StatusRoundButton {
 
     Binding on icon.color {
         when: successCircleVisible && d.copied
-        value: Theme.palette.successColor1
+        value: root.Theme.palette.successColor1
         restoreMode: Binding.RestoreBindingOrValue
     }
 
     Binding on icon.hoverColor {
         when: successCircleVisible && d.copied
-        value: Theme.palette.successColor1
+        value: root.Theme.palette.successColor1
         restoreMode: Binding.RestoreBindingOrValue
     }
 
     Binding on color {
         when: successCircleVisible && d.copied
-        value: Theme.palette.successColor2
+        value: root.Theme.palette.successColor2
         restoreMode: Binding.RestoreBindingOrValue
     }
 

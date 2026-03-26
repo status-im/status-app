@@ -59,7 +59,7 @@ AccountSelector {
     QtObject {
         id: d
         readonly property color headerStyleBackgroundColor: !!currentAccount ? root.control.hovered ?
-                                        Utils.getHoveredColor(Theme.palette, currentAccount.colorId) :
-                                        Utils.getColorForId(Theme.palette, currentAccount.colorId) : "transparent"
+                                        Utils.getHoveredColor(root.Theme.palette, currentAccount.colorId) :
+                                        Utils.getColorForId(root.Theme.palette, currentAccount.colorId) : "transparent"
     }
 }

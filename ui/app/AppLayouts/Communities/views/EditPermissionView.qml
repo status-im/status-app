@@ -424,17 +424,17 @@ StatusScrollView {
 
                 Binding on bgColor {
                     when: root.permissionTypeLimitReached && !root.isEditState
-                    value: Theme.palette.dangerColor3
+                    value: root.Theme.palette.dangerColor3
                 }
 
                 Binding on titleText.color {
                     when: root.permissionTypeLimitReached && !root.isEditState
-                    value: Theme.palette.dangerColor1
+                    value: root.Theme.palette.dangerColor1
                 }
 
                 Binding on asset.color {
                     when: root.permissionTypeLimitReached && !root.isEditState
-                    value: Theme.palette.dangerColor1
+                    value: root.Theme.palette.dangerColor1
                 }
 
                 StatusMouseArea {

@@ -8,6 +8,8 @@ import StatusQ.Core.Theme
 import utils
 
 Control {
+    id: root
+
     property int qualifyingAddresses: 1
     property int knownAddresses: 1
     property int unknownAddresses: 1
@@ -45,7 +47,7 @@ Control {
 
             Binding on color {
                 when: qualifyingAddresses === 0
-                value: Theme.palette.dangerColor1
+                value: root.Theme.palette.dangerColor1
             }
 
             readonly property real ratio: 100 * qualifyingAddresses / knownAddresses
