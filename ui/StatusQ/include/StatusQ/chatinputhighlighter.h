@@ -3,6 +3,7 @@
 #include <QQmlParserStatus>
 #include <QQuickTextDocument>
 #include <QSyntaxHighlighter>
+#include <QVariantList>
 
 class ChatInputHighlighter : public QSyntaxHighlighter
 {
@@ -16,6 +17,9 @@ public:
 
     QQuickTextDocument* quickTextDocument() const;
     void setQuickTextDocument(QQuickTextDocument*);
+
+    // Returns [{start, end, bold, italic, strikethrough}, ...] — for unit tests
+    Q_INVOKABLE QVariantList parseFormats(const QString& text) const;
 
 signals:
     void quickTextDocumentChanged();

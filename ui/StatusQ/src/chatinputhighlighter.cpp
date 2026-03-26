@@ -1,6 +1,7 @@
 #include "StatusQ/chatinputhighlighter.h"
 
 #include <QTextCharFormat>
+#include <QVariantMap>
 #include <QVector>
 
 namespace {
@@ -228,6 +229,23 @@ void ChatInputHighlighter::setQuickTextDocument(QQuickTextDocument* doc)
     else
         setDocument(nullptr);
     emit quickTextDocumentChanged();
+}
+
+QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
+{
+    const auto spans = processEmphasis(scanDelimiters(text));
+    QVariantList result;
+    result.reserve(spans.size());
+    for (const EmphSpan& s : spans) {
+        QVariantMap m;
+        m[QStringLiteral("start")]         = s.start;
+        m[QStringLiteral("end")]           = s.end;
+        m[QStringLiteral("bold")]          = bool(s.formatBits & kBold);
+        m[QStringLiteral("italic")]        = bool(s.formatBits & kItalic);
+        m[QStringLiteral("strikethrough")] = bool(s.formatBits & kStrikeThrough);
+        result.append(m);
+    }
+    return result;
 }
 
 void ChatInputHighlighter::highlightBlock(const QString& text)
