@@ -25,7 +25,7 @@ QtObject {
         },
         StatusRegularExpressionValidator {
             regularExpression: /^$|^[a-zA-Z0-9\-_\u0020]+$/
-            errorMessage: qsTr("Invalid characters (use A-Z and 0-9, hyphens and underscores only)")
+            errorMessage: qsTr("Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)")
         },
         StatusMinLengthValidator {
             minLength: Constants.keypair.nameLengthMin
