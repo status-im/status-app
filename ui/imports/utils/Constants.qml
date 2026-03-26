@@ -44,6 +44,7 @@ QtObject {
         readonly property int scrollSepoliaChainId: 534351
         readonly property int blastMainnetChainId: 81457
         readonly property int blastSepoliaChainId: 168587773
+        readonly property int hoodiChainId: 560048
         readonly property int statusNetworkSepoliaChainId: 1660990954
         readonly property int binanceSmartChainMainnetChainId: 56
         readonly property int binanceSmartChainTestnetChainId: 97
@@ -805,6 +806,7 @@ QtObject {
 
     readonly property QtObject networkNames: QtObject {
         readonly property string mainnet: "Mainnet"
+        readonly property string hoodi: "Hoodi"
         readonly property string sepolia: "Sepolia"
         readonly property string arbitrum: "Arbitrum"
         readonly property string sepoliaArbitrum: "Arbitrum Sepolia"
@@ -854,6 +856,7 @@ QtObject {
         readonly property string scroll: "https://scrollscan.com"
         readonly property string blast: "https://blastscan.io"
         readonly property string binanceSmartChain: "https://bscscan.com"
+        readonly property string hoodiEtherscan: "https://hoodi.etherscan.io"
         readonly property string sepoliaEtherscan: "https://sepolia.etherscan.io"
         readonly property string sepoliaArbiscan: "https://sepolia.arbiscan.io"
         readonly property string sepoliaOptimism: "https://sepolia-optimism.etherscan.io"
@@ -893,6 +896,7 @@ QtObject {
         readonly property string scroll: "scroll" // opensea does not support scroll yet
         readonly property string blast: "blast"
         readonly property string binanceSmartChain: "binance-smart-chain" // testnet not supported
+        readonly property string hoodiEthereum: "hoodi" // testnet not supported
         readonly property string sepoliaEthereum: "sepolia" // testnet not supported
         readonly property string sepoliaArbitrum: "arbitrum-sepolia" // testnet not supported
         readonly property string sepoliaOptimism: "optimism-sepolia" // testnet not supported

@@ -622,7 +622,7 @@ QtObject {
         let link = Constants.networkExplorerLinks.etherscan
         if (networkShortName === Constants.networkShortChainNames.mainnet) {
             if (testnetMode) {
-                link = Constants.networkExplorerLinks.sepoliaEtherscan
+                link = Constants.networkExplorerLinks.hoodiEtherscan
             }
         }
         if (networkShortName === Constants.networkShortChainNames.arbitrum) {
@@ -777,6 +777,7 @@ QtObject {
     function getNetworkShortName(chainID) {
         switch (chainID) {
             case Constants.chains.mainnetChainId:
+            case Constants.chains.hoodiChainId:
             case Constants.chains.sepoliaChainId:
                 return Constants.networkShortChainNames.mainnet
             case Constants.chains.arbitrumChainId:
@@ -832,6 +833,8 @@ QtObject {
         switch (chainID) {
             case Constants.chains.mainnetChainId:
                 return Constants.networkNames.mainnet
+            case Constants.chains.hoodiChainId:
+                return Constants.networkNames.hoodi
             case Constants.chains.sepoliaChainId:
                 return Constants.networkNames.sepolia
             case Constants.chains.arbitrumChainId:
@@ -921,6 +924,7 @@ QtObject {
     function isL1Chain(chainID) {
         switch (+chainID) {
             case Constants.chains.mainnetChainId:
+            case Constants.chains.hoodiChainId:
             case Constants.chains.sepoliaChainId:
             case Constants.chains.binanceSmartChainMainnetChainId:
             case Constants.chains.binanceSmartChainTestnetChainId:

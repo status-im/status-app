@@ -7616,6 +7616,13 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     </message>
 </context>
 <context>
+    <name>FeeRow</name>
+    <message>
+        <source>Max.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -8999,6 +9006,10 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>PIN correct</source>
         <translation>PIN správný</translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
+        <translation type="unfinished">Keycard zablokována</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>

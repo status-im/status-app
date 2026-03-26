@@ -14,6 +14,7 @@ QtObject {
     readonly property int customNet: 6
 
     readonly property int mainnetChainId: 1
+    readonly property int hoodiChainId: 560048
     readonly property int sepMainnetChainId: 11155111
     readonly property int optChainId: 10
     readonly property int sepOptChainId: 11155420
@@ -115,6 +116,31 @@ QtObject {
                         authToken: ""
                     }
                 ])
+    }
+
+    readonly property var hoodiRpcProviders: ListModel {
+        Component.onCompleted: append([
+                {
+                    name: "Embedded Hoodi #1",
+                    url: "https://hoodi.infura.io/v3/",
+                    isEnabled: true,
+                    providerType: "embedded-proxy",
+                    authType: "none",
+                    authLogin: "",
+                    authPassword: "",
+                    authToken: ""
+                },
+                {
+                    name: "Embedded Hoodi #2",
+                    url: "https://hoodi.alchemy.io/v3/",
+                    isEnabled: true,
+                    providerType: "embedded-direct",
+                    authType: "none",
+                    authLogin: "",
+                    authPassword: "",
+                    authToken: ""
+                }
+            ])
     }
 
     readonly property var sepMainnetRpcProviders: ListModel {
@@ -425,6 +451,24 @@ QtObject {
                 isDeactivatable: false,
             },
             {
+                chainId: hoodiChainId,
+                chainName: "Hoodi",
+                rpcProviders: hoodiRpcProviders,
+                blockExplorerURL: "https://hoodi.etherscan.io/",
+                iconUrl: "network/ethereum-test",
+                chainColor: "#627EEA",
+                shortName: "eth",
+                nativeCurrencyName: "Ether",
+                nativeCurrencySymbol: "ETH",
+                nativeCurrencyDecimals: 18,
+                isTest: true,
+                layer: 1,
+                isRouteEnabled: true,
+                isEnabled: true,
+                isActive: true,
+                isDeactivatable: false,
+            },
+            {
                 chainId: sepMainnetChainId,
                 chainName: "Sepolia Mainnet",
                 rpcProviders: sepMainnetRpcProviders,
@@ -439,8 +483,8 @@ QtObject {
                 layer: 1,
                 isRouteEnabled: true,
                 isEnabled: false,
-                isActive: true,
-                isDeactivatable: false,
+                isActive: false,
+                isDeactivatable: true,
             },
             {
                 chainId: optChainId,

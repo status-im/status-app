@@ -105,7 +105,7 @@ StatusDialog {
                 Qt.callLater(() => {
                                  // by default set ethereum chain
                                  root.swapInputParamsForm.selectedNetworkChainId = Utils.isChainIDTestnet(chainId)?
-                                     Constants.chains.sepoliaChainId
+                                     Constants.chains.hoodiChainId
                                    : Constants.chains.mainnetChainId
                              })
                 return

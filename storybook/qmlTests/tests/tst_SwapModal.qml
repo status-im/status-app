@@ -405,7 +405,7 @@ Item {
 
             // check default value of network comboBox, should be mainnet
             compare(root.swapFormData.selectedNetworkChainId, 1)
-            compare(root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId, 11155111 /*Sepolia Mainnet*/)
+            compare(root.swapAdaptor.filteredFlatNetworksModel.get(0).chainId, 560048 /*Hoodi*/)
 
             // lets ensure that the selected one is correctly set
             const networkSelectorView = findChild(networkComboBox.control.popup.contentItem, "networkSelectorList")
