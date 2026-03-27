@@ -2,22 +2,8 @@ import QtQuick
 
 import StatusQ.CustomWebView 1.0
 
-import AppLayouts.Browser.stores as BrowserStores
-
 AbstractWebView {
     id: root
-
-    required property BrowserStores.BookmarksStore bookmarksStore
-    required property BrowserStores.DownloadsStore downloadsStore
-    required property var localAccountSensitiveSettings
-
-    property var findBarComp
-    property var favMenu
-    property var addFavModal
-    property var downloadsMenu
-    property var determineRealURLFn: function(url) { return url }
-    property bool enableJsLogs: false
-    property bool isDownloadView: false
 
     readonly property bool offTheRecord: false
 
@@ -28,6 +14,7 @@ AbstractWebView {
     readonly property alias canGoForward: backend.canGoForward
     readonly property alias loadProgress: backend.loadProgress
     readonly property alias htmlPageLoaded: backend.loaded
+    readonly property alias zoomFactor: backend.zoomFactor
 
     ListModel {
         id: historyModel
@@ -36,14 +23,12 @@ AbstractWebView {
     readonly property var history: ({ items: historyModel })
     readonly property url icon: backend.favicon
 
-    readonly property bool supportsZoom: true
-    readonly property bool supportsDevTools: false
-    readonly property bool supportsFindInPage: backend.findSupported
-    readonly property bool supportsIncognito: false
-    readonly property bool supportsHistory: true
-    readonly property bool hasNativeFindPanel: backend.hasNativeFindPanel
-
-    readonly property alias zoomFactor: backend.zoomFactor
+    supportsZoom: true
+    supportsDevTools: false
+    supportsFindInPage: backend.findSupported
+    supportsIncognito: false
+    supportsHistory: true
+    hasNativeFindPanel: backend.hasNativeFindPanel
 
     MobileWebViewBackend {
         id: backend

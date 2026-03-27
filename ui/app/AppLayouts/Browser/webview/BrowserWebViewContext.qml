@@ -164,7 +164,7 @@ QtObject {
 
         var view = getWebView(index)
         if (tabsModel.count <= 1) {
-            var fallbackProfileParams = currentWebView ? currentWebView.profileParams : defaultProfileParams
+            var fallbackProfileParams = root.currentWebView ? currentWebView.profileParams : root.defaultProfileParams
             createEmptyTab(fallbackProfileParams, true)
         }
         tabsModel.removeTab(index)

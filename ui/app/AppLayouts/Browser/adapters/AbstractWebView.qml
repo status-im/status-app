@@ -1,12 +1,19 @@
 import QtQuick
 
+import AppLayouts.Browser.stores as BrowserStores
+
 Item {
     id: root
 
+    required property BrowserStores.BookmarksStore bookmarksStore
+    required property BrowserStores.DownloadsStore downloadsStore
+    required property var localAccountSensitiveSettings
+
     required property var webChannel
     required property ProfileParams profileParams
-    property bool devToolsEnabled: false
-    property bool isDownloadView: false
+    required property bool devToolsEnabled
+    required property bool enableJsLogs
+    required property bool isDownloadView
 
     readonly property bool offTheRecord: profileParams.offTheRecord
 
@@ -24,12 +31,12 @@ Item {
     readonly property var scrollPosition: Qt.point(0, 0)
 
     // === Capability Flags ===
-    readonly property bool supportsZoom: false
-    readonly property bool supportsDevTools: false
-    readonly property bool supportsFindInPage: false
-    readonly property bool supportsIncognito: false
-    readonly property bool supportsHistory: false
-    readonly property bool hasNativeFindPanel: false
+    required property bool supportsZoom
+    required property bool supportsDevTools
+    required property bool supportsFindInPage
+    required property bool supportsIncognito
+    required property bool supportsHistory
+    required property bool hasNativeFindPanel
 
     readonly property int devToolsHeight: 400
 

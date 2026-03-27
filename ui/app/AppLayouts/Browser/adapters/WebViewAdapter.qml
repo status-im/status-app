@@ -8,11 +8,6 @@ import AppLayouts.Browser.views
 AbstractWebView {
     id: root
 
-    property bool enableJsLogs: false
-    required property var localAccountSensitiveSettings
-    property var bookmarksStore
-    property var downloadsStore
-
     property var profile: ProfileManager.getProfile(root.profileParams)
 
     // Expose internal WebEngineView properties
@@ -29,11 +24,12 @@ AbstractWebView {
     readonly property alias scrollPosition: webView.scrollPosition
 
     // Capability flags for WebEngine
-    readonly property bool supportsZoom: true
-    readonly property bool supportsDevTools: true
-    readonly property bool supportsFindInPage: true
-    readonly property bool supportsIncognito: true
-    readonly property bool supportsHistory: true
+    supportsZoom: true
+    supportsDevTools: true
+    supportsFindInPage: true
+    supportsIncognito: true
+    supportsHistory: true
+    hasNativeFindPanel: false
 
     // Override functions
     function loadUrl(newUrl) { webView.url = newUrl }
@@ -91,10 +87,10 @@ AbstractWebView {
 
     WebEngineView {
         id: webView
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: root.devToolsEnabled ? devToolsView.top : parent.bottom
+        anchors.left: parent?.left
+        anchors.right: parent?.right
+        anchors.top: parent?.top
+        anchors.bottom: root.devToolsEnabled ? devToolsView.top : parent?.bottom
         focus: true
 
         property bool htmlPageLoaded: false
@@ -205,9 +201,9 @@ AbstractWebView {
 
     WebEngineView {
         id: devToolsView
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.left: parent?.left
+        anchors.right: parent?.right
+        anchors.bottom: parent?.bottom
         height: root.devToolsEnabled ? root.devToolsHeight : 0
         visible: root.devToolsEnabled
         inspectedView: root.devToolsEnabled ? webView : null
