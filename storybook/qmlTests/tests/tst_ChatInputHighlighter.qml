@@ -129,13 +129,18 @@ TestCase {
 
     // ── no formatting — negative cases ───────────────────────────────────────
 
-    function test_spaceAfterOpeningDelimiter_noBold() {
-        // CommonMark: "** foo **" — space after ** makes it not left-flanking
-        compare(highlighter.parseFormats("** foo **").length, 0)
+    function test_spaceAfterOpeningDelimiter_bold() {
+        // Whitespace is neutral: "** foo **" still produces a bold span over " foo "
+        const s = spanFor("** foo **", " foo ")
+        verify(s !== null, "expected a bold span over ' foo '")
+        verify(s.bold, "expected bold")
     }
 
-    function test_spaceBeforeClosingDelimiter_noItalic() {
-        compare(highlighter.parseFormats("*not italic *").length, 0)
+    function test_spaceBeforeClosingDelimiter_italic() {
+        // Whitespace is neutral: "*not italic *" produces an italic span
+        const s = spanFor("*not italic *", "not italic ")
+        verify(s !== null, "expected an italic span over 'not italic '")
+        verify(s.italic, "expected italic")
     }
 
     function test_emptyDelimiters() {

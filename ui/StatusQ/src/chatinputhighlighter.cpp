@@ -41,8 +41,6 @@ bool isLeftFlanking(const QString& text, int pos, int len)
     QChar charAfter  = (pos + len < text.length()) ? text[pos + len] : QChar(' ');
     QChar charBefore = (pos > 0)                   ? text[pos - 1]   : QChar(' ');
 
-    if (isUnicodeWhitespace(charAfter))
-        return false;
     if (!isUnicodePunctuation(charAfter))
         return true;
     return isUnicodeWhitespace(charBefore) || isUnicodePunctuation(charBefore);
@@ -53,8 +51,6 @@ bool isRightFlanking(const QString& text, int pos, int len)
     QChar charAfter  = (pos + len < text.length()) ? text[pos + len] : QChar(' ');
     QChar charBefore = (pos > 0)                   ? text[pos - 1]   : QChar(' ');
 
-    if (isUnicodeWhitespace(charBefore))
-        return false;
     if (!isUnicodePunctuation(charBefore))
         return true;
     return isUnicodeWhitespace(charAfter) || isUnicodePunctuation(charAfter);
