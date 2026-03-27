@@ -77,6 +77,13 @@ platform :ios do
         timeout: 3600,
         lock_when_sleeps: false
       )
+
+      # Remove stale keychains (e.g. fastlane.keychain-db) from the search list
+      # to prevent "ambiguous" codesign errors when the same certificate exists
+      # in multiple keychains.
+      kc_path = File.expand_path("~/Library/Keychains/#{keychain_name}-db")
+      login_kc = File.expand_path("~/Library/Keychains/login.keychain-db")
+      sh("security", "list-keychains", "-d", "user", "-s", kc_path, login_kc)
     end
   end
 
