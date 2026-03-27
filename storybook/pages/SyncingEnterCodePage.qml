@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
+
 import Storybook
 
 import mainui
@@ -17,7 +19,12 @@ SplitView {
 
     Logs { id: logs }
 
+    Keychain {
+        id: popupsKeychain
+    }
+
     Popups {
+        keychain: popupsKeychain
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutStores.RootStore {}

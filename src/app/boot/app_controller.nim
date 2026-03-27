@@ -275,6 +275,7 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
     result.networkService,
     result.generalService,
     result.keycardService,
+    result.keycardServiceV2,
     result.networkConnectionService,
     result.sharedUrlsService,
     result.marketService,

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
+import StatusQ
 import StatusQ.Core
 
 import mainui
@@ -19,7 +20,12 @@ SplitView {
 
     orientation: Qt.Vertical
 
+    Keychain {
+        id: popupsKeychain
+    }
+
     Popups {
+        keychain: popupsKeychain
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutStores.RootStore {}

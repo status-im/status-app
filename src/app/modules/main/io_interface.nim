@@ -309,6 +309,12 @@ method onStatusUrlRequested*(self: AccessInterface, action: StatusUrlAction, com
   url: string, userId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method prepareAuthenticationModule*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getAuthenticationModule*(self: AccessInterface): QVariant {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getKeycardSharedModuleForAuthenticationOrSigning*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 

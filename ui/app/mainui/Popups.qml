@@ -6,6 +6,7 @@ import QtQuick.Window
 import QtQml.Models
 import QtQml
 
+import StatusQ
 import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Components
@@ -33,6 +34,8 @@ import AppLayouts.stores.Messaging as MessagingStores
 import AppLayouts.stores.Messaging.Community as CommunityStores
 
 import shared.popups
+import shared.popups.authentication
+import shared.popups.authentication.stores 1.0 as AuthStores
 import shared.status
 import shared.stores
 import shared.views
@@ -44,6 +47,7 @@ QtObject {
     id: root
 
     required property var popupParent
+    required property Keychain keychain
 
     required property RootStore sharedRootStore
     required property AppLayoutStores.RootStore rootStore
@@ -67,6 +71,9 @@ QtObject {
     property ProfileStores.PrivacyStore privacyStore
 
     property MessagingStores.MessagingRootStore messagingRootStore
+
+    readonly property AuthStores.AuthenticationStore authenticationStore: AuthStores.AuthenticationStore {
+    }
 
     property var allContactsModel
     property var mutualContactsModel
@@ -120,6 +127,7 @@ QtObject {
         Global.unblockContactRequested.connect(openUnblockContactPopup)
         Global.openChangeProfilePicPopup.connect(openChangeProfilePicPopup)
         Global.openBackUpSeedPopup.connect(openBackUpSeedPopup)
+        Global.openAuthenticationPopup.connect(openAuthenticationPopup)
         Global.openPinnedMessagesPopupRequested.connect(openPinnedMessagesPopup)
         Global.openCommunityProfilePopupRequested.connect(openCommunityProfilePopup)
         Global.createCommunityPopupRequested.connect(openCreateCommunityPopup)
@@ -238,6 +246,10 @@ QtObject {
 
     function openBackUpSeedPopup() {
         openPopup(backupSeedModalComponent)
+    }
+
+    function openAuthenticationPopup(reason, keyUid) {
+        openPopup(authenticationPopupComponent, { reason: reason, keyUid: keyUid })
     }
 
     function openCommunityProfilePopup(store, community, communitySectionModule) {
@@ -602,6 +614,17 @@ QtObject {
                                                                        : qsTr("You backed up your recovery phrase. Access it in Settings"))
                 }
                 onClosed: destroy()
+            }
+        },
+
+        Component {
+            id: authenticationPopupComponent
+            AuthenticationPopup {
+                store: root.authenticationStore
+                keychain: root.keychain
+                onAuthenticationSuccess: function(reason, password, pin, keyUid) {
+                    Global.authenticationResult(reason, password, pin, keyUid)
+                }
             }
         },
 

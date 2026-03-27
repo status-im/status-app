@@ -945,6 +945,7 @@ Item {
     Popups {
         id: popups
 
+        keychain: appMain.keychain
         sharedRootStore: appMain.sharedRootStore
         popupParent: appMain
         rootStore: appMain.rootStore

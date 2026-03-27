@@ -2068,6 +2068,65 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     </message>
 </context>
 <context>
+    <name>AuthenticationPopup</name>
+    <message>
+        <source>Authenticate</source>
+        <translation type="unfinished">Ověřit</translation>
+    </message>
+    <message>
+        <source>Use biometrics</source>
+        <translation type="unfinished">Použít biometrii</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Zrušit</translation>
+    </message>
+    <message>
+        <source>Update password &amp; authenticate</source>
+        <translation type="unfinished">Aktualizovat heslo a ověřit</translation>
+    </message>
+    <message>
+        <source>Update PIN &amp; authenticate</source>
+        <translation type="unfinished">Aktualizovat PIN a ověřit</translation>
+    </message>
+    <message>
+        <source>Failed to update stored credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Credentials successfully obtained from biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics not supported</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Generic error occurred</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics is unavailable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics cancelled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics fallback error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown biometrics error</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BackupSeedModal</name>
     <message>
         <source>I&apos;ve backed up phrase</source>
@@ -2308,6 +2367,21 @@ Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezp
     <message>
         <source>Upload a community banner</source>
         <translation>Nahrát banner komunity</translation>
+    </message>
+</context>
+<context>
+    <name>Biometrics</name>
+    <message>
+        <source>Biometric authentication failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authenticate with biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use your password or PIN instead</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -5926,10 +6000,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <source>Display Names can’t start or end with a space</source>
         <translation>Zobrazovaná jména nesmí začínat ani končit mezerou</translation>
     </message>
-    <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Neplatné znaky (použijte pouze A-Z a 0-9, pomlčky a podtržítka)</translation>
-    </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
         <translation>
@@ -5957,6 +6027,10 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     <message>
         <source>This Display Name is already in use in one of your joined communities</source>
         <translation>Toto zobrazované jméno se již používá v jedné z vašich připojených komunit</translation>
+    </message>
+    <message>
+        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7166,6 +7240,25 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     <message>
         <source>Enter your new password to proceed</source>
         <translation>Zadejte své nové heslo pro pokračování</translation>
+    </message>
+</context>
+<context>
+    <name>EnterPin</name>
+    <message>
+        <source>Enter this Keycard&apos;s PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN incorrect</source>
+        <translation type="unfinished">Nesprávný PIN</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform>Zbývá %n pokus</numerusform>
+            <numerusform>Zbývají %n pokusy</numerusform>
+            <numerusform>Zbývá %n pokusů</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -8709,6 +8802,78 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     <message>
         <source>A key pair is your shareable public address and a secret private key that controls your wallet. Your key pair is being generated on your Keycard — keep it plugged in until the process completes.</source>
         <translation>Pár klíčů je vaše sdílitelná veřejná adresa a tajný soukromý klíč, který ovládá vaši peněženku. Váš pár klíčů se generuje na vaší Keycard – nechte ji připojenou, dokud proces neskončí.</translation>
+    </message>
+</context>
+<context>
+    <name>KeycardAuth</name>
+    <message>
+        <source>Plug in Keycard reader...</source>
+        <translation type="unfinished">Připojte čtečku Keycard...</translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading Keycard...</source>
+        <translation type="unfinished">Načítání Keycard...</translation>
+    </message>
+    <message>
+        <source>Keycard is empty</source>
+        <translation type="unfinished">Keycard je prázdná</translation>
+    </message>
+    <message>
+        <source>There is no key pair on this Keycard</source>
+        <translation type="unfinished">Na této Keycard není žádný pár klíčů</translation>
+    </message>
+    <message>
+        <source>This is not a Keycard</source>
+        <translation type="unfinished">Toto není Keycard</translation>
+    </message>
+    <message>
+        <source>The card inserted is not a recognised Keycard,
+please remove and try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard locked</source>
+        <translation type="unfinished">Keycard uzamčena</translation>
+    </message>
+    <message>
+        <source>PIN entered incorrectly too many times</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PUK entered incorrectly too many times</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard pairing error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max pairing slots reached for this Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard inserted</source>
+        <translation type="unfinished">Vložena nesprávná Keycard</translation>
+    </message>
+    <message>
+        <source>Inserted Keycard does not match the expected key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

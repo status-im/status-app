@@ -488,6 +488,28 @@ QtObject {
             readonly property int imageWidth: 240
             readonly property int imageHeight: 240
         }
+
+        readonly property QtObject state: QtObject {
+            readonly property string unknownReaderState: "unknown-reader-state"
+            readonly property string noPCSC: "no-pcsc"
+            readonly property string internalError: "internal-error"
+            readonly property string noReadersFound: "no-readers-found"
+            readonly property string readerConnectionError: "reader-connection-error"
+            readonly property string waitingForReader: "waiting-for-reader"
+            readonly property string waitingForCard: "waiting-for-card"
+            readonly property string connectingCard: "connecting-card"
+            readonly property string connectionError: "connection-error"
+            readonly property string notKeycard: "not-keycard"
+            readonly property string pairingError: "pairing-error"
+            readonly property string emptyKeycard: "empty-keycard"
+            readonly property string noAvailablePairingSlots: "no-available-pairing-slots"
+            readonly property string blockedPIN: "blocked-pin"
+            readonly property string blockedPUK: "blocked-puk"
+            readonly property string factoryResetting: "factory-resetting"
+            readonly property string ready: "ready"
+            readonly property string authorized: "authorized"
+            readonly property string cancelled: "cancelled"
+        }
     }
 
     readonly property QtObject regularExpressions: QtObject {

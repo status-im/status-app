@@ -42,6 +42,7 @@ type
     accountsService: accounts_service.Service
     generalService: general_service.Service
     resumeLogin: bool
+    tmpKeyUid: string
 
 proc newModule*[T](
     delegate: T,
@@ -297,7 +298,8 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
         self.controller.login(account, data["password"].str)
       of LoginMethod.Keycard:
         featureGuard USE_KEYCARD_QT:
-          self.loginKeycard(keyUid, data["pin"].str)
+          self.tmpKeyUid = keyUid
+          self.loginKeycard(self.tmpKeyUid, data["pin"].str)
         else:
           self.authorize(data["pin"].str)
           # We will continue the flow when the card is authorized in onKeycardStateUpdated
@@ -445,7 +447,7 @@ method onKeycardExportLoginKeysFailure*[T](self: Module[T], error: string) =
 method onKeycardExportLoginKeysSuccess*[T](self: Module[T], exportedKeys: KeycardExportedKeysDto) =
   let keycardInfo = self.view.getKeycardEvent().keycardInfo
   # We got the keys, now we can login. If everything goes well, we will finish the app loading
-  let accountDto = self.controller.getAccountByKeyUid(keycardInfo.keyUID)
+  let accountDto = self.controller.getAccountByKeyUid(self.tmpKeyUid)
   self.controller.login(
     accountDto,
     password = "",

@@ -268,6 +268,21 @@ QtObject:
   proc emitDisplayUserProfileSignal*(self: View, publicKey: string) =
     self.displayUserProfile(publicKey)
 
+  proc authenticationModuleChanged*(self: View) {.signal.}
+
+  proc prepareAuthenticationModule*(self: View) {.slot.} =
+    self.delegate.prepareAuthenticationModule()
+    self.authenticationModuleChanged()
+
+  proc getAuthenticationModule(self: View): QVariant {.slot.} =
+    let module = self.delegate.getAuthenticationModule()
+    if not module.isNil:
+      return module
+    return newQVariant()
+  QtProperty[QVariant] authenticationModule:
+    read = getAuthenticationModule
+    notify = authenticationModuleChanged
+
   proc getKeycardSharedModuleForAuthenticationOrSigning(self: View): QVariant {.slot.} =
     let module = self.delegate.getKeycardSharedModuleForAuthenticationOrSigning()
     if not module.isNil:

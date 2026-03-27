@@ -2061,6 +2061,65 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     </message>
 </context>
 <context>
+    <name>AuthenticationPopup</name>
+    <message>
+        <source>Authenticate</source>
+        <translation type="unfinished">Autenticar</translation>
+    </message>
+    <message>
+        <source>Use biometrics</source>
+        <translation type="unfinished">Usar biometría</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Cancelar</translation>
+    </message>
+    <message>
+        <source>Update password &amp; authenticate</source>
+        <translation type="unfinished">Actualizar contraseña y autenticar</translation>
+    </message>
+    <message>
+        <source>Update PIN &amp; authenticate</source>
+        <translation type="unfinished">Actualizar PIN y autenticar</translation>
+    </message>
+    <message>
+        <source>Failed to update stored credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Credentials successfully obtained from biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics not supported</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Generic error occurred</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics is unavailable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics cancelled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics fallback error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown biometrics error</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BackupSeedModal</name>
     <message>
         <source>I&apos;ve backed up phrase</source>
@@ -2301,6 +2360,21 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
     <message>
         <source>Upload a community banner</source>
         <translation>Subir un banner de comunidad</translation>
+    </message>
+</context>
+<context>
+    <name>Biometrics</name>
+    <message>
+        <source>Biometric authentication failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authenticate with biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use your password or PIN instead</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -5906,10 +5980,6 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
         <source>Display Names can’t start or end with a space</source>
         <translation>Los nombres públicos no pueden comenzar ni terminar con un espacio</translation>
     </message>
-    <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Caracteres inválidos (usa solo A-Z y 0-9, guiones y guiones bajos)</translation>
-    </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
         <translation>
@@ -5935,6 +6005,10 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     <message>
         <source>This Display Name is already in use in one of your joined communities</source>
         <translation>Este nombre público ya está en uso en una de tus comunidades unidas</translation>
+    </message>
+    <message>
+        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7141,6 +7215,24 @@ Por favor, agrégala e intenta de nuevo.</translation>
     <message>
         <source>Enter your new password to proceed</source>
         <translation>Escribe tu nueva contraseña para continuar</translation>
+    </message>
+</context>
+<context>
+    <name>EnterPin</name>
+    <message>
+        <source>Enter this Keycard&apos;s PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN incorrect</source>
+        <translation type="unfinished">PIN incorrecto</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform>Queda %n intento</numerusform>
+            <numerusform>Quedan %n intentos</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -8674,6 +8766,78 @@ Por favor, agrégala e intenta de nuevo.</translation>
     <message>
         <source>A key pair is your shareable public address and a secret private key that controls your wallet. Your key pair is being generated on your Keycard — keep it plugged in until the process completes.</source>
         <translation>Un par de claves es tu dirección pública compartible y una clave privada secreta que controla tu billetera. Tu par de claves se está generando en tu Keycard — manténlo conectado hasta que el proceso se complete.</translation>
+    </message>
+</context>
+<context>
+    <name>KeycardAuth</name>
+    <message>
+        <source>Plug in Keycard reader...</source>
+        <translation type="unfinished">Conecta el lector de Keycard...</translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading Keycard...</source>
+        <translation type="unfinished">Leyendo Keycard...</translation>
+    </message>
+    <message>
+        <source>Keycard is empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There is no key pair on this Keycard</source>
+        <translation type="unfinished">No hay par de claves en este Keycard</translation>
+    </message>
+    <message>
+        <source>This is not a Keycard</source>
+        <translation type="unfinished">Esto no es un Keycard</translation>
+    </message>
+    <message>
+        <source>The card inserted is not a recognised Keycard,
+please remove and try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard locked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN entered incorrectly too many times</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PUK entered incorrectly too many times</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard pairing error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max pairing slots reached for this Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard inserted</source>
+        <translation type="unfinished">Keycard incorrecto insertado</translation>
+    </message>
+    <message>
+        <source>Inserted Keycard does not match the expected key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

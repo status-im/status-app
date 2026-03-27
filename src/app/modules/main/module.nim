@@ -5,6 +5,7 @@ import io_interface, view, controller
 import ephemeral_notification_item, ephemeral_notification_model
 import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details, contacts_utils]
 import app/modules/shared_modules/keycard_popup/module as keycard_shared_module
+import app/modules/shared_modules/authentication/module as authentication_module
 import app/global/app_sections_config
 import app/global/app_signals
 import app/global/[global_singleton, feature_flags]
@@ -64,6 +65,7 @@ import app_service/service/community_tokens/service as community_tokens_service
 import app_service/service/network/service as network_service
 import app_service/service/general/service as general_service
 import app_service/service/keycard/service as keycard_service
+import app_service/service/keycardV2/service as keycard_serviceV2
 import app_service/service/shared_urls/service as urls_service
 import app_service/service/network_connection/service as network_connection_service
 import app_service/common/types
@@ -96,6 +98,7 @@ type
     events: EventEmitter
     urlsManager: UrlsManager
     keycardService: keycard_service.Service
+    keycardServiceV2: keycard_serviceV2.Service
     settingsService: settings_service.Service
     networkService: network_service.Service
     privacyService: privacy_service.Service
@@ -121,6 +124,7 @@ type
     networkConnectionModule: network_connection_module.AccessInterface
     sharedUrlsModule: shared_urls_module.AccessInterface
     marketModule: market_module.AccessInterface
+    authenticationModule: authentication_module.AccessInterface
     moduleLoaded: bool
     chatsLoaded: bool
     communityDataLoaded: bool
@@ -173,6 +177,7 @@ proc newModule*[T](
   networkService: network_service.Service,
   generalService: general_service.Service,
   keycardService: keycard_service.Service,
+  keycardServiceV2: keycard_serviceV2.Service,
   networkConnectionService: network_connection_service.Service,
   sharedUrlsService: urls_service.Service,
   marketService: market_service.Service,
@@ -211,6 +216,7 @@ proc newModule*[T](
   result.events = events
   result.urlsManager = urlsManager
   result.keycardService = keycardService
+  result.keycardServiceV2 = keycardServiceV2
   result.settingsService = settingsService
   result.networkService = networkService
   result.privacyService = privacyService
@@ -277,6 +283,8 @@ method delete*[T](self: Module[T]) =
     self.keycardSharedModule.delete
   self.networkConnectionModule.delete
   self.sharedUrlsModule.delete
+  if not self.authenticationModule.isNil:
+    self.authenticationModule.delete
   self.view.delete
   self.viewVariant.delete
 
@@ -1869,6 +1877,19 @@ method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, commun
     else:
       return
 
+################################################################################
+## authentication module
+################################################################################
+method prepareAuthenticationModule*[T](self: Module[T]) =
+  if self.authenticationModule.isNil:
+    self.authenticationModule = authentication_module.newModule[Module[T]](self, self.events, self.accountsService, self.walletAccountService, self.keycardServiceV2)
+
+method getAuthenticationModule*[T](self: Module[T]): QVariant =
+  if not self.authenticationModule.isNil:
+    return self.authenticationModule.getModuleAsVariant()
+  info "authentication module is nil, prepare it before using"
+  return newQVariant()
+################################################################################
 
 
 ################################################################################

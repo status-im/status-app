@@ -2534,6 +2534,79 @@
     </message>
   </context>
   <context>
+    <name>AuthenticationPopup</name>
+    <message>
+      <source>Authenticate</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Authenticate</translation>
+    </message>
+    <message>
+      <source>Use biometrics</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Use biometrics</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Cancel</translation>
+    </message>
+    <message>
+      <source>Update password &amp; authenticate</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Update password &amp; authenticate</translation>
+    </message>
+    <message>
+      <source>Update PIN &amp; authenticate</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Update PIN &amp; authenticate</translation>
+    </message>
+    <message>
+      <source>Failed to update stored credentials</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Failed to update stored credentials</translation>
+    </message>
+    <message>
+      <source>Credentials successfully obtained from biometrics</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Credentials successfully obtained from biometrics</translation>
+    </message>
+    <message>
+      <source>Biometrics not supported</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Biometrics not supported</translation>
+    </message>
+    <message>
+      <source>Generic error occurred</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Generic error occurred</translation>
+    </message>
+    <message>
+      <source>Biometrics is unavailable</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Biometrics is unavailable</translation>
+    </message>
+    <message>
+      <source>Biometrics cancelled</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Biometrics cancelled</translation>
+    </message>
+    <message>
+      <source>Biometrics not found</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Biometrics not found</translation>
+    </message>
+    <message>
+      <source>Biometrics fallback error</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Biometrics fallback error</translation>
+    </message>
+    <message>
+      <source>Unknown biometrics error</source>
+      <comment>AuthenticationPopup</comment>
+      <translation>Unknown biometrics error</translation>
+    </message>
+  </context>
+  <context>
     <name>BackupSeedModal</name>
     <message>
       <source>I&#39;ve backed up phrase</source>
@@ -2823,6 +2896,24 @@
       <source>Upload a community banner</source>
       <comment>BannerPicker</comment>
       <translation>Upload a community banner</translation>
+    </message>
+  </context>
+  <context>
+    <name>Biometrics</name>
+    <message>
+      <source>Biometric authentication failed</source>
+      <comment>Biometrics</comment>
+      <translation>Biometric authentication failed</translation>
+    </message>
+    <message>
+      <source>Authenticate with biometrics</source>
+      <comment>Biometrics</comment>
+      <translation>Authenticate with biometrics</translation>
+    </message>
+    <message>
+      <source>Use your password or PIN instead</source>
+      <comment>Biometrics</comment>
+      <translation>Use your password or PIN instead</translation>
     </message>
   </context>
   <context>
@@ -7198,11 +7289,6 @@
       <comment>DisplayNameValidators</comment>
       <translation>Display Names can’t start or end with a space</translation>
     </message>
-    <message>
-      <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-      <comment>DisplayNameValidators</comment>
-      <translation>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</translation>
-    </message>
     <message numerus="yes">
       <source>Display Names must be at least %n character(s) long</source>
       <comment>DisplayNameValidators</comment>
@@ -7233,6 +7319,11 @@
       <source>This Display Name is already in use in one of your joined communities</source>
       <comment>DisplayNameValidators</comment>
       <translation>This Display Name is already in use in one of your joined communities</translation>
+    </message>
+    <message>
+      <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+      <comment>DisplayNameValidators</comment>
+      <translation>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</translation>
     </message>
   </context>
   <context>
@@ -8708,6 +8799,27 @@
       <source>Enter your new password to proceed</source>
       <comment>EnterPassword</comment>
       <translation>Enter your new password to proceed</translation>
+    </message>
+  </context>
+  <context>
+    <name>EnterPin</name>
+    <message>
+      <source>Enter this Keycard&#39;s PIN</source>
+      <comment>EnterPin</comment>
+      <translation>Enter this Keycard&#39;s PIN</translation>
+    </message>
+    <message>
+      <source>PIN incorrect</source>
+      <comment>EnterPin</comment>
+      <translation>PIN incorrect</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n attempt(s) remaining</source>
+      <comment>EnterPin</comment>
+      <translation>
+        <numerusform>%n attempt remaining</numerusform>
+        <numerusform>%n attempts remaining</numerusform>
+      </translation>
     </message>
   </context>
   <context>
@@ -10571,6 +10683,94 @@
       <source>A key pair is your shareable public address and a secret private key that controls your wallet. Your key pair is being generated on your Keycard — keep it plugged in until the process completes.</source>
       <comment>KeycardAddKeyPairPage</comment>
       <translation>A key pair is your shareable public address and a secret private key that controls your wallet. Your key pair is being generated on your Keycard — keep it plugged in until the process completes.</translation>
+    </message>
+  </context>
+  <context>
+    <name>KeycardAuth</name>
+    <message>
+      <source>Plug in Keycard reader...</source>
+      <comment>KeycardAuth</comment>
+      <translation>Plug in Keycard reader...</translation>
+    </message>
+    <message>
+      <source>Tap or insert Keycard...</source>
+      <comment>KeycardAuth</comment>
+      <translation>Tap or insert Keycard...</translation>
+    </message>
+    <message>
+      <source>Reading Keycard...</source>
+      <comment>KeycardAuth</comment>
+      <translation>Reading Keycard...</translation>
+    </message>
+    <message>
+      <source>Keycard is empty</source>
+      <comment>KeycardAuth</comment>
+      <translation>Keycard is empty</translation>
+    </message>
+    <message>
+      <source>There is no key pair on this Keycard</source>
+      <comment>KeycardAuth</comment>
+      <translation>There is no key pair on this Keycard</translation>
+    </message>
+    <message>
+      <source>This is not a Keycard</source>
+      <comment>KeycardAuth</comment>
+      <translation>This is not a Keycard</translation>
+    </message>
+    <message>
+      <source>The card inserted is not a recognised Keycard,&#xA;please remove and try again</source>
+      <comment>KeycardAuth</comment>
+      <translation>The card inserted is not a recognised Keycard,&#xA;please remove and try again</translation>
+    </message>
+    <message>
+      <source>Connection error</source>
+      <comment>KeycardAuth</comment>
+      <translation>Connection error</translation>
+    </message>
+    <message>
+      <source>Something went wrong, please try again</source>
+      <comment>KeycardAuth</comment>
+      <translation>Something went wrong, please try again</translation>
+    </message>
+    <message>
+      <source>Keycard locked</source>
+      <comment>KeycardAuth</comment>
+      <translation>Keycard locked</translation>
+    </message>
+    <message>
+      <source>PIN entered incorrectly too many times</source>
+      <comment>KeycardAuth</comment>
+      <translation>PIN entered incorrectly too many times</translation>
+    </message>
+    <message>
+      <source>PUK entered incorrectly too many times</source>
+      <comment>KeycardAuth</comment>
+      <translation>PUK entered incorrectly too many times</translation>
+    </message>
+    <message>
+      <source>Keycard pairing error</source>
+      <comment>KeycardAuth</comment>
+      <translation>Keycard pairing error</translation>
+    </message>
+    <message>
+      <source>Max pairing slots reached for this Keycard</source>
+      <comment>KeycardAuth</comment>
+      <translation>Max pairing slots reached for this Keycard</translation>
+    </message>
+    <message>
+      <source>Wrong Keycard inserted</source>
+      <comment>KeycardAuth</comment>
+      <translation>Wrong Keycard inserted</translation>
+    </message>
+    <message>
+      <source>Inserted Keycard does not match the expected key</source>
+      <comment>KeycardAuth</comment>
+      <translation>Inserted Keycard does not match the expected key</translation>
+    </message>
+    <message>
+      <source>Success</source>
+      <comment>KeycardAuth</comment>
+      <translation>Success</translation>
     </message>
   </context>
   <context>

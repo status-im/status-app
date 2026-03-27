@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
+import StatusQ
 import StatusQ.Core
 
 import AppLayouts.stores as AppLayoutsStores
@@ -28,7 +29,12 @@ SplitView {
 
     readonly property var currencyStore: SharedStores.CurrenciesStore {}
 
+    Keychain {
+        id: popupsKeychain
+    }
+
     Popups {
+        keychain: popupsKeychain
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutsStores.RootStore

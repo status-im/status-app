@@ -40,7 +40,12 @@ Item {
     id: root
 
     // Needed for DAppsWorkflow->PairWCModal to open its instructions popup
+    Keychain {
+        id: popupsKeychain
+    }
+
     Popups {
+        keychain: popupsKeychain
         popupParent: root
         sharedRootStore: SharedStores.RootStore {}
         rootStore: AppLayoutStores.RootStore {}

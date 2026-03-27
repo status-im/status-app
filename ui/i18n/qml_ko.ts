@@ -2053,6 +2053,65 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
 </context>
 <context>
+    <name>AuthenticationPopup</name>
+    <message>
+        <source>Authenticate</source>
+        <translation type="unfinished">인증</translation>
+    </message>
+    <message>
+        <source>Use biometrics</source>
+        <translation type="unfinished">생체인증 사용</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">취소</translation>
+    </message>
+    <message>
+        <source>Update password &amp; authenticate</source>
+        <translation type="unfinished">비밀번호 업데이트 및 인증</translation>
+    </message>
+    <message>
+        <source>Update PIN &amp; authenticate</source>
+        <translation type="unfinished">PIN 업데이트 및 인증</translation>
+    </message>
+    <message>
+        <source>Failed to update stored credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Credentials successfully obtained from biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics not supported</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Generic error occurred</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics is unavailable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics cancelled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics fallback error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown biometrics error</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BackupSeedModal</name>
     <message>
         <source>I&apos;ve backed up phrase</source>
@@ -2293,6 +2352,21 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
     <message>
         <source>Upload a community banner</source>
         <translation>커뮤니티 배너 업로드</translation>
+    </message>
+</context>
+<context>
+    <name>Biometrics</name>
+    <message>
+        <source>Biometric authentication failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authenticate with biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use your password or PIN instead</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -5885,10 +5959,6 @@ Remember your password and don&apos;t share it with anyone.</source>
         <source>Display Names can’t start or end with a space</source>
         <translation>표시 이름은 공백으로 시작하거나 끝날 수 없습니다</translation>
     </message>
-    <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>잘못된 문자입니다 (A-Z, 0-9, 하이픈과 밑줄만 사용하세요)</translation>
-    </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
         <translation>
@@ -5912,6 +5982,10 @@ Remember your password and don&apos;t share it with anyone.</source>
     <message>
         <source>This Display Name is already in use in one of your joined communities</source>
         <translation>이 표시 이름은 당신이 가입한 커뮤니티 중 하나에서 이미 사용 중입니다</translation>
+    </message>
+    <message>
+        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7115,6 +7189,23 @@ Please add it and try again.</source>
     <message>
         <source>Enter your new password to proceed</source>
         <translation>계속하려면 새 비밀번호를 입력하세요</translation>
+    </message>
+</context>
+<context>
+    <name>EnterPin</name>
+    <message>
+        <source>Enter this Keycard&apos;s PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN incorrect</source>
+        <translation type="unfinished">PIN이 올바르지 않습니다</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -8638,6 +8729,78 @@ Please add it and try again.</source>
     <message>
         <source>A key pair is your shareable public address and a secret private key that controls your wallet. Your key pair is being generated on your Keycard — keep it plugged in until the process completes.</source>
         <translation>키 페어는 다른 사람과 공유할 수 있는 공개 주소와, 지갑을 제어하는 비밀 개인 키로 이루어져 있습니다. 지금 Keycard에서 키 페어를 생성 중입니다 — 과정이 끝날 때까지 분리하지 마세요.</translation>
+    </message>
+</context>
+<context>
+    <name>KeycardAuth</name>
+    <message>
+        <source>Plug in Keycard reader...</source>
+        <translation type="unfinished">Keycard 리더를 연결하세요...</translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading Keycard...</source>
+        <translation type="unfinished">Keycard 읽는 중...</translation>
+    </message>
+    <message>
+        <source>Keycard is empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There is no key pair on this Keycard</source>
+        <translation type="unfinished">이 Keycard에는 키 쌍이 없습니다</translation>
+    </message>
+    <message>
+        <source>This is not a Keycard</source>
+        <translation type="unfinished">이건 Keycard가 아닙니다</translation>
+    </message>
+    <message>
+        <source>The card inserted is not a recognised Keycard,
+please remove and try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard locked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN entered incorrectly too many times</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PUK entered incorrectly too many times</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard pairing error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max pairing slots reached for this Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard inserted</source>
+        <translation type="unfinished">잘못된 Keycard가 삽입되었습니다</translation>
+    </message>
+    <message>
+        <source>Inserted Keycard does not match the expected key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

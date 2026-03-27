@@ -232,6 +232,16 @@
     </message>
 </context>
 <context>
+    <name>EnterPin</name>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform>%n attempt remaining</numerusform>
+            <numerusform>%n attempts remaining</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>EnterPrivateKey</name>
     <message numerus="yes">
         <source>Key pair name must be at least %n character(s)</source>

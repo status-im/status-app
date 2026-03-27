@@ -101,6 +101,11 @@ QtObject {
     // BuyCrypto
     signal openBuyCryptoModalRequested(var formDataParams)
 
+    ///////////////// Global Authentication popup /////////////////
+    signal openAuthenticationPopup(string reason, string keyUid)
+    signal authenticationResult(string reason, string password, string pin, string keyUid)
+    ///////////////////////////////////////////////////////////////
+
     signal openAddEditSavedAddressesPopup(var params)
     signal openDeleteSavedAddressesPopup(var params)
     signal openShowQRPopup(var params)
