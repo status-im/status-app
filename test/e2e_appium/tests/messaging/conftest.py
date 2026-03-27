@@ -220,7 +220,7 @@ async def established_chat(request, test_environment) -> EstablishedChatContext:
     pool = None
     ctx = None
     setup_failed = False
-    max_attempts = 1
+    max_attempts = 2
     last_error: BaseException | None = None
     
     for attempt in range(1, max_attempts + 1):

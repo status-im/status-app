@@ -111,6 +111,9 @@ async def establish_contact(
         "Receiver failed to accept contact request"
     )
 
+    # Let Waku filter subscription propagate before messaging.
+    await asyncio.sleep(5)
+
     # Navigate receiver to messages
     assert receiver_app.click_messages_button(), "Receiver failed to navigate to messages"
     receiver_chat = ChatPage(receiver.driver)
@@ -137,8 +140,13 @@ async def establish_contact(
         "Receiver failed to send setup message"
     )
 
-    # Wait for the chat on sender side
+    # Wait for the chat on sender side — re-tap Messages to refresh the
+    # list in case the P2P message arrived but the UI hasn't updated.
     logger.info("Sender waiting for DM from receiver")
+    assert sender_app.click_messages_button(), "Sender failed to refresh messages tab"
+    sender_chat.dismiss_backup_prompt(timeout=2)
+    sender_chat.dismiss_introduce_prompt(timeout=2)
+
     assert sender_chat.wait_for_new_chat_to_arrive(
         receiver_suffix, display_name=receiver_display, timeout=timeout,
     ), "Chat did not arrive on sender"

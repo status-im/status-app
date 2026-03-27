@@ -43,7 +43,7 @@ device_defaults:
 
 
 devices:
-  default: "dynamic_samsung_tab"
+  default: "galaxy_tab_s10p_android_15"
   matrix:
     - id: "dynamic_samsung_tab"
       display_name: "Any Galaxy Tab (Android 12-16)"

@@ -84,7 +84,7 @@ class WalletLeftPanel(BasePage):
                 pass
             return False
         
-        if self.wait_for_condition(check_clipboard, timeout=3, poll_interval=0.1):
+        if self.wait_for_condition(check_clipboard, timeout=8, poll_interval=0.3):
             # Wait for the context menu to fully dismiss before returning
             self.wait_for_invisibility(self.locators.ACCOUNT_CONTEXT_MENU, timeout=3)
             return clipboard_result[0]

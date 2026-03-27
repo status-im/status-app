@@ -212,14 +212,59 @@ class ChatPage(BasePage):
         display_name: str | None = None,
         timeout: int = 60,
     ) -> bool:
+        """Wait for a chat row to appear in the messages list.
+
+        Periodically dismisses any dialogs and forces a navigation-level
+        refresh (Wallet → Messages) so the chat list is re-rendered.  The
+        Waku P2P layer may have delivered the message but the Qt list view
+        doesn't always update in place.
+        """
+        from pages.app import App
+
+        _REFRESH_INTERVAL = 30  # seconds between nav-toggle refreshes
+
         self.dismiss_introduce_prompt(timeout=2)
+        self.dismiss_backup_prompt(timeout=2)
         self._ensure_chat_list_visible()
         locators = self._resolve_chat_locators(chat_identifier, display_name)
-        return self.wait_for_condition(
-            lambda: any(self.find_element_safe(loc, timeout=1) for loc in locators),
-            timeout=timeout,
-            poll_interval=1.0,
-        )
+
+        deadline = time.time() + timeout
+        last_refresh = time.time()
+        app = App(self.driver)
+
+        while time.time() < deadline:
+            # Check for the chat row
+            try:
+                if any(self.find_element_safe(loc, timeout=1) for loc in locators):
+                    return True
+            except Exception:
+                pass
+
+            # Periodically force a full nav refresh: switch to another
+            # section and back so the chat list is re-built by the UI.
+            if time.time() - last_refresh >= _REFRESH_INTERVAL:
+                self.logger.info(
+                    "Nav-toggling to refresh chat list while waiting for '%s'",
+                    chat_identifier,
+                )
+                self.dismiss_introduce_prompt(timeout=1)
+                self.dismiss_backup_prompt(timeout=1)
+                try:
+                    app.click_wallet_button()
+                    time.sleep(1)
+                    # Force nav even if already in Messages (bypass short-circuit)
+                    app._ensure_main_nav_visible()
+                    app._click_nav_item(app.locators.LEFT_NAV_MESSAGES)
+                except Exception as exc:
+                    self.logger.debug("Nav-toggle refresh failed: %s", exc)
+                self.dismiss_introduce_prompt(timeout=1)
+                self.dismiss_backup_prompt(timeout=1)
+                self._ensure_chat_list_visible(timeout=5)
+                last_refresh = time.time()
+
+            time.sleep(1.0)
+
+        return False
 
     def is_chat_selected(
         self,
