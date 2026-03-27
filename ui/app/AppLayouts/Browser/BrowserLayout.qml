@@ -491,6 +491,11 @@ StatusSectionLayout {
             onHideFindBar: findBar.visible = false
             onFindNextRequested: findBar.findNext()
             onFindPreviousRequested: findBar.findPrevious()
+            onZoomIn: webViewContext.changeZoomCurrent(0.1)
+            onZoomOut: webViewContext.changeZoomCurrent(-0.1)
+            onResetZoomFactor: webViewContext.resetZoomCurrent()
+            onNextTabRequested: tabs.activateNextTab()
+            onPreviousTabRequested: tabs.activatePreviousTab()
         }
     }
 
@@ -569,7 +574,7 @@ StatusSectionLayout {
         parent: browserToolbarLoader
 
         incognitoMode: _internal.currentTabIncognito
-        zoomFactor: _internal.currentWebView ? _internal.currentWebView.zoomFactor : 1
+        zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
         onAddNewTab: _internal.addNewTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
         onGoIncognito: (checked) => webViewContext.setIncognitoCurrent(checked)
@@ -601,7 +606,14 @@ StatusSectionLayout {
     MobileSettingsMenu {
         id: mobileSettingsMenu
 
+        supportsIncognito: _internal.currentWebView?.supportsIncognito ?? false
         incognitoMode: _internal.currentTabIncognito
+
+        supportsZoom: _internal.currentWebView?.supportsZoom ?? false
+        zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
+        onZoomIn: webViewContext.changeZoomCurrent(0.1)
+        onZoomOut: webViewContext.changeZoomCurrent(-0.1)
+        onResetZoomFactor: webViewContext.resetZoomCurrent()
 
         onGoIncognito: checked => webViewContext.setIncognitoCurrent(checked)
         onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)

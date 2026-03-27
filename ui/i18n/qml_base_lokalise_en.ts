@@ -14190,6 +14190,26 @@
       <translation>Incognito</translation>
     </message>
     <message>
+      <source>Zoom</source>
+      <comment>MobileSettingsMenu</comment>
+      <translation>Zoom</translation>
+    </message>
+    <message>
+      <source>Zoom Out</source>
+      <comment>MobileSettingsMenu</comment>
+      <translation>Zoom Out</translation>
+    </message>
+    <message>
+      <source>Zoom In</source>
+      <comment>MobileSettingsMenu</comment>
+      <translation>Zoom In</translation>
+    </message>
+    <message>
+      <source>Zoom Fit</source>
+      <comment>MobileSettingsMenu</comment>
+      <translation>Zoom Fit</translation>
+    </message>
+    <message>
       <source>Settings</source>
       <comment>MobileSettingsMenu</comment>
       <translation>Settings</translation>

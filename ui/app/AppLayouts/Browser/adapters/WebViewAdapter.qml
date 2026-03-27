@@ -39,7 +39,7 @@ AbstractWebView {
     function reload() { webView.reload() }
     function stop() { webView.stop() }
     function findText(text, flags) { webView.findText(text, flags) }
-    function changeZoomFactor(factor) { webView.changeZoomFactor(factor) }
+    function changeZoomFactor(factor) { webView.zoomFactor = factor }
     function acceptAsNewWindow(request) { request.openIn(webView) }
     function detachView() {
         // Detach internal views from scene graph before destroy.

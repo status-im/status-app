@@ -11741,6 +11741,22 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Zoom</source>
+        <translation type="unfinished">Lupa</translation>
+    </message>
+    <message>
+        <source>Zoom Out</source>
+        <translation type="unfinished">Oddálit</translation>
+    </message>
+    <message>
+        <source>Zoom In</source>
+        <translation type="unfinished">Přiblížit</translation>
+    </message>
+    <message>
+        <source>Zoom Fit</source>
+        <translation type="unfinished">Přizpůsobit velikost</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation type="unfinished">Nastavení</translation>
     </message>

@@ -69,6 +69,11 @@ QObject {
     signal hideFindBar()
     signal findNextRequested()
     signal findPreviousRequested()
+    signal zoomIn()
+    signal zoomOut()
+    signal resetZoomFactor()
+    signal nextTabRequested()
+    signal previousTabRequested()
 
     Shortcut {
         sequences: ["Ctrl+L", "F6"]
@@ -138,5 +143,25 @@ QObject {
     Shortcut {
         sequences: [StandardKey.FindPrevious]
         onActivated: root.findPreviousRequested()
+    }
+    Shortcut {
+        sequences: [StandardKey.ZoomIn]
+        onActivated: root.zoomIn()
+    }
+    Shortcut {
+        sequences: [StandardKey.ZoomOut]
+        onActivated: root.zoomOut()
+    }
+    Shortcut {
+        sequence: "Ctrl+0"
+        onActivated: root.resetZoomFactor()
+    }
+    Shortcut {
+        sequences: [StandardKey.NextChild]
+        onActivated: root.nextTabRequested()
+    }
+    Shortcut {
+        sequences: [StandardKey.PreviousChild]
+        onActivated: root.previousTabRequested()
     }
 }

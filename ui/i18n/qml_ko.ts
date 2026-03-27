@@ -11628,6 +11628,22 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Zoom</source>
+        <translation type="unfinished">확대/축소</translation>
+    </message>
+    <message>
+        <source>Zoom Out</source>
+        <translation type="unfinished">축소</translation>
+    </message>
+    <message>
+        <source>Zoom In</source>
+        <translation type="unfinished">확대</translation>
+    </message>
+    <message>
+        <source>Zoom Fit</source>
+        <translation type="unfinished">맞춤 확대</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation type="unfinished">설정</translation>
     </message>

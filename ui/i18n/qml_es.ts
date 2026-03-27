@@ -11664,6 +11664,22 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Zoom</source>
+        <translation type="unfinished">Zoom</translation>
+    </message>
+    <message>
+        <source>Zoom Out</source>
+        <translation type="unfinished">Alejar</translation>
+    </message>
+    <message>
+        <source>Zoom In</source>
+        <translation type="unfinished">Acercar</translation>
+    </message>
+    <message>
+        <source>Zoom Fit</source>
+        <translation type="unfinished">Ajustar zoom</translation>
+    </message>
+    <message>
         <source>Settings</source>
         <translation type="unfinished">Ajustes</translation>
     </message>

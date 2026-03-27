@@ -64,6 +64,14 @@ FocusScope {
         tabBar.setCurrentIndex(index)
     }
 
+    function activateNextTab() {
+        tabBar.incrementCurrentIndex()
+    }
+
+    function activatePreviousTab() {
+        tabBar.decrementCurrentIndex()
+    }
+
     QtObject {
         id: d
 

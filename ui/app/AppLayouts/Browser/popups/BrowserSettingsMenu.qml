@@ -53,21 +53,6 @@ StatusMenu {
 
     StatusMenuSeparator {}
 
-    Shortcut {
-        sequences: [StandardKey.ZoomIn]
-        onActivated: zoomIn()
-    }
-
-    Shortcut {
-        sequences: [StandardKey.ZoomOut]
-        onActivated: zoomOut()
-    }
-
-    Shortcut {
-        sequence: "Ctrl+0"
-        onActivated: resetZoomFactor()
-    }
-
     StatusMenuItem {
         id: zoomMenuItem
         text: qsTr("Zoom")
