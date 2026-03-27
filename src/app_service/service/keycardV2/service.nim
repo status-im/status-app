@@ -34,8 +34,17 @@ const SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_SUCCESS* = "keycardExportLoginKeysSuccess
 
 ## Signals for keycard composite actions
 const SIGNAL_KEYCARD_LOGIN_FINISHED* = "keycardLoginFinished"
+const SIGNAL_KEYCARD_EXPORT_PUBLIC_KEYS_FINISHED* = "keycardExportPublicKeysFinished"
+const SIGNAL_KEYCARD_EXPORT_EXTENDED_PUBLIC_KEYS_FINISHED* = "keycardExportExtendedPublicKeysFinished"
+const SIGNAL_KEYCARD_CHANGE_PIN_FINISHED* = "keycardChangePinFinished"
+const SIGNAL_KEYCARD_CHANGE_PUK_FINISHED* = "keycardChangePukFinished"
+const SIGNAL_KEYCARD_UNBLOCK_FINISHED* = "keycardUnblockFinished"
+const SIGNAL_KEYCARD_GET_KEYCARD_METADATA_FINISHED* = "keycardGetKeycardMetadataFinished"
+const SIGNAL_KEYCARD_SIGN_FINISHED* = "keycardSignFinished"
+const SIGNAL_KEYCARD_FACTORY_RESET_KEYCARD_FINISHED* = "keycardFactoryResetKeycardFinished"
 
 type KeycardAction {.pure.} = enum
+  # single step actions
   Start = "Start"
   Stop = "Stop"
   GenerateMnemonic = "GenerateMnemonic"
@@ -47,9 +56,17 @@ type KeycardAction {.pure.} = enum
   FactoryReset = "FactoryReset"
   GetMetadata = "GetMetadata"
   StoreMetadata = "StoreMetadata"
+  CancelCurrentOperation = "CancelCurrentOperation"
+  # composite actions
+  ExportPublicKey = "ExportPublicKey"
+  ExportExtendedPublicKey = "ExportExtendedPublicKey"
   Login = "Login"
   Recover = "Recover"
-  CancelCurrentOperation = "CancelCurrentOperation"
+  ChangeKeycardPIN = "ChangeKeycardPIN"
+  ChangeKeycardPUK = "ChangeKeycardPUK"
+  UnblockUsingPUK = "UnblockUsingPUK"
+  GetKeycardMetadata = "GetKeycardMetadata"
+  Sign = "Sign"
 
 type
   KeycardEventArg* = ref object of Args
@@ -58,22 +75,32 @@ type
   KeycardErrorArg* = ref object of Args
     error*: string
 
-  KeycardAuthorizeEvent* = ref object of Args
-    error*: string
+  KeycardAuthorizeEvent* = ref object of KeycardErrorArg
     authorized*: bool
 
   KeycardKeyUIDArg* = ref object of Args
     keyUID*: string
 
-  KeycardExportedKeysArg* = ref object of Args
+  KeycardExportedKeysArg* = ref object of KeycardErrorArg
     exportedKeys*: KeycardExportedKeysDto
 
   KeycardChannelStateArg* = ref object of Args
     state*: string
 
-  KeycardLoginArgs* = ref object of Args
-    error*: string
+  KeycardLoginArgs* = ref object of KeycardErrorArg
     exportedKeys*: KeycardExportedKeysDto
+
+  KeycardExportedPublicKeysArgs* = ref object of KeycardErrorArg
+    exportedPublicKeys*: KeycardExportedPublicKeysDto
+
+  KeycardExportedExtendedPublicKeyArgs* = ref object of KeycardErrorArg
+    exportedExtendedPublicKey*: KeycardExportedExtendedPublicKeyDto
+
+  KeycardGetKeycardMetadataArgs* = ref object of KeycardErrorArg
+    metadata*: CardMetadataDto
+
+  KeycardSignArgs* = ref object of KeycardErrorArg
+    signature*: KeycardSignatureDto
 
 include utils
 include app_service/common/async_tasks
@@ -97,17 +124,14 @@ QtObject:
   proc initializeRPC(self: Service)
   proc asyncStart(self: Service, storageDir: string)
   proc onAsyncResponse(self: Service, response: string) {.slot.}
-
+  proc startDetection*(self: Service) {.featureGuard(KEYCARD_ENABLED).}
   proc delete*(self: Service)
+
   proc newService*(events: EventEmitter, threadpool: ThreadPool): Service =
     new(result, delete)
     result.QObject.setup
     result.events = events
     result.threadpool = threadpool
-
-  include queued_async_calls
-  
-  proc startDetection*(self: Service) {.featureGuard(KEYCARD_ENABLED).}
 
   proc init*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
     debug "KeycardServiceV2 init"
@@ -121,15 +145,12 @@ QtObject:
       self.startDetection()
     discard
 
-  proc initializeRPC(self: Service) {.slot, featureGuard(KEYCARD_ENABLED).} =
-    var response = keycard_go.keycardInitializeRPC()
-
   proc receiveKeycardSignalV2(self: Service, signal: string) {.slot, featureGuard(KEYCARD_ENABLED).} =
     try:
       # Since only one service can register to signals, we pass the signal to the old service too
       var jsonSignal = signal.parseJson
       let signalType = jsonSignal["type"].getStr
-      
+
       if signalType == keycard_constants.SignalKeycardStatusChanged:
         let keycardEvent = jsonSignal["event"].toKeycardEventDto()
         self.events.emit(SIGNAL_KEYCARD_STATE_UPDATED, KeycardEventArg(keycardEvent: keycardEvent))
@@ -140,249 +161,9 @@ QtObject:
     except Exception as e:
       error "error receiving a keycard signal", err=e.msg, data = signal
 
-  proc asyncStart(self: Service, storageDir: string) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{
-      "storageFilePath": storageDir,
-      "logEnabled": KEYCARD_LOGS_ENABLED,
-      "logFilePath": KEYCARD_LOG_FILE_PATH,
-    }
-    self.asyncCallRPC(KeycardAction.Start, params, proc (responseObj: JsonNode, err: string) {.featureGuard(KEYCARD_ENABLED).} =
-      if err.len > 0:
-        error "error starting keycard", err=err
-        return
-      debug "keycard started"
-    )
-
-  proc asyncStop*(self: Service)  {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{}
-    self.asyncCallRPC(KeycardAction.Stop, params, proc (responseObj: JsonNode, err: string) =
-      if err.len > 0:
-        error "error stopping keycard", err=err
-        return
-      debug "keycard stopped"
-    )
-
-  proc stop*(self: Service)  {.featureGuard(KEYCARD_ENABLED).} =
-    try:
-      let response = callRPC($KeycardAction.Stop)
-      let rpcResponseObj = response.parseJson
-      if rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != "":
-          let error = Json.decode(rpcResponseObj["error"].getStr, RpcError)
-          raise newException(RpcException, error.message)
-    except Exception as e:
-      error "error stop", err=e.msg
-
-  proc generateMnemonic*(self: Service, length: int): string {.featureGuard(KEYCARD_ENABLED).} =
-    try:
-      let response = callRPC($KeycardAction.GenerateMnemonic, %*{"length": length})
-      let rpcResponseObj = response.parseJson
-      if rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != "":
-          let error = Json.decode(rpcResponseObj["error"].getStr, RpcError)
-          raise newException(RpcException, error.message)
-
-      let indexes = rpcResponseObj["result"]["indexes"]
-      let words = buildSeedPhrasesFromIndexes(indexes)
-      let mnemonic = words.join(" ")
-      return mnemonic
-    except Exception as e:
-      error "error generating mnemonic", err=e.msg
-
-  proc getMetadata*(self: Service): CardMetadataDto {.featureGuard(KEYCARD_ENABLED).} =
-    try:
-      let response = callRPC($KeycardAction.GetMetadata)
-      let rpcResponseObj = response.parseJson
-      if rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != "":
-        let error = Json.decode(rpcResponseObj["error"].getStr, RpcError)
-        raise newException(RpcException, error.message)
-      return rpcResponseObj["result"].toCardMetadataDto()
-    except Exception as e:
-      error "error getting metadata", err=e.msg
-
-  proc asyncLoadMnemonic*(self: Service, mnemonic: string) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{"mnemonic": mnemonic}
-    self.asyncCallRPC(KeycardAction.LoadMnemonic, params, proc (responseObj: JsonNode, err: string) =
-      if err.len > 0:
-        error "error loading mnemonic", err=err
-        self.events.emit(SIGNAL_KEYCARD_LOAD_MNEMONIC_FAILURE, KeycardErrorArg(error: err))
-        return
-      let keyUID = responseObj["result"]["keyUID"].getStr
-      self.events.emit(SIGNAL_KEYCARD_LOAD_MNEMONIC_SUCCESS, KeycardKeyUIDArg(keyUID: keyUID))
-    )
-
-  proc asyncAuthorize*(self: Service, pin: string) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{"pin": pin}
-    self.asyncCallRPC(KeycardAction.Authorize, params, proc (responseObj: JsonNode, err: string) =
-      if err.len > 0:
-        error "error authorizing", err=err
-        let event = KeycardAuthorizeEvent(error: err, authorized: false)
-        self.events.emit(SIGNAL_KEYCARD_AUTHORIZE_FINISHED, event)
-        return
-
-      if responseObj.hasKey("error") and responseObj["error"].kind != JNull:
-        let rpcErrorObj = responseObj["error"]
-        let rpcError = if rpcErrorObj.kind == JString: rpcErrorObj.getStr() else: $rpcErrorObj
-        if rpcError.len > 0:
-          error "error authorizing", err=rpcError
-          let event = KeycardAuthorizeEvent(error: rpcError, authorized: false)
-          self.events.emit(SIGNAL_KEYCARD_AUTHORIZE_FINISHED, event)
-          return
-
-      let resultObj = responseObj{"result"}
-      if resultObj.kind == JNull or resultObj{"authorized"}.kind == JNull:
-        let reason = "missing authorize result"
-        error "error authorizing", err=reason
-        let event = KeycardAuthorizeEvent(error: reason, authorized: false)
-        self.events.emit(SIGNAL_KEYCARD_AUTHORIZE_FINISHED, event)
-        return
-
-      let event = KeycardAuthorizeEvent(
-        error: "",
-        authorized: resultObj{"authorized"}.getBool(),
-      )
-      self.events.emit(SIGNAL_KEYCARD_AUTHORIZE_FINISHED, event)
-    )
-
-  proc asyncInitialize*(self: Service, pin: string, puk: string) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{
-      "pin": pin,
-      "puk": puk,
-      "pairingPassword": "", # we keep it empty for now
-    }
-    self.asyncCallRPC(KeycardAction.Initialize, params, proc (responseObj: JsonNode, err: string) =
-      if err.len > 0:
-        error "error initializing keycard", err=err
-        self.events.emit(SIGNAL_KEYCARD_SET_PIN_FAILURE, KeycardErrorArg(error: err))
-        return
-      debug "keycard initialized"
-    )
-
-  proc asyncExportRecoverKeys*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{}
-    self.asyncCallRPC(KeycardAction.ExportRecoverKeys, params, proc (responseObj: JsonNode, err: string) =
-      if err.len > 0:
-        error "error exporting recover keys", err=err
-        self.events.emit(SIGNAL_KEYCARD_EXPORT_RESTORE_KEYS_FAILURE, KeycardErrorArg(error: err))
-        return
-      let keys = responseObj["result"]["keys"].toKeycardExportedKeysDto()
-      self.events.emit(SIGNAL_KEYCARD_EXPORT_RESTORE_KEYS_SUCCESS, KeycardExportedKeysArg(exportedKeys: keys))
-    )
-
-  proc asyncExportLoginKeys*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{}
-    self.asyncCallRPC(KeycardAction.ExportLoginKeys, params, proc (responseObj: JsonNode, err: string) =
-      if err.len > 0:
-        error "error exporting login keys", err=err
-        self.events.emit(SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_FAILURE, KeycardErrorArg(error: err))
-        return
-      let keys = responseObj["result"]["keys"].toKeycardExportedKeysDto()
-      self.events.emit(SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_SUCCESS, KeycardExportedKeysArg(exportedKeys: keys))
-    )
-
-  proc asyncFactoryReset*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{}
-    self.asyncCallRPC(KeycardAction.FactoryReset, params, proc (responseObj: JsonNode, err: string) =
-      if err.len > 0:
-        error "error factory reset", err=err
-        return
-      debug "factory reset"
-    )
-
-  proc asyncStoreMetadata*(self: Service, name: string, paths: seq[string]) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{"name": name, "paths": paths}
-    self.asyncCallRPC(KeycardAction.StoreMetadata, params, proc (responseObj: JsonNode, err: string) =
-      if err.len > 0:
-        error "error storing metadata", err=err
-        return
-      debug "metadata stored"
-    )
-
-  proc storeMetadata*(self: Service, name: string, paths: seq[string]) {.featureGuard(KEYCARD_ENABLED).} =
-    try:
-      let response = callRPC($KeycardAction.StoreMetadata, %*{"name": name, "paths": paths})
-      let rpcResponseObj = response.parseJson
-      if rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != "":
-          let error = Json.decode(rpcResponseObj["error"].getStr, RpcError)
-          raise newException(RpcException, error.message)
-    except Exception as e:
-      error "error storing metadata", err=e.msg
-
-  proc asyncLogin*(self: Service, keyUid: string, pin: string) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{
-      "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
-      "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
-      "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
-      "keyUid": keyUid,
-      "pin": pin,
-    }
-    self.asyncCallRPC(KeycardAction.Login, params, proc (responseObj: JsonNode, err: string) =
-      var data = KeycardLoginArgs()
-      try:
-        if err.len > 0:
-          raise newException(CatchableError, "login action parsing response error: " & err)
-        if responseObj.hasKey("error") and responseObj["error"].kind != JNull:
-          let errorObj = responseObj["error"]
-          if errorObj.hasKey("message"):
-            raise newException(CatchableError, "login action keycard response error: " & errorObj["message"].getStr())
-          raise newException(CatchableError, "login action keycard response unknown error")
-        # since this is a composite action, the login response is good when we get the keys
-        let resultObj = responseObj["result"]
-        if not resultObj.hasKey("keys"):
-          raise newException(CatchableError, "login action keycard response missing keys")
-        data.exportedKeys = resultObj["keys"].toKeycardExportedKeysDto()
-      except Exception as e:
-        error "login action error", err=e.msg
-        data.error = e.msg
-      self.events.emit(SIGNAL_KEYCARD_LOGIN_FINISHED, data)
-    )
-
-  proc asyncRecover*(self: Service, pin: string, puk: string, mnemonic: string) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{
-      "pin": pin,
-      "puk": puk,
-      "pairingPassword": "", # we keep it empty for now
-      "mnemonic": mnemonic,
-      "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
-      "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
-      "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
-    }
-    self.asyncCallRPC(KeycardAction.Recover, params, proc (responseObj: JsonNode, err: string) =
-      var data = KeycardLoginArgs()
-      try:
-        if err.len > 0:
-          raise newException(CatchableError, "recover action parsing response error: " & err)
-        if responseObj.hasKey("error") and responseObj["error"].kind != JNull:
-          let errorObj = responseObj["error"]
-          if errorObj.hasKey("message"):
-            raise newException(CatchableError, "recover action keycard response error: " & errorObj["message"].getStr())
-          raise newException(CatchableError, "recover action keycard response unknown error")
-        let resultObj = responseObj["result"]
-        if not resultObj.hasKey("keys"):
-          raise newException(CatchableError, "recover action keycard response missing keys")
-        data.exportedKeys = resultObj["keys"].toKeycardExportedKeysDto()
-      except Exception as e:
-        error "recover action error", err=e.msg
-        data.error = e.msg
-      self.events.emit(SIGNAL_KEYCARD_LOGIN_FINISHED, data)
-    )
-
-  proc startDetection*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
-    self.asyncStart(status_const.KEYCARDPAIRINGDATAFILE)
-  
-  proc cancelCurrentOperation*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
-    let params = %*{}
-    self.asyncCallRPC(KeycardAction.CancelCurrentOperation, params, proc (responseObj: JsonNode, err: string) =
-      if err.len > 0:
-        error "error canceling current keycard operation", reason=err
-        return
-      if responseObj.hasKey("error") and responseObj["error"].kind != JNull:
-        let errorObj = responseObj["error"]
-        if errorObj.hasKey("message"):
-          let reason = errorObj["message"].getStr()
-          error "error canceling current keycard operation", reason=reason
-        else:
-          let reason = $errorObj
-          error "error canceling current keycard operation", reason=reason
-    )
+  include queued_async_calls
+  include service_main
+  include service_composite_methods
 
   proc delete*(self: Service) =
     self.QObject.delete

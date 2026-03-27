@@ -2,9 +2,11 @@ import json, strutils
 include ../../common/json_utils
 
 type StateString* = enum
-  UnknownReaderState = "unknown"
+  UnknownReaderState = "unknown-reader-state"
   NoPCSC = "no-pcsc"
   InternalError = "internal-error"
+  NoReadersFound = "no-readers-found"
+  ReaderConnectionError = "reader-connection-error"
   WaitingForReader = "waiting-for-reader"
   WaitingForCard = "waiting-for-card"
   ConnectingCard = "connecting-card"
@@ -19,6 +21,7 @@ type StateString* = enum
   Ready = "ready"
   Authorized = "authorized"
   Cancelled = "cancelled" #user cancelled the operation
+
 
 # NOTE: Keep in sync with KeycardState in ui/StatusQ/src/onboarding/enums.h
 type KeycardState* = enum
@@ -61,6 +64,7 @@ type
     walletAccounts*: seq[WalletAccountDto]
 
 type KeycardEventDto* = object
+  stateString*: StateString
   state*: KeycardState
   keycardInfo*: KeycardInfoDto
   keycardStatus*: KeycardStatusDto
@@ -80,6 +84,21 @@ type KeycardExportedKeysDto* = object
   walletRootKey*: KeyDetailsV2
   whisperKey*: KeyDetailsV2
   masterKeyAddress*: string
+
+type KeycardExportedPublicKeysDto* = object
+  masterKeyAddress*: string
+  keys*: seq[KeyDetailsV2]
+
+type KeycardExportedExtendedPublicKeyDto* = object
+  address*: string
+  publicKey*: string
+  chainCode*: string
+  xpub*: string
+
+type KeycardSignatureDto* = object
+  r*: string
+  s*: string
+  v*: int
 
 proc fromStringStateToInt*(state: StateString): KeycardState =
   case state
@@ -155,7 +174,8 @@ proc toKeycardEventDto*(jsonObj: JsonNode): KeycardEventDto =
   result = KeycardEventDto()
 
   try:
-    result.state = parseEnum[StateString](jsonObj["state"].getStr).fromStringStateToInt
+    result.stateString = parseEnum[StateString](jsonObj["state"].getStr)
+    result.state = result.stateString.fromStringStateToInt
   except:
     result.state = KeycardState.UnknownReaderState
 
@@ -173,7 +193,8 @@ proc toKeyDetails(jsonObj: JsonNode): KeyDetailsV2 =
   discard jsonObj.getProp("address", result.address)
   discard jsonObj.getProp("privateKey", result.privateKey)
   if jsonObj.getProp("publicKey", result.publicKey):
-    result.publicKey = "0x" & result.publicKey
+    if not result.publicKey.startsWith("0x"):
+      result.publicKey = "0x" & result.publicKey
 
 proc toKeycardExportedKeysDto*(jsonObj: JsonNode): KeycardExportedKeysDto =
   result = KeycardExportedKeysDto()
@@ -182,18 +203,34 @@ proc toKeycardExportedKeysDto*(jsonObj: JsonNode): KeycardExportedKeysDto =
 
   if jsonObj.getProp("eip1581", obj):
     result.eip1581Key = toKeyDetails(obj)
-
   if jsonObj.getProp("encryptionPrivateKey", obj):
     result.encryptionKey = toKeyDetails(obj)
-
   if jsonObj.getProp("masterKey", obj):
     result.masterKey = toKeyDetails(obj)
-
   if jsonObj.getProp("walletKey", obj):
     result.walletKey = toKeyDetails(obj)
-
   if jsonObj.getProp("walletRootKey", obj):
     result.walletRootKey = toKeyDetails(obj)
-
   if jsonObj.getProp("whisperPrivateKey", obj):
     result.whisperKey = toKeyDetails(obj)
+
+proc toKeycardExportedPublicKeysDto*(jsonObj: JsonNode): KeycardExportedPublicKeysDto =
+  result = KeycardExportedPublicKeysDto()
+  discard jsonObj.getProp("masterKeyAddress", result.masterKeyAddress)
+  var obj: JsonNode
+  if jsonObj.getProp("exportedKeys", obj) and obj.kind == JArray:
+    for key in obj:
+      result.keys.add(toKeyDetails(key))
+
+proc toKeycardExportedExtendedPublicKeyDto*(jsonObj: JsonNode): KeycardExportedExtendedPublicKeyDto =
+  result = KeycardExportedExtendedPublicKeyDto()
+  discard jsonObj.getProp("address", result.address)
+  discard jsonObj.getProp("publicKey", result.publicKey)
+  discard jsonObj.getProp("chainCode", result.chainCode)
+  discard jsonObj.getProp("xpub", result.xpub)
+
+proc toKeycardSignatureDto*(jsonObj: JsonNode): KeycardSignatureDto =
+  result = KeycardSignatureDto()
+  discard jsonObj.getProp("r", result.r)
+  discard jsonObj.getProp("s", result.s)
+  discard jsonObj.getProp("v", result.v)
