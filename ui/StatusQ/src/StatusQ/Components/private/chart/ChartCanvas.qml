@@ -1,6 +1,7 @@
 import QtQuick
 
 import StatusQ.Core
+import StatusQ.Core.Backpressure
 
 import "./Library/Library.js" as Lib
 
@@ -110,8 +111,8 @@ Canvas {
     onPluginsChanged: refresh()
     onLabelsChanged: refresh()
     onDatasetsChanged: rebuild()
-    onHeightChanged: resized()
-    onWidthChanged: resized()
+    onHeightChanged: d.resizeDebouncer()
+    onWidthChanged: d.resizeDebouncer()
     onAvailableChanged: {
         if (!d.instance) {
             rebuild()
@@ -150,6 +151,10 @@ Canvas {
             }
             instance = new Chart(ctx, config)
         }
+
+        readonly property var resizeDebouncer: Backpressure.oneInTimeQueued(canvas, 100, function() {
+            canvas.resized()
+        })
     }
 
     Component.onDestruction: {

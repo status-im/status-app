@@ -5,7 +5,7 @@ import utils
 QtObject {
     id: root
 
-    // @see src/app_service/service/token/async_tasks.nim BalanceHistoryTimeInterval
+    // @see src/app_service/service/token/dto/market_data.nim
     enum TimeRange {
         Weekly = 0,
         Monthly,
@@ -33,7 +33,7 @@ QtObject {
     property var yearlyTimeRange: []
     property var allTimeRange: []
 
-    property int monthlyMaxTicks: monthlyTimeRange.length/d.hoursInADay
+    property int monthlyMaxTicks: monthlyTimeRange.length/d.avgLengthOfMonth
     property int weeklyMaxTicks: weeklyTimeRange.length/d.hoursInADay
     property int halfYearlyMaxTicks: halfYearlyTimeRange.length/d.avgLengthOfMonth
     property int yearlyMaxTicks: yearlyTimeRange.length/d.avgLengthOfMonth

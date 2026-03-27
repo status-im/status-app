@@ -67,6 +67,19 @@ type
     currency: string
     range: int
 
+proc daysInCurrentMonthCycle(): int =
+  let today = now()
+
+  # Subtract 1 month to get the "same day" in the previous month
+  # Nim handles the year rollover and month lengths automatically
+  let sameDayLastMonth = today - months(1)
+
+  # Calculate the duration between the two points in time
+  let diff = today - sameDayLastMonth
+
+  # Return the total number of full days as an integer
+  return diff.inDays.int
+
 proc getTokenHistoricalDataTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[GetTokenHistoricalDataTaskArg](argEncoded)
   var
@@ -82,7 +95,7 @@ proc getTokenHistoricalDataTask*(argEncoded: string) {.gcsafe, nimcall.} =
       of WEEKLY_TIME_RANGE:
         response = backend.getHourlyMarketValues(arg.tokenKey, arg.currency, DAYS_IN_WEEK*HOURS_IN_DAY, 1).result
       of MONTHLY_TIME_RANGE:
-        response = backend.getHourlyMarketValues(arg.tokenKey, arg.currency, getDaysInMonth(td.month, td.year)*HOURS_IN_DAY, 2).result
+        response = backend.getDailyMarketValues(arg.tokenKey, arg.currency, daysInCurrentMonthCycle(), false, 1).result
       of HALF_YEARLY_TIME_RANGE:
         response = backend.getDailyMarketValues(arg.tokenKey, arg.currency, int(getDaysInYear(td.year)/2), false, 1).result
       of YEARLY_TIME_RANGE:
