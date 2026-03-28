@@ -1,5 +1,6 @@
 #include "StatusQ/chatinputhighlighter.h"
 
+#include <QColor>
 #include <QTextCharFormat>
 #include <QVariantMap>
 #include <QVector>
@@ -9,6 +10,7 @@ namespace {
 static const int kBold          = 1 << 0;
 static const int kItalic        = 1 << 1;
 static const int kStrikeThrough = 1 << 2;
+static const int kDelimiter     = 1 << 3;
 
 struct Delimiter {
     int pos;
@@ -19,9 +21,11 @@ struct Delimiter {
 };
 
 struct EmphSpan {
-    int start;
-    int end;
+    int start;        // content start (= opener delimiter end)
+    int end;          // content end   (= closer delimiter start)
     int formatBits;
+    int openerStart;  // start of consumed opener delimiter chars
+    int closerEnd;    // end   of consumed closer delimiter chars
 };
 
 bool isUnicodeWhitespace(QChar c)
@@ -155,9 +159,11 @@ QVector<EmphSpan> processEmphasis(QVector<Delimiter> delimiters)
         else
             bits = kItalic;
 
-        int contentStart = opener.pos + opener.remaining;
-        int contentEnd   = closer.pos;
-        spans.append({contentStart, contentEnd, bits});
+        int contentStart     = opener.pos + opener.remaining;
+        int contentEnd       = closer.pos;
+        int openerDelimStart = contentStart - useCount;
+        int closerDelimEnd   = contentEnd   + useCount;
+        spans.append({contentStart, contentEnd, bits, openerDelimStart, closerDelimEnd});
 
         // Remove delimiters strictly between opener and closer
         int removeFrom = found + 1;
@@ -194,6 +200,10 @@ QVector<EmphSpan> processEmphasis(QVector<Delimiter> delimiters)
 QTextCharFormat buildFormat(int bits)
 {
     QTextCharFormat fmt;
+    if (bits & kDelimiter) {
+        fmt.setForeground(QColor(Qt::blue));
+        return fmt;
+    }
     if (bits & kBold)
         fmt.setFontWeight(QFont::Bold);
     if (bits & kItalic)
@@ -287,6 +297,37 @@ QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
     return result;
 }
 
+QVariantList ChatInputHighlighter::parseDelimiters(const QString& text) const
+{
+    QVariantList result;
+
+    auto collect = [&](const QString& src, int offset) {
+        for (const EmphSpan& s : processEmphasis(scanDelimiters(src))) {
+            QVariantMap op;
+            op[QStringLiteral("start")] = s.openerStart + offset;
+            op[QStringLiteral("end")]   = s.start       + offset;
+            result.append(op);
+            QVariantMap cl;
+            cl[QStringLiteral("start")] = s.end       + offset;
+            cl[QStringLiteral("end")]   = s.closerEnd + offset;
+            result.append(cl);
+        }
+    };
+
+    if (!m_multilineEmphasis) {
+        int lineStart = 0;
+        for (int i = 0; i <= text.length(); ++i) {
+            if (i == text.length() || text[i] == QLatin1Char('\n')) {
+                collect(text.mid(lineStart, i - lineStart), lineStart);
+                lineStart = i + 1;
+            }
+        }
+    } else {
+        collect(text, 0);
+    }
+    return result;
+}
+
 void ChatInputHighlighter::highlightBlock(const QString& text)
 {
     if (!document())
@@ -300,22 +341,43 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
         m_flags.assign(docLen, 0);
 
         if (m_multilineEmphasis) {
-            for (const EmphSpan& s : processEmphasis(scanDelimiters(fullText))) {
-                const int start = qMax(0, s.start);
-                const int end   = qMin(docLen, s.end);
-                for (int i = start; i < end; ++i)
+            const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(fullText));
+            // Pass 1: content bits
+            for (const EmphSpan& s : spans) {
+                for (int i = qMax(0, s.start); i < qMin(docLen, s.end); ++i)
                     m_flags[i] |= s.formatBits;
+            }
+            // Pass 2: delimiter bits (overwrite — ensures delimiter chars are ONLY blue)
+            for (const EmphSpan& s : spans) {
+                for (int i = qMax(0, s.openerStart); i < qMin(docLen, s.start); ++i)
+                    m_flags[i] = kDelimiter;
+                for (int i = qMax(0, s.end); i < qMin(docLen, s.closerEnd); ++i)
+                    m_flags[i] = kDelimiter;
             }
         } else {
             int lineStart = 0;
             for (int i = 0; i <= docLen; ++i) {
                 if (i == docLen || fullText[i] == QLatin1Char('\n')) {
                     const QString line = fullText.mid(lineStart, i - lineStart);
-                    for (const EmphSpan& s : processEmphasis(scanDelimiters(line))) {
+                    const int lineLen  = line.length();
+                    const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(line));
+                    // Pass 1: content bits
+                    for (const EmphSpan& s : spans) {
                         const int start = qMax(0, s.start) + lineStart;
-                        const int end   = qMin((int)line.length(), s.end) + lineStart;
+                        const int end   = qMin(lineLen, s.end) + lineStart;
                         for (int k = start; k < end; ++k)
                             m_flags[k] |= s.formatBits;
+                    }
+                    // Pass 2: delimiter bits (overwrite)
+                    for (const EmphSpan& s : spans) {
+                        const int opStart = qMax(0, s.openerStart) + lineStart;
+                        const int opEnd   = qMin(lineLen, s.start) + lineStart;
+                        for (int k = opStart; k < opEnd; ++k)
+                            m_flags[k] = kDelimiter;
+                        const int clStart = qMax(0, s.end) + lineStart;
+                        const int clEnd   = qMin(lineLen, s.closerEnd) + lineStart;
+                        for (int k = clStart; k < clEnd; ++k)
+                            m_flags[k] = kDelimiter;
                     }
                     lineStart = i + 1;
                 }

@@ -270,4 +270,65 @@ TestCase {
             verify(spans[i].start <  spans[i].end,             "start must be < end")
         }
     }
+
+    // ── delimiter positions ───────────────────────────────────────────────────
+
+    function delimFor(text, delimStr, fromPos) {
+        // finds the delimiter entry whose [start,end) = [fromPos, fromPos+delimStr.length)
+        const delims = highlighter.parseDelimiters(text)
+        for (let i = 0; i < delims.length; i++) {
+            if (delims[i].start === fromPos &&
+                delims[i].end   === fromPos + delimStr.length)
+                return delims[i]
+        }
+        return null
+    }
+
+    function test_delimiter_boldOpenerAndCloser() {
+        // "**bold**": opener=[0,2), closer=[6,8)
+        verify(delimFor("**bold**", "**", 0) !== null, "bold opener missing")
+        verify(delimFor("**bold**", "**", 6) !== null, "bold closer missing")
+    }
+
+    function test_delimiter_italicOpenerAndCloser() {
+        // "*italic*": opener=[0,1), closer=[7,8)
+        verify(delimFor("*italic*", "*", 0) !== null, "italic opener missing")
+        verify(delimFor("*italic*", "*", 7) !== null, "italic closer missing")
+    }
+
+    function test_delimiter_strikethroughOpenerAndCloser() {
+        // "~~strike~~": opener=[0,2), closer=[8,10)
+        verify(delimFor("~~strike~~", "~~", 0) !== null, "strikethrough opener missing")
+        verify(delimFor("~~strike~~", "~~", 8) !== null, "strikethrough closer missing")
+    }
+
+    function test_delimiter_unmatchedNotReturned() {
+        compare(highlighter.parseDelimiters("*unclosed").length, 0)
+        compare(highlighter.parseDelimiters("unclosed*").length, 0)
+    }
+
+    function test_delimiter_boldItalicTripleStar() {
+        // "***foo***": positions 0,1,2 and 6,7,8 are all delimiters
+        const text = "***foo***"
+        const delims = highlighter.parseDelimiters(text)
+        // 2 spans × 2 delimiter runs = 4 entries
+        compare(delims.length, 4)
+        // collect all covered positions
+        let covered = new Set()
+        for (let i = 0; i < delims.length; i++)
+            for (let p = delims[i].start; p < delims[i].end; p++)
+                covered.add(p)
+        for (let p = 0; p <= 2; p++)
+            verify(covered.has(p), "position " + p + " must be a delimiter")
+        for (let p = 6; p <= 8; p++)
+            verify(covered.has(p), "position " + p + " must be a delimiter")
+    }
+
+    function test_delimiter_count_bold() {
+        compare(highlighter.parseDelimiters("**bold**").length, 2)
+    }
+
+    function test_delimiter_noDelimitersInPlainText() {
+        compare(highlighter.parseDelimiters("hello world").length, 0)
+    }
 }
