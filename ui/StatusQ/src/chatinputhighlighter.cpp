@@ -219,20 +219,63 @@ void ChatInputHighlighter::setQuickTextDocument(QQuickTextDocument* doc)
 {
     if (m_quickTextDocument == doc)
         return;
+    if (m_quickTextDocument && m_quickTextDocument->textDocument())
+        disconnect(m_quickTextDocument->textDocument(), nullptr, this, nullptr);
     m_quickTextDocument = doc;
-    if (doc)
+    if (doc) {
         setDocument(doc->textDocument());
-    else
+        connect(doc->textDocument(), &QTextDocument::contentsChange,
+                this, [this](int, int charsRemoved, int charsAdded) {
+                    if (charsRemoved > 0 || charsAdded > 0)
+                        QMetaObject::invokeMethod(this, "rehighlight",
+                                                  Qt::QueuedConnection);
+                });
+    } else {
         setDocument(nullptr);
+    }
     emit quickTextDocumentChanged();
+}
+
+bool ChatInputHighlighter::multilineEmphasis() const
+{
+    return m_multilineEmphasis;
+}
+
+void ChatInputHighlighter::setMultilineEmphasis(bool enabled)
+{
+    if (m_multilineEmphasis == enabled)
+        return;
+    m_multilineEmphasis = enabled;
+    m_cachedText.clear();
+    rehighlight();
+    emit multilineEmphasisChanged();
 }
 
 QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
 {
-    const auto spans = processEmphasis(scanDelimiters(text));
     QVariantList result;
-    result.reserve(spans.size());
-    for (const EmphSpan& s : spans) {
+
+    if (!m_multilineEmphasis) {
+        int lineStart = 0;
+        for (int i = 0; i <= text.length(); ++i) {
+            if (i == text.length() || text[i] == QLatin1Char('\n')) {
+                const QString line = text.mid(lineStart, i - lineStart);
+                for (const EmphSpan& s : processEmphasis(scanDelimiters(line))) {
+                    QVariantMap m;
+                    m[QStringLiteral("start")]         = s.start + lineStart;
+                    m[QStringLiteral("end")]           = s.end   + lineStart;
+                    m[QStringLiteral("bold")]          = bool(s.formatBits & kBold);
+                    m[QStringLiteral("italic")]        = bool(s.formatBits & kItalic);
+                    m[QStringLiteral("strikethrough")] = bool(s.formatBits & kStrikeThrough);
+                    result.append(m);
+                }
+                lineStart = i + 1;
+            }
+        }
+        return result;
+    }
+
+    for (const EmphSpan& s : processEmphasis(scanDelimiters(text))) {
         QVariantMap m;
         m[QStringLiteral("start")]         = s.start;
         m[QStringLiteral("end")]           = s.end;
@@ -246,42 +289,57 @@ QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
 
 void ChatInputHighlighter::highlightBlock(const QString& text)
 {
-    const int docLen = document()->characterCount() - 1;
-    if (m_flags.size() != docLen)
+    if (!document())
+        return;
+
+    const QString fullText = document()->toPlainText();
+
+    if (fullText != m_cachedText) {
+        m_cachedText = fullText;
+        const int docLen = fullText.length();
         m_flags.assign(docLen, 0);
 
+        if (m_multilineEmphasis) {
+            for (const EmphSpan& s : processEmphasis(scanDelimiters(fullText))) {
+                const int start = qMax(0, s.start);
+                const int end   = qMin(docLen, s.end);
+                for (int i = start; i < end; ++i)
+                    m_flags[i] |= s.formatBits;
+            }
+        } else {
+            int lineStart = 0;
+            for (int i = 0; i <= docLen; ++i) {
+                if (i == docLen || fullText[i] == QLatin1Char('\n')) {
+                    const QString line = fullText.mid(lineStart, i - lineStart);
+                    for (const EmphSpan& s : processEmphasis(scanDelimiters(line))) {
+                        const int start = qMax(0, s.start) + lineStart;
+                        const int end   = qMin((int)line.length(), s.end) + lineStart;
+                        for (int k = start; k < end; ++k)
+                            m_flags[k] |= s.formatBits;
+                    }
+                    lineStart = i + 1;
+                }
+            }
+        }
+    }
+
     const int blockStart = currentBlock().position();
-
-    for (int i = blockStart; i < blockStart + text.length() && i < m_flags.size(); ++i)
-        m_flags[i] = 0;
-
-    QVector<Delimiter> delimiters = scanDelimiters(text);
-    QVector<EmphSpan>  spans      = processEmphasis(delimiters);
-
-    for (const EmphSpan& s : spans) {
-        int start = qMax(0, s.start);
-        int end   = qMin(text.length(), s.end + 1);
-        for (int i = start; i < end; ++i)
-            if (blockStart + i < m_flags.size())
-                m_flags[blockStart + i] |= s.formatBits;
-    }
-
-    QVector<int> localFlags(text.length(), 0);
-    for (const EmphSpan& s : spans) {
-        int start = qMax(0, s.start);
-        int end   = qMin(text.length(), s.end);
-        for (int i = start; i < end; ++i)
-            localFlags[i] |= s.formatBits;
-    }
+    const int blockLen   = text.length();
 
     int i = 0;
-    while (i < text.length()) {
-        int start = i;
-        int f = localFlags[i];
-        while (i < text.length() && localFlags[i] == f)
-            ++i;
+    while (i < blockLen) {
+        const int docPos = blockStart + i;
+        const int f = (docPos < (int)m_flags.size()) ? m_flags[docPos] : 0;
+        int j = i + 1;
+        while (j < blockLen) {
+            const int nf = ((blockStart + j) < (int)m_flags.size())
+                           ? m_flags[blockStart + j] : 0;
+            if (nf != f) break;
+            ++j;
+        }
         if (f)
-            setFormat(start, i - start, buildFormat(f));
+            setFormat(i, j - i, buildFormat(f));
+        i = j;
     }
 }
 
@@ -298,20 +356,31 @@ QVariantMap ChatInputHighlighter::emphasisAtInsertion(int position) const
     if (!document())
         return allFalse();
 
-    QTextBlock block = document()->findBlock(position);
-    if (!block.isValid())
+    QString fullText = document()->toPlainText();
+    if (position < 0 || position > fullText.length())
         return allFalse();
 
-    const int posInBlock = position - block.position();
-    QString modified = block.text();
-    modified.insert(posInBlock, QLatin1Char('a'));
-
-    const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(modified));
+    fullText.insert(position, QLatin1Char('a'));
 
     int bits = 0;
-    for (const EmphSpan& s : spans) {
-        if (posInBlock >= s.start && posInBlock < s.end)
-            bits |= s.formatBits;
+    if (m_multilineEmphasis) {
+        const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(fullText));
+        for (const EmphSpan& s : spans)
+            if (position >= s.start && position < s.end)
+                bits |= s.formatBits;
+    } else {
+        int lineStart = position;
+        while (lineStart > 0 && fullText[lineStart - 1] != QLatin1Char('\n'))
+            --lineStart;
+        int lineEnd = position + 1; // +1 for the inserted 'a'
+        while (lineEnd < fullText.length() && fullText[lineEnd] != QLatin1Char('\n'))
+            ++lineEnd;
+        const QString line = fullText.mid(lineStart, lineEnd - lineStart);
+        const int posInLine = position - lineStart;
+        const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(line));
+        for (const EmphSpan& s : spans)
+            if (posInLine >= s.start && posInLine < s.end)
+                bits |= s.formatBits;
     }
 
     return {

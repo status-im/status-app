@@ -24,13 +24,19 @@ Item {
             anchors.fill: parent
             wrapMode: TextEdit.Wrap
             font.pixelSize: 15
-            text: "**bold** text\n*italic* text\n~~strikethrough~~\n***bold italic***\n**bold** and *italic* together"
+            text: "**bold** text\n*italic* text\n~~strikethrough~~\n***bold italic***\n**bold** and *italic* together\n**multi-\nline bold**"
         }
 
         ColumnLayout {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.margins: 8
+
+            CheckBox {
+                text: "Multi-line emphasis"
+                checked: highlighter.multilineEmphasis
+                onToggled: highlighter.multilineEmphasis = checked
+            }
 
             Row {
                 spacing: 16

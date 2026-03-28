@@ -7,11 +7,22 @@ TestCase {
     name: "ChatInputHighlighter"
 
     property ChatInputHighlighter highlighter: ChatInputHighlighter {}
+    property ChatInputHighlighter highlighterMultiLine: ChatInputHighlighter { multilineEmphasis: true }
 
     // Returns the one span whose [start, end) exactly covers contentSubstring
     // inside text, or null if no such span exists.
     function spanFor(text, contentSubstring) {
         const spans = highlighter.parseFormats(text)
+        const idx   = text.indexOf(contentSubstring)
+        for (let i = 0; i < spans.length; i++) {
+            if (spans[i].start === idx && spans[i].end === idx + contentSubstring.length)
+                return spans[i]
+        }
+        return null
+    }
+
+    function spanForMultiLine(text, contentSubstring) {
+        const spans = highlighterMultiLine.parseFormats(text)
         const idx   = text.indexOf(contentSubstring)
         for (let i = 0; i < spans.length; i++) {
             if (spans[i].start === idx && spans[i].end === idx + contentSubstring.length)
@@ -169,6 +180,63 @@ TestCase {
         verify(ispan.italic,  "italic span must be italic")
         verify(!bspan.italic, "bold span must not be italic")
         verify(!ispan.bold,   "italic span must not be bold")
+    }
+
+    // ── multi-line emphasis ───────────────────────────────────────────────────
+
+    function test_multiline_bold() {
+        const s = spanForMultiLine("**bold\ncontent**", "bold\ncontent")
+        verify(s !== null, "expected bold span across newline")
+        verify(s.bold)
+    }
+
+    function test_multiline_italic() {
+        const s = spanForMultiLine("*first line\nsecond line*", "first line\nsecond line")
+        verify(s !== null, "expected italic span across newline")
+        verify(s.italic)
+    }
+
+    function test_multiline_strikethrough() {
+        const s = spanForMultiLine("~~line one\nline two~~", "line one\nline two")
+        verify(s !== null, "expected strikethrough span across newline")
+        verify(s.strikethrough)
+    }
+
+    function test_multiline_threeLines() {
+        const s = spanForMultiLine("**first\nmiddle\nlast**", "first\nmiddle\nlast")
+        verify(s !== null, "expected bold span across three lines")
+        verify(s.bold)
+    }
+
+    function test_multiline_independentSingleLineSpansUnaffected() {
+        // Single-line spans on separate lines must still work
+        const text  = "**bold**\n*italic*"
+        const bspan = spanForMultiLine(text, "bold")
+        const ispan = spanForMultiLine(text, "italic")
+        verify(bspan !== null && bspan.bold,   "bold span must still match")
+        verify(ispan !== null && ispan.italic, "italic span must still match")
+    }
+
+    // ── multilineEmphasis: false (default) — cross-line spans must not form ──
+
+    function test_multilineDisabled_noCrossLineBold() {
+        compare(highlighter.parseFormats("**bold\ncontent**").length, 0)
+    }
+
+    function test_multilineDisabled_noCrossLineItalic() {
+        compare(highlighter.parseFormats("*first\nsecond*").length, 0)
+    }
+
+    function test_multilineDisabled_noCrossLineStrikethrough() {
+        compare(highlighter.parseFormats("~~line one\nline two~~").length, 0)
+    }
+
+    function test_multilineDisabled_singleLineSpansStillWork() {
+        const text  = "**bold**\n*italic*"
+        const bspan = spanFor(text, "bold")
+        const ispan = spanFor(text, "italic")
+        verify(bspan !== null && bspan.bold,   "single-line bold must still work")
+        verify(ispan !== null && ispan.italic, "single-line italic must still work")
     }
 
     // ── intraword emphasis ────────────────────────────────────────────────────
