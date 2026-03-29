@@ -331,4 +331,125 @@ TestCase {
     function test_delimiter_noDelimitersInPlainText() {
         compare(highlighter.parseDelimiters("hello world").length, 0)
     }
+
+    // ── code span / emphasis interaction ──────────────────────────────────────
+
+    function test_codeSpan_delimsInsideCodeDoNotConsumeOutsideDelims() {
+        // "`A**B` C **D**": D must be bold; C must not be bold
+        const text  = "`A**B` C **D**"
+        const spans = highlighter.parseFormats(text)
+        let hasBoldD = false
+        let hasBoldC = false
+        for (let i = 0; i < spans.length; i++) {
+            if (!spans[i].bold) continue
+            for (let p = spans[i].start; p < spans[i].end; p++) {
+                if (text[p] === 'D') hasBoldD = true
+                if (text[p] === 'C') hasBoldC = true
+            }
+        }
+        verify(hasBoldD,  "D should be bold")
+        verify(!hasBoldC, "C must not be bold")
+    }
+
+    function test_codeSpan_emphasisAfterMultipleCodeSpans() {
+        // Two code spans then **bold**: bold must match correctly
+        const text  = "`a` `b` **bold**"
+        const spans = highlighter.parseFormats(text)
+        let boldSpan = null
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) boldSpan = spans[i]
+        verify(boldSpan !== null, "expected a bold span")
+        compare(boldSpan.start, text.indexOf("bold"))
+        compare(boldSpan.end,   text.indexOf("bold") + 4)
+    }
+
+    function test_inlineCode_basic() {
+        // "`hello`": content = [1, 6)
+        const spans = highlighter.parseCodeSpans("`hello`")
+        compare(spans.length, 1)
+        compare(spans[0].start, 1)
+        compare(spans[0].end,   6)
+    }
+
+    function test_inlineCode_unmatchedNotReturned() {
+        compare(highlighter.parseCodeSpans("`unclosed").length, 0)
+        compare(highlighter.parseCodeSpans("unclosed`").length, 0)
+    }
+
+    function test_inlineCode_noFormattingInsideCode() {
+        // **bold** inside backticks must not produce emphasis spans
+        const spans = highlighter.parseFormats("`**not bold**`")
+        for (let i = 0; i < spans.length; i++)
+            verify(!spans[i].bold, "bold must not apply inside code span")
+    }
+
+    function test_inlineCode_delimitersBlue() {
+        // backtick markers at [0,1) and [6,7) must appear as delimiter entries
+        verify(delimFor("`hello`", "`", 0) !== null, "opener delimiter missing")
+        verify(delimFor("`hello`", "`", 6) !== null, "closer delimiter missing")
+    }
+
+    function test_inlineCode_plainText() {
+        compare(highlighter.parseCodeSpans("hello world").length, 0)
+    }
+
+    // ── triple-backtick code fence ─────────────────────────────────────────────
+
+    function test_tripleBacktick_basic() {
+        // "```hello```": content = [3, 8)
+        const spans = highlighter.parseCodeSpans("```hello```")
+        compare(spans.length, 1)
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   8)
+    }
+
+    function test_tripleBacktick_noFormattingInsideFence() {
+        const spans = highlighter.parseFormats("```**not bold**```")
+        for (let i = 0; i < spans.length; i++)
+            verify(!spans[i].bold, "bold must not apply inside code fence")
+    }
+
+    function test_tripleBacktick_delimiters() {
+        verify(delimFor("```hi```", "```", 0) !== null, "fence opener delimiter missing")
+        verify(delimFor("```hi```", "```", 5) !== null, "fence closer delimiter missing")
+    }
+
+    // ── single vs triple backtick do not cross-match ───────────────────────────
+
+    function test_code_singleAndTripleDoNotCrossMatch() {
+        // "``foo`" — opener is 2 backticks, only one closer backtick → no match
+        compare(highlighter.parseCodeSpans("``foo`").length, 0)
+    }
+
+    // ── multiline code (multilineEmphasis: true) ───────────────────────────────
+
+    function test_multiline_inlineCode() {
+        const spans = highlighterMultiLine.parseCodeSpans("`first\nsecond`")
+        compare(spans.length, 1)
+        compare(spans[0].start, 1)
+        compare(spans[0].end,   13)
+    }
+
+    function test_multiline_tripleBacktick() {
+        const spans = highlighterMultiLine.parseCodeSpans("```first\nsecond```")
+        compare(spans.length, 1)
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   15)
+    }
+
+    // ── multilineEmphasis: false — single-backtick does not cross lines ─────────
+
+    function test_multilineDisabled_inlineCodeDoesNotCrossLines() {
+        compare(highlighter.parseCodeSpans("`first\nsecond`").length, 0)
+    }
+
+    // ── triple-backtick is always multiline, even with multilineEmphasis: false ─
+
+    function test_tripleBacktick_alwaysMultiline() {
+        // highlighter has multilineEmphasis: false, but ``` fences still cross lines
+        const spans = highlighter.parseCodeSpans("```first\nsecond```")
+        compare(spans.length, 1)
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   15)
+    }
 }

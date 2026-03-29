@@ -32,6 +32,9 @@ public:
     // Returns [{start, end}, ...] for each matched delimiter run — for unit tests
     Q_INVOKABLE QVariantList parseDelimiters(const QString& text) const;
 
+    // Returns [{start, end}, ...] for each matched code span content region — for unit tests
+    Q_INVOKABLE QVariantList parseCodeSpans(const QString& text) const;
+
     // Returns {bold, italic, strikethrough} booleans for the given document position
     Q_INVOKABLE QVariantMap emphasisAt(int position) const;
 
