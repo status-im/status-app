@@ -11664,6 +11664,10 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Find</source>
+        <translation type="unfinished">Buscar</translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation type="unfinished">Zoom</translation>
     </message>

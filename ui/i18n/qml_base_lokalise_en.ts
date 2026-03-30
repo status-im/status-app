@@ -14190,6 +14190,11 @@
       <translation>Incognito</translation>
     </message>
     <message>
+      <source>Find</source>
+      <comment>MobileSettingsMenu</comment>
+      <translation>Find</translation>
+    </message>
+    <message>
       <source>Zoom</source>
       <comment>MobileSettingsMenu</comment>
       <translation>Zoom</translation>

@@ -11648,6 +11648,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Find</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation type="unfinished"></translation>
     </message>

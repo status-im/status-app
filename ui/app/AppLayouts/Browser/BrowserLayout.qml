@@ -99,7 +99,35 @@ StatusSectionLayout {
         property real lastScrollPos: 0
         property bool scrolledUp: true
 
+        function resetScroll() {
+            _internal.lastScrollPos = _internal.currentWebView?.scrollPosition.y ?? 0
+            _internal.scrolledUp = true
+        }
+
         property Component jsDialogComponent: JSDialogWindow {}
+
+        readonly property bool currentTabSupportsFindInPage: currentWebView?.supportsFindInPage ?? false
+        readonly property bool hasNativeFindPanel: currentWebView?.hasNativeFindPanel ?? false
+
+        function showFindBar() {
+            if (!currentTabSupportsFindInPage)
+                return
+            if (hasNativeFindPanel)
+                currentWebView?.showFindPanel()
+            else {
+                findBar.visible = true
+                findBar.forceActiveFocus()
+            }
+        }
+
+        function hideFindBar() {
+            if (hasNativeFindPanel)
+                currentWebView?.hideFindPanel()
+            else {
+                findBar.visible = false
+                findBar.focus = false
+            }
+        }
 
         function addNewDownloadTab() {
             webViewContext.createDownloadTab(tabs.count !== 0 ? currentWebView.profileParams : connectorBridge.defaultProfileParams);
@@ -179,8 +207,7 @@ StatusSectionLayout {
         onCurrentWebViewChanged: {
             onCurrentTabUrlChanged()
             findBar.reset()
-            _internal.lastScrollPos = _internal.currentWebView?.scrollPosition.y ?? 0
-            _internal.scrolledUp = true
+            _internal.resetScroll()
         }
     }
 
@@ -234,10 +261,12 @@ StatusSectionLayout {
                              sslDialog.enqueue(error)
                          }
         jsDialogHandler: (request) => dialogsContext.openJsDialog(request)
-        findTextFinishedHandler: (result) => {
-                                     findBar.numberOfMatches = result.numberOfMatches
-                                     findBar.activeMatch = result.activeMatch
-                                 }
+        findTextFinishedHandler: function(result) {
+            if (!_internal.hasNativeFindPanel) {
+                findBar.numberOfMatches = result.numberOfMatches
+                findBar.activeMatch = result.activeMatch
+            }
+        }
     }
 
     headerContent: ColumnLayout {
@@ -269,6 +298,7 @@ StatusSectionLayout {
             sourceComponent: root.invertedLayout ? browserPortraitToolbar : browserLandscapeToolbar
 
             function activateAddressBar() {
+                _internal.resetScroll()
                 if (root.invertedLayout)
                     mobileAddressBar.activateAddressBar()
                 else
@@ -323,12 +353,10 @@ StatusSectionLayout {
                         settingsMenu.popup(target, pos)
                 }
                 function onRequestSearch() {
-                    if (root.isMobile)
+                    if (_internal.currentTabSupportsFindInPage)
+                        _internal.showFindBar()
+                    else
                         browserToolbarLoader.activateAddressBar()
-                    else {
-                        findBar.visible = true
-                        findBar.forceActiveFocus()
-                    }
                 }
                 function onGoIncognito(checked) {
                     webViewContext.setIncognitoCurrent(checked)
@@ -403,13 +431,13 @@ StatusSectionLayout {
                 if (text)
                     webViewContext.findTextCurrent(text)
                 else if (!visible)
-                    visible = true;
+                    _internal.showFindBar()
             }
             onFindPrevious: {
                 if (text)
                     webViewContext.findTextCurrent(text, true)
                 else if (!visible)
-                    visible = true;
+                    _internal.showFindBar()
             }
             onVisibleChanged: if (!visible) webViewContext.findTextCurrent("") // reset the highlight
         }
@@ -488,7 +516,7 @@ StatusSectionLayout {
         sourceComponent: BrowserShortcutActions {
             currentWebView: _internal.currentWebView
             onActivateAddressBar: browserToolbarLoader.activateAddressBar()
-            onHideFindBar: findBar.visible = false
+            onHideFindBar: _internal.hideFindBar()
             onFindNextRequested: findBar.findNext()
             onFindPreviousRequested: findBar.findPrevious()
             onZoomIn: webViewContext.changeZoomCurrent(0.1)
@@ -581,12 +609,7 @@ StatusSectionLayout {
         onZoomIn: webViewContext.changeZoomCurrent(0.1)
         onZoomOut: webViewContext.changeZoomCurrent(-0.1)
         onResetZoomFactor: webViewContext.resetZoomCurrent()
-        onLaunchFindBar: {
-            if (!findBar.visible) {
-                findBar.visible = true;
-                findBar.forceActiveFocus()
-            }
-        }
+        onLaunchFindBar: _internal.showFindBar()
         onToggleCompatibilityMode: function(checked) {
             for (let i = 0; i < tabs.count; ++i){
                 webViewContext.getWebView(i).stop() // Stop all loading tabs
@@ -614,6 +637,9 @@ StatusSectionLayout {
         onZoomIn: webViewContext.changeZoomCurrent(0.1)
         onZoomOut: webViewContext.changeZoomCurrent(-0.1)
         onResetZoomFactor: webViewContext.resetZoomCurrent()
+
+        supportsFind: _internal.currentTabSupportsFindInPage
+        onLaunchFindBar: _internal.showFindBar()
 
         onGoIncognito: checked => webViewContext.setIncognitoCurrent(checked)
         onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)

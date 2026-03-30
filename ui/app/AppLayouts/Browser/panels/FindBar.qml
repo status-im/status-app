@@ -51,15 +51,10 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
-
-import shared.controls
-
-import utils
 
 Rectangle {
     id: root
@@ -79,21 +74,6 @@ Rectangle {
 
     color: Theme.palette.background
 
-    layer.enabled: true
-    layer.effect: DropShadow {
-        width: root.width
-        height: root.height
-        x: root.x
-        y: root.y + 10
-        visible: root.visible
-        source: root
-        horizontalOffset: 0
-        verticalOffset: 2
-        radius: 10
-        samples: 15
-        color: Theme.palette.dropShadow
-    }
-
     function forceActiveFocus() {
         findTextField.forceActiveFocus();
     }
@@ -112,33 +92,24 @@ Rectangle {
         anchors.leftMargin: 10
         anchors.rightMargin: 10
 
-        spacing: 5
-
         StatusTextField {
             id: findTextField
             background: Rectangle {
                 color: Theme.palette.baseColor2
                 radius: Theme.radius
             }
+            font.pixelSize: Theme.fontSize(13)
             Layout.fillWidth: true
             Layout.fillHeight: true
             onAccepted: root.findNext()
-            onTextChanged: root.findNext()
+            onTextEdited: root.findNext()
             onActiveFocusChanged: activeFocus ? selectAll() : deselect()
         }
 
         StatusBaseText {
-            text: activeMatch + "/" + numberOfMatches
+            text: root.activeMatch + "/" + root.numberOfMatches
             visible: findTextField.text !== ""
-        }
-
-        Rectangle {
-            border.width: 1
-            border.color: Theme.palette.border
-            width: 2
-            height: parent.height
-            anchors.topMargin: 5
-            anchors.bottomMargin: 5
+            font.pixelSize: Theme.fontSize(13)
         }
 
         StatusFlatRoundButton {
@@ -146,7 +117,7 @@ Rectangle {
             implicitWidth: 32
             implicitHeight: 32
             icon.name: "previous"
-            enabled: numberOfMatches > 0
+            enabled: root.numberOfMatches > 0
             type: StatusFlatRoundButton.Type.Tertiary
             onClicked: root.findPrevious()
         }
@@ -156,7 +127,7 @@ Rectangle {
             implicitWidth: 32
             implicitHeight: 32
             icon.name: "next"
-            enabled: numberOfMatches > 0
+            enabled: root.numberOfMatches > 0
             type: StatusFlatRoundButton.Type.Tertiary
             onClicked: root.findNext()
         }

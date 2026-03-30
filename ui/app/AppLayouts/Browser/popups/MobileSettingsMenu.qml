@@ -16,7 +16,10 @@ StatusDialog {
     required property bool supportsZoom
     required property real zoomFactor
 
+    required property bool supportsFind
+
     signal goIncognito(bool checked)
+    signal launchFindBar
     signal zoomIn
     signal zoomOut
     signal resetZoomFactor
@@ -42,6 +45,16 @@ StatusDialog {
             ]
             onClicked: {
                 incognitoSwitch.click()
+                root.close()
+            }
+        }
+        StatusListItem {
+            Layout.fillWidth: true
+            visible: root.supportsFind
+            title: qsTr("Find")
+            asset.name: "search"
+            onClicked: {
+                root.launchFindBar()
                 root.close()
             }
         }
