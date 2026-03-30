@@ -2,6 +2,7 @@
 
 #include <QColor>
 #include <QFontDatabase>
+#include <QRegularExpression>
 #include <QTextCharFormat>
 #include <QVariantMap>
 #include <QVector>
@@ -14,6 +15,7 @@ static const int kStrikeThrough = 1 << 2;
 static const int kDelimiter     = 1 << 3;
 static const int kCode          = 1 << 4; // single-backtick: monospace + background
 static const int kCodeFence     = 1 << 5; // triple-backtick content: monospace, no background
+static const int kLink          = 1 << 6; // URL: blue foreground, combines with emphasis bits
 
 struct Delimiter {
     int pos;
@@ -37,6 +39,42 @@ struct EmphSpan {
     int openerStart;  // start of consumed opener delimiter chars
     int closerEnd;    // end   of consumed closer delimiter chars
 };
+
+struct LinkSpan {
+    int start;   // start of match in the scanned text
+    int end;     // end of match (exclusive)
+    QString url;
+};
+
+static const QRegularExpression kLinkRegex(
+    QStringLiteral(R"(\bhttps?://[a-zA-Z0-9](?:[a-zA-Z0-9\-.]*[a-zA-Z0-9])?(?:/[^\s<>()\[\]{}'"]*)?(?<![.,;:!?*~]))"),
+    QRegularExpression::CaseInsensitiveOption
+);
+
+QVector<LinkSpan> scanLinks(const QString& text,
+                            const QVector<QPair<int,int>>& excludeRanges = {})
+{
+    QVector<LinkSpan> result;
+    auto it = kLinkRegex.globalMatch(text);
+    while (it.hasNext()) {
+        const auto m = it.next();
+        const int s = m.capturedStart(), e = m.capturedEnd();
+        bool excluded = false;
+        for (const auto& r : excludeRanges)
+            if (s < r.second && e > r.first) { excluded = true; break; }
+        if (!excluded)
+            result.append({s, e, m.captured()});
+    }
+    return result;
+}
+
+QVector<QPair<int,int>> linkRangesOf(const QVector<LinkSpan>& links)
+{
+    QVector<QPair<int,int>> result;
+    for (const auto& l : links)
+        result.append({l.start, l.end});
+    return result;
+}
 
 bool isUnicodeWhitespace(QChar c)
 {
@@ -286,9 +324,60 @@ bool anyOverlap(const QVector<QPair<int,int>>& ranges, int start, int end)
 
 } // namespace
 
+// ── ChatInputLinksModel ───────────────────────────────────────────────────────
+
+ChatInputLinksModel::ChatInputLinksModel(QObject* parent)
+    : QAbstractListModel(parent)
+{
+}
+
+int ChatInputLinksModel::rowCount(const QModelIndex& parent) const
+{
+    if (parent.isValid())
+        return 0;
+    return m_links.size();
+}
+
+QVariant ChatInputLinksModel::data(const QModelIndex& index, int role) const
+{
+    if (!index.isValid() || index.row() < 0 || index.row() >= m_links.size())
+        return {};
+    const LinkItem& item = m_links[index.row()];
+    switch (role) {
+    case TextRole:   return item.text;
+    case StartRole:  return item.start;
+    case LengthRole: return item.length;
+    }
+    return {};
+}
+
+QHash<int, QByteArray> ChatInputLinksModel::roleNames() const
+{
+    return {
+        {TextRole,   "text"},
+        {StartRole,  "start"},
+        {LengthRole, "length"},
+    };
+}
+
+void ChatInputLinksModel::setLinks(const QVector<LinkItem>& links)
+{
+    beginResetModel();
+    m_links = links;
+    endResetModel();
+}
+
+// ── ChatInputHighlighter ──────────────────────────────────────────────────────
+
 ChatInputHighlighter::ChatInputHighlighter(QObject* parent)
     : QSyntaxHighlighter(parent)
+    , m_linksModel(new ChatInputLinksModel(this))
 {
+}
+
+QAbstractListModel* ChatInputHighlighter::linksModel() const
+{
+    return m_linksModel;
 }
 
 QQuickTextDocument* ChatInputHighlighter::quickTextDocument() const
@@ -364,12 +453,10 @@ QTextCharFormat ChatInputHighlighter::buildFormat(int bits) const
             fmt.setBackground(m_codeBackground);
         return fmt;
     }
-    if (bits & kBold)
-        fmt.setFontWeight(QFont::Bold);
-    if (bits & kItalic)
-        fmt.setFontItalic(true);
-    if (bits & kStrikeThrough)
-        fmt.setFontStrikeOut(true);
+    if (bits & kBold)          fmt.setFontWeight(QFont::Bold);
+    if (bits & kItalic)        fmt.setFontItalic(true);
+    if (bits & kStrikeThrough) fmt.setFontStrikeOut(true);
+    if (bits & kLink)          fmt.setForeground(QColor(Qt::blue));
     return fmt;
 }
 
@@ -390,17 +477,25 @@ QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
             if (i == text.length() || text[i] == QLatin1Char('\n')) {
                 const QString line    = text.mid(lineStart, i - lineStart);
                 const int     lineLen = line.length();
-                // Line-relative code ranges for delimiter scanning
-                const QVector<QPair<int,int>> lineRanges = codeRangesOf(line);
+                // Line-relative code ranges for delimiter scanning — compute spans once
+                const QVector<CodeSpan> lineCodeSpans = scanCodeSpans(line);
+                QVector<QPair<int,int>> lineRanges;
                 // Absolute code ranges for the inCode safety-net filter
-                QVector<QPair<int,int>> absRanges = tripleAbsRanges;
-                for (const auto& r : lineRanges)
-                    absRanges.append({r.first + lineStart, r.second + lineStart});
+                QVector<QPair<int,int>> absCodeRanges = tripleAbsRanges;
+                for (const CodeSpan& c : lineCodeSpans) {
+                    lineRanges.append({c.openerStart, c.closerEnd});
+                    absCodeRanges.append({c.openerStart + lineStart, c.closerEnd + lineStart});
+                }
+                for (const auto& r : lineRelativeRanges(tripleAbsRanges, lineStart, lineLen))
+                    lineRanges.append(r);
+                // Exclude link ranges so URL characters don't trigger emphasis
+                for (const auto& r : linkRangesOf(scanLinks(line, lineRanges)))
+                    lineRanges.append(r);
 
                 for (const EmphSpan& s : processEmphasis(scanDelimiters(line, lineRanges))) {
                     const int absStart = s.start + lineStart;
                     const int absEnd   = s.end   + lineStart;
-                    if (anyOverlap(absRanges, absStart, absEnd)) continue;
+                    if (anyOverlap(absCodeRanges, absStart, absEnd)) continue;
                     QVariantMap m;
                     m[QStringLiteral("start")]         = absStart;
                     m[QStringLiteral("end")]           = absEnd;
@@ -419,7 +514,11 @@ QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
     QVector<QPair<int,int>> allRanges;
     for (const CodeSpan& c : allCodeSpans)
         allRanges.append({c.openerStart, c.closerEnd});
-    for (const EmphSpan& s : processEmphasis(scanDelimiters(text, allRanges))) {
+    // Exclude link ranges so URL characters don't trigger emphasis
+    QVector<QPair<int,int>> allExcluded = allRanges;
+    for (const auto& r : linkRangesOf(scanLinks(text, allRanges)))
+        allExcluded.append(r);
+    for (const EmphSpan& s : processEmphasis(scanDelimiters(text, allExcluded))) {
         if (anyOverlap(allRanges, s.start, s.end)) continue;
         QVariantMap m;
         m[QStringLiteral("start")]         = s.start;
@@ -500,6 +599,54 @@ QVariantList ChatInputHighlighter::parseDelimiters(const QString& text) const
     return result;
 }
 
+QVariantList ChatInputHighlighter::parseLinks(const QString& text) const
+{
+    QVariantList result;
+
+    // Pre-compute triple-backtick ranges (always full-text)
+    const QVector<CodeSpan> allCodeSpans = scanCodeSpans(text);
+    QVector<QPair<int,int>> tripleAbsRanges;
+    for (const CodeSpan& c : allCodeSpans)
+        if (c.contentStart - c.openerStart == 3)
+            tripleAbsRanges.append({c.openerStart, c.closerEnd});
+
+    if (!m_multilineEmphasis) {
+        int lineStart = 0;
+        for (int i = 0; i <= text.length(); ++i) {
+            if (i == text.length() || text[i] == QLatin1Char('\n')) {
+                const QString line    = text.mid(lineStart, i - lineStart);
+                const int     lineLen = line.length();
+                QVector<QPair<int,int>> lineRanges = codeRangesOf(line);
+                for (const auto& r : lineRelativeRanges(tripleAbsRanges, lineStart, lineLen))
+                    lineRanges.append(r);
+
+                for (const LinkSpan& l : scanLinks(line, lineRanges)) {
+                    QVariantMap m;
+                    m[QStringLiteral("text")]   = l.url;
+                    m[QStringLiteral("start")]  = l.start + lineStart;
+                    m[QStringLiteral("length")] = l.end - l.start;
+                    result.append(m);
+                }
+                lineStart = i + 1;
+            }
+        }
+        return result;
+    }
+
+    // Multiline: exclude all code spans
+    QVector<QPair<int,int>> allRanges;
+    for (const CodeSpan& c : allCodeSpans)
+        allRanges.append({c.openerStart, c.closerEnd});
+    for (const LinkSpan& l : scanLinks(text, allRanges)) {
+        QVariantMap m;
+        m[QStringLiteral("text")]   = l.url;
+        m[QStringLiteral("start")]  = l.start;
+        m[QStringLiteral("length")] = l.end - l.start;
+        result.append(m);
+    }
+    return result;
+}
+
 void ChatInputHighlighter::highlightBlock(const QString& text)
 {
     if (!document())
@@ -547,9 +694,18 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
             }
         }
 
+        QVector<ChatInputLinksModel::LinkItem> modelItems;
+
         if (m_multilineEmphasis) {
+            // Scan links first so their ranges exclude emphasis delimiter recognition
+            const QVector<LinkSpan> fullLinks = scanLinks(fullText, fullCodeRanges);
+
+            QVector<QPair<int,int>> allExcluded = fullCodeRanges;
+            for (const auto& r : linkRangesOf(fullLinks))
+                allExcluded.append(r);
+
             const QVector<EmphSpan> spans = processEmphasis(
-                scanDelimiters(fullText, fullCodeRanges));
+                scanDelimiters(fullText, allExcluded));
             // Pass 1: content bits
             for (const EmphSpan& s : spans) {
                 for (int i = qMax(0, s.start); i < qMin(docLen, s.end); ++i)
@@ -566,6 +722,12 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
             applyCodeSpans(tripleFences, docLen, 0);
             // Pass 4: single-backtick spans
             applyCodeSpans(singleSpans, docLen, 0);
+            // Pass 5: link bits (OR in — allows combining with emphasis)
+            for (const auto& l : fullLinks) {
+                for (int k = l.start; k < l.end; ++k)
+                    m_flags[k] |= kLink;
+                modelItems.append({l.start, l.end - l.start, l.url});
+            }
         } else {
             int lineStart = 0;
             for (int i = 0; i <= docLen; ++i) {
@@ -583,7 +745,14 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
                     }
                     for (const auto& r : lineRelativeRanges(tripleAbsRanges, lineStart, lineLen))
                         lineRanges.append(r);
-                    const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(line, lineRanges));
+
+                    // Scan links before delimiter recognition so URL characters are excluded
+                    const QVector<LinkSpan> lineLinks = scanLinks(line, lineRanges);
+                    QVector<QPair<int,int>> lineExcluded = lineRanges;
+                    for (const auto& r : linkRangesOf(lineLinks))
+                        lineExcluded.append(r);
+
+                    const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(line, lineExcluded));
                     // Pass 1: content bits
                     for (const EmphSpan& s : spans) {
                         const int start = qMax(0, s.start) + lineStart;
@@ -604,12 +773,21 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
                     }
                     // Pass 3: single-backtick spans (per-line, reuse already-scanned spans)
                     applyCodeSpans(lineSingleSpans, lineLen, lineStart);
+                    // Pass 4 (per-line): link bits
+                    for (const auto& l : lineLinks) {
+                        for (int k = l.start + lineStart; k < l.end + lineStart; ++k)
+                            m_flags[k] |= kLink;
+                        modelItems.append({l.start + lineStart, l.end - l.start, l.url});
+                    }
+
                     lineStart = i + 1;
                 }
             }
-            // Pass 4: triple-backtick fences (full-document, already computed above)
+            // Pass 4 (global): triple-backtick fences (full-document, already computed above)
             applyCodeSpans(tripleFences, docLen, 0);
         }
+
+        m_linksModel->setLinks(modelItems);
     }
 
     const int blockStart = currentBlock().position();

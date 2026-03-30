@@ -27,6 +27,8 @@ Item {
             color: "transparent"
 
             ScrollView {
+                id: scrollView
+
                 anchors.fill: parent
 
                 contentWidth: availableWidth
@@ -65,6 +67,13 @@ int main() {
     return 0;
 }
 \`\`\`
+
+**Links:**
+
+Plain link: https://status.im
+Bold link: **https://status.im/bold**
+Star in URL (no italic): https://x.com/a*b*c
+Link in code (not highlighted): \`https://status.im\`
 `
                 }
             }
@@ -94,6 +103,92 @@ int main() {
                 Text { text: "bold: "          + vemph.bold }
                 Text { text: "italic: "        + vemph.italic }
                 Text { text: "strikethrough: " + vemph.strikethrough }
+            }
+        }
+    }
+
+    Rectangle {
+        anchors.fill: linksColumn
+        border.color: "lightblue"
+
+        MouseArea {
+            anchors.fill: parent
+        }
+    }
+
+    ColumnLayout {
+        id: linksColumn
+
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: 12
+        anchors.rightMargin: scrollView.ScrollBar.vertical.width + 12
+
+        width: 300
+        height: 400
+
+        Text {
+            Layout.fillWidth: true
+            font.bold: true
+            text: "detected links:"
+        }
+
+        ListView {
+            id: linksListView
+
+            Layout.leftMargin: 5
+
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            model: highlighter.linksModel
+
+            delegate: Text {
+                width: ListView.view.width
+                text: model.text + " @ " + model.start + " +" + model.length
+
+                elide: Text.ElideMiddle
+
+                MouseArea {
+                    id: linkMouseArea
+
+                    hoverEnabled: true
+
+                    anchors.fill: parent
+                }
+
+                Rectangle {
+                    parent: textArea
+
+                    z: -1
+
+                    visible: linkMouseArea.containsMouse
+
+                    readonly property rect position: {
+                        textArea.text
+                        textArea.contentWidth
+
+                        const start = textArea.positionToRectangle(model.start)
+                        const end = textArea.positionToRectangle(model.start + model.length)
+
+                        const rect = Qt.rect(
+                            start.x,
+                            start.y,
+                            end.x - start.x,
+                            start.height
+                        )
+
+                        return rect
+                    }
+
+                    x: position.x
+                    y: position.y
+                    width: position.width
+                    height: position.height
+
+                    border.color: "darkblue"
+                    color: "lightblue"
+                }
             }
         }
     }

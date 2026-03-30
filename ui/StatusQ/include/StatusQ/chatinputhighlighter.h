@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QAbstractListModel>
 #include <QColor>
 #include <QQmlParserStatus>
 #include <QQuickTextDocument>
@@ -8,6 +9,22 @@
 #include <QVariantList>
 #include <QVariantMap>
 #include <QVector>
+
+class ChatInputLinksModel : public QAbstractListModel {
+    Q_OBJECT
+public:
+    struct LinkItem { int start; int length; QString text; };
+    enum Roles { TextRole = Qt::UserRole + 1, StartRole, LengthRole };
+
+    explicit ChatInputLinksModel(QObject* parent = nullptr);
+    int rowCount(const QModelIndex& parent = {}) const override;
+    QVariant data(const QModelIndex& index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
+    void setLinks(const QVector<LinkItem>& links);
+
+private:
+    QVector<LinkItem> m_links;
+};
 
 class ChatInputHighlighter : public QSyntaxHighlighter
 {
@@ -21,6 +38,7 @@ class ChatInputHighlighter : public QSyntaxHighlighter
     Q_PROPERTY(QColor codeBackground
                READ codeBackground WRITE setCodeBackground
                NOTIFY codeBackgroundChanged)
+    Q_PROPERTY(QAbstractListModel* linksModel READ linksModel CONSTANT)
 
 public:
     explicit ChatInputHighlighter(QObject* parent = nullptr);
@@ -34,6 +52,8 @@ public:
     QColor codeBackground() const;
     void setCodeBackground(QColor color);
 
+    QAbstractListModel* linksModel() const;
+
     // Returns [{start, end, bold, italic, strikethrough}, ...] — for unit tests
     Q_INVOKABLE QVariantList parseFormats(const QString& text) const;
 
@@ -42,6 +62,9 @@ public:
 
     // Returns [{start, end}, ...] for each matched code span content region — for unit tests
     Q_INVOKABLE QVariantList parseCodeSpans(const QString& text) const;
+
+    // Returns [{text, start, length}, ...] for detected URLs — for unit tests
+    Q_INVOKABLE QVariantList parseLinks(const QString& text) const;
 
     // Returns {bold, italic, strikethrough} booleans for the given document position
     Q_INVOKABLE QVariantMap emphasisAt(int position) const;
@@ -66,4 +89,5 @@ private:
     QString m_cachedText; // last full document text parsed into m_flags
     bool m_multilineEmphasis{false};
     QColor m_codeBackground{Qt::transparent};
+    ChatInputLinksModel* m_linksModel{nullptr};
 };

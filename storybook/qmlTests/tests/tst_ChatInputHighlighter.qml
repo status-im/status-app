@@ -453,4 +453,75 @@ TestCase {
         compare(spans[0].start, 3)
         compare(spans[0].end,   15)
     }
+
+    // ── link detection ────────────────────────────────────────────────────────
+
+    function test_link_basic() {
+        const links = highlighter.parseLinks("see https://status.im")
+        compare(links.length, 1)
+        compare(links[0].start, 4)
+        compare(links[0].length, 17)
+    }
+
+    function test_link_trailingPunct() {
+        const links = highlighter.parseLinks("https://status.im.")
+        compare(links.length, 1)
+        verify(links[0].length < "https://status.im.".length, "trailing dot must be excluded")
+        compare(links[0].text, "https://status.im")
+    }
+
+    function test_link_inSingleBacktick() {
+        const links = highlighter.parseLinks("`https://status.im`")
+        compare(links.length, 0)
+    }
+
+    function test_link_inTripleBacktick() {
+        const links = highlighter.parseLinks("```https://status.im```")
+        compare(links.length, 0)
+    }
+
+    function test_link_boldLink() {
+        // Bold delimiters around a URL: 1 link, and parseFormats sees a bold span
+        const links = highlighter.parseLinks("**https://status.im**")
+        compare(links.length, 1)
+        const spans = highlighter.parseFormats("**https://status.im**")
+        let hasBold = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) hasBold = true
+        verify(hasBold, "expected bold span around URL")
+    }
+
+    function test_link_italicLink() {
+        const links = highlighter.parseLinks("*https://status.im*")
+        compare(links.length, 1)
+        const spans = highlighter.parseFormats("*https://status.im*")
+        let hasItalic = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].italic) hasItalic = true
+        verify(hasItalic, "expected italic span around URL")
+    }
+
+    function test_link_noHttp() {
+        // Plain domain without scheme must not be detected
+        compare(highlighter.parseLinks("status.im").length, 0)
+    }
+
+    function test_link_multiple() {
+        const links = highlighter.parseLinks("https://status.im and https://example.com")
+        compare(links.length, 2)
+    }
+
+    function test_link_starInUrl() {
+        // * characters inside a URL must not create italic spans
+        const text = "https://x.com/a*b*c"
+        const links = highlighter.parseLinks(text)
+        compare(links.length, 1)
+        compare(links[0].text, text)
+
+        const spans = highlighter.parseFormats(text)
+        let hasItalic = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].italic) hasItalic = true
+        verify(!hasItalic, "*b* inside URL must not produce italic span")
+    }
 }
