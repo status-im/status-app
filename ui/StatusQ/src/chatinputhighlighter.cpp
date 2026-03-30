@@ -12,7 +12,8 @@ static const int kBold          = 1 << 0;
 static const int kItalic        = 1 << 1;
 static const int kStrikeThrough = 1 << 2;
 static const int kDelimiter     = 1 << 3;
-static const int kCode          = 1 << 4;
+static const int kCode          = 1 << 4; // single-backtick: monospace + background
+static const int kCodeFence     = 1 << 5; // triple-backtick content: monospace, no background
 
 struct Delimiter {
     int pos;
@@ -283,26 +284,6 @@ bool anyOverlap(const QVector<QPair<int,int>>& ranges, int start, int end)
     return false;
 }
 
-QTextCharFormat buildFormat(int bits)
-{
-    QTextCharFormat fmt;
-    if (bits & kDelimiter) {
-        fmt.setForeground(QColor(Qt::blue));
-        return fmt;
-    }
-    if (bits & kCode) {
-        fmt.setFontFamilies(QFontDatabase::systemFont(QFontDatabase::FixedFont).families());
-        return fmt;
-    }
-    if (bits & kBold)
-        fmt.setFontWeight(QFont::Bold);
-    if (bits & kItalic)
-        fmt.setFontItalic(true);
-    if (bits & kStrikeThrough)
-        fmt.setFontStrikeOut(true);
-    return fmt;
-}
-
 } // namespace
 
 ChatInputHighlighter::ChatInputHighlighter(QObject* parent)
@@ -349,6 +330,47 @@ void ChatInputHighlighter::setMultilineEmphasis(bool enabled)
     m_cachedText.clear();
     rehighlight();
     emit multilineEmphasisChanged();
+}
+
+QColor ChatInputHighlighter::codeBackground() const
+{
+    return m_codeBackground;
+}
+
+void ChatInputHighlighter::setCodeBackground(QColor color)
+{
+    if (m_codeBackground == color)
+        return;
+    m_codeBackground = color;
+    m_cachedText.clear();
+    rehighlight();
+    emit codeBackgroundChanged();
+}
+
+QTextCharFormat ChatInputHighlighter::buildFormat(int bits) const
+{
+    QTextCharFormat fmt;
+    if (bits & kDelimiter) {
+        fmt.setForeground(QColor(Qt::darkGray));
+        return fmt;
+    }
+    if (bits & kCodeFence) {
+        fmt.setFontFamilies(QFontDatabase::systemFont(QFontDatabase::FixedFont).families());
+        return fmt;
+    }
+    if (bits & kCode) {
+        fmt.setFontFamilies(QFontDatabase::systemFont(QFontDatabase::FixedFont).families());
+        if (m_codeBackground.alpha() > 0)
+            fmt.setBackground(m_codeBackground);
+        return fmt;
+    }
+    if (bits & kBold)
+        fmt.setFontWeight(QFont::Bold);
+    if (bits & kItalic)
+        fmt.setFontItalic(true);
+    if (bits & kStrikeThrough)
+        fmt.setFontStrikeOut(true);
+    return fmt;
 }
 
 QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
@@ -492,17 +514,21 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
 
         auto applyCodeSpans = [&](const QVector<CodeSpan>& codeSpans, int len, int offset) {
             for (const CodeSpan& c : codeSpans) {
+                const bool isSingle   = (c.contentStart - c.openerStart == 1);
+                const int contentFlag = isSingle ? kCode : kCodeFence;
+                const int delimFlag   = isSingle ? kCode : kDelimiter;
                 const int start = qMax(0, c.contentStart) + offset;
-                const int end   = qMin(len, c.contentEnd) + offset;
-                for (int k = start; k < end; ++k) m_flags[k] = kCode;
-            }
-            for (const CodeSpan& c : codeSpans) {
+                const int end   = qMin(len, c.contentEnd)  + offset;
+                for (int k = start; k < end; ++k)
+                    m_flags[k] = contentFlag;
                 const int opStart = qMax(0, c.openerStart)    + offset;
                 const int opEnd   = qMin(len, c.contentStart) + offset;
-                for (int k = opStart; k < opEnd; ++k) m_flags[k] = kDelimiter;
+                for (int k = opStart; k < opEnd; ++k)
+                    m_flags[k] = delimFlag;
                 const int clStart = qMax(0, c.contentEnd)  + offset;
                 const int clEnd   = qMin(len, c.closerEnd) + offset;
-                for (int k = clStart; k < clEnd; ++k) m_flags[k] = kDelimiter;
+                for (int k = clStart; k < clEnd; ++k)
+                    m_flags[k] = delimFlag;
             }
         };
 

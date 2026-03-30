@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import StatusQ
+import StatusQ.Controls
 
 Item {
     id: root
@@ -9,28 +10,69 @@ Item {
     ChatInputHighlighter {
         id: highlighter
         quickTextDocument: textArea.textDocument
+        codeBackground: "#e8e8e8"
     }
 
     readonly property var emph: highlighter.emphasisAt(textArea.cursorPosition)
     readonly property var vemph: highlighter.emphasisAtInsertion(textArea.cursorPosition)
 
-    Rectangle {
+    ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        color: "transparent"
+        anchors.margins: 12
 
-        TextArea {
-            id: textArea
-            anchors.fill: parent
-            wrapMode: TextEdit.Wrap
-            font.pixelSize: 15
-            text: "**bold** text\n*italic* text\n~~strikethrough~~\n***bold italic***\n**bold** and *italic* together\n**multi-\nline bold**"
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            color: "transparent"
+
+            ScrollView {
+                anchors.fill: parent
+
+                contentWidth: availableWidth
+
+                StatusTextArea {
+                    id: textArea
+
+                    wrapMode: TextEdit.Wrap
+                    font.pixelSize: 15
+                    text:
+`Some **bold** text there!
+Some *italic* text text there!
+
+This is ~~strikethrough~~ text.
+
+Both bold and italics goes here: ***bold italic***
+And **bold** and *italic* together in a single line.
+
+**multi-
+line bold here, works only in multi-line emphasis mode**
+
+**Code:**
+
+Sometimes it's enough to use \`inline code\`.
+
+For bigger chunks of code it's better to use triple-ticks code block:
+
+\`\`\`
+#include <iostream>
+using namespace std;
+
+int main() {
+    // This statement prints "Hello World"
+    cout << "Hello World";
+
+    return 0;
+}
+\`\`\`
+`
+                }
+            }
         }
 
         ColumnLayout {
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            anchors.margins: 8
+            Layout.fillWidth: true
+            Layout.fillHeight: false
 
             CheckBox {
                 text: "Multi-line emphasis"

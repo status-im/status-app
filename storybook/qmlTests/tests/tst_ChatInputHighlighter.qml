@@ -383,8 +383,9 @@ TestCase {
             verify(!spans[i].bold, "bold must not apply inside code span")
     }
 
-    function test_inlineCode_delimitersBlue() {
+    function test_inlineCode_delimiterPositions() {
         // backtick markers at [0,1) and [6,7) must appear as delimiter entries
+        // (returned by parseDelimiters; rendered as kCode — monospace + background, not blue)
         verify(delimFor("`hello`", "`", 0) !== null, "opener delimiter missing")
         verify(delimFor("`hello`", "`", 6) !== null, "closer delimiter missing")
     }
