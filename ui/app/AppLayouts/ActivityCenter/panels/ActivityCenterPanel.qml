@@ -198,6 +198,7 @@ Control {
         // Notifications List
         StatusListView {
             id: listView
+            objectName: "listView"
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.topMargin: 2
@@ -249,9 +250,8 @@ Control {
                 preImageRadius: model.preImageRadius
                 content: model.content
                 attachments: model.attachments
-                showQuickActions: model.showQuickActions
                 avatarId: model.avatarId ?? ""
-                actionId: model.actionId ?? ""
+                actionId: model.showQuickActions ? (model.actionId ?? "") : ""
 
                 // Timestamp related
                 timestamp: model.timestamp
@@ -278,12 +278,8 @@ Control {
                     // No actions when clicked
                 }
                 onAvatarClicked: root.avatarClicked(model.avatarId)
-                onAcceptRequested: (avatarId, actionId) => {
-                    root.acceptRequested(avatarId, actionId)
-                }
-                onDeclineRequested: (avatarId, actionId) => {
-                    root.declineRequested(avatarId, actionId)
-                }
+                onAcceptRequested: root.acceptRequested(model.avatarId ?? "", model.actionId ?? "")
+                onDeclineRequested: root.declineRequested(model.avatarId ?? "", model.actionId ?? "")
             }
 
             onContentYChanged: d.fetchMoreNotifications()
@@ -293,6 +289,7 @@ Control {
         // OR Placeholder for the status news when they are all seen or there are no notifications
         Loader {
             id: placeholderLoader
+            objectName: "placeholderLoader"
 
             Layout.topMargin: 2
             Layout.bottomMargin: 2

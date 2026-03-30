@@ -18,7 +18,7 @@ Control {
     property alias oneAttachment: oneAttachment.checked
     property alias threeAttachments: threeAttachments.checked
     property alias sevenAttachments: sevenAttachments.checked
-    property alias showQuickActions: showQuickActions.checked
+    property string actionId: showQuickActions.checked ? "storybook-action-id" : ""
 
     property bool fullEditorVisible: true
 

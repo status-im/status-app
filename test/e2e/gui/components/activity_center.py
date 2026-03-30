@@ -78,8 +78,8 @@ class ContactRequest:
 
     def _contact_quick_actions_still_showing(self) -> bool:
         try:
-            if hasattr(self.object, 'showQuickActions'):
-                return bool(getattr(self.object, 'showQuickActions'))
+            if hasattr(self.object, 'actionId'):
+                return bool(getattr(self.object, 'actionId'))
         except (RuntimeError, AttributeError, LookupError):
             pass
         for oname in (_ACCEPT_OBJECT_NAME, _DECLINE_OBJECT_NAME):
@@ -90,9 +90,9 @@ class ContactRequest:
 
     def _wait_until_quick_actions_hidden(self, action_label: str) -> None:
         def _gone() -> bool:
-            # NotificationCard: showQuickActions → false when request is no longer pending (see NotificationAdaptorContactRequest)
+            # NotificationCard: actionId → empty when request is no longer pending (see NotificationAdaptorContactRequest)
             try:
-                if hasattr(self.object, 'showQuickActions') and not bool(getattr(self.object, 'showQuickActions')):
+                if hasattr(self.object, 'actionId') and not bool(getattr(self.object, 'actionId')):
                     return True
             except (RuntimeError, AttributeError, LookupError):
                 pass

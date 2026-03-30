@@ -84,7 +84,7 @@ SplitView {
                 attachments: contentEditor.oneAttachment ? d.oneAttachment :
                                                            contentEditor.threeAttachments ? d.threeAttachments :
                                                                                             contentEditor.sevenAttachments ? d.sevenAttachments : []
-                showQuickActions: contentEditor.showQuickActions
+                actionId: contentEditor.actionId
 
                 // Timestamp related
                 timestamp: dateText.text

@@ -131,7 +131,7 @@ def item_is_visible(item) -> bool:
     """True only if this item and QQuick ancestors are visible.
 
     Quick-action StatusButtons stay ``visible: true`` while parent ``RowLayout`` (quickActions)
-    is hidden via ``visible: root.showQuickActions`` — checking only the button lies.
+    is hidden via ``visible: root.actionId !== ""`` — checking only the button lies.
     """
     try:
         cur = item

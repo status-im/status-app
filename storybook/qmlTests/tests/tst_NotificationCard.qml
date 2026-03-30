@@ -87,7 +87,7 @@ Item {
 
             // States
             compare(controlUnderTest.unread, false)
-            compare(controlUnderTest.showQuickActions, false)
+            compare(controlUnderTest.actionId, "")
         }
 
         function test_objectName() {
@@ -226,21 +226,29 @@ Item {
         function test_quickActionsVisibility() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {
                 title: "Test",
-                showQuickActions: false
+                actionId: ""
             })
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
 
-            compare(controlUnderTest.showQuickActions, false)
+            // Quick actions row hidden when actionId is empty
+            const quickActions = findChild(controlUnderTest, "quickActions")
+            verify(!!quickActions)
+            compare(quickActions.visible, false)
 
-            controlUnderTest.showQuickActions = true
-            compare(controlUnderTest.showQuickActions, true)
+            // Quick actions row visible when actionId is non-empty
+            controlUnderTest.actionId = "some-action-id"
+            compare(quickActions.visible, true)
 
             // Verify buttons are findable when quick actions are shown
             const declineBtn = findChild(controlUnderTest, "notificationDeclineBtn")
             verify(!!declineBtn)
             const acceptBtn = findChild(controlUnderTest, "notificationAcceptBtn")
             verify(!!acceptBtn)
+
+            // Quick actions hide again when actionId is cleared
+            controlUnderTest.actionId = ""
+            compare(quickActions.visible, false)
         }
 
         function test_avatarProperties() {
@@ -314,7 +322,7 @@ Item {
         function test_quickActionSignals() {
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {
                 title: "Test",
-                showQuickActions: true
+                actionId: "test-action-id"
             })
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)

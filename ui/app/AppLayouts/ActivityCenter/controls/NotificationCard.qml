@@ -150,10 +150,8 @@ Control {
     // Media attachments (list/array of image URLs) for the content block.
     property var attachments: []
 
-    // The following property drives the quick actions row
-    property bool showQuickActions: false
-
-    // Identifiers forwarded to declineRequested / acceptRequested signals
+    // Identifiers used for quick actions (Decline / Accept buttons).
+    // Quick actions are visible when actionId is non-empty.
     property string avatarId: ""
     property string actionId: ""
 
@@ -185,9 +183,9 @@ Control {
     signal clicked()
     signal avatarClicked()
 
-    // Emitted when quick actions are shown and user iteracts with the corresponding buttons
-    signal declineRequested(string avatarId, string actionId)
-    signal acceptRequested(string avatarId, string actionId)
+    // Emitted when quick actions are shown and user interacts with the corresponding buttons
+    signal declineRequested()
+    signal acceptRequested()
 
     QtObject {
         id: d
@@ -362,8 +360,9 @@ Control {
 
             RowLayout {
                 id: quickActions
+                objectName: "quickActions"
 
-                visible: root.showQuickActions
+                visible: root.actionId !== ""
                 Layout.fillWidth: true
                 spacing: Theme.halfPadding
 
@@ -374,7 +373,7 @@ Control {
                     text: qsTr("Decline")
                     size: StatusBaseButton.Size.Small
                     type: StatusBaseButton.Type.Danger
-                    onClicked: root.declineRequested(root.avatarId, root.actionId)
+                    onClicked: root.declineRequested()
                 }
                 StatusButton {
                     Layout.fillWidth: true
@@ -383,7 +382,7 @@ Control {
                     text: qsTr("Accept")
                     size: StatusBaseButton.Size.Small
                     type: StatusBaseButton.Type.Normal
-                    onClicked: root.acceptRequested(root.avatarId, root.actionId)
+                    onClicked: root.acceptRequested()
                 }
             }
 
