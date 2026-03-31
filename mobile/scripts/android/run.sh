@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
 CWD=$(realpath `dirname $0`)
+# APP is passed from the Makefile (e.g. mobile/bin/android/qt6/StatusPR.apk)
 APP=${APP:="$CWD/../bin/$OS/Status.apk"}
-# for local builds debug variant is default
-APP_PACKAGE=${APP_PACKAGE:="app.status.mobile.debug"}
-ARCH=${ARCH:="arm64-v8a"}
+
 ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:=""}
+ANDROID_BUILD_TOOLS_VERSION=${ANDROID_BUILD_TOOLS_VERSION:=$(ls "$ANDROID_SDK_ROOT/build-tools/" | sort -V | tail -1)}
+AAPT=${AAPT:="$ANDROID_SDK_ROOT/build-tools/$ANDROID_BUILD_TOOLS_VERSION/aapt2"}
 EMULATOR=${EMULATOR:="$ANDROID_SDK_ROOT/emulator/emulator"}
 ADB=${ADB:="$ANDROID_SDK_ROOT/platform-tools/adb"}
 # Optional params:
@@ -16,6 +17,10 @@ ANDROID_SERIAL=${ANDROID_SERIAL:=""} # Serial number of the device to use to avo
 AVDMANAGER=${AVDMANAGER:="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager"}
 SDKMANAGER=${SDKMANAGER:="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"}
 
+# Extract package name and activity from the APK itself
+APP_PACKAGE=${APP_PACKAGE:=$($AAPT dump badging "$APP" 2>/dev/null | sed -n "s/^package: name='\([^']*\)'.*/\1/p")}
+APP_ACTIVITY=$($AAPT dump badging "$APP" 2>/dev/null | sed -n "s/^launchable-activity: name='\([^']*\)'.*/\1/p")
+ARCH=${ARCH:="arm64-v8a"}
 
 if [ "$ADB" = "" ]; then
     echo "ADB is not set. Please set ADB to the path of your Android SDK."
@@ -184,8 +189,8 @@ fi
 
 echo "App installed. Starting app"
 
-DEFAULT_ACTIVITY_NAME="${APP_PACKAGE}/app.status.mobile.StatusQtActivity"
-$ADB -s $ANDROID_SERIAL shell am start -a android.intent.action.MAIN -n $DEFAULT_ACTIVITY_NAME
+ACTIVITY_NAME="${APP_PACKAGE}/${APP_ACTIVITY}"
+$ADB -s $ANDROID_SERIAL shell am start -a android.intent.action.MAIN -n $ACTIVITY_NAME
 # wait for the app to start and then start logcat
 echo "Waiting for the app to start"
 while true; do
