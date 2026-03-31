@@ -93,7 +93,7 @@ modules:
   - name: status-desktop
     buildsystem: simple
     build-commands:
-      - ./scripts/init_app_dir.sh flatpak
+      - ./scripts/flatpak-copy-to-app.sh
 
     sources:
       - type: dir
