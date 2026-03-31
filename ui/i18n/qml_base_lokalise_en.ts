@@ -2541,16 +2541,6 @@
       <translation>Authenticate</translation>
     </message>
     <message>
-      <source>Use biometrics</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Use biometrics</translation>
-    </message>
-    <message>
-      <source>Cancel</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Cancel</translation>
-    </message>
-    <message>
       <source>Update password &amp; authenticate</source>
       <comment>AuthenticationPopup</comment>
       <translation>Update password &amp; authenticate</translation>
@@ -2559,51 +2549,6 @@
       <source>Update PIN &amp; authenticate</source>
       <comment>AuthenticationPopup</comment>
       <translation>Update PIN &amp; authenticate</translation>
-    </message>
-    <message>
-      <source>Failed to update stored credentials</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Failed to update stored credentials</translation>
-    </message>
-    <message>
-      <source>Credentials successfully obtained from biometrics</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Credentials successfully obtained from biometrics</translation>
-    </message>
-    <message>
-      <source>Biometrics not supported</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Biometrics not supported</translation>
-    </message>
-    <message>
-      <source>Generic error occurred</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Generic error occurred</translation>
-    </message>
-    <message>
-      <source>Biometrics is unavailable</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Biometrics is unavailable</translation>
-    </message>
-    <message>
-      <source>Biometrics cancelled</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Biometrics cancelled</translation>
-    </message>
-    <message>
-      <source>Biometrics not found</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Biometrics not found</translation>
-    </message>
-    <message>
-      <source>Biometrics fallback error</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Biometrics fallback error</translation>
-    </message>
-    <message>
-      <source>Unknown biometrics error</source>
-      <comment>AuthenticationPopup</comment>
-      <translation>Unknown biometrics error</translation>
     </message>
   </context>
   <context>
@@ -2901,19 +2846,49 @@
   <context>
     <name>Biometrics</name>
     <message>
-      <source>Biometric authentication failed</source>
+      <source>Biometric %1 failed</source>
       <comment>Biometrics</comment>
-      <translation>Biometric authentication failed</translation>
+      <translation>Biometric %1 failed</translation>
     </message>
     <message>
-      <source>Authenticate with biometrics</source>
+      <source>signing</source>
       <comment>Biometrics</comment>
-      <translation>Authenticate with biometrics</translation>
+      <translation>signing</translation>
     </message>
     <message>
-      <source>Use your password or PIN instead</source>
+      <source>authentication</source>
       <comment>Biometrics</comment>
-      <translation>Use your password or PIN instead</translation>
+      <translation>authentication</translation>
+    </message>
+    <message>
+      <source>%1 with biometrics</source>
+      <comment>Biometrics</comment>
+      <translation>%1 with biometrics</translation>
+    </message>
+    <message>
+      <source>Signing</source>
+      <comment>Biometrics</comment>
+      <translation>Signing</translation>
+    </message>
+    <message>
+      <source>Authentication</source>
+      <comment>Biometrics</comment>
+      <translation>Authentication</translation>
+    </message>
+    <message>
+      <source>Use your %1 instead</source>
+      <comment>Biometrics</comment>
+      <translation>Use your %1 instead</translation>
+    </message>
+    <message>
+      <source>PIN</source>
+      <comment>Biometrics</comment>
+      <translation>PIN</translation>
+    </message>
+    <message>
+      <source>password</source>
+      <comment>Biometrics</comment>
+      <translation>password</translation>
     </message>
   </context>
   <context>
@@ -8804,11 +8779,6 @@
   <context>
     <name>EnterPin</name>
     <message>
-      <source>Enter this Keycard&#39;s PIN</source>
-      <comment>EnterPin</comment>
-      <translation>Enter this Keycard&#39;s PIN</translation>
-    </message>
-    <message>
       <source>PIN incorrect</source>
       <comment>EnterPin</comment>
       <translation>PIN incorrect</translation>
@@ -8820,6 +8790,11 @@
         <numerusform>%n attempt remaining</numerusform>
         <numerusform>%n attempts remaining</numerusform>
       </translation>
+    </message>
+    <message>
+      <source>Enter Keycard&#39;s PIN</source>
+      <comment>EnterPin</comment>
+      <translation>Enter Keycard&#39;s PIN</translation>
     </message>
   </context>
   <context>
@@ -16184,6 +16159,69 @@
     </message>
   </context>
   <context>
+    <name>PopupBase</name>
+    <message>
+      <source>Authenticate</source>
+      <comment>PopupBase</comment>
+      <translation>Authenticate</translation>
+    </message>
+    <message>
+      <source>Use biometrics</source>
+      <comment>PopupBase</comment>
+      <translation>Use biometrics</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <comment>PopupBase</comment>
+      <translation>Cancel</translation>
+    </message>
+    <message>
+      <source>Failed to update stored credentials</source>
+      <comment>PopupBase</comment>
+      <translation>Failed to update stored credentials</translation>
+    </message>
+    <message>
+      <source>Credentials successfully obtained from biometrics</source>
+      <comment>PopupBase</comment>
+      <translation>Credentials successfully obtained from biometrics</translation>
+    </message>
+    <message>
+      <source>Biometrics not supported</source>
+      <comment>PopupBase</comment>
+      <translation>Biometrics not supported</translation>
+    </message>
+    <message>
+      <source>Generic error occurred</source>
+      <comment>PopupBase</comment>
+      <translation>Generic error occurred</translation>
+    </message>
+    <message>
+      <source>Biometrics is unavailable</source>
+      <comment>PopupBase</comment>
+      <translation>Biometrics is unavailable</translation>
+    </message>
+    <message>
+      <source>Biometrics cancelled</source>
+      <comment>PopupBase</comment>
+      <translation>Biometrics cancelled</translation>
+    </message>
+    <message>
+      <source>Biometrics not found</source>
+      <comment>PopupBase</comment>
+      <translation>Biometrics not found</translation>
+    </message>
+    <message>
+      <source>Biometrics fallback error</source>
+      <comment>PopupBase</comment>
+      <translation>Biometrics fallback error</translation>
+    </message>
+    <message>
+      <source>Unknown biometrics error</source>
+      <comment>PopupBase</comment>
+      <translation>Unknown biometrics error</translation>
+    </message>
+  </context>
+  <context>
     <name>Popups</name>
     <message>
       <source>Share addresses with %1&#39;s owner</source>
@@ -19135,6 +19173,29 @@
       <source>Sign with password</source>
       <comment>SignMessageModal</comment>
       <translation>Sign with password</translation>
+    </message>
+  </context>
+  <context>
+    <name>SignPopup</name>
+    <message>
+      <source>Sign Transaction</source>
+      <comment>SignPopup</comment>
+      <translation>Sign Transaction</translation>
+    </message>
+    <message>
+      <source>Sign</source>
+      <comment>SignPopup</comment>
+      <translation>Sign</translation>
+    </message>
+    <message>
+      <source>Update password &amp; sign</source>
+      <comment>SignPopup</comment>
+      <translation>Update password &amp; sign</translation>
+    </message>
+    <message>
+      <source>Update PIN &amp; sign</source>
+      <comment>SignPopup</comment>
+      <translation>Update PIN &amp; sign</translation>
     </message>
   </context>
   <context>

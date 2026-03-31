@@ -283,6 +283,21 @@ QtObject:
     read = getAuthenticationModule
     notify = authenticationModuleChanged
 
+  proc signingModuleChanged*(self: View) {.signal.}
+
+  proc prepareSigningModule*(self: View) {.slot.} =
+    self.delegate.prepareSigningModule()
+    self.signingModuleChanged()
+
+  proc getSigningModule(self: View): QVariant {.slot.} =
+    let module = self.delegate.getSigningModule()
+    if not module.isNil:
+      return module
+    return newQVariant()
+  QtProperty[QVariant] signingModule:
+    read = getSigningModule
+    notify = signingModuleChanged
+
   proc getKeycardSharedModuleForAuthenticationOrSigning(self: View): QVariant {.slot.} =
     let module = self.delegate.getKeycardSharedModuleForAuthenticationOrSigning()
     if not module.isNil:

@@ -36,6 +36,8 @@ import AppLayouts.stores.Messaging.Community as CommunityStores
 import shared.popups
 import shared.popups.authentication
 import shared.popups.authentication.stores 1.0 as AuthStores
+import shared.popups.signing
+import shared.popups.signing.stores 1.0 as SignStores
 import shared.status
 import shared.stores
 import shared.views
@@ -73,6 +75,9 @@ QtObject {
     property MessagingStores.MessagingRootStore messagingRootStore
 
     readonly property AuthStores.AuthenticationStore authenticationStore: AuthStores.AuthenticationStore {
+    }
+
+    readonly property SignStores.SigningStore signingStore: SignStores.SigningStore {
     }
 
     property var allContactsModel
@@ -128,6 +133,7 @@ QtObject {
         Global.openChangeProfilePicPopup.connect(openChangeProfilePicPopup)
         Global.openBackUpSeedPopup.connect(openBackUpSeedPopup)
         Global.openAuthenticationPopup.connect(openAuthenticationPopup)
+        Global.openSigningPopup.connect(openSigningPopup)
         Global.openPinnedMessagesPopupRequested.connect(openPinnedMessagesPopup)
         Global.openCommunityProfilePopupRequested.connect(openCommunityProfilePopup)
         Global.createCommunityPopupRequested.connect(openCreateCommunityPopup)
@@ -250,6 +256,10 @@ QtObject {
 
     function openAuthenticationPopup(reason, keyUid) {
         openPopup(authenticationPopupComponent, { reason: reason, keyUid: keyUid })
+    }
+
+    function openSigningPopup(reason, keyUid, txHash, path, address) {
+        openPopup(signingPopupComponent, { reason: reason, keyUid: keyUid, txHash: txHash, path: path, address: address })
     }
 
     function openCommunityProfilePopup(store, community, communitySectionModule) {
@@ -624,6 +634,17 @@ QtObject {
                 keychain: root.keychain
                 onAuthenticationSuccess: function(reason, password, pin, keyUid) {
                     Global.authenticationResult(reason, password, pin, keyUid)
+                }
+            }
+        },
+
+        Component {
+            id: signingPopupComponent
+            SignPopup {
+                store: root.signingStore
+                keychain: root.keychain
+                onSigningSuccess: function(reason, signature, keyUid) {
+                    Global.signingResult(reason, signature, keyUid)
                 }
             }
         },

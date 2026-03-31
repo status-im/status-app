@@ -2067,56 +2067,12 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation type="unfinished">Autenticar</translation>
     </message>
     <message>
-        <source>Use biometrics</source>
-        <translation type="unfinished">Usar biometría</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished">Cancelar</translation>
-    </message>
-    <message>
         <source>Update password &amp; authenticate</source>
         <translation type="unfinished">Actualizar contraseña y autenticar</translation>
     </message>
     <message>
         <source>Update PIN &amp; authenticate</source>
         <translation type="unfinished">Actualizar PIN y autenticar</translation>
-    </message>
-    <message>
-        <source>Failed to update stored credentials</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Credentials successfully obtained from biometrics</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Biometrics not supported</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Generic error occurred</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Biometrics is unavailable</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Biometrics cancelled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Biometrics not found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Biometrics fallback error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unknown biometrics error</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2365,15 +2321,39 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
 <context>
     <name>Biometrics</name>
     <message>
-        <source>Biometric authentication failed</source>
+        <source>Biometric %1 failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Authenticate with biometrics</source>
+        <source>signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Use your password or PIN instead</source>
+        <source>authentication</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 with biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signing</source>
+        <translation type="unfinished">Firmando</translation>
+    </message>
+    <message>
+        <source>Authentication</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use your %1 instead</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>password</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7220,10 +7200,6 @@ Por favor, agrégala e intenta de nuevo.</translation>
 <context>
     <name>EnterPin</name>
     <message>
-        <source>Enter this Keycard&apos;s PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>PIN incorrect</source>
         <translation type="unfinished">PIN incorrecto</translation>
     </message>
@@ -7233,6 +7209,10 @@ Por favor, agrégala e intenta de nuevo.</translation>
             <numerusform>Queda %n intento</numerusform>
             <numerusform>Quedan %n intentos</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Enter Keycard&apos;s PIN</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -13301,6 +13281,57 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>PopupBase</name>
+    <message>
+        <source>Authenticate</source>
+        <translation type="unfinished">Autenticar</translation>
+    </message>
+    <message>
+        <source>Use biometrics</source>
+        <translation type="unfinished">Usar biometría</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Cancelar</translation>
+    </message>
+    <message>
+        <source>Failed to update stored credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Credentials successfully obtained from biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics not supported</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Generic error occurred</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics is unavailable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics cancelled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics fallback error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown biometrics error</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Popups</name>
     <message>
         <source>Settings</source>
@@ -15727,6 +15758,25 @@ al cargar</translation>
     <message>
         <source>Sign with password</source>
         <translation>Firmar con contraseña</translation>
+    </message>
+</context>
+<context>
+    <name>SignPopup</name>
+    <message>
+        <source>Sign Transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sign</source>
+        <translation type="unfinished">Firmar</translation>
+    </message>
+    <message>
+        <source>Update password &amp; sign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update PIN &amp; sign</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

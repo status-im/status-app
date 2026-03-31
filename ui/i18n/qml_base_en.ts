@@ -2066,55 +2066,11 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Use biometrics</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Update password &amp; authenticate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Update PIN &amp; authenticate</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Failed to update stored credentials</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Credentials successfully obtained from biometrics</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Biometrics not supported</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Generic error occurred</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Biometrics is unavailable</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Biometrics cancelled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Biometrics not found</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Biometrics fallback error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unknown biometrics error</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2362,15 +2318,39 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
 <context>
     <name>Biometrics</name>
     <message>
-        <source>Biometric authentication failed</source>
+        <source>Biometric %1 failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Authenticate with biometrics</source>
+        <source>signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Use your password or PIN instead</source>
+        <source>authentication</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 with biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Authentication</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use your %1 instead</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>password</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7206,10 +7186,6 @@ Please add it and try again.</source>
 <context>
     <name>EnterPin</name>
     <message>
-        <source>Enter this Keycard&apos;s PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>PIN incorrect</source>
         <translation type="unfinished"></translation>
     </message>
@@ -7219,6 +7195,10 @@ Please add it and try again.</source>
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Enter Keycard&apos;s PIN</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -13283,6 +13263,57 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>PopupBase</name>
+    <message>
+        <source>Authenticate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to update stored credentials</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Credentials successfully obtained from biometrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics not supported</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Generic error occurred</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics is unavailable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics cancelled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics not found</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Biometrics fallback error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown biometrics error</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Popups</name>
     <message>
         <source>Share addresses with %1&apos;s owner</source>
@@ -15708,6 +15739,25 @@ to load</source>
     </message>
     <message>
         <source>Sign with password</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SignPopup</name>
+    <message>
+        <source>Sign Transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update password &amp; sign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update PIN &amp; sign</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

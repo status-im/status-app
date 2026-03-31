@@ -315,6 +315,12 @@ method prepareAuthenticationModule*(self: AccessInterface) {.base.} =
 method getAuthenticationModule*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method prepareSigningModule*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getSigningModule*(self: AccessInterface): QVariant {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getKeycardSharedModuleForAuthenticationOrSigning*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 

@@ -106,6 +106,11 @@ QtObject {
     signal authenticationResult(string reason, string password, string pin, string keyUid)
     ///////////////////////////////////////////////////////////////
 
+    ///////////////// Global Signing popup /////////////////////////
+    signal openSigningPopup(string reason, string keyUid, string txHash, string path, string address)
+    signal signingResult(string reason, string signature, string keyUid)
+    ///////////////////////////////////////////////////////////////
+
     signal openAddEditSavedAddressesPopup(var params)
     signal openDeleteSavedAddressesPopup(var params)
     signal openShowQRPopup(var params)

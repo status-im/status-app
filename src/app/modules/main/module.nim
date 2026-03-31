@@ -6,6 +6,7 @@ import ephemeral_notification_item, ephemeral_notification_model
 import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details, contacts_utils]
 import app/modules/shared_modules/keycard_popup/module as keycard_shared_module
 import app/modules/shared_modules/authentication/module as authentication_module
+import app/modules/shared_modules/signing/module as signing_module
 import app/global/app_sections_config
 import app/global/app_signals
 import app/global/[global_singleton, feature_flags]
@@ -109,6 +110,7 @@ type
     networkConnectionService: network_connection_service.Service
     stickersService: stickers_service.Service
     communityTokensService: community_tokens_service.Service
+    transactionService: transaction_service.Service
     walletSectionModule: wallet_section_module.AccessInterface
     browserSectionModule: browser_section_module.AccessInterface
     profileSectionModule: profile_section_module.AccessInterface
@@ -125,6 +127,7 @@ type
     sharedUrlsModule: shared_urls_module.AccessInterface
     marketModule: market_module.AccessInterface
     authenticationModule: authentication_module.AccessInterface
+    signingModule: signing_module.AccessInterface
     moduleLoaded: bool
     chatsLoaded: bool
     communityDataLoaded: bool
@@ -226,6 +229,7 @@ proc newModule*[T](
   result.followingAddressService = followingAddressService
   result.stickersService = stickersService
   result.communityTokensService = communityTokensService
+  result.transactionService = transactionService
 
   # Submodules
   result.chatSectionModules = initOrderedTable[string, chat_section_module.AccessInterface]()
@@ -285,6 +289,8 @@ method delete*[T](self: Module[T]) =
   self.sharedUrlsModule.delete
   if not self.authenticationModule.isNil:
     self.authenticationModule.delete
+  if not self.signingModule.isNil:
+    self.signingModule.delete
   self.view.delete
   self.viewVariant.delete
 
@@ -1888,6 +1894,20 @@ method getAuthenticationModule*[T](self: Module[T]): QVariant =
   if not self.authenticationModule.isNil:
     return self.authenticationModule.getModuleAsVariant()
   info "authentication module is nil, prepare it before using"
+  return newQVariant()
+################################################################################
+
+################################################################################
+## signing module
+################################################################################
+method prepareSigningModule*[T](self: Module[T]) =
+  if self.signingModule.isNil:
+    self.signingModule = signing_module.newModule[Module[T]](self, self.events, self.accountsService, self.walletAccountService, self.transactionService, self.keycardServiceV2)
+
+method getSigningModule*[T](self: Module[T]): QVariant =
+  if not self.signingModule.isNil:
+    return self.signingModule.getModuleAsVariant()
+  info "signing module is nil, prepare it before using"
   return newQVariant()
 ################################################################################
 
