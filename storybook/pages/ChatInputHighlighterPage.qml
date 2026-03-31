@@ -42,6 +42,8 @@ Item {
 `Some **bold** text there!
 Some *italic* text text there!
 
+Some in-line emoji: 😎🤪🎃
+
 This is ~~strikethrough~~ text.
 
 Both bold and italics goes here: ***bold italic***
@@ -74,6 +76,12 @@ Plain link: https://status.im
 Bold link: **https://status.im/bold**
 Star in URL (no italic): https://x.com/a*b*c
 Link in code (not highlighted): \`https://status.im\`
+
+**Unclosed code fence (toggle flag above to format):**
+
+\`\`\`
+unclosed fence here (no closing triple-tick)
+**bold suppressed when format unclosed code fence flag on**
 `
                 }
             }
@@ -83,10 +91,26 @@ Link in code (not highlighted): \`https://status.im\`
             Layout.fillWidth: true
             Layout.fillHeight: false
 
-            CheckBox {
+            Switch {
                 text: "Multi-line emphasis"
                 checked: highlighter.multilineEmphasis
                 onToggled: highlighter.multilineEmphasis = checked
+            }
+
+            Switch {
+                text: "Format unclosed code fence"
+                checked: highlighter.formatUnclosedCodeFence
+                onToggled: highlighter.formatUnclosedCodeFence = checked
+            }
+            Row {
+                spacing: 16
+                Text { text: "In unclosed code fence:" }
+                Text {
+                    text: {
+                        textArea.text
+                        return highlighter.inUnclosedCodeFence(textArea.cursorPosition) ? "true" : "false"
+                    }
+                }
             }
 
             Row {

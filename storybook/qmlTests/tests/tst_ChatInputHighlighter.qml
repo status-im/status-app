@@ -8,6 +8,7 @@ TestCase {
 
     property ChatInputHighlighter highlighter: ChatInputHighlighter {}
     property ChatInputHighlighter highlighterMultiLine: ChatInputHighlighter { multilineEmphasis: true }
+    property ChatInputHighlighter highlighterOpenFence: ChatInputHighlighter { formatUnclosedCodeFence: true }
 
     // Returns the one span whose [start, end) exactly covers contentSubstring
     // inside text, or null if no such span exists.
@@ -523,5 +524,59 @@ TestCase {
         for (let i = 0; i < spans.length; i++)
             if (spans[i].italic) hasItalic = true
         verify(!hasItalic, "*b* inside URL must not produce italic span")
+    }
+
+    // ── unclosed code fence ───────────────────────────────────────────────────
+
+    function test_openFence_closedUnaffected() {
+        // "```hi```": flag on → 1 normal span with content [3, 5)
+        const spans = highlighterOpenFence.parseCodeSpans("```hi```")
+        compare(spans.length, 1)
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   5)
+    }
+
+    function test_openFence_unclosedWithFlag() {
+        // "```code": flag on → 1 span with content [3, 7)
+        const spans = highlighterOpenFence.parseCodeSpans("```code")
+        compare(spans.length, 1)
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   7)
+    }
+
+    function test_openFence_unclosedWithoutFlag() {
+        // "```code": flag off → 0 spans (unclosed opener ignored)
+        compare(highlighter.parseCodeSpans("```code").length, 0)
+    }
+
+    function test_openFence_noEmphasisInOpen() {
+        // "```**bold**": flag on → parseFormats must not produce bold spans
+        const spans = highlighterOpenFence.parseFormats("```**bold**")
+        let hasBold = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) hasBold = true
+        verify(!hasBold, "bold must be suppressed inside unclosed code fence")
+    }
+
+    function test_openFence_multiLine() {
+        // "```\ncode\n**bold**": flag on → no bold spans
+        const spans = highlighterOpenFence.parseFormats("```\ncode\n**bold**")
+        let hasBold = false
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) hasBold = true
+        verify(!hasBold, "bold must be suppressed across lines inside unclosed code fence")
+    }
+
+    function test_openFence_closedThenOpen() {
+        // "```a``` ```b": paired "```a```" span is normal [3,4),
+        // second unclosed ``` at pos 8 → synthetic content [11, 12)
+        const spans = highlighterOpenFence.parseCodeSpans("```a``` ```b")
+        compare(spans.length, 2)
+        // first span: content of the closed fence
+        compare(spans[0].start, 3)
+        compare(spans[0].end,   4)
+        // second span: content of the unclosed fence (from pos 11 to end=12)
+        compare(spans[1].start, 11)
+        compare(spans[1].end,   12)
     }
 }

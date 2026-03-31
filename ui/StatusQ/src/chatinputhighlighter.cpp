@@ -284,6 +284,31 @@ QVector<CodeSpan> scanCodeSpans(const QString& text)
     return result;
 }
 
+// Returns the start of the first triple-backtick run that has no matching closer,
+// or -1 if all ``` openers are paired.
+int findOpenCodeFence(const QString& text)
+{
+    int i = 0;
+    const int len = text.length();
+    while (i < len) {
+        if (text[i] != QLatin1Char('`')) { ++i; continue; }
+        const int runStart = i;
+        while (i < len && text[i] == QLatin1Char('`')) ++i;
+        if (i - runStart != 3) continue;
+        // Search forward for a matching closer
+        int j = i;
+        bool found = false;
+        while (j < len) {
+            if (text[j] != QLatin1Char('`')) { ++j; continue; }
+            const int cs = j;
+            while (j < len && text[j] == QLatin1Char('`')) ++j;
+            if (j - cs == 3) { found = true; i = j; break; } // i=j: skip past closer
+        }
+        if (!found) return runStart;
+    }
+    return -1;
+}
+
 // Returns [openerStart, closerEnd) ranges for all code spans in text.
 QVector<QPair<int,int>> codeRangesOf(const QString& text)
 {
@@ -436,6 +461,27 @@ void ChatInputHighlighter::setCodeBackground(QColor color)
     emit codeBackgroundChanged();
 }
 
+bool ChatInputHighlighter::formatUnclosedCodeFence() const
+{
+    return m_formatUnclosedCodeFence;
+}
+
+void ChatInputHighlighter::setFormatUnclosedCodeFence(bool enabled)
+{
+    if (m_formatUnclosedCodeFence == enabled) return;
+    m_formatUnclosedCodeFence = enabled;
+    m_cachedText.clear();
+    rehighlight();
+    emit formatUnclosedCodeFenceChanged();
+}
+
+bool ChatInputHighlighter::inUnclosedCodeFence(int position) const
+{
+    if (!document()) return false;
+    const int unclosedStart = findOpenCodeFence(document()->toPlainText());
+    return unclosedStart >= 0 && position >= unclosedStart;
+}
+
 QTextCharFormat ChatInputHighlighter::buildFormat(int bits) const
 {
     QTextCharFormat fmt;
@@ -470,6 +516,10 @@ QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
     for (const CodeSpan& c : allCodeSpans)
         if (c.contentStart - c.openerStart == 3)
             tripleAbsRanges.append({c.openerStart, c.closerEnd});
+    if (m_formatUnclosedCodeFence) {
+        const int u = findOpenCodeFence(text);
+        if (u >= 0) tripleAbsRanges.append({u, text.length()});
+    }
 
     if (!m_multilineEmphasis) {
         int lineStart = 0;
@@ -514,6 +564,10 @@ QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
     QVector<QPair<int,int>> allRanges;
     for (const CodeSpan& c : allCodeSpans)
         allRanges.append({c.openerStart, c.closerEnd});
+    if (m_formatUnclosedCodeFence) {
+        const int u = findOpenCodeFence(text);
+        if (u >= 0) allRanges.append({u, text.length()});
+    }
     // Exclude link ranges so URL characters don't trigger emphasis
     QVector<QPair<int,int>> allExcluded = allRanges;
     for (const auto& r : linkRangesOf(scanLinks(text, allRanges)))
@@ -692,6 +746,14 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
             } else if (blen == 1) {
                 singleSpans.append(c);
             }
+        }
+
+        // ── Unclosed code fence ───────────────────────────────────────────────
+        const int unclosedStart = findOpenCodeFence(fullText);
+        if (m_formatUnclosedCodeFence && unclosedStart >= 0) {
+            tripleFences.append({unclosedStart, unclosedStart + 3, docLen, docLen});
+            fullCodeRanges.append({unclosedStart, docLen});
+            tripleAbsRanges.append({unclosedStart, docLen});
         }
 
         QVector<ChatInputLinksModel::LinkItem> modelItems;
@@ -878,7 +940,13 @@ QVariantList ChatInputHighlighter::parseCodeSpans(const QString& text) const
     const QVector<CodeSpan> allCodeSpans = scanCodeSpans(text);
 
     // Triple-backtick fences: always full-document
-    for (const CodeSpan& c : codeSpansByLen(allCodeSpans, 3)) {
+    QVector<CodeSpan> tripleFencesForParse = codeSpansByLen(allCodeSpans, 3);
+    if (m_formatUnclosedCodeFence) {
+        const int u = findOpenCodeFence(text);
+        if (u >= 0)
+            tripleFencesForParse.append({u, u + 3, text.length(), text.length()});
+    }
+    for (const CodeSpan& c : tripleFencesForParse) {
         QVariantMap m;
         m[QStringLiteral("start")] = c.contentStart;
         m[QStringLiteral("end")]   = c.contentEnd;
