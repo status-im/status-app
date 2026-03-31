@@ -107,10 +107,16 @@ SwipeView {
     property real headerPadding: Theme.halfPadding
     /*!
         \qmlproperty int StatusSectionLayout::leftPadding
-        This property sets the left padding for the component
-        Default value is the indicator width + standard padding as left margin
+        This property sets the left padding for the component.
+
+        Example:
+        \qml
+            leftPadding: Utils.swipeIndicatorWidth + Theme.halfPadding
+        \endqml
+
+        Default value is 0.
     */
-    leftPadding: Utils.swipeIndicatorWidth + Theme.halfPadding
+    leftPadding: 0
     /*!
         \qmlproperty alias StatusSectionLayout::backButtonName
         This property holds a reference to the backButtonName property of the
