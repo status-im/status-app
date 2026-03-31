@@ -209,15 +209,6 @@ proc mainProc() =
   let imageCert = imageServerTLSCert()
   installSelfSignedCertificate(imageCert)
 
-  when main_constants.IS_MOBILE:
-    # Apply dynamic scaling based on device width and DPI. Defaults to 1 for desktop.
-    proc statusq_getMobileUIScaleFactor(baseWidth: cfloat, baseDpi: cfloat, baseScale: cfloat): cfloat {.importc, cdecl.}
-    var scaleFactor = statusq_getMobileUIScaleFactor(1080.0, 480.0, 0.8)
-    # Clamp scale factor between 0.8 and 1.0
-    scaleFactor = max(0.8, min(1.0, scaleFactor))
-
-    putEnv("QT_SCALE_FACTOR", $scaleFactor)
-
   let app = newQGuiApplication()
 
   # force default language ("en") if not "Settings/Advanced/Enable translations"
