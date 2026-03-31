@@ -44,8 +44,9 @@ if [[ "${OS}" == "android" ]]; then
     MOBILEWEBVIEW_ANDROID_JAVA_SRC="$(<"${MOBILEWEBVIEW_JAVA_DIR_FILE}")"
   fi
 
-  # Export BUILD_VARIANT for build.gradle to pick up
+  # Export BUILD_VARIANT and BUNDLE_IDENTIFIER for build.gradle to pick up
   export BUILD_VARIANT
+  export BUNDLE_IDENTIFIER
 
   if [[ "$GRADLE_TARGETS" == *"Fdroid"* ]]; then
     # shellcheck source=../../fdroid/generate-keystore.sh

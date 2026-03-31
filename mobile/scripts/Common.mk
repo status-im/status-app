@@ -36,8 +36,12 @@ QRCODEGEN?=$(STATUS_DESKTOP)/vendor/QR-Code-generator/c
 STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/vendor/status-keycard-qt
 NIM_SDS_SOURCE_DIR ?= $(STATUS_DESKTOP)/vendor/nim-sds
 
-# compile macros
+# compile macros: pr -> StatusPR, release -> Status
+ifeq ($(BUILD_VARIANT),pr)
+TARGET_PREFIX := StatusPR
+else
 TARGET_PREFIX := Status
+endif
 
 # Default package type for Android builds
 PACKAGE_TYPE ?= apk

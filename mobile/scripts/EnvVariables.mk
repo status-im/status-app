@@ -54,6 +54,16 @@ else
     $(error "OS=$(OS). OS not supported by build system. Please update qmake to a supported version.")
 endif
 
+# Bundle identifier: pr -> app.status.mobile.pr, release -> app.status.mobile
+BUILD_VARIANT ?= release
+ifeq ($(BUILD_VARIANT),pr)
+    BUNDLE_IDENTIFIER ?= app.status.mobile.pr
+else
+    BUNDLE_IDENTIFIER ?= app.status.mobile
+endif
+export BUNDLE_IDENTIFIER
+export BUILD_VARIANT
+
 # tool macros
 CC := $(abspath $(MAKEFILE_DIR)/$(OS)/clangWrap.sh)
 

@@ -9,6 +9,7 @@ import backend/newsfeed as status_newsfeed
 import backend/mailservers as status_mailservers
 import backend/settings as status_settings
 import backend/status_update as status_update
+import backend/push_notifications as status_push_notifications
 import app/global/global_singleton
 import constants
 
@@ -369,6 +370,60 @@ QtObject:
 
   proc getSendPushNotifications*(self: Service): bool =
     self.settings.sendPushNotifications
+
+  proc registerForCentralizedPushNotifications*(self: Service, deviceToken: string) {.slot.} =
+    try:
+      let response = status_push_notifications.registerForPushNotifications(deviceToken, PUSH_TOPIC, PUSH_TOKEN_TYPE)
+      if not response.error.isNil:
+        error "error registering for push notifications", errDescription = response.error.message
+        return
+    except Exception as e:
+      error "error registering for push notifications", errDescription = e.msg
+
+  proc unregisterFromPushNotifications*(self: Service) {.slot.} =
+    try:
+      let response = status_push_notifications.unregisterFromPushNotifications()
+      if not response.error.isNil:
+        error "error unregistering from push notifications", errDescription = response.error.message
+        return
+    except Exception as e:
+      error "error unregistering from push notifications", errDescription = e.msg
+
+  proc enablePushNotificationsFromContactsOnly*(self: Service) {.slot.} =
+    try:
+      let response = status_push_notifications.enablePushNotificationsFromContactsOnly()
+      if not response.error.isNil:
+        error "error enabling push notifications from contacts only", errDescription = response.error.message
+        return
+    except Exception as e:
+      error "error enabling push notifications from contacts only", errDescription = e.msg
+
+  proc disablePushNotificationsFromContactsOnly*(self: Service) {.slot.} =
+    try:
+      let response = status_push_notifications.disablePushNotificationsFromContactsOnly()
+      if not response.error.isNil:
+        error "error disabling push notifications from contacts only", errDescription = response.error.message
+        return
+    except Exception as e:
+      error "error disabling push notifications from contacts only", errDescription = e.msg
+
+  proc enablePushNotificationsBlockMentions*(self: Service) {.slot.} =
+    try:
+      let response = status_push_notifications.enablePushNotificationsBlockMentions()
+      if not response.error.isNil:
+        error "error enabling push notifications block mentions", errDescription = response.error.message
+        return
+    except Exception as e:
+      error "error enabling push notifications block mentions", errDescription = e.msg
+
+  proc disablePushNotificationsBlockMentions*(self: Service) {.slot.} =
+    try:
+      let response = status_push_notifications.disablePushNotificationsBlockMentions()
+      if not response.error.isNil:
+        error "error disabling push notifications block mentions", errDescription = response.error.message
+        return
+    except Exception as e:
+      error "error disabling push notifications block mentions", errDescription = e.msg
 
   proc saveAppearance*(self: Service, value: int): bool =
     if(self.saveSetting(KEY_APPEARANCE, value)):

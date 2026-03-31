@@ -240,6 +240,7 @@ QtObject {
                             Constants.ephemeralNotificationType.success,
                             ""
                         )
+                        PushNotifications.requestToken()
                         enablePushNotificationsPopup.close()
                         return
                     }
@@ -252,13 +253,46 @@ QtObject {
         enablePushNotificationsPopupComponent.createObject(root.popupParent).open()
     }
 
+    readonly property Connections pushNotificationsConnections: Connections {
+        target: PushNotifications
+        function onTokenChanged() {
+            if (PushNotifications.token !== "" && SQUtils.Utils.isIOS) {
+                appSettings.registerForCentralizedPushNotifications(PushNotifications.token)
+            }
+        }
+    }
+
+    readonly property Connections pushNotificationsStatusConnections: Connections {
+        target: PushNotifications
+        enabled: false
+        function onStatusChanged() {
+            if (PushNotifications.status !== PushNotifications.Granted) {
+                showEnablePushNotificationsPopup()
+            }
+
+            Qt.callLater(() => {
+                pushNotificationsStatusConnections.enabled = false
+            })
+        }
+    }
+
     function maybeDisplayEnablePushNotificationsPopup() {
         if (!SQUtils.Utils.isMobile) {
-            return false
+            return
         }
 
         if (PushNotifications.status === PushNotifications.Granted) {
-            return false
+            PushNotifications.requestToken()
+            return
+        }
+
+        // Delay the popup display to avoid false negative when the status is unknown
+        // If might take a while to get the status, so we delay the popup display
+        // Platform specifics - iOS might take a while to get the status, so we delay the popup display
+        // Platform specifics - Android won't return the status until the first request is made
+        if (PushNotifications.status === PushNotifications.Unknown && SQUtils.Utils.isIOS) {
+            pushNotificationsStatusConnections.enabled = true
+            return
         }
 
         showEnablePushNotificationsPopup()

@@ -19,6 +19,7 @@ FLAG_BUY_ENABLED=${FLAG_BUY_ENABLED:-1}
 FLAG_SWAP_ENABLED=${FLAG_SWAP_ENABLED:-1}
 FLAG_BRIDGE_ENABLED=${FLAG_BRIDGE_ENABLED:-1}
 
+BUNDLE_IDENTIFIER=${BUNDLE_IDENTIFIER:-"app.status.mobile"}
 DESKTOP_VERSION=$(eval cd "$STATUS_DESKTOP" && git describe --tags --dirty="-dirty" --always)
 STATUSGO_VERSION=$(eval cd "$STATUS_DESKTOP/vendor/status-go" && git describe --tags --dirty="-dirty" --always)
 
@@ -66,6 +67,7 @@ APP_CONFIG_DEFINES=(
     -d:DESKTOP_VERSION="$DESKTOP_VERSION"
     -d:STATUSGO_VERSION="$STATUSGO_VERSION"
     -d:GIT_COMMIT="$(git log --pretty=format:'%h' -n 1)"
+    -d:PUSH_TOPIC="$BUNDLE_IDENTIFIER"
 )
 
 NIM_FLAGS=(

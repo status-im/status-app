@@ -40,6 +40,8 @@ def qtDir = System.getenv("QT_ANDROID_DIR") ?: qtAndroidDir
 
 // Build variant: 'pr' or 'release' (controls app ID and name)
 def buildVariant = System.getenv("BUILD_VARIANT") ?: "release"
+// Bundle identifier from EnvVariables.mk
+def bundleIdentifier = System.getenv("BUNDLE_IDENTIFIER") ?: "app.status.mobile"
 
 android {
     /*******************************************************
@@ -103,8 +105,8 @@ android {
         ndk.abiFilters = qtTargetAbiList.split(",")
         // Use FDROID_VERSION_CODE env var if set, otherwise generate from timestamp
         versionCode = System.getenv("FDROID_VERSION_CODE")?.toInteger() ?: (System.currentTimeMillis() / 60000).toInteger()
-        // Set applicationId and app name based on build variant
-        applicationId = buildVariant == 'release' ? "app.status.mobile" : "app.status.mobile.pr"
+        // Application ID from BUNDLE_IDENTIFIER env var (set in EnvVariables.mk)
+        applicationId = bundleIdentifier
         resValue "string", "app_name", buildVariant == 'release' ? "Status" : "Status PR"
         // lib_name must match TARGET in Status.pro (spaces cause weird issues in paths)
         resValue "string", "lib_name", buildVariant == 'release' ? "Status" : "StatusPR"
