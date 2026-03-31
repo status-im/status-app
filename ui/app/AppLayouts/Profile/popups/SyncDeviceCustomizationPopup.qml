@@ -82,6 +82,7 @@ StatusDialog {
             StatusButton {
                 text: qsTr("Delete Device")
                 type: StatusBaseButton.Type.Danger
+                visible: !deviceModel.isCurrentDevice
                 onClicked : {
                     root.deleteDeviceRequested(root.deviceModel.installationId)
                     root.close()

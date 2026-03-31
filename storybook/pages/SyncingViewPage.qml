@@ -42,6 +42,8 @@ SplitView {
 
         errorDeletingDeviceMessage: ctrlDevicesDeletionError.checked ? "Fake error" : ""
 
+        onDeleteDeviceRequested: installationId => logs.logEvent("onDeleteDeviceRequested", ["installationId"], [installationId])
+
         advancedStore: ProfileStores.AdvancedStore {
             readonly property bool isDebugEnabled: ctrlDebugEnabled.checked
         }
@@ -151,6 +153,7 @@ SplitView {
             Switch {
                 id: ctrlDebugEnabled
                 text: "Debug enabled"
+                checked: true
             }
         }
     }
