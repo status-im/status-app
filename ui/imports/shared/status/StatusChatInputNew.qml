@@ -806,6 +806,9 @@ Control {
         StatusChatInputToolBar {
             id: toolBar
 
+            Theme.padding: Theme.defaultPadding
+            Theme.fontSizeOffset: ThemeUtils.fontSizeOffsetM
+
             styleButtonVisible: false
             showFormatting: !!messageInputField.selectedText
 
