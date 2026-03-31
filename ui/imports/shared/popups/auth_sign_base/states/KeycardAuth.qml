@@ -6,6 +6,8 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
 
+import shared.popups.keycard.helpers 1.0
+
 import utils
 
 Control {
@@ -13,6 +15,7 @@ Control {
 
     required property string keycardState
     required property bool wrongKeycard
+    property var keyPairForProcessing: null
 
     topPadding: Theme.xlPadding
     bottomPadding: Theme.halfPadding
@@ -58,6 +61,25 @@ Control {
             Layout.fillWidth: true
             Layout.fillHeight: true
         }
+
+        Loader {
+            id: keyPairLoader
+            Layout.fillWidth: true
+            visible: false
+            active: !!root.keyPairForProcessing
+            sourceComponent: KeyPairItem {
+                keyPairType: root.keyPairForProcessing.pairType
+                keyPairKeyUid: root.keyPairForProcessing.keyUid
+                keyPairName: root.keyPairForProcessing.name
+                keyPairIcon: root.keyPairForProcessing.icon
+                keyPairImage: root.keyPairForProcessing.image
+                keyPairDerivedFrom: root.keyPairForProcessing.derivedFrom
+                keyPairAccounts: root.keyPairForProcessing.accounts
+                keyPairCardLocked: root.keyPairForProcessing.locked
+
+                displayAdditionalInfoForProfileKeypair: false
+            }
+        }
     }
 
     states: [
@@ -96,6 +118,10 @@ Control {
             PropertyChanges {
                 target: message
                 text: ""
+            }
+            PropertyChanges {
+                target: keyPairLoader
+                visible: true
             }
         },
         State {
@@ -136,6 +162,10 @@ Control {
                 text: qsTr("There is no key pair on this Keycard")
                 color: Theme.palette.directColor1
             }
+            PropertyChanges {
+                target: keyPairLoader
+                visible: true
+            }
         },
         State {
             name: "not-keycard"
@@ -153,6 +183,10 @@ Control {
                 target: message
                 text: qsTr("The card inserted is not a recognised Keycard,\nplease remove and try again")
                 color: Theme.palette.dangerColor1
+            }
+            PropertyChanges {
+                target: keyPairLoader
+                visible: true
             }
         },
         State {

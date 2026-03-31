@@ -5,6 +5,7 @@ import app/core/eventemitter
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/keycardV2/service as keycard_serviceV2
+import app/modules/shared/keypairs
 
 logScope:
   topics = "authentication-module-controller"
@@ -57,3 +58,9 @@ proc isKeypairMigratedToKeycard*(self: Controller, keyUid: string): bool =
   if keypair.isNil:
     return false
   return keypair.migratedToKeycard()
+
+proc buildKeyPairForProcessing*(self: Controller, keyUid: string): KeyPairItem =
+  let keypair = self.walletAccountService.getKeypairByKeyUid(keyUid)
+  if keypair.isNil:
+    return nil
+  return buildKeypairItem(keypair, areTestNetworksEnabled = false)

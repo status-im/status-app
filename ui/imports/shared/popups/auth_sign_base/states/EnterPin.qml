@@ -7,6 +7,8 @@ import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Controls.Validators
 
+import shared.popups.keycard.helpers 1.0
+
 import utils
 
 Control {
@@ -16,6 +18,7 @@ Control {
     property int remainingAttempts: -1
     property int maxPinRetries: 3
     property bool submitOnPinComplete: true
+    property var keyPairForProcessing: null
 
     readonly property alias pin: pinInputField.pinInput
     readonly property bool pinValid: pinInputField.pinInput.length === Constants.keycard.general.keycardPinLength && !root.wrongPin
@@ -46,7 +49,7 @@ Control {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            text: qsTr("Enter this Keycard's PIN")
+            text: qsTr("Enter Keycard's PIN")
             font.weight: Font.Bold
             font.pixelSize: Theme.fontSize(22)
         }
@@ -94,6 +97,23 @@ Control {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
+        }
+
+        Loader {
+            Layout.fillWidth: true
+            active: !!root.keyPairForProcessing
+            sourceComponent: KeyPairItem {
+                keyPairType: root.keyPairForProcessing.pairType
+                keyPairKeyUid: root.keyPairForProcessing.keyUid
+                keyPairName: root.keyPairForProcessing.name
+                keyPairIcon: root.keyPairForProcessing.icon
+                keyPairImage: root.keyPairForProcessing.image
+                keyPairDerivedFrom: root.keyPairForProcessing.derivedFrom
+                keyPairAccounts: root.keyPairForProcessing.accounts
+                keyPairCardLocked: root.keyPairForProcessing.locked
+
+                displayAdditionalInfoForProfileKeypair: false
+            }
         }
     }
 

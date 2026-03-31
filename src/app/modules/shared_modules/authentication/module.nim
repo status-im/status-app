@@ -3,6 +3,7 @@ import nimqml, chronicles
 import io_interface
 import view, controller
 import app/core/eventemitter
+import app/modules/shared_models/keypair_item
 
 import app/global/global_singleton
 import app_service/common/account_constants
@@ -50,6 +51,12 @@ method verifyPassword*[T](self: Module[T], password: string): bool =
 
 method isKeypairMigratedToKeycard*[T](self: Module[T], keyUid: string): bool =
   return self.controller.isKeypairMigratedToKeycard(keyUid)
+
+method buildKeyPairForProcessing*[T](self: Module[T], keyUid: string): KeyPairItem =
+  let item = self.controller.buildKeyPairForProcessing(keyUid)
+  if not item.isNil:
+    self.view.setKeyPairForProcessing(item)
+  return item
 
 method startKeycardAuthentication*[T](self: Module[T], keyUid: string, pin: string) =
   let

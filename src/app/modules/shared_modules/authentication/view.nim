@@ -1,5 +1,6 @@
 import nimqml
 import io_interface
+import app/modules/shared_models/keypair_item
 
 QtObject:
   type
@@ -7,6 +8,8 @@ QtObject:
       delegate: io_interface.AccessInterface
       keycardState: string
       remainingPinAttempts: int
+      keyPairForProcessing: KeyPairItem
+      keyPairForProcessingVariant: QVariant
 
   ## Forward declarations
   proc delete*(self: View)
@@ -23,6 +26,9 @@ QtObject:
 
   proc isKeypairMigratedToKeycard*(self: View, keyUid: string): bool {.slot.} =
     return self.delegate.isKeypairMigratedToKeycard(keyUid)
+
+  proc buildKeyPairForProcessing*(self: View, keyUid: string) {.slot.} =
+    discard self.delegate.buildKeyPairForProcessing(keyUid)
 
   proc keycardAuthSuccess*(self: View, encryptionPublicKey: string) {.signal.}
   proc keycardAuthError*(self: View, error: string) {.signal.}
@@ -57,5 +63,25 @@ QtObject:
     read = getRemainingPinAttempts
     notify = remainingPinAttemptsChanged
 
+  proc keyPairForProcessingChanged*(self: View) {.signal.}
+  proc setKeyPairForProcessing*(self: View, item: KeyPairItem) =
+    if self.keyPairForProcessing.isNil:
+      self.keyPairForProcessing = newKeyPairItem()
+    if self.keyPairForProcessingVariant.isNil:
+      self.keyPairForProcessingVariant = newQVariant(self.keyPairForProcessing)
+    self.keyPairForProcessing.setItem(item)
+    self.keyPairForProcessingChanged()
+  proc getKeyPairForProcessingVariant(self: View): QVariant {.slot.} =
+    if self.keyPairForProcessingVariant.isNil:
+      return newQVariant()
+    return self.keyPairForProcessingVariant
+  QtProperty[QVariant] keyPairForProcessing:
+    read = getKeyPairForProcessingVariant
+    notify = keyPairForProcessingChanged
+
   proc delete*(self: View) =
+    if not self.keyPairForProcessing.isNil:
+      self.keyPairForProcessing.delete
+    if not self.keyPairForProcessingVariant.isNil:
+      self.keyPairForProcessingVariant.delete
     self.QObject.delete

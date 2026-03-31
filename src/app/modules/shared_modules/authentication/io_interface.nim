@@ -1,6 +1,7 @@
 import nimqml
 
 import app_service/service/keycardV2/dto as keycard_serviceV2_dto
+import app/modules/shared_models/keypair_item
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -15,6 +16,9 @@ method verifyPassword*(self: AccessInterface, password: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method isKeypairMigratedToKeycard*(self: AccessInterface, keyUid: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method buildKeyPairForProcessing*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method startKeycardAuthentication*(self: AccessInterface, keyUid: string, pin: string) {.base.} =

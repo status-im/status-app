@@ -6,9 +6,11 @@ QtObject {
     signal keycardAuthSuccess(string encryptionPublicKey)
     signal keycardAuthError(string error)
 
+    readonly property bool ready: d.ready
     readonly property string userProfileKeyUid: userProfile.keyUid
 
     readonly property QtObject d: QtObject {
+        property bool ready: false
         readonly property var mainModuleInst: mainModule
     }
 
@@ -36,8 +38,15 @@ QtObject {
         return d.mainModuleInst.authenticationModule.remainingPinAttempts
     }
 
+    readonly property var keyPairForProcessing: {
+        if (!d.mainModuleInst.authenticationModule)
+            return null
+        return d.mainModuleInst.authenticationModule.keyPairForProcessing
+    }
+
     function prepare() {
         d.mainModuleInst.prepareAuthenticationModule()
+        d.ready = true
     }
 
     function isKeypairMigratedToKeycard(keyUid) {
@@ -70,5 +79,13 @@ QtObject {
             return
         }
         d.mainModuleInst.authenticationModule.stopKeycardAuthentication()
+    }
+
+    function buildKeyPairForProcessing(keyUid) {
+        if (!d.mainModuleInst.authenticationModule) {
+            console.error("authentication module was not created")
+            return
+        }
+        d.mainModuleInst.authenticationModule.buildKeyPairForProcessing(keyUid)
     }
 }
