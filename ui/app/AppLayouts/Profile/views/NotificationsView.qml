@@ -236,6 +236,8 @@ SettingsContentBase {
                         d.notificationsSettings.notifSettingAllowNotifications = !d.notificationsSettings.notifSettingAllowNotifications
                         if (d.notificationsSettings.notifSettingAllowNotifications) {
                             PushNotifications.request()
+                        } else {
+                            appSettings.unregisterFromPushNotifications()
                         }
                     }
                 }
@@ -245,308 +247,382 @@ SettingsContentBase {
             }
         }
 
-        StatusBaseText {
+        Loader {
             Layout.preferredWidth: root.contentWidth
-            Layout.leftMargin: Theme.padding
-            text: qsTr("Messages")
-            color: Theme.palette.baseColor1
+            sourceComponent: SQUtils.Utils.isIOS ? centralizedPushNotificationsMenuComponent : generalMenuComponent
         }
 
-        StatusListItem {
-            Layout.preferredWidth: root.contentWidth
-            title: qsTr("1:1 Chats")
-            components: [
-                NotificationSelect {
-                    selected: d.notificationsSettings.notifSettingOneToOneChats
-                    onSendAlertsClicked: d.notificationsSettings.notifSettingOneToOneChats = Constants.settingsSection.notifications.sendAlertsValue
-                    onDeliverQuietlyClicked: d.notificationsSettings.notifSettingOneToOneChats = Constants.settingsSection.notifications.deliverQuietlyValue
-                    onTurnOffClicked: d.notificationsSettings.notifSettingOneToOneChats = Constants.settingsSection.notifications.turnOffValue
-                }
-            ]
-        }
 
-        StatusListItem {
-            Layout.preferredWidth: root.contentWidth
-            title: qsTr("Group Chats")
-            components: [
-                NotificationSelect {
-                    selected: d.notificationsSettings.notifSettingGroupChats
-                    onSendAlertsClicked: d.notificationsSettings.notifSettingGroupChats = Constants.settingsSection.notifications.sendAlertsValue
-                    onDeliverQuietlyClicked: d.notificationsSettings.notifSettingGroupChats = Constants.settingsSection.notifications.deliverQuietlyValue
-                    onTurnOffClicked: d.notificationsSettings.notifSettingGroupChats = Constants.settingsSection.notifications.turnOffValue
-                }
-            ]
-        }
+        Component {
+            id: generalMenuComponent
+            ColumnLayout {
+            id: generalMenu
+            StatusBaseText {
+                Layout.preferredWidth: root.contentWidth
+                Layout.leftMargin: Theme.padding
+                text: qsTr("Messages")
+                color: Theme.palette.baseColor1
+            }
 
-        StatusListItem {
-            Layout.preferredWidth: root.contentWidth
-            title: qsTr("Personal @ Mentions")
-            tertiaryTitle: qsTr("Messages containing @%1").arg(userProfile.name)
-            components: [
-                NotificationSelect {
-                    selected: d.notificationsSettings.notifSettingPersonalMentions
-                    onSendAlertsClicked: d.notificationsSettings.notifSettingPersonalMentions = Constants.settingsSection.notifications.sendAlertsValue
-                    onDeliverQuietlyClicked: d.notificationsSettings.notifSettingPersonalMentions = Constants.settingsSection.notifications.deliverQuietlyValue
-                    onTurnOffClicked: d.notificationsSettings.notifSettingPersonalMentions = Constants.settingsSection.notifications.turnOffValue
-                }
-            ]
-        }
+            StatusListItem {
+                Layout.preferredWidth: root.contentWidth
+                title: qsTr("1:1 Chats")
+                components: [
+                    NotificationSelect {
+                        selected: d.notificationsSettings.notifSettingOneToOneChats
+                        onSendAlertsClicked: d.notificationsSettings.notifSettingOneToOneChats = Constants.settingsSection.notifications.sendAlertsValue
+                        onDeliverQuietlyClicked: d.notificationsSettings.notifSettingOneToOneChats = Constants.settingsSection.notifications.deliverQuietlyValue
+                        onTurnOffClicked: d.notificationsSettings.notifSettingOneToOneChats = Constants.settingsSection.notifications.turnOffValue
+                    }
+                ]
+            }
 
-        StatusListItem {
-            Layout.preferredWidth: root.contentWidth
-            title: qsTr("Global @ Mentions")
-            tertiaryTitle: qsTr("Messages containing @everyone")
-            components: [
-                NotificationSelect {
-                    selected: d.notificationsSettings.notifSettingGlobalMentions
-                    onSendAlertsClicked: d.notificationsSettings.notifSettingGlobalMentions = Constants.settingsSection.notifications.sendAlertsValue
-                    onDeliverQuietlyClicked: d.notificationsSettings.notifSettingGlobalMentions = Constants.settingsSection.notifications.deliverQuietlyValue
-                    onTurnOffClicked: d.notificationsSettings.notifSettingGlobalMentions = Constants.settingsSection.notifications.turnOffValue
-                }
-            ]
-        }
+            StatusListItem {
+                Layout.preferredWidth: root.contentWidth
+                title: qsTr("Group Chats")
+                components: [
+                    NotificationSelect {
+                        selected: d.notificationsSettings.notifSettingGroupChats
+                        onSendAlertsClicked: d.notificationsSettings.notifSettingGroupChats = Constants.settingsSection.notifications.sendAlertsValue
+                        onDeliverQuietlyClicked: d.notificationsSettings.notifSettingGroupChats = Constants.settingsSection.notifications.deliverQuietlyValue
+                        onTurnOffClicked: d.notificationsSettings.notifSettingGroupChats = Constants.settingsSection.notifications.turnOffValue
+                    }
+                ]
+            }
 
-        StatusListItem {
-            Layout.preferredWidth: root.contentWidth
-            title: qsTr("All Messages")
-            components: [
-                NotificationSelect {
-                    selected: d.notificationsSettings.notifSettingAllMessages
-                    onSendAlertsClicked: d.notificationsSettings.notifSettingAllMessages = Constants.settingsSection.notifications.sendAlertsValue
-                    onDeliverQuietlyClicked: d.notificationsSettings.notifSettingAllMessages = Constants.settingsSection.notifications.deliverQuietlyValue
-                    onTurnOffClicked: d.notificationsSettings.notifSettingAllMessages = Constants.settingsSection.notifications.turnOffValue
-                }
-            ]
-        }
+            StatusListItem {
+                Layout.preferredWidth: root.contentWidth
+                title: qsTr("Personal @ Mentions")
+                tertiaryTitle: qsTr("Messages containing @%1").arg(userProfile.name)
+                components: [
+                    NotificationSelect {
+                        selected: d.notificationsSettings.notifSettingPersonalMentions
+                        onSendAlertsClicked: d.notificationsSettings.notifSettingPersonalMentions = Constants.settingsSection.notifications.sendAlertsValue
+                        onDeliverQuietlyClicked: d.notificationsSettings.notifSettingPersonalMentions = Constants.settingsSection.notifications.deliverQuietlyValue
+                        onTurnOffClicked: d.notificationsSettings.notifSettingPersonalMentions = Constants.settingsSection.notifications.turnOffValue
+                    }
+                ]
+            }
 
-        StatusBaseText {
-            Layout.preferredWidth: root.contentWidth
-            Layout.leftMargin: Theme.padding
-            text: qsTr("Others")
-            color: Theme.palette.baseColor1
-        }
+            StatusListItem {
+                Layout.preferredWidth: root.contentWidth
+                title: qsTr("Global @ Mentions")
+                tertiaryTitle: qsTr("Messages containing @everyone")
+                components: [
+                    NotificationSelect {
+                        selected: d.notificationsSettings.notifSettingGlobalMentions
+                        onSendAlertsClicked: d.notificationsSettings.notifSettingGlobalMentions = Constants.settingsSection.notifications.sendAlertsValue
+                        onDeliverQuietlyClicked: d.notificationsSettings.notifSettingGlobalMentions = Constants.settingsSection.notifications.deliverQuietlyValue
+                        onTurnOffClicked: d.notificationsSettings.notifSettingGlobalMentions = Constants.settingsSection.notifications.turnOffValue
+                    }
+                ]
+            }
 
-        StatusListItem {
-            Layout.preferredWidth: root.contentWidth
-            title: qsTr("Contact Requests")
-            components: [
-                NotificationSelect {
-                    selected: d.notificationsSettings.notifSettingContactRequests
-                    onSendAlertsClicked: d.notificationsSettings.notifSettingContactRequests = Constants.settingsSection.notifications.sendAlertsValue
-                    onDeliverQuietlyClicked: d.notificationsSettings.notifSettingContactRequests = Constants.settingsSection.notifications.deliverQuietlyValue
-                    onTurnOffClicked: d.notificationsSettings.notifSettingContactRequests = Constants.settingsSection.notifications.turnOffValue
-                }
-            ]
-        }
-
-        StatusListItem {
-            Layout.preferredWidth: root.contentWidth
-            title: qsTr("Status News")
-            components: [
-                StatusButton {
-                    visible: !root.privacyStore.isStatusNewsViaRSSEnabled
-                    text: qsTr("Enable RSS")
-
-                    onClicked: root.privacyStore.setNewsRSSEnabled(true)
-                },
-                NotificationSelect {
-                    visible: root.privacyStore.isStatusNewsViaRSSEnabled
-                    selected: d.notificationsSettings.notifSettingStatusNews
-                    onSendAlertsClicked: d.notificationsSettings.notifSettingStatusNews = Constants.settingsSection.notifications.sendAlertsValue
-                    onDeliverQuietlyClicked: d.notificationsSettings.notifSettingStatusNews = Constants.settingsSection.notifications.deliverQuietlyValue
-                    onTurnOffClicked: d.notificationsSettings.notifSettingStatusNews = Constants.settingsSection.notifications.turnOffValue
-                }
-            ]
-        }
-
-        Separator {
-            Layout.preferredWidth: root.contentWidth
-            Layout.preferredHeight: Theme.bigPadding
-        }
-
-        ColumnLayout {
-            Layout.preferredWidth: root.contentWidth - Theme.padding * 2
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
-            visible: !SQUtils.Utils.isIOS
+            StatusListItem {
+                Layout.preferredWidth: root.contentWidth
+                title: qsTr("All Messages")
+                components: [
+                    NotificationSelect {
+                        selected: d.notificationsSettings.notifSettingAllMessages
+                        onSendAlertsClicked: d.notificationsSettings.notifSettingAllMessages = Constants.settingsSection.notifications.sendAlertsValue
+                        onDeliverQuietlyClicked: d.notificationsSettings.notifSettingAllMessages = Constants.settingsSection.notifications.deliverQuietlyValue
+                        onTurnOffClicked: d.notificationsSettings.notifSettingAllMessages = Constants.settingsSection.notifications.turnOffValue
+                    }
+                ]
+            }
 
             StatusBaseText {
-                Layout.fillWidth: true
-                text: qsTr("Notification Content")
+                Layout.preferredWidth: root.contentWidth
+                Layout.leftMargin: Theme.padding
+                text: qsTr("Others")
+                color: Theme.palette.baseColor1
+            }
+
+            StatusListItem {
+                Layout.preferredWidth: root.contentWidth
+                title: qsTr("Contact Requests")
+                components: [
+                    NotificationSelect {
+                        selected: d.notificationsSettings.notifSettingContactRequests
+                        onSendAlertsClicked: d.notificationsSettings.notifSettingContactRequests = Constants.settingsSection.notifications.sendAlertsValue
+                        onDeliverQuietlyClicked: d.notificationsSettings.notifSettingContactRequests = Constants.settingsSection.notifications.deliverQuietlyValue
+                        onTurnOffClicked: d.notificationsSettings.notifSettingContactRequests = Constants.settingsSection.notifications.turnOffValue
+                    }
+                ]
+            }
+
+            StatusListItem {
+                Layout.preferredWidth: root.contentWidth
+                title: qsTr("Status News")
+                components: [
+                    StatusButton {
+                        visible: !root.privacyStore.isStatusNewsViaRSSEnabled
+                        text: qsTr("Enable RSS")
+
+                        onClicked: root.privacyStore.setNewsRSSEnabled(true)
+                    },
+                    NotificationSelect {
+                        visible: root.privacyStore.isStatusNewsViaRSSEnabled
+                        selected: d.notificationsSettings.notifSettingStatusNews
+                        onSendAlertsClicked: d.notificationsSettings.notifSettingStatusNews = Constants.settingsSection.notifications.sendAlertsValue
+                        onDeliverQuietlyClicked: d.notificationsSettings.notifSettingStatusNews = Constants.settingsSection.notifications.deliverQuietlyValue
+                        onTurnOffClicked: d.notificationsSettings.notifSettingStatusNews = Constants.settingsSection.notifications.turnOffValue
+                    }
+                ]
+            }
+
+            Separator {
+                Layout.preferredWidth: root.contentWidth
+                Layout.preferredHeight: Theme.bigPadding
+            }
+
+            ColumnLayout {
+                Layout.preferredWidth: root.contentWidth - Theme.padding * 2
+                Layout.leftMargin: Theme.padding
+                Layout.rightMargin: Theme.padding 
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    text: qsTr("Notification Content")
+                    color: Theme.palette.directColor1
+                }
+
+                NotificationAppearancePreviewPanel {
+                    id: notifNameAndMsg
+
+                    Layout.fillWidth: true
+
+                    name: qsTr("Show Name and Message")
+                    notificationTitle: "Vitalik Buterin"
+                    notificationMessage: qsTr("Hi there! So EIP-1559 will defini...")
+                    buttonGroup: messageSetting
+                    checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewNameAndMessage
+                    onRadioCheckedChanged: {
+                        if (checked) {
+                            d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewNameAndMessage
+                        }
+                    }
+                }
+
+                NotificationAppearancePreviewPanel {
+                    Layout.fillWidth: true
+
+                    name: qsTr("Name Only")
+                    notificationTitle: "Vitalik Buterin"
+                    notificationMessage: qsTr("You have a new message")
+                    buttonGroup: messageSetting
+                    checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewNameOnly
+                    onRadioCheckedChanged: {
+                        if (checked) {
+                            d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewNameOnly
+                        }
+                    }
+                }
+
+                NotificationAppearancePreviewPanel {
+                    Layout.fillWidth: true
+
+                    name: qsTr("Anonymous")
+                    notificationTitle: "Status"
+                    notificationMessage: qsTr("You have a new message")
+                    buttonGroup: messageSetting
+                    checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewAnonymous
+                    onRadioCheckedChanged: {
+                        if (checked) {
+                            d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewAnonymous
+                        }
+                    }
+                }
+
+                Separator {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Theme.bigPadding
+                }
+            }
+
+            StatusListItem {
+                Layout.preferredWidth: root.contentWidth
+                title: qsTr("Play a Sound When Receiving a Notification")
+                components: [
+                    StatusSwitch {
+                        id: soundSwitch
+                        checked: d.notificationsSettings.notificationSoundsEnabled
+                        onClicked: {
+                            d.notificationsSettings.notificationSoundsEnabled = !d.notificationsSettings.notificationSoundsEnabled
+                        }
+                    }
+                ]
+                onClicked: {
+                    soundSwitch.clicked()
+                }
+            }
+
+            StatusBaseText {
+                Layout.preferredWidth: root.contentWidth
+                Layout.leftMargin: Theme.padding
+                text: qsTr("Volume")
                 color: Theme.palette.directColor1
             }
 
-            NotificationAppearancePreviewPanel {
-                id: notifNameAndMsg
+            Item {
+                Layout.preferredWidth: root.contentWidth
+                Layout.preferredHeight: Constants.settingsSection.itemHeight + Theme.padding
 
-                Layout.fillWidth: true
+                StatusSlider {
+                    id: volumeSlider
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.topMargin: Theme.bigPadding
+                    anchors.leftMargin: Theme.padding
+                    anchors.rightMargin: Theme.padding
+                    from: 0
+                    to: 100
+                    stepSize: 1
 
-                name: qsTr("Show Name and Message")
-                notificationTitle: "Vitalik Buterin"
-                notificationMessage: qsTr("Hi there! So EIP-1559 will defini...")
-                buttonGroup: messageSetting
-                checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewNameAndMessage
-                onRadioCheckedChanged: {
-                    if (checked) {
-                        d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewNameAndMessage
+                    onValueChanged: {
+                        d.notificationsSettings.volume = value
+                    }
+
+                    Component.onCompleted: {
+                        value = d.notificationsSettings.volume
+                        volumeSlider.valueChanged.connect(() => {
+                                                            // play a sound preview, but not on startup
+                                                            Global.playNotificationSound()
+                                                        });
+                    }
+                }
+
+                RowLayout {
+                    anchors.top: volumeSlider.bottom
+                    anchors.left: volumeSlider.left
+                    anchors.topMargin: Theme.halfPadding
+                    width: volumeSlider.width
+
+                    StatusBaseText {
+                        font.pixelSize: Theme.primaryTextFontSize
+                        text: volumeSlider.from
+                        Layout.preferredWidth: volumeSlider.width/2
+                        color: Theme.palette.baseColor1
+                    }
+
+                    StatusBaseText {
+                        font.pixelSize: Theme.primaryTextFontSize
+                        text: volumeSlider.to
+                        Layout.alignment: Qt.AlignRight
+                        color: Theme.palette.baseColor1
                     }
                 }
             }
 
-            NotificationAppearancePreviewPanel {
-                Layout.fillWidth: true
-
-                name: qsTr("Name Only")
-                notificationTitle: "Vitalik Buterin"
-                notificationMessage: qsTr("You have a new message")
-                buttonGroup: messageSetting
-                checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewNameOnly
-                onRadioCheckedChanged: {
-                    if (checked) {
-                        d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewNameOnly
-                    }
-                }
-            }
-
-            NotificationAppearancePreviewPanel {
-                Layout.fillWidth: true
-
-                name: qsTr("Anonymous")
-                notificationTitle: "Status"
-                notificationMessage: qsTr("You have a new message")
-                buttonGroup: messageSetting
-                checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewAnonymous
-                onRadioCheckedChanged: {
-                    if (checked) {
-                        d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewAnonymous
-                    }
+            StatusButton {
+                Layout.leftMargin: Theme.padding
+                text: qsTr("Send a Test Notification")
+                onClicked: {
+                    root.notificationsStore.sendTestNotification(notifNameAndMsg.notificationTitle,
+                                                                notifNameAndMsg.notificationMessage)
                 }
             }
 
             Separator {
-                Layout.fillWidth: true
+                Layout.preferredWidth: root.contentWidth
                 Layout.preferredHeight: Theme.bigPadding
             }
+
+            StatusBaseText {
+                Layout.preferredWidth: root.contentWidth
+                Layout.leftMargin: Theme.padding
+                text: qsTr("Exemptions")
+                color: Theme.palette.directColor1
+            }
+
+            SearchBox {
+                id: searchBox
+                Layout.preferredWidth: root.contentWidth - 2 * Theme.padding
+                Layout.leftMargin: Theme.padding
+                Layout.rightMargin: Theme.padding
+                placeholderText: qsTr("Search Communities, Group Chats and 1:1 Chats")
+            }
+
+            StatusBaseText {
+                Layout.preferredWidth: root.contentWidth
+                Layout.leftMargin: Theme.padding
+                text: qsTr("Most recent")
+                color: Theme.palette.baseColor1
+            }
+
+            StatusListView {
+                Layout.preferredWidth: root.contentWidth
+                Layout.preferredHeight: this.contentHeight
+                visible: root.notificationsStore.exemptionsModel.count > 0
+
+                model: root.notificationsStore.exemptionsModel
+                delegate: exemptionDelegateComponent
+            }
+            }
         }
 
-        StatusListItem {
-            Layout.preferredWidth: root.contentWidth
-            title: qsTr("Play a Sound When Receiving a Notification")
-            components: [
-                StatusSwitch {
-                    id: soundSwitch
-                    checked: d.notificationsSettings.notificationSoundsEnabled
+        Component {
+            id: centralizedPushNotificationsMenuComponent
+            ColumnLayout {
+                Separator {
+                    Layout.preferredWidth: root.contentWidth
+                    Layout.preferredHeight: Theme.bigPadding
+                }
+                StatusListItem {
+                    Layout.preferredWidth: root.contentWidth
+                    title: qsTr("From non-contacts")
+                    subTitle: qsTr("Contact requests and group messages")
+                    enabled: d.notificationsSettings.notifSettingAllowNotifications
+                    components: [
+                        StatusSwitch {
+                            id: nonContactsSwitch
+                            checked: !d.notificationsSettings.notifSettingAllowNotifications ? false : nonContactsSwitch.allowFromNonContacts
+                            property bool allowFromNonContacts: true
+                            enabled: d.notificationsSettings.notifSettingAllowNotifications
+                            onClicked: {
+                                allowFromNonContacts = !allowFromNonContacts
+                                if (allowFromNonContacts) {
+                                    appSettings.disablePushNotificationsFromContactsOnly()
+                                } else {
+                                    appSettings.enablePushNotificationsFromContactsOnly()
+                                }
+                            }
+                        }
+                    ]
                     onClicked: {
-                        d.notificationsSettings.notificationSoundsEnabled = !d.notificationsSettings.notificationSoundsEnabled
+                        if (enabled)
+                            nonContactsSwitch.clicked()
                     }
                 }
-            ]
-            onClicked: {
-                soundSwitch.clicked()
-            }
-        }
 
-        StatusBaseText {
-            Layout.preferredWidth: root.contentWidth
-            Layout.leftMargin: Theme.padding
-            text: qsTr("Volume")
-            color: Theme.palette.directColor1
-        }
-
-        Item {
-            Layout.preferredWidth: root.contentWidth
-            Layout.preferredHeight: Constants.settingsSection.itemHeight + Theme.padding
-
-            StatusSlider {
-                id: volumeSlider
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.topMargin: Theme.bigPadding
-                anchors.leftMargin: Theme.padding
-                anchors.rightMargin: Theme.padding
-                from: 0
-                to: 100
-                stepSize: 1
-
-                onValueChanged: {
-                    d.notificationsSettings.volume = value
-                }
-
-                Component.onCompleted: {
-                    value = d.notificationsSettings.volume
-                    volumeSlider.valueChanged.connect(() => {
-                                                          // play a sound preview, but not on startup
-                                                          Global.playNotificationSound()
-                                                      });
+                StatusListItem {
+                    Layout.preferredWidth: root.contentWidth
+                    title: qsTr("Communities")
+                    subTitle: qsTr("Mentions and replies")
+                    enabled: d.notificationsSettings.notifSettingAllowNotifications
+                    components: [
+                        StatusSwitch {
+                            id: communitiesSwitch
+                            checked: !d.notificationsSettings.notifSettingAllowNotifications ? false : communitiesSwitch.allowCommunities
+                            property bool allowCommunities: true
+                            enabled: d.notificationsSettings.notifSettingAllowNotifications
+                            onClicked: {
+                                allowCommunities = !allowCommunities
+                                if (allowCommunities) {
+                                    appSettings.disablePushNotificationsBlockMentions()
+                                } else {
+                                    appSettings.enablePushNotificationsBlockMentions()
+                                }
+                            }
+                        }
+                    ]
+                    onClicked: {
+                        if (enabled)
+                            communitiesSwitch.clicked()
+                    }
                 }
             }
-
-            RowLayout {
-                anchors.top: volumeSlider.bottom
-                anchors.left: volumeSlider.left
-                anchors.topMargin: Theme.halfPadding
-                width: volumeSlider.width
-
-                StatusBaseText {
-                    font.pixelSize: Theme.primaryTextFontSize
-                    text: volumeSlider.from
-                    Layout.preferredWidth: volumeSlider.width/2
-                    color: Theme.palette.baseColor1
-                }
-
-                StatusBaseText {
-                    font.pixelSize: Theme.primaryTextFontSize
-                    text: volumeSlider.to
-                    Layout.alignment: Qt.AlignRight
-                    color: Theme.palette.baseColor1
-                }
-            }
-        }
-
-        StatusButton {
-            Layout.leftMargin: Theme.padding
-            text: qsTr("Send a Test Notification")
-            onClicked: {
-                root.notificationsStore.sendTestNotification(notifNameAndMsg.notificationTitle,
-                                                             notifNameAndMsg.notificationMessage)
-            }
-        }
-
-        Separator {
-            Layout.preferredWidth: root.contentWidth
-            Layout.preferredHeight: Theme.bigPadding
-        }
-
-        StatusBaseText {
-            Layout.preferredWidth: root.contentWidth
-            Layout.leftMargin: Theme.padding
-            text: qsTr("Exemptions")
-            color: Theme.palette.directColor1
-        }
-
-        SearchBox {
-            id: searchBox
-            Layout.preferredWidth: root.contentWidth - 2 * Theme.padding
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
-            placeholderText: qsTr("Search Communities, Group Chats and 1:1 Chats")
-        }
-
-        StatusBaseText {
-            Layout.preferredWidth: root.contentWidth
-            Layout.leftMargin: Theme.padding
-            text: qsTr("Most recent")
-            color: Theme.palette.baseColor1
-        }
-
-        StatusListView {
-            Layout.preferredWidth: root.contentWidth
-            Layout.preferredHeight: this.contentHeight
-            visible: root.notificationsStore.exemptionsModel.count > 0
-
-            model: root.notificationsStore.exemptionsModel
-            delegate: exemptionDelegateComponent
         }
     }
 }

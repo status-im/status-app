@@ -20,6 +20,16 @@ const DATE_TIME_FORMAT_2* = "yyyy-MM-dd'T'HH:mm:ss'.'ffffffzzz"
 
 const sep* = when defined(windows): "\\" else: "/"
 
+# Push notification token types (from push_notifications.proto)
+const PUSH_TOKEN_TYPE_UNKNOWN* = 0
+const PUSH_TOKEN_TYPE_APN* = 1      # iOS
+const PUSH_TOKEN_TYPE_FIREBASE* = 2  # Android
+
+const PUSH_TOKEN_TYPE* = when defined(ios): PUSH_TOKEN_TYPE_APN
+                         elif defined(android): PUSH_TOKEN_TYPE_FIREBASE
+                         else: PUSH_TOKEN_TYPE_UNKNOWN
+const PUSH_TOPIC* {.strdefine.} = "app.status.mobile"
+
 ################################################################################
 # The following variables are set:
 #

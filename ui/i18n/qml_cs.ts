@@ -12542,6 +12542,22 @@ selhalo</translation>
         <source>Enable mobile push notifications</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>From non-contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Contact requests and group messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished">Komunity</translation>
+    </message>
+    <message>
+        <source>Mentions and replies</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>OnboardingFlow</name>

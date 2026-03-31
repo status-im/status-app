@@ -67,6 +67,9 @@ android {
 ios {
     CONFIG += add_ios_ffmpeg_libraries
 
+    QMAKE_CXXFLAGS += -Wno-implicit-function-declaration
+    QMAKE_CFLAGS += -Wno-implicit-function-declaration
+
     QMAKE_INFO_PLIST = $$OUT_PWD/Info.plist
     QMAKE_IOS_DEPLOYMENT_TARGET=16.0
     QMAKE_ASSET_CATALOGS += $$PWD/../ios/Images.xcassets
