@@ -84,6 +84,8 @@ StatusSectionLayout {
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
 
+    property int extraLeftPadding: 0
+
     readonly property bool contentLocked: {
         if (!rootStore.chatCommunitySectionModule.isCommunity()) {
             return false
@@ -331,6 +333,7 @@ StatusSectionLayout {
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
+            extraLeftPadding: root.extraLeftPadding
             joined: root.joined
 
             // Unfurling related data:

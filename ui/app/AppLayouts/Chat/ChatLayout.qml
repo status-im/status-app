@@ -71,6 +71,8 @@ StackLayout {
     property bool sendViaPersonalChatEnabled
     property string disabledTooltipText
 
+    property int extraLeftPadding: 0
+
     property var emojiPopup
     property var stickersPopup
 
@@ -233,6 +235,7 @@ StackLayout {
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
+            extraLeftPadding: root.extraLeftPadding
             showUsersList: root.showUsersList
 
             hasUnrestrictedViewOnlyPermission: {

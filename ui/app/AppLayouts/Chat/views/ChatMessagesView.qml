@@ -57,6 +57,8 @@ Item {
     property bool sendViaPersonalChatEnabled
     property string disabledTooltipText
 
+    property int extraLeftPadding: 0
+
     // Unfurling related data:
     property bool gifUnfurlingEnabled
     property bool neverAskAboutUnfurlingAgain
@@ -322,6 +324,7 @@ Item {
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             disabledTooltipText: root.disabledTooltipText
             areTestNetworksEnabled: root.areTestNetworksEnabled
+            extraLeftPadding: root.extraLeftPadding
 
             chatId: root.chatId
             messageId: model.id

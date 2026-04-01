@@ -151,6 +151,8 @@ Loader {
     property bool sendViaPersonalChatEnabled
     property string disabledTooltipText
 
+    property int extraLeftPadding: 0
+
     property bool areTestNetworksEnabled
 
     property bool stickersLoaded: false
@@ -656,7 +658,7 @@ Loader {
                 Layout.fillWidth: true
                 Layout.topMargin: Theme.halfPadding
                 Layout.bottomMargin: Theme.halfPadding
-                Layout.leftMargin: Theme.padding
+                Layout.leftMargin: Theme.padding + root.extraLeftPadding
                 spacing: Theme.halfPadding
 
                 readonly property int smartIconSize: 20
@@ -818,6 +820,7 @@ Loader {
                             root.prevMessageContentType === Constants.messageContentType.bridgeMessageType ||
                             root.senderId !== root.prevMessageSenderId || root.prevMessageDeleted
                 isActiveMessage: d.isMessageActive
+                leftPadding: root.extraLeftPadding
                 topPadding: showHeader ? Theme.halfPadding : 0
                 bottomPadding: showHeader && d.nextMessageHasHeader ? Theme.halfPadding : 2
                 disableHover: root.disableHover ||

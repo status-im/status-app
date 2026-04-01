@@ -130,8 +130,6 @@ Control {
         textInput.clear()
     }
 
-    padding: Theme.smallPadding
-
     QtObject {
         id: d
 
@@ -805,6 +803,8 @@ Control {
 
         StatusChatInputToolBar {
             id: toolBar
+
+            padding: Theme.smallPadding
 
             Theme.padding: Theme.defaultPadding
             Theme.fontSizeOffset: ThemeUtils.fontSizeOffsetM

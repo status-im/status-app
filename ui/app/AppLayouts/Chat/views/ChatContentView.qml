@@ -63,6 +63,8 @@ ColumnLayout {
     property bool sendViaPersonalChatEnabled
     property string disabledTooltipText
 
+    property int extraLeftPadding: 0
+
     // Contacts related data:
     property string myPublicKey
 
@@ -121,6 +123,7 @@ ColumnLayout {
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             disabledTooltipText: root.disabledTooltipText
             areTestNetworksEnabled: root.areTestNetworksEnabled
+            extraLeftPadding: root.extraLeftPadding
             usersModel: root.usersModel
             joined: root.joined
 

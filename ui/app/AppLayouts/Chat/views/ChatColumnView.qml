@@ -59,6 +59,8 @@ Item {
     property bool paymentRequestFeatureEnabled
     property bool joined
 
+    property int extraLeftPadding: 0
+
     // Unfurling related data:
     property bool gifUnfurlingEnabled
     property bool neverAskAboutUnfurlingAgain
@@ -305,12 +307,9 @@ Item {
                 model: parentModule && parentModule.model
 
                 Loader {
-                    width: parent.width
-                    height: parent.height
+                    anchors.fill: parent
                     active: model.type !== Constants.chatType.category && model.type !== Constants.chatType.unknown
                     sourceComponent: ChatContentView {
-                        width: parent.width
-                        height: parent.height
                         visible: !root.rootStore.openCreateChat && model.active
                         chatId: model.itemId
                         chatType: model.type
@@ -324,6 +323,7 @@ Item {
                         sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
                         disabledTooltipText: root.disabledTooltipText
                         areTestNetworksEnabled: root.areTestNetworksEnabled
+                        extraLeftPadding: root.extraLeftPadding
                         joined: root.joined
 
                         // Unfurling related data:

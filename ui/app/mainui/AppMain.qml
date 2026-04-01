@@ -1955,6 +1955,7 @@ Item {
                                 disabledTooltipText: !appMain.networkConnectionStore.walletReadyForTransactionsEnabled ?
                                                          appMain.networkConnectionStore.walletReadyForTransactionsToolTipText : ""
                                 paymentRequestFeatureEnabled: featureFlagsStore.paymentRequestEnabled
+                                extraLeftPadding: appMain.isPortraitMode ? SQUtils.Utils.swipeIndicatorWidth : 0
 
                                 mutualContactsModel: contactsModelAdaptor.mutualContacts
 
@@ -2362,6 +2363,7 @@ Item {
                                 networksStore: appMain.networksStore
                                 advancedStore: appMain.advancedStore
                                 paymentRequestFeatureEnabled: featureFlagsStore.paymentRequestEnabled
+                                extraLeftPadding: appMain.isPortraitMode ? SQUtils.Utils.swipeIndicatorWidth : 0
 
                                 mutualContactsModel: contactsModelAdaptor.mutualContacts
 
