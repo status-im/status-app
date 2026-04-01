@@ -29,7 +29,7 @@ QtObject {
     readonly property var blockchainNetworksDown: root.allBlockchainNetworksDown.filter(chainId => ModelUtils.contains(root.networksStore.activeNetworks, "chainId", chainId))
     readonly property bool atleastOneBlockchainNetworkAvailable: root.blockchainNetworksDown.length < root.activeNetworksCount
 
-    readonly property bool walletReadyForTransactions: localAppSettings.testEnvironment || (isOnline && !networkConnectionModule.blockchainNetworkConnection.completelyDown && atleastOneBlockchainNetworkAvailable)
+    readonly property bool walletReadyForTransactionsEnabled: localAppSettings.testEnvironment || (isOnline && !networkConnectionModule.blockchainNetworkConnection.completelyDown && atleastOneBlockchainNetworkAvailable)
     readonly property string walletReadyForTransactionsToolTipText: {
         if (!isOnline) {
             return qsTr("Requires internet connection")

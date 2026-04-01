@@ -691,7 +691,7 @@ QtObject {
                 utilsStore: root.utilsStore
                 networksStore: root.networksStore
 
-                sendToAccountEnabled: root.networkConnectionStore.walletReadyForTransactions
+                sendToAccountEnabled: root.networkConnectionStore.walletReadyForTransactionsEnabled
 
                 showcaseCommunitiesModel: isCurrentUser ? root.profileStore.ownShowcaseCommunitiesModel
                                                         : root.contactsStore.contactShowcaseCommunitiesModel
