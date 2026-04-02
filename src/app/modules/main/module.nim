@@ -7,6 +7,7 @@ import app/modules/shared_models/[user_item, member_item, member_model, section_
 import app/modules/shared_modules/keycard_popup/module as keycard_shared_module
 import app/modules/shared_modules/authentication/module as authentication_module
 import app/modules/shared_modules/signing/module as signing_module
+import app/modules/shared_modules/keycard_management/module as keycard_management_module
 import app/global/app_sections_config
 import app/global/app_signals
 import app/global/[global_singleton, feature_flags]
@@ -128,6 +129,7 @@ type
     marketModule: market_module.AccessInterface
     authenticationModule: authentication_module.AccessInterface
     signingModule: signing_module.AccessInterface
+    keycardManagementModule: keycard_management_module.AccessInterface
     moduleLoaded: bool
     chatsLoaded: bool
     communityDataLoaded: bool
@@ -1919,6 +1921,23 @@ method getSigningModule*[T](self: Module[T]): QVariant =
   return newQVariant()
 ################################################################################
 
+################################################################################
+## keycard management module
+################################################################################
+method prepareKeycardManagementModule*[T](self: Module[T]) =
+  if self.keycardManagementModule.isNil:
+    self.keycardManagementModule = keycard_management_module.newModule[Module[T]](self, self.events, self.keycardServiceV2)
+
+method destroyKeycardManagementModule*[T](self: Module[T]) =
+  if not self.keycardManagementModule.isNil:
+    self.keycardManagementModule.delete
+    self.keycardManagementModule = nil
+
+method getKeycardManagementModule*[T](self: Module[T]): QVariant =
+  if not self.keycardManagementModule.isNil:
+    return self.keycardManagementModule.getModuleAsVariant()
+  return newQVariant()
+################################################################################
 
 ################################################################################
 ## keycard shared module - authentication/sign purpose

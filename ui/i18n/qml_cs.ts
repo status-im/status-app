@@ -7215,6 +7215,25 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     </message>
 </context>
 <context>
+    <name>EnterPinState</name>
+    <message>
+        <source>Enter the Keycard PIN</source>
+        <translation type="unfinished">Zadejte PIN Keycard</translation>
+    </message>
+    <message>
+        <source>PIN incorrect</source>
+        <translation type="unfinished">Nesprávný PIN</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform>Zbývá %n pokus</numerusform>
+            <numerusform>Zbývají %n pokusy</numerusform>
+            <numerusform>Zbývá %n pokusů</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>EnterPrivateKey</name>
     <message>
         <source>Private key</source>
@@ -8720,6 +8739,25 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     </message>
 </context>
 <context>
+    <name>KeyPairCompactItem</name>
+    <message>
+        <source>Moving this key pair will require you to use your Keycard to login</source>
+        <translation type="unfinished">Přesunutí tohoto páru klíčů bude vyžadovat použití vaší Keycard pro přihlášení</translation>
+    </message>
+    <message>
+        <source>Keycard Locked</source>
+        <translation type="unfinished">Keycard uzamčena</translation>
+    </message>
+    <message numerus="yes">
+        <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
+        <translation type="unfinished">
+            <numerusform>Obsahuje %n účet s nekompatibilními odvozovacími cestami Keycard</numerusform>
+            <numerusform>Obsahuje %n účty s nekompatibilními odvozovacími cestami Keycard</numerusform>
+            <numerusform>Obsahuje %n účtů s nekompatibilními odvozovacími cestami Keycard</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>KeyPairItem</name>
     <message>
         <source>Moving this key pair will require you to use your Keycard to login</source>
@@ -8735,6 +8773,14 @@ Prosím přidejte jej a zkuste to znovu.</translation>
             <numerusform>Obsahuje %n účet s nekompatibilními odvozovacími cestami Keycard</numerusform>
             <numerusform>Obsahuje %n účty s nekompatibilními odvozovacími cestami Keycard</numerusform>
             <numerusform>Obsahuje %n účtů s nekompatibilními odvozovacími cestami Keycard</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Active Account(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
 </context>
@@ -9639,6 +9685,29 @@ k přihlášení do Statusu?</translation>
     </message>
     <message>
         <source>Order a new Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>KeycardManagementPopup</name>
+    <message>
+        <source>Read Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard Flow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Zrušit</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation type="unfinished">Hotovo</translation>
+    </message>
+    <message>
+        <source>I don&apos;t have or don&apos;t know PIN</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -14439,6 +14508,45 @@ selhalo</translation>
     <message>
         <source>Download</source>
         <translation>Stahování</translation>
+    </message>
+</context>
+<context>
+    <name>ReadingKeycardState</name>
+    <message>
+        <source>Plug in Keycard reader...</source>
+        <translation type="unfinished">Připojte čtečku Keycard...</translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading Keycard...</source>
+        <translation type="unfinished">Načítání Keycard...</translation>
+    </message>
+    <message>
+        <source>This is not a Keycard</source>
+        <translation type="unfinished">Toto není Keycard</translation>
+    </message>
+    <message>
+        <source>The card is not a Keycard, try again with Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard inserted</source>
+        <translation type="unfinished">Vložena nesprávná Keycard</translation>
+    </message>
+    <message>
+        <source>Inserted Keycard does not match the expected key</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -242,6 +242,16 @@
     </message>
 </context>
 <context>
+    <name>EnterPinState</name>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform>%n attempt remaining</numerusform>
+            <numerusform>%n attempts remaining</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>EnterPrivateKey</name>
     <message numerus="yes">
         <source>Key pair name must be at least %n character(s)</source>
@@ -326,12 +336,29 @@
     </message>
 </context>
 <context>
+    <name>KeyPairCompactItem</name>
+    <message numerus="yes">
+        <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
+        <translation type="unfinished">
+            <numerusform>Contains %n account with Keycard incompatible derivation paths</numerusform>
+            <numerusform>Contains %n accounts with Keycard incompatible derivation paths</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>KeyPairItem</name>
     <message numerus="yes">
         <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
         <translation>
             <numerusform>Contains %n account with Keycard incompatible derivation paths</numerusform>
             <numerusform>Contains %n accounts with Keycard incompatible derivation paths</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Active Account(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
 </context>

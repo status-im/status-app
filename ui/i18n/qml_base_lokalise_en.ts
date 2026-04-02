@@ -8765,6 +8765,27 @@
     </message>
   </context>
   <context>
+    <name>EnterPinState</name>
+    <message>
+      <source>Enter the Keycard PIN</source>
+      <comment>EnterPinState</comment>
+      <translation>Enter the Keycard PIN</translation>
+    </message>
+    <message>
+      <source>PIN incorrect</source>
+      <comment>EnterPinState</comment>
+      <translation>PIN incorrect</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n attempt(s) remaining</source>
+      <comment>EnterPinState</comment>
+      <translation>
+        <numerusform>%n attempt remaining</numerusform>
+        <numerusform>%n attempts remaining</numerusform>
+      </translation>
+    </message>
+  </context>
+  <context>
     <name>EnterPrivateKey</name>
     <message>
       <source>Private key</source>
@@ -10584,6 +10605,27 @@
     </message>
   </context>
   <context>
+    <name>KeyPairCompactItem</name>
+    <message>
+      <source>Moving this key pair will require you to use your Keycard to login</source>
+      <comment>KeyPairCompactItem</comment>
+      <translation>Moving this key pair will require you to use your Keycard to login</translation>
+    </message>
+    <message>
+      <source>Keycard Locked</source>
+      <comment>KeyPairCompactItem</comment>
+      <translation>Keycard Locked</translation>
+    </message>
+    <message numerus="yes">
+      <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
+      <comment>KeyPairCompactItem</comment>
+      <translation>
+        <numerusform>Contains %n account with Keycard incompatible derivation paths</numerusform>
+        <numerusform>Contains %n accounts with Keycard incompatible derivation paths</numerusform>
+      </translation>
+    </message>
+  </context>
+  <context>
     <name>KeyPairItem</name>
     <message>
       <source>Moving this key pair will require you to use your Keycard to login</source>
@@ -10601,6 +10643,14 @@
       <translation>
         <numerusform>Contains %n account with Keycard incompatible derivation paths</numerusform>
         <numerusform>Contains %n accounts with Keycard incompatible derivation paths</numerusform>
+      </translation>
+    </message>
+    <message numerus="yes">
+      <source>Active Account(s)</source>
+      <comment>KeyPairItem</comment>
+      <translation>
+        <numerusform></numerusform>
+        <numerusform></numerusform>
       </translation>
     </message>
   </context>
@@ -11659,6 +11709,34 @@
       <source>Order a new Keycard</source>
       <comment>KeycardLostPage</comment>
       <translation>Order a new Keycard</translation>
+    </message>
+  </context>
+  <context>
+    <name>KeycardManagementPopup</name>
+    <message>
+      <source>Read Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Read Keycard</translation>
+    </message>
+    <message>
+      <source>Keycard Flow</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Keycard Flow</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Cancel</translation>
+    </message>
+    <message>
+      <source>Done</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Done</translation>
+    </message>
+    <message>
+      <source>I don&#39;t have or don&#39;t know PIN</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>I don&#39;t have or don&#39;t know PIN</translation>
     </message>
   </context>
   <context>
@@ -17472,6 +17550,54 @@
       <source>Download</source>
       <comment>RateView</comment>
       <translation>Download</translation>
+    </message>
+  </context>
+  <context>
+    <name>ReadingKeycardState</name>
+    <message>
+      <source>Plug in Keycard reader...</source>
+      <comment>ReadingKeycardState</comment>
+      <translation>Plug in Keycard reader...</translation>
+    </message>
+    <message>
+      <source>Tap or insert Keycard...</source>
+      <comment>ReadingKeycardState</comment>
+      <translation>Tap or insert Keycard...</translation>
+    </message>
+    <message>
+      <source>Reading Keycard...</source>
+      <comment>ReadingKeycardState</comment>
+      <translation>Reading Keycard...</translation>
+    </message>
+    <message>
+      <source>This is not a Keycard</source>
+      <comment>ReadingKeycardState</comment>
+      <translation>This is not a Keycard</translation>
+    </message>
+    <message>
+      <source>The card is not a Keycard, try again with Keycard.</source>
+      <comment>ReadingKeycardState</comment>
+      <translation>The card is not a Keycard, try again with Keycard.</translation>
+    </message>
+    <message>
+      <source>Connection error</source>
+      <comment>ReadingKeycardState</comment>
+      <translation>Connection error</translation>
+    </message>
+    <message>
+      <source>Something went wrong, please try again</source>
+      <comment>ReadingKeycardState</comment>
+      <translation>Something went wrong, please try again</translation>
+    </message>
+    <message>
+      <source>Wrong Keycard inserted</source>
+      <comment>ReadingKeycardState</comment>
+      <translation>Wrong Keycard inserted</translation>
+    </message>
+    <message>
+      <source>Inserted Keycard does not match the expected key</source>
+      <comment>ReadingKeycardState</comment>
+      <translation>Inserted Keycard does not match the expected key</translation>
     </message>
   </context>
   <context>

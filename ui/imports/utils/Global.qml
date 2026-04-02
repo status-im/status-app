@@ -111,6 +111,12 @@ QtObject {
     signal signingResult(string reason, string signature, string keyUid)
     ///////////////////////////////////////////////////////////////
 
+    ///////////////// Global Keycard Management popup //////////////
+    signal openKeycardManagementPopup(string flow, string keyUid, string keycardUid)
+    signal keycardManagementResult(string keycardState, string keycardUid, string keyUid, int remainingPinAttempts, int remainingPukAttempts,
+                                   int availableSlots, string cardMetadataName, string cardMetadataWalletAccountsJson)
+    ///////////////////////////////////////////////////////////////
+
     signal openAddEditSavedAddressesPopup(var params)
     signal openDeleteSavedAddressesPopup(var params)
     signal openShowQRPopup(var params)

@@ -38,6 +38,8 @@ import shared.popups.authentication
 import shared.popups.authentication.stores 1.0 as AuthStores
 import shared.popups.signing
 import shared.popups.signing.stores 1.0 as SignStores
+import shared.popups.keycard_new
+import shared.popups.keycard_new.stores 1.0 as KeycardMgmtStores
 import shared.status
 import shared.stores
 import shared.views
@@ -78,6 +80,9 @@ QtObject {
     }
 
     readonly property SignStores.SigningStore signingStore: SignStores.SigningStore {
+    }
+
+    readonly property KeycardMgmtStores.KeycardManagementStore keycardManagementStore: KeycardMgmtStores.KeycardManagementStore {
     }
 
     property var allContactsModel
@@ -134,6 +139,7 @@ QtObject {
         Global.openBackUpSeedPopup.connect(openBackUpSeedPopup)
         Global.openAuthenticationPopup.connect(openAuthenticationPopup)
         Global.openSigningPopup.connect(openSigningPopup)
+        Global.openKeycardManagementPopup.connect(openKeycardManagementPopup)
         Global.openPinnedMessagesPopupRequested.connect(openPinnedMessagesPopup)
         Global.openCommunityProfilePopupRequested.connect(openCommunityProfilePopup)
         Global.createCommunityPopupRequested.connect(openCreateCommunityPopup)
@@ -260,6 +266,10 @@ QtObject {
 
     function openSigningPopup(reason, keyUid, txHash, path, address) {
         openPopup(signingPopupComponent, { reason: reason, keyUid: keyUid, txHash: txHash, path: path, address: address })
+    }
+
+    function openKeycardManagementPopup(flow, keyUid, keycardUid) {
+        openPopup(keycardManagementPopupComponent, { flow: flow, keyUid: keyUid, keycardUid: keycardUid })
     }
 
     function openCommunityProfilePopup(store, community, communitySectionModule) {
@@ -645,6 +655,18 @@ QtObject {
                 keychain: root.keychain
                 onSigningSuccess: function(reason, signature, keyUid) {
                     Global.signingResult(reason, signature, keyUid)
+                }
+            }
+        },
+
+        Component {
+            id: keycardManagementPopupComponent
+            KeycardManagementPopup {
+                store: root.keycardManagementStore
+                onMetadataResult: function(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
+                                           availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
+                    Global.keycardManagementResult(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
+                                                   availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
                 }
             }
         },

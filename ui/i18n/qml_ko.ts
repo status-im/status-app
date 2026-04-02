@@ -7162,6 +7162,23 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
+    <name>EnterPinState</name>
+    <message>
+        <source>Enter the Keycard PIN</source>
+        <translation type="unfinished">Keycard PIN을 입력하세요</translation>
+    </message>
+    <message>
+        <source>PIN incorrect</source>
+        <translation type="unfinished">PIN이 올바르지 않습니다</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>EnterPrivateKey</name>
     <message>
         <source>Private key</source>
@@ -8649,6 +8666,23 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
+    <name>KeyPairCompactItem</name>
+    <message>
+        <source>Moving this key pair will require you to use your Keycard to login</source>
+        <translation type="unfinished">이 키 쌍을 이동하려면 로그인할 때 Keycard를 사용해야 합니다</translation>
+    </message>
+    <message>
+        <source>Keycard Locked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
+        <translation type="unfinished">
+            <numerusform>Keycard와 호환되지 않는 파생 경로가 있는 계정 %n개 포함</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>KeyPairItem</name>
     <message>
         <source>Moving this key pair will require you to use your Keycard to login</source>
@@ -8662,6 +8696,12 @@ Please add it and try again.</source>
         <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
         <translation>
             <numerusform>Keycard와 호환되지 않는 파생 경로가 있는 계정 %n개 포함</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Active Account(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
         </translation>
     </message>
 </context>
@@ -9560,6 +9600,29 @@ to login to Status?</source>
     </message>
     <message>
         <source>Order a new Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>KeycardManagementPopup</name>
+    <message>
+        <source>Read Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard Flow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">취소</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation type="unfinished">완료</translation>
+    </message>
+    <message>
+        <source>I don&apos;t have or don&apos;t know PIN</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -14310,6 +14373,45 @@ to load</source>
     <message>
         <source>Download</source>
         <translation>다운로드</translation>
+    </message>
+</context>
+<context>
+    <name>ReadingKeycardState</name>
+    <message>
+        <source>Plug in Keycard reader...</source>
+        <translation type="unfinished">Keycard 리더를 연결하세요...</translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading Keycard...</source>
+        <translation type="unfinished">Keycard 읽는 중...</translation>
+    </message>
+    <message>
+        <source>This is not a Keycard</source>
+        <translation type="unfinished">이건 Keycard가 아닙니다</translation>
+    </message>
+    <message>
+        <source>The card is not a Keycard, try again with Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard inserted</source>
+        <translation type="unfinished">잘못된 Keycard가 삽입되었습니다</translation>
+    </message>
+    <message>
+        <source>Inserted Keycard does not match the expected key</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -327,6 +327,15 @@ method destroySigningModule*(self: AccessInterface) {.base.} =
 method getSigningModule*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method prepareKeycardManagementModule*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method destroyKeycardManagementModule*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getKeycardManagementModule*(self: AccessInterface): QVariant {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getKeycardSharedModuleForAuthenticationOrSigning*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 

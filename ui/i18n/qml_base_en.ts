@@ -7175,6 +7175,24 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
+    <name>EnterPinState</name>
+    <message>
+        <source>Enter the Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN incorrect</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>EnterPrivateKey</name>
     <message>
         <source>Private key</source>
@@ -8671,6 +8689,24 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
+    <name>KeyPairCompactItem</name>
+    <message>
+        <source>Moving this key pair will require you to use your Keycard to login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard Locked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>KeyPairItem</name>
     <message>
         <source>Moving this key pair will require you to use your Keycard to login</source>
@@ -8682,6 +8718,13 @@ Please add it and try again.</source>
     </message>
     <message numerus="yes">
         <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Active Account(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
             <numerusform></numerusform>
@@ -9565,6 +9608,29 @@ to login to Status?</source>
     </message>
     <message>
         <source>Order a new Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>KeycardManagementPopup</name>
+    <message>
+        <source>Read Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard Flow</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>I don&apos;t have or don&apos;t know PIN</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -14335,6 +14401,45 @@ to load</source>
     </message>
     <message>
         <source>Download</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ReadingKeycardState</name>
+    <message>
+        <source>Plug in Keycard reader...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This is not a Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The card is not a Keycard, try again with Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard inserted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Inserted Keycard does not match the expected key</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
