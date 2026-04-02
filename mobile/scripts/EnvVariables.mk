@@ -17,14 +17,8 @@ endif
 HOST_OS=$(shell uname -s | tr '[:upper:]' '[:lower:]')
 #Architectures: arm64, arm, x86_64. x86_64 is default for simulator
 ARCH?=$(shell uname -m)
-# Detect Qt version from qmake
-QT_MAJOR?=$(shell $(QMAKE) -query QT_VERSION | head -c 1 2>/dev/null)
 QT_DIR?=$(shell $(QMAKE) -query QT_INSTALL_PREFIX)
 MAKEFILE_DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
-
-ifneq ($(QT_MAJOR),6)
-    $(error Detected Qt major version $(QT_MAJOR), but version 6 is required.)
-endif
 
 ifeq ($(OS), ios)
     # iOS
@@ -67,21 +61,15 @@ CXX_OPT_FLAGS := -O3
 endif
 
 export COMPILER
-export CC
-export CXX
 export CXX_OPT_FLAGS
 export ARCH
 export OS
 export HOST_OS
-export QT_MAJOR
 export QT_DIR
 
 ifeq ($(OS), ios)
     export SDK=$(IPHONE_SDK)
     export IOS_TARGET
-    export CPATH=$(shell xcrun --sdk ${IPHONE_SDK} --show-sdk-path)/usr/include/
-    export SDKROOT=$(shell xcrun --sdk ${IPHONE_SDK} --show-sdk-path)
-    export LIBRARY_PATH:=${SDKROOT}/usr/lib:${LIBRARY_PATH}
     export LIB_EXT := .a
 else
     export ANDROID_API
@@ -110,21 +98,10 @@ QMAKE ?= $(shell which qmake)
 ifeq ($(QMAKE),)
     $(error qmake not found)
 endif
+export QMAKE
 $(info QMAKE: $(QMAKE))
 
-RCC := $(shell $(QMAKE) -query QT_HOST_LIBEXECS)/rcc
-ifeq ($(RCC),)
-    $(error rcc not found)
-endif
-$(info RCC: $(RCC))
-
 ifeq ($(OS),android)
-    ANDROIDDEPLOYQT := $(shell which androiddeployqt)
-    ifeq ($(ANDROIDDEPLOYQT),)
-        $(error androiddeployqt not found)
-    endif
-    $(info ANDROIDDEPLOYQT: $(ANDROIDDEPLOYQT))
-
     ifeq ($(ANDROID_NDK_ROOT),)
         $(error ANDROID_NDK_ROOT not set)
     endif

@@ -3,28 +3,28 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDisplayName</key>
-    <string>${PRODUCT_NAME}</string>
+    <string>$(PRODUCT_NAME)</string>
 
     <key>CFBundleExecutable</key>
-    <string>${EXECUTABLE_NAME}</string>
+    <string>$(EXECUTABLE_NAME)</string>
 
     <key>CFBundleIconFile</key>
-    <string>${ASSETCATALOG_COMPILER_APPICON_NAME}</string>
+    <string>$(ASSETCATALOG_COMPILER_APPICON_NAME)</string>
 
     <key>CFBundleIdentifier</key>
-    <string>${PRODUCT_BUNDLE_IDENTIFIER}</string>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 
     <key>CFBundleName</key>
-    <string>${PRODUCT_NAME}</string>
+    <string>$(PRODUCT_NAME)</string>
 
     <key>CFBundlePackageType</key>
     <string>APPL</string>
 
     <key>CFBundleShortVersionString</key>
-    <string>${QMAKE_FULL_VERSION}</string>
+    <string>$(MARKETING_VERSION)</string>
 
     <key>CFBundleVersion</key>
-    <string>${CURRENT_PROJECT_VERSION}</string>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
 
     <key>LSRequiresIPhoneOS</key>
     <true/>
@@ -93,18 +93,14 @@
         <string>remote-notification</string>
         <string>fetch</string>
     </array>
-    <!-- Do not require paid apple accounts to build the app with NFC support -->
-    <!-- KEYCARD_NFC_START
-        <key>NFCReaderUsageDescription</key>
-        <string>Status uses NFC to read and verify identity cards for secure authentication.</string>
-        <key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
-        <array>
-            <string>A0000008040001</string>
-            <string>A00000080400010101</string>
-            <string>A00000080400010301</string>
-            <string>A000000151000000</string>
-        </array>
-    KEYCARD_NFC_END -->
+    <key>NFCReaderUsageDescription</key>
+    <string>Status uses NFC to read and verify identity cards for secure authentication.</string>
+    <key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+    <array>
+        <string>A0000008040001</string>
+        <string>A00000080400010101</string>
+        <string>A00000080400010301</string>
+        <string>A000000151000000</string>
+    </array>
 </dict>
 </plist>
-

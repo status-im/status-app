@@ -25,7 +25,9 @@ else
 fi
 
 TARGET="$CARCH-linux-android${TARGET_SUFFIX}${ANDROID_API}"
-EXTRA_ARGS="-fembed-bitcode"
+# Note: -fembed-bitcode is omitted — it's deprecated since NDK 26 and
+# interferes with TLS model when building static libs for shared linking.
+EXTRA_ARGS=""
 
 LINK_PAGE_SIZE_ARGS="-Wl,-z,max-page-size=16384"
 

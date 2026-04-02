@@ -373,7 +373,7 @@ statusq-tests:
 	cmake \
 		-DSTATUSQ_BUILD_SANITY_CHECKER=OFF \
 		-DSTATUSQ_BUILD_TESTS=ON \
-		-DSTATUSQ_SHADOW_BUILD=OFF \
+		-DSTATUSQ_BUNDLE_RESOURCES=OFF \
 		$(COMMON_CMAKE_CONFIG_PARAMS) \
 		-B $(STATUSQ_BUILD_PATH) \
 		-S $(STATUSQ_SOURCE_PATH) \
@@ -401,7 +401,7 @@ $(STORYBOOK_CMAKE_CACHE): | check-qt-dir
 	cmake \
 		-DCMAKE_INSTALL_PREFIX=$(STORYBOOK_INSTALL_PATH) \
 		-DCMAKE_BUILD_TYPE=$(COMMON_CMAKE_BUILD_TYPE) \
-		-DSTATUSQ_SHADOW_BUILD=OFF \
+		-DSTATUSQ_BUNDLE_RESOURCES=OFF \
 		$(COMMON_CMAKE_CONFIG_PARAMS) \
 		-B $(STORYBOOK_BUILD_PATH) \
 		-S $(STORYBOOK_SOURCE_PATH) \
@@ -603,6 +603,44 @@ $(UI_RESOURCES): $(UI_SOURCES) | check-qt-dir compile-translations
 
 rcc: $(UI_RESOURCES)
 
+##
+##	App Resources (QML AOT compilation)
+##
+
+APP_RESOURCES_SOURCE_PATH := ui/app_resources
+APP_RESOURCES_BUILD_PATH := ui/app_resources/build/Qt$(QT_VERSION)
+APP_RESOURCES_LIB_PATH := $(APP_RESOURCES_BUILD_PATH)/lib
+APP_RESOURCES_STAMP := $(APP_RESOURCES_LIB_PATH)/.stamp
+APP_RESOURCES_CMAKE_CACHE := $(APP_RESOURCES_BUILD_PATH)/CMakeCache.txt
+
+$(APP_RESOURCES_CMAKE_CACHE): | check-qt-dir compile-translations
+	echo -e "\033[92mConfiguring:\033[39m App Resources (QML AOT)"
+	cmake \
+		-DCMAKE_BUILD_TYPE=$(COMMON_CMAKE_BUILD_TYPE) \
+		-DAPP_AOT_COMPILE=ON \
+		$(COMMON_CMAKE_CONFIG_PARAMS) \
+		-B $(APP_RESOURCES_BUILD_PATH) \
+		-S $(APP_RESOURCES_SOURCE_PATH) \
+		-Wno-dev \
+		$(HANDLE_OUTPUT)
+
+app-resources-configure: | $(APP_RESOURCES_CMAKE_CACHE)
+
+# Stamp file tracks when app resources were last built.
+# Depends on QML/JS/qmldir sources — changing any triggers rebuild.
+$(APP_RESOURCES_STAMP): $(UI_SOURCES) | app-resources-configure
+	echo -e "\033[92mBuilding:\033[39m App Resources (QML AOT)"
+	cmake --build $(APP_RESOURCES_BUILD_PATH) \
+		--config $(COMMON_CMAKE_BUILD_TYPE) \
+		$(HANDLE_OUTPUT)
+	@touch $(APP_RESOURCES_STAMP)
+
+app-resources: $(APP_RESOURCES_STAMP)
+
+app-resources-clean:
+	echo -e "\033[92mCleaning:\033[39m App Resources"
+	rm -rf $(APP_RESOURCES_BUILD_PATH)
+
 TS_SOURCE_DIR := ui/i18n
 TS_BUILD_DIR := $(TS_SOURCE_DIR)/build
 
@@ -684,7 +722,31 @@ ifeq ($(mkspecs),win32)
  STATUSQ_LIB_PATH := $(STATUSQ_BUILD_PATH)/lib/$(COMMON_CMAKE_BUILD_TYPE)
 endif
 $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
-$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(KEYCARD_LIB) $(QRCODEGEN) rcc deps
+
+# APP_AOT_COMPILE: when enabled, compile QML files ahead of time via qmlcachegen
+# and link the compiled resources into the binary instead of using resources.rcc
+APP_AOT_COMPILE ?= false
+ifeq ($(APP_AOT_COMPILE),true)
+  NIM_STATUS_CLIENT_DEPS := statusq dotherside check-qt-dir $(STATUSGO) $(KEYCARD_LIB) $(QRCODEGEN) deps
+  $(NIM_STATUS_CLIENT): NIM_PARAMS += -d:APP_AOT_COMPILE
+  # Link the single fat archive containing all AOT-compiled QML resources.
+  # The archive includes AppResourcesPlugin + all sub-module object files.
+  # Use -force_load (macOS) / --whole-archive (Linux) to ensure the
+  # Q_CONSTRUCTOR_FUNCTION static initializer is included.
+  ifeq ($(host_os),darwin)
+    APP_RESOURCES_LINK_FLAGS = --passL:"-Wl,-force_load,$(APP_RESOURCES_LIB_PATH)/libappresourcesplugin.a"
+  else
+    APP_RESOURCES_LINK_FLAGS = --passL:"-Wl,--whole-archive" --passL:"$(APP_RESOURCES_LIB_PATH)/libappresourcesplugin.a" --passL:"-Wl,--no-whole-archive"
+  endif
+else
+  NIM_STATUS_CLIENT_DEPS := statusq dotherside check-qt-dir $(STATUSGO) $(KEYCARD_LIB) $(QRCODEGEN) rcc deps
+  APP_RESOURCES_LINK_FLAGS :=
+endif
+
+ifeq ($(APP_AOT_COMPILE),true)
+$(NIM_STATUS_CLIENT): $(APP_RESOURCES_STAMP)
+endif
+$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | $(NIM_STATUS_CLIENT_DEPS)
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
 		--mm:refc \
@@ -693,6 +755,7 @@ $(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSG
 		--passL:"-L$(STATUSQ_LIB_PATH)" \
 		--passL:"-L$(EXTRA_LIBS_PATH)" \
 		--passL:"-lStatusQ" \
+		$(APP_RESOURCES_LINK_FLAGS) \
 		--passL:"-L$(KEYCARD_LIBDIR)" \
 		--passL:"-l$(KEYCARD_LINKNAME)" \
 		--passL:"$(QRCODEGEN)" \
@@ -814,7 +877,9 @@ $(STATUS_CLIENT_DMG): nim_status_client
 	cp bin/nim_status_client $(MACOS_OUTER_BUNDLE)/Contents/MacOS/
 	cp status.icns $(MACOS_OUTER_BUNDLE)/Contents/Resources/
 	cp status-macos.svg $(MACOS_OUTER_BUNDLE)/Contents/
+ifneq ($(APP_AOT_COMPILE),true)
 	cp -R resources.rcc $(MACOS_OUTER_BUNDLE)/Contents/
+endif
 
 	echo -e $(BUILD_MSG) "app"
 	MAC_QTQMLDIR=$(shell $(QMAKE) -query QT_INSTALL_QML) && \
@@ -861,7 +926,10 @@ $(STATUS_CLIENT_EXE): compile_windows_resources nim_status_client nim_windows_la
 	rm -rf pkg/*.exe tmp/windows/dist
 	mkdir -p $(OUTPUT)/bin $(OUTPUT)/resources $(OUTPUT)/vendor $(OUTPUT)/bin/plugins/tls
 	cat windows-install.txt | unix2dos > $(OUTPUT)/INSTALL.txt
-	cp status.ico status.png resources.rcc $(OUTPUT)/resources/
+	cp status.ico status.png $(OUTPUT)/resources/
+ifneq ($(APP_AOT_COMPILE),true)
+	cp resources.rcc $(OUTPUT)/resources/
+endif
 	cp cacert.pem $(OUTPUT)/bin/cacert.pem
 	cp bin/nim_status_client.exe $(OUTPUT)/bin/Status.exe
 	cp bin/nim_windows_launcher.exe $(OUTPUT)/Status.exe
@@ -921,7 +989,7 @@ zip-windows: check-pkg-target-windows $(STATUS_CLIENT_7Z)
 clean-destdir:
 	rm -rf bin/*
 
-clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean dotherside-clean storybook-clean clean-translations
+clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean dotherside-clean storybook-clean clean-translations app-resources-clean
 	rm -rf bottles/* pkg/* tmp/* $(STATUSKEYCARDGO)
 	+ $(MAKE) -C vendor/QR-Code-generator/c/ --no-print-directory clean
 
@@ -991,7 +1059,7 @@ export QTDIR := $(call qmkq,QT_INSTALL_PREFIX)
 
 mobile-run: deps-common
 	echo -e "\033[92mRunning:\033[39m mobile app"
-	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug
+	$(MAKE) -C mobile run DEBUG=1
 
 mobile-build: USE_SYSTEM_NIM=1
 mobile-build: | deps-common

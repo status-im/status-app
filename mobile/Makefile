@@ -11,23 +11,60 @@ FLAG_KEYCARD_ENABLED ?= 1
 FLAG_DAPPS_ENABLED ?= 1
 FLAG_CONNECTOR_ENABLED ?= 0
 FLAG_BROWSER_ENABLED ?= 1
+BUILD_VARIANT ?= release
 
-$(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
+$(info Configuring build system for $(OS) $(ARCH))
 
-# default rule
-default: makedir all
+# ---- qt-cmake & build configuration ----
 
-iosdevice: IPHONE_SDK=iphoneos
-iosdevice: default
+QT_CMAKE := $(QT_DIR)/bin/qt-cmake
+CMAKE_BUILD_DIR := $(BUILD_PATH)/cmake-build
+VERSION := $(shell cd $(STATUS_DESKTOP) && git describe --tags --always | cut -d- -f1 | cut -d. -f1-3 | sed 's/^v//')
+BUILD_VERSION := $(if $(CHANGE_ID),$(CHANGE_ID).)$(shell echo $$(($$(date +%s) / 60)))
+OUTPUT_NAME := $(if $(filter pr,$(BUILD_VARIANT)),StatusPR,Status)
 
-# dependencies
-statusq: clean-statusq $(STATUS_Q_LIB)
-dotherside: clean-dotherside $(DOTHERSIDE_LIB)
-openssl: clean-openssl $(OPENSSL_LIB)
-qrcodegen: clean-qrcodegen $(QRCODEGEN_LIB)
-status-keycard-qt: clean-status-keycard-qt $(STATUS_KEYCARD_QT_LIB)
-nim-status-client: clean-nim-status-client $(NIM_STATUS_CLIENT_LIB)
-status-desktop-rcc: clean-status-desktop-rcc $(STATUS_DESKTOP_RCC)
+CMAKE_FLAGS := \
+    -DCMAKE_BUILD_TYPE=$(if $(DEBUG),Debug,Release) \
+    -DAPP_AOT_COMPILE=ON \
+    -DAPP_RESOURCES_MOBILE=ON \
+    -DFLAG_KEYCARD_ENABLED=$(if $(filter 1,$(FLAG_KEYCARD_ENABLED)),ON,OFF) \
+    -DPROJECT_VERSION=$(VERSION)
+
+NPROC := $(shell sysctl -n hw.logicalcpu 2>/dev/null || nproc)
+
+ifeq ($(OS),android)
+    CMAKE_FLAGS += -DANDROID_PLATFORM=android-35
+    GRADLE_BIN := $(QT_DIR)/src/3rdparty/gradle/gradlew
+else ifeq ($(OS),ios)
+    # qt-cmake defaults to Xcode generator for iOS (handles duplicate static lib
+    # symbols, code signing, etc. natively). We set sysroot and arch for device/simulator.
+    CMAKE_FLAGS += -DCMAKE_OSX_SYSROOT=$(IPHONE_SDK) -DCMAKE_OSX_ARCHITECTURES=$(ARCH)
+endif
+
+# Signing: map STATUS_APP_KEYSTORE_* → QT_ANDROID_KEYSTORE_* for androiddeployqt
+ifdef STATUS_APP_KEYSTORE_PATH
+CMAKE_FLAGS += -DQT_ANDROID_SIGN_APK=ON
+export QT_ANDROID_KEYSTORE_PATH := $(STATUS_APP_KEYSTORE_PATH)
+export QT_ANDROID_KEYSTORE_ALIAS := $(STATUS_APP_KEY_ALIAS)
+export QT_ANDROID_KEYSTORE_STORE_PASS := $(STATUS_APP_KEYSTORE_PASSWORD)
+export QT_ANDROID_KEYSTORE_KEY_PASS := $(STATUS_APP_KEY_PASSWORD)
+endif
+
+# ---- Non-CMake dependencies ----
+# CC/CXX (clangWrap.sh) are only needed by non-cmake targets.
+# Export per-target so cmake/xcodebuild don't inherit them.
+$(STATUS_GO_LIB): export CC := $(CC)
+$(STATUS_GO_LIB): export CXX := $(CXX)
+$(OPENSSL_LIB): export CC := $(CC)
+$(OPENSSL_LIB): export CXX := $(CXX)
+$(NIM_STATUS_CLIENT_LIB): export CC := $(CC)
+$(NIM_STATUS_CLIENT_LIB): export CXX := $(CXX)
+$(STATUS_GO_STUB_LIB): export CC := $(CC)
+$(STATUS_GO_STUB_LIB): export CXX := $(CXX)
+$(STATUS_GO_SERVICE_LIB): export CC := $(CC)
+$(STATUS_GO_SERVICE_LIB): export CXX := $(CXX)
+$(QRCODEGEN_LIB): export CC := $(CC)
+$(QRCODEGEN_LIB): export CXX := $(CXX)
 
 $(STATUS_GO_LIB):
 	@echo "Building status-go mobile library"
@@ -77,16 +114,6 @@ $(STATUS_GO_SERVICE_LIB): $(STATUS_GO_LIB)
 $(STATUS_GO_STUB_GEN):
 	@$(MAKE) -C $(STATUS_DESKTOP)/vendor/status-go statusgo-stub-bindings
 
-$(STATUS_Q_LIB): $(STATUS_Q_FILES) $(STATUS_Q_SCRIPT) $(STATUS_Q_UI_FILES)
-	@echo "Building StatusQ"
-	@STATUSQ=$(STATUSQ) QT_MAJOR=$(QT_MAJOR) LIB_SUFFIX=$(LIB_SUFFIX) LIB_EXT=$(LIB_EXT) $(STATUS_Q_SCRIPT) $(HANDLE_OUTPUT)
-	@echo "StatusQ built $(STATUS_Q_LIB)"
-
-$(DOTHERSIDE_LIB): $(DOTHERSIDE_FILES) $(DOTHERSIDE_SCRIPT)
-	@echo "Building DOtherSide"
-	@DOTHERSIDE=$(DOTHERSIDE) QT_MAJOR=$(QT_MAJOR) LIB_SUFFIX=$(LIB_SUFFIX) LIB_EXT=$(LIB_EXT) $(DOTHERSIDE_SCRIPT) $(HANDLE_OUTPUT)
-	@echo "DOtherSide built $(DOTHERSIDE_LIB)"
-
 $(OPENSSL_LIB): $(OPENSSL_FILES)
 	@echo "Building OpenSSL"
 	@LIB_PATH=$(LIB_PATH) LIB_EXT=$(LIB_EXT) OPENSSL=$(OPENSSL) BUILD_DIR=$(BUILD_PATH) $(OPENSSL_SCRIPT) $(HANDLE_OUTPUT)
@@ -96,26 +123,26 @@ $(QRCODEGEN_LIB): $(QRCODEGEN_FILES)
 	@QRCODEGEN=$(QRCODEGEN) $(QRCODEGEN_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "QRCodeGen built $(QRCODEGEN_LIB)"
 
-$(STATUS_KEYCARD_QT_LIB): $(STATUS_KEYCARD_QT_FILES) $(STATUS_KEYCARD_QT_SCRIPT) $(OPENSSL_LIB)
-	@echo "Building status-keycard-qt"
-	@STATUS_KEYCARD_QT=$(STATUS_KEYCARD_QT) KEYCARD_QT=$(KEYCARD_QT) BUILD_DIR=$(BUILD_PATH) $(STATUS_KEYCARD_QT_SCRIPT) $(HANDLE_OUTPUT)
-	@echo "status-keycard-qt built $(STATUS_KEYCARD_QT_LIB)"
-
-$(STATUS_DESKTOP_RCC): $(STATUS_DESKTOP_UI_FILES) compile-translations
-	@echo "Building Status Desktop rcc"
-	@make -C $(STATUS_DESKTOP) rcc $(HANDLE_OUTPUT)
-	@echo "Status Desktop rcc built"
-
-
 ifeq ($(OS),android)
 $(NIM_STATUS_CLIENT_LIB): $(STATUS_GO_STUB_LIB) $(STATUS_GO_SERVICE_LIB)
 endif
 
-$(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT) $(STATUS_DESKTOP_RCC) $(DOTHERSIDE_LIB) $(OPENSSL_LIB) $(STATUS_Q_LIB) $(QRCODEGEN_LIB)
+# Track build flags that affect nim compilation. When DEBUG or feature flags
+# change, the sentinel file changes and forces a rebuild of nim_status_client.
+NIM_BUILD_FLAGS := DEBUG=$(DEBUG) FLAG_DAPPS_ENABLED=$(FLAG_DAPPS_ENABLED) FLAG_KEYCARD_ENABLED=$(FLAG_KEYCARD_ENABLED) FLAG_BROWSER_ENABLED=$(FLAG_BROWSER_ENABLED)
+NIM_FLAGS_SENTINEL := $(BUILD_PATH)/.nim_build_flags
+
+# Recreate sentinel if flags changed (compare content, not just existence)
+$(shell mkdir -p $(BUILD_PATH))
+$(shell echo "$(NIM_BUILD_FLAGS)" | cmp -s - $(NIM_FLAGS_SENTINEL) || echo "$(NIM_BUILD_FLAGS)" > $(NIM_FLAGS_SENTINEL))
+
+# nim_status_client is now static on both platforms — no link-time deps on
+# DOtherSide/StatusQ. Only needs OpenSSL for C compilation.
+$(NIM_STATUS_CLIENT_LIB): $(NIM_FLAGS_SENTINEL) $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT) $(OPENSSL_LIB)
 	@echo "Building Status Desktop Lib"
 	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
 	LIB_SUFFIX=$(LIB_SUFFIX) \
-	LIB_EXT=$(LIB_EXT) \
+	LIB_EXT=.a \
 	USE_QML_SERVER=$(USE_QML_SERVER) \
 	BUNDLE_IDENTIFIER="$(BUNDLE_IDENTIFIER)" \
 	DEBUG=$(DEBUG) \
@@ -127,107 +154,113 @@ $(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT
 	$(NIM_STATUS_CLIENT_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "Status Desktop Lib built $(NIM_STATUS_CLIENT_LIB)"
 
-# non-phony targets
-$(TARGET): $(APP_SCRIPT) $(STATUS_GO_LIB) $(STATUS_Q_LIB) $(DOTHERSIDE_LIB) $(OPENSSL_LIB) $(QRCODEGEN_LIB) $(STATUS_KEYCARD_QT_LIB) $(NIM_STATUS_CLIENT_LIB) $(STATUS_DESKTOP_RCC) $(WRAPPER_APP_FILES)
-	@echo "Building app"
-ifeq ($(OS),android)
-	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
-	GRADLE_TARGETS="$(GRADLE_TARGETS)" \
-	BUILD_TYPE=$(PACKAGE_TYPE) \
-	BIN_DIR=$(BIN_PATH) \
-	BUILD_DIR=$(BUILD_PATH) \
-	QT_MAJOR=$(QT_MAJOR) \
-	FLAG_KEYCARD_ENABLED=$(FLAG_KEYCARD_ENABLED) \
-	$(APP_SCRIPT) $(HANDLE_OUTPUT)
-else
-	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
-	BIN_DIR=$(BIN_PATH) \
-	BUILD_DIR=$(BUILD_PATH) \
-	QT_MAJOR=$(QT_MAJOR) \
-	FLAG_KEYCARD_ENABLED=$(FLAG_KEYCARD_ENABLED) \
-	$(APP_SCRIPT) $(HANDLE_OUTPUT)
-endif
-	@echo "Built $(TARGET)"
+# ---- cmake configure (shared across all build targets) ----
+# qt-cmake sets the correct generator and toolchain for each platform:
+#   iOS: -GXcode + qt.toolchain.cmake (sets CMAKE_SYSTEM_NAME=iOS, sysroot, arch, deployment target)
+#   Android: qt.toolchain.cmake (chain-loads NDK toolchain, auto-detects ABI)
 
-# phony rules
+NON_CMAKE_DEPS := $(STATUS_GO_LIB) $(OPENSSL_LIB) $(QRCODEGEN_LIB) $(NIM_STATUS_CLIENT_LIB)
+CMAKE_CACHE := $(CMAKE_BUILD_DIR)/CMakeCache.txt
+
+$(CMAKE_CACHE): $(NON_CMAKE_DEPS) | makedir
+	@echo "Configuring cmake ($(OS), variant=$(BUILD_VARIANT))..."
+	@BUILD_VARIANT=$(BUILD_VARIANT) VERSION_CODE=$(BUILD_VERSION) \
+		$(QT_CMAKE) -S $(WRAPPER_APP) -B $(CMAKE_BUILD_DIR) $(CMAKE_FLAGS)
+
+.PHONY: cmake-reconfigure
+cmake-reconfigure:
+	@rm -f $(CMAKE_CACHE)
+	@$(MAKE) $(CMAKE_CACHE)
+
+# ---- Platform build targets ----
+
+ifeq ($(OS),android)
+
+.PHONY: apk
+apk: $(CMAKE_CACHE)
+	@cmake --build $(CMAKE_BUILD_DIR) --target apk -j $$(nproc)
+	@mkdir -p $(BIN_PATH)
+	@cp $$(find $(CMAKE_BUILD_DIR)/android-build -name "*.apk" -path "*/release/*" | head -1) $(BIN_PATH)/$(OUTPUT_NAME).apk
+	@echo "✓ $(BIN_PATH)/$(OUTPUT_NAME).apk"
+
+.PHONY: apk-debug
+apk-debug: $(CMAKE_CACHE)
+	@cmake --build $(CMAKE_BUILD_DIR) --target apk -j $$(nproc)
+	@cd $(CMAKE_BUILD_DIR)/android-build && $(GRADLE_BIN) assembleDebug --no-daemon --console=plain
+	@mkdir -p $(BIN_PATH)
+	@cp $$(find $(CMAKE_BUILD_DIR)/android-build -name "*.apk" -path "*/debug/*" | head -1) $(BIN_PATH)/$(OUTPUT_NAME).apk
+	@echo "✓ $(BIN_PATH)/$(OUTPUT_NAME).apk"
+
+.PHONY: aab
+aab: $(CMAKE_CACHE)
+	@cmake --build $(CMAKE_BUILD_DIR) --target apk -j $$(nproc)
+	@cd $(CMAKE_BUILD_DIR)/android-build && $(GRADLE_BIN) bundleRelease --no-daemon --console=plain
+	@mkdir -p $(BIN_PATH)
+	@cp $$(find $(CMAKE_BUILD_DIR)/android-build -name "*.aab" -path "*/bundle/*" | head -1) $(BIN_PATH)/$(OUTPUT_NAME).aab
+	@echo "✓ $(BIN_PATH)/$(OUTPUT_NAME).aab"
+
+.PHONY: apk-aab
+apk-aab: $(CMAKE_CACHE)
+	@cmake --build $(CMAKE_BUILD_DIR) --target apk -j $$(nproc)
+	@cd $(CMAKE_BUILD_DIR)/android-build && $(GRADLE_BIN) bundleRelease --no-daemon --console=plain
+	@mkdir -p $(BIN_PATH)
+	@cp $$(find $(CMAKE_BUILD_DIR)/android-build -name "*.apk" -path "*/release/*" | head -1) $(BIN_PATH)/$(OUTPUT_NAME).apk
+	@cp $$(find $(CMAKE_BUILD_DIR)/android-build -name "*.aab" -path "*/bundle/*" | head -1) $(BIN_PATH)/$(OUTPUT_NAME).aab
+	@echo "✓ $(BIN_PATH)/$(OUTPUT_NAME).apk + .aab"
+
+.PHONY: apk-fdroid
+apk-fdroid: apk
+
+else ifeq ($(OS),ios)
+
+# Xcode build flags
+XCODE_FLAGS := -configuration Release -sdk $(IPHONE_SDK) -jobs $(NPROC) -parallelizeTargets \
+    CURRENT_PROJECT_VERSION=$(BUILD_VERSION)
+ifeq ($(QMAKE_EXTRA_CONFIG),fastlane)
+    XCODE_FLAGS += CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+else
+    XCODE_FLAGS += -allowProvisioningUpdates
+endif
+
+.PHONY: ios-app
+ios-app: $(CMAKE_CACHE)
+	@cd $(CMAKE_BUILD_DIR) && xcodebuild $(XCODE_FLAGS) -target StatusMobile build | xcbeautify
+	@mkdir -p $(BIN_PATH)
+	@rm -rf $(BIN_PATH)/$(OUTPUT_NAME).app
+	@cp -R $(CMAKE_BUILD_DIR)/Release-$(IPHONE_SDK)/$(OUTPUT_NAME).app $(BIN_PATH)/$(OUTPUT_NAME).app
+	@test -e "$(BIN_PATH)/$(OUTPUT_NAME).app/Info.plist" || { echo "Build failed"; exit 1; }
+	@echo "✓ $(BIN_PATH)/$(OUTPUT_NAME).app"
+endif
+
+# ---- Utility targets ----
+
 .PHONY: makedir
 makedir:
 	@mkdir -p $(BIN_PATH) $(LIB_PATH) $(BUILD_PATH)
 
-.PHONY: compile-translations
-compile-translations:
-	@echo "Building translations"
-ifeq ($(HOST_OS),linux)
-	@make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
-else
-	@CC= CXX= make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
-endif
+.PHONY: default
+default: makedir all
 
-.PHONY: apk
-apk:
 ifeq ($(OS),android)
-	@$(MAKE) GRADLE_TARGETS=assembleRelease $(TARGET)
-else
-	$(error APK target is only available for Android)
-endif
-
-.PHONY: apk-debug
-apk-debug:
-ifeq ($(OS),android)
-	@$(MAKE) GRADLE_TARGETS=assembleDebug $(TARGET)
-else
-	$(error APK target is only available for Android)
-endif
-
-.PHONY: aab
-aab:
-ifeq ($(OS),android)
-	@$(MAKE) GRADLE_TARGETS="assembleRelease bundleRelease" $(TARGET)
-else
-	$(error AAB target is only available for Android)
-endif
-
-.PHONY: apk-aab
-apk-aab:
-ifeq ($(OS),android)
-	@$(MAKE) GRADLE_TARGETS="assembleRelease bundleRelease" $(TARGET)
-else
-	$(error apk-aab target is only available for Android)
-endif
-
-.PHONY: ios-app
-ios-app:
-ifeq ($(OS),ios)
-	@$(MAKE) $(TARGET)
-	@echo "✓ iOS app built successfully"
-else
-	$(error iOS app target is only available for iOS)
-endif
-
 .PHONY: all
-all: $(TARGET)
-
-.PHONY: clean
-clean: clean-statusq clean-dotherside clean-openssl clean-qrcodegen clean-status-keycard-qt clean-nim-status-client clean-status-desktop-rcc
-	@echo "Cleaning"
-	@rm -rf $(ROOT_DIR)/bin $(ROOT_DIR)/build $(ROOT_DIR)/lib
+all: apk-debug
 
 .PHONY: run
-run: makedir $(TARGET)
-	@echo "Running"
-	@APP=$(TARGET) QT_MAJOR=$(QT_MAJOR) USE_QML_SERVER=$(USE_QML_SERVER) $(RUN_SCRIPT)
+run: apk-debug
+	@APP=$(BIN_PATH)/$(OUTPUT_NAME).apk USE_QML_SERVER=$(USE_QML_SERVER) $(RUN_SCRIPT)
+else ifeq ($(OS),ios)
+.PHONY: all
+all: ios-app
 
-.PHONY: clean-statusq
-clean-statusq:
-	@rm -f $(STATUS_Q_LIB)
-	@rm -rf $(STATUSQ)/build
-	@make -C $(STATUS_DESKTOP) statusq-clean
+.PHONY: run
+run: ios-app
+	@APP=$(BIN_PATH)/$(OUTPUT_NAME).app USE_QML_SERVER=$(USE_QML_SERVER) $(RUN_SCRIPT)
+endif
 
-.PHONY: clean-dotherside
-clean-dotherside:
-	@rm -f $(DOTHERSIDE_LIB)
-	@rm -rf $(DOTHERSIDE)/build
-	@make -C $(STATUS_DESKTOP) dotherside-clean
+.PHONY: clean
+clean: clean-openssl clean-qrcodegen clean-nim-status-client
+	@echo "Cleaning"
+	@rm -rf $(ROOT_DIR)/bin $(ROOT_DIR)/build $(ROOT_DIR)/lib
 
 .PHONY: clean-openssl
 clean-openssl:
@@ -238,28 +271,7 @@ clean-qrcodegen:
 	@rm -f $(QRCODEGEN_LIB)
 	@cd $(QRCODEGEN) && make clean
 
-# keycard-qt is now automatically built by status-keycard-qt via CMake FetchContent
-# Its build artifacts are cleaned as part of status-keycard-qt's build directory
-.PHONY: clean-status-keycard-qt
-clean-status-keycard-qt:
-	@rm -f $(STATUS_KEYCARD_QT_LIB)
-	@rm -rf $(STATUS_KEYCARD_QT)/build/$(OS)
-
 .PHONY: clean-nim-status-client
 clean-nim-status-client:
 	@rm -f $(NIM_STATUS_CLIENT_LIB)
 	@rm -rf $(STATUS_DESKTOP)/nimcache
-
-.PHONY: clean-status-desktop-rcc
-clean-status-desktop-rcc:
-	@rm -f $(STATUS_DESKTOP_RCC)
-	@rm -f $(STATUS_DESKTOP)/resources.rcc
-	@rm -f $(STATUS_DESKTOP)/ui/resources.qrc
-
-.PHONY: apk-fdroid
-apk-fdroid:
-ifeq ($(OS),android)
-	@$(MAKE) GRADLE_TARGETS=assembleFdroid $(TARGET)
-else
-	$(error apk-fdroid target is only available for Android)
-endif

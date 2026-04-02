@@ -5,12 +5,15 @@
 
 extern "C" {
     void NimMain();
+
+    // Nim's staticlib expects these to be provided by the host.
+    // On Android there's no traditional main(argc, argv), so provide stubs.
+    int cmdCount = 0;
+    char** cmdLine = nullptr;
 }
 
 int main(int argc, char* argv[])
 {
-    Q_INIT_RESOURCE(resources);
-
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
     qmlRegisterModule("Qt.labs.settings", 1, 1);
     qmlRegisterModule("Qt.labs.settings", 1, 0);

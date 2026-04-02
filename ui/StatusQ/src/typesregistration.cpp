@@ -152,7 +152,9 @@ void registerStatusQTypes() {
 
 #ifdef BUNDLE_QML_RESOURCES
     Q_INIT_RESOURCE(TestConfig);
-    Q_INIT_RESOURCE(statusq);
+    // QML resources are now managed by qt_add_qml_module (qmlcachegen AOT compilation)
+    Q_INIT_RESOURCE(qmake_StatusQ);
+    Q_INIT_RESOURCE(StatusQ_raw_qml_0);
 #if defined(STATUSQ_HAS_MOBILEWEBVIEW)
     Q_INIT_RESOURCE(customwebview);
 #endif

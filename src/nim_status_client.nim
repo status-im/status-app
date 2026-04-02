@@ -10,6 +10,9 @@ import app/core/main
 import constants as main_constants
 import statusq_bridge
 
+  # APP_AOT_COMPILE resources are now initialized by Q_IMPORT_PLUGIN(AppResourcesPlugin)
+  # in main.cpp — no Nim-side bridge needed.
+
 import app/global/global_singleton
 import app/global/local_app_settings
 import app/boot/app_controller
@@ -201,6 +204,10 @@ proc mainProc() =
 
   let statusFoundation = newStatusFoundation()
   let uiScaleFilePath = joinPath(DATADIR, "ui-scale")
+
+  # Enable QML disk cache for faster subsequent launches
+  putEnv("QML_DISK_CACHE", "aot")
+
   # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
   initializeWebView()
   enableHDPI(uiScaleFilePath)
@@ -238,7 +245,11 @@ proc mainProc() =
   let isExperimentalQVariant = newQVariant(isExperimental)
   let signalsManagerQVariant = newQVariant(statusFoundation.signalsManager)
 
-  QResource.registerResource(app.applicationDirPath & resourcesPath)
+  when not defined(APP_AOT_COMPILE):
+    # When AOT is disabled, load resources from external .rcc file at runtime.
+    # When AOT is enabled, resources are initialized by Q_IMPORT_PLUGIN(AppResourcesPlugin)
+    # in main.cpp before NimMain() is called.
+    QResource.registerResource(app.applicationDirPath & resourcesPath)
 
   if not main_constants.IS_MACOS:
     app.icon(app.applicationDirPath & statusAppIconPath)
@@ -269,20 +280,20 @@ proc mainProc() =
 
   app.installEventFilter(urlSchemeEvent)
 
-  defer:
-    info "shutting down..."
-    signalsManagerQObjPointer = nil
-    featureGuard KEYCARD_ENABLED:
-      keycardServiceQObjPointer = nil
-      keycardServiceV2QObjPointer = nil
-    isProductionQVariant.delete()
-    isExperimentalQVariant.delete()
-    signalsManagerQVariant.delete()
-    networkAccessFactory.delete()
-    appController.delete()
-    statusFoundation.delete()
-    singleInstance.delete()
-    app.delete()
+  # defer:
+  #   info "shutting down..."
+  #   signalsManagerQObjPointer = nil
+  #   featureGuard KEYCARD_ENABLED:
+  #     keycardServiceQObjPointer = nil
+  #     keycardServiceV2QObjPointer = nil
+  #   isProductionQVariant.delete()
+  #   isExperimentalQVariant.delete()
+  #   signalsManagerQVariant.delete()
+  #   networkAccessFactory.delete()
+  #   appController.delete()
+  #   statusFoundation.delete()
+  #   singleInstance.delete()
+  #   app.delete()
 
   featureGuard SINGLE_STATUS_INSTANCE_ENABLED:
     # Checks below must be always after "defer", in case anything fails destructors will freed a memory.
@@ -301,6 +312,7 @@ proc mainProc() =
 
   info "app info", version=APP_VERSION, commit=GIT_COMMIT, currentDateTime=now()
 
+  echo "CPU Time [app_startup] BEGIN"
   info "starting application controller..."
   appController.start()
 
