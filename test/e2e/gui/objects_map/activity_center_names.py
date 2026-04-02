@@ -5,10 +5,10 @@ from objectmaphelper import *
 
 activityCenterPanel = {"container": statusDesktop_mainWindow, "objectName": "activityCenterPanel", "type": "ActivityCenterPanel", "visible": True}
 activityCenterCloseButton = {"container": activityCenterPanel, "objectName": "closeButton", "type": "StatusFlatRoundButton", "visible": True}
-activityCenterListView = {"container": activityCenterPanel, "id": "listView", "type": "StatusListView", "unnamed": 1, "visible": True}
+activityCenterListView = {"container": activityCenterPanel, "objectName": "listView", "type": "StatusListView", "visible": True}
 activityCenterListLoader = {"container": activityCenterListView, "index": 0, "type": "Loader", "unnamed": 1, "visible": True}
 activityCenterNotificationCard = {"container": activityCenterListView, "objectName": "notificationCard", "type": "NotificationCard", "visible": True}
-activityCenterQuickActions = {"container": activityCenterNotificationCard, "id": "quickActions", "type": "RowLayout", "unnamed": 1, "visible": True}
+activityCenterQuickActions = {"container": activityCenterNotificationCard, "objectName": "quickActions", "type": "RowLayout", "visible": True}
 
 notificationCardAcceptButton = {"container": activityCenterQuickActions, "objectName": "notificationAcceptBtn", "type": "StatusButton",}
 notificationCardDeclineButton = {"container": activityCenterQuickActions, "objectName": "notificationDeclineBtn", "type": "StatusButton",}
