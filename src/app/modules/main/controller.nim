@@ -653,3 +653,6 @@ proc stopTokenHoldersManagement*(self: Controller) =
 
 proc connectionChange*(self: Controller, connectionType: string, isExpensive: bool) =
   self.generalService.connectionChange(connectionType, isExpensive)
+
+proc logout*(self: Controller) =
+  self.generalService.logout()

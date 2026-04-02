@@ -1508,7 +1508,7 @@ QtObject {
                 headerSettings.title: qsTr("Sign out")
                 confirmationText: qsTr("Make sure you have your account password and recovery phrase stored. Without them you can lock yourself out of your account and lose funds.")
                 confirmButtonLabel: qsTr("Sign out & Quit")
-                onConfirmButtonClicked: Qt.exit(0)
+                onConfirmButtonClicked: mainModule.signOutAndQuit()
             }
         },
 

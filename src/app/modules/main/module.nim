@@ -2005,6 +2005,11 @@ proc runStartUsingKeycardForProfilePopup[T](self: Module[T]) =
     singletonInstance.userProfile.getKeyUid(), bip44Paths = @[], txHash = "", forceFlow = true)
 ################################################################################
 
+method signOutAndQuit*[T](self: Module[T]) =
+  info "signOutAndQuit: logging out and quitting"
+  self.controller.logout()
+  quit()
+
 method checkAndPerformProfileMigrationIfNeeded*[T](self: Module[T]) =
   let keyUid = singletonInstance.userProfile.getKeyUid()
   let migrationNeeded = self.settingsService.getProfileMigrationNeeded()
