@@ -34,6 +34,10 @@ QtObject {
         keycardModule: d.profileSectionModuleInst.keycardModule
     }
 
+    property KeycardNewStore keycardNewStore: KeycardNewStore {
+        keycardNewModule: d.profileSectionModuleInst.keycardNewModule
+    }
+
     property EnsUsernamesStore ensUsernamesStore: EnsUsernamesStore {
         ensUsernamesModule: d.profileSectionModuleInst.ensUsernamesModule
     }

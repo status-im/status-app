@@ -241,10 +241,11 @@ QtObject {
         readonly property int about: 12
         readonly property int communitiesSettings: 13
         readonly property int keycard: 14
-        readonly property int about_terms: 15 // a subpage under "About"
-        readonly property int about_privacy: 16 // a subpage under "About"
-        readonly property int privacyAndSecurity: 17
-        readonly property int backupSettings: 18
+        readonly property int keycardNew: 15
+        readonly property int about_terms: 16 // a subpage under "About"
+        readonly property int about_privacy: 17 // a subpage under "About"
+        readonly property int privacyAndSecurity: 18
+        readonly property int backupSettings: 19
 
         // special treatment; these do not participate in the main settings' StackLayout
         readonly property int signout: 100
@@ -510,6 +511,10 @@ QtObject {
             readonly property string ready: "ready"
             readonly property string authorized: "authorized"
             readonly property string cancelled: "cancelled"
+        }
+
+        readonly property QtObject flow: QtObject {
+            readonly property string readKeycard: "read-keycard"
         }
     }
 

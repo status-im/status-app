@@ -11,4 +11,5 @@ PrivacyAndSecurityView 1.0 PrivacyAndSecurityView.qml
 SyncingView 1.0 SyncingView.qml
 SettingsLeftTabView 1.0 SettingsLeftTabView.qml
 SettingsContentBase 1.0 SettingsContentBase.qml
+KeycardViewNew 1.0 KeycardViewNew.qml
 WhitelistedDomainsView 1.0 WhitelistedDomainsView.qml

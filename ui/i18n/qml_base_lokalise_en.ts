@@ -6745,6 +6745,191 @@
       <comment>DetailsView</comment>
       <translation>Create a new pairing code</translation>
     </message>
+    <message>
+      <source>Keycard is empty</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard is empty</translation>
+    </message>
+    <message>
+      <source>Keycard is blocked</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard is blocked</translation>
+    </message>
+    <message>
+      <source>Keycard stores only PIN</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard stores only PIN</translation>
+    </message>
+    <message>
+      <source>Keycard stores Status profile key pair</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard stores Status profile key pair</translation>
+    </message>
+    <message>
+      <source>Keycard stores key pair</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard stores key pair</translation>
+    </message>
+    <message>
+      <source>Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard</translation>
+    </message>
+    <message>
+      <source>Keycard is blocked due to five failed PUK input attempts</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard is blocked due to five failed PUK input attempts</translation>
+    </message>
+    <message>
+      <source>Keycard is blocked due to three failed PIN input attempts</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard is blocked due to three failed PIN input attempts</translation>
+    </message>
+    <message>
+      <source>You are using this Keycard to login to Status</source>
+      <comment>DetailsView</comment>
+      <translation>You are using this Keycard to login to Status</translation>
+    </message>
+    <message>
+      <source>This key pair have been already added to Status wallet</source>
+      <comment>DetailsView</comment>
+      <translation>This key pair have been already added to Status wallet</translation>
+    </message>
+    <message>
+      <source>Key pair has not been added to Status wallet</source>
+      <comment>DetailsView</comment>
+      <translation>Key pair has not been added to Status wallet</translation>
+    </message>
+    <message>
+      <source>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</source>
+      <comment>DetailsView</comment>
+      <translation>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</translation>
+    </message>
+    <message>
+      <source>, </source>
+      <comment>DetailsView</comment>
+      <translation>,</translation>
+    </message>
+    <message>
+      <source>UID: %1</source>
+      <comment>DetailsView</comment>
+      <translation>UID: %1</translation>
+    </message>
+    <message>
+      <source>What you can do:</source>
+      <comment>DetailsView</comment>
+      <translation>What you can do:</translation>
+    </message>
+    <message>
+      <source>Move profile key pair to Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>Move profile key pair to Keycard</translation>
+    </message>
+    <message>
+      <source>Keycard will be required for sign and login to Status</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard will be required for sign and login to Status</translation>
+    </message>
+    <message>
+      <source>Move key pair from Status wallet to Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>Move key pair from Status wallet to Keycard</translation>
+    </message>
+    <message>
+      <source>Keycard will be required for signing</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard will be required for signing</translation>
+    </message>
+    <message>
+      <source>Import a new key pair to Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>Import a new key pair to Keycard</translation>
+    </message>
+    <message>
+      <source>Import an existing key pair (from recovery phrase) to Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>Import an existing key pair (from recovery phrase) to Keycard</translation>
+    </message>
+    <message>
+      <source>In case you lost Keycard, want to create a backup or import key pair&#xA;Keycard will be required for signing</source>
+      <comment>DetailsView</comment>
+      <translation>In case you lost Keycard, want to create a backup or import key pair&#xA;Keycard will be required for signing</translation>
+    </message>
+    <message>
+      <source>Unblock with recovery phrase</source>
+      <comment>DetailsView</comment>
+      <translation>Unblock with recovery phrase</translation>
+    </message>
+    <message>
+      <source>Requires providing recovery phrase for key pair stored on Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>Requires providing recovery phrase for key pair stored on Keycard</translation>
+    </message>
+    <message>
+      <source>Unblock with PUK</source>
+      <comment>DetailsView</comment>
+      <translation>Unblock with PUK</translation>
+    </message>
+    <message>
+      <source>If you set your PUK earlier for this Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>If you set your PUK earlier for this Keycard</translation>
+    </message>
+    <message>
+      <source>Add key pair to Status wallet</source>
+      <comment>DetailsView</comment>
+      <translation>Add key pair to Status wallet</translation>
+    </message>
+    <message>
+      <source>You’ll be able to sign transactions in Status wallet with Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>You’ll be able to sign transactions in Status wallet with Keycard</translation>
+    </message>
+    <message>
+      <source>Change PIN on Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>Change PIN on Keycard</translation>
+    </message>
+    <message>
+      <source>If you want to have other PIN</source>
+      <comment>DetailsView</comment>
+      <translation>If you want to have other PIN</translation>
+    </message>
+    <message>
+      <source>New name will be visible in Status and in other apps</source>
+      <comment>DetailsView</comment>
+      <translation>New name will be visible in Status and in other apps</translation>
+    </message>
+    <message>
+      <source>Set or change PUK</source>
+      <comment>DetailsView</comment>
+      <translation>Set or change PUK</translation>
+    </message>
+    <message>
+      <source>If you want additional recovery option</source>
+      <comment>DetailsView</comment>
+      <translation>If you want additional recovery option</translation>
+    </message>
+    <message>
+      <source>Status password will be required to login and signing</source>
+      <comment>DetailsView</comment>
+      <translation>Status password will be required to login and signing</translation>
+    </message>
+    <message>
+      <source>Status password will be required to sign</source>
+      <comment>DetailsView</comment>
+      <translation>Status password will be required to sign</translation>
+    </message>
+    <message>
+      <source>Factory reset</source>
+      <comment>DetailsView</comment>
+      <translation>Factory reset</translation>
+    </message>
+    <message>
+      <source>Remove everything from Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>Remove everything from Keycard</translation>
+    </message>
   </context>
   <context>
     <name>DidYouKnowMessages</name>
@@ -12214,6 +12399,14 @@
     </message>
   </context>
   <context>
+    <name>KeycardViewNew</name>
+    <message>
+      <source>Read Keycard</source>
+      <comment>KeycardViewNew</comment>
+      <translation>Read Keycard</translation>
+    </message>
+  </context>
+  <context>
     <name>Keychain</name>
     <message>
       <source>Authenticate</source>
@@ -13028,6 +13221,11 @@
       <source>Import missing key pairs</source>
       <comment>MainView</comment>
       <translation>Import missing key pairs</translation>
+    </message>
+    <message>
+      <source>Get Keycard</source>
+      <comment>MainView</comment>
+      <translation>Get Keycard</translation>
     </message>
   </context>
   <context>

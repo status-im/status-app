@@ -57,6 +57,7 @@ StatusSectionLayout {
     required property ProfileStores.NotificationsStore notificationsStore
     required property ProfileStores.LanguageStore languageStore
     required property ProfileStores.KeycardStore keycardStore
+    required property ProfileStores.KeycardNewStore keycardNewStore
     required property ProfileStores.WalletStore walletStore
     required property ProfileStores.EnsUsernamesStore ensUsernamesStore
     required property ProfileStores.AboutStore aboutStore
@@ -126,6 +127,9 @@ StatusSectionLayout {
             break;
         case Constants.settingsSubsection.keycard:
             keycardView.item.handleBackAction()
+            break;
+        case Constants.settingsSubsection.keycardNew:
+            keycardViewNew.item.handleBackAction()
             break;
         }
 
@@ -218,6 +222,8 @@ StatusSectionLayout {
                 privacyAndSecurityView.item.resetStack()
             } else if (currentIndex === Constants.settingsSubsection.keycard) {
                 keycardView.item.handleBackAction()
+            } else if (currentIndex === Constants.settingsSubsection.keycardNew) {
+                keycardViewNew.item.handleBackAction()
             }
         }
 
@@ -549,6 +555,25 @@ StatusSectionLayout {
                 mainSectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.keycard)
                 backButtonName: d.backButtonName
                 contentWidth: d.contentWidth
+            }
+        }
+
+        Loader {
+            id: keycardViewNew
+            active: false
+            sourceComponent: KeycardViewNew {
+                implicitWidth: parent.width
+                implicitHeight: parent.height
+
+                keycardNewStore: root.keycardNewStore
+                areTestNetworksEnabled: root.networksStore.areTestNetworksEnabled
+                sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.keycardNew)
+                mainSectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.keycardNew)
+                contentWidth: d.contentWidth
+
+                onBackButtonNameRequested: function(name) {
+                    d.backButtonName = name
+                }
             }
         }
 

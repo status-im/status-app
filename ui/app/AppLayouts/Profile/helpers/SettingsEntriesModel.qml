@@ -80,6 +80,13 @@ SortFilterProxyModel {
             icon: "keycard",
             isExperimental: false
         },
+        // TODO: enable when integrate keycard settings
+        // {
+        //     subsection: Constants.settingsSubsection.keycardNew,
+        //     text: qsTr("Keycard New"),
+        //     icon: "keycard",
+        //     isExperimental: false
+        // },
         {
             subsection: Constants.settingsSubsection.ensUsernames,
             text: qsTr("ENS usernames"),
@@ -222,6 +229,8 @@ SortFilterProxyModel {
                     case Constants.settingsSubsection.backUpSeed:
                         return root.showBackUpSeed
                     case Constants.settingsSubsection.keycard:
+                        return root.isKeycardEnabled
+                    case Constants.settingsSubsection.keycardNew:
                         return root.isKeycardEnabled
                     case Constants.settingsSubsection.contacts:
                         return root.showSubSubSections

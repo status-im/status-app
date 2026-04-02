@@ -5540,6 +5540,155 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
         <source>Create a new pairing code</source>
         <translation>Crear un nuevo código de emparejamiento</translation>
     </message>
+    <message>
+        <source>Keycard is empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is blocked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard stores only PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard stores Status profile key pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard stores key pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard</source>
+        <translation type="unfinished">Keycard</translation>
+    </message>
+    <message>
+        <source>Keycard is blocked due to five failed PUK input attempts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is blocked due to three failed PIN input attempts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are using this Keycard to login to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This key pair have been already added to Status wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Key pair has not been added to Status wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>, </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>UID: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>What you can do:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Move profile key pair to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard will be required for sign and login to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Move key pair from Status wallet to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard will be required for signing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import a new key pair to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import an existing key pair (from recovery phrase) to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In case you lost Keycard, want to create a backup or import key pair
+Keycard will be required for signing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unblock with recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Requires providing recovery phrase for key pair stored on Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unblock with PUK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you set your PUK earlier for this Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add key pair to Status wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You’ll be able to sign transactions in Status wallet with Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Change PIN on Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you want to have other PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New name will be visible in Status and in other apps</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set or change PUK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you want additional recovery option</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status password will be required to login and signing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status password will be required to sign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Factory reset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove everything from Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>DidYouKnowMessages</name>
@@ -10034,6 +10183,13 @@ acceso a tus fondos.</translation>
     </message>
 </context>
 <context>
+    <name>KeycardViewNew</name>
+    <message>
+        <source>Read Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Keychain</name>
     <message>
         <source>Authenticate</source>
@@ -10714,6 +10870,10 @@ al cargar</translation>
     <message>
         <source>Import missing key pairs</source>
         <translation>Importar pares de claves faltantes</translation>
+    </message>
+    <message>
+        <source>Get Keycard</source>
+        <translation type="unfinished">Obtener Keycard</translation>
     </message>
 </context>
 <context>

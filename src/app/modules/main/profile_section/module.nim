@@ -35,6 +35,7 @@ import ./notifications/module as notifications_module
 import ./ens_usernames/module as ens_usernames_module
 import ./communities/module as communities_module
 import ./keycard/module as keycard_module
+import ./keycard_new/module as keycard_new_module
 import ./wallet/module as wallet_module
 
 export io_interface
@@ -59,6 +60,7 @@ type
     ensUsernamesModule: ens_usernames_module.AccessInterface
     communitiesModule: communities_module.AccessInterface
     keycardModule: keycard_module.AccessInterface
+    keycardNewModule: keycard_new_module.AccessInterface
     walletModule: wallet_module.AccessInterface
 
 proc newModule*(delegate: delegate_interface.AccessInterface,
@@ -111,6 +113,8 @@ proc newModule*(delegate: delegate_interface.AccessInterface,
   result.keycardModule = keycard_module.newModule(result, events, keycardService, settingsService, networkService,
     privacyService, accountsService, walletAccountService)
 
+  result.keycardNewModule = keycard_new_module.newModule(result, walletAccountService)
+
   result.walletModule = wallet_module.newModule(result, events, accountsService, walletAccountService, settingsService,
     networkService, devicesService, nodeService)
 
@@ -127,6 +131,7 @@ method delete*(self: Module) =
   self.wakuModule.delete
   self.communitiesModule.delete
   self.keycardModule.delete
+  self.keycardNewModule.delete
 
   self.view.delete
   self.viewVariant.delete
@@ -146,6 +151,7 @@ method load*(self: Module) =
   self.ensUsernamesModule.load()
   self.communitiesModule.load()
   self.keycardModule.load()
+  self.keycardNewModule.load()
   self.walletModule.load()
 
 method isLoaded*(self: Module): bool =
@@ -186,6 +192,9 @@ proc checkIfModuleDidLoad(self: Module) =
     return
 
   if(not self.keycardModule.isLoaded()):
+    return
+
+  if(not self.keycardNewModule.isLoaded()):
     return
 
   if(not self.walletModule.isLoaded()):
@@ -262,6 +271,12 @@ method communitiesModuleDidLoad*(self: Module) =
 
 method getKeycardModule*(self: Module): QVariant =
   self.keycardModule.getModuleAsVariant()
+
+method keycardNewModuleDidLoad*(self: Module) =
+  self.checkIfModuleDidLoad()
+
+method getKeycardNewModule*(self: Module): QVariant =
+  self.keycardNewModule.getModuleAsVariant()
 
 method walletModuleDidLoad*(self: Module) =
   self.checkIfModuleDidLoad()

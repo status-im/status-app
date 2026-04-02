@@ -72,6 +72,11 @@ QtObject:
   QtProperty[QVariant] keycardModule:
     read = getKeycardModule
 
+  proc getKeycardNewModule(self: View): QVariant {.slot.} =
+    return self.delegate.getKeycardNewModule()
+  QtProperty[QVariant] keycardNewModule:
+    read = getKeycardNewModule
+
   proc getWalletModule(self: View): QVariant {.slot.} =
     return self.delegate.getWalletModule()
   QtProperty[QVariant] walletModule:

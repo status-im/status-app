@@ -9,3 +9,4 @@ ProfileSectionStore 1.0 ProfileSectionStore.qml
 ProfileStore 1.0 ProfileStore.qml
 WalletStore 1.0 WalletStore.qml
 KeycardStore 1.0 KeycardStore.qml
+KeycardNewStore 1.0 KeycardNewStore.qml
