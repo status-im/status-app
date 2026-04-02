@@ -50,8 +50,8 @@ SplitView {
                 Tracer { border.color: "blue" }
                 Layout.fillWidth: true
 
-                isOnline: ctrlIsOnline.checked
                 networkConnectionStore: NetworkConnectionStore {
+                    isOnline: ctrlIsOnline.checked
                     function getChainIdsJointString(chainIdsDown) {
                         return chainIdsDown.join(" & ")
                     }

@@ -26,7 +26,7 @@ Loader {
     property bool relevantForCurrentSection: true
     onRelevantForCurrentSectionChanged: updateBanner(false)
 
-    required property bool isOnline // strict online/offline check, doesn't care about the wallet services
+    readonly property bool isOnline: networkConnectionStore.isOnline // strict online/offline check, doesn't care about the wallet services
     onIsOnlineChanged: {
         connectionState = Constants.ConnectionStatus.Unknown // reset the state; wait for real status change from backend
         updateBanner()

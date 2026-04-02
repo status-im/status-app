@@ -122,6 +122,7 @@ Item {
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore: ChatStores.CreateChatPropertiesStore {}
     property SharedStores.NetworkConnectionStore networkConnectionStore: SharedStores.NetworkConnectionStore {
         networksStore: appMain.networksStore
+        isOnline: d.networkChecker.isOnline
     }
     property SharedStores.CommunityTokensStore communityTokensStore: SharedStores.CommunityTokensStore {
         currencyStore: appMain.currencyStore
@@ -831,15 +832,12 @@ Item {
             active: {
                 if (!appMain.rootStore.thirdpartyServicesEnabled) // the connectivity checks might leak our IP
                     return false
-                if (SQUtils.Utils.isMobile) // on mobile, suspend the checks when in background
-                    return appMain.Window.window.active
                 return true
             }
 
             Component.onCompleted: d.connectionChange()
             onIsOnlineChanged: d.connectionChange()
             onConnectionTypeChanged: d.connectionChange()
-            onIsExpensiveChanged: d.connectionChange()
         }
 
         readonly property int activeSectionType: appMain.rootStore.activeSectionType
@@ -1403,7 +1401,6 @@ Item {
                         return ""
                     }
                 }
-                isOnline: d.networkChecker.isOnline
             }
 
             ConnectionWarnings {
@@ -1455,7 +1452,6 @@ Item {
                         return ""
                     }
                 }
-                isOnline: d.networkChecker.isOnline
             }
 
             ConnectionWarnings {
@@ -1482,7 +1478,6 @@ Item {
                         return ""
                     }
                 }
-                isOnline: d.networkChecker.isOnline
             }
         }
 
@@ -2640,7 +2635,7 @@ Item {
         }
     }
     Shortcut {
-        sequence: StandardKey.Find
+        sequences: [StandardKey.Find]
         context: Qt.ApplicationShortcut
         enabled: d.activeSectionType !== Constants.appSection.browser // has its own "Search"
         onActivated: {

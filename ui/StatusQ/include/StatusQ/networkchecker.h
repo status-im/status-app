@@ -32,6 +32,8 @@ private slots:
 private:
     QNetworkInformation* m_netinfo{nullptr};
 
+    void init();
+
     bool m_online{true};
     bool isOnline() const;
     void setOnline(bool online);

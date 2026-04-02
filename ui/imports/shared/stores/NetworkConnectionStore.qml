@@ -19,7 +19,7 @@ QtObject {
 
     readonly property var networkConnectionModuleInst: networkConnectionModule
 
-    readonly property bool isOnline: mainModule.isOnline
+    property bool isOnline: true
 
     readonly property bool balanceCache: walletSectionAssets.hasBalanceCache
     readonly property bool marketValuesCache: walletSectionAssets.hasMarketValuesCache

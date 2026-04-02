@@ -1,6 +1,8 @@
 #include "StatusQ/networkchecker.h"
 
 #include <QDebug>
+#include <QGuiApplication>
+#include <QTimer>
 
 namespace {
 // Must match the connection types defined in status-go (see internal/connection/state.go)
@@ -17,6 +19,9 @@ QString connectionTypeFromTransport(QNetworkInformation::TransportMedium transpo
         return QStringLiteral("unknown");
     }
 }
+
+using namespace std::chrono_literals;
+constexpr auto kCheckDelay = 10s;
 }
 
 NetworkChecker::NetworkChecker(QObject *parent)
@@ -29,22 +34,40 @@ NetworkChecker::NetworkChecker(QObject *parent)
 
     m_netinfo = QNetworkInformation::instance();
 
+    // initial update (optionally delayed)
+    QDeadlineTimer deadline(kCheckDelay);
+    while (!deadline.hasExpired() || (QGuiApplication::applicationState() & Qt::ApplicationActive)) {
+        init();
+        break;
+    }
+}
+
+void NetworkChecker::init()
+{
     // subscribe for updates
     connect(m_netinfo, &QNetworkInformation::reachabilityChanged, this, &NetworkChecker::onReachabilityChanged);
     connect(m_netinfo, &QNetworkInformation::transportMediumChanged, this, &NetworkChecker::onTransportMediumChanged);
     connect(m_netinfo, &QNetworkInformation::isMeteredChanged, this, &NetworkChecker::onMeteredChanged);
 
-    // initial update
+    connect(qApp, &QGuiApplication::applicationStateChanged, this, [&](Qt::ApplicationState state) {
+        QTimer::singleShot(kCheckDelay, this, [&]() { onReachabilityChanged(m_netinfo->reachability()); });
+    });
+
     onReachabilityChanged(m_netinfo->reachability());
     updateConnectionDetails();
 }
 
 void NetworkChecker::onReachabilityChanged(QNetworkInformation::Reachability reachability)
 {
-    if (m_active) {
-        setOnline(reachability == QNetworkInformation::Reachability::Online);
-        updateConnectionDetails();
-    }
+    if (!m_active)
+        return;
+
+    const auto appStateFlags = QGuiApplication::applicationState();
+    if (!(appStateFlags & Qt::ApplicationActive))
+        return;
+
+    setOnline(reachability == QNetworkInformation::Reachability::Online);
+    updateConnectionDetails();
 }
 
 void NetworkChecker::onTransportMediumChanged()
@@ -88,6 +111,8 @@ QString NetworkChecker::connectionType() const
 
 bool NetworkChecker::isExpensive() const
 {
+    if (!m_netinfo)
+        return false;
     return m_netinfo->isMetered() || m_netinfo->transportMedium() == QNetworkInformation::TransportMedium::Cellular;
 }
 
@@ -98,6 +123,7 @@ void NetworkChecker::updateConnectionDetails()
 
 void NetworkChecker::checkNetwork()
 {
+    setActive(false);
     setChecking(true);
     setActive(true);
 }
