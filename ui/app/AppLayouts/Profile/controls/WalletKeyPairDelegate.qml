@@ -107,6 +107,7 @@ Rectangle {
                 width: ListView.view.width
                 account: model.account
                 totalCount: ListView.view.count
+                compIndex: index
                 onGoToAccountView: root.goToAccountView(model.account)
 
                 RowLayout {

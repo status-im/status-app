@@ -69,6 +69,7 @@ StatusDialog {
                                 account : model.account
                                 color: StatusColors.transparent
                                 nextIconVisible: false
+                                compIndex: index
                                 components: StatusBaseText {
                                     font.pixelSize: Theme.primaryTextFontSize
                                     text: LocaleUtils.currencyAmountToLocaleString(!!account ? account.balance: "")

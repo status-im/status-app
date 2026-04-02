@@ -14,6 +14,7 @@ StatusListItem {
     property var account
     property int totalCount: 0
     property bool nextIconVisible: true
+    property int compIndex: -1
 
     signal goToAccountView()
 
@@ -40,11 +41,11 @@ StatusListItem {
     // This is used to give the first and last delgate rounded corners
     Rectangle {
         visible: totalCount > 1
-        readonly property bool isLastOrFirstItem: index === 0 || index === (totalCount-1)
+        readonly property bool isLastOrFirstItem: compIndex === 0 || compIndex === (totalCount-1)
         width: parent.width
         height: isLastOrFirstItem? parent.height/2 : parent.height
-        anchors.top: !isLastOrFirstItem || index === (totalCount-1) ? parent.top: undefined
-        anchors.bottom: index === 0 ? parent.bottom: undefined
+        anchors.top: !isLastOrFirstItem || compIndex === (totalCount-1) ? parent.top: undefined
+        anchors.bottom: compIndex === 0 ? parent.bottom: undefined
         color: parent.color
         z: parent.z - 10
     }
