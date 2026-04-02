@@ -2413,33 +2413,6 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
     </message>
 </context>
 <context>
-    <name>BrowserConnectionModal</name>
-    <message>
-        <source>&apos;%1&apos; would like to connect to</source>
-        <translation>&apos;%1&apos; 이(가) 다음에 연결하려고 합니다</translation>
-    </message>
-    <message>
-        <source>Allowing authorizes this DApp to retrieve your wallet address and enable Web3</source>
-        <translation>웹3를 활용하기 위해, 디앱이 사용자의 지갑 주소를 검색하는 것을 허용합니다</translation>
-    </message>
-    <message>
-        <source>Granting access authorizes this DApp to retrieve your chat key</source>
-        <translation>디앱에 접근 권한을 부여하여 채팅 키를 검색합니다</translation>
-    </message>
-    <message>
-        <source>Unknown permission: %1</source>
-        <translation>알 수 없는 권한: %1</translation>
-    </message>
-    <message>
-        <source>Deny</source>
-        <translation>거절</translation>
-    </message>
-    <message>
-        <source>Allow</source>
-        <translation>허용</translation>
-    </message>
-</context>
-<context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
@@ -5939,6 +5912,10 @@ Remember your password and don&apos;t share it with anyone.</source>
         <source>Display Names can’t start or end with a space</source>
         <translation>표시 이름은 공백으로 시작하거나 끝날 수 없습니다</translation>
     </message>
+    <message>
+        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
         <translation>
@@ -5962,10 +5939,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     <message>
         <source>This Display Name is already in use in one of your joined communities</source>
         <translation>이 표시 이름은 당신이 가입한 커뮤니티 중 하나에서 이미 사용 중입니다</translation>
-    </message>
-    <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -15697,37 +15670,6 @@ to load</source>
     <message>
         <source>Copied</source>
         <translation>복사됨</translation>
-    </message>
-</context>
-<context>
-    <name>SignMessageModal</name>
-    <message>
-        <source>Signature request</source>
-        <translation>서명 요청</translation>
-    </message>
-    <message>
-        <source>From</source>
-        <translation>보낸 주소</translation>
-    </message>
-    <message>
-        <source>Data</source>
-        <translation>데이터</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>메시지</translation>
-    </message>
-    <message>
-        <source>Reject</source>
-        <translation>거절</translation>
-    </message>
-    <message>
-        <source>Sign</source>
-        <translation>서명</translation>
-    </message>
-    <message>
-        <source>Sign with password</source>
-        <translation>비밀번호로 서명</translation>
     </message>
 </context>
 <context>

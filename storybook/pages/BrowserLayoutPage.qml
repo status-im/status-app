@@ -136,7 +136,6 @@ SplitView {
             property var dappBrowserAccount: ({address:"0xdeadbeef", name: "Foobar", colorId: 0})
             property var accounts: []
             property string defaultCurrency: "USD"
-            property string signingPhrase
 
             function getEtherscanLink(chainID) {
                 return "https://etherscan.io/tx/"

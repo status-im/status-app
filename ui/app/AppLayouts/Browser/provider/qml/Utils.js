@@ -3,12 +3,12 @@
 function accountsDidChange(oldAccounts, newAccounts) {
     const a = oldAccounts || []
     const b = newAccounts || []
-    
+
     if (a.length !== b.length) return true
-    
+
     const setA = new Set(a.map(addr => addr.toLowerCase()))
     const setB = new Set(b.map(addr => addr.toLowerCase()))
-    
+
     return setA.size !== setB.size || ![...setA].every(addr => setB.has(addr))
 }
 
@@ -81,7 +81,7 @@ function validateDAppIcon(iconUrl, siteUrl) {
     if (faviconDomain.includes(siteDomain) || siteDomain.includes(faviconDomain)) {
         return {valid: true, iconUrl: normalizeFaviconUrl(iconStr), reason: "match"}
     }
-    
+
     return { valid: false, iconUrl: "", reason: "domain_mismatch" }
 }
 

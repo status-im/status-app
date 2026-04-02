@@ -2418,33 +2418,6 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
     </message>
 </context>
 <context>
-    <name>BrowserConnectionModal</name>
-    <message>
-        <source>&apos;%1&apos; would like to connect to</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Allowing authorizes this DApp to retrieve your wallet address and enable Web3</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Granting access authorizes this DApp to retrieve your chat key</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unknown permission: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Deny</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Allow</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
@@ -5947,6 +5920,10 @@ Remember your password and don&apos;t share it with anyone.</source>
         <source>Display Names can’t start or end with a space</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
         <translation type="unfinished">
@@ -5971,10 +5948,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
     <message>
         <source>This Display Name is already in use in one of your joined communities</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15728,37 +15701,6 @@ to load</source>
     </message>
     <message>
         <source>Copied</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SignMessageModal</name>
-    <message>
-        <source>Signature request</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>From</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Data</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reject</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sign</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sign with password</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

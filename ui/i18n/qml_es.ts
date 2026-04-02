@@ -2421,33 +2421,6 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
     </message>
 </context>
 <context>
-    <name>BrowserConnectionModal</name>
-    <message>
-        <source>&apos;%1&apos; would like to connect to</source>
-        <translation>&apos;%1&apos; quiere conectarse a</translation>
-    </message>
-    <message>
-        <source>Allowing authorizes this DApp to retrieve your wallet address and enable Web3</source>
-        <translation>Permitir autoriza a esta DApp a recuperar la dirección de tu billetera y habilitar Web3</translation>
-    </message>
-    <message>
-        <source>Granting access authorizes this DApp to retrieve your chat key</source>
-        <translation>Conceder acceso autoriza a esta DApp a obtener tu clave de chat</translation>
-    </message>
-    <message>
-        <source>Unknown permission: %1</source>
-        <translation>Permiso desconocido: %1</translation>
-    </message>
-    <message>
-        <source>Deny</source>
-        <translation>Negar</translation>
-    </message>
-    <message>
-        <source>Allow</source>
-        <translation>Permitir</translation>
-    </message>
-</context>
-<context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
@@ -5960,6 +5933,10 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
         <source>Display Names can’t start or end with a space</source>
         <translation>Los nombres públicos no pueden comenzar ni terminar con un espacio</translation>
     </message>
+    <message>
+        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
         <translation>
@@ -5985,10 +5962,6 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     <message>
         <source>This Display Name is already in use in one of your joined communities</source>
         <translation>Este nombre público ya está en uso en una de tus comunidades unidas</translation>
-    </message>
-    <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -15747,37 +15720,6 @@ al cargar</translation>
     <message>
         <source>Copied</source>
         <translation>Copiado</translation>
-    </message>
-</context>
-<context>
-    <name>SignMessageModal</name>
-    <message>
-        <source>Signature request</source>
-        <translation>Solicitud de firma</translation>
-    </message>
-    <message>
-        <source>From</source>
-        <translation>De</translation>
-    </message>
-    <message>
-        <source>Data</source>
-        <translation>Datos</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Mensaje</translation>
-    </message>
-    <message>
-        <source>Reject</source>
-        <translation>Rechazar</translation>
-    </message>
-    <message>
-        <source>Sign</source>
-        <translation>Firmar</translation>
-    </message>
-    <message>
-        <source>Sign with password</source>
-        <translation>Firmar con contraseña</translation>
     </message>
 </context>
 <context>

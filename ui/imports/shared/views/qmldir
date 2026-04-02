@@ -16,5 +16,4 @@ SyncingDeviceView 1.0 SyncingDeviceView.qml
 SyncingDisplayCode 1.0 SyncingDisplayCode.qml
 SyncingEnterCode 1.0 SyncingEnterCode.qml
 SyncingErrorMessage 1.0 SyncingErrorMessage.qml
-TransactionSigner 1.0 TransactionSigner.qml
 BiometricsSectionView 1.0 BiometricsSectionView.qml

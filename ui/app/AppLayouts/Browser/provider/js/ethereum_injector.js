@@ -13,13 +13,13 @@ function initializeWebChannel() {
             return false;
         }
     }
-    
+
     return false;
 }
 
 function setupEthereumProvider(channel) {
     window.ethereumProvider = channel.objects.ethereumProvider; // Eip1193ProviderAdapter.qml
-    
+
     if (!window.ethereumProvider) {
         console.error("[Ethereum Injector] ethereumProvider not found in channel.objects");
         return;

@@ -3,9 +3,9 @@ import "Utils.js" as Utils
 
 QtObject {
     id: root
-    
+
     property var connectorController: null
-    
+
     // dApp metadata
     property string dappUrl: ""
     property string dappOrigin: ""
@@ -13,7 +13,7 @@ QtObject {
     property string dappIconUrl: ""
     property int dappChainId: 1
     property string clientId: "status-desktop/dapp-browser"
-    
+
     // STATE
     property bool connected: false
     property var accounts: []
@@ -74,15 +74,15 @@ QtObject {
             result: null
         })
     }
-    
+
     // STATE MANAGEMENT METHODS
     function updateAccounts(newAccounts) {
         if (!Utils.accountsDidChange(accounts, newAccounts)) {
             return false
         }
-        
+
         accounts = newAccounts
-        
+
         providerStateChanged()
         accountsChangedEvent(accounts)
         return true
@@ -92,32 +92,32 @@ QtObject {
         if (connected === isConnected) {
             return false
         }
-        
+
         connected = isConnected
-        
+
         if (connected && !_initialConnectionDone) {
             _initialConnectionDone = true
             const chainIdHex = Utils.chainIdToHex(dappChainId)
-            
+
             providerStateChanged()
             connectEvent({ chainId: chainIdHex })
             console.log("[ConnectorManager] Initial connection established")
         } else {
             providerStateChanged()
         }
-        
+
         return true
     }
-    
+
     function clearState() {
         if (accounts.length === 0 && !connected) {
             return false
         }
-        
+
         accounts = []
         connected = false
         _initialConnectionDone = false
-        
+
         providerStateChanged()
         disconnectEvent({ code: 4900, message: "User disconnected" })  // EIP-1193: Disconnected
         accountsChangedEvent([])
@@ -158,46 +158,46 @@ QtObject {
             console.log("[ConnectorManager] Ignoring signal for other origin:", event.url, "expected:", dappOrigin)
             return false
         }
-        
+
         // Filter by clientId
         if (event.clientId !== undefined && event.clientId !== "" && clientId !== "" && event.clientId !== clientId) {
             console.log("[ConnectorManager] Ignoring signal for other clientId:", event.clientId, "expected:", clientId)
             return false
         }
-        
+
         return true
     }
-    
+
     // SIGNAL HANDLERS
     readonly property Connections _connections: Connections {
         target: connectorController
-        
+
         function onConnected(payload) {
             try {
                 const data = JSON.parse(payload)
-                
+
                 if (!shouldProcessSignal(data)) return
-                
+
                 const newAccounts = data.sharedAccount ? [data.sharedAccount] : []
                 updateAccounts(newAccounts)
-                
+
                 if (data.chainId) {
                     const newChainId = data.chainId
                     if (dappChainId !== newChainId) {
                         dappChainId = newChainId
                         const chainIdHex = Utils.chainIdToHex(newChainId)
-                        
+
                         providerStateChanged()
                         chainChangedEvent(chainIdHex)
                     }
                 }
-                
+
                 setConnected(true)
             } catch (error) {
                 console.error("[ConnectorManager] Error processing connected signal:", error)
             }
         }
-        
+
         function onDisconnected(payload) {
             try {
                 const data = JSON.parse(payload)
@@ -207,7 +207,7 @@ QtObject {
                 console.error("[ConnectorManager] Error processing disconnected signal:", error)
             }
         }
-        
+
         function onConnectorCallRPCResult(requestId, payload) {
             // Emit to Eip1193ProviderAdapter → ethereum_wrapper.js
             requestCompletedEvent({
@@ -215,19 +215,19 @@ QtObject {
                 response: payload
             })
         }
-        
+
         function onChainIdSwitched(payload) {
             try {
                 const data = JSON.parse(payload)
-                
+
                 if (!shouldProcessSignal(data)) return
-                
+
                 const chainIdDecimal = Utils.parseChainId(data.chainId)
-                
+
                 if (dappChainId !== chainIdDecimal) {
                     dappChainId = chainIdDecimal
                     const chainIdHex = Utils.chainIdToHex(chainIdDecimal)
-                    
+
                     providerStateChanged()
                     chainChangedEvent(chainIdHex)
                 }

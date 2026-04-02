@@ -2428,33 +2428,6 @@ Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezp
     </message>
 </context>
 <context>
-    <name>BrowserConnectionModal</name>
-    <message>
-        <source>&apos;%1&apos; would like to connect to</source>
-        <translation>&apos;%1&apos; se chce připojit k</translation>
-    </message>
-    <message>
-        <source>Allowing authorizes this DApp to retrieve your wallet address and enable Web3</source>
-        <translation>Povolení autorizuje tuto DApp k získání vaší adresy peněženky a povolení Web3</translation>
-    </message>
-    <message>
-        <source>Granting access authorizes this DApp to retrieve your chat key</source>
-        <translation>Udělení přístupu autorizuje tuto DApp k získání vašeho chatovacího klíče</translation>
-    </message>
-    <message>
-        <source>Unknown permission: %1</source>
-        <translation>Neznámé oprávnění: %1</translation>
-    </message>
-    <message>
-        <source>Deny</source>
-        <translation>Odmítnout</translation>
-    </message>
-    <message>
-        <source>Allow</source>
-        <translation>Povolit</translation>
-    </message>
-</context>
-<context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
@@ -5980,6 +5953,10 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <source>Display Names can’t start or end with a space</source>
         <translation>Zobrazovaná jména nesmí začínat ani končit mezerou</translation>
     </message>
+    <message>
+        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
         <translation>
@@ -6007,10 +5984,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     <message>
         <source>This Display Name is already in use in one of your joined communities</source>
         <translation>Toto zobrazované jméno se již používá v jedné z vašich připojených komunit</translation>
-    </message>
-    <message>
-        <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -15838,37 +15811,6 @@ selhalo</translation>
     <message>
         <source>Copied</source>
         <translation>Zkopírováno</translation>
-    </message>
-</context>
-<context>
-    <name>SignMessageModal</name>
-    <message>
-        <source>Signature request</source>
-        <translation>Žádost o podpis</translation>
-    </message>
-    <message>
-        <source>From</source>
-        <translation>Od</translation>
-    </message>
-    <message>
-        <source>Data</source>
-        <translation>Data</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Zpráva</translation>
-    </message>
-    <message>
-        <source>Reject</source>
-        <translation>Odmítnout</translation>
-    </message>
-    <message>
-        <source>Sign</source>
-        <translation>Podepsat</translation>
-    </message>
-    <message>
-        <source>Sign with password</source>
-        <translation>Podepsat heslem</translation>
     </message>
 </context>
 <context>

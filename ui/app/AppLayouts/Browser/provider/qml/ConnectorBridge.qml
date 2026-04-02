@@ -101,7 +101,7 @@ QtObject {
         if (!connectorController) {
             return false
         }
-        
+
         const result = connectorController.disconnect(hostname, clientId)
         return result
     }
@@ -110,7 +110,7 @@ QtObject {
         if (!dappOrigin) {
             return false
         }
-        
+
         return disconnect(dappOrigin)
     }
 

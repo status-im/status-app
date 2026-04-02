@@ -2967,39 +2967,6 @@
     </message>
   </context>
   <context>
-    <name>BrowserConnectionModal</name>
-    <message>
-      <source>&#39;%1&#39; would like to connect to</source>
-      <comment>BrowserConnectionModal</comment>
-      <translation>&#39;%1&#39; would like to connect to</translation>
-    </message>
-    <message>
-      <source>Allowing authorizes this DApp to retrieve your wallet address and enable Web3</source>
-      <comment>BrowserConnectionModal</comment>
-      <translation>Allowing authorizes this DApp to retrieve your wallet address and enable Web3</translation>
-    </message>
-    <message>
-      <source>Granting access authorizes this DApp to retrieve your chat key</source>
-      <comment>BrowserConnectionModal</comment>
-      <translation>Granting access authorizes this DApp to retrieve your chat key</translation>
-    </message>
-    <message>
-      <source>Unknown permission: %1</source>
-      <comment>BrowserConnectionModal</comment>
-      <translation>Unknown permission: %1</translation>
-    </message>
-    <message>
-      <source>Deny</source>
-      <comment>BrowserConnectionModal</comment>
-      <translation>Deny</translation>
-    </message>
-    <message>
-      <source>Allow</source>
-      <comment>BrowserConnectionModal</comment>
-      <translation>Allow</translation>
-    </message>
-  </context>
-  <context>
     <name>BrowserLandscapeToolbar</name>
     <message>
       <source>Back</source>
@@ -7264,6 +7231,11 @@
       <comment>DisplayNameValidators</comment>
       <translation>Display Names can’t start or end with a space</translation>
     </message>
+    <message>
+      <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
+      <comment>DisplayNameValidators</comment>
+      <translation>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</translation>
+    </message>
     <message numerus="yes">
       <source>Display Names must be at least %n character(s) long</source>
       <comment>DisplayNameValidators</comment>
@@ -7294,11 +7266,6 @@
       <source>This Display Name is already in use in one of your joined communities</source>
       <comment>DisplayNameValidators</comment>
       <translation>This Display Name is already in use in one of your joined communities</translation>
-    </message>
-    <message>
-      <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
-      <comment>DisplayNameValidators</comment>
-      <translation>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</translation>
     </message>
   </context>
   <context>
@@ -19160,44 +19127,6 @@
       <source>Copied</source>
       <comment>SignCollectibleInfoBox</comment>
       <translation>Copied</translation>
-    </message>
-  </context>
-  <context>
-    <name>SignMessageModal</name>
-    <message>
-      <source>Signature request</source>
-      <comment>SignMessageModal</comment>
-      <translation>Signature request</translation>
-    </message>
-    <message>
-      <source>From</source>
-      <comment>SignMessageModal</comment>
-      <translation>From</translation>
-    </message>
-    <message>
-      <source>Data</source>
-      <comment>SignMessageModal</comment>
-      <translation>Data</translation>
-    </message>
-    <message>
-      <source>Message</source>
-      <comment>SignMessageModal</comment>
-      <translation>Message</translation>
-    </message>
-    <message>
-      <source>Reject</source>
-      <comment>SignMessageModal</comment>
-      <translation>Reject</translation>
-    </message>
-    <message>
-      <source>Sign</source>
-      <comment>SignMessageModal</comment>
-      <translation>Sign</translation>
-    </message>
-    <message>
-      <source>Sign with password</source>
-      <comment>SignMessageModal</comment>
-      <translation>Sign with password</translation>
     </message>
   </context>
   <context>
