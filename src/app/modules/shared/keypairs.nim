@@ -34,10 +34,10 @@ proc buildKeypairItem*(keypair: KeypairDto, areTestNetworksEnabled: bool): KeyPa
     item.setImage(singletonInstance.userProfile.getIcon())
     item.setPairType(KeyPairType.Profile.int)
   elif keypair.keypairType == KeypairTypeSeed:
-    item.setIcon(if item.getMigratedToKeycard(): "keycard" else: "key_pair_seed_phrase")
+    item.setIcon("key_pair_seed_phrase")
     item.setPairType(KeyPairType.SeedImport.int)
   elif keypair.keypairType == KeypairTypeKey:
-    item.setIcon(if item.getMigratedToKeycard(): "keycard" else: "objects")
+    item.setIcon("objects")
     item.setPairType(KeyPairType.PrivateKeyImport.int)
 
   for acc in keypair.accounts:
