@@ -72,20 +72,20 @@ StatusDialog {
                 }
 
                 if (!!d.error) {
-                    if (d.wrongPinError1 && root.remainingPinAttempts > 0
-                            || d.wrongPinError2) {
+                    if (keycardErrors.wrongPinError1 && root.remainingPinAttempts > 0
+                            || keycardErrors.wrongPinError2) {
                         return enterPinComponent
                     }
-                    if (d.wrongKeycardError
-                            || d.emptyKeycardError
-                            || d.notKeycardError
-                            || d.connectionKeycardError1
-                            || d.connectionKeycardError2
-                            || d.wrongPinError1
-                            || d.wrongPinError2
-                            || d.blockedPinError
-                            || d.blockedPukError
-                            || d.noAvailablePairingSlotsError) {
+                    if (keycardErrors.wrongKeycardError
+                            || keycardErrors.emptyKeycardError
+                            || keycardErrors.notKeycardError
+                            || keycardErrors.connectionKeycardError1
+                            || keycardErrors.connectionKeycardError2
+                            || keycardErrors.wrongPinError1
+                            || keycardErrors.wrongPinError2
+                            || keycardErrors.blockedPinError
+                            || keycardErrors.blockedPukError
+                            || keycardErrors.noAvailablePairingSlotsError) {
                         return keycardAuthComponent
                     }
                 }
@@ -94,7 +94,7 @@ StatusDialog {
                     return keycardAuthComponent
                 }
 
-                return root.isKeycardKeyPair ? enterPinComponent : enterPasswordComponent
+                return enterPinComponent
             }
         }
     }
@@ -180,30 +180,6 @@ StatusDialog {
         readonly property bool usingBiometrics: root.keychain.available
                                                 && root.keyUid === root.userProfileKeyUid
                                                 && keychain.hasCredential(root.keyUid) === Keychain.StatusSuccess
-
-        readonly property QtObject errKeyword: QtObject {
-            readonly property string wrongKeycard: "profile does not match"
-            readonly property string wrongPin1: "Wrong PIN"
-            readonly property string wrongPin2: "PIN must be 6 digits"
-            readonly property string connection1: "Failed to connect to card"
-            readonly property string connection2: Constants.keycard.state.connectionError
-            readonly property string emptyKeycard: Constants.keycard.state.emptyKeycard
-            readonly property string notKeycard: Constants.keycard.state.notKeycard
-            readonly property string blockedPin: Constants.keycard.state.blockedPIN
-            readonly property string blockedPuk: Constants.keycard.state.blockedPUK
-            readonly property string noAvailablePairingSlots: Constants.keycard.state.noAvailablePairingSlots
-        }
-
-        readonly property bool wrongKeycardError: d.error.toLowerCase().indexOf(errKeyword.wrongKeycard.toLowerCase()) > -1
-        readonly property bool wrongPinError1: d.error.toLowerCase().indexOf(errKeyword.wrongPin1.toLowerCase()) > -1
-        readonly property bool wrongPinError2: d.error.toLowerCase().indexOf(errKeyword.wrongPin2.toLowerCase()) > -1
-        readonly property bool connectionKeycardError1: d.error.toLowerCase().indexOf(errKeyword.connection1.toLowerCase()) > -1
-        readonly property bool connectionKeycardError2: d.error.toLowerCase().indexOf(errKeyword.connection2.toLowerCase()) > -1
-        readonly property bool emptyKeycardError: d.error.toLowerCase().indexOf(errKeyword.emptyKeycard.toLowerCase()) > -1
-        readonly property bool notKeycardError: d.error.toLowerCase().indexOf(errKeyword.notKeycard.toLowerCase()) > -1
-        readonly property bool blockedPinError: d.error.toLowerCase().indexOf(errKeyword.blockedPin.toLowerCase()) > -1
-        readonly property bool blockedPukError: d.error.toLowerCase().indexOf(errKeyword.blockedPuk.toLowerCase()) > -1
-        readonly property bool noAvailablePairingSlotsError: d.error.toLowerCase().indexOf(errKeyword.noAvailablePairingSlots.toLowerCase()) > -1
 
         property bool biometricsInProgress: false
         property bool credentialMismatchAfterBiometrics: false
@@ -306,7 +282,7 @@ StatusDialog {
                 return
             }
 
-            if ((d.wrongPinError1 || d.wrongPinError2) && d.credentialCameFromBiometrics) {
+            if ((keycardErrors.wrongPinError1 || keycardErrors.wrongPinError2) && d.credentialCameFromBiometrics) {
                 d.credentialMismatchAfterBiometrics = true
             }
         }
@@ -350,6 +326,11 @@ StatusDialog {
 
             Global.displayToastMessage(text, "", "warning", false, Constants.ephemeralNotificationType.danger, "")
         }
+    }
+
+    ErrorsHandler {
+        id: keycardErrors
+        errorText: d.error
     }
 
     // Public API for concrete popups to drive state
@@ -397,7 +378,7 @@ StatusDialog {
         id: keycardAuthComponent
         KeycardAuth {
             keycardState: d.processedKeycardState
-            wrongKeycard: d.wrongKeycardError
+            wrongKeycard: keycardErrors.wrongKeycardError
             keyPairForProcessing: root.keyPairForProcessing
         }
     }
@@ -405,7 +386,7 @@ StatusDialog {
     Component {
         id: enterPinComponent
         EnterPin {
-            wrongPin: d.wrongPinError1 || d.wrongPinError2
+            wrongPin: keycardErrors.wrongPinError1 || keycardErrors.wrongPinError2
             remainingAttempts: d.processedRemainingPinAttempts
             submitOnPinComplete: !d.credentialMismatchAfterBiometrics
             keyPairForProcessing: root.keyPairForProcessing
