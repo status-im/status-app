@@ -7210,8 +7210,8 @@ Prosím přidejte jej a zkuste to znovu.</translation>
         </translation>
     </message>
     <message>
-        <source>Enter Keycard&apos;s PIN</source>
-        <translation type="unfinished"></translation>
+        <source>Enter the Keycard PIN</source>
+        <translation type="unfinished">Zadejte PIN Keycard</translation>
     </message>
 </context>
 <context>
@@ -8837,11 +8837,6 @@ Prosím přidejte jej a zkuste to znovu.</translation>
         <translation type="unfinished">Toto není Keycard</translation>
     </message>
     <message>
-        <source>The card inserted is not a recognised Keycard,
-please remove and try again</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Connection error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8879,6 +8874,10 @@ please remove and try again</source>
     </message>
     <message>
         <source>Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The card is not a Keycard, try again with Keycard.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

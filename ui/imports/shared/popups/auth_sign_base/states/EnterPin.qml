@@ -7,7 +7,7 @@ import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Controls.Validators
 
-import shared.popups.keycard.helpers 1.0
+import shared.popups.keycard_new.helpers 1.0
 
 import utils
 
@@ -49,7 +49,7 @@ Control {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            text: qsTr("Enter Keycard's PIN")
+            text: qsTr("Enter the Keycard PIN")
             font.weight: Font.Bold
             font.pixelSize: Theme.fontSize(22)
         }
@@ -102,7 +102,7 @@ Control {
         Loader {
             Layout.fillWidth: true
             active: !!root.keyPairForProcessing
-            sourceComponent: KeyPairItem {
+            sourceComponent: KeyPairCompactItem {
                 keyPairType: root.keyPairForProcessing.pairType
                 keyPairKeyUid: root.keyPairForProcessing.keyUid
                 keyPairName: root.keyPairForProcessing.name

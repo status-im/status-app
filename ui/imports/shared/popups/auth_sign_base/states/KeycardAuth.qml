@@ -6,7 +6,7 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
 
-import shared.popups.keycard.helpers 1.0
+import shared.popups.keycard_new.helpers 1.0
 
 import utils
 
@@ -67,7 +67,7 @@ Control {
             Layout.fillWidth: true
             visible: false
             active: !!root.keyPairForProcessing
-            sourceComponent: KeyPairItem {
+            sourceComponent: KeyPairCompactItem {
                 keyPairType: root.keyPairForProcessing.pairType
                 keyPairKeyUid: root.keyPairForProcessing.keyUid
                 keyPairName: root.keyPairForProcessing.name
@@ -181,7 +181,7 @@ Control {
             }
             PropertyChanges {
                 target: message
-                text: qsTr("The card inserted is not a recognised Keycard,\nplease remove and try again")
+                text: qsTr("The card is not a Keycard, try again with Keycard.")
                 color: Theme.palette.dangerColor1
             }
             PropertyChanges {

@@ -8759,9 +8759,9 @@
       </translation>
     </message>
     <message>
-      <source>Enter Keycard&#39;s PIN</source>
+      <source>Enter the Keycard PIN</source>
       <comment>EnterPin</comment>
-      <translation>Enter Keycard&#39;s PIN</translation>
+      <translation>Enter the Keycard PIN</translation>
     </message>
   </context>
   <context>
@@ -10718,11 +10718,6 @@
       <translation>This is not a Keycard</translation>
     </message>
     <message>
-      <source>The card inserted is not a recognised Keycard,&#xA;please remove and try again</source>
-      <comment>KeycardAuth</comment>
-      <translation>The card inserted is not a recognised Keycard,&#xA;please remove and try again</translation>
-    </message>
-    <message>
       <source>Connection error</source>
       <comment>KeycardAuth</comment>
       <translation>Connection error</translation>
@@ -10771,6 +10766,11 @@
       <source>Success</source>
       <comment>KeycardAuth</comment>
       <translation>Success</translation>
+    </message>
+    <message>
+      <source>The card is not a Keycard, try again with Keycard.</source>
+      <comment>KeycardAuth</comment>
+      <translation>The card is not a Keycard, try again with Keycard.</translation>
     </message>
   </context>
   <context>

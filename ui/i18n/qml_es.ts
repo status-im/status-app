@@ -7184,8 +7184,8 @@ Por favor, agrégala e intenta de nuevo.</translation>
         </translation>
     </message>
     <message>
-        <source>Enter Keycard&apos;s PIN</source>
-        <translation type="unfinished"></translation>
+        <source>Enter the Keycard PIN</source>
+        <translation type="unfinished">Escribe el PIN de Keycard</translation>
     </message>
 </context>
 <context>
@@ -8798,11 +8798,6 @@ Por favor, agrégala e intenta de nuevo.</translation>
         <translation type="unfinished">Esto no es un Keycard</translation>
     </message>
     <message>
-        <source>The card inserted is not a recognised Keycard,
-please remove and try again</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Connection error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -8840,6 +8835,10 @@ please remove and try again</source>
     </message>
     <message>
         <source>Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The card is not a Keycard, try again with Keycard.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
