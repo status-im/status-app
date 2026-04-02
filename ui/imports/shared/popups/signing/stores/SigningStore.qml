@@ -49,6 +49,16 @@ QtObject {
         d.ready = true
     }
 
+    function teardown() {
+        if (!d.mainModuleInst.signingModule) {
+            console.error("signing module was not created")
+            return
+        }
+        d.mainModuleInst.signingModule.stopKeycardSigning()
+        d.mainModuleInst.destroySigningModule()
+        d.ready = false
+    }
+
     function isKeypairMigratedToKeycard(keyUid) {
         if (!d.mainModuleInst.signingModule) {
             console.error("signing module was not created")
@@ -79,14 +89,6 @@ QtObject {
             return
         }
         d.mainModuleInst.signingModule.startKeycardSigning(keyUid, pin, txHash, path)
-    }
-
-    function stopKeycardSigning() {
-        if (!d.mainModuleInst.signingModule) {
-            console.error("signing module was not created")
-            return
-        }
-        d.mainModuleInst.signingModule.stopKeycardSigning()
     }
 
     function buildKeyPairForProcessing(keyUid) {

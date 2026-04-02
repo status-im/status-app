@@ -49,6 +49,16 @@ QtObject {
         d.ready = true
     }
 
+    function teardown() {
+        if (!d.mainModuleInst.authenticationModule) {
+            console.error("authentication module was not created")
+            return
+        }
+        d.mainModuleInst.authenticationModule.stopKeycardAuthentication()
+        d.mainModuleInst.destroyAuthenticationModule()
+        d.ready = false
+    }
+
     function isKeypairMigratedToKeycard(keyUid) {
         if (!d.mainModuleInst.authenticationModule) {
             console.error("authentication module was not created")
@@ -71,14 +81,6 @@ QtObject {
             return
         }
         d.mainModuleInst.authenticationModule.startKeycardAuthentication(keyUid, pin)
-    }
-
-    function stopKeycardAuthentication() {
-        if (!d.mainModuleInst.authenticationModule) {
-            console.error("authentication module was not created")
-            return
-        }
-        d.mainModuleInst.authenticationModule.stopKeycardAuthentication()
     }
 
     function buildKeyPairForProcessing(keyUid) {

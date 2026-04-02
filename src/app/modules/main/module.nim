@@ -1890,10 +1890,14 @@ method prepareAuthenticationModule*[T](self: Module[T]) =
   if self.authenticationModule.isNil:
     self.authenticationModule = authentication_module.newModule[Module[T]](self, self.events, self.accountsService, self.walletAccountService, self.keycardServiceV2)
 
+method destroyAuthenticationModule*[T](self: Module[T]) =
+  if not self.authenticationModule.isNil:
+    self.authenticationModule.delete
+    self.authenticationModule = nil
+
 method getAuthenticationModule*[T](self: Module[T]): QVariant =
   if not self.authenticationModule.isNil:
     return self.authenticationModule.getModuleAsVariant()
-  info "authentication module is nil, prepare it before using"
   return newQVariant()
 ################################################################################
 
@@ -1904,10 +1908,14 @@ method prepareSigningModule*[T](self: Module[T]) =
   if self.signingModule.isNil:
     self.signingModule = signing_module.newModule[Module[T]](self, self.events, self.accountsService, self.walletAccountService, self.transactionService, self.keycardServiceV2)
 
+method destroySigningModule*[T](self: Module[T]) =
+  if not self.signingModule.isNil:
+    self.signingModule.delete
+    self.signingModule = nil
+
 method getSigningModule*[T](self: Module[T]): QVariant =
   if not self.signingModule.isNil:
     return self.signingModule.getModuleAsVariant()
-  info "signing module is nil, prepare it before using"
   return newQVariant()
 ################################################################################
 

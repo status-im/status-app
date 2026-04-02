@@ -274,6 +274,10 @@ QtObject:
     self.delegate.prepareAuthenticationModule()
     self.authenticationModuleChanged()
 
+  proc destroyAuthenticationModule*(self: View) {.slot.} =
+    self.delegate.destroyAuthenticationModule()
+    self.authenticationModuleChanged()
+
   proc getAuthenticationModule(self: View): QVariant {.slot.} =
     let module = self.delegate.getAuthenticationModule()
     if not module.isNil:
@@ -287,6 +291,10 @@ QtObject:
 
   proc prepareSigningModule*(self: View) {.slot.} =
     self.delegate.prepareSigningModule()
+    self.signingModuleChanged()
+
+  proc destroySigningModule*(self: View) {.slot.} =
+    self.delegate.destroySigningModule()
     self.signingModuleChanged()
 
   proc getSigningModule(self: View): QVariant {.slot.} =

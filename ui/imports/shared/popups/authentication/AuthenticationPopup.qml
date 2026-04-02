@@ -40,8 +40,8 @@ PopupBase {
         root.store.startKeycardAuthentication(keyUid, pin)
     }
 
-    stopAction: function() {
-        root.store.stopKeycardAuthentication()
+    closePopupAction: function() {
+        root.store.teardown()
     }
 
     Connections {

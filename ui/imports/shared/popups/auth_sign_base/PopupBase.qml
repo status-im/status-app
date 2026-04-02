@@ -41,7 +41,7 @@ StatusDialog {
     // actions
     property var performPasswordAction: null // (password: string) => bool — returns true on success
     property var performKeycardAction: null // (keyUid: string, pin: string) => void — async
-    property var stopAction: null // () => void — cancel ongoing keycard operation
+    property var closePopupAction: null // () => void — cancel ongoing keycard operation, destroy module
 
 
     title: qsTr("Authenticate")
@@ -373,8 +373,8 @@ StatusDialog {
 
     onClosed: {
         root.keychain.cancelActiveRequest()
-        if (root.stopAction)
-            root.stopAction()
+        if (root.closePopupAction)
+            root.closePopupAction()
         destroy()
     }
 

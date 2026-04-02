@@ -51,8 +51,8 @@ PopupBase {
         root.store.startKeycardSigning(keyUid, pin, root.txHash, root.path)
     }
 
-    stopAction: function() {
-        root.store.stopKeycardSigning()
+    closePopupAction: function() {
+        root.store.teardown()
     }
 
     Connections {
