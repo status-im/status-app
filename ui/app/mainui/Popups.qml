@@ -645,6 +645,8 @@ QtObject {
                 onAuthenticationSuccess: function(reason, password, pin, keyUid) {
                     Global.authenticationResult(reason, password, pin, keyUid)
                 }
+
+                onClosed: destroy()
             }
         },
 
@@ -656,6 +658,8 @@ QtObject {
                 onSigningSuccess: function(reason, signature, keyUid) {
                     Global.signingResult(reason, signature, keyUid)
                 }
+
+                onClosed: destroy()
             }
         },
 
@@ -668,6 +672,8 @@ QtObject {
                     Global.keycardManagementResult(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
                                                    availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
                 }
+
+                onClosed: destroy()
             }
         },
 
