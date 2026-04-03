@@ -125,7 +125,11 @@ AbstractWebView {
         console.warn("WebViewAdapter: acceptAsNewWindow not supported")
     }
 
+    // hide the native backend so the UIKit WKWebView is removed before destroy.
     function detachView() {
+        backend.webChannel = null
+        backend.stop()
+        backend.visible = false
     }
 
     function triggerWebAction(action) {

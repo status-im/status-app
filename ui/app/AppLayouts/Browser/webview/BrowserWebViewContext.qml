@@ -180,7 +180,11 @@ QtObject {
 
     readonly property var webViewAdapterComponent: Component {
         WebViewAdapter {
-            visible: !root.isMobile || !root.hasPopups
+            // On mobile, only the active tab must be visible; native WKWebView
+            // subviews share the same UIKit window and ignore QML z-order,
+            // so StackLayout alone cannot hide inactive tabs reliably.
+            visible: root.isMobile ? StackLayout.isCurrentItem && !root.hasPopups
+                                   : true
             enabled: visible
 
             bookmarksStore: root.bookmarksStore
