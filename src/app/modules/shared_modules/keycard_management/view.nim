@@ -30,14 +30,20 @@ QtObject:
     result.cardMetadataName = ""
     result.cardMetadataWalletAccountsJson = "[]"
 
-  proc startGetMetadata*(self: View, pin: string) {.slot.} =
-    self.delegate.startGetMetadata(pin)
-
   proc stopKeycardAction*(self: View) {.slot.} =
     self.delegate.stopKeycardAction()
 
   proc keycardGetMetadataSuccess*(self: View) {.signal.}
   proc keycardGetMetadataError*(self: View, error: string) {.signal.}
+
+  proc startGetMetadata*(self: View, pin: string) {.slot.} =
+    self.delegate.startGetMetadata(pin)
+
+  proc keycardFactoryResetSuccess*(self: View) {.signal.}
+  proc keycardFactoryResetError*(self: View, error: string) {.signal.}
+
+  proc startFactoryReset*(self: View, keycardUid: string) {.slot.} =
+    self.delegate.startFactoryReset(keycardUid)
 
   proc keycardStateChanged*(self: View) {.signal.}
   proc getKeycardState*(self: View): string {.slot.} =

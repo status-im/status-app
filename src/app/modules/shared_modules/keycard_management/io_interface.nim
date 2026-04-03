@@ -23,5 +23,11 @@ method onKeycardStateUpdated*(self: AccessInterface, kcEvent: KeycardEventDto) {
 method onKeycardGetMetadataFinished*(self: AccessInterface, metadata: CardMetadataDto, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startFactoryReset*(self: AccessInterface, keycardUid: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onKeycardFactoryResetFinished*(self: AccessInterface, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 type
   DelegateInterface* = concept c

@@ -7683,6 +7683,19 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
+    <name>FactoryResetConfirmationState</name>
+    <message>
+        <source>A factory reset will delete the key on this Keycard.
+Are you sure you want to do this?</source>
+        <translation type="unfinished">공장 초기화를 하면 이 Keycard의 키가 삭제됩니다.
+정말 진행하시겠어요?</translation>
+    </message>
+    <message>
+        <source>I understand the key pair on this Keycard will be deleted</source>
+        <translation type="unfinished">이 Keycard의 키 페어가 삭제된다는 것을 이해합니다</translation>
+    </message>
+</context>
+<context>
     <name>FavoriteMenu</name>
     <message>
         <source>Open in new Tab</source>
@@ -8950,6 +8963,14 @@ Please add it and try again.</source>
         <source>The card is not a Keycard, try again with Keycard.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Something went wrong</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try again</source>
+        <translation type="unfinished">다시 시도</translation>
+    </message>
 </context>
 <context>
     <name>KeycardChannelDrawer</name>
@@ -9773,6 +9794,42 @@ to login to Status?</source>
         <source>I don&apos;t have or don&apos;t know PIN</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Factory reset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Factory reset this Keycard</source>
+        <translation type="unfinished">이 Keycard를 공장 초기화</translation>
+    </message>
+    <message>
+        <source>Resetting Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard has been reset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is now empty.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try again</source>
+        <translation type="unfinished">다시 시도</translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>
@@ -10120,6 +10177,69 @@ access to your funds.</source>
     <message>
         <source>Retry biometrics</source>
         <translation>생체 인증 다시 시도</translation>
+    </message>
+</context>
+<context>
+    <name>KeycardProgressState</name>
+    <message>
+        <source>Reading...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try again</source>
+        <translation type="unfinished">다시 시도</translation>
+    </message>
+    <message>
+        <source>Plug in Keycard reader...</source>
+        <translation type="unfinished">Keycard 리더를 연결하세요...</translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading Keycard...</source>
+        <translation type="unfinished">Keycard 읽는 중...</translation>
+    </message>
+    <message>
+        <source>This is not a Keycard</source>
+        <translation type="unfinished">이건 Keycard가 아닙니다</translation>
+    </message>
+    <message>
+        <source>The card is not a Keycard, try again with Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard inserted</source>
+        <translation type="unfinished">잘못된 Keycard가 삽입되었습니다</translation>
+    </message>
+    <message>
+        <source>Inserted Keycard does not match the expected key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>It&apos;s a different Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please try again with Keycard you read before.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14535,45 +14655,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>ReadingKeycardState</name>
-    <message>
-        <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Keycard 리더를 연결하세요...</translation>
-    </message>
-    <message>
-        <source>Tap or insert Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reading Keycard...</source>
-        <translation type="unfinished">Keycard 읽는 중...</translation>
-    </message>
-    <message>
-        <source>This is not a Keycard</source>
-        <translation type="unfinished">이건 Keycard가 아닙니다</translation>
-    </message>
-    <message>
-        <source>The card is not a Keycard, try again with Keycard.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Connection error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Something went wrong, please try again</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Wrong Keycard inserted</source>
-        <translation type="unfinished">잘못된 Keycard가 삽입되었습니다</translation>
-    </message>
-    <message>
-        <source>Inserted Keycard does not match the expected key</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ReceiveModal</name>
     <message>
         <source>Copy address</source>
@@ -18404,37 +18485,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Confirm</source>
         <translation>비밀번호 확인</translation>
-    </message>
-</context>
-<context>
-    <name>TransactionSigner</name>
-    <message>
-        <source>You need to enter a password</source>
-        <translation>비밀번호를 입력해야 합니다</translation>
-    </message>
-    <message>
-        <source>Password needs to be 6 characters or more</source>
-        <translation>비밀번호는 6자 이상이어야 합니다</translation>
-    </message>
-    <message>
-        <source>Signing phrase</source>
-        <translation>서명 구문</translation>
-    </message>
-    <message>
-        <source>Signing phrase is a 3 word combination that is displayed when you entered the wallet on this device for the first time.</source>
-        <translation>서명 문구는 이 기기에서 지갑에 처음 진입했을 때 표시되는 3단어 조합입니다.</translation>
-    </message>
-    <message>
-        <source>Enter the password you use to unlock this device</source>
-        <translation>이 기기의 잠금을 해제할 때 사용하는 비밀번호를 입력하세요</translation>
-    </message>
-    <message>
-        <source>Password</source>
-        <translation>비밀번호</translation>
-    </message>
-    <message>
-        <source>Enter password</source>
-        <translation>비밀번호 입력</translation>
     </message>
 </context>
 <context>

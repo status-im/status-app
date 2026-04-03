@@ -440,7 +440,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: factory reset flow...")
+            Global.openKeycardManagementPopup(Constants.keycard.flow.factoryReset, root.keyUid, root.keycardUid)
         }
     }
 }

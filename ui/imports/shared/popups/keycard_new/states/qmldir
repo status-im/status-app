@@ -1,2 +1,3 @@
 EnterPinState 1.0 EnterPinState.qml
-ReadingKeycardState 1.0 ReadingKeycardState.qml
+FactoryResetConfirmationState 1.0 FactoryResetConfirmationState.qml
+KeycardProgressState 1.0 KeycardProgressState.qml

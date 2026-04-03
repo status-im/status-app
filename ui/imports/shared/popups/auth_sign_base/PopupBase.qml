@@ -76,7 +76,8 @@ StatusDialog {
                             || keycardErrors.wrongPinError2) {
                         return enterPinComponent
                     }
-                    if (keycardErrors.wrongKeycardError
+                    if (keycardErrors.internalError
+                            || keycardErrors.wrongKeycardProfileError
                             || keycardErrors.emptyKeycardError
                             || keycardErrors.notKeycardError
                             || keycardErrors.connectionKeycardError1
@@ -378,7 +379,8 @@ StatusDialog {
         id: keycardAuthComponent
         KeycardAuth {
             keycardState: d.processedKeycardState
-            wrongKeycard: keycardErrors.wrongKeycardError
+            keycardInternalError: keycardErrors.internalError
+            wrongKeycardProfile: keycardErrors.wrongKeycardProfileError
             keyPairForProcessing: root.keyPairForProcessing
         }
     }

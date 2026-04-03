@@ -9409,6 +9409,19 @@
     </message>
   </context>
   <context>
+    <name>FactoryResetConfirmationState</name>
+    <message>
+      <source>A factory reset will delete the key on this Keycard.&#xA;Are you sure you want to do this?</source>
+      <comment>FactoryResetConfirmationState</comment>
+      <translation>A factory reset will delete the key on this Keycard.&#xA;Are you sure you want to do this?</translation>
+    </message>
+    <message>
+      <source>I understand the key pair on this Keycard will be deleted</source>
+      <comment>FactoryResetConfirmationState</comment>
+      <translation>I understand the key pair on this Keycard will be deleted</translation>
+    </message>
+  </context>
+  <context>
     <name>FavoriteMenu</name>
     <message>
       <source>Open in new Tab</source>
@@ -10957,6 +10970,16 @@
       <comment>KeycardAuth</comment>
       <translation>The card is not a Keycard, try again with Keycard.</translation>
     </message>
+    <message>
+      <source>Something went wrong</source>
+      <comment>KeycardAuth</comment>
+      <translation>Something went wrong</translation>
+    </message>
+    <message>
+      <source>Try again</source>
+      <comment>KeycardAuth</comment>
+      <translation>Try again</translation>
+    </message>
   </context>
   <context>
     <name>KeycardChannelDrawer</name>
@@ -11923,6 +11946,51 @@
       <comment>KeycardManagementPopup</comment>
       <translation>I don&#39;t have or don&#39;t know PIN</translation>
     </message>
+    <message>
+      <source>Factory reset</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Factory reset</translation>
+    </message>
+    <message>
+      <source>Factory reset this Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Factory reset this Keycard</translation>
+    </message>
+    <message>
+      <source>Resetting Keycard...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Resetting Keycard...</translation>
+    </message>
+    <message>
+      <source>Reading...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Reading...</translation>
+    </message>
+    <message>
+      <source>Keycard has been reset</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Keycard has been reset</translation>
+    </message>
+    <message>
+      <source>Success</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Success</translation>
+    </message>
+    <message>
+      <source>Keycard is now empty.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Keycard is now empty.</translation>
+    </message>
+    <message>
+      <source>Something went wrong</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Something went wrong</translation>
+    </message>
+    <message>
+      <source>Try again</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Try again</translation>
+    </message>
   </context>
   <context>
     <name>KeycardNotEmptyPage</name>
@@ -12352,6 +12420,84 @@
       <source>Retry biometrics</source>
       <comment>KeycardPopupDetails</comment>
       <translation>Retry biometrics</translation>
+    </message>
+  </context>
+  <context>
+    <name>KeycardProgressState</name>
+    <message>
+      <source>Reading...</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Reading...</translation>
+    </message>
+    <message>
+      <source>Success</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Success</translation>
+    </message>
+    <message>
+      <source>Something went wrong</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Something went wrong</translation>
+    </message>
+    <message>
+      <source>Try again</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Try again</translation>
+    </message>
+    <message>
+      <source>Plug in Keycard reader...</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Plug in Keycard reader...</translation>
+    </message>
+    <message>
+      <source>Tap or insert Keycard...</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Tap or insert Keycard...</translation>
+    </message>
+    <message>
+      <source>Reading Keycard...</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Reading Keycard...</translation>
+    </message>
+    <message>
+      <source>This is not a Keycard</source>
+      <comment>KeycardProgressState</comment>
+      <translation>This is not a Keycard</translation>
+    </message>
+    <message>
+      <source>The card is not a Keycard, try again with Keycard.</source>
+      <comment>KeycardProgressState</comment>
+      <translation>The card is not a Keycard, try again with Keycard.</translation>
+    </message>
+    <message>
+      <source>Connection error</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Connection error</translation>
+    </message>
+    <message>
+      <source>Something went wrong, please try again</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Something went wrong, please try again</translation>
+    </message>
+    <message>
+      <source>Wrong Keycard inserted</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Wrong Keycard inserted</translation>
+    </message>
+    <message>
+      <source>Inserted Keycard does not match the expected key</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Inserted Keycard does not match the expected key</translation>
+    </message>
+    <message>
+      <source>It&#39;s a different Keycard</source>
+      <comment>KeycardProgressState</comment>
+      <translation>It&#39;s a different Keycard</translation>
+    </message>
+    <message>
+      <source>Please try again with Keycard you read before.</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Please try again with Keycard you read before.</translation>
     </message>
   </context>
   <context>
@@ -17751,54 +17897,6 @@
     </message>
   </context>
   <context>
-    <name>ReadingKeycardState</name>
-    <message>
-      <source>Plug in Keycard reader...</source>
-      <comment>ReadingKeycardState</comment>
-      <translation>Plug in Keycard reader...</translation>
-    </message>
-    <message>
-      <source>Tap or insert Keycard...</source>
-      <comment>ReadingKeycardState</comment>
-      <translation>Tap or insert Keycard...</translation>
-    </message>
-    <message>
-      <source>Reading Keycard...</source>
-      <comment>ReadingKeycardState</comment>
-      <translation>Reading Keycard...</translation>
-    </message>
-    <message>
-      <source>This is not a Keycard</source>
-      <comment>ReadingKeycardState</comment>
-      <translation>This is not a Keycard</translation>
-    </message>
-    <message>
-      <source>The card is not a Keycard, try again with Keycard.</source>
-      <comment>ReadingKeycardState</comment>
-      <translation>The card is not a Keycard, try again with Keycard.</translation>
-    </message>
-    <message>
-      <source>Connection error</source>
-      <comment>ReadingKeycardState</comment>
-      <translation>Connection error</translation>
-    </message>
-    <message>
-      <source>Something went wrong, please try again</source>
-      <comment>ReadingKeycardState</comment>
-      <translation>Something went wrong, please try again</translation>
-    </message>
-    <message>
-      <source>Wrong Keycard inserted</source>
-      <comment>ReadingKeycardState</comment>
-      <translation>Wrong Keycard inserted</translation>
-    </message>
-    <message>
-      <source>Inserted Keycard does not match the expected key</source>
-      <comment>ReadingKeycardState</comment>
-      <translation>Inserted Keycard does not match the expected key</translation>
-    </message>
-  </context>
-  <context>
     <name>ReceiveModal</name>
     <message>
       <source>Copy address</source>
@@ -22431,44 +22529,6 @@
       <source>Confirm</source>
       <comment>TransactionSettings</comment>
       <translation>Confirm</translation>
-    </message>
-  </context>
-  <context>
-    <name>TransactionSigner</name>
-    <message>
-      <source>You need to enter a password</source>
-      <comment>TransactionSigner</comment>
-      <translation>You need to enter a password</translation>
-    </message>
-    <message>
-      <source>Password needs to be 6 characters or more</source>
-      <comment>TransactionSigner</comment>
-      <translation>Password needs to be 6 characters or more</translation>
-    </message>
-    <message>
-      <source>Signing phrase</source>
-      <comment>TransactionSigner</comment>
-      <translation>Signing phrase</translation>
-    </message>
-    <message>
-      <source>Signing phrase is a 3 word combination that is displayed when you entered the wallet on this device for the first time.</source>
-      <comment>TransactionSigner</comment>
-      <translation>Signing phrase is a 3 word combination that is displayed when you entered the wallet on this device for the first time.</translation>
-    </message>
-    <message>
-      <source>Enter the password you use to unlock this device</source>
-      <comment>TransactionSigner</comment>
-      <translation>Enter the password you use to unlock this device</translation>
-    </message>
-    <message>
-      <source>Password</source>
-      <comment>TransactionSigner</comment>
-      <translation>Password</translation>
-    </message>
-    <message>
-      <source>Enter password</source>
-      <comment>TransactionSigner</comment>
-      <translation>Enter password</translation>
     </message>
   </context>
   <context>

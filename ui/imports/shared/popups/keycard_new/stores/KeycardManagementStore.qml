@@ -6,6 +6,9 @@ QtObject {
     signal keycardGetMetadataSuccess()
     signal keycardGetMetadataError(string error)
 
+    signal keycardFactoryResetSuccess()
+    signal keycardFactoryResetError(string error)
+
     readonly property bool ready: d.ready
     readonly property string userProfileKeyUid: userProfile.keyUid
 
@@ -23,6 +26,14 @@ QtObject {
 
         function onKeycardGetMetadataError(error) {
             root.keycardGetMetadataError(error)
+        }
+
+        function onKeycardFactoryResetSuccess() {
+            root.keycardFactoryResetSuccess()
+        }
+
+        function onKeycardFactoryResetError(error) {
+            root.keycardFactoryResetError(error)
         }
     }
 
@@ -95,5 +106,13 @@ QtObject {
             return
         }
         d.mainModuleInst.keycardManagementModule.startGetMetadata(pin)
+    }
+
+    function startFactoryReset(keycardUid) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.startFactoryReset(keycardUid)
     }
 }

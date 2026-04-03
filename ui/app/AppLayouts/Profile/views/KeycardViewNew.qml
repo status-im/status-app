@@ -62,7 +62,13 @@ SettingsContentBase {
             property string cardMetadataName: ""
             property string cardMetadataWalletAccountsJson: "[]"
 
-            function showDetails(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
+            function showMainScreen() {
+                stackLayout.currentIndex = d.mainViewIndex
+                root.sectionTitle = root.mainSectionTitle
+                root.backButtonNameRequested("")
+            }
+
+            function showDetailsScreen(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
                                  availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
                 d.keycardState = keycardState
                 d.keycardUid = keycardUid
@@ -107,8 +113,12 @@ SettingsContentBase {
 
         function onKeycardManagementResult(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
                                            availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
-            d.showDetails(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
-                          availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
+            d.showDetailsScreen(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
+                                availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
+        }
+
+        function onKeycardFactoryResetDone() {
+            d.showMainScreen()
         }
     }
 }

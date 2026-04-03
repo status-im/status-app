@@ -672,6 +672,9 @@ QtObject {
                     Global.keycardManagementResult(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
                                                    availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
                 }
+                onFactoryResetResult: function(success) {
+                    Global.keycardFactoryResetDone()
+                }
 
                 onClosed: destroy()
             }

@@ -69,4 +69,14 @@ method onKeycardGetMetadataFinished*[T](self: Module[T], metadata: CardMetadataD
   self.view.setCardMetadataWalletAccountsJson($walletsJson)
   self.view.keycardGetMetadataSuccess()
 
+method startFactoryReset*[T](self: Module[T], keycardUid: string) =
+  self.controller.startFactoryReset(keycardUid)
+
+method onKeycardFactoryResetFinished*[T](self: Module[T], error: string) =
+  if error.len > 0:
+    error "keycard factory reset error", error=error
+    self.view.keycardFactoryResetError(error)
+    return
+  self.view.keycardFactoryResetSuccess()
+
 {.pop.}

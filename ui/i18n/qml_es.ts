@@ -7713,6 +7713,18 @@ Por favor, agrégala e intenta de nuevo.</translation>
     </message>
 </context>
 <context>
+    <name>FactoryResetConfirmationState</name>
+    <message>
+        <source>A factory reset will delete the key on this Keycard.
+Are you sure you want to do this?</source>
+        <translation type="unfinished">Un restablecimiento de fábrica eliminará la clave en este Keycard. ¿Estás seguro de que deseas hacer esto?</translation>
+    </message>
+    <message>
+        <source>I understand the key pair on this Keycard will be deleted</source>
+        <translation type="unfinished">Entiendo que el par de claves en este Keycard será eliminado</translation>
+    </message>
+</context>
+<context>
     <name>FavoriteMenu</name>
     <message>
         <source>Open in new Tab</source>
@@ -8990,6 +9002,14 @@ Por favor, agrégala e intenta de nuevo.</translation>
         <source>The card is not a Keycard, try again with Keycard.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Something went wrong</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try again</source>
+        <translation type="unfinished">Inténtalo de nuevo</translation>
+    </message>
 </context>
 <context>
     <name>KeycardChannelDrawer</name>
@@ -9795,6 +9815,42 @@ to login to Status?</source>
         <source>I don&apos;t have or don&apos;t know PIN</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Factory reset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Factory reset this Keycard</source>
+        <translation type="unfinished">Restablecer este Keycard de fábrica</translation>
+    </message>
+    <message>
+        <source>Resetting Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard has been reset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is now empty.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try again</source>
+        <translation type="unfinished">Inténtalo de nuevo</translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>
@@ -10143,6 +10199,69 @@ acceso a tus fondos.</translation>
     <message>
         <source>Restart App &amp; Sign In Using Your Keycard</source>
         <translation>Reiniciar aplicación e iniciar sesión usando tu Keycard</translation>
+    </message>
+</context>
+<context>
+    <name>KeycardProgressState</name>
+    <message>
+        <source>Reading...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try again</source>
+        <translation type="unfinished">Inténtalo de nuevo</translation>
+    </message>
+    <message>
+        <source>Plug in Keycard reader...</source>
+        <translation type="unfinished">Conecta el lector de Keycard...</translation>
+    </message>
+    <message>
+        <source>Tap or insert Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading Keycard...</source>
+        <translation type="unfinished">Leyendo Keycard...</translation>
+    </message>
+    <message>
+        <source>This is not a Keycard</source>
+        <translation type="unfinished">Esto no es un Keycard</translation>
+    </message>
+    <message>
+        <source>The card is not a Keycard, try again with Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Connection error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong, please try again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard inserted</source>
+        <translation type="unfinished">Keycard incorrecto insertado</translation>
+    </message>
+    <message>
+        <source>Inserted Keycard does not match the expected key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>It&apos;s a different Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please try again with Keycard you read before.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -14582,45 +14701,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>ReadingKeycardState</name>
-    <message>
-        <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Conecta el lector de Keycard...</translation>
-    </message>
-    <message>
-        <source>Tap or insert Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reading Keycard...</source>
-        <translation type="unfinished">Leyendo Keycard...</translation>
-    </message>
-    <message>
-        <source>This is not a Keycard</source>
-        <translation type="unfinished">Esto no es un Keycard</translation>
-    </message>
-    <message>
-        <source>The card is not a Keycard, try again with Keycard.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Connection error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Something went wrong, please try again</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Wrong Keycard inserted</source>
-        <translation type="unfinished">Keycard incorrecto insertado</translation>
-    </message>
-    <message>
-        <source>Inserted Keycard does not match the expected key</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>ReceiveModal</name>
     <message>
         <source>Copy address</source>
@@ -18465,37 +18545,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Confirm</source>
         <translation>Confirmar</translation>
-    </message>
-</context>
-<context>
-    <name>TransactionSigner</name>
-    <message>
-        <source>You need to enter a password</source>
-        <translation>Debe escribir una contraseña</translation>
-    </message>
-    <message>
-        <source>Password needs to be 6 characters or more</source>
-        <translation>La contraseña debe tener 6 caracteres o más</translation>
-    </message>
-    <message>
-        <source>Signing phrase</source>
-        <translation>Frase de firma</translation>
-    </message>
-    <message>
-        <source>Signing phrase is a 3 word combination that is displayed when you entered the wallet on this device for the first time.</source>
-        <translation>La frase de firma es una combinación de 3 palabras que se muestra cuando entraste a la billetera en este dispositivo por primera vez.</translation>
-    </message>
-    <message>
-        <source>Enter the password you use to unlock this device</source>
-        <translation>Ingresa la contraseña que usas para desbloquear este dispositivo</translation>
-    </message>
-    <message>
-        <source>Password</source>
-        <translation>Contraseña</translation>
-    </message>
-    <message>
-        <source>Enter password</source>
-        <translation>Ingresa la contraseña</translation>
     </message>
 </context>
 <context>

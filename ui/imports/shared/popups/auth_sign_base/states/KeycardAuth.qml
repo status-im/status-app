@@ -14,7 +14,8 @@ Control {
     id: root
 
     required property string keycardState
-    required property bool wrongKeycard
+    required property bool keycardInternalError
+    required property bool wrongKeycardProfile
     property var keyPairForProcessing: null
 
     topPadding: Theme.xlPadding
@@ -126,7 +127,8 @@ Control {
         },
         State {
             name: "reading-card"
-            when: !root.wrongKeycard
+            when: !root.keycardInternalError
+                  && !root.wrongKeycardProfile
                   && (root.keycardState === Constants.keycard.state.connectingCard
                       || root.keycardState === Constants.keycard.state.ready)
             PropertyChanges {
@@ -265,9 +267,8 @@ Control {
             }
         },
         State {
-            name: "wrong-keycard"
-            when: root.keycardState === Constants.keycard.state.ready
-                  && root.wrongKeycard
+            name: "wrong-keycard-profile"
+            when: root.wrongKeycardProfile
             PropertyChanges {
                 target: image
                 source: Assets.png("keycard/wrong_card/wrong-profile")
@@ -275,12 +276,30 @@ Control {
             PropertyChanges {
                 target: title
                 text: qsTr("Wrong Keycard inserted")
-                color: Theme.palette.directColor1
+                color: Theme.palette.dangerColor1
             }
             PropertyChanges {
                 target: message
                 text: qsTr("Inserted Keycard does not match the expected key")
-                color: Theme.palette.directColor1
+                color: Theme.palette.dangerColor1
+            }
+        },
+        State {
+            name: "keycard-internal-error"
+            when: root.keycardInternalError
+            PropertyChanges {
+                target: image
+                source: Assets.png("keycard/wrong_card/wrong-profile")
+            }
+            PropertyChanges {
+                target: title
+                text: qsTr("Something went wrong")
+                color: Theme.palette.dangerColor1
+            }
+            PropertyChanges {
+                target: message
+                text: qsTr("Try again")
+                color: Theme.palette.dangerColor1
             }
         },
         State {

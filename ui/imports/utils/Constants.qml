@@ -515,6 +515,7 @@ QtObject {
 
         readonly property QtObject flow: QtObject {
             readonly property string readKeycard: "read-keycard"
+            readonly property string factoryReset: "factory-reset"
         }
     }
 

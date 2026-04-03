@@ -47,5 +47,8 @@ proc init*(self: Controller) =
 proc startGetMetadata*(self: Controller, pin: string) =
   self.keycardServiceV2.asyncGetKeycardMetadata(pin)
 
+proc startFactoryReset*(self: Controller, keycardUid: string) =
+  self.keycardServiceV2.asyncFactoryResetKeycard(keycardUid)
+
 proc stopKeycardAction*(self: Controller) =
   self.keycardServiceV2.asyncStop()
