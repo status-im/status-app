@@ -67,6 +67,7 @@ type KeycardAction {.pure.} = enum
   UnblockUsingPUK = "UnblockUsingPUK"
   GetKeycardMetadata = "GetKeycardMetadata"
   Sign = "Sign"
+  FactoryResetKeycard = "FactoryResetKeycard"
 
 type
   KeycardEventArg* = ref object of Args

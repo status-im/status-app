@@ -112,9 +112,10 @@ proc asyncExportExtendedPublicKey*(self: Service, keyUid: string, path: string, 
     self.events.emit(SIGNAL_KEYCARD_EXPORT_EXTENDED_PUBLIC_KEYS_FINISHED, data)
   )
 
-proc asyncChangeKeycardPIN*(self: Service, keyUid: string, pin: string, newPin: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncChangeKeycardPIN*(self: Service, keyUid: string, pin: string, newPin: string, keycardUid: string) {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keyUid": keyUid,
+    "keycardUid": keycardUid,
     "pin": pin,
     "newPin": newPin,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
@@ -137,9 +138,10 @@ proc asyncChangeKeycardPIN*(self: Service, keyUid: string, pin: string, newPin: 
     self.events.emit(SIGNAL_KEYCARD_CHANGE_PIN_FINISHED, data)
   )
 
-proc asyncChangeKeycardPUK*(self: Service, keyUid: string, pin: string, newPuk: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncChangeKeycardPUK*(self: Service, keyUid: string, pin: string, newPuk: string, keycardUid: string) {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keyUid": keyUid,
+    "keycardUid": keycardUid,
     "pin": pin,
     "newPuk": newPuk,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
@@ -162,9 +164,10 @@ proc asyncChangeKeycardPUK*(self: Service, keyUid: string, pin: string, newPuk: 
     self.events.emit(SIGNAL_KEYCARD_CHANGE_PUK_FINISHED, data)
   )
 
-proc asyncUnblockUsingPUK*(self: Service, keyUid: string, puk: string, newPin: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncUnblockUsingPUK*(self: Service, keyUid: string, puk: string, newPin: string, keycardUid: string) {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keyUid": keyUid,
+    "keycardUid": keycardUid,
     "puk": puk,
     "newPin": newPin,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
@@ -238,9 +241,14 @@ proc asyncGetKeycardMetadata*(self: Service, pin: string) {.featureGuard(KEYCARD
     self.events.emit(SIGNAL_KEYCARD_GET_KEYCARD_METADATA_FINISHED, data)
   )
 
-proc asyncFactoryResetKeycard*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
-  let params = %*{}
-  self.asyncCallRPC(KeycardAction.FactoryReset, params, proc (responseObj: JsonNode, err: string) =
+proc asyncFactoryResetKeycard*(self: Service, keycardUid: string) {.featureGuard(KEYCARD_ENABLED).} =
+  let params = %*{
+    "keycardUid": keycardUid,
+    "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
+    "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
+  }
+  self.asyncCallRPC(KeycardAction.FactoryResetKeycard, params, proc (responseObj: JsonNode, err: string) =
     var data = KeycardErrorArg()
     try:
       if err.len > 0:
