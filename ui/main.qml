@@ -61,6 +61,11 @@ Window {
     readonly property bool appThemeDark: Theme.style === Theme.Style.Dark
     readonly property KeycardStateStore keycardStateStore: KeycardStateStore {}
     readonly property bool portraitLayout: height > width
+    readonly property bool suppressKeyboardResize: SQUtils.Utils.isMobile
+                                                && loader.item
+                                                && loader.item.objectName === "appMain"
+                                                && loader.item.rootStore
+                                                && loader.item.rootStore.activeSectionType === Constants.appSection.browser
     property bool biometricFlowPending: false
 
     // Store the native SafeArea bottom margin (e.g., iOS home indicator)
@@ -79,7 +84,9 @@ Window {
     // Calculate additional margin so that total = max(nativeSafeAreaBottom, keyboardHeight)
     // When keyboard shows, we want the keyboard height to replace the native safe area, not add to it
     // The Behavior animation ensures smooth transitions even during rapid keyboard show/hide sequences
-    property real additionalBottomMargin: Math.max(0, keyboardHeight - nativeSafeAreaBottom)
+    property real additionalBottomMargin: suppressKeyboardResize
+                                          ? 0
+                                          : Math.max(0, keyboardHeight - nativeSafeAreaBottom)
 
     SafeArea.additionalMargins.bottom: additionalBottomMargin
 
