@@ -131,14 +131,14 @@ class ContactsSettingsView(QObject):
     @property
     @allure.step('Get contact items')
     def contact_items(self, attempts: int = 2) -> typing.List[ContactItem]:
+        last_error: typing.Optional[BaseException] = None
         for _ in range(attempts):
             try:
-                contact_items = driver.findAllObjects(self.contact_item.wait_until_appears().real_name)
-                if contact_items:
-                    return [ContactItem(item) for item in contact_items]
-            except Exception:
-                pass
-        raise LookupError('Contact requests are not found')
+                raw = driver.findAllObjects(self.contact_item.wait_until_appears().real_name)
+                return [ContactItem(item) for item in raw]
+            except Exception as e:
+                last_error = e
+        raise LookupError('Contact requests are not found') from last_error
 
     @property
     @allure.step('Get title of list with sent pending requests')

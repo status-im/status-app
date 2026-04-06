@@ -12,8 +12,12 @@ from driver.objects_access import (
     describe_button_for_log,
     find_notification_button_on_card,
     item_is_visible,
+    notification_quick_action_bounds_plausible,
 )
-from helpers.chat_helper import skip_message_backup_popup_if_visible
+from helpers.chat_helper import (
+    accept_review_contact_request_popup_if_visible,
+    skip_message_backup_popup_if_visible,
+)
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.scroll import Scroll
@@ -28,33 +32,57 @@ _ACCEPT_OBJECT_NAME = 'notificationAcceptBtn'
 _DECLINE_OBJECT_NAME = 'notificationDeclineBtn'
 
 
-def _click_qml_item_center(item) -> None:
-    """Prefer screen-space click: item-relative coords often miss on nested/transformed QML."""
-    try:
-        b = squish_object.globalBounds(item)
-    except (RuntimeError, LookupError, AttributeError):
-        b = None
-    if b is not None and b.width > 0 and b.height > 0:
-        cx = int(b.x + b.width / 2)
-        cy = int(b.y + b.height / 2)
-        time.sleep(0.03)
-        driver.nativeMouseClick(cx, cy, driver.MouseButton.LeftButton)
-        return
+def _click_qml_item_center(item, card=None) -> None:
+    """Click QML control: Qt object-relative first; native global center as fallback.
+
+    When ``card`` is the notification delegate, we refuse targets whose bounds cover the whole card:
+    that hit tests the card ``TapHandler`` (review modal) instead of Accept/Decline.
+    """
+    time.sleep(0.03)
+
+    def _plausible() -> bool:
+        return card is None or notification_quick_action_bounds_plausible(item, card)
+
     try:
         w = int(getattr(item, 'width', 0) or 0)
         h = int(getattr(item, 'height', 0) or 0)
     except (RuntimeError, TypeError, ValueError, AttributeError):
         w, h = 0, 0
-    if w > 0 and h > 0:
+    if w > 0 and h > 0 and _plausible():
         x = max(1, int(w * 0.5))
         y = max(1, int(h * 0.5))
         try:
             squish.mouseMove(item, x, y)
-        except (RuntimeError, LookupError, AttributeError):
-            pass
-        driver.mouseClick(item, x, y, driver.Qt.LeftButton)
+            time.sleep(0.06)
+            driver.mouseClick(item, x, y, driver.Qt.LeftButton)
+            return
+        except (RuntimeError, LookupError, AttributeError) as ex:
+            LOG.info('_click_qml_item_center: Qt-relative click failed: %s', ex)
+    try:
+        b = squish_object.globalBounds(item)
+    except (RuntimeError, LookupError, AttributeError):
+        b = None
+    if b is not None and b.width > 2 and b.height > 2 and _plausible():
+        cx = int(b.x + b.width / 2)
+        cy = int(b.y + b.height / 2)
+        time.sleep(0.03)
+        driver.nativeMouseClick(cx, cy, driver.MouseButton.LeftButton)
         return
-    driver.mouseClick(item)
+    if card is None:
+        if w > 0 and h > 0:
+            x = max(1, int(w * 0.5))
+            y = max(1, int(h * 0.5))
+            try:
+                squish.mouseMove(item, x, y)
+                driver.mouseClick(item, x, y, driver.Qt.LeftButton)
+                return
+            except (RuntimeError, LookupError, AttributeError):
+                pass
+        driver.mouseClick(item)
+        return
+    raise RuntimeError(
+        'Refusing click on notification control: geometry matches the card (would trigger card tap / review modal).'
+    )
 
 
 class ContactRequest:
@@ -90,22 +118,23 @@ class ContactRequest:
 
     def _wait_until_quick_actions_hidden(self, action_label: str) -> None:
         def _gone() -> bool:
-            # NotificationCard: actionId → empty when request is no longer pending (see NotificationAdaptorContactRequest)
-            try:
-                if hasattr(self.object, 'actionId') and not bool(getattr(self.object, 'actionId')):
-                    return True
-            except (RuntimeError, AttributeError, LookupError):
-                pass
+            # Check buttons first: falsy actionId must not short-circuit while Accept/Decline are still visible.
             for oname in (_ACCEPT_OBJECT_NAME, _DECLINE_OBJECT_NAME):
                 btn = find_notification_button_on_card(self.object, oname)
                 if btn is not None and item_is_visible(btn):
                     return False
+            try:
+                if hasattr(self.object, 'actionId') and bool(getattr(self.object, 'actionId')):
+                    return False
+            except (RuntimeError, AttributeError, LookupError):
+                pass
             return True
 
         LOG.info('Waiting until quick actions hidden after %s', action_label)
         ok = driver.waitFor(_gone, _QUICK_ACTIONS_DISMISS_MS)
         assert ok, (
-            f'{action_label} had no effect: Accept/Decline are still visible after {_QUICK_ACTIONS_DISMISS_MS} ms'
+            f'{action_label}: quick actions (Accept/Decline) did not disappear within {_QUICK_ACTIONS_DISMISS_MS} ms — '
+            f'the click likely did not reach the app; if buttons still look visible in the UI, check focus/scaling.'
         )
         LOG.info('Quick actions hidden after %s', action_label)
 
@@ -115,28 +144,39 @@ class ContactRequest:
         while time.monotonic() < deadline:
             btn = find_notification_button_on_card(self.object, object_name)
             if btn is not None and item_is_visible(btn) and bool(getattr(btn, 'enabled', True)):
-                for attempt in range(1, 7):
+                for attempt in range(1, 11):
                     LOG.info(
                         'ActivityCenter: %s — attempt %s on %s',
                         label,
                         attempt,
                         describe_button_for_log(btn),
                     )
-                    if attempt <= 4:
-                        _click_qml_item_center(btn)
+                    if attempt <= 6:
+                        _click_qml_item_center(btn, self.object)
                     else:
                         try:
                             Button({'container': self.object, 'objectName': object_name}).click()
                         except Exception as ex:
                             LOG.info('Button(container=card).click fallback failed: %s', ex)
-                            _click_qml_item_center(btn)
+                            _click_qml_item_center(btn, self.object)
                     time.sleep(0.4)
+                    if accept_review_contact_request_popup_if_visible():
+                        if not self._contact_quick_actions_still_showing():
+                            return
                     if not self._contact_quick_actions_still_showing():
                         return
                     btn = find_notification_button_on_card(self.object, object_name)
                     if btn is None or not item_is_visible(btn) or not bool(getattr(btn, 'enabled', True)):
                         return
-                return
+                if accept_review_contact_request_popup_if_visible():
+                    if not self._contact_quick_actions_still_showing():
+                        return
+                LOG.info(
+                    'ActivityCenter: %s — quick actions still visible after attempts; retrying outer loop',
+                    label,
+                )
+                time.sleep(0.35)
+                continue
             now = time.monotonic()
             if now - last_progress_log >= 2.0:
                 last_progress_log = now
@@ -156,7 +196,9 @@ class ContactRequest:
 
     @allure.step('Accept request')
     def accept(self):
+        accept_review_contact_request_popup_if_visible()
         self._click_notification_button(_ACCEPT_OBJECT_NAME, 'Accept button')
+        accept_review_contact_request_popup_if_visible()
         skip_message_backup_popup_if_visible()
         self._wait_until_quick_actions_hidden('Accept contact request')
 
@@ -259,6 +301,16 @@ class ActivityCenter(QObject):
     @allure.step('Accept contact request')
     def accept_contact_request(self, request):
         self._scroll_notification_into_view(request.object)
+        label = request.contact_request
+        if label:
+            try:
+                request = self.find_contact_request_in_list(
+                    label,
+                    configs.timeouts.MESSAGING_TIMEOUT_SEC,
+                )
+                self._scroll_notification_into_view(request.object)
+            except TimeoutError:
+                LOG.info('ActivityCenter: could not refresh contact request card for %r; using prior ref', label)
         request.accept()
         self.close()
         LOG.info('ActivityCenter: accept_contact_request finished')

@@ -60,6 +60,7 @@ def test_block_and_unblock_user_from_settings_and_profile(multiple_instances):
             main_screen.prepare()
             contacts_settings = \
                 main_screen.left_panel.open_settings().left_panel.open_messaging_settings().open_contacts_settings()
+            contacts_settings.open_contacts()
             assert driver.waitFor(
                 lambda: user_two.name in [str(contact) for contact in contacts_settings.contact_items], timeout)
             block_popup = contacts_settings.open_contacts().open_more_options_popup(user_two.name).block_user()

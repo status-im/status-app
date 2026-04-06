@@ -7,6 +7,7 @@ import allure
 import configs
 from gui.components.community.enable_message_backup_popup import EnableMessageBackupPopup
 from gui.components.introduce_yourself_popup import IntroduceYourselfPopup
+from gui.components.settings.review_contact_request_popup import AcceptIgnoreRequestFromProfile
 
 
 @allure.step('Skip Enable Messages backup popup')
@@ -28,6 +29,20 @@ def skip_message_backup_popup_if_visible(attempts = 4):
                 continue
             else:
                 raise Exception(f"Failed to close EnableMessageBackupPopup after {attempts} attempts: {e}")
+
+
+@allure.step('Accept from Review contact request popup if visible')
+def accept_review_contact_request_popup_if_visible() -> bool:
+    """When the notification card TapHandler opens the review dialog, finish accept via its Accept button."""
+    popup = AcceptIgnoreRequestFromProfile()
+    if not popup.is_visible:
+        return False
+    try:
+        popup.accept_button.click()
+        time.sleep(0.35)
+        return True
+    except Exception:
+        return False
 
 
 @allure.step('Skip Introduce Yourself popup')
