@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components

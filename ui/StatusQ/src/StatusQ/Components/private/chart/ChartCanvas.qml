@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 import StatusQ.Core
@@ -54,7 +56,7 @@ Canvas {
 
     // [polyfill] element.getBoundingClientRect
     // https://developer.mozilla.org/docs/Web/API/Element/getBoundingClientRect
-    function getBoundingClientRect() {
+    function getBoundingClientRect(): var {
         return {top: 0, right: canvas.width, bottom: canvas.height, left: 0}
     }
 
@@ -82,19 +84,19 @@ Canvas {
 
         readonly property Connections mouseConn: Connections {
             target: mouse
-            function onPositionChanged(event) {
+            function onPositionChanged(event: var): void {
                 _eventSource.positionChanged(event)
             }
-            function onEntered(event) {
+            function onEntered(event: var): void {
                 _eventSource.entered(event)
             }
-            function onExited(event) {
+            function onExited(event: var): void {
                 _eventSource.exited(event)
             }
-            function onPressed(event) {
+            function onPressed(event: var): void {
                 _eventSource.pressed(event)
             }
-            function onReleased(event) {
+            function onReleased(event: var): void {
                 _eventSource.released(event)
             }
         }

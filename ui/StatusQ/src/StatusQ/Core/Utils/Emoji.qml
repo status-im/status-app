@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 pragma Singleton
 
 import QtQuick
@@ -22,7 +24,7 @@ QtObject {
         emojiJson: EmojiJSON.emoji_json
     }
 
-    function parse(text, renderSize = size.small) {
+    function parse(text: string, renderSize = size.small): string {
         const renderSizes = renderSize.split("x");
         if (!renderSize.includes("x") || renderSizes.length !== 2) {
             throw new Error("Invalid value for 'renderSize' parameter: ", renderSize);
@@ -43,27 +45,27 @@ QtObject {
             }
         })
     }
-    function iconSource(text) {
+    function iconSource(text: string): var {
         if (!text) return
         const parsed = parse(text);
         const match = parsed.match('src="(.*\.svg).*"');
         return (match && match.length >= 2) ? match[1] : undefined;
     }
-    function svgImage(unicode) {
+    function svgImage(unicode: string): string {
         return `${base}/${unicode}.svg`
     }
-    function iconId(text) {
+    function iconId(text: string): var {
         if (!text) return
         const parsed = parse(text);
         const match = parsed.match('src=".*\/(.+?).svg');
         return (match && match.length >= 2) ? match[1] : undefined;
     }
     // NOTE: doing the same thing as iconId but without checking Twemoji internal checks
-    function iconHex(text) {
+    function iconHex(text: string): var {
         if (!text) return
         return text.codePointAt(0).toString(16);
     }
-    function fromCodePoint(value) {
+    function fromCodePoint(value: string): string {
         return Twemoji.twemoji.convert.fromCodePoint(value)
     }
 
@@ -72,27 +74,27 @@ QtObject {
     //  - `alt` (this one is captured)
     readonly property var emojiRegexp: /<img(?=[^>]*\balt="([^"]*)")(?=[^>]*\bsrc="[^>]*\/assets\/twemoji\/[^>]*")[^>]*>/g
 
-    function deparse(value) {
+    function deparse(value: string): string {
         return value.replace(emojiRegexp, "$1");
     }
-    function hasEmoji(value) {
+    function hasEmoji(value: string): bool {
         let match = value.match(emojiRegexp)
         return match && match.length > 0
     }
-    function nbEmojis(value) {
+    function nbEmojis(value: string): int {
         let match = value.match(emojiRegexp)
         return match ? match.length : 0
     }
-    function getEmojis(value) {
+    function getEmojis(value: string): var {
         return value.match(emojiRegexp, "$1");
     }
-    function getEmojiUnicode(shortname) {
+    function getEmojiUnicode(shortname: string): var {
         const _emoji = emojiModel.getEmojiUnicodeFromShortname(shortname);
         if (!!_emoji)
             return _emoji;
     }
 
-    function getEmojiCodepoint(iconCodePoint) {
+    function getEmojiCodepoint(iconCodePoint: string): string {
         // Split the codepoint to get all the parts and then encode them from hex to utf8
         const splitCodePoint = iconCodePoint.split('-')
         let codePointParts = []
@@ -111,7 +113,7 @@ QtObject {
     // Returns a random emoji excluding flags emojis
     // WARNING: use status-go RandomWalletEmoji instead.
     // More details here: https://github.com/status-im/status-go/issues/5663
-    function getRandomEmoji(size) {
+    function getRandomEmoji(size: string): string {
         let whitelistedIndex = Math.floor(Math.random() * (EmojiJSON.emoji_json.length - flagsCount))
         // Compensating for the missing flags emojis index
         if (whitelistedIndex >= firstFlagIndex) {

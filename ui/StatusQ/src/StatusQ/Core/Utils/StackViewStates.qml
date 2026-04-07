@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 
@@ -12,13 +14,13 @@ QtObject {
     property alias size: statesStack.size
     readonly property alias states: statesStack.states
 
-    function pushInitialState(state) {
+    function pushInitialState(state: string): void {
         if(size > 0)
             console.warn("Pushing initial state but the stack already contains elements:  " + size)
         statesStack.push(state)
     }
 
-    function push(state, item, properties, operation) {
+    function push(state: string, item: var, properties: var, operation: var): var {
         // States related operations:
         statesStack.push(state)
 
@@ -26,7 +28,7 @@ QtObject {
         return stackView.push(item, properties, operation)
     }
 
-    function pop(operation) {
+    function pop(operation: var): var {
         // States related operations:
         statesStack.pop()
 
@@ -34,7 +36,7 @@ QtObject {
         return stackView.pop(operation)
     }
 
-    function clear(initialState, operation) {
+    function clear(initialState: string, operation: var): var {
         // States related operations:
         statesStack.clear()
         statesStack.push(initialState)

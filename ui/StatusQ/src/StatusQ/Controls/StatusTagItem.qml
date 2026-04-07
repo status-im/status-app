@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -64,7 +66,7 @@ Control {
         readonly property int tagMargins: 8
         readonly property int tagIconsSize: 20
 
-        function getTagColor(isReadonly) {
+        function getTagColor(isReadonly: bool): color {
             if(isReadonly)
                 return root.Theme.palette.baseColor1
             return root.hovered ? root.Theme.palette.miscColor1 : root.Theme.palette.primaryColor1

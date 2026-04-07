@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 pragma Singleton
 
 import QtQuick
@@ -20,7 +22,7 @@ QtObject {
         @param color [color] The color to evaluate.
         @return      [real]  Luminance in range [0, 1]. Values > 0.5 are considered light.
     */
-    function luminance(color) {
+    function luminance(color: color): real {
         let r = Math.pow(color.r, 2.2) * 0.2126
         let g = Math.pow(color.g, 2.2) * 0.7152
         let b = Math.pow(color.b, 2.2) * 0.0721

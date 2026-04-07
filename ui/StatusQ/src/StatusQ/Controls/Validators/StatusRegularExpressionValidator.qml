@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 import StatusQ.Controls
@@ -53,7 +55,7 @@ StatusValidator {
     errorMessage: `Must match regex(${regularExpression.toString()})`
     validatorObj: RegularExpressionValidator { regularExpression: root.regularExpression }
 
-    validate: function (value) {
+    validate: function (value: string): var {
         // Basic validation management
         return root.regularExpression.test(value)
     }

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 import StatusQ
@@ -43,7 +45,7 @@ Item {
 
                 sourceModel: root.model
 
-                function selectionPredicate(selected) {
+                function selectionPredicate(selected: bool): bool {
                     return root.mode === StatusCommunityTags.ShowSelectedOnly ? selected : !selected
                 }
 

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 import QtQuick.Controls as QC
@@ -280,7 +282,7 @@ Item {
     */
     signal editingFinished()
 
-    function insert(position, text) {
+    function insert(position: int, text: string): void {
         let pos = edit.cursorVisible ? edit.cursorPosition : -1
         edit.insert(position, text)
         if (pos >= 0)

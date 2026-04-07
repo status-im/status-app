@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 
@@ -112,7 +114,7 @@ Rectangle {
 
         readonly property int minShortNameWidth: root.shortName ? 50 : 0
 
-        function availableTextWidth() {
+        function availableTextWidth(): real {
              return root.width - imageItem.width - row.spacing - shortNameItem.anchors.rightMargin - selector.width - selector.anchors.rightMargin - 24/*Margin between both texts*/
         }
     }

@@ -124,14 +124,14 @@ void registerStatusQTypes() {
                                                   return new OnboardingEnums;
                                               });
 
+    // Theme, ThemePalette, StatusColors: QML_ELEMENT macros provide compile-time type info,
+    // runtime registration ensures types are available when loaded outside the static module context.
     qmlRegisterSingletonType<StatusColors>("StatusQ.Core.Theme", 0, 1, "StatusColors",
                                            [](QQmlEngine*, QJSEngine*) {
                                                return new StatusColors;
                                            });
-
     qmlRegisterUncreatableType<Theme>("StatusQ.Core.Theme", 0, 1,
                                       "Theme", QStringLiteral("This is attached type, cannot be created directly."));
-
     qmlRegisterUncreatableType<ThemePalette>("StatusQ.Core.Theme", 0, 1,
                                              "ThemePalette", QStringLiteral("Theme palette cannot be created directly."));
 
@@ -152,7 +152,6 @@ void registerStatusQTypes() {
 
 #ifdef BUNDLE_QML_RESOURCES
     Q_INIT_RESOURCE(TestConfig);
-    Q_INIT_RESOURCE(StatusQ_raw_qml_0);
 #if defined(STATUSQ_HAS_MOBILEWEBVIEW)
     Q_INIT_RESOURCE(customwebview);
 #endif

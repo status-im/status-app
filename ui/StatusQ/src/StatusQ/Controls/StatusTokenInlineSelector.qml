@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 
@@ -35,7 +37,7 @@ RowLayout {
        \qmlproperty var StatusTokenInlineSelector::tokenImageSourceGetter
        This is a property function used to acquire image source for given token.
     */
-    property var tokenImageSourceGetter: function (token) {
+    property var tokenImageSourceGetter: function (token: string): string {
         return Qt.resolvedUrl("../../assets/img/icons/%1.png".arg(token))
     }
 
@@ -78,7 +80,7 @@ RowLayout {
 
     QtObject {
         id: d
-        function assignItemProperties(item, index, modelData) {
+        function assignItemProperties(item: var, index: int, modelData: var): void {
             item.tokenImageSource = root.tokenImageSourceGetter(modelData.token)
             item.token = modelData.token
             item.amount = modelData.amount

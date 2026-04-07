@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QColor>
 #include <QMetaType>
+#include <QQmlEngine>
 
 #include <memory>
 
@@ -162,6 +163,8 @@ public:
 // Main ThemePalette class
 class ThemePalette : public QObject {
     Q_OBJECT
+    QML_NAMED_ELEMENT(ThemePalette)
+    QML_UNCREATABLE("Theme palette cannot be created directly.")
     Q_PROPERTY(QString name MEMBER name CONSTANT)
 
     Q_PROPERTY(bool isDark READ isDark CONSTANT)

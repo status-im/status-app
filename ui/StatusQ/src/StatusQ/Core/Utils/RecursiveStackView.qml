@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 
@@ -40,7 +42,7 @@ StackView {
     }
 
     // pops from the current stack or nested one
-    function popTopLevelItem(operation = StackView.Transition) {
+    function popTopLevelItem(operation = StackView.Transition): void {
         if (topLevelStack.depth === 1)
             topLevelStack.StackView.view.pop(operation)
         else

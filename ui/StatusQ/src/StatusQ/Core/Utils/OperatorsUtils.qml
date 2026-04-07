@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 pragma Singleton
 
 import QtQuick
@@ -23,7 +25,7 @@ QtObject {
         Or
     }
 
-    function setOperatorTextFormat(operator) {
+    function setOperatorTextFormat(operator: int): string {
         switch(operator) {
             case OperatorsUtils.Operators.And:
                 return root.andOperatorText

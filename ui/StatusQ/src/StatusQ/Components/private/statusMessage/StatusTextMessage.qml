@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
@@ -77,7 +79,7 @@ Item {
                                              chatText.hoveredLink, !!root.disabledTooltipText)
         }
 
-        function showDisabledTooltipForAddressEnsName(link) {
+        function showDisabledTooltipForAddressEnsName(link: string): bool {
             return link.startsWith('//send-via-personal-chat//') && !!root.disabledTooltipText
         }
     }

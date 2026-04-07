@@ -100,11 +100,8 @@ Rectangle {
         anchors.left: replyToUsername.left
         anchors.top: replyToUsername.bottom
         anchors.topMargin: 2
-        imageWidth: 64
-        imageHeight: 64
-        stickerData: root.stickerData
-        color: StatusColors.transparent
-        contentType: root.contentType
+        asset.width: 64
+        asset.height: 64
     }
 
     RoundButton {

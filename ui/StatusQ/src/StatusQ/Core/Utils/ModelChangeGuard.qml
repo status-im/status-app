@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQml
 
 ModelChangeTracker {

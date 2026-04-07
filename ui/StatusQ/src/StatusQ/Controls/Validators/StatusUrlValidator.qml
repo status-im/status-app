@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import StatusQ.Core.Utils
 import StatusQ.Controls
 
@@ -6,7 +8,7 @@ StatusValidator {
 
     errorMessage: qsTr("Please enter a valid URL")
 
-    validate: function (value) {
+    validate: function (value: string): var {
         return Utils.isURL(value);
     }
 }

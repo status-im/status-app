@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import StatusQ.Core.Backpressure
 
@@ -13,10 +15,10 @@ Item {
     // calls are attempted, the timer resets each time.
     property int debounceTime: 600
 
-    property var validate: function (value) {
+    property var validate: function (value: var): bool {
         return value === "async result"
     }
-    property var asyncOperation: function(inputText) {
+    property var asyncOperation: function(inputText: string): void {
         // Do something with the input text. Once completed, fire the
         // `asyncComplete` signal
         asyncComplete("async result")

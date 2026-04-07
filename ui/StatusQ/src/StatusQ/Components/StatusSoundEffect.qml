@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtMultimedia
 
@@ -22,7 +24,7 @@ Item {
         soundEffect.stop()
     }
 
-    function convertVolume(volume) {
+    function convertVolume(volume: real): real {
         return AudioUtils.convertLogarithmicToLinearVolumeScale(volume)
     }
 

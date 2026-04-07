@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Dialogs
 import QtCore
@@ -43,7 +45,7 @@ QObject {
         readonly property url resolvedFile: resolveFile(dlg.selectedFile)
         readonly property var resolvedFiles: resolveSelectedFiles(dlg.selectedFiles)
 
-        function resolveFile(file) {
+        function resolveFile(file: var): string {
             if (!file)
                 return ""
 
@@ -57,7 +59,7 @@ QObject {
             return resolvedLocalFile
         }
 
-        function resolveSelectedFiles(selectedFiles) {
+        function resolveSelectedFiles(selectedFiles: var): var {
             if (selectedFiles.length === 0)
                 return []
 

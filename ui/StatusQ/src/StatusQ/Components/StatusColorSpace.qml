@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Qt5Compat.GraphicalEffects
 
@@ -15,7 +17,7 @@ Item {
     property color color: "red"
     property color rootColor: Qt.hsva(color.hsvHue, 1, 1, 1)
 
-    function pickColorFromHueGauge(x, y) {
+    function pickColorFromHueGauge(x: real, y: real): color {
         // Get angle of picked color
         let theta = Math.atan2(y - hueGauge.height / 2, x - hueGauge.width / 2) * 0.5 / Math.PI;
         if (theta < 0.0)
@@ -25,7 +27,7 @@ Item {
         return Qt.hsva(1 - theta, 1, 1, 1)
     }
 
-    function pickColorFromSatValRect(x, y) {
+    function pickColorFromSatValRect(x: real, y: real): color {
         // x for saturation, reversed y for value
         let sat = mapFromRange(Math.min(Math.max(x, 0), satValRect.width),
                                minSaturate, maxSaturate, satValRect.width);
@@ -34,17 +36,17 @@ Item {
         return Qt.hsva(rootColor.hsvHue, sat, val, 1);
     }
 
-    function angleOnHueGauge(pickingColor) {
+    function angleOnHueGauge(pickingColor: color): real {
         // color hue to angle
         return (1 - pickingColor.hsvHue) * 2 * Math.PI;
     }
 
     // TODO: mapToRange & mapFromRange to helper js
-    function mapToRange(value, minValue, maxValue, range) {
+    function mapToRange(value: real, minValue: real, maxValue: real, range: real): real {
         return (value - minValue) / (maxValue - minValue) * range;
     }
 
-    function mapFromRange(pos, minValue, maxValue, range) {
+    function mapFromRange(pos: real, minValue: real, maxValue: real, range: real): real {
         return pos / range * (maxValue - minValue) + minValue;
     }
 

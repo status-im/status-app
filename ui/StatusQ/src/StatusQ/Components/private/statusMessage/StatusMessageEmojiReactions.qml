@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -25,7 +27,7 @@ Flow {
     QtObject {
         id: d
 
-        function showReactionAuthors(jsonArrayOfUsersReactedWithThisEmoji, emoji) {
+        function showReactionAuthors(jsonArrayOfUsersReactedWithThisEmoji: string, emoji: string): string {
             if (!jsonArrayOfUsersReactedWithThisEmoji) {
                 return
             }

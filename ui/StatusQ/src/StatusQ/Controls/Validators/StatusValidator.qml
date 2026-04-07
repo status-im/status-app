@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 QtObject {
@@ -5,7 +7,7 @@ QtObject {
     property string errorMessage: qsTr("invalid input")
     property var validatorObj
 
-    property var validate: function (value) {
+    property var validate: function (value: string): var {
         return true
     }
 }

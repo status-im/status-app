@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Dialogs
 
@@ -28,7 +30,7 @@ QObject {
         id: d
         property url resolvedFolder: d.resolveFolder(dlg.selectedFolder)
 
-        function resolveFolder(folder) {
+        function resolveFolder(folder: url): url {
             let resolvedFolder = folder;
             if (Utils.isIOS) {
                 //Convert from `file://` to local path

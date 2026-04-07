@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -116,7 +118,7 @@ Item {
     */
     signal editingFinished()
 
-    function setWord(seedWord) {
+    function setWord(seedWord: string): void {
         let seedWordTrimmed = seedWord.trim()
         seedWordInput.input.edit.text = seedWordTrimmed
         seedWordInput.input.edit.cursorPosition = seedWordInput.text.length

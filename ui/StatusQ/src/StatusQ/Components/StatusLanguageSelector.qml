@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Universal
@@ -74,7 +76,7 @@ Button {
             }
         }
 
-        function beautifyIsoCode(code) {
+        function beautifyIsoCode(code: string): string {
             return code.replace('_', '-').toUpperCase()
         }
     }

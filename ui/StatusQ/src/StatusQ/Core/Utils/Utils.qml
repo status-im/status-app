@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 pragma Singleton
 
 import QtQuick
@@ -21,7 +23,7 @@ QtObject {
 
     readonly property int swipeIndicatorWidth: 8
 
-    function getAbsolutePosition(node) {
+    function getAbsolutePosition(node: var): var {
         var returnPos = {};
         returnPos.x = 0;
         returnPos.y = 0;
@@ -33,11 +35,11 @@ QtObject {
         return returnPos;
     }
 
-    function isValidAddress(inputValue) {
+    function isValidAddress(inputValue: string): bool {
         return inputValue !== "0x" && /^0x[a-fA-F0-9]{40}$/.test(inputValue)
     }
 
-    function isValidEns(inputValue) {
+    function isValidEns(inputValue: string): bool {
         if (!inputValue) {
             return false
         }
@@ -46,15 +48,15 @@ QtObject {
         return isEmail || isDomain || (inputValue.startsWith("@") && inputValue.length > 1)
     }
 
-    function isURL(text) {
+    function isURL(text: string): bool {
         return (/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}(\.[a-zA-Z0-9()]{1,6})?\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(text))
     }
 
-    function uuid() {
+    function uuid(): string {
         return Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
     }
 
-    function getThemeAccountColor(c, accountColors) {
+    function getThemeAccountColor(c: string, accountColors: var): var {
         const upperCaseColor = c.toUpperCase()
         let colorIndex = accountColors.indexOf(upperCaseColor)
 
@@ -64,7 +66,7 @@ QtObject {
         return false
     }
 
-    function findAssetByChainAndSymbol(chainIdToFind, assets, symbolToFind) {
+    function findAssetByChainAndSymbol(chainIdToFind: int, assets: var, symbolToFind: string): var {
         for(var i=0; i<assets.rowCount(); i++) {
             const item = ModelUtils.get(assets, i)
             if (item.symbol.toLowerCase() === symbolToFind.toLowerCase() &&
@@ -81,7 +83,7 @@ QtObject {
         }
     }
 
-    function stripTrailingZeros(strNumber) {
+    function stripTrailingZeros(strNumber: var): string {
         if (!(typeof strNumber === "string")) {
             try {
                 strNumber = strNumber.toString()
@@ -92,12 +94,12 @@ QtObject {
         return strNumber.replace(/(\.[0-9]*[1-9])0+$|\.0*$/,'$1')
     }
 
-    function isHtml(text) {
+    function isHtml(text: string): bool {
         return (/<\/?[a-z][\s\S]*>/i.test(text))
     }
 
     // function to draw arrow
-    function drawArrow(context, fromx, fromy, tox, toy, color, offset) {
+    function drawArrow(context: var, fromx: real, fromy: real, tox: real, toy: real, color: string, offset: real): void {
         const fromX = fromx + 8
         const toX = tox - 8
         const dx = toX - fromX;
@@ -171,7 +173,7 @@ QtObject {
         }
     }
 
-    function linkifyAndXSS(inputText, linkAddressAndEnsName = false) {
+    function linkifyAndXSS(inputText: string, linkAddressAndEnsName = false): string {
         //URLs starting with http://, https://, ftp:// or status-app://
         var replacePattern1 = /(\b(https?|ftp|status-app):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;\(\)]*[-A-Z0-9+&@#\/%=~_|])/gim;
         var replacedText = inputText.replace(replacePattern1, "<a href='$1'>$1</a>");
@@ -195,11 +197,11 @@ QtObject {
         return XSS.filterXSS(replacedText)
     }
 
-    function filterXSS(inputText) {
+    function filterXSS(inputText: string): string {
         return XSS.filterXSS(inputText)
     }
 
-    function getMessageWithStyle(palette, msg, hoveredLink = "", ethLinkDisabled = false) {
+    function getMessageWithStyle(palette: var, msg: string, hoveredLink = "", ethLinkDisabled = false): string {
         const ethLinkColor = ethLinkDisabled ? palette.directColor1 : palette.primaryColor1
         const ethLinkHoverColor = ethLinkDisabled ? palette.baseColor1 : palette.primaryColor1
         const ethLinkHoverBackgroundColor = ethLinkDisabled ? palette.directColor8 : palette.primaryColor3
@@ -252,24 +254,24 @@ QtObject {
                 `${msg}`
     }
 
-    function convertToSingleLine(text) {
+    function convertToSingleLine(text: string): string {
         return text.replace(/<br\s*\/>/gm, " ")
     }
 
-    function stripHtmlTags(text) {
+    function stripHtmlTags(text: string): string {
         return text.replace(/<[^>]*>?/gm, '')
     }
 
-    function elideText(text, leftCharsCount, rightCharsCount = leftCharsCount) {
+    function elideText(text: string, leftCharsCount: int, rightCharsCount = leftCharsCount): string {
         return text.substr(0, leftCharsCount) + "…" + text.substr(text.length - rightCharsCount)
     }
 
-    function elideAndFormatWalletAddress(address) {
+    function elideAndFormatWalletAddress(address: string): string {
         return elideText(address, 6, 4).replace(
                     "0x", "0" + String.fromCodePoint(0x00D7))
     }
 
-    function ensureVisible(flickable, rect) {
+    function ensureVisible(flickable: var, rect: var): void {
         const rectRight = rect.x + rect.width
         const rectBottom = rect.y + rect.height
         const flickableRight = flickable.contentX + flickable.width
@@ -286,16 +288,16 @@ QtObject {
             flickable.contentY = rectBottom - flickable.height
     }
 
-    function encodeUtf8(str){
+    function encodeUtf8(str: string): string {
         return unescape(encodeURIComponent(str));
     }
 
-    function deviceIcon(deviceType) {
+    function deviceIcon(deviceType: string): string {
         const isMobileDevice = deviceType === "ios" || deviceType === "android"
         return isMobileDevice ? "mobile" : "desktop"
     }
 
-    function stripHttpsAndwwwFromUrl(text) {
+    function stripHttpsAndwwwFromUrl(text: string): string {
         return text.replace(/http(s)?(:)?(\/\/)?|(\/\/)?(www\.)?(\/)/gim, '')
     }
 
@@ -307,7 +309,7 @@ QtObject {
         const indexes = nSamples(3, 6) // pick 3 random numbers from an array of 6 elements [0..5]
         console.log(indexes) -> Array[0, 4, 5] // example output
       */
-    function nSamples(n, totalCount) {
+    function nSamples(n: int, totalCount: int): var {
         if (n > totalCount) {
             console.error("'n' must be less than or equal to 'totalCount'")
             return
@@ -320,7 +322,7 @@ QtObject {
         return [...set].sort((a, b) => a - b)
     }
 
-    function formatAccessibleName(defaultName, testId) {
+    function formatAccessibleName(defaultName: string, testId: string): string {
         const content = (defaultName || "").toString().trim()
         const tid = (testId || "").toString().trim()
         
@@ -333,7 +335,7 @@ QtObject {
         return content.length > 0 ? (content + tidSuffix) : tidSuffix
     }
 
-    function hasPopups(overlayChildren) {
+    function hasPopups(overlayChildren: var): bool {
         if (!overlayChildren)
             return false
 

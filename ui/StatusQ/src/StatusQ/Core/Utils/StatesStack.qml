@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQml
 
 QtObject {
@@ -7,13 +9,13 @@ QtObject {
     property int size: 0
     property var states: []
 
-    function push(state) {
+    function push(state: string): void {
         states.push(state)
         currentState = state
         size++
     }
 
-    function pop(operation) {
+    function pop(operation: var): void {
         states.pop()
         currentState = states.length ? states[states.length - 1] : ""
         size = states.length

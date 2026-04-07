@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 pragma Singleton
 
 import QtCore
@@ -12,7 +14,7 @@ QtObject {
         return loc
     }
 
-    function integralPartLength(num) {
+    function integralPartLength(num: real): int {
         num = Math.abs(num)
 
         // According to the JS Reference:
@@ -41,7 +43,7 @@ QtObject {
         return num.toFixed().length
     }
 
-    function fractionalPartLength(num) {
+    function fractionalPartLength(num: real): int {
         if (Number.isInteger(num))
             return 0
 
@@ -71,19 +73,19 @@ QtObject {
     }
 
 
-    function stripTrailingZeroes(numStr, locale) {
+    function stripTrailingZeroes(numStr: string, locale: var): string {
         locale = locale || Qt.locale()
         let regEx = locale.decimalPoint === "." ? /(\.[0-9]*[1-9])0+$|\.0*$/ : /(\,[0-9]*[1-9])0+$|\,0*$/
         return numStr.replace(regEx, '$1')
     }
 
-    function numberToLocaleString(num, precision = -128 /* QLocale::FloatingPointShortest */, locale = null) {
+    function numberToLocaleString(num: real, precision = -128 /* QLocale::FloatingPointShortest */, locale = null): string {
         locale = locale || Qt.locale()
 
         return num.toLocaleString(locale, 'f', precision)
     }
 
-    function currencyNumberToLocaleString(num, symbol = "", locale = null) {
+    function currencyNumberToLocaleString(num: var, symbol = "", locale = null): string {
         locale = locale || Qt.locale()
 
         if (typeof num === "string")
@@ -92,7 +94,7 @@ QtObject {
         return num.toLocaleCurrencyString(locale, symbol)
     }
 
-    function numberToLocaleStringInCompactForm(num, locale = null) {
+    function numberToLocaleStringInCompactForm(num: real, locale = null): string {
         locale = locale || Qt.locale()
         const numberOfDigits = integralPartLength(num)
         let oneArgStrFormat = "%1"
@@ -115,7 +117,7 @@ QtObject {
         return oneArgStrFormat.arg(stripTrailingZeroes(stringNumber, locale))
     }
 
-    function numberFromLocaleString(num, locale = null) {
+    function numberFromLocaleString(num: string, locale = null): real {
         locale = locale || Qt.locale()
         try {
             return Number.fromLocaleString(locale, num)
@@ -124,7 +126,7 @@ QtObject {
         }
     }
 
-    function getLocalizedDigitsCount(str, locale = null) {
+    function getLocalizedDigitsCount(str: string, locale = null): int {
         if (!str)
             return 0
 
@@ -142,7 +144,7 @@ QtObject {
         Down
     }
 
-    function currencyAmountToLocaleString(currencyAmount, options = null, locale = null) {
+    function currencyAmountToLocaleString(currencyAmount: var, options = null, locale = null): string {
         if (!currencyAmount) {
             return qsTr("N/A")
         }
@@ -252,7 +254,7 @@ QtObject {
         readonly property int msInADay: 86400000
 
         // try to parse date from a number or ISO string timestamp
-        function readDate(value) {
+        function readDate(value: var): var {
             if (typeof value === "undefined") // default to "now" if omitted
                 return new Date()
             if (typeof value === "string" || typeof value === "number")  // support reading ISO string or numeric timestamps
@@ -261,7 +263,7 @@ QtObject {
         }
 
         // enforce correct 12/24 time format when not using defaults
-        function fixupTimeFormatString(formatString) {
+        function fixupTimeFormatString(formatString: string): string {
             if (settings.timeFormatUsesDefaults) // OS defaults, nothing to change
                 return formatString
             if (settings.timeFormatUses24Hours) { // enforce 24h time format
@@ -293,18 +295,18 @@ QtObject {
         property bool timeFormatUses24Hours: is24hTimeFormatDefault()
     }
 
-    function is24hTimeFormatDefault() {
+    function is24hTimeFormatDefault(): bool {
         const timeFormatString = Qt.locale().timeFormat(Locale.LongFormat)
         return !d.amPmFormatChars.some(ampm => timeFormatString.includes(ampm))
     }
 
     // return full days between 2 dates
-    function daysBetween(firstDate, secondDate) {
+    function daysBetween(firstDate: var, secondDate: var): int {
         return Math.abs(daysTo(firstDate, secondDate))
     }
 
     // return full days from first to second date
-    function daysTo(firstDate, secondDate) {
+    function daysTo(firstDate: var, secondDate: var): int {
         const d1 = new Date(firstDate)
         const d2 = new Date(secondDate)
         d1.setHours(0, 0, 0) // discard time
@@ -318,7 +320,7 @@ QtObject {
         *  - `time``: timestamp to use as reference
         *  - `rounding``: if true, rounds to the last minute
     **/
-    function minutes(before = 0, time = Date.now(), rounding = true) {
+    function minutes(before = 0, time = Date.now(), rounding = true): real {
         let timestamp = rounding ? Math.floor(time / minutesToMs(5)) * minutesToMs(5)
                                     : time
         return timestamp - minutesToMs(before)
@@ -330,7 +332,7 @@ QtObject {
         *  - `time``: timestamp to use as reference
         *  - `rounding``: if true, rounds to the last hour
     **/
-    function hours(before = 0, time = Date.now(), rounding = true) {
+    function hours(before = 0, time = Date.now(), rounding = true): real {
         let timestamp = rounding ? Math.floor(time / minutesToMs(30)) * minutesToMs(30)
                                     : time
         return timestamp - hoursToMs(before)
@@ -342,7 +344,7 @@ QtObject {
         *  - `time``: timestamp to use as reference
         *  - `rounding``: if true, rounds to the last day
     **/
-    function days(before = 0, time = Date.now(), rounding = true) {
+    function days(before = 0, time = Date.now(), rounding = true): real {
         let date = new Date(time)
         if(rounding) {
             date = new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -358,7 +360,7 @@ QtObject {
         *  - `time``: timestamp to use as reference
         *  - `rounding``: if true, rounds to the last week
     **/
-    function months(before = 0, time = Date.now(), rounding = true) {
+    function months(before = 0, time = Date.now(), rounding = true): real {
         let date = new Date(time)
         if(rounding) {
             date = new Date(date.getFullYear(), date.getMonth(), 1)
@@ -374,7 +376,7 @@ QtObject {
         *  - `time``: timestamp to use as reference
         *  - `rounding``: if true, rounds to the last year
     **/
-    function years(before = 0, time = Date.now(), rounding = true) {
+    function years(before = 0, time = Date.now(), rounding = true): real {
         let date = new Date(time)
         if(rounding) {
             date = new Date(date.getFullYear(), 0, 1)
@@ -387,7 +389,7 @@ QtObject {
         *  Retuns the number of milliseconds in the given amount of minutes
         *  - `count``: number of minutes
     **/
-    function minutesToMs(count = 1) {
+    function minutesToMs(count = 1): real {
         return count * 60 * 1000
     }
 
@@ -395,7 +397,7 @@ QtObject {
         *  Retuns the number of milliseconds in the given amount of hours
         *  - `count``: number of hours
     **/
-    function hoursToMs(count = 1) {
+    function hoursToMs(count = 1): real {
         return count * minutesToMs(60)
     }
 
@@ -403,7 +405,7 @@ QtObject {
         *  Retuns the number of milliseconds in the given amount of days
         *  - `count``: number of days
     **/
-    function daysToMs(count = 1) {
+    function daysToMs(count = 1): real {
         return count * hoursToMs(24)
     }
 
@@ -413,7 +415,7 @@ QtObject {
       - 'value' can be either a Date object, or a string containing a number or ISO string timestamp, or empty for "now"
       - 'format' can be one of Locale.LongFormat (default), Locale.ShortFormat
     */
-    function formatDate(value, format = Locale.LongFormat) {
+    function formatDate(value: var, format = Locale.LongFormat): string {
         value = d.readDate(value)
         const loc = Qt.locale()
         if (format === Locale.ShortFormat) { // replace 2-digit year with 4-digits (yy -> yyyy) in short format
@@ -431,7 +433,7 @@ QtObject {
       - 'value' can be either a Date object, or a string containing a number or ISO string timestamp, or empty for "now"
       - 'format' can be one of Locale.LongFormat (default), Locale.ShortFormat
     */
-    function formatTime(value, format = Locale.LongFormat) {
+    function formatTime(value: var, format = Locale.LongFormat): string {
         value = d.readDate(value)
         const loc = Qt.locale()
         const formatString = d.fixupTimeFormatString(loc.timeFormat(format))
@@ -444,7 +446,7 @@ QtObject {
       - 'value' can be either a Date object, or a string containing a number or ISO string timestamp, or empty for "now"
       - 'format' can be one of Locale.LongFormat (default), Locale.ShortFormat
     */
-    function formatDateTime(value, format = Locale.LongFormat) {
+    function formatDateTime(value: var, format = Locale.LongFormat): string {
         value = d.readDate(value)
         const loc = Qt.locale()
         var formatString = d.fixupTimeFormatString(loc.dateTimeFormat(format))
@@ -457,7 +459,7 @@ QtObject {
     /**
       Returns the Date of the first day of the current week.
     */
-    function getFirstDayOfTheCurrentWeek() {
+    function getFirstDayOfTheCurrentWeek(): var {
         const loc = Qt.locale()
         let firstDayOfWeek = new Date()
         // NOTE returned value is always Sunday, so day must be adjusted by locale first day of week
@@ -469,7 +471,7 @@ QtObject {
     }
 
     // TODO use JS Intl.RelativeTimeFormat in Qt 6?
-    function formatRelativeTimestamp(timestamp, weekFromBeginning=false) {
+    function formatRelativeTimestamp(timestamp: var, weekFromBeginning = false): string {
         const now = new Date()
         const value = d.readDate(timestamp)
         const loc = Qt.locale()
@@ -505,7 +507,7 @@ QtObject {
         return formatDateTime(value, Locale.ShortFormat)
     }
 
-    function getTimeDifference(d1, d2) {
+    function getTimeDifference(d1: var, d2: var): string {
         const day1Year = d1.getFullYear()
         const day1Month = d1.getMonth()
         const day1Time = d1.getTime()
@@ -553,17 +555,17 @@ QtObject {
     }
 
     // FIXME Qt6 use IntlFormat (partial string)
-    function getDayMonth(value) {
+    function getDayMonth(value: var): string {
         const currentFormat = is24hTimeFormatDefault() ? "d MMM" : "MMM d"
         return formatDate(value, currentFormat)
     }
 
     // FIXME Qt6 use IntlFormat (partial string)
-    function getMonthYear(value) {
+    function getMonthYear(value: var): string {
         return formatDate(value, "MMM yyyy")
     }
 
-    function getDayName(value) {
+    function getDayName(value: var): string {
         return Qt.locale().standaloneDayName(value.getDay())
     }
 }

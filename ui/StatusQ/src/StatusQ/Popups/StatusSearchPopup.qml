@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -26,13 +28,13 @@ StatusModal {
     property var searchSelectionButton
     // This function is called to know if the popup accepts clicks in the title
     // If it does not, the clicks on the titles mousearea will be propagated to the main body instead
-    property var acceptsTitleClick: function(titleId) {return true}
+    property var acceptsTitleClick: function(titleId: string): bool {return true}
 
     signal resultItemClicked(string itemId)
     signal resultItemTitleClicked(string titleId)
     signal resetSearchLocationClicked()
 
-    property var formatTimestampFn: function (ts) {
+    property var formatTimestampFn: function (ts: var): var {
         return ts
     }
 
@@ -43,7 +45,7 @@ StatusModal {
                                 iconName = "",
                                 iconColor = "",
                                 isUserIcon = false,
-                                colorId = 0) {
+                                colorId = 0): void {
         searchSelectionButton.primaryText = text
         searchSelectionButton.secondaryText = secondaryText
         searchSelectionButton.asset.imgIsIdenticon = isIdenticon

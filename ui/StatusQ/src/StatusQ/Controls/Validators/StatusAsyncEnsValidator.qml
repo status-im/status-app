@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import StatusQ.Controls
 import StatusQ.Core.Utils
 
@@ -8,7 +10,7 @@ StatusAsyncValidator {
 
     errorMessage: qsTr("ENS name could not be resolved in to an address")
 
-    validate: function (asyncResult) {
+    validate: function (asyncResult: string): var {
         return Utils.isValidAddress(asyncResult)
     }
 }

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import StatusQ.Core.Theme
 
@@ -42,7 +44,7 @@ QtObject {
     property int imgStatus
     property bool imgIsIdenticon: false
 
-    function isImgSrc(name) {
+    function isImgSrc(name: string): bool {
         return name.toLowerCase().startsWith("data:image") ||
                name.toLowerCase().startsWith("http://") ||
                name.toLowerCase().startsWith("https://")

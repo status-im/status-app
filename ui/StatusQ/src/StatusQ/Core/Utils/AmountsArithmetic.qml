@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 pragma Singleton
 
 import QtQuick
@@ -32,7 +34,7 @@ QtObject {
         console.log(AmountsArithmetic.fromNumber(0.07, 18)) // 70000000000000000 - correct
       \endqml
      */
-    function fromNumber(number, multiplier = 0) {
+    function fromNumber(number: real, multiplier = 0): var {
         console.assert(!isNaN(number) && Number.isInteger(multiplier)
                        && multiplier >= 0)
         return new Big.Big(number).times(fromExponent(multiplier))
@@ -54,7 +56,7 @@ QtObject {
         console.log(AmountsArithmetic.toNumber("123456789123456789123")) // 123456789123456800000
       \endqml
      */
-    function toNumber(amount, multiplier = 0) {
+    function toNumber(amount: var, multiplier = 0): real {
         console.assert(Number.isInteger(multiplier) && multiplier >= 0)
 
         if (typeof amount === "string")
@@ -83,7 +85,7 @@ QtObject {
 
       returns NaN in case the conversion fails.
      */
-    function fromString(numStr) {
+    function fromString(numStr: var): var {
         console.assert(typeof numStr === "string" || typeof numStr === "number")
         try {
             return new Big.Big(numStr)
@@ -96,7 +98,7 @@ QtObject {
       \qmlmethod AmountsArithmetic::fromExponent(exponent)
       \brief Construct a number 10^exponent in a safe manner.
      */
-    function fromExponent(exponent) {
+    function fromExponent(exponent: int): var {
         console.assert(Number.isInteger(exponent))
         const num = new Big.Big(1)
         num.e += exponent
@@ -114,7 +116,7 @@ QtObject {
                         AmountsArithmetic.fromNumber(1, 18).times(70)) === 0) // true
       \endqml
      */
-    function times(amount, multiplier) {
+    function times(amount: var, multiplier: var): var {
         console.assert(amount instanceof Big.Big)
         console.assert(multiplier instanceof Big.Big || Number.isInteger(multiplier))
         return amount.times(multiplier)
@@ -124,7 +126,7 @@ QtObject {
       \qmlmethod AmountsArithmetic::div(divident, divisor)
       \brief Returns a Big number whose value is the value of divident divided by divisor.
      */
-    function div(divident, divisor) {
+    function div(divident: var, divisor: var): var {
         console.assert(divident instanceof Big.Big)
         console.assert(divisor instanceof Big.Big)
         return divident.div(divisor)
@@ -134,7 +136,7 @@ QtObject {
       \qmlmethod AmountsArithmetic::sum(amount1, amount2)
       \brief Returns a Big number whose value is the sum of amount1 and amount2.
      */
-    function sum(amount1, amount2) {
+    function sum(amount1: var, amount2: var): var {
         console.assert(amount1 instanceof Big.Big)
         console.assert(amount2 instanceof Big.Big)
         return amount1.plus(amount2)
@@ -144,7 +146,7 @@ QtObject {
       \qmlmethod AmountsArithmetic::sub(amount1, amount2)
       \brief Returns a Big number whose value is the subtraction of amount2 from amount1.
      */
-    function sub(amount1, amount2) {
+    function sub(amount1: var, amount2: var): var {
         console.assert(amount1 instanceof Big.Big)
         console.assert(amount2 instanceof Big.Big || Number.isInteger(amount2))
         return amount1.minus(amount2)
@@ -158,7 +160,7 @@ QtObject {
       Returns -1 if the value of amount1 is less than the value of amount2.
       Returns 0 if both amounts have the same value.
      */
-    function cmp(amount1, amount2) {
+    function cmp(amount1: var, amount2: var): int {
         console.assert(amount1 instanceof Big.Big)
         console.assert(amount2 instanceof Big.Big)
         return amount1.cmp(amount2)
@@ -170,7 +172,7 @@ QtObject {
 
       If decimalPlaces is not specified, rounds to 0 decimal places (integer).
      */
-    function round(amount, decimalPlaces = 0) {
+    function round(amount: var, decimalPlaces = 0): var {
         console.assert(amount instanceof Big.Big)
         console.assert(Number.isInteger(decimalPlaces))
         return amount.round(decimalPlaces)

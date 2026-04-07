@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 import StatusQ
@@ -167,7 +169,7 @@ Item {
 
         It won't do anything if pin length is different from the set `pinLen`.
     */
-    function setPin(pin) {
+    function setPin(pin: string): void {
         if(pin.length !== root.pinLen)
             return
 

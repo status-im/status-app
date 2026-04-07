@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQml
 
 QObject {
@@ -41,7 +43,7 @@ QObject {
     Connections {
         target: root.model ?? null
 
-        function onDataChanged(topLeft, bottomRight) {
+        function onDataChanged(topLeft: var, bottomRight: var): void {
             if (!d.persistentIndex || !d.persistentIndex.valid)
                 return
 

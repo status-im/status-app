@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 
@@ -160,7 +162,7 @@ Item {
         \note the source image must be set and \c sourceSize valid otherwise, an error is logged to \c console
         \note If the new rect has a diferent area the crop window will adjust to the new AR
     */
-    function setCropRect(newRect /*rect*/) {
+    function setCropRect(newRect: rect): void {
         if (newRect.x === 0 && newRect.y === 0 && newRect.width === 0 && newRect.height === 0) { // reset
             d.cropRect = newRect
             return
@@ -213,7 +215,7 @@ Item {
         d.cropRect = n
     }
 
-    function getZoomRect(scale /*real*/) {
+    function getZoomRect(scale: real): rect {
         const oldCenter = root.rectCenter(root.cropRect)
         const inflatedRect = root.inflateRectBy(d.minimumCropRect(), 1/scale)
         return root.recenterRect(inflatedRect, oldCenter);
@@ -223,7 +225,7 @@ Item {
         \qmlmethod StatusImageCrop::inflateRectBy(rect target, real scale)
         Inflates the curren \a target rectangle with the \a scale while keeping the center fixed
     */
-    function inflateRectBy(target /*rect*/, scale /*real*/) {
+    function inflateRectBy(target: rect, scale: real): rect {
         const inflatedWidth = target.width * scale
         const inflatedHeight = target.height * scale
         return Qt.rect(target.x - (inflatedWidth - target.width)/2, target.y - (inflatedHeight - target.height)/2, inflatedWidth, inflatedHeight)
@@ -233,7 +235,7 @@ Item {
         \qmlmethod StatusImageCrop::rectCenter(rect target)
         Returns the center point of the \a target rectangle as a Qt.point
     */
-    function rectCenter(target /*rect*/) /*Qt.point*/ {
+    function rectCenter(target: rect): point {
         return Qt.point(target.x + target.width/2, target.y + target.height/2)
     }
 
@@ -241,11 +243,11 @@ Item {
         \qmlmethod StatusImageCrop::recenterRect(rect target)
         Move the \a target rectangle's center to a /a newCenter
     */
-    function recenterRect(target /*rect*/, newCenter/*point*/) {
+    function recenterRect(target: rect, newCenter: point): rect {
         return Qt.rect(newCenter.x - target.width/2 , newCenter.y - target.height/2, target.width, target.height)
     }
 
-    function fillContentInWindow(contentSize /*size*/, windowSize /*size*/) {
+    function fillContentInWindow(contentSize: size, windowSize: size): rect {
         const contentAR = contentSize.width/contentSize.height
         const windowAR = windowSize.width/windowSize.height
         const heightBound = contentAR > windowAR
@@ -275,14 +277,14 @@ Item {
         property size cropWindowSize: Qt.size(d.cropRect.width, d.cropRect.height)
 
         //> 1.0 is the content represented by w fully inscribed in c
-        function currentZoom(c /*size*/, w /*size*/) {
+        function currentZoom(c: size, w: size): real {
             const wScale = c.width/w.width
             const hScale = c.height/w.height
             return Math.max(wScale, hScale)
         }
 
         //> cropRect for minimum zoom: 1.0
-        function minimumCropRect() {
+        function minimumCropRect(): rect {
             const sourceAR = root.sourceSize.width/root.sourceSize.height
             const widthBound =  sourceAR > root.aspectRatio
             const minCropSize = widthBound ? Qt.size(root.sourceSize.width, root.sourceSize.width/root.aspectRatio)

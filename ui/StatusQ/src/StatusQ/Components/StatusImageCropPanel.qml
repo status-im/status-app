@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 
@@ -104,7 +106,7 @@ Item {
         \qmlmethod StatusImageCropPanel::setCropRect(rect)
         \sa StatusImageCrop::cropRect
     */
-    function setCropRect(newRect) {
+    function setCropRect(newRect: rect): void {
         cropEditor.setCropRect(newRect)
         aspectRatio = cropEditor.aspectRatio
     }
@@ -113,7 +115,7 @@ Item {
         id: d
 
         readonly property int referenceWindowWidth: 1000
-        function updateAspectRatio(newAR) {
+        function updateAspectRatio(newAR: real): void {
             if(root.sourceSize.width === 0 || root.sourceSize.height === 0)
                 return
             cropEditor.setCropRect(cropEditor.fillContentInWindow(root.sourceSize, Qt.size(referenceWindowWidth, referenceWindowWidth / root.aspectRatio)))
@@ -229,15 +231,15 @@ Item {
                     cropEditor.setCropRect(cropEditor.getZoomRect(cropEditor.zoomScale + delta * root.scrollZoomFactor))
                 }
 
-                function moveRect(r /*rect*/, delta /*real*/) {
+                function moveRect(r: rect, delta: var): rect {
                     return Qt.rect(r.x + delta.x, r.y + delta.y, r.width, r.height)
                 }
 
-                function scaleSize(sz /*size*/, s /*size*/) {
+                function scaleSize(sz: size, s: real): point {
                     return Qt.point(sz.width * s, sz.height * s)
                 }
 
-                function updateDrag(p) {
+                function updateDrag(p: point): void {
                     let delta = (lastDragPoint ? Qt.size(lastDragPoint.x - p.x, lastDragPoint.y - p.y) : Qt.size(0, 0))
                     delta = scaleSize(delta, 1/cropEditor.scrToImgScale)
                     cropEditor.setCropRect(moveRect(cropEditor.cropRect, delta))

@@ -12,6 +12,9 @@ class QQuickItem;
 class Theme : public QQuickAttachedPropertyPropagator
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(Theme)
+    QML_UNCREATABLE("This is an attached type, cannot be created directly.")
+    QML_ATTACHED(Theme)
 
     Q_PROPERTY(qreal defaultPadding READ defaultPadding CONSTANT)
 
@@ -61,14 +64,13 @@ class Theme : public QQuickAttachedPropertyPropagator
 
     Q_PROPERTY(QJSValue fontSize READ fontSize NOTIFY fontSizeOffsetChanged)
 
+public:
     enum class Style {
         Light,
         Dark
     };
 
     Q_ENUM(Style)
-
-public:
     explicit Theme(QObject *parent = nullptr);
 
     // paddings

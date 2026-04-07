@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 2.15
 
 Item {
@@ -20,13 +22,13 @@ Item {
         property real lastDx: 0
         property real lastVx: 0
 
-        function nowMs() { return Date.now() }
+        function nowMs(): real { return Date.now() }
 
-        function effectiveOpenDistance() {
+        function effectiveOpenDistance(): real {
             return root.openDistance > 0 ? root.openDistance : 280
         }
 
-        function velocityPxPerSecStep(dx, dtMs) {
+        function velocityPxPerSecStep(dx: real, dtMs: real): real {
             const dt = Math.max(1, dtMs)
             return (dx / dt) * 1000.0
         }

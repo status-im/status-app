@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -151,7 +153,7 @@ Control {
     \endqml
 
     */
-    function open(title, subTitle, iconName, type, loading, url) {
+    function open(title: string, subTitle: string, iconName: string, type: int, loading: bool, url: string): void {
         root.primaryText = title;
         root.secondaryText = subTitle;
         root.icon.name = iconName;

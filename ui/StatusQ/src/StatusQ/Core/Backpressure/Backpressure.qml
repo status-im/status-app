@@ -1,5 +1,7 @@
 // Subset of https://github.com/e-fever/backpressure, refactored to modern JS
 
+pragma ComponentBehavior: Bound
+
 pragma Singleton
 
 import QtQml
@@ -10,7 +12,7 @@ QtObject {
     property var _timers: ({})
     property int _nextId: 0
 
-    function setTimeout(owner, timeout, callback) {
+    function setTimeout(owner: var, timeout: int, callback: var): int {
         const tid = ++_nextId
 
         const cleanup = () => {
@@ -42,7 +44,7 @@ QtObject {
         return tid
     }
 
-    function clearTimeout(timerId) {
+    function clearTimeout(timerId: int): void {
         if (!_timers.hasOwnProperty(timerId))
             return
 
@@ -52,7 +54,7 @@ QtObject {
         delete _timers[timerId]
     }
 
-    function oneInTime(owner, duration, callback) {
+    function oneInTime(owner: var, duration: int, callback: var): var {
         let pending = false
         let timerId = null
 
@@ -70,7 +72,7 @@ QtObject {
     }
 
     // Same as `oneInTime` while also handling any queued calls
-    function oneInTimeQueued(owner, duration, callback) {
+    function oneInTimeQueued(owner: var, duration: int, callback: var): var {
         let pending = false
         let queued = false
         let timerId = null
@@ -94,7 +96,7 @@ QtObject {
         return proxy
     }
 
-    function debounce(owner, duration, callback) {
+    function debounce(owner: var, duration: int, callback: var): var {
         let timerId = null
 
         return function() {

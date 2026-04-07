@@ -2,11 +2,14 @@
 
 #include <QColor>
 #include <QObject>
+#include <QQmlEngine>
 #include <QVariantMap>
 
 class StatusColors : public QObject
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(StatusColors)
+    QML_SINGLETON
     Q_PROPERTY(QVariantMap colors READ colors CONSTANT)
 
     Q_PROPERTY(QColor black MEMBER black CONSTANT)

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -326,7 +328,7 @@ Control {
         This function validates the text input's text.
     */
 
-    function validate(force = false) {
+    function validate(force = false): void {
         if (!force && !statusBaseInput.dirty && validationMode === StatusInput.ValidationMode.OnlyWhenDirty) {
             return
         }
@@ -415,7 +417,7 @@ Control {
         \qmlmethod updateAsyncValidity(validatorName, value, result)
         This function updates the text input async validation.
     */
-    function updateAsyncValidity(validatorName, value, result) {
+    function updateAsyncValidity(validatorName: string, value: var, result: var): void {
         if (!asyncErrors) {
             asyncErrors = {}
         }

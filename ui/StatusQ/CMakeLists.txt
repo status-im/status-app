@@ -146,13 +146,10 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/rxvalidator.h
         include/StatusQ/shareutils.h
         include/StatusQ/stablearraysorter.h
-        include/StatusQ/statuscolors.h
         include/StatusQ/statusemojimodel.h
         include/StatusQ/statussyntaxhighlighter.h
         include/StatusQ/stringutilsinternal.h
         include/StatusQ/systemutilsinternal.h
-        include/StatusQ/theme.h
-        include/StatusQ/themepalette.h
         include/StatusQ/typesregistration.h
         include/StatusQ/undefinedfilter.h
         include/StatusQ/urlutils.h
@@ -174,13 +171,10 @@ add_library(StatusQ ${LIB_TYPE}
         src/permissionutilsinternal.cpp
         src/rxvalidator.cpp
         src/stablearraysorter.cpp
-        src/statuscolors.cpp
         src/statusemojimodel.cpp
         src/statussyntaxhighlighter.cpp
         src/stringutilsinternal.cpp
         src/systemutilsinternal.cpp
-        src/theme.cpp
-        src/themepalette.cpp
         src/typesregistration.cpp
         src/undefinedfilter.cpp
         src/urlutils.cpp
@@ -371,62 +365,160 @@ target_include_directories(StatusQ PUBLIC include)
 if (${STATUSQ_SHADOW_BUILD})
     add_definitions(-DBUNDLE_QML_RESOURCES)
 
-    # --- Collect QML/JS files from StatusQ source tree ---
-    file(GLOB_RECURSE STATUSQ_QML_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-        "src/StatusQ/*.qml"
-        "src/StatusQ/*.js"
-        "src/StatusQ/*.mjs"
-    )
+    set(_SQ_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/StatusQ")
 
-    # --- Collect qmldir and other non-compilable resources ---
-    file(GLOB_RECURSE STATUSQ_QMLDIR_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-        "src/StatusQ/*/qmldir"
-    )
-    file(GLOB_RECURSE STATUSQ_OTHER_RESOURCES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-        "src/StatusQ/*/LICENSE"
-        "src/StatusQ/*/README.md"
-    )
-    set(STATUSQ_RESOURCE_FILES ${STATUSQ_QMLDIR_FILES} ${STATUSQ_OTHER_RESOURCES})
+    # --- Helper: add a QML submodule as a STATIC target linked into StatusQ ---
+    function(statusq_add_qml_submodule TARGET_NAME MODULE_URI SRC_SUBDIR)
+        cmake_parse_arguments(ARG "" "" "SINGLETONS;EXCLUDE_SUBDIRS;SOURCES" ${ARGN})
+        set(_src_dir "${_SQ_SRC}/${SRC_SUBDIR}")
 
-    # --- Set QT_RESOURCE_ALIAS: strip "src/StatusQ/" prefix for correct resource paths ---
-    # qt_add_qml_module prepends "/<URI>/" to each file's alias, so we strip "src/StatusQ/"
-    # to get: /StatusQ/ + Core/StatusBaseText.qml = qrc:/StatusQ/Core/StatusBaseText.qml
-    foreach(f IN LISTS STATUSQ_QML_FILES STATUSQ_RESOURCE_FILES)
-        string(REGEX REPLACE "^src/StatusQ/" "" alias "${f}")
-        set_source_files_properties("${f}" PROPERTIES QT_RESOURCE_ALIAS "${alias}")
+        # Collect QML/JS files recursively
+        file(GLOB_RECURSE _all_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+            "${_src_dir}/*.qml" "${_src_dir}/*.js" "${_src_dir}/*.mjs")
+
+        # Exclude sub-module directories if specified
+        if(ARG_EXCLUDE_SUBDIRS)
+            set(_qml_files)
+            foreach(f IN LISTS _all_files)
+                set(_skip FALSE)
+                foreach(excl IN LISTS ARG_EXCLUDE_SUBDIRS)
+                    if(f MATCHES "src/StatusQ/${SRC_SUBDIR}/${excl}/")
+                        set(_skip TRUE)
+                        break()
+                    endif()
+                endforeach()
+                if(NOT _skip)
+                    list(APPEND _qml_files "${f}")
+                endif()
+            endforeach()
+        else()
+            set(_qml_files "${_all_files}")
+        endif()
+
+        # Set resource alias: strip module source prefix so URI path provides the directory
+        # e.g. URI "StatusQ.Core" → prefix "/StatusQ/Core/" + alias "StatusBaseText.qml"
+        foreach(f IN LISTS _qml_files)
+            string(REGEX REPLACE "^src/StatusQ/${SRC_SUBDIR}/" "" _alias "${f}")
+            set_source_files_properties("${f}" PROPERTIES QT_RESOURCE_ALIAS "${_alias}")
+        endforeach()
+
+        # Mark singletons
+        if(ARG_SINGLETONS)
+            set(_singleton_paths)
+            foreach(s IN LISTS ARG_SINGLETONS)
+                list(APPEND _singleton_paths "src/StatusQ/${SRC_SUBDIR}/${s}")
+            endforeach()
+            set_source_files_properties(${_singleton_paths} PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+        endif()
+
+        # Collect qmldir and other non-QML resources
+        set(_res_files)
+        if(EXISTS "${_src_dir}/qmldir")
+            set(_qmldir_path "src/StatusQ/${SRC_SUBDIR}/qmldir")
+            set_source_files_properties("${_qmldir_path}" PROPERTIES QT_RESOURCE_ALIAS "qmldir")
+            list(APPEND _res_files "${_qmldir_path}")
+        endif()
+        foreach(_pattern LICENSE README.md)
+            if(EXISTS "${_src_dir}/${_pattern}")
+                set(_res_path "src/StatusQ/${SRC_SUBDIR}/${_pattern}")
+                set_source_files_properties("${_res_path}" PROPERTIES QT_RESOURCE_ALIAS "${_pattern}")
+                list(APPEND _res_files "${_res_path}")
+            endif()
+        endforeach()
+
+        string(REPLACE "." "/" _uri_path "${MODULE_URI}")
+        qt_add_qml_module(${TARGET_NAME}
+            URI "${MODULE_URI}"
+            VERSION 0.1
+            RESOURCE_PREFIX "/"
+            NO_PLUGIN
+            STATIC
+            OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${_uri_path}"
+            QML_FILES ${_qml_files}
+            RESOURCES ${_res_files}
+        )
+
+        # Add C++ sources if specified (for QML_ELEMENT type registration)
+        if(ARG_SOURCES)
+            target_sources(${TARGET_NAME} PRIVATE ${ARG_SOURCES})
+            target_include_directories(${TARGET_NAME} PRIVATE
+                "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                "${CMAKE_CURRENT_SOURCE_DIR}/include/StatusQ"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src")
+            target_link_libraries(${TARGET_NAME} PRIVATE
+                Qt::Core Qt::Qml Qt::Quick Qt::QuickPrivate Qt::QuickControls2)
+        endif()
+
+        # Link with WHOLE_ARCHIVE to prevent linker from stripping static constructors
+        # (module registration and resource initialization)
+        target_link_libraries(StatusQ PRIVATE
+            "$<LINK_LIBRARY:WHOLE_ARCHIVE,${TARGET_NAME}>")
+    endfunction()
+
+    # --- Primary module: StatusQ.Core (attached to StatusQ target) ---
+    file(GLOB _core_qml RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${_SQ_SRC}/Core/*.qml" "${_SQ_SRC}/Core/*.js")
+    foreach(f IN LISTS _core_qml)
+        string(REGEX REPLACE "^src/StatusQ/Core/" "" _alias "${f}")
+        set_source_files_properties("${f}" PROPERTIES QT_RESOURCE_ALIAS "${_alias}")
     endforeach()
-
-    # --- Mark singleton QML files (from qmldir declarations) ---
     set_source_files_properties(
-        # StatusQ.Core
         src/StatusQ/Core/ColorUtils.qml
         src/StatusQ/Core/LocaleUtils.qml
         src/StatusQ/Core/StatusSharedUpdateTimer.qml
-        # StatusQ.Core.Theme
-        src/StatusQ/Core/Theme/Assets.qml
-        src/StatusQ/Core/Theme/Fonts.qml
-        src/StatusQ/Core/Theme/ThemeUtils.qml
-        # StatusQ.Core.Utils
-        src/StatusQ/Core/Utils/AmountsArithmetic.qml
-        src/StatusQ/Core/Utils/Emoji.qml
-        src/StatusQ/Core/Utils/ModelUtils.qml
-        src/StatusQ/Core/Utils/OperatorsUtils.qml
-        src/StatusQ/Core/Utils/StringUtils.qml
-        src/StatusQ/Core/Utils/Utils.qml
-        # StatusQ.Core.Backpressure
-        src/StatusQ/Core/Backpressure/Backpressure.qml
-        PROPERTIES QT_QML_SINGLETON_TYPE TRUE
-    )
+        PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+    set(_core_qmldir "src/StatusQ/Core/qmldir")
+    set_source_files_properties("${_core_qmldir}" PROPERTIES QT_RESOURCE_ALIAS "qmldir")
 
-    # --- QML module with ahead-of-time bytecode compilation (qmlcachegen) ---
     qt_add_qml_module(StatusQ
-        URI "StatusQ"
+        URI "StatusQ.Core"
         VERSION 0.1
         RESOURCE_PREFIX "/"
         NO_PLUGIN
-        QML_FILES ${STATUSQ_QML_FILES}
-        RESOURCES ${STATUSQ_RESOURCE_FILES}
+        OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/StatusQ/Core"
+        QML_FILES ${_core_qml}
+        RESOURCES ${_core_qmldir}
     )
+
+    # --- Submodules (STATIC targets linked into StatusQ) ---
+
+    statusq_add_qml_submodule(StatusQ_CoreTheme "StatusQ.Core.Theme" "Core/Theme"
+        SINGLETONS Assets.qml Fonts.qml ThemeUtils.qml
+        SOURCES
+            include/StatusQ/theme.h
+            include/StatusQ/themepalette.h
+            include/StatusQ/statuscolors.h
+            src/theme.cpp
+            src/themepalette.cpp
+            src/statuscolors.cpp)
+
+    statusq_add_qml_submodule(StatusQ_CoreUtils "StatusQ.Core.Utils" "Core/Utils"
+        SINGLETONS AmountsArithmetic.qml Emoji.qml ModelUtils.qml OperatorsUtils.qml StringUtils.qml Utils.qml
+        EXCLUDE_SUBDIRS emojibase-parser)
+
+    statusq_add_qml_submodule(StatusQ_CoreBackpressure "StatusQ.Core.Backpressure" "Core/Backpressure"
+        SINGLETONS Backpressure.qml)
+
+    statusq_add_qml_submodule(StatusQ_Controls "StatusQ.Controls" "Controls"
+        EXCLUDE_SUBDIRS Validators)
+
+    statusq_add_qml_submodule(StatusQ_ControlsValidators "StatusQ.Controls.Validators" "Controls/Validators")
+
+    statusq_add_qml_submodule(StatusQ_Components "StatusQ.Components" "Components"
+        EXCLUDE_SUBDIRS private)
+
+    statusq_add_qml_submodule(StatusQ_ComponentsPrivate "StatusQ.Components.private" "Components/private")
+
+    statusq_add_qml_submodule(StatusQ_Popups "StatusQ.Popups" "Popups"
+        EXCLUDE_SUBDIRS Dialog)
+
+    statusq_add_qml_submodule(StatusQ_PopupsDialog "StatusQ.Popups.Dialog" "Popups/Dialog")
+
+    statusq_add_qml_submodule(StatusQ_Layout "StatusQ.Layout" "Layout")
+
+    statusq_add_qml_submodule(StatusQ_Platform "StatusQ.Platform" "Platform")
+
+    statusq_add_qml_submodule(StatusQ_Validators "StatusQ.Validators" "Validators")
 
     # --- Asset resources (binary assets — no QML compilation) ---
     set(STATUSQ_ASSET_QRC_FILES

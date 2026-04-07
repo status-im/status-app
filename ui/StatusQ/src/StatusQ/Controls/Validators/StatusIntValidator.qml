@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 import StatusQ.Controls
@@ -50,7 +52,7 @@ StatusValidator {
     errorMessage: qsTr("Please enter a valid numeric value.")
     validatorObj: IntValidator { bottom: root.bottom; locale: root.locale.name; top: root.top }
 
-    validate: function (t) {
+    validate: function (t: string): var {
         let value = parseInt(t)
         let floatValue = parseFloat(t)
         let nan = isNaN(t)

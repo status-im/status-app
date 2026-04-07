@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -92,7 +94,7 @@ Control {
 
         readonly property int imageSelectorPadding: 75
 
-        function loadFile(fileUrls) {
+        function loadFile(fileUrls: var): void {
             if (fileUrls.length > 0) {
 
                 // The first file is the one kept:
@@ -104,7 +106,7 @@ Control {
             }
         }
 
-        function isValidFile(file) {
+        function isValidFile(file: string): bool {
             return root.acceptedImageExtensions.some(ext => file.toLowerCase().includes(ext))
         }
 

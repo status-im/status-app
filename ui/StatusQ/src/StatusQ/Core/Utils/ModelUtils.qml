@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 pragma Singleton
 
 import QtQuick
@@ -6,14 +8,14 @@ import StatusQ
 import QtModelsToolkit as QtMT
 
 QtObject {
-    function get(model, index, role = "") {
+    function get(model: var, index: int, role = ""): var {
         if (role)
             return QtMT.ModelQuery.get(model, index, role)
         else
             return QtMT.ModelQuery.get(model, index)
     }
 
-    function getByKey(model, keyRole, keyValue, role = "") {
+    function getByKey(model: var, keyRole: string, keyValue: var, role = ""): var {
         const idx = indexOf(model, keyRole, keyValue)
 
         if (idx === -1)
@@ -22,7 +24,7 @@ QtObject {
         return get(model, idx, role)
     }
 
-    function modelToArray(model, roles) {
+    function modelToArray(model: var, roles: var): var {
         if (!model)
             return []
 
@@ -52,31 +54,31 @@ QtObject {
         return array
     }
 
-    function modelToFlatArray(model, role) {
+    function modelToFlatArray(model: var, role: string): var {
         return modelToArray(model, [role]).map(entry => entry[role])
     }
 
-    function joinModelEntries(model, role, separator) {
+    function joinModelEntries(model: var, role: string, separator: string): string {
         return modelToFlatArray(model, role).join(separator)
     }
 
-    function indexOf(model, role, key) {
+    function indexOf(model: var, role: string, key: var): int {
         return QtMT.ModelQuery.indexOf(model, role, key)
     }
 
-    function persistentIndex(model, index) {
+    function persistentIndex(model: var, index: int): var {
         return QtMT.ModelQuery.persistentIndex(model, index)
     }
 
-    function contains(model, roleName, value, mode = Qt.CaseSensitive) {
+    function contains(model: var, roleName: string, value: var, mode = Qt.CaseSensitive): bool {
         return QtMT.ModelQuery.contains(model, roleName, value, mode)
     }
 
-    function checkItemsEquality(itemA, itemB, roles) {
+    function checkItemsEquality(itemA: var, itemB: var, roles: var): bool {
         return roles.every((role) => itemA[role] === itemB[role])
     }
 
-    function checkEqualityStrict(modelA, modelB, roles) {
+    function checkEqualityStrict(modelA: var, modelB: var, roles: var): bool {
         if (modelA === modelB)
             return true
 
@@ -100,7 +102,7 @@ QtObject {
         return true
     }
 
-    function checkEqualitySet(modelA, modelB, roles) {
+    function checkEqualitySet(modelA: var, modelB: var, roles: var): bool {
         if (modelA === modelB)
             return true
 
@@ -131,12 +133,12 @@ QtObject {
         return true
     }
 
-    function roleNames(model) {
+    function roleNames(model: var): var {
         return QtMT.ModelQuery.roleNames(model)
     }
 
     /// Returns the first model entry that satisfies the condition function or null if none is found.
-    function getFirstModelEntryIf(model, conditionFn) {
+    function getFirstModelEntryIf(model: var, conditionFn: var): var {
         if (!model)
             return null
 
@@ -153,7 +155,7 @@ QtObject {
         return null
     }
 
-    function forEach(model, callback) {
+    function forEach(model: var, callback: var): void {
         if (!model)
             return
 

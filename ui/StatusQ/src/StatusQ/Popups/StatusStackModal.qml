@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 
@@ -49,7 +51,7 @@ StatusModal {
         onClicked: root.closeHandler()
     }
 
-    function replace(item) { replaceItem = item; }
+    function replace(item: var): void { replaceItem = item; }
 
     function updateRightButtons() {
         if (replaceItem) {

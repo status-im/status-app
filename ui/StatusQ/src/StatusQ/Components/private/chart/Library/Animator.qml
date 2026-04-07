@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 QtObject {
@@ -28,7 +30,7 @@ QtObject {
         root.animate();
     }
 
-    function requestAnimation(callback) {
+    function requestAnimation(callback: var): int {
         _requests.push({
             callback: callback,
             scope: this

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -135,7 +137,7 @@ Item {
         \qmlmethod
         This function is used to find an entry in a model.
     */
-    function find(model, criteria) {
+    function find(model: var, criteria: var): var {
         for (var i = 0; i < model.count; ++i) if (criteria(model.get(i))) return model.get(i);
         return null;
     }
@@ -144,7 +146,7 @@ Item {
         \qmlmethod
         This function is used to insert a new tag.
     */
-    function insertTag(name, id, isReadonly, tagIcon) {
+    function insertTag(name: string, id: string, isReadonly: bool, tagIcon: string): void {
         if (!find(namesModel, function(item) { return item.pubKey === id }) && namesModel.count < root.nameCountLimit) {
             if(orderByReadonly && isReadonly)
                 namesModel.insert(0, {"name": name, "pubKey": id, "isReadonly": !!isReadonly, "tagIcon": tagIcon ? tagIcon : ""});
@@ -159,7 +161,7 @@ Item {
         \qmlmethod
         This function is used to sort the source model.
     */
-    function sortModel(inputModel) {
+    function sortModel(inputModel: var): void {
         sortedList.clear();
         if (text !== "") {
             for (var i = 0; i < inputModel.count; i++ ) {

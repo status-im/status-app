@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQml
 
 QtObject {
@@ -29,7 +31,7 @@ QtObject {
         readonly property bool equal: checkEquality(modelA, modelB, roles, mode,
                                                     revision)
 
-        function checkEquality(modelA, modelB, roles, mode, dummy) {
+        function checkEquality(modelA: var, modelB: var, roles: var, mode: int, dummy: int): bool {
             if (mode === ModelsComparator.CompareMode.Strict)
                 return ModelUtils.checkEqualityStrict(modelA, modelB, roles)
 

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 //This is a helper component that is used to batch requests and send them periodically
@@ -11,7 +13,7 @@ QtObject {
     signal subscribed(string subscriptionId)
     signal unsubscribed(string subscriptionId)
 
-    function response(subscriptionId, responseObj) {
+    function response(subscriptionId: string, responseObj: var): void {
         let resolvedTopic = ""
         Object.keys(d.topics).forEach(function (topic) {
             d.topics[topic].subscriptions.forEach(function(subscrId) {
@@ -23,10 +25,10 @@ QtObject {
         })
         d.onResponse(resolvedTopic, responseObj)
     }
-    function subscribe(subscription) {
+    function subscribe(subscription: var): void {
         d.subscribe(subscription)
     }
-    function unsubscribe(subscription) {
+    function unsubscribe(subscription: var): void {
         d.unsubscribe(subscription)
     }
 
@@ -51,7 +53,7 @@ QtObject {
 
 
 
-        function subscribe(subscription) {
+        function subscribe(subscription: var): void {
             if(!(subscription instanceof Subscription)) 
                 return
             if(d.managedSubscriptions.hasOwnProperty(subscription.subscriptionId)) 
@@ -64,7 +66,7 @@ QtObject {
             root.subscribed(subscription.subscriptionId)
         }
 
-        function unsubscribe(subscriptionId) {
+        function unsubscribe(subscriptionId: string): void {
             if(!subscriptionId || !d.managedSubscriptions.hasOwnProperty(subscriptionId)) 
                 return
 
@@ -72,14 +74,14 @@ QtObject {
             root.unsubscribed(subscriptionId)
         }
 
-        function registerToManagedSubscriptions(subscriptionObject) {
+        function registerToManagedSubscriptions(subscriptionObject: var): void {
             d.managedSubscriptions[subscriptionObject.subscriptionId] = {
                 subscription: subscriptionObject,
                 topic: subscriptionObject.topic,
             }
         }
 
-        function releaseManagedSubscription(subscriptionId) {
+        function releaseManagedSubscription(subscriptionId: string): void {
             if(!subscriptionId || !d.managedSubscriptions.hasOwnProperty(subscriptionId)) return
 
             const subscriptionInfo = d.managedSubscriptions[subscriptionId]
@@ -88,7 +90,7 @@ QtObject {
             delete d.managedSubscriptions[subscriptionId]
         }
 
-        function connectToSubscriptionEvents(subscription) {
+        function connectToSubscriptionEvents(subscription: var): void {
             const subscriptionId = subscription.subscriptionId
             const topic = subscription.topic
 
@@ -139,7 +141,7 @@ QtObject {
             root.unsubscribed.connect(onUnsubscribedHandler)
         }
 
-        function registerToTopic(topic, subscriptionId) {
+        function registerToTopic(topic: string, subscriptionId: string): void {
             if(!d.topics.hasOwnProperty(topic)) {
                 d.topics[topic] = {
                     subscriptions: [],
@@ -162,7 +164,7 @@ QtObject {
             d.managedSubscriptions[subscriptionId].subscription.response = d.topics[topic].response
         }
 
-        function unregisterFromTopic(topic, subscriptionId) {
+        function unregisterFromTopic(topic: string, subscriptionId: string): void {
             if(!d.topics.hasOwnProperty(topic)) return
 
             const index = d.topics[topic].subscriptions.indexOf(subscriptionId)
@@ -179,7 +181,7 @@ QtObject {
 
 
 
-        function request(subscriptionId, topic) {
+        function request(subscriptionId: string, topic: string): void {
             if(!d.topics.hasOwnProperty(topic)) return
 
             d.topics[topic].requestPending = true
@@ -187,7 +189,7 @@ QtObject {
             root.request(subscriptionId, topic)
         }
 
-        function onResponse(topic, responseObj) {
+        function onResponse(topic: string, responseObj: var): void {
             if(!d.topics.hasOwnProperty(topic)) return
 
             d.topics[topic].response = responseObj

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
@@ -187,7 +189,7 @@ Rectangle {
         readonly property color loadingColor2: root.Theme.palette.baseColor4
         readonly property int titleFontWeight: (root.cardSize === StatusCommunityCard.Size.Big) ? Font.Bold : Font.Medium
 
-        function numberFormat(number) {
+        function numberFormat(number: int): string {
             var res = number
             const million = 1000000
             const ks = 1000

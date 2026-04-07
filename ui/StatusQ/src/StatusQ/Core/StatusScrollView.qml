@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.impl
@@ -162,7 +164,7 @@ T.ScrollView {
 
     readonly property Flickable flickable: root.contentItem
 
-    function ensureVisible(rect) {
+    function ensureVisible(rect: var): void {
         Utils.ensureVisible(flickable, rect)
     }
 

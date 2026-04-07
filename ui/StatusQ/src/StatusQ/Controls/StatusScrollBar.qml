@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls as T
 
@@ -27,7 +29,7 @@ import StatusQ.Core.Theme
 T.ScrollBar {
     id: root
 
-    function resolveVisibility(policy, availableSize, contentSize) {
+    function resolveVisibility(policy: int, availableSize: real, contentSize: real): bool {
         switch (policy) {
         case T.ScrollBar.AsNeeded:
             return contentSize > availableSize;

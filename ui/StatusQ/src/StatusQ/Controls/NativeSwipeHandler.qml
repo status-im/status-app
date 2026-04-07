@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 2.15
 import StatusQ.Controls 0.1
 import StatusQ.Core.Utils as StatusQUtils
@@ -50,8 +52,8 @@ Item {
             root.isSwipeActive = true
             root.swipeStarted()
         }
-        function onSwipeUpdated(delta, velocity) { root.swipeUpdated(delta, velocity) }
-        function onSwipeEnded(delta, velocity, canceled) {
+        function onSwipeUpdated(delta: real, velocity: real): void { root.swipeUpdated(delta, velocity) }
+        function onSwipeEnded(delta: real, velocity: real, canceled: bool): void {
             root.isSwipeActive = false
             root.swipeEnded(delta, velocity, canceled)
         }

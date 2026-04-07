@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -146,7 +148,7 @@ ItemDelegate {
         }
 
         // Short keychat composition:
-        function composeShortKeyChat(pubKey) {
+        function composeShortKeyChat(pubKey: string): string {
             if (!pubKey)
                 return ""
             return Utils.elideText(pubKey, 3, 6)
