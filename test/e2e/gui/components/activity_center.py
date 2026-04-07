@@ -21,47 +21,14 @@ from gui.objects_map import names, activity_center_names
 
 LOG = logging.getLogger(__name__)
 
-_QUICK_ACTIONS_DISMISS_MS = 25_000
-
-# NotificationCard.qml — waitForObject({container: cardRef, objectName: ...}) is unreliable in Squish; use tree walk.
-_ACCEPT_OBJECT_NAME = 'notificationAcceptBtn'
-_DECLINE_OBJECT_NAME = 'notificationDeclineBtn'
-
-
-def _click_qml_item_center(item) -> None:
-    """Prefer screen-space click: item-relative coords often miss on nested/transformed QML."""
-    try:
-        b = squish_object.globalBounds(item)
-    except (RuntimeError, LookupError, AttributeError):
-        b = None
-    if b is not None and b.width > 0 and b.height > 0:
-        cx = int(b.x + b.width / 2)
-        cy = int(b.y + b.height / 2)
-        time.sleep(0.03)
-        driver.nativeMouseClick(cx, cy, driver.MouseButton.LeftButton)
-        return
-    try:
-        w = int(getattr(item, 'width', 0) or 0)
-        h = int(getattr(item, 'height', 0) or 0)
-    except (RuntimeError, TypeError, ValueError, AttributeError):
-        w, h = 0, 0
-    if w > 0 and h > 0:
-        x = max(1, int(w * 0.5))
-        y = max(1, int(h * 0.5))
-        try:
-            squish.mouseMove(item, x, y)
-        except (RuntimeError, LookupError, AttributeError):
-            pass
-        driver.mouseClick(item, x, y, driver.Qt.LeftButton)
-        return
-    driver.mouseClick(item)
-
-
 class ContactRequest:
 
     def __init__(self, obj):
         self.object = obj
         self.contact_request: typing.Optional[str] = None
+        self.header: typing.Optional[QObject] = None
+        self.accept_button: typing.Optional[Button] = None
+        self.decline_button: typing.Optional[Button] = None
         self.init_ui()
 
     def __repr__(self):
@@ -76,94 +43,22 @@ class ContactRequest:
             self.contact_request = None
         LOG.info('ContactRequest init: title=%r -> contact_request=%r', title, self.contact_request)
 
-    def _contact_quick_actions_still_showing(self) -> bool:
-        try:
-            if hasattr(self.object, 'actionId'):
-                return bool(getattr(self.object, 'actionId'))
-        except (RuntimeError, AttributeError, LookupError):
-            pass
-        for oname in (_ACCEPT_OBJECT_NAME, _DECLINE_OBJECT_NAME):
-            btn = find_notification_button_on_card(self.object, oname)
-            if btn is not None and item_is_visible(btn):
-                return True
-        return False
+        self.header = QObject(activity_center_names.notificationCardHeader)
+        self.accept_button = Button(activity_center_names.notificationCardAcceptButton)
+        self.decline_button = Button(activity_center_names.notificationCardDeclineButton)
 
-    def _wait_until_quick_actions_hidden(self, action_label: str) -> None:
-        def _gone() -> bool:
-            # NotificationCard: actionId → empty when request is no longer pending (see NotificationAdaptorContactRequest)
-            try:
-                if hasattr(self.object, 'actionId') and not bool(getattr(self.object, 'actionId')):
-                    return True
-            except (RuntimeError, AttributeError, LookupError):
-                pass
-            for oname in (_ACCEPT_OBJECT_NAME, _DECLINE_OBJECT_NAME):
-                btn = find_notification_button_on_card(self.object, oname)
-                if btn is not None and item_is_visible(btn):
-                    return False
-            return True
-
-        LOG.info('Waiting until quick actions hidden after %s', action_label)
-        ok = driver.waitFor(_gone, _QUICK_ACTIONS_DISMISS_MS)
-        assert ok, (
-            f'{action_label} had no effect: Accept/Decline are still visible after {_QUICK_ACTIONS_DISMISS_MS} ms'
-        )
-        LOG.info('Quick actions hidden after %s', action_label)
-
-    def _click_notification_button(self, object_name: str, label: str) -> None:
-        deadline = time.monotonic() + configs.timeouts.MESSAGING_TIMEOUT_SEC
-        last_progress_log = 0.0
-        while time.monotonic() < deadline:
-            btn = find_notification_button_on_card(self.object, object_name)
-            if btn is not None and item_is_visible(btn) and bool(getattr(btn, 'enabled', True)):
-                for attempt in range(1, 7):
-                    LOG.info(
-                        'ActivityCenter: %s — attempt %s on %s',
-                        label,
-                        attempt,
-                        describe_button_for_log(btn),
-                    )
-                    if attempt <= 4:
-                        _click_qml_item_center(btn)
-                    else:
-                        try:
-                            Button({'container': self.object, 'objectName': object_name}).click()
-                        except Exception as ex:
-                            LOG.info('Button(container=card).click fallback failed: %s', ex)
-                            _click_qml_item_center(btn)
-                    time.sleep(0.4)
-                    if not self._contact_quick_actions_still_showing():
-                        return
-                    btn = find_notification_button_on_card(self.object, object_name)
-                    if btn is None or not item_is_visible(btn) or not bool(getattr(btn, 'enabled', True)):
-                        return
-                return
-            now = time.monotonic()
-            if now - last_progress_log >= 2.0:
-                last_progress_log = now
-                vis = item_is_visible(btn) if btn is not None else None
-                LOG.info(
-                    'Waiting for %s objectName=%r (btn=%s item_is_visible=%s)',
-                    label,
-                    object_name,
-                    'present' if btn is not None else 'absent',
-                    vis,
-                )
-            time.sleep(0.25)
-        raise AssertionError(
-            f'{label}: no visible enabled descendant objectName={object_name!r} under notification card within '
-            f'{configs.timeouts.MESSAGING_TIMEOUT_SEC}s'
-        )
 
     @allure.step('Accept request')
     def accept(self):
-        self._click_notification_button(_ACCEPT_OBJECT_NAME, 'Accept button')
+        time.sleep(1)
+        self.accept_button.click()
+        assert not self.accept_button.is_visible
         skip_message_backup_popup_if_visible()
-        self._wait_until_quick_actions_hidden('Accept contact request')
 
     @allure.step('Decline request')
     def decline(self):
-        self._click_notification_button(_DECLINE_OBJECT_NAME, 'Decline button')
-        self._wait_until_quick_actions_hidden('Decline contact request')
+        self.decline_button.click()
+        self.decline_button.wait_until_hidden()
 
 
 class ActivityCenter(QObject):
@@ -180,8 +75,6 @@ class ActivityCenter(QObject):
     @allure.step('Get contact items')
     def contact_items(self) -> typing.List[ContactRequest]:
         return [ContactRequest(item) for item in driver.findAllObjects(self.activity_center_notification_card.real_name)]
-
-    # TODO: navigation buttons are the same so its hard to click a certain button
 
     @allure.step('Click activity center button')
     def click_activity_center_button(self, text: str):

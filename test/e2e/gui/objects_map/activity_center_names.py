@@ -12,6 +12,7 @@ activityCenterQuickActions = {"container": activityCenterNotificationCard, "obje
 
 notificationCardAcceptButton = {"container": activityCenterQuickActions, "objectName": "notificationAcceptBtn", "type": "StatusButton",}
 notificationCardDeclineButton = {"container": activityCenterQuickActions, "objectName": "notificationDeclineBtn", "type": "StatusButton",}
+notificationCardHeader = {'container': activityCenterNotificationCard,'type': 'NotificationHeaderRow','unnamed': 1,'visible': True}
 
 activityCenterContactRequestMoreButton = {"container": activityCenterListLoader, "objectName": "moreBtn", "type": "StatusFlatRoundButton", "visible": True}
 activityCenterContactRequestHeader = {"container": activityCenterNotificationCard, "type": "NotificationHeaderRow", "unnamed": 1, "visible": True}
