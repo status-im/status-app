@@ -152,7 +152,7 @@ void registerStatusQTypes() {
 
 #ifdef BUNDLE_QML_RESOURCES
     Q_INIT_RESOURCE(TestConfig);
-    Q_INIT_RESOURCE(statusq);
+    Q_INIT_RESOURCE(StatusQ_raw_qml_0);
 #if defined(STATUSQ_HAS_MOBILEWEBVIEW)
     Q_INIT_RESOURCE(customwebview);
 #endif

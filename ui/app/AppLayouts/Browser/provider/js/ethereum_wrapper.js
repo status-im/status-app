@@ -202,12 +202,12 @@ const EthereumWrapper = (function() {
                     if (nativeResp && typeof nativeResp === 'string') {
                         try {
                             const parsedResp = JSON.parse(nativeResp);
-                            if (parsedResp?.error) {
+                            if (parsedResp && parsedResp.error) {
                                 this.pendingRequests.delete(requestId);
                                 reject(parsedResp.error);
                                 return;
                             }
-                        } catch {}
+                        } catch (_e) {}
                     }
                 } catch (e) {
                     // Only catch synchronous exceptions (e.g., invalid payload)

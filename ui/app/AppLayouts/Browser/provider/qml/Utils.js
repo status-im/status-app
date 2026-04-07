@@ -62,7 +62,7 @@ function extractDomainName(urlString) {
 
 // Convert image://favicon/URL?query to direct URL
 function normalizeFaviconUrl(url) {
-    return (url?.toString() ?? "").replace(/^image:\/\/favicon\/([^?]*).*/, "$1")
+    return (url ? url.toString() : "").replace(/^image:\/\/favicon\/([^?]*).*/, "$1")
 }
 
 function validateDAppIcon(iconUrl, siteUrl) {

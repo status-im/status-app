@@ -195,7 +195,6 @@ proc mainProc() =
     ensureQmlSelector("mobile")
 
   let isExperimental = isExperimental()
-  let resourcesPath = determineResourcePath()
   let openUri = determineOpenUri()
   let statusAppIconPath = determineStatusAppIconPath()
 
@@ -238,7 +237,9 @@ proc mainProc() =
   let isExperimentalQVariant = newQVariant(isExperimental)
   let signalsManagerQVariant = newQVariant(statusFoundation.signalsManager)
 
-  QResource.registerResource(app.applicationDirPath & resourcesPath)
+  when not main_constants.IS_MOBILE:
+    let resourcesPath = determineResourcePath()
+    QResource.registerResource(app.applicationDirPath & resourcesPath)
 
   if not main_constants.IS_MACOS:
     app.icon(app.applicationDirPath & statusAppIconPath)

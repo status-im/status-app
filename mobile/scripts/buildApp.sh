@@ -157,8 +157,8 @@ else
   # Remove stale symlink from previous install that prevents xcodebuild mkdir
   rm -f "${BUILD_DIR}/Release-${SDK}/${OUTPUT_NAME}.app"
 
-  xcodebuild "${XCODE_FLAGS[@]}" -target "Qt Preprocess" | xcbeautify
-  xcodebuild "${XCODE_FLAGS[@]}" -target "$OUTPUT_NAME" install DSTROOT="$BIN_DIR" INSTALL_PATH="/" TARGET_BUILD_DIR="$BIN_DIR" | xcbeautify
+  MAKEFLAGS="-j$(sysctl -n hw.ncpu)" xcodebuild "${XCODE_FLAGS[@]}" -target "Qt Preprocess" | xcbeautify
+  MAKEFLAGS="-j$(sysctl -n hw.ncpu)" xcodebuild "${XCODE_FLAGS[@]}" -target "$OUTPUT_NAME" install DSTROOT="$BIN_DIR" INSTALL_PATH="/" TARGET_BUILD_DIR="$BIN_DIR" | xcbeautify
 
   [[ ! -e "$BIN_DIR/${OUTPUT_NAME}.app/Info.plist" ]] && { echo "Build failed"; exit 1; }
 

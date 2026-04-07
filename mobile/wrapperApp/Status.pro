@@ -1,6 +1,7 @@
 TEMPLATE = app
 
 QT += quick gui qml webview svg widgets multimedia
+CONFIG += qtquickcompiler
 
 BUILD_VARIANT = $$(BUILD_VARIANT)
 TARGET = Status

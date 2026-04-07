@@ -126,36 +126,7 @@ else()
     set(LIB_TYPE SHARED)
 endif ()
 
-if (${STATUSQ_SHADOW_BUILD})
-    add_definitions(-DBUNDLE_QML_RESOURCES)
-    set(STATUSQ_QRC_FILES src/statusq.qrc
-        src/assets/fonts/fonts.qrc
-        src/assets/img/img.qrc
-        src/assets/png/png.qrc
-        src/assets/twemoji/twemoji.qrc
-        src/assets/twemoji/twemoji-svg.qrc)
-
-    # Platform-specific PNG bundles
-    if(ANDROID OR IOS)
-        list(APPEND STATUSQ_QRC_FILES
-            src/assets/png/png-mobile.qrc
-        )
-    else()
-        list(APPEND STATUSQ_QRC_FILES
-            src/assets/png/png-desktop.qrc
-        )
-    endif()
-
-    if (${STATUSQ_STATIC_LIB})
-        # randlib would complain about the generated .o files. Generate cpp files instead.
-        qt_add_resources(STATUSQ_QRC_COMPILED ${STATUSQ_QRC_FILES})
-    else()
-        qt_add_big_resources(STATUSQ_QRC_COMPILED ${STATUSQ_QRC_FILES})
-    endif()
-endif()
-
 add_library(StatusQ ${LIB_TYPE}
-        ${STATUSQ_QRC_COMPILED}
         ${STATUSQ_TESTCONFIG_RCC}
         include/StatusQ/audioutils.h
         include/StatusQ/clipboardutils.h
@@ -395,6 +366,90 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 target_include_directories(StatusQ PUBLIC include)
+
+### QML compilation and resource bundling (Release / shadow build only)
+if (${STATUSQ_SHADOW_BUILD})
+    add_definitions(-DBUNDLE_QML_RESOURCES)
+
+    # --- Collect QML/JS files from StatusQ source tree ---
+    file(GLOB_RECURSE STATUSQ_QML_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+        "src/StatusQ/*.qml"
+        "src/StatusQ/*.js"
+        "src/StatusQ/*.mjs"
+    )
+
+    # --- Collect qmldir and other non-compilable resources ---
+    file(GLOB_RECURSE STATUSQ_QMLDIR_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+        "src/StatusQ/*/qmldir"
+    )
+    file(GLOB_RECURSE STATUSQ_OTHER_RESOURCES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+        "src/StatusQ/*/LICENSE"
+        "src/StatusQ/*/README.md"
+    )
+    set(STATUSQ_RESOURCE_FILES ${STATUSQ_QMLDIR_FILES} ${STATUSQ_OTHER_RESOURCES})
+
+    # --- Set QT_RESOURCE_ALIAS: strip "src/StatusQ/" prefix for correct resource paths ---
+    # qt_add_qml_module prepends "/<URI>/" to each file's alias, so we strip "src/StatusQ/"
+    # to get: /StatusQ/ + Core/StatusBaseText.qml = qrc:/StatusQ/Core/StatusBaseText.qml
+    foreach(f IN LISTS STATUSQ_QML_FILES STATUSQ_RESOURCE_FILES)
+        string(REGEX REPLACE "^src/StatusQ/" "" alias "${f}")
+        set_source_files_properties("${f}" PROPERTIES QT_RESOURCE_ALIAS "${alias}")
+    endforeach()
+
+    # --- Mark singleton QML files (from qmldir declarations) ---
+    set_source_files_properties(
+        # StatusQ.Core
+        src/StatusQ/Core/ColorUtils.qml
+        src/StatusQ/Core/LocaleUtils.qml
+        src/StatusQ/Core/StatusSharedUpdateTimer.qml
+        # StatusQ.Core.Theme
+        src/StatusQ/Core/Theme/Assets.qml
+        src/StatusQ/Core/Theme/Fonts.qml
+        src/StatusQ/Core/Theme/ThemeUtils.qml
+        # StatusQ.Core.Utils
+        src/StatusQ/Core/Utils/AmountsArithmetic.qml
+        src/StatusQ/Core/Utils/Emoji.qml
+        src/StatusQ/Core/Utils/ModelUtils.qml
+        src/StatusQ/Core/Utils/OperatorsUtils.qml
+        src/StatusQ/Core/Utils/StringUtils.qml
+        src/StatusQ/Core/Utils/Utils.qml
+        # StatusQ.Core.Backpressure
+        src/StatusQ/Core/Backpressure/Backpressure.qml
+        PROPERTIES QT_QML_SINGLETON_TYPE TRUE
+    )
+
+    # --- QML module with ahead-of-time bytecode compilation (qmlcachegen) ---
+    qt_add_qml_module(StatusQ
+        URI "StatusQ"
+        VERSION 0.1
+        RESOURCE_PREFIX "/"
+        NO_PLUGIN
+        QML_FILES ${STATUSQ_QML_FILES}
+        RESOURCES ${STATUSQ_RESOURCE_FILES}
+    )
+
+    # --- Asset resources (binary assets — no QML compilation) ---
+    set(STATUSQ_ASSET_QRC_FILES
+        src/assets/fonts/fonts.qrc
+        src/assets/img/img.qrc
+        src/assets/png/png.qrc
+        src/assets/twemoji/twemoji.qrc
+        src/assets/twemoji/twemoji-svg.qrc
+    )
+    if(ANDROID OR IOS)
+        list(APPEND STATUSQ_ASSET_QRC_FILES src/assets/png/png-mobile.qrc)
+    else()
+        list(APPEND STATUSQ_ASSET_QRC_FILES src/assets/png/png-desktop.qrc)
+    endif()
+
+    if (${STATUSQ_STATIC_LIB})
+        qt_add_resources(STATUSQ_ASSET_QRC ${STATUSQ_ASSET_QRC_FILES})
+    else()
+        qt_add_big_resources(STATUSQ_ASSET_QRC ${STATUSQ_ASSET_QRC_FILES})
+    endif()
+
+    target_sources(StatusQ PRIVATE ${STATUSQ_ASSET_QRC})
+endif()
 
 install(TARGETS StatusQ
         RUNTIME DESTINATION StatusQ
