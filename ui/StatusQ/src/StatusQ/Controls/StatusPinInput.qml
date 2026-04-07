@@ -283,6 +283,7 @@ Item {
 
             Item {
                 id: container
+                required property int index
                 property string innerState: "EMPTY"
                 property alias blinkingAnimation: blinkingAnimation
                 property alias innerOpacity: inner.opacity

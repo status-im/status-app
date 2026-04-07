@@ -150,10 +150,15 @@ Button {
                 }
 
                 delegate: ItemDelegate {
-                    objectName: "itemDelegate_" + model.shortName
+                    required property string shortName
+                    required property string name
+                    required property string symbol
+                    required property url imageSource
+
+                    objectName: "itemDelegate_" + shortName
                     width: ListView.view.width
                     height: d.delegateHeight
-                    checked: model.shortName === d.selectedCurrency
+                    checked: shortName === d.selectedCurrency
                     background: Rectangle {
                         radius: Theme.radius
                         color: currencySelectorPanel.activeFocus ? "transparent" : hovered ? Theme.palette.primaryColor2 : "transparent"
@@ -166,18 +171,18 @@ Button {
                                 StatusImage {
                                     Layout.preferredWidth: 16
                                     Layout.preferredHeight: 16
-                                    source: model.imageSource
+                                    source: imageSource
                                 }
                                 StatusBaseText {
                                     Layout.fillWidth: true
-                                    text: model.name
+                                    text: name
                                     font.pixelSize: root.font.pixelSize
                                     font.weight: root.font.weight
                                 }
                             }
                             StatusBaseText {
                                 Layout.fillWidth: true
-                                text: model.symbol ? "%1 (%2)".arg(model.shortName).arg(model.symbol) : model.shortName
+                                text: symbol ? "%1 (%2)".arg(shortName).arg(symbol) : shortName
                                 font.pixelSize: root.font.pixelSize
                                 color: Theme.palette.baseColor1
                             }
@@ -192,7 +197,7 @@ Button {
                     }
                     onClicked: {
                         dropdown.close()
-                        root.currencySelected(model.shortName)
+                        root.currencySelected(shortName)
                     }
                     HoverHandler {
                         cursorShape: hovered ? Qt.PointingHandCursor : undefined

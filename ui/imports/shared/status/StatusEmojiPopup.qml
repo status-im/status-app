@@ -92,7 +92,10 @@ StatusDropdown {
         root.close()
     }
 
-    Component.onCompleted: root.emojiModel.recentEmojis = root.recentEmojis
+    Component.onCompleted: {
+        if (root.recentEmojis !== undefined)
+            root.emojiModel.recentEmojis = root.recentEmojis
+    }
 
     onOpened: {
         if (!StatusQUtils.Utils.isMobile)

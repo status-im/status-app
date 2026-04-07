@@ -152,10 +152,14 @@ Button {
                 }
 
                 delegate: ItemDelegate {
-                    objectName: "itemDelegate_" + model.code
+                    required property string code
+                    required property string name
+                    required property string nativeName
+
+                    objectName: "itemDelegate_" + code
                     width: ListView.view.width
                     height: d.delegateHeight
-                    checked: model.code === d.selectedLanguage
+                    checked: code === d.selectedLanguage
                     background: Rectangle {
                         radius: Theme.radius
                         color: userSelectorPanel.activeFocus ? "transparent" : hovered ? Theme.palette.primaryColor2 : "transparent"
@@ -166,14 +170,14 @@ Button {
                             StatusBaseText {
                                 Layout.fillWidth: true
                                 horizontalAlignment: Qt.AlignLeft // force LTR
-                                text: model.nativeName
+                                text: nativeName
                                 font.capitalization: Font.Capitalize
                                 font.pixelSize: root.font.pixelSize
                                 font.weight: root.font.weight
                             }
                             StatusBaseText {
                                 Layout.fillWidth: true
-                                text: "%1 (%2)".arg(model.name).arg(d.beautifyIsoCode(model.code))
+                                text: "%1 (%2)".arg(name).arg(d.beautifyIsoCode(code))
                                 font: root.font
                                 color: Theme.palette.baseColor1
                             }
@@ -188,7 +192,7 @@ Button {
                     }
                     onClicked: {
                         dropdown.close()
-                        root.languageSelected(model.code)
+                        root.languageSelected(code)
                     }
                     HoverHandler {
                         cursorShape: hovered ? Qt.PointingHandCursor : undefined

@@ -15,8 +15,8 @@ CommonContactDialog {
     // expected roles: id, from, clock, text, contactRequestState
     required property var crDetails
 
-    signal accepted(string contactRequestId)
-    signal discarded(string contactRequestId)
+    signal contactRequestAccepted(string contactRequestId)
+    signal contactRequestDiscarded(string contactRequestId)
 
     title: qsTr("Review contact request")
 
@@ -49,13 +49,13 @@ CommonContactDialog {
         StatusFlatButton {
             text: qsTr("Ignore")
             objectName: "ignoreButton"
-            onClicked: root.discarded(crDetails.id ?? "")
+            onClicked: root.contactRequestDiscarded(crDetails.id ?? "")
         }
         StatusButton {
             text: qsTr("Accept")
             type: StatusBaseButton.Type.Success
             objectName: "acceptButton"
-            onClicked: root.accepted(crDetails.id ?? "")
+            onClicked: root.contactRequestAccepted(crDetails.id ?? "")
         }
     }
 }

@@ -671,7 +671,7 @@ StatusSectionLayout {
     rightPanelWidth: d.rightPanelWidth
     rightPanel: Loader {
         active: root.showRightPanel
-        sourceComponent: profileContainer.currentItem.sideBySidePreviewComponent
+        sourceComponent: profileContainer.currentItem ? profileContainer.currentItem.sideBySidePreviewComponent : null
     }
 
     Connections {

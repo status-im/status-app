@@ -598,7 +598,7 @@ QtObject {
                 contactsStore: root.contactsStore
                 utilsStore: root.utilsStore
 
-                onAccepted: root.contactsStore.sendContactRequest(publicKey, message)
+                onContactRequestAccepted: root.contactsStore.sendContactRequest(publicKey, message)
                 onClosed: destroy()
             }
         },
@@ -608,12 +608,12 @@ QtObject {
             ReviewContactRequestPopup {
                 utilsStore: root.utilsStore
 
-                onAccepted: {
+                onContactRequestAccepted: {
                     root.contactsStore.acceptContactRequest(publicKey, contactRequestId)
                     Global.displaySuccessToastMessage(qsTr("Contact request accepted"))
                     close()
                 }
-                onDiscarded: {
+                onContactRequestDiscarded: {
                     root.contactsStore.dismissContactRequest(publicKey, contactRequestId)
                     Global.displaySuccessToastMessage(qsTr("Contact request ignored"))
                     close()

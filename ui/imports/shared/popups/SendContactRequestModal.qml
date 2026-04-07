@@ -22,7 +22,7 @@ CommonContactDialog {
     property string challengeText: qsTr("Write a short message telling them who you are...")
     property string buttonText: qsTr("Send contact request")
 
-    signal accepted(string message)
+    signal contactRequestAccepted(string message)
 
     title: qsTr("Send contact request")
 
@@ -86,7 +86,7 @@ CommonContactDialog {
             enabled: messageInput.valid
             text: root.buttonText
             onClicked: {
-                root.accepted(messageInput.text);
+                root.contactRequestAccepted(messageInput.text);
                 root.close();
             }
         }

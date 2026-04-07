@@ -32,7 +32,7 @@ QtObject {
     }
 
     readonly property Connections chatCommunitySectionModuleConnections: Connections {
-        target: root.chatCommunitySectionModule
+        target: root.chatCommunitySectionModule ?? null
 
         function onOpenNoPermissionsToJoinPopup(communityName: string,
                                                 userName: string, communityId:
@@ -79,7 +79,7 @@ QtObject {
     readonly property UsersStore usersStore: UsersStore {
         property var chatDetails: !!root.activeChatContentModule ? root.activeChatContentModule.chatDetails : null
 
-        isFullCommunityMembers: chatDetails.belongsToCommunity && !chatDetails.requiresPermissions
+        isFullCommunityMembers: !!chatDetails && chatDetails.belongsToCommunity && !chatDetails.requiresPermissions
         usersModule: !!root.activeChatContentModule ? root.activeChatContentModule.usersModule : null
         chatCommunitySectionModule: root.chatCommunitySectionModule
     }
@@ -91,7 +91,7 @@ QtObject {
     // TODO: Review if `mainModuleInst.activeSection` is indeed the same as `sectionDetails` here. If yes, this is redundant
     readonly property bool joined: root.mainModuleInst.activeSection.joined
 
-    property var communityItemsModel: chatCommunitySectionModule.model
+    property var communityItemsModel: chatCommunitySectionModule ? chatCommunitySectionModule.model : null
 
     property var assetsModel: SortFilterProxyModel {
         sourceModel: communitiesModuleInst.tokenList
@@ -186,7 +186,7 @@ QtObject {
         ]
     }
 
-    readonly property string overviewChartData: chatCommunitySectionModule.overviewChartData
+    readonly property string overviewChartData: chatCommunitySectionModule ? chatCommunitySectionModule.overviewChartData : ""
 
     readonly property bool isUserAllowedToSendMessage: d.isUserAllowedToSendMessage
     readonly property string chatInputPlaceHolderText: d.chatInputPlaceHolderText
@@ -196,14 +196,16 @@ QtObject {
     function currentChatContentModule() {
         // When we decide to have the same struct as it's on the backend we will remove this function.
         // So far this is a way to deal with refactored backend from the current qml structure.
+        if (!chatCommunitySectionModule || !chatCommunitySectionModule.activeItem)
+            return null
         chatCommunitySectionModule.prepareChatContentModuleForChatId(chatCommunitySectionModule.activeItem.id)
         return chatCommunitySectionModule.getChatContentModule()
     }
 
     // Contact requests related part
-    property var contactRequestsModel: chatCommunitySectionModule.contactRequestsModel
+    property var contactRequestsModel: chatCommunitySectionModule ? chatCommunitySectionModule.contactRequestsModel : null
 
-    property bool loadingHistoryMessagesInProgress: chatCommunitySectionModule.loadingHistoryMessagesInProgress
+    property bool loadingHistoryMessagesInProgress: chatCommunitySectionModule ? chatCommunitySectionModule.loadingHistoryMessagesInProgress : false
 
     property var advancedModule: profileSectionModule.advancedModule
 
@@ -598,7 +600,7 @@ QtObject {
                 sourceModel: mainModuleInst.sectionsModel
                 filters: ValueFilter {
                     roleName: "id"
-                    value: chatCommunitySectionModule.getMySectionId()
+                    value: chatCommunitySectionModule ? chatCommunitySectionModule.getMySectionId() : ""
                 }
             }
             delegate: QtObject {

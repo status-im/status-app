@@ -137,7 +137,6 @@ SettingsContentBase {
         readonly property bool isIdentityTabDirty: (!descriptionPanel.isEnsName &&
                                                     descriptionPanel.displayName.text !== profileStore.displayName) ||
                                                    descriptionPanel.bio.text !== profileStore.bio ||
-                                                   profileStore.socialLinksDirty ||
                                                    profileHeader.icon !== profileStore.profileLargeImage
 
         property ProfileShowcaseModels showcaseModels: ProfileShowcaseModels {

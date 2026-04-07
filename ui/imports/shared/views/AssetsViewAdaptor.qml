@@ -140,7 +140,7 @@ QObject {
             SortFilterProxyModel {
                 id: filteredBalances
 
-                sourceModel: rootModel.balances
+                sourceModel: rootModel ? rootModel.balances ?? null : null
 
                 filters: [
                     OneOfFilter {

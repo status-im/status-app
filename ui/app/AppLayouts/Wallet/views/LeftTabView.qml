@@ -385,7 +385,7 @@ Rectangle {
                             }
                             StatusTextWithLoadingState {
                                 customColor: Theme.palette.textColor
-                                text: RootStore.totalCurrencyBalance.symbol
+                                text: RootStore.totalCurrencyBalance ? RootStore.totalCurrencyBalance.symbol : ""
                                 font.pixelSize: Theme.additionalTextSize
                                 loading: RootStore.balanceLoading
                                 font.weight: Font.Medium

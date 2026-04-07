@@ -14,7 +14,14 @@ QtObject {
 
     // set by asyncGetOwnerTokenDetails
     readonly property var ownerTokenDetails: {
-        JSON.parse(communityTokensModuleInst.ownerTokenDetails)
+        const data = communityTokensModuleInst ? communityTokensModuleInst.ownerTokenDetails : ""
+        if (!data)
+            return ({})
+        try {
+            return JSON.parse(data)
+        } catch (e) {
+            return ({})
+        }
     }
 
     signal ownershipLost(string communityId, string communityName)

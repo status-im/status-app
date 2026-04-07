@@ -33,11 +33,9 @@ QtObject {
     readonly property int colorId: Utils.colorIdForPubkey(root.pubKey)
 
     readonly property string bio: profileModule.bio
-    readonly property string socialLinksJson: profileModule.socialLinksJson
     readonly property var socialLinksModel: profileModule.socialLinksModel
     readonly property var temporarySocialLinksModel: profileModule.temporarySocialLinksModel // for editing purposes
     readonly property var temporarySocialLinksJson: profileModule.temporarySocialLinksJson
-    readonly property bool socialLinksDirty: profileModule.socialLinksDirty
 
 
     readonly property var showcasePreferencesCommunitiesModel: profileModule.showcasePreferencesCommunitiesModel

@@ -131,7 +131,7 @@ Item {
         }
         asset.isImage: true
         primaryText: tokenGroup && tokenGroup.name ? tokenGroup.name : Constants.dummyText
-        secondaryText: tokenGroup ? tokenGroup.balanceText : Constants.dummyText
+        secondaryText: tokenGroup && tokenGroup.balanceText !== undefined ? tokenGroup.balanceText : Constants.dummyText
         tertiaryText: {
             if (!d.isCommunityAsset) {
                 let totalCurrencyBalance = tokenGroup ? tokenGroup.balance * tokenGroup.marketPrice : 0
@@ -472,12 +472,12 @@ Item {
 
                         Layout.alignment: Qt.AlignTop
                         Layout.preferredWidth: detailsFlow.isOverflowing ? -1 : detailsFlow.rightSideWidth
-                        visible: !d.isCommunityAsset && tokenGroup.websiteUrl
+                        visible: !d.isCommunityAsset && !!tokenGroup && !!tokenGroup.websiteUrl
                         primaryText: qsTr("Website")
                         content: InformationTag {
                             asset.name : "browser"
-                            tagPrimaryLabel.text: SQUtils.Utils.stripHttpsAndwwwFromUrl(tokenGroup.websiteUrl)
-                            visible: typeof tokenGroup != "undefined" && tokenGroup && tokenGroup.websiteUrl !== ""
+                            tagPrimaryLabel.text: !!tokenGroup ? SQUtils.Utils.stripHttpsAndwwwFromUrl(tokenGroup.websiteUrl) : ""
+                            visible: !!tokenGroup && tokenGroup.websiteUrl !== ""
                             customBackground: Component {
                                 Rectangle {
                                     color: Theme.palette.baseColor2
