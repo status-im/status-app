@@ -8,6 +8,7 @@ import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Backpressure
+import StatusQ.Popups.Dialog
 
 import StatusQ
 
@@ -106,10 +107,6 @@ Control {
     signal declineRequested(string avatarId, string actionId)
     signal acceptRequested(string avatarId, string actionId)
 
-    TapHandler {
-        acceptedButtons: Qt.RightButton
-    }
-
     QtObject {
         id: d
 
@@ -125,7 +122,7 @@ Control {
     }
 
     objectName: "activityCenterPanel"
-    background: Rectangle {
+    background: StatusDialogBackground {
         color: parent.backgroundColor
         radius: Theme.radius
     }
