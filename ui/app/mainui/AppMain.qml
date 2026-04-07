@@ -2078,7 +2078,7 @@ Item {
 
                         active: d.isBrowserEnabled && appView.currentIndex === Constants.appViewStackIndex.browser
 
-                        sourceComponent: appMain.rootStore.thirdpartyServicesEnabled ? browserLayout: browserPrivacyWall
+                        sourceComponent: appMain.rootStore.thirdpartyServicesEnabled ? browserLayoutComp: browserPrivacyWall
 
                         Component {
                             id: browserPrivacyWall
@@ -2092,9 +2092,10 @@ Item {
                         }
 
                         Component {
-                            id: browserLayout
+                            id: browserLayoutComp
 
                             BrowserLayout {
+                                id: browserLayout
                                 isMobile: SQUtils.Utils.isMobile
                                 userUID: appMain.profileStore.pubKey
                                 thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
