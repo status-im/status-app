@@ -12788,6 +12788,22 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>From non-contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Contact requests and group messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Communities</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mentions and replies</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt;font color=&apos;%1&apos;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
         <translation type="unfinished"></translation>
     </message>

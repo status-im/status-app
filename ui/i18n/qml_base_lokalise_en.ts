@@ -15584,6 +15584,26 @@
       <translation>Most recent</translation>
     </message>
     <message>
+      <source>From non-contacts</source>
+      <comment>NotificationsView</comment>
+      <translation>From non-contacts</translation>
+    </message>
+    <message>
+      <source>Contact requests and group messages</source>
+      <comment>NotificationsView</comment>
+      <translation>Contact requests and group messages</translation>
+    </message>
+    <message>
+      <source>Communities</source>
+      <comment>NotificationsView</comment>
+      <translation>Communities</translation>
+    </message>
+    <message>
+      <source>Mentions and replies</source>
+      <comment>NotificationsView</comment>
+      <translation>Mentions and replies</translation>
+    </message>
+    <message>
       <source>&lt;font color=&#39;%1&#39;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</source>
       <comment>NotificationsView</comment>
       <translation>&lt;font color=&#39;%1&#39;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</translation>
