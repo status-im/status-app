@@ -1,6 +1,5 @@
 import logging
 import time
-import typing
 
 import object
 import squish
@@ -63,81 +62,17 @@ def is_descendant_of(ancestor, item) -> bool:
     return False
 
 
-# NotificationCard.qml: RowLayout id quickActions holds Decline/Accept StatusButtons.
-_QUICK_ACTIONS_OBJECT_NAME = 'quickActions'
-# Reject Squish object refs whose bounds cover ~the whole card (wrong target → card TapHandler / review modal).
-_MAX_NOTIFICATION_BUTTON_TO_CARD_AREA_RATIO = 0.55
-
-
-def notification_quick_action_bounds_plausible(btn, card) -> bool:
-    """True if ``btn`` global rect looks like a single control, not the full notification card."""
-    try:
-        ib = object.globalBounds(btn)
-        ob = object.globalBounds(card)
-    except (RuntimeError, LookupError, AttributeError):
-        return True
-    if ib is None or ob is None:
-        return True
-    if ib.width <= 2 or ib.height <= 2 or ob.width <= 2 or ob.height <= 2:
-        return True
-    inner_a = float(ib.width) * float(ib.height)
-    outer_a = float(ob.width) * float(ob.height)
-    return inner_a < _MAX_NOTIFICATION_BUTTON_TO_CARD_AREA_RATIO * outer_a
-
-
-def _find_button_under_quick_actions(card, object_name: str) -> typing.Optional[typing.Any]:
-    """Resolve Accept/Decline under the card's ``quickActions`` row (avoids card-level hit targets)."""
-    for qa in squish.findAllObjects({'objectName': _QUICK_ACTIONS_OBJECT_NAME}):
-        if not item_is_visible(qa):
-            continue
-        if not is_descendant_of(card, qa):
-            continue
-        btn = find_descendant_by_object_name(qa, object_name, max_depth=250)
-        if btn is not None and item_is_visible(btn) and notification_quick_action_bounds_plausible(btn, card):
-            LOG.info(
-                'find_notification_button_on_card: %r under quickActions on card %s',
-                object_name,
-                describe_notification_card_for_log(card),
-            )
-            return btn
-    for qa in squish.findAllObjects({'objectName': _QUICK_ACTIONS_OBJECT_NAME}):
-        if not item_is_visible(qa):
-            continue
-        if not is_descendant_of(card, qa):
-            continue
-        for btn in squish.findAllObjects({'objectName': object_name}):
-            if not item_is_visible(btn):
-                continue
-            if not is_descendant_of(qa, btn):
-                continue
-            if not notification_quick_action_bounds_plausible(btn, card):
-                continue
-            LOG.info(
-                'find_notification_button_on_card: %r via quickActions+scan on card %s; %s',
-                object_name,
-                describe_notification_card_for_log(card),
-                describe_button_for_log(btn),
-            )
-            return btn
-    return None
-
-
 def find_notification_button_on_card(card, object_name: str, max_depth: int = 1000):
     """Find StatusButton by objectName on a specific NotificationCard.
 
     ``object.children`` from a QQuick ``Control`` often does not include ``contentItem`` children,
     so tree-walk from the card misses Accept/Decline. Fallback: ``findAllObjects`` + ancestor or bounds.
-    Prefer the real quick-action row so we never click the card TapHandler (opens review modal).
     """
     if card is None or not object_name:
         return None
 
-    via_qa = _find_button_under_quick_actions(card, object_name)
-    if via_qa is not None:
-        return via_qa
-
     found = find_descendant_by_object_name(card, object_name, max_depth)
-    if found is not None and notification_quick_action_bounds_plausible(found, card):
+    if found is not None:
         LOG.info(
             'find_notification_button_on_card: %r via tree walk on card %s',
             object_name,
@@ -148,8 +83,6 @@ def find_notification_button_on_card(card, object_name: str, max_depth: int = 10
     all_named = list(squish.findAllObjects({'objectName': object_name}))
     for btn in all_named:
         if not item_is_visible(btn):
-            continue
-        if not notification_quick_action_bounds_plausible(btn, card):
             continue
         if is_descendant_of(card, btn):
             LOG.info(
@@ -169,8 +102,6 @@ def find_notification_button_on_card(card, object_name: str, max_depth: int = 10
 
     for btn in all_named:
         if not item_is_visible(btn):
-            continue
-        if not notification_quick_action_bounds_plausible(btn, card):
             continue
         try:
             inner = object.globalBounds(btn)

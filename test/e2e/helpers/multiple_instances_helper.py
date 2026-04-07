@@ -80,6 +80,17 @@ def send_contact_request_from_settings(aut, main_window, chat_key, message):
     return contacts_settings
 
 
+@allure.step('Accept contact request via Activity Center')
+def accept_contact_request_via_activity_center(aut, main_window, from_user_name: str):
+    """Same flow as critical group-chat tests: focus AUT, accept, then minimize to avoid cross-window clicks."""
+    switch_to_aut(aut, main_window)
+    activity_center = main_window.left_panel.open_activity_center()
+    request = activity_center.find_contact_request_in_list(from_user_name)
+    activity_center.accept_contact_request(request)
+    main_window.left_panel.click()
+    main_window.minimize()
+
+
 @allure.step('Accept contact request from settings')
 def accept_contact_request_from_settings(aut, main_window, user_name):
     """
