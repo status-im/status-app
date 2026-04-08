@@ -115,12 +115,12 @@ Rectangle {
             objectName: "walletFooterSendButton"
             icon.name: "send"
             text: root.isCommunityOwnershipTransfer ? qsTr("Send Owner token to transfer %1 Community ownership").arg(root.communityName) : qsTr("Send")
-            interactive: !d.isCollectibleSoulbound && networkConnectionStore.walletReadyForTransactionsEnabled
+            interactive: !d.isCollectibleSoulbound && !!networkConnectionStore && networkConnectionStore.walletReadyForTransactionsEnabled
             onClicked: {
                 root.transactionStore.setSenderAccount(root.walletStore.selectedAddress)
                 root.launchSendModal(d.isCollectibleViewed ? d.userOwnedAddressForCollectible: root.walletStore.selectedAddress)
             }
-            tooltip.text: d.isCollectibleSoulbound ? qsTr("Soulbound collectibles cannot be sent to another wallet") : networkConnectionStore.walletReadyForTransactionsToolTipText
+            tooltip.text: d.isCollectibleSoulbound ? qsTr("Soulbound collectibles cannot be sent to another wallet") : (networkConnectionStore ? networkConnectionStore.walletReadyForTransactionsToolTipText : "")
             visible: d.sendActionAvailable
             display: layout.showText ? StatusFlatButton.TextBesideIcon : StatusFlatButton.IconOnly
         }
@@ -152,9 +152,9 @@ Rectangle {
             id: swap
             objectName: "walletFooterSwapButton"
 
-            interactive: networkConnectionStore.walletReadyForTransactionsEnabled
+            interactive: !!networkConnectionStore && networkConnectionStore.walletReadyForTransactionsEnabled
             visible: d.swapActionAvailable
-            tooltip.text: networkConnectionStore.walletReadyForTransactionsToolTipText
+            tooltip.text: networkConnectionStore ? networkConnectionStore.walletReadyForTransactionsToolTipText : ""
             icon.name: "swap"
             text: qsTr("Swap")
             onClicked: root.launchSwapModal()

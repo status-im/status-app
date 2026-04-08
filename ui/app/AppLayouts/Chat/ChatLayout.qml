@@ -41,8 +41,8 @@ StackLayout {
 
     // WIP: This is the new store's structure, now used, `PermissionsStore` and `CommunityAccessStore`. More stores will be added in next steps
     property CommunityStores.CommunityRootStore newCommnityStore
-    readonly property CommunityStores.CommunityAccessStore communityAccessStore: newCommnityStore.communityAccessStore
-    readonly property CommunityStores.PermissionsStore communityPermissionsStore: newCommnityStore.communityPermissionsStore
+    readonly property CommunityStores.CommunityAccessStore communityAccessStore: newCommnityStore ? newCommnityStore.communityAccessStore : null
+    readonly property CommunityStores.PermissionsStore communityPermissionsStore: newCommnityStore ? newCommnityStore.communityPermissionsStore : null
 
     // Rest of stores references (to be reviewed)
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
@@ -58,12 +58,12 @@ StackLayout {
     property var mutualContactsModel
     property var sectionItemModel
 
-    readonly property bool isOwner: sectionItemModel.memberRole === Constants.memberRole.owner
-    readonly property bool isAdmin: sectionItemModel.memberRole === Constants.memberRole.admin
-    readonly property bool isTokenMasterOwner: sectionItemModel.memberRole === Constants.memberRole.tokenMaster
-    readonly property bool isControlNode: sectionItemModel.isControlNode
+    readonly property bool isOwner: !!sectionItemModel && sectionItemModel.memberRole === Constants.memberRole.owner
+    readonly property bool isAdmin: !!sectionItemModel && sectionItemModel.memberRole === Constants.memberRole.admin
+    readonly property bool isTokenMasterOwner: !!sectionItemModel && sectionItemModel.memberRole === Constants.memberRole.tokenMaster
+    readonly property bool isControlNode: !!sectionItemModel && sectionItemModel.isControlNode
     readonly property bool isPrivilegedUser: isControlNode || isOwner || isAdmin || isTokenMasterOwner
-    readonly property int isInvitationPending: root.rootStore.chatCommunitySectionModule.requestToJoinState !== Constants.RequestToJoinState.None
+    readonly property int isInvitationPending: root.rootStore && root.rootStore.chatCommunitySectionModule ? root.rootStore.chatCommunitySectionModule.requestToJoinState !== Constants.RequestToJoinState.None : false
 
     property bool communitySettingsDisabled
     property bool showUsersList
@@ -95,7 +95,7 @@ StackLayout {
     signal tokenPaymentRequested(string recipientAddress, string tokenKey, string rawAmount)
 
     // Community transfer ownership related props/signals:
-    property bool isPendingOwnershipRequest: sectionItemModel.isPendingOwnershipRequest
+    property bool isPendingOwnershipRequest: !!sectionItemModel && sectionItemModel.isPendingOwnershipRequest
 
     // Contacts related data:
     property string myPublicKey
@@ -132,13 +132,13 @@ StackLayout {
 
     Loader {
         id: mainViewLoader
-        readonly property var sectionItem: root.rootStore.chatCommunitySectionModule
-        readonly property int accessType: sectionItem.requiresTokenPermissionToJoin ? Constants.communityChatOnRequestAccess
-                                                                                    : Constants.communityChatPublicAccess
+        readonly property var sectionItem: root.rootStore ? root.rootStore.chatCommunitySectionModule : null
+        readonly property int accessType: sectionItem && sectionItem.requiresTokenPermissionToJoin ? Constants.communityChatOnRequestAccess
+                                                                                                   : Constants.communityChatPublicAccess
 
         sourceComponent: {
-            if (sectionItem.isCommunity() && !sectionItem.amIMember) {
-                if (sectionItemModel.amIBanned) {
+            if (sectionItem && sectionItem.isCommunity() && !sectionItem.amIMember) {
+                if (root.sectionItemModel && sectionItemModel.amIBanned) {
                     return communityBanComponent
                 } else if (sectionItem.isWaitingOnNewCommunityOwnerToConfirmRequestToRejoin) {
                     return controlNodeOfflineComponent
@@ -151,7 +151,7 @@ StackLayout {
     }
 
     Connections {
-        target: root.communityAccessStore
+        target: root.communityAccessStore ?? null
         function onCommunityMembershipNotificationReceived() {
             root.currentIndex = 1 // go to settings
             if (communitySettingsLoader.item) {
@@ -207,7 +207,7 @@ StackLayout {
             id: chatView
 
             readonly property var sectionItem: root.rootStore.chatCommunitySectionModule
-            readonly property string communityId: root.sectionItemModel.id
+            readonly property string communityId: root.sectionItemModel ? root.sectionItemModel.id : ""
 
             objectName: "chatViewComponent"
 
@@ -222,14 +222,14 @@ StackLayout {
             emojiPopup: root.emojiPopup
             stickersPopup: root.stickersPopup
             sectionItemModel: root.sectionItemModel
-            joinedMembersCount: sectionItemModel.joinedMembersCount
+            joinedMembersCount: root.sectionItemModel ? sectionItemModel.joinedMembersCount : 0
             areTestNetworksEnabled: root.networksStore.areTestNetworksEnabled
             amIChatAdmin: root.rootStore.amIChatAdmin()
-            amIMember: sectionItem.amIMember
-            amISectionAdmin: root.sectionItemModel.memberRole === Constants.memberRole.owner ||
+            amIMember: sectionItem ? sectionItem.amIMember : false
+            amISectionAdmin: !!root.sectionItemModel && (root.sectionItemModel.memberRole === Constants.memberRole.owner ||
                              root.sectionItemModel.memberRole === Constants.memberRole.admin ||
-                             root.sectionItemModel.memberRole === Constants.memberRole.tokenMaster
-            hasViewOnlyPermissions: root.communityPermissionsStore.viewOnlyPermissionsModel.count > 0
+                             root.sectionItemModel.memberRole === Constants.memberRole.tokenMaster)
+            hasViewOnlyPermissions: root.communityPermissionsStore ? root.communityPermissionsStore.viewOnlyPermissionsModel.count > 0 : false
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
@@ -237,6 +237,9 @@ StackLayout {
 
             hasUnrestrictedViewOnlyPermission: {
                 viewOnlyUnrestrictedPermissionHelper.revision
+
+                if (!root.communityPermissionsStore)
+                    return false
 
                 const model = root.communityPermissionsStore.viewOnlyPermissionsModel
                 const count = model.rowCount()
@@ -254,7 +257,7 @@ StackLayout {
             Instantiator {
                 id: viewOnlyUnrestrictedPermissionHelper
 
-                model: root.communityPermissionsStore.viewOnlyPermissionsModel
+                model: root.communityPermissionsStore ? root.communityPermissionsStore.viewOnlyPermissionsModel : null
 
                 property int revision: 0
 
@@ -268,25 +271,25 @@ StackLayout {
             }
 
             ModelChangeTracker {
-                model: root.communityPermissionsStore.viewOnlyPermissionsModel
+                model: root.communityPermissionsStore ? root.communityPermissionsStore.viewOnlyPermissionsModel : null
                 onRevisionChanged: viewOnlyUnrestrictedPermissionHelper.revision++
             }
 
-            hasViewAndPostPermissions: root.communityPermissionsStore.viewAndPostPermissionsModel.count > 0
-            viewOnlyPermissionsModel: root.communityPermissionsStore.viewOnlyPermissionsModel
-            viewAndPostPermissionsModel: root.communityPermissionsStore.viewAndPostPermissionsModel
+            hasViewAndPostPermissions: root.communityPermissionsStore ? root.communityPermissionsStore.viewAndPostPermissionsModel.count > 0 : false
+            viewOnlyPermissionsModel: root.communityPermissionsStore ? root.communityPermissionsStore.viewOnlyPermissionsModel : null
+            viewAndPostPermissionsModel: root.communityPermissionsStore ? root.communityPermissionsStore.viewAndPostPermissionsModel : null
             assetsModel: root.rootStore.assetsModel
             collectiblesModel: root.rootStore.collectiblesModel
-            requestToJoinState: sectionItem.requestToJoinState
+            requestToJoinState: sectionItem ? sectionItem.requestToJoinState : Constants.RequestToJoinState.None
             ensCommunityPermissionsEnabled: root.advancedStore.ensCommunityPermissionsEnabled
 
             // Community access related data:
             isPendingOwnershipRequest: root.isPendingOwnershipRequest
-            allChannelsAreHiddenBecauseNotPermitted: root.communityAccessStore.allChannelsAreHiddenBecauseNotPermitted
-            communityMemberReevaluationStatus: root.communityAccessStore.communityMemberReevaluationStatus
-            spectatedPermissionsModel: root.communityAccessStore.spectatedPermissionsModel
-            chatPermissionsCheckOngoing: root.communityAccessStore.chatPermissionsCheckOngoing
-            joined: root.isChatView ? root.rootStore.joined : root.communityAccessStore.joined
+            allChannelsAreHiddenBecauseNotPermitted: root.communityAccessStore ? root.communityAccessStore.allChannelsAreHiddenBecauseNotPermitted : false
+            communityMemberReevaluationStatus: root.communityAccessStore ? root.communityAccessStore.communityMemberReevaluationStatus : 0
+            spectatedPermissionsModel: root.communityAccessStore ? root.communityAccessStore.spectatedPermissionsModel : null
+            chatPermissionsCheckOngoing: root.communityAccessStore ? root.communityAccessStore.chatPermissionsCheckOngoing : false
+            joined: root.isChatView ? root.rootStore.joined : (root.communityAccessStore ? root.communityAccessStore.joined : false)
 
             // Unfurling related data:
             gifUnfurlingEnabled: root.gifUnfurlingEnabled

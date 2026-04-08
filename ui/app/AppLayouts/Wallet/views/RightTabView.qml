@@ -87,7 +87,7 @@ RightTabBaseView {
         readonly property var overview: root.walletRootStore.overview
 
         allAccounts: overview.isAllAccounts
-        emojiId: SQUtils.Emoji.iconId(overview.emoji ?? "")
+        emojiId: SQUtils.Emoji.iconId(overview.emoji ?? "") ?? ""
         balance: LocaleUtils.currencyAmountToLocaleString(overview.currencyBalance)
         balanceLoading: overview.balanceLoading
         color: Utils.getColorForId(Theme.palette, overview.colorId)
@@ -95,8 +95,9 @@ RightTabBaseView {
         balanceAvailable: !root.networkConnectionStore.accountBalanceNotAvailable
         networksModel: root.networksStore.activeNetworks
         ensOrElidedAddress: RootStore.overview.ens ||
-                            SQUtils.Utils.elideAndFormatWalletAddress(
-                                RootStore.overview.mixedcaseAddress)
+                            (RootStore.overview.mixedcaseAddress
+                             ? SQUtils.Utils.elideAndFormatWalletAddress(RootStore.overview.mixedcaseAddress)
+                             : "")
         lastReloadedTime: !!root.walletRootStore.lastReloadTimestamp ?
                               LocaleUtils.formatRelativeTimestamp(
                                   root.walletRootStore.lastReloadTimestamp * 1000) : ""
@@ -392,10 +393,10 @@ RightTabBaseView {
                         formatFiat: balance => RootStore.currencyStore.formatCurrencyAmount(
                                         balance, RootStore.currencyStore.currentCurrency)
 
-                        sendEnabled: root.networkConnectionStore.walletReadyForTransactionsEnabled &&
-                                     !RootStore.overview.isWatchOnlyAccount && RootStore.overview.canSend
+                        sendEnabled: (!!root.networkConnectionStore && root.networkConnectionStore.walletReadyForTransactionsEnabled) &&
+                                     !!RootStore.overview && !RootStore.overview.isWatchOnlyAccount && !!RootStore.overview.canSend
                         communitySendEnabled: RootStore.tokensStore.showCommunityAssetsInSend
-                        swapEnabled: !RootStore.overview.isWatchOnlyAccount
+                        swapEnabled: !!RootStore.overview && !RootStore.overview.isWatchOnlyAccount
                         swapVisible: root.swapEnabled
 
                         onSendRequested: (key) => {

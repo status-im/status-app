@@ -308,7 +308,7 @@ Rectangle {
                     statusListItemTitle.font.weight: Font.Medium
                     color: sensor.containsMouse || highlighted ? Theme.palette.baseColor3 : "transparent"
                     statusListItemSubTitle.loading: !!model.assetsLoading
-                    errorMode: networkConnectionStore.accountBalanceNotAvailable
+                    errorMode: networkConnectionStore.accountBalanceNotAvailable && !model.assetsLoading
                     errorIcon.tooltip.maxWidth: 300
                     errorIcon.tooltip.text: networkConnectionStore.accountBalanceNotAvailableText
                     onClicked: function(itemId, mouse) {
@@ -405,7 +405,7 @@ Rectangle {
                             icon.color: Theme.palette.dangerColor1
                             tooltip.text: networkConnectionStore.accountBalanceNotAvailableText
                             tooltip.maxWidth: 200
-                            visible: networkConnectionStore.accountBalanceNotAvailable
+                            visible: networkConnectionStore.accountBalanceNotAvailable && !RootStore.balanceLoading
                         }
                     }
                 }

@@ -32,19 +32,19 @@ QtObject {
     readonly property var largeImage: userProfile.largeImage
     readonly property int colorId: Utils.colorIdForPubkey(root.pubKey)
 
-    readonly property string bio: profileModule.bio
-    readonly property string socialLinksJson: profileModule.socialLinksJson
-    readonly property var socialLinksModel: profileModule.socialLinksModel
-    readonly property var temporarySocialLinksModel: profileModule.temporarySocialLinksModel // for editing purposes
-    readonly property var temporarySocialLinksJson: profileModule.temporarySocialLinksJson
-    readonly property bool socialLinksDirty: profileModule.socialLinksDirty
+    readonly property string bio: profileModule ? profileModule.bio : ""
+    readonly property string socialLinksJson: profileModule ? profileModule.socialLinksJson : ""
+    readonly property var socialLinksModel: profileModule ? profileModule.socialLinksModel : null
+    readonly property var temporarySocialLinksModel: profileModule ? profileModule.temporarySocialLinksModel : null // for editing purposes
+    readonly property var temporarySocialLinksJson: profileModule ? profileModule.temporarySocialLinksJson : ""
+    readonly property bool socialLinksDirty: profileModule ? profileModule.socialLinksDirty : false
 
 
-    readonly property var showcasePreferencesCommunitiesModel: profileModule.showcasePreferencesCommunitiesModel
-    readonly property var showcasePreferencesAccountsModel: profileModule.showcasePreferencesAccountsModel
-    readonly property var showcasePreferencesCollectiblesModel: profileModule.showcasePreferencesCollectiblesModel
-    readonly property var showcasePreferencesAssetsModel: profileModule.showcasePreferencesAssetsModel
-    readonly property var showcasePreferencesSocialLinksModel: profileModule.showcasePreferencesSocialLinksModel
+    readonly property var showcasePreferencesCommunitiesModel: profileModule ? profileModule.showcasePreferencesCommunitiesModel : null
+    readonly property var showcasePreferencesAccountsModel: profileModule ? profileModule.showcasePreferencesAccountsModel : null
+    readonly property var showcasePreferencesCollectiblesModel: profileModule ? profileModule.showcasePreferencesCollectiblesModel : null
+    readonly property var showcasePreferencesAssetsModel: profileModule ? profileModule.showcasePreferencesAssetsModel : null
+    readonly property var showcasePreferencesSocialLinksModel: profileModule ? profileModule.showcasePreferencesSocialLinksModel : null
 
     readonly property alias ownShowcaseCommunitiesModel: ownShowcaseModels.adaptedCommunitiesSourceModel
     readonly property alias ownShowcaseAccountsModel: ownShowcaseModels.adaptedAccountsSourceModel

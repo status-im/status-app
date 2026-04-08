@@ -108,7 +108,7 @@ SQUtils.QObject {
         readonly property var filteredDappsModel: SortFilterProxyModel {
             id: dappsFilteredModel
             objectName: "DAppsModelFiltered"
-            sourceModel: root.dappsModule.dappsModel
+            sourceModel: root.dappsModule?.dappsModel ?? null
             readonly property string selectedAddress: root.selectedAddress
             readonly property var connectorIcons: Constants.dappImageByType
 
