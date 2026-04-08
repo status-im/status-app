@@ -147,6 +147,29 @@ SplitView {
         ]
     }
 
+    property int unreadCount: 0
+
+    function recomputeUnreadCount() {
+        const src = allNotificationsModelMock.sourceModel
+        let count = 0
+        for (let i = 0; i < src.count; i++)
+            if (src.get(i).unread) count++
+        unreadCount = count
+    }
+
+    Component.onCompleted: recomputeUnreadCount()
+
+    function setNotificationUnread(notificationId, unreadValue) {
+        const src = allNotificationsModelMock.sourceModel
+        for (let i = 0; i < src.count; i++) {
+            if (src.get(i).notificationId === notificationId) {
+                src.setProperty(i, "unread", unreadValue)
+                recomputeUnreadCount()
+                return
+            }
+        }
+    }
+
     function getNotificationsModelMock() {
         switch (root.currentActiveGroup) {
         case ActivityCenterTypes.ActivityCenterGroup.Admin:
@@ -182,7 +205,7 @@ SplitView {
             color: Theme.palette.baseColor4
 
             Rectangle {
-                color: Theme.palette.baseColor2
+                color: Theme.palette.statusAppLayout.backgroundColor
                 radius: 12
                 anchors.centerIn: parent
                 width: slider.value
@@ -211,7 +234,10 @@ SplitView {
                     onCloseRequested: logs.logEvent("ActivityCenterPanel::onCloseRequested")
                     onMarkAllAsReadRequested: {
                         logs.logEvent("ActivityCenterPanel::onMarkAllAsReadRequested")
-                        unreadNotifications.checked = false
+                        const src = allNotificationsModelMock.sourceModel
+                        for (let i = 0; i < src.count; i++)
+                            src.setProperty(i, "unread", false)
+                        root.recomputeUnreadCount()
                     }
                     onHideShowReadNotificationsRequested: {
                         logs.logEvent("ActivityCenterPanel::onHideShowReadNotificationsRequested: " + hideReadNotifications)
@@ -241,6 +267,15 @@ SplitView {
                                          }
                     onRedirectToSection: (sectionId) => { logs.logEvent("ActivityCenterPanel::onRedirectToSection: " + sectionId) }
                     onRedirectToPopup: (notification) => { logs.logEvent("ActivityCenterPanel::onRedirectToPopup: " + notification)}
+                    onMarkNotificationRead: (notificationId) => {
+                        logs.logEvent("ActivityCenterPanel::onMarkNotificationRead: " + notificationId)
+                        root.setNotificationUnread(notificationId, false)
+                    }
+
+                    onMarkNotificationUnread: (notificationId) => {
+                        logs.logEvent("ActivityCenterPanel::onMarkNotificationUnread: " + notificationId)
+                        root.setNotificationUnread(notificationId, true)
+                    }
                 }
             }
         }
@@ -327,8 +362,8 @@ SplitView {
             CheckBox {
                 id: unreadNotifications
                 Layout.fillWidth: true
-                text: "Has unread nontificaitons?"
-                checked: true
+                text: "Has unread notifications?"
+                checked: root.unreadCount > 0
             }
         }
     }

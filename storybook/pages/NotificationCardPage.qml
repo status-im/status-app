@@ -40,9 +40,10 @@ SplitView {
         orientation: Qt.Vertical
         SplitView.fillWidth: true
 
-        Item {
+        Rectangle {
             SplitView.fillHeight: true
             SplitView.fillWidth: true
+            color: Theme.palette.baseColor5
 
             NotificationCard {
                 Tracer {
@@ -86,16 +87,31 @@ SplitView {
                                                                                             contentEditor.sevenAttachments ? d.sevenAttachments : []
                 actionId: contentEditor.actionId
 
+                // Colors
+                backgroundColor: cardBgSwitch.checked ? Theme.palette.primaryColor2 : Theme.palette.statusAppLayout.backgroundColor
+                contextMenuColor: contextMenuSwitch.checked ? Theme.palette.baseColor3 : Theme.palette.baseColor4
+
                 // Timestamp related
                 timestamp: dateText.text
 
                 // Interactions
                 onAvatarClicked: logs.logEvent("NotificationCard::onAvatarClicked --> Avatar clicked")
-                onClicked: logs.logEvent("NotificationCard::onClicked --> Card clicked")
+                onClicked: {
+                    logs.logEvent("NotificationCard::onClicked --> Card clicked")
+                    undreadCheck.checked = false
+                }
                 onDeclineRequested: logs.logEvent("NotificationCard::onDeclineRequested --> Decline button clicked")
                 onAcceptRequested: logs.logEvent("NotificationCard::onAcceptRequested --> Accept button clicked")
+                onMarkAsReadRequested: {
+                    logs.logEvent("NotificationCard::onMarkAsReadRequested --> Mark as read clicked")
+                    undreadCheck.checked = false
+                }
+                onMarkAsUnreadRequested: {
+                    logs.logEvent("NotificationCard::onMarkAsUnreadRequested --> Mark as unread clicked")
+                    undreadCheck.checked = true
+                }
             }
-        }
+        }  // end Rectangle
 
         LogsAndControlsPanel {
             SplitView.minimumHeight: 100
@@ -133,6 +149,23 @@ SplitView {
                     id: selectedCheck
                     text: "Selected?"
                     checked: true
+                }
+
+                Label {
+                    Layout.topMargin: Theme.padding
+                    Layout.bottomMargin: Theme.padding
+                    text: "COLORS"
+                    font.weight: Font.Bold
+                }
+
+                Switch {
+                    id: cardBgSwitch
+                    text: checked ? "Card background: primaryColor2" : "Card background: default"
+                }
+
+                Switch {
+                    id: contextMenuSwitch
+                    text: checked ? "Context menu: baseColor3" : "Context menu: default"
                 }
 
                 Label {

@@ -98,6 +98,7 @@ Control {
 
     // Card interactions
     signal markNotificationRead(string notificationId)
+    signal markNotificationUnread(string notificationId)
     signal avatarClicked(string avatarId)
     signal redirectToDetails(string sectionId, string subsectionId, string itemId)
     signal redirectToSection(string sectionId)
@@ -139,7 +140,7 @@ Control {
             Layout.leftMargin: Theme.padding
             Layout.topMargin: Theme.halfPadding
             Layout.bottomMargin: Theme.halfPadding
-            Layout.rightMargin: 0
+            Layout.rightMargin: Theme.halfPadding
 
             spacing: 0
 
@@ -159,6 +160,7 @@ Control {
             StatusFlatRoundButton {
                 id: markAllReadBtn
                 objectName: "markAllReadButton"
+                enabled: root.hasUnreadNotifications
                 icon.name: "double-checkmark"
                 onClicked: root.markAllAsReadRequested()
             }
@@ -211,6 +213,8 @@ Control {
                 anchors.left: listView.contentItem.left
                 anchors.right: listView.contentItem.right
                 anchors.margins: Math.max(Theme.halfPadding, 8)
+
+                backgroundColor: root.backgroundColor
 
                 // Card states related
                 unread: model.unread
@@ -283,6 +287,8 @@ Control {
                 onAvatarClicked: root.avatarClicked(model.avatarId)
                 onAcceptRequested: root.acceptRequested(model.avatarId ?? "", model.actionId ?? "")
                 onDeclineRequested: root.declineRequested(model.avatarId ?? "", model.actionId ?? "")
+                onMarkAsReadRequested: root.markNotificationRead(model.notificationId)
+                onMarkAsUnreadRequested: root.markNotificationUnread(model.notificationId)
             }
 
             onContentYChanged: d.fetchMoreNotifications()

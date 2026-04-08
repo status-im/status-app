@@ -43,6 +43,18 @@ Item {
         signalName: "acceptRequested"
     }
 
+    SignalSpy {
+        id: markAsReadRequestedSpy
+        target: controlUnderTest
+        signalName: "markAsReadRequested"
+    }
+
+    SignalSpy {
+        id: markAsUnreadRequestedSpy
+        target: controlUnderTest
+        signalName: "markAsUnreadRequested"
+    }
+
     property NotificationCard controlUnderTest: null
 
     TestCase {
@@ -56,6 +68,8 @@ Item {
             avatarClickedSpy.clear()
             declineRequestedSpy.clear()
             acceptRequestedSpy.clear()
+            markAsReadRequestedSpy.clear()
+            markAsUnreadRequestedSpy.clear()
         }
 
         function test_defaults() {
@@ -341,6 +355,91 @@ Item {
             compare(acceptRequestedSpy.count, 0)
             mouseClick(acceptBtn)
             compare(acceptRequestedSpy.count, 1)
+        }
+
+        function rightClickCenter(item) {
+            mouseClick(item, item.width / 2, item.height / 2, Qt.RightButton)
+        }
+
+        function waitForContextMenuOpen(card) {
+            const panel = findChild(card, "notificationContextPanel")
+            verify(!!panel)
+            tryVerify(() => panel.height >= panel.expandedHeight - 1)
+        }
+
+        function waitForContextMenuClosed(card) {
+            const panel = findChild(card, "notificationContextPanel")
+            verify(!!panel)
+            tryVerify(() => panel.height === 0)
+        }
+
+        function test_markAsUnreadContextMenu() {
+            // Card is read (unread: false) → button says "Mark as unread"
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                title: "Test",
+                unread: false
+            })
+            verify(!!controlUnderTest)
+            waitForRendering(controlUnderTest)
+
+            const btn = findChild(controlUnderTest, "notificationMarkUnreadBtn")
+            verify(!!btn)
+            verify(!btn.visible)
+
+            rightClickCenter(controlUnderTest)
+            waitForContextMenuOpen(controlUnderTest)
+            compare(btn.text, qsTr("Mark as unread"))
+
+            compare(markAsUnreadRequestedSpy.count, 0)
+            mouseClick(btn)
+            compare(markAsUnreadRequestedSpy.count, 1)
+            compare(markAsReadRequestedSpy.count, 0)
+            waitForContextMenuClosed(controlUnderTest)
+        }
+
+        function test_markAsReadContextMenu() {
+            // Card is unread (unread: true) → button says "Mark as read"
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                title: "Test",
+                unread: true
+            })
+            verify(!!controlUnderTest)
+            waitForRendering(controlUnderTest)
+
+            const btn = findChild(controlUnderTest, "notificationMarkUnreadBtn")
+            verify(!!btn)
+
+            rightClickCenter(controlUnderTest)
+            waitForContextMenuOpen(controlUnderTest)
+            compare(btn.text, qsTr("Mark as read"))
+
+            compare(markAsReadRequestedSpy.count, 0)
+            mouseClick(btn)
+            compare(markAsReadRequestedSpy.count, 1)
+            compare(markAsUnreadRequestedSpy.count, 0)
+            waitForContextMenuClosed(controlUnderTest)
+        }
+
+        function test_contextMenuClosesOnLeftClick() {
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                title: "Test"
+            })
+            verify(!!controlUnderTest)
+            waitForRendering(controlUnderTest)
+
+            const btn = findChild(controlUnderTest, "notificationMarkUnreadBtn")
+            verify(!!btn)
+
+            // Open context menu via right-click
+            rightClickCenter(controlUnderTest)
+            waitForContextMenuOpen(controlUnderTest)
+
+            // Left-click on the card closes the menu without emitting clicked()
+            const cardBg = findChild(controlUnderTest, "notificationCardBg")
+            verify(!!cardBg)
+            mouseClick(cardBg)
+            waitForContextMenuClosed(controlUnderTest)
+            compare(clickedSpy.count, 0)
         }
     }
 }

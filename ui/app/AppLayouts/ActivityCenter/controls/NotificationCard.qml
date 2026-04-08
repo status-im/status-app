@@ -45,6 +45,7 @@ import StatusQ.Core.Theme
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 
 import utils
 
@@ -169,11 +170,18 @@ Control {
     // Style / layout
     // ──────────────────────────────────────────────────────────────────────────
 
+    // Background color of the card. Should match the page/panel background so
+    // the card blends in and the context panel overlap is properly hidden.
+    property color backgroundColor: Theme.palette.statusAppLayout.backgroundColor
+
+    // Background color of the context menu panel shown below the card.
+    property color contextMenuColor: Theme.palette.baseColor4
+
     // Horizontal spacing between avatar and content column.
     spacing: Math.max(Theme.halfPadding, 8)
 
-    // Vertical padding inside the card background.
-    verticalPadding: Math.max(Theme.halfPadding, 8)
+    // No padding — managed explicitly inside contentItem via cardVPad.
+    padding: 0
 
     // ──────────────────────────────────────────────────────────────────────────
     // Interactions
@@ -186,6 +194,10 @@ Control {
     // Emitted when quick actions are shown and user interacts with the corresponding buttons
     signal declineRequested()
     signal acceptRequested()
+
+    // Emitted when the user requests to mark the notification as read/unread via the context menu.
+    signal markAsReadRequested()
+    signal markAsUnreadRequested()
 
     QtObject {
         id: d
@@ -208,14 +220,23 @@ Control {
         readonly property int readUnreadBadgeSize: 8
 
         // Color of the unread indicator dot.
-        readonly property color unreadDotColor: Theme.palette.primaryColor1
+        readonly property color unreadDotColor: root.Theme.palette.primaryColor1
 
         // Fixed diameter (or the small unread dot (read-only convenience).
         readonly property int unreadBadgeSize: 18
 
+        // Vertical padding inside the card background.
+        readonly property int cardVPad: Math.max(Theme.halfPadding, 8)
+
+        // How many pixels the context panel overlaps the card bottom edge.
+        readonly property int contextPanelOverlap: root.Theme.radius * 2
+
         // True when the pointer is over an interactive child (e.g. avatar),
         // used to temporarily block the card tap handler in favor of the child one.
         property bool hasInteractiveChildHovered: false
+
+        // True when the context menu (right-click / long-press) is expanded.
+        property bool contextMenuOpen: false
 
         // Returns the avatar scaling factor for a given font size enum value.
         function avatarFactorForFontSize(fs) {
@@ -233,168 +254,273 @@ Control {
 
     objectName: "notificationCard"
 
-    // Card background and unread indicator.
-    background: Rectangle {
-        radius: Theme.radius
-        color: StatusColors.transparent
-        border.width: 2
-        border.color: root.selected || (root.hovered && root.enabled) ? Theme.palette.primaryColor1 : StatusColors.transparent
+    // The card background is drawn inside contentItem so its height is fixed
+    // to the card content area only — the context panel appears below as a
+    // separate element and must not cause the card background to expand.
+    background: null
 
-         // Unread indicator dot (top-right).
+    // ──────────────────────────────────────────────────────────────────────────
+    // Content
+    // ──────────────────────────────────────────────────────────────────────────
+    contentItem: Item {
+        id: contentRoot
+
+        implicitWidth: cardLayout.implicitWidth
+        implicitHeight: cardBg.height + Math.max(0, contextPanel.height - d.contextPanelOverlap)
+
+        // ── Card visual background ────────────────────────────────────────────
+        // Sized to the card content only. The context panel sits below this.
+        // z: 1 ensures the card's rounded bottom corners render on top of the
+        // context panel, which overlaps the card bottom by Theme.radius pixels.
         Rectangle {
-            objectName: "notificationReadIndicator"
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: Math.max(Theme.halfPadding, 8)
-            width: Math.max(Theme.halfPadding, 8)
-            height: width
-            radius: width / 2
-            color: d.unreadDotColor
-            visible: root.unread
-        }
+            id: cardBg
+            objectName: "notificationCardBg"
+            z: 1
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: cardLayout.implicitHeight + 2 * d.cardVPad
+            radius: Theme.radius
+            color: d.contextMenuOpen ? root.contextMenuColor : root.backgroundColor
+            border.width: 2
+            border.color: root.selected || (root.hovered && root.enabled) ? Theme.palette.primaryColor1 : StatusColors.transparent
 
-        // Full-card click target
-        TapHandler {
-            enabled: !d.hasInteractiveChildHovered
-            onTapped: root.clicked()
-        }
-
-        HoverHandler {
-            enabled: !d.hasInteractiveChildHovered
-            cursorShape: Qt.PointingHandCursor
-        }
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Content - Main layout: avatar + content column.
-    // ──────────────────────────────────────────────────────────────────────────
-    contentItem: RowLayout {
-        spacing: root.spacing
-
-        // Avatar block (non-clickable here; card handles clicks).
-        NotificationAvatar {
-            Layout.alignment: Qt.AlignTop
-            Layout.leftMargin: Math.max(Theme.halfPadding, 8)
-
-            objectName: "notificationAvatar"
-
-            // Scale avatar with current font size factor
-            density: d.avatarFactorForFontSize(Theme.currentFontSize)
-
-            avatarSource: root.avatarSource
-            badgeIconName: root.badgeIconName
-            circular: root.isCircularAvatar
-            isAvatarClickable: root.isAvatarClickable
-            isBadgeClickable: root.isBadgeClickable
-            avatarLetterColor: root.avatarLetterColor
-            avatarLetterText: root.avatarLetterText
-            isAvatarLetterAcronym: root.isAvatarLetterAcronym
-            avatarMaxTextLen: root.avatarMaxTextLen
-
-            onAvatarClicked: root.avatarClicked()
-
-            HoverHandler {
-                cursorShape: Qt.PointingHandCursor
-                onHoveredChanged: d.hasInteractiveChildHovered = hovered
+            // Unread indicator dot (top-right).
+            Rectangle {
+                objectName: "notificationReadIndicator"
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: Math.max(Theme.halfPadding, 8)
+                width: Math.max(Theme.halfPadding, 8)
+                height: width
+                radius: width / 2
+                color: d.unreadDotColor
+                visible: root.unread
             }
-        }
 
-        // Main content area
-        ColumnLayout {
-            spacing: Theme.smallPadding / 2
-            Layout.fillWidth: true
-            Layout.rightMargin: Math.max(Theme.halfPadding, 8)
+            // Full-card left-click: close context menu if open, otherwise navigate.
+            TapHandler {
+                enabled: !d.hasInteractiveChildHovered
+                onTapped: {
+                    if (d.contextMenuOpen) {
+                        d.contextMenuOpen = false
+                    } else {
+                        root.clicked()
+                    }
+                }
+            }
+
+            StatusSecondaryActionHandler {
+                onTriggered: d.contextMenuOpen = !d.contextMenuOpen
+            }
 
             HoverHandler {
                 enabled: !d.hasInteractiveChildHovered
                 cursorShape: Qt.PointingHandCursor
             }
+        }
 
-            // Header row: title + chat key + contact/trust badges.
-            NotificationHeaderRow {
-                Layout.fillWidth: true
-                Layout.rightMargin: d.unreadBadgeSize / 2
-                objectName: "notificationHeader"
-                visible: root.title != ""
-                title: root.title
-                chatKey: root.chatKey
-                isContact: root.isContact
-                trustIndicator: root.trustIndicator
-                isBlocked: root.isBlocked
+        // ── Main card content ─────────────────────────────────────────────────
+        // Avatar + text + quick actions + timestamp.
+        // Anchored at top with cardVPad margin so the card background has equal
+        // padding on all sides. z: 1 keeps content above the context panel.
+        ColumnLayout {
+            id: cardLayout
+            z: 1
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: parent.top
+                topMargin: d.cardVPad
             }
-
-            // Context row: community + channel + optional icons.
-            NotificationContextRow {
-                Layout.fillWidth: true
-                Layout.rightMargin: d.unreadBadgeSize / 2
-                objectName: "notificationContext"
-                visible: root.primaryText != ""
-                primaryText: root.primaryText
-                contextAvatar: root.contextAvatar
-                secondaryText: root.secondaryText
-                iconName: root.iconName
-                separatorIconName: root.separatorIconName
-            }
-
-            // Optional action hint/body line under context row.
-            StatusBaseText {
-                Layout.fillWidth: true
-                objectName: "notificationActionText"
-                visible: root.actionText
-                text: root.actionText
-                font.pixelSize: Theme.fontSize(13)
-                color: Theme.palette.directColor5
-                elide: Text.ElideRight
-            }
-
-            // Rich content block: HTML, banner, attachments.
-            NotificationContentBlock {
-                Layout.fillWidth: true
-                objectName: "notificationContent"
-                contentText: root.content
-                preImageSource: root.preImageSource
-                preImageRadius: root.preImageRadius
-                attachments: root.attachments
-                thumbSpacing: 6
-            }
+            spacing: Theme.halfPadding / 2
 
             RowLayout {
-                id: quickActions
-                objectName: "quickActions"
-
-                visible: root.actionId !== ""
                 Layout.fillWidth: true
-                spacing: Theme.halfPadding
+                spacing: root.spacing
 
-                StatusButton {
-                    Layout.fillWidth: true
+            // Avatar block (non-clickable here; card handles clicks).
+            NotificationAvatar {
+                Layout.alignment: Qt.AlignTop
+                Layout.leftMargin: Math.max(Theme.halfPadding, 8)
 
-                    objectName: "notificationDeclineBtn"
-                    text: qsTr("Decline")
-                    size: StatusBaseButton.Size.Small
-                    type: StatusBaseButton.Type.Danger
-                    onClicked: root.declineRequested()
+                objectName: "notificationAvatar"
+
+                // Scale avatar with current font size factor
+                density: d.avatarFactorForFontSize(Theme.currentFontSize)
+
+                avatarSource: root.avatarSource
+                badgeIconName: root.badgeIconName
+                circular: root.isCircularAvatar
+                isAvatarClickable: root.isAvatarClickable
+                isBadgeClickable: root.isBadgeClickable
+                avatarLetterColor: root.avatarLetterColor
+                avatarLetterText: root.avatarLetterText
+                isAvatarLetterAcronym: root.isAvatarLetterAcronym
+                avatarMaxTextLen: root.avatarMaxTextLen
+
+                onAvatarClicked: root.avatarClicked()
+
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                    onHoveredChanged: d.hasInteractiveChildHovered = hovered
                 }
+            }
+
+            // Main content area
+            ColumnLayout {
+                spacing: Theme.smallPadding / 2
+                Layout.fillWidth: true
+                Layout.rightMargin: Math.max(Theme.halfPadding, 8)
+
+                HoverHandler {
+                    enabled: !d.hasInteractiveChildHovered
+                    cursorShape: Qt.PointingHandCursor
+                }
+
+                // Header row: title + chat key + contact/trust badges.
+                NotificationHeaderRow {
+                    Layout.fillWidth: true
+                    Layout.rightMargin: d.unreadBadgeSize / 2
+                    objectName: "notificationHeader"
+                    visible: root.title != ""
+                    title: root.title
+                    chatKey: root.chatKey
+                    isContact: root.isContact
+                    trustIndicator: root.trustIndicator
+                    isBlocked: root.isBlocked
+                }
+
+                // Context row: community + channel + optional icons.
+                NotificationContextRow {
+                    Layout.fillWidth: true
+                    Layout.rightMargin: d.unreadBadgeSize / 2
+                    objectName: "notificationContext"
+                    visible: root.primaryText != ""
+                    primaryText: root.primaryText
+                    contextAvatar: root.contextAvatar
+                    secondaryText: root.secondaryText
+                    iconName: root.iconName
+                    separatorIconName: root.separatorIconName
+                }
+
+                // Optional action hint/body line under context row.
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    objectName: "notificationActionText"
+                    visible: root.actionText
+                    text: root.actionText
+                    font.pixelSize: Theme.fontSize(13)
+                    color: Theme.palette.directColor5
+                    elide: Text.ElideRight
+                }
+
+                // Rich content block: HTML, banner, attachments.
+                NotificationContentBlock {
+                    Layout.fillWidth: true
+                    objectName: "notificationContent"
+                    contentText: root.content
+                    preImageSource: root.preImageSource
+                    preImageRadius: root.preImageRadius
+                    attachments: root.attachments
+                    thumbSpacing: 6
+                }
+
+                RowLayout {
+                    id: quickActions
+                    objectName: "quickActions"
+
+                    visible: root.actionId !== ""
+                    Layout.fillWidth: true
+                    spacing: Theme.halfPadding
+
+                    StatusButton {
+                        Layout.fillWidth: true
+
+                        objectName: "notificationDeclineBtn"
+                        text: qsTr("Decline")
+                        size: StatusBaseButton.Size.Small
+                        type: StatusBaseButton.Type.Danger
+                        onClicked: root.declineRequested()
+                    }
+                    StatusButton {
+                        Layout.fillWidth: true
+
+                        objectName: "notificationAcceptBtn"
+                        text: qsTr("Accept")
+                        size: StatusBaseButton.Size.Small
+                        type: StatusBaseButton.Type.Normal
+                        onClicked: root.acceptRequested()
+                    }
+                }
+
+                // Timestamp row (falls back to "Just now").
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    objectName: "notificationTimestamp"
+                    text: LocaleUtils.formatRelativeTimestamp(root.timestamp)
+                    font.pixelSize: Theme.fontSize(11)
+                    color: Theme.palette.directColor5
+                    elide: Text.ElideRight
+                }
+            }
+            } // end inner RowLayout
+        } // end cardLayout
+
+        // ── Context menu panel ────────────────────────────────────────────────
+        // Appears anchored below the card background as a separate rounded
+        // rectangle. The card's own visual is unchanged when this is shown.
+        Rectangle {
+            id: contextPanel
+            objectName: "notificationContextPanel"
+
+            readonly property real expandedHeight: contextActionsRow.implicitHeight + Theme.padding * 2 + d.contextPanelOverlap
+
+            clip: true
+            visible: height > 0
+            anchors {
+                top: cardBg.bottom
+                topMargin: -d.contextPanelOverlap
+                left: parent.left
+                right: parent.right
+            }
+            height: d.contextMenuOpen ? expandedHeight : 0
+            radius: Theme.radius
+            color: root.contextMenuColor
+
+            RowLayout {
+                id: contextActionsRow
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    top: parent.top
+                    bottom: parent.bottom
+                    topMargin: Theme.padding + d.contextPanelOverlap
+                    bottomMargin: Theme.padding
+                    leftMargin: Theme.padding
+                    rightMargin: Theme.padding
+                }
+
                 StatusButton {
                     Layout.fillWidth: true
-
-                    objectName: "notificationAcceptBtn"
-                    text: qsTr("Accept")
+                    objectName: "notificationMarkUnreadBtn"
+                    text: root.unread ? qsTr("Mark as read") : qsTr("Mark as unread")
                     size: StatusBaseButton.Size.Small
                     type: StatusBaseButton.Type.Normal
-                    onClicked: root.acceptRequested()
+                    onClicked: {
+                        d.contextMenuOpen = false
+                        if (root.unread)
+                            root.markAsReadRequested()
+                        else
+                            root.markAsUnreadRequested()
+                    }
                 }
             }
 
-            // Timestamp row (falls back to "Just now").
-            StatusBaseText {
-                Layout.fillWidth: true
-                objectName: "notificationTimestamp"
-                text: LocaleUtils.formatRelativeTimestamp(root.timestamp)
-                font.pixelSize: Theme.fontSize(11)
-                color: Theme.palette.directColor5
-                elide: Text.ElideRight
+            Behavior on height {
+                NumberAnimation {
+                    duration: ThemeUtils.AnimationDuration.Slow
+                    easing.type: Easing.OutCubic
+                }
             }
         }
-    }
+    } // end contentItem
 }

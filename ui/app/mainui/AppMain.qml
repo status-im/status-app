@@ -1667,6 +1667,7 @@ Item {
 
                 // Card Interactions
                 onMarkNotificationRead: (notificationId) => { appMain.activityCenterStore.markActivityCenterNotificationRead(notificationId) }
+                onMarkNotificationUnread: (notificationId) => { appMain.activityCenterStore.markActivityCenterNotificationUnread(notificationId) }
                 onAvatarClicked: (avatarId) => { Global.openProfilePopup(avatarId) }
                 onRedirectToDetails: (sectionId, subsectionId, subsectionItemId) => {
                                          appMain.rootStore.setNavToMsgDetailsFlag(true) // It covers in-app link navigation in portrait mode

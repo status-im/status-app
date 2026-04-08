@@ -111,12 +111,15 @@ Item {
         }
 
         function test_markAllReadButton() {
-            controlUnderTest = createTemporaryObject(componentUnderTest, root)
+            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
+                hasUnreadNotifications: true
+            })
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
 
             const markAllBtn = findChild(controlUnderTest, "markAllReadButton")
             verify(!!markAllBtn)
+            verify(markAllBtn.enabled)
             mouseClick(markAllBtn)
             compare(markAllAsReadSpy.count, 1)
         }

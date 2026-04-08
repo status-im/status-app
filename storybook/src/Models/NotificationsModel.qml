@@ -857,7 +857,9 @@ ObjectProxyModel {
             }
         ]
 
-        Component.onCompleted: append(data)
+        Component.onCompleted: {
+            append(data.map((item, index) => Object.assign({}, item, {notificationId: "notif-" + index})))
+        }
     }
 
     delegate: QtObject {
