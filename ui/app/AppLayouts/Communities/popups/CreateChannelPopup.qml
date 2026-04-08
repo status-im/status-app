@@ -52,6 +52,8 @@ StatusStackModal {
 
     property var activeCommunity
     required property var assetsModel
+    property bool assetsLoading: false
+    property var loadTokenList: function() {}
     required property var collectiblesModel
     required property var permissionsModel
 
@@ -934,6 +936,8 @@ StatusStackModal {
             internalRightPadding: 0
 
             assetsModel: root.assetsModel
+            assetsLoading: root.assetsLoading
+            loadTokenList: root.loadTokenList
             collectiblesModel: root.collectiblesModel
             permissionsModel: d.channelEditModel.channelPermissionsModel
             channelsModel: d.channelEditModel.liveChannelsModel

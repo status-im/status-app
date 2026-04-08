@@ -19,10 +19,21 @@ StatusListView {
 
     required property var tokenListsModel // Expected roles: id, name, timestamp, source, logoUri, version, tokens
     required property var allNetworks
+    property bool loading: false
 
     implicitHeight: contentHeight
     model: root.tokenListsModel
     spacing: Theme.halfPadding
+
+    header: Item {
+        width: root.width
+        height: root.loading ? 40 : 0
+        visible: root.loading
+
+        StatusLoadingIndicator {
+            anchors.centerIn: parent
+        }
+    }
 
     delegate: StatusListItem {
         height: ProfileUtils.defaultDelegateHeight
@@ -41,6 +52,8 @@ StatusListView {
                 id: viewButton
 
                 text: qsTr("View")
+                enabled: !popup.active || popup.status === Loader.Ready
+                loading: popup.active && popup.status !== Loader.Ready
                 onClicked: popup.open()
             }
         ]
@@ -49,6 +62,7 @@ StatusListView {
             id: popup
 
             active: false
+            asynchronous: true
 
             function open() {
                 popup.active = true

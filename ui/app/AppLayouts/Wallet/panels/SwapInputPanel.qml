@@ -58,6 +58,7 @@ Control {
     property bool fiatInputInteractive
     property bool mainInputLoading
     property bool bottomTextLoading
+    property bool tokenSelectorLoading
     property bool interactive: true
 
     function reevaluateSelectedId() {
@@ -303,7 +304,7 @@ Control {
 
                 model: d.adaptor.outputAssetsModel
                 hasMoreItems: d.adaptor.outputAssetsModel.hasMoreItems
-                isLoadingMore: d.adaptor.outputAssetsModel.isLoadingMore
+                isLoadingMore: root.tokenSelectorLoading || d.adaptor.outputAssetsModel.isLoadingMore
                 nonInteractiveKey: root.nonInteractiveGroupKey
 
                 onSearch: function(keyword) {

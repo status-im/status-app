@@ -22,6 +22,8 @@ StackView {
 
     required property var permissionsModel
     required property var assetsModel
+    property bool assetsLoading: false
+    property var loadTokenList: function() {} // called to trigger lazy loading of token list
     required property var collectiblesModel
     required property var channelsModel
 
@@ -216,6 +218,8 @@ StackView {
                 }
 
                 assetsModel: root.assetsModel
+                assetsLoading: root.assetsLoading
+                loadTokenList: root.loadTokenList
                 collectiblesModel: nonOwnerCollectibles
                 channelsModel: allChannelsTransformed
                 communityDetails: root.communityDetails

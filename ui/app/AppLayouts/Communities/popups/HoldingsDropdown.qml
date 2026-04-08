@@ -12,12 +12,15 @@ import AppLayouts.Communities.controls
 import AppLayouts.Communities.helpers
 import utils
 
+import QtModelsToolkit
+
 StatusDropdown {
     id: root
 
     property string communityId
     property var assetsModel
     property var collectiblesModel
+    property bool assetsLoading: false
     property bool isENSTab: true
     property bool ensCommunityPermissionsEnabled
     property string noDataText: {
@@ -163,6 +166,7 @@ StatusDropdown {
     }
 
     height: Math.min(implicitHeight, 425)
+    fillHeightOnBottomSheet: true
     width: d.defaultWidth
     leftPadding: 0
     rightPadding: 0
@@ -287,6 +291,7 @@ StatusDropdown {
             communityId: root.communityId
             assetsModel: root.assetsModel
             collectiblesModel: root.collectiblesModel
+            assetsLoading: root.assetsLoading
             noDataText: root.noDataText
 
             checkedKeys: root.usedTokens.map(entry => entry.key)
@@ -298,7 +303,7 @@ StatusDropdown {
                 value: true
 
                 when: d.extendedDropdownType === ExtendedDropdownContent.Type.Assets
-                      && root.assetsModel.rowCount() > 0
+                      && root.assetsModel.ModelCount.count > 0
                       && ModelUtils.get(root.assetsModel, 0, "category") === TokenCategories.Category.General
             }
 
@@ -306,7 +311,7 @@ StatusDropdown {
                 value: true
 
                 when: d.extendedDropdownType === ExtendedDropdownContent.Type.Collectibles
-                      && root.collectiblesModel.rowCount() > 0
+                      && root.collectiblesModel.ModelCount.count > 0
                       && ModelUtils.get(root.collectiblesModel, 0, "category") === TokenCategories.Category.General
             }
 

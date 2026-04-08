@@ -153,6 +153,8 @@ Item {
             ColumnLayout {
                 id: advancedSettings
 
+                Component.onCompleted: root.tokensStore.loadTokenLists()
+
                 function saveSettings() {
                     if (showCommunityAssetsSwitch.checked !== root.tokensStore.showCommunityAssetsInSend)
                         root.tokensStore.toggleShowCommunityAssetsInSend()
@@ -297,6 +299,7 @@ Item {
                     Layout.fillHeight: true
                     tokenListsModel: root.tokenListsModel
                     allNetworks: root.allNetworks
+                    loading: root.tokensStore.tokenListsLoading
                 }
             }
         }

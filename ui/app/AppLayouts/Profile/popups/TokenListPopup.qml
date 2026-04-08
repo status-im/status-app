@@ -13,6 +13,8 @@ import utils
 
 import shared.panels
 
+import QtModelsToolkit
+
 StatusDialog {
     id: root
 
@@ -35,6 +37,7 @@ StatusDialog {
     width: 521 // by design
     padding: 0
     horizontalPadding: Theme.padding
+    fillHeightOnBottomSheet: true    
 
     contentItem: StatusListView {
         id: list

@@ -370,6 +370,8 @@ StatusSectionLayout {
                 // solution soon.
 
                 assetsModel: rootStore.assetsModel
+                assetsLoading: rootStore.tokenListLoading
+                loadTokenList: rootStore.loadTokenList
 
                 collectiblesModel: rootStore.collectiblesModel
                 channelsModel: rootStore.chatCommunitySectionModule.model

@@ -22,6 +22,8 @@ StatusScrollView {
     id: root
 
     required property var assetsModel
+    property bool assetsLoading: false
+    property var loadTokenList: function() {}
     required property var collectiblesModel
     required property var channelsModel
 
@@ -255,6 +257,7 @@ StatusScrollView {
 
                 assetsModel: root.assetsModel
                 collectiblesModel: root.collectiblesModel
+                assetsLoading: root.assetsLoading
                 showTokenAmount: false
                 ensCommunityPermissionsEnabled: root.ensCommunityPermissionsEnabled
 
@@ -284,6 +287,7 @@ StatusScrollView {
                 }
 
                 onOpened: {
+                    root.loadTokenList()
                     usedTokens = d.dirtyValues.getTokenKeysAndAmounts()
                     usedEnsNames = d.dirtyValues.getEnsNames().filter(item => item !== ensDomainName)
                 }

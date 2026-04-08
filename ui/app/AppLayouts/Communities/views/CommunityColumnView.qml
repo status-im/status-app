@@ -552,6 +552,8 @@ Item {
             communitiesStore: root.communitiesStore
             tokensStore: root.walletAssetsStore.walletTokensStore
             assetsModel: root.store.assetsModel
+            assetsLoading: root.store.tokenListLoading
+            loadTokenList: root.store.loadTokenList
             collectiblesModel: root.store.collectiblesModel
             ensCommunityPermissionsEnabled: root.ensCommunityPermissionsEnabled
             permissionsModel: {

@@ -266,6 +266,7 @@ StatusDialog {
                     swapSide: SwapInputPanel.SwapSide.Pay
                     swapExchangeButtonWidth: swapExchangeButton.width
 
+                    tokenSelectorLoading: root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainLoading
                     bottomTextLoading: root.swapAdaptor.swapProposalLoading
 
                     onSelectedHoldingIdChanged: root.swapInputParamsForm.fromGroupKey = selectedHoldingId
@@ -311,6 +312,7 @@ StatusDialog {
                     swapSide: SwapInputPanel.SwapSide.Receive
                     swapExchangeButtonWidth: swapExchangeButton.width
 
+                    tokenSelectorLoading: root.swapAdaptor.walletAssetsStore.walletTokensStore.groupsForChainLoading
                     mainInputLoading: root.swapAdaptor.swapProposalLoading
                     bottomTextLoading: root.swapAdaptor.swapProposalLoading
 

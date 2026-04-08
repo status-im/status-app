@@ -6,6 +6,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import StatusQ
+import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core.Theme
 import StatusQ.Popups
@@ -24,6 +25,7 @@ Item {
     property string communityId
     property var assetsModel
     property var collectiblesModel
+    property bool assetsLoading: false
 
     property var checkedKeys: []
     property int type: ExtendedDropdownContent.Type.Assets
@@ -65,7 +67,7 @@ Item {
     }
 
     onFocusChanged: {
-        if(focus)
+        if(focus && !SQUtils.Utils.isMobile)
             searcher.forceActiveFocus()
     }
 
@@ -103,16 +105,17 @@ Item {
             return false
         }
 
+        readonly property bool dataTransformationsActive: ((root.type === ExtendedDropdownContent.Type.Assets && d.availableData) || 
+                    (root.type === ExtendedDropdownContent.Type.Collectibles && d.availableData)) && root.visible
+
         onCurrentModelChanged: {
             // Workaround for a bug in SortFilterProxyModel causing that model
             // is rendered incorrectly when sourceModel is changed to a model
             // with different set of roles
             filteredModel.active = false
-            filteredModel.active = true
-
+            // Reset filters when model changes
             searcher.text = ""
-            filteredModel.item.sourceModel = currentModel
-            contentLoader.item.model = filteredModel.item
+            filteredModel.active = Qt.binding(() => d.dataTransformationsActive)
         }
 
         readonly property Loader loader_: Loader {
@@ -125,7 +128,11 @@ Item {
                 return TokenCategories.getCategoryLabelForCollectible(category)
             }
 
+            active: d.dataTransformationsActive
+            asynchronous: true
+
             sourceComponent: SortFilterProxyModel {
+                sourceModel: d.currentModel
                 filters: [
                     ValueFilter {
                         roleName: "category"
@@ -431,7 +438,7 @@ Item {
             Layout.rightMargin: d.padding
             Layout.topMargin: root.state === d.depth1_ListState ? 0 : 8
 
-            visible: d.availableData
+            visible: d.availableData && !loadingIndicator.visible
             topPadding: 0
             bottomPadding: 0
             minimumHeight: 36
@@ -458,11 +465,11 @@ Item {
                 value: qsTr("Search %1").arg(d.currentItemName)
             }
             onVisibleChanged: {
-                if(visible)
+                if(visible && !SQUtils.Utils.isMobile)
                     forceActiveFocus()
             }
             Component.onCompleted: {
-                if(visible)
+                if(visible && !SQUtils.Utils.isMobile)
                     forceActiveFocus()
             }
         }
@@ -484,6 +491,13 @@ Item {
                                            d.currentItemSource)
         }
 
+        StatusLoadingIndicator {
+            id: loadingIndicator
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: Theme.padding
+            visible: (root.assetsLoading || filteredModel.status !== Loader.Ready) && root.type === ExtendedDropdownContent.Type.Assets
+        }
+
         Loader {
             id: contentLoader
 
@@ -499,6 +513,7 @@ Item {
         ListDropdownContent {
             id: assetDelegate
 
+            model: filteredModel.item
             availableData: d.availableData
             noDataText: root.noDataText
             areHeaderButtonsVisible: root.state === d.depth1_ListState
@@ -545,6 +560,7 @@ Item {
         ListDropdownContent {
             id: collectibleDelegate
 
+            model: filteredModel.status === Loader.Ready ? filteredModel.item : null
             availableData: d.availableData
             noDataText: root.noDataText
             areHeaderButtonsVisible: root.state === d.depth1_ListState
