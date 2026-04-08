@@ -213,7 +213,6 @@ QtObject:
       return
 
   proc init*(self: Service) =
-    self.setImageServerUrl()
     self.fetchContacts()
     self.doConnect()
 
