@@ -14,6 +14,11 @@ ColumnLayout {
 
     spacing: 0
 
+    Item {
+        Layout.fillHeight: true
+        Layout.verticalStretchFactor: 1
+    }
+
     Image {
         id: placeholderImage
 
@@ -25,14 +30,6 @@ ColumnLayout {
         Layout.fillHeight: true
         Layout.maximumHeight: Math.min(width, implicitHeight)
 
-        Layout.topMargin: {
-            const remainingHeight = root.height - height
-
-            return Math.max(0, remainingHeight / 2 -
-                            Math.max(0, baseText.implicitHeight -
-                                     remainingHeight / 2)) / 2
-        }
-
         source: Assets.png("chat/chat@2x")
     }
 
@@ -40,8 +37,6 @@ ColumnLayout {
         id: baseText
 
         Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.minimumHeight: implicitHeight
 
         text: qsTr("%1 to connect with or<br>invite your friends to Status.")
           .arg(Utils.getStyledLink(qsTr("Share your profile"), "#share", hoveredLink,
@@ -65,5 +60,10 @@ ColumnLayout {
             // Qt CSS doesn't support custom cursor shape
             cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
         }
+    }
+
+    Item {
+        Layout.fillHeight: true
+        Layout.verticalStretchFactor: 2
     }
 }
