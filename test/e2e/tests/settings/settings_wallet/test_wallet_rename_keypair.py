@@ -5,6 +5,7 @@ import allure
 import pytest
 from allure_commons._allure import step
 
+from configs import get_platform
 from constants.wallet import WalletRenameKeypair, WalletAccountPopup
 from helpers.settings_helper import skip_pcsc_error_popup_if_visible
 from helpers.wallet_helper import authenticate_with_password
@@ -19,6 +20,7 @@ from gui.main_window import MainWindow
     'emoji',
     [pytest.param('sunglasses')])
 @pytest.mark.parametrize('address_pair', [constants.wallet.private_key_address_pair_1])
+@pytest.mark.skipif(get_platform() != 'Linux', reason="Known issue with PCSD module on Windows with first run")
 def test_rename_keypair_test(main_screen: MainWindow, user_account, emoji: str, address_pair):
 
     with step('Get display name'):
