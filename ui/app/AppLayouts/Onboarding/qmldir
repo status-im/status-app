@@ -10,3 +10,4 @@ OnboardingStackView 1.0 OnboardingStackView.qml
 UnblockWithPukFlow 1.0 UnblockWithPukFlow.qml
 UnblockWithSeedphraseFlow 1.0 UnblockWithSeedphraseFlow.qml
 UseRecoveryPhraseFlow 1.0 UseRecoveryPhraseFlow.qml
+StartupOnboardingWrapper 1.0 StartupOnboardingWrapper.qml

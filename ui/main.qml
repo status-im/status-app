@@ -11,11 +11,6 @@ import mainui
 import AppLayouts.stores as AppStores
 import AppLayouts.Profile.stores
 
-import AppLayouts.Onboarding
-import AppLayouts.Onboarding.enums
-import AppLayouts.Onboarding.stores
-import AppLayouts.Onboarding.pages
-
 import StatusQ
 import StatusQ.Controls
 import StatusQ.Core
@@ -290,8 +285,15 @@ Window {
 
     function moveToAppMain() {
         Global.appIsReady = true
-
-        loader.sourceComponent = app
+        loader.setSource("app/mainui/AppMain.qml", {
+            "objectName": "appMain",
+            "utilsStore": applicationWindow.utilsStore,
+            "featureFlagsStore": applicationWindow.featureFlagsStore,
+            "languageStore": applicationWindow.languageStore,
+            "visible": Qt.binding(() => !startupOnboardingLoader.active),
+            "systemTrayIconAvailable": Qt.binding(() => systemTray.available),
+            "keychain": appKeychain
+        })
 
         d.runMockedKeycardControllerWindow()
     }
@@ -350,7 +352,7 @@ Window {
                 else
                     applicationWindow.showMinimized()
             // In case not logged in or loading, quit app
-            } else if (loader.sourceComponent != app) {
+            } else if (!loader.item) {
                 close.accepted = true
             }
             // In case user has set to close should quit app
@@ -541,6 +543,18 @@ Window {
     }
 
     Loader {
+        id: splashScreenLoader
+        anchors.fill: parent
+        sourceComponent: DidYouKnowSplashScreen {
+            messagesEnabled: true
+            infiniteLoading: true
+        }
+        onLoaded: {
+            applicationWindow.contentLoaded()
+        }
+    }
+
+    Loader {
         id: loader
 
         anchors.fill: parent
@@ -557,41 +571,21 @@ Window {
         an empty screen for a sec until it is loaded */
         onLoaded: {
             startupOnboardingLoader.active = false
-            if (item && item.objectName === "appMain" && d.showSkippedBiometricFlow) {
-                // IN case of Login via syncing, request to show Biometrics Page after onboarding
-                item.showEnableBiometricsFlow()
-            }
-        }
-    }
-
-    Component {
-        id: app
-        AppMain {
-            objectName: "appMain"
-
-            utilsStore: applicationWindow.utilsStore
-            featureFlagsStore: applicationWindow.featureFlagsStore
-            languageStore: applicationWindow.languageStore
-
-            visible: !startupOnboardingLoader.active
-
-            systemTrayIconAvailable: systemTray.available
-
-            keychain: appKeychain
-            Component.onCompleted: {
+            splashScreenLoader.active = false
+            if (item) {
                 applicationWindow.contentLoaded()
+                if (d.showSkippedBiometricFlow) {
+                    // IN case of Login via syncing, request to show Biometrics Page after onboarding
+                    item.showEnableBiometricsFlow()
+                }
             }
         }
-    }
 
-    Component {
-        id: splashScreenV2
-        DidYouKnowSplashScreen {
-            objectName: "splashScreenV2"
-            readonly property bool backAvailableHint: false
-            property bool runningProgressAnimation
-            messagesEnabled: true
-            infiniteLoading: runningProgressAnimation
+        onStatusChanged: {
+            if (status === Loader.Error) {
+                console.error("Failed to load AppMain.qml")
+                Qt.quit()
+            }
         }
     }
 
@@ -605,7 +599,32 @@ Window {
         anchors.bottomMargin: parent.SafeArea.margins.bottom
         active: !applicationWindow.skipOnboarding
 
-        sourceComponent: onboardingV2
+        source: active ? "app/AppLayouts/Onboarding/StartupOnboardingWrapper.qml" : ""
+
+        onLoaded: {
+            item.featureFlagsStore = applicationWindow.featureFlagsStore
+            item.languageStore = applicationWindow.languageStore
+            item.keychain = appKeychain
+            item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
+            item.biometricFlowPending = Qt.binding(() => applicationWindow.biometricFlowPending)
+
+            item.appReady.connect(() => {
+                applicationWindow.appIsReady = true
+            })
+            item.storeAppStateRequested.connect(applicationWindow.storeAppState)
+            item.requestMoveToAppMain.connect(moveToAppMain)
+            item.biometricFlowStarted.connect(() => {
+                applicationWindow.biometricFlowPending = true
+            })
+            item.skippedBiometricFlow.connect((available) => {
+                d.showSkippedBiometricFlow = available
+            })
+            item.profileSelected.connect((keyUid) => {
+                localAppSettings.selectedProfileKeyUid = keyUid
+            })
+            splashScreenLoader.active = false
+            applicationWindow.contentLoaded()
+        }
     }
 
     Keychain {
@@ -619,7 +638,7 @@ Window {
         onCredentialSaved: function (account) {
             applicationWindow.biometricFlowPending = false
             // load appMain if not already after biometric flow is complete
-            if(loader.sourceComponent !== app && applicationWindow.appIsReady) {
+            if(!loader.item && applicationWindow.appIsReady) {
                 moveToAppMain()
             }
             localAccountSettings.storeToKeychainValue = Constants.keychain.storedValue.store
@@ -628,130 +647,9 @@ Window {
         onGetCredentialRequestCompleted: function(status, secret) {
             // Handle Failure to safely move on to appMain
             if (status !== Keychain.StatusSuccess &&
-                    loader.sourceComponent !== app &&
+                    !loader.item &&
                     applicationWindow.appIsReady) {
                 moveToAppMain()
-            }
-        }
-    }
-
-    Component {
-        id: onboardingV2
-
-        OnboardingLayout {
-            id: onboardingLayout
-            objectName: "startupOnboardingLayout"
-
-            isKeycardEnabled: featureFlagsStore.keycardEnabled
-            lastSelectedProfileKeyUid: localAppSettings.selectedProfileKeyUid
-            networkChecksEnabled: true
-
-            onboardingStore: OnboardingStore {
-                id: onboardingStore
-
-                property bool loginRequestSent: false
-
-                onAppLoaded: {
-                    applicationWindow.appIsReady = true
-                    applicationWindow.storeAppState()
-
-                    // only load appMain if biometrics flow is complete
-                    if(!applicationWindow.biometricFlowPending) {
-                        moveToAppMain()
-                    }
-                }
-                onAccountLoginError: function (error, wrongPassword) {
-                    onboardingStore.loginRequestSent = false
-                    onboardingLayout.unwindToLoginScreen() // error handled internally
-                }
-                onSaveBiometricsRequested: (account, credential) => {
-                    applicationWindow.biometricFlowPending = true
-                    appKeychain.saveCredential(account, credential)
-                }
-                onDeleteBiometricsRequested: (account) => {
-                    appKeychain.deleteCredential(account)
-                }
-
-                onKeycardStateChanged: {
-                    if (onboardingStore.loginRequestSent && keycardState === Onboarding.KeycardState.NotEmpty) {
-                        stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate) // we unwind on error
-                    } else if(keycardState === Onboarding.KeycardState.Cancelled) {
-                        onboardingLayout.unwindToLoginScreen()
-                    }
-                }
-            }
-
-            currentLanguage: languageStore.currentLanguage
-            availableLanguages: languageStore.availableLanguages
-            onChangeLanguageRequested: (newLanguageCode) => languageStore.changeLanguage(newLanguageCode, true /*shouldRetranslate*/)
-
-            keychain: appKeychain
-
-            privacyModeFeatureEnabled: applicationWindow.featureFlagsStore.privacyModeFeatureEnabled
-
-            onFinished: function(flow, data) {
-                const error = onboardingStore.finishOnboardingFlow(flow, data)
-
-                if (error !== "") {
-                    // We should never be here since everything should be validated already
-                    console.error("!!! ONBOARDING FINISHED WITH ERROR:", error)
-                    return
-                }
-
-                // We use a custom handler for LoginWithLostKeycardSeedphrase flow.
-                // At the moment of implementation, this was the simplest move to make it work in the given code.
-                // Ideally, ConvertKeycardAccountPage should be created inside the OnboardingLayout and not here,
-                // but this would require more changes and eventually give more inconsistencies.
-                if (flow === Onboarding.OnboardingFlow.LoginWithLostKeycardSeedphrase) {
-                    stack.push(convertingKeycardAccountPage)
-                } else {
-                    stack.push(splashScreenV2, {runningProgressAnimation: true})
-                }
-            }
-
-            onProfileSelected: function (keyUid) {
-                if (localAppSettings.selectedProfileKeyUid === keyUid) {
-                    return
-                }
-                localAppSettings.selectedProfileKeyUid = keyUid
-                if (SQUtils.Utils.isMobile) {
-                    onboardingStore.resetKeycardProgressStates()
-                }
-            }
-
-            onLoginRequested: function (keyUid, method, data) {
-                let selectedProfile = SQUtils.ModelUtils.getByKey(onboardingStore.loginAccountsModel, "keyUid", keyUid)
-                if (!selectedProfile) {
-                    console.error("cannot resolve selected profile")
-                    return
-                }
-
-                stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate) // we unwind on error
-
-                onboardingStore.loginRequestSent = true
-                onboardingStore.loginRequested(keyUid, method, data)
-            }
-
-            onSkippedBiometricFlow: () => {
-                                        d.showSkippedBiometricFlow = appKeychain.available
-                                    }
-
-            Component.onCompleted: {
-                applicationWindow.contentLoaded()
-            }
-
-            Component {
-                id: convertingKeycardAccountPage
-
-                ConvertKeycardAccountPage {
-                    convertKeycardAccountState: onboardingStore.convertKeycardAccountState
-                    onRestartRequested: {
-                        SystemUtils.restartApplication()
-                    }
-                    onBackToLoginRequested: {
-                        onboardingLayout.unwindToLoginScreen()
-                    }
-                }
             }
         }
     }
