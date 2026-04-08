@@ -463,6 +463,10 @@ QtObject:
   proc emitOpenUrlSignal*(self: View, url: string) =
     self.openUrl(url)
 
+  proc navigateToMessageDetails*(self: View) {.signal.}
+  proc emitNavigateToMessageDetailsSignal*(self: View) =
+    self.navigateToMessageDetails()
+
   proc wcLinkActivated*(self: View, url: string) {.signal.}
 
   proc loadMembersForSectionId*(self: View, communityId: string) {.slot.} =

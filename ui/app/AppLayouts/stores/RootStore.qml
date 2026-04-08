@@ -102,6 +102,16 @@ QtObject {
     function activateStatusDeepLink(link) {
         if(!internal.mainModuleInst)
             return
+
+        if (!link)
+            return
+
+        if (link.includes("/cc/") ||
+                link.includes("/p/") ||
+                link.includes("/g/")) {
+            root.setNavToMsgDetailsFlag(true)
+        }
+
         internal.mainModuleInst.activateStatusDeepLink(link)
     }
 
@@ -188,6 +198,10 @@ QtObject {
 
             function onOpenUrl(url) {
                 root.openUrl(url)
+            }
+
+            function onNavigateToMessageDetails() {
+                root.setNavToMsgDetailsFlag(true)
             }
 
             function onWcLinkActivated(url) {

@@ -85,6 +85,9 @@ import app/core/tasks/threadpool
 
 const TOAST_MESSAGE_VISIBILITY_DURATION_IN_MS = 5000 # 5 seconds
 const STATUS_URL_ENS_RESOLVE_REASON = "StatusUrl"
+const STATUS_INTERNAL_DEEP_LINK_PREFIX = "status-app://"
+const STATUS_EXTERNAL_DEEP_LINK_PREFIX = "https://status.app/"
+const STATUS_EXTERNAL_DEEP_LINK_PREFIX_HTTP = "http://status.app/"
 
 type
   SpectateRequest = object
@@ -1840,6 +1843,71 @@ proc switchToContactOrDisplayUserProfile[T](self: Module[T], publicKey: string) 
   else:
     self.view.emitDisplayUserProfileSignal(publicKey)
 
+proc extractStatusDeepLinkPath(statusDeepLink: string): string =
+  if statusDeepLink.startsWith(STATUS_INTERNAL_DEEP_LINK_PREFIX):
+    return statusDeepLink[STATUS_INTERNAL_DEEP_LINK_PREFIX.len .. ^1]
+
+  if statusDeepLink.startsWith(STATUS_EXTERNAL_DEEP_LINK_PREFIX):
+    return statusDeepLink[STATUS_EXTERNAL_DEEP_LINK_PREFIX.len .. ^1]
+
+  if statusDeepLink.startsWith(STATUS_EXTERNAL_DEEP_LINK_PREFIX_HTTP):
+    return statusDeepLink[STATUS_EXTERNAL_DEEP_LINK_PREFIX_HTTP.len .. ^1]
+
+proc extractDeepLinkValueUntilSeparator(value: string): string =
+  if value.len == 0:
+    return ""
+
+  var endIdx = value.len
+  for separator in ['?', '#', '&']:
+    let idx = value.find(separator)
+    if idx != -1 and idx < endIdx:
+      endIdx = idx
+
+  return value[0 ..< endIdx]
+
+proc extractOneToOneChatIdFromDeepLink(statusDeepLink: string): string =
+  let deepLinkPath = extractStatusDeepLinkPath(statusDeepLink)
+  if not deepLinkPath.startsWith("p/"):
+    return ""
+
+  return extractDeepLinkValueUntilSeparator(deepLinkPath["p/".len .. ^1])
+
+proc extractGroupChatIdFromDeepLink(statusDeepLink: string): string =
+  let deepLinkPath = extractStatusDeepLinkPath(statusDeepLink)
+  if not deepLinkPath.startsWith("g/"):
+    return ""
+
+  const groupChatQueryParam = "a2="
+  let idx = deepLinkPath.find(groupChatQueryParam)
+  if idx == -1:
+    return ""
+
+  return extractDeepLinkValueUntilSeparator(deepLinkPath[idx + groupChatQueryParam.len .. ^1])
+
+proc activateChatDeepLink[T](self: Module[T], statusDeepLink: string): bool =
+  let oneToOneChatId = extractOneToOneChatIdFromDeepLink(statusDeepLink)
+  if oneToOneChatId.len > 0:
+    self.view.emitNavigateToMessageDetailsSignal()
+    self.getChatSectionModule().switchToOrCreateOneToOneChat(oneToOneChatId)
+    return true
+
+  let groupChatId = extractGroupChatIdFromDeepLink(statusDeepLink)
+  if groupChatId.len == 0:
+    return false
+
+  let personalSectionId = singletonInstance.userProfile.getPubKey()
+  if self.getActiveSectionId() != personalSectionId:
+    self.setActiveSectionById(personalSectionId)
+
+  let chatSectionModule = self.getChatSectionModule()
+  if chatSectionModule.communityContainsChat(groupChatId):
+    self.view.emitNavigateToMessageDetailsSignal()
+    chatSectionModule.setActiveItem(groupChatId)
+  else:
+    warn "Unable to resolve private group chat deep link", groupChatId
+
+  return true
+
 method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, communityId: string, channelId: string,
     url: string, userId: string) =
 
@@ -2075,6 +2143,8 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
     return
   if statusDeepLink.contains("/wc?"):
     self.view.wcLinkActivated(statusDeepLink)
+    return
+  if self.activateChatDeepLink(statusDeepLink):
     return
   let urlData = self.sharedUrlsModule.parseSharedUrl(statusDeepLink)
   if urlData.notASupportedStatusLink:

@@ -264,7 +264,7 @@ StatusSectionLayout {
         //
         // NOTE: It only affects behavior in portrait mode
         if(root.navToMsgDetails) {
-            root.goToNextPanel()
+            root.currentIndex = StatusSectionLayout.CentralPanel
             root.navToMsgDetailsRequested(false)
         }
     }
