@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 
 /*!
      \qmltype StatusSectionLayout
@@ -181,10 +182,18 @@ LayoutChooser {
             portraitView.decrementCurrentIndex()
     }
 
-    criteria: [
-        root.height > root.width && root.width < root.implicitWidth, // Portrait mode
-        true // Defaults to landscape mode
-    ]
+    criteria: {
+        // On mobile it's necessary to use window height because virtual keyboard may make
+        // the content shorter, triggering the opposite mode. Ideally InputMethod could be
+        // used to compensate keyboard height but it's not providing reliable value in
+        // the current configuration.
+        const height = Utils.isMobile ? root.Window.height : root.height
+
+        return [
+            height > root.width && root.width < root.implicitWidth, // Portrait mode
+            true // Defaults to landscape mode
+        ]
+    }
 
     layoutChoices: [
         portraitView,
