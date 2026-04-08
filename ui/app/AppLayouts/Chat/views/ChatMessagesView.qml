@@ -455,6 +455,21 @@ Item {
             return null
         }
         onHeaderChanged: chatLogView.positionViewAtBeginning()
+
+        property int prevHeight: height
+
+        onHeightChanged: {
+            const heightDiff = prevHeight - height
+
+            // Keep position at the end (positionViewAtBeginning must be used bc
+            // BottomToTop layout) on resize when it was at the end before.
+            // Without this workaround, when the keyboard opens or window is
+            // resized, the position is slightly changed and not at the end anymore.
+            if (contentHeight - (d.scrollY + height) <= heightDiff)
+                Qt.callLater(positionViewAtBeginning)
+
+            prevHeight = height
+        }
     }
 
     StatusMessageDialog {
