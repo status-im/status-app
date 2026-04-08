@@ -29,6 +29,7 @@ from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import messaging_names, communities_names
 from gui.screens.community import CommunityScreen, BannedCommunityScreen
+from helpers.chat_helper import skip_message_backup_popup_if_visible
 from scripts.tools.image import Image
 from scripts.utils.parsers import remove_tags
 
@@ -60,6 +61,7 @@ class LeftPanel(QObject):
         for attempt in range(1, attempts + 1):
             self._chat_list_item.wait_until_appears()
             self._chat_list_item.click()
+            skip_message_backup_popup_if_visible()
             try:
                 return ChatView().wait_until_appears()
             except Exception as e:

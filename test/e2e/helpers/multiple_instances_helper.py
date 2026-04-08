@@ -23,31 +23,14 @@ def switch_to_aut(aut, main_window):
 
 @allure.step('Authorize user in AUT')
 def authorize_user_in_aut(aut, main_window, user_account):
-    """
-    Authorize user in the given AUT.
-    
-    Args:
-        aut: The AUT to authorize user in
-        main_window: MainWindow instance
-        user_account: UserAccount to authorize
-    """
     aut.attach()
     main_window.wait_until_appears(configs.timeouts.APP_LOAD_TIMEOUT_MSEC).prepare()
     main_window.authorize_user(user_account)
+    main_window.minimize()
 
 
 @allure.step('Get chat key from user')
 def get_chat_key(aut, main_window):
-    """
-    Get chat key from the current user.
-    
-    Args:
-        aut: The AUT to get chat key from
-        main_window: MainWindow instance
-        
-    Returns:
-        str: Chat key of the user
-    """
     aut.attach()
     main_window.prepare()
     profile_popup = main_window.left_panel.open_online_identifier().open_profile_popup_from_online_identifier()

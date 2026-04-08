@@ -21,14 +21,11 @@ from gui.screens.messages import MessagesScreen
 from scripts.utils.generators import random_text_message
 
 
-@pytest.mark.case(703014, 738735, 738736, 738739, 738740)
 @pytest.mark.critical
-# TODO: https://github.com/status-im/status-desktop/issues/19285
 @pytest.mark.smoke
 @pytest.mark.parametrize('community_name, domain_link, domain_link_2',
                          [pytest.param('Status', 'status.app', 'github.com')
                           ])
-# TODO: add clearing chat history action
 def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain_link, domain_link_2):
     user_one: UserAccount = RandomUser()
     user_two: UserAccount = RandomUser()
@@ -48,6 +45,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 authorize_user_in_aut(aut, main_window, account)
 
         with step(f'User {user_two.name}, get chat key'):
+            switch_to_aut(aut_two, main_window)
             user_2_chat_key = get_chat_key(aut_two, main_window)
             main_window.minimize()
 
@@ -67,6 +65,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
             main_window.minimize()
 
         with step(f'User {user_three.name}, get chat key'):
+            switch_to_aut(aut_three, main_window)
             user_3_chat_key = get_chat_key(aut_three, main_window)
             main_window.minimize()
 

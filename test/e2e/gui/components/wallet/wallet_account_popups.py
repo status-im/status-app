@@ -1,3 +1,5 @@
+import squish
+
 from constants.wallet import *
 from gui.screens.settings_keycard import KeycardSettingsView
 from gui.screens.settings_wallet import *
@@ -235,6 +237,7 @@ class AddNewAccountPopup(QObject):
         self._seed_phrase_status_input = QObject(names.addAccountPopup_ImportedSeedPhraseKeyName_StatusInput)
         self._private_key_status_input = QObject(names.addAccountPopup_PrivateKeyName_StatusInput)
         self._already_added_error = QObject(names.enterSeedPhraseInvalidSeedText_StatusBaseText)
+        self._seed_phrase_scroll = Scroll(names.scrollView_StatusScrollView)
 
     @allure.step('Wait until appears {0}')
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
@@ -293,13 +296,22 @@ class AddNewAccountPopup(QObject):
             self._seed_phrase_24_words_button.click()
         else:
             raise RuntimeError("Wrong amount of seed words", len(seed_phrase_words))
+        if len(seed_phrase_words) > 12:
+            self._seed_phrase_word_text_edit.real_name['objectName'] = 'enterSeedPhraseInputField1'
+            self._seed_phrase_scroll.vertical_scroll_up(
+                self._seed_phrase_word_text_edit, timeout_sec=10)
         for count, word in enumerate(seed_phrase_words, start=1):
             self._seed_phrase_word_text_edit.real_name['objectName'] = f'enterSeedPhraseInputField{count}'
+            if len(seed_phrase_words) > 12:
+                self._seed_phrase_scroll.vertical_scroll_down(
+                    self._seed_phrase_word_text_edit, timeout_sec=10)
             self._seed_phrase_word_text_edit.text = word
         return self
 
     @allure.step('Enter seed phrase name')
     def enter_seed_phrase_name(self, seed_phrase_name: str):
+        self._seed_phrase_scroll.vertical_scroll_down(
+            self._seed_phrase_phrase_key_name_text_edit, timeout_sec=10)
         self._seed_phrase_phrase_key_name_text_edit.text = seed_phrase_name
         return self
 
@@ -308,10 +320,14 @@ class AddNewAccountPopup(QObject):
         self._generate_master_key_button.click()
         BackUpYourSeedPhrasePopUp().back_up_seed_phrase(name)
 
+
     @allure.step('Get text of error')
     def get_already_added_error(self):
-        assert self._already_added_error.is_visible
-        return self._already_added_error.object.text
+        self._seed_phrase_scroll.vertical_scroll_down(
+            self._already_added_error, timeout_sec=10)
+
+        text = str(self._already_added_error.object.text)
+        return text
 
 
 class GeneratedAddressesList(QObject):

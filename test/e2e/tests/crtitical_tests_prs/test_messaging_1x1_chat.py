@@ -21,9 +21,7 @@ from gui.main_window import MainWindow
 from scripts.utils.generators import random_text_message
 
 
-@pytest.mark.case(703087, 738732, 738734, 738742, 738744, 738745)
 @pytest.mark.critical
-# TODO: https://github.com/status-im/status-desktop/issues/19285
 @pytest.mark.smoke
 def test_1x1_chat_add_contact_in_settings(multiple_instances):
     user_one: UserAccount = RandomUser()
@@ -41,10 +39,12 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
                 authorize_user_in_aut(aut, main_window, account)
 
         with step(f'User {user_two.name}, get chat key'):
+            switch_to_aut(aut_two, main_window)
             chat_key = get_chat_key(aut_two, main_window)
             main_window.minimize()
 
         with step(f'User {user_one.name}, send contact request to {user_two.name}'):
+            switch_to_aut(aut_one, main_window)
             contacts_settings = send_contact_request_from_settings(aut_one, main_window, chat_key, f'Hello {user_two.name}')
 
         with step('Verify that contact request was sent and is in pending requests'):
@@ -79,7 +79,6 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
 
         with step(f'Verify that contact appeared in contacts list of {user_two.name} in messaging settings'):
-            # Test is on a chat screen, so we need to open settings from left panel
             contacts_settings = main_window.left_panel.open_settings().left_panel.open_messaging_settings().open_contacts_settings()
             contacts_settings.open_contacts()
             assert str(contacts_settings.section_header.object.text) == 'Contacts'
@@ -96,7 +95,6 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             assert len(contacts_settings.contact_items) == 1
 
         with step(f'Verify that 1X1 chat with {user_two.name} appeared for {user_one.name}'):
-            # Test is in contact settings, so we need to open messages from left panel
             messages_screen = main_window.left_panel.open_messages_screen()
             assert user_two.name in messages_screen.left_panel.get_chats_names
             main_window.minimize()
@@ -119,12 +117,11 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             message = chat.find_message_by_text(chat_message1, 0)
             additional_text = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(1, 21))
             time.sleep(5)
-        # TODO: https://github.com/status-im/status-desktop/issues/17757
-        # with step(f'User {user_one.name}, click address / ens link in message and verify send modal appears'):
-        #     send_modal = chat.open_send_modal_from_link(chat_message1)
-        #     assert str(send_modal.send_modal_recipient_panel.object.selectedRecipientAddress) == chat_message1
+
+        with step(f'User {user_one.name}, click address / ens link in message and verify send modal appears'):
+            send_modal = chat.open_send_modal_from_link(chat_message1)
+            assert str(send_modal.send_modal_recipient_panel.object.selectedRecipientAddress) == chat_message1
             left_panel_chat.click()
-            skip_message_backup_popup_if_visible()
 
         with step(f'User {user_one.name}, edit message and verify it was changed'):
             message_actions = message.hover_message()
@@ -134,6 +131,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
                 f"Message text is not found in last message"
             assert message_object.delegate_button.object.isEdited, \
                 f"Message status was not changed to edited"
+            main_window.minimize()
 
 
         with step(f'User {user_two.name} opens 1x1 chat with {user_one.name}'):
@@ -180,8 +178,6 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             ), f"Message text is not found in the last message"
 
         with step(f'User {user_one.name}, received emoji from {user_two.name}'):
-            # Re-fetch message object inside lambda to ensure we always check the latest state
-            # This handles timing issues on Windows CI VMs where message propagation may be delayed
             assert driver.waitFor(
                 lambda: (
                     len(messages_screen.chat.messages(1)) > 0 and

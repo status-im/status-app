@@ -795,9 +795,8 @@ mainWallet_AddEditAccountPopup_18WordsButton = {"container": mainWallet_AddEditA
                                                 "objectName": "18SeedButton", "type": "StatusSwitchTabButton"}
 mainWallet_AddEditAccountPopup_24WordsButton = {"container": mainWallet_AddEditAccountPopup_Content,
                                                 "objectName": "24SeedButton", "type": "StatusSwitchTabButton"}
-enterSeedPhraseInvalidSeedText_StatusBaseText = {"container": statusDesktop_mainWindow_overlay,
-                                                 "objectName": "enterSeedPhraseInvalidSeedText",
-                                                 "type": "StatusBaseText", "visible": True}
+
+enterSeedPhraseInvalidSeedText_StatusBaseText = {"container": statusDesktop_mainWindow_overlay, "objectName": "enterSeedPhraseInvalidSeedText", "type": "StatusBaseText", "visible": True}
 addAccountPopup_ImportedSeedPhraseKeyName_StatusInput = {"container": statusDesktop_mainWindow_overlay,
                                                          "objectName": "AddAccountPopup-ImportedSeedPhraseKeyName",
                                                          "type": "StatusInput", "visible": True}

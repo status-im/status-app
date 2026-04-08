@@ -10,6 +10,7 @@ import driver
 from constants import UserAccount, RandomCommunity
 from gui.main_window import MainWindow
 from gui.screens.messages import MessagesScreen
+from helpers.multiple_instances_helper import authorize_user_in_aut, switch_to_aut
 from scripts.utils.parsers import remove_tags
 
 
@@ -162,13 +163,10 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
     with multiple_instances(user_data=user_data_one) as aut_one, multiple_instances(user_data=user_data_two) as aut_two:
         with step(f'Launch multiple instances with authorized users {user_one.name} and {user_two.name}'):
             for aut, account in zip([aut_one, aut_two], [user_one, user_two]):
-                aut.attach()
-                main_screen.wait_until_appears(configs.timeouts.APP_LOAD_TIMEOUT_MSEC).prepare()
-                main_screen.authorize_user(account)
+                authorize_user_in_aut(aut, main_screen, account)
 
         with step(f'User {user_one.name}, create non-restricted channel and can send message'):
-            aut_one.attach()
-            main_screen.prepare()
+            switch_to_aut(aut_one, main_screen)
             community_screen = main_screen.left_panel.open_community('My awesome community')
             community_screen.create_channel(channel_name, channel_description, emoji=None)
             community_screen.left_panel.select_channel(channel_name)
@@ -180,8 +178,7 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
         with step(
                 f'User {user_two.name}, select non-restricted channel, verify that can view other messages and also '
                 f'can send message'):
-            aut_two.attach()
-            main_screen.prepare()
+            switch_to_aut(aut_two, main_screen)
             community_screen = main_screen.left_panel.open_community('My awesome community')
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
@@ -194,8 +191,7 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
             main_screen.minimize()
 
         with step(f'User {user_one.name}, verify that can see sent by member message'):
-            aut_one.attach()
-            main_screen.prepare()
+            switch_to_aut(aut_one, main_screen)
             community_screen = main_screen.left_panel.open_community('My awesome community')
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
