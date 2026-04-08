@@ -93,6 +93,13 @@ QtObject {
 
     property var communityItemsModel: chatCommunitySectionModule.model
 
+    readonly property bool tokenListLoading: !!communitiesModuleInst ? communitiesModuleInst.tokenListLoading : false
+
+    function loadTokenList() {
+        if (communitiesModuleInst)
+            communitiesModuleInst.loadTokenList()
+    }
+
     property var assetsModel: SortFilterProxyModel {
         sourceModel: communitiesModuleInst.tokenList
 

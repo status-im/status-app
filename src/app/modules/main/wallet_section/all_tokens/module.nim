@@ -69,6 +69,11 @@ method load*(self: Module) =
     self.view.currencyFormatsUpdated()
   self.events.on(SIGNAL_AUTO_REFRESH_TOKENS_UPDATED) do(e:Args):
     self.view.emitAutoRefreshTokensListsChanged()
+  self.events.on(SIGNAL_TOKEN_LISTS_LOADED) do(e: Args):
+    self.view.setTokenListsLoading(false)
+    self.view.tokenListsUpdated()
+  self.events.on(SIGNAL_GROUPS_FOR_CHAIN_LOADED) do(e: Args):
+    self.view.onGroupsForChainLoaded()
 
   self.controller.init()
   self.view.load()
@@ -128,8 +133,8 @@ method getTokenMarketValuesDataSource*(self: Module): TokenMarketValuesDataSourc
     getTokensMarketValuesLoading: proc(): bool = self.controller.getTokensMarketValuesLoading(),
   )
 
-method buildGroupsForChain*(self: Module, chainId: int): bool =
-  return self.controller.buildGroupsForChain(chainId)
+method buildGroupsForChain*(self: Module, chainId: int) =
+  self.controller.buildGroupsForChain(chainId)
 
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: Module, key: string): TokenItem =
   return self.controller.getTokenByKeyOrGroupKeyFromAllTokens(key)
@@ -195,3 +200,7 @@ method getMandatoryTokenGroupKeys*(self: Module): seq[string] =
 
 method isChainSupportedForSwapViaParaswap*(self: Module, chainId: int): bool =
   return self.controller.isChainSupportedForSwapViaParaswap(chainId)
+
+method loadTokenLists*(self: Module) =
+  self.view.setTokenListsLoading(true)
+  self.controller.loadTokenLists()

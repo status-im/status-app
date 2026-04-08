@@ -107,8 +107,15 @@ QtObject {
     readonly property bool showCommunityAssetsInSend: true //root._allTokensModule.showCommunityAssetWhenSendingTokens
     readonly property bool displayAssetsBelowBalance: root._allTokensModule.displayAssetsBelowBalance
     readonly property bool autoRefreshTokensLists: root._allTokensModule.autoRefreshTokensLists
+    readonly property bool tokenListsLoading: !!root._allTokensModule ? root._allTokensModule.tokenListsLoading : false
+    readonly property bool groupsForChainLoading: !!root._allTokensModule ? root._allTokensModule.groupsForChainLoading : false
 
     signal displayAssetsBelowBalanceThresholdChanged()
+
+    function loadTokenLists() {
+        if (root._allTokensModule)
+            root._allTokensModule.loadTokenLists()
+    }
 
     function buildGroupsForChain(chainId, mandatoryKeys) {
         root._allTokensModule.buildGroupsForChain(chainId, mandatoryKeys)

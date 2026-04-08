@@ -70,8 +70,8 @@ proc getHistoricalDataForToken*(self: Controller, tokenKey: string, currency: st
 proc getAllTokenLists*(self: Controller): var seq[TokenListItem] =
   return self.tokenService.getAllTokenLists()
 
-proc buildGroupsForChain*(self: Controller, chainId: int): bool =
-  return self.tokenService.buildGroupsForChain(chainId)
+proc buildGroupsForChain*(self: Controller, chainId: int) =
+  self.tokenService.buildGroupsForChain(chainId)
 
 proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Controller, key: string): TokenItem =
   return self.tokenService.getTokenByKeyOrGroupKeyFromAllTokens(key)
@@ -152,3 +152,12 @@ proc getMandatoryTokenGroupKeys*(self: Controller): seq[string] =
 
 proc isChainSupportedForSwapViaParaswap*(self: Controller, chainId: int): bool =
   return self.tokenService.isChainSupportedForSwapViaParaswap(chainId)
+
+proc loadTokenLists*(self: Controller) =
+  self.tokenService.asyncFetchAllTokenLists()
+
+proc getTokenListsLoading*(self: Controller): bool =
+  return self.tokenService.getTokenListsLoading()
+
+proc getGroupsForChainLoading*(self: Controller): bool =
+  return self.tokenService.getGroupsForChainLoading()

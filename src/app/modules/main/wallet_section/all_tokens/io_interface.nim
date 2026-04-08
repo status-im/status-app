@@ -81,7 +81,7 @@ method getTokenPreferencesJson*(self: AccessInterface): string {.base.} =
 method viewDidLoad*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method buildGroupsForChain*(self: AccessInterface, chainId: int): bool {.base.} =
+method buildGroupsForChain*(self: AccessInterface, chainId: int) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getTokenByKeyOrGroupKeyFromAllTokens*(self: AccessInterface, key: string): TokenItem {.base.} =
@@ -136,4 +136,7 @@ method getMandatoryTokenGroupKeys*(self: AccessInterface): seq[string] {.base.} 
   raise newException(ValueError, "No implementation available")
 
 method isChainSupportedForSwapViaParaswap*(self: AccessInterface, chainId: int): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method loadTokenLists*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")

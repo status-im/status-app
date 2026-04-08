@@ -11,6 +11,9 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       marketHistoryIsLoading: bool
+      tokenListsLoading: bool
+      groupsForChainLoading: bool
+      pendingMandatoryGroupKeys: seq[string]
 
       tokenListsModel: TokenListsModel
       tokenGroupsModel: TokenGroupsModel # refers to tokens of interest for active networks mode
@@ -111,16 +114,29 @@ QtObject:
     read = getTokenGroupsModel
     notify = tokenGroupsModelChanged
 
-  proc buildGroupsForChain*(self: View, chainId: int, mandatoryGroupKeysString: string) {.slot.} =
-    if not self.delegate.buildGroupsForChain(chainId):
+  proc groupsForChainLoadingChanged*(self: View) {.signal.}
+  proc getGroupsForChainLoading(self: View): bool {.slot.} =
+    return self.groupsForChainLoading
+  proc setGroupsForChainLoading*(self: View, loading: bool) =
+    if self.groupsForChainLoading == loading:
       return
-    var mandatoryGroupKeys: seq[string] = @[]
-    if mandatoryGroupKeysString.len > 0:
-      mandatoryGroupKeys = mandatoryGroupKeysString.split("$$")
-    else:
-      mandatoryGroupKeys = self.delegate.getMandatoryTokenGroupKeys()
+    self.groupsForChainLoading = loading
+    self.groupsForChainLoadingChanged()
+  QtProperty[bool] groupsForChainLoading:
+    read = getGroupsForChainLoading
+    notify = groupsForChainLoadingChanged
 
-    self.tokenGroupsForChainModel.modelsUpdated(resetModelSize = true, mandatoryGroupKeys)
+  proc buildGroupsForChain*(self: View, chainId: int, mandatoryGroupKeysString: string) {.slot.} =
+    if mandatoryGroupKeysString.len > 0:
+      self.pendingMandatoryGroupKeys = mandatoryGroupKeysString.split("$$")
+    else:
+      self.pendingMandatoryGroupKeys = self.delegate.getMandatoryTokenGroupKeys()
+    self.setGroupsForChainLoading(true)
+    self.delegate.buildGroupsForChain(chainId)
+
+  proc onGroupsForChainLoaded*(self: View) =
+    self.setGroupsForChainLoading(false)
+    self.tokenGroupsForChainModel.modelsUpdated(resetModelSize = true, self.pendingMandatoryGroupKeys)
     self.tokenGroupsForChainModelChanged()
 
   proc getTokenByKeyOrGroupKeyFromAllTokens*(self: View, key: string): string {.slot.} =
@@ -130,8 +146,11 @@ QtObject:
     return $(%* token)
 
   proc modelsUpdated*(self: View) =
-    self.tokenListsModel.modelsUpdated()
     self.tokenGroupsModel.modelsUpdated()
+
+  proc tokenListsUpdated*(self: View) =
+    self.tokenListsModel.modelsUpdated()
+    self.tokenListsModelChanged()
 
   proc tokensMarketValuesUpdated*(self: View) =
     self.tokenGroupsModel.tokensMarketValuesUpdated()
@@ -236,6 +255,21 @@ QtObject:
   QtProperty[bool] autoRefreshTokensLists:
     read = getAutoRefreshTokensLists
     notify = autoRefreshTokensListsChanged
+
+  proc tokenListsLoadingChanged*(self: View) {.signal.}
+  proc getTokenListsLoading(self: View): bool {.slot.} =
+    return self.tokenListsLoading
+  proc setTokenListsLoading*(self: View, loading: bool) =
+    if self.tokenListsLoading == loading:
+      return
+    self.tokenListsLoading = loading
+    self.tokenListsLoadingChanged()
+  QtProperty[bool] tokenListsLoading:
+    read = getTokenListsLoading
+    notify = tokenListsLoadingChanged
+
+  proc loadTokenLists*(self: View) {.slot.} =
+    self.delegate.loadTokenLists()
 
   proc isChainSupportedForSwapViaParaswap*(self: View, chainId: int): bool {.slot.} =
     return self.delegate.isChainSupportedForSwapViaParaswap(chainId)

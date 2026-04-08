@@ -46,7 +46,11 @@ QtObject:
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]
     groupsOfInterest: seq[TokenGroupItem] # refers to groups for tokens of interest
     groupsForChain: seq[TokenGroupItem] # refers to groups for a specific chain
-    allTokenLists: seq[TokenListItem] # TODO: remove this, fetch async when needed, don't store it
+    allTokenGroupsForActiveNetworks: seq[TokenGroupItem] # all token groups, fetched on demand
+    allTokenGroupsLoading: bool
+    allTokenLists: seq[TokenListItem] # fetched on demand, not at startup
+    tokenListsLoading: bool
+    groupsForChainLoading: bool
     tokenDetailsTable: Table[string, TokenDetailsItem] # [tokenKey, TokenDetailsItem]
     tokenMarketValuesTable: Table[string, TokenMarketValuesItem] # [tokenKey, TokenMarketValuesItem]
     tokenPriceTable: Table[string, float64] # [tokenKey, price]
@@ -70,6 +74,10 @@ QtObject:
   proc tokensDetailsRetrieved(self: Service, response: string) {.slot.}
   proc tokensPricesRetrieved(self: Service, response: string) {.slot.}
   proc tokenHistoricalDataResolved*(self: Service, response: string) {.slot.}
+  proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.}
+  proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.}
+  proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.}
+  proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.}
 
 
   proc delete*(self: Service)

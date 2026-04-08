@@ -189,6 +189,9 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_WALLET_ACCOUNT_NETWORK_ENABLED_UPDATED) do(e: Args):
     self.delegate.onWalletAccountTokensRebuilt()
 
+  self.events.on(SIGNAL_ALL_TOKEN_GROUPS_LOADED) do(e: Args):
+    self.delegate.onAllTokenGroupsLoaded()
+
   self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED) do(e: Args):
     let args = SharedKeycarModuleArgs(e)
     if args.uniqueIdentifier != UNIQUE_COMMUNITIES_MODULE_AUTH_IDENTIFIER:
@@ -346,6 +349,9 @@ proc requestCancelDiscordChannelImport*(self: Controller, discordChannelId: stri
 
 proc getAllTokenGroupsForActiveNetworksMode*(self: Controller): seq[TokenGroupItem] =
   return self.tokenService.getAllTokenGroupsForActiveNetworksMode()
+
+proc fetchAllTokenGroups*(self: Controller) =
+  self.tokenService.asyncFetchAllTokenGroups()
 
 proc getCommunityTokens*(self: Controller, communityId: string): seq[CommunityTokenDto] =
   self.communityTokensService.getCommunityTokens(communityId)

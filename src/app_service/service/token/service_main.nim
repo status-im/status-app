@@ -28,25 +28,89 @@ proc addNewTokensToGroupsOfInterest(self: Service, tokens: seq[TokenItem]) =
   createTokenGroupsFromTokens(tokens, self.groupsOfInterestByKey)
   self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
 
-proc refreshTokens(self: Service) =
-  self.allTokenLists = getAllTokenLists()
+proc applyAllTokenListsData(self: Service, allTokenListsJson: JsonNode) =
+  let tokenListsDtos = if allTokenListsJson.isNil or allTokenListsJson.kind == JNull: @[]
+    else: Json.decode($allTokenListsJson, seq[TokenListDto], allowUnknownFields = true)
+  self.allTokenLists = tokenListsDtos.map(tl => createTokenListItem(tl))
 
-  # build groups of interest
+proc applyRefreshTokensData(self: Service, tokensOfInterestJson: JsonNode, tokenPrefsJson: JsonNode) =
+  # Parse tokens of interest
   self.tokensOfInterestByKey.clear()
   self.groupsOfInterestByKey.clear()
-
-  var tokens = getTokensOfInterestForActiveNetworksMode()
+  let tokenDtos = if tokensOfInterestJson.isNil or tokensOfInterestJson.kind == JNull: @[]
+    else: Json.decode($tokensOfInterestJson, seq[TokenDtoSafe], allowUnknownFields = true)
+  let tokens = tokenDtos.map(t => createTokenItem(t))
 
   for token in tokens:
     self.tokensOfInterestByKey[token.key] = token
 
   self.addNewTokensToGroupsOfInterest(tokens)
 
+  # Parse token preferences
+  self.tokenPreferencesJson = "[]"
+  if not tokenPrefsJson.isNil and tokenPrefsJson.kind == JArray:
+    self.tokenPreferencesJson = $tokenPrefsJson
+    for preferences in tokenPrefsJson:
+      let dto = Json.decode($preferences, TokenPreferencesDto, allowUnknownFields = true)
+      self.tokenPreferencesTable[dto.key] = TokenPreferencesItem(
+        key: dto.key,
+        position: dto.position,
+        groupPosition: dto.groupPosition,
+        visible: dto.visible,
+        communityId: dto.communityId)
+
   self.rebuildMarketData()
-  self.fetchTokensDetails() # TODO: if the only place where we can see these details is account's details page, we should fetch this on demand, no need to have local cache
-  self.fetchTokenPreferences()
+  self.fetchTokensDetails()
   # notify modules
   self.events.emit(SIGNAL_TOKENS_LIST_UPDATED, Args())
+  self.events.emit(SIGNAL_TOKEN_PREFERENCES_UPDATED, Args())
+
+proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.} =
+  try:
+    let rpcResponseObj = response.parseJson
+    let errStr = rpcResponseObj["error"].getStr()
+    if errStr.len > 0:
+      error "async refresh tokens failed", errDescription = errStr
+      return
+    self.applyRefreshTokensData(
+      rpcResponseObj["tokensOfInterest"],
+      rpcResponseObj["tokenPreferences"],
+    )
+  except Exception as e:
+    error "error processing async refresh tokens", msg = e.msg
+
+proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.} =
+  self.tokenListsLoading = false
+  try:
+    let rpcResponseObj = response.parseJson
+    let errStr = rpcResponseObj["error"].getStr()
+    if errStr.len > 0:
+      error "async fetch all token lists failed", errDescription = errStr
+      return
+    self.applyAllTokenListsData(rpcResponseObj["allTokenLists"])
+    self.events.emit(SIGNAL_TOKEN_LISTS_LOADED, Args())
+  except Exception as e:
+    error "error processing async fetch all token lists", msg = e.msg
+
+proc asyncRefreshTokens(self: Service) =
+  let arg = AsyncRefreshTokensTaskArg(
+    tptr: asyncRefreshTokensTask,
+    vptr: cast[uint](self.vptr),
+    slot: "onAsyncRefreshTokensDone",
+  )
+  self.threadpool.start(arg)
+
+proc asyncFetchAllTokenLists*(self: Service) =
+  self.tokenListsLoading = true
+  let arg = AsyncFetchAllTokenListsTaskArg(
+    tptr: asyncFetchAllTokenListsTask,
+    vptr: cast[uint](self.vptr),
+    slot: "onAsyncFetchAllTokenListsDone",
+  )
+  self.threadpool.start(arg)
+
+proc getTokenListsLoading*(self: Service): bool =
+  return self.tokenListsLoading
 
 proc init*(self: Service) =
   self.rebuildMarketDataDebouncer = debouncer_service.newDebouncer(
@@ -65,15 +129,16 @@ proc init*(self: Service) =
         self.rebuildMarketData()
   # update and populate internal list and then emit signal when new custom token detected?
   self.events.on(SignalType.WalletTokensListsUpdated.event) do(e:Args):
-    self.refreshTokens()
+    self.asyncRefreshTokens()
+    self.asyncFetchAllTokenLists()
 
   self.events.on(SIGNAL_NETWORK_MODE_UPDATED) do(e:Args):
-    self.refreshTokens()
+    self.asyncRefreshTokens()
 
   self.events.on(SIGNAL_CURRENCY_UPDATED) do(e:Args):
     self.rebuildMarketData()
 
-  self.refreshTokens()
+  self.asyncRefreshTokens()
 
 proc getMandatoryTokenGroupKeys*(self: Service): seq[string] =
   let tokenKeys = getMandatoryTokenKeys()
@@ -86,29 +151,83 @@ proc getMandatoryTokenGroupKeys*(self: Service): seq[string] =
 proc getCurrency*(self: Service): string =
   return self.settingsService.getCurrency()
 
-proc getAllTokenGroupsForActiveNetworksModeByKeys(self: Service): Table[string, TokenGroupItem] =
-  let allTokens = getTokensForActiveNetworksMode()
-  createTokenGroupsFromTokens(allTokens, result)
-
-proc getAllTokenGroupsForActiveNetworksMode*(self: Service): seq[TokenGroupItem] =
-  let groupsByKey = self.getAllTokenGroupsForActiveNetworksModeByKeys()
-  var groups = toSeq(groupsByKey.values)
-  sortTokenGroupsByName(groups)
-  return groups
-
 proc getGroupsOfInterest*(self: Service): var seq[TokenGroupItem] =
   return self.groupsOfInterest
 
-proc buildGroupsForChain*(self: Service, chainId: int): bool =
+proc buildGroupsForChain*(self: Service, chainId: int) =
   if chainId <= 0:
     warn "invalid chainId", chainId = chainId
-    return false
-  let allTokens = getTokensByChain(chainId)
-  var groupsByKey = initTable[string, TokenGroupItem]()
-  createTokenGroupsFromTokens(allTokens, groupsByKey)
-  self.groupsForChain = toSeq(groupsByKey.values)
-  sortTokenGroupsByName(self.groupsForChain)
-  return true
+    return
+  self.groupsForChainLoading = true
+  let arg = AsyncBuildGroupsForChainTaskArg(
+    tptr: asyncBuildGroupsForChainTask,
+    vptr: cast[uint](self.vptr),
+    slot: "onAsyncBuildGroupsForChainDone",
+    chainId: chainId,
+  )
+  self.threadpool.start(arg)
+
+proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.} =
+  self.groupsForChainLoading = false
+  try:
+    let rpcResponseObj = response.parseJson
+    let errStr = rpcResponseObj["error"].getStr()
+    if errStr.len > 0:
+      error "async build groups for chain failed", errDescription = errStr
+      self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
+      return
+    let tokensJson = rpcResponseObj["tokens"]
+    let tokenDtos = if tokensJson.isNil or tokensJson.kind == JNull: @[]
+      else: Json.decode($tokensJson, seq[TokenDtoSafe], allowUnknownFields = true)
+    let tokens = tokenDtos.map(t => createTokenItem(t))
+    var groupsByKey = initTable[string, TokenGroupItem]()
+    createTokenGroupsFromTokens(tokens, groupsByKey)
+    self.groupsForChain = toSeq(groupsByKey.values)
+    sortTokenGroupsByName(self.groupsForChain)
+    self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
+  except Exception as e:
+    error "error processing async build groups for chain", msg = e.msg
+    self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
+
+proc getGroupsForChainLoading*(self: Service): bool =
+  return self.groupsForChainLoading
+
+proc asyncFetchAllTokenGroups*(self: Service) =
+  self.allTokenGroupsLoading = true
+  let arg = AsyncFetchAllTokenGroupsTaskArg(
+    tptr: asyncFetchAllTokenGroupsTask,
+    vptr: cast[uint](self.vptr),
+    slot: "onAsyncFetchAllTokenGroupsDone",
+  )
+  self.threadpool.start(arg)
+
+proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.} =
+  self.allTokenGroupsLoading = false
+  try:
+    let rpcResponseObj = response.parseJson
+    let errStr = rpcResponseObj["error"].getStr()
+    if errStr.len > 0:
+      error "async fetch all token groups failed", errDescription = errStr
+      self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
+      return
+    let tokensJson = rpcResponseObj["tokens"]
+    let tokenDtos = if tokensJson.isNil or tokensJson.kind == JNull: @[]
+      else: Json.decode($tokensJson, seq[TokenDtoSafe], allowUnknownFields = true)
+    let tokens = tokenDtos.map(t => createTokenItem(t))
+    var groupsByKey = initTable[string, TokenGroupItem]()
+    createTokenGroupsFromTokens(tokens, groupsByKey)
+    self.allTokenGroupsForActiveNetworks = toSeq(groupsByKey.values)
+    sortTokenGroupsByName(self.allTokenGroupsForActiveNetworks)
+    self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
+  except Exception as e:
+    error "error processing async fetch all token groups", msg = e.msg
+    self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
+
+proc getAllTokenGroupsForActiveNetworksMode*(self: Service): seq[TokenGroupItem] =
+  return self.allTokenGroupsForActiveNetworks
+
+proc getAllTokenGroupsLoading*(self: Service): bool =
+  return self.allTokenGroupsLoading
 
 proc getGroupsForChain*(self: Service): var seq[TokenGroupItem] =
   return self.groupsForChain
@@ -129,12 +248,6 @@ proc getTokenBySymbolOnChain*(self: Service, symbol: string, chainId: int): Toke
       return token
   return nil
 ################################################################################
-
-proc getAllCommunityTokens*(self: Service): var seq[TokenItem] =
-  const communityTokenListId = "community"
-  for tl in self.allTokenLists:
-    if tl.id == communityTokenListId:
-      return tl.tokens
 
 proc getTokenByKey*(self: Service, key: string): TokenItem =
   if not common_utils.isTokenKey(key):
@@ -239,4 +352,4 @@ proc addNewCommunityToken*(self: Service, token: TokenItem) =
     for t in tokens:
       if t.key == token.key:
         return
-  self.refreshTokens()
+  self.asyncRefreshTokens()

@@ -1,6 +1,97 @@
 import times, std/strformat
 
 #################################################
+# Async refresh tokens (blocking RPCs on threadpool)
+#################################################
+
+type
+  AsyncRefreshTokensTaskArg = ref object of QObjectTaskArg
+    discard
+
+proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncRefreshTokensTaskArg](argEncoded)
+  var output = %*{
+    "tokensOfInterest": "",
+    "tokenPreferences": "",
+    "error": ""
+  }
+  try:
+    var tokensOfInterestResponse: JsonNode
+    var err = status_go_tokens.getTokensOfInterestForActiveNetworksMode(tokensOfInterestResponse)
+    if err.len > 0:
+      raise newException(CatchableError, "getTokensOfInterestForActiveNetworksMode failed: " & err)
+    output["tokensOfInterest"] = if tokensOfInterestResponse.isNil: newJNull() else: tokensOfInterestResponse
+
+    let prefsResponse = backend.getTokenPreferences()
+    if not prefsResponse.error.isNil:
+      raise newException(CatchableError, "getTokenPreferences failed: " & prefsResponse.error.message)
+    output["tokenPreferences"] = if prefsResponse.result.isNil: newJNull() else: prefsResponse.result
+  except Exception as e:
+    output["error"] = %* fmt"Error refreshing tokens: {e.msg}"
+  arg.finish(output)
+
+type
+  AsyncFetchAllTokenListsTaskArg = ref object of QObjectTaskArg
+    discard
+
+proc asyncFetchAllTokenListsTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncFetchAllTokenListsTaskArg](argEncoded)
+  var output = %*{
+    "allTokenLists": "",
+    "error": ""
+  }
+  try:
+    var allTokenListsResponse: JsonNode
+    var err = status_go_tokens.getAllTokenLists(allTokenListsResponse)
+    if err.len > 0:
+      raise newException(CatchableError, "getAllTokenLists failed: " & err)
+    output["allTokenLists"] = if allTokenListsResponse.isNil: newJNull() else: allTokenListsResponse
+  except Exception as e:
+    output["error"] = %* fmt"Error fetching all token lists: {e.msg}"
+  arg.finish(output)
+
+type
+  AsyncFetchAllTokenGroupsTaskArg = ref object of QObjectTaskArg
+    discard
+
+proc asyncFetchAllTokenGroupsTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncFetchAllTokenGroupsTaskArg](argEncoded)
+  var output = %*{
+    "tokens": "",
+    "error": ""
+  }
+  try:
+    var response: JsonNode
+    var err = status_go_tokens.getTokensForActiveNetworksMode(response)
+    if err.len > 0:
+      raise newException(CatchableError, "getTokensForActiveNetworksMode failed: " & err)
+    output["tokens"] = if response.isNil: newJNull() else: response
+  except Exception as e:
+    output["error"] = %* fmt"Error fetching all token groups: {e.msg}"
+  arg.finish(output)
+
+type
+  AsyncBuildGroupsForChainTaskArg = ref object of QObjectTaskArg
+    chainId: int
+
+proc asyncBuildGroupsForChainTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncBuildGroupsForChainTaskArg](argEncoded)
+  var output = %*{
+    "chainId": arg.chainId,
+    "tokens": "",
+    "error": ""
+  }
+  try:
+    var response: JsonNode
+    var err = status_go_tokens.getTokensByChain(response, arg.chainId)
+    if err.len > 0:
+      raise newException(CatchableError, "getTokensByChain failed: " & err)
+    output["tokens"] = if response.isNil: newJNull() else: response
+  except Exception as e:
+    output["error"] = %* fmt"Error building groups for chain {arg.chainId}: {e.msg}"
+  arg.finish(output)
+
+#################################################
 # Async load transactions
 #################################################
 

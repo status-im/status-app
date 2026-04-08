@@ -147,7 +147,6 @@ method load*(self: Module) =
   self.controller.init()
   self.communityTokensModule.load()
   self.view.load()
-  self.onWalletAccountTokensRebuilt()
 
 method isLoaded*(self: Module): bool =
   return self.moduleLoaded
@@ -619,7 +618,19 @@ proc buildTokensAndCollectiblesFromWallet(self: Module) =
   self.view.tokenListModel.setWalletTokenItems(tokenListItems)
 
 method onWalletAccountTokensRebuilt*(self: Module) =
+  # Rebuild from cached data only - does NOT trigger a new fetch
   self.buildTokensAndCollectiblesFromWallet()
+
+method onAllTokenGroupsLoaded*(self: Module) =
+  info "onAllTokenGroupsLoaded - building tokens from wallet"
+  self.buildTokensAndCollectiblesFromWallet()
+  info "onAllTokenGroupsLoaded - setting tokenListLoading to false"
+  self.view.setTokenListLoading(false)
+
+method loadTokenList*(self: Module) =
+  info "loadTokenList - setting tokenListLoading to true and fetching"
+  self.view.setTokenListLoading(true)
+  self.controller.fetchAllTokenGroups()
 
 method onCommunityTokenMetadataAdded*(self: Module, communityId: string, tokenMetadata: CommunityTokensMetadataDto) =
   let communityTokens = self.controller.getCommunityTokens(communityId)

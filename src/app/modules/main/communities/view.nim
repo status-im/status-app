@@ -23,6 +23,7 @@ QtObject:
       curatedCommunitiesModel: CuratedCommunityModel
       curatedCommunitiesModelVariant: QVariant
       curatedCommunitiesLoading: bool
+      tokenListLoading: bool
       tokenListModel: TokenListModel
       tokenListModelVariant: QVariant
       collectiblesListModel: TokenListModel
@@ -700,6 +701,21 @@ QtObject:
 
   QtProperty[QVariant] tokenList:
     read = getTokenListModel
+
+  proc tokenListLoadingChanged*(self: View) {.signal.}
+  proc getTokenListLoading(self: View): bool {.slot.} =
+    return self.tokenListLoading
+  proc setTokenListLoading*(self: View, loading: bool) =
+    if self.tokenListLoading == loading:
+      return
+    self.tokenListLoading = loading
+    self.tokenListLoadingChanged()
+  QtProperty[bool] tokenListLoading:
+    read = getTokenListLoading
+    notify = tokenListLoadingChanged
+
+  proc loadTokenList*(self: View) {.slot.} =
+    self.delegate.loadTokenList()
 
   proc collectiblesListModel*(self: View): TokenListModel =
     result = self.collectiblesListModel
