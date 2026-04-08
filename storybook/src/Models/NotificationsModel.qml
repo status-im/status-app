@@ -14,7 +14,7 @@ import AppLayouts.ActivityCenter.helpers
 // Here is an example of the complete set of properties that a `Notification model` can contain:
 //{
 //    // Card states related
-//    notificationsType: ActivityCenterTypes.NotificationType.Mention,
+//    notificationType: ActivityCenterTypes.NotificationType.Mention,
 //    unread: false,
 //    selected: false,
 //

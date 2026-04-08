@@ -97,6 +97,7 @@ Control {
     signal enableNewsRequested()
 
     // Card interactions
+    signal markNotificationRead(string notificationId)
     signal avatarClicked(string avatarId)
     signal redirectToDetails(string sectionId, string subsectionId, string itemId)
     signal redirectToSection(string sectionId)
@@ -255,6 +256,11 @@ Control {
 
                 // Interactions
                 onClicked: {
+
+                    // 1. When a notification is clicked, it is immediately marked as read
+                    root.markNotificationRead(model.notificationId)
+
+                    // 2. Once marked as read, the corresponding navigation logic is executed.
                     if(model.redirectToDetails)
                         return root.redirectToDetails(model.sectionId, model.subsectionId, model.subsectionItemId)
 
@@ -272,7 +278,7 @@ Control {
                     if(model.avatarId)
                         return root.avatarClicked(model.avatarId)
 
-                    // No actions when clicked
+                    // No navigation actions when clicked
                 }
                 onAvatarClicked: root.avatarClicked(model.avatarId)
                 onAcceptRequested: root.acceptRequested(model.avatarId ?? "", model.actionId ?? "")

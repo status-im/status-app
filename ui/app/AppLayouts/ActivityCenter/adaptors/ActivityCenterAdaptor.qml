@@ -138,7 +138,8 @@ QtObject {
 
         Model structure (output):
 
-        notificationsType    [int]     - notification type
+        id                   [string]  - notificaiton identifier
+        notificationType     [int]     - notification type
         unread               [bool]    - whether the notification is unread
         selected             [bool]    - selection state (UI-managed)
 
@@ -229,7 +230,7 @@ QtObject {
 
             expectedRoles: [
                 // Notification status / management
-                "notificationType", "timestamp", "read", "dismissed", "accepted",
+                "id", "notificationType", "timestamp", "read", "dismissed", "accepted",
 
                 // Notification context
                 "chatId", "communityId", "sectionId",
@@ -246,7 +247,7 @@ QtObject {
 
             exposedRoles: [
                 // Card states related
-                "notificationsType", "unread",
+                "notificationId", "notificationType", "unread",
 
                 // Avatar related
                 "avatarSource", "badgeIconName", "isCircularAvatar", "isAvatarClickable", "avatarId",
@@ -395,7 +396,8 @@ QtObject {
                 // -------------------------
                 // Card state
                 // -------------------------
-                readonly property int notificationsType: notification.notificationType
+                readonly property string notificationId: notification.notificationId
+                readonly property int notificationType: notification.notificationType
                 readonly property bool unread: !(notification.read ?? false)
 
                 // -------------------------
