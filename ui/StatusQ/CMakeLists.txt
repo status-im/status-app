@@ -346,7 +346,7 @@ FetchContent_Declare(
   SCodes
 
   GIT_REPOSITORY https://github.com/status-im/SCodes.git
-  GIT_TAG 8d2baf1250393544b1949ff04b7414465b6d73cf
+  GIT_TAG 09f70a1c5d8a7b5facf946fdfe11f401890f45fc
     SOURCE_SUBDIR src
 )
 
