@@ -7,11 +7,11 @@
       separate-process StatusGoService. This is defense-in-depth on top of android:exported="false".
     -->
     <permission
-        android:name="app.status.mobile.permission.STATUSGO_SERVICE"
+        android:name="${applicationId}.permission.STATUSGO_SERVICE"
         android:label="Status status-go service access"
         android:protectionLevel="signature" />
 
-    <uses-permission android:name="app.status.mobile.permission.STATUSGO_SERVICE" />
+    <uses-permission android:name="${applicationId}.permission.STATUSGO_SERVICE" />
     <!-- non-dangerous permissions -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.NFC"/>
@@ -139,7 +139,7 @@
         <service
             android:name=".ipc.StatusGoService"
             android:exported="false"
-            android:permission="app.status.mobile.permission.STATUSGO_SERVICE"
+            android:permission="${applicationId}.permission.STATUSGO_SERVICE"
             android:process=":statusgo"
             android:foregroundServiceType="specialUse">
             <property

@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import org.json.JSONObject;
 
+import app.status.mobile.BuildConfig;
 import app.status.mobile.R;
 import app.status.mobile.ipc.notifications.StatusNotificationManager;
 import im.status.mobileui.PushNotificationHelper;
@@ -35,8 +36,10 @@ import im.status.mobileui.PushNotificationHelper;
 public final class StatusGoService extends Service {
     private static final String TAG = "StatusGoService";
 
-    public static final String ACTION_START = "app.status.mobile.ipc.StatusGoService.START";
-    public static final String ACTION_STOP = "app.status.mobile.ipc.StatusGoService.STOP";
+    public static final String ACTION_START =
+            BuildConfig.APPLICATION_ID + ".ipc.StatusGoService.START";
+    public static final String ACTION_STOP =
+            BuildConfig.APPLICATION_ID + ".ipc.StatusGoService.STOP";
 
     private static final String CHANNEL_ID = "statusgo";
     private static final int NOTIFICATION_ID = 4242;
