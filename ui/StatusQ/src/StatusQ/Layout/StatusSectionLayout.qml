@@ -187,7 +187,9 @@ LayoutChooser {
         // the content shorter, triggering the opposite mode. Ideally InputMethod could be
         // used to compensate keyboard height but it's not providing reliable value in
         // the current configuration.
-        const height = Utils.isMobile ? root.Window.height : root.height
+        const safeArea = root.Window.window.contentItem.SafeArea
+        const height = Utils.isMobile ? root.Window.height - safeArea.margins.bottom - safeArea.margins.top
+                                      : root.height
 
         return [
             height > root.width && root.width < root.implicitWidth, // Portrait mode
