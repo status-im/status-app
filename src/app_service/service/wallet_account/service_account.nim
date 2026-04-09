@@ -432,6 +432,20 @@ proc addNewKeycardStoredKeypair*(self: Service, keyUid, keypairName, rootWalletM
     error "error: ", procName="addNewKeycardStoredKeypair", errName=e.name, errDesription=e.msg
     return e.msg
 
+proc addNewKeycardStoredKeypairNew*(self: Service, keyUid, keypairName, xpub, coldWallet, rootWalletMasterKey: string = "", accounts: seq[WalletAccountDto]): string =
+  try:
+    var response = status_go_accounts.addKeypairStoredToKeycardNew(keyUid, rootWalletMasterKey, keypairName, xpub, coldWallet, accounts)
+    if not response.error.isNil:
+      error "status-go error adding keypair", procName="addNewKeycardStoredKeypair", errCode=response.error.code, errDesription=response.error.message
+      return response.error.message
+
+    for i in 0 ..< accounts.len:
+      self.addNewKeypairsAccountsToLocalStoreAndNotify()
+    return ""
+  except Exception as e:
+    error "error: ", procName="addNewKeycardStoredKeypair", errName=e.name, errDesription=e.msg
+    return e.msg
+
 proc makeSeedPhraseKeypairFullyOperable*(self: Service, keyUid, mnemonic, password: string, doPasswordHashing: bool): string =
   if password.len == 0:
     let err = "for making a private key keypair fully operable, password must be provided"
