@@ -404,14 +404,13 @@ Control {
             }
         }
 
-        // TODO remove me completely? literally the same as MessageContextMenuView, and overlaps the message text
         Loader {
             active: root.hovered && root.quickActions.length > 0
                     && !Utils.isMobile // hover menu disabled on mobile; we use the MessageContextMenuView
             visible: active
             anchors.right: parent.right
             anchors.rightMargin: Theme.padding
-            anchors.top: parent.top
+            anchors.verticalCenter: parent.top
             sourceComponent: StatusMessageQuickActions {
                 items: root.quickActions
             }
