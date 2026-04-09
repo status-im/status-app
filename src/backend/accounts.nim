@@ -230,6 +230,42 @@ proc createAccountFromMnemonicAndDeriveAccountsForPaths*(mnemonic: string, paths
     error "error doing rpc request", methodName = "createAccountFromMnemonicAndDeriveAccountsForPaths", exception=e.msg
     raise newException(RpcException, e.msg)
 
+proc deriveAccountsPublicInfoFromExtendedPublicKeyForPaths*(extendedPublicKey: string, paths: seq[string]): RpcResponse[JsonNode] =
+  let payload = %* {
+    "extendedPublicKey": extendedPublicKey,
+    "paths": paths
+  }
+
+  try:
+    let rpcResponseRaw = status_go.deriveAccountsPublicInfoFromExtendedPublicKeyForPaths($payload)
+    result = Json.decode(rpcResponseRaw, RpcResponse[JsonNode])
+  except Exception as e:
+    error "error doing rpc request", methodName = "deriveAccountsPublicInfoFromExtendedPublicKeyForPaths", exception=e.msg
+    raise newException(RpcException, e.msg)
+
+proc deriveExtendedPublicKeyAtPath*(mnemonic: string, passphrase: string, path: string): RpcResponse[JsonNode] =
+  let payload = %* {
+    "mnemonic": mnemonic,
+    "passphrase": passphrase,
+    "path": path
+  }
+  try:
+    let rpcResponseRaw = status_go.deriveExtendedPublicKeyAtPath($payload)
+    result = Json.decode(rpcResponseRaw, RpcResponse[JsonNode])
+  except Exception as e:
+    error "error doing rpc request", methodName = "deriveExtendedPublicKeyAtPath", exception=e.msg
+    raise newException(RpcException, e.msg)
+
+proc convertURCryptoHDKeyToXPub*(ur: string): RpcResponse[JsonNode] =
+  try:
+    let rpcResponseRaw = status_go.convertURCryptoHDKeyToXPub(ur)
+    result = Json.decode(rpcResponseRaw, RpcResponse[JsonNode])
+    if not result.error.isNil:
+      raise newException(ValueError, result.error.message)
+  except Exception as e:
+    error "error doing rpc request", methodName = "convertURCryptoHDKeyToXPub", exception=e.msg
+    raise newException(RpcException, e.msg)
+
 proc makePrivateKeyKeypairFullyOperable*(privateKey, password: string):
   RpcResponse[JsonNode] =
   let payload = %* [privateKey, password]

@@ -385,6 +385,36 @@ QtObject:
       paths.add(PATH_EIP_1581)
     return self.createAccountFromMnemonic(mnemonic, paths)
 
+  proc deriveAccountsPublicInfoFromExtendedPublicKeyForPaths*(self: Service, extendedPublicKey: string, paths: seq[string]): DerivedAccounts =
+    if extendedPublicKey.len == 0:
+      error "empty extended public key"
+      return
+    try:
+      let response = status_account.deriveAccountsPublicInfoFromExtendedPublicKeyForPaths(extendedPublicKey, paths)
+      return toDerivedAccounts(response.result)
+    except Exception as e:
+      error "error: ", procName="deriveAccountsPublicInfoFromExtendedPublicKeyForPaths", errName = e.name, errDesription = e.msg
+
+  proc deriveExtendedPublicKeyAtPath*(self: Service, mnemonic: string, passphrase: string, path: string): string =
+    if mnemonic.len == 0:
+      error "empty mnemonic"
+      return
+    try:
+      let response = status_account.deriveExtendedPublicKeyAtPath(mnemonic, passphrase, path)
+      return response.result.getStr
+    except Exception as e:
+      error "error: ", procName="deriveExtendedPublicKeyAtPath", errName = e.name, errDesription = e.msg
+
+  proc convertURCryptoHDKeyToXPub*(self: Service, ur: string): string =
+    if ur.len == 0:
+      error "empty ur"
+      return
+    try:
+      let response = status_account.convertURCryptoHDKeyToXPub(ur)
+      return response.result.getStr
+    except Exception as e:
+      error "error: ", procName="convertURCryptoHDKeyToXPub", errName = e.name, errDesription = e.msg
+
   proc fetchAddressesFromNotImportedMnemonic*(self: Service, mnemonic: string, paths: seq[string])=
     let arg = FetchAddressesFromNotImportedMnemonicArg(
       mnemonic: mnemonic,
