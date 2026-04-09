@@ -34,6 +34,7 @@ const SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_SUCCESS* = "keycardExportLoginKeysSuccess
 
 ## Signals for keycard composite actions
 const SIGNAL_KEYCARD_LOGIN_FINISHED* = "keycardLoginFinished"
+const SIGNAL_KEYCARD_LOAD_FINISHED* = "keycardLoadFinished"
 const SIGNAL_KEYCARD_EXPORT_PUBLIC_KEYS_FINISHED* = "keycardExportPublicKeysFinished"
 const SIGNAL_KEYCARD_EXPORT_EXTENDED_PUBLIC_KEYS_FINISHED* = "keycardExportExtendedPublicKeysFinished"
 const SIGNAL_KEYCARD_CHANGE_PIN_FINISHED* = "keycardChangePinFinished"
@@ -68,6 +69,7 @@ type KeycardAction {.pure.} = enum
   GetKeycardMetadata = "GetKeycardMetadata"
   Sign = "Sign"
   FactoryResetKeycard = "FactoryResetKeycard"
+  Load = "Load"
 
 type
   KeycardEventArg* = ref object of Args

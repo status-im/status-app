@@ -263,3 +263,32 @@ proc asyncFactoryResetKeycard*(self: Service, keycardUid: string) {.featureGuard
       data.error = e.msg
     self.events.emit(SIGNAL_KEYCARD_FACTORY_RESET_KEYCARD_FINISHED, data)
   )
+
+proc asyncLoadSeedPhrase*(self: Service, pin: string, puk: string, seedPhrase: string, metadataName: string,
+    metadataPaths: seq[string]) {.featureGuard(KEYCARD_ENABLED).} =
+  let params = %*{
+    "pin": pin,
+    "puk": puk,
+    "pairingPassword": "", # we keep it empty for now
+    "mnemonic": seedPhrase,
+    "metadataName": metadataName,
+    "metadataPaths": metadataPaths,
+    "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
+    "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
+  }
+  self.asyncCallRPC(KeycardAction.Load, params, proc (responseObj: JsonNode, err: string) =
+    var data = KeycardErrorArg()
+    try:
+      if err.len > 0:
+        raise newException(CatchableError, "load key pair parsing response error: " & err)
+      if responseObj.hasKey("error") and responseObj["error"].kind != JNull:
+        let errorObj = responseObj["error"]
+        if errorObj.hasKey("message"):
+          raise newException(CatchableError, "load key pair response error: " & errorObj["message"].getStr())
+        raise newException(CatchableError, "load key pair response unknown error")
+    except Exception as e:
+      error "load key pair error", err=e.msg
+      data.error = e.msg
+    self.events.emit(SIGNAL_KEYCARD_LOAD_FINISHED, data)
+  )
