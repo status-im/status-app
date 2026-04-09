@@ -405,9 +405,7 @@ Item {
 
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
 
-            onShowReplyArea: {
-                root.showReplyArea(messageId, author)
-            }
+            onShowReplyArea: (messageId, author) => root.showReplyArea(messageId, author)
 
             stickersLoaded: root.stickersLoaded
 

@@ -104,7 +104,7 @@ Flow {
             link: modelData
             isOnline: root.isOnline
             playAnimation: root.playAnimations
-            onClicked: root.imageClicked(imageAlias, mouse, link, link)
+            onClicked: mouse => root.imageClicked(imageAlias, mouse, link, link)
         }
     }
 

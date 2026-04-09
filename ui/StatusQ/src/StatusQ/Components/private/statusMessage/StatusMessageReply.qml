@@ -87,7 +87,7 @@ Item {
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
                             anchors.fill: parent
                             enabled: root.profileClickable
-                            onClicked: root.replyProfileClicked(this, mouse)
+                            onClicked: mouse => root.replyProfileClicked(this, mouse)
                         }
                     }
                     StatusBaseText {
@@ -105,9 +105,7 @@ Item {
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
                             enabled: root.profileClickable
                             hoverEnabled: true
-                            onClicked: {
-                                root.replyProfileClicked(this, mouse)
-                            }
+                            onClicked: mouse => root.replyProfileClicked(this, mouse)
                         }
                     }
                 }
@@ -166,9 +164,7 @@ Item {
                         enabled: !root.replyDetails.messageDeleted && root.replyDetails.sender.id
                         hoverEnabled: true
                         cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: {
-                            root.messageClicked(mouse)
-                        }
+                        onClicked: mouse => root.messageClicked(mouse)
                     }
                 }
             }

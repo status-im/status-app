@@ -146,7 +146,7 @@ Rectangle {
         StatusMouseArea {
             cursorShape: Qt.PointingHandCursor
             anchors.fill: parent
-            onPressed: mouse.accepted = false
+            onPressed: mouse => mouse.accepted = false
         }
     }
 
