@@ -53,13 +53,16 @@ ColumnLayout {
         readonly property bool isMaxPairingSlotsReached: root.keycardState === Constants.keycard.state.noAvailablePairingSlots
                                                          || root.availableSlots === 0
 
-        readonly property bool isBlockedPIN: root.keycardState === Constants.keycard.state.blockedPIN
-                                             || root.remainingPinAttempts === 0
+        readonly property bool isBlockedPIN: !d.isEmpty
+                                             && (root.keycardState === Constants.keycard.state.blockedPIN
+                                                 || root.remainingPinAttempts === 0)
 
-        readonly property bool isBlockedPUK: root.keycardState === Constants.keycard.state.blockedPUK
-                                             || root.remainingPukAttempts === 0
+        readonly property bool isBlockedPUK: !d.isEmpty
+                                             && (root.keycardState === Constants.keycard.state.blockedPUK
+                                                 || root.remainingPukAttempts === 0)
 
         readonly property bool isEmpty: root.keycardState === Constants.keycard.state.emptyKeycard
+                                        || !root.keycardUid
 
         readonly property bool knownCardMetadata: {
             if (!d.hasKeyPair || d.cardMetadataWalletAccounts.length === 0) {
@@ -133,7 +136,7 @@ ColumnLayout {
         }
 
         readonly property string info2: {
-            if (root.availableSlots == 0 && !d.pairingExists) {
+            if (!d.isEmpty && root.availableSlots == 0 && !d.pairingExists) {
                 return qsTr("You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.")
             }
 
@@ -224,7 +227,7 @@ ColumnLayout {
         visible: d.isEmpty
                  || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && (root.availableSlots > 0 || d.pairingExists)
         title: qsTr("Move profile key pair to Keycard")
-        subTitle: qsTr("Keycard will be required for sign and login to Status")
+        subTitle: qsTr("Keycard will be required for signing and logging in to Status")
         components: [
             StatusIcon {
                 icon: "next"
@@ -274,8 +277,8 @@ ColumnLayout {
         Layout.fillWidth: true
         visible: d.isEmpty
                  || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && (root.availableSlots > 0 || d.pairingExists)
-        title: qsTr("Import an existing key pair (from recovery phrase) to Keycard")
-        subTitle: qsTr("In case you lost Keycard, want to create a backup or import key pair\nKeycard will be required for signing")
+        title: qsTr("Import a key pair from recovery phrase")
+        subTitle: qsTr("In case you lost Keycard, want to create a backup or import a\nkey pair. Keycard will be required for signing")
         components: [
             StatusIcon {
                 icon: "next"
@@ -292,7 +295,7 @@ ColumnLayout {
         visible: d.isBlockedPIN
                  || d.isBlockedPUK
         title: qsTr("Unblock with recovery phrase")
-        subTitle: qsTr("Requires providing recovery phrase for key pair stored on Keycard")
+        subTitle: qsTr("Requires providing the recovery phrase for the key pair stored on Keycard")
         components: [
             StatusIcon {
                 icon: "next"
@@ -340,12 +343,13 @@ ColumnLayout {
 
     StatusListItem {
         Layout.fillWidth: true
-        visible: d.hasKeyPair
+        visible: (d.hasKeyPair
+                  || d.onlyPinSet)
                  && !d.isBlockedPIN
                  && !d.isBlockedPUK
                  && (root.availableSlots > 0 || d.pairingExists)
-        title: qsTr("Change PIN on Keycard")
-        subTitle: qsTr("If you want to have other PIN")
+        title: qsTr("Change PIN")
+        subTitle: qsTr("If you want to have a different PIN")
         components: [
             StatusIcon {
                 icon: "next"
@@ -359,11 +363,12 @@ ColumnLayout {
 
     StatusListItem {
         Layout.fillWidth: true
-        visible: d.hasKeyPair
+        visible: (d.hasKeyPair
+                  || d.onlyPinSet)
                  && !d.isBlockedPIN
                  && !d.isBlockedPUK
                  && (root.availableSlots > 0 || d.pairingExists)
-        title: qsTr("Rename Keycard")
+        title: qsTr("Rename")
         subTitle: qsTr("New name will be visible in Status and in other apps")
         components: [
             StatusIcon {
@@ -378,12 +383,13 @@ ColumnLayout {
 
     StatusListItem {
         Layout.fillWidth: true
-        visible: d.hasKeyPair
+        visible: (d.hasKeyPair
+                  || d.onlyPinSet)
                  && !d.isBlockedPIN
                  && !d.isBlockedPUK
                  && (root.availableSlots > 0 || d.pairingExists)
         title: qsTr("Set or change PUK")
-        subTitle: qsTr("If you want additional recovery option")
+        subTitle: qsTr("If you want an additional recovery option")
         components: [
             StatusIcon {
                 icon: "next"
@@ -397,41 +403,10 @@ ColumnLayout {
 
     StatusListItem {
         Layout.fillWidth: true
-        visible: d.isProfileKeyPair
-        title: qsTr("Stop using Keycard for this key pair")
-        subTitle: qsTr("Status password will be required to login and signing")
-        components: [
-            StatusIcon {
-                icon: "next"
-                color: Theme.palette.baseColor1
-            }
-        ]
-        onClicked: {
-            console.warn("TODO: stop using profile keycard flow...")
-        }
-    }
-
-    StatusListItem {
-        Layout.fillWidth: true
-        visible: !d.isProfileKeyPair && d.isKnownKeyPair
-        title: qsTr("Stop using Keycard for this key pair")
-        subTitle: qsTr("Status password will be required to sign")
-        components: [
-            StatusIcon {
-                icon: "next"
-                color: Theme.palette.baseColor1
-            }
-        ]
-        onClicked: {
-            console.warn("TODO: stop using keycard flow...")
-        }
-    }
-
-    StatusListItem {
-        Layout.fillWidth: true
-        visible: d.hasKeyPair
+        visible: (d.hasKeyPair
+                  || d.onlyPinSet)
                  || d.onlyPinSet
-        title: qsTr("Factory reset")
+        title: qsTr("Factory reset Keycard")
         subTitle: qsTr("Remove everything from Keycard")
         components: [
             StatusIcon {
