@@ -88,7 +88,6 @@ Control {
     signal senderNameClicked(var sender)
     signal replyProfileClicked(var sender, var mouse)
     signal replyMessageClicked(var mouse)
-    signal pressAndHold(var mouse)
 
     signal addReactionClicked(var sender, var mouse)
     signal toggleReactionClicked(string hexcode)
@@ -288,7 +287,6 @@ Control {
                             textField.onHoveredLinkChanged: {
                                 root.hoveredLink = hoveredLink;
                             }
-                            onPressAndHold: mouse => root.pressAndHold(mouse)
                         }
                     }
                     Loader {
@@ -311,7 +309,12 @@ Control {
                                     allowShowMore: !root.isInPinnedPopup
                                     textField.anchors.rightMargin: root.isInPinnedPopup ? Theme.xlPadding : 0 // margin for the "Unpin" floating button
                                     highlightedLink: root.highlightedLink
+                                    linkAddressAndEnsName: root.linkAddressAndEnsName
+                                    disabledTooltipText: root.disabledTooltipText
                                     onLinkActivated: link => root.linkActivated(link)
+                                    textField.onHoveredLinkChanged: {
+                                        root.hoveredLink = hoveredLink
+                                    }
                                 }
                             }
 

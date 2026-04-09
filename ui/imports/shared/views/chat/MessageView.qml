@@ -244,7 +244,7 @@ Loader {
         profileContextMenuComponent.createObject(root, params).popup(x, y)
     }
 
-    function openMessageContextMenu(x, y) {
+    function openMessageContextMenu(point) {
         if (isViewMemberMessagesePopup || placeholderMessage || !root.joined)
             return
 
@@ -266,7 +266,7 @@ Loader {
             editRestricted: root.editRestricted,
         }
 
-        messageContextMenuComponent.createObject(root, params).popup(x, y)
+        messageContextMenuComponent.createObject(root, params).popup(point)
     }
 
     function setMessageActive(messageId, active) {
@@ -898,10 +898,16 @@ Loader {
                     root.messageStore.resendMessage(root.messageId)
                 }
 
-                ContextMenu.onRequested: pos => root.openMessageContextMenu(pos.x, pos.y)
-                onPressAndHold: function (mouse) {
-                    if (mouse.wasHeld && (root.chatLogView && !root.chatLogView.moving))
-                        root.openMessageContextMenu(mouse.x, mouse.y)
+                TapHandler {
+                    gesturePolicy: TapHandler.ReleaseWithinBounds // exclusive grab on press
+                    acceptedDevices: PointerDevice.TouchScreen
+                    onLongPressed: root.openMessageContextMenu(point.position)
+                }
+
+                TapHandler {
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+                    acceptedButtons: Qt.RightButton
+                    onTapped: (point, button) => root.openMessageContextMenu(point.position)
                 }
 
                 messageDetails: StatusMessageDetails {
@@ -921,7 +927,6 @@ Loader {
                         case StatusMessage.ContentType.Sticker:
                             return root.sticker;
                         case StatusMessage.ContentType.Image:
-
                             return root.messageImage;
                         }
                         if (root.isDiscordMessage && root.messageImage != "") {

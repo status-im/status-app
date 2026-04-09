@@ -31,8 +31,6 @@ Item {
     implicitWidth: chatText.implicitWidth
     implicitHeight: chatText.height + d.showMoreHeight / 2
 
-    signal pressAndHold(var mouseEvent)
-
     QtObject {
         id: d
         property string hoveredLink: chatText.hoveredLink || root.highlightedLink
@@ -90,7 +88,7 @@ Item {
         color: Theme.palette.baseColor1
     }
 
-    StatusTextArea {
+    TextEdit {
         id: chatText
         objectName: "StatusTextMessage_chatText"
 
@@ -103,18 +101,21 @@ Item {
         anchors.leftMargin: d.isQuote ? Theme.halfPadding : 0
         anchors.right: parent.right
         opacity: !showMoreOpacityMask.active && !horizontalOpacityMask.active ? 1 : 0
-        background: null
-        leftPadding: 0
-        rightPadding: 0
-        topPadding: 0
-        bottomPadding: 0
         text: d.text
         selectedTextColor: Theme.palette.directColor1
+        selectionColor: Theme.palette.primaryColor3
         color: d.isQuote ? Theme.palette.baseColor1 : Theme.palette.directColor1
+        font.family: Fonts.baseFont.family
+        font.pixelSize: Theme.primaryTextFontSize
         textFormat: Text.RichText
         wrapMode: root.convertToSingleLine ? Text.NoWrap : Text.Wrap
         readOnly: true
-        selectByMouse: !Utils.isMobile // applies to mouse only, not touch
+        selectByMouse: true  // applies to mouse only, not touch
+        enabled: !Utils.isMobile // eats the internal touch events to enable the external context menu on long press
+
+        // disable native (edit) context menu; we're really not an edit control
+        inputMethodHints: Qt.ImhNoEditMenu
+
         onLinkActivated: function(link) {
             if(d.showDisabledTooltipForAddressEnsName(link)) {
                 return
@@ -132,7 +133,6 @@ Item {
             x: hoverHandler.point.position.x - 60
             y: -disabledLinkTooltip.height + hoverHandler.point.position.y - 10
         }
-        onPressAndHold: mouseEvent => root.pressAndHold(mouseEvent)
     }
 
     StatusSyntaxHighlighter {
