@@ -90,13 +90,6 @@ Window {
 
     SafeArea.additionalMargins.bottom: additionalBottomMargin
 
-    Behavior on additionalBottomMargin {
-        NumberAnimation {
-            duration: 250
-            easing.type: Easing.OutCubic
-        }
-    }
-
     objectName: "mainWindow"
     color: Theme.palette.background
     title: {
