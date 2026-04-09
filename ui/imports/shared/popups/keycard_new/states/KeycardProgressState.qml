@@ -16,6 +16,8 @@ Control {
     required property bool keycardInternalError
     required property bool wrongKeycard
     required property bool wrongKeycardProfile
+    required property bool wrongPin
+    required property int remainingAttempts
 
     required property bool processing
     required property string processingImage
@@ -238,6 +240,47 @@ Control {
                 PropertyChanges {
                     target: message
                     text: qsTr("Please try again with Keycard you read before")
+                    color: Theme.palette.dangerColor1
+                }
+            },
+            State {
+                name: "wrong-pin"
+                when: root.failure
+                      && root.wrongPin
+                      && root.keycardState !== Constants.keycard.state.blockedPIN
+                PropertyChanges {
+                    target: image
+                    source: Assets.png("keycard/wrong_card/wrong-profile")
+                }
+                PropertyChanges {
+                    target: title
+                    text: qsTr("PIN incorrect")
+                    color: Theme.palette.dangerColor1
+                }
+                PropertyChanges {
+                    target: message
+                    visible: root.remainingAttempts > 0
+                             && root.remainingAttempts < 3
+                    text: qsTr("%n attempt(s) remaining", "", root.remainingAttempts)
+                    color: Theme.palette.dangerColor1
+                }
+            },
+            State {
+                name: "blocked-pin"
+                when: root.failure
+                      && root.keycardState === Constants.keycard.state.blockedPIN
+                PropertyChanges {
+                    target: image
+                    source: Assets.png("keycard/card_inserted/writing-negative")
+                }
+                PropertyChanges {
+                    target: title
+                    text: qsTr("Keycard is blocked")
+                    color: Theme.palette.dangerColor1
+                }
+                PropertyChanges {
+                    target: message
+                    text: qsTr("Keycard is blocked due to three failed PIN input attempts")
                     color: Theme.palette.dangerColor1
                 }
             },

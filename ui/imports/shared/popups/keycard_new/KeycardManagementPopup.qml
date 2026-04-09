@@ -48,6 +48,7 @@ StatusDialog {
     }
 
     enum ImportFlowSteps {
+        EnterPin,
         EnterNewPin,
         RepeatPin,
         EnterSeedPhrase,
@@ -59,13 +60,17 @@ StatusDialog {
     QtObject {
         id: d
 
+        readonly property bool keycardHasOnlyPinSet: !!root.keycardUid && !root.keyUid
+
         property bool processing: false
         property bool success: false
         property string error: ""
 
         property bool factoryResetConfirmationChecked: false
 
-        property int importStep: KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+        property int importStep: d.keycardHasOnlyPinSet?
+                                     KeycardManagementPopup.ImportFlowSteps.EnterPin
+                                   : KeycardManagementPopup.ImportFlowSteps.EnterNewPin
 
         property string newPin: ""
         property bool pinMismatch: false
@@ -92,6 +97,10 @@ StatusDialog {
         }
 
         function nextImportStep() {
+            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterPin) {
+                d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase
+                return
+            }
             if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterNewPin) {
                 d.importStep = KeycardManagementPopup.ImportFlowSteps.RepeatPin
                 return
@@ -128,6 +137,10 @@ StatusDialog {
             if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase) {
                 d.newPin = ""
                 d.pinMismatch = false
+                if (d.keycardHasOnlyPinSet) {
+                    d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterPin
+                    return
+                }
                 d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterNewPin
                 return
             }
@@ -137,6 +150,10 @@ StatusDialog {
                 d.seedPhrase = ""
                 d.seedPhraseKeyUid = ""
                 d.keyPairName = ""
+                if (d.keycardHasOnlyPinSet) {
+                    d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterPin
+                    return
+                }
                 d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterNewPin
                 return
             }
@@ -246,6 +263,8 @@ StatusDialog {
                 } else if (root.flow === Constants.keycard.flow.importSeedPhrase) {
                     if (!d.error && !d.success) {
                         switch(d.importStep) {
+                        case KeycardManagementPopup.ImportFlowSteps.EnterPin:
+                            return enterPinComponent
                         case KeycardManagementPopup.ImportFlowSteps.EnterNewPin:
                             return createPinComponent
                         case KeycardManagementPopup.ImportFlowSteps.RepeatPin:
@@ -408,6 +427,9 @@ StatusDialog {
             keycardInternalError: keycardErrors.internalError
             wrongKeycard: keycardErrors.wrongKeycardError
             wrongKeycardProfile: keycardErrors.wrongKeycardProfileError
+            wrongPin: keycardErrors.wrongPinError1
+                      || keycardErrors.wrongPinError2
+            remainingAttempts: root.store.remainingPinAttempts
 
             keycardState: root.store.keycardState
 
@@ -484,12 +506,25 @@ StatusDialog {
     Component {
         id: enterPinComponent
         EnterPinState {
-            wrongPin: keycardErrors.wrongPinError1 || keycardErrors.wrongPinError2
+            wrongPin: keycardErrors.wrongPinError1
+                      || keycardErrors.wrongPinError2
             remainingAttempts: root.store.remainingPinAttempts
 
             onPinCompleteChanged: {
-                if (pinComplete && root.flow === Constants.keycard.flow.readKeycard) {
+                if (!pinComplete) {
+                    return
+                }
+
+                switch(root.flow) {
+                case Constants.keycard.flow.readKeycard:
                     d.startKeycardReading(pinInput)
+                    return
+                case Constants.keycard.flow.importSeedPhrase:
+                    d.newPin = pinInput
+                    d.nextImportStep()
+                    return
+                default:
+                    return
                 }
             }
         }
@@ -501,9 +536,17 @@ StatusDialog {
             mode: EnterPinState.Mode.CreatePin
 
             onPinCompleteChanged: {
-                if (pinComplete && root.flow === Constants.keycard.flow.importSeedPhrase) {
+                if (!pinComplete) {
+                    return
+                }
+
+                switch(root.flow) {
+                case Constants.keycard.flow.importSeedPhrase:
                     d.newPin = pinInput
                     d.nextImportStep()
+                    return
+                default:
+                    return
                 }
             }
         }
@@ -520,8 +563,16 @@ StatusDialog {
             }
 
             onPinCompleteChanged: {
-                if (pinComplete && root.flow === Constants.keycard.flow.importSeedPhrase) {
+                if (!pinComplete) {
+                    return
+                }
+
+                switch(root.flow) {
+                case Constants.keycard.flow.importSeedPhrase:
                     d.nextImportStep()
+                    return
+                default:
+                    return
                 }
             }
         }
