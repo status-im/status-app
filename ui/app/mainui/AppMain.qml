@@ -971,6 +971,7 @@ Item {
         mutualContactsModel: contactsModelAdaptor.mutualContacts
 
         isDevBuild: !appMain.rootStore.isProduction
+        emojiPopup: statusEmojiPopup.item
 
         onOpenExternalLink: (link) => d.openLinkInBrowser(link)
         onSaveDomainToUnfurledWhitelist: function(domain) {

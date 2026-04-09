@@ -448,6 +448,8 @@ QtObject {
 
         readonly property string temporarilyUnavailable: qsTr("Temporarily unavailable, will be available in the next release.")
 
+        readonly property int maxNumberOfAccountsToAddWhenImportingKeyPair: 5
+
         readonly property QtObject general: QtObject {
             readonly property string purchasePage: "https://get.keycard.tech"
             readonly property int onboardingHeight: 460
@@ -516,6 +518,7 @@ QtObject {
         readonly property QtObject flow: QtObject {
             readonly property string readKeycard: "read-keycard"
             readonly property string factoryReset: "factory-reset"
+            readonly property string importSeedPhrase: "import-seed-phrase"
         }
     }
 
@@ -703,6 +706,8 @@ QtObject {
     readonly property string keyWalletType: "key"
     readonly property string seedWalletType: "seed"
     readonly property string generatedWalletType: "generated"
+
+    readonly property string walletRootPath: "m/44'/60'/0'/0"
 
 
     readonly property QtObject walletConnections: QtObject {

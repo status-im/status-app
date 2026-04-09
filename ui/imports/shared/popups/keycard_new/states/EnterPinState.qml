@@ -12,13 +12,45 @@ import utils
 Control {
     id: root
 
+    enum Mode {
+        EnterPin,
+        CreatePin,
+        RepeatPin
+    }
+
+    property int mode: EnterPinState.Mode.EnterPin
+
+    property alias pinInput: pinInputField.pinInput
+
+    // EnterPin mode
     property bool wrongPin: false
     property int remainingAttempts: -1
 
-    readonly property bool pinComplete: pinInputField.pinInput.length === Constants.keycard.general.keycardPinLength
-                                          && !root.wrongPin
+    // RepeatPin mode
+    property string pinToMatch: ""
+    readonly property bool pinMismatch: {
+        if (root.mode !== EnterPinState.Mode.RepeatPin) {
+            return false
+        }
+        if (pinInputField.pinInput.length < root.pinToMatch.length) {
+            for (let i = 0; i < pinInputField.pinInput.length; i++) {
+                if (root.pinToMatch[i] !== pinInputField.pinInput[i]) {
+                    return true
+                }
+            }
+            return false
+        }
+        return root.pinToMatch !== pinInputField.pinInput
+    }
 
-    property alias pinInput: pinInputField.pinInput
+    readonly property bool pinComplete: {
+        const full = pinInputField.pinInput.length === Constants.keycard.general.keycardPinLength
+        if (root.mode === EnterPinState.Mode.EnterPin)
+            return full && !root.wrongPin
+        if (root.mode === EnterPinState.Mode.RepeatPin)
+            return full && !root.pinMismatch
+        return full
+    }
 
     leftPadding: Theme.xlPadding
     rightPadding: Theme.xlPadding
@@ -26,14 +58,16 @@ Control {
     bottomPadding: Theme.halfPadding
 
     contentItem: ColumnLayout {
-        spacing: Theme.halfPadding
+        spacing: Theme.padding
 
         Image {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredHeight: Constants.keycard.shared.imageHeight
             Layout.preferredWidth: Constants.keycard.shared.imageWidth
-            source: root.wrongPin ? Assets.png("keycard/pin/negative")
-                                  : Assets.png("keycard/pin/in-progress")
+            source: (root.mode === EnterPinState.Mode.EnterPin && root.wrongPin)
+                    || (root.mode === EnterPinState.Mode.RepeatPin && root.pinMismatch)
+                    ? Assets.png("keycard/pin/negative")
+                    : Assets.png("keycard/pin/in-progress")
             fillMode: Image.PreserveAspectFit
             mipmap: true
         }
@@ -42,7 +76,13 @@ Control {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            text: qsTr("Enter the Keycard PIN")
+            text: {
+                switch(root.mode) {
+                case EnterPinState.Mode.CreatePin: return qsTr("Set a new Keycard PIN")
+                case EnterPinState.Mode.RepeatPin: return qsTr("Repeat the Keycard PIN")
+                default: return qsTr("Enter the Keycard PIN")
+                }
+            }
             font.weight: Font.Bold
             font.pixelSize: Theme.fontSize(22)
         }
@@ -56,7 +96,7 @@ Control {
             pinLen: Constants.keycard.general.keycardPinLength
 
             onPinInputChanged: {
-                if (root.wrongPin)
+                if (root.mode === EnterPinState.Mode.EnterPin && root.wrongPin)
                     root.wrongPin = false
             }
         }
@@ -65,8 +105,14 @@ Control {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            visible: root.wrongPin
-            text: qsTr("PIN incorrect")
+            visible: root.mode === EnterPinState.Mode.EnterPin && root.wrongPin
+                     || root.mode === EnterPinState.Mode.RepeatPin && root.pinMismatch
+            text: {
+                if (root.mode === EnterPinState.Mode.RepeatPin && root.pinMismatch) {
+                    return qsTr("PIN doesn't match")
+                }
+                return qsTr("PIN incorrect")
+            }
             font.pixelSize: Theme.tertiaryTextFontSize
             color: Theme.palette.dangerColor1
         }
@@ -75,7 +121,10 @@ Control {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            visible: root.wrongPin && root.remainingAttempts > 0 && root.remainingAttempts < 3
+            visible: root.mode === EnterPinState.Mode.EnterPin
+                     && root.wrongPin
+                     && root.remainingAttempts > 0
+                     && root.remainingAttempts < 3
             text: qsTr("%n attempt(s) remaining", "", root.remainingAttempts)
             font.pixelSize: Theme.tertiaryTextFontSize
             color: root.remainingAttempts === 1 ? Theme.palette.dangerColor1
@@ -89,7 +138,7 @@ Control {
     }
 
     onWrongPinChanged: {
-        if (wrongPin)
+        if (root.mode === EnterPinState.Mode.EnterPin && wrongPin)
             pinInputField.statesInitialization()
     }
 

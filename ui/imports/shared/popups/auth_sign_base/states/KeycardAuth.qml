@@ -70,11 +70,9 @@ Control {
             active: !!root.keyPairForProcessing
             sourceComponent: KeyPairCompactItem {
                 keyPairType: root.keyPairForProcessing.pairType
-                keyPairKeyUid: root.keyPairForProcessing.keyUid
                 keyPairName: root.keyPairForProcessing.name
                 keyPairIcon: root.keyPairForProcessing.icon
                 keyPairImage: root.keyPairForProcessing.image
-                keyPairDerivedFrom: root.keyPairForProcessing.derivedFrom
                 keyPairAccounts: root.keyPairForProcessing.accounts
                 keyPairCardLocked: root.keyPairForProcessing.locked
 

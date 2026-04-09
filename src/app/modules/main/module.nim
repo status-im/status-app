@@ -1994,7 +1994,7 @@ method getSigningModule*[T](self: Module[T]): QVariant =
 ################################################################################
 method prepareKeycardManagementModule*[T](self: Module[T]) =
   if self.keycardManagementModule.isNil:
-    self.keycardManagementModule = keycard_management_module.newModule[Module[T]](self, self.events, self.keycardServiceV2)
+    self.keycardManagementModule = keycard_management_module.newModule[Module[T]](self, self.events, self.keycardServiceV2, self.accountsService, self.walletAccountService)
 
 method destroyKeycardManagementModule*[T](self: Module[T]) =
   if not self.keycardManagementModule.isNil:

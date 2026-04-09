@@ -9,6 +9,9 @@ QtObject {
     signal keycardFactoryResetSuccess()
     signal keycardFactoryResetError(string error)
 
+    signal keycardImportKeyPairSuccess()
+    signal keycardImportKeyPairError(string error)
+
     readonly property bool ready: d.ready
     readonly property string userProfileKeyUid: userProfile.keyUid
 
@@ -34,6 +37,14 @@ QtObject {
 
         function onKeycardFactoryResetError(error) {
             root.keycardFactoryResetError(error)
+        }
+
+        function onKeycardImportKeyPairSuccess() {
+            root.keycardImportKeyPairSuccess()
+        }
+
+        function onKeycardImportKeyPairError(error) {
+            root.keycardImportKeyPairError(error)
         }
     }
 
@@ -114,5 +125,45 @@ QtObject {
             return
         }
         d.mainModuleInst.keycardManagementModule.startFactoryReset(keycardUid)
+    }
+
+    function getKeyUidForSeedPhrase(seedPhrase) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return ""
+        }
+        return d.mainModuleInst.keycardManagementModule.getKeyUidForSeedPhrase(seedPhrase)
+    }
+
+    function isKnownKeyUid(keyUid) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return false
+        }
+        return d.mainModuleInst.keycardManagementModule.isKnownKeyUid(keyUid)
+    }
+
+    function getKeyPairNameForKeyUid(keyUid) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return ""
+        }
+        return d.mainModuleInst.keycardManagementModule.getKeyPairNameForKeyUid(keyUid)
+    }
+
+    function getKeyPairAccountPathsJsonForKeyUid(keyUid) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return "[]"
+        }
+        return d.mainModuleInst.keycardManagementModule.getKeyPairAccountPathsJsonForKeyUid(keyUid)
+    }
+
+    function startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
     }
 }

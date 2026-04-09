@@ -118,6 +118,7 @@ QtObject {
     signal keycardManagementResult(string keycardState, string keycardUid, string keyUid, int remainingPinAttempts, int remainingPukAttempts,
                                    int availableSlots, string cardMetadataName, string cardMetadataWalletAccountsJson)
     signal keycardFactoryResetDone()
+    signal keycardImportKeyPairDone(bool success, string keyUid)
     ///////////////////////////////////////////////////////////////
 
     signal openAddEditSavedAddressesPopup(var params)

@@ -45,6 +45,25 @@ QtObject:
   proc startFactoryReset*(self: View, keycardUid: string) {.slot.} =
     self.delegate.startFactoryReset(keycardUid)
 
+  proc keycardImportKeyPairSuccess*(self: View) {.signal.}
+  proc keycardImportKeyPairError*(self: View, error: string) {.signal.}
+
+  proc getKeyUidForSeedPhrase*(self: View, seedPhrase: string): string {.slot.} =
+    return self.delegate.getKeyUidForSeedPhrase(seedPhrase)
+
+  proc isKnownKeyUid*(self: View, keyUid: string): bool {.slot.} =
+    return self.delegate.isKnownKeyUid(keyUid)
+
+  proc getKeyPairNameForKeyUid*(self: View, keyUid: string): string {.slot.} =
+    return self.delegate.getKeyPairNameForKeyUid(keyUid)
+
+  proc getKeyPairAccountPathsJsonForKeyUid*(self: View, keyUid: string): string {.slot.} =
+    return self.delegate.getKeyPairAccountPathsJsonForKeyUid(keyUid)
+
+  proc startLoadSeedPhrase*(self: View, pin: string, seedPhrase: string, metadataName: string,
+      metadataAccounts: string) {.slot.} =
+    self.delegate.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
+
   proc keycardStateChanged*(self: View) {.signal.}
   proc getKeycardState*(self: View): string {.slot.} =
     return self.keycardState

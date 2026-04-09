@@ -117,7 +117,13 @@ SettingsContentBase {
                                 availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
         }
 
-        function onKeycardFactoryResetDone() {
+        function onKeycardFactoryResetDone(success) {
+            console.info("resetting keycard done successfully: ", success)
+            d.showMainScreen()
+        }
+
+        function onKeycardImportKeyPairDone(success, keyUid) {
+            console.info("importing key pair with keyUid: ", keyUid, " done successfully: ", success)
             d.showMainScreen()
         }
     }

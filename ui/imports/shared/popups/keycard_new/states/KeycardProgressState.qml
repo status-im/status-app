@@ -81,11 +81,31 @@ Control {
 
         states: [
             State {
+                name: "success"
+                when: !root.failure
+                      && root.success
+                PropertyChanges {
+                    target: image
+                    source: root.successImage
+                }
+                PropertyChanges {
+                    target: title
+                    text: root.successTitle
+                    color: Theme.palette.directColor1
+                }
+                PropertyChanges {
+                    target: message
+                    text: root.successMessage
+                    color: Theme.palette.directColor1
+                }
+            },
+            State {
                 name: "waiting-for-reader"
-                when: root.keycardState === Constants.keycard.state.waitingForReader
-                      || root.keycardState === Constants.keycard.state.noReadersFound
-                      || root.keycardState === Constants.keycard.state.unknownReaderState
-                      || root.keycardState === ""
+                when: !root.failure
+                      && (root.keycardState === Constants.keycard.state.waitingForReader
+                          || root.keycardState === Constants.keycard.state.noReadersFound
+                          || root.keycardState === Constants.keycard.state.unknownReaderState
+                          || root.keycardState === "")
                 PropertyChanges {
                     target: image
                     source: Assets.png("keycard/wrong_card/something-went-wrong")
@@ -102,7 +122,8 @@ Control {
             },
             State {
                 name: "waiting-for-card"
-                when: root.keycardState === Constants.keycard.state.waitingForCard
+                when: !root.failure
+                      && root.keycardState === Constants.keycard.state.waitingForCard
                 PropertyChanges {
                     target: image
                     source: Assets.png("keycard/card_insert/insert")
@@ -119,7 +140,8 @@ Control {
             },
             State {
                 name: "reading-card"
-                when: !root.keycardInternalError
+                when: !root.failure
+                      && !root.keycardInternalError
                       && !root.wrongKeycard
                       && !root.wrongKeycardProfile
                       && (root.keycardState === Constants.keycard.state.connectingCard
@@ -143,7 +165,8 @@ Control {
             },
             State {
                 name: "not-keycard"
-                when: root.keycardState === Constants.keycard.state.notKeycard
+                when: !root.failure
+                      && root.keycardState === Constants.keycard.state.notKeycard
                 PropertyChanges {
                     target: image
                     source: Assets.png("keycard/wrong_card/not-keycard")
@@ -155,15 +178,16 @@ Control {
                 }
                 PropertyChanges {
                     target: message
-                    text: qsTr("The card is not a Keycard, try again with Keycard.")
+                    text: qsTr("The card is not a Keycard, try again with Keycard")
                     color: Theme.palette.dangerColor1
                 }
             },
             State {
                 name: "connection-error"
-                when: root.keycardState === Constants.keycard.state.connectionError
-                      || root.keycardState === Constants.keycard.state.readerConnectionError
-                      || root.keycardState === Constants.keycard.state.internalError
+                when: !root.failure
+                      && (root.keycardState === Constants.keycard.state.connectionError
+                          || root.keycardState === Constants.keycard.state.readerConnectionError
+                          || root.keycardState === Constants.keycard.state.internalError)
                 PropertyChanges {
                     target: image
                     source: Assets.png("keycard/wrong_card/something-went-wrong")
@@ -181,7 +205,8 @@ Control {
             },
             State {
                 name: "wrong-keycard-profile"
-                when: root.wrongKeycardProfile
+                when: root.failure
+                      && root.wrongKeycardProfile
                 PropertyChanges {
                     target: image
                     source: Assets.png("keycard/wrong_card/wrong-profile")
@@ -199,7 +224,8 @@ Control {
             },
             State {
                 name: "wrong-keycard"
-                when: root.wrongKeycard
+                when: root.failure
+                      && root.wrongKeycard
                 PropertyChanges {
                     target: image
                     source: Assets.png("keycard/wrong_card/wrong-profile")
@@ -211,13 +237,14 @@ Control {
                 }
                 PropertyChanges {
                     target: message
-                    text: qsTr("Please try again with Keycard you read before.")
+                    text: qsTr("Please try again with Keycard you read before")
                     color: Theme.palette.dangerColor1
                 }
             },
             State {
                 name: "keycard-internal-error"
-                when: root.keycardInternalError
+                when: root.failure
+                      && root.keycardInternalError
                 PropertyChanges {
                     target: image
                     source: Assets.png("keycard/wrong_card/something-went-wrong")
@@ -235,7 +262,8 @@ Control {
             },
             State {
                 name: "processing"
-                when: root.processing
+                when: !root.failure
+                      && root.processing
                 PropertyChanges {
                     target: image
                     source: root.processingImage
@@ -248,24 +276,6 @@ Control {
                 PropertyChanges {
                     target: message
                     text: root.processingMessage
-                    color: Theme.palette.directColor1
-                }
-            },
-            State {
-                name: "success"
-                when: root.success
-                PropertyChanges {
-                    target: image
-                    source: root.successImage
-                }
-                PropertyChanges {
-                    target: title
-                    text: root.successTitle
-                    color: Theme.palette.directColor1
-                }
-                PropertyChanges {
-                    target: message
-                    text: root.successMessage
                     color: Theme.palette.directColor1
                 }
             },

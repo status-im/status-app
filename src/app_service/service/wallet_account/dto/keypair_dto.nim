@@ -12,6 +12,12 @@ const KeypairTypeKey* = "key"
 
 const SyncedFromBackup* = "backup" # means a keypair is coming from backed up data
 
+const
+  ColdWalletTypeNoNone* = ""
+  ColdWalletTypeStatusKeycard* = "status-keycard"
+  ColdWalletTypeLedger* = "ledger"
+  ColdWalletTypeTrezor* = "trezor"
+
 type
   KeypairDto* = ref object of RootObj
     keyUid*: string

@@ -85,6 +85,8 @@ QtObject {
     readonly property KeycardMgmtStores.KeycardManagementStore keycardManagementStore: KeycardMgmtStores.KeycardManagementStore {
     }
 
+    property var emojiPopup: null
+
     property var allContactsModel
     property var mutualContactsModel
 
@@ -670,6 +672,7 @@ QtObject {
             id: keycardManagementPopupComponent
             KeycardManagementPopup {
                 store: root.keycardManagementStore
+                emojiPopup: root.emojiPopup
                 onMetadataResult: function(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
                                            availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
                     Global.keycardManagementResult(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
@@ -677,6 +680,9 @@ QtObject {
                 }
                 onFactoryResetResult: function(success) {
                     Global.keycardFactoryResetDone()
+                }
+                onImportKeyPairResult: function(success, keyUid) {
+                    Global.keycardImportKeyPairDone(success, keyUid)
                 }
 
                 onClosed: destroy()

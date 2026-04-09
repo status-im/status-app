@@ -5605,10 +5605,6 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Keycard will be required for sign and login to Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Move key pair from Status wallet to Keycard</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5618,15 +5614,6 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Import an existing key pair (from recovery phrase) to Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>In case you lost Keycard, want to create a backup or import key pair
-Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5654,23 +5641,11 @@ Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Change PIN on Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If you want to have other PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>New name will be visible in Status and in other apps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Set or change PUK</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If you want additional recovery option</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5687,6 +5662,31 @@ Keycard will be required for signing</source>
     </message>
     <message>
         <source>Remove everything from Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard will be required for signing and logging in to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import a key pair from recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In case you lost Keycard, want to create a backup or import a
+key pair. Keycard will be required for signing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you want to have a different PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rename</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you want an additional recovery option</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7225,6 +7225,17 @@ Por favor, agrégala e intenta de nuevo.</translation>
     </message>
 </context>
 <context>
+    <name>EnterKeyPairNameState</name>
+    <message>
+        <source>Name your key pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>What would you like this key pair to be called?</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EnterKeypairName</name>
     <message>
         <source>Key name</source>
@@ -7354,6 +7365,18 @@ Por favor, agrégala e intenta de nuevo.</translation>
             <numerusform>Quedan %n intentos</numerusform>
         </translation>
     </message>
+    <message>
+        <source>Set a new Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Repeat the Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN doesn&apos;t match</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EnterPrivateKey</name>
@@ -7461,6 +7484,17 @@ Por favor, agrégala e intenta de nuevo.</translation>
     <message>
         <source>Enter recovery phrase for %1 key pair</source>
         <translation></translation>
+    </message>
+</context>
+<context>
+    <name>EnterSeedPhraseState</name>
+    <message>
+        <source>Enter recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Invalid recovery phrase</source>
+        <translation type="unfinished">Frase de recuperación inválida</translation>
     </message>
 </context>
 <context>
@@ -7737,13 +7771,6 @@ Are you sure you want to do this?</source>
     <message>
         <source>Remove</source>
         <translation>Eliminar</translation>
-    </message>
-</context>
-<context>
-    <name>FeeRow</name>
-    <message>
-        <source>Max.</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -9153,10 +9180,6 @@ Are you sure you want to do this?</source>
         <source>PIN correct</source>
         <translation>PIN correcto</translation>
     </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
         <translation>
@@ -9850,6 +9873,38 @@ to login to Status?</source>
     <message>
         <source>Try again</source>
         <translation type="unfinished">Inténtalo de nuevo</translation>
+    </message>
+    <message>
+        <source>Import key pair from recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try setting the PIN again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation type="unfinished">Siguiente</translation>
+    </message>
+    <message>
+        <source>Importing key pair to Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add another account</source>
+        <translation type="unfinished">Agregar otra cuenta</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Continuar</translation>
+    </message>
+    <message>
+        <source>Key pair has been imported to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is now required to sign with this key pair.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11117,6 +11172,41 @@ al cargar</translation>
     <message>
         <source>Your hidden assets will appear here</source>
         <translation>Tus activos ocultos aparecerán aquí</translation>
+    </message>
+</context>
+<context>
+    <name>ManageKeyPairAccountsState</name>
+    <message>
+        <source>Name your accounts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Colour</source>
+        <translation type="unfinished">Color</translation>
+    </message>
+    <message>
+        <source>Remove account</source>
+        <translation type="unfinished">Eliminar cuenta</translation>
+    </message>
+    <message>
+        <source>Do you want to delete the &quot;%1&quot; account?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to delete this account?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Yes, delete this account</source>
+        <translation type="unfinished">Sí, eliminar esta cuenta</translation>
+    </message>
+    <message>
+        <source>What would you like this account to be called?</source>
+        <translation type="unfinished">¿Cómo te gustaría llamar a esta cuenta?</translation>
+    </message>
+    <message>
+        <source>Preview</source>
+        <translation type="unfinished">Vista previa</translation>
     </message>
 </context>
 <context>

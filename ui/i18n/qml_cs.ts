@@ -5623,10 +5623,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Keycard will be required for sign and login to Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Move key pair from Status wallet to Keycard</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5636,15 +5632,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     </message>
     <message>
         <source>Import a new key pair to Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Import an existing key pair (from recovery phrase) to Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>In case you lost Keycard, want to create a backup or import key pair
-Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5672,23 +5659,11 @@ Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Change PIN on Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If you want to have other PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>New name will be visible in Status and in other apps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Set or change PUK</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If you want additional recovery option</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5705,6 +5680,31 @@ Keycard will be required for signing</source>
     </message>
     <message>
         <source>Remove everything from Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard will be required for signing and logging in to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import a key pair from recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>In case you lost Keycard, want to create a backup or import a
+key pair. Keycard will be required for signing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you want to have a different PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rename</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you want an additional recovery option</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -7249,6 +7249,17 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     </message>
 </context>
 <context>
+    <name>EnterKeyPairNameState</name>
+    <message>
+        <source>Name your key pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>What would you like this key pair to be called?</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EnterKeypairName</name>
     <message>
         <source>Key name</source>
@@ -7381,6 +7392,18 @@ Prosím přidejte jej a zkuste to znovu.</translation>
             <numerusform>Zbývá %n pokusů</numerusform>
         </translation>
     </message>
+    <message>
+        <source>Set a new Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Repeat the Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN doesn&apos;t match</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>EnterPrivateKey</name>
@@ -7490,6 +7513,17 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     <message>
         <source>Enter recovery phrase for %1 key pair</source>
         <translation>Zadejte obnovovací frázi pro pár klíčů %1</translation>
+    </message>
+</context>
+<context>
+    <name>EnterSeedPhraseState</name>
+    <message>
+        <source>Enter recovery phrase</source>
+        <translation type="unfinished">Zadejte obnovovací frázi</translation>
+    </message>
+    <message>
+        <source>Invalid recovery phrase</source>
+        <translation type="unfinished">Neplatná obnovovací fráze</translation>
     </message>
 </context>
 <context>
@@ -7767,13 +7801,6 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>Remove</source>
         <translation>Odstranit</translation>
-    </message>
-</context>
-<context>
-    <name>FeeRow</name>
-    <message>
-        <source>Max.</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -9195,10 +9222,6 @@ Opravdu to chcete udělat?</translation>
         <source>PIN correct</source>
         <translation>PIN správný</translation>
     </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation type="unfinished">Keycard zablokována</translation>
-    </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
         <translation>
@@ -9914,6 +9937,38 @@ k přihlášení do Statusu?</translation>
     <message>
         <source>Try again</source>
         <translation type="unfinished">Zkusit znovu</translation>
+    </message>
+    <message>
+        <source>Import key pair from recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try setting the PIN again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation type="unfinished">Další</translation>
+    </message>
+    <message>
+        <source>Importing key pair to Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add another account</source>
+        <translation type="unfinished">Přidat další účet</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Pokračovat</translation>
+    </message>
+    <message>
+        <source>Key pair has been imported to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is now required to sign with this key pair.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11193,6 +11248,41 @@ selhalo</translation>
     <message>
         <source>Your hidden assets will appear here</source>
         <translation>Zde se zobrazí vaše skrytá aktiva</translation>
+    </message>
+</context>
+<context>
+    <name>ManageKeyPairAccountsState</name>
+    <message>
+        <source>Name your accounts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Colour</source>
+        <translation type="unfinished">Barva</translation>
+    </message>
+    <message>
+        <source>Remove account</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to delete the &quot;%1&quot; account?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do you want to delete this account?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Yes, delete this account</source>
+        <translation type="unfinished">Ano, smazat tento účet</translation>
+    </message>
+    <message>
+        <source>What would you like this account to be called?</source>
+        <translation type="unfinished">Jak byste chtěli tento účet nazvat?</translation>
+    </message>
+    <message>
+        <source>Preview</source>
+        <translation type="unfinished">Náhled</translation>
     </message>
 </context>
 <context>

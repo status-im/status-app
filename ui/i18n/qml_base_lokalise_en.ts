@@ -6826,11 +6826,6 @@
       <translation>Move profile key pair to Keycard</translation>
     </message>
     <message>
-      <source>Keycard will be required for sign and login to Status</source>
-      <comment>DetailsView</comment>
-      <translation>Keycard will be required for sign and login to Status</translation>
-    </message>
-    <message>
       <source>Move key pair from Status wallet to Keycard</source>
       <comment>DetailsView</comment>
       <translation>Move key pair from Status wallet to Keycard</translation>
@@ -6844,16 +6839,6 @@
       <source>Import a new key pair to Keycard</source>
       <comment>DetailsView</comment>
       <translation>Import a new key pair to Keycard</translation>
-    </message>
-    <message>
-      <source>Import an existing key pair (from recovery phrase) to Keycard</source>
-      <comment>DetailsView</comment>
-      <translation>Import an existing key pair (from recovery phrase) to Keycard</translation>
-    </message>
-    <message>
-      <source>In case you lost Keycard, want to create a backup or import key pair&#xA;Keycard will be required for signing</source>
-      <comment>DetailsView</comment>
-      <translation>In case you lost Keycard, want to create a backup or import key pair&#xA;Keycard will be required for signing</translation>
     </message>
     <message>
       <source>Unblock with recovery phrase</source>
@@ -6886,16 +6871,6 @@
       <translation>You’ll be able to sign transactions in Status wallet with Keycard</translation>
     </message>
     <message>
-      <source>Change PIN on Keycard</source>
-      <comment>DetailsView</comment>
-      <translation>Change PIN on Keycard</translation>
-    </message>
-    <message>
-      <source>If you want to have other PIN</source>
-      <comment>DetailsView</comment>
-      <translation>If you want to have other PIN</translation>
-    </message>
-    <message>
       <source>New name will be visible in Status and in other apps</source>
       <comment>DetailsView</comment>
       <translation>New name will be visible in Status and in other apps</translation>
@@ -6904,11 +6879,6 @@
       <source>Set or change PUK</source>
       <comment>DetailsView</comment>
       <translation>Set or change PUK</translation>
-    </message>
-    <message>
-      <source>If you want additional recovery option</source>
-      <comment>DetailsView</comment>
-      <translation>If you want additional recovery option</translation>
     </message>
     <message>
       <source>Status password will be required to login and signing</source>
@@ -6929,6 +6899,36 @@
       <source>Remove everything from Keycard</source>
       <comment>DetailsView</comment>
       <translation>Remove everything from Keycard</translation>
+    </message>
+    <message>
+      <source>Keycard will be required for signing and logging in to Status</source>
+      <comment>DetailsView</comment>
+      <translation>Keycard will be required for signing and logging in to Status</translation>
+    </message>
+    <message>
+      <source>Import a key pair from recovery phrase</source>
+      <comment>DetailsView</comment>
+      <translation>Import a key pair from recovery phrase</translation>
+    </message>
+    <message>
+      <source>In case you lost Keycard, want to create a backup or import a&#xA;key pair. Keycard will be required for signing</source>
+      <comment>DetailsView</comment>
+      <translation>In case you lost Keycard, want to create a backup or import a&#xA;key pair. Keycard will be required for signing</translation>
+    </message>
+    <message>
+      <source>If you want to have a different PIN</source>
+      <comment>DetailsView</comment>
+      <translation>If you want to have a different PIN</translation>
+    </message>
+    <message>
+      <source>Rename</source>
+      <comment>DetailsView</comment>
+      <translation>Rename</translation>
+    </message>
+    <message>
+      <source>If you want an additional recovery option</source>
+      <comment>DetailsView</comment>
+      <translation>If you want an additional recovery option</translation>
     </message>
   </context>
   <context>
@@ -8814,6 +8814,19 @@
     </message>
   </context>
   <context>
+    <name>EnterKeyPairNameState</name>
+    <message>
+      <source>Name your key pair</source>
+      <comment>EnterKeyPairNameState</comment>
+      <translation>Name your key pair</translation>
+    </message>
+    <message>
+      <source>What would you like this key pair to be called?</source>
+      <comment>EnterKeyPairNameState</comment>
+      <translation>What would you like this key pair to be called?</translation>
+    </message>
+  </context>
+  <context>
     <name>EnterKeypairName</name>
     <message>
       <source>Key name</source>
@@ -8969,6 +8982,21 @@
         <numerusform>%n attempts remaining</numerusform>
       </translation>
     </message>
+    <message>
+      <source>Set a new Keycard PIN</source>
+      <comment>EnterPinState</comment>
+      <translation>Set a new Keycard PIN</translation>
+    </message>
+    <message>
+      <source>Repeat the Keycard PIN</source>
+      <comment>EnterPinState</comment>
+      <translation>Repeat the Keycard PIN</translation>
+    </message>
+    <message>
+      <source>PIN doesn&#39;t match</source>
+      <comment>EnterPinState</comment>
+      <translation>PIN doesn&#39;t match</translation>
+    </message>
   </context>
   <context>
     <name>EnterPrivateKey</name>
@@ -9100,6 +9128,19 @@
       <source>Enter recovery phrase for %1 key pair</source>
       <comment>EnterSeedPhrase</comment>
       <translation>Enter recovery phrase for %1 key pair</translation>
+    </message>
+  </context>
+  <context>
+    <name>EnterSeedPhraseState</name>
+    <message>
+      <source>Enter recovery phrase</source>
+      <comment>EnterSeedPhraseState</comment>
+      <translation>Enter recovery phrase</translation>
+    </message>
+    <message>
+      <source>Invalid recovery phrase</source>
+      <comment>EnterSeedPhraseState</comment>
+      <translation>Invalid recovery phrase</translation>
     </message>
   </context>
   <context>
@@ -9437,14 +9478,6 @@
       <source>Remove</source>
       <comment>FavoriteMenu</comment>
       <translation>Remove</translation>
-    </message>
-  </context>
-  <context>
-    <name>FeeRow</name>
-    <message>
-      <source>Max.</source>
-      <comment>FeeRow</comment>
-      <translation>Max.</translation>
     </message>
   </context>
   <context>
@@ -11151,11 +11184,6 @@
       <comment>KeycardEnterPinPage</comment>
       <translation>PIN correct</translation>
     </message>
-    <message>
-      <source>Keycard blocked</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>Keycard blocked</translation>
-    </message>
     <message numerus="yes">
       <source>%n attempt(s) remaining</source>
       <comment>KeycardEnterPinPage</comment>
@@ -11990,6 +12018,46 @@
       <source>Try again</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Try again</translation>
+    </message>
+    <message>
+      <source>Import key pair from recovery phrase</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Import key pair from recovery phrase</translation>
+    </message>
+    <message>
+      <source>Try setting the PIN again</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Try setting the PIN again</translation>
+    </message>
+    <message>
+      <source>Next</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Next</translation>
+    </message>
+    <message>
+      <source>Importing key pair to Keycard...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Importing key pair to Keycard...</translation>
+    </message>
+    <message>
+      <source>Add another account</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Add another account</translation>
+    </message>
+    <message>
+      <source>Continue</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Continue</translation>
+    </message>
+    <message>
+      <source>Key pair has been imported to Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Key pair has been imported to Keycard</translation>
+    </message>
+    <message>
+      <source>Keycard is now required to sign with this key pair.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Keycard is now required to sign with this key pair.</translation>
     </message>
   </context>
   <context>
@@ -13524,6 +13592,49 @@
       <source>Your hidden assets will appear here</source>
       <comment>ManageHiddenPanel</comment>
       <translation>Your hidden assets will appear here</translation>
+    </message>
+  </context>
+  <context>
+    <name>ManageKeyPairAccountsState</name>
+    <message>
+      <source>Name your accounts</source>
+      <comment>ManageKeyPairAccountsState</comment>
+      <translation>Name your accounts</translation>
+    </message>
+    <message>
+      <source>Colour</source>
+      <comment>ManageKeyPairAccountsState</comment>
+      <translation>Colour</translation>
+    </message>
+    <message>
+      <source>Remove account</source>
+      <comment>ManageKeyPairAccountsState</comment>
+      <translation>Remove account</translation>
+    </message>
+    <message>
+      <source>Do you want to delete the &#34;%1&#34; account?</source>
+      <comment>ManageKeyPairAccountsState</comment>
+      <translation>Do you want to delete the &#34;%1&#34; account?</translation>
+    </message>
+    <message>
+      <source>Do you want to delete this account?</source>
+      <comment>ManageKeyPairAccountsState</comment>
+      <translation>Do you want to delete this account?</translation>
+    </message>
+    <message>
+      <source>Yes, delete this account</source>
+      <comment>ManageKeyPairAccountsState</comment>
+      <translation>Yes, delete this account</translation>
+    </message>
+    <message>
+      <source>What would you like this account to be called?</source>
+      <comment>ManageKeyPairAccountsState</comment>
+      <translation>What would you like this account to be called?</translation>
+    </message>
+    <message>
+      <source>Preview</source>
+      <comment>ManageKeyPairAccountsState</comment>
+      <translation>Preview</translation>
     </message>
   </context>
   <context>

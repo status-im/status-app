@@ -22,11 +22,9 @@ StatusListItem {
     property bool useTransparentItemBackgroundColor: false
 
     property int keyPairType: Constants.keycard.keyPairType.unknown
-    property string keyPairKeyUid: ""
     property string keyPairName: ""
     property string keyPairIcon: ""
     property string keyPairImage: ""
-    property string keyPairDerivedFrom: ""
     property bool keyPairCardLocked: false
     property var keyPairAccounts
 
@@ -87,27 +85,30 @@ StatusListItem {
     tagsModel: root.keyPairAccounts
 
     tagsDelegate: StatusListItemTag {
-        bgColor: Utils.getColorForId(Theme.palette, model.account.colorId)
+        readonly property var acc: model.account !== undefined && model.account !== null
+                                   ? model.account
+                                   : model
+
+        bgColor: Utils.getColorForId(Theme.palette, acc.colorId ?? "")
         height: Theme.defaultBigPadding
         bgRadius: 6
         tagClickable: root.tagClickable
-        closeButtonVisible: root.tagDisplayRemoveAccountButton?
-                                index > 0 : false
+        closeButtonVisible: root.tagDisplayRemoveAccountButton
         asset {
-            emoji: model.account.emoji
+            emoji: acc.emoji ?? ""
             emojiSize: Emoji.size.verySmall
-            isLetterIdenticon: !!model.account.emoji
-            name: model.account.icon
+            isLetterIdenticon: !!(acc.emoji ?? "")
+            name: acc.icon ?? ""
             color: Theme.palette.indirectColor1
             width: 16
             height: 16
         }
-        title: Utils.appTranslation(model.account.name)
+        title: Utils.appTranslation(acc.name ?? "")
         titleText.color: Theme.palette.indirectColor1
         titleText.font.pixelSize: Theme.tertiaryTextFontSize
 
         onClicked: {
-            root.removeAccount(index, model.account.name)
+            root.removeAccount(index, acc.name ?? "")
         }
 
         onTagClicked: {

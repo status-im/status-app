@@ -286,7 +286,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: import an existing key pair from recovery phrase to Keycard flow...")
+            Global.openKeycardManagementPopup(Constants.keycard.flow.importSeedPhrase, root.keyUid, root.keycardUid)
         }
     }
 
