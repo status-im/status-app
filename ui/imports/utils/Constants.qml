@@ -366,7 +366,7 @@ QtObject {
     }
 
     readonly property QtObject keypair: QtObject {
-        readonly property int nameLengthMax: 24
+        readonly property int nameLengthMax: 20
         readonly property int nameLengthMin: 5
 
         readonly property QtObject type: QtObject {
