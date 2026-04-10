@@ -144,6 +144,7 @@ def pytest_runtest_setup(item):
 
     test_data.error = []
     test_data.steps = []
+    test_data.aut_screenshot_attached = False
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -166,7 +167,11 @@ def pytest_runtest_makereport(item, call):
         test_data.error = rep.longreprtext
 
 
-def pytest_exception_interact(node):
+def pytest_exception_interact(node, call, report):
+    if call.when != 'call':
+        return
+    if test_data.aut_screenshot_attached:
+        return
     test_path, test_name, test_params = generate_test_info(node)
     node_dir: SystemPath = configs.testpath.RUN / test_path / test_name / test_params
     node_dir.mkdir(parents=True, exist_ok=True)

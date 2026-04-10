@@ -10,6 +10,7 @@ from PIL import ImageGrab
 import configs
 import driver
 import shortuuid
+from tests import test_data
 from datetime import datetime
 from configs.system import get_platform
 from driver import context
@@ -65,6 +66,7 @@ class AUT:
                     name=f'Screenshot on fail: {self.aut_id}',
                     body=screenshot.read_bytes(),
                     attachment_type=allure.attachment_type.PNG)
+                test_data.aut_screenshot_attached = True
             except Exception as err:
                 LOG.error(err)
 
