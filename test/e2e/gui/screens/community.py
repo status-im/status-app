@@ -318,10 +318,16 @@ class CommunityLeftPanel(QObject):
         sy = max(1, int(scroll_obj.height / 2))
         last_error: typing.Optional[BaseException] = None
 
+        def _object_name(o) -> str:
+            try:
+                return str(o.objectName)
+            except (AttributeError, RuntimeError):
+                return ''
+
         while time.monotonic() < deadline:
             obj = next(
                 (o for o in driver.findAllObjects(self.chatListItemDropAreaItem.real_name)
-                 if str(o.objectName) == name),
+                 if _object_name(o) == name),
                 None,
             )
 

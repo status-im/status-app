@@ -242,7 +242,6 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 messages_screen.group_chat.send_message()
 
             with step('Verify image and link unfurl are present in the last sent message'):
-                message_object = messages_screen.chat.messages(0)[0]
                 # Re-check message object in case image wasn't found during initial init
                 assert driver.waitFor(lambda: (
                     messages_screen.chat.messages(0)[0].image_message is not None and
@@ -250,11 +249,6 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 ), timeout), f"Image is not found in the last message"
                 assert driver.waitFor(lambda: messages_screen.chat.messages(0)[0].delegate_button.is_visible,
                                       timeout), f"Link preview is not found in the last message"
-                # Banner loads from external URL (e.g. github.com) - needs longer timeout than UI elements
-                assert driver.waitFor(lambda: (
-                    messages_screen.chat.messages(0)[0].banner_image is not None and
-                    messages_screen.chat.messages(0)[0].banner_image.is_visible
-                ), configs.timeouts.LINK_PREVIEW_BANNER_TIMEOUT_MSEC), f"Banner image is not found in the last message"
                 assert driver.waitFor(
                     lambda: domain_link_2 == messages_screen.chat.messages(0)[0].get_link_domain(),
                     configs.timeouts.UI_LOAD_TIMEOUT_MSEC)

@@ -55,4 +55,7 @@ class MessageContextMenuPopup(QObject):
         # for 1st element occurrence is absent in real name, for other elements it starts from 2
         if occurrence > 1:
             self._emoji_reaction.real_name['occurrence'] = occurrence
+        else:
+            self._emoji_reaction.real_name.pop('occurrence', None)
         self._emoji_reaction.click()
+        self._emoji_reaction.real_name.pop('occurrence', None)

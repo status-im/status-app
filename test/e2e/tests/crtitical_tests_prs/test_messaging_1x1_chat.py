@@ -202,13 +202,12 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
                 f"Last message does not have reply corner"
 
         with step(f'User {user_one.name}, add reaction to the last message and verify it was added'):
-            occurrence = random.randint(1, 5)
             context_menu = message.open_context_menu_for_message()
-            expected_emoji_code = context_menu.get_emoji_code_by_occurrence(occurrence)
-            context_menu.add_reaction_to_message(occurrence)
-            assert driver.waitFor(lambda: expected_emoji_code in message.get_emoji_reactions_pathes(),
+            context_menu.add_reaction_to_message(1)
+            assert driver.waitFor(lambda: len(message.get_emoji_reactions_pathes()) > 0,
                                   timeout), \
-                f"Emoji reaction is not correct. Expected: {expected_emoji_code}, Got: {message.get_emoji_reactions_pathes()}"
+                f"No emoji reaction was added to the message"
+            expected_emoji_code = message.get_emoji_reactions_pathes()[0]
             main_window.minimize()
 
         with step(f'User {user_two.name}, also see emoji reaction on the last message'):

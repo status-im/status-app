@@ -633,6 +633,7 @@ class PermissionsSettingsView(QObject):
     def set_who_holds_asset_and_amount(self, asset: str, amount: str, index: int = None):
         if asset:
             self.who_holds_plus_button.click()
+            self._who_holds_asset_field.wait_until_appears(15000)
             self._who_holds_asset_field.clear().text = asset
             # Wait for search results to appear
             time.sleep(0.5)

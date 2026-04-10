@@ -3,8 +3,6 @@
 UI_LOAD_TIMEOUT_SEC = 5
 UI_LOAD_TIMEOUT_MSEC = UI_LOAD_TIMEOUT_SEC * 1000
 LOADING_LIST_TIMEOUT_MSEC = 20000
-# External link preview banner loads from URL - needs longer timeout than UI elements
-LINK_PREVIEW_BANNER_TIMEOUT_MSEC = 30000
 PROCESS_TIMEOUT_SEC = 10
 PROCESS_TIMEOUT_SEC_WINDOWS = 20  # Longer timeout for slow first startup on Windows VMs
 APP_LOAD_TIMEOUT_MSEC = 60000
