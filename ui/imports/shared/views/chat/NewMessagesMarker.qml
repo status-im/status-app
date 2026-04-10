@@ -1,10 +1,7 @@
 import QtQuick
-import QtQuick.Layouts
 
 import StatusQ.Core
 import StatusQ.Core.Theme
-
-import utils
 
 Item {
     id: root
@@ -12,64 +9,80 @@ Item {
     property double timestamp
     property int count
 
-    implicitHeight: 28
+    implicitHeight: Math.max(28, txt.implicitHeight + 8)
 
-    RowLayout {
-        anchors {
-            left: parent.left
-            right: parent.right
-            leftMargin: 16
-            rightMargin: 16
-            verticalCenter: parent.verticalCenter
-        }
+    QtObject {
+        id: d
 
-        spacing: 8
+        readonly property int horizontalPadding: 16
+        readonly property int minimumLineWidth: 16
+        readonly property int internalPadding: 8
+    }
 
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: 1
-            color: Theme.palette.primaryColor1
-        }
+    Rectangle {
+        height: 1
+        anchors.left: parent.left
+        anchors.leftMargin: d.horizontalPadding
+
+        anchors.right: txt.left
+        anchors.rightMargin: -(txt.width - txt.contentWidth) / 2 + d.internalPadding
+
+        anchors.verticalCenter: parent.verticalCenter
+        color: Theme.palette.primaryColor1
+    }
+
+    Rectangle {
+        height: 1
+        anchors.left: txt.right
+        anchors.right: newBadge.left
+        anchors.verticalCenter: parent.verticalCenter
+
+        anchors.leftMargin: -(txt.width - txt.contentWidth) / 2 + d.internalPadding
+        color: Theme.palette.primaryColor1
+    }
+
+    Rectangle {
+        id: newBadge
+        height: 16
+        width: newLabel.width + 8
+
+        anchors.right: parent.right
+        anchors.rightMargin: d.horizontalPadding
+        anchors.verticalCenter: parent.verticalCenter
+
+        radius: 4
+        color: Theme.palette.primaryColor1
 
         StatusBaseText {
-            text: qsTr("%n missed message(s) since %1", "", count).arg(LocaleUtils.formatDate(timestamp))
-            color: Theme.palette.primaryColor1
-            font.weight: Font.Bold
-            font.pixelSize: Theme.additionalTextSize
+            id: newLabel
+            anchors.centerIn: parent
+            text: qsTr("NEW", "new message(s)")
+            color: Theme.palette.indirectColor1
+            font.weight: Font.DemiBold
+            font.pixelSize: Theme.fontSize(11)
         }
+    }
 
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+    StatusBaseText {
+        id: txt
 
-            RowLayout {
-                width: parent.width
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 0
+        anchors.left: parent.left
+        anchors.right: newBadge.left
+        anchors.verticalCenter: parent.verticalCenter
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    implicitHeight: 1
-                    color: Theme.palette.primaryColor1
-                }
+        anchors.leftMargin: d.horizontalPadding + d.minimumLineWidth + d.internalPadding
+        anchors.rightMargin: d.minimumLineWidth + d.internalPadding
 
-                Rectangle {
-                    implicitHeight: 16
-                    implicitWidth: newLabel.width + 2*4
+        text: qsTr("%n missed message(s) since %1", "", count).arg(
+                  LocaleUtils.formatDate(timestamp))
+        color: Theme.palette.primaryColor1
+        font.weight: Font.Bold
+        font.pixelSize: Theme.additionalTextSize
+        maximumLineCount: 2
+        elide: Text.ElideRight
 
-                    radius: 4
-                    color: Theme.palette.primaryColor1
+        horizontalAlignment: Text.AlignHCenter
 
-                    StatusBaseText {
-                        id: newLabel
-                        anchors.centerIn: parent
-                        text: qsTr("NEW", "new message(s)")
-                        color: Theme.palette.indirectColor1
-                        font.weight: Font.DemiBold
-                        font.pixelSize: Theme.fontSize(11)
-                    }
-                }
-            }
-        }
+        wrapMode: Text.Wrap
     }
 }
