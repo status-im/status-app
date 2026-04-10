@@ -122,6 +122,7 @@
         <file>StatusQ/Controls/StatusItemPicker.qml</file>
         <file>StatusQ/Controls/StatusLabeledSlider.qml</file>
         <file>StatusQ/Controls/StatusLinkText.qml</file>
+        <file>StatusQ/Controls/StatusSecondaryActionHandler.qml</file>
         <file>StatusQ/Controls/NativeSwipeHandler.qml</file>
         <file>StatusQ/Controls/NativeSwipeHandlerImpl.qml</file>
         <file>StatusQ/Controls/NativeIndicator.qml</file>

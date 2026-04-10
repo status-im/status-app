@@ -46,6 +46,7 @@ StatusProgressBar 0.1 StatusProgressBar.qml
 StatusRadioButton 0.1 StatusRadioButton.qml
 StatusRoundButton 0.1 StatusRoundButton.qml
 StatusScrollBar 0.1 StatusScrollBar.qml
+StatusSecondaryActionHandler 0.1 StatusSecondaryActionHandler.qml
 StatusSeedPhraseField 0.1 StatusSeedPhraseField.qml
 StatusSeedPhraseInput 0.1 StatusSeedPhraseInput.qml
 StatusSeedPhraseTabBar 0.1 StatusSeedPhraseTabBar.qml
