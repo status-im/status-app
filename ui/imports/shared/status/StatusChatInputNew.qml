@@ -584,34 +584,8 @@ Control {
         Rectangle {
             id: backgroundRect
 
-            states: [
-                State {
-                    when: StatusQUtils.Utils.isMobile
-
-                    PropertyChanges {
-                        target: backgroundRect
-
-                        anchors.fill: parent
-                        topLeftRadius: 20
-                        topRightRadius: 20
-
-                        anchors.leftMargin: -1
-                        anchors.rightMargin: -1
-                        anchors.bottomMargin: -1
-                    }
-                },
-                State {
-                    when: !StatusQUtils.Utils.isMobile
-
-                    PropertyChanges {
-                        target: backgroundRect
-
-                        width: backgroundRect.parent.width
-                        height: 1
-                    }
-                }
-            ]
-
+            width: backgroundRect.parent.width
+            height: 1
             border.color: Theme.palette.directColor7
             color: StatusColors.transparent
         }
