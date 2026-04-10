@@ -57,7 +57,10 @@ Flow {
 
     QtObject {
         id: d
+
         property bool localAskAboutUnfurling: true
+        readonly property int maximumContentWidth: 300
+        readonly property int contentWidth: Math.min(maximumContentWidth, root.width)
     }
 
     Loader {
@@ -73,6 +76,9 @@ Flow {
         model: root.paymentRequestModel
         delegate: PaymentRequestCardDelegate {
             required property var model
+
+            width: d.contentWidth
+
             objectName: "PaymentRequestDelegate_" + model.index
             areTestNetworksEnabled: root.areTestNetworksEnabled
             amount: {
@@ -101,6 +107,8 @@ Flow {
         delegate: LinkPreviewGifDelegate {
             required property string modelData
 
+            imageWidth: d.contentWidth
+
             link: modelData
             isOnline: root.isOnline
             playAnimation: root.playAnimations
@@ -116,6 +124,8 @@ Flow {
         model: root.linkPreviewModel
         delegate: LinkPreviewCardDelegate {
             id: delegate
+
+            width: d.contentWidth
 
             highlight: url === root.highlightLink
             onHoveredChanged: {
@@ -143,7 +153,7 @@ Flow {
 
         Rectangle {
             id: enableLinkRoot
-            implicitWidth: 300
+            implicitWidth: d.contentWidth
             implicitHeight: childrenRect.height + Theme.smallPadding
             radius: 16
             border.width: 1
@@ -204,7 +214,7 @@ Flow {
                 width: parent.width
                 anchors.top: sep1.bottom
                 Component.onCompleted: {
-                    background.radius = 0;
+                    background.radius = 0
                 }
             }
             Separator {
@@ -212,30 +222,18 @@ Flow {
                 anchors.top: enableBtn.bottom
                 anchors.topMargin: 0
             }
-            Item {
+
+            StatusFlatButton {
+                id: dontAskBtn
                 width: parent.width
                 height: 44
                 anchors.top: sep2.bottom
-                clip: true
-                StatusFlatButton {
-                    id: dontAskBtn
-                    width: parent.width
-                    height: (parent.height+Theme.padding)
-                    anchors.top: parent.top
-                    anchors.topMargin: -Theme.padding
-                    contentItem: Item {
-                        StatusBaseText {
-                            anchors.centerIn: parent
-                            anchors.verticalCenterOffset: Theme.halfPadding
-                            font: dontAskBtn.font
-                            color: dontAskBtn.textColor
-                            text: qsTr("Don't ask me again")
-                        }
-                    }
-                    onClicked: root.setNeverAskAboutUnfurlingAgain(true)
-                    Component.onCompleted: {
-                        background.radius = Theme.padding
-                    }
+                text: qsTr("Don't ask me again")
+                onClicked: root.setNeverAskAboutUnfurlingAgain(true)
+                Component.onCompleted: {
+                    background.radius = 0
+                    background.bottomRightRadius = Theme.padding
+                    background.bottomRightRadius = Theme.padding
                 }
             }
         }

@@ -714,10 +714,16 @@ Loader {
                 StatusBaseText {
                     text: qsTr("<b>%1</b> deleted this message").arg(root.deletedByContactDisplayName)
                     Layout.alignment: Qt.AlignVCenter
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: implicitWidth
+                    elide: Text.ElideRight
                 }
 
                 StatusTimeStampLabel {
                     Layout.alignment: Qt.AlignVCenter
+                    Layout.fillWidth: true
+                    Layout.rightMargin: Theme.padding
+
                     timestamp: root.messageTimestamp
                 }
             }

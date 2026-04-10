@@ -10,10 +10,12 @@ import StatusQ.Core.Theme
 
 CalloutCard {
     id: root
-    
+
     required property string link
     required property bool playAnimation
     required property bool isOnline
+
+    property int imageWidth: 300
 
     readonly property bool isPlaying: linkImage.playing
     readonly property alias imageAlias: linkImage.imageAlias
@@ -32,7 +34,7 @@ CalloutCard {
         objectName: "LinksMessageView_unfurledImageComponent_linkImage"
         anchors.centerIn: parent
         source: root.link
-        imageWidth: 300
+        imageWidth: root.imageWidth
         playing: root.playAnimation && localAnimationEnabled
         isOnline: root.isOnline
         asynchronous: true
