@@ -19,8 +19,9 @@ FLAG_BUY_ENABLED=${FLAG_BUY_ENABLED:-1}
 FLAG_SWAP_ENABLED=${FLAG_SWAP_ENABLED:-1}
 FLAG_BRIDGE_ENABLED=${FLAG_BRIDGE_ENABLED:-1}
 
-DESKTOP_VERSION=$(eval cd "$STATUS_DESKTOP" && git describe --tags --dirty="-dirty" --always)
-STATUSGO_VERSION=$(eval cd "$STATUS_DESKTOP/vendor/status-go" && git describe --tags --dirty="-dirty" --always)
+BUNDLE_IDENTIFIER=${BUNDLE_IDENTIFIER:-"app.status.mobile"}
+DESKTOP_VERSION=$(cd "$STATUS_DESKTOP" && ./scripts/version.sh)
+STATUSGO_VERSION=$(cd "$STATUS_DESKTOP/vendor/status-go" && ./scripts/version.sh)
 
 if [[ "$ARCH" == "x86_64" ]]; then
     CARCH="amd64"
