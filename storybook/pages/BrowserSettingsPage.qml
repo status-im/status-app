@@ -19,6 +19,7 @@ SplitView {
             property string customSearchEngineUrl: "https://example.com/search?q="
             property bool shouldShowFavoritesBar: true
             property int useBrowserEthereumExplorer: 1
+            property bool openLinksInStatus
         }
     }
     SplitView {
@@ -31,6 +32,7 @@ SplitView {
             contentWidth: parent.width
             sectionTitle: "Browser"
             
+            userUID: "0xdeadbeef"
             accountSettings: mockData.accountSettings
         }
 

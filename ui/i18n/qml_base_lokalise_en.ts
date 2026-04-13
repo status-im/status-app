@@ -3246,6 +3246,16 @@
       <comment>BrowserView</comment>
       <translation>Show bookmarks bar</translation>
     </message>
+    <message>
+      <source>Restore open tabs</source>
+      <comment>BrowserView</comment>
+      <translation>Restore open tabs</translation>
+    </message>
+    <message>
+      <source>Turn on to save your tabs only on this device and restore them next time. Turning off deletes all saved session data.</source>
+      <comment>BrowserView</comment>
+      <translation>Turn on to save your tabs only on this device and restore them next time. Turning off deletes all saved session data.</translation>
+    </message>
   </context>
   <context>
     <name>BurnTokensPopup</name>

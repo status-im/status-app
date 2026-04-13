@@ -2648,6 +2648,14 @@ Do you wish to override the security check and continue?</source>
         <source>Show bookmarks bar</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Restore open tabs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Turn on to save your tabs only on this device and restore them next time. Turning off deletes all saved session data.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BurnTokensPopup</name>

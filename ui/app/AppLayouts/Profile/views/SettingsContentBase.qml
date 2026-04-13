@@ -172,7 +172,7 @@ FocusScope {
                 Behavior on implicitHeight {
                     enabled: root.autoscrollWhenDirty
                     NumberAnimation {
-                        duration: 150
+                        duration: ThemeUtils.AnimationDuration.Fast
                         easing.type: Easing.InOutQuad
                     }
                 }
@@ -187,6 +187,7 @@ FocusScope {
         anchors.bottomMargin: d.bottomDirtyToastMargin
         anchors.horizontalCenter: parent.horizontalCenter
 
+        visible: active
         active: root.dirty
         flickable: root.autoscrollWhenDirty ? scrollView.flickable : null
         saveChangesButtonEnabled: root.saveChangesButtonEnabled

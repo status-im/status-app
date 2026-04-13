@@ -37,6 +37,7 @@ StatusSectionLayout {
     id: root
 
     required property bool isProduction
+    required property string userUID
 
     property alias settingsSubsection: leftPanel.settingsSubsection
     property int settingsSubSubsection
@@ -457,6 +458,7 @@ StatusSectionLayout {
                 implicitWidth: parent.width
                 implicitHeight: parent.height
 
+                userUID: root.userUID
                 accountSettings: localAccountSensitiveSettings
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.browserSettings)
                 contentWidth: d.contentWidth

@@ -74,6 +74,10 @@ SplitView {
             function disconnect(hostname) {
                 console.info("connectorController.disconnect", hostname)
             }
+
+            function connectorCallRPC(requestId, rpcRequestJSON) {
+                console.info("connectorController.connectorCallRPC", requestId, rpcRequestJSON)
+            }
         }
 
         platformOS: ctrlPlatformOS.currentValue
@@ -222,12 +226,22 @@ SplitView {
             checked: true
         }
 
-        Button {
-            text: "Open some tabs"
-            onClicked: {
-                browserLayout.openUrlInNewTab("https://www.kde.org")
-                browserLayout.openUrlInNewTab("https://status.app")
-                browserLayout.openUrlInNewTab("https://www.google.com")
+        RowLayout {
+            Layout.fillWidth: true
+            Switch {
+                text: "Restore open tabs"
+                checked: browserLayout.uiSettings.restoreOpenTabs
+                onToggled: {
+                    browserLayout.uiSettings.restoreOpenTabs = checked
+                    browserLayout.uiSettings.sync()
+                }
+            }
+            Button {
+                text: "Clear saved tabs"
+                onClicked: {
+                    browserLayout.uiSettings.openTabs = []
+                    browserLayout.uiSettings.sync()
+                }
             }
         }
     }

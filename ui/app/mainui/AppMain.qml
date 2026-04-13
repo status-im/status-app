@@ -2093,7 +2093,13 @@ Item {
                     Loader {
                         id: browserLayoutContainer
 
-                        active: d.isBrowserEnabled && appView.currentIndex === Constants.appViewStackIndex.browser
+                        // Do not unload section data from the memory once activated
+                        active: false
+                        Binding on active {
+                            when: d.isBrowserEnabled && appView.currentIndex === Constants.appViewStackIndex.browser
+                            value: true
+                            restoreMode: Binding.RestoreNone
+                        }
 
                         sourceComponent: appMain.rootStore.thirdpartyServicesEnabled ? browserLayoutComp: browserPrivacyWall
 
@@ -2154,6 +2160,7 @@ Item {
                         active: appView.currentIndex === Constants.appViewStackIndex.profile
                         sourceComponent: ProfileLayout {
                             isProduction: appMain.rootStore.isProduction
+                            userUID: appMain.profileStore.pubKey
 
                             sharedRootStore: appMain.sharedRootStore
                             utilsStore: appMain.utilsStore
