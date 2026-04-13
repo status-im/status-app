@@ -1666,7 +1666,11 @@ Item {
                 onEnableNewsRequested: appMain.notificationsStore.notificationsSettings.notifSettingStatusNews = Constants.settingsSection.notifications.sendAlertsValue
 
                 // Card Interactions
-                onMarkNotificationRead: (notificationId) => { appMain.activityCenterStore.markActivityCenterNotificationRead(notificationId) }
+                onMarkNotificationRead: (notificationId) => {
+                    appMain.activityCenterStore.markActivityCenterNotificationRead(notificationId)
+                    if (hideReadNotifications)
+                        appMain.activityCenterStore.setActivityCenterReadType(ActivityCenterTypes.ActivityCenterReadType.Unread)
+                }
                 onMarkNotificationUnread: (notificationId) => { appMain.activityCenterStore.markActivityCenterNotificationUnread(notificationId) }
                 onAvatarClicked: (avatarId) => { Global.openProfilePopup(avatarId) }
                 onRedirectToDetails: (sectionId, subsectionId, subsectionItemId) => {

@@ -87,6 +87,12 @@ Control {
     // badge to be clickable or highlight on hover.
     property bool isBadgeClickable: true
 
+    // Cursor shape shown when hovering over the avatar area. Defaults to a pointing
+    // hand when clickable, arrow otherwise. Override to force a specific cursor
+    // regardless of isAvatarClickable (e.g. Qt.PointingHandCursor when the parent
+    // card is always clickable).
+    property int avatarCursorShape: root.isAvatarClickable ? Qt.PointingHandCursor : Qt.ArrowCursor
+
     // Properties used to show up avatar letters whenever no image source is provided
     property color avatarLetterColor: Theme.palette.miscColor5
     property string avatarLetterText: ""
@@ -130,7 +136,7 @@ Control {
         MouseArea {
             anchors.fill: avatarComponent
             enabled: root.isAvatarClickable
-            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+            cursorShape: root.avatarCursorShape
             onClicked: root.avatarClicked()
         }
 

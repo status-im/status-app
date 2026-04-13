@@ -352,12 +352,22 @@ Control {
                 circular: root.isCircularAvatar
                 isAvatarClickable: root.isAvatarClickable
                 isBadgeClickable: root.isBadgeClickable
+                avatarCursorShape: Qt.PointingHandCursor
                 avatarLetterColor: root.avatarLetterColor
                 avatarLetterText: root.avatarLetterText
                 isAvatarLetterAcronym: root.isAvatarLetterAcronym
                 avatarMaxTextLen: root.avatarMaxTextLen
 
-                onAvatarClicked: root.avatarClicked()
+                onAvatarClicked: {
+                    root.avatarClicked()
+                    if (root.unread)
+                        root.markAsReadRequested()
+                }
+
+                TapHandler {
+                    enabled: !root.isAvatarClickable
+                    onTapped: root.clicked()
+                }
 
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
@@ -520,6 +530,24 @@ Control {
                     duration: ThemeUtils.AnimationDuration.Slow
                     easing.type: Easing.OutCubic
                 }
+            }
+        }
+
+        // When the context menu expands, scroll the ListView so the panel
+        // is fully visible — avoids having to manually scroll to see the button.
+        Connections {
+            target: d
+            function onContextMenuOpenChanged() {
+                if (!d.contextMenuOpen) return
+                const lv = root.ListView.view
+                if (!lv) return
+                const panelBottom = contentRoot.mapToItem(lv.contentItem, 0, 0).y
+                                    + cardBg.height
+                                    + contextPanel.expandedHeight
+                                    - d.contextPanelOverlap
+                const visibleBottom = lv.contentY + lv.height
+                if (panelBottom > visibleBottom)
+                    lv.contentY = lv.contentY + (panelBottom - visibleBottom)
             }
         }
     } // end contentItem
