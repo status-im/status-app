@@ -519,6 +519,7 @@ QtObject {
             readonly property string readKeycard: "read-keycard"
             readonly property string factoryReset: "factory-reset"
             readonly property string importSeedPhrase: "import-seed-phrase"
+            readonly property string importNewKeyPair: "import-new-key-pair"
         }
     }
 

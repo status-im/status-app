@@ -3926,6 +3926,25 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     </message>
 </context>
 <context>
+    <name>ConfirmSeedPhraseWordsState</name>
+    <message>
+        <source>Confirm recovery phrase words</source>
+        <translation type="unfinished">Confirma las palabras de la frase de recuperación</translation>
+    </message>
+    <message>
+        <source>Word #%1</source>
+        <translation type="unfinished">Palabra #%1</translation>
+    </message>
+    <message>
+        <source>Enter word</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This word doesn&apos;t match</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ConfirmationDialog</name>
     <message>
         <source>Confirm</source>
@@ -5633,10 +5652,6 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Requires providing recovery phrase for key pair stored on Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Unblock with PUK</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5658,18 +5673,6 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     </message>
     <message>
         <source>Set or change PUK</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status password will be required to login and signing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status password will be required to sign</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Factory reset</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5700,6 +5703,14 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>If you want an additional recovery option</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Factory reset Keycard</source>
+        <translation type="unfinished">Restablecer Keycard de fábrica</translation>
     </message>
 </context>
 <context>
@@ -9918,6 +9929,10 @@ to login to Status?</source>
         <source>Keycard is now required to sign with this key pair.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Import a new key pair to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>
@@ -10303,10 +10318,6 @@ acceso a tus fondos.</translation>
         <translation type="unfinished">Esto no es un Keycard</translation>
     </message>
     <message>
-        <source>The card is not a Keycard, try again with Keycard.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Connection error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10327,7 +10338,30 @@ acceso a tus fondos.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Please try again with Keycard you read before.</source>
+        <source>The card is not a Keycard, try again with Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please try again with Keycard you read before</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN incorrect</source>
+        <translation type="unfinished">PIN incorrecto</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform>Queda %n intento</numerusform>
+            <numerusform>Quedan %n intentos</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Keycard is blocked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is blocked due to three failed PIN input attempts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15433,6 +15467,17 @@ al cargar</translation>
     <message>
         <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
         <translation>La siguiente pantalla contiene tu frase de recuperación.&lt;br/&gt;&lt;b&gt;Cualquiera&lt;/b&gt; que la vea puede usarla para acceder a tus fondos.</translation>
+    </message>
+</context>
+<context>
+    <name>SeedPhraseDisplayState</name>
+    <message>
+        <source>Write down your recovery phrase</source>
+        <translation type="unfinished">Anota tu frase de recuperación</translation>
+    </message>
+    <message>
+        <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
+        <translation type="unfinished">La siguiente pantalla contiene tu frase de recuperación.&lt;br/&gt;&lt;b&gt;Cualquiera&lt;/b&gt; que la vea puede usarla para acceder a tus fondos.</translation>
     </message>
 </context>
 <context>

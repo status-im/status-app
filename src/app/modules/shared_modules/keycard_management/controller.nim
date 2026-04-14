@@ -94,3 +94,6 @@ proc deriveAccountsPublicInfoFromExtendedPublicKeyForPaths*(self: Controller, ex
 
 proc deriveExtendedPublicKeyAtPath*(self: Controller, mnemonic: string, passphrase: string, path: string): string =
   return self.accountsService.deriveExtendedPublicKeyAtPath(mnemonic, passphrase, path)
+
+proc generateMnemonic*(self: Controller): string =
+  return self.walletAccountService.getRandomMnemonic()

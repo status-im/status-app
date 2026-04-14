@@ -166,4 +166,12 @@ QtObject {
         }
         d.mainModuleInst.keycardManagementModule.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
     }
+
+    function generateMnemonic() {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return ""
+        }
+        return d.mainModuleInst.keycardManagementModule.generateMnemonic()
+    }
 }

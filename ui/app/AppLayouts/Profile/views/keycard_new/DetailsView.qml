@@ -269,7 +269,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: import a new key pair to Keycard flow...")
+            Global.openKeycardManagementPopup(Constants.keycard.flow.importNewKeyPair, root.keyUid, root.keycardUid)
         }
     }
 

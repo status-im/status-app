@@ -4783,6 +4783,29 @@
     </message>
   </context>
   <context>
+    <name>ConfirmSeedPhraseWordsState</name>
+    <message>
+      <source>Confirm recovery phrase words</source>
+      <comment>ConfirmSeedPhraseWordsState</comment>
+      <translation>Confirm recovery phrase words</translation>
+    </message>
+    <message>
+      <source>Word #%1</source>
+      <comment>ConfirmSeedPhraseWordsState</comment>
+      <translation>Word #%1</translation>
+    </message>
+    <message>
+      <source>Enter word</source>
+      <comment>ConfirmSeedPhraseWordsState</comment>
+      <translation>Enter word</translation>
+    </message>
+    <message>
+      <source>This word doesn&#39;t match</source>
+      <comment>ConfirmSeedPhraseWordsState</comment>
+      <translation>This word doesn&#39;t match</translation>
+    </message>
+  </context>
+  <context>
     <name>ConfirmationDialog</name>
     <message>
       <source>Confirm</source>
@@ -6861,11 +6884,6 @@
       <translation>Unblock with recovery phrase</translation>
     </message>
     <message>
-      <source>Requires providing recovery phrase for key pair stored on Keycard</source>
-      <comment>DetailsView</comment>
-      <translation>Requires providing recovery phrase for key pair stored on Keycard</translation>
-    </message>
-    <message>
       <source>Unblock with PUK</source>
       <comment>DetailsView</comment>
       <translation>Unblock with PUK</translation>
@@ -6894,21 +6912,6 @@
       <source>Set or change PUK</source>
       <comment>DetailsView</comment>
       <translation>Set or change PUK</translation>
-    </message>
-    <message>
-      <source>Status password will be required to login and signing</source>
-      <comment>DetailsView</comment>
-      <translation>Status password will be required to login and signing</translation>
-    </message>
-    <message>
-      <source>Status password will be required to sign</source>
-      <comment>DetailsView</comment>
-      <translation>Status password will be required to sign</translation>
-    </message>
-    <message>
-      <source>Factory reset</source>
-      <comment>DetailsView</comment>
-      <translation>Factory reset</translation>
     </message>
     <message>
       <source>Remove everything from Keycard</source>
@@ -6944,6 +6947,16 @@
       <source>If you want an additional recovery option</source>
       <comment>DetailsView</comment>
       <translation>If you want an additional recovery option</translation>
+    </message>
+    <message>
+      <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>Requires providing the recovery phrase for the key pair stored on Keycard</translation>
+    </message>
+    <message>
+      <source>Factory reset Keycard</source>
+      <comment>DetailsView</comment>
+      <translation>Factory reset Keycard</translation>
     </message>
   </context>
   <context>
@@ -12074,6 +12087,11 @@
       <comment>KeycardManagementPopup</comment>
       <translation>Keycard is now required to sign with this key pair.</translation>
     </message>
+    <message>
+      <source>Import a new key pair to Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Import a new key pair to Keycard</translation>
+    </message>
   </context>
   <context>
     <name>KeycardNotEmptyPage</name>
@@ -12548,11 +12566,6 @@
       <translation>This is not a Keycard</translation>
     </message>
     <message>
-      <source>The card is not a Keycard, try again with Keycard.</source>
-      <comment>KeycardProgressState</comment>
-      <translation>The card is not a Keycard, try again with Keycard.</translation>
-    </message>
-    <message>
       <source>Connection error</source>
       <comment>KeycardProgressState</comment>
       <translation>Connection error</translation>
@@ -12578,9 +12591,37 @@
       <translation>It&#39;s a different Keycard</translation>
     </message>
     <message>
-      <source>Please try again with Keycard you read before.</source>
+      <source>The card is not a Keycard, try again with Keycard</source>
       <comment>KeycardProgressState</comment>
-      <translation>Please try again with Keycard you read before.</translation>
+      <translation>The card is not a Keycard, try again with Keycard</translation>
+    </message>
+    <message>
+      <source>Please try again with Keycard you read before</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Please try again with Keycard you read before</translation>
+    </message>
+    <message>
+      <source>PIN incorrect</source>
+      <comment>KeycardProgressState</comment>
+      <translation>PIN incorrect</translation>
+    </message>
+    <message numerus="yes">
+      <source>%n attempt(s) remaining</source>
+      <comment>KeycardProgressState</comment>
+      <translation>
+        <numerusform>%n attempt remaining</numerusform>
+        <numerusform>%n attempts remaining</numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Keycard is blocked</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Keycard is blocked</translation>
+    </message>
+    <message>
+      <source>Keycard is blocked due to three failed PIN input attempts</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Keycard is blocked due to three failed PIN input attempts</translation>
     </message>
   </context>
   <context>
@@ -18785,6 +18826,19 @@
     <message>
       <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
       <comment>SeedPhrase</comment>
+      <translation>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</translation>
+    </message>
+  </context>
+  <context>
+    <name>SeedPhraseDisplayState</name>
+    <message>
+      <source>Write down your recovery phrase</source>
+      <comment>SeedPhraseDisplayState</comment>
+      <translation>Write down your recovery phrase</translation>
+    </message>
+    <message>
+      <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
+      <comment>SeedPhraseDisplayState</comment>
       <translation>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</translation>
     </message>
   </context>

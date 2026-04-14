@@ -3940,6 +3940,25 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     </message>
 </context>
 <context>
+    <name>ConfirmSeedPhraseWordsState</name>
+    <message>
+        <source>Confirm recovery phrase words</source>
+        <translation type="unfinished">Potvrdit slova obnovovací fráze</translation>
+    </message>
+    <message>
+        <source>Word #%1</source>
+        <translation type="unfinished">Slovo #%1</translation>
+    </message>
+    <message>
+        <source>Enter word</source>
+        <translation type="unfinished">Zadat slovo</translation>
+    </message>
+    <message>
+        <source>This word doesn&apos;t match</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ConfirmationDialog</name>
     <message>
         <source>Confirm</source>
@@ -5651,10 +5670,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Requires providing recovery phrase for key pair stored on Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Unblock with PUK</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5676,18 +5691,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     </message>
     <message>
         <source>Set or change PUK</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status password will be required to login and signing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status password will be required to sign</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Factory reset</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5718,6 +5721,14 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>If you want an additional recovery option</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Factory reset Keycard</source>
+        <translation type="unfinished">Tovární nastavení Keycard</translation>
     </message>
 </context>
 <context>
@@ -9982,6 +9993,10 @@ k přihlášení do Statusu?</translation>
         <source>Keycard is now required to sign with this key pair.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Import a new key pair to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>
@@ -10368,10 +10383,6 @@ přístup ke svým prostředkům.</translation>
         <translation type="unfinished">Toto není Keycard</translation>
     </message>
     <message>
-        <source>The card is not a Keycard, try again with Keycard.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Connection error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -10392,7 +10403,31 @@ přístup ke svým prostředkům.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Please try again with Keycard you read before.</source>
+        <source>The card is not a Keycard, try again with Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Please try again with Keycard you read before</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN incorrect</source>
+        <translation type="unfinished">Nesprávný PIN</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform>Zbývá %n pokus</numerusform>
+            <numerusform>Zbývají %n pokusy</numerusform>
+            <numerusform>Zbývá %n pokusů</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Keycard is blocked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is blocked due to three failed PIN input attempts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15524,6 +15559,17 @@ selhalo</translation>
     <message>
         <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
         <translation>Další obrazovka obsahuje vaši obnovovací frázi.&lt;br/&gt;&lt;b&gt;Kdokoli&lt;/b&gt;, kdo ji uvidí, ji může použít k přístupu k vašim prostředkům.</translation>
+    </message>
+</context>
+<context>
+    <name>SeedPhraseDisplayState</name>
+    <message>
+        <source>Write down your recovery phrase</source>
+        <translation type="unfinished">Zapište si svou obnovovací frázi</translation>
+    </message>
+    <message>
+        <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
+        <translation type="unfinished">Další obrazovka obsahuje vaši obnovovací frázi.&lt;br/&gt;&lt;b&gt;Kdokoli&lt;/b&gt;, kdo ji uvidí, ji může použít k přístupu k vašim prostředkům.</translation>
     </message>
 </context>
 <context>

@@ -48,5 +48,8 @@ method startLoadSeedPhrase*(self: AccessInterface, pin: string, seedPhrase: stri
 method onKeycardLoadSeedPhraseFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method generateMnemonic*(self: AccessInterface): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 type
   DelegateInterface* = concept c

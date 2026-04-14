@@ -64,6 +64,9 @@ QtObject:
       metadataAccounts: string) {.slot.} =
     self.delegate.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
 
+  proc generateMnemonic*(self: View): string {.slot.} =
+    return self.delegate.generateMnemonic()
+
   proc keycardStateChanged*(self: View) {.signal.}
   proc getKeycardState*(self: View): string {.slot.} =
     return self.keycardState
