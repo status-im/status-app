@@ -465,8 +465,13 @@ Item {
                     }
 
                     onIsReplyChanged: {
-                        if (!isReply)
-                            replyMessageId = ""
+                        if (isReply)
+                            return
+
+                        replyMessageId = ""
+
+                        if (!!d.activeChatContentModule)
+                            d.activeChatContentModule.inputAreaModule.preservedProperties.replyMessageId = ""
                     }
 
                     onSendMessageRequested: {
