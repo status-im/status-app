@@ -142,6 +142,14 @@ AbstractButton {
     icon.height: d.iconSize
     icon.color: asset.color
 
+    // Only activate hover for mouse/touchpad/stylus, not touchscreen, so that
+    // tapped buttons don't stay visually highlighted after the finger is lifted.
+    HoverHandler {
+        id: pointerHoverHandler
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+        enabled: root.hoverEnabled
+    }
+
     background: Rectangle {
         radius: root.radius
         border.color: root.borderColor
@@ -149,7 +157,7 @@ AbstractButton {
         color: {
             if ((!root.enabled || !root.interactive) && !root.checked)
                 return disabledColor
-            return !root.loading && !root.loadingWithText && (root.hovered || root.highlighted || root.checked) ? hoverColor : normalColor
+            return !root.loading && !root.loadingWithText && (pointerHoverHandler.hovered || root.highlighted || root.checked) ? hoverColor : normalColor
         }
     }
 
