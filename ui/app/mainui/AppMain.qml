@@ -1529,9 +1529,12 @@ Item {
                 // Keep alive while closing animation
                 property bool _shown: openPanel
 
+                // Turns true only after the open animation completes
+                property bool _fullyOpen: false
+
                 // Layout
                 z: sectionLayout.z + 1
-                color: Theme.palette.transparent
+                color: _fullyOpen ? Theme.palette.baseColor4 : Theme.palette.transparent
                 height: parent.height
                 width: parent.extendedLeftPanelWidth
                 clip: true
@@ -1548,16 +1551,18 @@ Item {
                         easing.type: Easing.OutCubic
                     }
                 }
-                // When close finishe, finally hide, no more inputs to capture
+                // When close finished, finally hide, no more inputs to capture.
+                // Also drives _fullyOpen to ensure when the panel is fully open.
                 onYChanged: {
-                    if (!openPanel && y >= height) {
-                        // Ensure the slide to bottom has been finished
+                    if (openPanel && y === 0)
+                        _fullyOpen = true
+                    if (!openPanel && y >= height)
                         _shown = false
-                    }
                 }
                 // Drives animation
                 onOpenPanelChanged: {
                     if (openPanel) _shown = true
+                    _fullyOpen = false
                 }
 
                 LayoutItemProxy {
