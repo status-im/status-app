@@ -1645,6 +1645,7 @@ Item {
                 hasMentions: appMain.activityCenterStore.mentionsCount > 0
                 hasContactRequests: appMain.activityCenterStore.contactRequestsCount > 0
                 hasMembership: appMain.activityCenterStore.membershipCount > 0
+                hasSystem: appMain.activityCenterStore.systemCount > 0
                 activeGroup: appMain.activityCenterStore.activeNotificationGroup
 
                 hasUnreadNotifications: appMain.activityCenterStore.unreadNotificationsCount > 0

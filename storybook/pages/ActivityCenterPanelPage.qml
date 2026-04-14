@@ -147,6 +147,23 @@ SplitView {
         ]
     }
 
+    SortFilterProxyModel {
+        id: systemMock
+        sourceModel: allNotificationsModelMock
+        filters: [
+            AnyOf {
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.NewInstallationReceived
+                }
+                ValueFilter {
+                    roleName: "notificationType"
+                    value: ActivityCenterTypes.NotificationType.NewInstallationCreated
+                }
+            }
+        ]
+    }
+
     property int unreadCount: 0
 
     function recomputeUnreadCount() {
@@ -189,6 +206,9 @@ SplitView {
 
         case ActivityCenterTypes.ActivityCenterGroup.NewsMessage:
             return newsMock
+
+        case ActivityCenterTypes.ActivityCenterGroup.System:
+            return systemMock
         }
         return allNotificationsModelMock
     }
@@ -221,6 +241,7 @@ SplitView {
                     hasReplies: repliesMock.count > 0
                     hasContactRequests: contactRequestsMock.count > 0
                     hasMembership: membershipMock.count > 0
+                    hasSystem: systemMock.count > 0
                     activeGroup: root.currentActiveGroup
 
                     hasUnreadNotifications: unreadNotifications.checked

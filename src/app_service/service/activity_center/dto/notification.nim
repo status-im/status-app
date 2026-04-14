@@ -230,5 +230,10 @@ proc activityCenterNotificationTypesByGroup*(group: ActivityCenterGroup) : seq[i
       return @[ActivityCenterNotificationType.ContactVerification.int]
     of ActivityCenterGroup.News:
       return @[ActivityCenterNotificationType.ActivityCenterNotificationTypeNews.int]
+    of ActivityCenterGroup.System:
+      return @[
+        ActivityCenterNotificationType.NewInstallationReceived.int,
+        ActivityCenterNotificationType.NewInstallationCreated.int,
+      ]
     else:
       return @[]

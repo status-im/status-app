@@ -22,6 +22,7 @@ Item {
             hasReplies: false
             hasContactRequests: false
             hasMembership: false
+            hasSystem: false
             activeGroup: ActivityCenterTypes.ActivityCenterGroup.All
 
             readNotificationsStatus: ActivityCenterTypes.ActivityCenterReadType.All

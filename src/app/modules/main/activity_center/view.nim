@@ -199,6 +199,13 @@ QtObject:
     read = getMembershipCount
     notify = groupCountersChanged
 
+  proc getSystemCount*(self: View): int {.slot.} =
+    return self.groupCounters.getOrDefault(ActivityCenterGroup.System, 0)
+
+  QtProperty[int] systemCount:
+    read = getSystemCount
+    notify = groupCountersChanged
+
   proc setActivityGroupCounters*(self: View, counters: Table[ActivityCenterGroup, int]) =
     self.groupCounters = counters
     self.groupCountersChanged()

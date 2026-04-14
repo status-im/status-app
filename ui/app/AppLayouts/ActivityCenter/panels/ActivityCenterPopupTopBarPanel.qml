@@ -21,6 +21,7 @@ StatusRollArea {
     required property bool hasReplies
     required property bool hasContactRequests
     required property bool hasMembership
+    required property bool hasSystem
     required property int activeGroup
 
     signal setActiveGroupRequested(int group)
@@ -45,7 +46,7 @@ StatusRollArea {
                 { text: qsTr("Contact requests"), group: ActivityCenterTypes.ActivityCenterGroup.ContactRequests, visible: true, enabled: root.hasContactRequests },
                 { text: qsTr("Transactions"), group: ActivityCenterTypes.ActivityCenterGroup.Transactions, visible: false, enabled: true },
                 { text: qsTr("Membership"), group: ActivityCenterTypes.ActivityCenterGroup.Membership, visible: true, enabled: root.hasMembership },
-                { text: qsTr("System"), group: ActivityCenterTypes.ActivityCenterGroup.System, visible: false, enabled: true } ]
+                { text: qsTr("System"), group: ActivityCenterTypes.ActivityCenterGroup.System, visible: root.hasSystem, enabled: root.hasSystem } ]
 
             StatusFlatButton {
                 objectName: "activityCenterGroupButton"

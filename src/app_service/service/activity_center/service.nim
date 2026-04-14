@@ -56,7 +56,8 @@ const ACTIVITY_GROUPS = @[
   ActivityCenterGroup.Membership,
   ActivityCenterGroup.Admin,
   ActivityCenterGroup.ContactRequests,
-  ActivityCenterGroup.IdentityVerification
+  ActivityCenterGroup.IdentityVerification,
+  ActivityCenterGroup.System
 ]
 
 QtObject:
