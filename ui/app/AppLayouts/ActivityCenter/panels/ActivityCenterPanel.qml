@@ -32,6 +32,7 @@ Control {
     required property bool hasContactRequests
     required property bool hasMembership
     required property bool hasSystem
+    required property bool hasNews
     required property int activeGroup
 
     // Properties related to notifications states:
@@ -190,6 +191,8 @@ Control {
             hasContactRequests: root.hasContactRequests
             hasMembership: root.hasMembership
             hasSystem: root.hasSystem
+            hasNews: root.hasNews
+            newsDisabledBySettings: d.newsDisabledBySettings
             activeGroup: root.activeGroup
 
             gradientColor: root.backgroundColor

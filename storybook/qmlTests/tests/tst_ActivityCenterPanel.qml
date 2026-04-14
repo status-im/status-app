@@ -23,6 +23,7 @@ Item {
             hasContactRequests: false
             hasMembership: false
             hasSystem: false
+            hasNews: false
             activeGroup: ActivityCenterTypes.ActivityCenterGroup.All
 
             readNotificationsStatus: ActivityCenterTypes.ActivityCenterReadType.All

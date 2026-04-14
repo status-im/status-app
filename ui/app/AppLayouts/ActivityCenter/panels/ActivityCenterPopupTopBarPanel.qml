@@ -22,6 +22,8 @@ StatusRollArea {
     required property bool hasContactRequests
     required property bool hasMembership
     required property bool hasSystem
+    required property bool hasNews
+    required property bool newsDisabledBySettings
     required property int activeGroup
 
     signal setActiveGroupRequested(int group)
@@ -39,7 +41,7 @@ StatusRollArea {
         Repeater {
             // NOTE: some entries are hidden until implementation
             model: [ { text: qsTr("All"), group: ActivityCenterTypes.ActivityCenterGroup.All, visible: true, enabled: true },
-                { text: qsTr("News"), group: ActivityCenterTypes.ActivityCenterGroup.NewsMessage, visible: true, enabled: true },
+                { text: qsTr("News"), group: ActivityCenterTypes.ActivityCenterGroup.NewsMessage, visible: true, enabled: root.hasNews || root.newsDisabledBySettings },
                 { text: qsTr("Admin"), group: ActivityCenterTypes.ActivityCenterGroup.Admin, visible: root.hasAdmin, enabled: root.hasAdmin },
                 { text: qsTr("Mentions"), group: ActivityCenterTypes.ActivityCenterGroup.Mentions, visible: true, enabled: root.hasMentions },
                 { text: qsTr("Replies"), group: ActivityCenterTypes.ActivityCenterGroup.Replies, visible: true, enabled: root.hasReplies },

@@ -242,6 +242,7 @@ SplitView {
                     hasContactRequests: contactRequestsMock.count > 0
                     hasMembership: membershipMock.count > 0
                     hasSystem: systemMock.count > 0
+                    hasNews: newsMock.count > 0
                     activeGroup: root.currentActiveGroup
 
                     hasUnreadNotifications: unreadNotifications.checked

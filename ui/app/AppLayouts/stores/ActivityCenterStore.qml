@@ -19,6 +19,7 @@ QtObject {
     readonly property int contactRequestsCount: activityCenterModuleInst.contactRequestsCount
     readonly property int membershipCount: activityCenterModuleInst.membershipCount
     readonly property int systemCount: activityCenterModuleInst.systemCount
+    readonly property int newsCount: activityCenterModuleInst.newsCount
 
     function markAllActivityCenterNotificationsRead() {
         root.activityCenterModuleInst.markAllActivityCenterNotificationsRead()
