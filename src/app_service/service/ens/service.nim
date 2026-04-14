@@ -62,17 +62,12 @@ type
     txHash*: string
     error*: string
 
-  EnsRegisteredAddressArgs* = ref object of Args
-    registeredAddress*: string
-    error*: string
-
 # Signals which may be emitted by this service:
 const SIGNAL_ENS_USERNAME_AVAILABILITY_CHECKED* = "ensUsernameAvailabilityChecked"
 const SIGNAL_ENS_USERNAME_DETAILS_FETCHED* = "ensUsernameDetailsFetched"
 const SIGNAL_ENS_TRANSACTION_SENT* = "ensTransactionSent"
 const SIGNAL_ENS_TRANSACTION_CONFIRMED* = "ensTransactionConfirmed"
 const SIGNAL_ENS_TRANSACTION_REVERTED* = "ensTransactionReverted"
-const SIGNAL_ENS_REGISTERED_ADDRESS_FETCHED* = "ensRegisteredAddressFetched"
 
 QtObject:
   type
@@ -89,7 +84,6 @@ QtObject:
   ## Forward declarations
   proc add*(self: Service, chainId: int, username: string): bool
   proc remove*(self: Service, chainId: int, username: string): bool
-  proc getEnsRegisteredAddressAsync*(self: Service)
 
   proc delete*(self: Service)
   proc newService*(
@@ -208,8 +202,6 @@ QtObject:
 
   proc init*(self: Service) =
     self.doConnect()
-
-    self.getEnsRegisteredAddressAsync()
 
     for trx in self.transactionService.getPendingTransactions():
       if trx.typeValue == $PendingTransactionTypeDto.RegisterENS or
@@ -364,32 +356,14 @@ QtObject:
       error "Error getting ENS resolver address", err=e.msg
       return ""
 
-  proc onEnsRegisteredAddressFetched*(self: Service, response: string) {.slot.} =
+  proc getEnsRegisteredAddress*(self: Service): string =
     try:
-      let responseObj = response.parseJson
-      if responseObj.kind != JObject:
-        raise newException(CatchableError, "expected response is not a json object")
-
-      if responseObj.contains("error"):
-        raise newException(CatchableError, responseObj{"error"}.getStr)
-
-      var registeredAddress: string
-      discard responseObj.getProp("registeredAddress", registeredAddress)
-      let data = EnsRegisteredAddressArgs(registeredAddress: registeredAddress)
-      self.events.emit(SIGNAL_ENS_REGISTERED_ADDRESS_FETCHED, data)
+      let res = status_ens.getRegistrarAddress(self.getChainId())
+      if res.error != nil:
+        raise newException(ValueError, res.error.message)
+      return res.result.getStr
     except Exception as e:
-      error "error: ", procName="onEnsRegisteredAddressFetched", msg = e.msg
-      # notify view, this is important
-      self.events.emit(SIGNAL_ENS_REGISTERED_ADDRESS_FETCHED, EnsRegisteredAddressArgs(error: e.msg))
-
-  proc getEnsRegisteredAddressAsync*(self: Service) =
-    let arg = GetEnsRegisteredAddressTaskArg(
-      tptr: getEnsRegisteredAddressTask,
-      vptr: cast[uint](self.vptr),
-      slot: "onEnsRegisteredAddressFetched",
-      chainId: self.getChainId()
-    )
-    self.threadpool.start(arg)
+      error "Error getting ENS registered address", err=e.msg
 
   proc resourceUrl*(self: Service, username: string): (string, string, string) =
     try:

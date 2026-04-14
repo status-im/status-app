@@ -50,6 +50,9 @@ method removeEnsUsername*(self: AccessInterface, chainId: int, ensUsername: stri
 method connectOwnedUsername*(self: AccessInterface, ensUsername: string, isStatus: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method getEnsRegisteredAddress*(self: AccessInterface): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getWalletDefaultAddress*(self: AccessInterface): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -68,7 +71,4 @@ method setPrefferedEnsUsername*(self: AccessInterface, ensUsername: string) {.ba
   raise newException(ValueError, "No implementation available")
 
 method ensnameResolverAddress*(self: AccessInterface, ensUsername: string): string {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method ensRegisteredAddressFetched*(self: AccessInterface, registeredAddress, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")

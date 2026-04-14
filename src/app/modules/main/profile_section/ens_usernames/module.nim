@@ -162,6 +162,9 @@ method ensTransactionReverted*(self: Module, trxType: string, ensUsername: strin
   self.view.model().removeItemByEnsUsername(chainId, finalEnsUsername)
   self.view.emitTransactionCompletedSignal(false, transactionHash, finalEnsUsername, trxType)
 
+method getEnsRegisteredAddress*(self: Module): string =
+  return self.controller.getEnsRegisteredAddress()
+
 method getWalletDefaultAddress*(self: Module): string =
   return self.controller.getWalletDefaultAddress()
 
@@ -201,10 +204,3 @@ method setPrefferedEnsUsername*(self: Module, ensUsername: string) =
 
 method ensnameResolverAddress*(self: Module, ensUsername: string): string =
   return self.controller.ensnameResolverAddress(ensUsername)
-
-method ensRegisteredAddressFetched*(self: Module, registeredAddress, error: string) =
-  if error.len != 0:
-    error "fetching ENS registered address failed", errMsg=error, methodName="ensRegisteredAddressFetched"
-    return
-
-  self.view.setEnsRegisteredAddress(registeredAddress)

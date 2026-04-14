@@ -101,7 +101,7 @@ QtObject {
         networkConnectionStore: root.networkConnectionStore
 
         // for ens flows
-        ensRegisteredAddress: root.ensUsernamesStore.ensRegisteredAddress
+        ensRegisteredAddress: root.ensUsernamesStore.getEnsRegisteredAddress()
         myPublicKey: root.contactsStore.myPublicKey
         getStatusTokenGroupKey: function() {
             return root.ensUsernamesStore.getStatusTokenGroupKey()

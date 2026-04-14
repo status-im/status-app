@@ -82,25 +82,3 @@ proc ensUsernameDetailsTask(argEncoded: string) {.gcsafe, nimcall.} =
       "isStatus": arg.isStatus,
       "error": e.msg,
     })
-
-#################################################
-# Async get ENS registered address
-#################################################
-
-type
-  GetEnsRegisteredAddressTaskArg = ref object of QObjectTaskArg
-    chainId*: int
-
-proc getEnsRegisteredAddressTask(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[GetEnsRegisteredAddressTaskArg](argEncoded)
-  try:
-    let res = status_ens.getRegistrarAddress(arg.chainId)
-    if res.error != nil:
-      raise newException(ValueError, res.error.message)
-    arg.finish(%*{
-      "registeredAddress": res.result.getStr
-    })
-  except Exception as e:
-    arg.finish(%*{
-      "error": e.msg
-    })

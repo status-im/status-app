@@ -131,7 +131,7 @@ Item {
                 }
 
                 StatusBaseText {
-                    text: qsTr("%1 (Status UsernameRegistrar).").arg(root.ensUsernamesStore.ensRegisteredAddress)
+                    text: qsTr("%1 (Status UsernameRegistrar).").arg(root.ensUsernamesStore.getEnsRegisteredAddress())
                     wrapMode: Text.WordWrap
                     anchors.left: parent.left
                     anchors.right: parent.right
@@ -142,7 +142,7 @@ Item {
                 StatusBaseText {
                     text: qsTr("<a href='%1/%2'>Look up on Etherscan</a>")
                     .arg(root.ensUsernamesStore.getEtherscanAddressLink())
-                    .arg(root.ensUsernamesStore.ensRegisteredAddress)
+                    .arg(root.ensUsernamesStore.getEnsRegisteredAddress())
                     anchors.left: parent.left
                     anchors.right: parent.right
                     onLinkActivated: (link) => Global.requestOpenLink(link)
