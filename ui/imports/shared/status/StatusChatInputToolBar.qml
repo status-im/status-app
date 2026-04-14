@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 
 import utils
 
@@ -60,13 +61,16 @@ Control {
                 width: 24 + Math.max(0, Theme.fontSizeOffset * 2)
                 height: width
 
-                color: chatIconRoot.checked || chatIconRoot.hovered
+                color: chatIconRoot.checked || hoverHandler.hovered
                        ? Theme.palette.primaryColor1
                        : Theme.palette.directColor4
             }
         }
 
         HoverHandler {
+            id: hoverHandler
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+            enabled: root.hoverEnabled
             cursorShape: Qt.PointingHandCursor
         }
     }
