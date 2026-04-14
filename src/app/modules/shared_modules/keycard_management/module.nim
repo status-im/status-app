@@ -204,6 +204,9 @@ proc saveKeypairToKeycard*[T](self: Module[T]): bool =
   ## #########################################################
   return true
 
+method generateMnemonic*[T](self: Module[T]): string =
+  return self.controller.generateMnemonic()
+
 method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], error: string) =
   if error.len > 0:
     error "keycard load key pair error", error=error

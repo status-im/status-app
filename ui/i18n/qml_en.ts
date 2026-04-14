@@ -393,6 +393,16 @@
     </message>
 </context>
 <context>
+    <name>KeycardProgressState</name>
+    <message numerus="yes">
+        <source>%n attempt(s) remaining</source>
+        <translation type="unfinished">
+            <numerusform>%n attempt remaining</numerusform>
+            <numerusform>%n attempts remaining</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>KeycardPuk</name>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
