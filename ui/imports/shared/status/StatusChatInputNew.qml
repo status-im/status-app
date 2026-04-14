@@ -793,6 +793,10 @@ Control {
                 imageDialog.open()
             }
 
+            sendButton.enabled: messageInputField.length > 0 || messageInputField.preeditText
+                               || root.fileUrlsAndSources.length > 0
+                               || (!!root.paymentRequestModel && root.paymentRequestModel.ModelCount.count > 0)
+
             sendButton.limitText: messageInputField.length >= root.messageLimit - root.messageLimitSoft
                                   ? (root.messageLimit - messageInputField.length).toString()
                                   : ""
