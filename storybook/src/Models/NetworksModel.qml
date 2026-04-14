@@ -22,7 +22,7 @@ QtObject {
     readonly property int sepArbChainId: 421614
     readonly property int baseChainId: 8453
     readonly property int sepBaseChainId: 84532
-    readonly property int sepStatusChainId: 1660990954
+    readonly property int hoodiStatusChainId: 374
     readonly property int binanceSmartChainMainnetChainId: 56
     readonly property int binanceSmartChainTestnetChainId: 97
 

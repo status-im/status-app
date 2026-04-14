@@ -819,7 +819,7 @@ QtObject {
             case Constants.chains.blastMainnetChainId:
             case Constants.chains.blastSepoliaChainId:
                 return Constants.networkShortChainNames.blast
-            case Constants.chains.statusNetworkSepoliaChainId:
+            case Constants.chains.statusNetworkHoodiChainId:
                 return Constants.networkShortChainNames.status
             case Constants.chains.binanceSmartChainMainnetChainId:
             case Constants.chains.binanceSmartChainTestnetChainId:
@@ -889,8 +889,8 @@ QtObject {
                 return Constants.networkNames.blast
             case Constants.chains.blastSepoliaChainId:
                 return Constants.networkNames.sepoliaBlast
-            case Constants.chains.statusNetworkSepoliaChainId:
-                return Constants.networkNames.sepoliaStatus
+            case Constants.chains.statusNetworkHoodiChainId:
+                return Constants.networkNames.hoodiStatus
             case Constants.chains.binanceSmartChainMainnetChainId:
                 return Constants.networkNames.binanceSmartChain
             case Constants.chains.binanceSmartChainTestnetChainId:
