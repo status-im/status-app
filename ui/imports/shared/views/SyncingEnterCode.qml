@@ -84,8 +84,10 @@ ColumnLayout {
             StatusSyncCodeInput {
                 objectName: "syncCodeInput"
                 id: syncCode
+
+                Layout.fillWidth: true
                 Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: 440
+                Layout.maximumWidth: 440
 
                 mode: StatusSyncCodeInput.Mode.WriteMode
                 label: root.syncCodeLabel

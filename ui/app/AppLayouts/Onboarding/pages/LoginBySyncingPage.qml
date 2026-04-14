@@ -13,7 +13,10 @@ import shared.popups
 OnboardingPage {
     id: root
 
-    property var validateConnectionString: (stringValue) => { console.error("validateConnectionString IMPLEMENT ME"); return false }
+    property var validateConnectionString: (stringValue) => {
+        console.error("validateConnectionString IMPLEMENT ME")
+        return false
+    }
 
     signal syncProceedWithConnectionString(string connectionString)
 
@@ -21,8 +24,12 @@ OnboardingPage {
 
     contentItem: Item {
         ColumnLayout {
-            anchors.centerIn: parent
+            anchors.fill: parent
             spacing: Theme.xlPadding
+
+            Item {
+                Layout.fillHeight: true
+            }
 
             StatusBaseText {
                 Layout.fillWidth: true
@@ -43,11 +50,17 @@ OnboardingPage {
 
             SyncingEnterCode {
                 Layout.fillWidth: true
+                Layout.fillHeight: false
+                Layout.maximumWidth: implicitWidth * 1.5
                 Layout.alignment: Qt.AlignHCenter
                 validateConnectionString: root.validateConnectionString
 
                 onDisplayInstructions: instructionsPopup.createObject(root).open()
                 onProceed: (connectionString) => root.syncProceedWithConnectionString(connectionString)
+            }
+
+            Item {
+                Layout.fillHeight: true
             }
         }
     }
