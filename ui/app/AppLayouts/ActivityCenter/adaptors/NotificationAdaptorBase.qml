@@ -38,7 +38,7 @@ SQUtils.QObject {
     readonly property string primaryText: context.primaryText
     readonly property url    contextAvatar: context.contextAvatar
     readonly property string iconName: context.iconName
-    readonly property string secondaryText: context.secondaryName ?? ""
+    readonly property string secondaryText: context.secondaryText ?? ""
     readonly property string separatorIconName: context.separatorIconName
 
     // Action text
