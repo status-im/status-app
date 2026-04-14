@@ -30,6 +30,12 @@ StatusDialog {
     property alias assetsModel: profileView.assetsModel
     property alias collectiblesModel: profileView.collectiblesModel
 
+    // Triggered whenever an action inside this component causes a navigation away from it.
+    // The following actions are considered::
+    // ** Sending a message
+    // ** Editing profile
+    signal navigationRequested()
+
     implicitHeight: implicitContentHeight + (header.visible ? header.height : 0)
     width: 640
     padding: 0
@@ -58,5 +64,6 @@ StatusDialog {
         id: profileView
 
         onCloseRequested: root.close()
+        onNavigationRequested: root.navigationRequested()
     }
 }

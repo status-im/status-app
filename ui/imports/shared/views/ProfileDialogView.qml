@@ -58,6 +58,12 @@ Pane {
 
     signal closeRequested()
 
+    // Triggered whenever an action inside this component causes a navigation away from it.
+    // The following actions are considered::
+    // ** Sending a message
+    // ** Editing profile
+    signal navigationRequested()
+
     padding: 0
     topPadding: 32
 
@@ -98,6 +104,7 @@ Pane {
             tooltip.text: interactive ? "" : qsTr("Not available in preview mode")
             onClicked: {
                 Global.changeAppSectionBySectionType(Constants.appSection.profile)
+                root.navigationRequested()
                 root.closeRequested()
             }
         }
@@ -111,6 +118,7 @@ Pane {
             objectName: "sendMessageButton"
             onClicked: {
                 root.contactsStore.joinPrivateChat(root.publicKey)
+                root.navigationRequested()
                 root.closeRequested()
             }
         }

@@ -746,6 +746,8 @@ QtObject {
                     }
                     destroy()
                 }
+
+                onNavigationRequested: Global.closeActivityCenterRequested()
             }
         },
 

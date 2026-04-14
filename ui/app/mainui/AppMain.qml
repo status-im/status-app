@@ -1099,6 +1099,11 @@ Item {
         function onOpenSavedAddressActivityPopup(params) {
             savedAddressActivity.open(params)
         }
+
+        function onCloseActivityCenterRequested() {
+            if (mainLayoutItem.isPortraitMode)
+                mainLayoutItem.openACCenterPanel = false
+        }
     }
 
     Connections {

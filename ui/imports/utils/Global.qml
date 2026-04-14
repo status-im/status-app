@@ -95,6 +95,8 @@ QtObject {
 
     signal openNewsMessagePopupRequested(var notification)
 
+    signal closeActivityCenterRequested()
+
     signal openInfoPopup(string title, string message)
     signal openShakeToSharePopupRequested()
 
