@@ -29,6 +29,9 @@ class ProfilePopup(QObject):
         self._chat_key_text_label = TextLabel(names.https_status_app_StatusBaseText)
         self._emoji_hash = QObject(names.profileDialog_userEmojiHash_EmojiHash)
         self._chat_key_copy_button = Button(names.copy_icon_CopyButton)
+        self.profile_showcase_communities_view = QObject(names.profilePopup_communitiesView)
+        self.profile_community_card = QObject(names.profilePopup_communityCard)
+        self.profile_showcase_tab_communities = QObject(names.profilePopup_communityTab)
 
     @allure.step('Wait until appears {0}')
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
@@ -43,7 +46,6 @@ class ProfilePopup(QObject):
     @property
     @allure.step('Get image without identicon_ring')
     def cropped_profile_image(self):
-        # Profile image without identicon_ring
         self._profile_image.image.update_view()
         self._profile_image.image.crop(
             driver.UiTypes.ScreenRectangle(
@@ -72,7 +74,6 @@ class ProfilePopup(QObject):
 
     @allure.step('Verify: user image contains text')
     def is_user_image_contains(self, text: str):
-        # To remove all artifacts, the image cropped.
         crop = driver.UiTypes.ScreenRectangle(
             15, 15, self._profile_image.image.width - 30, self._profile_image.image.height - 30
         )
@@ -92,6 +93,12 @@ class ProfilePopup(QObject):
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         self._emoji_hash.wait_until_appears(timeout_msec)
         return self
+
+    @allure.step('Get communities cards names from profile')
+    def communities_names_on_cards(self):
+        self.profile_showcase_tab_communities.click()
+        return [str(item.name) for item in
+                driver.findAllObjects(self.profile_community_card.real_name)]
 
 
 class ProfilePopupFromMembers(ProfilePopup):

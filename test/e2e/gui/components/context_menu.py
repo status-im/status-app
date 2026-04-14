@@ -13,6 +13,7 @@ class ContextMenu(QObject):
     def __init__(self):
         super().__init__(names.contextMenu_PopupItem)
         self.menu_item = QObject(names.contextMenuItem)
+
         # wallet left panel context items
         self.add_watched_address_from_context = QObject(names.contextMenuItem_AddWatchOnly)
         self.edit_saved_address_from_context = QObject(names.contextSavedAddressEdit)
@@ -52,4 +53,3 @@ class ContextMenu(QObject):
     def open_leave_community_popup(self) -> LeaveCommunityConfirmationPopup:
         self.leave_community_option.click()
         return LeaveCommunityConfirmationPopup().wait_until_appears()
-

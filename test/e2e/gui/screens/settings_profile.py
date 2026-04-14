@@ -4,6 +4,7 @@ import configs.timeouts
 import driver
 from driver.objects_access import walk_children
 from gui.components.settings.build_your_showcase_popup import BuildShowcasePopup
+from gui.components.settings.profile_showcase_visibility_menu import ProfileShowcaseVisibilityMenu
 from gui.components.social_links_popup import SocialLinksPopup
 from gui.elements.button import Button
 from gui.elements.object import QObject
@@ -24,6 +25,9 @@ class ProfileSettingsView(QObject):
         self.add_more_links_label = TextLabel(settings_names.addMoreSocialLinks)
         self._links_list = QObject(names.linksView)
         self.web_tab_button = Button(settings_names.profileTabBar_Web_StatusTabButton)
+        self.communities_tab_button = Button(settings_names.communitiesTabButton)
+        self.profile_showcase_delegate = QObject(settings_names.showcaseDelegate)
+        self.community_showcase_delegate_action_button = Button(settings_names.delegateActionButton)
         self._identity_tab_button = Button(settings_names.profileTabBar_Identity_StatusTabButton)
 
     @property
@@ -116,3 +120,37 @@ class ProfileSettingsView(QObject):
         self.showcase_popup_close_if_present()
         self.add_more_links_label.click()
         return SocialLinksPopup().wait_until_appears()
+
+    @allure.step('Verify community showcase visibility state')
+    def verify_community_visibility_state(self, community_name, visibility):
+        """Assert ``community_name`` appears among delegates with ``showcaseVisibility == visibility``.
+
+        Enum values match ``Constants.ShowcaseVisibility`` (NoOne=0, …, Everyone=3).
+        """
+        self.communities_tab_button.click()
+        self.showcase_popup_close_if_present()
+
+        titles = [
+            str(delegate.title)
+            for delegate in driver.findAllObjects(self.profile_showcase_delegate.real_name)
+            if getattr(delegate, 'showcaseVisibility', -1) == visibility
+        ]
+
+        assert community_name in titles, (
+            f'{community_name!r} not found for showcaseVisibility={visibility}. Found: {titles}'
+        )
+
+    @allure.step('Open showcase visibility menu for community')
+    def open_showcase_visibility_menu(self, community_name):
+        self.communities_tab_button.click()
+        self.showcase_popup_close_if_present()
+
+        for delegate in driver.findAllObjects(self.profile_showcase_delegate.real_name):
+            if str(getattr(delegate, 'title', '')) == community_name:
+                d_bounds = driver.object.globalBounds(delegate)
+                for btn in driver.findAllObjects(self.community_showcase_delegate_action_button.real_name):
+                    b_bounds = driver.object.globalBounds(btn)
+                    if d_bounds.y <= b_bounds.y and b_bounds.y + b_bounds.height <= d_bounds.y + d_bounds.height:
+                        driver.mouseClick(btn)
+                        return ProfileShowcaseVisibilityMenu().wait_until_appears()
+        raise LookupError(f'Visibility button not found for: {community_name!r}')

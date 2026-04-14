@@ -27,7 +27,7 @@ settingsSignOutQuitOption = {"container": LeftTabProfileMenu, "objectName": "17-
 
 # Communities View
 mainWindow_CommunitiesView = {"container": statusDesktop_mainWindow, "id": "communitiesView", "type": "Loader", "unnamed": 1}
-mainWindow_settingsContentBaseScrollView_StatusScrollView = {"container": mainWindow_CommunitiesView, "objectName": "settingsContentBaseScrollView", "type": "StatusScrollView", "visible": True}
+mainWindow_settingsContentBaseScrollView_StatusScrollView = {"container": statusDesktop_mainWindow, "objectName": "settingsContentBaseScrollView", "type": "StatusScrollView", "visible": True}
 settingsContentBaseScrollView_listItem_StatusListItem = {"container": mainWindow_settingsContentBaseScrollView_StatusScrollView, "id": "listItem", "type": "StatusListItem", "unnamed": 1, "visible": True}
 
 # Templates to generate Real Name in test
@@ -161,7 +161,17 @@ bio_TextEdit = {"container": bio_StatusInput, "type": "TextEdit", "unnamed": 1, 
 addMoreSocialLinks = {"container": statusDesktop_mainWindow, "objectName": "addMoreSocialLinks", "type": "StatusLinkText", "visible": True}
 mainWindow_profileTabBar_StatusTabBar = {"container": statusDesktop_mainWindow, "id": "profileTabBar", "type": "StatusTabBar", "unnamed": 1, "visible": True}
 profileTabBar_Web_StatusTabButton = {"checkable": True, "container": mainWindow_profileTabBar_StatusTabBar, "objectName": "webTabButton", "type": "StatusTabButton", "visible": True}
+communitiesTabButton = {"checkable": True, "container": mainWindow_profileTabBar_StatusTabBar, "objectName": "communitiesTabButton", "type": "StatusTabButton", "visible": True}
+hiddenCommunitiesListView = {"container": mainWindow_settingsContentBaseScrollView_StatusScrollView, "id": "hiddenListView", "type": "EmptyShapeRectangleFooterListView", "unnamed": 1, "visible": True}
+inShowCaseCommunitiesListView = {"container": mainWindow_settingsContentBaseScrollView_StatusScrollView, "id": "inShowcaseListView", "type": "EmptyShapeRectangleFooterListView", "unnamed": 1, "visible": True}
+showcaseDelegate = {"checkable": False, "container": mainWindow_settingsContentBaseScrollView_StatusScrollView, "type": "ProfileShowcasePanelDelegate", "unnamed": 1, "visible": True}
+delegateActionButton = {"checkable": False, "container": mainWindow_settingsContentBaseScrollView_StatusScrollView, "type": "StatusButton", "unnamed": 1, "visible": True}
 profileTabBar_Identity_StatusTabButton = {"checkable": True, "container": mainWindow_profileTabBar_StatusTabBar, "objectName": "identityTabButton", "type": "StatusTabButton", "visible": True}
+
+# profile showcase visibility actions
+profileShowcaseNoOne = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "visibilityAction_0", "type": "ShowcaseVisibilityAction", "visible": True}
+profileShowcaseContacts = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "visibilityAction_2", "type": "ShowcaseVisibilityAction", "visible": True}
+profileShowcaseEveryone = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "visibilityAction_3", "type": "ShowcaseVisibilityAction", "visible": True}
 
 # Password view
 mainWindow_PasswordView = {"container": statusDesktop_mainWindow, "type": "ChangePasswordView", "unnamed": 1, "visible": True}

@@ -198,6 +198,9 @@ edit_TextEdit = {"container": ProfileDialogView, "id": "edit", "type": "TextEdit
 https_status_app_StatusBaseText = {"container": edit_TextEdit, "type": "StatusBaseText", "unnamed": 1, "visible": True}
 copy_icon_CopyButton = {"container": ProfileDialogView, "objectName": "copy-icon", "type": "CopyButton",
                         "visible": True}
+profilePopup_communitiesView = {"container": ProfileDialogView, "type": "ProfileShowcaseCommunitiesView", "unnamed": 1, "visible": True}
+profilePopup_communityCard = {"container": ProfileDialogView, "id": "profileDialogCommunityCard", "type": "StatusCommunityCard", "unnamed": 1, "visible": True}
+profilePopup_communityTab = {"checkable": True, "container": ProfileDialogView, "objectName": "showcaseTabBar_communities", "type": "StatusTabButton", "visible": True}
 request_ID_verification_StatusFlatButton = {"checkable": False, "container": ProfileDialogView,
                                             "objectName": "requestIDVerification_StatusItem",
                                             "type": "StatusFlatButton", "visible": True}
