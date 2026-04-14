@@ -403,10 +403,7 @@ Item {
             // Contacts related data:
             myPublicKey: root.myPublicKey
 
-            onOpenStickerPackPopup: {
-                root.openStickerPackPopup(stickerPackId);
-            }
-
+            onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
 
             onShowReplyArea: (messageId, author) => root.showReplyArea(messageId, author)

@@ -2,55 +2,44 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ.Core
 import StatusQ.Core.Theme
 
-import utils
-import shared
 import shared.panels
 
-Item {
+Control {
     id: root
+
     property string packThumb: "QmfZrHmLR5VvkXSDbArDR3TX6j4FgpDcrvNz2fHSJk1VvG"
     property string packName: "Status Cat"
     property string packAuthor: "cryptoworld1373"
     property int packNameFontSize: Theme.primaryTextFontSize
-    property int spacing: Theme.padding
 
-    height: childrenRect.height
-    width: parent.width
+    padding: Theme.padding
 
-    RoundedImage {
-        id: imgThumb
-        anchors.left: parent.left
-        width: 40
-        height: 40
-        source: packThumb
-    }
+    contentItem: RowLayout {
+        spacing: root.spacing
 
-    Column {
-        anchors.left: imgThumb.right
-        anchors.leftMargin: root.spacing
-        StyledText {
-            id: txtPackName
-            text: packName
-            font.family: Fonts.baseFont.family
-            font.weight: Font.Bold
-            font.pixelSize: packNameFontSize
+        RoundedImage {
+            Layout.preferredWidth: 40
+            Layout.preferredHeight: 40
+            source: root.packThumb
         }
-        StyledText {
-            color: Theme.palette.secondaryText
-            text: packAuthor
-            font.family: Fonts.baseFont.family
-            font.pixelSize: Theme.primaryTextFontSize
-        }
-    }
 
-    Separator {
-        anchors.top: imgThumb.bottom
-        anchors.topMargin: Theme.padding
-        anchors.left: parent.left
-        anchors.leftMargin: -Theme.padding
-        anchors.right: parent.right
-        anchors.rightMargin: -Theme.padding
+        ColumnLayout {
+            Layout.fillWidth: true
+            StatusBaseText {
+                Layout.fillWidth: true
+                text: root.packName
+                font.weight: Font.Medium
+                font.pixelSize: root.packNameFontSize
+            }
+            StatusBaseText {
+                Layout.fillWidth: true
+                color: Theme.palette.secondaryText
+                text: root.packAuthor
+                font.pixelSize: Theme.primaryTextFontSize
+            }
+        }
     }
 }

@@ -1,5 +1,4 @@
-import QtQuick
-import utils
+import QtQml
 
 QtObject {
     id: root
@@ -24,4 +23,3 @@ QtObject {
         return stickersModule.getCurrentCurrency()
     }
 }
-

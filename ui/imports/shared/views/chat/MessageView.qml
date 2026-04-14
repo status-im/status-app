@@ -899,9 +899,7 @@ Loader {
                     d.addReactionClicked(sender, mouse)
                 }
 
-                onStickerClicked: {
-                    root.openStickerPackPopup(root.stickerPack);
-                }
+                onStickerClicked: root.openStickerPackPopup(root.stickerPack)
 
                 onResendClicked: {
                     root.messageStore.resendMessage(root.messageId)

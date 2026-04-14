@@ -5,85 +5,59 @@ import QtQuick.Layouts
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
+import StatusQ.Popups.Dialog
 
 import shared.controls
-import shared.popups
 
 import utils
 
 import AppLayouts.Browser.adapters
 
-// TODO: replace with StatusDialog
-ModalPopup {
+StatusDialog {
     id: root
+
     property QtObject request
-    height: 286
 
+    width: 300
+    implicitHeight: 286
+    title: request.securityOrigin
     closePolicy: Popup.NoAutoClose
+    destroyOnClose: true
 
-    onClosed: {
-        request.dialogReject();
-        root.destroy();
-    }
-
-    Component.onCompleted: {
-        root.title = request.securityOrigin;
-        message.text = request.message;
-        if(request.type === AbstractWebView.JavaScriptDialogType.DialogTypeAlert) {
-            cancelButton.visible = false;
-        }
-        if(request.type === AbstractWebView.JavaScriptDialogType.DialogTypePrompt) {
-            prompt.text = request.defaultText;
-            prompt.visible = true;
-            svMessage.height = 75;
-        }
-    }
-
-    StatusScrollView {
-        id: svMessage
-        width: parent.width
-        height: 100
-        TextArea {
-            id: message
-            wrapMode: TextEdit.Wrap
-            readOnly: true
-            text: ""
-        }
-    }
-
-    Input {
-        id: prompt
-        text: ""
-        visible: false
-        anchors.top: svMessage.bottom
-        anchors.right: parent.right
-        anchors.left: parent.left
-    }
-
-    footer: Item {
-        width: parent.width
-        height: okButton.height
-
-        StatusButton {
-            id: okButton
-            anchors.right: parent.right
-            text: qsTr("OK")
-            anchors.bottom: parent.bottom
-            onClicked: {
-                request.dialogAccept(prompt.text);
-                close();
+    contentItem: ColumnLayout {
+        StatusScrollView {
+            Layout.fillWidth: true
+            Layout.preferredHeight: request.type === AbstractWebView.JavaScriptDialogType.DialogTypePrompt ? 75 : 100
+            StatusTextArea {
+                readOnly: true
+                text: request.message
             }
         }
 
-        StatusFlatButton {
-            id: cancelButton
-            anchors.right: okButton.left
-            anchors.rightMargin: Theme.smallPadding
-            text: qsTr("Cancel")
-            anchors.bottom: parent.bottom
-            onClicked: {
-                request.dialogReject();
-                close();
+        Input {
+            Layout.fillWidth: true
+            id: prompt
+            text: request.defaultText
+            visible: request.type === AbstractWebView.JavaScriptDialogType.DialogTypePrompt
+        }
+    }
+
+    footer: StatusDialogFooter {
+        rightButtons: ObjectModel {
+            StatusFlatButton {
+                text: qsTr("Cancel")
+                visible: request.type !== AbstractWebView.JavaScriptDialogType.DialogTypeAlert
+                onClicked: {
+                    request.dialogReject()
+                    root.close()
+                }
+            }
+            StatusButton {
+                text: qsTr("OK")
+                onClicked: {
+                    request.dialogAccept(prompt.text)
+                    root.close()
+                }
             }
         }
     }

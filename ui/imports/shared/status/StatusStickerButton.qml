@@ -16,7 +16,6 @@ StatusButton {
         LargeNoIcon
     }
 
-    property alias tooltip: tooltip
     property int style: StatusStickerButton.StyleType.Default
     property int packPrice: 0
     property bool isBought: false
@@ -33,7 +32,7 @@ StatusButton {
     signal updateClicked()
     signal buyClicked()
 
-    text: root.style === StatusStickerButton.StyleType.Default ? packPrice : qsTr("Buy for %1 SNT").arg(packPrice)
+    text: root.style === StatusStickerButton.StyleType.Default ? packPrice : qsTr("Buy for %L1 SNT").arg(packPrice)
     icon.name: root.style === StatusStickerButton.StyleType.Default ? d.iconName : ""
 
     size: root.style === StatusStickerButton.StyleType.LargeNoIcon ? StatusBaseButton.Size.Large : StatusBaseButton.Size.Small
@@ -145,18 +144,15 @@ StatusButton {
             when: root.hasInsufficientFunds
             PropertyChanges {
                 target: root;
-                text: root.style === StatusStickerButton.StyleType.Default ? packPrice : "%1 SNT".arg(packPrice)
+                text: root.style === StatusStickerButton.StyleType.Default ? packPrice : qsTr("%L1 SNT").arg(packPrice)
                 enabled: false;
             }
         }
     ]
 
     // Tooltip only in case we are browsing an item to be installed/downloaded/bought
-    StatusToolTip {
-        id: tooltip
-        visible: root.hovered && text && (root.greyedOut || root.isInstalled)
-        maxWidth: 300
-    }
+    tooltip.visible: root.hovered && !!tooltip.text && (root.greyedOut || root.isInstalled)
+    tooltip.maxWidth: 300
 
     StatusMouseArea {
         anchors.fill: parent

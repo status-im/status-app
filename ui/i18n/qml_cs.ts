@@ -12716,6 +12716,14 @@ selhalo</translation>
         <source>Accept</source>
         <translation type="unfinished">Přijmout</translation>
     </message>
+    <message>
+        <source>Mark as read</source>
+        <translation type="unfinished">Označit jako přečtené</translation>
+    </message>
+    <message>
+        <source>Mark as unread</source>
+        <translation type="unfinished">Označit jako nepřečtěné</translation>
+    </message>
 </context>
 <context>
     <name>NotificationSelect</name>
@@ -17097,8 +17105,8 @@ selhalo</translation>
 <context>
     <name>StatusStickerButton</name>
     <message>
-        <source>Buy for %1 SNT</source>
-        <translation>Koupit za %1 SNT</translation>
+        <source>Buy for %L1 SNT</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Uninstall</source>
@@ -17123,6 +17131,10 @@ selhalo</translation>
     <message>
         <source>Pending...</source>
         <translation>Čekající...</translation>
+    </message>
+    <message>
+        <source>%L1 SNT</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

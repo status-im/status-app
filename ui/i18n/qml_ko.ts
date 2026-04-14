@@ -12593,6 +12593,14 @@ to load</source>
         <source>Accept</source>
         <translation type="unfinished">수락</translation>
     </message>
+    <message>
+        <source>Mark as read</source>
+        <translation type="unfinished">읽음으로 표시</translation>
+    </message>
+    <message>
+        <source>Mark as unread</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NotificationSelect</name>
@@ -16938,8 +16946,8 @@ to load</source>
 <context>
     <name>StatusStickerButton</name>
     <message>
-        <source>Buy for %1 SNT</source>
-        <translation>%1 SNT로 구매</translation>
+        <source>Buy for %L1 SNT</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Uninstall</source>
@@ -16964,6 +16972,10 @@ to load</source>
     <message>
         <source>Pending...</source>
         <translation>대기 중...</translation>
+    </message>
+    <message>
+        <source>%L1 SNT</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

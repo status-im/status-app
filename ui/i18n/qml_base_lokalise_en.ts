@@ -15372,6 +15372,16 @@
       <comment>NotificationCard</comment>
       <translation>Accept</translation>
     </message>
+    <message>
+      <source>Mark as read</source>
+      <comment>NotificationCard</comment>
+      <translation>Mark as read</translation>
+    </message>
+    <message>
+      <source>Mark as unread</source>
+      <comment>NotificationCard</comment>
+      <translation>Mark as unread</translation>
+    </message>
   </context>
   <context>
     <name>NotificationSelect</name>
@@ -20663,9 +20673,9 @@
   <context>
     <name>StatusStickerButton</name>
     <message>
-      <source>Buy for %1 SNT</source>
+      <source>Buy for %L1 SNT</source>
       <comment>StatusStickerButton</comment>
-      <translation>Buy for %1 SNT</translation>
+      <translation>Buy for %L1 SNT</translation>
     </message>
     <message>
       <source>Uninstall</source>
@@ -20696,6 +20706,11 @@
       <source>Pending...</source>
       <comment>StatusStickerButton</comment>
       <translation>Pending...</translation>
+    </message>
+    <message>
+      <source>%L1 SNT</source>
+      <comment>StatusStickerButton</comment>
+      <translation>%L1 SNT</translation>
     </message>
   </context>
   <context>

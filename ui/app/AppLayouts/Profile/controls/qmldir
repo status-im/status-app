@@ -1,4 +1,5 @@
 AddMoreAccountsLink 1.0 AddMoreAccountsLink.qml
+FleetRadioSelector 1.0 FleetRadioSelector.qml
 ProfileShowcasePanelDelegate 1.0 ProfileShowcasePanelDelegate.qml
 SettingsList 1.0 SettingsList.qml
 ShowcaseDelegate 1.0 ShowcaseDelegate.qml

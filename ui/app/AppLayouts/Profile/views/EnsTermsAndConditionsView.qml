@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import utils
-import shared.popups
 
 import StatusQ
 import StatusQ.Core
@@ -11,6 +10,7 @@ import StatusQ.Core.Theme
 import StatusQ.Core.Utils
 import StatusQ.Controls
 import StatusQ.Components
+import StatusQ.Popups.Dialog
 
 import AppLayouts.Profile.stores
 
@@ -50,10 +50,11 @@ Item {
         color: Theme.palette.directColor1
     }
 
-    // TODO: Replace with StatusModal
-    ModalPopup {
+    StatusDialog {
         id: popup
         title: qsTr("Terms of name registration")
+        width: 480
+        standardButtons: Dialog.Ok
 
         StatusScrollView {
             id: scroll

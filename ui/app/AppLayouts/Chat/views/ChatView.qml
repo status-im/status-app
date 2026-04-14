@@ -346,9 +346,7 @@ StatusSectionLayout {
             // Contacts related data:
             myPublicKey: root.myPublicKey
 
-            onOpenStickerPackPopup: {
-                Global.openPopup(statusStickerPackClickPopup, {packId: stickerPackId, store: root.stickersPopup.store} )
-            }
+            onOpenStickerPackPopup: stickerPackId => Global.openPopup(statusStickerPackClickPopup, {packId: stickerPackId})
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
 
             // Unfurling related requests:
@@ -463,7 +461,8 @@ StatusSectionLayout {
 
     Component {
         id: statusStickerPackClickPopup
-        StatusStickerPackClickPopup{
+        StatusStickerPackClickPopup {
+            store: root.stickersPopup.store
             onBuyClicked: root.buyStickerPackRequested(packId, price)
             onClosed: destroy()
         }

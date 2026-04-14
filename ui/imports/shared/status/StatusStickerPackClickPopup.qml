@@ -1,11 +1,11 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
+import StatusQ.Popups.Dialog
 
 import utils
 import shared
@@ -15,11 +15,9 @@ import shared.stores as SharedStores
 import shared.popups.send
 import shared.stores.send
 
-//TODO remove this dependency!
 import AppLayouts.Chat.stores as ChatStores
 
-// TODO: replace with StatusModal
-ModalPopup {
+StatusDialog {
     id: root
 
     property string packId
@@ -33,7 +31,11 @@ ModalPopup {
     property bool bought: false
     property bool pending: false
     property var stickers
+
     signal buyClicked()
+
+    width: 480
+    implicitHeight: 472
 
     onAboutToShow: {
         stickersModule.getInstalledStickerPacks()
@@ -51,9 +53,7 @@ ModalPopup {
         pending = item.pending
     }
 
-    height: 472
     header: StatusStickerPackDetails {
-        id: stickerGrid
         packThumb: thumbnail
         packName: name
         packAuthor: author
@@ -61,36 +61,31 @@ ModalPopup {
         spacing: Theme.padding / 2
     }
 
-    contentWrapper.anchors.topMargin: 0
-    contentWrapper.anchors.bottomMargin: 0
-    contentWrapper.anchors.rightMargin: 0
-    StatusStickerList {
-        id: stickerGridInPopup
+    contentItem: StatusStickerList {
         model: stickers
-        anchors.fill: parent
-        anchors.topMargin: Theme.padding
         packId: root.packId
     }
 
-    footer: StatusStickerButton {
-        anchors.right: parent.right
-        style: StatusStickerButton.StyleType.LargeNoIcon
-        packPrice: price
-        isInstalled: installed
-        isBought: bought
-        isPending: pending
-        greyedOut: !store.networkConnectionStore.stickersNetworkAvailable
-        tooltip.text: store.networkConnectionStore.stickersNetworkUnavailableText
-        onInstallClicked: {
-            stickersModule.install(packId)
-            root.close()
+    footer: StatusDialogFooter {
+        rightButtons: ObjectModel {
+            StatusStickerButton {
+                style: StatusStickerButton.StyleType.LargeNoIcon
+                packPrice: parseInt(price)
+                isInstalled: installed
+                isBought: bought
+                isPending: pending
+                greyedOut: !store.networkConnectionStore.stickersNetworkAvailable
+                tooltip.text: store.networkConnectionStore.stickersNetworkUnavailableText
+                onInstallClicked: {
+                    stickersModule.install(packId)
+                    root.close()
+                }
+                onUninstallClicked: {
+                    stickersModule.uninstall(packId);
+                    root.close();
+                }
+                onBuyClicked: root.buyClicked()
+            }
         }
-        onUninstallClicked: {
-            stickersModule.uninstall(packId);
-            root.close();
-        }
-        onCancelClicked: function(){}
-        onUpdateClicked: function(){}
-        onBuyClicked: root.buyClicked()
     }
 }

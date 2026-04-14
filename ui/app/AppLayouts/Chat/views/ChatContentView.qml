@@ -137,9 +137,7 @@ ColumnLayout {
             onShowReplyArea: (messageId, senderId) => {
                 root.showReplyArea(messageId)
             }
-            onOpenStickerPackPopup: {
-                root.openStickerPackPopup(stickerPackId);
-            }
+            onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
             onEditModeChanged: {
                 if (!editModeOn)

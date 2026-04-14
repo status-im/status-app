@@ -11,7 +11,7 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Components
-//TODO improve this!
+
 import AppLayouts.Chat.stores as ChatStores
 
 StatusDropdown {
@@ -103,11 +103,11 @@ StatusDropdown {
             packId: stickerPackListView.selectedPackId
             marketVisible: root.thirdpartyServicesEnabled && d.stickerPacksLoaded
                            && d.online
-            onInstallClicked: {
+            onInstallClicked: (stickers, packId, index) => {
                 //starts async task
                 stickersModule.install(packId)
             }
-            onUninstallClicked: {
+            onUninstallClicked: packId => {
                 stickersModule.uninstall(packId)
                 stickerGrid.model = d.recentStickers
                 btnHistory.clicked(null)
@@ -117,7 +117,8 @@ StatusDropdown {
                 footerContent.visible = true
                 stickersContainer.visible = true
             }
-            onBuyClicked: root.buyClicked(packId, price)
+            onBuyClicked: (packId, price) => root.buyClicked(packId, price)
+            onCloseRequested: root.close()
 
             Connections {
                 target: root.store.stickersModuleInst
@@ -266,7 +267,7 @@ StatusDropdown {
                 anchors.fill: parent
                 model: d.recentStickers
                 packId: stickerPackListView.selectedPackId
-                onStickerClicked: {
+                onStickerClicked: (hash, packId, url) => {
                     root.stickerSelected(hash, packId, url)
                     root.close()
                 }

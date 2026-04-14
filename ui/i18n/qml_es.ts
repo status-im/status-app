@@ -12633,6 +12633,14 @@ al cargar</translation>
         <source>Accept</source>
         <translation type="unfinished">Aceptar</translation>
     </message>
+    <message>
+        <source>Mark as read</source>
+        <translation type="unfinished">Marcar como leído</translation>
+    </message>
+    <message>
+        <source>Mark as unread</source>
+        <translation type="unfinished">Marcar como no leído</translation>
+    </message>
 </context>
 <context>
     <name>NotificationSelect</name>
@@ -16996,8 +17004,8 @@ al cargar</translation>
 <context>
     <name>StatusStickerButton</name>
     <message>
-        <source>Buy for %1 SNT</source>
-        <translation>Comprar por %1 SNT</translation>
+        <source>Buy for %L1 SNT</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Uninstall</source>
@@ -17022,6 +17030,10 @@ al cargar</translation>
     <message>
         <source>Pending...</source>
         <translation>Pendiente...</translation>
+    </message>
+    <message>
+        <source>%L1 SNT</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

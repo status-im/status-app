@@ -1,31 +1,28 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 import QtQml.Models
 
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils
 import StatusQ.Controls
+import StatusQ.Popups.Dialog
 
 import utils
 import shared
 import shared.panels
-import shared.popups
 import shared.status
 import shared.popups.send
 import shared.stores.send
 
-//TODO remove this dependency!
 import AppLayouts.Chat.stores as ChatStores
-import AppLayouts.Wallet.stores
 
 Item {
     id: root
 
     property ChatStores.RootStore store
-    property var stickerPacks: ChatStores.StickerPackData {}
+    property var stickerPacks
     property string packId
     property bool marketVisible
     property bool isWalletEnabled
@@ -36,6 +33,7 @@ Item {
     signal cancelClicked(string packId)
     signal updateClicked(string packId)
     signal buyClicked(string packId, int price)
+    signal closeRequested()
 
     implicitHeight: childrenRect.height
 
@@ -87,7 +85,7 @@ Item {
                 update()
             }
 
-            model: stickerPacks
+            model: root.stickerPacks
             items.onChanged: update()
             filterOnGroup: "visible"
             groups: DelegateModelGroup {
@@ -114,13 +112,14 @@ Item {
                     source: model.preview
                     onClicked: {
                         stickerPackDetailsPopup.open()
+                        root.closeRequested()
                     }
                 }
 
-                // TODO: replace with StatusModal
-                ModalPopup {
+                StatusDialog {
                     id: stickerPackDetailsPopup
-                    height: 540
+                    implicitHeight: 540
+                    width: 480
                     header: StatusStickerPackDetails {
                         packThumb: thumbnail
                         packName: name
@@ -129,32 +128,29 @@ Item {
                         spacing: Theme.padding / 2
                     }
 
-                    contentWrapper.anchors.topMargin: 0
-                    contentWrapper.anchors.bottomMargin: 0
-                    contentWrapper.anchors.rightMargin: 0
-                    StatusStickerList {
-                        id: stickerGridInPopup
-                        anchors.fill: parent
-                        anchors.topMargin: Theme.padding
+                    contentItem: StatusStickerList {
                         model: stickers
                         packId: root.packId
                     }
 
-                    footer: StatusStickerButton {
-                        objectName: "statusStickerMarketInstallButton"
-                        anchors.right: parent.right
-                        style: StatusStickerButton.StyleType.LargeNoIcon
-                        packPrice: price
-                        isInstalled: installed
-                        isBought: bought
-                        isPending: pending
-                        greyedOut: !root.store.networkConnectionStore.stickersNetworkAvailable
-                        tooltip.text: root.store.networkConnectionStore.stickersNetworkUnavailableText
-                        onInstallClicked: root.installClicked(stickers, packId, index)
-                        onUninstallClicked: root.uninstallClicked(packId)
-                        onCancelClicked: root.cancelClicked(packId)
-                        onUpdateClicked: root.updateClicked(packId)
-                        onBuyClicked: root.buyClicked(packId, price)
+                    footer: StatusDialogFooter {
+                        rightButtons: ObjectModel {
+                            StatusStickerButton {
+                                objectName: "statusStickerMarketInstallButton"
+                                style: StatusStickerButton.StyleType.LargeNoIcon
+                                packPrice: price
+                                isInstalled: installed
+                                isBought: bought
+                                isPending: pending
+                                greyedOut: !root.store.networkConnectionStore.stickersNetworkAvailable
+                                tooltip.text: root.store.networkConnectionStore.stickersNetworkUnavailableText
+                                onInstallClicked: root.installClicked(stickers, packId, index)
+                                onUninstallClicked: root.uninstallClicked(packId)
+                                onCancelClicked: root.cancelClicked(packId)
+                                onUpdateClicked: root.updateClicked(packId)
+                                onBuyClicked: root.buyClicked(packId, price)
+                            }
+                        }
                     }
                 }
 

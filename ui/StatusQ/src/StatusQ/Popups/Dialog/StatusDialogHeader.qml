@@ -22,11 +22,11 @@ ToolBar {
     property int popupFullHeight
     property Component internalPopupComponent
 
-    property string color: Theme.palette.statusModal.backgroundColor
+    property color color: Theme.palette.statusModal.backgroundColor
     property int radius: Theme.radius
     
-
     signal closeInternalPopup()
+
     position: ToolBar.Top
     background: StatusDialogBackground {
         color: root.color

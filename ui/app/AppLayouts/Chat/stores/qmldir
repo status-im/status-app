@@ -1,8 +1,6 @@
 CommunitiesStore 1.0 CommunitiesStore.qml
 CreateChatPropertiesStore 1.0 CreateChatPropertiesStore.qml
 RootStore 1.0 RootStore.qml
-StickerData 1.0 StickerData.qml
-StickerPackData 1.0 StickerPackData.qml
 StickersStore 1.0 StickersStore.qml
 MessageStore 1.0 MessageStore.qml
 UsersStore 1.0 UsersStore.qml

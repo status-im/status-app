@@ -12617,6 +12617,14 @@ to load</source>
         <source>Accept</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Mark as read</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mark as unread</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>NotificationSelect</name>
@@ -16977,7 +16985,7 @@ to load</source>
 <context>
     <name>StatusStickerButton</name>
     <message>
-        <source>Buy for %1 SNT</source>
+        <source>Buy for %L1 SNT</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -17002,6 +17010,10 @@ to load</source>
     </message>
     <message>
         <source>Pending...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%L1 SNT</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
