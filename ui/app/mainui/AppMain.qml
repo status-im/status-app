@@ -1623,6 +1623,8 @@ Item {
                     color: Theme.palette.backdropColor
                 }
 
+                background: null
+
                 contentItem: LayoutItemProxy {
                     target: acPanelItem
                     anchors.fill: parent
