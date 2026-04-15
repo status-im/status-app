@@ -44,7 +44,7 @@ StatusDialog {
 
         topMargin: Theme.padding
         bottomMargin: Theme.padding
-        implicitHeight: contentHeight
+        implicitHeight: Math.min(420, contentHeight + topMargin + bottomMargin)
 
         model: root.tokensListModel
 
