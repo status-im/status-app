@@ -33,6 +33,8 @@ StatusDraggableListItem {
         id: menuItem
         required property int showcaseVisibility
 
+        objectName: "visibilityAction_" + showcaseVisibility
+
         ButtonGroup.group: showcaseVisibilityGroup
         icon.name: ProfileUtils.visibilityIcon(showcaseVisibility)
         icon.color: Theme.palette.primaryColor1
