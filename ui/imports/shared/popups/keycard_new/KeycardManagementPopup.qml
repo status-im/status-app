@@ -4,6 +4,7 @@ import QtQml.Models
 
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Core.Backpressure
 import StatusQ.Controls
 import StatusQ.Popups.Dialog
 
@@ -44,6 +45,8 @@ StatusDialog {
             return qsTr("Import key pair from recovery phrase")
         case Constants.keycard.flow.importNewKeyPair:
             return qsTr("Import a new key pair to Keycard")
+        case Constants.keycard.flow.moveKeyPair:
+            return qsTr("Move key pair to Keycard")
         default:
             return qsTr("Keycard Flow")
         }
@@ -57,8 +60,10 @@ StatusDialog {
         EnterKeyPairName,
         ManageAccounts,
         Importing,
+        Migrating,
         DisplaySeedPhrase,
-        ConfirmSeedPhraseWords
+        ConfirmSeedPhraseWords,
+        SelectKeyPair
     }
 
     QtObject {
@@ -72,9 +77,11 @@ StatusDialog {
 
         property bool factoryResetConfirmationChecked: false
 
-        property int importStep: d.keycardHasOnlyPinSet?
-                                     KeycardManagementPopup.ImportFlowSteps.EnterPin
-                                   : KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+        property int importStep: root.flow === Constants.keycard.flow.moveKeyPair
+                                     ? KeycardManagementPopup.ImportFlowSteps.SelectKeyPair
+                                     : d.keycardHasOnlyPinSet
+                                         ? KeycardManagementPopup.ImportFlowSteps.EnterPin
+                                         : KeycardManagementPopup.ImportFlowSteps.EnterNewPin
 
         property string newPin: ""
         property bool pinMismatch: false
@@ -84,6 +91,12 @@ StatusDialog {
         property bool keyPairKnown: false
         property string keyPairName: ""
         property string accountPathsJson: "[]"
+
+        property string moveKeyPairSelectedKeyUid: ""
+        property string moveKeyPairSelectedKeyPairName: ""
+        property bool moveKeyPairUnderstandChecked: false
+
+        property string authenticationPassword: ""
 
         function startKeycardReading(pin) {
             d.processing = true
@@ -95,13 +108,36 @@ StatusDialog {
             root.store.startFactoryReset(root.keycardUid)
         }
 
-        function startLoadSeedPhrase() {
+        function startImportingKeyPair() {
             d.importStep = KeycardManagementPopup.ImportFlowSteps.Importing
             d.processing = true
-            root.store.startLoadSeedPhrase(d.newPin, d.seedPhrase, d.keyPairName, d.accountPathsJson)
+            root.store.startImportingKeyPair(d.newPin,
+                                             d.seedPhrase,
+                                             d.keyPairName,
+                                             d.accountPathsJson)
+        }
+
+        function startMigratingNonProfileKeypairToKeycard() {
+            d.importStep = KeycardManagementPopup.ImportFlowSteps.Migrating
+            d.processing = true
+            Backpressure.debounce(this, 500, () => {
+                                      root.store.startMigratingNonProfileKeypairToKeycard(d.authenticationPassword,
+                                                                                          d.newPin,
+                                                                                          d.seedPhrase,
+                                                                                          root.store.getKeyPairNameForKeyUid(d.moveKeyPairSelectedKeyUid),
+                                                                                          root.store.getKeyPairAccountPathsJsonForKeyUid(d.moveKeyPairSelectedKeyUid))
+                                  })()
         }
 
         function nextImportStep() {
+            d.print1("nextImportStep")
+
+            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.SelectKeyPair) {
+                d.importStep = d.keycardHasOnlyPinSet
+                    ? KeycardManagementPopup.ImportFlowSteps.EnterPin
+                    : KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+                return
+            }
             if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterPin) {
                 if (root.flow === Constants.keycard.flow.importNewKeyPair) {
                     d.seedPhrase = root.store.generateMnemonic()
@@ -127,8 +163,13 @@ StatusDialog {
                 return
             }
             if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase) {
+                if (root.flow === Constants.keycard.flow.moveKeyPair) {
+                    Global.openAuthenticationPopup(Constants.keycard.flow.moveKeyPair, root.store.userProfileKeyUid)
+                    return
+                }
+
                 if (d.keyPairKnown) {
-                    d.startLoadSeedPhrase()
+                    d.startImportingKeyPair()
                     return
                 }
 
@@ -149,21 +190,43 @@ StatusDialog {
                 return
             }
             if (d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts) {
-                d.startLoadSeedPhrase()
+                d.startImportingKeyPair()
                 return
             }
         }
 
         function previousImportStep() {
+            d.print1("previousImportStep")
+            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+                    && root.flow === Constants.keycard.flow.moveKeyPair) {
+                d.importStep = KeycardManagementPopup.ImportFlowSteps.SelectKeyPair
+                return
+            }
             if (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin) {
                 d.newPin = ""
                 d.pinMismatch = false
                 d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterNewPin
                 return
             }
+            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterPin
+                    && root.flow === Constants.keycard.flow.moveKeyPair) {
+                d.newPin = ""
+                d.importStep = KeycardManagementPopup.ImportFlowSteps.SelectKeyPair
+                return
+            }
             if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase) {
                 d.newPin = ""
                 d.pinMismatch = false
+                d.seedPhrase = ""
+                d.seedPhraseKeyUid = ""
+                if (root.flow === Constants.keycard.flow.moveKeyPair) {
+                    if (d.keycardHasOnlyPinSet) {
+                        d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterPin
+                        return
+                    }
+                    d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+                    return
+                }
                 if (d.keycardHasOnlyPinSet) {
                     d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterPin
                     return
@@ -281,6 +344,32 @@ StatusDialog {
             d.processing = false
             d.error = error
         }
+
+        function onKeycardMoveKeyPairSuccess() {
+            d.processing = false
+            d.success = true
+        }
+
+        function onKeycardMoveKeyPairError(error) {
+            console.error("Keycard move key pair error:", error)
+            d.processing = false
+            d.error = error
+        }
+    }
+
+    Connections {
+        target: Global
+        enabled: root.flow === Constants.keycard.flow.moveKeyPair
+
+        function onAuthenticationResult(reason, password, pin, keyUid) {
+            if (reason !== Constants.keycard.flow.moveKeyPair)
+                return
+            if (!password) {
+                return
+            }
+            d.authenticationPassword = password
+            d.startMigratingNonProfileKeypairToKeycard()
+        }
     }
 
     ErrorsHandler {
@@ -346,6 +435,21 @@ StatusDialog {
                             return manageKeyPairAccountsComponent
                         }
                     }
+                } else if (root.flow === Constants.keycard.flow.moveKeyPair) {
+                    if (!d.error && !d.success) {
+                        switch(d.importStep) {
+                        case KeycardManagementPopup.ImportFlowSteps.SelectKeyPair:
+                            return selectKeyPairComponent
+                        case KeycardManagementPopup.ImportFlowSteps.EnterPin:
+                            return enterPinComponent
+                        case KeycardManagementPopup.ImportFlowSteps.EnterNewPin:
+                            return createPinComponent
+                        case KeycardManagementPopup.ImportFlowSteps.RepeatPin:
+                            return repeatPinComponent
+                        case KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase:
+                            return moveKeyPairEnterSeedPhraseComponent
+                        }
+                    }
                 }
 
                 return keycardProgressComponent
@@ -367,6 +471,11 @@ StatusDialog {
                                  || d.importStep === KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords
                                  || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName
                                  || d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts))
+                         || (root.flow === Constants.keycard.flow.moveKeyPair
+                             && (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterPin
+                                 || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+                                 || d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin
+                                 || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase))
 
                 onClicked: {
                     d.previousImportStep()
@@ -389,7 +498,8 @@ StatusDialog {
                             return qsTr("Cancel")
                         }
                     } else if (root.flow === Constants.keycard.flow.importSeedPhrase
-                               || root.flow === Constants.keycard.flow.importNewKeyPair) {
+                               || root.flow === Constants.keycard.flow.importNewKeyPair
+                               || root.flow === Constants.keycard.flow.moveKeyPair) {
                         if (!d.processing && !d.success && !d.error) {
                             return qsTr("Cancel")
                         }
@@ -446,14 +556,21 @@ StatusDialog {
                                      || d.importStep === KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase
                                      || d.importStep === KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords
                                      || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName
-                                     || d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts)))
+                                     || d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts))
+                             || (root.flow === Constants.keycard.flow.moveKeyPair
+                                 && (d.importStep === KeycardManagementPopup.ImportFlowSteps.SelectKeyPair
+                                     || d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin
+                                     || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase)))
                 enabled: visible
                          && ((d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin && d.pinMismatch)
                              || (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
                              || (d.importStep === KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase && contentLoader.item.seedPhraseRevealed)
                              || (d.importStep === KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords && contentLoader.item.allEntriesValid)
                              || (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName && contentLoader.item.nameValid)
-                             || (d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts && contentLoader.item.allAccountsValid))
+                             || (d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts && contentLoader.item.allAccountsValid)
+                             || (d.importStep === KeycardManagementPopup.ImportFlowSteps.SelectKeyPair
+                                 && !!contentLoader.item.selectedKeyUid
+                                 && contentLoader.item.understandChecked))
                 text: {
                     if (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin) {
                         return qsTr("Try setting the PIN again")
@@ -465,11 +582,22 @@ StatusDialog {
                     return qsTr("Next")
                 }
                 onClicked: {
+                    if (d.importStep === KeycardManagementPopup.ImportFlowSteps.SelectKeyPair) {
+                        d.moveKeyPairSelectedKeyUid = contentLoader.item.selectedKeyUid
+                        d.moveKeyPairSelectedKeyPairName = contentLoader.item.selectedKeyPairName
+                        d.moveKeyPairUnderstandChecked = contentLoader.item.understandChecked
+                        d.nextImportStep()
+                        return
+                    }
                     if (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin) {
                         d.previousImportStep()
                         return
                     }
                     if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase) {
+                        if (root.flow === Constants.keycard.flow.moveKeyPair) {
+                            d.nextImportStep()
+                            return
+                        }
                         d.keyPairKnown = root.store.isKnownKeyUid(d.seedPhraseKeyUid)
                         if (d.keyPairKnown) {
                             d.keyPairName = root.store.getKeyPairNameForKeyUid(d.seedPhraseKeyUid)
@@ -500,6 +628,8 @@ StatusDialog {
 
     Component.onCompleted: {
         root.store.prepare()
+        if (root.flow === Constants.keycard.flow.moveKeyPair)
+            root.store.prepareKeyPairModel()
     }
 
     onClosed: {
@@ -508,6 +638,8 @@ StatusDialog {
         } else if (root.flow === Constants.keycard.flow.importSeedPhrase
                    || root.flow === Constants.keycard.flow.importNewKeyPair) {
             root.importKeyPairResult(d.success, d.seedPhraseKeyUid)
+        } else if (root.flow === Constants.keycard.flow.moveKeyPair) {
+            root.importKeyPairResult(d.success, d.moveKeyPairSelectedKeyUid)
         }
         root.store.teardown()
     }
@@ -534,6 +666,8 @@ StatusDialog {
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
                     return qsTr("Importing key pair to Keycard...")
+                case Constants.keycard.flow.moveKeyPair:
+                    return qsTr("Moving key pair to Keycard...")
                 default:
                     return qsTr("Reading...")
                 }
@@ -550,6 +684,7 @@ StatusDialog {
                     return Assets.png("keycard/factory_reset/keycard-factory-reset-positive")
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
+                case Constants.keycard.flow.moveKeyPair:
                     return Assets.png("keycard/card_insert/insert")
                 default:
                     return ""
@@ -562,6 +697,8 @@ StatusDialog {
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
                     return qsTr("Key pair has been imported to Keycard")
+                case Constants.keycard.flow.moveKeyPair:
+                    return qsTr("Key pair has been moved to Keycard")
                 default:
                     return qsTr("Success")
                 }
@@ -572,6 +709,7 @@ StatusDialog {
                     return qsTr("Keycard is now empty.")
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
+                case Constants.keycard.flow.moveKeyPair:
                     return qsTr("Keycard is now required to sign with this key pair.")
                 default:
                     return ""
@@ -589,6 +727,7 @@ StatusDialog {
                     return Assets.png("keycard/factory_reset/keycard-factory-reset-negative")
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
+                case Constants.keycard.flow.moveKeyPair:
                     return Assets.png("keycard/wrong_card/something-went-wrong")
                 default:
                     return ""
@@ -617,6 +756,7 @@ StatusDialog {
                     return
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
+                case Constants.keycard.flow.moveKeyPair:
                     d.newPin = pinInput
                     d.nextImportStep()
                     return
@@ -640,6 +780,7 @@ StatusDialog {
                 switch(root.flow) {
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
+                case Constants.keycard.flow.moveKeyPair:
                     d.newPin = pinInput
                     d.nextImportStep()
                     return
@@ -668,6 +809,7 @@ StatusDialog {
                 switch(root.flow) {
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
+                case Constants.keycard.flow.moveKeyPair:
                     d.nextImportStep()
                     return
                 default:
@@ -690,7 +832,11 @@ StatusDialog {
         id: enterSeedPhraseComponent
         EnterSeedPhraseState {
             validateSeedPhrase: function(phrase) {
-                return root.store.getKeyUidForSeedPhrase(phrase)
+                const keyUid = root.store.getKeyUidForSeedPhrase(phrase)
+                if (root.store.isKnownKeyUid(keyUid)) {
+                    return ""
+                }
+                return keyUid
             }
 
             onSeedPhraseValidated: function(phrase, keyUid) {
@@ -741,6 +887,32 @@ StatusDialog {
         id: confirmSeedPhraseWordsComponent
         ConfirmSeedPhraseWordsState {
             seedPhrase: d.seedPhrase
+        }
+    }
+
+    Component {
+        id: selectKeyPairComponent
+        SelectKeyPairState {
+            keypairsModel: root.store.keypairsModel
+            initialSelectedKeyUid: d.moveKeyPairSelectedKeyUid
+            initialUnderstandChecked: d.moveKeyPairUnderstandChecked
+        }
+    }
+
+    Component {
+        id: moveKeyPairEnterSeedPhraseComponent
+        EnterSeedPhraseState {
+            validateSeedPhrase: function(phrase) {
+                const keyUid = root.store.getKeyUidForSeedPhrase(phrase)
+                if (keyUid === d.moveKeyPairSelectedKeyUid)
+                    return keyUid
+                return ""
+            }
+
+            onSeedPhraseValidated: function(phrase, keyUid) {
+                d.seedPhrase = phrase
+                d.seedPhraseKeyUid = keyUid
+            }
         }
     }
 }

@@ -12092,6 +12092,21 @@
       <comment>KeycardManagementPopup</comment>
       <translation>Import a new key pair to Keycard</translation>
     </message>
+    <message>
+      <source>Move key pair to Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Move key pair to Keycard</translation>
+    </message>
+    <message>
+      <source>Moving key pair to Keycard...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Moving key pair to Keycard...</translation>
+    </message>
+    <message>
+      <source>Key pair has been moved to Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Key pair has been moved to Keycard</translation>
+    </message>
   </context>
   <context>
     <name>KeycardNotEmptyPage</name>
@@ -18922,6 +18937,19 @@
       <source>If a paired device (like a tablet without NFC) can’t use a Keycard, unpair it before migrating your Status profile. Otherwise, Status will stop working on that device.</source>
       <comment>SelectKeyPair</comment>
       <translation>If a paired device (like a tablet without NFC) can’t use a Keycard, unpair it before migrating your Status profile. Otherwise, Status will stop working on that device.</translation>
+    </message>
+  </context>
+  <context>
+    <name>SelectKeyPairState</name>
+    <message>
+      <source>Select key pair</source>
+      <comment>SelectKeyPairState</comment>
+      <translation>Select key pair</translation>
+    </message>
+    <message>
+      <source>I understand that moving this key pair will require using Keycard to sign</source>
+      <comment>SelectKeyPairState</comment>
+      <translation>I understand that moving this key pair will require using Keycard to sign</translation>
     </message>
   </context>
   <context>

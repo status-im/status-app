@@ -41,14 +41,21 @@ method getKeyPairNameForKeyUid*(self: AccessInterface, keyUid: string): string {
 method getKeyPairAccountPathsJsonForKeyUid*(self: AccessInterface, keyUid: string): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method startLoadSeedPhrase*(self: AccessInterface, pin: string, seedPhrase: string, metadataName: string,
+method startImportingKeyPair*(self: AccessInterface, pin: string, seedPhrase: string, metadataName: string,
       metadataAccounts: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method startMigratingNonProfileKeypairToKeycard*(self: AccessInterface, password: string, pin: string,
+    seedPhrase: string, metadataName: string, metadataAccounts: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onKeycardLoadSeedPhraseFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method generateMnemonic*(self: AccessInterface): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method populateKeyPairModel*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 type

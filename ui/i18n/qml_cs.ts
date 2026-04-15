@@ -9997,6 +9997,18 @@ k přihlášení do Statusu?</translation>
         <source>Import a new key pair to Keycard</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Move key pair to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Moving key pair to Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Key pair has been moved to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>
@@ -15637,6 +15649,17 @@ selhalo</translation>
     </message>
     <message>
         <source>If a paired device (like a tablet without NFC) can’t use a Keycard, unpair it before migrating your Status profile. Otherwise, Status will stop working on that device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SelectKeyPairState</name>
+    <message>
+        <source>Select key pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>I understand that moving this key pair will require using Keycard to sign</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
