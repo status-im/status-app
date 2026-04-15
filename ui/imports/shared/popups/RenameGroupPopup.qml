@@ -59,7 +59,7 @@ StatusDialog {
             StatusInput {
                 id: groupName
                 input.edit.objectName: "groupChatEdit_name"
-                Layout.alignment: Qt.AlignHCenter
+                Layout.fillWidth: true
                 label: qsTr("Name the group")
                 charLimit: d.nameCharLimit
 
@@ -100,7 +100,7 @@ StatusDialog {
             StatusColorSelectorGrid {
                 id: colorSelectionGrid
                 objectName: "groupChatEdit_color"
-                Layout.alignment: Qt.AlignHCenter
+                Layout.fillWidth: true
                 Layout.topMargin: -(parent.spacing / 3)
                 diameter: 40
                 selectorDiameter: 16
