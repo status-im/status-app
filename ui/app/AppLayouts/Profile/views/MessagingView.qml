@@ -233,6 +233,7 @@ SettingsContentBase {
             }
 
             footer: StatusDialogFooter {
+                bottomPadding: Theme.padding + syncingOnMobileNetworkPopup.parent.SafeArea.margins.bottom
                 leftButtons: ObjectModel {
                     StatusButton {
                         text: qsTr("Mobile data and Wi-Fi")
