@@ -13,7 +13,7 @@ import StatusQ.Core.Utils
 StatusModal {
     id: root
     width: 700
-    height: !!searchResults && searchResults.count >= 0 && searchText !== "" ? 560 : 200
+    implicitHeight: !!searchResults && searchResults.count >= 0 && searchText !== "" ? 560 : 200
     showHeader: false
     showFooter: false
 
