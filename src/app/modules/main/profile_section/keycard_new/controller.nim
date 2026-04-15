@@ -20,6 +20,9 @@ proc delete*(self: Controller) =
 proc init*(self: Controller) =
   discard
 
+proc getKeypairs*(self: Controller): seq[KeypairDto] =
+  return self.walletAccountService.getKeypairs()
+
 proc getKeypairByKeyUid*(self: Controller, keyUid: string): KeypairDto =
   return self.walletAccountService.getKeypairByKeyUid(keyUid)
 

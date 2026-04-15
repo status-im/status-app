@@ -26,6 +26,9 @@ QtObject:
   proc isKnownKeyUid*(self: View, keyUid: string): bool {.slot.} =
     return self.delegate.isKnownKeyUid(keyUid)
 
+  proc allNonProfileKeyPairsMigratedToKeycard*(self: View): bool {.slot.} =
+    return self.delegate.allNonProfileKeyPairsMigratedToKeycard()
+
   proc keycardPairingExists*(self: View, keycardUid: string): bool {.slot.} =
     return self.delegate.keycardPairingExists(keycardUid)
 

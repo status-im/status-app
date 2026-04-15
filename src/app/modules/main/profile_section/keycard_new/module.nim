@@ -52,6 +52,16 @@ method isKnownKeyUid*(self: Module, keyUid: string): bool =
     return false
   return true
 
+method allNonProfileKeyPairsMigratedToKeycard*(self: Module): bool =
+  let keypairs = self.controller.getKeypairs()
+  for keypair in keypairs:
+    if not keypair.isNil and
+      keypair.keypairType != KeypairTypeProfile and
+      not keypair.removed and
+      not keypair.migratedToKeycard():
+        return false
+  return true
+
 method getKeyPairItemForKeyUid*(self: Module, keyUid: string): KeyPairItem =
   let keypair = self.controller.getKeypairByKeyUid(keyUid)
   if keypair.isNil or keypair.removed:
