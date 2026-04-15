@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Components
@@ -44,6 +45,7 @@ Item {
         icon.color: hovered || checked ? Theme.palette.primaryColor1 : Theme.palette.directColor1
         isRoundIcon: true
         tooltip.orientation: StatusToolTip.Orientation.Bottom
+        tooltip.y: parent.height + Theme.padding
     }
 
     // main layout
@@ -77,15 +79,8 @@ Item {
             }
 
             HeaderButton {
-                objectName: "qrScannerButton"
-                icon.name: "qr-scan"
-                tooltip.text: qsTr("Open QR Scanner")
-                onClicked: Global.openQRScannerRequested()
-            }
-
-            HeaderButton {
                 objectName: "startChatButton"
-                icon.name: "edit"
+                icon.name: "chat-commands"
                 checkable: true
                 checked: root.store.openCreateChat
                 tooltip.text: qsTr("Start chat")
@@ -97,35 +92,49 @@ Item {
                     }
                 }
             }
+
+            HeaderButton {
+                objectName: "searchButton"
+                icon.name: "search"
+                tooltip.text: qsTr("Search")
+                checkable: true
+                checked: searchInput.visible
+                onToggled: searchInput.visible = checked
+            }
         }
 
         // search field
         SearchBox {
             id: searchInput
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.padding
-            Layout.rightMargin: Theme.padding
+            Layout.leftMargin: Theme.halfPadding
+            Layout.rightMargin: scrollView.rightPadding
+            Layout.topMargin: 4
+            Layout.bottomMargin: 4
             Layout.preferredHeight: 40
-            input.topPadding: 4
-            input.bottomPadding: 4
-            StatusMouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.openAppSearch()
-            }
+            KeyNavigation.tab: channelList
+            Keys.onEscapePressed: visible = false
+            placeholderText: qsTr("Search chats...")
+            visible: false
+            onVisibleChanged: input.edit.clear()
+            focus: visible
         }
 
+        // loading panel
         ChatsLoadingPanel {
             Layout.fillWidth: true
-            chatSectionModule: root.chatSectionModule
+            visible: !chatSectionModule.chatsLoaded
         }
 
         // chat list
         StatusScrollView {
             id: scrollView
             Layout.fillWidth: true
+            Layout.leftMargin: Theme.halfPadding
             Layout.fillHeight: true
+
+            topPadding: 0
+            leftPadding: 0
             contentWidth: availableWidth
 
             StatusChatList {
@@ -134,6 +143,13 @@ Item {
                 width: scrollView.availableWidth
                 model: SortFilterProxyModel {
                     sourceModel: root.chatSectionModule.model
+                    filters: [
+                        SQUtils.SearchFilter {
+                            roleName: "name"
+                            searchPhrase: searchInput.text
+                            enabled: !!searchPhrase
+                        }
+                    ]
                     sorters: RoleSorter {
                         roleName: "lastMessageTimestamp"
                         sortOrder: Qt.DescendingOrder

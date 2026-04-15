@@ -8,4 +8,3 @@ StatusBaseText {
     font.weight: Font.Bold
     color: Theme.palette.directColor1
 }
-

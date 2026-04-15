@@ -21,7 +21,7 @@ SplitView {
             anchors.fill: parent
             anchors.margins: -1
             color: "transparent"
-            border.color: "black"
+            border.color: "gray"
         }
 
         UserListPanel {
@@ -48,6 +48,7 @@ SplitView {
                 }
 
                 TextField {
+                    Layout.fillWidth: true
                     id: labelTextField
 
                     text: "Some label here"

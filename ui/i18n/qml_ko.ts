@@ -3312,6 +3312,10 @@ file format</source>
         <source>Invite contacts</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">검색</translation>
+    </message>
 </context>
 <context>
     <name>CommunitiesGridView</name>
@@ -3481,6 +3485,10 @@ file format</source>
 </context>
 <context>
     <name>CommunityColumnView</name>
+    <message>
+        <source>Search channels...</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Create channel</source>
         <translation>채널 만들기</translation>
@@ -4148,7 +4156,11 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation>채팅 시작</translation>
     </message>
     <message>
-        <source>Open QR Scanner</source>
+        <source>Search</source>
+        <translation type="unfinished">검색</translation>
+    </message>
+    <message>
+        <source>Search chats...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -18717,6 +18729,14 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
 </context>
 <context>
     <name>UserListPanel</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">검색</translation>
+    </message>
+    <message>
+        <source>Search members...</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Member re-evaluation in progress...</source>
         <translation>멤버 재평가 진행 중...</translation>

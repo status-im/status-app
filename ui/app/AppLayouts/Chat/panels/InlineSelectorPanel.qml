@@ -7,7 +7,7 @@ import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Popups.Dialog
 
 import utils
@@ -252,7 +252,7 @@ ColumnLayout {
                     TextInput {
                         id: edit
                         objectName: "chatRecipientInput"
-                        Accessible.name: Utils.formatAccessibleName("Input for adding group members", "chatRecipientInput")
+                        Accessible.name: SQUtils.Utils.formatAccessibleName("Input for adding group members", "chatRecipientInput")
 
                         property bool pasteOperation: false
 

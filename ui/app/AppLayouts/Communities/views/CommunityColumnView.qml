@@ -1,10 +1,10 @@
 import QtCore
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
 import QtQuick.Layouts
 
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Components
@@ -13,6 +13,7 @@ import StatusQ.Popups.Dialog
 
 import utils
 import shared
+import shared.controls
 import shared.popups
 import shared.status
 import shared.controls.chat.menuItems
@@ -26,7 +27,8 @@ import AppLayouts.Communities.panels
 import AppLayouts.Communities.stores as CommunitiesStores
 import AppLayouts.Wallet.stores as WalletStores
 
-// FIXME: Rework me to use ColumnLayout instead of anchors!!
+import SortFilterProxyModel
+
 Item {
     id: root
     objectName: "communityColumnView"
@@ -87,371 +89,392 @@ Item {
         readonly property bool invitationPending: d.requestToJoinState !== Constants.RequestToJoinState.None
     }
 
-    ColumnHeaderPanel {
-        id: communityHeader
+    ColumnLayout {
+        anchors {
+            fill: parent
+            topMargin: Theme.smallPadding
+        }
+        spacing: Theme.halfPadding
 
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        name: communityData.name
-        membersCount: root.joinedMembersCount
-        image: communityData.image
-        color: communityData.color
-        amISectionAdmin: root.isSectionAdmin
-        onInfoButtonClicked: root.infoButtonClicked()
-        onShareOwnProfileRequested: root.shareOwnProfileRequested()
-    }
-
-    Loader {
-        id: columnHeaderButton
-
-        anchors.top: communityHeader.bottom
-        anchors.topMargin: Theme.halfPadding
-        anchors.bottomMargin: Theme.halfPadding
-        anchors.horizontalCenter: parent.horizontalCenter
-        sourceComponent: d.showFinaliseOwnershipButton ? finaliseCommunityOwnershipBtn :
-                                                         d.showJoinButton ? joinCommunityButton : undefined
-        active: d.showFinaliseOwnershipButton || d.showJoinButton
-    }
-
-    ChatsLoadingPanel {
-        chatSectionModule: root.communitySectionModule
-        width: parent.width
-        anchors.top: columnHeaderButton.active ? columnHeaderButton.bottom : communityHeader.bottom
-        anchors.topMargin: active ? Theme.halfPadding : 0
-    }
-
-    StatusMenu {
-        id: adminPopupMenu
-        enabled: root.isSectionAdmin
-        hideDisabledItems: !showInviteButton
-
-        property bool showInviteButton: false
-
-        onClosed: adminPopupMenu.showInviteButton = false
-
-        StatusAction {
-            objectName: "createCommunityChannelBtn"
-            text: qsTr("Create channel")
-            icon.name: "channel"
-            onTriggered: Global.openPopup(createChannelPopup)
+        ColumnHeaderPanel {
+            Layout.fillWidth: true
+            name: communityData.name
+            membersCount: root.joinedMembersCount
+            image: communityData.image
+            color: communityData.color
+            amISectionAdmin: root.isSectionAdmin
+            searchActive: searchField.visible
+            onInfoButtonClicked: root.infoButtonClicked()
+            onShareOwnProfileRequested: root.shareOwnProfileRequested()
+            onSearchRequested: toggled => searchField.visible = toggled
         }
 
-        // hidden as part of https://github.com/status-im/status-app/issues/17726
-        // StatusAction {
-        //     objectName: "importCommunityChannelBtn"
-        //     text: qsTr("Create channel via Discord import")
-        //     icon.name: "download"
-        //     enabled: !d.discordImportInProgress
-        //     onTriggered: {
-        //         Global.openPopup(createChannelPopup, {isDiscordImport: true, communityId: communityData.id})
-        //     }
-        // }
-
-        StatusAction {
-            objectName: "createCommunityCategoryBtn"
-            text: qsTr("Create category")
-            icon.name: "channel-category"
-            onTriggered: Global.openPopup(createCategoryPopup)
+        Loader {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: Theme.halfPadding
+            Layout.bottomMargin: Theme.halfPadding
+            sourceComponent: d.showFinaliseOwnershipButton ? finaliseCommunityOwnershipBtn :
+                                                             d.showJoinButton ? joinCommunityButton : undefined
+            active: d.showFinaliseOwnershipButton || d.showJoinButton
+            visible: active
         }
 
-        StatusMenuSeparator {
-            visible: invitePeopleBtn.enabled
+        SearchBox {
+            id: searchField
+            Layout.fillWidth: true
+            Layout.leftMargin: Theme.halfPadding
+            Layout.rightMargin: scrollView.rightPadding
+            Layout.topMargin: 4
+            Layout.bottomMargin: 4
+            Layout.preferredHeight: 40
+            KeyNavigation.tab: communityChatListAndCategories
+            Keys.onEscapePressed: visible = false
+            placeholderText: qsTr("Search channels...")
+            visible: false
+            onVisibleChanged: input.edit.clear()
+            focus: visible
         }
 
-        StatusAction {
-            id: invitePeopleBtn
-            text: qsTr("Invite people")
-            icon.name: "share-ios"
-            enabled: communityData.canManageUsers && adminPopupMenu.showInviteButton
-            objectName: "invitePeople"
-            onTriggered: {
-                Global.openInviteFriendsToCommunityPopup(root.communityData,
-                                                         root.communitySectionModule,
-                                                         null)
+        ChatsLoadingPanel {
+            Layout.fillWidth: true
+            visible: !root.communitySectionModule.chatsLoaded
+        }
+
+        StatusMenu {
+            id: adminPopupMenu
+            enabled: root.isSectionAdmin
+            hideDisabledItems: !showInviteButton
+
+            property bool showInviteButton: false
+
+            onClosed: adminPopupMenu.showInviteButton = false
+
+            StatusAction {
+                objectName: "createCommunityChannelBtn"
+                text: qsTr("Create channel")
+                icon.name: "channel"
+                onTriggered: Global.openPopup(createChannelPopup)
+            }
+
+            // hidden as part of https://github.com/status-im/status-app/issues/17726
+            // StatusAction {
+            //     objectName: "importCommunityChannelBtn"
+            //     text: qsTr("Create channel via Discord import")
+            //     icon.name: "download"
+            //     enabled: !d.discordImportInProgress
+            //     onTriggered: {
+            //         Global.openPopup(createChannelPopup, {isDiscordImport: true, communityId: communityData.id})
+            //     }
+            // }
+
+            StatusAction {
+                objectName: "createCommunityCategoryBtn"
+                text: qsTr("Create category")
+                icon.name: "channel-category"
+                onTriggered: Global.openPopup(createCategoryPopup)
+            }
+
+            StatusMenuSeparator {
+                visible: invitePeopleBtn.enabled
+            }
+
+            StatusAction {
+                id: invitePeopleBtn
+                text: qsTr("Invite people")
+                icon.name: "share-ios"
+                enabled: communityData.canManageUsers && adminPopupMenu.showInviteButton
+                objectName: "invitePeople"
+                onTriggered: {
+                    Global.openInviteFriendsToCommunityPopup(root.communityData,
+                                                             root.communitySectionModule,
+                                                             null)
+                }
             }
         }
-    }
 
-    StatusScrollView {
-        id: scrollView
+        StatusScrollView {
+            id: scrollView
 
-        anchors.top: columnHeaderButton.active ? columnHeaderButton.bottom : communityHeader.bottom
-        anchors.topMargin: Theme.halfPadding
-        anchors.bottom: createChatOrCommunity.top
-        anchors.horizontalCenter: parent.horizontalCenter
+            Layout.fillWidth: true
+            Layout.leftMargin: Theme.halfPadding
+            Layout.fillHeight: true
 
-        width: parent.width
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
-        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            topPadding: 0
+            leftPadding: 0
+            contentWidth: availableWidth
+            contentHeight: communityChatListAndCategories.height
+                           + bannerColumn.height
+                           + bannerColumn.anchors.topMargin
 
-        contentWidth: availableWidth
-        contentHeight: communityChatListAndCategories.height
-                       + bannerColumn.height
-                       + bannerColumn.anchors.topMargin
+            StatusChatListAndCategories {
+                id: communityChatListAndCategories
+                width: scrollView.availableWidth
+                draggableItems: root.isSectionAdmin
+                draggableCategories: root.isSectionAdmin
 
-        StatusChatListAndCategories {
-            id: communityChatListAndCategories
-            width: scrollView.availableWidth
-            draggableItems: root.isSectionAdmin
-            draggableCategories: root.isSectionAdmin
-
-            model: root.communitySectionModule.model
-            highlightItem: !root.store.openCreateChat
-
-            onChatItemSelected: {
-                Global.closeCreateChatView()
-                root.communitySectionModule.setActiveItem(id)
-            }
-            onChatItemClicked: (id) => {
-                root.chatItemClicked(id)
-            }
-
-            showCategoryActionButtons: root.isSectionAdmin
-            showPopupMenu: root.isSectionAdmin && communityData.canManageUsers
-
-            onChatItemUnmuted: root.communitySectionModule.unmuteChat(id)
-            onChatItemReordered: function(categoryId, chatId, to) {
-                root.store.reorderCommunityChat(categoryId, chatId, to);
-            }
-            onChatListCategoryReordered: root.store.reorderCommunityCategories(categoryId, to)
-
-            onCategoryAddButtonClicked: Global.openPopup(createChannelPopup, {
-                                                             categoryId: id
-                                                         })
-
-            onToggleCollapsedCommunityCategory: root.store.toggleCollapsedCommunityCategory(categoryId, collapsed)
-
-            popupMenu: StatusMenu {
-                hideDisabledItems: false
-                StatusAction {
-                    text: qsTr("Create channel")
-                    icon.name: "channel"
-                    enabled: root.isSectionAdmin
-                    onTriggered: Global.openPopup(createChannelPopup)
+                model: SortFilterProxyModel {
+                    sourceModel: root.communitySectionModule.model
+                    filters: [
+                        SQUtils.SearchFilter {
+                            roleName: "name"
+                            searchPhrase: searchField.text
+                            enabled: !!searchPhrase
+                        }
+                    ]
                 }
 
-                // hidden as part of https://github.com/status-im/status-app/issues/17726
-                // StatusAction {
-                //     objectName: "importCommunityChannelBtn"
-                //     text: qsTr("Create channel via Discord import")
-                //     icon.name: "download"
-                //     enabled: !d.discordImportInProgress
-                //     onTriggered: Global.openPopup(createChannelPopup, {isDiscordImport: true, communityId: root.communityData.id})
-                // }
+                highlightItem: !root.store.openCreateChat
 
-                StatusAction {
-                    text: qsTr("Create category")
-                    icon.name: "channel-category"
-                    enabled: root.isSectionAdmin
-                    onTriggered: Global.openPopup(createCategoryPopup)
+                onChatItemSelected: (categoryId, id) => {
+                    Global.closeCreateChatView()
+                    root.communitySectionModule.setActiveItem(id)
                 }
+                onChatItemClicked: id => root.chatItemClicked(id)
 
-                StatusMenuSeparator {}
+                showCategoryActionButtons: root.isSectionAdmin
+                showPopupMenu: root.isSectionAdmin && communityData.canManageUsers
 
-                StatusAction {
-                    text: qsTr("Invite people")
-                    icon.name: "share-ios"
-                    enabled: communityData.canManageUsers
-                    objectName: "invitePeople"
-                    onTriggered: {
-                        Global.openInviteFriendsToCommunityPopup(root.communityData,
-                                                                 root.communitySectionModule,
-                                                                 null)
+                onChatItemUnmuted: id => root.communitySectionModule.unmuteChat(id)
+                onChatItemReordered: function(categoryId, chatId, to) {
+                    root.store.reorderCommunityChat(categoryId, chatId, to);
+                }
+                onChatListCategoryReordered: (categoryId, to) => root.store.reorderCommunityCategories(categoryId, to)
+
+                onCategoryAddButtonClicked: id => Global.openPopup(createChannelPopup, {categoryId: id})
+
+                onToggleCollapsedCommunityCategory: (categoryId, collapsed) => root.store.toggleCollapsedCommunityCategory(categoryId, collapsed)
+
+                popupMenu: StatusMenu {
+                    hideDisabledItems: false
+                    StatusAction {
+                        text: qsTr("Create channel")
+                        icon.name: "channel"
+                        enabled: root.isSectionAdmin
+                        onTriggered: Global.openPopup(createChannelPopup)
                     }
-                }
-            }
 
-            categoryPopupMenu: StatusMenu {
-                id: contextMenuCategory
-                property var categoryItem
+                    // hidden as part of https://github.com/status-im/status-app/issues/17726
+                    // StatusAction {
+                    //     objectName: "importCommunityChannelBtn"
+                    //     text: qsTr("Create channel via Discord import")
+                    //     icon.name: "download"
+                    //     enabled: !d.discordImportInProgress
+                    //     onTriggered: Global.openPopup(createChannelPopup, {isDiscordImport: true, communityId: root.communityData.id})
+                    // }
 
-                MuteChatMenuItem {
-                    enabled: !!categoryItem && !categoryItem.muted
-                    title: qsTr("Mute category")
-                    onMuteTriggered: {
-                        root.communitySectionModule.muteCategory(categoryItem.itemId, interval)
-                        contextMenuCategory.close()
+                    StatusAction {
+                        text: qsTr("Create category")
+                        icon.name: "channel-category"
+                        enabled: root.isSectionAdmin
+                        onTriggered: Global.openPopup(createCategoryPopup)
+                    }
+
+                    StatusMenuSeparator {}
+
+                    StatusAction {
+                        text: qsTr("Invite people")
+                        icon.name: "share-ios"
+                        enabled: communityData.canManageUsers
+                        objectName: "invitePeople"
+                        onTriggered: {
+                            Global.openInviteFriendsToCommunityPopup(root.communityData,
+                                                                     root.communitySectionModule,
+                                                                     null)
+                        }
                     }
                 }
 
-                StatusAction {
-                    enabled: !!categoryItem && categoryItem.muted
-                    text: qsTr("Unmute category")
-                    icon.name: "notification"
-                    onTriggered: {
-                        root.communitySectionModule.unmuteCategory(categoryItem.itemId)
+                categoryPopupMenu: StatusMenu {
+                    id: contextMenuCategory
+                    property var categoryItem
+
+                    MuteChatMenuItem {
+                        enabled: !!categoryItem && !categoryItem.muted
+                        title: qsTr("Mute category")
+                        onMuteTriggered: {
+                            root.communitySectionModule.muteCategory(categoryItem.itemId, interval)
+                            contextMenuCategory.close()
+                        }
+                    }
+
+                    StatusAction {
+                        enabled: !!categoryItem && categoryItem.muted
+                        text: qsTr("Unmute category")
+                        icon.name: "notification"
+                        onTriggered: {
+                            root.communitySectionModule.unmuteCategory(categoryItem.itemId)
+                        }
+                    }
+
+                    StatusAction {
+                        objectName: "editCategoryMenuItem"
+                        enabled: root.isSectionAdmin
+                        text: qsTr("Edit Category")
+                        icon.name: "edit"
+                        onTriggered: {
+                            Global.openPopup(createCategoryPopup, {
+                                                 isEdit: true,
+                                                 channels: [],
+                                                 categoryId: categoryItem.itemId,
+                                                 categoryName: categoryItem.name
+                                             })
+                        }
+                    }
+
+                    StatusMenuSeparator {
+                        visible: root.isSectionAdmin
+                    }
+
+                    StatusAction {
+                        objectName: "deleteCategoryMenuItem"
+                        enabled: root.isSectionAdmin
+                        text: qsTr("Delete Category")
+                        icon.name: "delete"
+                        type: StatusAction.Type.Danger
+                        onTriggered: {
+                            Global.openPopup(deleteCategoryConfirmationDialogComponent, {
+                                                 "headerSettings.title": qsTr("Delete '%1' category").arg(categoryItem.name),
+                                                 confirmationText: qsTr("Are you sure you want to delete '%1' category? Channels inside the category won't be deleted.")
+                                                 .arg(categoryItem.name),
+                                                 categoryId: categoryItem.itemId
+                                             })
+                        }
                     }
                 }
 
-                StatusAction {
-                    objectName: "editCategoryMenuItem"
-                    enabled: root.isSectionAdmin
-                    text: qsTr("Edit Category")
-                    icon.name: "edit"
-                    onTriggered: {
-                        Global.openPopup(createCategoryPopup, {
-                                             isEdit: true,
-                                             channels: [],
-                                             categoryId: categoryItem.itemId,
-                                             categoryName: categoryItem.name
-                                         })
-                    }
-                }
+                chatListPopupMenu: ChatContextMenuView {
+                    id: chatContextMenuView
+                    showDebugOptions: root.store.isDebugEnabled
 
-                StatusMenuSeparator {
-                    visible: root.isSectionAdmin
-                }
+                    // TODO pass the chatModel in its entirety instead of fetching the JSOn using just the id
+                    openHandler: function (id) {
+                        try {
+                            let jsonObj = root.communitySectionModule.getItemAsJson(id)
+                            let obj = JSON.parse(jsonObj)
+                            if (obj.error) {
+                                console.error("error parsing chat item json object, id: ", id, " error: ", obj.error)
+                                close()
+                                return
+                            }
 
-                StatusAction {
-                    objectName: "deleteCategoryMenuItem"
-                    enabled: root.isSectionAdmin
-                    text: qsTr("Delete Category")
-                    icon.name: "delete"
-                    type: StatusAction.Type.Danger
-                    onTriggered: {
-                        Global.openPopup(deleteCategoryConfirmationDialogComponent, {
-                                             "headerSettings.title": qsTr("Delete '%1' category").arg(categoryItem.name),
-                                             confirmationText: qsTr("Are you sure you want to delete '%1' category? Channels inside the category won't be deleted.")
-                                             .arg(categoryItem.name),
-                                             categoryId: categoryItem.itemId
-                                         })
-                    }
-                }
-            }
-
-            chatListPopupMenu: ChatContextMenuView {
-                id: chatContextMenuView
-                showDebugOptions: root.store.isDebugEnabled
-
-                // TODO pass the chatModel in its entirety instead of fetching the JSOn using just the id
-                openHandler: function (id) {
-                    try {
-                        let jsonObj = root.communitySectionModule.getItemAsJson(id)
-                        let obj = JSON.parse(jsonObj)
-                        if (obj.error) {
-                            console.error("error parsing chat item json object, id: ", id, " error: ", obj.error)
+                            isCommunityChat = root.communitySectionModule.isCommunity()
+                            amIChatAdmin = root.isSectionAdmin
+                            chatId = obj.itemId
+                            chatName = obj.name
+                            chatDescription = obj.description
+                            chatIcon = obj.icon
+                            chatEmoji = obj.emoji
+                            chatColor = obj.color
+                            chatType = obj.type
+                            chatMuted = obj.muted
+                            channelPosition = obj.position
+                            chatCategoryId = obj.categoryId
+                            viewersCanPostReactions = obj.viewersCanPostReactions
+                            hideIfPermissionsNotMet = obj.hideIfPermissionsNotMet
+                        } catch (e) {
+                            console.error("error parsing chat item json object, id: ", id, " error: ", e)
                             close()
                             return
                         }
-
-                        isCommunityChat = root.communitySectionModule.isCommunity()
-                        amIChatAdmin = root.isSectionAdmin
-                        chatId = obj.itemId
-                        chatName = obj.name
-                        chatDescription = obj.description
-                        chatIcon = obj.icon
-                        chatEmoji = obj.emoji
-                        chatColor = obj.color
-                        chatType = obj.type
-                        chatMuted = obj.muted
-                        channelPosition = obj.position
-                        chatCategoryId = obj.categoryId
-                        viewersCanPostReactions = obj.viewersCanPostReactions
-                        hideIfPermissionsNotMet = obj.hideIfPermissionsNotMet
-                    } catch (e) {
-                        console.error("error parsing chat item json object, id: ", id, " error: ", e)
-                        close()
-                        return
                     }
-                }
 
-                onMuteChat: {
-                    root.communitySectionModule.muteChat(chatId, interval)
-                }
+                    onMuteChat: {
+                        root.communitySectionModule.muteChat(chatId, interval)
+                    }
 
-                onUnmuteChat: {
-                    root.communitySectionModule.unmuteChat(chatId)
-                }
+                    onUnmuteChat: {
+                        root.communitySectionModule.unmuteChat(chatId)
+                    }
 
-                onMarkAllMessagesRead: {
-                    root.communitySectionModule.markAllMessagesRead(chatId)
-                }
+                    onMarkAllMessagesRead: {
+                        root.communitySectionModule.markAllMessagesRead(chatId)
+                    }
 
-                onClearChatHistory: {
-                    root.communitySectionModule.clearChatHistory(chatId)
-                }
+                    onClearChatHistory: {
+                        root.communitySectionModule.clearChatHistory(chatId)
+                    }
 
-                onLeaveChat: {
-                    root.communitySectionModule.leaveChat(chatId)
-                }
+                    onLeaveChat: {
+                        root.communitySectionModule.leaveChat(chatId)
+                    }
 
-                onDeleteCommunityChat:  root.store.removeCommunityChat(chatId)
+                    onDeleteCommunityChat:  root.store.removeCommunityChat(chatId)
 
-                onDisplayProfilePopup: {
-                    Global.openProfilePopup(publicKey)
-                }
-                onDisplayEditChannelPopup: {
-                    Global.openPopup(createChannelPopup, {
-                        isEdit: true,
-                        channelName: chatName,
-                        channelDescription: chatDescription,
-                        channelEmoji: chatEmoji,
-                        channelColor: chatColor,
-                        categoryId: chatCategoryId,
-                        chatId: chatContextMenuView.chatId,
-                        channelPosition: channelPosition,
-                        viewOnlyCanAddReaction: viewersCanPostReactions,
-                        deleteChatConfirmationDialog: deleteChatConfirmationDialog,
-                        hideIfPermissionsNotMet: hideIfPermissionsNotMet
-                    });
+                    onDisplayProfilePopup: {
+                        Global.openProfilePopup(publicKey)
+                    }
+                    onDisplayEditChannelPopup: {
+                        Global.openPopup(createChannelPopup, {
+                                             isEdit: true,
+                                             channelName: chatName,
+                                             channelDescription: chatDescription,
+                                             channelEmoji: chatEmoji,
+                                             channelColor: chatColor,
+                                             categoryId: chatCategoryId,
+                                             chatId: chatContextMenuView.chatId,
+                                             channelPosition: channelPosition,
+                                             viewOnlyCanAddReaction: viewersCanPostReactions,
+                                             deleteChatConfirmationDialog: deleteChatConfirmationDialog,
+                                             hideIfPermissionsNotMet: hideIfPermissionsNotMet
+                                         });
+                    }
                 }
             }
-        }
 
-        Column {
-            id: bannerColumn
-            width: scrollView.availableWidth
-            anchors.top: communityChatListAndCategories.bottom
-            anchors.topMargin: Theme.padding
-            spacing: Theme.bigPadding
+            Column {
+                id: bannerColumn
+                width: scrollView.availableWidth
+                anchors.top: communityChatListAndCategories.bottom
+                anchors.topMargin: Theme.padding
+                spacing: Theme.bigPadding
 
-            Settings {
-                id: bannerSettings
-                category: "BannerSettings_%1".arg(communityData.id)
-                property bool hiddenCommunityWelcomeBanners
-                property bool hiddenCommunityChannelAndCategoriesBanners
+                Settings {
+                    id: bannerSettings
+                    category: "BannerSettings_%1".arg(communityData.id)
+                    property bool hiddenCommunityWelcomeBanners
+                    property bool hiddenCommunityChannelAndCategoriesBanners
+                }
+
+                Loader {
+                    active: root.isSectionAdmin && !bannerSettings.hiddenCommunityWelcomeBanners
+                    width: parent.width
+                    visible: active
+                    sourceComponent: Component {
+                        WelcomeBannerPanel {
+                            activeCommunity: communityData
+                            communitySectionModule: root.communitySectionModule
+                            onManageCommunityClicked: root.manageButtonClicked()
+                            onHideBannerRequested: bannerSettings.hiddenCommunityWelcomeBanners = true
+                        }
+                    }
+                }
+
+                Loader {
+                    active: root.isSectionAdmin && !bannerSettings.hiddenCommunityChannelAndCategoriesBanners
+                    width: parent.width
+                    visible: active
+                    sourceComponent: Component {
+                        ChannelsAndCategoriesBannerPanel {
+                            id: channelsAndCategoriesBanner
+                            communityId: communityData.id
+                            onAddMembersClicked: {
+                                Global.openPopup(createChannelPopup);
+                            }
+                            onAddCategoriesClicked: {
+                                Global.openPopup(createCategoryPopup);
+                            }
+                            onHideBannerRequested: bannerSettings.hiddenCommunityChannelAndCategoriesBanners = true
+                        }
+                    }
+                }
             }
 
-            Loader {
-                active: root.isSectionAdmin && !bannerSettings.hiddenCommunityWelcomeBanners
-                width: parent.width
-                visible: active
-                sourceComponent: Component {
-                    WelcomeBannerPanel {
-                        activeCommunity: communityData
-                        communitySectionModule: root.communitySectionModule
-                        onManageCommunityClicked: root.manageButtonClicked()
-                        onHideBannerRequested: bannerSettings.hiddenCommunityWelcomeBanners = true
-                    }
-                }
-            } // Loader
-
-            Loader {
-                active: root.isSectionAdmin && !bannerSettings.hiddenCommunityChannelAndCategoriesBanners
-                width: parent.width
-                visible: active
-                sourceComponent: Component {
-                    ChannelsAndCategoriesBannerPanel {
-                        id: channelsAndCategoriesBanner
-                        communityId: communityData.id
-                        onAddMembersClicked: {
-                            Global.openPopup(createChannelPopup);
-                        }
-                        onAddCategoriesClicked: {
-                            Global.openPopup(createCategoryPopup);
-                        }
-                        onHideBannerRequested: bannerSettings.hiddenCommunityChannelAndCategoriesBanners = true
-                    }
-                }
-            } // Loader
-        } // Column
-
-        background: Item {
             TapHandler {
                 enabled: root.isSectionAdmin
                 acceptedButtons: Qt.RightButton
-                onTapped: {
+                onTapped: function (eventPoint, button) {
                     adminPopupMenu.showInviteButton = true
                     adminPopupMenu.x = eventPoint.position.x + 4
                     adminPopupMenu.y = eventPoint.position.y + 4
@@ -459,30 +482,29 @@ Item {
                 }
             }
         }
-    } // ScrollView
 
-    Loader {
-        id: createChatOrCommunity
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: active ? Theme.padding : 0
-        active: root.isSectionAdmin
-        sourceComponent: Component {
-            StatusLinkText {
-                id: createChannelOrCategoryBtn
-                objectName: "createChannelOrCategoryBtn"
-                height: visible ? implicitHeight : 0
-                text: qsTr("Create channel or category")
-                font.underline: true
+        Loader {
+            id: createChatOrCommunity
+            Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
+            Layout.bottomMargin: Theme.padding
+            active: root.isSectionAdmin
+            sourceComponent: Component {
+                StatusLinkText {
+                    id: createChannelOrCategoryBtn
+                    objectName: "createChannelOrCategoryBtn"
+                    height: visible ? implicitHeight : 0
+                    text: qsTr("Create channel or category")
+                    font.underline: true
 
-                StatusMouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        adminPopupMenu.showInviteButton = false
-                        adminPopupMenu.popup()
-                        adminPopupMenu.y = Qt.binding(() => root.height - adminPopupMenu.height
-                                                      - createChannelOrCategoryBtn.height - 20)
+                    StatusMouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            adminPopupMenu.showInviteButton = false
+                            adminPopupMenu.popup()
+                            adminPopupMenu.y = Qt.binding(() => root.height - adminPopupMenu.height
+                                                          - createChannelOrCategoryBtn.height - 20)
+                        }
                     }
                 }
             }
@@ -493,10 +515,6 @@ Item {
         id: joinCommunityButton
 
         StatusButton {
-            anchors.top: communityHeader.bottom
-            anchors.topMargin: Theme.halfPadding
-            anchors.bottomMargin: Theme.halfPadding
-            anchors.horizontalCenter: parent.horizontalCenter
             enabled: !root.communityData.amIBanned
             loading: d.requestToJoinState === Constants.RequestToJoinState.InProgress
 
@@ -535,12 +553,7 @@ Item {
         id: finaliseCommunityOwnershipBtn
 
         StatusButton {
-            anchors.top: communityHeader.bottom
-            anchors.topMargin: Theme.halfPadding
-            anchors.bottomMargin: Theme.halfPadding
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            text: communityData.joined ? qsTr("Finalise community ownership") : qsTr("To join, finalise community ownership")
+            text: root.communityData.joined ? qsTr("Finalise community ownership") : qsTr("To join, finalise community ownership")
 
             onClicked: root.finaliseOwnershipClicked()
         }

@@ -4056,6 +4056,11 @@
       <comment>ColumnHeaderPanel</comment>
       <translation>Invite contacts</translation>
     </message>
+    <message>
+      <source>Search</source>
+      <comment>ColumnHeaderPanel</comment>
+      <translation>Search</translation>
+    </message>
   </context>
   <context>
     <name>CommunitiesGridView</name>
@@ -4260,6 +4265,11 @@
   </context>
   <context>
     <name>CommunityColumnView</name>
+    <message>
+      <source>Search channels...</source>
+      <comment>CommunityColumnView</comment>
+      <translation>Search channels...</translation>
+    </message>
     <message>
       <source>Create channel</source>
       <comment>CommunityColumnView</comment>
@@ -5074,9 +5084,14 @@
       <translation>Start chat</translation>
     </message>
     <message>
-      <source>Open QR Scanner</source>
+      <source>Search</source>
       <comment>ContactsColumnView</comment>
-      <translation>Open QR Scanner</translation>
+      <translation>Search</translation>
+    </message>
+    <message>
+      <source>Search chats...</source>
+      <comment>ContactsColumnView</comment>
+      <translation>Search chats...</translation>
     </message>
     <message>
       <source>Invite contacts</source>
@@ -22813,6 +22828,16 @@
   </context>
   <context>
     <name>UserListPanel</name>
+    <message>
+      <source>Search</source>
+      <comment>UserListPanel</comment>
+      <translation>Search</translation>
+    </message>
+    <message>
+      <source>Search members...</source>
+      <comment>UserListPanel</comment>
+      <translation>Search members...</translation>
+    </message>
     <message>
       <source>Member re-evaluation in progress...</source>
       <comment>UserListPanel</comment>

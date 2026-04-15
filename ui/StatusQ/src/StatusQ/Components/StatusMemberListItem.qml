@@ -124,7 +124,7 @@ ItemDelegate {
         \qmlsignal rightClicked
         This signal is emitted when the StatusMemberListItem is right clicked.
     */
-    signal rightClicked
+    signal rightClicked(point position)
 
     QtObject {
         id: d
@@ -173,12 +173,8 @@ ItemDelegate {
        cursorShape: root.enabled && root.hoverEnabled && root.hovered ? Qt.PointingHandCursor : undefined
     }
 
-    // handles the right click & cursor for the extra buttons
-    MouseArea {
-        anchors.fill: parent
-        acceptedButtons: Qt.RightButton
-        cursorShape: containsMouse ? Qt.PointingHandCursor : undefined
-        onClicked: root.rightClicked()
+    StatusSecondaryActionHandler {
+        onTriggered: pos => root.rightClicked(pos)
     }
 
     contentItem: RowLayout {

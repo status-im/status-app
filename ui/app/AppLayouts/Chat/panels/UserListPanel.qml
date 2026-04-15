@@ -3,16 +3,19 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Theme
 import StatusQ.Components
 import StatusQ.Controls
 
+import shared
+import shared.controls
 import shared.views.chat
 import utils
 
 import SortFilterProxyModel
 
-Item {
+ColumnLayout {
     id: root
 
     property var usersModel
@@ -37,38 +40,56 @@ Item {
     signal removeContactRequested(string pubKey)
     signal removeContactFromGroupRequested(string pubKey)
 
-    StatusBaseText {
-        id: titleText
+    spacing: Theme.halfPadding
 
-        anchors.top: parent.top
-        anchors.topMargin: Theme.padding
-        anchors.left: parent.left
-        anchors.leftMargin: Theme.padding
-        anchors.right: parent.right
-        anchors.rightMargin: Theme.padding
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.margins: Theme.padding
 
-        opacity: (root.width > 58) ? 1.0 : 0.0
-        visible: (opacity > 0.1)
-        font.pixelSize: Theme.primaryTextFontSize
-        font.weight: Font.Medium
-        color: Theme.palette.directColor1
-        text: root.label
+        StatusBaseText {
+            id: titleText
+            Layout.fillWidth: true
 
-        wrapMode: Text.Wrap
+            opacity: (root.width > 58) ? 1.0 : 0.0
+            visible: (opacity > 0.1)
+            font.weight: Font.Medium
+            text: root.label
+
+            wrapMode: Text.Wrap
+        }
+
+        StatusFlatButton {
+            icon.name: "search"
+            isRoundIcon: true
+            checkable: true
+            checked: searchField.visible
+            onToggled: searchField.visible = checked
+            textColor: checked || hovered ? Theme.palette.primaryColor1 : Theme.palette.directColor1
+            tooltip.text: qsTr("Search")
+            tooltip.orientation: StatusToolTip.Orientation.Bottom
+        }
+    }
+
+    SearchBox {
+        id: searchField
+        KeyNavigation.tab: userListView
+        Keys.onEscapePressed: visible = false
+        Layout.fillWidth: true
+        Layout.leftMargin: Theme.padding
+        Layout.rightMargin: Theme.padding
+        placeholderText: qsTr("Search members...")
+        visible: false
+        onVisibleChanged: input.edit.clear()
+        focus: visible
     }
 
     StatusBaseText {
         id: communityMemberReevaluationInProgressText
+        Layout.fillWidth: true
+        Layout.leftMargin: Theme.padding
+        Layout.rightMargin: Theme.padding
         visible: root.communityMemberReevaluationStatus === Constants.CommunityMemberReevaluationStatus.InProgress
-        height: visible ? implicitHeight : 0
-        anchors.top: titleText.bottom
-        anchors.topMargin: visible ? Theme.padding : 0
-        anchors.left: parent.left
-        anchors.leftMargin: Theme.padding
-        anchors.right: parent.right
-        anchors.rightMargin: Theme.padding
         font.pixelSize: Theme.secondaryTextFontSize
-        color: Theme.palette.directColor1
         text: qsTr("Member re-evaluation in progress...")
         wrapMode: Text.WordWrap
 
@@ -82,84 +103,77 @@ Item {
         }
     }
 
-    Item {
-        anchors {
-            top: communityMemberReevaluationInProgressText.bottom
-            topMargin: Theme.padding
-            left: parent.left
-            leftMargin: Theme.halfPadding
-            right: parent.right
-            rightMargin: Theme.halfPadding
-            bottom: parent.bottom
-        }
+    StatusListView {
+        id: userListView
+        objectName: "userListPanel"
 
-        clip: true
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.leftMargin: Theme.padding
+        Layout.rightMargin: Theme.padding
 
-        StatusListView {
-            id: userListView
-            objectName: "userListPanel"
-
-            clip: false
-
-            anchors.fill: parent
-            anchors.bottomMargin: Theme.bigPadding
-            displayMarginEnd: anchors.bottomMargin
-
-            model: SortFilterProxyModel {
-                sourceModel: root.usersModel
-
-                sorters: [
-                    RoleSorter {
-                        roleName: "onlineStatus"
-                        sortOrder: Qt.DescendingOrder
-                    },
-                    StringSorter {
-                        roleName: "preferredDisplayName"
-                        caseSensitivity: Qt.CaseInsensitive
-                    }
-                ]
-            }
-            section.property: "onlineStatus"
-            section.delegate: (root.width > 58) ? sectionDelegateComponent : null
-            delegate: StatusMemberListItem {
-                width: ListView.view.width
-
-                usesDefaultName: model.usesDefaultName
-                nickName: model.localNickname
-                userName: ProfileUtils.displayName("", model.ensName, model.displayName, model.alias)
-                pubKey: model.isEnsVerified ? "" : model.compressedPubKey
-                isContact: model.isContact
-                isVerified: model.isVerified
-                isUntrustworthy: model.isUntrustworthy
-                isBlocked: model.isBlocked
-                isOwner: model.memberRole === Constants.memberRole.owner
-                icon.name: model.icon
-                icon.color: Utils.colorForColorId(Theme.palette, model.colorId)
-                status: model.onlineStatus
-
-                onClicked: Global.openProfilePopup(model.pubKey)
-                onRightClicked: {
-                    const profileType = Utils.getProfileType(model.isCurrentUser, false, model.isBlocked)
-                    const contactType = Utils.getContactType(model.contactRequest, model.isContact)
-
-                    const params = {
-                        profileType, contactType,
-                        pubKey: model.pubKey,
-                        compressedPubKey: model.compressedPubKey,
-                        emojiHash: JSON.parse(model.emojiHash),
-                        colorId: model.colorId,
-                        displayName: model.preferredDisplayName,
-                        userIcon: model.icon,
-                        trustStatus: model.trustStatus,
-                        onlineStatus: model.onlineStatus,
-                        hasLocalNickname: !!model.localNickname,
-                        usesDefaultName: model.usesDefaultName,
-                        chatType: root.chatType,
-                        isAdmin: root.isAdmin
-                    }
-
-                    Global.openMenu(profileContextMenuComponent, this, params)
+        model: SortFilterProxyModel {
+            sourceModel: root.usersModel
+            filters: [
+                SQUtils.SearchFilter {
+                    roleName: "preferredDisplayName"
+                    searchPhrase: searchField.text
+                    enabled: !!searchPhrase
                 }
+            ]
+            sorters: [
+                RoleSorter {
+                    roleName: "onlineStatus"
+                    sortOrder: Qt.DescendingOrder
+                },
+                StringSorter {
+                    roleName: "preferredDisplayName"
+                    caseSensitivity: Qt.CaseInsensitive
+                }
+            ]
+        }
+        section.property: "onlineStatus"
+        section.delegate: (root.width > 58) ? sectionDelegateComponent : null
+        delegate: StatusMemberListItem {
+            width: ListView.view.width
+
+            usesDefaultName: model.usesDefaultName
+            nickName: model.localNickname
+            userName: ProfileUtils.displayName("", model.ensName, model.displayName, model.alias)
+            pubKey: model.isEnsVerified ? "" : model.compressedPubKey
+            isContact: model.isContact
+            isVerified: model.isVerified
+            isUntrustworthy: model.isUntrustworthy
+            isBlocked: model.isBlocked
+            isOwner: model.memberRole === Constants.memberRole.owner
+            icon.name: model.icon
+            icon.color: Utils.colorForColorId(Theme.palette, model.colorId)
+            status: model.onlineStatus
+
+            onClicked: {
+                Global.openProfilePopup(model.pubKey)
+            }
+            onRightClicked: position => {
+                const profileType = Utils.getProfileType(model.isCurrentUser, false, model.isBlocked)
+                const contactType = Utils.getContactType(model.contactRequest, model.isContact)
+
+                const params = {
+                    profileType, contactType,
+                    pubKey: model.pubKey,
+                    compressedPubKey: model.compressedPubKey,
+                    emojiHash: JSON.parse(model.emojiHash),
+                    colorId: model.colorId,
+                    displayName: model.preferredDisplayName,
+                    userIcon: model.icon,
+                    trustStatus: model.trustStatus,
+                    onlineStatus: model.onlineStatus,
+                    hasLocalNickname: !!model.localNickname,
+                    usesDefaultName: model.usesDefaultName,
+                    chatType: root.chatType,
+                    isAdmin: root.isAdmin
+                }
+
+                Global.openMenu(profileContextMenuComponent, this, params, position)
             }
         }
     }

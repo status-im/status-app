@@ -16,13 +16,22 @@ Control {
     property url image
     property color color
     property bool amISectionAdmin
+    property bool searchActive
 
     signal infoButtonClicked
     signal shareOwnProfileRequested
+    signal searchRequested(bool toggled)
 
     padding: Theme.halfPadding
     rightPadding: Theme.padding
     topPadding: Theme.smallPadding
+
+    component HeaderButton: StatusFlatButton {
+        icon.color: hovered || checked ? Theme.palette.primaryColor1 : Theme.palette.directColor1
+        isRoundIcon: true
+        tooltip.orientation: StatusToolTip.Orientation.Bottom
+        tooltip.y: parent.height + Theme.padding
+    }
 
     contentItem: RowLayout {
         StatusChatInfoButton {
@@ -38,19 +47,20 @@ Control {
             onClicked: if(root.amISectionAdmin) root.infoButtonClicked()
         }
 
-        StatusIconTabButton {
+        HeaderButton {
             objectName: "shareProfileButton"
             icon.name: "add-contact"
-            icon.color: Theme.palette.directColor1
-            checkable: false
             onClicked: root.shareOwnProfileRequested()
+            tooltip.text: qsTr("Invite contacts")
+        }
 
-            StatusToolTip {
-                text: qsTr("Invite contacts")
-                visible: parent.hovered
-                orientation: StatusToolTip.Orientation.Bottom
-                y: parent.height + Theme.padding
-            }
+        HeaderButton {
+            objectName: "searchButton"
+            icon.name: "search"
+            checkable: true
+            checked: root.searchActive
+            onToggled: root.searchRequested(checked)
+            tooltip.text: qsTr("Search")
         }
     }
 }

@@ -3323,6 +3323,10 @@ no compatible</translation>
         <source>Invite contacts</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Buscar</translation>
+    </message>
 </context>
 <context>
     <name>CommunitiesGridView</name>
@@ -3493,6 +3497,10 @@ no compatible</translation>
 </context>
 <context>
     <name>CommunityColumnView</name>
+    <message>
+        <source>Search channels...</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Create channel</source>
         <translation>Crear canal</translation>
@@ -4164,7 +4172,11 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
         <translation>Iniciar chat</translation>
     </message>
     <message>
-        <source>Open QR Scanner</source>
+        <source>Search</source>
+        <translation type="unfinished">Buscar</translation>
+    </message>
+    <message>
+        <source>Search chats...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -18779,6 +18791,14 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
 </context>
 <context>
     <name>UserListPanel</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Buscar</translation>
+    </message>
+    <message>
+        <source>Search members...</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Member re-evaluation in progress...</source>
         <translation>Reevaluación de miembros en curso...</translation>

@@ -3333,6 +3333,10 @@ formát souboru</translation>
         <source>Invite contacts</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Hledat</translation>
+    </message>
 </context>
 <context>
     <name>CommunitiesGridView</name>
@@ -3504,6 +3508,10 @@ formát souboru</translation>
 </context>
 <context>
     <name>CommunityColumnView</name>
+    <message>
+        <source>Search channels...</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Create channel</source>
         <translation>Vytvořit kanál</translation>
@@ -4179,8 +4187,12 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <translation>Zahájit chat</translation>
     </message>
     <message>
-        <source>Open QR Scanner</source>
-        <translation>Otevřít QR skener</translation>
+        <source>Search</source>
+        <translation type="unfinished">Hledat</translation>
+    </message>
+    <message>
+        <source>Search chats...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Invite contacts</source>
@@ -18875,6 +18887,14 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
 </context>
 <context>
     <name>UserListPanel</name>
+    <message>
+        <source>Search</source>
+        <translation type="unfinished">Hledat</translation>
+    </message>
+    <message>
+        <source>Search members...</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message>
         <source>Member re-evaluation in progress...</source>
         <translation>Probíhá kontrola členů...</translation>
