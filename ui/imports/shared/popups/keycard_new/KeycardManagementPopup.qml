@@ -52,7 +52,7 @@ StatusDialog {
         }
     }
 
-    enum ImportFlowSteps {
+    enum FlowStep {
         EnterPin,
         EnterNewPin,
         RepeatPin,
@@ -77,11 +77,11 @@ StatusDialog {
 
         property bool factoryResetConfirmationChecked: false
 
-        property int importStep: root.flow === Constants.keycard.flow.moveKeyPair
-                                     ? KeycardManagementPopup.ImportFlowSteps.SelectKeyPair
+        property int currentStep: root.flow === Constants.keycard.flow.moveKeyPair
+                                     ? KeycardManagementPopup.FlowStep.SelectKeyPair
                                      : d.keycardHasOnlyPinSet
-                                         ? KeycardManagementPopup.ImportFlowSteps.EnterPin
-                                         : KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+                                         ? KeycardManagementPopup.FlowStep.EnterPin
+                                         : KeycardManagementPopup.FlowStep.EnterNewPin
 
         property string newPin: ""
         property bool pinMismatch: false
@@ -98,6 +98,32 @@ StatusDialog {
 
         property string authenticationPassword: ""
 
+        function componentForStep(step) {
+            switch (step) {
+            case KeycardManagementPopup.FlowStep.EnterPin:
+                return enterPinComponent
+            case KeycardManagementPopup.FlowStep.EnterNewPin:
+                return createPinComponent
+            case KeycardManagementPopup.FlowStep.RepeatPin:
+                return repeatPinComponent
+            case KeycardManagementPopup.FlowStep.EnterSeedPhrase:
+                return root.flow === Constants.keycard.flow.moveKeyPair
+                    ? moveKeyPairEnterSeedPhraseComponent
+                    : enterSeedPhraseComponent
+            case KeycardManagementPopup.FlowStep.EnterKeyPairName:
+                return enterKeyPairNameComponent
+            case KeycardManagementPopup.FlowStep.ManageAccounts:
+                return manageKeyPairAccountsComponent
+            case KeycardManagementPopup.FlowStep.DisplaySeedPhrase:
+                return seedPhraseDisplayComponent
+            case KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords:
+                return confirmSeedPhraseWordsComponent
+            case KeycardManagementPopup.FlowStep.SelectKeyPair:
+                return selectKeyPairComponent
+            default: return null
+            }
+        }
+
         function startKeycardReading(pin) {
             d.processing = true
             root.store.startGetMetadata(pin)
@@ -109,7 +135,7 @@ StatusDialog {
         }
 
         function startImportingKeyPair() {
-            d.importStep = KeycardManagementPopup.ImportFlowSteps.Importing
+            d.currentStep = KeycardManagementPopup.FlowStep.Importing
             d.processing = true
             root.store.startImportingKeyPair(d.newPin,
                                              d.seedPhrase,
@@ -118,7 +144,7 @@ StatusDialog {
         }
 
         function startMigratingNonProfileKeypairToKeycard() {
-            d.importStep = KeycardManagementPopup.ImportFlowSteps.Migrating
+            d.currentStep = KeycardManagementPopup.FlowStep.Migrating
             d.processing = true
             Backpressure.debounce(this, 500, () => {
                                       root.store.startMigratingNonProfileKeypairToKeycard(d.authenticationPassword,
@@ -129,40 +155,38 @@ StatusDialog {
                                   })()
         }
 
-        function nextImportStep() {
-            d.print1("nextImportStep")
-
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.SelectKeyPair) {
-                d.importStep = d.keycardHasOnlyPinSet
-                    ? KeycardManagementPopup.ImportFlowSteps.EnterPin
-                    : KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+        function nextStep() {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
+                d.currentStep = d.keycardHasOnlyPinSet
+                    ? KeycardManagementPopup.FlowStep.EnterPin
+                    : KeycardManagementPopup.FlowStep.EnterNewPin
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterPin) {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.EnterPin) {
                 if (root.flow === Constants.keycard.flow.importNewKeyPair) {
                     d.seedPhrase = root.store.generateMnemonic()
-                    d.importStep = KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase
+                    d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
                     return
                 }
 
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase
+                d.currentStep = KeycardManagementPopup.FlowStep.EnterSeedPhrase
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterNewPin) {
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.RepeatPin
+            if (d.currentStep === KeycardManagementPopup.FlowStep.EnterNewPin) {
+                d.currentStep = KeycardManagementPopup.FlowStep.RepeatPin
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin) {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin) {
                 if (root.flow === Constants.keycard.flow.importNewKeyPair) {
                     d.seedPhrase = root.store.generateMnemonic()
-                    d.importStep = KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase
+                    d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
                     return
                 }
 
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase
+                d.currentStep = KeycardManagementPopup.FlowStep.EnterSeedPhrase
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase) {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase) {
                 if (root.flow === Constants.keycard.flow.moveKeyPair) {
                     Global.openAuthenticationPopup(Constants.keycard.flow.moveKeyPair, root.store.userProfileKeyUid)
                     return
@@ -173,90 +197,77 @@ StatusDialog {
                     return
                 }
 
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName
+                d.currentStep = KeycardManagementPopup.FlowStep.EnterKeyPairName
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase) {
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords
+            if (d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase) {
+                d.currentStep = KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords) {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords) {
                 d.seedPhraseKeyUid = root.store.getKeyUidForSeedPhrase(d.seedPhrase)
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName
+                d.currentStep = KeycardManagementPopup.FlowStep.EnterKeyPairName
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName) {
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.ManageAccounts
+            if (d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName) {
+                d.currentStep = KeycardManagementPopup.FlowStep.ManageAccounts
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts) {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts) {
                 d.startImportingKeyPair()
                 return
             }
         }
 
-        function previousImportStep() {
-            d.print1("previousImportStep")
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+        function previousStep() {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.EnterNewPin
                     && root.flow === Constants.keycard.flow.moveKeyPair) {
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.SelectKeyPair
+                d.currentStep = KeycardManagementPopup.FlowStep.SelectKeyPair
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin) {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin) {
                 d.newPin = ""
                 d.pinMismatch = false
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+                d.currentStep = KeycardManagementPopup.FlowStep.EnterNewPin
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterPin
+            if (d.currentStep === KeycardManagementPopup.FlowStep.EnterPin
                     && root.flow === Constants.keycard.flow.moveKeyPair) {
                 d.newPin = ""
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.SelectKeyPair
+                d.currentStep = KeycardManagementPopup.FlowStep.SelectKeyPair
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase) {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase) {
                 d.newPin = ""
                 d.pinMismatch = false
                 d.seedPhrase = ""
                 d.seedPhraseKeyUid = ""
-                if (root.flow === Constants.keycard.flow.moveKeyPair) {
-                    if (d.keycardHasOnlyPinSet) {
-                        d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterPin
-                        return
-                    }
-                    d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterNewPin
-                    return
-                }
-                if (d.keycardHasOnlyPinSet) {
-                    d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterPin
-                    return
-                }
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+                d.currentStep = d.keycardHasOnlyPinSet
+                    ? KeycardManagementPopup.FlowStep.EnterPin
+                    : KeycardManagementPopup.FlowStep.EnterNewPin
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase) {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase) {
                 d.seedPhrase = ""
                 d.seedPhraseRevealed = false
                 d.newPin = ""
                 d.pinMismatch = false
                 if (d.keycardHasOnlyPinSet) {
-                    d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterPin
+                    d.currentStep = KeycardManagementPopup.FlowStep.EnterPin
                     return
                 }
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+                d.currentStep = KeycardManagementPopup.FlowStep.EnterNewPin
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords) {
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase
-                if (contentLoader.item && !contentLoader.item.allEntriesValid) {
-                }
+            if (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords) {
+                d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName) {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName) {
                 d.keyPairName = ""
                 if (root.flow === Constants.keycard.flow.importNewKeyPair) {
                     d.seedPhraseKeyUid = ""
-                    d.importStep = KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords
+                    d.currentStep = KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords
                     return
                 }
                 d.newPin = ""
@@ -264,15 +275,15 @@ StatusDialog {
                 d.seedPhrase = ""
                 d.seedPhraseKeyUid = ""
                 if (d.keycardHasOnlyPinSet) {
-                    d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterPin
+                    d.currentStep = KeycardManagementPopup.FlowStep.EnterPin
                     return
                 }
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterNewPin
+                d.currentStep = KeycardManagementPopup.FlowStep.EnterNewPin
                 return
             }
-            if (d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts) {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts) {
                 d.accountPathsJson = "[]"
-                d.importStep = KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName
+                d.currentStep = KeycardManagementPopup.FlowStep.EnterKeyPairName
                 return
             }
         }
@@ -399,57 +410,8 @@ StatusDialog {
                     if (!d.error && !d.success) {
                         return factoryResetConfirmationComponent
                     }
-                } else if (root.flow === Constants.keycard.flow.importSeedPhrase) {
-                    if (!d.error && !d.success) {
-                        switch(d.importStep) {
-                        case KeycardManagementPopup.ImportFlowSteps.EnterPin:
-                            return enterPinComponent
-                        case KeycardManagementPopup.ImportFlowSteps.EnterNewPin:
-                            return createPinComponent
-                        case KeycardManagementPopup.ImportFlowSteps.RepeatPin:
-                            return repeatPinComponent
-                        case KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase:
-                            return enterSeedPhraseComponent
-                        case KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName:
-                            return enterKeyPairNameComponent
-                        case KeycardManagementPopup.ImportFlowSteps.ManageAccounts:
-                            return manageKeyPairAccountsComponent
-                        }
-                    }
-                } else if (root.flow === Constants.keycard.flow.importNewKeyPair) {
-                    if (!d.error && !d.success) {
-                        switch(d.importStep) {
-                        case KeycardManagementPopup.ImportFlowSteps.EnterPin:
-                            return enterPinComponent
-                        case KeycardManagementPopup.ImportFlowSteps.EnterNewPin:
-                            return createPinComponent
-                        case KeycardManagementPopup.ImportFlowSteps.RepeatPin:
-                            return repeatPinComponent
-                        case KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase:
-                            return seedPhraseDisplayComponent
-                        case KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords:
-                            return confirmSeedPhraseWordsComponent
-                        case KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName:
-                            return enterKeyPairNameComponent
-                        case KeycardManagementPopup.ImportFlowSteps.ManageAccounts:
-                            return manageKeyPairAccountsComponent
-                        }
-                    }
-                } else if (root.flow === Constants.keycard.flow.moveKeyPair) {
-                    if (!d.error && !d.success) {
-                        switch(d.importStep) {
-                        case KeycardManagementPopup.ImportFlowSteps.SelectKeyPair:
-                            return selectKeyPairComponent
-                        case KeycardManagementPopup.ImportFlowSteps.EnterPin:
-                            return enterPinComponent
-                        case KeycardManagementPopup.ImportFlowSteps.EnterNewPin:
-                            return createPinComponent
-                        case KeycardManagementPopup.ImportFlowSteps.RepeatPin:
-                            return repeatPinComponent
-                        case KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase:
-                            return moveKeyPairEnterSeedPhraseComponent
-                        }
-                    }
+                } else if (!d.error && !d.success) {
+                    return d.componentForStep(d.currentStep) ?? keycardProgressComponent
                 }
 
                 return keycardProgressComponent
@@ -461,31 +423,31 @@ StatusDialog {
         leftButtons: ObjectModel {
             StatusBackButton {
                 visible: (root.flow === Constants.keycard.flow.importSeedPhrase
-                          && (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin
-                              || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase
-                              || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName
-                              || d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts))
+                          && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                              || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                              || d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName
+                              || d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts))
                          || (root.flow === Constants.keycard.flow.importNewKeyPair
-                             && (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin
-                                 || d.importStep === KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase
-                                 || d.importStep === KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords
-                                 || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName
-                                 || d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts))
+                             && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts))
                          || (root.flow === Constants.keycard.flow.moveKeyPair
-                             && (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterPin
-                                 || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterNewPin
-                                 || d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin
-                                 || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase))
+                             && (d.currentStep === KeycardManagementPopup.FlowStep.EnterPin
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.EnterNewPin
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase))
 
                 onClicked: {
-                    d.previousImportStep()
+                    d.previousStep()
                 }
             }
         }
 
         rightButtons: ObjectModel {
             StatusFlatButton {
-                visible: d.importStep !== KeycardManagementPopup.ImportFlowSteps.ManageAccounts
+                visible: d.currentStep !== KeycardManagementPopup.FlowStep.ManageAccounts
                 text: {
                     if (root.flow === Constants.keycard.flow.readKeycard) {
                         if (contentLoader.status === Loader.Ready
@@ -533,9 +495,9 @@ StatusDialog {
                 visible: (root.flow === Constants.keycard.flow.importSeedPhrase
                           || root.flow === Constants.keycard.flow.importNewKeyPair)
                          && contentLoader.item
-                         && d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts
+                         && d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts
                 enabled: visible
-                         && d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts
+                         && d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts
                          && contentLoader.item.allAccountsValid
                          && contentLoader.item.numberOfAddedAccounts < Constants.keycard.maxNumberOfAccountsToAddWhenImportingKeyPair
                 text: qsTr("Add another account")
@@ -547,55 +509,55 @@ StatusDialog {
             StatusButton {
                 visible: contentLoader.item
                          && ((root.flow === Constants.keycard.flow.importSeedPhrase
-                              && (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin
-                                  || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase
-                                  || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName
-                                  || d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts))
+                              && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                  || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                                  || d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName
+                                  || d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts))
                              || (root.flow === Constants.keycard.flow.importNewKeyPair
-                                 && (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin
-                                     || d.importStep === KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase
-                                     || d.importStep === KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords
-                                     || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName
-                                     || d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts))
+                                 && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts))
                              || (root.flow === Constants.keycard.flow.moveKeyPair
-                                 && (d.importStep === KeycardManagementPopup.ImportFlowSteps.SelectKeyPair
-                                     || d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin
-                                     || d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase)))
+                                 && (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase)))
                 enabled: visible
-                         && ((d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin && d.pinMismatch)
-                             || (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
-                             || (d.importStep === KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase && contentLoader.item.seedPhraseRevealed)
-                             || (d.importStep === KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords && contentLoader.item.allEntriesValid)
-                             || (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName && contentLoader.item.nameValid)
-                             || (d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts && contentLoader.item.allAccountsValid)
-                             || (d.importStep === KeycardManagementPopup.ImportFlowSteps.SelectKeyPair
+                         && ((d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
+                             || (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
+                             || (d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase && contentLoader.item.seedPhraseRevealed)
+                             || (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords && contentLoader.item.allEntriesValid)
+                             || (d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName && contentLoader.item.nameValid)
+                             || (d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts && contentLoader.item.allAccountsValid)
+                             || (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair
                                  && !!contentLoader.item.selectedKeyUid
                                  && contentLoader.item.understandChecked))
                 text: {
-                    if (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin) {
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin) {
                         return qsTr("Try setting the PIN again")
                     }
-                    if (d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts) {
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts) {
                         return qsTr("Continue")
                     }
 
                     return qsTr("Next")
                 }
                 onClicked: {
-                    if (d.importStep === KeycardManagementPopup.ImportFlowSteps.SelectKeyPair) {
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
                         d.moveKeyPairSelectedKeyUid = contentLoader.item.selectedKeyUid
                         d.moveKeyPairSelectedKeyPairName = contentLoader.item.selectedKeyPairName
                         d.moveKeyPairUnderstandChecked = contentLoader.item.understandChecked
-                        d.nextImportStep()
+                        d.nextStep()
                         return
                     }
-                    if (d.importStep === KeycardManagementPopup.ImportFlowSteps.RepeatPin) {
-                        d.previousImportStep()
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin) {
+                        d.previousStep()
                         return
                     }
-                    if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterSeedPhrase) {
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase) {
                         if (root.flow === Constants.keycard.flow.moveKeyPair) {
-                            d.nextImportStep()
+                            d.nextStep()
                             return
                         }
                         d.keyPairKnown = root.store.isKnownKeyUid(d.seedPhraseKeyUid)
@@ -603,22 +565,22 @@ StatusDialog {
                             d.keyPairName = root.store.getKeyPairNameForKeyUid(d.seedPhraseKeyUid)
                             d.accountPathsJson = root.store.getKeyPairAccountPathsJsonForKeyUid(d.seedPhraseKeyUid)
                         }
-                        d.nextImportStep()
+                        d.nextStep()
                         return
                     }
-                    if (d.importStep === KeycardManagementPopup.ImportFlowSteps.DisplaySeedPhrase
-                            || d.importStep === KeycardManagementPopup.ImportFlowSteps.ConfirmSeedPhraseWords) {
-                        d.nextImportStep()
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase
+                            || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords) {
+                        d.nextStep()
                         return
                     }
-                    if (d.importStep === KeycardManagementPopup.ImportFlowSteps.EnterKeyPairName) {
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName) {
                         d.keyPairName = contentLoader.item.keyPairName
-                        d.nextImportStep()
+                        d.nextStep()
                         return
                     }
-                    if (d.importStep === KeycardManagementPopup.ImportFlowSteps.ManageAccounts) {
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts) {
                         d.accountPathsJson = contentLoader.item.getAccountsJson()
-                        d.nextImportStep()
+                        d.nextStep()
                         return
                     }
                 }
@@ -758,7 +720,7 @@ StatusDialog {
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
                     d.newPin = pinInput
-                    d.nextImportStep()
+                    d.nextStep()
                     return
                 default:
                     return
@@ -782,7 +744,7 @@ StatusDialog {
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
                     d.newPin = pinInput
-                    d.nextImportStep()
+                    d.nextStep()
                     return
                 default:
                     return
@@ -810,7 +772,7 @@ StatusDialog {
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
-                    d.nextImportStep()
+                    d.nextStep()
                     return
                 default:
                     return
@@ -853,7 +815,7 @@ StatusDialog {
 
             onDone: {
                 d.keyPairName = keyPairName
-                d.nextImportStep()
+                d.nextStep()
             }
         }
     }
@@ -866,7 +828,7 @@ StatusDialog {
 
             onDone: {
                 d.accountPathsJson = getAccountsJson()
-                d.nextImportStep()
+                d.nextStep()
             }
         }
     }
