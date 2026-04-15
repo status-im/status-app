@@ -51,7 +51,7 @@ proc startKeycardAuthentication*(self: Controller, keyUid: string, paths: seq[st
   self.keycardServiceV2.asyncExportPublicKey(keyUid, paths, exportPrivate, exportMasterAddr, pin)
 
 proc stopKeycardAuthentication*(self: Controller) =
-  self.keycardServiceV2.asyncStop()
+  self.keycardServiceV2.stop()
 
 proc isKeypairMigratedToKeycard*(self: Controller, keyUid: string): bool =
   let keypair = self.walletAccountService.getKeypairByKeyUid(keyUid)

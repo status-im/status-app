@@ -59,7 +59,7 @@ proc startKeycardSigning*(self: Controller, keyUid: string, pin: string, txHash:
   self.keycardServiceV2.asyncSign(keyUid, pin, txHash, path)
 
 proc stopKeycardSigning*(self: Controller) =
-  self.keycardServiceV2.asyncStop()
+  self.keycardServiceV2.stop()
 
 proc isKeypairMigratedToKeycard*(self: Controller, keyUid: string): bool =
   let keypair = self.walletAccountService.getKeypairByKeyUid(keyUid)
