@@ -7,6 +7,7 @@ QtObject {
 
     readonly property string userProfileKeyUid: userProfile.keyUid
     readonly property string userProfilePubKey: userProfile.pubKey
+    readonly property bool isKeycardUser: userProfile.isKeycardUser
 
     readonly property var keyPairItem: root.keycardNewModule.keyPairItem
 
@@ -24,5 +25,9 @@ QtObject {
 
     function resolveKeyPairItemForKeyUid(keyUid) {
         root.keycardNewModule.resolveKeyPairItemForKeyUid(keyUid)
+    }
+
+    function allNonProfileKeyPairsMigratedToKeycard() {
+        return root.keycardNewModule.allNonProfileKeyPairsMigratedToKeycard()
     }
 }

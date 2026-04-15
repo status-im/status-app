@@ -224,8 +224,9 @@ ColumnLayout {
 
     StatusListItem {
         Layout.fillWidth: true
-        visible: d.isEmpty
-                 || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && (root.availableSlots > 0 || d.pairingExists)
+        visible: !root.keycardStore.isKeycardUser
+                 && (d.isEmpty
+                     || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && (root.availableSlots > 0 || d.pairingExists))
         title: qsTr("Move profile key pair to Keycard")
         subTitle: qsTr("Keycard will be required for signing and logging in to Status")
         components: [
@@ -241,8 +242,9 @@ ColumnLayout {
 
     StatusListItem {
         Layout.fillWidth: true
-        visible: d.isEmpty
-                 || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && (root.availableSlots > 0 || d.pairingExists)
+        visible: !root.keycardStore.allNonProfileKeyPairsMigratedToKeycard()
+                 && (d.isEmpty
+                     || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && (root.availableSlots > 0 || d.pairingExists))
         title: qsTr("Move key pair from Status wallet to Keycard")
         subTitle: qsTr("Keycard will be required for signing")
         components: [
