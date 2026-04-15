@@ -686,6 +686,24 @@ proc updateKeypairName*(self: Service, keyUid: string, name: string) =
   except Exception as e:
     error "error: ", procName="updateKeypairName", errName=e.name, errDesription=e.msg
 
+# returns error message if there is an error, empty string if successful
+proc updateKeypairExtendedPublicKey*(self: Service, keyUid: string, extendedPublicKey: string, coldWalletType: string): string =
+  result = ""
+  try:
+    let kp = self.getKeypairByKeyUid(keyUid)
+    if kp.isNil:
+      result = "there is no known keypair for key uid: " & keyUid
+      error "error: ", err=result, procName="updateKeypairName"
+      return
+    let response = backend.updateKeypairXPub(keyUid, extendedPublicKey, coldWalletType)
+    if not response.error.isNil:
+      result = "status-go error: " & response.error.message
+      error "error: ", err=result, procName="updateKeypairExtendedPublicKey"
+      return
+  except Exception as e:
+    result = "error: " & e.msg
+    error "error: ", err=result, procName="updateKeypairExtendedPublicKey"
+
 proc fetchDerivedAddresses*(self: Service, password: string, derivedFrom: string, paths: seq[string], hashPassword: bool) =
   let arg = FetchDerivedAddressesTaskArg(
     password: if hashPassword: utils.hashPassword(password) else: password,

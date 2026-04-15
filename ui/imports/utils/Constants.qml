@@ -520,6 +520,7 @@ QtObject {
             readonly property string factoryReset: "factory-reset"
             readonly property string importSeedPhrase: "import-seed-phrase"
             readonly property string importNewKeyPair: "import-new-key-pair"
+            readonly property string moveKeyPair: "move-key-pair"
         }
     }
 

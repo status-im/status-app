@@ -29,6 +29,8 @@ type
     accounts*: seq[WalletAccountDto]
     keycards*: seq[KeycardDto]
     removed*: bool
+    extendedPublicKey*: string
+    coldWalletType*: string
 
 proc migratedToKeycard*(self: KeypairDto): bool =
   return self.keycards.len > 0
@@ -42,6 +44,8 @@ proc toKeypairDto*(jsonObj: JsonNode): KeypairDto =
   discard jsonObj.getProp("last-used-derivation-index", result.lastUsedDerivationIndex)
   discard jsonObj.getProp("synced-from", result.syncedFrom)
   discard jsonObj.getProp("removed", result.removed)
+  discard jsonObj.getProp("xpub", result.extendedPublicKey)
+  discard jsonObj.getProp("cold-wallet", result.coldWalletType)
 
   if not result.removed:
     if result.keypairType != KeypairTypeProfile and
@@ -67,6 +71,8 @@ proc `$`*(self: KeypairDto): string =
     derivedFrom: {self.derivedFrom},
     lastUsedDerivationIndex: {self.lastUsedDerivationIndex},
     syncedFrom: {self.syncedFrom},
+    extendedPublicKey: {self.extendedPublicKey},
+    coldWalletType: {self.coldWalletType},
     accounts:
   """
   for i in 0 ..< self.accounts.len:

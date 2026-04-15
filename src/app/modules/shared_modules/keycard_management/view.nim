@@ -1,5 +1,6 @@
 import nimqml
 import io_interface
+import ../../shared_models/[keypair_model, keypair_item]
 
 QtObject:
   type
@@ -13,6 +14,8 @@ QtObject:
       keyUid: string
       cardMetadataName: string
       cardMetadataWalletAccountsJson: string
+      keyPairModel: KeyPairModel
+      keyPairModelVariant: QVariant
 
   ## Forward declarations
   proc delete*(self: View)
@@ -48,6 +51,29 @@ QtObject:
   proc keycardImportKeyPairSuccess*(self: View) {.signal.}
   proc keycardImportKeyPairError*(self: View, error: string) {.signal.}
 
+  proc keycardMoveKeyPairSuccess*(self: View) {.signal.}
+  proc keycardMoveKeyPairError*(self: View, error: string) {.signal.}
+
+  proc keyPairModelChanged(self: View) {.signal.}
+  proc getKeyPairModel(self: View): QVariant {.slot.} =
+    if self.keyPairModelVariant.isNil:
+      return newQVariant()
+    return self.keyPairModelVariant
+  QtProperty[QVariant] keyPairModel:
+    read = getKeyPairModel
+    notify = keyPairModelChanged
+
+  proc createKeyPairModel*(self: View, items: seq[KeyPairItem]) =
+    if self.keyPairModel.isNil:
+      self.keyPairModel = newKeyPairModel()
+    if self.keyPairModelVariant.isNil:
+      self.keyPairModelVariant = newQVariant(self.keyPairModel)
+    self.keyPairModel.setItems(items)
+    self.keyPairModelChanged()
+
+  proc populateKeyPairModel*(self: View) {.slot.} =
+    self.delegate.populateKeyPairModel()
+
   proc getKeyUidForSeedPhrase*(self: View, seedPhrase: string): string {.slot.} =
     return self.delegate.getKeyUidForSeedPhrase(seedPhrase)
 
@@ -60,12 +86,16 @@ QtObject:
   proc getKeyPairAccountPathsJsonForKeyUid*(self: View, keyUid: string): string {.slot.} =
     return self.delegate.getKeyPairAccountPathsJsonForKeyUid(keyUid)
 
-  proc startLoadSeedPhrase*(self: View, pin: string, seedPhrase: string, metadataName: string,
-      metadataAccounts: string) {.slot.} =
-    self.delegate.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
+  proc startImportingKeyPair*(self: View, pin: string, seedPhrase: string, metadataName: string,
+    metadataAccounts: string) {.slot.} =
+    self.delegate.startImportingKeyPair(pin, seedPhrase, metadataName, metadataAccounts)
 
   proc generateMnemonic*(self: View): string {.slot.} =
     return self.delegate.generateMnemonic()
+
+  proc startMigratingNonProfileKeypairToKeycard*(self: View, password: string, pin: string, seedPhrase: string,
+    metadataName: string, metadataAccounts: string) {.slot.} =
+    self.delegate.startMigratingNonProfileKeypairToKeycard(password, pin, seedPhrase, metadataName, metadataAccounts)
 
   proc keycardStateChanged*(self: View) {.signal.}
   proc getKeycardState*(self: View): string {.slot.} =

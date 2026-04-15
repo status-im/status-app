@@ -79,12 +79,8 @@ proc getKeyUidForSeedPhrase*(self: Controller, seedPhrase: string): string =
 proc getKeypairByKeyUid*(self: Controller, keyUid: string): KeypairDto =
   return self.walletAccountService.getKeypairByKeyUid(keyUid)
 
-proc addNewKeycardStoredKeypair*(self: Controller, keyUid, keypairName, xpub, coldWallet: string, accounts: seq[wallet_account_service.WalletAccountDto]): bool =
-  let err = self.walletAccountService.addNewKeycardStoredKeypairNew(keyUid, keypairName, xpub, coldWallet, rootWalletMasterKey="", accounts)
-  if err.len > 0:
-    info "adding new keycard stored keypair failed", keypairName=keypairName, keyUid=keyUid
-    return false
-  return true
+proc addNewKeycardStoredKeypair*(self: Controller, keyUid, keypairName, xpub, coldWallet: string, accounts: seq[wallet_account_service.WalletAccountDto]): string =
+  return self.walletAccountService.addNewKeycardStoredKeypairNew(keyUid, keypairName, xpub, coldWallet, rootWalletMasterKey="", accounts)
 
 proc addKeycardOrAccounts*(self: Controller, keyPair: KeycardDto, password: string) =
   self.walletAccountService.addKeycardOrAccountsAsync(keyPair, password)
@@ -97,3 +93,9 @@ proc deriveExtendedPublicKeyAtPath*(self: Controller, mnemonic: string, passphra
 
 proc generateMnemonic*(self: Controller): string =
   return self.walletAccountService.getRandomMnemonic()
+
+proc getKeypairs*(self: Controller): seq[wallet_account_service.KeypairDto] =
+  return self.walletAccountService.getKeypairs()
+
+proc updateKeypairExtendedPublicKey*(self: Controller, keyUid, extendedPublicKey, coldWalletType: string): string =
+  return self.walletAccountService.updateKeypairExtendedPublicKey(keyUid, extendedPublicKey, coldWalletType)
