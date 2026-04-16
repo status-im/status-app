@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils
 
 /*!
      \qmltype StatusSectionLayout
@@ -183,13 +182,10 @@ LayoutChooser {
     }
 
     criteria: {
-        // On mobile it's necessary to use window height because virtual keyboard may make
-        // the content shorter, triggering the opposite mode. Ideally InputMethod could be
-        // used to compensate keyboard height but it's not providing reliable value in
-        // the current configuration.
-        const safeArea = root.Window.window.contentItem.SafeArea
-        const height = Utils.isMobile ? root.Window.height - safeArea.margins.bottom - safeArea.margins.top
-                                      : root.height
+        // Workaround to compensate keyboard height when determining mode. Relying on SafeArea's
+        // additionalMargings doesn't work as expected, therefore additionalBottomMargin is used
+        // directly.
+        const height = root.height + Window.window.additionalBottomMargin
 
         return [
             height > root.width && root.width < root.implicitWidth, // Portrait mode
