@@ -33,17 +33,28 @@ proc applyAllTokenListsData(self: Service, allTokenListsJson: JsonNode) =
     else: Json.decode($allTokenListsJson, seq[TokenListDto], allowUnknownFields = true)
   self.allTokenLists = tokenListsDtos.map(tl => createTokenListItem(tl))
 
+proc rebuildAllTokensByGroupKeyIndex(self: Service) =
+  self.allTokensByGroupKey.clear()
+  let allTokens = getAllTokens()
+  for token in allTokens:
+    self.allTokensByGroupKey.mgetOrPut(token.groupKey, @[]).add(token)
+
 proc prefetchParaswapSupport(self: Service) =
   let chainIds = self.networkService.getEnabledChainIds()
   if chainIds.len == 0:
     return
-  let arg = PrefetchParaswapSupportTaskArg(
-    tptr: prefetchParaswapSupportTask,
-    vptr: cast[uint](self.vptr),
-    slot: "prefetchParaswapSupportRetrieved",
-    chainIds: chainIds,
-  )
-  self.threadpool.start(arg)
+  # One threadpool task per chain so the UI cache fills as each RPC completes; a single batched
+  # task only called finish at the end, so every chain missed the cache until all RPCs finished.
+  for chainId in chainIds:
+    if chainId <= 0:
+      continue
+    let arg = PrefetchParaswapSupportTaskArg(
+      tptr: prefetchParaswapSupportTask,
+      vptr: cast[uint](self.vptr),
+      slot: "prefetchParaswapSupportRetrieved",
+      chainIds: @[chainId],
+    )
+    self.threadpool.start(arg)
 
 proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.} =
   try:
@@ -93,7 +104,9 @@ proc applyRefreshTokensData(self: Service, tokensOfInterestJson: JsonNode, token
         communityId: dto.communityId)
 
   self.rebuildMarketData()
-  self.fetchTokensDetails()
+  self.fetchTokensDetails() # TODO: if the only place where we can see these details is account's details page, we should fetch this on demand, no need to have local cache
+  self.fetchTokenPreferences()
+  self.rebuildAllTokensByGroupKeyIndex()
   # notify modules
   self.events.emit(SIGNAL_TOKENS_LIST_UPDATED, Args())
   self.events.emit(SIGNAL_TOKEN_PREFERENCES_UPDATED, Args())
@@ -332,6 +345,10 @@ proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): TokenIte
   var tokens = self.getTokensByGroupKey(key)
   if tokens.len > 0:
     return tokens[0]
+  if self.allTokensByGroupKey.hasKey(key):
+    let indexed = self.allTokensByGroupKey[key]
+    if indexed.len > 0:
+      return indexed[0]
   tokens = getAllTokens()
   let matchedTokens = tokens.filter(t => t.groupKey == key)
   if matchedTokens.len > 0:
