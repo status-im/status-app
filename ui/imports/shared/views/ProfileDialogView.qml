@@ -479,18 +479,22 @@ Pane {
                     Layout.rightMargin: column.anchors.rightMargin
                     bottomPadding: -4
                     StatusTabButton {
+                        objectName: "showcaseTabBar_communities"
                         width: implicitWidth
                         text: qsTr("Communities")
                     }
                     StatusTabButton {
+                        objectName: "showcaseTabBar_accounts"
                         width: implicitWidth
                         text: qsTr("Accounts")
                     }
                     StatusTabButton {
+                        objectName: "showcaseTabBar_collectibles"
                         width: implicitWidth
                         text: qsTr("Collectibles")
                     }
                     StatusTabButton {
+                        objectName: "showcaseTabBar_web"
                         width: implicitWidth
                         text: qsTr("Web")
                     }
