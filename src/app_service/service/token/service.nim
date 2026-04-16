@@ -45,7 +45,7 @@ QtObject:
     tokensOfInterestByKey: Table[string, TokenItem] # [tokenKey, TokenItem]
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]
     groupsOfInterest: seq[TokenGroupItem] # refers to groups for tokens of interest
-    allTokensByGroupKey: Table[string, seq[TokenItem]] # rebuilt in refreshTokens for getTokenByKeyOrGroupKeyFromAllTokens
+    allTokensByGroupKey: Table[string, seq[TokenItem]] # rebuilt in applyRefreshTokensData for getTokenByKeyOrGroupKeyFromAllTokens
     groupsForChain: seq[TokenGroupItem] # refers to groups for a specific chain
     allTokenGroupsForActiveNetworks: seq[TokenGroupItem] # all token groups, fetched on demand
     allTokenGroupsLoading: bool
