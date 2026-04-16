@@ -47,15 +47,13 @@ proc tokensMarketValuesRetrieved(self: Service, response: string) {.slot.} =
   # this is emited so that the models can notify about market values being available
   defer: self.setTokensMarketDetailsLoadingStateAndNotify(false)
   try:
-    let parsedJson = response.parseJson
-    var errorString: string
-    var tokenMarketValues, tokensResult: JsonNode
-    discard parsedJson.getProp("tokenMarketValues", tokenMarketValues)
-    discard parsedJson.getProp("error", errorString)
-    discard tokenMarketValues.getProp("result", tokensResult)
-
-    if not errorString.isEmptyOrWhitespace:
-      raise newException(Exception, "Error getting tokens market values: " & errorString)
+    let env = Json.decode(response, TokensMarketValuesSlotResponse, allowUnknownFields = true)
+    if not env.error.isEmptyOrWhitespace:
+      raise newException(Exception, "Error getting tokens market values: " & env.error)
+    if env.tokenMarketValues.isNil or env.tokenMarketValues.kind == JNull:
+      return
+    var tokensResult: JsonNode
+    discard env.tokenMarketValues.getProp("result", tokensResult)
     if tokensResult.isNil or tokensResult.kind == JNull:
       return
 
@@ -90,15 +88,13 @@ proc tokensDetailsRetrieved(self: Service, response: string) {.slot.} =
   # this is emited so that the models can notify about details being available
   defer: self.events.emit(SIGNAL_TOKENS_DETAILS_UPDATED, Args())
   try:
-    let parsedJson = response.parseJson
-    var errorString: string
-    var tokensDetails, tokensResult: JsonNode
-    discard parsedJson.getProp("tokensDetails", tokensDetails)
-    discard parsedJson.getProp("error", errorString)
-    discard tokensDetails.getProp("result", tokensResult)
-
-    if not errorString.isEmptyOrWhitespace:
-      raise newException(Exception, "Error getting tokens details: " & errorString)
+    let env = Json.decode(response, TokensDetailsSlotResponse, allowUnknownFields = true)
+    if not env.error.isEmptyOrWhitespace:
+      raise newException(Exception, "Error getting tokens details: " & env.error)
+    if env.tokensDetails.isNil or env.tokensDetails.kind == JNull:
+      return
+    var tokensResult: JsonNode
+    discard env.tokensDetails.getProp("result", tokensResult)
     if tokensResult.isNil or tokensResult.kind == JNull:
       return
 
@@ -127,15 +123,13 @@ proc tokensPricesRetrieved(self: Service, response: string) {.slot.} =
   # this is emited so that the models can notify about prices being available
   defer: self.setTokensPricesLoadingStateAndNotify(false)
   try:
-    let parsedJson = response.parseJson
-    var errorString: string
-    var tokensPrices, tokensResult: JsonNode
-    discard parsedJson.getProp("tokensPrices", tokensPrices)
-    discard parsedJson.getProp("error", errorString)
-    discard tokensPrices.getProp("result", tokensResult)
-
-    if not errorString.isEmptyOrWhitespace:
-      raise newException(Exception, "Error getting tokens details: " & errorString)
+    let env = Json.decode(response, TokensPricesSlotResponse, allowUnknownFields = true)
+    if not env.error.isEmptyOrWhitespace:
+      raise newException(Exception, "Error getting tokens prices: " & env.error)
+    if env.tokensPrices.isNil or env.tokensPrices.kind == JNull:
+      return
+    var tokensResult: JsonNode
+    discard env.tokensPrices.getProp("result", tokensResult)
     if tokensResult.isNil or tokensResult.kind == JNull:
       return
 

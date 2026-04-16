@@ -28,9 +28,7 @@ proc addNewTokensToGroupsOfInterest(self: Service, tokens: seq[TokenItem]) =
   createTokenGroupsFromTokens(tokens, self.groupsOfInterestByKey)
   self.groupsOfInterest = toSeq(self.groupsOfInterestByKey.values)
 
-proc applyAllTokenListsData(self: Service, allTokenListsJson: JsonNode) =
-  let tokenListsDtos = if allTokenListsJson.isNil or allTokenListsJson.kind == JNull: @[]
-    else: Json.decode($allTokenListsJson, seq[TokenListDto], allowUnknownFields = true)
+proc applyAllTokenListsData(self: Service, tokenListsDtos: seq[TokenListDto]) =
   self.allTokenLists = tokenListsDtos.map(tl => createTokenListItem(tl))
 
 proc rebuildAllTokensByGroupKeyIndex(self: Service) =
@@ -72,12 +70,10 @@ proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.} 
   except Exception as ex:
     error "prefetchParaswapSupportRetrieved", err = ex.msg
 
-proc applyRefreshTokensData(self: Service, tokensOfInterestJson: JsonNode, tokenPrefsJson: JsonNode) =
+proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], tokenPrefsNode: JsonNode) =
   # Parse tokens of interest
   self.tokensOfInterestByKey.clear()
   self.groupsOfInterestByKey.clear()
-  let tokenDtos = if tokensOfInterestJson.isNil or tokensOfInterestJson.kind == JNull: @[]
-    else: Json.decode($tokensOfInterestJson, seq[TokenDtoSafe], allowUnknownFields = true)
   let tokens = tokenDtos.map(t => createTokenItem(t))
 
   for token in tokens:
@@ -85,11 +81,11 @@ proc applyRefreshTokensData(self: Service, tokensOfInterestJson: JsonNode, token
 
   self.addNewTokensToGroupsOfInterest(tokens)
 
-  # Parse token preferences
+  # Keep tokenPreferencesJson as the backend array string for QML; fill table from decoded DTOs.
   self.tokenPreferencesJson = "[]"
-  if not tokenPrefsJson.isNil and tokenPrefsJson.kind == JArray:
-    self.tokenPreferencesJson = $tokenPrefsJson
-    for preferences in tokenPrefsJson:
+  if not tokenPrefsNode.isNil and tokenPrefsNode.kind == JArray:
+    self.tokenPreferencesJson = $tokenPrefsNode
+    for preferences in tokenPrefsNode:
       let dto = Json.decode($preferences, TokenPreferencesDto, allowUnknownFields = true)
       self.tokenPreferencesTable[dto.key] = TokenPreferencesItem(
         key: dto.key,
@@ -107,27 +103,22 @@ proc applyRefreshTokensData(self: Service, tokensOfInterestJson: JsonNode, token
 
 proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.} =
   try:
-    let rpcResponseObj = response.parseJson
-    let errStr = rpcResponseObj["error"].getStr()
-    if errStr.len > 0:
-      error "async refresh tokens failed", errDescription = errStr
+    let env = Json.decode(response, RefreshTokensResponse, allowUnknownFields = true)
+    if env.error.len > 0:
+      error "async refresh tokens failed", errDescription = env.error
       return
-    self.applyRefreshTokensData(
-      rpcResponseObj["tokensOfInterest"],
-      rpcResponseObj["tokenPreferences"],
-    )
+    self.applyRefreshTokensData(env.tokensOfInterest, env.tokenPreferences)
   except Exception as e:
     error "error processing async refresh tokens", msg = e.msg
 
 proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.} =
   self.tokenListsLoading = false
   try:
-    let rpcResponseObj = response.parseJson
-    let errStr = rpcResponseObj["error"].getStr()
-    if errStr.len > 0:
-      error "async fetch all token lists failed", errDescription = errStr
+    let env = Json.decode(response, FetchAllTokenListsResponse, allowUnknownFields = true)
+    if env.error.len > 0:
+      error "async fetch all token lists failed", errDescription = env.error
       return
-    self.applyAllTokenListsData(rpcResponseObj["allTokenLists"])
+    self.applyAllTokenListsData(env.allTokenLists)
     self.events.emit(SIGNAL_TOKEN_LISTS_LOADED, Args())
   except Exception as e:
     error "error processing async fetch all token lists", msg = e.msg
@@ -212,17 +203,13 @@ proc buildGroupsForChain*(self: Service, chainId: int) =
 proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.} =
   self.groupsForChainLoading = false
   try:
-    let rpcResponseObj = response.parseJson
-    let errStr = rpcResponseObj["error"].getStr()
-    if errStr.len > 0:
-      error "async build groups for chain failed", errDescription = errStr
+    let env = Json.decode(response, BuildGroupsForChainResponse, allowUnknownFields = true)
+    if env.error.len > 0:
+      error "async build groups for chain failed", errDescription = env.error
       self.events.emit(SIGNAL_GROUPS_FOR_CHAIN_LOADED, Args())
       return
-    let tokensJson = rpcResponseObj["tokens"]
-    let tokenDtos = if tokensJson.isNil or tokensJson.kind == JNull: @[]
-      else: Json.decode($tokensJson, seq[TokenDtoSafe], allowUnknownFields = true)
-    let tokens = tokenDtos.map(t => createTokenItem(t))
-    var groupsByKey = initTable[string, TokenGroupItem]()
+    let tokens = env.tokens.map(t => createTokenItem(t))
+    var groupsByKey = initTable[string, TokenGroupItem](tokens.len)
     createTokenGroupsFromTokens(tokens, groupsByKey)
     self.groupsForChain = toSeq(groupsByKey.values)
     sortTokenGroupsByName(self.groupsForChain)
@@ -246,17 +233,13 @@ proc asyncFetchAllTokenGroups*(self: Service) =
 proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.} =
   self.allTokenGroupsLoading = false
   try:
-    let rpcResponseObj = response.parseJson
-    let errStr = rpcResponseObj["error"].getStr()
-    if errStr.len > 0:
-      error "async fetch all token groups failed", errDescription = errStr
+    let env = Json.decode(response, FetchAllTokenGroupsResponse, allowUnknownFields = true)
+    if env.error.len > 0:
+      error "async fetch all token groups failed", errDescription = env.error
       self.events.emit(SIGNAL_ALL_TOKEN_GROUPS_LOADED, Args())
       return
-    let tokensJson = rpcResponseObj["tokens"]
-    let tokenDtos = if tokensJson.isNil or tokensJson.kind == JNull: @[]
-      else: Json.decode($tokensJson, seq[TokenDtoSafe], allowUnknownFields = true)
-    let tokens = tokenDtos.map(t => createTokenItem(t))
-    var groupsByKey = initTable[string, TokenGroupItem]()
+    let tokens = env.tokens.map(t => createTokenItem(t))
+    var groupsByKey = initTable[string, TokenGroupItem](tokens.len)
     createTokenGroupsFromTokens(tokens, groupsByKey)
     self.allTokenGroupsForActiveNetworks = toSeq(groupsByKey.values)
     sortTokenGroupsByName(self.allTokenGroupsForActiveNetworks)

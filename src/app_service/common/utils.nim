@@ -29,7 +29,7 @@ proc first*(jArray: JsonNode, fieldName, id: string): JsonNode =
   if jArray.kind != JArray:
     raise newException(ValueError, "Parameter 'jArray' is a " & $jArray.kind & ", but must be a JArray")
   for child in jArray.getElems:
-    if child{fieldName}.getStr.toLower == id.toLower:
+    if child{fieldName}.getStr.toLowerAscii == id.toLowerAscii:
       return child
 
 const sep = when defined(windows): "\\" else: "/"
@@ -73,7 +73,7 @@ proc isPathOutOfTheDefaultStatusDerivationTree*(path: string): bool =
   return false
 
 proc contractUniqueKey*(chainId: int, contractAddress: string): string =
-  return $chainId & "_" & contractAddress.toLower()
+  return $chainId & "_" & contractAddress.toLowerAscii()
 
 proc intersectSeqs*[T](seq1, seq2: seq[T]): seq[T] =
   for item in seq1:
@@ -157,10 +157,10 @@ proc timestampToUnix*(timestamp: string): int64 =
     return 0
 
 proc isTokenKey*(key: string): bool =
-  return not key.isEmptyOrWhitespace and key.toLower.contains("-0x")
+  return not key.isEmptyOrWhitespace and key.toLowerAscii.contains("-0x")
 
 proc createTokenKey*(chainId: int, address: string): string =
-  return $chainId & wallet_constants.TOKEN_KEY_DELIMITER & address.toLower()
+  return $chainId & wallet_constants.TOKEN_KEY_DELIMITER & address.toLowerAscii()
 
 proc createNativeTokenKey*(chainId: int): string =
   return createTokenKey(chainId, wallet_constants.ZERO_ADDRESS)

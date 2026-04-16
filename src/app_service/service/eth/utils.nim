@@ -38,7 +38,7 @@ proc first*(jArray: JsonNode, fieldName, id: string): JsonNode =
   if jArray.kind != JArray:
     raise newException(ValueError, "Parameter 'jArray' is a " & $jArray.kind & ", but must be a JArray")
   for child in jArray.getElems:
-    if child{fieldName}.getStr.toLower == id.toLower:
+    if child{fieldName}.getStr.toLowerAscii == id.toLowerAscii:
       return child
 
 proc any*(jArray: JsonNode, fieldName, id: string): bool =
@@ -46,7 +46,7 @@ proc any*(jArray: JsonNode, fieldName, id: string): bool =
     return false
   result = false
   for child in jArray.getElems:
-    if child{fieldName}.getStr.toLower == id.toLower:
+    if child{fieldName}.getStr.toLowerAscii == id.toLowerAscii:
       return true
 
 proc isEmpty*(a: JsonNode): bool =

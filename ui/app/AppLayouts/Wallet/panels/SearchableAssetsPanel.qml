@@ -118,6 +118,7 @@ Control {
             id: listView
 
             objectName: "assetsListView"
+            reuseItems: true
 
             clip: true
 

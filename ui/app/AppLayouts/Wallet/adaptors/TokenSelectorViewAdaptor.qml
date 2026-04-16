@@ -124,17 +124,9 @@ QObject {
             }
         ]
         sorters: [
-            FastExpressionSorter {
-                expression: {
-                    const lhs = modelLeft.currencyBalance?? 0
-                    const rhs = modelRight.currencyBalance?? 0
-                    if (lhs < rhs)
-                        return 1
-                    else if (lhs > rhs)
-                        return -1
-                    return 0
-                }
-                expectedRoles: ["currencyBalance"]
+            RoleSorter {
+                roleName: "currencyBalance"
+                sortOrder: Qt.DescendingOrder
             }
         ]
         sourceModel: ObjectProxyModel {
@@ -251,8 +243,8 @@ QObject {
         objectName: "TokenSelectorViewAdaptor_outputAssetsModel"
 
         sourceModel: root.showAllTokens?
-                         allTokensLoader.item
-                       : tokensWithBalance.ModelCount.count? tokensWithBalance : null
+            allTokensLoader.item
+            : tokensWithBalance.ModelCount.count? tokensWithBalance : null
 
         proxyRoles: [
             FastExpressionRole {

@@ -1,4 +1,4 @@
-import strutils, sequtils, sugar
+import strutils
 
 import app_service/common/types as common_types
 
@@ -33,8 +33,8 @@ proc addToken*(self: TokenGroupItem, token: TokenItem) =
   if self.key != token.groupKey:
     raise newException(ValueError, "token group key does not match")
 
-  let tokens = self.tokens.filter(t => cmpIgnoreCase(t.key, token.key) == 0)
-  if tokens.len != 0:
-    return
+  for t in self.tokens:
+    if cmpIgnoreCase(t.key, token.key) == 0:
+      return
 
   self.tokens.add(token)
