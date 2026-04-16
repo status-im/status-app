@@ -93,6 +93,8 @@ StatusListView {
                 }
 
                 onLinkClicked: (link) => Global.requestOpenLink(link)
+
+                onClosed: popup.close()
             }
         }
     }
