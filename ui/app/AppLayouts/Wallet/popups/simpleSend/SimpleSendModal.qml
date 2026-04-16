@@ -250,6 +250,7 @@ StatusDialog {
             onItemChanged: d.setAssetInTokenSelector()
             onAvailableChanged: d.setAssetInTokenSelector()
             onValueChanged: {
+                d.updateResolvedSelectedToken()
                 // if it's non-interactive mode and the assets model doesn't contain selectedGroupKey set the UI properly
                 if (!root.interactive && !!root.selectedGroupKey) {
                     if (d.selectedTokenExistsInAssetsModel) {
@@ -916,4 +917,6 @@ StatusDialog {
             visible: !!root.routerErrorCode || !!root.routerError
         }
     }
+
+    Component.onCompleted: d.updateResolvedSelectedToken()
 }

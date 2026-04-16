@@ -32,6 +32,7 @@ StatusDialog {
         readonly property int symbolColumnWidth: 90
         readonly property int addressColumnWidth: 106
         readonly property int externalLinkBtnWidth: 32
+        readonly property int maxTokenListBodyHeight: 420
     }
 
     width: 521 // by design
@@ -44,7 +45,8 @@ StatusDialog {
 
         topMargin: Theme.padding
         bottomMargin: Theme.padding
-        implicitHeight: Math.min(420, contentHeight + topMargin + bottomMargin)
+        // Cap ListView implicit height so delegates recycle instead of laying out the full list
+        implicitHeight: Math.min(d.maxTokenListBodyHeight, contentHeight + topMargin + bottomMargin)
 
         model: root.tokensListModel
 

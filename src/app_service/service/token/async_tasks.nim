@@ -204,30 +204,28 @@ proc getTokenHistoricalDataTask*(argEncoded: string) {.gcsafe, nimcall.} =
 
 type
   PrefetchParaswapSupportTaskArg = ref object of QObjectTaskArg
-    chainIds: seq[int]
+    chainId: int
 
-proc prefetchParaswapSupportForChain(chainId: int): bool =
+proc prefetchParaswapSupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[PrefetchParaswapSupportTaskArg](argEncoded)
+  if arg.chainId <= 0:
+    arg.finish(%*{"chainId": 0, "error": "invalid chainId"})
+    return
   try:
     var response: JsonNode
-    var err = status_go_tokens.isChainSupportedForSwapViaParaswap(response, chainId)
+    var err = status_go_tokens.isChainSupportedForSwapViaParaswap(response, arg.chainId)
     if err.len > 0:
       raise newException(CatchableError, "failed" & err)
     if response.isNil or response.kind != JsonNodeKind.JBool:
       raise newException(CatchableError, "unexpected response")
-    return response.getBool()
+    arg.finish(%*{
+      "chainId": arg.chainId,
+      "supported": response.getBool(),
+      "error": "",
+    })
   except Exception as e:
-    error "prefetch paraswap chain support failed", chainId = chainId, err = e.msg
-    return false
-
-proc prefetchParaswapSupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[PrefetchParaswapSupportTaskArg](argEncoded)
-  var entries = newJArray()
-  for chainId in arg.chainIds:
-    if chainId <= 0:
-      continue
-    entries.add %*{
-      "chainId": chainId,
-      "supported": prefetchParaswapSupportForChain(chainId)
-    }
-  let output = %*{"entries": entries, "error": ""}
-  arg.finish(output)
+    error "prefetch paraswap chain support failed", chainId = arg.chainId, err = e.msg
+    arg.finish(%*{
+      "chainId": arg.chainId,
+      "error": e.msg,
+    })

@@ -43,8 +43,7 @@ proc prefetchParaswapSupport(self: Service) =
   let chainIds = self.networkService.getEnabledChainIds()
   if chainIds.len == 0:
     return
-  # One threadpool task per chain so the UI cache fills as each RPC completes; a single batched
-  # task only called finish at the end, so every chain missed the cache until all RPCs finished.
+  # One task per chain so the cache fills incrementally as each RPC completes.
   for chainId in chainIds:
     if chainId <= 0:
       continue
@@ -52,7 +51,7 @@ proc prefetchParaswapSupport(self: Service) =
       tptr: prefetchParaswapSupportTask,
       vptr: cast[uint](self.vptr),
       slot: "prefetchParaswapSupportRetrieved",
-      chainIds: @[chainId],
+      chainId: chainId,
     )
     self.threadpool.start(arg)
 
@@ -60,20 +59,16 @@ proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.} 
   try:
     let parsedJson = response.parseJson
     var errorString: string
-    var entries: JsonNode
     discard parsedJson.getProp("error", errorString)
-    discard parsedJson.getProp("entries", entries)
-    if not errorString.isEmptyOrWhitespace:
-      warn "prefetch paraswap support task error", err = errorString
+    if errorString.len > 0:
       return
-    if entries.isNil or entries.kind != JArray:
+    if not parsedJson.hasKey("chainId") or not parsedJson.hasKey("supported"):
       return
-    for e in entries:
-      if e.kind != JObject:
-        continue
-      let chainId = e["chainId"].getInt()
-      let supported = e["supported"].getBool()
-      self.chainsSupportedForSwapViaParaswap[chainId] = supported
+    let chainId = parsedJson["chainId"].getInt()
+    if chainId <= 0:
+      return
+    let supported = parsedJson["supported"].getBool()
+    self.chainsSupportedForSwapViaParaswap[chainId] = supported
   except Exception as ex:
     error "prefetchParaswapSupportRetrieved", err = ex.msg
 
@@ -105,7 +100,6 @@ proc applyRefreshTokensData(self: Service, tokensOfInterestJson: JsonNode, token
 
   self.rebuildMarketData()
   self.fetchTokensDetails() # TODO: if the only place where we can see these details is account's details page, we should fetch this on demand, no need to have local cache
-  self.fetchTokenPreferences()
   self.rebuildAllTokensByGroupKeyIndex()
   # notify modules
   self.events.emit(SIGNAL_TOKENS_LIST_UPDATED, Args())
