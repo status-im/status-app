@@ -33,6 +33,39 @@ proc applyAllTokenListsData(self: Service, allTokenListsJson: JsonNode) =
     else: Json.decode($allTokenListsJson, seq[TokenListDto], allowUnknownFields = true)
   self.allTokenLists = tokenListsDtos.map(tl => createTokenListItem(tl))
 
+proc prefetchParaswapSupport(self: Service) =
+  let chainIds = self.networkService.getEnabledChainIds()
+  if chainIds.len == 0:
+    return
+  let arg = PrefetchParaswapSupportTaskArg(
+    tptr: prefetchParaswapSupportTask,
+    vptr: cast[uint](self.vptr),
+    slot: "prefetchParaswapSupportRetrieved",
+    chainIds: chainIds,
+  )
+  self.threadpool.start(arg)
+
+proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.} =
+  try:
+    let parsedJson = response.parseJson
+    var errorString: string
+    var entries: JsonNode
+    discard parsedJson.getProp("error", errorString)
+    discard parsedJson.getProp("entries", entries)
+    if not errorString.isEmptyOrWhitespace:
+      warn "prefetch paraswap support task error", err = errorString
+      return
+    if entries.isNil or entries.kind != JArray:
+      return
+    for e in entries:
+      if e.kind != JObject:
+        continue
+      let chainId = e["chainId"].getInt()
+      let supported = e["supported"].getBool()
+      self.chainsSupportedForSwapViaParaswap[chainId] = supported
+  except Exception as ex:
+    error "prefetchParaswapSupportRetrieved", err = ex.msg
+
 proc applyRefreshTokensData(self: Service, tokensOfInterestJson: JsonNode, tokenPrefsJson: JsonNode) =
   # Parse tokens of interest
   self.tokensOfInterestByKey.clear()
@@ -134,11 +167,13 @@ proc init*(self: Service) =
 
   self.events.on(SIGNAL_NETWORK_MODE_UPDATED) do(e:Args):
     self.asyncRefreshTokens()
+    self.prefetchParaswapSupport()
 
   self.events.on(SIGNAL_CURRENCY_UPDATED) do(e:Args):
     self.rebuildMarketData()
 
   self.asyncRefreshTokens()
+  self.prefetchParaswapSupport()
 
 proc getMandatoryTokenGroupKeys*(self: Service): seq[string] =
   let tokenKeys = getMandatoryTokenKeys()
