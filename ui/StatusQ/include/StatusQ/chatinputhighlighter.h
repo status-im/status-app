@@ -92,10 +92,10 @@ protected:
     void highlightBlock(const QString& text) override;
 
 private:
-    QTextCharFormat buildFormat(int bits) const;
+    QTextCharFormat buildFormat(unsigned int bits) const;
 
     QQuickTextDocument* m_quickTextDocument{nullptr};
-    QVector<int> m_flags; // per-document-character emphasis bits
+    QVector<unsigned int> m_flags; // per-document-character emphasis bits
     QString m_cachedText; // last full document text parsed into m_flags
     bool m_multilineEmphasis{false};
     QColor m_codeBackground{Qt::transparent};
