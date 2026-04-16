@@ -263,7 +263,7 @@ type StatusDesktopConfig = object
     abbr: "d" .}: string
   uri* {.
     defaultValue: ""
-    desc: "status-app:// URI to open a chat or other"
+    desc: "app.status.mobile:// URI to open a chat or other"
     name: "uri" .}: string
   testMode* {.
     defaultValue: false

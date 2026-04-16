@@ -32,7 +32,7 @@ SplitView {
 
         QtObject {
             function shareCommunityUrlWithData(communityId) {
-                return "status-app:/"+communityId
+                return "app.status.mobile://"+communityId
             }
 
             Component.onCompleted: {

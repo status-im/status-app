@@ -85,7 +85,7 @@ import app/core/tasks/threadpool
 
 const TOAST_MESSAGE_VISIBILITY_DURATION_IN_MS = 5000 # 5 seconds
 const STATUS_URL_ENS_RESOLVE_REASON = "StatusUrl"
-const STATUS_INTERNAL_DEEP_LINK_PREFIX = "status-app://"
+const STATUS_INTERNAL_DEEP_LINK_PREFIX = "app.status.mobile://"
 const STATUS_EXTERNAL_DEEP_LINK_PREFIX = "https://status.app/"
 const STATUS_EXTERNAL_DEEP_LINK_PREFIX_HTTP = "http://status.app/"
 

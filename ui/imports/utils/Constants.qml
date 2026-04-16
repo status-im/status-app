@@ -935,7 +935,7 @@ QtObject {
 
     readonly property int repeatHeaderInterval: 2
 
-    readonly property string deepLinkPrefix: 'status-app://'
+    readonly property string deepLinkPrefix: 'app.status.mobile://'
     readonly property string externalStatusLink: 'status.app'
     readonly property string externalStatusLinkWithHttps: 'https://' + externalStatusLink
     readonly property string browserDefaultHomepage: 'https://hub.status.network/'

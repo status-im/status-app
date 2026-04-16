@@ -6,7 +6,7 @@ import ../../global/app_signals
 logScope:
   topics = "urls-manager"
 
-const StatusInternalLink* = "status-app://"
+const StatusInternalLink* = "app.status.mobile://"
 const StatusExternalLink* = "https://status.app/"
 
 QtObject:
