@@ -72,6 +72,9 @@ public:
     // Returns [{text, start, length}, ...] for detected URLs — for unit tests
     Q_INVOKABLE QVariantList parseLinks(const QString& text) const;
 
+    // Returns [{start, end}, ...] for each quote group — for unit tests
+    Q_INVOKABLE QVariantList parseQuoteBlocks(const QString& text) const;
+
     // Returns true when `position` falls inside an unclosed ``` region in the document
     Q_INVOKABLE bool inUnclosedCodeFence(int position) const;
 

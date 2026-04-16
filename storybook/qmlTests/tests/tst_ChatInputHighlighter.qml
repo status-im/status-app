@@ -579,4 +579,108 @@ TestCase {
         compare(spans[1].start, 11)
         compare(spans[1].end,   12)
     }
+
+    // ── quote blocks ──────────────────────────────────────────────────────────
+
+    function test_quote_singleLine() {
+        const text = "> hello"
+        const groups = highlighter.parseQuoteBlocks(text)
+        compare(groups.length, 1)
+        compare(groups[0].start, 0)
+        compare(groups[0].end,   text.length)
+    }
+
+    function test_quote_consecutiveLines_oneGroup() {
+        const text = "> line one\n> line two"
+        const groups = highlighter.parseQuoteBlocks(text)
+        compare(groups.length, 1)
+        compare(groups[0].start, 0)
+        compare(groups[0].end,   text.length)
+    }
+
+    function test_quote_twoGroups_separatedByBlankLine() {
+        // "> first\n" = 8 chars; "> second" starts at position 9
+        const text = "> first\n\n> second"
+        const groups = highlighter.parseQuoteBlocks(text)
+        compare(groups.length, 2)
+        compare(groups[0].start, 0)
+        compare(groups[0].end,   8)
+        compare(groups[1].start, 9)
+        compare(groups[1].end,   text.length)
+    }
+
+    function test_quote_noSpaceAfterAngle_notQuote() {
+        // ">hello" (no space after >) must not be treated as a quote
+        compare(highlighter.parseQuoteBlocks(">hello").length, 0)
+    }
+
+    function test_quote_plainText_noGroups() {
+        compare(highlighter.parseQuoteBlocks("hello world").length, 0)
+    }
+
+    function test_quote_emptyString_noGroups() {
+        compare(highlighter.parseQuoteBlocks("").length, 0)
+    }
+
+    function test_quote_insideCodeFence_notQuote() {
+        // Lines whose start falls inside an already-open ``` fence must not
+        // be treated as quote blocks
+        const text = "```\n> inside fence\n```"
+        compare(highlighter.parseQuoteBlocks(text).length, 0)
+    }
+
+    function test_quote_boldInside() {
+        const text = "> **bold** text"
+        const s = spanFor(text, "bold")
+        verify(s !== null, "expected bold span inside quote")
+        verify(s.bold)
+    }
+
+    function test_quote_italicInside() {
+        const text = "> *italic*"
+        const s = spanFor(text, "italic")
+        verify(s !== null, "expected italic span inside quote")
+        verify(s.italic)
+    }
+
+    function test_quote_strikethroughInside() {
+        const text = "> ~~strike~~"
+        const s = spanFor(text, "strike")
+        verify(s !== null, "expected strikethrough span inside quote")
+        verify(s.strikethrough)
+    }
+
+    function test_quote_crossLineEmphasisWithinGroup() {
+        // Consecutive quote lines form one group; bold can span them when
+        // multilineEmphasis is true
+        const text = "> **bold\n> content**"
+        const s = spanForMultiLine(text, "bold\n> content")
+        verify(s !== null, "bold should span lines within the same quote group")
+        verify(s.bold)
+    }
+
+    function test_quote_noEmphasisCrossLineWithinGroup_multilineDisabled() {
+        // When multilineEmphasis is false, bold must not span quote lines
+        compare(highlighter.parseFormats("> **bold\n> content**").length, 0)
+    }
+
+    function test_quote_noEmphasisAcrossGroupBoundary() {
+        // A blank line between two quote lines creates separate groups;
+        // a delimiter in the first group must not pair with one in the second
+        compare(highlighter.parseFormats("> *open\n\n> close*").length, 0)
+    }
+
+    function test_quote_noEmphasisBetweenQuoteAndOutside() {
+        // A delimiter outside a quote group must not pair with one inside it
+        compare(highlighter.parseFormats("*before\n> inside*").length, 0)
+    }
+
+    function test_quote_emphasisOutsideUnaffected() {
+        // Emphasis on a non-quote line and inside a quote line both work
+        const text = "**bold**\n> *italic*"
+        const bspan = spanFor(text, "bold")
+        const ispan = spanFor(text, "italic")
+        verify(bspan !== null && bspan.bold,   "bold outside quote must still apply")
+        verify(ispan !== null && ispan.italic, "italic inside quote must still apply")
+    }
 }

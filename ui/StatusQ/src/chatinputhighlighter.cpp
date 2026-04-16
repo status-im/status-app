@@ -18,6 +18,7 @@ static const unsigned int kDelimiter     = 1u << 3;
 static const unsigned int kCode          = 1u << 4; // single-backtick: monospace + background
 static const unsigned int kCodeFence     = 1u << 5; // triple-backtick content: monospace, no background
 static const unsigned int kLink          = 1u << 6; // URL: blue foreground, combines with emphasis bits
+static const unsigned int kQuote         = 1u << 7; // block-quote line: dark-blue foreground
 
 struct Delimiter {
     qsizetype pos;
@@ -46,6 +47,11 @@ struct LinkSpan {
     QString   url;
     qsizetype start;   // start of match in the scanned text
     qsizetype end;     // end of match (exclusive)
+};
+
+struct QuoteGroup {
+    qsizetype start;   // absolute position of '>' on first line
+    qsizetype end;     // exclusive end (past last char of last quote line, incl. trailing \n)
 };
 
 using Ranges = QVector<QPair<qsizetype,qsizetype>>;
@@ -355,6 +361,60 @@ bool anyOverlap(const Ranges& ranges, qsizetype start, qsizetype end)
     return false;
 }
 
+// Finds maximal runs of consecutive lines starting with "> ".
+// A line is excluded from being a quote line only when it is INSIDE an already-open
+// fence (fence started on a previous line). A line that OPENS a fence mid-way still
+// counts as a quote line — the quote covers the content before the ```.
+QVector<QuoteGroup> scanQuoteGroups(const QString& text, const Ranges& fenceRanges)
+{
+    QVector<QuoteGroup> groups;
+    qsizetype i = 0;
+    const qsizetype n = text.length();
+    qsizetype groupStart = -1;
+
+    while (i < n) {
+        const qsizetype lineStart = i;
+        while (i < n && text[i] != QLatin1Char('\n')) ++i;
+        const qsizetype lineEnd = i;   // exclusive, does not include '\n'
+        if (i < n) ++i;               // skip '\n'
+
+        bool inFence = false;
+        for (const auto& r : fenceRanges)
+            if (r.first < lineStart && r.second > lineStart) { inFence = true; break; }
+
+        const bool isQuote = !inFence
+                          && lineEnd - lineStart >= 2
+                          && text[lineStart] == QLatin1Char('>')
+                          && text[lineStart + 1] == QLatin1Char(' ');
+
+        if (isQuote) {
+            if (groupStart < 0) groupStart = lineStart;
+        } else {
+            if (groupStart >= 0) {
+                groups.append({groupStart, lineStart});
+                groupStart = -1;
+            }
+        }
+    }
+    if (groupStart >= 0)
+        groups.append({groupStart, n});
+
+    return groups;
+}
+
+// Returns the absolute "> " prefix ranges (2 chars each) for every line in a quote group.
+Ranges quoteGroupPrefixRanges(const QString& text, const QuoteGroup& g)
+{
+    Ranges result;
+    qsizetype i = g.start;
+    while (i < g.end) {
+        result.append({i, i + 2});                               // the "> " prefix
+        while (i < g.end && text[i] != QLatin1Char('\n')) ++i;
+        if (i < g.end) ++i;                                     // skip '\n'
+    }
+    return result;
+}
+
 } // namespace
 
 // ── ChatInputLinksModel ───────────────────────────────────────────────────────
@@ -511,6 +571,7 @@ QTextCharFormat ChatInputHighlighter::buildFormat(unsigned int bits) const
     if (bits & kItalic)        fmt.setFontItalic(true);
     if (bits & kStrikeThrough) fmt.setFontStrikeOut(true);
     if (bits & kLink)          fmt.setForeground(QColor(Qt::blue));
+    else if (bits & kQuote)    fmt.setForeground(QColor(Qt::darkBlue));
     return fmt;
 }
 
@@ -529,12 +590,64 @@ QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
         if (u >= 0) tripleAbsRanges.append({u, text.length()});
     }
 
+    // ── Quote groups (always processed, regardless of multilineEmphasis) ────
+    const QVector<QuoteGroup> quoteGroups = scanQuoteGroups(text, tripleAbsRanges);
+    Ranges quoteAbsRanges;
+    for (const QuoteGroup& g : quoteGroups) {
+        quoteAbsRanges.append({g.start, g.end});
+
+        const QString groupText = text.mid(g.start, g.end - g.start);
+        const qsizetype offset  = g.start;
+
+        Ranges groupExclude = quoteGroupPrefixRanges(text, g);
+        for (auto& r : groupExclude) { r.first -= offset; r.second -= offset; }
+
+        const auto groupCodeSpans = scanCodeSpans(groupText);
+        for (const CodeSpan& c : groupCodeSpans)
+            groupExclude.append({c.openerStart, c.closerEnd});
+
+        for (const auto& r : linkRangesOf(scanLinks(groupText, groupExclude)))
+            groupExclude.append(r);
+
+        auto appendSpan = [&](const EmphSpan& s, qsizetype lineOffset) {
+            QVariantMap m;
+            m[QStringLiteral("start")]         = s.start + lineOffset + offset;
+            m[QStringLiteral("end")]           = s.end   + lineOffset + offset;
+            m[QStringLiteral("bold")]          = bool(s.formatBits & kBold);
+            m[QStringLiteral("italic")]        = bool(s.formatBits & kItalic);
+            m[QStringLiteral("strikethrough")] = bool(s.formatBits & kStrikeThrough);
+            result.append(m);
+        };
+
+        if (m_multilineEmphasis) {
+            for (const EmphSpan& s : processEmphasis(scanDelimiters(groupText, groupExclude)))
+                appendSpan(s, 0);
+        } else {
+            const qsizetype groupLen = groupText.length();
+            qsizetype lineStart = 0;
+            for (qsizetype i = 0; i <= groupLen; ++i) {
+                if (i == groupLen || groupText[i] == QLatin1Char('\n')) {
+                    const QString line = groupText.mid(lineStart, i - lineStart);
+                    const auto lineExclude = lineRelativeRanges(groupExclude, lineStart, line.length());
+                    for (const EmphSpan& s : processEmphasis(scanDelimiters(line, lineExclude)))
+                        appendSpan(s, lineStart);
+                    lineStart = i + 1;
+                }
+            }
+        }
+    }
+
     if (!m_multilineEmphasis) {
         qsizetype lineStart = 0;
         for (qsizetype i = 0; i <= text.length(); ++i) {
             if (i == text.length() || text[i] == QLatin1Char('\n')) {
                 const QString line    = text.mid(lineStart, i - lineStart);
                 const qsizetype lineLen = line.length();
+                // Skip quote lines (already processed above)
+                if (anyOverlap(quoteAbsRanges, lineStart, lineStart + lineLen)) {
+                    lineStart = i + 1;
+                    continue;
+                }
                 // Line-relative code ranges for delimiter scanning — compute spans once
                 const QVector<CodeSpan> lineCodeSpans = scanCodeSpans(line);
                 Ranges lineRanges;
@@ -579,9 +692,11 @@ QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
         const qsizetype u = findOpenCodeFence(text);
         if (u >= 0) allRanges.append({u, text.length()});
     }
-    // Exclude link ranges so URL characters don't trigger emphasis
+    // Exclude quote and link ranges so they don't participate in outer emphasis
     Ranges allExcluded = allRanges;
-    const auto allLinkRanges = linkRangesOf(scanLinks(text, allRanges));
+    for (const auto& r : quoteAbsRanges)
+        allExcluded.append(r);
+    const auto allLinkRanges = linkRangesOf(scanLinks(text, allExcluded));
     for (const auto& r : allLinkRanges)
         allExcluded.append(r);
     const auto allEmphSpans = processEmphasis(scanDelimiters(text, allExcluded));
@@ -720,6 +835,30 @@ QVariantList ChatInputHighlighter::parseLinks(const QString& text) const
     return result;
 }
 
+QVariantList ChatInputHighlighter::parseQuoteBlocks(const QString& text) const
+{
+    QVariantList result;
+
+    const QVector<CodeSpan> allCodeSpans = scanCodeSpans(text);
+    Ranges tripleAbsRanges;
+    for (const CodeSpan& c : allCodeSpans)
+        if (c.contentStart - c.openerStart == 3)
+            tripleAbsRanges.append({c.openerStart, c.closerEnd});
+    if (m_formatUnclosedCodeFence) {
+        const qsizetype u = findOpenCodeFence(text);
+        if (u >= 0) tripleAbsRanges.append({u, text.length()});
+    }
+
+    const QVector<QuoteGroup> groups = scanQuoteGroups(text, tripleAbsRanges);
+    for (const QuoteGroup& g : groups) {
+        QVariantMap m;
+        m[QStringLiteral("start")] = g.start;
+        m[QStringLiteral("end")]   = g.end;
+        result.append(m);
+    }
+    return result;
+}
+
 void ChatInputHighlighter::highlightBlock(const QString& text)
 {
     if (!document())
@@ -778,11 +917,85 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
 
         QVector<ChatInputLinksModel::LinkItem> modelItems;
 
+        // ── Quote groups ──────────────────────────────────────────────────────
+        const QVector<QuoteGroup> quoteGroups = scanQuoteGroups(fullText, fullCodeRanges);
+        Ranges quoteAbsRanges;
+        for (const QuoteGroup& g : quoteGroups) {
+            // Stamp kQuote on every character in the group
+            for (qsizetype k = g.start; k < g.end; ++k)
+                m_flags[k] = kQuote;
+            quoteAbsRanges.append({g.start, g.end});
+
+            const QString groupText = fullText.mid(g.start, g.end - g.start);
+            const qsizetype offset  = g.start;
+
+            // Excluded ranges within this group (group-relative):
+            // - the "> " prefixes on each line
+            // - single-backtick code spans
+            Ranges groupExclude = quoteGroupPrefixRanges(fullText, g);
+            for (auto& r : groupExclude) { r.first -= offset; r.second -= offset; }
+
+            const auto groupCodeSpans = scanCodeSpans(groupText);
+            QVector<CodeSpan> groupSingleSpans;
+            for (const CodeSpan& c : groupCodeSpans) {
+                groupExclude.append({c.openerStart, c.closerEnd});
+                if (c.contentStart - c.openerStart == 1)
+                    groupSingleSpans.append(c);
+            }
+            // kCode overwrites kQuote for inline code spans (monospace, no dark-blue)
+            applyCodeSpans(groupSingleSpans, g.end - g.start, offset);
+
+            // Exclude link ranges so URL characters don't trigger emphasis
+            const auto groupLinks = scanLinks(groupText, groupExclude);
+            for (const auto& r : linkRangesOf(groupLinks))
+                groupExclude.append(r);
+
+            // Emphasis scoped to this group, respecting multilineEmphasis flag
+            auto applyGroupSpan = [&](const EmphSpan& s, qsizetype lineOff) {
+                const qsizetype groupLen = g.end - g.start;
+                const qsizetype s0 = qMax(qsizetype(0), s.start + lineOff) + offset;
+                const qsizetype s1 = qMin(groupLen, s.end + lineOff) + offset;
+                for (qsizetype k = s0; k < s1; ++k)
+                    m_flags[k] |= s.formatBits;
+                for (qsizetype k = s.openerStart + lineOff + offset; k < s.start + lineOff + offset; ++k)
+                    m_flags[k] = kDelimiter;
+                for (qsizetype k = s.end + lineOff + offset; k < s.closerEnd + lineOff + offset; ++k)
+                    m_flags[k] = kDelimiter;
+            };
+            if (m_multilineEmphasis) {
+                for (const EmphSpan& s : processEmphasis(scanDelimiters(groupText, groupExclude)))
+                    applyGroupSpan(s, 0);
+            } else {
+                const qsizetype groupLen = g.end - g.start;
+                qsizetype lineStart = 0;
+                for (qsizetype i = 0; i <= groupLen; ++i) {
+                    if (i == groupLen || groupText[i] == QLatin1Char('\n')) {
+                        const QString line = groupText.mid(lineStart, i - lineStart);
+                        const auto lineExclude = lineRelativeRanges(groupExclude, lineStart, line.length());
+                        for (const EmphSpan& s : processEmphasis(scanDelimiters(line, lineExclude)))
+                            applyGroupSpan(s, lineStart);
+                        lineStart = i + 1;
+                    }
+                }
+            }
+            for (const auto& l : groupLinks) {
+                for (qsizetype k = l.start + offset; k < l.end + offset; ++k)
+                    m_flags[k] |= kLink;
+                modelItems.append({static_cast<int>(l.start + offset),
+                                   static_cast<int>(l.end - l.start), l.url});
+            }
+        }
+
         if (m_multilineEmphasis) {
-            // Scan links first so their ranges exclude emphasis delimiter recognition
-            const QVector<LinkSpan> fullLinks = scanLinks(fullText, fullCodeRanges);
+            // Scan links first (excluding code and quote ranges)
+            Ranges fullExclude = fullCodeRanges;
+            for (const auto& r : quoteAbsRanges)
+                fullExclude.append(r);
+            const QVector<LinkSpan> fullLinks = scanLinks(fullText, fullExclude);
 
             Ranges allExcluded = fullCodeRanges;
+            for (const auto& r : quoteAbsRanges)
+                allExcluded.append(r);
             const auto fullLinkRanges = linkRangesOf(fullLinks);
             for (const auto& r : fullLinkRanges)
                 allExcluded.append(r);
@@ -818,6 +1031,11 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
                 if (i == docLen || fullText[i] == QLatin1Char('\n')) {
                     const QString line        = fullText.mid(lineStart, i - lineStart);
                     const qsizetype lineLen   = line.length();
+                    // Skip quote lines — handled in the quote-group pass above
+                    if (anyOverlap(quoteAbsRanges, lineStart, lineStart + lineLen)) {
+                        lineStart = i + 1;
+                        continue;
+                    }
                     // Scan line code spans once; reuse for both delimiter filtering and pass 3.
                     const QVector<CodeSpan> lineCodeSpans = scanCodeSpans(line);
                     Ranges lineRanges;
@@ -872,6 +1090,18 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
             }
             // Pass 4 (global): triple-backtick fences (full-document, already computed above)
             applyCodeSpans(tripleFences, docLen, 0);
+        }
+
+        // ── Re-protect "> " prefixes ─────────────────────────────────────────
+        // Outer bold/italic spans that straddle a quote group OR their
+        // formatBits into every covered position, including the "> " prefix.
+        // Overwrite those positions back to kQuote-only so the prefix is
+        // always rendered as plain dark-blue with no emphasis styling.
+        for (const QuoteGroup& g : quoteGroups) {
+            const Ranges prefixRanges = quoteGroupPrefixRanges(fullText, g);
+            for (const auto& r : prefixRanges)
+                for (qsizetype k = r.first; k < r.second; ++k)
+                    m_flags[k] = kQuote;
         }
 
         m_linksModel->setLinks(modelItems);
