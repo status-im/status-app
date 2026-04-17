@@ -392,10 +392,7 @@ StatusSectionLayout {
                         settingsMenu.popup(target, pos)
                 }
                 function onRequestSearch() {
-                    if (_internal.currentTabSupportsFindInPage)
-                        _internal.showFindBar()
-                    else
-                        browserToolbarLoader.activateAddressBar()
+                    browserToolbarLoader.activateAddressBar()
                 }
                 function onGoIncognito(checked) {
                     webViewContext.setIncognitoCurrent(checked)
