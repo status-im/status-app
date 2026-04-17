@@ -51,7 +51,7 @@ StatusDialog {
         StatusListItem {
             Layout.fillWidth: true
             visible: root.supportsFind
-            title: qsTr("Find")
+            title: qsTr("Find in page")
             asset.name: "search"
             onClicked: {
                 root.launchFindBar()

@@ -108,7 +108,7 @@ StatusMenu {
     }
 
     StatusAction {
-        text: qsTr("Find")
+        text: qsTr("Find in page")
         icon.name: "search"
         shortcut: StandardKey.Find
         onTriggered: launchFindBar()
