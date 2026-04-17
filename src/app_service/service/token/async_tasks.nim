@@ -55,7 +55,7 @@ proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
     var err = status_go_tokens.getTokensOfInterestForActiveNetworksMode(tokensOfInterestResponse)
     if err.len > 0:
       raise newException(CatchableError, "getTokensOfInterestForActiveNetworksMode failed: " & err)
-    output["tokensOfInterest"] = if tokensOfInterestResponse.isNil: newJNull() else: tokensOfInterestResponse
+    output["tokensOfInterest"] = if tokensOfInterestResponse.isNil: newJArray() else: tokensOfInterestResponse
 
     let prefsResponse = backend.getTokenPreferences()
     if not prefsResponse.error.isNil:
@@ -80,7 +80,7 @@ proc asyncFetchAllTokenListsTask*(argEncoded: string) {.gcsafe, nimcall.} =
     var err = status_go_tokens.getAllTokenLists(allTokenListsResponse)
     if err.len > 0:
       raise newException(CatchableError, "getAllTokenLists failed: " & err)
-    output["allTokenLists"] = if allTokenListsResponse.isNil: newJNull() else: allTokenListsResponse
+    output["allTokenLists"] = if allTokenListsResponse.isNil: newJArray() else: allTokenListsResponse
   except Exception as e:
     output["error"] = %* fmt"Error fetching all token lists: {e.msg}"
   arg.finish(output)
@@ -100,7 +100,7 @@ proc asyncFetchAllTokenGroupsTask*(argEncoded: string) {.gcsafe, nimcall.} =
     var err = status_go_tokens.getTokensForActiveNetworksMode(response)
     if err.len > 0:
       raise newException(CatchableError, "getTokensForActiveNetworksMode failed: " & err)
-    output["tokens"] = if response.isNil: newJNull() else: response
+    output["tokens"] = if response.isNil: newJArray() else: response
   except Exception as e:
     output["error"] = %* fmt"Error fetching all token groups: {e.msg}"
   arg.finish(output)
@@ -121,7 +121,7 @@ proc asyncBuildGroupsForChainTask*(argEncoded: string) {.gcsafe, nimcall.} =
     var err = status_go_tokens.getTokensByChain(response, arg.chainId)
     if err.len > 0:
       raise newException(CatchableError, "getTokensByChain failed: " & err)
-    output["tokens"] = if response.isNil: newJNull() else: response
+    output["tokens"] = if response.isNil: newJArray() else: response
   except Exception as e:
     output["error"] = %* fmt"Error building groups for chain {arg.chainId}: {e.msg}"
   arg.finish(output)
