@@ -89,6 +89,9 @@ pipeline {
     FLAG_BRIDGE_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
     /* fix for proxy stage defaulting to test */
     STATUS_BUILD_PROXY_STAGE_NAME = "${utils.isReleaseBuild() ? 'prod' : 'test'}"
+    // Workaround for cmake 4.x dropping compatibility with cmake_minimum_required < 3.5
+    // Required by vendor/QR-Code-generator (scodes) until upstream bumps their CMakeLists.txt
+    CMAKE_POLICY_VERSION_MINIMUM = 3.5
   }
 
   stages {
