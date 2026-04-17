@@ -41,7 +41,7 @@ Control {
 
     leftPadding: 12
     rightPadding: 4
-    verticalPadding: 6
+    verticalPadding: 2
 
     background: Rectangle {
         color: root.incognitoMode ? Theme.palette.privacyColors.secondary : Theme.palette.background

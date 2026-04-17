@@ -106,18 +106,19 @@ StatusDialog {
             id: searchField
 
             Layout.fillWidth: true
+            Layout.preferredHeight: 40
             visible: searchButton.checked
             onVisibleChanged: clear()
 
             background: Rectangle {
                 color: Theme.palette.background
-                radius: 40
+                radius: searchField.height
             }
             leftPadding: Theme.halfPadding + searchIcon.width + searchIcon.anchors.leftMargin
             rightPadding: Theme.halfPadding + clearButton.width
             placeholderText: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs ? qsTr("Search in open tabs")
                                                                                                   : qsTr("Search in bookmarks")
-            font.pixelSize: Theme.fontSize(13)
+            font.pixelSize: Theme.fontSize(14)
             inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhSensitiveData | Qt.ImhNoAutoUppercase
             EnterKey.type: Qt.EnterKeySearch
 
@@ -126,7 +127,7 @@ StatusDialog {
                 height: parent.height/2
                 width: height
                 anchors.left: parent.left
-                anchors.leftMargin: Theme.halfPadding
+                anchors.leftMargin: height/2
                 anchors.verticalCenter: parent.verticalCenter
                 icon: "search"
                 color: Theme.palette.primaryColor1
@@ -276,7 +277,7 @@ StatusDialog {
                             Layout.fillWidth: true
                             text: bookmarkDelegate.text
                             elide: Text.ElideRight
-                            font.pixelSize: Theme.fontSize(13)
+                            font.pixelSize: Theme.fontSize(14)
                         }
                         StatusFlatButton {
                             icon.name: "edit_pencil"

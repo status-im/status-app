@@ -98,7 +98,7 @@ Rectangle {
                 color: Theme.palette.baseColor2
                 radius: Theme.radius
             }
-            font.pixelSize: Theme.fontSize(13)
+            font.pixelSize: Theme.fontSize(14)
             Layout.fillWidth: true
             Layout.fillHeight: true
             onAccepted: root.findNext()
@@ -109,31 +109,28 @@ Rectangle {
         StatusBaseText {
             text: root.activeMatch + "/" + root.numberOfMatches
             visible: findTextField.text !== ""
-            font.pixelSize: Theme.fontSize(13)
+            font.pixelSize: Theme.fontSize(14)
         }
 
         StatusFlatRoundButton {
-            id: prevBtn
             implicitWidth: 32
             implicitHeight: 32
-            icon.name: "previous"
+            icon.name: "chevron-up"
             enabled: root.numberOfMatches > 0
             type: StatusFlatRoundButton.Type.Tertiary
             onClicked: root.findPrevious()
         }
 
         StatusFlatRoundButton {
-            id: nextBtn
             implicitWidth: 32
             implicitHeight: 32
-            icon.name: "next"
+            icon.name: "chevron-down"
             enabled: root.numberOfMatches > 0
             type: StatusFlatRoundButton.Type.Tertiary
             onClicked: root.findNext()
         }
 
         StatusFlatRoundButton {
-            id: closeBtn
             implicitWidth: 32
             implicitHeight: 32
             icon.name: "close-circle"

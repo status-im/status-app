@@ -19,7 +19,7 @@ StatusTextField {
 
     readonly property url searchEngineIcon: Assets.svg(SearchEnginesConfig.getEngineIcon(localAccountSensitiveSettings.selectedBrowserSearchEngineId))
 
-    implicitHeight: 36
+    implicitHeight: 40
 
     background: Rectangle {
         color: root.bgColor
@@ -28,9 +28,9 @@ StatusTextField {
     verticalAlignment: TextInput.AlignVCenter
     leftPadding: showFavicon ? Theme.halfPadding + favicon.width + favicon.anchors.leftMargin
                              : Theme.padding
-    rightPadding: Theme.halfPadding + clearButton.width
+    rightPadding: clearButton.width
     placeholderText: qsTr("Search or enter address")
-    font.pixelSize: Theme.additionalTextSize
+    font.pixelSize: Theme.fontSize(14)
     color: root.incognitoMode ? Theme.palette.privacyColors.tertiary : Theme.palette.textColor
 
     inputMethodHints: Qt.ImhUrlCharactersOnly | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
@@ -75,8 +75,6 @@ StatusTextField {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         visible: parent.cursorVisible && !!parent.text
-        icon.width: 18
-        icon.height: 18
         tooltip.orientation: StatusToolTip.Orientation.Bottom
         onClicked: {
             parent.forceActiveFocus()

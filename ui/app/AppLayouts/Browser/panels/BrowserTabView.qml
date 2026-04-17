@@ -192,7 +192,7 @@ FocusScope {
                     Layout.leftMargin: Theme.halfPadding
                     Layout.rightMargin: 2
                     elide: Qt.ElideRight
-                    font.pixelSize: Theme.additionalTextSize
+                    font.pixelSize: Theme.fontSize(14)
                     text: tabButton.tabTitle
                 }
 
@@ -202,7 +202,6 @@ FocusScope {
                     Layout.alignment: Qt.AlignTrailing
                     icon.name: "close"
                     icon.color: hovered ? Theme.palette.directColor1 : Theme.palette.baseColor1
-                    size: StatusBaseButton.Size.Small
                     radius: width/2
                     opacity: root.isMobile || tabButton.hovered ? 1 : 0
                     visible: opacity > 0
