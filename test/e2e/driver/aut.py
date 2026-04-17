@@ -1,3 +1,4 @@
+import os
 import time
 
 import allure
@@ -22,6 +23,9 @@ from scripts.utils.wait_for_port import wait_for_port
 import psutil
 
 LOG = logging.getLogger(__name__)
+
+# When set (e.g. in CI), startaut adds local Waku flags and passes STATUS_FLEET / STATUS_FLEET_CONFIG_FILE to the AUT.
+_LOCAL_WAKU_ENV_VALUES = ('1', 'true', 'yes')
 
 
 class AUT:
@@ -106,12 +110,33 @@ class AUT:
             f'--port={self.port}',
             str(self.path),
             f'--datadir={self.app_data}',
-            f'--LOG_LEVEL={configs.testpath.LOG_LEVEL}',
-            '--api-logging'
         ]
+        child_env = None
+        use_local_waku = os.environ.get('E2E_LOCAL_WAKU_FLEET', '').lower() in _LOCAL_WAKU_ENV_VALUES
+        if use_local_waku:
+            repo_root = configs.testpath.ROOT.parent.parent
+            local_config = (repo_root / 'assets' / 'local-waku-fleets-config.json').resolve()
+            local_fleet = os.environ.get('STATUS_FLEET', 'status-app.test')
+            command.extend(
+                [
+                    '--enable-fleet-selection',
+                    f'--waku-fleet={local_fleet}',
+                    f'--waku-fleets-config={local_config}',
+                ]
+            )
+            child_env = os.environ.copy()
+            child_env['STATUS_FLEET'] = local_fleet
+            child_env['STATUS_FLEET_CONFIG_FILE'] = str(local_config)
+        command.extend(
+            [
+                f'--LOG_LEVEL={configs.testpath.LOG_LEVEL}',
+                '--api-logging',
+            ]
+        )
+        LOG.info('AUT startaut argv (%d parts): %s', len(command), command)
         try:
             with open(configs.AUT_LOG_FILE, "ab") as log:
-                self.pid = local_system.execute(command, stderr=log, stdout=log)
+                self.pid = local_system.execute(command, stderr=log, stdout=log, env=child_env)
         except Exception as err:
             LOG.error('Failed to start AUT: %s', err)
             self.stop()

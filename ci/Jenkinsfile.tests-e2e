@@ -111,6 +111,7 @@ pipeline {
     /* QT_DEBUG_PLUGINS = 0 */
 
     /* Use local waku fleet */
+    E2E_LOCAL_WAKU_FLEET = '1'
     STATUS_FLEET = 'status-app.test'
     STATUS_FLEET_CONFIG_FILE = "${WORKSPACE}/assets/local-waku-fleets-config.json"
 

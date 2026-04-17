@@ -61,9 +61,13 @@ def execute(
         stderr=subprocess.STDOUT,
         stdout=subprocess.STDOUT,
         shell=False,
+        env: typing.Optional[typing.Mapping[str, str]] = None,
 ):
     LOG.info('Executing: %s', command)
-    process = subprocess.Popen(command, shell=shell, stderr=stderr, stdout=stdout)
+    kwargs: dict = dict(shell=shell, stderr=stderr, stdout=stdout)
+    if env is not None:
+        kwargs['env'] = env
+    process = subprocess.Popen(command, **kwargs)
     return process.pid
 
 
