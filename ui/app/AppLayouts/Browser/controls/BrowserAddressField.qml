@@ -23,7 +23,7 @@ StatusTextField {
 
     background: Rectangle {
         color: root.bgColor
-        radius: 40
+        radius: root.height
     }
     verticalAlignment: TextInput.AlignVCenter
     leftPadding: showFavicon ? Theme.halfPadding + favicon.width + favicon.anchors.leftMargin
@@ -52,7 +52,7 @@ StatusTextField {
         height: parent.height/2
         width: height
         anchors.left: parent.left
-        anchors.leftMargin: Theme.halfPadding
+        anchors.leftMargin: height/2
         anchors.verticalCenter: parent.verticalCenter
         image.sourceSize: Qt.size(width, height)
         image.source: {
@@ -73,7 +73,6 @@ StatusTextField {
     StatusClearButton {
         id: clearButton
         anchors.right: parent.right
-        anchors.rightMargin: Theme.halfPadding
         anchors.verticalCenter: parent.verticalCenter
         visible: parent.cursorVisible && !!parent.text
         icon.width: 18
