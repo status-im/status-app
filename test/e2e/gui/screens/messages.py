@@ -264,7 +264,7 @@ class Message:
 
                                     if icon_path:
                                         # Extract emoji ID from path like "qrc:/assets/twemoji/svg/1f600.svg"
-                                        match = re.search(r'/([a-f0-9]+)\.svg', icon_path)
+                                        match = re.search(r'/([a-fA-F0-9]+)\.svg', icon_path)
                                         if match:
                                             reactions_pathes.append(match.group(1))
                                             break
@@ -280,9 +280,6 @@ class Message:
         except (RuntimeError, AttributeError, LookupError):
             # If walking children fails, return empty list
             pass
-
-        if not reactions_pathes:
-            raise LookupError('No emoji reactions found for this message')
 
         return reactions_pathes
 
