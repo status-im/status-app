@@ -30,6 +30,7 @@ StatusDialog {
     required property string keycardState
     required property int remainingPinAttempts
     required property string userProfileKeyUid
+    required property string userProfilePublicKey
     required property bool isKeycardKeyPair
     property var keyPairForProcessing: null
 
@@ -378,6 +379,7 @@ StatusDialog {
     Component {
         id: keycardAuthComponent
         KeycardAuth {
+            userProfilePublicKey: root.userProfilePublicKey
             keycardState: d.processedKeycardState
             keycardInternalError: keycardErrors.internalError
             wrongKeycardProfile: keycardErrors.wrongKeycardProfileError
@@ -388,6 +390,7 @@ StatusDialog {
     Component {
         id: enterPinComponent
         EnterPin {
+            userProfilePublicKey: root.userProfilePublicKey
             wrongPin: keycardErrors.wrongPinError1 || keycardErrors.wrongPinError2
             remainingAttempts: d.processedRemainingPinAttempts
             submitOnPinComplete: !d.credentialMismatchAfterBiometrics

@@ -1,4 +1,4 @@
-import nimqml, sugar, strutils, chronicles, json, json_serialization, uuids
+import nimqml, sugar, strutils, sequtils, chronicles, json, json_serialization
 
 import io_interface
 import view, controller
@@ -10,6 +10,7 @@ import app_service/common/utils
 import app_service/service/keycardV2/service as keycard_serviceV2
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
+import app_service/service/privacy/service as privacy_service
 
 export io_interface
 
@@ -27,6 +28,7 @@ type AccountData = object
 type FlowType {.pure.} = enum
   ImportingKeyPair = "ImportingKeyPair"
   MigratingNonProfileKeypairToKeycard = "MigratingNonProfileKeypairToKeycard"
+  MigratingProfileKeypairToKeycard = "MigratingProfileKeypairToKeycard"
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -40,18 +42,20 @@ type
     tmpKeypairName: string
     tmpXpub: string
     tmpAccountsData: seq[AccountData]
+    tmpSeedPhrase: string
 
 proc newModule*[T](delegate: T,
   events: EventEmitter,
   keycardServiceV2: keycard_serviceV2.Service,
   accountsService: accounts_service.Service,
-  walletAccountService: wallet_account_service.Service):
+  walletAccountService: wallet_account_service.Service,
+  privacyService: privacy_service.Service):
   Module[T] =
   result = Module[T]()
   result.delegate = delegate
   result.view = view.newView(result)
   result.viewVariant = newQVariant(result.view)
-  result.controller = controller.newController(result, events, keycardServiceV2, accountsService, walletAccountService)
+  result.controller = controller.newController(result, events, keycardServiceV2, accountsService, walletAccountService, privacyService)
   result.controller.init()
 
 {.push warning[Deprecated]: off.}
@@ -135,7 +139,9 @@ proc prepareAccountsData[T](self: Module[T], extendedPublicKey: string, metadata
     error "error parsing account data json", err=e.msg
     return false
 
-  let relativePaths = self.tmpAccountsData.map(a => a.path.replace(PATH_WALLET_XPUB&"/", ""))
+  # only keep paths that are under the wallet xpub path and make them relative to the wallet xpub path
+  let relativePaths = self.tmpAccountsData.filter(a => a.path.startsWith(PATH_WALLET_XPUB)).
+    map(a => a.path.replace(PATH_WALLET_XPUB&"/", ""))
 
   let derivedAccounts = self.controller.deriveAccountsPublicInfoFromExtendedPublicKeyForPaths(extendedPublicKey, relativePaths)
   if derivedAccounts.derivations.len == 0:
@@ -161,6 +167,8 @@ proc emitError[T](self: Module[T], err: string) =
     self.view.keycardImportKeyPairError(err)
   elif self.tmpFlowType == FlowType.MigratingNonProfileKeypairToKeycard:
     self.view.keycardMoveKeyPairError(err)
+  elif self.tmpFlowType == FlowType.MigratingProfileKeypairToKeycard:
+    self.view.keycardMoveProfileKeyPairError(err)
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
 
@@ -189,11 +197,34 @@ method startImportingKeyPair*[T](self: Module[T], pin: string, seedPhrase: strin
   self.tmpFlowType = FlowType.ImportingKeyPair
   self.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
 
-method startMigratingNonProfileKeypairToKeycard*[T](self: Module[T], password: string, pin: string,
-    seedPhrase: string, metadataName: string, metadataAccounts: string) =
+method startMigratingNonProfileKeypairToKeycard*[T](self: Module[T], password: string, pin: string, seedPhrase: string) =
   self.tmpFlowType = FlowType.MigratingNonProfileKeypairToKeycard
   self.tmpPassword = utils.hashPassword(password)
+  let keyUid = self.controller.getKeyUidForSeedPhrase(seedPhrase)
+  let metadataName = self.getKeyPairNameForKeyUid(keyUid)
+  let metadataAccounts = self.getKeyPairAccountPathsJsonForKeyUid(keyUid)
   self.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
+
+method isMnemonicBackedUp*[T](self: Module[T]): bool =
+  return self.controller.isMnemonicBackedUp()
+
+method getMnemonic*[T](self: Module[T]): string =
+  return self.controller.getMnemonic()
+
+method startMigratingProfileKeypairToKeycard*[T](self: Module[T], password: string, pin: string, seedPhrase: string) =
+  self.tmpFlowType = FlowType.MigratingProfileKeypairToKeycard
+  self.tmpPassword = password # don't hash it here, cause it's hashed in the service (TODO: change that and use hashPassword instead, from this line)
+  self.tmpSeedPhrase = seedPhrase
+  let keyUid = self.controller.getKeyUidForSeedPhrase(seedPhrase)
+  let metadataName = self.getKeyPairNameForKeyUid(keyUid)
+  let metadataAccounts = self.getKeyPairAccountPathsJsonForKeyUid(keyUid)
+  self.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
+
+method onConvertingProfileKeypairFinished*[T](self: Module[T], success: bool) =
+  if not success:
+    self.emitError("failed to convert profile keypair to keycard")
+    return
+  self.view.keycardMoveProfileKeyPairSuccess()
 
 proc addNewKeycardKeypair*[T](self: Module[T]): string =
   var walletAccounts: seq[wallet_account_service.WalletAccountDto]
@@ -216,7 +247,7 @@ proc addNewKeycardKeypair*[T](self: Module[T]): string =
 ## For now, we just add a new keycard and don't care (listen for signal) about the result of that operation
 proc saveKeypairToKeycard[T](self: Module[T]) =
   let keyPair = KeycardDto(
-    keycardUid: $genUUID(),
+    keycardUid: self.view.getKeycardUid(),
     keyUid: self.tmpKeyUid,
     keycardName: self.tmpKeypairName,
     keycardLocked: false,
@@ -238,6 +269,8 @@ method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], error: string) =
     self.emitError("keycard load key pair error: " & error)
     return
 
+  self.view.keycardInteractionSuccessfullyCompleted() # this signal is used to switch from the kreycard states to progressing statess
+
   if self.tmpFlowType == FlowType.ImportingKeyPair:
     if self.isKnownKeyUid(self.tmpKeyUid):
       self.emitError("key pair already exists in db, cannot be imported, keyUid: " & self.tmpKeyUid)
@@ -255,6 +288,19 @@ method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], error: string) =
       return
     self.saveKeypairToKeycard() # this is just to add keycard to db and remove keystore files
     self.view.keycardMoveKeyPairSuccess()
+  elif self.tmpFlowType == FlowType.MigratingProfileKeypairToKeycard:
+    let acc = self.controller.createAccountFromMnemonic(self.tmpSeedPhrase, includeEncryption = true)
+    let newPassword = acc.derivedAccounts.encryption.publicKey
+    if newPassword.len == 0:
+      self.emitError("failed to derive encryption public key from seed phrase")
+      return
+    self.controller.setStoreToKeychainValueNotNow()
+    let err = self.controller.updateKeypairExtendedPublicKey(self.tmpKeyUid, self.tmpXpub, wallet_account_service.ColdWalletTypeStatusKeycard)
+    if err.len > 0:
+      self.emitError("failed to update keypair extended public key: " & err & " for key uid: " & self.tmpKeyUid)
+      return
+    let keycardUid = self.view.getKeycardUid()
+    self.controller.convertRegularProfileKeypairToKeycard(keycardUid, self.tmpPassword, newPassword)
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
 

@@ -12107,6 +12107,41 @@
       <comment>KeycardManagementPopup</comment>
       <translation>Key pair has been moved to Keycard</translation>
     </message>
+    <message>
+      <source>Move profile key pair to Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Move profile key pair to Keycard</translation>
+    </message>
+    <message>
+      <source>Moving profile key pair to Keycard...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Moving profile key pair to Keycard...</translation>
+    </message>
+    <message>
+      <source>Profile key pair has been moved to Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Profile key pair has been moved to Keycard</translation>
+    </message>
+    <message>
+      <source>Quit and restart Status</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Quit and restart Status</translation>
+    </message>
+    <message>
+      <source>Re-encrypting data may take some time</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Re-encrypting data may take some time</translation>
+    </message>
+    <message>
+      <source>Do not quit the application or turn off your device. Doing so will lead to data&#xA;corruption, loss of your Status profile and the inability to restart Status.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Do not quit the application or turn off your device. Doing so will lead to data&#xA;corruption, loss of your Status profile and the inability to restart Status.</translation>
+    </message>
+    <message>
+      <source>Keycard is now required to log in and sign.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Keycard is now required to log in and sign.</translation>
+    </message>
   </context>
   <context>
     <name>KeycardNotEmptyPage</name>
@@ -18950,6 +18985,16 @@
       <source>I understand that moving this key pair will require using Keycard to sign</source>
       <comment>SelectKeyPairState</comment>
       <translation>I understand that moving this key pair will require using Keycard to sign</translation>
+    </message>
+    <message>
+      <source>Profile key pair</source>
+      <comment>SelectKeyPairState</comment>
+      <translation>Profile key pair</translation>
+    </message>
+    <message>
+      <source>I understand that moving this key pair will require using Keycard to log in and sign</source>
+      <comment>SelectKeyPairState</comment>
+      <translation>I understand that moving this key pair will require using Keycard to log in and sign</translation>
     </message>
   </context>
   <context>

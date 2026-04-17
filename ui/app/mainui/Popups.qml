@@ -678,11 +678,8 @@ QtObject {
                     Global.keycardManagementResult(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
                                                    availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
                 }
-                onFactoryResetResult: function(success) {
-                    Global.keycardFactoryResetDone()
-                }
-                onImportKeyPairResult: function(success, keyUid) {
-                    Global.keycardImportKeyPairDone(success, keyUid)
+                onKeycardFlowCompleted: function(flow, keyUid, keycardUid, success) {
+                    Global.keycardFlowDone(flow, keyUid, keycardUid, success)
                 }
 
                 onClosed: destroy()

@@ -19,10 +19,13 @@ Control {
     required property bool wrongPin
     required property int remainingAttempts
 
+    required property bool keycardInteractionCompleted
     required property bool processing
     required property string processingImage
     property string processingTitle: qsTr("Reading...")
     property string processingMessage: ""
+    property string processingSpecialWarning1: ""
+    property string processingSpecialWarning2: ""
 
     required property bool success
     required property string successImage
@@ -76,6 +79,40 @@ Control {
             visible: text !== ""
         }
 
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: warning.implicitHeight
+            visible: root.processing
+                     && (!!root.processingSpecialWarning1
+                         || !!root.processingSpecialWarning2)
+            color: StatusColors.transparent
+            radius: Theme.radius
+            border.width: 1
+            border.color: Theme.palette.separator
+
+            Column {
+                id: warning
+                anchors.left: parent.left
+                anchors.right: parent.right
+                padding: Theme.padding
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: root.processingSpecialWarning1
+                    visible: text !== ""
+                }
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: root.processingSpecialWarning2
+                    visible: text !== ""
+                    color: Theme.palette.dangerColor1
+                }
+            }
+        }
+
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -104,6 +141,7 @@ Control {
             State {
                 name: "waiting-for-reader"
                 when: !root.failure
+                      && !root.keycardInteractionCompleted
                       && (root.keycardState === Constants.keycard.state.waitingForReader
                           || root.keycardState === Constants.keycard.state.noReadersFound
                           || root.keycardState === Constants.keycard.state.unknownReaderState
@@ -125,6 +163,7 @@ Control {
             State {
                 name: "waiting-for-card"
                 when: !root.failure
+                      && !root.keycardInteractionCompleted
                       && root.keycardState === Constants.keycard.state.waitingForCard
                 PropertyChanges {
                     target: image
@@ -143,6 +182,7 @@ Control {
             State {
                 name: "reading-card"
                 when: !root.failure
+                      && !root.keycardInteractionCompleted
                       && !root.keycardInternalError
                       && !root.wrongKeycard
                       && !root.wrongKeycardProfile

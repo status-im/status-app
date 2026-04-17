@@ -14,6 +14,8 @@ import utils
 Control {
     id: root
 
+    property string userProfilePublicKey: ""
+
     property bool wrongPin: false
     property int remainingAttempts: -1
     property int maxPinRetries: 3
@@ -103,6 +105,8 @@ Control {
             Layout.fillWidth: true
             active: !!root.keyPairForProcessing
             sourceComponent: KeyPairCompactItem {
+                userProfilePublicKey: root.userProfilePublicKey
+
                 keyPairType: root.keyPairForProcessing.pairType
                 keyPairName: root.keyPairForProcessing.name
                 keyPairIcon: root.keyPairForProcessing.icon

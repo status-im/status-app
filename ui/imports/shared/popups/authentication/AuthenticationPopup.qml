@@ -24,6 +24,7 @@ PopupBase {
     keycardState: root.store.keycardState
     remainingPinAttempts: root.store.remainingPinAttempts
     userProfileKeyUid: root.store.userProfileKeyUid
+    userProfilePublicKey: root.store.userProfilePubKey
     isKeycardKeyPair: root.store.ready && root.store.isKeypairMigratedToKeycard(root.keyUid)
     keyPairForProcessing: root.store.keyPairForProcessing
 

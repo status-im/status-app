@@ -391,6 +391,9 @@ QtObject:
       return
     try:
       let response = status_account.deriveAccountsPublicInfoFromExtendedPublicKeyForPaths(extendedPublicKey, paths)
+      if not response.error.isNil:
+        error "error: ", procName="deriveAccountsPublicInfoFromExtendedPublicKeyForPaths", errName = response.error.message, errDesription = response.error.message
+        return
       return toDerivedAccounts(response.result)
     except Exception as e:
       error "error: ", procName="deriveAccountsPublicInfoFromExtendedPublicKeyForPaths", errName = e.name, errDesription = e.msg
@@ -401,6 +404,9 @@ QtObject:
       return
     try:
       let response = status_account.deriveExtendedPublicKeyAtPath(mnemonic, passphrase, path)
+      if not response.error.isNil:
+        error "error: ", procName="deriveExtendedPublicKeyAtPath", errName = response.error.message, errDesription = response.error.message
+        return
       return response.result.getStr
     except Exception as e:
       error "error: ", procName="deriveExtendedPublicKeyAtPath", errName = e.name, errDesription = e.msg
@@ -411,6 +417,9 @@ QtObject:
       return
     try:
       let response = status_account.convertURCryptoHDKeyToXPub(ur)
+      if not response.error.isNil:
+        error "error: ", procName="convertURCryptoHDKeyToXPub", errName = response.error.message, errDesription = response.error.message
+        return
       return response.result.getStr
     except Exception as e:
       error "error: ", procName="convertURCryptoHDKeyToXPub", errName = e.name, errDesription = e.msg

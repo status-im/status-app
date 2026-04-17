@@ -13,6 +13,8 @@ import utils
 StatusListItem {
     id: root
 
+    property string userProfilePublicKey
+
     property ButtonGroup buttonGroup
     property bool usedAsSelectOption: false
     property bool tagClickable: false
@@ -53,7 +55,7 @@ StatusListItem {
     statusListItemTitleAside.text: {
         let t = ""
         if (root.keyPairType === Constants.keycard.keyPairType.profile) {
-            t = Utils.getElidedCompressedPk(d.myPublicKey)
+            t = Utils.getElidedCompressedPk(root.userProfilePublicKey)
         }
         if (root.keyPairCardLocked) {
             let label = qsTr("Keycard Locked")
@@ -72,15 +74,20 @@ StatusListItem {
     asset {
         width: root.keyPairIcon? 24 : 40
         height: root.keyPairIcon? 24 : 40
-        name: root.keyPairImage? root.keyPairImage : root.keyPairIcon
+        name: root.keyPairImage? root.keyPairImage
+                               : root.keyPairIcon? root.keyPairIcon
+                                                 : root.keyPairType === Constants.keycard.keyPairType.profile? "contact"
+                                                                                                             : ""
         isImage: !!root.keyPairImage
-        color: root.keyPairType === Constants.keycard.keyPairType.profile?
-                   Utils.colorForPubkey(Theme.palette, d.myPublicKey) :
-                   root.keyPairCardLocked? Theme.palette.dangerColor1 : Theme.palette.primaryColor1
+        color: root.keyPairType === Constants.keycard.keyPairType.profile? Theme.palette.indirectColor2
+                                                                          : root.keyPairCardLocked? Theme.palette.dangerColor1
+                                                                                                  : Theme.palette.primaryColor1
         letterSize: Math.max(4, asset.width / 2.4)
         charactersLen: 2
-        isLetterIdenticon: !root.keyPairIcon && !asset.name.toString()
-        bgColor: root.keyPairCardLocked? Theme.palette.dangerColor3 : Theme.palette.primaryColor3
+        isLetterIdenticon: !root.keyPairImage && !root.keyPairIcon && root.keyPairType !== Constants.keycard.keyPairType.profile
+        bgColor: root.keyPairCardLocked? Theme.palette.dangerColor3
+                                       : root.keyPairType === Constants.keycard.keyPairType.profile? Utils.colorForPubkey(Theme.palette, root.userProfilePublicKey)
+                                                                                                   : Theme.palette.primaryColor3
     }
 
     tagsModel: root.keyPairAccounts
@@ -121,7 +128,6 @@ StatusListItem {
 
     QtObject {
         id: d
-        property string myPublicKey: userProfile.pubKey
 
         property list<Item> components: [
             StatusRadioButton {

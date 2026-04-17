@@ -521,6 +521,7 @@ QtObject {
             readonly property string importSeedPhrase: "import-seed-phrase"
             readonly property string importNewKeyPair: "import-new-key-pair"
             readonly property string moveKeyPair: "move-key-pair"
+            readonly property string moveProfileKeyPair: "move-profile-key-pair"
         }
     }
 

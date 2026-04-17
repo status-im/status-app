@@ -117,13 +117,28 @@ SettingsContentBase {
                                 availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
         }
 
-        function onKeycardFactoryResetDone(success) {
-            console.info("resetting keycard done successfully: ", success)
-            d.showMainScreen()
-        }
+        function onKeycardFlowDone(flow, keyUid, keycardUid, success) {
+            switch(flow) {
+            case Constants.keycard.flow.readKeycard:
+                console.info("reading keycard - keyUid: ", keyUid, " keycardUid: ", keycardUid," done successfully: ", success)
+                return
+            case Constants.keycard.flow.factoryReset:
+                console.info("resetting keycard done successfully: ", success)
+                break
+            case Constants.keycard.flow.importSeedPhrase:
+                console.info("importing key pair via seed phrase - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
+                break
+            case Constants.keycard.flow.importNewKeyPair:
+                console.info("importing a new key pair - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
+                break
+            case Constants.keycard.flow.moveKeyPair:
+                console.info("migrating key pair to keycard - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
+                break
+            case Constants.keycard.flow.moveProfileKeyPair:
+                console.info("migrating a profile key pair to keycard - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
+                break
+            }
 
-        function onKeycardImportKeyPairDone(success, keyUid) {
-            console.info("importing key pair with keyUid: ", keyUid, " done successfully: ", success)
             d.showMainScreen()
         }
     }

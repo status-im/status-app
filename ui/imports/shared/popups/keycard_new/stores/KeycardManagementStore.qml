@@ -3,6 +3,8 @@ import QtQuick
 QtObject {
     id: root
 
+    signal keycardInteractionSuccessfullyCompleted()
+
     signal keycardGetMetadataSuccess()
     signal keycardGetMetadataError(string error)
 
@@ -15,8 +17,13 @@ QtObject {
     signal keycardMoveKeyPairSuccess()
     signal keycardMoveKeyPairError(string error)
 
+    signal keycardMoveProfileKeyPairSuccess()
+    signal keycardMoveProfileKeyPairError(string error)
+
     readonly property bool ready: d.ready
+
     readonly property string userProfileKeyUid: userProfile.keyUid
+    readonly property string userProfilePubKey: userProfile.pubKey
 
     readonly property var keypairsModel: d.mainModuleInst.keycardManagementModule
                                          ? d.mainModuleInst.keycardManagementModule.keyPairModel
@@ -29,6 +36,10 @@ QtObject {
 
     readonly property Connections keycardManagementModuleConnections: Connections {
         target: d.mainModuleInst.keycardManagementModule ?? null
+
+        function onKeycardInteractionSuccessfullyCompleted() {
+            root.keycardInteractionSuccessfullyCompleted()
+        }
 
         function onKeycardGetMetadataSuccess() {
             root.keycardGetMetadataSuccess()
@@ -60,6 +71,14 @@ QtObject {
 
         function onKeycardMoveKeyPairError(error) {
             root.keycardMoveKeyPairError(error)
+        }
+
+        function onKeycardMoveProfileKeyPairSuccess() {
+            root.keycardMoveProfileKeyPairSuccess()
+        }
+
+        function onKeycardMoveProfileKeyPairError(error) {
+            root.keycardMoveProfileKeyPairError(error)
         }
     }
 
@@ -114,6 +133,14 @@ QtObject {
     function prepare() {
         d.mainModuleInst.prepareKeycardManagementModule()
         d.ready = true
+    }
+
+    function signOutAndQuit() {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.signOutAndQuit()
     }
 
     function prepareKeyPairModel() {
@@ -198,11 +225,35 @@ QtObject {
         return d.mainModuleInst.keycardManagementModule.generateMnemonic()
     }
 
-    function startMigratingNonProfileKeypairToKeycard(password, pin, seedPhrase, metadataName, metadataAccounts) {
+    function startMigratingNonProfileKeypairToKeycard(password, pin, seedPhrase) {
         if (!d.mainModuleInst.keycardManagementModule) {
             console.error("keycard management module was not created")
             return
         }
-        d.mainModuleInst.keycardManagementModule.startMigratingNonProfileKeypairToKeycard(password, pin, seedPhrase, metadataName, metadataAccounts)
+        d.mainModuleInst.keycardManagementModule.startMigratingNonProfileKeypairToKeycard(password, pin, seedPhrase)
+    }
+
+    function isMnemonicBackedUp() {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return true
+        }
+        return d.mainModuleInst.keycardManagementModule.isMnemonicBackedUp()
+    }
+
+    function getMnemonic() {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return ""
+        }
+        return d.mainModuleInst.keycardManagementModule.getMnemonic()
+    }
+
+    function startMigratingProfileKeypairToKeycard(password, pin, seedPhrase) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.startMigratingProfileKeypairToKeycard(password, pin, seedPhrase)
     }
 }

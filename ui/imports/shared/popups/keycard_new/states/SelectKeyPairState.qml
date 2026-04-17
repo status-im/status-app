@@ -18,6 +18,9 @@ Control {
 
     required property var keypairsModel
 
+    required property string userProfilePublicKey
+
+    property bool profileOnly: false
     property string initialSelectedKeyUid: ""
     property bool initialUnderstandChecked: false
 
@@ -32,16 +35,23 @@ Control {
 
     QtObject {
         id: d
-        readonly property int profilePairTypeValue: Constants.keycard.keyPairType.profile
+        readonly property int profileKeyPairTypeValue: Constants.keycard.keyPairType.profile
+        readonly property int seedKeyPairTypeValue: Constants.keycard.keyPairType.seedImport
     }
 
     contentItem: ColumnLayout {
         spacing: Theme.padding
 
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: root.profileOnly
+        }
+
         StatusBaseText {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            text: qsTr("Select key pair")
+            text: root.profileOnly ? qsTr("Profile key pair") : qsTr("Select key pair")
             color: Theme.palette.baseColor1
         }
 
@@ -53,15 +63,17 @@ Control {
             id: filteredModel
             sourceModel: root.keypairsModel ?? null
             filters: ExpressionFilter {
-                expression: model.keyPair.pairType !== d.profilePairTypeValue
-                            && !model.keyPair.migratedToKeycard
+                expression: root.profileOnly
+                            ? (model.keyPair.pairType === d.profileKeyPairTypeValue && !model.keyPair.migratedToKeycard)
+                            : (model.keyPair.pairType === d.seedKeyPairTypeValue && !model.keyPair.migratedToKeycard)
             }
         }
 
         ListView {
             id: keypairsList
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.fillHeight: !root.profileOnly
+            Layout.preferredHeight: root.profileOnly ? contentHeight : -1
             clip: true
             spacing: Theme.halfPadding
             model: filteredModel
@@ -74,7 +86,9 @@ Control {
                 width: keypairsList.width - (keypairsList.ScrollBar.vertical.visible
                                              ? keypairsList.ScrollBar.vertical.width : 0)
 
-                usedAsSelectOption: true
+                userProfilePublicKey: root.userProfilePublicKey
+
+                usedAsSelectOption: !root.profileOnly
                 buttonGroup: keyPairsButtonGroup
                 checked: model.keyPair.keyUid === root.initialSelectedKeyUid
 
@@ -94,13 +108,21 @@ Control {
 
         Item {
             Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: root.profileOnly
+        }
+
+        Item {
+            Layout.fillWidth: true
             Layout.preferredHeight: Theme.padding
         }
 
         StatusCheckBox {
             id: understandCheckBox
             Layout.fillWidth: true
-            text: qsTr("I understand that moving this key pair will require using Keycard to sign")
+            text: root.profileOnly
+                  ? qsTr("I understand that moving this key pair will require using Keycard to log in and sign")
+                  : qsTr("I understand that moving this key pair will require using Keycard to sign")
 
             Component.onCompleted: {
                 checked = root.initialUnderstandChecked

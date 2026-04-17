@@ -46,7 +46,7 @@ method startImportingKeyPair*(self: AccessInterface, pin: string, seedPhrase: st
   raise newException(ValueError, "No implementation available")
 
 method startMigratingNonProfileKeypairToKeycard*(self: AccessInterface, password: string, pin: string,
-    seedPhrase: string, metadataName: string, metadataAccounts: string) {.base.} =
+    seedPhrase: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onKeycardLoadSeedPhraseFinished*(self: AccessInterface, error: string) {.base.} =
@@ -56,6 +56,19 @@ method generateMnemonic*(self: AccessInterface): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method populateKeyPairModel*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method isMnemonicBackedUp*(self: AccessInterface): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getMnemonic*(self: AccessInterface): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method startMigratingProfileKeypairToKeycard*(self: AccessInterface, password: string, pin: string,
+    seedPhrase: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onConvertingProfileKeypairFinished*(self: AccessInterface, success: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 type

@@ -28,8 +28,7 @@ StatusDialog {
 
     signal metadataResult(string keycardState, string keycardUid, string keyUid, int remainingPinAttempts, int remainingPukAttempts,
                           int availableSlots, string cardMetadataName, string cardMetadataWalletAccountsJson)
-    signal factoryResetResult(bool success)
-    signal importKeyPairResult(bool success, string keyUid)
+    signal keycardFlowCompleted(string flow, string keyUid, string keycardUid, bool success)
 
     width: Constants.keycard.general.popupWidth
     padding: Theme.halfPadding
@@ -47,6 +46,8 @@ StatusDialog {
             return qsTr("Import a new key pair to Keycard")
         case Constants.keycard.flow.moveKeyPair:
             return qsTr("Move key pair to Keycard")
+        case Constants.keycard.flow.moveProfileKeyPair:
+            return qsTr("Move profile key pair to Keycard")
         default:
             return qsTr("Keycard Flow")
         }
@@ -71,13 +72,15 @@ StatusDialog {
 
         readonly property bool keycardHasOnlyPinSet: !!root.keycardUid && !root.keyUid
 
+        property bool keycardInteractionCompleted: false
         property bool processing: false
         property bool success: false
         property string error: ""
 
         property bool factoryResetConfirmationChecked: false
 
-        property int currentStep: root.flow === Constants.keycard.flow.moveKeyPair
+        property int currentStep: (root.flow === Constants.keycard.flow.moveKeyPair
+                                      || root.flow === Constants.keycard.flow.moveProfileKeyPair)
                                      ? KeycardManagementPopup.FlowStep.SelectKeyPair
                                      : d.keycardHasOnlyPinSet
                                          ? KeycardManagementPopup.FlowStep.EnterPin
@@ -107,9 +110,11 @@ StatusDialog {
             case KeycardManagementPopup.FlowStep.RepeatPin:
                 return repeatPinComponent
             case KeycardManagementPopup.FlowStep.EnterSeedPhrase:
-                return root.flow === Constants.keycard.flow.moveKeyPair
-                    ? moveKeyPairEnterSeedPhraseComponent
-                    : enterSeedPhraseComponent
+                if (root.flow === Constants.keycard.flow.moveKeyPair)
+                    return moveKeyPairEnterSeedPhraseComponent
+                if (root.flow === Constants.keycard.flow.moveProfileKeyPair)
+                    return moveProfileKeyPairEnterSeedPhraseComponent
+                return enterSeedPhraseComponent
             case KeycardManagementPopup.FlowStep.EnterKeyPairName:
                 return enterKeyPairNameComponent
             case KeycardManagementPopup.FlowStep.ManageAccounts:
@@ -119,7 +124,9 @@ StatusDialog {
             case KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords:
                 return confirmSeedPhraseWordsComponent
             case KeycardManagementPopup.FlowStep.SelectKeyPair:
-                return selectKeyPairComponent
+                return root.flow === Constants.keycard.flow.moveProfileKeyPair
+                    ? selectProfileKeyPairComponent
+                    : selectKeyPairComponent
             default: return null
             }
         }
@@ -149,9 +156,17 @@ StatusDialog {
             Backpressure.debounce(this, 500, () => {
                                       root.store.startMigratingNonProfileKeypairToKeycard(d.authenticationPassword,
                                                                                           d.newPin,
-                                                                                          d.seedPhrase,
-                                                                                          root.store.getKeyPairNameForKeyUid(d.moveKeyPairSelectedKeyUid),
-                                                                                          root.store.getKeyPairAccountPathsJsonForKeyUid(d.moveKeyPairSelectedKeyUid))
+                                                                                          d.seedPhrase)
+                                  })()
+        }
+
+        function startMigratingProfileKeypairToKeycard() {
+            d.currentStep = KeycardManagementPopup.FlowStep.Migrating
+            d.processing = true
+            Backpressure.debounce(this, 500, () => {
+                                      root.store.startMigratingProfileKeypairToKeycard(d.authenticationPassword,
+                                                                                       d.newPin,
+                                                                                       d.seedPhrase)
                                   })()
         }
 
@@ -165,6 +180,11 @@ StatusDialog {
             if (d.currentStep === KeycardManagementPopup.FlowStep.EnterPin) {
                 if (root.flow === Constants.keycard.flow.importNewKeyPair) {
                     d.seedPhrase = root.store.generateMnemonic()
+                    d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
+                    return
+                }
+                if (root.flow === Constants.keycard.flow.moveProfileKeyPair && !root.store.isMnemonicBackedUp()) {
+                    d.seedPhrase = root.store.getMnemonic()
                     d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
                     return
                 }
@@ -182,6 +202,11 @@ StatusDialog {
                     d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
                     return
                 }
+                if (root.flow === Constants.keycard.flow.moveProfileKeyPair && !root.store.isMnemonicBackedUp()) {
+                    d.seedPhrase = root.store.getMnemonic()
+                    d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
+                    return
+                }
 
                 d.currentStep = KeycardManagementPopup.FlowStep.EnterSeedPhrase
                 return
@@ -189,6 +214,10 @@ StatusDialog {
             if (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase) {
                 if (root.flow === Constants.keycard.flow.moveKeyPair) {
                     Global.openAuthenticationPopup(Constants.keycard.flow.moveKeyPair, root.store.userProfileKeyUid)
+                    return
+                }
+                if (root.flow === Constants.keycard.flow.moveProfileKeyPair) {
+                    Global.openAuthenticationPopup(Constants.keycard.flow.moveProfileKeyPair, root.store.userProfileKeyUid)
                     return
                 }
 
@@ -205,6 +234,10 @@ StatusDialog {
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords) {
+                if (root.flow === Constants.keycard.flow.moveProfileKeyPair) {
+                    Global.openAuthenticationPopup(Constants.keycard.flow.moveProfileKeyPair, root.store.userProfileKeyUid)
+                    return
+                }
                 d.seedPhraseKeyUid = root.store.getKeyUidForSeedPhrase(d.seedPhrase)
                 d.currentStep = KeycardManagementPopup.FlowStep.EnterKeyPairName
                 return
@@ -221,7 +254,8 @@ StatusDialog {
 
         function previousStep() {
             if (d.currentStep === KeycardManagementPopup.FlowStep.EnterNewPin
-                    && root.flow === Constants.keycard.flow.moveKeyPair) {
+                    && (root.flow === Constants.keycard.flow.moveKeyPair
+                        || root.flow === Constants.keycard.flow.moveProfileKeyPair)) {
                 d.currentStep = KeycardManagementPopup.FlowStep.SelectKeyPair
                 return
             }
@@ -232,7 +266,8 @@ StatusDialog {
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.EnterPin
-                    && root.flow === Constants.keycard.flow.moveKeyPair) {
+                    && (root.flow === Constants.keycard.flow.moveKeyPair
+                        || root.flow === Constants.keycard.flow.moveProfileKeyPair)) {
                 d.newPin = ""
                 d.currentStep = KeycardManagementPopup.FlowStep.SelectKeyPair
                 return
@@ -291,6 +326,21 @@ StatusDialog {
 
     Connections {
         target: root.store
+
+        function onKeycardInteractionSuccessfullyCompleted() {
+            switch(root.flow) {
+            case Constants.keycard.flow.importSeedPhrase:
+            case Constants.keycard.flow.importNewKeyPair:
+                d.currentStep = KeycardManagementPopup.FlowStep.Importing
+                break
+            case Constants.keycard.flow.moveKeyPair:
+            case Constants.keycard.flow.moveProfileKeyPair:
+                d.currentStep = KeycardManagementPopup.FlowStep.Migrating
+                break
+            }
+
+            d.keycardInteractionCompleted = true
+        }
 
         function onKeycardGetMetadataSuccess() {
             d.processing = false
@@ -366,20 +416,41 @@ StatusDialog {
             d.processing = false
             d.error = error
         }
+
+        function onKeycardMoveProfileKeyPairSuccess() {
+            d.processing = false
+            d.success = true
+        }
+
+        function onKeycardMoveProfileKeyPairError(error) {
+            console.error("Keycard move profile key pair error:", error)
+            d.processing = false
+            d.error = error
+        }
     }
 
     Connections {
         target: Global
         enabled: root.flow === Constants.keycard.flow.moveKeyPair
+                 || root.flow === Constants.keycard.flow.moveProfileKeyPair
 
         function onAuthenticationResult(reason, password, pin, keyUid) {
-            if (reason !== Constants.keycard.flow.moveKeyPair)
-                return
             if (!password) {
                 return
             }
+
             d.authenticationPassword = password
-            d.startMigratingNonProfileKeypairToKeycard()
+
+            switch(reason) {
+            case Constants.keycard.flow.moveKeyPair:
+                d.startMigratingNonProfileKeypairToKeycard()
+                break
+            case Constants.keycard.flow.moveProfileKeyPair:
+                d.startMigratingProfileKeypairToKeycard()
+                break
+            default:
+                console.warn("unknown authentication reason received in keycard popup", reason)
+            }
         }
     }
 
@@ -438,6 +509,13 @@ StatusDialog {
                                  || d.currentStep === KeycardManagementPopup.FlowStep.EnterNewPin
                                  || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
                                  || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase))
+                         || (root.flow === Constants.keycard.flow.moveProfileKeyPair
+                             && (d.currentStep === KeycardManagementPopup.FlowStep.EnterPin
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.EnterNewPin
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords))
 
                 onClicked: {
                     d.previousStep()
@@ -461,16 +539,32 @@ StatusDialog {
                         }
                     } else if (root.flow === Constants.keycard.flow.importSeedPhrase
                                || root.flow === Constants.keycard.flow.importNewKeyPair
-                               || root.flow === Constants.keycard.flow.moveKeyPair) {
+                               || root.flow === Constants.keycard.flow.moveKeyPair
+                               || root.flow === Constants.keycard.flow.moveProfileKeyPair) {
                         if (!d.processing && !d.success && !d.error) {
                             return qsTr("Cancel")
                         }
                     }
 
-                    return !!d.error || d.success ? qsTr("Done") : qsTr("Cancel")
+                    if (!!d.error) {
+                        return qsTr("Done")
+                    } else if (d.success) {
+                        if (root.flow === Constants.keycard.flow.moveProfileKeyPair) {
+                            return qsTr("Quit and restart Status")
+                        }
+                        return qsTr("Done")
+                    }
+                    return qsTr("Cancel")
                 }
 
-                onClicked: root.close()
+                onClicked: {
+                    if (d.success && root.flow === Constants.keycard.flow.moveProfileKeyPair) {
+                        console.info("the app is closing due to successfully migrated profile key pair to a keycard")
+                        root.store.signOutAndQuit()
+                    }
+
+                    root.close()
+                }
             }
 
             StatusButton {
@@ -522,7 +616,13 @@ StatusDialog {
                              || (root.flow === Constants.keycard.flow.moveKeyPair
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair
                                      || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
-                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase)))
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase))
+                             || (root.flow === Constants.keycard.flow.moveProfileKeyPair
+                                 && (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords)))
                 enabled: visible
                          && ((d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
@@ -537,7 +637,8 @@ StatusDialog {
                     if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin) {
                         return qsTr("Try setting the PIN again")
                     }
-                    if (d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts) {
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts
+                            || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords) {
                         return qsTr("Continue")
                     }
 
@@ -556,7 +657,8 @@ StatusDialog {
                         return
                     }
                     if (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase) {
-                        if (root.flow === Constants.keycard.flow.moveKeyPair) {
+                        if (root.flow === Constants.keycard.flow.moveKeyPair
+                                || root.flow === Constants.keycard.flow.moveProfileKeyPair) {
                             d.nextStep()
                             return
                         }
@@ -590,19 +692,34 @@ StatusDialog {
 
     Component.onCompleted: {
         root.store.prepare()
-        if (root.flow === Constants.keycard.flow.moveKeyPair)
+        if (root.flow === Constants.keycard.flow.moveKeyPair
+                || root.flow === Constants.keycard.flow.moveProfileKeyPair)
             root.store.prepareKeyPairModel()
     }
 
     onClosed: {
-        if (root.flow === Constants.keycard.flow.factoryReset) {
-            root.factoryResetResult(d.success)
-        } else if (root.flow === Constants.keycard.flow.importSeedPhrase
-                   || root.flow === Constants.keycard.flow.importNewKeyPair) {
-            root.importKeyPairResult(d.success, d.seedPhraseKeyUid)
-        } else if (root.flow === Constants.keycard.flow.moveKeyPair) {
-            root.importKeyPairResult(d.success, d.moveKeyPairSelectedKeyUid)
+        let keyUid = root.keyUid
+        let keycardUid = root.keycardUid
+
+        switch(root.flow) {
+        case Constants.keycard.flow.readKeycard:
+            keyUid = root.store.keyUid
+            keycardUid = root.store.keycardUid
+            break
+        case Constants.keycard.flow.importSeedPhrase:
+        case Constants.keycard.flow.importNewKeyPair:
+            keyUid = d.seedPhraseKeyUid
+            keycardUid = root.store.keycardUid
+            break
+        case Constants.keycard.flow.moveKeyPair:
+        case Constants.keycard.flow.moveProfileKeyPair:
+            keyUid = d.moveKeyPairSelectedKeyUid
+            keycardUid = root.store.keycardUid
+            break
         }
+
+        root.keycardFlowCompleted(root.flow, keyUid, keycardUid, d.success)
+
         root.store.teardown()
     }
 
@@ -618,6 +735,8 @@ StatusDialog {
 
             keycardState: root.store.keycardState
 
+            keycardInteractionCompleted: d.keycardInteractionCompleted
+
             processing: root.flow !== Constants.keycard.flow.readKeycard
                         && d.processing
             processingImage: Assets.png("keycard/scanning/scanning")
@@ -630,10 +749,16 @@ StatusDialog {
                     return qsTr("Importing key pair to Keycard...")
                 case Constants.keycard.flow.moveKeyPair:
                     return qsTr("Moving key pair to Keycard...")
+                case Constants.keycard.flow.moveProfileKeyPair:
+                    return qsTr("Moving profile key pair to Keycard...")
                 default:
                     return qsTr("Reading...")
                 }
             }
+            processingSpecialWarning1: root.flow === Constants.keycard.flow.moveProfileKeyPair? qsTr("Re-encrypting data may take some time")
+                                                                                              : ""
+            processingSpecialWarning2: root.flow === Constants.keycard.flow.moveProfileKeyPair? qsTr("Do not quit the application or turn off your device. Doing so will lead to data\ncorruption, loss of your Status profile and the inability to restart Status.")
+                                                                                              : ""
 
             success: {
                 if (root.flow === Constants.keycard.flow.readKeycard)
@@ -647,6 +772,7 @@ StatusDialog {
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
+                case Constants.keycard.flow.moveProfileKeyPair:
                     return Assets.png("keycard/card_insert/insert")
                 default:
                     return ""
@@ -661,6 +787,8 @@ StatusDialog {
                     return qsTr("Key pair has been imported to Keycard")
                 case Constants.keycard.flow.moveKeyPair:
                     return qsTr("Key pair has been moved to Keycard")
+                case Constants.keycard.flow.moveProfileKeyPair:
+                    return qsTr("Profile key pair has been moved to Keycard")
                 default:
                     return qsTr("Success")
                 }
@@ -673,6 +801,8 @@ StatusDialog {
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
                     return qsTr("Keycard is now required to sign with this key pair.")
+                case Constants.keycard.flow.moveProfileKeyPair:
+                    return qsTr("Keycard is now required to log in and sign.")
                 default:
                     return ""
                 }
@@ -690,6 +820,7 @@ StatusDialog {
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
+                case Constants.keycard.flow.moveProfileKeyPair:
                     return Assets.png("keycard/wrong_card/something-went-wrong")
                 default:
                     return ""
@@ -719,6 +850,7 @@ StatusDialog {
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
+                case Constants.keycard.flow.moveProfileKeyPair:
                     d.newPin = pinInput
                     d.nextStep()
                     return
@@ -743,6 +875,7 @@ StatusDialog {
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
+                case Constants.keycard.flow.moveProfileKeyPair:
                     d.newPin = pinInput
                     d.nextStep()
                     return
@@ -772,6 +905,7 @@ StatusDialog {
                 case Constants.keycard.flow.importSeedPhrase:
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
+                case Constants.keycard.flow.moveProfileKeyPair:
                     d.nextStep()
                     return
                 default:
@@ -825,6 +959,7 @@ StatusDialog {
         ManageKeyPairAccountsState {
             emojiPopup: root.emojiPopup
             keyPairName: d.keyPairName
+            userProfilePublicKey: root.store.userProfilePubKey
 
             onDone: {
                 d.accountPathsJson = getAccountsJson()
@@ -855,6 +990,8 @@ StatusDialog {
     Component {
         id: selectKeyPairComponent
         SelectKeyPairState {
+            userProfilePublicKey: root.store.userProfilePubKey
+
             keypairsModel: root.store.keypairsModel
             initialSelectedKeyUid: d.moveKeyPairSelectedKeyUid
             initialUnderstandChecked: d.moveKeyPairUnderstandChecked
@@ -867,6 +1004,36 @@ StatusDialog {
             validateSeedPhrase: function(phrase) {
                 const keyUid = root.store.getKeyUidForSeedPhrase(phrase)
                 if (keyUid === d.moveKeyPairSelectedKeyUid)
+                    return keyUid
+                return ""
+            }
+
+            onSeedPhraseValidated: function(phrase, keyUid) {
+                d.seedPhrase = phrase
+                d.seedPhraseKeyUid = keyUid
+            }
+        }
+    }
+
+    Component {
+        id: selectProfileKeyPairComponent
+        SelectKeyPairState {
+            profileOnly: true
+
+            userProfilePublicKey: root.store.userProfilePubKey
+
+            keypairsModel: root.store.keypairsModel
+            initialSelectedKeyUid: root.store.userProfileKeyUid
+            initialUnderstandChecked: d.moveKeyPairUnderstandChecked
+        }
+    }
+
+    Component {
+        id: moveProfileKeyPairEnterSeedPhraseComponent
+        EnterSeedPhraseState {
+            validateSeedPhrase: function(phrase) {
+                const keyUid = root.store.getKeyUidForSeedPhrase(phrase)
+                if (keyUid === root.store.userProfileKeyUid)
                     return keyUid
                 return ""
             }

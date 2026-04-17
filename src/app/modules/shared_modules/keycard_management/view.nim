@@ -36,6 +36,8 @@ QtObject:
   proc stopKeycardAction*(self: View) {.slot.} =
     self.delegate.stopKeycardAction()
 
+  proc keycardInteractionSuccessfullyCompleted*(self: View) {.signal.}
+
   proc keycardGetMetadataSuccess*(self: View) {.signal.}
   proc keycardGetMetadataError*(self: View, error: string) {.signal.}
 
@@ -53,6 +55,9 @@ QtObject:
 
   proc keycardMoveKeyPairSuccess*(self: View) {.signal.}
   proc keycardMoveKeyPairError*(self: View, error: string) {.signal.}
+
+  proc keycardMoveProfileKeyPairSuccess*(self: View) {.signal.}
+  proc keycardMoveProfileKeyPairError*(self: View, error: string) {.signal.}
 
   proc keyPairModelChanged(self: View) {.signal.}
   proc getKeyPairModel(self: View): QVariant {.slot.} =
@@ -93,9 +98,17 @@ QtObject:
   proc generateMnemonic*(self: View): string {.slot.} =
     return self.delegate.generateMnemonic()
 
-  proc startMigratingNonProfileKeypairToKeycard*(self: View, password: string, pin: string, seedPhrase: string,
-    metadataName: string, metadataAccounts: string) {.slot.} =
-    self.delegate.startMigratingNonProfileKeypairToKeycard(password, pin, seedPhrase, metadataName, metadataAccounts)
+  proc startMigratingNonProfileKeypairToKeycard*(self: View, password: string, pin: string, seedPhrase: string) {.slot.} =
+    self.delegate.startMigratingNonProfileKeypairToKeycard(password, pin, seedPhrase)
+
+  proc isMnemonicBackedUp*(self: View): bool {.slot.} =
+    return self.delegate.isMnemonicBackedUp()
+
+  proc getMnemonic*(self: View): string {.slot.} =
+    return self.delegate.getMnemonic()
+
+  proc startMigratingProfileKeypairToKeycard*(self: View, password: string, pin: string, seedPhrase: string) {.slot.} =
+    self.delegate.startMigratingProfileKeypairToKeycard(password, pin, seedPhrase)
 
   proc keycardStateChanged*(self: View) {.signal.}
   proc getKeycardState*(self: View): string {.slot.} =

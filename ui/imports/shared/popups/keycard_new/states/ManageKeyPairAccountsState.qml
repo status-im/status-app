@@ -17,6 +17,7 @@ Control {
 
     property var emojiPopup: null
     property string keyPairName: ""
+    property string userProfilePublicKey: ""
 
     readonly property bool allAccountsValid: d.allAccountsValid
     readonly property int numberOfAddedAccounts: accountsList.count
@@ -235,6 +236,9 @@ Control {
             Layout.fillWidth: true
             tagClickable: true
             tagDisplayRemoveAccountButton: accountsList.count > 1
+
+            userProfilePublicKey: root.userProfilePublicKey
+
             keyPairType: Constants.keycard.keyPairType.seedImport
             keyPairName: root.keyPairName
             keyPairIcon: "key_pair_seed_phrase"

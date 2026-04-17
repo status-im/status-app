@@ -9931,6 +9931,35 @@ to login to Status?</source>
         <source>Key pair has been moved to Keycard</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Move profile key pair to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Moving profile key pair to Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Profile key pair has been moved to Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quit and restart Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Re-encrypting data may take some time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Do not quit the application or turn off your device. Doing so will lead to data
+corruption, loss of your Status profile and the inability to restart Status.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is now required to log in and sign.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>
@@ -15550,6 +15579,14 @@ to load</source>
     </message>
     <message>
         <source>I understand that moving this key pair will require using Keycard to sign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Profile key pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>I understand that moving this key pair will require using Keycard to log in and sign</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

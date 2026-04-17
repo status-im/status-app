@@ -282,8 +282,6 @@ proc convertURCryptoHDKeyToXPub*(ur: string): RpcResponse[JsonNode] =
   try:
     let rpcResponseRaw = status_go.convertURCryptoHDKeyToXPub(ur)
     result = Json.decode(rpcResponseRaw, RpcResponse[JsonNode])
-    if not result.error.isNil:
-      raise newException(ValueError, result.error.message)
   except Exception as e:
     error "error doing rpc request", methodName = "convertURCryptoHDKeyToXPub", exception=e.msg
     raise newException(RpcException, e.msg)

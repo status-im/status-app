@@ -42,7 +42,8 @@ ColumnLayout {
     QtObject {
         id: d
 
-        readonly property bool isProfileKeyPair: root.keyUid === root.keycardStore.userProfileKeyUid
+        readonly property bool isProfileKeyPair: !!root.keyUid
+                                                 && root.keyUid === root.keycardStore.userProfileKeyUid
 
         readonly property bool hasKeyPair: !!root.keycardUid && !!root.keyUid
 
@@ -236,7 +237,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: move profile key pair to Keycard flow...")
+            Global.openKeycardManagementPopup(Constants.keycard.flow.moveProfileKeyPair, root.keyUid, root.keycardUid)
         }
     }
 

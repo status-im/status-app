@@ -13,6 +13,7 @@ import utils
 Control {
     id: root
 
+    required property string userProfilePublicKey
     required property string keycardState
     required property bool keycardInternalError
     required property bool wrongKeycardProfile
@@ -69,6 +70,7 @@ Control {
             visible: false
             active: !!root.keyPairForProcessing
             sourceComponent: KeyPairCompactItem {
+                userProfilePublicKey: root.userProfilePublicKey
                 keyPairType: root.keyPairForProcessing.pairType
                 keyPairName: root.keyPairForProcessing.name
                 keyPairIcon: root.keyPairForProcessing.icon
