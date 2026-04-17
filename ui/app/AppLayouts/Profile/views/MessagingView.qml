@@ -75,6 +75,7 @@ SettingsContentBase {
 
         StatusListItem {
             id: allowSyncingOnMobileNetwork
+            visible: false
 
             Layout.fillWidth: true
             implicitHeight: 64

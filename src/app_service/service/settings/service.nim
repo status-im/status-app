@@ -305,7 +305,10 @@ QtObject:
     return false
 
   proc getSyncingOnMobileNetwork*(self: Service): bool =
-    self.settings.syncingOnMobileNetwork
+    # Hardcoded to true (Mobile data + Wi-Fi) for v2.38 while the feature is under review.
+    # Re-enable the line below in v2.39 once the WiFi-only behaviour is validated.
+    # self.settings.syncingOnMobileNetwork
+    true
 
   proc saveMnemonic*(self: Service, value: string): bool =
     if(self.saveSetting(KEY_MNEMONIC, value)):
