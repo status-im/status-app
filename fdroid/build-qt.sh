@@ -30,6 +30,8 @@ rm -rf build_qt_host
 # Build Qt for Android arm64-v8a
 mkdir -p build_qt_android && cd build_qt_android
 
+: "${FFMPEG_DIR:?FFMPEG_DIR must point to the staged FFmpeg build (lib/, include/)}"
+
 "$QT_SRCDIR"/configure \
     -prefix "$HOME/qt/$QT_VERSION/android_arm64_v8a" \
     -release \
@@ -43,8 +45,11 @@ mkdir -p build_qt_android && cd build_qt_android
     -qt-host-path "$HOME/qt/$QT_VERSION/gcc_64" \
     -android-abis arm64-v8a \
     -openssl-linked \
+    -ffmpeg \
     -- \
     -DOPENSSL_ROOT_DIR="$HOME/openssl" \
+    -DFFMPEG_DIR="$FFMPEG_DIR" \
+    -DQT_DEFAULT_MEDIA_BACKEND=ffmpeg \
     -DCMAKE_MESSAGE_LOG_LEVEL=WARNING \
     -Wno-dev
 
