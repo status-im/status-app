@@ -30,6 +30,8 @@ rm -rf build_qt_host
 # Build Qt for Android arm64-v8a
 mkdir -p build_qt_android && cd build_qt_android
 
+: "${FFMPEG_DIR:?FFMPEG_DIR must point to the staged FFmpeg build (lib/, include/)}"
+
 "$QT_SRCDIR"/configure \
     -prefix "$HOME/qt/$QT_VERSION/android_arm64_v8a" \
     -release \
@@ -45,11 +47,19 @@ mkdir -p build_qt_android && cd build_qt_android
     -openssl-linked \
     -- \
     -DOPENSSL_ROOT_DIR="$HOME/openssl" \
+    -DFFMPEG_DIR="$FFMPEG_DIR" \
+    -DFEATURE_ffmpeg=ON \
+    -DQT_DEFAULT_MEDIA_BACKEND=ffmpeg \
     -DCMAKE_MESSAGE_LOG_LEVEL=WARNING \
     -Wno-dev
 
 cmake --build . --parallel "$(nproc)"
 cmake --install . > /dev/null
+
+# Without this, the ffmpeg multimedia plugin is built but
+# cannot dlopen libav* at runtime, and QtMultimedia falls back to the legacy
+# androidmediaplugin backend (breaking QCamera / QR scanning).
+cp -av "$FFMPEG_DIR"/lib/*.so "$HOME/qt/$QT_VERSION/android_arm64_v8a/lib/"
 
 cd "$BUILD_DIR"
 rm -rf build_qt_android
