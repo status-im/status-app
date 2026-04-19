@@ -34,6 +34,4 @@ elif [[ "$SDK" == "macosx" ]]; then
     fi
 fi
 
-echo "$TARGET ${EXTRA_ARGS[*]} $XCODE_SDK_PATH"
-
 exec "$CLANG" -target "$TARGET" "${EXTRA_ARGS[@]}" -isysroot "$XCODE_SDK_PATH" "$@"
