@@ -254,7 +254,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: move key pair to Keycard flow...")
+            Global.openKeycardManagementPopup(Constants.keycard.flow.moveKeyPair, root.keyUid, root.keycardUid)
         }
     }
 

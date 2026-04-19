@@ -18,6 +18,7 @@ StatusListItem {
     property bool tagClickable: false
     property bool tagDisplayRemoveAccountButton: false
     property bool canBeSelected: true
+    property bool checked: false
     property bool displayRadioButtonForSelection: true
     property bool useTransparentItemBackgroundColor: false
 
@@ -129,6 +130,10 @@ StatusListItem {
                 ButtonGroup.group: root.buttonGroup
                 onCheckedChanged: {
                     d.doAction(checked)
+                }
+
+                Component.onCompleted: {
+                    checked = root.checked
                 }
             },
             StatusIcon {

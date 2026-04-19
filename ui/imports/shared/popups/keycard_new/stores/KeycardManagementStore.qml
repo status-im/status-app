@@ -12,8 +12,15 @@ QtObject {
     signal keycardImportKeyPairSuccess()
     signal keycardImportKeyPairError(string error)
 
+    signal keycardMoveKeyPairSuccess()
+    signal keycardMoveKeyPairError(string error)
+
     readonly property bool ready: d.ready
     readonly property string userProfileKeyUid: userProfile.keyUid
+
+    readonly property var keypairsModel: d.mainModuleInst.keycardManagementModule
+                                         ? d.mainModuleInst.keycardManagementModule.keyPairModel
+                                         : null
 
     readonly property QtObject d: QtObject {
         property bool ready: false
@@ -45,6 +52,14 @@ QtObject {
 
         function onKeycardImportKeyPairError(error) {
             root.keycardImportKeyPairError(error)
+        }
+
+        function onKeycardMoveKeyPairSuccess() {
+            root.keycardMoveKeyPairSuccess()
+        }
+
+        function onKeycardMoveKeyPairError(error) {
+            root.keycardMoveKeyPairError(error)
         }
     }
 
@@ -99,6 +114,14 @@ QtObject {
     function prepare() {
         d.mainModuleInst.prepareKeycardManagementModule()
         d.ready = true
+    }
+
+    function prepareKeyPairModel() {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.populateKeyPairModel()
     }
 
     function teardown() {
@@ -159,12 +182,12 @@ QtObject {
         return d.mainModuleInst.keycardManagementModule.getKeyPairAccountPathsJsonForKeyUid(keyUid)
     }
 
-    function startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts) {
+    function startImportingKeyPair(pin, seedPhrase, metadataName, metadataAccounts) {
         if (!d.mainModuleInst.keycardManagementModule) {
             console.error("keycard management module was not created")
             return
         }
-        d.mainModuleInst.keycardManagementModule.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
+        d.mainModuleInst.keycardManagementModule.startImportingKeyPair(pin, seedPhrase, metadataName, metadataAccounts)
     }
 
     function generateMnemonic() {
@@ -173,5 +196,13 @@ QtObject {
             return ""
         }
         return d.mainModuleInst.keycardManagementModule.generateMnemonic()
+    }
+
+    function startMigratingNonProfileKeypairToKeycard(password, pin, seedPhrase, metadataName, metadataAccounts) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.startMigratingNonProfileKeypairToKeycard(password, pin, seedPhrase, metadataName, metadataAccounts)
     }
 }
