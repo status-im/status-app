@@ -34,6 +34,7 @@ AbstractWebView {
         id: backend
         anchors.fill: parent
         visible: root.visible
+        freeze: root.freeze
         userScripts: root.profileParams.scripts
         webChannel: root.webChannel
     }

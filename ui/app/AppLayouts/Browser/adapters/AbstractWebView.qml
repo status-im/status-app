@@ -38,6 +38,9 @@ Item {
     required property bool supportsHistory
     required property bool hasNativeFindPanel
 
+    // Mobile-only: pauses native webview updates (no-op on desktop)
+    property bool freeze: false
+
     readonly property int devToolsHeight: 400
 
     readonly property int findBackward: 1
