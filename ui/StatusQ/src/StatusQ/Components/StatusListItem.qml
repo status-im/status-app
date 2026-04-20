@@ -199,14 +199,18 @@ Rectangle {
 
             StatusTextWithLoadingState {
                 id: statusListItemTitle
+
                 text: root.title
                 font.pixelSize: Theme.primaryTextFontSize
+                width: Math.min(implicitWidth, parent.width)
                 height: visible ? contentHeight : 0
-                elide: Text.ElideRight
+
+                wrapMode: Text.Wrap
+
                 anchors.left: parent.left
                 anchors.top: bottomModel.length === 0 ? undefined:  parent.top
                 anchors.topMargin: bottomModel.length === 0 ? undefined : 20
-                width: Math.min(implicitWidth, parent.width)
+
                 customColor: {
                     if (!root.enabled) {
                         return Theme.palette.baseColor1

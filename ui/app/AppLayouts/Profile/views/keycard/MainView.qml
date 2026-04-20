@@ -37,6 +37,7 @@ ColumnLayout {
         Layout.alignment: Qt.AlignCenter
         Layout.preferredHeight: 240
         Layout.preferredWidth: 350
+        Layout.fillWidth: true
         fillMode: Image.PreserveAspectFit
         antialiasing: true
         source: Assets.png("keycard/card_insert/insert")
@@ -52,10 +53,12 @@ ColumnLayout {
 
     StyledText {
         visible: d.noKeycardsSet
-        Layout.alignment: Qt.AlignCenter
+        Layout.fillWidth: true
+        horizontalAlignment: Text.AlignHCenter
         font.pixelSize: Theme.fontSize(18)
         color: Theme.palette.directColor1
         text: qsTr("Secure your funds. Keep your profile safe.")
+        wrapMode: Text.Wrap
     }
 
     Item {
@@ -116,6 +119,7 @@ ColumnLayout {
         Layout.leftMargin: Theme.padding
         Layout.rightMargin: Theme.padding
         text: qsTr("Create, import or restore a Keycard account")
+        wrapMode: Text.Wrap
     }
 
     StatusListItem {
