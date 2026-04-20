@@ -57,6 +57,7 @@ StatusMenu {
         id: zoomMenuItem
         text: qsTr("Zoom")
         RowLayout {
+            spacing: 2
             height: parent.availableHeight
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
@@ -109,7 +110,7 @@ StatusMenu {
 
     StatusAction {
         text: qsTr("Find in page")
-        icon.name: "search"
+        icon.name: "search-custom"
         shortcut: StandardKey.Find
         onTriggered: launchFindBar()
     }

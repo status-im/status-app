@@ -235,6 +235,7 @@
         <file>icons/rotate.svg</file>
         <file>icons/sandwatch.svg</file>
         <file>icons/search.svg</file>
+        <file>icons/search-custom.svg</file>
         <file>icons/secret.svg</file>
         <file>icons/security.svg</file>
         <file>icons/seed-phrase.svg</file>
@@ -359,6 +360,7 @@
         <file>icons/untrustworthy.svg</file>
         <file>icons/verified.svg</file>
         <file>icons/walletIcon.svg</file>
+        <file>icons/zoom.svg</file>
         <file>icons/zoom-fit.svg</file>
         <file>icons/zoom-in.svg</file>
         <file>icons/zoom-out.svg</file>

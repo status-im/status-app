@@ -52,7 +52,7 @@ StatusDialog {
             Layout.fillWidth: true
             visible: root.supportsFind
             title: qsTr("Find in page")
-            asset.name: "search"
+            asset.name: "search-custom"
             onClicked: {
                 root.launchFindBar()
                 root.close()
@@ -63,7 +63,7 @@ StatusDialog {
             Layout.fillWidth: true
             visible: root.supportsZoom
             title: qsTr("Zoom")
-            asset.name: "zoom-in"
+            asset.name: "zoom"
             components: [
                 RowLayout {
                     StatusFlatButton {
