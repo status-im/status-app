@@ -411,6 +411,7 @@ ColumnLayout {
                 color: Theme.palette.baseColor1
                 visible: footerColumn.allActivityLoaded
                 horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.Wrap
             }
             StatusButton {
                 Layout.alignment: Qt.AlignHCenter
