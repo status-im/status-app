@@ -1,3 +1,4 @@
+import sequtils
 import strutils
 
 import app_service/common/types as common_types
@@ -21,10 +22,7 @@ proc `type`*(self: TokenGroupItem): common_types.TokenType =
   return self.tokens[0].`type`
 
 proc isCommunityTokenGroup*(self: TokenGroupItem): bool =
-  for token in self.tokens:
-    if not token.communityData.id.isEmptyOrWhitespace:
-      return true
-  return false
+  self.tokens.anyIt(not it.communityData.id.isEmptyOrWhitespace)
 
 proc addToken*(self: TokenGroupItem, token: TokenItem) =
   if token.isNil:
@@ -33,8 +31,7 @@ proc addToken*(self: TokenGroupItem, token: TokenItem) =
   if self.key != token.groupKey:
     raise newException(ValueError, "token group key does not match")
 
-  for t in self.tokens:
-    if cmpIgnoreCase(t.key, token.key) == 0:
-      return
+  if self.tokens.anyIt(cmpIgnoreCase(it.key, token.key) == 0):
+    return
 
   self.tokens.add(token)
