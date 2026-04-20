@@ -46,6 +46,7 @@ AbstractButton {
                 font.weight: Font.Medium
                 lineHeightMode: Text.FixedHeight
                 lineHeight: 18
+                wrapMode: Text.Wrap
             }
             StatusBaseText {
                 Layout.fillWidth: true
@@ -54,6 +55,7 @@ AbstractButton {
                 visible: !!text
                 lineHeightMode: Text.FixedHeight
                 lineHeight: 18
+                wrapMode: Text.Wrap
             }
         }
 
