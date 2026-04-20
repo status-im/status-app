@@ -2575,8 +2575,8 @@ Do you wish to override the security check and continue?</source>
         <translation>맞춤 확대</translation>
     </message>
     <message>
-        <source>Find</source>
-        <translation>찾기</translation>
+        <source>Find in page</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Compatibility mode</source>
@@ -12151,8 +12151,8 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Find</source>
-        <translation type="unfinished">찾기</translation>
+        <source>Find in page</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Zoom</source>

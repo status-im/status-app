@@ -3166,9 +3166,9 @@
       <translation>Downloads</translation>
     </message>
     <message>
-      <source>Find</source>
+      <source>Find in page</source>
       <comment>BrowserSettingsMenu</comment>
-      <translation>Find</translation>
+      <translation>Find in page</translation>
     </message>
     <message>
       <source>Compatibility mode</source>
@@ -14836,9 +14836,9 @@
       <translation>Incognito</translation>
     </message>
     <message>
-      <source>Find</source>
+      <source>Find in page</source>
       <comment>MobileSettingsMenu</comment>
-      <translation>Find</translation>
+      <translation>Find in page</translation>
     </message>
     <message>
       <source>Zoom</source>

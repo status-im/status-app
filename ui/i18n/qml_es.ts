@@ -2591,8 +2591,8 @@ Do you wish to override the security check and continue?</source>
         <translation>Descargas</translation>
     </message>
     <message>
-        <source>Find</source>
-        <translation>Buscar</translation>
+        <source>Find in page</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Compatibility mode</source>
@@ -12190,8 +12190,8 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Find</source>
-        <translation type="unfinished">Buscar</translation>
+        <source>Find in page</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Zoom</source>

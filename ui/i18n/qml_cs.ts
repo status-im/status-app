@@ -2594,8 +2594,8 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
         <translation>Stažené soubory</translation>
     </message>
     <message>
-        <source>Find</source>
-        <translation>Najít</translation>
+        <source>Find in page</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Compatibility mode</source>
@@ -12272,8 +12272,8 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Find</source>
-        <translation type="unfinished">Najít</translation>
+        <source>Find in page</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Zoom</source>

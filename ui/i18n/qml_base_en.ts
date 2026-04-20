@@ -2583,7 +2583,7 @@ Do you wish to override the security check and continue?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Find</source>
+        <source>Find in page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12174,7 +12174,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Find</source>
+        <source>Find in page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
