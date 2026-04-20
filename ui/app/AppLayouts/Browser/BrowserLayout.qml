@@ -376,6 +376,13 @@ StatusSectionLayout {
                 function onEditBookmarkRequested() {
                     _internal.openFavoriteModal(true)
                 }
+                function onRemoveBookmarkRequested() {
+                    const url = favoritesContext.currentUrl
+                    if (url.toString() === "") {
+                        return console.error("Can't remove empty bookmark")
+                    }
+                    root.bookmarksStore.deleteBookmark(url)
+                }
                 function onRequestLaunchInBrowser(url) {
                     _internal.onRequestLaunchInBrowser(url)
                 }

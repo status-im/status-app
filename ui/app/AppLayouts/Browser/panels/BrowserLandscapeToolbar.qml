@@ -88,7 +88,8 @@ BrowserToolbarBase {
             incognitoMode: root.currentTabIncognito
             icon.name: root.currentTabIsBookmark ? "bookmark-added" : "bookmark"
             tooltip.text: root.currentTabIsBookmark ? qsTr("Bookmarked") : qsTr("Add to bookmarks")
-            onClicked: root.currentTabIsBookmark ? root.editBookmarkRequested() : root.addBookmarkRequested()
+            onClicked: root.currentTabIsBookmark ? root.removeBookmarkRequested() : root.addBookmarkRequested()
+            onPressAndHold: if (root.currentTabIsBookmark) root.editBookmarkRequested()
         }
 
         Divider {}

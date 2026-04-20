@@ -27,6 +27,7 @@ Control {
     signal requestAllOpenTabsView()
     signal addBookmarkRequested()
     signal editBookmarkRequested()
+    signal removeBookmarkRequested()
     signal requestStopLoadingPage()
     signal requestReloadPage()
     signal requestGoForward()

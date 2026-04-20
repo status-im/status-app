@@ -33,6 +33,22 @@ StatusDialog {
 
         StatusInput {
             Layout.fillWidth: true
+            id: nameInput
+            label: qsTr("Name")
+            input.text: root.ogName
+            placeholderText: qsTr("Name of the website")
+            validators: [
+                StatusMinLengthValidator {
+                    errorMessage: qsTr("Please enter a name")
+                    minLength: 1
+                }
+            ]
+            validationMode: StatusInput.ValidationMode.Always
+            input.tabNavItem: urlInput
+        }
+
+        StatusInput {
+            Layout.fillWidth: true
             id: urlInput
             label: qsTr("URL")
             input.text: root.ogUrl
@@ -53,22 +69,6 @@ StatusDialog {
             ]
             validationMode: StatusInput.ValidationMode.Always
             input.tabNavItem: nameInput
-        }
-
-        StatusInput {
-            Layout.fillWidth: true
-            id: nameInput
-            label: qsTr("Name")
-            input.text: root.ogName
-            placeholderText: qsTr("Name of the website")
-            validators: [
-                StatusMinLengthValidator {
-                    errorMessage: qsTr("Please enter a name")
-                    minLength: 1
-                }
-            ]
-            validationMode: StatusInput.ValidationMode.Always
-            input.tabNavItem: urlInput
         }
     }
 
