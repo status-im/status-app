@@ -51,6 +51,8 @@ OnboardingPage {
                 image: "onboarding/carousel/keycard"
             }
         }
+
+        readonly property int maximumWidth: 400
     }
 
     title: qsTr("Welcome to Status")
@@ -58,156 +60,157 @@ OnboardingPage {
     contentItem: GridLayout {
         rows: root.isPortrait ? 2 : 1
         columns: root.isPortrait ? 1 : 2
-        uniformCellHeights: true
         uniformCellWidths: true
         layoutDirection: Qt.RightToLeft
+
+        rowSpacing: 0
 
         NewsCarousel {
             Layout.fillWidth: true
             Layout.fillHeight: true
             newsModel: d.newsModel
         }
+
         // left part (welcome + buttons)
-        Item {
+        ColumnLayout {
             Layout.fillWidth: true
-            Layout.fillHeight: true
 
-            ColumnLayout {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: Math.min(400, parent.width)
-                spacing: root.isPortrait ? 6 : 28
+            spacing: root.isPortrait ? 6 : 28
 
-                Item { Layout.fillHeight: true } // Spacer
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
 
-                ColumnLayout {
-                    id: logoAndTextLayout
-                    Layout.fillWidth: true
-                    spacing: root.isPortrait ? 6 : 28
-                    StatusImage {
-                        Layout.preferredWidth: 90
-                        Layout.preferredHeight: 90
-                        Layout.alignment: Qt.AlignHCenter
-                        source: Assets.png("status")
-                        mipmap: true
-                        layer.enabled: true
-                        layer.effect: DropShadow {
-                            horizontalOffset: 0
-                            verticalOffset: 4
-                            radius: 12
-                            samples: 25
-                            spread: 0.2
-                            color: Theme.palette.dropShadow
-                        }
-                    }
-
-                    StatusBaseText {
-                        id: headerText
-                        Layout.fillWidth: true
-                        text: root.title
-                        font.pixelSize: Theme.fontSize(40)
-                        font.bold: true
-                        wrapMode: Text.WordWrap
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-
-                    StatusBaseText {
-                        Layout.fillWidth: true
-                        text: qsTr("The open-source, decentralised wallet and messenger")
-                        wrapMode: Text.WordWrap
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-                }
-
-                Item { Layout.fillHeight: true } // Spacer
-
-                ColumnLayout {
-                    id: buttonsLayout
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignBottom
-                    Layout.bottomMargin: Theme.xlPadding
-                    spacing: root.padding
-                    StatusButton {
-                        objectName: "btnCreateProfile"
-                        id: btnCreateProfile
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignBottom
-                        text: qsTr("Create profile")
-                        onClicked: root.createProfileRequested()
-                    }
-                    StatusButton {
-                        objectName: "btnLogin"
-                        Layout.fillWidth: true
-                        text: qsTr("Log in")
-                        isOutline: true
-                        onClicked: root.loginRequested()
-                    }
-
-                    StatusBaseText {
-                        objectName: "thirdPartyServices"
-                        Layout.fillWidth: true
-                        Layout.topMargin: Theme.halfPadding
-                        Layout.bottomMargin: Theme.halfPadding
-                        text: qsTr("Third-party services %1").arg(
-                                  Utils.getStyledLink(root.thirdpartyServicesEnabled ? qsTr("enabled"): qsTr("disabled"),
-                                                      "#",
-                                                      hoveredLink,
-                                                      Theme.palette.primaryColor1,
-                                                      Theme.palette.primaryColor1,
-                                                      false))
-                        textFormat: Text.RichText
-                        font.pixelSize: Theme.tertiaryTextFontSize
-                        lineHeightMode: Text.FixedHeight
-                        lineHeight: 16
-                        wrapMode: Text.WordWrap
-                        color: Theme.palette.baseColor1
-                        horizontalAlignment: Text.AlignHCenter
-                        onLinkActivated: root.openThirdpartyServicesInfoPopupRequested()
-
-                        HoverHandler {
-                            // Qt CSS doesn't support custom cursor shape
-                            cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
-                        }
-
-                        visible: root.privacyModeFeatureEnabled
-                    }
-                    StatusBaseText {
-                        objectName: "approvalLinks"
-                        Layout.fillWidth: true
-                        text: qsTr("By proceeding you accept Status<br>%1 and %2")
-                            .arg(Utils.getStyledLink(qsTr("Terms of Use"), "#terms", hoveredLink, Theme.palette.primaryColor1, Theme.palette.primaryColor1, false))
-                            .arg(Utils.getStyledLink(qsTr("Privacy Policy"), "#privacy", hoveredLink, Theme.palette.primaryColor1, Theme.palette.primaryColor1, false))
-                        textFormat: Text.RichText
-                        font.pixelSize: Theme.tertiaryTextFontSize
-                        lineHeightMode: Text.FixedHeight
-                        lineHeight: 16
-                        wrapMode: Text.WordWrap
-                        color: Theme.palette.baseColor1
-                        horizontalAlignment: Text.AlignHCenter
-                        onLinkActivated: (link) => {
-                            if (link === "#terms")
-                                root.termsOfUseRequested()
-                            else if (link === "#privacy")
-                                root.privacyPolicyRequested()
-                        }
-
-                        HoverHandler {
-                            // Qt CSS doesn't support custom cursor shape
-                            cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
-                        }
-                    }
+                StatusLanguageSelector {
+                    anchors.right: parent.right
+                    anchors.rightMargin: root.isPortrait ? 0 : Theme.padding
+                    anchors.top: parent.top
+                    anchors.topMargin: root.isPortrait ? Theme.halfPadding : 0
+                    currentLanguage: root.currentLanguage
+                    languageCodes: root.availableLanguages
+                    onLanguageSelected: (languageCode) => root.changeLanguageRequested(languageCode)
                 }
             }
 
-            StatusLanguageSelector {
-                anchors.right: parent.right
-                anchors.rightMargin: root.isPortrait ? 0 : Theme.padding
-                anchors.top: parent.top
-                anchors.topMargin: root.isPortrait ? Theme.halfPadding : 0
-                currentLanguage: root.currentLanguage
-                languageCodes: root.availableLanguages
-                onLanguageSelected: (languageCode) => root.changeLanguageRequested(languageCode)
+            ColumnLayout {
+                id: logoAndTextLayout
+                Layout.fillWidth: true
+                spacing: root.isPortrait ? 6 : 28
+
+                Layout.maximumWidth: d.maximumWidth
+                Layout.alignment: Qt.AlignHCenter
+
+                StatusImage {
+                    Layout.preferredWidth: 90
+                    Layout.preferredHeight: 90
+                    Layout.alignment: Qt.AlignHCenter
+                    source: Assets.png("status")
+                    mipmap: true
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        horizontalOffset: 0
+                        verticalOffset: 4
+                        radius: 12
+                        samples: 25
+                        spread: 0.2
+                        color: Theme.palette.dropShadow
+                    }
+                }
+
+                StatusBaseText {
+                    id: headerText
+                    Layout.fillWidth: true
+                    text: root.title
+                    font.pixelSize: Theme.fontSize(35)
+                    font.bold: true
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    text: qsTr("The open-source, decentralised wallet and messenger")
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                }
+            }
+
+            Item { Layout.fillHeight: true } // Spacer
+
+            ColumnLayout {
+                id: buttonsLayout
+                Layout.fillWidth: true
+                Layout.maximumWidth: d.maximumWidth
+                Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
+                spacing: Theme.smallPadding
+                StatusButton {
+                    objectName: "btnCreateProfile"
+                    id: btnCreateProfile
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignBottom
+                    text: qsTr("Create profile")
+                    onClicked: root.createProfileRequested()
+                }
+                StatusButton {
+                    objectName: "btnLogin"
+                    Layout.fillWidth: true
+                    text: qsTr("Log in")
+                    isOutline: true
+                    onClicked: root.loginRequested()
+                }
+
+                StatusBaseText {
+                    objectName: "thirdPartyServices"
+                    Layout.fillWidth: true
+                    Layout.topMargin: Theme.halfPadding
+                    text: qsTr("Third-party services %1").arg(
+                              Utils.getStyledLink(root.thirdpartyServicesEnabled ? qsTr("enabled"): qsTr("disabled"),
+                                                  "#",
+                                                  hoveredLink,
+                                                  Theme.palette.primaryColor1,
+                                                  Theme.palette.primaryColor1,
+                                                  false))
+                    textFormat: Text.RichText
+                    font.pixelSize: Theme.tertiaryTextFontSize
+                    lineHeightMode: Text.FixedHeight
+                    lineHeight: 16
+                    wrapMode: Text.WordWrap
+                    color: Theme.palette.baseColor1
+                    horizontalAlignment: Text.AlignHCenter
+                    onLinkActivated: root.openThirdpartyServicesInfoPopupRequested()
+
+                    HoverHandler {
+                        // Qt CSS doesn't support custom cursor shape
+                        cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
+                    }
+
+                    visible: root.privacyModeFeatureEnabled
+                }
+                StatusBaseText {
+                    objectName: "approvalLinks"
+                    Layout.fillWidth: true
+                    text: qsTr("By proceeding you accept Status<br>%1 and %2")
+                        .arg(Utils.getStyledLink(qsTr("Terms of Use"), "#terms", hoveredLink, Theme.palette.primaryColor1, Theme.palette.primaryColor1, false))
+                        .arg(Utils.getStyledLink(qsTr("Privacy Policy"), "#privacy", hoveredLink, Theme.palette.primaryColor1, Theme.palette.primaryColor1, false))
+                    textFormat: Text.RichText
+                    font.pixelSize: Theme.tertiaryTextFontSize
+                    lineHeightMode: Text.FixedHeight
+                    lineHeight: 16
+                    wrapMode: Text.WordWrap
+                    color: Theme.palette.baseColor1
+                    horizontalAlignment: Text.AlignHCenter
+                    onLinkActivated: (link) => {
+                        if (link === "#terms")
+                            root.termsOfUseRequested()
+                        else if (link === "#privacy")
+                            root.privacyPolicyRequested()
+                    }
+
+                    HoverHandler {
+                        // Qt CSS doesn't support custom cursor shape
+                        cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
+                    }
+                }
             }
         }
     }

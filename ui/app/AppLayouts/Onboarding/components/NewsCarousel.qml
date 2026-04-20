@@ -18,15 +18,13 @@ Control {
         radius: 20
     }
 
-    verticalPadding: Theme.xlPadding
+    verticalPadding: Theme.padding
     horizontalPadding: Theme.xlPadding * 2
 
     contentItem: ColumnLayout {
         id: newsPage
         readonly property string primaryText: root.newsModel.get(pageIndicator.currentIndex).primary
         readonly property string secondaryText: root.newsModel.get(pageIndicator.currentIndex).secondary
-
-        spacing: Theme.halfPadding
 
         Image {
             Layout.fillWidth: true
@@ -35,7 +33,7 @@ Control {
             Layout.maximumHeight: 582
             Layout.alignment: Qt.AlignHCenter
             fillMode: Image.PreserveAspectFit
-            asynchronous: true
+            asynchronous: false
             source: Assets.png(root.newsModel.get(pageIndicator.currentIndex).image)
         }
 
