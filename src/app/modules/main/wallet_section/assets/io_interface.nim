@@ -1,8 +1,12 @@
 import app_service/service/wallet_account/dto/asset_group_item
+import app/core/cow_seq
 
 type
   GroupedAccountAssetsDataSource* = tuple[
-    getGroupedAssetsList: proc(): var seq[AssetGroupItem]
+    # Returns a CoW snapshot of the grouped assets.  The model holds onto
+    # the snapshot until its next modelsUpdated() call so that it can diff
+    # the previous and next states.
+    getGroupedAssetsList: proc(): CowSeq[AssetGroupItem]
   ]
 
 type

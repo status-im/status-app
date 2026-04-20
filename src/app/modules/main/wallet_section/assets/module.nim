@@ -2,6 +2,7 @@ import nimqml
 
 import app/global/global_singleton
 import app/core/eventemitter
+import app/core/cow_seq
 import app_service/service/token/service as token_service
 import app_service/service/currency/service as currency_service
 import app_service/service/wallet_account/service as wallet_account_service
@@ -67,7 +68,7 @@ method viewDidLoad*(self: Module) =
 
 method getGroupedAccountAssetsDataSource*(self: Module): GroupedAccountAssetsDataSource =
   return (
-    getGroupedAssetsList: proc(): var seq[AssetGroupItem] = self.controller.getGroupedAssetsList()
+    getGroupedAssetsList: proc(): CowSeq[AssetGroupItem] = self.controller.getGroupedAssetsList()
   )
 
 method filterChanged*(self: Module, addresses: seq[string], chainIds: seq[int]) =

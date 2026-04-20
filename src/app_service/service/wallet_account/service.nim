@@ -3,6 +3,7 @@ import net, strutils, os, times, algorithm, options, sets
 import web3/eth_api_types
 
 import app/global/global_singleton
+import app/core/cow_seq
 
 import app_service/service/general/debouncer as debouncer_service
 import app_service/service/settings/service as settings_service
@@ -48,7 +49,7 @@ QtObject:
     currencyService: currency_service.Service
     watchOnlyAccounts: Table[string, WalletAccountDto] ## [address, WalletAccountDto]
     keypairs: Table[string, KeypairDto] ## [keyUid, KeypairDto]
-    groupedAssets: seq[AssetGroupItem]
+    groupedAssets: CowSeq[AssetGroupItem]
     hasBalanceCache: bool
     buildTokensDebouncer: debouncer_service.Debouncer
 

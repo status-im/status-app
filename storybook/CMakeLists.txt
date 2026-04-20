@@ -132,6 +132,98 @@ target_link_libraries(QmlTests PRIVATE
   StatusQ SortFilterProxyModel QmlStorybookLib)
 add_test(NAME QmlTests COMMAND QmlTests -platform offscreen)
 
+# ----------------------------------------------------------------------------
+# Optional: Nim model A/B benchmark (BENCH_MODELS=ON)
+# ----------------------------------------------------------------------------
+# Builds storybook/qmlTests/nimbench/bench_lib.nim as a static library and
+# links it (along with libDOtherSideStatic.a) into the QmlTests executable.
+# The bench QObject is exposed as the `benchHarness` QML context property
+# from qmlTests/main.cpp (gated on BENCH_MODELS).
+#
+# Default builds are unaffected; opt in with `-DBENCH_MODELS=ON`.
+option(BENCH_MODELS "Build the Nim grouped_account_assets_model benchmark" OFF)
+
+if(BENCH_MODELS)
+    set(NIMBENCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/qmlTests/nimbench)
+    set(BENCH_LIB_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/libbench_models.a)
+    set(STATUS_DESKTOP_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/..)
+
+    file(GLOB_RECURSE BENCH_NIM_SOURCES
+        "${NIMBENCH_DIR}/*.nim")
+
+    # Compile the Nim static lib via env.sh (sets up the vendored Nim
+    # toolchain + nimqml from nimbus-build-system).
+    #
+    # CRITICAL: --noConfig prevents nim from walking up to the BASE repo's
+    # nim.cfg (the worktree lives inside the base repo, so the parent-walk
+    # picks up `path = "src"` pointing at master's src/ and resolves
+    # imports to the OLD ref-object files instead of the worktree's NEW
+    # value-type files).  We pass everything the bench needs explicitly.
+    add_custom_command(
+        OUTPUT ${BENCH_LIB_OUTPUT}
+        COMMAND ${STATUS_DESKTOP_ROOT}/env.sh nim c
+                  --skipParentCfg:on
+                  --skipProjCfg:on
+                  --app:staticlib --noMain
+                  --mm:refc
+                  -d:release --opt:speed
+                  --threads:on
+                  --tlsEmulation:off
+                  --debugger:native
+                  --cc:clang
+                  --passC:-mmacosx-version-min=14.0
+                  # Don't emit dlopen()s - the C++ host links DOtherSideStatic
+                  # so the symbols are already in the executable.
+                  --dynlibOverrideAll
+                  --path:${STATUS_DESKTOP_ROOT}/src
+                  --path:${STATUS_DESKTOP_ROOT}/vendor/nimqml/src
+                  --path:${STATUS_DESKTOP_ROOT}/vendor/nim-stint
+                  --path:${STATUS_DESKTOP_ROOT}/vendor/nim-stew
+                  --path:${STATUS_DESKTOP_ROOT}/vendor/nimcrypto
+                  --path:${STATUS_DESKTOP_ROOT}/vendor/nim-serialization
+                  --path:${STATUS_DESKTOP_ROOT}/vendor/nim-faststreams
+                  --path:${STATUS_DESKTOP_ROOT}/vendor/nim-results
+                  --path:${STATUS_DESKTOP_ROOT}/vendor/nim-unittest2
+                  --nimcache:${CMAKE_CURRENT_BINARY_DIR}/nimbench_cache
+                  -o:${BENCH_LIB_OUTPUT}
+                  ${NIMBENCH_DIR}/bench_lib.nim
+        DEPENDS ${BENCH_NIM_SOURCES}
+        WORKING_DIRECTORY ${STATUS_DESKTOP_ROOT}
+        COMMENT "Building bench_models.a (Nim static lib)"
+        VERBATIM
+    )
+    add_custom_target(bench_models_lib DEPENDS ${BENCH_LIB_OUTPUT})
+
+    add_library(bench_models STATIC IMPORTED GLOBAL)
+    set_target_properties(bench_models PROPERTIES
+        IMPORTED_LOCATION ${BENCH_LIB_OUTPUT})
+    add_dependencies(bench_models bench_models_lib)
+
+    # DOtherSide static (built separately via `make storybook-bench`).
+    set(DOTHERSIDE_STATIC_LIB
+        ${STATUS_DESKTOP_ROOT}/vendor/DOtherSide/build/Qt${QT_VERSION_MAJOR}.${Qt${QT_VERSION_MAJOR}_VERSION_MINOR}.${Qt${QT_VERSION_MAJOR}_VERSION_PATCH}/lib/libDOtherSideStatic.a)
+    if(NOT EXISTS ${DOTHERSIDE_STATIC_LIB})
+        # Fallback: glob for any libDOtherSideStatic.a under vendor/DOtherSide/build
+        file(GLOB_RECURSE _doth_candidates
+             ${STATUS_DESKTOP_ROOT}/vendor/DOtherSide/build/*/lib/libDOtherSideStatic.a)
+        list(LENGTH _doth_candidates _doth_count)
+        if(_doth_count GREATER 0)
+            list(GET _doth_candidates 0 DOTHERSIDE_STATIC_LIB)
+        endif()
+    endif()
+    message(STATUS "BENCH_MODELS: linking DOtherSideStatic from ${DOTHERSIDE_STATIC_LIB}")
+
+    add_library(DOtherSideStatic STATIC IMPORTED GLOBAL)
+    set_target_properties(DOtherSideStatic PROPERTIES
+        IMPORTED_LOCATION ${DOTHERSIDE_STATIC_LIB})
+
+    # DOtherSideStatic was built with Qt::WebView support, so QmlTests must
+    # link it too even though no test uses it directly.
+    target_link_libraries(QmlTests PRIVATE
+        bench_models DOtherSideStatic Qt::WebView)
+    target_compile_definitions(QmlTests PRIVATE BENCH_MODELS=1)
+endif()
+
 set(OVERRIDE_STORE_PATHS_WITH_STUBS_IN_QTCREATOR OFF CACHE BOOL
   "Resolve store components as stubs instead of actual ones in QtCreator")
 

@@ -1,4 +1,5 @@
 import io_interface
+import app/core/cow_seq
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/network/service as network_service
 import app_service/service/token/service as token_service
@@ -41,7 +42,7 @@ proc getCurrentCurrency*(self: Controller): string =
 proc getCurrencyFormat*(self: Controller, key: string): CurrencyFormatDto =
   return self.currencyService.getCurrencyFormat(key)
 
-proc getGroupedAssetsList*(self: Controller): var seq[AssetGroupItem] =
+proc getGroupedAssetsList*(self: Controller): CowSeq[AssetGroupItem] =
   return self.walletAccountService.getGroupedAssetsList()
 
 proc getHasBalanceCache*(self: Controller): bool =

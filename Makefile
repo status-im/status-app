@@ -434,6 +434,46 @@ storybook-clean:
 	rm -rf $(STORYBOOK_BUILD_PATH)
 
 ##
+##	Storybook bench (Nim model A/B benchmark)
+##
+
+# Build DOtherSide as a static lib for desktop (the storybook bench needs to
+# link the Nim staticlib against it).  Reuses the same DOtherSide source the
+# main app uses.  Output: vendor/DOtherSide/build-static/Qt$(QT_VERSION)/lib/libDOtherSideStatic.a
+DOTHERSIDE_STATIC_BUILD_PATH := vendor/DOtherSide/build-static/Qt$(QT_VERSION)
+DOTHERSIDE_STATIC_LIB := $(DOTHERSIDE_STATIC_BUILD_PATH)/lib/libDOtherSideStatic.a
+
+$(DOTHERSIDE_STATIC_LIB): | check-qt-dir
+	echo -e "\033[92mConfiguring:\033[39m DOtherSide (static)"
+	cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DENABLE_DYNAMIC_LIBS=OFF \
+		-DENABLE_STATIC_LIBS=ON \
+		-DENABLE_DOCS=OFF \
+		-DBUILD_TESTING=OFF \
+		-S vendor/DOtherSide -B $(DOTHERSIDE_STATIC_BUILD_PATH) \
+		-Wno-dev
+	echo -e "\033[92mBuilding:\033[39m DOtherSide (static)"
+	cmake --build $(DOTHERSIDE_STATIC_BUILD_PATH) --config Release
+
+# Build storybook with BENCH_MODELS=ON, then run only the bench test.
+storybook-bench: $(DOTHERSIDE_STATIC_LIB) | check-qt-dir
+	echo -e "\033[92mConfiguring:\033[39m Storybook (BENCH_MODELS=ON)"
+	cmake \
+		-DCMAKE_INSTALL_PREFIX=$(STORYBOOK_INSTALL_PATH) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DSTATUSQ_SHADOW_BUILD=OFF \
+		-DBENCH_MODELS=ON \
+		$(COMMON_CMAKE_CONFIG_PARAMS) \
+		-B $(STORYBOOK_BUILD_PATH) \
+		-S $(STORYBOOK_SOURCE_PATH) \
+		-Wno-dev
+	echo -e "\033[92mBuilding:\033[39m Storybook QmlTests (BENCH_MODELS=ON)"
+	cmake --build $(STORYBOOK_BUILD_PATH) --target QmlTests --config Release
+	echo -e "\033[92mRunning:\033[39m GroupedAssetsModelBench"
+	cd $(STORYBOOK_BUILD_PATH) && ctest -V -R QmlTests
+
+##
 ##	DOtherSide
 ##
 

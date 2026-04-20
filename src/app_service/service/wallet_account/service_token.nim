@@ -17,13 +17,17 @@ proc onAllTokensBuilt(self: Service, response: string) {.slot.} =
     var resultObj: JsonNode
     discard responseObj.getProp("result", resultObj)
 
+    # Working table - value-type AssetGroupItem now, so we mutate via mpairs /
+    # mgetOrPut rather than relying on ref-object aliasing.
     var groupedAssetsBalances: Table[string, AssetGroupItem] # [crossChainId (or tokenKey if crossChainId is empty), AssetGroupItem]
-    # add current assets to the groupedAssetsBalances first
+
+    # Seed with the existing snapshot.
     for asset in self.groupedAssets:
       if not groupedAssetsBalances.hasKey(asset.key):
         groupedAssetsBalances[asset.key] = asset
       else:
-        groupedAssetsBalances[asset.key].balancesPerAccount.add(asset.balancesPerAccount)
+        groupedAssetsBalances.withValue(asset.key, existing):
+          existing[].balancesPerAccount.add(asset.balancesPerAccount)
 
     var allTokensHaveError: bool = true
     if resultObj.kind == JObject:
@@ -33,10 +37,10 @@ proc onAllTokensBuilt(self: Service, response: string) {.slot.} =
         # Delete all existing entries for the account for whom assets were requested,
         # for a new account the balances per address per chain will simply be appended later
         var assetsToBeDeleted: seq[string] = @[]
-        for _, asset in groupedAssetsBalances:
+        for key, asset in groupedAssetsBalances.mpairs:
           asset.balancesPerAccount = asset.balancesPerAccount.filter(balanceItem => balanceItem.account != accountAddress)
           if asset.balancesPerAccount.len == 0:
-            assetsToBeDeleted.add(asset.key)
+            assetsToBeDeleted.add(key)
 
         for a in assetsToBeDeleted:
           groupedAssetsBalances.del(a)
@@ -63,17 +67,16 @@ proc onAllTokensBuilt(self: Service, response: string) {.slot.} =
               allTokensHaveError = false
 
             let groupKey = token.groupKey
-            if not groupedAssetsBalances.hasKey(groupKey):
-              groupedAssetsBalances[groupKey] = AssetGroupItem(key: groupKey)
-
-            groupedAssetsBalances[groupKey].balancesPerAccount.add(BalanceItem(
-              account: accountAddress,
-              groupKey: groupKey,
-              tokenKey: token.key,
-              tokenAddress: token.address,
-              chainId: token.chainId,
-              balance: rawBalance
-            ))
+            discard groupedAssetsBalances.hasKeyOrPut(groupKey, AssetGroupItem(key: groupKey))
+            groupedAssetsBalances.withValue(groupKey, existing):
+              existing[].balancesPerAccount.add(BalanceItem(
+                account: accountAddress,
+                groupKey: groupKey,
+                tokenKey: token.key,
+                tokenAddress: token.address,
+                chainId: token.chainId,
+                balance: rawBalance
+              ))
 
         # set assetsLoading to false once the tokens are loaded
         self.updateAssetsLoadingState(accountAddress, false)
@@ -81,7 +84,9 @@ proc onAllTokensBuilt(self: Service, response: string) {.slot.} =
     groupedAssets = toSeq(groupedAssetsBalances.values)
     if not allTokensHaveError:
       self.hasBalanceCache = true
-      self.groupedAssets = groupedAssets
+      # Atomic snapshot swap: any model holding the old CowSeq still sees its
+      # data; the next modelsUpdated() pull will diff against this new buffer.
+      self.groupedAssets = toCowSeq(groupedAssets)
   except Exception as e:
     error "error: ", procName="onAllTokensBuilt", errName = e.name, errDesription = e.msg
 
@@ -119,7 +124,11 @@ proc getTotalCurrencyBalance*(self: Service, walletAccounts: seq[string], chainI
       totalBalance = totalBalance + (value*price)
   return totalBalance
 
-proc getGroupedAssetsList*(self: Service): var seq[AssetGroupItem] =
+proc getGroupedAssetsList*(self: Service): CowSeq[AssetGroupItem] =
+  ## Returns a CoW snapshot of the grouped assets.  Callers receive their
+  ## own ref onto the shared backing buffer (O(1) refcount bump).  The
+  ## buffer is replaced wholesale by onAllTokensBuilt, so a stale snapshot
+  ## remains valid until the caller explicitly pulls a fresh one.
   return self.groupedAssets
 
 proc getTokensMarketValuesLoading*(self: Service): bool =
