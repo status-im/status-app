@@ -158,6 +158,8 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
     user_one: UserAccount = constants.user_account_one
     user_two: UserAccount = constants.user_account_two
     channel_name = channel_name + ''.join(random.choices(string.ascii_letters + string.digits, k=5))
+    owner_message = 'Hi'
+    member_message = 'Hi hi'
     main_screen = MainWindow()
 
     with multiple_instances(user_data=user_data_one) as aut_one, multiple_instances(user_data=user_data_two) as aut_two:
@@ -165,14 +167,31 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
             for aut, account in zip([aut_one, aut_two], [user_one, user_two]):
                 authorize_user_in_aut(aut, main_screen, account)
 
-        with step(f'User {user_one.name}, create non-restricted channel and can send message'):
+        with step(f'User {user_one.name}, create non-restricted channel'):
             switch_to_aut(aut_one, main_screen)
             community_screen = main_screen.left_panel.open_community('My awesome community')
             community_screen.create_channel(channel_name, channel_description, emoji=None)
+            main_screen.minimize()
+
+        with step(f'User {user_two.name}, wait for channel to sync and select it'):
+            # Select the channel before the owner sends so the chat entity exists on this client.
+            # Without this, status-go drops incoming messages with "non-existing chat".
+            switch_to_aut(aut_two, main_screen)
+            community_screen = main_screen.left_panel.open_community('My awesome community')
+            assert driver.waitFor(
+                lambda: channel_name in [c.name for c in community_screen.left_panel.channels],
+                configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000), (
+                f'Channel {channel_name!r} did not appear for {user_two.name}'
+            )
+            community_screen.left_panel.select_channel(channel_name)
+            main_screen.minimize()
+
+        with step(f'User {user_one.name}, send message to non-restricted channel'):
+            switch_to_aut(aut_one, main_screen)
+            community_screen = main_screen.left_panel.open_community('My awesome community')
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
-            message_text = "Hi"
-            messages_screen.group_chat.send_message_to_group_chat(message_text)
+            messages_screen.group_chat.send_message_to_group_chat(owner_message)
             main_screen.minimize()
 
         with step(
@@ -182,12 +201,16 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
             community_screen = main_screen.left_panel.open_community('My awesome community')
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
-            messages_screen.chat.find_message_by_text('Hi', 0)
-            message_text = "Hi hi"
-            messages_screen.group_chat.send_message_to_group_chat(message_text)
+            messages_screen.chat.find_message_by_text(owner_message, 0)
+            messages_screen.group_chat.send_message_to_group_chat(member_message)
             assert driver.waitFor(
-                lambda: any('Hi hi' in remove_tags(str(m.text)) for m in messages_screen.chat.messages(0)),
-                configs.timeouts.UI_LOAD_TIMEOUT_MSEC), f"User {user_two.name} message 'Hi hi' was not sent"
+                lambda: any(
+                    m.text is not None and member_message in remove_tags(str(m.text))
+                    for m in messages_screen.chat.messages(0)
+                ),
+                configs.timeouts.UI_LOAD_TIMEOUT_MSEC), (
+                f'User {user_two.name} message {member_message!r} was not sent'
+            )
             main_screen.minimize()
 
         with step(f'User {user_one.name}, verify that can see sent by member message'):
@@ -196,7 +219,12 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
             assert driver.waitFor(
-                lambda: any('Hi hi' in remove_tags(str(m.text)) for m in messages_screen.chat.messages(0)),
-                configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000), f"Message text is not found in last message"
+                lambda: any(
+                    m.text is not None and member_message in remove_tags(str(m.text))
+                    for m in messages_screen.chat.messages(0)
+                ),
+                configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000), (
+                f'Message {member_message!r} not found in channel for {user_one.name}'
+            )
         with step('Delete channel'):
             community_screen.delete_channel(channel_name)

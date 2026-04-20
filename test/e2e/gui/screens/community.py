@@ -19,7 +19,7 @@ from gui.components.profile_popup import ProfilePopupFromMembers
 from gui.elements.button import Button
 from gui.elements.list import List
 from gui.elements.object import QObject
-from gui.elements.scroll import Scroll
+from gui.elements.scroll import Scroll, row_vertically_usable_in_scroll_viewport
 from gui.elements.text_label import TextLabel
 from gui.objects_map import names, communities_names, messaging_names
 from gui.screens.community_settings import CommunitySettingsScreen
@@ -317,12 +317,19 @@ class CommunityLeftPanel(QObject):
         sx = max(1, int(scroll_obj.width / 2))
         sy = max(1, int(scroll_obj.height / 2))
         last_error: typing.Optional[BaseException] = None
+        scroll_step = 0
 
         def _object_name(o) -> str:
             try:
                 return str(o.objectName)
             except (AttributeError, RuntimeError):
                 return ''
+
+        def _scroll_to_reveal() -> None:
+            nonlocal scroll_step
+            dy = -30 if scroll_step % 2 == 0 else 30
+            scroll_step += 1
+            driver.mouse.scroll(scroll_obj, sx, sy, 0, dy, 1, 0.1)
 
         while time.monotonic() < deadline:
             obj = next(
@@ -332,8 +339,15 @@ class CommunityLeftPanel(QObject):
             )
 
             if obj is None:
-                driver.mouse.scroll(scroll_obj, sx, sy, 0, -30, 1, 0.1)
+                _scroll_to_reveal()
                 continue
+
+            try:
+                selected = obj.item.selected
+            except (AttributeError, RuntimeError):
+                selected = False
+            if selected:
+                return obj
 
             try:
                 srect = driver.object.globalBounds(scroll_obj)
@@ -342,10 +356,8 @@ class CommunityLeftPanel(QObject):
                 time.sleep(0.1)
                 continue
 
-            cy = crect.y + crect.height / 2
-            margin = 24
-            if not (srect.y + margin <= cy <= srect.y + srect.height - margin):
-                driver.mouse.scroll(scroll_obj, sx, sy, 0, -30, 1, 0.1)
+            if not row_vertically_usable_in_scroll_viewport(srect, crect):
+                _scroll_to_reveal()
                 continue
 
             try:

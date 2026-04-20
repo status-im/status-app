@@ -9,6 +9,39 @@ from .object import QObject
 LOG = logging.getLogger(__name__)
 
 
+def effective_vertical_viewport_margin(surface_height: float, max_margin: int = 24) -> int:
+    """Vertical inset from scroll edges when deciding whether a row center is \"clickably\" inside.
+
+    Caps ``max_margin`` so that small scroll surfaces (CI windows, banners shrinking the flickable)
+    keep a non-empty inner band instead of permanently rejecting every ``cy``.
+    """
+    if surface_height <= 0:
+        return 0
+    return min(max_margin, max(0, int((surface_height - 8) // 2)))
+
+
+def row_vertically_usable_in_scroll_viewport(
+    scroll_bounds,
+    row_bounds,
+    max_margin: int = 24,
+) -> bool:
+    """True if a channel/list row is suitably positioned for interaction inside the scroll viewport.
+
+    Prefer vertical center inside an adaptive inner band; fall back to any overlap with the viewport.
+    """
+    cy = row_bounds.y + row_bounds.height / 2
+    h = scroll_bounds.height
+    m = effective_vertical_viewport_margin(h, max_margin)
+    top = scroll_bounds.y + m
+    bot = scroll_bounds.y + h - m
+    if top <= cy <= bot:
+        return True
+    return (
+        row_bounds.y < scroll_bounds.y + scroll_bounds.height
+        and row_bounds.y + row_bounds.height > scroll_bounds.y
+    )
+
+
 def _element_center_y_in_scroll_viewport(
     element: QObject, scroll_surface, margin: int = 24
 ) -> bool:
@@ -19,6 +52,8 @@ def _element_center_y_in_scroll_viewport(
 
     Uses ``driver.object.globalBounds`` like :meth:`QObject.bounds`, but resolves the target with a short
     ``waitForObjectExists`` so we do not call ``element.object`` (full UI timeout) on every scroll step.
+
+    Uses :func:`effective_vertical_viewport_margin` so narrow scroll surfaces still yield a valid band.
     """
     try:
         elem_obj = driver.waitForObjectExists(element.real_name, 200)
@@ -30,8 +65,9 @@ def _element_center_y_in_scroll_viewport(
     except (RuntimeError, AttributeError):
         return False
     cy = crect.y + crect.height / 2
-    top = srect.y + margin
-    bot = srect.y + srect.height - margin
+    m = effective_vertical_viewport_margin(srect.height, margin)
+    top = srect.y + m
+    bot = srect.y + srect.height - m
     return top <= cy <= bot
 
 

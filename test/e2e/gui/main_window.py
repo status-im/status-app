@@ -204,7 +204,9 @@ class MainLeftPanel(QObject):
         driver.mouseClick(self._get_community(name))
         skip_message_backup_popup_if_visible()
         skip_intro_if_visible()
-        return CommunityScreen().wait_until_appears()
+        community = CommunityScreen()
+        community.left_panel.wait_until_appears(configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
+        return community
 
     @allure.step('Get community logo')
     def get_community_logo(self, name: str) -> Image:
