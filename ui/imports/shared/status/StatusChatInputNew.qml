@@ -133,10 +133,13 @@ Control {
     QtObject {
         id: d
 
-        // whether to send message using Ctrl+Return or just Enter; based on
+        // Whether to send message using Ctrl+Return or just Enter; based on
         // OSK (virtual keyboard presence)
+        // Qt.inputMethod.visible is not reliable in some cases, as a workaround android and ios keyboards
+        // are checked directly as well.
         readonly property int kbdModifierToSendMessage:
-            Qt.inputMethod.visible ? Qt.ControlModifier : Qt.NoModifier
+            (SystemUtils.androidKeyboardVisible || SystemUtils.iosKeyboardVisible || Qt.inputMethod.visible)
+                ? Qt.ControlModifier : Qt.NoModifier
 
         property bool emojiPopupOpened: false
         property bool stickersPopupOpened: false
