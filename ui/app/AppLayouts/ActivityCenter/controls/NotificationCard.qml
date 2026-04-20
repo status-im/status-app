@@ -262,7 +262,7 @@ Control {
     background: Rectangle {
         objectName: "notificationCardBg"
         radius: Theme.radius
-        color: d.contextMenuOpen ? root.contextMenuColor : root.backgroundColor
+        color: root.selected || (root.hovered && root.enabled) ? root.contextMenuColor : root.backgroundColor
 
         // Full-card left-click: close context menu if open, otherwise navigate.
         TapHandler {
@@ -277,7 +277,18 @@ Control {
         }
 
         StatusSecondaryActionHandler {
-            onTriggered: d.contextMenuOpen = !d.contextMenuOpen
+            onTriggered: {
+                // NOTE: Context menu it's now disabled until we have more options than `Read / Unread`
+                //d.contextMenuOpen = !d.contextMenuOpen
+
+                // While context menu is hidden, in case of long press(touchscreens) or right-click (non-toouchscreens),
+                // use it to mark as unread / read. Otherwise, clear this code
+                if(root.unread) {
+                    root.markAsReadRequested()
+                } else {
+                    root.markAsUnreadRequested()
+                }
+            }
         }
 
         HoverHandler {
@@ -296,22 +307,6 @@ Control {
 
         implicitWidth: cardLayout.implicitWidth
         implicitHeight: cardHeight + Math.max(0, contextPanel.height - d.contextPanelOverlap)
-
-        // ── Selection / hover border ─────────────────────────────────────────────────
-        // Explicitly sized to the card area only — never extends over the
-        // context panel below.
-        Rectangle {
-            anchors {
-                left: parent.left
-                right: parent.right
-                top: parent.top
-            }
-            height: contentRoot.cardHeight
-            color: StatusColors.transparent
-            radius: Theme.radius
-            border.width: 2
-            border.color: root.selected || (root.hovered && root.enabled) ? Theme.palette.primaryColor1 : StatusColors.transparent
-        }
 
         // Unread indicator dot (top-right).
         Rectangle {
@@ -467,11 +462,13 @@ Control {
                     // Timestamp row (falls back to "Just now").
                     StatusBaseText {
                         Layout.fillWidth: true
+                        Layout.rightMargin: d.unreadBadgeSize / 2
                         objectName: "notificationTimestamp"
                         text: LocaleUtils.formatRelativeTimestamp(root.timestamp)
                         font.pixelSize: Theme.fontSize(11)
                         color: Theme.palette.directColor5
-                        elide: Text.ElideRight
+                        elide: Text.ElideLeft
+                        horizontalAlignment: Text.AlignRight
                     }
                 }
             } // end inner RowLayout

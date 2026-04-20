@@ -361,20 +361,9 @@ Item {
             mouseClick(item, item.width / 2, item.height / 2, Qt.RightButton)
         }
 
-        function waitForContextMenuOpen(card) {
-            const panel = findChild(card, "notificationContextPanel")
-            verify(!!panel)
-            tryVerify(() => panel.height >= panel.expandedHeight - 1)
-        }
 
-        function waitForContextMenuClosed(card) {
-            const panel = findChild(card, "notificationContextPanel")
-            verify(!!panel)
-            tryVerify(() => panel.height === 0)
-        }
-
-        function test_markAsUnreadContextMenu() {
-            // Card is read (unread: false) → button says "Mark as unread"
+        function test_rightClickOnReadCardMarksAsUnread() {
+            // Right-click on a read card directly emits markAsUnreadRequested (no context menu)
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {
                 title: "Test",
                 unread: false
@@ -382,23 +371,14 @@ Item {
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
 
-            const btn = findChild(controlUnderTest, "notificationMarkUnreadBtn")
-            verify(!!btn)
-            verify(!btn.visible)
-
-            rightClickCenter(controlUnderTest)
-            waitForContextMenuOpen(controlUnderTest)
-            compare(btn.text, qsTr("Mark as unread"))
-
             compare(markAsUnreadRequestedSpy.count, 0)
-            mouseClick(btn)
+            rightClickCenter(controlUnderTest)
             compare(markAsUnreadRequestedSpy.count, 1)
             compare(markAsReadRequestedSpy.count, 0)
-            waitForContextMenuClosed(controlUnderTest)
         }
 
-        function test_markAsReadContextMenu() {
-            // Card is unread (unread: true) → button says "Mark as read"
+        function test_rightClickOnUnreadCardMarksAsRead() {
+            // Right-click on an unread card directly emits markAsReadRequested (no context menu)
             controlUnderTest = createTemporaryObject(componentUnderTest, root, {
                 title: "Test",
                 unread: true
@@ -406,40 +386,9 @@ Item {
             verify(!!controlUnderTest)
             waitForRendering(controlUnderTest)
 
-            const btn = findChild(controlUnderTest, "notificationMarkUnreadBtn")
-            verify(!!btn)
-
             rightClickCenter(controlUnderTest)
-            waitForContextMenuOpen(controlUnderTest)
-            compare(btn.text, qsTr("Mark as read"))
-
-            compare(markAsReadRequestedSpy.count, 0)
-            mouseClick(btn)
             compare(markAsReadRequestedSpy.count, 1)
             compare(markAsUnreadRequestedSpy.count, 0)
-            waitForContextMenuClosed(controlUnderTest)
-        }
-
-        function test_contextMenuClosesOnLeftClick() {
-            controlUnderTest = createTemporaryObject(componentUnderTest, root, {
-                title: "Test"
-            })
-            verify(!!controlUnderTest)
-            waitForRendering(controlUnderTest)
-
-            const btn = findChild(controlUnderTest, "notificationMarkUnreadBtn")
-            verify(!!btn)
-
-            // Open context menu via right-click
-            rightClickCenter(controlUnderTest)
-            waitForContextMenuOpen(controlUnderTest)
-
-            // Left-click on the card closes the menu without emitting clicked()
-            const cardBg = findChild(controlUnderTest, "notificationCardBg")
-            verify(!!cardBg)
-            mouseClick(cardBg)
-            waitForContextMenuClosed(controlUnderTest)
-            compare(clickedSpy.count, 0)
         }
     }
 }
