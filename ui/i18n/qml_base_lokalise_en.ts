@@ -442,11 +442,6 @@
   <context>
     <name>ActivityCenterPanel</name>
     <message>
-      <source>Notifications</source>
-      <comment>ActivityCenterPanel</comment>
-      <translation>Notifications</translation>
-    </message>
-    <message>
       <source>Enable Status News notifications</source>
       <comment>ActivityCenterPanel</comment>
       <translation>Enable Status News notifications</translation>
@@ -485,6 +480,11 @@
       <source>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</source>
       <comment>ActivityCenterPanel</comment>
       <translation>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</translation>
+    </message>
+    <message>
+      <source>Activity</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Activity</translation>
     </message>
   </context>
   <context>
@@ -18614,9 +18614,9 @@
       <translation>Assets</translation>
     </message>
     <message>
-      <source>Activity</source>
+      <source>History</source>
       <comment>RightTabView</comment>
-      <translation>Activity</translation>
+      <translation>History</translation>
     </message>
   </context>
   <context>

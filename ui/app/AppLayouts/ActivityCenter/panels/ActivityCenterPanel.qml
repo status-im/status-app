@@ -150,7 +150,7 @@ Control {
                 Layout.fillWidth: true
 
                 font.pixelSize: Theme.fontSize(19)
-                text: qsTr("Notifications")
+                text: qsTr("Activity")
                 elide: Text.ElideRight
             }
 

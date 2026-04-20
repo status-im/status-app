@@ -360,10 +360,6 @@
 <context>
     <name>ActivityCenterPanel</name>
     <message>
-        <source>Notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Enable Status News notifications</source>
         <translation type="unfinished"></translation>
     </message>
@@ -393,6 +389,10 @@
     </message>
     <message>
         <source>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Activity</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15271,7 +15271,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Activity</source>
+        <source>History</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

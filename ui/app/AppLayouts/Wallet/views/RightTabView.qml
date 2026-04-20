@@ -167,15 +167,19 @@ RightTabBaseView {
             function getBackButtonText(index) {
                 switch(index) {
                 case 1:
-                    return qsTr("Collectibles")
+                    return collectiblesString
                 case 2:
-                    return qsTr("Assets")
+                    return assetsString
                 case 3:
-                    return qsTr("Activity")
+                    return historyString
                 default:
                     return ""
                 }
             }
+
+            readonly property string collectiblesString: qsTr("Collectibles")
+            readonly property string assetsString: qsTr("Assets")
+            readonly property string historyString: qsTr("History")
 
             readonly property var walletViewsMap: [
                 assetsView,
@@ -252,18 +256,18 @@ RightTabBaseView {
                     StatusTabButton {
                         objectName: "assetsTabButton"
                         width: implicitWidth
-                        text: qsTr("Assets")
+                        text: d.assetsString
                     }
                     StatusTabButton {
                         objectName: "collectiblesTabButton"
                         width: implicitWidth
-                        text: qsTr("Collectibles")
+                        text: d.collectiblesString
                     }
                     StatusTabButton {
                         objectName: "activityTabButton"
                         rightPadding: 0
                         width: implicitWidth
-                        text: qsTr("Activity")
+                        text: d.historyString
                     }
                     onCurrentIndexChanged: {
                         RootStore.setCurrentViewedHoldingType(walletTabBar.currentIndex === 1 ? Constants.TokenType.ERC721 : Constants.TokenType.ERC20)

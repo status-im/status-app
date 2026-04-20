@@ -360,10 +360,6 @@
 <context>
     <name>ActivityCenterPanel</name>
     <message>
-        <source>Notifications</source>
-        <translation type="unfinished">알림</translation>
-    </message>
-    <message>
         <source>Enable Status News notifications</source>
         <translation type="unfinished">Status 뉴스 알림 활성화</translation>
     </message>
@@ -394,6 +390,10 @@
     <message>
         <source>Turn them on to get updates about new features and announcements. You can also enable this anytime in Notifications and Sound settings.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Activity</source>
+        <translation type="unfinished">활동</translation>
     </message>
 </context>
 <context>
@@ -15240,8 +15240,8 @@ to load</source>
         <translation>자산</translation>
     </message>
     <message>
-        <source>Activity</source>
-        <translation>활동</translation>
+        <source>History</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
