@@ -4,7 +4,6 @@ AssetsViewAdaptor 1.0 AssetsViewAdaptor.qml
 ConfirmHideAssetPopup 1.0 ConfirmHideAssetPopup.qml
 ConfirmHideCommunityAssetsPopup 1.0 ConfirmHideCommunityAssetsPopup.qml
 ExistingContacts 1.0 ExistingContacts.qml
-HistoryBetaTag 1.0 HistoryBetaTag.qml
 HistoryView 1.0 HistoryView.qml
 NoFriendsRectangle 1.0 NoFriendsRectangle.qml
 PasswordConfirmationView 1.0 PasswordConfirmationView.qml

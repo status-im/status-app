@@ -85,23 +85,6 @@ ColumnLayout {
         readonly property int maxSecondsBetweenRefresh: 3
     }
 
-    HistoryBetaTag {
-        id: betaTag
-        flatNetworks: root.networksStore.activeNetworks
-
-        Layout.fillWidth: true
-        Layout.alignment: Qt.AlignTop
-        Layout.topMargin: root.firstItemOffset
-        Layout.preferredHeight: 56
-        visible: root.firstItemOffset === 0 // visible only in the main wallet view
-
-        onLinkActivated: {
-            const explorerUrl = root.activityStore.showAllAccounts ? link
-                                                                        : "%1/%2/%3".arg(link).arg(Constants.networkExplorerLinks.addressPath).arg(root.activityStore.selectedAddress)
-            Global.requestOpenLink(explorerUrl)
-        }
-    }
-
     StyledText {
         id: nonArchivalNodeError
         Layout.fillWidth: true
