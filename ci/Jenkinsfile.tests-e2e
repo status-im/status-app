@@ -187,48 +187,53 @@ pipeline {
       } } } }
     }
 
-    stage('Start Local Fleet') {
-      steps { timeout(2) { script {
-        /* Clean up any leftover containers from a previous aborted run */
-        sh 'docker compose -f docker-compose.waku.yml down || true'
-        sh 'docker compose -f docker-compose.waku.yml up -d'
-        sh 'sleep 15'
-      } } }
-    }
-
     stage('Test') {
-      steps { timeout(getTestStageTimeout()) { script { dir('test/e2e') {
-        def flags = []
-        if (params.TEST_NAME)  { flags.add("-k=${params.TEST_NAME}") }
-        if (params.TEST_SCOPE_FLAG) { flags.add(params.TEST_SCOPE_FLAG) }
-        if (params.LOG_LEVEL)  { flags.addAll(["--log-level=${params.LOG_LEVEL}", "--log-cli-level=${params.LOG_LEVEL}"]) }
-        dir ('configs') { sh 'ln -s _local.ci.py _local.py' }
-        wrap([
-          $class:            'Xvfb',
-          autoDisplayName:   true,
-          parallelBuild:     true,
-          screen:            '2560x1440x24',
-          additionalOptions: '-dpi 1'
-        ]) {
-          sh 'fluxbox &'
-          withCredentials([
-            usernamePassword(
-              credentialsId: 'test-rail-api-devops',
-              usernameVariable: 'TESTRAIL_USR',
-              passwordVariable: 'TESTRAIL_PSW'
-            ),
-            string(credentialsId: 'wallet-test-user-seed', variable: 'WALLET_TEST_USER_SEED')
-          ]) {
-            /* Keep the --reruns flag first, or it won't work */
-            sh """
-              python3 -m pytest -m "not keycard" -v --reruns=1 --timeout=300 ${flags.join(" ")} \
-                --disable-warnings \
-                --alluredir=./allure-results \
-                -o timeout_func_only=true
-            """
+      steps {
+        /* Lock the agent so we run only one e2e build at a time */
+        lock(resource: "e2e-linux-${env.NODE_NAME}", quantity: 1) {
+          timeout(2) {
+            /* Clean up any leftover containers from a previous aborted run */
+            sh 'docker compose -f docker-compose.waku.yml down --remove-orphans || true'
+            sh 'docker compose -f docker-compose.waku.yml up -d'
+            sh 'sleep 15'
+          }
+          timeout(time: getTestStageTimeout()) {
+            dir('test/e2e') {
+              script {
+                def flags = []
+                if (params.TEST_NAME)  { flags.add("-k=${params.TEST_NAME}") }
+                if (params.TEST_SCOPE_FLAG) { flags.add(params.TEST_SCOPE_FLAG) }
+                if (params.LOG_LEVEL)  { flags.addAll(["--log-level=${params.LOG_LEVEL}", "--log-cli-level=${params.LOG_LEVEL}"]) }
+                dir ('configs') { sh 'ln -s _local.ci.py _local.py' }
+                wrap([
+                  $class:            'Xvfb',
+                  autoDisplayName:   true,
+                  parallelBuild:     true,
+                  screen:            '2560x1440x24',
+                  additionalOptions: '-dpi 1'
+                ]) {
+                  sh 'fluxbox &'
+                  withCredentials([
+                    usernamePassword(
+                      credentialsId: 'test-rail-api-devops',
+                      usernameVariable: 'TESTRAIL_USR',
+                      passwordVariable: 'TESTRAIL_PSW'
+                    ),
+                    string(credentialsId: 'wallet-test-user-seed', variable: 'WALLET_TEST_USER_SEED')
+                  ]) {
+                    sh """
+                      python3 -m pytest -m "not keycard" -v --reruns=1 --timeout=300 ${flags.join(" ")} \
+                        --disable-warnings \
+                        --alluredir=./allure-results \
+                        -o timeout_func_only=true
+                    """
+                  }
+                }
+              }
+            }
           }
         }
-      } } } }
+      }
     }
   }
 
