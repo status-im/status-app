@@ -35,9 +35,14 @@ ColumnLayout {
 
     spacing: Constants.settingsSection.itemSpacing
 
-    onKeyUidChanged: {
-        root.keycardStore.resolveKeyPairItemForKeyUid(root.keyUid)
+    // Used to refresh properties since no bindings on a plain functions
+    function refresh() {
+        d.refresh()
     }
+
+    onKeyUidChanged: d.refresh()
+
+    onKeycardUidChanged: d.refresh()
 
     QtObject {
         id: d
@@ -49,21 +54,23 @@ ColumnLayout {
 
         readonly property bool onlyPinSet: !!root.keycardUid && !root.keyUid
 
-        readonly property bool pairingExists: !!root.keycardUid && root.keycardStore.keycardPairingExists(root.keycardUid)
+        // pairing slot has the highest priority, cause the keycard cannot be read if the pairing doesn't exist or a new pairing cannot be made
+        readonly property bool noKnownAndNoAvailablePairingSlots: root.keycardState === Constants.keycard.state.noAvailablePairingSlots
+                                                                  || (root.availableSlots <= 0 && !d.pairingExists)
 
-        readonly property bool isMaxPairingSlotsReached: root.keycardState === Constants.keycard.state.noAvailablePairingSlots
-                                                         || root.availableSlots === 0
-
-        readonly property bool isBlockedPIN: !d.isEmpty
+        readonly property bool isBlockedPIN: !d.noKnownAndNoAvailablePairingSlots
+                                             && !d.isEmpty
                                              && (root.keycardState === Constants.keycard.state.blockedPIN
-                                                 || root.remainingPinAttempts === 0)
+                                                 || root.remainingPinAttempts <= 0)
 
-        readonly property bool isBlockedPUK: !d.isEmpty
+        readonly property bool isBlockedPUK: !d.noKnownAndNoAvailablePairingSlots
+                                             && !d.isEmpty
                                              && (root.keycardState === Constants.keycard.state.blockedPUK
-                                                 || root.remainingPukAttempts === 0)
+                                                 || root.remainingPukAttempts <= 0)
 
-        readonly property bool isEmpty: root.keycardState === Constants.keycard.state.emptyKeycard
-                                        || !root.keycardUid
+        readonly property bool isEmpty: !d.noKnownAndNoAvailablePairingSlots
+                                        && (root.keycardState === Constants.keycard.state.emptyKeycard
+                                            || !root.keycardUid)
 
         readonly property bool knownCardMetadata: {
             if (!d.hasKeyPair || d.cardMetadataWalletAccounts.length === 0) {
@@ -90,13 +97,24 @@ ColumnLayout {
             }
         }
 
-        readonly property bool isKnownKeyPair: {
-            if (!d.hasKeyPair)
-                return false
-            return root.keycardStore.isKnownKeyUid(root.keyUid)
+        property bool pairingExists: false
+        property bool isKnownKeyPair: false
+        property bool allNonProfileKpsMigrated: false
+
+        function refresh() {
+            d.pairingExists = !!root.keycardUid
+                              && root.keycardStore.keycardPairingExists(root.keycardUid)
+            d.isKnownKeyPair = d.hasKeyPair
+                               && root.keycardStore.isKnownKeyUid(root.keyUid)
+            d.allNonProfileKpsMigrated = root.keycardStore.allNonProfileKeyPairsMigratedToKeycard()
+
+            root.keycardStore.resolveKeyPairItemForKeyUid(root.keyUid)
         }
 
         readonly property string detailsTitle: {
+            if (d.noKnownAndNoAvailablePairingSlots) {
+                return qsTr("No free pairing slots")
+            }
             if (d.isEmpty) {
                 return qsTr("Keycard is empty")
             }
@@ -116,7 +134,10 @@ ColumnLayout {
             return qsTr("Keycard")
         }
 
-        readonly property string info1: {
+        readonly property string info: {
+            if (d.noKnownAndNoAvailablePairingSlots) {
+                return qsTr("You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.")
+            }
             if (d.isBlockedPUK) {
                 return qsTr("Keycard is blocked due to five failed PUK input attempts")
             }
@@ -136,12 +157,12 @@ ColumnLayout {
             return ""
         }
 
-        readonly property string info2: {
-            if (!d.isEmpty && root.availableSlots == 0 && !d.pairingExists) {
-                return qsTr("You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.")
-            }
-
-            return ""
+        function startFlow(flow) {
+            Global.openKeycardManagementPopup(flow,
+                                              root.keyUid,
+                                              root.keycardUid,
+                                              root.cardMetadataName,
+                                              root.cardMetadataWalletAccountsJson)
         }
     }
 
@@ -177,7 +198,7 @@ ColumnLayout {
         color: Theme.palette.baseColor1
         wrapMode: Text.WordWrap
         visible: !!text
-        text: d.info1
+        text: d.info
     }
 
     KeyPairItem {
@@ -204,17 +225,6 @@ ColumnLayout {
         keyPairLocationColor: d.isKnownKeyPair? Utils.getKeypairLocationColor(Theme.palette, root.keycardStore.keyPairItem) : ""
     }
 
-    StatusBaseText {
-        Layout.fillWidth: true
-        Layout.leftMargin: Theme.padding
-        Layout.rightMargin: Theme.padding
-        Layout.topMargin: Theme.xlPadding
-        color: Theme.palette.baseColor1
-        wrapMode: Text.WordWrap
-        visible: !!text
-        text: d.info2
-    }
-
     StatusSectionHeadline {
         Layout.fillWidth: true
         Layout.leftMargin: Theme.padding
@@ -227,7 +237,7 @@ ColumnLayout {
         Layout.fillWidth: true
         visible: !root.keycardStore.isKeycardUser
                  && (d.isEmpty
-                     || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && (root.availableSlots > 0 || d.pairingExists))
+                     || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && !d.noKnownAndNoAvailablePairingSlots)
         title: qsTr("Move profile key pair to Keycard")
         subTitle: qsTr("Keycard will be required for signing and logging in to Status")
         components: [
@@ -237,15 +247,15 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            Global.openKeycardManagementPopup(Constants.keycard.flow.moveProfileKeyPair, root.keyUid, root.keycardUid)
+            d.startFlow(Constants.keycard.flow.moveProfileKeyPair)
         }
     }
 
     StatusListItem {
         Layout.fillWidth: true
-        visible: !root.keycardStore.allNonProfileKeyPairsMigratedToKeycard()
+        visible: !d.allNonProfileKpsMigrated
                  && (d.isEmpty
-                     || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && (root.availableSlots > 0 || d.pairingExists))
+                     || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && !d.noKnownAndNoAvailablePairingSlots)
         title: qsTr("Move key pair from Status wallet to Keycard")
         subTitle: qsTr("Keycard will be required for signing")
         components: [
@@ -255,14 +265,14 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            Global.openKeycardManagementPopup(Constants.keycard.flow.moveKeyPair, root.keyUid, root.keycardUid)
+            d.startFlow(Constants.keycard.flow.moveKeyPair)
         }
     }
 
     StatusListItem {
         Layout.fillWidth: true
         visible: d.isEmpty
-                 || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && (root.availableSlots > 0 || d.pairingExists)
+                 || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && !d.noKnownAndNoAvailablePairingSlots
         title: qsTr("Import a new key pair to Keycard")
         subTitle: qsTr("Keycard will be required for signing")
         components: [
@@ -272,14 +282,14 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            Global.openKeycardManagementPopup(Constants.keycard.flow.importNewKeyPair, root.keyUid, root.keycardUid)
+            d.startFlow(Constants.keycard.flow.importNewKeyPair)
         }
     }
 
     StatusListItem {
         Layout.fillWidth: true
         visible: d.isEmpty
-                 || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && (root.availableSlots > 0 || d.pairingExists)
+                 || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && !d.noKnownAndNoAvailablePairingSlots
         title: qsTr("Import a key pair from recovery phrase")
         subTitle: qsTr("In case you lost Keycard, want to create a backup or import a\nkey pair. Keycard will be required for signing")
         components: [
@@ -289,7 +299,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            Global.openKeycardManagementPopup(Constants.keycard.flow.importSeedPhrase, root.keyUid, root.keycardUid)
+            d.startFlow(Constants.keycard.flow.importSeedPhrase)
         }
     }
 
@@ -330,7 +340,7 @@ ColumnLayout {
         Layout.fillWidth: true
         visible: d.hasKeyPair
                  && !d.isKnownKeyPair
-                 && (root.availableSlots > 0 || d.pairingExists)
+                 && !d.noKnownAndNoAvailablePairingSlots
         title: qsTr("Add key pair to Status wallet")
         subTitle: qsTr("You’ll be able to sign transactions in Status wallet with Keycard")
         components: [
@@ -340,7 +350,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: add key pair to Status flow...")
+            d.startFlow(Constants.keycard.flow.addKeyPairToStatus)
         }
     }
 
@@ -350,7 +360,7 @@ ColumnLayout {
                   || d.onlyPinSet)
                  && !d.isBlockedPIN
                  && !d.isBlockedPUK
-                 && (root.availableSlots > 0 || d.pairingExists)
+                 && !d.noKnownAndNoAvailablePairingSlots
         title: qsTr("Change PIN")
         subTitle: qsTr("If you want to have a different PIN")
         components: [
@@ -370,7 +380,7 @@ ColumnLayout {
                   || d.onlyPinSet)
                  && !d.isBlockedPIN
                  && !d.isBlockedPUK
-                 && (root.availableSlots > 0 || d.pairingExists)
+                 && !d.noKnownAndNoAvailablePairingSlots
         title: qsTr("Rename")
         subTitle: qsTr("New name will be visible in Status and in other apps")
         components: [
@@ -390,7 +400,7 @@ ColumnLayout {
                   || d.onlyPinSet)
                  && !d.isBlockedPIN
                  && !d.isBlockedPUK
-                 && (root.availableSlots > 0 || d.pairingExists)
+                 && !d.noKnownAndNoAvailablePairingSlots
         title: qsTr("Set or change PUK")
         subTitle: qsTr("If you want an additional recovery option")
         components: [
@@ -406,9 +416,9 @@ ColumnLayout {
 
     StatusListItem {
         Layout.fillWidth: true
-        visible: (d.hasKeyPair
-                  || d.onlyPinSet)
+        visible: d.hasKeyPair
                  || d.onlyPinSet
+                 || d.noKnownAndNoAvailablePairingSlots
         title: qsTr("Factory reset Keycard")
         subTitle: qsTr("Remove everything from Keycard")
         components: [
@@ -418,7 +428,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            Global.openKeycardManagementPopup(Constants.keycard.flow.factoryReset, root.keyUid, root.keycardUid)
+            d.startFlow(Constants.keycard.flow.factoryReset)
         }
     }
 }

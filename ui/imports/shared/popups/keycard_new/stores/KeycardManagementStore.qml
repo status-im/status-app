@@ -20,6 +20,9 @@ QtObject {
     signal keycardMoveProfileKeyPairSuccess()
     signal keycardMoveProfileKeyPairError(string error)
 
+    signal keycardAddKeyPairSuccess()
+    signal keycardAddKeyPairError(string error)
+
     readonly property bool ready: d.ready
 
     readonly property string userProfileKeyUid: userProfile.keyUid
@@ -79,6 +82,14 @@ QtObject {
 
         function onKeycardMoveProfileKeyPairError(error) {
             root.keycardMoveProfileKeyPairError(error)
+        }
+
+        function onKeycardAddKeyPairSuccess() {
+            root.keycardAddKeyPairSuccess()
+        }
+
+        function onKeycardAddKeyPairError(error) {
+            root.keycardAddKeyPairError(error)
         }
     }
 
@@ -255,5 +266,13 @@ QtObject {
             return
         }
         d.mainModuleInst.keycardManagementModule.startMigratingProfileKeypairToKeycard(password, pin, seedPhrase)
+    }
+
+    function startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts)
     }
 }

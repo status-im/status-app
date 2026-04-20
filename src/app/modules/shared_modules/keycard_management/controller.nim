@@ -67,6 +67,11 @@ proc init*(self: Controller) =
     self.delegate.onConvertingProfileKeypairFinished(args.success)
   self.connectionIds.add(handlerId)
 
+  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_EXTENDED_PUBLIC_KEYS_FINISHED) do(e: Args):
+    let args = KeycardExportedExtendedPublicKeyArgs(e)
+    self.delegate.onKeycardExportExtendedPublicKeyFinished(args.exportedExtendedPublicKey.xpub, args.error)
+  self.connectionIds.add(handlerId)
+
 proc startGetMetadata*(self: Controller, pin: string) =
   self.keycardServiceV2.asyncGetKeycardMetadata(pin)
 
@@ -76,6 +81,9 @@ proc startFactoryReset*(self: Controller, keycardUid: string) =
 proc startLoadSeedPhrase*(self: Controller, pin: string, puk: string, seedPhrase: string, metadataName: string,
     metadataPaths: seq[string]) =
   self.keycardServiceV2.asyncLoadSeedPhrase(pin, puk, seedPhrase, metadataName, metadataPaths)
+
+proc startExportExtendedPublicKey*(self: Controller, keyUid: string, path: string, pin: string) =
+  self.keycardServiceV2.asyncExportExtendedPublicKey(keyUid, path, pin)
 
 proc stopKeycardAction*(self: Controller) =
   self.keycardServiceV2.asyncStop()

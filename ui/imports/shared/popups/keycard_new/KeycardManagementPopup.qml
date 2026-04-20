@@ -22,6 +22,9 @@ StatusDialog {
     required property string keycardUid
     required property string keyUid
 
+    required property string cardMetadataName
+    required property string cardMetadataWalletAccountsJson
+
     required property KeycardManagementStore store
 
     property var emojiPopup: null
@@ -48,6 +51,8 @@ StatusDialog {
             return qsTr("Move key pair to Keycard")
         case Constants.keycard.flow.moveProfileKeyPair:
             return qsTr("Move profile key pair to Keycard")
+        case Constants.keycard.flow.addKeyPairToStatus:
+            return qsTr("Add key pair to Status")
         default:
             return qsTr("Keycard Flow")
         }
@@ -62,6 +67,7 @@ StatusDialog {
         ManageAccounts,
         Importing,
         Migrating,
+        AddingKeyPair,
         DisplaySeedPhrase,
         ConfirmSeedPhraseWords,
         SelectKeyPair
@@ -82,9 +88,11 @@ StatusDialog {
         property int currentStep: (root.flow === Constants.keycard.flow.moveKeyPair
                                       || root.flow === Constants.keycard.flow.moveProfileKeyPair)
                                      ? KeycardManagementPopup.FlowStep.SelectKeyPair
-                                     : d.keycardHasOnlyPinSet
+                                     : (root.flow === Constants.keycard.flow.addKeyPairToStatus)
                                          ? KeycardManagementPopup.FlowStep.EnterPin
-                                         : KeycardManagementPopup.FlowStep.EnterNewPin
+                                         : d.keycardHasOnlyPinSet
+                                             ? KeycardManagementPopup.FlowStep.EnterPin
+                                             : KeycardManagementPopup.FlowStep.EnterNewPin
 
         property string newPin: ""
         property bool pinMismatch: false
@@ -170,6 +178,15 @@ StatusDialog {
                                   })()
         }
 
+        function startAddingKeyPairToStatus() {
+            d.currentStep = KeycardManagementPopup.FlowStep.AddingKeyPair
+            d.processing = true
+            root.store.startAddingKeyPairToStatusFromKeycard(d.newPin,
+                                                            root.keyUid,
+                                                            d.keyPairName,
+                                                            d.accountPathsJson)
+        }
+
         function nextStep() {
             if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
                 d.currentStep = d.keycardHasOnlyPinSet
@@ -186,6 +203,10 @@ StatusDialog {
                 if (root.flow === Constants.keycard.flow.moveProfileKeyPair && !root.store.isMnemonicBackedUp()) {
                     d.seedPhrase = root.store.getMnemonic()
                     d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
+                    return
+                }
+                if (root.flow === Constants.keycard.flow.addKeyPairToStatus) {
+                    d.currentStep = KeycardManagementPopup.FlowStep.EnterKeyPairName
                     return
                 }
 
@@ -247,6 +268,10 @@ StatusDialog {
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts) {
+                if (root.flow === Constants.keycard.flow.addKeyPairToStatus) {
+                    d.startAddingKeyPairToStatus()
+                    return
+                }
                 d.startImportingKeyPair()
                 return
             }
@@ -305,6 +330,11 @@ StatusDialog {
                     d.currentStep = KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords
                     return
                 }
+                if (root.flow === Constants.keycard.flow.addKeyPairToStatus) {
+                    d.newPin = ""
+                    d.currentStep = KeycardManagementPopup.FlowStep.EnterPin
+                    return
+                }
                 d.newPin = ""
                 d.pinMismatch = false
                 d.seedPhrase = ""
@@ -336,6 +366,9 @@ StatusDialog {
             case Constants.keycard.flow.moveKeyPair:
             case Constants.keycard.flow.moveProfileKeyPair:
                 d.currentStep = KeycardManagementPopup.FlowStep.Migrating
+                break
+            case Constants.keycard.flow.addKeyPairToStatus:
+                d.currentStep = KeycardManagementPopup.FlowStep.AddingKeyPair
                 break
             }
 
@@ -424,6 +457,17 @@ StatusDialog {
 
         function onKeycardMoveProfileKeyPairError(error) {
             console.error("Keycard move profile key pair error:", error)
+            d.processing = false
+            d.error = error
+        }
+
+        function onKeycardAddKeyPairSuccess() {
+            d.processing = false
+            d.success = true
+        }
+
+        function onKeycardAddKeyPairError(error) {
+            console.error("Keycard add key pair error:", error)
             d.processing = false
             d.error = error
         }
@@ -516,6 +560,9 @@ StatusDialog {
                                  || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
                                  || d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase
                                  || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords))
+                         || (root.flow === Constants.keycard.flow.addKeyPairToStatus
+                             && (d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts))
 
                 onClicked: {
                     d.previousStep()
@@ -540,7 +587,8 @@ StatusDialog {
                     } else if (root.flow === Constants.keycard.flow.importSeedPhrase
                                || root.flow === Constants.keycard.flow.importNewKeyPair
                                || root.flow === Constants.keycard.flow.moveKeyPair
-                               || root.flow === Constants.keycard.flow.moveProfileKeyPair) {
+                               || root.flow === Constants.keycard.flow.moveProfileKeyPair
+                               || root.flow === Constants.keycard.flow.addKeyPairToStatus) {
                         if (!d.processing && !d.success && !d.error) {
                             return qsTr("Cancel")
                         }
@@ -587,7 +635,8 @@ StatusDialog {
 
             StatusButton {
                 visible: (root.flow === Constants.keycard.flow.importSeedPhrase
-                          || root.flow === Constants.keycard.flow.importNewKeyPair)
+                          || root.flow === Constants.keycard.flow.importNewKeyPair
+                          || root.flow === Constants.keycard.flow.addKeyPairToStatus)
                          && contentLoader.item
                          && d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts
                 enabled: visible
@@ -622,7 +671,10 @@ StatusDialog {
                                      || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
                                      || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
                                      || d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase
-                                     || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords)))
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords))
+                             || (root.flow === Constants.keycard.flow.addKeyPairToStatus
+                                 && (d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts)))
                 enabled: visible
                          && ((d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
@@ -716,6 +768,10 @@ StatusDialog {
             keyUid = d.moveKeyPairSelectedKeyUid
             keycardUid = root.store.keycardUid
             break
+        case Constants.keycard.flow.addKeyPairToStatus:
+            keyUid = root.keyUid
+            keycardUid = root.keycardUid
+            break
         }
 
         root.keycardFlowCompleted(root.flow, keyUid, keycardUid, d.success)
@@ -751,6 +807,8 @@ StatusDialog {
                     return qsTr("Moving key pair to Keycard...")
                 case Constants.keycard.flow.moveProfileKeyPair:
                     return qsTr("Moving profile key pair to Keycard...")
+                case Constants.keycard.flow.addKeyPairToStatus:
+                    return qsTr("Adding key pair to Status...")
                 default:
                     return qsTr("Reading...")
                 }
@@ -773,6 +831,7 @@ StatusDialog {
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
                 case Constants.keycard.flow.moveProfileKeyPair:
+                case Constants.keycard.flow.addKeyPairToStatus:
                     return Assets.png("keycard/card_insert/insert")
                 default:
                     return ""
@@ -789,6 +848,8 @@ StatusDialog {
                     return qsTr("Key pair has been moved to Keycard")
                 case Constants.keycard.flow.moveProfileKeyPair:
                     return qsTr("Profile key pair has been moved to Keycard")
+                case Constants.keycard.flow.addKeyPairToStatus:
+                    return qsTr("Key pair has been added to Status")
                 default:
                     return qsTr("Success")
                 }
@@ -803,6 +864,8 @@ StatusDialog {
                     return qsTr("Keycard is now required to sign with this key pair.")
                 case Constants.keycard.flow.moveProfileKeyPair:
                     return qsTr("Keycard is now required to log in and sign.")
+                case Constants.keycard.flow.addKeyPairToStatus:
+                    return qsTr("Now you can sign with this key pair using Keycard.")
                 default:
                     return ""
                 }
@@ -821,6 +884,7 @@ StatusDialog {
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
                 case Constants.keycard.flow.moveProfileKeyPair:
+                case Constants.keycard.flow.addKeyPairToStatus:
                     return Assets.png("keycard/wrong_card/something-went-wrong")
                 default:
                     return ""
@@ -851,6 +915,7 @@ StatusDialog {
                 case Constants.keycard.flow.importNewKeyPair:
                 case Constants.keycard.flow.moveKeyPair:
                 case Constants.keycard.flow.moveProfileKeyPair:
+                case Constants.keycard.flow.addKeyPairToStatus:
                     d.newPin = pinInput
                     d.nextStep()
                     return
@@ -945,7 +1010,11 @@ StatusDialog {
     Component {
         id: enterKeyPairNameComponent
         EnterKeyPairNameState {
-            initialKeyPairName: d.keyPairName
+            initialKeyPairName: d.keyPairName.length > 0
+                                ? d.keyPairName
+                                : (root.flow === Constants.keycard.flow.addKeyPairToStatus
+                                   ? root.cardMetadataName
+                                   : "")
 
             onDone: {
                 d.keyPairName = keyPairName

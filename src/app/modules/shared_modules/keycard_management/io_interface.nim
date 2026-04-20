@@ -49,6 +49,13 @@ method startMigratingNonProfileKeypairToKeycard*(self: AccessInterface, password
     seedPhrase: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startAddingKeyPairToStatusFromKeycard*(self: AccessInterface, pin: string, keyUid: string,
+    metadataName: string, metadataAccounts: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onKeycardExportExtendedPublicKeyFinished*(self: AccessInterface, xpub: string, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onKeycardLoadSeedPhraseFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

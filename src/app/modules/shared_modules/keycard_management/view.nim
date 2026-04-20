@@ -59,6 +59,9 @@ QtObject:
   proc keycardMoveProfileKeyPairSuccess*(self: View) {.signal.}
   proc keycardMoveProfileKeyPairError*(self: View, error: string) {.signal.}
 
+  proc keycardAddKeyPairSuccess*(self: View) {.signal.}
+  proc keycardAddKeyPairError*(self: View, error: string) {.signal.}
+
   proc keyPairModelChanged(self: View) {.signal.}
   proc getKeyPairModel(self: View): QVariant {.slot.} =
     if self.keyPairModelVariant.isNil:
@@ -109,6 +112,10 @@ QtObject:
 
   proc startMigratingProfileKeypairToKeycard*(self: View, password: string, pin: string, seedPhrase: string) {.slot.} =
     self.delegate.startMigratingProfileKeypairToKeycard(password, pin, seedPhrase)
+
+  proc startAddingKeyPairToStatusFromKeycard*(self: View, pin: string, keyUid: string, metadataName: string,
+      metadataAccounts: string) {.slot.} =
+    self.delegate.startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts)
 
   proc keycardStateChanged*(self: View) {.signal.}
   proc getKeycardState*(self: View): string {.slot.} =

@@ -54,21 +54,23 @@ Control {
             mipmap: true
         }
 
-        StatusLoadingIndicator {
-            Layout.alignment: Qt.AlignCenter
-            visible: root.processing
-                     && root.state !== "waiting-for-reader"
-                     && root.state !== "waiting-for-card"
-                     && root.state !== "reading-card"
-        }
+        Row {
+            Layout.alignment: Qt.AlignHCenter
+            spacing: Theme.halfPadding
 
-        StatusBaseText {
-            id: title
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
-            font.weight: Font.Bold
-            font.pixelSize: Theme.fontSize(22)
+            StatusLoadingIndicator {
+                visible: root.processing
+                         && root.state !== "waiting-for-reader"
+                         && root.state !== "waiting-for-card"
+                         && root.state !== "reading-card"
+            }
+
+            StatusBaseText {
+                id: title
+                wrapMode: Text.WordWrap
+                font.weight: Font.Bold
+                font.pixelSize: Theme.fontSize(22)
+            }
         }
 
         StatusBaseText {

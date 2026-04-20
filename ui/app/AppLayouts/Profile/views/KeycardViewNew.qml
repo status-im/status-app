@@ -29,7 +29,9 @@ SettingsContentBase {
         onClicked: {
             const keyUid = ""
             const keycardUid = ""
-            Global.openKeycardManagementPopup(Constants.keycard.flow.readKeycard, keyUid, keycardUid)
+            const cardMetadataName = ""
+            const cardMetadataWalletAccountsJson = "[]"
+            Global.openKeycardManagementPopup(Constants.keycard.flow.readKeycard, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
         }
     }
 
@@ -78,6 +80,8 @@ SettingsContentBase {
                 d.availableSlots = availableSlots
                 d.cardMetadataName = cardMetadataName
                 d.cardMetadataWalletAccountsJson = cardMetadataWalletAccountsJson
+
+                detailsView.refresh()
 
                 root.sectionTitle = detailsView.detailsScreenTitle
                 root.backButtonNameRequested(root.mainSectionTitle)
@@ -136,6 +140,9 @@ SettingsContentBase {
                 break
             case Constants.keycard.flow.moveProfileKeyPair:
                 console.info("migrating a profile key pair to keycard - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
+                break
+            case Constants.keycard.flow.addKeyPairToStatus:
+                console.info("adding key pair from keycard - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
                 break
             }
 

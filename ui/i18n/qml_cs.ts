@@ -5738,6 +5738,10 @@ key pair. Keycard will be required for signing</source>
         <source>Factory reset Keycard</source>
         <translation type="unfinished">Tovární nastavení Keycard</translation>
     </message>
+    <message>
+        <source>No free pairing slots</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>DidYouKnowMessages</name>
@@ -10044,6 +10048,22 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Keycard is now required to log in and sign.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add key pair to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Adding key pair to Status...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Key pair has been added to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Now you can sign with this key pair using Keycard.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

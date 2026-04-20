@@ -29,6 +29,7 @@ type FlowType {.pure.} = enum
   ImportingKeyPair = "ImportingKeyPair"
   MigratingNonProfileKeypairToKeycard = "MigratingNonProfileKeypairToKeycard"
   MigratingProfileKeypairToKeycard = "MigratingProfileKeypairToKeycard"
+  AddingKeyPairFromKeycard = "AddingKeyPairFromKeycard"
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -43,6 +44,7 @@ type
     tmpXpub: string
     tmpAccountsData: seq[AccountData]
     tmpSeedPhrase: string
+    tmpMetadataAccountsJson: string
 
 proc newModule*[T](delegate: T,
   events: EventEmitter,
@@ -169,6 +171,8 @@ proc emitError[T](self: Module[T], err: string) =
     self.view.keycardMoveKeyPairError(err)
   elif self.tmpFlowType == FlowType.MigratingProfileKeypairToKeycard:
     self.view.keycardMoveProfileKeyPairError(err)
+  elif self.tmpFlowType == FlowType.AddingKeyPairFromKeycard:
+    self.view.keycardAddKeyPairError(err)
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
 
@@ -263,6 +267,45 @@ method populateKeyPairModel*[T](self: Module[T]) =
   let items = keypairs.buildKeyPairsList(self.controller.getKeypairs(), excludeAlreadyMigratedPairs = true,
     excludePrivateKeyKeypairs = false)
   self.view.createKeyPairModel(items)
+
+method startAddingKeyPairToStatusFromKeycard*[T](self: Module[T], pin: string, keyUid: string,
+    metadataName: string, metadataAccounts: string) =
+  self.tmpFlowType = FlowType.AddingKeyPairFromKeycard
+  self.tmpKeyUid = keyUid
+  self.tmpKeypairName = metadataName
+  self.tmpMetadataAccountsJson = metadataAccounts
+  self.controller.startExportExtendedPublicKey(self.tmpKeyUid, PATH_WALLET_XPUB, pin)
+
+method onKeycardExportExtendedPublicKeyFinished*[T](self: Module[T], xpub: string, error: string) =
+  if self.tmpFlowType != FlowType.AddingKeyPairFromKeycard:
+    return
+  if error.len > 0:
+    self.emitError("keycard export extended public key error: " & error)
+    return
+  if xpub.len == 0:
+    self.emitError("keycard export extended public key returned empty xpub")
+    return
+
+  self.tmpXpub = xpub
+
+  if not self.prepareAccountsData(self.tmpXpub, self.tmpMetadataAccountsJson):
+    self.emitError("failed to prepare accounts data")
+    return
+
+  # additional check to protect against adding a key pair which is already in the db, in case `startAddingKeyPairToStatusFromKeycard` is not called from the DetailsView
+  if self.isKnownKeyUid(self.tmpKeyUid):
+    self.emitError("key pair already exists in db, cannot be added, keyUid: " & self.tmpKeyUid)
+    return
+
+  self.view.keycardInteractionSuccessfullyCompleted()
+
+  let err = self.addNewKeycardKeypair()
+  if err.len > 0:
+    self.emitError("failed to add new keycard stored keypair: " & err)
+    return
+
+  self.saveKeypairToKeycard()
+  self.view.keycardAddKeyPairSuccess()
 
 method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], error: string) =
   if error.len > 0:

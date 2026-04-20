@@ -270,8 +270,14 @@ QtObject {
         openPopup(signingPopupComponent, { reason: reason, keyUid: keyUid, txHash: txHash, path: path, address: address })
     }
 
-    function openKeycardManagementPopup(flow, keyUid, keycardUid) {
-        openPopup(keycardManagementPopupComponent, { flow: flow, keyUid: keyUid, keycardUid: keycardUid })
+    function openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson) {
+        openPopup(keycardManagementPopupComponent, {
+            flow: flow,
+            keyUid: keyUid,
+            keycardUid: keycardUid,
+            cardMetadataName: cardMetadataName ?? "",
+            cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson ?? "[]"
+        })
     }
 
     function openCommunityProfilePopup(store, community, communitySectionModule) {

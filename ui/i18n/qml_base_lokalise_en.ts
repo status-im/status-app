@@ -6968,6 +6968,11 @@
       <comment>DetailsView</comment>
       <translation>Factory reset Keycard</translation>
     </message>
+    <message>
+      <source>No free pairing slots</source>
+      <comment>DetailsView</comment>
+      <translation>No free pairing slots</translation>
+    </message>
   </context>
   <context>
     <name>DidYouKnowMessages</name>
@@ -12151,6 +12156,26 @@
       <source>Keycard is now required to log in and sign.</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Keycard is now required to log in and sign.</translation>
+    </message>
+    <message>
+      <source>Add key pair to Status</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Add key pair to Status</translation>
+    </message>
+    <message>
+      <source>Adding key pair to Status...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Adding key pair to Status...</translation>
+    </message>
+    <message>
+      <source>Key pair has been added to Status</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Key pair has been added to Status</translation>
+    </message>
+    <message>
+      <source>Now you can sign with this key pair using Keycard.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Now you can sign with this key pair using Keycard.</translation>
     </message>
   </context>
   <context>
