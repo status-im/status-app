@@ -187,7 +187,7 @@ LayoutChooser {
         delayed: true
 
         value: {
-            const height = root.height + root.Window.window.additionalBottomMargin
+            const height = root.height + (root.Window.window?.additionalBottomMargin ?? 0)
 
             return [
                 height > root.width && root.width < root.implicitWidth, // Portrait mode
