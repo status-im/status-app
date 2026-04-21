@@ -951,6 +951,7 @@ run-macos: nim_status_client
 	mkdir -p bin/StatusDev.app/Contents/{MacOS,Resources}
 	cp Info.dev.plist bin/StatusDev.app/Contents/Info.plist
 	cp status-dev.icns bin/StatusDev.app/Contents/Resources/
+	cp resources.rcc bin/StatusDev.app/Contents/
 	cd bin/StatusDev.app/Contents/MacOS && \
 		ln -fs ../../../nim_status_client ./
 	fileicon set bin/nim_status_client status-dev.icns
