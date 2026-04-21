@@ -56,6 +56,10 @@ TextArea {
     */
     property bool valid: true
 
+    // Workaround to make selection working on Android. Otherwise
+    // selection is dropped right after selection.
+    onPressAndHold: ;
+
     leftPadding: Theme.padding
     rightPadding: Theme.padding
     topPadding: Theme.smallPadding
