@@ -39,6 +39,7 @@ StatusDialog {
 
     signal addBookmarkRequested()
     signal editBookmarkRequested(string url, string name)
+    signal deleteBookmarkRequested(string url)
     signal bookmarkClicked(string url)
 
     title: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs ? qsTr("Open tabs") : qsTr("Bookmarks")
@@ -255,7 +256,6 @@ StatusDialog {
                     spacing: Theme.halfPadding
                     width: ListView.view.width
 
-                    text: "%1 <font color='%3'>(%2)</a>".arg(model.name).arg(model.url).arg(Theme.palette.baseColor1)
                     icon.source: model.imageUrl || Assets.svg("globe")
                     icon.width: 24
                     icon.height: 24
@@ -273,11 +273,21 @@ StatusDialog {
                             image.sourceSize: Qt.size(width, height)
                             image.source: bookmarkDelegate.icon.source
                         }
-                        StatusBaseText {
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            text: bookmarkDelegate.text
-                            elide: Text.ElideRight
-                            font.pixelSize: Theme.fontSize(14)
+                            StatusBaseText {
+                                Layout.fillWidth: true
+                                text: model.name
+                                elide: Text.ElideRight
+                                font.pixelSize: Theme.fontSize(14)
+                            }
+                            StatusBaseText {
+                                Layout.fillWidth: true
+                                text: model.url
+                                elide: Text.ElideRight
+                                font.pixelSize: Theme.fontSize(14)
+                                color: Theme.palette.baseColor1
+                            }
                         }
                         StatusFlatButton {
                             icon.name: "edit_pencil"
@@ -287,6 +297,12 @@ StatusDialog {
                                 root.editBookmarkRequested(model.url, model.name)
                                 root.close()
                             }
+                        }
+                        StatusFlatButton {
+                            icon.name: "delete"
+                            type: StatusBaseButton.Type.Danger
+                            tooltip.text: qsTr("Delete bookmark")
+                            onClicked: root.deleteBookmarkRequested(model.url)
                         }
                     }
 
