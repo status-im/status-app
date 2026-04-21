@@ -29,6 +29,7 @@ ColumnLayout {
     QtObject {
         id: d
         readonly property int loadingItemsCount: 5
+        readonly property int delegateHeight: 64
     }
 
     spacing: 20
@@ -53,6 +54,8 @@ ColumnLayout {
         objectName: "providersList"
         Layout.fillWidth: true
         Layout.fillHeight: true
+        implicitHeight: root.providersLoading ? (d.loadingItemsCount + 1) * d.delegateHeight :
+                                                (regularModel.count + 1) * d.delegateHeight
 
         DelegateModel {
             id: regularModel

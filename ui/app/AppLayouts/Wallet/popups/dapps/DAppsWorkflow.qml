@@ -440,6 +440,7 @@ SQUtils.QObject {
         id: dappConnectSelectLoader
         objectName: "dappConnectSelectLoader"
         active: false
+        parent: root.visualParent
         sourceComponent: StatusDialog {
             id: dappConnectSelect
             objectName: "dappConnectSelect"
@@ -450,10 +451,10 @@ SQUtils.QObject {
             bottomPadding: 4
             destroyOnClose: false
             visible: true
-            parent: root.visualParent
 
             title: qsTr("Connect a dApp")
             footer: StatusDialogFooter {
+                bottomPadding: Theme.padding + dappConnectSelect.parent.SafeArea.margins.bottom
                 rightButtons: ObjectModel {
                     StatusButton {
                         text: qsTr("Cancel")
@@ -466,6 +467,7 @@ SQUtils.QObject {
                 StatusBaseText {
                     Layout.fillWidth: true
                     Layout.leftMargin: Theme.padding
+                    Layout.topMargin: Theme.padding
                     color: Theme.palette.baseColor1
                     text: qsTr("How would you like to connect?")
                 }
@@ -503,6 +505,7 @@ SQUtils.QObject {
                         dappConnectSelect.close()
                         root.pairWithConnectorRequested(Constants.DAppConnectors.WalletConnect)
                     }
+                    Layout.bottomMargin: Theme.padding
                 }
             }
             onClosed: dappConnectSelectLoader.active = false

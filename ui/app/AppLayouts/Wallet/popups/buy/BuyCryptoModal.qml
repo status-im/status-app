@@ -138,7 +138,6 @@ StatusStackModal {
     }
 
     width: 560
-    implicitHeight: 515
     padding: Theme.xlPadding
     stackTitle: !!root.buyCryptoInputParamsForm.selectedTokenGroupKey ?
                     qsTr("Ways to buy %1 for %2").arg(d.selectedTokenEntry.item.name).arg(!!d.selectedAccountEntry.item ? d.selectedAccountEntry.item.name: "")
