@@ -286,15 +286,15 @@ method onKeycardExportExtendedPublicKeyFinished*[T](self: Module[T], xpub: strin
     self.emitError("keycard export extended public key returned empty xpub")
     return
 
+  # additional check to protect against adding a key pair which is already in the db, in case `startAddingKeyPairToStatusFromKeycard` is not called from the DetailsView
+  if self.isKnownKeyUid(self.tmpKeyUid):
+    self.emitError("key pair already exists in db, cannot be added, keyUid: " & self.tmpKeyUid)
+    return
+
   self.tmpXpub = xpub
 
   if not self.prepareAccountsData(self.tmpXpub, self.tmpMetadataAccountsJson):
     self.emitError("failed to prepare accounts data")
-    return
-
-  # additional check to protect against adding a key pair which is already in the db, in case `startAddingKeyPairToStatusFromKeycard` is not called from the DetailsView
-  if self.isKnownKeyUid(self.tmpKeyUid):
-    self.emitError("key pair already exists in db, cannot be added, keyUid: " & self.tmpKeyUid)
     return
 
   self.view.keycardInteractionSuccessfullyCompleted()

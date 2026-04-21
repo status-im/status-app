@@ -99,14 +99,14 @@ ColumnLayout {
 
         property bool pairingExists: false
         property bool isKnownKeyPair: false
-        property bool allNonProfileKpsMigrated: false
+        property bool allNonProfileKeyPairsMigrated: false
 
         function refresh() {
             d.pairingExists = !!root.keycardUid
                               && root.keycardStore.keycardPairingExists(root.keycardUid)
             d.isKnownKeyPair = d.hasKeyPair
                                && root.keycardStore.isKnownKeyUid(root.keyUid)
-            d.allNonProfileKpsMigrated = root.keycardStore.allNonProfileKeyPairsMigratedToKeycard()
+            d.allNonProfileKeyPairsMigrated = root.keycardStore.allNonProfileKeyPairsMigratedToKeycard()
 
             root.keycardStore.resolveKeyPairItemForKeyUid(root.keyUid)
         }
@@ -253,7 +253,7 @@ ColumnLayout {
 
     StatusListItem {
         Layout.fillWidth: true
-        visible: !d.allNonProfileKpsMigrated
+        visible: !d.allNonProfileKeyPairsMigrated
                  && (d.isEmpty
                      || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && !d.noKnownAndNoAvailablePairingSlots)
         title: qsTr("Move key pair from Status wallet to Keycard")
