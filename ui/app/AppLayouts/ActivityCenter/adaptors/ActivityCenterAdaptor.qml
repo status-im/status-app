@@ -678,7 +678,7 @@ QtObject {
                         getCommunityDetails: root.getCommunityDetails
 
                         // Avatar related
-                        badgeIconName: "action-check"
+                        badgeIconName: "action-green-airplane"
 
                         // Action text
                         actionText: qsTr("Request to join community")

@@ -516,5 +516,6 @@
         <file>icons/justContact.svg</file>
         <file>icons/trustedContact.svg</file>
         <file>icons/untrustworthyContact.svg</file>
+        <file>icons/action-green-airplane.svg</file>
     </qresource>
 </RCC>
