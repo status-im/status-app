@@ -784,7 +784,7 @@ Control {
             Theme.fontSizeOffset: ThemeUtils.fontSizeOffsetM
 
             styleButtonVisible: false
-            showFormatting: !!messageInputField.selectedText
+            showFormatting: messageInputField.selectionStart !== messageInputField.selectionEnd
 
             cameraButton.visible: false
 
