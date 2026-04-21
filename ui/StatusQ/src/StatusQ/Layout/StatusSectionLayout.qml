@@ -181,16 +181,19 @@ LayoutChooser {
             portraitView.decrementCurrentIndex()
     }
 
-    criteria: {
-        // Workaround to compensate keyboard height when determining mode. Relying on SafeArea's
-        // additionalMargings doesn't work as expected, therefore additionalBottomMargin is used
-        // directly.
-        const height = root.height + Window.window.additionalBottomMargin
+    Binding on criteria {
+        // delay to avoid race conditions related to additional bottom space and therefore
+        // unexpected mode changes when opening/closing virtual keyboard
+        delayed: true
 
-        return [
-            height > root.width && root.width < root.implicitWidth, // Portrait mode
-            true // Defaults to landscape mode
-        ]
+        value: {
+            const height = root.height + root.Window.window.additionalBottomMargin
+
+            return [
+                height > root.width && root.width < root.implicitWidth, // Portrait mode
+                true // Defaults to landscape mode
+            ]
+        }
     }
 
     layoutChoices: [
