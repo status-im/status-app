@@ -160,7 +160,7 @@ compile-translations:
 ifeq ($(HOST_OS),linux)
 	@make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
 else
-	@CC= CXX= make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
+	@CC= CXX= LDFLAGS= CGO_LDFLAGS= NIMFLAGS= make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
 endif
 
 .PHONY: apk
