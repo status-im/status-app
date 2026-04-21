@@ -21,7 +21,6 @@ proc newStatusFoundation*(): StatusFoundation =
   result.signalsManager = newSignalsManager(result.events)
 
 proc delete*(self: StatusFoundation) =
-  self.threadpool.teardown()
   self.signalsManager.delete()
   self.urlsManager.delete()
 

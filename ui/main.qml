@@ -65,7 +65,7 @@ Window {
 
     // Store the native SafeArea bottom margin (e.g., iOS home indicator)
     // Must be set in Component.onCompleted before any additionalMargins are applied
-    property real nativeSafeAreaBottom: 0
+    property real nativeSafeAreaBottom: applicationWindow.contentItem.SafeArea.margins.bottom
 
     // Use native Android keyboard tracking via WindowInsets API
     // This bypasses Qt's unreliable inputMethod and works with any windowSoftInputMode
@@ -396,26 +396,6 @@ Window {
         }
     }
 
-    // Clear additional SafeArea's margins when regular margins are initialized. Doing cleanup
-    // this way prevents binding loop between margins and additional margins.
-    Connections {
-        id: safeMarginsCleanupConnections
-
-        enabled: false
-        target: applicationWindow.contentItem.SafeArea
-
-        function onMarginsChanged() {
-            const safeArea = applicationWindow.contentItem.SafeArea
-
-            safeArea.additionalMargins.top = 0
-            safeArea.additionalMargins.bottom = Qt.binding(() => applicationWindow.additionalBottomMargin)
-            safeArea.additionalMargins.left = 0
-            safeArea.additionalMargins.right = 0
-
-            safeMarginsCleanupConnections.enabled = false
-        }
-    }
-
     Component.onCompleted: {
 
         console.info(">>> %1 %2 started, using Qt version %3, QPA: %4".arg(Application.name).arg(Application.version).arg(SystemUtils.qtRuntimeVersion()).arg(Qt.platform.pluginName))
@@ -439,29 +419,6 @@ Window {
         restoreAppState()
 
         Global.openShakeToSharePopupRequested.connect(openShakeToSharePopup)
-
-        nativeSafeAreaBottom = MobileUI.safeAreaBottom + MobileUI.navbarHeight
-
-        // SafeArea margins works well out of the box when app uses regular qml Window as a top level
-        // window. When custom window derived from QQuickWindow is used, SafeArea's margins are all 0
-        // till first screen rotation or virtual keyboard usage (Android 15, 16, not and issue on Android 14).
-        // This workaround initializes margins by adding addtionalMargins using values read directly from
-        // via native API. When the margins are initialized, binding is cleared.
-        const safeArea = applicationWindow.contentItem.SafeArea
-
-        if (safeArea.margins.bottom === 0 && MobileUI.safeAreaBottom + MobileUI.navbarHeight > 0)
-            safeArea.additionalMargins.bottom = Qt.binding(() => MobileUI.safeAreaBottom + MobileUI.navbarHeight + applicationWindow.additionalBottomMargin)
-
-        if (safeArea.margins.top === 0 && MobileUI.safeAreaTop > 0)
-            safeArea.additionalMargins.top = Qt.binding(() => MobileUI.safeAreaTop)
-
-        if (safeArea.margins.right === 0 && MobileUI.safeAreaRight > 0)
-            safeArea.additionalMargins.right = Qt.binding(() => MobileUI.safeAreaRight)
-
-        if (safeArea.margins.left === 0 && MobileUI.safeAreaLeft > 0)
-            safeArea.additionalMargins.left = Qt.binding(() => MobileUI.safeAreaLeft)
-
-        safeMarginsCleanupConnections.enabled = true
 
         if (applicationWindow.skipOnboarding) {
             moveToAppMain()

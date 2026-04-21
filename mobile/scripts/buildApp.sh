@@ -64,6 +64,18 @@ if [[ "${OS}" == "android" ]]; then
     --android-platform android-35 \
     --verbose --aux-mode
 
+  # Package service-only libs into the APK without adding them to Qt's
+  # bundled_libs auto-load list. Qt has no qmake variable for "package only",
+  # so we drop the libs into android-build/libs/<abi>/ directly after
+  # androiddeployqt (gradle's jniLibs.srcDirs=['libs'] picks them up).
+  # These are loaded by the :statusgo service via System.loadLibrary("status_service")
+  # and must NOT be dlopen'd in the UI process (see mobile/wrapperApp/Status.pro).
+  # cp -f overwrites any stale copy androiddeployqt may have left from a prior
+  # build when these libs were still in ANDROID_EXTRA_LIBS.
+  for lib in libstatus.so libstatus_service.so libsds.so; do
+    cp -f "$CWD/../lib/android/qt${QT_MAJOR}/$lib" "$BUILD_DIR/android-build/libs/arm64-v8a/$lib"
+  done
+
   # Copy custom Android files, preserve Qt-generated libs.xml
   cp "$CWD/../android/qt${QT_MAJOR}"/{AndroidManifest.xml,build.gradle,settings.gradle,gradle.properties} "$BUILD_DIR/android-build/"
   rsync -a --exclude='libs.xml' "$CWD/../android/qt${QT_MAJOR}/res/" "$BUILD_DIR/android-build/res/" 2>/dev/null || true

@@ -247,7 +247,7 @@ void Keychain::cancelActiveRequest()
     const QJniObject auth = ensureJavaAuth();
     if (!auth.isValid()) return;
 
-    auth.callMethod<void>("cancel", "()I");
+    auth.callMethod<void>("cancel", "()V");
 }
 
 // Credential saved result (async)
