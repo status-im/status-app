@@ -37,6 +37,8 @@ Control {
     component ChatIcon: AbstractButton {
         id: chatIconRoot
 
+        focusPolicy: Qt.NoFocus
+
         checkable: true
         padding: Math.round(Theme.halfPadding / 2)
 
