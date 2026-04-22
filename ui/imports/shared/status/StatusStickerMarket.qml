@@ -110,6 +110,7 @@ Item {
                     width: parent.width
                     radius: 12
                     source: model.preview
+                    fillMode: Image.PreserveAspectFit
                     onClicked: {
                         stickerPackDetailsPopup.open()
                         root.closeRequested()
