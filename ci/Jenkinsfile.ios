@@ -63,7 +63,7 @@ pipeline {
     QTDIR = sh(script:"${env.QMAKE} -query QT_INSTALL_PREFIX", returnStdout: true).trim()
     /* Enforce Go version installed infra-role-golang. */
     /* to fix missing rcc, since QT6 rcc is located at ${QTDIR}/libexec/rcc */
-    PATH = "${env.QTDIR}/bin:${env.QTDIR}/libexec:${env.HOME}/go/bin:/usr/local/go/bin:${env.PATH}"
+    PATH = "${env.QTDIR}/bin:${env.QTDIR}/libexec:${env.HOME}/go/bin:/usr/local/go/bin:${env.PATH}:/run/current-system/sw/bin"
     /* prevent sharing cache dir across different jobs */
     GO_GENERATE_FAST_DIR = "${env.WORKSPACE_TMP}/go-generate-fast"
     XDG_CACHE_HOME = "${env.WORKSPACE_TMP}/.cache"

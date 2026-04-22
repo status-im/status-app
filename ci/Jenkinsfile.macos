@@ -78,7 +78,7 @@ pipeline {
     QTDIR = sh(script:"${env.QMAKE} -query QT_INSTALL_PREFIX", returnStdout: true).trim()
     /* Enforce Go version installed infra-role-golang. */
     /* to fix missing rcc, since QT6 rcc is located at ${QTDIR}/libexec/rcc and nix */
-    PATH = "/nix/var/nix/profiles/default/bin:${env.QTDIR}/bin:${env.QTDIR}/libexec:${env.HOME}/go/bin:/usr/local/go/bin:${env.PATH}"
+    PATH = "/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:${env.QTDIR}/bin:${env.QTDIR}/libexec:${env.HOME}/go/bin:/usr/local/go/bin:${env.PATH}"
     /* Avoid weird bugs caused by stale cache. */
     QML_DISABLE_DISK_CACHE = "true"
     /* Set USE_NWAKU before VERSION since version.sh uses it */
