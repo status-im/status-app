@@ -86,6 +86,12 @@ proc findPairingJsonForInstance(pairingsRoot: JsonNode, keycardUid: string): Jso
       return v
   return nil
 
+method remainingKeypairCapacity*(self: Module): int =
+  return self.controller.remainingKeypairCapacity()
+
+method remainingAccountCapacity*(self: Module): int =
+  return self.controller.remainingAccountCapacity()
+
 method keycardPairingExists*(self: Module, keycardUid: string): bool =
   if keycardUid.len == 0:
     return false

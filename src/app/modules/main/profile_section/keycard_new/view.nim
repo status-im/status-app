@@ -32,6 +32,12 @@ QtObject:
   proc keycardPairingExists*(self: View, keycardUid: string): bool {.slot.} =
     return self.delegate.keycardPairingExists(keycardUid)
 
+  proc remainingKeypairCapacity*(self: View): int {.slot.} =
+    return self.delegate.remainingKeypairCapacity()
+
+  proc remainingAccountCapacity*(self: View): int {.slot.} =
+    return self.delegate.remainingAccountCapacity()
+
   proc notifyKeyPairItemChanged*(self: View) {.signal.}
   proc getKeyPairItem*(self: View): QVariant {.slot.} =
     if self.keyPairItemVariant.isNil:

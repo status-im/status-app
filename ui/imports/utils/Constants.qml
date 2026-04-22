@@ -448,8 +448,6 @@ QtObject {
 
         readonly property string temporarilyUnavailable: qsTr("Temporarily unavailable, will be available in the next release.")
 
-        readonly property int maxNumberOfAccountsToAddWhenImportingKeyPair: 5
-
         readonly property QtObject general: QtObject {
             readonly property string purchasePage: "https://get.keycard.tech"
             readonly property int onboardingHeight: 460

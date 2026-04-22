@@ -140,3 +140,9 @@ proc setStoreToKeychainValueNotNow*(self: Controller) =
 
 proc startStopUsingKeycardForKeyPair*(self: Controller, keyUid, seedPhrase, newPassword: string) =
   self.walletAccountService.migrateNonProfileKeycardKeypairToAppAsync(keyUid, seedPhrase, newPassword, doPasswordHashing = true)
+
+proc remainingKeypairCapacity*(self: Controller): int =
+  return self.walletAccountService.remainingKeypairCapacity()
+
+proc remainingAccountCapacity*(self: Controller): int =
+  return self.walletAccountService.remainingAccountCapacity()

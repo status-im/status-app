@@ -280,6 +280,10 @@ ColumnLayout {
             }
         ]
         onClicked: {
+            if (root.keycardStore.remainingKeypairCapacity() === 0) {
+                Global.openLimitReachedPopup(Constants.LimitWarning.Keypairs)
+                return
+            }
             d.startFlow(Constants.keycard.flow.importNewKeyPair)
         }
     }
@@ -348,6 +352,10 @@ ColumnLayout {
             }
         ]
         onClicked: {
+            if (root.keycardStore.remainingKeypairCapacity() === 0) {
+                Global.openLimitReachedPopup(Constants.LimitWarning.Keypairs)
+                return
+            }
             d.startFlow(Constants.keycard.flow.addKeyPairToStatus)
         }
     }
