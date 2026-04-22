@@ -1,10 +1,12 @@
 import QtQuick
+import QtQuick.Controls
 
 import StatusQ
+import StatusQ.Controls as StatusQ
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as StatusQUtils
-import StatusQ.Controls as StatusQ
+import StatusQ.Popups
 
 import AppLayouts.Chat.adaptors
 import utils
@@ -142,78 +144,10 @@ StatusQ.StatusTextArea {
             }
         }
 
-        if (event.matches(StandardKey.Copy) || event.matches(StandardKey.Cut)) {
-            if (root.selectedText !== "") {
-                d.copiedTextPlain = root.getText(
-                            root.selectionStart, root.selectionEnd)
-                d.copiedTextFormatted = root.getFormattedText(
-                            root.selectionStart, root.selectionEnd)
-                d.copyMentions(root.selectionStart, root.selectionEnd)
-            }
-        } else if (event.matches(StandardKey.Paste)) {
-            if (!ClipboardUtils.hasText)
-                return
-
-            const clipboardText = StatusQUtils.StringUtils.plainText(ClipboardUtils.text)
-            // prevent repetitive & huge clipboard paste, where huge is total char count > than messageLimitHard
-            const selectionLength = root.selectionEnd - root.selectionStart
-            if ((length + clipboardText.length - selectionLength) > root.messageLimitHard)
-            {
-                attemptToExceedHardLimit()
-                event.accepted = true
-                return
-            }
-
-            root.remove(root.selectionStart, root.selectionEnd)
-
-            // cursor position must be stored in a helper property because setting readonly to true causes change
-            // of the cursor position to the end of the input
-            d.copyTextStart = root.cursorPosition
-            root.readOnly = true
-
-            const copiedText = StatusQUtils.StringUtils.plainText(d.copiedTextPlain)
-
-            if (copiedText === clipboardText) {
-                if (d.copiedTextPlain.includes("@")) {
-                    d.copiedTextFormatted = d.copiedTextFormatted.replace(
-                                        /span style="/g, "span style=\" text-decoration:none;")
-
-                    let lastFoundIndex = -1
-                    for (let j = 0; j < d.copiedMentionsPos.length; j++) {
-                        const name = d.copiedMentionsPos[j].name
-                        const indexOfName = d.copiedTextPlain.indexOf(name, lastFoundIndex)
-                        lastFoundIndex += name.length
-
-                        if (indexOfName === d.copiedMentionsPos[j].leftIndex + 1) {
-                            const mention = {
-                                name: name,
-                                pubKey: d.copiedMentionsPos[j].pubKey,
-                                leftIndex: (d.copiedMentionsPos[j].leftIndex + d.copyTextStart - 1),
-                                rightIndex: (d.copiedMentionsPos[j].leftIndex + d.copyTextStart + name.length)
-                            }
-                            d.mentionsPos.push(mention)
-                            d.sortMentions()
-                        }
-                    }
-                }
-                insertInTextInput(d.copyTextStart, d.copiedTextFormatted)
-            } else {
-                d.copiedTextPlain = ""
-                d.copiedTextFormatted = ""
-                d.copiedMentionsPos = []
-                root.insert(d.copyTextStart, ((d.nbEmojisInClipboard === 0) ?
-                ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
-                : StatusQUtils.Emoji.deparse(ClipboardUtils.html)))
-            }
-
-            // Reset readOnly immediately after paste completes
-            // Don't wait for onReleased which might not fire on mobile
-            if (StatusQUtils.Utils.isMobile) {
-                root.readOnly = false
-                root.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard)
-            }
-            event.accepted = true
-        }
+        if (event.matches(StandardKey.Copy) || event.matches(StandardKey.Cut))
+            d.prepareCopyOrCut()
+        else if (event.matches(StandardKey.Paste))
+            event.accepted = d.paste()
     }
 
     // gives up-to-date cursorPosition
@@ -721,6 +655,82 @@ StatusQ.StatusTextArea {
                 }
             }
         }
+
+        function prepareCopyOrCut() {
+            if (root.selectedText === "")
+                return
+
+            d.copiedTextPlain = root.getText(
+                        root.selectionStart, root.selectionEnd)
+            d.copiedTextFormatted = root.getFormattedText(
+                        root.selectionStart, root.selectionEnd)
+            d.copyMentions(root.selectionStart, root.selectionEnd)
+        }
+
+        function paste(immediateCleanup = false) {
+            if (!ClipboardUtils.hasText)
+                return false
+
+            const clipboardText = StatusQUtils.StringUtils.plainText(ClipboardUtils.text)
+            // prevent repetitive & huge clipboard paste, where huge is total char count > than messageLimitHard
+            const selectionLength = root.selectionEnd - root.selectionStart
+            if ((length + clipboardText.length - selectionLength) > root.messageLimitHard)
+            {
+                root.attemptToExceedHardLimit()
+                return true
+            }
+
+            root.remove(root.selectionStart, root.selectionEnd)
+
+            // cursor position must be stored in a helper property because setting readonly to true causes change
+            // of the cursor position to the end of the input
+            d.copyTextStart = root.cursorPosition
+            root.readOnly = true
+
+            const copiedText = StatusQUtils.StringUtils.plainText(d.copiedTextPlain)
+
+            if (copiedText === clipboardText) {
+                if (d.copiedTextPlain.includes("@")) {
+                    d.copiedTextFormatted = d.copiedTextFormatted.replace(
+                                        /span style="/g, "span style=\" text-decoration:none;")
+
+                    let lastFoundIndex = -1
+                    for (let j = 0; j < d.copiedMentionsPos.length; j++) {
+                        const name = d.copiedMentionsPos[j].name
+                        const indexOfName = d.copiedTextPlain.indexOf(name, lastFoundIndex)
+                        lastFoundIndex += name.length
+
+                        if (indexOfName === d.copiedMentionsPos[j].leftIndex + 1) {
+                            const mention = {
+                                name: name,
+                                pubKey: d.copiedMentionsPos[j].pubKey,
+                                leftIndex: (d.copiedMentionsPos[j].leftIndex + d.copyTextStart - 1),
+                                rightIndex: (d.copiedMentionsPos[j].leftIndex + d.copyTextStart + name.length)
+                            }
+                            d.mentionsPos.push(mention)
+                            d.sortMentions()
+                        }
+                    }
+                }
+                root.insertInTextInput(d.copyTextStart, d.copiedTextFormatted)
+            } else {
+                d.copiedTextPlain = ""
+                d.copiedTextFormatted = ""
+                d.copiedMentionsPos = []
+                root.insert(d.copyTextStart, ((d.nbEmojisInClipboard === 0) ?
+                ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
+                : StatusQUtils.Emoji.deparse(ClipboardUtils.html)))
+            }
+
+            // Reset readOnly immediately after paste completes
+            // Don't wait for onReleased which might not fire on mobile
+            if (StatusQUtils.Utils.isMobile || immediateCleanup) {
+                root.readOnly = false
+                root.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard)
+            }
+
+            return true
+        }
     }
 
     SuggestionsFilterAdaptor {
@@ -764,4 +774,34 @@ StatusQ.StatusTextArea {
         enabled: parent.hoveredLink
         cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.IBeamCursor
     }
+
+    StatusMenu {
+        id: contextMenu
+
+        hideDisabledItems: false
+
+        StatusAction {
+            text: qsTr("Cut")
+            enabled: root.selectionStart !== root.selectionEnd
+            onTriggered: {
+                d.prepareCopyOrCut()
+                root.cut()
+            }
+        }
+        StatusAction {
+            text: qsTr("Copy")
+            enabled: root.selectionStart !== root.selectionEnd
+            onTriggered: {
+                d.prepareCopyOrCut()
+                root.copy()
+            }
+        }
+        StatusAction {
+            text: qsTr("Paste")
+            enabled: root.canPaste
+            onTriggered: d.paste(true)
+        }
+    }
+
+    ContextMenu.menu: StatusQUtils.Utils.isMobile ? null : contextMenu
 }

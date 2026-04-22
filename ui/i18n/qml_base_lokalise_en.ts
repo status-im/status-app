@@ -20370,6 +20370,24 @@
     </message>
   </context>
   <context>
+    <name>StatusChatInputTextArea</name>
+    <message>
+      <source>Cut</source>
+      <comment>StatusChatInputTextArea</comment>
+      <translation>Cut</translation>
+    </message>
+    <message>
+      <source>Copy</source>
+      <comment>StatusChatInputTextArea</comment>
+      <translation>Copy</translation>
+    </message>
+    <message>
+      <source>Paste</source>
+      <comment>StatusChatInputTextArea</comment>
+      <translation>Paste</translation>
+    </message>
+  </context>
+  <context>
     <name>StatusChatListCategoryItem</name>
     <message>
       <source>Add channel inside category</source>

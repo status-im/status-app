@@ -16744,6 +16744,21 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>StatusChatInputTextArea</name>
+    <message>
+        <source>Cut</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished">Copiar</translation>
+    </message>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished">Pegar</translation>
+    </message>
+</context>
+<context>
     <name>StatusChatListCategoryItem</name>
     <message>
         <source>Add channel inside category</source>
