@@ -56,17 +56,15 @@ ColumnLayout {
 
         // pairing slot has the highest priority, cause the keycard cannot be read if the pairing doesn't exist or a new pairing cannot be made
         readonly property bool noKnownAndNoAvailablePairingSlots: root.keycardState === Constants.keycard.state.noAvailablePairingSlots
-                                                                  || (root.availableSlots <= 0 && !d.pairingExists)
+                                                                  || (!!root.keycardUid && root.availableSlots === 0 && !d.pairingExists)
 
-        readonly property bool isBlockedPIN: !d.noKnownAndNoAvailablePairingSlots
-                                             && !d.isEmpty
+        readonly property bool isBlockedPIN: !d.isEmpty
                                              && (root.keycardState === Constants.keycard.state.blockedPIN
-                                                 || root.remainingPinAttempts <= 0)
+                                                 || !!root.keycardUid && root.remainingPinAttempts === 0)
 
-        readonly property bool isBlockedPUK: !d.noKnownAndNoAvailablePairingSlots
-                                             && !d.isEmpty
+        readonly property bool isBlockedPUK: !d.isEmpty
                                              && (root.keycardState === Constants.keycard.state.blockedPUK
-                                                 || root.remainingPukAttempts <= 0)
+                                                 || !!root.keycardUid && root.remainingPukAttempts <= 0)
 
         readonly property bool isEmpty: !d.noKnownAndNoAvailablePairingSlots
                                         && (root.keycardState === Constants.keycard.state.emptyKeycard
