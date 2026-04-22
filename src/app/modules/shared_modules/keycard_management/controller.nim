@@ -72,6 +72,11 @@ proc init*(self: Controller) =
     self.delegate.onKeycardExportExtendedPublicKeyFinished(args.exportedExtendedPublicKey.xpub, args.error)
   self.connectionIds.add(handlerId)
 
+  handlerId = self.events.onWithUUID(SIGNAL_ALL_KEYCARDS_DELETED) do(e: Args):
+    let args = KeycardArgs(e)
+    self.delegate.onStopUsingKeycardForKeyPairFinished(args.keycard.keyUid, args.success)
+  self.connectionIds.add(handlerId)
+
 proc startGetMetadata*(self: Controller, pin: string) =
   self.keycardServiceV2.asyncGetKeycardMetadata(pin)
 
@@ -132,3 +137,6 @@ proc convertRegularProfileKeypairToKeycard*(self: Controller, keycardUid, curren
 
 proc setStoreToKeychainValueNotNow*(self: Controller) =
   singletonInstance.localAccountSettings.setStoreToKeychainValue(LS_VALUE_NOT_NOW)
+
+proc startStopUsingKeycardForKeyPair*(self: Controller, keyUid, seedPhrase, newPassword: string) =
+  self.walletAccountService.migrateNonProfileKeycardKeypairToAppAsync(keyUid, seedPhrase, newPassword, doPasswordHashing = true)

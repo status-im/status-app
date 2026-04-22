@@ -26,10 +26,12 @@ type AccountData = object
   publicKey: string
 
 type FlowType {.pure.} = enum
-  ImportingKeyPair = "ImportingKeyPair"
-  MigratingNonProfileKeypairToKeycard = "MigratingNonProfileKeypairToKeycard"
-  MigratingProfileKeypairToKeycard = "MigratingProfileKeypairToKeycard"
-  AddingKeyPairFromKeycard = "AddingKeyPairFromKeycard"
+  ImportingKeyPair = "ImportingKeyPair" # imports a key pair form the seed phrase (provided or created by the app) to the Keycard
+                                        # if the key pair is not already addded to the app, the flow adds it
+  MigratingNonProfileKeypairToKeycard = "MigratingNonProfileKeypairToKeycard" # migrates a non-profile keypair to the keycard (only if the keypair is not already migrated)
+  MigratingProfileKeypairToKeycard = "MigratingProfileKeypairToKeycard" # migrates a profile keypair to the keycard (only if the keypair is not already migrated)
+  AddingKeyPairFromKeycard = "AddingKeyPairFromKeycard" # adds a new key pair from the keycard to the app (only if the key pair is not already added)
+  StoppingKeycardForKeyPair = "StoppingKeycardForKeyPair" # stops using a Keycard for a non-profile key pair by moving it back into the app
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -119,6 +121,12 @@ method isKnownKeyUid*[T](self: Module[T], keyUid: string): bool =
     return false
   return true
 
+method isKeyPairMigratedToKeycard*[T](self: Module[T], keyUid: string): bool =
+  let keypair = self.controller.getKeypairByKeyUid(keyUid)
+  if keypair.isNil or keypair.removed:
+    return false
+  return keypair.migratedToKeycard()
+
 method getKeyPairNameForKeyUid*[T](self: Module[T], keyUid: string): string =
   let keypair = self.controller.getKeypairByKeyUid(keyUid)
   if keypair.isNil or keypair.removed:
@@ -173,6 +181,8 @@ proc emitError[T](self: Module[T], err: string) =
     self.view.keycardMoveProfileKeyPairError(err)
   elif self.tmpFlowType == FlowType.AddingKeyPairFromKeycard:
     self.view.keycardAddKeyPairError(err)
+  elif self.tmpFlowType == FlowType.StoppingKeycardForKeyPair:
+    self.view.stopUsingKeycardForKeyPairError(err)
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
 
@@ -268,6 +278,27 @@ method populateKeyPairModel*[T](self: Module[T]) =
     excludePrivateKeyKeypairs = false)
   self.view.createKeyPairModel(items)
 
+method getKeyPairItemForKeyUid*[T](self: Module[T], keyUid: string): KeyPairItem =
+  let keypair = self.controller.getKeypairByKeyUid(keyUid)
+  if keypair.isNil or keypair.removed:
+    return nil
+  return keypairs.buildKeypairItem(keypair, areTestNetworksEnabled = false)
+
+method startStopUsingKeycardForKeyPair*[T](self: Module[T], keyUid, seedPhrase, newPassword: string) =
+  self.tmpFlowType = FlowType.StoppingKeycardForKeyPair
+  self.tmpKeyUid = keyUid
+  self.tmpSeedPhrase = seedPhrase
+  self.tmpPassword = newPassword # it is hashed in the service
+  self.controller.startStopUsingKeycardForKeyPair(keyUid, seedPhrase, newPassword)
+
+method onStopUsingKeycardForKeyPairFinished*[T](self: Module[T], keyUid: string, success: bool) =
+  if self.tmpFlowType != FlowType.StoppingKeycardForKeyPair:
+    return
+  if not success or keyUid != self.tmpKeyUid:
+    self.emitError("failed to stop using Keycard for key pair")
+    return
+  self.view.stopUsingKeycardForKeyPairSuccess()
+
 method startAddingKeyPairToStatusFromKeycard*[T](self: Module[T], pin: string, keyUid: string,
     metadataName: string, metadataAccounts: string) =
   self.tmpFlowType = FlowType.AddingKeyPairFromKeycard
@@ -315,14 +346,15 @@ method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], error: string) =
   self.view.keycardInteractionSuccessfullyCompleted() # this signal is used to switch from the kreycard states to progressing statess
 
   if self.tmpFlowType == FlowType.ImportingKeyPair:
-    if self.isKnownKeyUid(self.tmpKeyUid):
-      self.emitError("key pair already exists in db, cannot be imported, keyUid: " & self.tmpKeyUid)
+    if not self.isKnownKeyUid(self.tmpKeyUid):
+      let err = self.addNewKeycardKeypair()
+      if err.len > 0:
+        self.emitError("failed to add new keycard stored keypair: " & err)
+        return
+      self.saveKeypairToKeycard() # this is just to add keycard to db and remove keystore files
+    elif not self.isKeyPairMigratedToKeycard(self.tmpKeyUid):
+      self.emitError("key pair is not migrated to keycard, cannot be imported to keycard, keyUid: " & self.tmpKeyUid)
       return
-    let err = self.addNewKeycardKeypair()
-    if err.len > 0:
-      self.emitError("failed to add new keycard stored keypair: " & err)
-      return
-    self.saveKeypairToKeycard() # this is just to add keycard to db and remove keystore files
     self.view.keycardImportKeyPairSuccess()
   elif self.tmpFlowType == FlowType.MigratingNonProfileKeypairToKeycard:
     let error = self.controller.updateKeypairExtendedPublicKey(self.tmpKeyUid, self.tmpXpub, wallet_account_service.ColdWalletTypeStatusKeycard)

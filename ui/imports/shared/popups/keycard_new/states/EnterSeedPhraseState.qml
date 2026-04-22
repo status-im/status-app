@@ -18,6 +18,8 @@ Control {
     // Function to validate and get keyUid for the seed phrase, must be provided by parent
     required property var validateSeedPhrase
 
+    property string initialSeedPhrase: ""
+
     property bool seedPhraseValid: false
     property string validatedSeedPhrase: ""
 
@@ -44,6 +46,7 @@ Control {
             Layout.fillWidth: true
 
             dictionary: BIP39_en {}
+            initialSeedPhrase: root.initialSeedPhrase
 
             onSeedPhraseProvided: function(seedPhrase) {
                 const phrase = seedPhrase.join(" ")

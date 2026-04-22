@@ -16,6 +16,8 @@ QtObject:
       cardMetadataWalletAccountsJson: string
       keyPairModel: KeyPairModel
       keyPairModelVariant: QVariant
+      keyPairItem: KeyPairItem
+      keyPairItemVariant: QVariant
 
   ## Forward declarations
   proc delete*(self: View)
@@ -32,6 +34,8 @@ QtObject:
     result.keyUid = ""
     result.cardMetadataName = ""
     result.cardMetadataWalletAccountsJson = "[]"
+    result.keyPairItem = newKeyPairItem()
+    result.keyPairItemVariant = newQVariant(result.keyPairItem)
 
   proc stopKeycardAction*(self: View) {.slot.} =
     self.delegate.stopKeycardAction()
@@ -62,6 +66,9 @@ QtObject:
   proc keycardAddKeyPairSuccess*(self: View) {.signal.}
   proc keycardAddKeyPairError*(self: View, error: string) {.signal.}
 
+  proc stopUsingKeycardForKeyPairSuccess*(self: View) {.signal.}
+  proc stopUsingKeycardForKeyPairError*(self: View, error: string) {.signal.}
+
   proc keyPairModelChanged(self: View) {.signal.}
   proc getKeyPairModel(self: View): QVariant {.slot.} =
     if self.keyPairModelVariant.isNil:
@@ -87,6 +94,9 @@ QtObject:
 
   proc isKnownKeyUid*(self: View, keyUid: string): bool {.slot.} =
     return self.delegate.isKnownKeyUid(keyUid)
+
+  proc isKeyPairMigratedToKeycard*(self: View, keyUid: string): bool {.slot.} =
+    return self.delegate.isKeyPairMigratedToKeycard(keyUid)
 
   proc getKeyPairNameForKeyUid*(self: View, keyUid: string): string {.slot.} =
     return self.delegate.getKeyPairNameForKeyUid(keyUid)
@@ -116,6 +126,27 @@ QtObject:
   proc startAddingKeyPairToStatusFromKeycard*(self: View, pin: string, keyUid: string, metadataName: string,
       metadataAccounts: string) {.slot.} =
     self.delegate.startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts)
+
+  proc startStopUsingKeycardForKeyPair*(self: View, keyUid: string, seedPhrase: string, newPassword: string) {.slot.} =
+    self.delegate.startStopUsingKeycardForKeyPair(keyUid, seedPhrase, newPassword)
+
+  proc notifyKeyPairItemChanged*(self: View) {.signal.}
+  proc getKeyPairItem*(self: View): QVariant {.slot.} =
+    if self.keyPairItemVariant.isNil:
+      return newQVariant()
+    return self.keyPairItemVariant
+  QtProperty[QVariant] keyPairItem:
+    read = getKeyPairItem
+    notify = notifyKeyPairItemChanged
+
+  proc resolveKeyPairItemForKeyUid*(self: View, keyUid: string) {.slot.} =
+    if not self.keyPairItem.isNil and self.keyPairItem.getKeyUid() == keyUid:
+      return
+    var item = self.delegate.getKeyPairItemForKeyUid(keyUid)
+    if item.isNil:
+      item = newKeyPairItem()
+    self.keyPairItem.setItem(item)
+    self.notifyKeyPairItemChanged()
 
   proc keycardStateChanged*(self: View) {.signal.}
   proc getKeycardState*(self: View): string {.slot.} =
@@ -207,3 +238,11 @@ QtObject:
 
   proc delete*(self: View) =
     self.QObject.delete
+    if not self.keyPairItem.isNil:
+      self.keyPairItem.delete
+    if not self.keyPairItemVariant.isNil:
+      self.keyPairItemVariant.delete
+    if not self.keyPairModel.isNil:
+      self.keyPairModel.delete
+    if not self.keyPairModelVariant.isNil:
+      self.keyPairModelVariant.delete

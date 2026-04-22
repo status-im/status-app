@@ -18,6 +18,8 @@ Control {
     // string type is expected.
     property alias dictionary: suggestionsModel.sourceModel
 
+    property string initialSeedPhrase: ""
+
     // Error text presented by the component. Set internally when provided words
     // are not present in the dictionary or externally via setError method.
     readonly property alias errorText: errorText.text
@@ -104,6 +106,23 @@ Control {
 
             append(Array(24).fill(emptyEntry))
         }
+    }
+
+    Component.onCompleted: {
+        if (!initialSeedPhrase)
+            return
+
+        Qt.callLater(() => {
+            const words = initialSeedPhrase.trim().split(/[, \s]+/)
+            const length = words.length
+            if (!lengthBar.lengths.includes(length))
+                return
+
+            lengthBar.selectLength(length)
+            words.forEach((word, idx) => {
+                inputModel.setEntry(idx, word, d.isInDictionary(word))
+            })
+        })
     }
 
     SortFilterProxyModel {
