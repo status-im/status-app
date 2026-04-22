@@ -122,6 +122,27 @@ AbstractWebView {
         backend.zoomFactor = factor
     }
 
+    // targetSize is the logical on-screen size
+    function grabToImage(callback, targetSize) {
+        function onReady(imageUrl, ok) {
+            backend.snapshotReady.disconnect(onReady)
+            if (callback)
+                callback({ url: ok ? imageUrl : "" })
+        }
+        backend.snapshotReady.connect(onReady)
+
+        const scale = 2;
+        if (targetSize !== undefined && targetSize !== null) {
+            backend.requestSnapshot(
+                Qt.size(
+                    targetSize.width * scale,
+                    targetSize.height * scale
+                )
+            )
+        } else
+            backend.requestSnapshot()
+    }
+
     function acceptAsNewWindow(request) {
         console.warn("WebViewAdapter: acceptAsNewWindow not supported")
     }
