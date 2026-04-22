@@ -35,3 +35,9 @@ method keycardPairingExists*(self: AccessInterface, keycardUid: string): bool {.
 
 method getKeyPairItemForKeyUid*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
+
+method remainingKeypairCapacity*(self: AccessInterface): int {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method remainingAccountCapacity*(self: AccessInterface): int {.base.} =
+  raise newException(ValueError, "No implementation available")

@@ -284,6 +284,12 @@ method getKeyPairItemForKeyUid*[T](self: Module[T], keyUid: string): KeyPairItem
     return nil
   return keypairs.buildKeypairItem(keypair, areTestNetworksEnabled = false)
 
+method remainingKeypairCapacity*[T](self: Module[T]): int =
+  return self.controller.remainingKeypairCapacity()
+
+method remainingAccountCapacity*[T](self: Module[T]): int =
+  return self.controller.remainingAccountCapacity()
+
 method startStopUsingKeycardForKeyPair*[T](self: Module[T], keyUid, seedPhrase, newPassword: string) =
   self.tmpFlowType = FlowType.StoppingKeycardForKeyPair
   self.tmpKeyUid = keyUid

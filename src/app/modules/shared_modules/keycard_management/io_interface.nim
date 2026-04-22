@@ -91,5 +91,11 @@ method onStopUsingKeycardForKeyPairFinished*(self: AccessInterface, keyUid: stri
 method getKeyPairItemForKeyUid*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method remainingKeypairCapacity*(self: AccessInterface): int {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method remainingAccountCapacity*(self: AccessInterface): int {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 type
   DelegateInterface* = concept c

@@ -314,4 +314,20 @@ QtObject {
         }
         d.mainModuleInst.keycardManagementModule.startStopUsingKeycardForKeyPair(keyUid, seedPhrase, newPassword)
     }
+
+    function remainingKeypairCapacity() {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return 0
+        }
+        return d.mainModuleInst.keycardManagementModule.remainingKeypairCapacity()
+    }
+
+    function remainingAccountCapacity() {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return 0
+        }
+        return d.mainModuleInst.keycardManagementModule.remainingAccountCapacity()
+    }
 }

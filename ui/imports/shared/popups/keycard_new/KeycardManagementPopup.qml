@@ -718,9 +718,12 @@ StatusDialog {
                 enabled: visible
                          && d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts
                          && contentLoader.item.allAccountsValid
-                         && contentLoader.item.numberOfAddedAccounts < Constants.keycard.maxNumberOfAccountsToAddWhenImportingKeyPair
                 text: qsTr("Add another account")
                 onClicked: {
+                    if (contentLoader.item.numberOfAddedAccounts === root.store.remainingAccountCapacity()) {
+                        Global.openLimitReachedPopup(Constants.LimitWarning.Accounts)
+                        return
+                    }
                     contentLoader.item.addAccount()
                 }
             }
@@ -825,6 +828,10 @@ StatusDialog {
                         if (d.keyPairKnown) {
                             d.keyPairName = root.store.getKeyPairNameForKeyUid(d.seedPhraseKeyUid)
                             d.accountPathsJson = root.store.getKeyPairAccountPathsJsonForKeyUid(d.seedPhraseKeyUid)
+                        } else if (root.flow === Constants.keycard.flow.importSeedPhrase
+                                   && root.store.remainingKeypairCapacity() === 0) {
+                            Global.openLimitReachedPopup(Constants.LimitWarning.Keypairs)
+                            return
                         }
                         d.nextStep()
                         return

@@ -30,4 +30,12 @@ QtObject {
     function allNonProfileKeyPairsMigratedToKeycard() {
         return root.keycardNewModule.allNonProfileKeyPairsMigratedToKeycard()
     }
+
+    function remainingKeypairCapacity() {
+        return root.keycardNewModule.remainingKeypairCapacity()
+    }
+
+    function remainingAccountCapacity() {
+        return root.keycardNewModule.remainingAccountCapacity()
+    }
 }

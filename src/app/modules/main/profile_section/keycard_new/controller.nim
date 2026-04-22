@@ -28,3 +28,9 @@ proc getKeypairByKeyUid*(self: Controller, keyUid: string): KeypairDto =
 
 proc areTestNetworksEnabled*(self: Controller): bool =
   return self.walletAccountService.areTestNetworksEnabled()
+
+proc remainingKeypairCapacity*(self: Controller): int =
+  return self.walletAccountService.remainingKeypairCapacity()
+
+proc remainingAccountCapacity*(self: Controller): int =
+  return self.walletAccountService.remainingAccountCapacity()
