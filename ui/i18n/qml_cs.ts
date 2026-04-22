@@ -8355,13 +8355,6 @@ Opravdu to chcete udělat?</translation>
     </message>
 </context>
 <context>
-    <name>HistoryBetaTag</name>
-    <message>
-        <source>Activity is in beta. For any issues, go to Settings → Advanced → Refetch transaction history.</source>
-        <translation></translation>
-    </message>
-</context>
-<context>
     <name>HistoryView</name>
     <message>
         <source>Status Desktop is connected to a non-archival node. Transaction history may be incomplete.</source>
