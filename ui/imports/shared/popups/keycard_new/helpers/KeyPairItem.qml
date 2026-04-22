@@ -32,11 +32,14 @@ Rectangle {
     required property var keyPairAccounts // [ { "path", "address", "publicKey?" } ] from card metadata JSON
     property bool isKnownKeyPair: false
 
+    property real accountsListMaxHeight: 0
+
     readonly property bool isProfileKeyPair: root.keyPairKeyUid !== ""
                                              && root.keyPairKeyUid === root.userProfileKeyUid
 
     color: Theme.palette.baseColor2
     radius: Theme.halfPadding
+    clip: true
     implicitWidth: 448
     implicitHeight: columnLayout.implicitHeight
 
@@ -90,7 +93,8 @@ Rectangle {
         StatusListView {
             id: accountsList
             Layout.fillWidth: true
-            Layout.preferredHeight: contentHeight
+            Layout.preferredHeight: root.accountsListMaxHeight > 0? Math.min(contentHeight, root.accountsListMaxHeight)
+                                                                  : contentHeight
             Layout.preferredWidth: parent.width
             Layout.bottomMargin: Theme.padding
             Layout.leftMargin: Theme.padding

@@ -135,6 +135,9 @@ proc createAccountFromMnemonic*(self: Controller, mnemonic: string, includeEncry
 proc convertRegularProfileKeypairToKeycard*(self: Controller, keycardUid, currentPassword, newPassword: string) =
   self.accountsService.convertRegularProfileKeypairToKeycard(keycardUid, currentPassword, newPassword)
 
+proc convertKeycardProfileKeypairToRegular*(self: Controller, mnemonic, currentPassword, newPassword: string) =
+  self.accountsService.convertKeycardProfileKeypairToRegular(mnemonic, currentPassword, newPassword)
+
 proc setStoreToKeychainValueNotNow*(self: Controller) =
   singletonInstance.localAccountSettings.setStoreToKeychainValue(LS_VALUE_NOT_NOW)
 
