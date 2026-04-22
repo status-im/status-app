@@ -3894,6 +3894,36 @@ file format</source>
     </message>
 </context>
 <context>
+    <name>ConfirmKeyPairForStopUsingState</name>
+    <message>
+        <source>I understand Keycard will no longer be used for signing, and Status password will be required</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ConfirmPasswordState</name>
+    <message>
+        <source>Have you written down your password?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You will never be able to recover your password if you loose it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you need to, write it using pen and paper and keep in a safe place.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you loose your password you will loose access to your Status profile.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm your password (again)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ConfirmSeedPhraseBackup</name>
     <message>
         <source>Step 4 of 4</source>
@@ -4831,6 +4861,45 @@ Send a contact request to the person you would like to chat with, you will be ab
 Your keys are always securely stored on your device and protected by your Status profile password. Status doesn&apos;t know your password and can&apos;t reset it for you. If you forget your password, you may lose access to your Status profile and wallet funds.
 
 Remember your password and don&apos;t share it with anyone.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CreatePasswordState</name>
+    <message>
+        <source>Create a password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create a password to unlock Status on this device &amp; sign transactions. &lt;span style=&apos;color:%1;&apos;&gt;You won’t be able to recover password if lost.&lt;/span&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To strengthen your password consider including:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Lower case</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Upper case</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Numbers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Symbols</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm password</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9971,6 +10040,30 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Now you can sign with this key pair using Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop using Keycard for key pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create password</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Finalize Status Password Creation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Moving key pair to Status...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Key pair has been moved to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status password is now required to sign.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -17970,6 +18063,10 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Add</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Delete bookmark</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

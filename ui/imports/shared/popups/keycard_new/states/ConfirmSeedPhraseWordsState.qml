@@ -73,7 +73,7 @@ Control {
             validators: [
                 StatusValidator {
                     validate: function(t) {
-                        if (!d.words || d.words.length === 0 || word0.text.length === 0)
+                        if (!d || !d.words || d.words.length === 0 || word0.text.length === 0)
                             return false
                         return d.words[d.wordIndices[0]] === word0.text
                     }
@@ -98,7 +98,7 @@ Control {
             validators: [
                 StatusValidator {
                     validate: function(t) {
-                        if (!d.words || d.words.length === 0 || word1.text.length === 0)
+                        if (!d || !d.words || d.words.length === 0 || word1.text.length === 0)
                             return false
                         return d.words[d.wordIndices[1]] === word1.text
                     }
@@ -123,7 +123,7 @@ Control {
             validators: [
                 StatusValidator {
                     validate: function(t) {
-                        if (!d.words || d.words.length === 0 || word2.text.length === 0)
+                        if (!d || !d.words || d.words.length === 0 || word2.text.length === 0)
                             return false
                         return d.words[d.wordIndices[2]] === word2.text
                     }

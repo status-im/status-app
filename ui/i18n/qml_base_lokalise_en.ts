@@ -4755,6 +4755,42 @@
     </message>
   </context>
   <context>
+    <name>ConfirmKeyPairForStopUsingState</name>
+    <message>
+      <source>I understand Keycard will no longer be used for signing, and Status password will be required</source>
+      <comment>ConfirmKeyPairForStopUsingState</comment>
+      <translation>I understand Keycard will no longer be used for signing, and Status password will be required</translation>
+    </message>
+  </context>
+  <context>
+    <name>ConfirmPasswordState</name>
+    <message>
+      <source>Have you written down your password?</source>
+      <comment>ConfirmPasswordState</comment>
+      <translation>Have you written down your password?</translation>
+    </message>
+    <message>
+      <source>You will never be able to recover your password if you loose it.</source>
+      <comment>ConfirmPasswordState</comment>
+      <translation>You will never be able to recover your password if you loose it.</translation>
+    </message>
+    <message>
+      <source>If you need to, write it using pen and paper and keep in a safe place.</source>
+      <comment>ConfirmPasswordState</comment>
+      <translation>If you need to, write it using pen and paper and keep in a safe place.</translation>
+    </message>
+    <message>
+      <source>If you loose your password you will loose access to your Status profile.</source>
+      <comment>ConfirmPasswordState</comment>
+      <translation>If you loose your password you will loose access to your Status profile.</translation>
+    </message>
+    <message>
+      <source>Confirm your password (again)</source>
+      <comment>ConfirmPasswordState</comment>
+      <translation>Confirm your password (again)</translation>
+    </message>
+  </context>
+  <context>
     <name>ConfirmSeedPhraseBackup</name>
     <message>
       <source>Step 4 of 4</source>
@@ -5890,6 +5926,54 @@
       <source>Your Status keys are the foundation of your self-sovereign identity in Web3. You have complete control over these keys, which you can use to sign transactions, access your data, and interact with Web3 services.&#xA;&#xA;Your keys are always securely stored on your device and protected by your Status profile password. Status doesn&#39;t know your password and can&#39;t reset it for you. If you forget your password, you may lose access to your Status profile and wallet funds.&#xA;&#xA;Remember your password and don&#39;t share it with anyone.</source>
       <comment>CreatePasswordPage</comment>
       <translation>Your Status keys are the foundation of your self-sovereign identity in Web3. You have complete control over these keys, which you can use to sign transactions, access your data, and interact with Web3 services.&#xA;&#xA;Your keys are always securely stored on your device and protected by your Status profile password. Status doesn&#39;t know your password and can&#39;t reset it for you. If you forget your password, you may lose access to your Status profile and wallet funds.&#xA;&#xA;Remember your password and don&#39;t share it with anyone.</translation>
+    </message>
+  </context>
+  <context>
+    <name>CreatePasswordState</name>
+    <message>
+      <source>Create a password</source>
+      <comment>CreatePasswordState</comment>
+      <translation>Create a password</translation>
+    </message>
+    <message>
+      <source>Create a password to unlock Status on this device &amp; sign transactions. &lt;span style=&#39;color:%1;&#39;&gt;You won’t be able to recover password if lost.&lt;/span&gt;</source>
+      <comment>CreatePasswordState</comment>
+      <translation>Create a password to unlock Status on this device &amp; sign transactions. &lt;span style=&#39;color:%1;&#39;&gt;You won’t be able to recover password if lost.&lt;/span&gt;</translation>
+    </message>
+    <message>
+      <source>New password</source>
+      <comment>CreatePasswordState</comment>
+      <translation>New password</translation>
+    </message>
+    <message>
+      <source>To strengthen your password consider including:</source>
+      <comment>CreatePasswordState</comment>
+      <translation>To strengthen your password consider including:</translation>
+    </message>
+    <message>
+      <source>Lower case</source>
+      <comment>CreatePasswordState</comment>
+      <translation>Lower case</translation>
+    </message>
+    <message>
+      <source>Upper case</source>
+      <comment>CreatePasswordState</comment>
+      <translation>Upper case</translation>
+    </message>
+    <message>
+      <source>Numbers</source>
+      <comment>CreatePasswordState</comment>
+      <translation>Numbers</translation>
+    </message>
+    <message>
+      <source>Symbols</source>
+      <comment>CreatePasswordState</comment>
+      <translation>Symbols</translation>
+    </message>
+    <message>
+      <source>Confirm password</source>
+      <comment>CreatePasswordState</comment>
+      <translation>Confirm password</translation>
     </message>
   </context>
   <context>
@@ -12158,6 +12242,36 @@
       <source>Now you can sign with this key pair using Keycard.</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Now you can sign with this key pair using Keycard.</translation>
+    </message>
+    <message>
+      <source>Stop using Keycard for key pair</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Stop using Keycard for key pair</translation>
+    </message>
+    <message>
+      <source>Create password</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Create password</translation>
+    </message>
+    <message>
+      <source>Finalize Status Password Creation</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Finalize Status Password Creation</translation>
+    </message>
+    <message>
+      <source>Moving key pair to Status...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Moving key pair to Status...</translation>
+    </message>
+    <message>
+      <source>Key pair has been moved to Status</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Key pair has been moved to Status</translation>
+    </message>
+    <message>
+      <source>Status password is now required to sign.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Status password is now required to sign.</translation>
     </message>
   </context>
   <context>
@@ -21875,6 +21989,11 @@
       <source>Add</source>
       <comment>TabsBookmarksOverviewModal</comment>
       <translation>Add</translation>
+    </message>
+    <message>
+      <source>Delete bookmark</source>
+      <comment>TabsBookmarksOverviewModal</comment>
+      <translation>Delete bookmark</translation>
     </message>
   </context>
   <context>

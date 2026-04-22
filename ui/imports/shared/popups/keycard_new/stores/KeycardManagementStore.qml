@@ -23,6 +23,9 @@ QtObject {
     signal keycardAddKeyPairSuccess()
     signal keycardAddKeyPairError(string error)
 
+    signal stopUsingKeycardForKeyPairSuccess()
+    signal stopUsingKeycardForKeyPairError(string error)
+
     readonly property bool ready: d.ready
 
     readonly property string userProfileKeyUid: userProfile.keyUid
@@ -31,6 +34,10 @@ QtObject {
     readonly property var keypairsModel: d.mainModuleInst.keycardManagementModule
                                          ? d.mainModuleInst.keycardManagementModule.keyPairModel
                                          : null
+
+    readonly property var keyPairItem: d.mainModuleInst.keycardManagementModule
+                                       ? d.mainModuleInst.keycardManagementModule.keyPairItem
+                                       : null
 
     readonly property QtObject d: QtObject {
         property bool ready: false
@@ -90,6 +97,14 @@ QtObject {
 
         function onKeycardAddKeyPairError(error) {
             root.keycardAddKeyPairError(error)
+        }
+
+        function onStopUsingKeycardForKeyPairSuccess() {
+            root.stopUsingKeycardForKeyPairSuccess()
+        }
+
+        function onStopUsingKeycardForKeyPairError(error) {
+            root.stopUsingKeycardForKeyPairError(error)
         }
     }
 
@@ -204,6 +219,14 @@ QtObject {
         return d.mainModuleInst.keycardManagementModule.isKnownKeyUid(keyUid)
     }
 
+    function isKeyPairMigratedToKeycard(keyUid) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return false
+        }
+        return d.mainModuleInst.keycardManagementModule.isKeyPairMigratedToKeycard(keyUid)
+    }
+
     function getKeyPairNameForKeyUid(keyUid) {
         if (!d.mainModuleInst.keycardManagementModule) {
             console.error("keycard management module was not created")
@@ -274,5 +297,21 @@ QtObject {
             return
         }
         d.mainModuleInst.keycardManagementModule.startAddingKeyPairToStatusFromKeycard(pin, keyUid, metadataName, metadataAccounts)
+    }
+
+    function resolveKeyPairItemForKeyUid(keyUid) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.resolveKeyPairItemForKeyUid(keyUid)
+    }
+
+    function startStopUsingKeycardForKeyPair(keyUid, seedPhrase, newPassword) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.startStopUsingKeycardForKeyPair(keyUid, seedPhrase, newPassword)
     }
 }

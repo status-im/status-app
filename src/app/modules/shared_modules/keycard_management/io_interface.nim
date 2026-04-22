@@ -1,6 +1,7 @@
 import nimqml
 
 import app_service/service/keycardV2/dto as keycard_serviceV2_dto
+import app/modules/shared_models/keypair_item
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -33,6 +34,9 @@ method getKeyUidForSeedPhrase*(self: AccessInterface, seedPhrase: string): strin
   raise newException(ValueError, "No implementation available")
 
 method isKnownKeyUid*(self: AccessInterface, keyUid: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method isKeyPairMigratedToKeycard*(self: AccessInterface, keyUid: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getKeyPairNameForKeyUid*(self: AccessInterface, keyUid: string): string {.base.} =
@@ -76,6 +80,15 @@ method startMigratingProfileKeypairToKeycard*(self: AccessInterface, password: s
   raise newException(ValueError, "No implementation available")
 
 method onConvertingProfileKeypairFinished*(self: AccessInterface, success: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method startStopUsingKeycardForKeyPair*(self: AccessInterface, keyUid, seedPhrase, newPassword: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onStopUsingKeycardForKeyPairFinished*(self: AccessInterface, keyUid: string, success: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getKeyPairItemForKeyUid*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
 type
