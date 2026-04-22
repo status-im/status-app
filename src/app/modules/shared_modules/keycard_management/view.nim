@@ -69,6 +69,9 @@ QtObject:
   proc stopUsingKeycardForKeyPairSuccess*(self: View) {.signal.}
   proc stopUsingKeycardForKeyPairError*(self: View, error: string) {.signal.}
 
+  proc stopUsingKeycardForProfileKeyPairSuccess*(self: View) {.signal.}
+  proc stopUsingKeycardForProfileKeyPairError*(self: View, error: string) {.signal.}
+
   proc keyPairModelChanged(self: View) {.signal.}
   proc getKeyPairModel(self: View): QVariant {.slot.} =
     if self.keyPairModelVariant.isNil:
@@ -129,6 +132,9 @@ QtObject:
 
   proc startStopUsingKeycardForKeyPair*(self: View, keyUid: string, seedPhrase: string, newPassword: string) {.slot.} =
     self.delegate.startStopUsingKeycardForKeyPair(keyUid, seedPhrase, newPassword)
+
+  proc startStopUsingKeycardForProfileKeyPair*(self: View, seedPhrase: string, newPassword: string) {.slot.} =
+    self.delegate.startStopUsingKeycardForProfileKeyPair(seedPhrase, newPassword)
 
   proc remainingKeypairCapacity*(self: View): int {.slot.} =
     return self.delegate.remainingKeypairCapacity()

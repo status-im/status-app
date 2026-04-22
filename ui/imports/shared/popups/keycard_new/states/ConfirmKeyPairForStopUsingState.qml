@@ -55,6 +55,8 @@ Control {
             keyPairAccounts: root.keyPairItem ? root.keyPairItem.accounts : null
             keyPairLocation: root.keyPairItem ? Utils.getKeypairLocation(root.keyPairItem, false) : ""
             keyPairLocationColor: root.keyPairItem ? Utils.getKeypairLocationColor(Theme.palette, root.keyPairItem) : ""
+
+            accountsListMaxHeight: Math.max(120, Constants.keycard.general.popupHeight - 280)
         }
 
         Item {

@@ -88,6 +88,9 @@ method startStopUsingKeycardForKeyPair*(self: AccessInterface, keyUid, seedPhras
 method onStopUsingKeycardForKeyPairFinished*(self: AccessInterface, keyUid: string, success: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startStopUsingKeycardForProfileKeyPair*(self: AccessInterface, seedPhrase, newPassword: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getKeyPairItemForKeyUid*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 

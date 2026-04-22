@@ -32,6 +32,7 @@ type FlowType {.pure.} = enum
   MigratingProfileKeypairToKeycard = "MigratingProfileKeypairToKeycard" # migrates a profile keypair to the keycard (only if the keypair is not already migrated)
   AddingKeyPairFromKeycard = "AddingKeyPairFromKeycard" # adds a new key pair from the keycard to the app (only if the key pair is not already added)
   StoppingKeycardForKeyPair = "StoppingKeycardForKeyPair" # stops using a Keycard for a non-profile key pair by moving it back into the app
+  StoppingKeycardForProfileKeyPair = "StoppingKeycardForProfileKeyPair" # stops using a Keycard for the profile key pair by moving it back into the app
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -183,6 +184,8 @@ proc emitError[T](self: Module[T], err: string) =
     self.view.keycardAddKeyPairError(err)
   elif self.tmpFlowType == FlowType.StoppingKeycardForKeyPair:
     self.view.stopUsingKeycardForKeyPairError(err)
+  elif self.tmpFlowType == FlowType.StoppingKeycardForProfileKeyPair:
+    self.view.stopUsingKeycardForProfileKeyPairError(err)
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
 
@@ -235,10 +238,18 @@ method startMigratingProfileKeypairToKeycard*[T](self: Module[T], password: stri
   self.startLoadSeedPhrase(pin, seedPhrase, metadataName, metadataAccounts)
 
 method onConvertingProfileKeypairFinished*[T](self: Module[T], success: bool) =
-  if not success:
-    self.emitError("failed to convert profile keypair to keycard")
-    return
-  self.view.keycardMoveProfileKeyPairSuccess()
+  if self.tmpFlowType == FlowType.MigratingProfileKeypairToKeycard:
+    if not success:
+      self.emitError("failed to convert profile keypair to keycard")
+      return
+    self.view.keycardMoveProfileKeyPairSuccess()
+  elif self.tmpFlowType == FlowType.StoppingKeycardForProfileKeyPair:
+    if not success:
+      self.emitError("failed to convert profile keypair to the app")
+      return
+    self.view.stopUsingKeycardForProfileKeyPairSuccess()
+  else:
+    error "unexpected flow type on converting profile keypair finished", flowType=($self.tmpFlowType)
 
 proc addNewKeycardKeypair*[T](self: Module[T]): string =
   var walletAccounts: seq[wallet_account_service.WalletAccountDto]
@@ -304,6 +315,18 @@ method onStopUsingKeycardForKeyPairFinished*[T](self: Module[T], keyUid: string,
     self.emitError("failed to stop using Keycard for key pair")
     return
   self.view.stopUsingKeycardForKeyPairSuccess()
+
+method startStopUsingKeycardForProfileKeyPair*[T](self: Module[T], seedPhrase, newPassword: string) =
+  self.tmpFlowType = FlowType.StoppingKeycardForProfileKeyPair
+  self.tmpSeedPhrase = seedPhrase
+  self.tmpPassword = newPassword # don't hash it here, cause it's hashed in the service
+  let acc = self.controller.createAccountFromMnemonic(seedPhrase, includeEncryption = true)
+  let currentPassword = acc.derivedAccounts.encryption.publicKey
+  if currentPassword.len == 0:
+    self.emitError("failed to derive encryption public key from seed phrase")
+    return
+  self.controller.setStoreToKeychainValueNotNow()
+  self.controller.convertKeycardProfileKeypairToRegular(seedPhrase, currentPassword, newPassword)
 
 method startAddingKeyPairToStatusFromKeycard*[T](self: Module[T], pin: string, keyUid: string,
     metadataName: string, metadataAccounts: string) =

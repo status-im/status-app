@@ -57,6 +57,8 @@ StatusDialog {
             return qsTr("Add key pair to Status")
         case Constants.keycard.flow.stopUsingKeycard:
             return qsTr("Stop using Keycard for key pair")
+        case Constants.keycard.flow.stopUsingKeycardForProfile:
+            return qsTr("Stop using Keycard for profile key pair")
         default:
             return qsTr("Keycard Flow")
         }
@@ -93,16 +95,24 @@ StatusDialog {
 
         property bool factoryResetConfirmationChecked: false
 
-        property int currentStep: (root.flow === Constants.keycard.flow.moveKeyPair
-                                      || root.flow === Constants.keycard.flow.moveProfileKeyPair)
-                                     ? KeycardManagementPopup.FlowStep.SelectKeyPair
-                                     : (root.flow === Constants.keycard.flow.stopUsingKeycard)
-                                         ? KeycardManagementPopup.FlowStep.ConfirmKeyPair
-                                         : (root.flow === Constants.keycard.flow.addKeyPairToStatus)
-                                             ? KeycardManagementPopup.FlowStep.EnterPin
-                                             : d.keycardHasOnlyPinSet
-                                                 ? KeycardManagementPopup.FlowStep.EnterPin
-                                                 : KeycardManagementPopup.FlowStep.EnterNewPin
+        property int currentStep: {
+            switch(root.flow) {
+            case Constants.keycard.flow.moveKeyPair:
+                return KeycardManagementPopup.FlowStep.SelectKeyPair
+            case Constants.keycard.flow.moveProfileKeyPair:
+                return KeycardManagementPopup.FlowStep.SelectKeyPair
+            case Constants.keycard.flow.stopUsingKeycard:
+                return KeycardManagementPopup.FlowStep.ConfirmKeyPair
+            case Constants.keycard.flow.stopUsingKeycardForProfile:
+                return KeycardManagementPopup.FlowStep.ConfirmKeyPair
+            case Constants.keycard.flow.addKeyPairToStatus:
+                return KeycardManagementPopup.FlowStep.EnterPin
+            default:
+                return d.keycardHasOnlyPinSet
+                    ? KeycardManagementPopup.FlowStep.EnterPin
+                    : KeycardManagementPopup.FlowStep.EnterNewPin
+            }
+        }
 
         property string newPin: ""
         property bool pinMismatch: false
@@ -137,6 +147,8 @@ StatusDialog {
                     return moveProfileKeyPairEnterSeedPhraseComponent
                 if (root.flow === Constants.keycard.flow.stopUsingKeycard)
                     return stopUsingEnterSeedPhraseComponent
+                if (root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)
+                    return stopUsingForProfileEnterSeedPhraseComponent
                 return enterSeedPhraseComponent
             case KeycardManagementPopup.FlowStep.EnterKeyPairName:
                 return enterKeyPairNameComponent
@@ -227,6 +239,16 @@ StatusDialog {
                                     })()
         }
 
+        function startStopUsingKeycardForProfileKeyPair() {
+            d.currentStep = KeycardManagementPopup.FlowStep.Stopping
+            d.keycardInteractionCompleted = true
+            d.processing = true
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startStopUsingKeycardForProfileKeyPair(d.seedPhrase,
+                                                                                          d.newStatusPassword)
+                                    })()
+        }
+
         function nextStep() {
             if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
                 d.currentStep = d.keycardHasOnlyPinSet
@@ -243,7 +265,11 @@ StatusDialog {
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword) {
-                d.startStopUsingKeycardForKeyPair()
+                if (root.flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
+                    d.startStopUsingKeycardForProfileKeyPair()
+                } else {
+                    d.startStopUsingKeycardForKeyPair()
+                }
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.EnterPin) {
@@ -293,7 +319,8 @@ StatusDialog {
                     Global.openAuthenticationPopup(Constants.keycard.flow.moveProfileKeyPair, root.store.userProfileKeyUid)
                     return
                 }
-                if (root.flow === Constants.keycard.flow.stopUsingKeycard) {
+                if (root.flow === Constants.keycard.flow.stopUsingKeycard
+                        || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
                     d.currentStep = KeycardManagementPopup.FlowStep.CreatePassword
                     return
                 }
@@ -354,7 +381,8 @@ StatusDialog {
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase) {
-                if (root.flow === Constants.keycard.flow.stopUsingKeycard) {
+                if (root.flow === Constants.keycard.flow.stopUsingKeycard
+                        || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
                     d.currentStep = KeycardManagementPopup.FlowStep.ConfirmKeyPair
                     return
                 }
@@ -542,6 +570,17 @@ StatusDialog {
             d.processing = false
             d.error = error
         }
+
+        function onStopUsingKeycardForProfileKeyPairSuccess() {
+            d.processing = false
+            d.success = true
+        }
+
+        function onStopUsingKeycardForProfileKeyPairError(error) {
+            console.error("Stop using Keycard for profile key pair error:", error)
+            d.processing = false
+            d.error = error
+        }
     }
 
     Connections {
@@ -638,6 +677,10 @@ StatusDialog {
                              && (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
                                  || d.currentStep === KeycardManagementPopup.FlowStep.CreatePassword
                                  || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword))
+                         || (root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
+                             && (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.CreatePassword
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword))
 
                 onClicked: {
                     d.previousStep()
@@ -664,7 +707,8 @@ StatusDialog {
                                || root.flow === Constants.keycard.flow.moveKeyPair
                                || root.flow === Constants.keycard.flow.moveProfileKeyPair
                                || root.flow === Constants.keycard.flow.addKeyPairToStatus
-                               || root.flow === Constants.keycard.flow.stopUsingKeycard) {
+                               || root.flow === Constants.keycard.flow.stopUsingKeycard
+                               || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
                         if (!d.processing && !d.success && !d.error) {
                             return qsTr("Cancel")
                         }
@@ -673,7 +717,8 @@ StatusDialog {
                     if (!!d.error) {
                         return qsTr("Done")
                     } else if (d.success) {
-                        if (root.flow === Constants.keycard.flow.moveProfileKeyPair) {
+                        if (root.flow === Constants.keycard.flow.moveProfileKeyPair
+                                || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
                             return qsTr("Quit and restart Status")
                         }
                         return qsTr("Done")
@@ -682,8 +727,9 @@ StatusDialog {
                 }
 
                 onClicked: {
-                    if (d.success && root.flow === Constants.keycard.flow.moveProfileKeyPair) {
-                        console.info("the app is closing due to successfully migrated profile key pair to a keycard")
+                    if (d.success && (root.flow === Constants.keycard.flow.moveProfileKeyPair
+                                      || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)) {
+                        console.info("the app is closing due to successfully converted profile key pair - flow: ", root.flow)
                         root.store.signOutAndQuit()
                     }
 
@@ -755,6 +801,11 @@ StatusDialog {
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.EnterKeyPairName
                                      || d.currentStep === KeycardManagementPopup.FlowStep.ManageAccounts))
                              || (root.flow === Constants.keycard.flow.stopUsingKeycard
+                                 && (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmKeyPair
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.CreatePassword
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword))
+                             || (root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmKeyPair
                                      || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
                                      || d.currentStep === KeycardManagementPopup.FlowStep.CreatePassword
@@ -863,6 +914,8 @@ StatusDialog {
             root.store.prepareKeyPairModel()
         if (root.flow === Constants.keycard.flow.stopUsingKeycard)
             root.store.resolveKeyPairItemForKeyUid(root.keyUid)
+        if (root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)
+            root.store.resolveKeyPairItemForKeyUid(root.store.userProfileKeyUid)
     }
 
     onClosed: {
@@ -890,6 +943,10 @@ StatusDialog {
             break
         case Constants.keycard.flow.stopUsingKeycard:
             keyUid = root.keyUid
+            keycardUid = root.keycardUid
+            break
+        case Constants.keycard.flow.stopUsingKeycardForProfile:
+            keyUid = root.store.userProfileKeyUid
             keycardUid = root.keycardUid
             break
         }
@@ -931,14 +988,20 @@ StatusDialog {
                     return qsTr("Adding key pair to Status...")
                 case Constants.keycard.flow.stopUsingKeycard:
                     return qsTr("Moving key pair to Status...")
+                case Constants.keycard.flow.stopUsingKeycardForProfile:
+                    return qsTr("Moving profile key pair to Status...")
                 default:
                     return qsTr("Reading...")
                 }
             }
-            processingSpecialWarning1: root.flow === Constants.keycard.flow.moveProfileKeyPair? qsTr("Re-encrypting data may take some time")
-                                                                                              : ""
-            processingSpecialWarning2: root.flow === Constants.keycard.flow.moveProfileKeyPair? qsTr("Do not quit the application or turn off your device. Doing so will lead to data\ncorruption, loss of your Status profile and the inability to restart Status.")
-                                                                                              : ""
+            processingSpecialWarning1: (root.flow === Constants.keycard.flow.moveProfileKeyPair
+                                        || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)
+                                       ? qsTr("Re-encrypting data may take some time")
+                                       : ""
+            processingSpecialWarning2: (root.flow === Constants.keycard.flow.moveProfileKeyPair
+                                        || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)
+                                       ? qsTr("Do not quit the application or turn off your device. Doing so will lead to data\ncorruption, loss of your Status profile and the inability to restart Status.")
+                                       : ""
 
             success: {
                 if (root.flow === Constants.keycard.flow.readKeycard)
@@ -955,6 +1018,7 @@ StatusDialog {
                 case Constants.keycard.flow.moveProfileKeyPair:
                 case Constants.keycard.flow.addKeyPairToStatus:
                 case Constants.keycard.flow.stopUsingKeycard:
+                case Constants.keycard.flow.stopUsingKeycardForProfile:
                     return Assets.png("keycard/card_insert/insert")
                 default:
                     return ""
@@ -975,6 +1039,8 @@ StatusDialog {
                     return qsTr("Key pair has been added to Status")
                 case Constants.keycard.flow.stopUsingKeycard:
                     return qsTr("Key pair has been moved to Status")
+                case Constants.keycard.flow.stopUsingKeycardForProfile:
+                    return qsTr("Profile key pair has been moved to Status")
                 default:
                     return qsTr("Success")
                 }
@@ -993,6 +1059,8 @@ StatusDialog {
                     return qsTr("Now you can sign with this key pair using Keycard.")
                 case Constants.keycard.flow.stopUsingKeycard:
                     return qsTr("Status password is now required to sign.")
+                case Constants.keycard.flow.stopUsingKeycardForProfile:
+                    return qsTr("Status password is now required to log in and sign.")
                 default:
                     return ""
                 }
@@ -1013,6 +1081,7 @@ StatusDialog {
                 case Constants.keycard.flow.moveProfileKeyPair:
                 case Constants.keycard.flow.addKeyPairToStatus:
                 case Constants.keycard.flow.stopUsingKeycard:
+                case Constants.keycard.flow.stopUsingKeycardForProfile:
                     return Assets.png("keycard/wrong_card/something-went-wrong")
                 default:
                     return ""
@@ -1257,6 +1326,26 @@ StatusDialog {
                 if (keyUid === root.keyUid)
                     return keyUid
                 console.error("provided seed phrase doesn't match the key pair being tried to stop using a keycard for")
+                return ""
+            }
+
+            onSeedPhraseValidated: function(phrase, keyUid) {
+                d.seedPhrase = phrase
+                d.seedPhraseKeyUid = keyUid
+            }
+        }
+    }
+
+    Component {
+        id: stopUsingForProfileEnterSeedPhraseComponent
+        EnterSeedPhraseState {
+            initialSeedPhrase: d.seedPhrase
+
+            validateSeedPhrase: function(phrase) {
+                const keyUid = root.store.getKeyUidForSeedPhrase(phrase)
+                if (keyUid === root.store.userProfileKeyUid)
+                    return keyUid
+                console.error("provided seed phrase doesn't match the profile key pair being tried to stop using a keycard for")
                 return ""
             }
 
