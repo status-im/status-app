@@ -80,7 +80,7 @@ Control {
     QtObject {
         id: d
 
-        readonly property int padding: Math.round(root.Theme.padding * 3 / 4)
+        readonly property int padding: Math.round(root.Theme.padding * 4 / 5)
     }
 
     Rectangle {

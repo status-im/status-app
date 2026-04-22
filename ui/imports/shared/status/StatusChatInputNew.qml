@@ -610,6 +610,7 @@ Control {
 
         ColumnLayout {
             Layout.fillWidth: true
+            spacing: 0
 
             StatusChatInputReplyPanel {
                 id: replyPanel
@@ -700,6 +701,7 @@ Control {
                     Layout.fillWidth: true
                     Layout.maximumHeight: 200
 
+                    Layout.topMargin: Theme.padding
                     Layout.leftMargin: 12
                     Layout.rightMargin: 12
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff

@@ -191,7 +191,6 @@ Control {
 
             icon.color: pressed ? Theme.palette.background
                                 : Theme.palette.primaryColor1
-            size: StatusBaseButton.Size.Small
             radius: width / 2
 
             Binding on hoverColor {
