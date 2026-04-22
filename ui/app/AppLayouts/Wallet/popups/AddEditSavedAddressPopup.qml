@@ -271,7 +271,7 @@ StatusDialog {
                 return
 
             if (!d.editMode && root.store.remainingCapacityForSavedAddresses() === 0) {
-                limitPopup.active = true
+                Global.openLimitReachedPopup(Constants.LimitWarning.SavedAddresses)
                 return
             }
 
@@ -373,33 +373,6 @@ StatusDialog {
             height: childrenRect.height
 
             spacing: Theme.xlPadding
-
-            Loader {
-                id: limitPopup
-                active: false
-
-                sourceComponent: StatusDialog {
-                    width: root.width - 2*Theme.padding
-
-                    title: Constants.walletConstants.maxNumberOfSavedAddressesTitle
-
-                    StatusBaseText {
-                        anchors.fill: parent
-                        text: Constants.walletConstants.maxNumberOfSavedAddressesContent
-                        wrapMode: Text.WordWrap
-                    }
-
-                    standardButtons: Dialog.Ok
-
-                    onClosed: {
-                        limitPopup.active = false
-                    }
-                }
-
-                onLoaded: {
-                    limitPopup.item.open()
-                }
-            }
 
             StatusInput {
                 id: nameInput

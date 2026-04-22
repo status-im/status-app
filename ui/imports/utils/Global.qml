@@ -98,6 +98,7 @@ QtObject {
     signal closeActivityCenterRequested()
 
     signal openInfoPopup(string title, string message)
+    signal openLimitReachedPopupRequested(int warningType)
     signal openShakeToSharePopupRequested()
 
     // BuyCrypto
@@ -172,5 +173,9 @@ QtObject {
 
     function openShakeToSharePopup() {
         root.openShakeToSharePopupRequested()
+    }
+
+    function openLimitReachedPopup(warningType) {
+        root.openLimitReachedPopupRequested(warningType)
     }
 }
