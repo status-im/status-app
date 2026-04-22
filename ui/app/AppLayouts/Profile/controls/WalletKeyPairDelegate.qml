@@ -55,12 +55,19 @@ Rectangle {
             asset {
                 width: !!root.keyPair && keyPair.icon? root.Theme.bigPadding : 40
                 height: !!root.keyPair && keyPair.icon? root.Theme.bigPadding : 40
-                name: !!root.keyPair? !!root.keyPair.image? root.keyPair.image : root.keyPair.icon : ""
+                name: !root.keyPair? ""
+                                   : !!root.keyPair.image? root.keyPair.image
+                                                         : !!root.keyPair.icon? root.keyPair.icon
+                                                                              : d.isProfileKeypair? "contact"
+                                                                                                  : ""
                 isImage: !!root.keyPair && !!keyPair.image
-                color: d.isProfileKeypair ? Utils.colorForPubkey(Theme.palette, root.userProfilePublicKey) : root.Theme.palette.primaryColor1
+                color: d.isProfileKeypair ? Theme.palette.indirectColor2
+                                          : Theme.palette.primaryColor1
                 letterSize: Math.max(4, asset.width / 2.4)
                 charactersLen: 2
                 isLetterIdenticon: !!root.keyPair && !keyPair.icon && !asset.name.toString()
+                bgColor: d.isProfileKeypair? Utils.colorForPubkey(Theme.palette, root.userProfilePublicKey)
+                                           : Theme.palette.primaryColor3
             }
             components: [
                 StatusFlatRoundButton {
