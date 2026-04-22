@@ -55,23 +55,30 @@ StatusItemDelegate {
 
     background: Rectangle {
         color: root.hovered ? Theme.palette.baseColor4: StatusColors.transparent
-    }
-
-    contentItem: ColumnLayout {
-        spacing: 0
 
         // Divider on top
         Rectangle {
-            Layout.alignment: Qt.AlignTop
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
             color: Theme.palette.baseColor2
             visible: index > 0
         }
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 0
+        // Divider at the bottom
+        Rectangle {
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
+            color: Theme.palette.baseColor2
+            visible: root.isLastItem
+        }
+    }
+
+    contentItem: RowLayout {
+        spacing: 0
 
             // Index
             StatusTextWithLoadingState {
@@ -211,15 +218,6 @@ StatusItemDelegate {
                 rightPadding: Theme.padding
                 loading: root.loading
             }
-        }
-
-        // Divider at the bottom
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: Theme.palette.baseColor2
-            visible: root.isLastItem
-        }
     }
 
     TextMetrics {
