@@ -522,6 +522,7 @@ QtObject {
             readonly property string moveProfileKeyPair: "move-profile-key-pair"
             readonly property string addKeyPairToStatus: "add-key-pair-to-status"
             readonly property string stopUsingKeycard: "stop-using-keycard"
+            readonly property string stopUsingKeycardForProfile: "stop-using-keycard-for-profile"
         }
     }
 

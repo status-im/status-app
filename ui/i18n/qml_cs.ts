@@ -10144,6 +10144,22 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <source>Status password is now required to sign.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Stop using Keycard for profile key pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Moving profile key pair to Status...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Profile key pair has been moved to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status password is now required to log in and sign.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>

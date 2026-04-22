@@ -272,12 +272,47 @@ QtObject {
     }
 
     function openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson) {
+        let finalFlow = flow
+        let finalKeyUid = keyUid
+
+        // if no keyUid is set, follow the flow, otherwise, validate and adjust params
+        if (!!finalKeyUid) {
+            switch(flow) {
+            case Constants.keycard.flow.moveKeyPair:
+                if (finalKeyUid === root.keycardManagementStore.userProfileKeyUid) {
+                    finalFlow = Constants.keycard.flow.moveProfileKeyPair
+                }
+                break
+            case Constants.keycard.flow.stopUsingKeycard:
+                if (finalKeyUid === root.keycardManagementStore.userProfileKeyUid) {
+                    finalFlow = Constants.keycard.flow.stopUsingKeycardForProfile
+                }
+                break
+            case Constants.keycard.flow.moveProfileKeyPair:
+                if (finalKeyUid !== root.keycardManagementStore.userProfileKeyUid) {
+                    finalFlow = Constants.keycard.flow.stopUsingKeycard
+                }
+                break
+            case Constants.keycard.flow.stopUsingKeycardForProfile:
+                if (finalKeyUid !== root.keycardManagementStore.userProfileKeyUid) {
+                    finalFlow = Constants.keycard.flow.stopUsingKeycard
+                }
+                break
+            }
+        }
+
+        if (finalFlow !== flow) {
+            console.info("wrong flow for the provided keyUid: ", keyUid, " flow changed from ", flow, " to ", finalFlow)
+        }
+
+        console.info("openning keycard popup for flow: ", finalFlow, " keyUid: ", finalKeyUid, " keycardUid: ", keycardUid, " cardMetadataName: ", cardMetadataName, " cardMetadataWalletAccountsJson: ", cardMetadataWalletAccountsJson)
+
         openPopup(keycardManagementPopupComponent, {
-            flow: flow,
-            keyUid: keyUid,
+            flow: finalFlow,
+            keyUid: finalKeyUid,
             keycardUid: keycardUid,
-            cardMetadataName: cardMetadataName ?? "",
-            cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson ?? "[]"
+            cardMetadataName: cardMetadataName,
+            cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson
         })
     }
 

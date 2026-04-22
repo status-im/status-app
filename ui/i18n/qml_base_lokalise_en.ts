@@ -12273,6 +12273,26 @@
       <comment>KeycardManagementPopup</comment>
       <translation>Status password is now required to sign.</translation>
     </message>
+    <message>
+      <source>Stop using Keycard for profile key pair</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Stop using Keycard for profile key pair</translation>
+    </message>
+    <message>
+      <source>Moving profile key pair to Status...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Moving profile key pair to Status...</translation>
+    </message>
+    <message>
+      <source>Profile key pair has been moved to Status</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Profile key pair has been moved to Status</translation>
+    </message>
+    <message>
+      <source>Status password is now required to log in and sign.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Status password is now required to log in and sign.</translation>
+    </message>
   </context>
   <context>
     <name>KeycardNotEmptyPage</name>
