@@ -1458,7 +1458,8 @@ QtObject {
     enum LimitWarning {
         Accounts,
         Keypairs,
-        WatchOnlyAccounts
+        WatchOnlyAccounts,
+        SavedAddresses
     }
 
     readonly property QtObject rpcProviderTypes: QtObject {

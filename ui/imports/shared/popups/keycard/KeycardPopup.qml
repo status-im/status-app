@@ -83,7 +83,7 @@ StatusDialog {
             root.close();
         }
         onAccountLimitWarning: {
-            limitPopup.active = true
+            Global.openLimitReachedPopup(Constants.LimitWarning.Accounts)
         }
     }
 
@@ -129,29 +129,6 @@ StatusDialog {
             sharedKeycardModule: root.sharedKeycardModule
             emojiPopup: root.emojiPopup
             onPrimaryButtonEnabledChanged: d.primaryButtonEnabled = primaryButtonEnabled
-
-            Loader {
-                id: limitPopup
-                active: false
-
-                sourceComponent: StatusDialog {
-                    width: root.width - 2*Theme.padding
-
-                    title: Constants.walletConstants.maxNumberOfAccountsTitle
-
-                    StatusBaseText {
-                        anchors.fill: parent
-                        text: Constants.walletConstants.maxNumberOfAccountsContent
-                        wrapMode: Text.WordWrap
-                    }
-
-                    standardButtons: Dialog.Ok
-
-                    onClosed: {
-                        limitPopup.active = false
-                    }
-                }
-            }
         }
     }
 

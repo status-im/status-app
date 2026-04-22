@@ -33,7 +33,7 @@ StatusModal {
     onOpened: {
         root.store.resetStoreValues()
 
-        root.store.showLimitPopup.connect(limitPopup.showPopup)
+        root.store.showLimitPopup.connect(Global.openLimitReachedPopup)
     }
 
     onClosed: {
@@ -60,58 +60,6 @@ StatusModal {
             implicitWidth: loader.implicitWidth
             implicitHeight: loader.implicitHeight
             width: scrollView.availableWidth
-
-            Loader {
-                id: limitPopup
-                active: false
-
-                property string title
-                property string content
-
-                function showPopup(warningType) {
-                    if (warningType === Constants.LimitWarning.Accounts) {
-                        limitPopup.title = Constants.walletConstants.maxNumberOfAccountsTitle
-                        limitPopup.content = Constants.walletConstants.maxNumberOfAccountsContent
-                    } else if (warningType === Constants.LimitWarning.Keypairs) {
-                        limitPopup.title = Constants.walletConstants.maxNumberOfKeypairsTitle
-                        limitPopup.content = Constants.walletConstants.maxNumberOfKeypairsContent
-                    } else if (warningType === Constants.LimitWarning.WatchOnlyAccounts) {
-                        limitPopup.title = Constants.walletConstants.maxNumberOfWatchOnlyAccountsTitle
-                        limitPopup.content = Constants.walletConstants.maxNumberOfSavedAddressesContent
-                    } else {
-                        console.error("unsupported warning type")
-                        return
-                    }
-
-                    limitPopup.active = true
-                }
-
-                sourceComponent: StatusDialog {
-                    width: root.width - 2*Theme.padding
-
-                    property string contentText
-
-                    title: Constants.walletConstants.maxNumberOfAccountsTitle
-
-                    StatusBaseText {
-                        anchors.fill: parent
-                        text: contentText
-                        wrapMode: Text.WordWrap
-                    }
-
-                    standardButtons: Dialog.Ok
-
-                    onClosed: {
-                        limitPopup.active = false
-                    }
-                }
-
-                onLoaded: {
-                    limitPopup.item.title = limitPopup.title
-                    limitPopup.item.contentText = limitPopup.content
-                    limitPopup.item.open()
-                }
-            }
 
             Loader {
                 id: loader
@@ -153,10 +101,10 @@ StatusModal {
                     store: root.store
 
                     onWatchOnlyAccountsLimitReached: {
-                        limitPopup.showPopup(Constants.LimitWarning.WatchOnlyAccounts)
+                        Global.openLimitReachedPopup(Constants.LimitWarning.WatchOnlyAccounts)
                     }
                     onKeypairLimitReached: {
-                        limitPopup.showPopup(Constants.LimitWarning.Keypairs)
+                        Global.openLimitReachedPopup(Constants.LimitWarning.Keypairs)
                     }
                 }
             }

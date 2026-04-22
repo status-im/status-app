@@ -175,6 +175,7 @@ QtObject {
         Global.openInfoPopup.connect(openInfoPopup)
         Global.shareProfileDialogRequested.connect(openShareProfilePopup)
         Global.openNavigationEducationPopupRequested.connect(openNavigationEducationPopup)
+        Global.openLimitReachedPopupRequested.connect(openLimitReachedPopup)
     }
 
     property var currentPopup
@@ -529,6 +530,33 @@ QtObject {
 
     function openNavigationEducationPopup() {
         openPopup(openNavigationEducationComponent)
+    }
+
+    function openLimitReachedPopup(warningType) {
+        let title = ""
+        let content = ""
+        switch (warningType) {
+        case Constants.LimitWarning.Accounts:
+            title = Constants.walletConstants.maxNumberOfAccountsTitle
+            content = Constants.walletConstants.maxNumberOfAccountsContent
+            break
+        case Constants.LimitWarning.Keypairs:
+            title = Constants.walletConstants.maxNumberOfKeypairsTitle
+            content = Constants.walletConstants.maxNumberOfKeypairsContent
+            break
+        case Constants.LimitWarning.WatchOnlyAccounts:
+            title = Constants.walletConstants.maxNumberOfWatchOnlyAccountsTitle
+            content = Constants.walletConstants.maxNumberOfSavedAddressesContent
+            break
+        case Constants.LimitWarning.SavedAddresses:
+            title = Constants.walletConstants.maxNumberOfSavedAddressesTitle
+            content = Constants.walletConstants.maxNumberOfSavedAddressesContent
+            break
+        default:
+            console.error("openLimitReachedPopup: unsupported warning type", warningType)
+            return
+        }
+        openPopup(limitReachedPopupComponent, { title, contentText: content })
     }
 
     readonly property list<Component> _components: [
@@ -1612,6 +1640,28 @@ QtObject {
 
                 destroyOnClose: true
                 onClosed: root.navigationEducationDialogSeenRequested()
+            }
+        },
+
+        Component {
+            id: limitReachedPopupComponent
+
+            StatusDialog {
+                id: limitDialog
+
+                property string contentText
+
+                width: 480
+
+                StatusBaseText {
+                    anchors.fill: parent
+                    text: limitDialog.contentText
+                    wrapMode: Text.WordWrap
+                }
+
+                standardButtons: Dialog.Ok
+
+                onClosed: destroy()
             }
         }
     ]
