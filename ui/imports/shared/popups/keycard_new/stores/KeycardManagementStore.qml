@@ -26,6 +26,9 @@ QtObject {
     signal stopUsingKeycardForKeyPairSuccess()
     signal stopUsingKeycardForKeyPairError(string error)
 
+    signal stopUsingKeycardForProfileKeyPairSuccess()
+    signal stopUsingKeycardForProfileKeyPairError(string error)
+
     readonly property bool ready: d.ready
 
     readonly property string userProfileKeyUid: userProfile.keyUid
@@ -105,6 +108,14 @@ QtObject {
 
         function onStopUsingKeycardForKeyPairError(error) {
             root.stopUsingKeycardForKeyPairError(error)
+        }
+
+        function onStopUsingKeycardForProfileKeyPairSuccess() {
+            root.stopUsingKeycardForProfileKeyPairSuccess()
+        }
+
+        function onStopUsingKeycardForProfileKeyPairError(error) {
+            root.stopUsingKeycardForProfileKeyPairError(error)
         }
     }
 
@@ -313,6 +324,14 @@ QtObject {
             return
         }
         d.mainModuleInst.keycardManagementModule.startStopUsingKeycardForKeyPair(keyUid, seedPhrase, newPassword)
+    }
+
+    function startStopUsingKeycardForProfileKeyPair(seedPhrase, newPassword) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.startStopUsingKeycardForProfileKeyPair(seedPhrase, newPassword)
     }
 
     function remainingKeypairCapacity() {
