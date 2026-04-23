@@ -61,6 +61,8 @@ StatusDialog {
             return qsTr("Stop using Keycard for profile key pair")
         case Constants.keycard.flow.changePin:
             return qsTr("Change Keycard PIN")
+        case Constants.keycard.flow.setOrChangePuk:
+            return qsTr("Set or change PUK")
         default:
             return qsTr("Keycard Flow")
         }
@@ -83,7 +85,10 @@ StatusDialog {
         CreatePassword,
         ConfirmPassword,
         Stopping,
-        ChangingPin
+        ChangingPin,
+        CreatePuk,
+        RepeatPuk,
+        ChangingPuk
     }
 
     QtObject {
@@ -112,6 +117,8 @@ StatusDialog {
                 return KeycardManagementPopup.FlowStep.EnterPin
             case Constants.keycard.flow.changePin:
                 return KeycardManagementPopup.FlowStep.EnterPin
+            case Constants.keycard.flow.setOrChangePuk:
+                return KeycardManagementPopup.FlowStep.EnterPin
             default:
                 return d.keycardHasOnlyPinSet
                     ? KeycardManagementPopup.FlowStep.EnterPin
@@ -121,6 +128,7 @@ StatusDialog {
 
         property string currentPin: ""
         property string newPin: ""
+        property string newPuk: ""
         property bool pinMismatch: false
         property string seedPhrase: ""
         property bool seedPhraseRevealed: false
@@ -174,6 +182,10 @@ StatusDialog {
                 return createPasswordComponent
             case KeycardManagementPopup.FlowStep.ConfirmPassword:
                 return confirmPasswordComponent
+            case KeycardManagementPopup.FlowStep.CreatePuk:
+                return createPukComponent
+            case KeycardManagementPopup.FlowStep.RepeatPuk:
+                return repeatPukComponent
             default: return null
             }
         }
@@ -263,6 +275,14 @@ StatusDialog {
                                     })()
         }
 
+        function startChangeKeycardPUK() {
+            d.currentStep = KeycardManagementPopup.FlowStep.ChangingPuk
+            d.processing = true
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startChangeKeycardPUK(d.currentPin, d.newPuk)
+                                    })()
+        }
+
         function nextStep() {
             if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
                 d.currentStep = d.keycardHasOnlyPinSet
@@ -305,8 +325,20 @@ StatusDialog {
                     d.currentStep = KeycardManagementPopup.FlowStep.EnterNewPin
                     return
                 }
+                if (root.flow === Constants.keycard.flow.setOrChangePuk) {
+                    d.currentStep = KeycardManagementPopup.FlowStep.CreatePuk
+                    return
+                }
 
                 d.currentStep = KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                return
+            }
+            if (d.currentStep === KeycardManagementPopup.FlowStep.CreatePuk) {
+                d.currentStep = KeycardManagementPopup.FlowStep.RepeatPuk
+                return
+            }
+            if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk) {
+                d.startChangeKeycardPUK()
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.EnterNewPin) {
@@ -393,6 +425,18 @@ StatusDialog {
                     && root.flow === Constants.keycard.flow.changePin) {
                 d.newPin = ""
                 d.currentStep = KeycardManagementPopup.FlowStep.EnterPin
+                return
+            }
+            if (d.currentStep === KeycardManagementPopup.FlowStep.CreatePuk
+                    && root.flow === Constants.keycard.flow.setOrChangePuk) {
+                d.newPuk = ""
+                d.currentStep = KeycardManagementPopup.FlowStep.EnterPin
+                return
+            }
+            if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk
+                    && root.flow === Constants.keycard.flow.setOrChangePuk) {
+                d.newPuk = ""
+                d.currentStep = KeycardManagementPopup.FlowStep.CreatePuk
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin) {
@@ -620,6 +664,17 @@ StatusDialog {
             d.processing = false
             d.error = error
         }
+
+        function onKeycardChangePukSuccess() {
+            d.processing = false
+            d.success = true
+        }
+
+        function onKeycardChangePukError(error) {
+            console.error("Keycard change PUK error:", error)
+            d.processing = false
+            d.error = error
+        }
     }
 
     Connections {
@@ -723,6 +778,9 @@ StatusDialog {
                          || (root.flow === Constants.keycard.flow.changePin
                              && (d.currentStep === KeycardManagementPopup.FlowStep.EnterNewPin
                                  || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin))
+                         || (root.flow === Constants.keycard.flow.setOrChangePuk
+                             && (d.currentStep === KeycardManagementPopup.FlowStep.CreatePuk
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk))
 
                 onClicked: {
                     d.previousStep()
@@ -751,7 +809,8 @@ StatusDialog {
                                || root.flow === Constants.keycard.flow.addKeyPairToStatus
                                || root.flow === Constants.keycard.flow.stopUsingKeycard
                                || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
-                               || root.flow === Constants.keycard.flow.changePin) {
+                               || root.flow === Constants.keycard.flow.changePin
+                               || root.flow === Constants.keycard.flow.setOrChangePuk) {
                         if (!d.processing && !d.success && !d.error) {
                             return qsTr("Cancel")
                         }
@@ -854,7 +913,10 @@ StatusDialog {
                                      || d.currentStep === KeycardManagementPopup.FlowStep.CreatePassword
                                      || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword))
                              || (root.flow === Constants.keycard.flow.changePin
-                                 && d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin))
+                                 && d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin)
+                             || (root.flow === Constants.keycard.flow.setOrChangePuk
+                                 && (d.currentStep === KeycardManagementPopup.FlowStep.CreatePuk
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk)))
                 enabled: visible
                          && ((d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
@@ -870,7 +932,10 @@ StatusDialog {
                              || (d.currentStep === KeycardManagementPopup.FlowStep.CreatePassword
                                  && contentLoader.item.ready)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword
-                                 && contentLoader.item.passwordMatches))
+                                 && contentLoader.item.passwordMatches)
+                             || ((d.currentStep === KeycardManagementPopup.FlowStep.CreatePuk
+                                  || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk)
+                                 && contentLoader.item.pukValid))
                 text: {
                     if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin) {
                         return qsTr("Try setting the PIN again")
@@ -947,6 +1012,15 @@ StatusDialog {
                         d.nextStep()
                         return
                     }
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.CreatePuk) {
+                        d.newPuk = contentLoader.item.pukInput
+                        d.nextStep()
+                        return
+                    }
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk) {
+                        d.nextStep()
+                        return
+                    }
                 }
             }
         }
@@ -982,20 +1056,8 @@ StatusDialog {
             keyUid = d.moveKeyPairSelectedKeyUid
             keycardUid = root.store.keycardUid
             break
-        case Constants.keycard.flow.addKeyPairToStatus:
-            keyUid = root.keyUid
-            keycardUid = root.keycardUid
-            break
-        case Constants.keycard.flow.stopUsingKeycard:
-            keyUid = root.keyUid
-            keycardUid = root.keycardUid
-            break
         case Constants.keycard.flow.stopUsingKeycardForProfile:
             keyUid = root.store.userProfileKeyUid
-            keycardUid = root.keycardUid
-            break
-        case Constants.keycard.flow.changePin:
-            keyUid = root.keyUid
             keycardUid = root.keycardUid
             break
         }
@@ -1041,6 +1103,8 @@ StatusDialog {
                     return qsTr("Moving profile key pair to Status...")
                 case Constants.keycard.flow.changePin:
                     return qsTr("Changing Keycard PIN...")
+                case Constants.keycard.flow.setOrChangePuk:
+                    return qsTr("Setting your Keycard PUK...")
                 default:
                     return qsTr("Reading...")
                 }
@@ -1071,6 +1135,7 @@ StatusDialog {
                 case Constants.keycard.flow.stopUsingKeycard:
                 case Constants.keycard.flow.stopUsingKeycardForProfile:
                 case Constants.keycard.flow.changePin:
+                case Constants.keycard.flow.setOrChangePuk:
                     return Assets.png("keycard/card_insert/insert")
                 default:
                     return ""
@@ -1095,6 +1160,8 @@ StatusDialog {
                     return qsTr("Profile key pair has been moved to Status")
                 case Constants.keycard.flow.changePin:
                     return qsTr("Keycard PIN has been changed")
+                case Constants.keycard.flow.setOrChangePuk:
+                    return qsTr("Keycard’s PUK successfully set")
                 default:
                     return qsTr("Success")
                 }
@@ -1139,6 +1206,7 @@ StatusDialog {
                 case Constants.keycard.flow.stopUsingKeycard:
                 case Constants.keycard.flow.stopUsingKeycardForProfile:
                 case Constants.keycard.flow.changePin:
+                case Constants.keycard.flow.setOrChangePuk:
                     return Assets.png("keycard/wrong_card/something-went-wrong")
                 default:
                     return ""
@@ -1174,6 +1242,7 @@ StatusDialog {
                     d.nextStep()
                     return
                 case Constants.keycard.flow.changePin:
+                case Constants.keycard.flow.setOrChangePuk:
                     d.currentPin = pinInput
                     d.nextStep()
                     return
@@ -1442,6 +1511,21 @@ StatusDialog {
         id: confirmPasswordComponent
         ConfirmPasswordState {
             expectedPassword: d.newStatusPassword
+        }
+    }
+
+    Component {
+        id: createPukComponent
+        EnterPukState {
+            mode: EnterPukState.Mode.CreatePuk
+        }
+    }
+
+    Component {
+        id: repeatPukComponent
+        EnterPukState {
+            mode: EnterPukState.Mode.RepeatPuk
+            pukToMatch: d.newPuk
         }
     }
 }

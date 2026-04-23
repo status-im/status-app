@@ -9182,6 +9182,29 @@
     </message>
   </context>
   <context>
+    <name>EnterPukState</name>
+    <message>
+      <source>Repeat your Keycard PUK</source>
+      <comment>EnterPukState</comment>
+      <translation>Repeat your Keycard PUK</translation>
+    </message>
+    <message>
+      <source>Choose a Keycard PUK</source>
+      <comment>EnterPukState</comment>
+      <translation>Choose a Keycard PUK</translation>
+    </message>
+    <message>
+      <source>Use numbers only</source>
+      <comment>EnterPukState</comment>
+      <translation>Use numbers only</translation>
+    </message>
+    <message>
+      <source>PUK doesn&#39;t match</source>
+      <comment>EnterPukState</comment>
+      <translation>PUK doesn&#39;t match</translation>
+    </message>
+  </context>
+  <context>
     <name>EnterSeedPhrase</name>
     <message>
       <source>Invalid recovery phrase</source>
@@ -12312,6 +12335,21 @@
       <source>New PIN is required to interact with Keycard.</source>
       <comment>KeycardManagementPopup</comment>
       <translation>New PIN is required to interact with Keycard.</translation>
+    </message>
+    <message>
+      <source>Set or change PUK</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Set or change PUK</translation>
+    </message>
+    <message>
+      <source>Setting your Keycard PUK...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Setting your Keycard PUK...</translation>
+    </message>
+    <message>
+      <source>Keycard’s PUK successfully set</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Keycard’s PUK successfully set</translation>
     </message>
   </context>
   <context>
