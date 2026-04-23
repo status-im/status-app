@@ -33,6 +33,7 @@ type FlowType {.pure.} = enum
   AddingKeyPairFromKeycard = "AddingKeyPairFromKeycard" # adds a new key pair from the keycard to the app (only if the key pair is not already added)
   StoppingKeycardForKeyPair = "StoppingKeycardForKeyPair" # stops using a Keycard for a non-profile key pair by moving it back into the app
   StoppingKeycardForProfileKeyPair = "StoppingKeycardForProfileKeyPair" # stops using a Keycard for the profile key pair by moving it back into the app
+  ChangingKeycardPIN = "ChangingKeycardPIN" # changes the Keycard PIN
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -186,6 +187,8 @@ proc emitError[T](self: Module[T], err: string) =
     self.view.stopUsingKeycardForKeyPairError(err)
   elif self.tmpFlowType == FlowType.StoppingKeycardForProfileKeyPair:
     self.view.stopUsingKeycardForProfileKeyPairError(err)
+  elif self.tmpFlowType == FlowType.ChangingKeycardPIN:
+    self.view.keycardChangePinError(err)
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
 
@@ -315,6 +318,20 @@ method onStopUsingKeycardForKeyPairFinished*[T](self: Module[T], keyUid: string,
     self.emitError("failed to stop using Keycard for key pair")
     return
   self.view.stopUsingKeycardForKeyPairSuccess()
+
+method startChangeKeycardPIN*[T](self: Module[T], currentPin, newPin: string) =
+  self.tmpFlowType = FlowType.ChangingKeycardPIN
+  let keyUid = self.view.getKeyUid()
+  let keycardUid = self.view.getKeycardUid()
+  self.controller.startChangeKeycardPIN(keyUid, currentPin, newPin, keycardUid)
+
+method onChangeKeycardPINFinished*[T](self: Module[T], error: string) =
+  if self.tmpFlowType != FlowType.ChangingKeycardPIN:
+    return
+  if error.len > 0:
+    self.emitError("keycard change PIN error: " & error)
+    return
+  self.view.keycardChangePinSuccess()
 
 method startStopUsingKeycardForProfileKeyPair*[T](self: Module[T], seedPhrase, newPassword: string) =
   self.tmpFlowType = FlowType.StoppingKeycardForProfileKeyPair
