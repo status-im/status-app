@@ -144,6 +144,9 @@ SettingsContentBase {
             case Constants.keycard.flow.addKeyPairToStatus:
                 console.info("adding key pair from keycard - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
                 break
+            case Constants.keycard.flow.changePin:
+                console.info("changing keycard PIN - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
+                break
             }
 
             d.showMainScreen()

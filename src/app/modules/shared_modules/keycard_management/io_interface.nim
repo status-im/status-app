@@ -91,6 +91,12 @@ method onStopUsingKeycardForKeyPairFinished*(self: AccessInterface, keyUid: stri
 method startStopUsingKeycardForProfileKeyPair*(self: AccessInterface, seedPhrase, newPassword: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startChangeKeycardPIN*(self: AccessInterface, currentPin, newPin: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onChangeKeycardPINFinished*(self: AccessInterface, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getKeyPairItemForKeyUid*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
