@@ -77,6 +77,11 @@ proc init*(self: Controller) =
     self.delegate.onStopUsingKeycardForKeyPairFinished(args.keycard.keyUid, args.success)
   self.connectionIds.add(handlerId)
 
+  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_CHANGE_PIN_FINISHED) do(e: Args):
+    let args = KeycardErrorArg(e)
+    self.delegate.onChangeKeycardPINFinished(args.error)
+  self.connectionIds.add(handlerId)
+
 proc startGetMetadata*(self: Controller, pin: string) =
   self.keycardServiceV2.asyncGetKeycardMetadata(pin)
 
@@ -143,6 +148,9 @@ proc setStoreToKeychainValueNotNow*(self: Controller) =
 
 proc startStopUsingKeycardForKeyPair*(self: Controller, keyUid, seedPhrase, newPassword: string) =
   self.walletAccountService.migrateNonProfileKeycardKeypairToAppAsync(keyUid, seedPhrase, newPassword, doPasswordHashing = true)
+
+proc startChangeKeycardPIN*(self: Controller, keyUid, currentPin, newPin, keycardUid: string) =
+  self.keycardServiceV2.asyncChangeKeycardPIN(keyUid, currentPin, newPin, keycardUid)
 
 proc remainingKeypairCapacity*(self: Controller): int =
   return self.walletAccountService.remainingKeypairCapacity()

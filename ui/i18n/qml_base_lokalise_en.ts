@@ -9082,11 +9082,6 @@
   <context>
     <name>EnterPinState</name>
     <message>
-      <source>Enter the Keycard PIN</source>
-      <comment>EnterPinState</comment>
-      <translation>Enter the Keycard PIN</translation>
-    </message>
-    <message>
       <source>PIN incorrect</source>
       <comment>EnterPinState</comment>
       <translation>PIN incorrect</translation>
@@ -9100,19 +9095,24 @@
       </translation>
     </message>
     <message>
-      <source>Set a new Keycard PIN</source>
-      <comment>EnterPinState</comment>
-      <translation>Set a new Keycard PIN</translation>
-    </message>
-    <message>
-      <source>Repeat the Keycard PIN</source>
-      <comment>EnterPinState</comment>
-      <translation>Repeat the Keycard PIN</translation>
-    </message>
-    <message>
       <source>PIN doesn&#39;t match</source>
       <comment>EnterPinState</comment>
       <translation>PIN doesn&#39;t match</translation>
+    </message>
+    <message>
+      <source>Enter new PIN</source>
+      <comment>EnterPinState</comment>
+      <translation>Enter new PIN</translation>
+    </message>
+    <message>
+      <source>Repeat new PIN</source>
+      <comment>EnterPinState</comment>
+      <translation>Repeat new PIN</translation>
+    </message>
+    <message>
+      <source>Enter Keycard PIN</source>
+      <comment>EnterPinState</comment>
+      <translation>Enter Keycard PIN</translation>
     </message>
   </context>
   <context>
@@ -12292,6 +12292,26 @@
       <source>Status password is now required to log in and sign.</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Status password is now required to log in and sign.</translation>
+    </message>
+    <message>
+      <source>Change Keycard PIN</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Change Keycard PIN</translation>
+    </message>
+    <message>
+      <source>Changing Keycard PIN...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Changing Keycard PIN...</translation>
+    </message>
+    <message>
+      <source>Keycard PIN has been changed</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Keycard PIN has been changed</translation>
+    </message>
+    <message>
+      <source>New PIN is required to interact with Keycard.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>New PIN is required to interact with Keycard.</translation>
     </message>
   </context>
   <context>

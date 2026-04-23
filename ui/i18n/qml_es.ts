@@ -7447,10 +7447,6 @@ Por favor, agrégala e intenta de nuevo.</translation>
 <context>
     <name>EnterPinState</name>
     <message>
-        <source>Enter the Keycard PIN</source>
-        <translation type="unfinished">Escribe el PIN de Keycard</translation>
-    </message>
-    <message>
         <source>PIN incorrect</source>
         <translation type="unfinished">PIN incorrecto</translation>
     </message>
@@ -7462,15 +7458,19 @@ Por favor, agrégala e intenta de nuevo.</translation>
         </translation>
     </message>
     <message>
-        <source>Set a new Keycard PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Repeat the Keycard PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>PIN doesn&apos;t match</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter new PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Repeat new PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter Keycard PIN</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -10094,6 +10094,22 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Status password is now required to log in and sign.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Change Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Changing Keycard PIN...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard PIN has been changed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New PIN is required to interact with Keycard.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

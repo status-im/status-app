@@ -72,6 +72,12 @@ QtObject:
   proc stopUsingKeycardForProfileKeyPairSuccess*(self: View) {.signal.}
   proc stopUsingKeycardForProfileKeyPairError*(self: View, error: string) {.signal.}
 
+  proc keycardChangePinSuccess*(self: View) {.signal.}
+  proc keycardChangePinError*(self: View, error: string) {.signal.}
+
+  proc startChangeKeycardPIN*(self: View, currentPin: string, newPin: string) {.slot.} =
+    self.delegate.startChangeKeycardPIN(currentPin, newPin)
+
   proc keyPairModelChanged(self: View) {.signal.}
   proc getKeyPairModel(self: View): QVariant {.slot.} =
     if self.keyPairModelVariant.isNil:
