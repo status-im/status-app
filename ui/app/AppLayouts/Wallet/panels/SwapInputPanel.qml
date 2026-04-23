@@ -68,6 +68,8 @@ Control {
 
     // output API
     readonly property string selectedHoldingId: d.selectedHoldingId
+    readonly property string selectedHoldingTokenKey: d.selectedHoldingTokenKey
+
     readonly property double value: amountToSendInput.asNumber
     readonly property string rawValue: {
         if (!d.isSelectedHoldingValidAsset) {
@@ -107,7 +109,7 @@ Control {
         id: d
 
         property string selectedHoldingId: root.groupKey
-
+        property string selectedHoldingTokenKey: ""
 
         function reevaluateSelectedId() {
             const entry = SQUtils.ModelUtils.getByKey(d.adaptor.outputAssetsModel, "key", d.selectedHoldingId)
@@ -129,12 +131,26 @@ Control {
         function setHoldingToSelector() {
             // search in currentlly selected output asset model (full(lazy-loaded) or search)
             if (selectedHolding.available && !!selectedHolding.item) {
+                if (!selectedHolding.item.tokens || selectedHolding.item.tokens.ModelCount.count !== 1) {
+                    console.error("token for the selected group cannot be resolved", "group-key", d.selectedHoldingId, "chain", root.selectedNetworkChainId)
+                    return
+                }
+
+                d.selectedHoldingTokenKey = SQUtils.ModelUtils.get(selectedHolding.item.tokens, 0, "key")
+
                 holdingSelector.setSelection(selectedHolding.item.symbol, selectedHolding.item.iconSource, selectedHolding.item.key)
                 return
             }
             // search in full model (lazy-loaded items) if not found in selected model (fir example while searching, but the other token is selected)
             const entry = SQUtils.ModelUtils.getByKey(d.adaptor.fullOutputAssetsModel, "key", d.selectedHoldingId)
             if (!!entry) {
+                if (!entry.tokens || entry.tokens.ModelCount.count !== 1) {
+                    console.error("token for the selected group (full model) cannot be resolved", "group-key", d.selectedHoldingId, "chain", root.selectedNetworkChainId)
+                    return
+                }
+
+                d.selectedHoldingTokenKey = SQUtils.ModelUtils.get(entry.tokens, 0, "key")
+
                 holdingSelector.setSelection(entry.symbol, entry.iconSource, entry.key)
                 return
             }

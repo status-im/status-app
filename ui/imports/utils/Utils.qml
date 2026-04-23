@@ -943,6 +943,10 @@ QtObject {
         }
     }
 
+    function getNativeTokenKey(chainId) {
+        return composeTokenKey(chainId, Constants.zeroAddress)
+    }
+
     // Get NativeTokenSymbol for ChainID
     function getNativeTokenSymbol(chainID) {
         switch (+chainID) {
@@ -1352,7 +1356,20 @@ QtObject {
         return result
     }
 
-    function buildTokenKey(chainId, address) {
+    function composeTokenKey(chainId, address) {
         return "%1%2%3".arg(chainId).arg(Constants.tokenKeyDelimiter).arg(address.toLowerCase())
+    }
+
+    function getChainAndAddressFromTokenKey(tokenKey) {
+        let result = {
+            address: "",
+            chainId: 0
+        }
+        const parts = tokenKey.split(Constants.tokenKeyDelimiter)
+        if (parts.length === 2) {
+            result.chainId = parseInt(parts[0], 10)
+            result.address = parts[1]
+        }
+        return result
     }
 }

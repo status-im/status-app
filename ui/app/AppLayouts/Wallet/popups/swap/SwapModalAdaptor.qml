@@ -51,6 +51,7 @@ QObject {
         property string txHash
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapFormData.selectedNetworkChainId)
+        readonly property string nativeTokenKey: Utils.getNativeTokenKey(root.swapFormData.selectedNetworkChainId)
 
         // Properties to handle error states
         readonly property bool isRouteEthBalanceInsufficient: root.validSwapProposalReceived && root.swapOutputData.errCode === Constants.routerErrorCodes.router.errNotEnoughNativeBalance
@@ -145,16 +146,16 @@ QObject {
                 let totalTokenFeesInFiat = 0
                 if (!!root.fromToken && !!root.fromToken.marketDetails && !!root.fromToken.marketDetails.currencyPrice)
                     totalTokenFeesInFiat = gasTimeEstimate.totalTokenFees * root.fromToken.marketDetails.currencyPrice.amount
-                root.swapOutputData.totalFees = root.currencyStore.getFiatValue(gasTimeEstimate.totalFeesInNativeCrypto, d.nativeTokenSymbol) + totalTokenFeesInFiat
+                root.swapOutputData.totalFees = root.currencyStore.getFiatValue(gasTimeEstimate.totalFeesInNativeCrypto, d.nativeTokenKey) + totalTokenFeesInFiat
                 let bestPath = ModelUtils.get(txRoutes.suggestedRoutes, 0, "route")
 
                 root.swapOutputData.txFeesWei = AmountsArithmetic.sum(AmountsArithmetic.fromString(bestPath.txFeeInWei), AmountsArithmetic.fromString(bestPath.txL1FeeInWei)).toString()
                 const txFeesNative = Utils.nativeTokenRawToDecimal(root.swapFormData.selectedNetworkChainId, root.swapOutputData.txFeesWei)
-                root.swapOutputData.txFeesInFiat = root.currencyStore.getFiatValue(txFeesNative, d.nativeTokenSymbol)
+                root.swapOutputData.txFeesInFiat = root.currencyStore.getFiatValue(txFeesNative, d.nativeTokenKey)
 
                 root.swapOutputData.approvalTxFeesWei = AmountsArithmetic.sum(AmountsArithmetic.fromString(bestPath.approvalFeeInWei), AmountsArithmetic.fromString(bestPath.approvalL1FeeInWei)).toString()
                 const txApprovalFeesNative = Utils.nativeTokenRawToDecimal(root.swapFormData.selectedNetworkChainId, root.swapOutputData.approvalTxFeesWei)
-                root.swapOutputData.approvalTxFeesFiat = root.currencyStore.getFiatValue(txApprovalFeesNative, d.nativeTokenSymbol)
+                root.swapOutputData.approvalTxFeesFiat = root.currencyStore.getFiatValue(txApprovalFeesNative, d.nativeTokenKey)
 
                 const totalMaxFeesInGasUnit = Math.ceil(bestPath.gasFees.maxFeePerGasM) * bestPath.gasAmount
                 root.swapOutputData.maxFeesToReserveRaw = Utils.nativeTokenGasToRaw(root.swapFormData.selectedNetworkChainId, totalMaxFeesInGasUnit).toString()

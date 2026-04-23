@@ -47,7 +47,7 @@ SQUtils.QObject {
     // Symbol of the currency used to perform crypto -> fiat conversions
     required property string fiatSymbol
     // Function to transform the eth value to fiat
-    property var getFiatValue: (maxFeesEthStr, token) => console.error("getFiatValue not implemented")
+    property var getFiatValue: (maxFeesEthStr, tokenKey) => console.error("getFiatValue not implemented")
 
     // Signals
     /// Signal emitted when a session request is accepted
@@ -97,7 +97,7 @@ SQUtils.QObject {
             nativeTokenGroupKey: Utils.getNativeTokenGroupKey(request.chainId)
             nativeTokenMaxFees: feesSubscriber.maxEthFee ? SQUtils.AmountsArithmetic.div(feesSubscriber.maxEthFee, SQUtils.AmountsArithmetic.fromNumber(1, 9)) : null
             fiatSymbol: root.fiatSymbol
-            fiatMaxFees: nativeTokenMaxFees ? SQUtils.AmountsArithmetic.fromString(root.getFiatValue(nativeTokenMaxFees.toString(), Utils.getNativeTokenSymbol(request.chainId))) : null
+            fiatMaxFees: nativeTokenMaxFees ? SQUtils.AmountsArithmetic.fromString(root.getFiatValue(nativeTokenMaxFees.toString(), Utils.getNativeTokenKey(request.chainId))) : null
             function signedHandler(topic, id, data) {
                 if (topic != request.topic || id != request.requestId) {
                     return
@@ -143,7 +143,7 @@ SQUtils.QObject {
                 } catch (e) {
                     console.error("Error executing session request", e)
                 }
-                
+
                 if (!executed) {
                     root.rejected(request.topic, request.requestId, true /*hasError*/)
                     root.store.signingResult.disconnect(request.signedHandler)
@@ -298,7 +298,7 @@ SQUtils.QObject {
 
             const token = SQUtils.ModelUtils.getByKey(root.groupedAccountAssetsModel, "key", tokenGroupKey)
             const balance = getBalance(chainId, accountAddress, token)
-            
+
             if (!balance) {
                 console.error("Error fetching balance for account", accountAddress, "on chain", chainId)
                 return true

@@ -300,8 +300,8 @@ SQUtils.QObject {
         feesBroker: feesBroker
 
         fiatSymbol: root.currenciesStore.currentCurrency
-        getFiatValue: (value, currency) => {
-            return root.currenciesStore.getFiatValue(value, currency)
+        getFiatValue: (value, tokenKey) => {
+            return root.currenciesStore.getFiatValue(value, tokenKey)
         }
 
         onAccepted: (topic, id, userAccepted) => {
@@ -339,8 +339,8 @@ SQUtils.QObject {
         feesBroker: feesBroker
 
         fiatSymbol: root.currenciesStore.currentCurrency
-        getFiatValue: (value, currency) => {
-            return root.currenciesStore.getFiatValue(value, currency)
+        getFiatValue: (value, tokenKey) => {
+            return root.currenciesStore.getFiatValue(value, tokenKey)
         }
 
         onAccepted: (topic, id, userAccepted) => {

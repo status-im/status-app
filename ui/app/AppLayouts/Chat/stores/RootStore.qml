@@ -553,10 +553,6 @@ QtObject {
         }
     }
 
-    function getFiatValue(balance, cryptoSymbol, fiatSymbol) {
-        return profileSectionModule.ensUsernamesModule.getFiatValue(balance, cryptoSymbol, fiatSymbol)
-    }
-
     function resolveENS(value) {
         mainModuleInst.resolveENS(value, "")
     }
