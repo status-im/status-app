@@ -25,6 +25,9 @@ import "../../controls"
 
 Item {
     id: root
+
+    implicitHeight: column.implicitHeight
+
     signal goBack
 
     readonly property int mainnetTabIndex: 0
