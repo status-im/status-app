@@ -612,8 +612,8 @@ QtObject {
 
                         // Required data
                         readonly property NotificationSenderResolver senderResolver: NotificationSenderResolver {
-                            isOutgoingMessage: root.notification?.message?.amISender ?? false
-                            contactId: root.notification ? (isOutgoingMessage ? root.notification.chatId : root.notification.author) : ""
+                            isOutgoingMessage: row.notification?.message?.amISender ?? false
+                            contactId: row.notification ? (isOutgoingMessage ? row.notification.chatId : row.notification.author) : ""
                             contactsModel: root.contactsModel
 
                             onPopulateContactDetailsRequested: (contactId) => root.populateContactDetailsRequested(contactId)
@@ -641,9 +641,14 @@ QtObject {
                     NotificationAdaptorCommunity {
 
                         // Required data
+                        readonly property int membershipStatus: notification && notification.membershipStatus ?
+                                                                    notification.membershipStatus :
+                                                                    ActivityCenterTypes.ActivityCenterMembershipStatus.None
+                        readonly property bool pending: membershipStatus === ActivityCenterTypes.ActivityCenterMembershipStatus.Pending
+
                         readonly property NotificationSenderResolver senderResolver: NotificationSenderResolver {
-                            isOutgoingMessage: root.notification?.message?.amISender ?? false
-                            contactId: root.notification ? (isOutgoingMessage ? root.notification.chatId : root.notification.author) : ""
+                            isOutgoingMessage: row.notification?.message?.amISender ?? false
+                            contactId: row.notification ? (isOutgoingMessage ? row.notification.chatId : row.notification.author) : ""
                             contactsModel: root.contactsModel
 
                             onPopulateContactDetailsRequested: (contactId) => root.populateContactDetailsRequested(contactId)
@@ -658,7 +663,14 @@ QtObject {
                         actionText: qsTr("Community membership request")
 
                         // Content related
-                        content: senderResolver.sender?.displayName ?? ""
+                        content: senderResolver.sender?.displayName
+                                 ? "<font color='%1'>@%2</font>".arg(Theme.palette.primaryColor1)
+                                                                .arg(senderResolver.sender.displayName)
+                                 : ""
+
+                        // Quick actions — only when genuinely pending (excludes AcceptedPending=4, DeclinedPending=5)
+                        showQuickActions: pending
+                        actionId: pending ? notification.notificationId : ""
                     }
                 }
 
@@ -688,8 +700,8 @@ QtObject {
                             if(accepted)
                                 return "<font color='%1'>".arg(Theme.palette.successColor1) + qsTr("Accepted") + "</font>"
 
-                            if(dismissed)
-                                return "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Decline") + "</font>"
+                            if(declined)
+                                return "<font color='%1'>".arg(Theme.palette.dangerColor1) + qsTr("Declined") + "</font>"
 
                             if(pending)
                                 return qsTr("In progress")

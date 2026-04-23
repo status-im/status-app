@@ -1759,26 +1759,36 @@ Item {
                                     }
 
                 // Quick actions
-                // NOTE: There are now just quick actions specific for `Contact Requests`, OR generally to accept / decline notification.
-                // If more quick actions are introduced, this will need some generalization rule / implementation
-                onAcceptRequested: (avatarId, actionId) => {
+                onAcceptRequested: (requestId, actionId, notificationType) => {
                                        // This means, Contact Requests
-                                       if(avatarId) {
-                                           appMain.contactsStore.acceptContactRequest(avatarId, actionId)
+                                       if (notificationType === ActivityCenterTypes.NotificationType.ContactRequest) {
+                                           appMain.contactsStore.acceptContactRequest(requestId, actionId)
+                                       }
+                                       // This means, Community Membership Requests
+                                       else if (notificationType === ActivityCenterTypes.NotificationType.CommunityMembershipRequest) {
+                                           const store = appMain.messagingRootStore.createCommunityRootStore(appMain, requestId)
+                                           store.communityAccessStore.acceptRequestToJoinCommunityRequested(actionId, requestId)
+                                           store.destroy()
                                        }
                                        // This means, generic accept notification by id
                                        else {
-                                            appMain.activityCenterStore.acceptActivityCenterNotification(actionId)
+                                           appMain.activityCenterStore.acceptActivityCenterNotification(actionId)
                                        }
                                    }
-                onDeclineRequested: (avatarId, actionId) => {
+                onDeclineRequested: (requestId, actionId, notificationType) => {
                                         // This means, Contact Requests
-                                        if(avatarId) {
-                                            appMain.contactsStore.dismissContactRequest(avatarId, actionId)
+                                        if (notificationType === ActivityCenterTypes.NotificationType.ContactRequest) {
+                                            appMain.contactsStore.dismissContactRequest(requestId, actionId)
+                                        }
+                                        // This means, Community Membership Requests
+                                        else if (notificationType === ActivityCenterTypes.NotificationType.CommunityMembershipRequest) {
+                                            const store = appMain.messagingRootStore.createCommunityRootStore(appMain, requestId)
+                                            store.communityAccessStore.declineRequestToJoinCommunityRequested(actionId, requestId)
+                                            store.destroy()
                                         }
                                         // This means, generic dismiss notification by id
                                         else {
-                                             appMain.activityCenterStore.dismissActivityCenterNotification(actionId)
+                                            appMain.activityCenterStore.dismissActivityCenterNotification(actionId)
                                         }
                                     }
             }

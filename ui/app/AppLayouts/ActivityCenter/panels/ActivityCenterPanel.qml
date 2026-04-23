@@ -107,9 +107,9 @@ Control {
     signal redirectToPopup(var notification)
     signal redirectToWallet(string address, string txHash)
 
-    // Emitted when quick actions are shown and user iteracts with the corresponding buttons
-    signal declineRequested(string avatarId, string actionId)
-    signal acceptRequested(string avatarId, string actionId)
+    // Emitted when quick actions are shown and user interacts with the corresponding buttons
+    signal declineRequested(string requestId, string actionId, int notificationType)
+    signal acceptRequested(string requestId, string actionId, int notificationType)
 
     QtObject {
         id: d
@@ -290,8 +290,18 @@ Control {
                     // No navigation actions when clicked
                 }
                 onAvatarClicked: root.avatarClicked(model.avatarId)
-                onAcceptRequested: root.acceptRequested(model.avatarId ?? "", model.actionId ?? "")
-                onDeclineRequested: root.declineRequested(model.avatarId ?? "", model.actionId ?? "")
+                onAcceptRequested: {
+                    if (model.notificationType === ActivityCenterTypes.NotificationType.CommunityMembershipRequest)
+                        root.acceptRequested(model.communityId ?? "", model.actionId ?? "", model.notificationType)
+                    else
+                        root.acceptRequested(model.avatarId ?? "", model.actionId ?? "", model.notificationType)
+                }
+                onDeclineRequested: {
+                    if (model.notificationType === ActivityCenterTypes.NotificationType.CommunityMembershipRequest)
+                        root.declineRequested(model.communityId ?? "", model.actionId ?? "", model.notificationType)
+                    else
+                        root.declineRequested(model.avatarId ?? "", model.actionId ?? "", model.notificationType)
+                }
                 onMarkAsReadRequested: root.markNotificationRead(model.notificationId)
                 onMarkAsUnreadRequested: root.markNotificationUnread(model.notificationId)
             }
