@@ -70,7 +70,7 @@ Control {
                     running: root.visible
                     from: -gradient.width
                     to: contentItem.contentItemWidth + gradient.width
-                    duration: 800
+                    duration: 1000
                     easing.period: 2
                 }
             }
