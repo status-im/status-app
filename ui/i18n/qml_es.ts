@@ -7529,6 +7529,25 @@ Por favor, agrégala e intenta de nuevo.</translation>
     </message>
 </context>
 <context>
+    <name>EnterPukState</name>
+    <message>
+        <source>Repeat your Keycard PUK</source>
+        <translation type="unfinished">Repite tu PUK de Keycard</translation>
+    </message>
+    <message>
+        <source>Choose a Keycard PUK</source>
+        <translation type="unfinished">Elige un PUK de Keycard</translation>
+    </message>
+    <message>
+        <source>Use numbers only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PUK doesn&apos;t match</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EnterSeedPhrase</name>
     <message>
         <source>The phrase you’ve entered is invalid</source>
@@ -10111,6 +10130,18 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <message>
         <source>New PIN is required to interact with Keycard.</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set or change PUK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Setting your Keycard PUK...</source>
+        <translation type="unfinished">Configurando tu PUK de Keycard...</translation>
+    </message>
+    <message>
+        <source>Keycard’s PUK successfully set</source>
+        <translation type="unfinished">PUK de Keycard configurada exitosamente</translation>
     </message>
 </context>
 <context>

@@ -78,6 +78,12 @@ QtObject:
   proc startChangeKeycardPIN*(self: View, currentPin: string, newPin: string) {.slot.} =
     self.delegate.startChangeKeycardPIN(currentPin, newPin)
 
+  proc keycardChangePukSuccess*(self: View) {.signal.}
+  proc keycardChangePukError*(self: View, error: string) {.signal.}
+
+  proc startChangeKeycardPUK*(self: View, currentPin: string, newPuk: string) {.slot.} =
+    self.delegate.startChangeKeycardPUK(currentPin, newPuk)
+
   proc keyPairModelChanged(self: View) {.signal.}
   proc getKeyPairModel(self: View): QVariant {.slot.} =
     if self.keyPairModelVariant.isNil:

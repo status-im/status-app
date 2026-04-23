@@ -7515,6 +7515,25 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
+    <name>EnterPukState</name>
+    <message>
+        <source>Repeat your Keycard PUK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose a Keycard PUK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use numbers only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PUK doesn&apos;t match</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>EnterSeedPhrase</name>
     <message>
         <source>Invalid recovery phrase</source>
@@ -10096,6 +10115,18 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>New PIN is required to interact with Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set or change PUK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Setting your Keycard PUK...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard’s PUK successfully set</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
