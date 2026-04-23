@@ -89,6 +89,8 @@ pipeline {
     FLAG_BRIDGE_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
     /* fix for proxy stage defaulting to test */
     STATUS_BUILD_PROXY_STAGE_NAME = "${utils.isReleaseBuild() ? 'prod' : 'test'}"
+    /*pin cmake to 3.5*/
+    CMAKE_POLICY_VERSION_MINIMUM = 3.5
   }
 
   stages {

@@ -106,6 +106,8 @@ pipeline {
     USE_MOCKED_KEYCARD_LIB = "${params.USE_MOCKED_KEYCARD_LIB}"
     /* FIXME: figure out why NIMFLAGS are not respected */
     XDG_CACHE_HOME = "${env.WORKSPACE_TMP}/.cache"
+    /*pin cmake to 3.5*/
+    CMAKE_POLICY_VERSION_MINIMUM = 3.5
   }
 
   stages {
