@@ -147,6 +147,9 @@ SettingsContentBase {
             case Constants.keycard.flow.changePin:
                 console.info("changing keycard PIN - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
                 break
+            case Constants.keycard.flow.setOrChangePuk:
+                console.info("setting keycard PUK - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
+                break
             }
 
             d.showMainScreen()

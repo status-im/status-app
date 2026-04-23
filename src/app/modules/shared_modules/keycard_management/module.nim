@@ -34,6 +34,7 @@ type FlowType {.pure.} = enum
   StoppingKeycardForKeyPair = "StoppingKeycardForKeyPair" # stops using a Keycard for a non-profile key pair by moving it back into the app
   StoppingKeycardForProfileKeyPair = "StoppingKeycardForProfileKeyPair" # stops using a Keycard for the profile key pair by moving it back into the app
   ChangingKeycardPIN = "ChangingKeycardPIN" # changes the Keycard PIN
+  ChangingKeycardPUK = "ChangingKeycardPUK" # sets or changes the Keycard PUK
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -189,6 +190,8 @@ proc emitError[T](self: Module[T], err: string) =
     self.view.stopUsingKeycardForProfileKeyPairError(err)
   elif self.tmpFlowType == FlowType.ChangingKeycardPIN:
     self.view.keycardChangePinError(err)
+  elif self.tmpFlowType == FlowType.ChangingKeycardPUK:
+    self.view.keycardChangePukError(err)
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
 
@@ -332,6 +335,20 @@ method onChangeKeycardPINFinished*[T](self: Module[T], error: string) =
     self.emitError("keycard change PIN error: " & error)
     return
   self.view.keycardChangePinSuccess()
+
+method startChangeKeycardPUK*[T](self: Module[T], currentPin, newPuk: string) =
+  self.tmpFlowType = FlowType.ChangingKeycardPUK
+  let keyUid = self.view.getKeyUid()
+  let keycardUid = self.view.getKeycardUid()
+  self.controller.startChangeKeycardPUK(keyUid, currentPin, newPuk, keycardUid)
+
+method onChangeKeycardPUKFinished*[T](self: Module[T], error: string) =
+  if self.tmpFlowType != FlowType.ChangingKeycardPUK:
+    return
+  if error.len > 0:
+    self.emitError("keycard change PUK error: " & error)
+    return
+  self.view.keycardChangePukSuccess()
 
 method startStopUsingKeycardForProfileKeyPair*[T](self: Module[T], seedPhrase, newPassword: string) =
   self.tmpFlowType = FlowType.StoppingKeycardForProfileKeyPair

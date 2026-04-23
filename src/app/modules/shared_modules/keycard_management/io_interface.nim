@@ -97,6 +97,12 @@ method startChangeKeycardPIN*(self: AccessInterface, currentPin, newPin: string)
 method onChangeKeycardPINFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startChangeKeycardPUK*(self: AccessInterface, currentPin, newPuk: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onChangeKeycardPUKFinished*(self: AccessInterface, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getKeyPairItemForKeyUid*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 

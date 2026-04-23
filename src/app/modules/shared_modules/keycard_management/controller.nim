@@ -82,6 +82,11 @@ proc init*(self: Controller) =
     self.delegate.onChangeKeycardPINFinished(args.error)
   self.connectionIds.add(handlerId)
 
+  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_CHANGE_PUK_FINISHED) do(e: Args):
+    let args = KeycardErrorArg(e)
+    self.delegate.onChangeKeycardPUKFinished(args.error)
+  self.connectionIds.add(handlerId)
+
 proc startGetMetadata*(self: Controller, pin: string) =
   self.keycardServiceV2.asyncGetKeycardMetadata(pin)
 
@@ -151,6 +156,9 @@ proc startStopUsingKeycardForKeyPair*(self: Controller, keyUid, seedPhrase, newP
 
 proc startChangeKeycardPIN*(self: Controller, keyUid, currentPin, newPin, keycardUid: string) =
   self.keycardServiceV2.asyncChangeKeycardPIN(keyUid, currentPin, newPin, keycardUid)
+
+proc startChangeKeycardPUK*(self: Controller, keyUid, currentPin, newPuk, keycardUid: string) =
+  self.keycardServiceV2.asyncChangeKeycardPUK(keyUid, currentPin, newPuk, keycardUid)
 
 proc remainingKeypairCapacity*(self: Controller): int =
   return self.walletAccountService.remainingKeypairCapacity()

@@ -111,6 +111,13 @@ Item {
 
     signal pinEditedManually()
 
+    /*!
+       \qmlsignal StatusPinInput::invalidInput()
+       Emitted when the user presses a key (printable character) that the validator rejects (e.g. a non-digit with a digits-only validator).
+       Useful for showing inline feedback such as "Use numbers only".
+    */
+    signal invalidInput()
+
     QtObject {
         id: d
         property int currentPinIndex: 0
@@ -266,6 +273,18 @@ Item {
         Keys.onPressed: (event) => {
                             if (event.matches(StandardKey.Paste)) {
                                 root.setPin(ClipboardUtils.text)
+                                return
+                            }
+
+                            if (event.text.length === 1
+                                && event.text >= " " // printable characters condition
+                                && inputText.text.length < root.pinLen) {
+                                const prevLength = inputText.text.length
+                                Qt.callLater(() => {
+                                                 if (inputText.text.length === prevLength) {
+                                                     root.invalidInput()
+                                                 }
+                                             })
                             }
                         }
     }

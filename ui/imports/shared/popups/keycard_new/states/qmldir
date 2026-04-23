@@ -1,4 +1,5 @@
 EnterPinState 1.0 EnterPinState.qml
+EnterPukState 1.0 EnterPukState.qml
 FactoryResetConfirmationState 1.0 FactoryResetConfirmationState.qml
 KeycardProgressState 1.0 KeycardProgressState.qml
 EnterSeedPhraseState 1.0 EnterSeedPhraseState.qml

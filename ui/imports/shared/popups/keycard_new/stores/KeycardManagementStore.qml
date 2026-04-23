@@ -32,6 +32,9 @@ QtObject {
     signal keycardChangePinSuccess()
     signal keycardChangePinError(string error)
 
+    signal keycardChangePukSuccess()
+    signal keycardChangePukError(string error)
+
     readonly property bool ready: d.ready
 
     readonly property string userProfileKeyUid: userProfile.keyUid
@@ -127,6 +130,14 @@ QtObject {
 
         function onKeycardChangePinError(error) {
             root.keycardChangePinError(error)
+        }
+
+        function onKeycardChangePukSuccess() {
+            root.keycardChangePukSuccess()
+        }
+
+        function onKeycardChangePukError(error) {
+            root.keycardChangePukError(error)
         }
     }
 
@@ -351,6 +362,14 @@ QtObject {
             return
         }
         d.mainModuleInst.keycardManagementModule.startChangeKeycardPIN(currentPin, newPin)
+    }
+
+    function startChangeKeycardPUK(currentPin, newPuk) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.startChangeKeycardPUK(currentPin, newPuk)
     }
 
     function remainingKeypairCapacity() {
