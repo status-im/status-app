@@ -416,7 +416,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: change puk flow...")
+            d.startFlow(Constants.keycard.flow.setOrChangePuk)
         }
     }
 
