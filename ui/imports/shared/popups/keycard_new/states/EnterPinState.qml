@@ -78,9 +78,9 @@ Control {
             wrapMode: Text.WordWrap
             text: {
                 switch(root.mode) {
-                case EnterPinState.Mode.CreatePin: return qsTr("Set a new Keycard PIN")
-                case EnterPinState.Mode.RepeatPin: return qsTr("Repeat the Keycard PIN")
-                default: return qsTr("Enter the Keycard PIN")
+                case EnterPinState.Mode.CreatePin: return qsTr("Enter new PIN")
+                case EnterPinState.Mode.RepeatPin: return qsTr("Repeat new PIN")
+                default: return qsTr("Enter Keycard PIN")
                 }
             }
             font.weight: Font.Bold

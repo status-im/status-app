@@ -376,7 +376,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: change pin flow...")
+            d.startFlow(Constants.keycard.flow.changePin)
         }
     }
 
