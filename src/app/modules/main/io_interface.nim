@@ -145,9 +145,6 @@ method onContactsLoaded*(
   ){.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onChatsLoadingFailed*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method onActiveChatChange*(self: AccessInterface, sectionId: string, chatId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

@@ -54,6 +54,7 @@ Item {
     property bool canPost: true
     property var viewAndPostHoldingsModel
     property bool amISectionAdmin: false
+    property bool amIBanned: false
     property bool sendViaPersonalChatEnabled
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
@@ -400,8 +401,8 @@ Item {
                         delayed: true
                         value: !!d.activeChatContentModule
                                  && !d.activeChatContentModule.chatDetails.blocked
-                                 && root.rootStore.sectionDetails.joined
-                                 && !root.rootStore.sectionDetails.amIBanned
+                                 && root.joined
+                                 && !root.amIBanned
                                  && root.rootStore.isUserAllowedToSendMessage
                     }
 
@@ -418,11 +419,11 @@ Item {
 
                         return d.activeChatContentModule.inputAreaModule.askToEnableLinkPreview
                     }
-                    textInput.placeholderText: {
+                    chatInputPlaceholder: {
                         if (!channelPostRestrictions.visible) {
                             if (d.activeChatContentModule && d.activeChatContentModule.chatDetails.blocked)
                                 return qsTr("This user has been blocked.")
-                            if (!root.rootStore.sectionDetails.joined || root.rootStore.sectionDetails.amIBanned) {
+                            if (!root.joined || root.amIBanned) {
                                 return qsTr("You need to join this community to send messages")
                             }
                             if (!root.canPost) {

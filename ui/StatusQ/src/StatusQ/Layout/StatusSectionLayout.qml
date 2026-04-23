@@ -182,9 +182,7 @@ LayoutChooser {
     }
 
     Binding on criteria {
-        // delay to avoid race conditions related to additional bottom space and therefore
-        // unexpected mode changes when opening/closing virtual keyboard
-        delayed: true
+        id: criteriaBinding
 
         value: {
             const height = root.height + (root.Window.window?.additionalBottomMargin ?? 0)
@@ -250,5 +248,12 @@ LayoutChooser {
         onBackButtonClicked: root.backButtonClicked()
 
         Component.onCompleted: currentIndexCache = currentIndex
+    }
+
+    Component.onCompleted: {
+        // initialize with no delay at startup but later delay to avoid race conditions related to
+        // additional bottom space and therefore unexpected mode changes when opening/closing
+        // virtual keyboard
+        Qt.callLater(() => { criteriaBinding.delayed = true })
     }
 }

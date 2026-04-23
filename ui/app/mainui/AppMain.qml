@@ -36,12 +36,13 @@ import shared.popups.send.views
 import shared.stores.send
 
 import StatusQ
-import StatusQ.Core
-import StatusQ.Core.Theme
-import StatusQ.Core.Utils as SQUtils
 import StatusQ.Components
 import StatusQ.Components.private
 import StatusQ.Controls
+import StatusQ.Core
+import StatusQ.Core.Backpressure
+import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Layout
 import StatusQ.Popups
 import StatusQ.Popups.Dialog
@@ -65,7 +66,7 @@ import SortFilterProxyModel
 
 Item {
     id: appMain
-    
+
     // Primary store container — all additional stores should be initialized under this root
     readonly property AppStores.RootStore rootStore: AppStores.RootStore {
         localBackupEnabled: appMain.featureFlagsStore.localBackupEnabled
@@ -840,6 +841,8 @@ Item {
             onConnectionTypeChanged: d.connectionChange()
         }
 
+        property bool showChatLayoutLoading: false
+
         readonly property int activeSectionType: appMain.rootStore.activeSectionType
         readonly property bool isWalletRelatedSectionType: activeSectionType === Constants.appSection.wallet ||
                                                            activeSectionType === Constants.appSection.swap || activeSectionType === Constants.appSection.market ||
@@ -847,6 +850,38 @@ Item {
         readonly property bool isBrowserEnabled: appMain.featureFlagsStore.browserEnabled &&
                                                  localAccountSensitiveSettings.isBrowserEnabled
         readonly property int syncingBadgeCount: appMain.devicesStore.totalDevicesCount - appMain.devicesStore.pairedDevicesCount
+
+        function hasChatLayoutLoader(sectionId: string): bool {
+            if (sectionId === appMain.profileStore.pubKey) {
+                return true
+            }
+
+            for (let i = 0; i < appView.children.length; i++) {
+                const child = appView.children[i]
+                if (child && child.sectionId === sectionId) {
+                    return true
+                }
+            }
+
+            return false
+        }
+
+        function isChatLayoutLoaderActive(sectionId: string) {
+            // Personal chat section is backed by a dedicated loader.
+            if (sectionId === appMain.profileStore.pubKey) {
+                return personalChatLayoutLoader.active
+            }
+
+            // Community sections are backed by repeater-created loaders.
+            for (let i = 0; i < appView.children.length; i++) {
+                const child = appView.children[i]
+                if (child && child.sectionId === sectionId) {
+                    return child.active
+                }
+            }
+
+            return false
+        }
 
         function openHomePage() {
             appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.homePage)
@@ -1175,7 +1210,12 @@ Item {
     }
 
     function changeAppSectionBySectionId(sectionId) {
-        appMain.rootStore.setActiveSectionById(sectionId)
+        d.showChatLayoutLoading = d.hasChatLayoutLoader(sectionId)
+                                  && !d.isChatLayoutLoaderActive(sectionId)
+        // Using callLater doesn't leave ebnough time to render the loading state
+        Backpressure.setTimeout(this, 1, () => {
+            appMain.rootStore.setActiveSectionById(sectionId)
+        })
     }
 
     StatusSoundEffect {
@@ -1278,7 +1318,7 @@ Item {
     }
 
     ColumnLayout {
-        anchors.fill: parent        
+        anchors.fill: parent
 
         spacing: 0
 
@@ -1890,15 +1930,15 @@ Item {
                     }
 
                     Loader {
+                        id: personalChatLayoutLoader
+
                         active: false
-                        sourceComponent: {
-                            if (appMain.rootChatStore.chatsLoadingFailed) {
-                                return errorStateComponent
+                        sourceComponent: personalChatLayoutComponent
+
+                        onStatusChanged: {
+                            if (status === Loader.Ready || status === Loader.Error) {
+                                d.showChatLayoutLoading = false
                             }
-                            if (appMain.rootStore.sectionsLoaded) {
-                                return personalChatLayoutComponent
-                            }
-                            return loadingStateComponent
                         }
 
                         // Do not unload section data from the memory in order not
@@ -1908,34 +1948,6 @@ Item {
                             when: appView.currentIndex === Constants.appViewStackIndex.chat
                             value: true
                             restoreMode: Binding.RestoreNone
-                        }
-
-                        Component {
-                            id: loadingStateComponent
-                            Item {
-                                anchors.fill: parent
-
-                                Row {
-                                    anchors.centerIn: parent
-                                    spacing: 6
-                                    StatusBaseText {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: qsTr("Loading sections...")
-                                    }
-                                    LoadingAnimation { anchors.verticalCenter: parent.verticalCenter }
-                                }
-                            }
-                        }
-
-                        Component {
-                            id: errorStateComponent
-                            Item {
-                                anchors.fill: parent
-                                StatusBaseText {
-                                    text: qsTr("Error loading chats, try closing the app and restarting")
-                                    anchors.centerIn: parent
-                                }
-                            }
                         }
 
                         Component {
@@ -1967,8 +1979,8 @@ Item {
                                 emojiPopup: statusEmojiPopup.item
                                 stickersPopup: statusStickersPopupLoader.item
                                 sendViaPersonalChatEnabled: featureFlagsStore.sendViaPersonalChatEnabled
-                                disabledTooltipText: !appMain.networkConnectionStore.walletReadyForTransactionsEnabled ?
-                                                         appMain.networkConnectionStore.walletReadyForTransactionsToolTipText : ""
+                                disabledTooltipText: !appMain.networkConnectionStore.sendBuyBridgeEnabled ?
+                                                        appMain.networkConnectionStore.sendBuyBridgeToolTipText : ""
                                 paymentRequestFeatureEnabled: featureFlagsStore.paymentRequestEnabled
                                 extraLeftPadding: appMain.isPortraitMode ? SQUtils.Utils.swipeIndicatorWidth : 0
 
@@ -2327,6 +2339,13 @@ Item {
                             Layout.fillHeight: true
 
                             active: false
+                            asynchronous: false
+
+                            onStatusChanged: {
+                                if (status === Loader.Ready || status === Loader.Error) {
+                                    d.showChatLayoutLoading = false
+                                }
+                            }
 
                             // Do not unload section data from the memory in order not
                             // to reset scroll, not send text input and etc during the
@@ -2356,6 +2375,7 @@ Item {
                                     }
                                 }
 
+                                anchors.fill: parent
                                 showUsersList: appMain.accountSettingsStore.showUsersList
                                 onShowUsersListRequested:
                                     show => appMain.accountSettingsStore.setShowUsersList(show)
@@ -2367,7 +2387,7 @@ Item {
                                 createChatPropertiesStore: appMain.createChatPropertiesStore
                                 communitiesStore: appMain.communitiesStore
                                 communitySettingsDisabled: !chatLayoutComponent.isManageCommunityEnabledInAdvanced &&
-                                                           (appMain.rootStore.isProduction && appMain.networksStore.areTestNetworksEnabled)
+                                                        (appMain.rootStore.isProduction && appMain.networksStore.areTestNetworksEnabled)
 
                                 newCommnityStore: appMain.messagingRootStore.createCommunityRootStore(this, model.id)
                                 rootStore: ChatStores.RootStore {
@@ -2534,6 +2554,19 @@ Item {
                         // is shown after it's been introduced
                         d.tryOpenNavigationEducationPopup()
                     }
+                }
+            }
+
+             Loader {
+                active: d.showChatLayoutLoading
+                anchors.left: sidebar.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+
+                sourceComponent: ChatLayoutLoading {
+                    anchors.fill: parent
+                    showMembersPanel: appMain.accountSettingsStore.showUsersList
                 }
             }
         }

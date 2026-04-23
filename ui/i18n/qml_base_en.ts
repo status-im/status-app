@@ -1813,14 +1813,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Loading sections...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Error loading chats, try closing the app and restarting</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>%1 was removed from your trusted sites.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -17601,6 +17593,10 @@ to load</source>
     </message>
     <message>
         <source>Something went wrong. Change amount, token or try again later.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No routes found with enough liquidity</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
