@@ -48,8 +48,6 @@ QtObject:
     notify = keyPairItemChanged
 
   proc resolveKeyPairItemForKeyUid*(self: View, keyUid: string) {.slot.} =
-    if not self.keyPairItem.isNil and self.keyPairItem.getKeyUid() == keyUid:
-      return
     var item = self.delegate.getKeyPairItemForKeyUid(keyUid)
     if item.isNil:
       item = newKeyPairItem()

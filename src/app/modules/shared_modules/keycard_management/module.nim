@@ -35,6 +35,7 @@ type FlowType {.pure.} = enum
   StoppingKeycardForProfileKeyPair = "StoppingKeycardForProfileKeyPair" # stops using a Keycard for the profile key pair by moving it back into the app
   ChangingKeycardPIN = "ChangingKeycardPIN" # changes the Keycard PIN
   ChangingKeycardPUK = "ChangingKeycardPUK" # sets or changes the Keycard PUK
+  RenamingKeycard = "RenamingKeycard" # renames the Keycard (stores a new keycard metadata name)
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -192,6 +193,8 @@ proc emitError[T](self: Module[T], err: string) =
     self.view.keycardChangePinError(err)
   elif self.tmpFlowType == FlowType.ChangingKeycardPUK:
     self.view.keycardChangePukError(err)
+  elif self.tmpFlowType == FlowType.RenamingKeycard:
+    self.view.keycardRenameError(err)
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
 
@@ -349,6 +352,28 @@ method onChangeKeycardPUKFinished*[T](self: Module[T], error: string) =
     self.emitError("keycard change PUK error: " & error)
     return
   self.view.keycardChangePukSuccess()
+
+method startRenameKeycard*[T](self: Module[T], currentPin, newName, metadataAccountsJson: string) =
+  self.tmpFlowType = FlowType.RenamingKeycard
+  var paths: seq[string] = @[]
+  try:
+    let parsed = parseJson(metadataAccountsJson)
+    if parsed.kind == JArray:
+      for acc in parsed.elems:
+        if acc.kind == JObject and acc.hasKey("path") and acc["path"].kind == JString:
+          paths.add(acc["path"].getStr())
+  except Exception as e:
+    self.emitError("failed to parse keycard metadata accounts json: " & e.msg)
+    return
+  self.controller.startRenameKeycard(currentPin, newName, paths)
+
+method onRenameKeycardFinished*[T](self: Module[T], error: string) =
+  if self.tmpFlowType != FlowType.RenamingKeycard:
+    return
+  if error.len > 0:
+    self.emitError("keycard rename error: " & error)
+    return
+  self.view.keycardRenameSuccess()
 
 method startStopUsingKeycardForProfileKeyPair*[T](self: Module[T], seedPhrase, newPassword: string) =
   self.tmpFlowType = FlowType.StoppingKeycardForProfileKeyPair

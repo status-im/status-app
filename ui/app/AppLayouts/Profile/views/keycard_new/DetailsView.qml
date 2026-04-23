@@ -396,7 +396,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: rename keycard flow...")
+            d.startFlow(Constants.keycard.flow.rename)
         }
     }
 

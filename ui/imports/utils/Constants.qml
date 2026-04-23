@@ -525,6 +525,7 @@ QtObject {
             readonly property string stopUsingKeycardForProfile: "stop-using-keycard-for-profile"
             readonly property string changePin: "change-pin"
             readonly property string setOrChangePuk: "set-or-change-puk"
+            readonly property string rename: "rename"
         }
     }
 
