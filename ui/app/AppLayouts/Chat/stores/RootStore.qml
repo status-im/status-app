@@ -53,7 +53,6 @@ QtObject {
     }
 
     readonly property var chatSectionModuleModel: root.mainModuleInst.getChatSectionModule().model
-    readonly property bool chatsLoadingFailed: root.mainModuleInst.chatsLoadingFailed
 
     // Meanwhile cleanup and refactor of this store is not done, use the following
     // property to distinguish if store is currently related to chat or to community
@@ -79,7 +78,7 @@ QtObject {
     readonly property UsersStore usersStore: UsersStore {
         property var chatDetails: !!root.activeChatContentModule ? root.activeChatContentModule.chatDetails : null
 
-        isFullCommunityMembers: chatDetails.belongsToCommunity && !chatDetails.requiresPermissions
+        isFullCommunityMembers: (chatDetails?.belongsToCommunity && !chatDetails?.requiresPermissions) || false
         usersModule: !!root.activeChatContentModule ? root.activeChatContentModule.usersModule : null
         chatCommunitySectionModule: root.chatCommunitySectionModule
     }
@@ -239,7 +238,7 @@ QtObject {
     }
 
     function amIChatAdmin() {
-        return currentChatContentModule().amIChatAdmin()
+        return currentChatContentModule()?.amIChatAdmin() || false
     }
 
     function loadMembersForSectionId(sectionId) {
