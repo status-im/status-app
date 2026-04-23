@@ -10143,6 +10143,26 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <source>Keycard’s PUK successfully set</source>
         <translation type="unfinished">PUK de Keycard configurada exitosamente</translation>
     </message>
+    <message>
+        <source>Rename Keycard</source>
+        <translation type="unfinished">Renombrar Keycard</translation>
+    </message>
+    <message>
+        <source>Rename</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Renaming Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard has been renamed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New name: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>

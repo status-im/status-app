@@ -103,6 +103,12 @@ method startChangeKeycardPUK*(self: AccessInterface, currentPin, newPuk: string)
 method onChangeKeycardPUKFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startRenameKeycard*(self: AccessInterface, currentPin, newName, metadataAccountsJson: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onRenameKeycardFinished*(self: AccessInterface, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getKeyPairItemForKeyUid*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 

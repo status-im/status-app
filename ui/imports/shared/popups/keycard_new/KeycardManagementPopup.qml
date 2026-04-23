@@ -63,6 +63,8 @@ StatusDialog {
             return qsTr("Change Keycard PIN")
         case Constants.keycard.flow.setOrChangePuk:
             return qsTr("Set or change PUK")
+        case Constants.keycard.flow.rename:
+            return qsTr("Rename Keycard")
         default:
             return qsTr("Keycard Flow")
         }
@@ -88,7 +90,9 @@ StatusDialog {
         ChangingPin,
         CreatePuk,
         RepeatPuk,
-        ChangingPuk
+        ChangingPuk,
+        RenameInput,
+        RenamingKeycard
     }
 
     QtObject {
@@ -119,6 +123,8 @@ StatusDialog {
                 return KeycardManagementPopup.FlowStep.EnterPin
             case Constants.keycard.flow.setOrChangePuk:
                 return KeycardManagementPopup.FlowStep.EnterPin
+            case Constants.keycard.flow.rename:
+                return KeycardManagementPopup.FlowStep.EnterPin
             default:
                 return d.keycardHasOnlyPinSet
                     ? KeycardManagementPopup.FlowStep.EnterPin
@@ -129,6 +135,7 @@ StatusDialog {
         property string currentPin: ""
         property string newPin: ""
         property string newPuk: ""
+        property string newName: ""
         property bool pinMismatch: false
         property string seedPhrase: ""
         property bool seedPhraseRevealed: false
@@ -186,6 +193,8 @@ StatusDialog {
                 return createPukComponent
             case KeycardManagementPopup.FlowStep.RepeatPuk:
                 return repeatPukComponent
+            case KeycardManagementPopup.FlowStep.RenameInput:
+                return renameKeycardComponent
             default: return null
             }
         }
@@ -283,6 +292,16 @@ StatusDialog {
                                     })()
         }
 
+        function startRenameKeycard() {
+            d.currentStep = KeycardManagementPopup.FlowStep.RenamingKeycard
+            d.processing = true
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startRenameKeycard(d.currentPin,
+                                                                      d.newName,
+                                                                      root.cardMetadataWalletAccountsJson)
+                                    })()
+        }
+
         function nextStep() {
             if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
                 d.currentStep = d.keycardHasOnlyPinSet
@@ -329,8 +348,16 @@ StatusDialog {
                     d.currentStep = KeycardManagementPopup.FlowStep.CreatePuk
                     return
                 }
+                if (root.flow === Constants.keycard.flow.rename) {
+                    d.currentStep = KeycardManagementPopup.FlowStep.RenameInput
+                    return
+                }
 
                 d.currentStep = KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                return
+            }
+            if (d.currentStep === KeycardManagementPopup.FlowStep.RenameInput) {
+                d.startRenameKeycard()
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.CreatePuk) {
@@ -437,6 +464,12 @@ StatusDialog {
                     && root.flow === Constants.keycard.flow.setOrChangePuk) {
                 d.newPuk = ""
                 d.currentStep = KeycardManagementPopup.FlowStep.CreatePuk
+                return
+            }
+            if (d.currentStep === KeycardManagementPopup.FlowStep.RenameInput
+                    && root.flow === Constants.keycard.flow.rename) {
+                d.newName = ""
+                d.currentStep = KeycardManagementPopup.FlowStep.EnterPin
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin) {
@@ -675,6 +708,17 @@ StatusDialog {
             d.processing = false
             d.error = error
         }
+
+        function onKeycardRenameSuccess() {
+            d.processing = false
+            d.success = true
+        }
+
+        function onKeycardRenameError(error) {
+            console.error("Keycard rename error:", error)
+            d.processing = false
+            d.error = error
+        }
     }
 
     Connections {
@@ -781,6 +825,8 @@ StatusDialog {
                          || (root.flow === Constants.keycard.flow.setOrChangePuk
                              && (d.currentStep === KeycardManagementPopup.FlowStep.CreatePuk
                                  || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk))
+                         || (root.flow === Constants.keycard.flow.rename
+                             && d.currentStep === KeycardManagementPopup.FlowStep.RenameInput)
 
                 onClicked: {
                     d.previousStep()
@@ -810,7 +856,8 @@ StatusDialog {
                                || root.flow === Constants.keycard.flow.stopUsingKeycard
                                || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
                                || root.flow === Constants.keycard.flow.changePin
-                               || root.flow === Constants.keycard.flow.setOrChangePuk) {
+                               || root.flow === Constants.keycard.flow.setOrChangePuk
+                               || root.flow === Constants.keycard.flow.rename) {
                         if (!d.processing && !d.success && !d.error) {
                             return qsTr("Cancel")
                         }
@@ -916,7 +963,9 @@ StatusDialog {
                                  && d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin)
                              || (root.flow === Constants.keycard.flow.setOrChangePuk
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.CreatePuk
-                                     || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk)))
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk))
+                             || (root.flow === Constants.keycard.flow.rename
+                                 && d.currentStep === KeycardManagementPopup.FlowStep.RenameInput))
                 enabled: visible
                          && ((d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
@@ -935,7 +984,10 @@ StatusDialog {
                                  && contentLoader.item.passwordMatches)
                              || ((d.currentStep === KeycardManagementPopup.FlowStep.CreatePuk
                                   || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk)
-                                 && contentLoader.item.pukValid))
+                                 && contentLoader.item.pukValid)
+                             || (d.currentStep === KeycardManagementPopup.FlowStep.RenameInput
+                                 && contentLoader.item.nameValid
+                                 && contentLoader.item.keyPairName !== root.cardMetadataName))
                 text: {
                     if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin) {
                         return qsTr("Try setting the PIN again")
@@ -949,6 +1001,9 @@ StatusDialog {
                     }
                     if (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword) {
                         return qsTr("Finalize Status Password Creation")
+                    }
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.RenameInput) {
+                        return qsTr("Rename")
                     }
 
                     return qsTr("Next")
@@ -1018,6 +1073,11 @@ StatusDialog {
                         return
                     }
                     if (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPuk) {
+                        d.nextStep()
+                        return
+                    }
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.RenameInput) {
+                        d.newName = contentLoader.item.keyPairName
                         d.nextStep()
                         return
                     }
@@ -1105,6 +1165,8 @@ StatusDialog {
                     return qsTr("Changing Keycard PIN...")
                 case Constants.keycard.flow.setOrChangePuk:
                     return qsTr("Setting your Keycard PUK...")
+                case Constants.keycard.flow.rename:
+                    return qsTr("Renaming Keycard...")
                 default:
                     return qsTr("Reading...")
                 }
@@ -1136,6 +1198,7 @@ StatusDialog {
                 case Constants.keycard.flow.stopUsingKeycardForProfile:
                 case Constants.keycard.flow.changePin:
                 case Constants.keycard.flow.setOrChangePuk:
+                case Constants.keycard.flow.rename:
                     return Assets.png("keycard/card_insert/insert")
                 default:
                     return ""
@@ -1162,6 +1225,8 @@ StatusDialog {
                     return qsTr("Keycard PIN has been changed")
                 case Constants.keycard.flow.setOrChangePuk:
                     return qsTr("Keycard’s PUK successfully set")
+                case Constants.keycard.flow.rename:
+                    return qsTr("Keycard has been renamed")
                 default:
                     return qsTr("Success")
                 }
@@ -1184,6 +1249,8 @@ StatusDialog {
                     return qsTr("Status password is now required to log in and sign.")
                 case Constants.keycard.flow.changePin:
                     return qsTr("New PIN is required to interact with Keycard.")
+                case Constants.keycard.flow.rename:
+                    return qsTr("New name: %1").arg(d.newName)
                 default:
                     return ""
                 }
@@ -1207,6 +1274,7 @@ StatusDialog {
                 case Constants.keycard.flow.stopUsingKeycardForProfile:
                 case Constants.keycard.flow.changePin:
                 case Constants.keycard.flow.setOrChangePuk:
+                case Constants.keycard.flow.rename:
                     return Assets.png("keycard/wrong_card/something-went-wrong")
                 default:
                     return ""
@@ -1243,6 +1311,7 @@ StatusDialog {
                     return
                 case Constants.keycard.flow.changePin:
                 case Constants.keycard.flow.setOrChangePuk:
+                case Constants.keycard.flow.rename:
                     d.currentPin = pinInput
                     d.nextStep()
                     return
@@ -1526,6 +1595,14 @@ StatusDialog {
         EnterPukState {
             mode: EnterPukState.Mode.RepeatPuk
             pukToMatch: d.newPuk
+        }
+    }
+
+    Component {
+        id: renameKeycardComponent
+        EnterKeyPairNameState {
+            title: ""
+            initialKeyPairName: root.cardMetadataName
         }
     }
 }

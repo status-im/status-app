@@ -241,6 +241,31 @@ proc asyncGetKeycardMetadata*(self: Service, pin: string) {.featureGuard(KEYCARD
     self.events.emit(SIGNAL_KEYCARD_GET_KEYCARD_METADATA_FINISHED, data)
   )
 
+proc asyncStoreKeycardMetadata*(self: Service, pin: string, metadataName: string, metadataPaths: seq[string]) {.featureGuard(KEYCARD_ENABLED).} =
+  let params = %*{
+    "pin": pin,
+    "name": metadataName,
+    "paths": metadataPaths,
+    "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
+    "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
+    "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
+  }
+  self.asyncCallRPC(KeycardAction.StoreKeycardMetadata, params, proc (responseObj: JsonNode, err: string) =
+    var data = KeycardErrorArg()
+    try:
+      if err.len > 0:
+        raise newException(CatchableError, "store keycard metadata parsing response error: " & err)
+      if responseObj.hasKey("error") and responseObj["error"].kind != JNull:
+        let errorObj = responseObj["error"]
+        if errorObj.hasKey("message"):
+          raise newException(CatchableError, "store keycard metadata response error: " & errorObj["message"].getStr())
+        raise newException(CatchableError, "store keycard metadata response unknown error")
+    except Exception as e:
+      error "store keycard metadata error", err=e.msg
+      data.error = e.msg
+    self.events.emit(SIGNAL_KEYCARD_STORE_KEYCARD_METADATA_FINISHED, data)
+  )
+
 proc asyncFactoryResetKeycard*(self: Service, keycardUid: string) {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keycardUid": keycardUid,
