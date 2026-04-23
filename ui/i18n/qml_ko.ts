@@ -10122,6 +10122,26 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <source>Keycard’s PUK successfully set</source>
         <translation type="unfinished">Keycard의 PUK이 성공적으로 설정되었습니다</translation>
     </message>
+    <message>
+        <source>Rename Keycard</source>
+        <translation type="unfinished">Keycard 이름 변경</translation>
+    </message>
+    <message>
+        <source>Rename</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Renaming Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard has been renamed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New name: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>

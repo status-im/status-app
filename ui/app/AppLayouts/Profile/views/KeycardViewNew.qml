@@ -150,6 +150,9 @@ SettingsContentBase {
             case Constants.keycard.flow.setOrChangePuk:
                 console.info("setting keycard PUK - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
                 break
+            case Constants.keycard.flow.rename:
+                console.info("renaming keycard - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
+                break
             }
 
             d.showMainScreen()

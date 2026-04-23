@@ -13,6 +13,7 @@ Control {
 
     property string keyPairName: ""
     property string initialKeyPairName: ""
+    property string title: qsTr("Name your key pair")
     readonly property bool nameValid: nameInput.valid
 
     signal done()
@@ -29,7 +30,8 @@ Control {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
-            text: qsTr("Name your key pair")
+            visible: !!root.title
+            text: root.title
             font.weight: Font.Bold
             font.pixelSize: Theme.fontSize(22)
         }

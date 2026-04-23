@@ -12351,6 +12351,31 @@
       <comment>KeycardManagementPopup</comment>
       <translation>Keycard’s PUK successfully set</translation>
     </message>
+    <message>
+      <source>Rename Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Rename Keycard</translation>
+    </message>
+    <message>
+      <source>Rename</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Rename</translation>
+    </message>
+    <message>
+      <source>Renaming Keycard...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Renaming Keycard...</translation>
+    </message>
+    <message>
+      <source>Keycard has been renamed</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Keycard has been renamed</translation>
+    </message>
+    <message>
+      <source>New name: %1</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>New name: %1</translation>
+    </message>
   </context>
   <context>
     <name>KeycardNotEmptyPage</name>

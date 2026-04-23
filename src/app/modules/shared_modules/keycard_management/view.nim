@@ -84,6 +84,12 @@ QtObject:
   proc startChangeKeycardPUK*(self: View, currentPin: string, newPuk: string) {.slot.} =
     self.delegate.startChangeKeycardPUK(currentPin, newPuk)
 
+  proc keycardRenameSuccess*(self: View) {.signal.}
+  proc keycardRenameError*(self: View, error: string) {.signal.}
+
+  proc startRenameKeycard*(self: View, currentPin: string, newName: string, metadataAccountsJson: string) {.slot.} =
+    self.delegate.startRenameKeycard(currentPin, newName, metadataAccountsJson)
+
   proc keyPairModelChanged(self: View) {.signal.}
   proc getKeyPairModel(self: View): QVariant {.slot.} =
     if self.keyPairModelVariant.isNil:
