@@ -8082,16 +8082,54 @@ Are you sure you want to do this?</source>
         <translation>Asegúrate de que ambos dispositivos estén en la misma red</translation>
     </message>
     <message>
+        <source>Open Status App on your device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open %1</source>
+        <comment>(to) Open Settings</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Navigate to the %1</source>
+        <comment>Navigate to the Syncing tab</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Click %1</source>
+        <comment>Click Setup Syncing</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 on this device</source>
+        <comment>Scan QR on this device</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Open Status on the device you want to import from</source>
         <translation>Abre Status en el dispositivo desde el que quieres importar</translation>
     </message>
     <message>
-        <source>Open Status App on your desktop device</source>
-        <translation>Abre la aplicación Status en tu dispositivo de escritorio</translation>
+        <source>Open %1</source>
+        <comment>(to) Open Settings / Wallet</comment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Open</source>
-        <translation>Abrir</translation>
+        <source>Click %1 of key pairs on this device</source>
+        <comment>Click Show encrypted QR of key pairs on this device</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show encrypted QR</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy the encrypted key pairs code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Paste the encrypted key pairs code to this device</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings / Wallet</source>
@@ -8102,52 +8140,20 @@ Are you sure you want to do this?</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <source>Click</source>
-        <translation>Haz clic</translation>
-    </message>
-    <message>
-        <source>Navigate to the</source>
-        <translation>Navega a la</translation>
-    </message>
-    <message>
-        <source>Show encrypted QR of key pairs on this device</source>
-        <translation>Mostrar código QR cifrado de pares de claves en este dispositivo</translation>
-    </message>
-    <message>
         <source>Syncing tab</source>
         <translation>Pestaña de sincronización</translation>
     </message>
     <message>
-        <source>Copy the</source>
-        <translation>Copia el</translation>
-    </message>
-    <message>
         <source>Scan QR</source>
         <translation>Escanear QR</translation>
-    </message>
-    <message>
-        <source>encrypted key pairs code</source>
-        <translation>código cifrado de pares de claves</translation>
-    </message>
-    <message>
-        <source>on this device</source>
-        <translation>en este dispositivo</translation>
     </message>
     <message>
         <source>Setup Syncing</source>
         <translation>Configurar sincronización</translation>
     </message>
     <message>
-        <source>Paste the</source>
-        <translation>Pega el</translation>
-    </message>
-    <message>
         <source>Scan or enter the encrypted QR with this device</source>
         <translation>Escanea o introduce el código QR cifrado con este dispositivo</translation>
-    </message>
-    <message>
-        <source>to this device</source>
-        <translation>a este dispositivo</translation>
     </message>
     <message>
         <source>For security, delete the code as soon as you are done</source>
@@ -8156,111 +8162,12 @@ Are you sure you want to do this?</source>
     <message>
         <source>Scan or enter the code</source>
         <translation>Escanea o introduce el código</translation>
-    </message>
-    <message>
-        <source>%1 %2</source>
-        <translation type="unfinished">%1 %2</translation>
-    </message>
-    <message>
-        <source>%1 %2 %3</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>GetSyncCodeInstructionsPopup</name>
     <message>
-        <source>How to get a pairing code on...</source>
-        <translation>Cómo obtener un código de emparejamiento en...</translation>
-    </message>
-</context>
-<context>
-    <name>GetSyncCodeMobileInstructions</name>
-    <message>
-        <source>Ensure both devices are on the same network</source>
-        <translation>Asegúrate de que ambos dispositivos estén en la misma red</translation>
-    </message>
-    <message>
-        <source>Open Status on the device you want to import from</source>
-        <translation>Abre Status en el dispositivo desde el que quieres importar</translation>
-    </message>
-    <message>
-        <source>Open Status App on your mobile device</source>
-        <translation>Abre la aplicación Status en tu dispositivo móvil</translation>
-    </message>
-    <message>
-        <source>Open your</source>
-        <translation>Abre tu</translation>
-    </message>
-    <message>
-        <source>Settings / Wallet</source>
-        <translation>Ajustes / Billetera</translation>
-    </message>
-    <message>
-        <source>Profile</source>
-        <translation>Perfil</translation>
-    </message>
-    <message>
-        <source>Tap</source>
-        <translation>Toca</translation>
-    </message>
-    <message>
-        <source>Go to</source>
-        <translation>Ve a</translation>
-    </message>
-    <message>
-        <source>Show encrypted key pairs code</source>
-        <translation>Mostrar código cifrado de pares de claves</translation>
-    </message>
-    <message>
-        <source>Syncing</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Copy the</source>
-        <translation>Copia el</translation>
-    </message>
-    <message>
-        <source>Scan QR</source>
-        <translation>Escanear QR</translation>
-    </message>
-    <message>
-        <source>encrypted key pairs code</source>
-        <translation>código cifrado de pares de claves</translation>
-    </message>
-    <message>
-        <source>on this device</source>
-        <translation>en este dispositivo</translation>
-    </message>
-    <message>
-        <source>Sync new device</source>
-        <translation>Sincronizar nuevo dispositivo</translation>
-    </message>
-    <message>
-        <source>Paste the</source>
-        <translation>Pega el</translation>
-    </message>
-    <message>
-        <source>Scan or enter the encrypted QR with this device</source>
-        <translation>Escanea o introduce el código QR cifrado con este dispositivo</translation>
-    </message>
-    <message>
-        <source>to this device</source>
-        <translation>a este dispositivo</translation>
-    </message>
-    <message>
-        <source>For security, delete the code as soon as you are done</source>
-        <translation>Por seguridad, elimina el código tan pronto como hayas terminado</translation>
-    </message>
-    <message>
-        <source>Scan or enter the code</source>
-        <translation>Escanea o introduce el código</translation>
-    </message>
-    <message>
-        <source>%1 %2</source>
-        <translation type="unfinished">%1 %2</translation>
-    </message>
-    <message>
-        <source>%1 %2 %3</source>
+        <source>How to get a pairing code...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -17604,6 +17511,10 @@ al cargar</translation>
         <translation>El impacto en el precio es demasiado alto. Reduce la cantidad de tokens o inténtalo de nuevo más tarde.</translation>
     </message>
     <message>
+        <source>No routes found with enough liquidity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Something went wrong. Change amount, token or try again later.</source>
         <translation>Algo salió mal. Cambia la cantidad, el token o inténtalo de nuevo más tarde.</translation>
     </message>
@@ -17740,17 +17651,6 @@ al cargar</translation>
     <message>
         <source>Log in via recovery phrase</source>
         <translation>Iniciar sesión con frase de recuperación</translation>
-    </message>
-</context>
-<context>
-    <name>SyncingCodeInstructions</name>
-    <message>
-        <source>Mobile</source>
-        <translation>Móvil</translation>
-    </message>
-    <message>
-        <source>Desktop</source>
-        <translation>Escritorio</translation>
     </message>
 </context>
 <context>

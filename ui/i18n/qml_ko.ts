@@ -8053,16 +8053,54 @@ Are you sure you want to do this?</source>
         <translation>두 기기가 같은 네트워크에 있는지 확인하세요</translation>
     </message>
     <message>
+        <source>Open Status App on your device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open %1</source>
+        <comment>(to) Open Settings</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Navigate to the %1</source>
+        <comment>Navigate to the Syncing tab</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Click %1</source>
+        <comment>Click Setup Syncing</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 on this device</source>
+        <comment>Scan QR on this device</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Open Status on the device you want to import from</source>
         <translation>가져올 기기에서 Status를 여세요</translation>
     </message>
     <message>
-        <source>Open Status App on your desktop device</source>
-        <translation>데스크톱 기기에서 Status App을 여세요</translation>
+        <source>Open %1</source>
+        <comment>(to) Open Settings / Wallet</comment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Open</source>
-        <translation>열기</translation>
+        <source>Click %1 of key pairs on this device</source>
+        <comment>Click Show encrypted QR of key pairs on this device</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show encrypted QR</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy the encrypted key pairs code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Paste the encrypted key pairs code to this device</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings / Wallet</source>
@@ -8073,48 +8111,16 @@ Are you sure you want to do this?</source>
         <translation>설정</translation>
     </message>
     <message>
-        <source>Click</source>
-        <translation>클릭</translation>
-    </message>
-    <message>
-        <source>Navigate to the</source>
-        <translation>다음으로 이동하세요</translation>
-    </message>
-    <message>
-        <source>Show encrypted QR of key pairs on this device</source>
-        <translation>이 기기에서 키 페어의 암호화된 QR 표시</translation>
-    </message>
-    <message>
         <source>Syncing tab</source>
         <translation>동기화 탭</translation>
-    </message>
-    <message>
-        <source>Copy the</source>
-        <translation>복사</translation>
-    </message>
-    <message>
-        <source>encrypted key pairs code</source>
-        <translation>암호화된 키 페어 코드</translation>
-    </message>
-    <message>
-        <source>on this device</source>
-        <translation>이 기기에서</translation>
     </message>
     <message>
         <source>Setup Syncing</source>
         <translation>동기화 설정</translation>
     </message>
     <message>
-        <source>Paste the</source>
-        <translation>붙여넣기</translation>
-    </message>
-    <message>
         <source>Scan or enter the encrypted QR with this device</source>
         <translation>이 기기로 암호화된 QR을 스캔하거나 입력하세요</translation>
-    </message>
-    <message>
-        <source>to this device</source>
-        <translation>이 기기로</translation>
     </message>
     <message>
         <source>For security, delete the code as soon as you are done</source>
@@ -8127,111 +8133,12 @@ Are you sure you want to do this?</source>
     <message>
         <source>Scan QR</source>
         <translation>QR 코드 스캔</translation>
-    </message>
-    <message>
-        <source>%1 %2</source>
-        <translation type="unfinished">%1 %2</translation>
-    </message>
-    <message>
-        <source>%1 %2 %3</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>GetSyncCodeInstructionsPopup</name>
     <message>
-        <source>How to get a pairing code on...</source>
-        <translation>페어링 코드를 받는 방법...</translation>
-    </message>
-</context>
-<context>
-    <name>GetSyncCodeMobileInstructions</name>
-    <message>
-        <source>Ensure both devices are on the same network</source>
-        <translation>두 기기가 같은 네트워크에 연결되어 있는지 확인하세요</translation>
-    </message>
-    <message>
-        <source>Open Status on the device you want to import from</source>
-        <translation>가져올 기기에서 Status를 열어요</translation>
-    </message>
-    <message>
-        <source>Open Status App on your mobile device</source>
-        <translation>모바일 기기에서 Status App 열기</translation>
-    </message>
-    <message>
-        <source>Open your</source>
-        <translation>열어 주세요</translation>
-    </message>
-    <message>
-        <source>Settings / Wallet</source>
-        <translation>설정 / 지갑</translation>
-    </message>
-    <message>
-        <source>Profile</source>
-        <translation>프로필</translation>
-    </message>
-    <message>
-        <source>Tap</source>
-        <translation>탭</translation>
-    </message>
-    <message>
-        <source>Go to</source>
-        <translation>이동</translation>
-    </message>
-    <message>
-        <source>Show encrypted key pairs code</source>
-        <translation>암호화된 키 페어 코드 표시</translation>
-    </message>
-    <message>
-        <source>Syncing</source>
-        <translation>동기화 중</translation>
-    </message>
-    <message>
-        <source>Copy the</source>
-        <translation>복사</translation>
-    </message>
-    <message>
-        <source>encrypted key pairs code</source>
-        <translation>암호화된 키 쌍 코드</translation>
-    </message>
-    <message>
-        <source>on this device</source>
-        <translation>이 기기에서</translation>
-    </message>
-    <message>
-        <source>Sync new device</source>
-        <translation>새 기기 동기화</translation>
-    </message>
-    <message>
-        <source>Paste the</source>
-        <translation>붙여넣기</translation>
-    </message>
-    <message>
-        <source>Scan or enter the encrypted QR with this device</source>
-        <translation>이 기기로 암호화된 QR을 스캔하거나 입력하세요</translation>
-    </message>
-    <message>
-        <source>to this device</source>
-        <translation>이 기기로</translation>
-    </message>
-    <message>
-        <source>For security, delete the code as soon as you are done</source>
-        <translation>보안을 위해, 완료하자마자 코드를 삭제하세요</translation>
-    </message>
-    <message>
-        <source>Scan or enter the code</source>
-        <translation>코드를 스캔하거나 입력하세요</translation>
-    </message>
-    <message>
-        <source>Scan QR</source>
-        <translation>QR 코드 스캔</translation>
-    </message>
-    <message>
-        <source>%1 %2</source>
-        <translation type="unfinished">%1 %2</translation>
-    </message>
-    <message>
-        <source>%1 %2 %3</source>
+        <source>How to get a pairing code...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -17542,6 +17449,10 @@ to load</source>
         <translation>가격 영향이 너무 큽니다. 토큰 수량을 줄이거나 나중에 다시 시도하세요.</translation>
     </message>
     <message>
+        <source>No routes found with enough liquidity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Something went wrong. Change amount, token or try again later.</source>
         <translation>문제가 발생했습니다. 수량이나 토큰을 변경하거나 나중에 다시 시도하세요.</translation>
     </message>
@@ -17678,17 +17589,6 @@ to load</source>
     <message>
         <source>Log in via recovery phrase</source>
         <translation>복구 구문으로 로그인</translation>
-    </message>
-</context>
-<context>
-    <name>SyncingCodeInstructions</name>
-    <message>
-        <source>Mobile</source>
-        <translation>모바일</translation>
-    </message>
-    <message>
-        <source>Desktop</source>
-        <translation>데스크톱</translation>
     </message>
 </context>
 <context>

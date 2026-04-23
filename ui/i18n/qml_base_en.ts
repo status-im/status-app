@@ -8068,15 +8068,53 @@ Are you sure you want to do this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Open Status App on your device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open %1</source>
+        <comment>(to) Open Settings</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Navigate to the %1</source>
+        <comment>Navigate to the Syncing tab</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Click %1</source>
+        <comment>Click Setup Syncing</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 on this device</source>
+        <comment>Scan QR on this device</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Open Status on the device you want to import from</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Open Status App on your desktop device</source>
+        <source>Open %1</source>
+        <comment>(to) Open Settings / Wallet</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Open</source>
+        <source>Click %1 of key pairs on this device</source>
+        <comment>Click Show encrypted QR of key pairs on this device</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show encrypted QR</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy the encrypted key pairs code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Paste the encrypted key pairs code to this device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -8088,31 +8126,7 @@ Are you sure you want to do this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Click</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Navigate to the</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Show encrypted QR of key pairs on this device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Syncing tab</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Copy the</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>encrypted key pairs code</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>on this device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -8120,15 +8134,7 @@ Are you sure you want to do this?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Paste the</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Scan or enter the encrypted QR with this device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>to this device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -8141,112 +8147,13 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Scan QR</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 %2 %3</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>GetSyncCodeInstructionsPopup</name>
     <message>
-        <source>How to get a pairing code on...</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>GetSyncCodeMobileInstructions</name>
-    <message>
-        <source>Ensure both devices are on the same network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open Status on the device you want to import from</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open Status App on your mobile device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Open your</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Settings / Wallet</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Tap</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Go to</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Show encrypted key pairs code</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Syncing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Copy the</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>encrypted key pairs code</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>on this device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sync new device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Paste the</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Scan or enter the encrypted QR with this device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>to this device</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>For security, delete the code as soon as you are done</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Scan or enter the code</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Scan QR</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 %2 %3</source>
+        <source>How to get a pairing code...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -17585,6 +17492,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>No routes found with enough liquidity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Something went wrong. Change amount, token or try again later.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -17720,17 +17631,6 @@ to load</source>
     </message>
     <message>
         <source>Log in via recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SyncingCodeInstructions</name>
-    <message>
-        <source>Mobile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Desktop</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -18,7 +18,6 @@ ErrorTag 1.0 ErrorTag.qml
 ExpandableTag 1.0 ExpandableTag.qml
 FoldableHeader 1.0 FoldableHeader.qml
 GetSyncCodeDesktopInstructions 1.0 GetSyncCodeDesktopInstructions.qml
-GetSyncCodeMobileInstructions 1.0 GetSyncCodeMobileInstructions.qml
 ImportKeypairInfo 1.0 ImportKeypairInfo.qml
 InformationTag 1.0 InformationTag.qml
 InformationTile 1.0 InformationTile.qml
