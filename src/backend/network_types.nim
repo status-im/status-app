@@ -10,6 +10,7 @@ type RpcProviderAuthType* {.pure.} = enum
   NoAuth = "no-auth"
   BasicAuth = "basic-auth"
   TokenAuth = "token-auth"
+  PuzzleAuth = "puzzle-auth"
 
 type RpcProviderDto* = object
   id* {.serializedFieldName("id").}: int

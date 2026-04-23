@@ -78,6 +78,7 @@ let
   ETH_RPC_PROXY_USER_RESOLVED* = desktopConfig.ethRpcProxyUser
   ETH_RPC_PROXY_PASSWORD_RESOLVED* = desktopConfig.ethRpcProxyPassword
   ETH_RPC_PROXY_URL_RESOLVED* = desktopConfig.ethRpcProxyUrl
+  ETH_RPC_PROXY_USE_PUZZLE_AUTH_RESOLVED* = desktopConfig.ethRpcProxyUsePuzzleAuth
   NFT_PROXY_URL_RESOLVED* = desktopConfig.nftProxyUrl
   NFT_PROXY_STAGE_NAME_RESOLVED* = desktopConfig.nftProxyStageName
   NFT_PROXY_USER_RESOLVED* = desktopConfig.nftProxyUser
