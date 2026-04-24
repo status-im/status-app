@@ -136,8 +136,8 @@ Window {
 
             geometry = Qt.rect(0,
                                0,
-                               Math.min(Screen.desktopAvailableWidth - 125, ThemeUtils.portraitBreakpoint.width),
-                               Math.min(Screen.desktopAvailableHeight - 125, ThemeUtils.portraitBreakpoint.height));
+                               Math.min(Screen.desktopAvailableWidth - 125, ThemeUtils.defaultDesktopSize.width),
+                               Math.min(Screen.desktopAvailableHeight - 125, ThemeUtils.defaultDesktopSize.height));
             geometry.x = (screen.width - geometry.width) / 2;
             geometry.y = (screen.height - geometry.height) / 2;
         }

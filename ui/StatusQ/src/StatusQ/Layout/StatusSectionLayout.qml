@@ -181,18 +181,12 @@ LayoutChooser {
             portraitView.decrementCurrentIndex()
     }
 
-    Binding on criteria {
-        id: criteriaBinding
+    readonly property int windowWidth: root.Window?.width ?? Screen.width
 
-        value: {
-            const height = root.height + (root.Window.window?.additionalBottomMargin ?? 0)
-
-            return [
-                height > root.width && root.width < root.implicitWidth, // Portrait mode
-                true // Defaults to landscape mode
-            ]
-        }
-    }
+    criteria: [
+        root.windowWidth < root.implicitWidth, // Portrait mode
+        true // Defaults to landscape mode
+    ]
 
     layoutChoices: [
         portraitView,
@@ -248,12 +242,5 @@ LayoutChooser {
         onBackButtonClicked: root.backButtonClicked()
 
         Component.onCompleted: currentIndexCache = currentIndex
-    }
-
-    Component.onCompleted: {
-        // initialize with no delay at startup but later delay to avoid race conditions related to
-        // additional bottom space and therefore unexpected mode changes when opening/closing
-        // virtual keyboard
-        Qt.callLater(() => { criteriaBinding.delayed = true })
     }
 }
