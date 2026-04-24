@@ -115,6 +115,13 @@ method startUnblockKeycardUsingPuk*(self: AccessInterface, newPin, puk: string) 
 method onUnblockKeycardFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startUnblockKeycardUsingRecoveryPhrase*(self: AccessInterface, newPin: string, seedPhrase: string, metadataName: string,
+  metadataAccountsJson: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onKeycardRecoverFinished*(self: AccessInterface, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getKeyPairItemForKeyUid*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 

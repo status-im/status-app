@@ -34,6 +34,7 @@ const SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_SUCCESS* = "keycardExportLoginKeysSuccess
 
 ## Signals for keycard composite actions
 const SIGNAL_KEYCARD_LOGIN_FINISHED* = "keycardLoginFinished"
+const SIGNAL_KEYCARD_RECOVER_FINISHED* = "keycardRecoverFinished"
 const SIGNAL_KEYCARD_LOAD_FINISHED* = "keycardLoadFinished"
 const SIGNAL_KEYCARD_EXPORT_PUBLIC_KEYS_FINISHED* = "keycardExportPublicKeysFinished"
 const SIGNAL_KEYCARD_EXPORT_EXTENDED_PUBLIC_KEYS_FINISHED* = "keycardExportExtendedPublicKeysFinished"
