@@ -156,6 +156,9 @@ SettingsContentBase {
             case Constants.keycard.flow.unblockWithPuk:
                 console.info("unblocking keycard with PUK - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
                 break
+            case Constants.keycard.flow.unblockWithRecoveryPhrase:
+                console.info("unblocking keycard with recovery phrase - keyUid: ", keyUid, " keycardUid: ", keycardUid, " done successfully: ", success)
+                break
             }
 
             d.showMainScreen()

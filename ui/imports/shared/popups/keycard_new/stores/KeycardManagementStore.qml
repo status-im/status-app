@@ -410,6 +410,14 @@ QtObject {
         d.mainModuleInst.keycardManagementModule.startUnblockKeycardUsingPuk(newPin, puk)
     }
 
+    function startUnblockKeycardUsingRecoveryPhrase(newPin, seedPhrase, metadataName, metadataAccountsJson) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.startUnblockKeycardUsingRecoveryPhrase(newPin, seedPhrase, metadataName, metadataAccountsJson)
+    }
+
     function remainingKeypairCapacity() {
         if (!d.mainModuleInst.keycardManagementModule) {
             console.error("keycard management module was not created")

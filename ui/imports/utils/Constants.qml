@@ -530,6 +530,7 @@ QtObject {
             readonly property string setOrChangePuk: "set-or-change-puk"
             readonly property string rename: "rename"
             readonly property string unblockWithPuk: "unblock-with-puk"
+            readonly property string unblockWithRecoveryPhrase: "unblock-with-recovery-phrase"
         }
     }
 

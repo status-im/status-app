@@ -12401,6 +12401,16 @@
       <comment>KeycardManagementPopup</comment>
       <translation>You can now use your Keycard again</translation>
     </message>
+    <message>
+      <source>Unblock with recovery phrase</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Unblock with recovery phrase</translation>
+    </message>
+    <message>
+      <source>It is now ready to use.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>It is now ready to use.</translation>
+    </message>
   </context>
   <context>
     <name>KeycardNotEmptyPage</name>

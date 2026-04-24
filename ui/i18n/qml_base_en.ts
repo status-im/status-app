@@ -10169,6 +10169,14 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <source>You can now use your Keycard again</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Unblock with recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>It is now ready to use.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>
