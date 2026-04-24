@@ -96,6 +96,10 @@ QtObject:
   proc startUnblockKeycardUsingPuk*(self: View, newPin: string, puk: string) {.slot.} =
     self.delegate.startUnblockKeycardUsingPuk(newPin, puk)
 
+  proc startUnblockKeycardUsingRecoveryPhrase*(self: View, newPin: string, seedPhrase: string,
+      metadataName: string, metadataAccountsJson: string) {.slot.} =
+    self.delegate.startUnblockKeycardUsingRecoveryPhrase(newPin, seedPhrase, metadataName, metadataAccountsJson)
+
   proc keyPairModelChanged(self: View) {.signal.}
   proc getKeyPairModel(self: View): QVariant {.slot.} =
     if self.keyPairModelVariant.isNil:

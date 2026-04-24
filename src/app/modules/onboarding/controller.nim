@@ -111,6 +111,14 @@ proc init*(self: Controller) =
       else:
         self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
     self.connectionIds.add(handlerId)
+
+    handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_RECOVER_FINISHED) do(e: Args):
+      let args = KeycardLoginArgs(e)
+      if args.error.len > 0:
+        self.delegate.onKeycardExportLoginKeysFailure(args.error)
+      else:
+        self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
+    self.connectionIds.add(handlerId)
   else:
     handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_FAILURE) do(e: Args):
       let args = KeycardErrorArg(e)
