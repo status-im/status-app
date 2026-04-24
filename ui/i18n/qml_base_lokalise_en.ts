@@ -9626,6 +9626,14 @@
     </message>
   </context>
   <context>
+    <name>FeeRow</name>
+    <message>
+      <source>Max.</source>
+      <comment>FeeRow</comment>
+      <translation>Max.</translation>
+    </message>
+  </context>
+  <context>
     <name>FeesBox</name>
     <message>
       <source>Fees</source>
@@ -11320,6 +11328,11 @@
       <source>PIN correct</source>
       <comment>KeycardEnterPinPage</comment>
       <translation>PIN correct</translation>
+    </message>
+    <message>
+      <source>Keycard blocked</source>
+      <comment>KeycardEnterPinPage</comment>
+      <translation>Keycard blocked</translation>
     </message>
     <message numerus="yes">
       <source>%n attempt(s) remaining</source>
@@ -21674,14 +21687,14 @@
       <translation>Price impact too high. Lower token amount or try again later.</translation>
     </message>
     <message>
-      <source>Something went wrong. Change amount, token or try again later.</source>
-      <comment>SwapModalAdaptor</comment>
-      <translation>Something went wrong. Change amount, token or try again later.</translation>
-    </message>
-    <message>
       <source>No routes found with enough liquidity</source>
       <comment>SwapModalAdaptor</comment>
       <translation>No routes found with enough liquidity</translation>
+    </message>
+    <message>
+      <source>Something went wrong. Change amount, token or try again later.</source>
+      <comment>SwapModalAdaptor</comment>
+      <translation>Something went wrong. Change amount, token or try again later.</translation>
     </message>
   </context>
   <context>
@@ -22129,6 +22142,11 @@
       <translation>Edit bookmark</translation>
     </message>
     <message>
+      <source>Delete bookmark</source>
+      <comment>TabsBookmarksOverviewModal</comment>
+      <translation>Delete bookmark</translation>
+    </message>
+    <message>
       <source>Search</source>
       <comment>TabsBookmarksOverviewModal</comment>
       <translation>Search</translation>
@@ -22137,11 +22155,6 @@
       <source>Add</source>
       <comment>TabsBookmarksOverviewModal</comment>
       <translation>Add</translation>
-    </message>
-    <message>
-      <source>Delete bookmark</source>
-      <comment>TabsBookmarksOverviewModal</comment>
-      <translation>Delete bookmark</translation>
     </message>
   </context>
   <context>

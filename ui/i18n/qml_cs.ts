@@ -7923,6 +7923,13 @@ Opravdu to chcete udělat?</translation>
     </message>
 </context>
 <context>
+    <name>FeeRow</name>
+    <message>
+        <source>Max.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -9333,6 +9340,10 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>PIN correct</source>
         <translation>PIN správný</translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
+        <translation type="unfinished">Keycard zablokována</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
@@ -17928,12 +17939,12 @@ selhalo</translation>
         <translation>Dopad na cenu je příliš vysoký. Snižte množství tokenů nebo to zkuste později.</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>Něco se pokazilo. Změňte částku, token nebo to zkuste později.</translation>
-    </message>
-    <message>
         <source>No routes found with enough liquidity</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong. Change amount, token or try again later.</source>
+        <translation>Něco se pokazilo. Změňte částku, token nebo to zkuste později.</translation>
     </message>
 </context>
 <context>
@@ -18302,16 +18313,16 @@ Tuto akci nelze vzít zpět.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Delete bookmark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished">Hledat</translation>
     </message>
     <message>
         <source>Add</source>
         <translation type="unfinished">Přidat</translation>
-    </message>
-    <message>
-        <source>Delete bookmark</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
