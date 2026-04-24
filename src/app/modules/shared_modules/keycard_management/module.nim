@@ -36,6 +36,7 @@ type FlowType {.pure.} = enum
   ChangingKeycardPIN = "ChangingKeycardPIN" # changes the Keycard PIN
   ChangingKeycardPUK = "ChangingKeycardPUK" # sets or changes the Keycard PUK
   RenamingKeycard = "RenamingKeycard" # renames the Keycard (stores a new keycard metadata name)
+  UnblockingKeycard = "UnblockingKeycard" # unblocks a Keycard with a blocked PIN by providing the PUK and a new PIN
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -195,6 +196,8 @@ proc emitError[T](self: Module[T], err: string) =
     self.view.keycardChangePukError(err)
   elif self.tmpFlowType == FlowType.RenamingKeycard:
     self.view.keycardRenameError(err)
+  elif self.tmpFlowType == FlowType.UnblockingKeycard:
+    self.view.keycardUnblockError(err)
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
 
@@ -374,6 +377,20 @@ method onRenameKeycardFinished*[T](self: Module[T], error: string) =
     self.emitError("keycard rename error: " & error)
     return
   self.view.keycardRenameSuccess()
+
+method startUnblockKeycardUsingPuk*[T](self: Module[T], newPin, puk: string) =
+  self.tmpFlowType = FlowType.UnblockingKeycard
+  let keyUid = self.view.getKeyUid()
+  let keycardUid = self.view.getKeycardUid()
+  self.controller.startUnblockKeycardUsingPuk(keyUid, puk, newPin, keycardUid)
+
+method onUnblockKeycardFinished*[T](self: Module[T], error: string) =
+  if self.tmpFlowType != FlowType.UnblockingKeycard:
+    return
+  if error.len > 0:
+    self.emitError("keycard unblock error: " & error)
+    return
+  self.view.keycardUnblockSuccess()
 
 method startStopUsingKeycardForProfileKeyPair*[T](self: Module[T], seedPhrase, newPassword: string) =
   self.tmpFlowType = FlowType.StoppingKeycardForProfileKeyPair
