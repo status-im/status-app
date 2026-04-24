@@ -237,7 +237,6 @@ QtObject:
     notify = cardMetadataWalletAccountsJsonChanged
 
   proc delete*(self: View) =
-    self.QObject.delete
     if not self.keyPairItem.isNil:
       self.keyPairItem.delete
     if not self.keyPairItemVariant.isNil:
@@ -246,3 +245,4 @@ QtObject:
       self.keyPairModel.delete
     if not self.keyPairModelVariant.isNil:
       self.keyPairModelVariant.delete
+    self.QObject.delete

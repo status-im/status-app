@@ -162,69 +162,69 @@ StatusDialog {
 
         function startKeycardReading(pin) {
             d.processing = true
-            Backpressure.debounce(this, 500, () => {
-                                      root.store.startGetMetadata(pin)
-                                  })()
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startGetMetadata(pin)
+                                    })()
         }
 
         function startFactoryReset() {
             d.processing = true
-            Backpressure.debounce(this, 500, () => {
-                                      root.store.startFactoryReset(root.keycardUid)
-                                  })()
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startFactoryReset(root.keycardUid)
+                                    })()
         }
 
         function startImportingKeyPair() {
             d.currentStep = KeycardManagementPopup.FlowStep.Importing
             d.processing = true
-            Backpressure.debounce(this, 500, () => {
-                                      root.store.startImportingKeyPair(d.newPin,
-                                                                       d.seedPhrase,
-                                                                       d.keyPairName,
-                                                                       d.accountPathsJson)
-                                  })()
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startImportingKeyPair(d.newPin,
+                                                                         d.seedPhrase,
+                                                                         d.keyPairName,
+                                                                         d.accountPathsJson)
+                                    })()
         }
 
         function startMigratingNonProfileKeypairToKeycard() {
             d.currentStep = KeycardManagementPopup.FlowStep.Migrating
             d.processing = true
-            Backpressure.debounce(this, 500, () => {
-                                      root.store.startMigratingNonProfileKeypairToKeycard(d.authenticationPassword,
-                                                                                          d.newPin,
-                                                                                          d.seedPhrase)
-                                  })()
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startMigratingNonProfileKeypairToKeycard(d.authenticationPassword,
+                                                                                            d.newPin,
+                                                                                            d.seedPhrase)
+                                    })()
         }
 
         function startMigratingProfileKeypairToKeycard() {
             d.currentStep = KeycardManagementPopup.FlowStep.Migrating
             d.processing = true
-            Backpressure.debounce(this, 500, () => {
-                                      root.store.startMigratingProfileKeypairToKeycard(d.authenticationPassword,
-                                                                                       d.newPin,
-                                                                                       d.seedPhrase)
-                                  })()
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startMigratingProfileKeypairToKeycard(d.authenticationPassword,
+                                                                                         d.newPin,
+                                                                                         d.seedPhrase)
+                                    })()
         }
 
         function startAddingKeyPairToStatus() {
             d.currentStep = KeycardManagementPopup.FlowStep.AddingKeyPair
             d.processing = true
-            Backpressure.debounce(this, 500, () => {
-                                      root.store.startAddingKeyPairToStatusFromKeycard(d.newPin,
-                                                                                       root.keyUid,
-                                                                                       d.keyPairName,
-                                                                                       d.accountPathsJson)
-                                  })()
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startAddingKeyPairToStatusFromKeycard(d.newPin,
+                                                                                         root.keyUid,
+                                                                                         d.keyPairName,
+                                                                                         d.accountPathsJson)
+                                    })()
         }
 
         function startStopUsingKeycardForKeyPair() {
             d.currentStep = KeycardManagementPopup.FlowStep.Stopping
             d.keycardInteractionCompleted = true
             d.processing = true
-            Backpressure.debounce(this, 500, () => {
-                                      root.store.startStopUsingKeycardForKeyPair(root.keyUid,
-                                                                                 d.seedPhrase,
-                                                                                 d.newStatusPassword)
-                                  })()
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startStopUsingKeycardForKeyPair(root.keyUid,
+                                                                                   d.seedPhrase,
+                                                                                   d.newStatusPassword)
+                                    })()
         }
 
         function nextStep() {
