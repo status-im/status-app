@@ -7517,6 +7517,10 @@ Please add it and try again.</source>
         <source>PUK doesn&apos;t match</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Enter PUK</source>
+        <translation type="unfinished">PUK 입력</translation>
+    </message>
 </context>
 <context>
     <name>EnterSeedPhrase</name>
@@ -10142,6 +10146,22 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <source>New name: %1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Unblock with PUK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unblocking Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard has been unblocked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You can now use your Keycard again</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>
@@ -10569,6 +10589,14 @@ access to your funds.</source>
     </message>
     <message>
         <source>Keycard is blocked due to three failed PIN input attempts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PUK incorrect</source>
+        <translation type="unfinished">PUK가 올바르지 않습니다</translation>
+    </message>
+    <message>
+        <source>Keycard is blocked due to five failed PUK input attempts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -448,6 +448,9 @@ QtObject {
 
         readonly property string temporarilyUnavailable: qsTr("Temporarily unavailable, will be available in the next release.")
 
+        readonly property int maxPinAttempts: 3
+        readonly property int maxPukAttempts: 5
+
         readonly property QtObject general: QtObject {
             readonly property string purchasePage: "https://get.keycard.tech"
             readonly property int onboardingHeight: 460
@@ -526,6 +529,7 @@ QtObject {
             readonly property string changePin: "change-pin"
             readonly property string setOrChangePuk: "set-or-change-puk"
             readonly property string rename: "rename"
+            readonly property string unblockWithPuk: "unblock-with-puk"
         }
     }
 

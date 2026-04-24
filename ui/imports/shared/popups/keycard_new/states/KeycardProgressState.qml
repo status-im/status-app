@@ -17,7 +17,9 @@ Control {
     required property bool wrongKeycard
     required property bool wrongKeycardProfile
     required property bool wrongPin
-    required property int remainingAttempts
+    required property int remainingPinAttempts
+    required property bool wrongPuk
+    required property int remainingPukAttempts
 
     required property bool keycardInteractionCompleted
     required property bool processing
@@ -286,6 +288,49 @@ Control {
                 }
             },
             State {
+                name: "wrong-puk"
+                when: root.failure
+                      && root.wrongPuk
+                      && root.remainingPinAttempts === 0
+                      && root.remainingPukAttempts < Constants.keycard.maxPukAttempts
+                      && root.keycardState === Constants.keycard.state.blockedPIN
+                PropertyChanges {
+                    target: image
+                    source: Assets.png("keycard/wrong_card/wrong-profile")
+                }
+                PropertyChanges {
+                    target: title
+                    text: qsTr("PUK incorrect")
+                    color: Theme.palette.dangerColor1
+                }
+                PropertyChanges {
+                    target: message
+                    visible: root.remainingPukAttempts > 0
+                             && root.remainingPukAttempts < Constants.keycard.maxPukAttempts
+                    text: qsTr("%n attempt(s) remaining", "", root.remainingPukAttempts)
+                    color: Theme.palette.dangerColor1
+                }
+            },
+            State {
+                name: "blocked-puk"
+                when: root.failure
+                      && root.keycardState === Constants.keycard.state.blockedPUK
+                PropertyChanges {
+                    target: image
+                    source: Assets.png("keycard/card_inserted/writing-negative")
+                }
+                PropertyChanges {
+                    target: title
+                    text: qsTr("Keycard is blocked")
+                    color: Theme.palette.dangerColor1
+                }
+                PropertyChanges {
+                    target: message
+                    text: qsTr("Keycard is blocked due to five failed PUK input attempts")
+                    color: Theme.palette.dangerColor1
+                }
+            },
+            State {
                 name: "wrong-pin"
                 when: root.failure
                       && root.wrongPin
@@ -301,9 +346,9 @@ Control {
                 }
                 PropertyChanges {
                     target: message
-                    visible: root.remainingAttempts > 0
-                             && root.remainingAttempts < 3
-                    text: qsTr("%n attempt(s) remaining", "", root.remainingAttempts)
+                    visible: root.remainingPinAttempts > 0
+                             && root.remainingPinAttempts < Constants.keycard.maxPinAttempts
+                    text: qsTr("%n attempt(s) remaining", "", root.remainingPinAttempts)
                     color: Theme.palette.dangerColor1
                 }
             },

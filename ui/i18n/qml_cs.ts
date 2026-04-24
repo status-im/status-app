@@ -7574,6 +7574,10 @@ Prosím přidejte jej a zkuste to znovu.</translation>
         <source>PUK doesn&apos;t match</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Enter PUK</source>
+        <translation type="unfinished">Zadejte PUK</translation>
+    </message>
 </context>
 <context>
     <name>EnterSeedPhrase</name>
@@ -10227,6 +10231,22 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <source>New name: %1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Unblock with PUK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unblocking Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard has been unblocked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You can now use your Keycard again</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>KeycardNotEmptyPage</name>
@@ -10658,6 +10678,14 @@ přístup ke svým prostředkům.</translation>
     </message>
     <message>
         <source>Keycard is blocked due to three failed PIN input attempts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PUK incorrect</source>
+        <translation type="unfinished">Nesprávný PUK</translation>
+    </message>
+    <message>
+        <source>Keycard is blocked due to five failed PUK input attempts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
