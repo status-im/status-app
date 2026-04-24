@@ -18,7 +18,7 @@ from gui.main_window import MainWindow
 def test_settings_networks_edit_restore_defaults(main_screen: MainWindow, network_tab: str):
     networks = main_screen.left_panel.open_settings().left_panel.open_wallet_settings().open_networks()
 
-    with step('Check network items titles'):
+    with step('Check mainnet network item titles'):
         assert \
             networks.get_network_item_attribute_by_id_and_attr_name('title',
                                                                     WalletNetworkNaming.ETHEREUM_MAINNET_NETWORK_ID.value) == WalletNetworkNaming.LAYER1_ETHEREUM.value
@@ -30,6 +30,14 @@ def test_settings_networks_edit_restore_defaults(main_screen: MainWindow, networ
                                                                     WalletNetworkNaming.ARBITRUM_MAINNET_NETWORK_ID.value) == WalletNetworkNaming.LAYER2_ARBITRUM.value
         assert \
             networks.get_network_item_attribute_by_id_and_attr_name('title', WalletNetworkNaming.BASE_MAINNET_NETWORK_ID.value) == WalletNetworkNaming.LAYER2_BASE.value
+
+    with step('Check testnet network item title'):
+        networks_testnet = networks.switch_testnet_mode_toggle()
+        networks_testnet.turn_on_button.click()
+        assert \
+            networks.get_network_item_attribute_by_id_and_attr_name('title',
+                                                                    WalletNetworkNaming.HOODI_NETWORK_ID.value) == WalletNetworkNaming.LAYER1_ETHEREUM_TESTNET.value
+        networks.switch_testnet_mode_toggle().turn_off_button.click()
 
     with step('Open Ethereum Mainnet network item to edit'):
         edit_network_form = networks.edit_network(

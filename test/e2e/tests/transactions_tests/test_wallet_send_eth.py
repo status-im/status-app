@@ -1,5 +1,3 @@
-import random
-
 import allure
 import pytest
 from allure_commons._allure import step
@@ -8,9 +6,8 @@ from configs import WALLET_SEED
 from constants import ReturningUser
 from constants.wallet import WalletAddress, WalletNetworkSettings
 from helpers.onboarding_helper import open_create_profile_view, import_seed_and_log_in
-from helpers.settings_helper import enable_testnet_mode, open_network_settings
+from helpers.settings_helper import enable_testnet_mode
 from helpers.wallet_helper import authenticate_with_password, open_send_modal_for_account
-from scripts.utils.generators import random_network
 
 
 @pytest.mark.case(704527, 738784)
@@ -19,7 +16,7 @@ from scripts.utils.generators import random_network
 @pytest.mark.parametrize('receiver_account_address, amount, asset, collectible', [
     pytest.param(WalletAddress.RECEIVER_ADDRESS.value, '0', 'ETH', '')
 ])
-@pytest.mark.parametrize('network_name', [pytest.param(random_network())])
+@pytest.mark.parametrize('network_name', [pytest.param('Hoodi')])
 def test_wallet_send_0_eth(main_window, user_account, receiver_account_address, amount, asset, collectible, network_name):
 
     user_account = ReturningUser(
@@ -34,10 +31,6 @@ def test_wallet_send_0_eth(main_window, user_account, receiver_account_address, 
 
     with step('Set testnet mode'):
         enable_testnet_mode(main_window)
-
-    with step(f'Enable network {network_name}'):
-        networks_screen = open_network_settings(main_window)
-        networks_screen.toggle_network_state(network_name, True)
 
     with step('Open wallet send popup'):
         send_popup = open_send_modal_for_account(

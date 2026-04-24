@@ -38,12 +38,11 @@ def random_ens_string():
 
 
 def random_network():
-    return random.choice(['Arbitrum Sepolia', 'Optimism Sepolia', 'Base Sepolia', 'Status Network Sepolia', 'Linea Sepolia'])
+    return random.choice(['Hoodi'])
 
 
 def random_network_for_minting():
-    """Returns a random network for minting, excluding Linea Sepolia."""
-    return random.choice(['Arbitrum Sepolia', 'Optimism Sepolia', 'Base Sepolia', 'Status Network Sepolia'])
+    return random.choice(['Hoodi'])
 
 
 def random_community_name():

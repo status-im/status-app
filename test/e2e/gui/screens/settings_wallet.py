@@ -8,7 +8,7 @@ from objectmaphelper import RegularExpression
 import configs.timeouts
 import driver
 from constants.wallet import (
-    DefaultNetworksList,
+    E2E_NETWORK_CHAIN_IDS,
     TokenListItem,
     WalletAccountListItem,
     WalletNetworkDefaultValues,
@@ -315,40 +315,32 @@ class NetworkWalletSettings(WalletSettingsView):
         self.testnet_mode_toggle.wait_until_appears(configs.timeouts.FEES_TIMEOUT_MSEC)
         return self
 
+    @allure.step('Scroll network delegate into view: {network_name}')
+    def _scroll_network_delegate_into_view(self, network_name: str) -> None:
+        chain_id = E2E_NETWORK_CHAIN_IDS.get(network_name)
+        if chain_id is None:
+            return
+        self.wallet_network_item_template.real_name['objectName'] = (
+            f'walletNetworkDelegate_{network_name}_{chain_id}'
+        )
+        self.scroll.vertical_scroll_down(self.wallet_network_item_template)
+
     @allure.step('Enable or disable network: {network_name}')
     def toggle_network_state(self, network_name: str, enable: bool = True):
+        self._scroll_network_delegate_into_view(network_name)
         self.network_switch.real_name['objectName'] = f'isActiveSwitch_{network_name}'
         is_currently_enabled = self.network_switch.is_checked
 
         if enable and not is_currently_enabled:
-            # If enabling a non-default network, disable one default network first (max 5 active)
-            default_networks = [network.value for network in DefaultNetworksList]
-            if network_name not in default_networks:
-                network_to_disable = self._find_default_network_to_disable(network_name)
-                if network_to_disable:
-                    popup = self._disable_network(network_to_disable)
-                    popup.confirm_disable()
-
-            self.network_switch.real_name['objectName'] = f'isActiveSwitch_{network_name}'
             self.network_switch.click()
         elif not enable and is_currently_enabled:
             popup = self._disable_network(network_name)
             popup.confirm_disable()
 
-    @allure.step('Find default network to disable')
-    def _find_default_network_to_disable(self, target_network: str) -> str:
-        """Find a random default enabled network to disable (not Sepolia, not the target)."""
-        default_networks = [network.value for network in DefaultNetworksList]
-        available_networks = [
-            net_name for net_name in default_networks
-            if net_name.lower() != "sepolia" and net_name != target_network
-        ]
-        return random.choice(available_networks) if available_networks else None
-
     @allure.step('Disable network: {network_name}')
     def _disable_network(self, network_name: str):
         """Disable a network and return confirmation popup."""
-        
+        self._scroll_network_delegate_into_view(network_name)
         self.network_switch.real_name['objectName'] = f'isActiveSwitch_{network_name}'
         if self.network_switch.is_checked:
             self.network_switch.click()

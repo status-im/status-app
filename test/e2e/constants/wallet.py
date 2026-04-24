@@ -94,27 +94,24 @@ class WalletAccountSettings(Enum):
 
 class WalletNetworkNaming(Enum):
     LAYER1_ETHEREUM = 'Mainnet'
+    LAYER1_ETHEREUM_TESTNET = 'Hoodi'
     LAYER2_OPTIMISIM = 'Optimism'
     LAYER2_ARBITRUM = 'Arbitrum'
     LAYER2_BASE = 'Base'
     ETHEREUM_MAINNET_NETWORK_ID = 1
-    ETHEREUM_SEPOLIA_NETWORK_ID = 11155111
+    HOODI_NETWORK_ID = 560048
     OPTIMISM_MAINNET_NETWORK_ID = 10
-    OPTIMISM_SEPOLIA_NETWORK_ID = 11155420
     ARBITRUM_MAINNET_NETWORK_ID = 42161
-    ARBITRUM_SEPOLIA_NETWORK_ID = 421614
     BASE_MAINNET_NETWORK_ID = 8453
-    BASE_SEPOLIA_NETWORK_ID = 84532
-    STATUS_SEPOLIA_NETWORK_ID = 1660990954
     BINANCE_SMART_CHAIN_MAINNET_NETWORK_ID = 56
     BINANCE_SMART_CHAIN_TESTNET_NETWORK_ID = 97
 
 
 class WalletNetworkDefaultValues(Enum):
     ETHEREUM_LIVE_MAIN = 'https://eth-archival.rpc.grove.city'
-    ETHEREUM_TEST_MAIN = 'https://sepolia-archival.rpc.grove.city'
+    ETHEREUM_TEST_MAIN = 'https://hoodi.infura.io'
     ETHEREUM_LIVE_FAILOVER = 'https://mainnet.infura.io'
-    ETHEREUM_TEST_FAILOVER = 'https://sepolia.infura.io'
+    ETHEREUM_TEST_FAILOVER = 'https://hoodi.infura.io'
 
 
 class WalletEditNetworkErrorMessages(Enum):
@@ -149,11 +146,6 @@ class WalletAccountPopup(Enum):
     WALLET_KEYPAIR_NAME_MIN = 'Key pair name must be at least 5 characters'
     WALLET_KEYPAIR_MIN = 'Key pair must be at least 5 character(s)'
 
-class DefaultNetworksList(Enum):
-    # Networks enabled by default on app launch (max 5 active networks)
-    SEPOLIA = "Sepolia"
-    ARBITRUM_SEPOLIA = "Arbitrum Sepolia"
-    OPTIMISM_SEPOLIA = "Optimism Sepolia"
-    BASE_SEPOLIA = "Base Sepolia"
-    STATUS_NETWORK_SEPOLIA = "Status Network Sepolia"
-
+E2E_NETWORK_CHAIN_IDS: dict[str, int] = {
+    "Hoodi": WalletNetworkNaming.HOODI_NETWORK_ID.value,
+}
