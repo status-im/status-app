@@ -442,6 +442,16 @@ StatusSectionLayout {
     }
 
     onSwiped: (previous, current) => {
+        // showUsersList is normally cleared by swiping back, but may
+        // remain true e.g. by closing app with user list open or in
+        // case of dynamic layout change. In that case the flag should be
+        // cleared for consistency.
+        if (previous === StatusSectionLayout.LeftPanel
+            && current === StatusSectionLayout.CentralPanel
+            && root.showUsersList) {
+            Qt.callLater(() => root.showUsersListRequested(false))
+        }
+
         if (previous !== StatusSectionLayout.RightPanel)
             return
 
