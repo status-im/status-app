@@ -318,7 +318,7 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: unblock with recovery phrase flow...")
+            d.startFlow(Constants.keycard.flow.unblockWithRecoveryPhrase)
         }
     }
 
