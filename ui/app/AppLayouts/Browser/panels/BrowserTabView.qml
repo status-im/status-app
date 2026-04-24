@@ -135,6 +135,7 @@ FocusScope {
             icon.name: "add"
             incognitoMode: root.currentTabIncognito
             hoverColor: incognitoMode ? Theme.palette.privacyColors.primary : Theme.palette.background
+            focusPolicy: Qt.NoFocus
             onClicked: root.openNewTabTriggered()
         }
     }

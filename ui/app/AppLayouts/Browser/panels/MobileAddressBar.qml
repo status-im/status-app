@@ -29,8 +29,8 @@ Control {
     signal requestWalletMenu()
 
     function activateAddressBar() {
-        addressBar.forceActiveFocus()
         addressBar.selectAll()
+        addressBar.forceActiveFocus()
     }
 
     function deactivateAddressBar() {
