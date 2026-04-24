@@ -38,6 +38,9 @@ QtObject {
     signal keycardRenameSuccess()
     signal keycardRenameError(string error)
 
+    signal keycardUnblockSuccess()
+    signal keycardUnblockError(string error)
+
     readonly property bool ready: d.ready
 
     readonly property string userProfileKeyUid: userProfile.keyUid
@@ -149,6 +152,14 @@ QtObject {
 
         function onKeycardRenameError(error) {
             root.keycardRenameError(error)
+        }
+
+        function onKeycardUnblockSuccess() {
+            root.keycardUnblockSuccess()
+        }
+
+        function onKeycardUnblockError(error) {
+            root.keycardUnblockError(error)
         }
     }
 
@@ -389,6 +400,14 @@ QtObject {
             return
         }
         d.mainModuleInst.keycardManagementModule.startRenameKeycard(currentPin, newName, metadataAccountsJson)
+    }
+
+    function startUnblockKeycardUsingPuk(newPin, puk) {
+        if (!d.mainModuleInst.keycardManagementModule) {
+            console.error("keycard management module was not created")
+            return
+        }
+        d.mainModuleInst.keycardManagementModule.startUnblockKeycardUsingPuk(newPin, puk)
     }
 
     function remainingKeypairCapacity() {
