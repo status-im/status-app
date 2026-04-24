@@ -33,7 +33,7 @@ StatusTextField {
     font.pixelSize: Theme.fontSize(14)
     color: root.incognitoMode ? Theme.palette.privacyColors.tertiary : Theme.palette.textColor
 
-    inputMethodHints: Qt.ImhUrlCharactersOnly | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
+    inputMethodHints: Qt.ImhUrlCharactersOnly | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
     EnterKey.type: Qt.EnterKeyGo
 
     text: root.url
