@@ -243,6 +243,7 @@ Loader {
             hasLocalNickname: !!contactDetails.localNickname
         }
 
+        d.preventVirtualKeyboardOpening()
         profileContextMenuComponent.createObject(root, params).popup(x, y)
     }
 
@@ -268,6 +269,7 @@ Loader {
             editRestricted: root.editRestricted,
         }
 
+        d.preventVirtualKeyboardOpening()
         messageContextMenuComponent.createObject(root, params).popup(point)
     }
 
@@ -494,9 +496,11 @@ Loader {
         function onImageClicked(image, mouse, imageSource, url = "") {
             switch (mouse.button) {
             case Qt.LeftButton:
+                d.preventVirtualKeyboardOpening()
                 Global.openImagePopup(image, url, false)
                 break;
             case Qt.RightButton:
+                d.preventVirtualKeyboardOpening()
                 Global.openMenu(imageContextMenuComponent, image, { imageSource, url })
                 break;
             }
@@ -504,6 +508,17 @@ Loader {
 
         function correctBridgeNameCapitalization(bridgeName) {
             return (bridgeName === "discord") ? "Discord" : bridgeName
+        }
+
+        // Qt's Popup/Menu stashes the activeFocusItem on open and restores it on close via
+        // an internal forceActiveFocus call. It causes that text edit gains focus and opens
+        // virtual keyboard even if it was closed before opening popup/menu. To prevent that
+        // behavior, if virtual keyboard is not visible focus is changed to message itself.
+        // On close focus is restored to message component, without invoking vkbd.
+        function preventVirtualKeyboardOpening() {
+            if (!SystemUtils.androidKeyboardVisible && !SystemUtils.iosKeyboardVisible && !Qt.inputMethod.visible) {
+                root.forceActiveFocus()
+            }
         }
     }
 
@@ -1339,6 +1354,7 @@ Loader {
             onOpened: {
                 root.setMessageActive(model.id, true)
             }
+
             onClosed: {
                 root.setMessageActive(model.id, false)
                 destroy()
