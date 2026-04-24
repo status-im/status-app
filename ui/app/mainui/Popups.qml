@@ -421,9 +421,12 @@ QtObject {
     }
 
     function openDownloadImageDialog(imageSource) {
-        // On IOS the app is sandboxed and the FileDialog has limited access to the system.
-        // We'll save the image to the default location - currenty the Photos album.
-        if (SQUtils.Utils.isIOS) {
+        // iOS: the app is sandboxed so FileDialog has limited system access.
+        // Android: opening the folder picker sends the app to background, which
+        // causes the Status Go image server to become unreachable — the download
+        // fails with a connection error by the time the picker returns.
+        // In both cases, save directly to the system gallery instead.
+        if (SQUtils.Utils.isIOS || SQUtils.Utils.isAndroid) {
             SystemUtils.downloadImageByUrl(imageSource, "")
             return
         }

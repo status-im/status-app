@@ -3,8 +3,10 @@
 #include <QDesktopServices>
 #include <QGuiApplication>
 #include <QMimeDatabase>
+#include <QDir>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QSslError>
 #include <QProcess>
 #include <QSaveFile>
 #include <QStandardPaths>
@@ -14,6 +16,7 @@
 #include <mutex>
 
 #ifdef Q_OS_ANDROID
+#include <QFile>
 #include <QJniObject>
 #include <QJniEnvironment>
 #include <QtCore/qnativeinterface.h>
@@ -140,7 +143,7 @@ void save(const QByteArray& imageData, const QString& targetDir)
 {
     // Get current Date/Time information to use in naming of the image file
     const auto dateTimeString = QDateTime::currentDateTime().toString(
-                QStringLiteral("dd-MM-yyyy_hh-mm-ss"));
+                QStringLiteral("yyyy-MM-dd_HH-mm-ss"));
 
     // Get the preferred extension
     QMimeDatabase mimeDb;
@@ -151,6 +154,13 @@ void save(const QByteArray& imageData, const QString& targetDir)
     // Construct the target path
     const auto targetFile = QStringLiteral("%1/image_%2.%3").arg(
                 targetDir, dateTimeString, ext);
+
+    if (!QDir().mkpath(targetDir)) {
+        qWarning() << "SystemUtilsInternal::downloadImageByUrl: "
+                      "Failed to create target directory:"
+                   << targetDir;
+        return;
+    }
 
     // Save the image in a safe way
     QSaveFile image(targetFile);
@@ -169,6 +179,55 @@ void save(const QByteArray& imageData, const QString& targetDir)
                     << targetFile;
 }
 
+#ifdef Q_OS_ANDROID
+static void saveToAndroidGallery(const QByteArray& imageData)
+{
+    QMimeDatabase mimeDb;
+    const auto mimeType = mimeDb.mimeTypeForData(imageData);
+    auto ext = mimeType.preferredSuffix();
+    if (ext.isEmpty())
+        ext = QStringLiteral("jpg");
+    auto mime = mimeType.name();
+    if (mime.isEmpty())
+        mime = QStringLiteral("image/jpeg");
+
+    const auto dateTimeString = QDateTime::currentDateTime().toString(
+                QStringLiteral("yyyy-MM-dd_HH-mm-ss"));
+    const auto displayName = QStringLiteral("image_%1.%2").arg(dateTimeString, ext);
+
+    const auto tempPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+                          + QChar('/') + displayName;
+    {
+        QFile tempFile(tempPath);
+        if (!tempFile.open(QIODevice::WriteOnly)) {
+            qWarning() << "saveToAndroidGallery: failed to open temp file:" << tempPath;
+            return;
+        }
+        if (tempFile.write(imageData) == -1) {
+            qWarning() << "saveToAndroidGallery: failed to write temp file:" << tempPath;
+            QFile::remove(tempPath);
+            return;
+        }
+    } // tempFile flushed and closed here before JNI reads it
+
+    QJniObject ctx = QNativeInterface::QAndroidApplication::context();
+    const bool ok = QJniObject::callStaticMethod<jboolean>(
+        "app/status/mobile/MediaStoreHelper",
+        "insertImageFromPath",
+        "(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z",
+        ctx.object(),
+        QJniObject::fromString(tempPath).object<jstring>(),
+        QJniObject::fromString(mime).object<jstring>(),
+        QJniObject::fromString(displayName).object<jstring>()
+    );
+    QFile::remove(tempPath);
+
+    if (!ok)
+        qWarning() << "saveToAndroidGallery: MediaStore insertion failed for" << displayName;
+}
+
+#endif
+
 void SystemUtilsInternal::downloadImageByUrl(
         const QUrl& url, const QString& path) const
 {
@@ -177,13 +236,18 @@ void SystemUtilsInternal::downloadImageByUrl(
 
     QNetworkReply *reply = manager.get(QNetworkRequest(url));
 
+    // The image may be served from the local Status Go node (https://localhost:…)
+    // which uses a self-signed certificate. Accept SSL errors only for localhost
+    // so we match the behaviour of the engine's QML network access manager.
+    if (url.host() == QLatin1String("localhost") || url.host() == QLatin1String("127.0.0.1")) {
+        QObject::connect(reply, &QNetworkReply::sslErrors, reply,
+                         [reply](const QList<QSslError>&) { reply->ignoreSslErrors(); });
+    }
+
     // accept both "file:/foo/bar" and "/foo/bar"
-    auto targetDir = QUrl::fromUserInput(path)
-#ifndef Q_OS_ANDROID
-                         .toLocalFile();
-#else
-                         .toString(); // don't touch the "content://" URI
-#endif
+    const auto parsedPath = QUrl::fromUserInput(path);
+
+    auto targetDir = parsedPath.toLocalFile();
 
     if (targetDir.isEmpty())
         targetDir = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
@@ -191,7 +255,7 @@ void SystemUtilsInternal::downloadImageByUrl(
     QObject::connect(reply, &QNetworkReply::finished, this, [reply, targetDir] {
         if(reply->error() != QNetworkReply::NoError) {
             qWarning() << "SystemUtilsInternal::downloadImageByUrl: Downloading image"
-                       << reply->request().url() << "failed!";
+                       << reply->request().url() << "failed:" << reply->errorString();
             return;
         }
 
@@ -200,6 +264,8 @@ void SystemUtilsInternal::downloadImageByUrl(
         Q_ASSERT(!btArray.isEmpty());
 #ifdef Q_OS_IOS
         saveImageToPhotosAlbum(btArray);
+#elif defined(Q_OS_ANDROID)
+        saveToAndroidGallery(btArray);
 #else
         save(btArray, targetDir);
 #endif
