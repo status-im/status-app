@@ -13,6 +13,8 @@ QtObject {
         readonly property string wrongKeycard: "Keycard instance UID does not match"
         readonly property string wrongPin1: "Wrong PIN"
         readonly property string wrongPin2: "PIN must be 6 digits"
+        readonly property string wrongPuk1: "Wrong PUK"
+        readonly property string wrongPuk2: "PUK must be 12 digits"
         readonly property string connection1: "Failed to connect to card"
         readonly property string connection2: Constants.keycard.state.connectionError
         readonly property string emptyKeycard: Constants.keycard.state.emptyKeycard
@@ -27,6 +29,8 @@ QtObject {
     readonly property bool wrongKeycardError: root.errorText.toLowerCase().indexOf(errKeyword.wrongKeycard.toLowerCase()) > -1
     readonly property bool wrongPinError1: root.errorText.toLowerCase().indexOf(errKeyword.wrongPin1.toLowerCase()) > -1
     readonly property bool wrongPinError2: root.errorText.toLowerCase().indexOf(errKeyword.wrongPin2.toLowerCase()) > -1
+    readonly property bool wrongPukError1: root.errorText.toLowerCase().indexOf(errKeyword.wrongPuk1.toLowerCase()) > -1
+    readonly property bool wrongPukError2: root.errorText.toLowerCase().indexOf(errKeyword.wrongPuk2.toLowerCase()) > -1
     readonly property bool connectionKeycardError1: root.errorText.toLowerCase().indexOf(errKeyword.connection1.toLowerCase()) > -1
     readonly property bool connectionKeycardError2: root.errorText.toLowerCase().indexOf(errKeyword.connection2.toLowerCase()) > -1
     readonly property bool emptyKeycardError: root.errorText.toLowerCase().indexOf(errKeyword.emptyKeycard.toLowerCase()) > -1

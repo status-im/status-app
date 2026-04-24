@@ -92,6 +92,11 @@ proc init*(self: Controller) =
     self.delegate.onRenameKeycardFinished(args.error)
   self.connectionIds.add(handlerId)
 
+  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_UNBLOCK_FINISHED) do(e: Args):
+    let args = KeycardErrorArg(e)
+    self.delegate.onUnblockKeycardFinished(args.error)
+  self.connectionIds.add(handlerId)
+
 proc startGetMetadata*(self: Controller, pin: string) =
   self.keycardServiceV2.asyncGetKeycardMetadata(pin)
 
@@ -167,6 +172,9 @@ proc startChangeKeycardPUK*(self: Controller, keyUid, currentPin, newPuk, keycar
 
 proc startRenameKeycard*(self: Controller, pin, name: string, paths: seq[string]) =
   self.keycardServiceV2.asyncStoreKeycardMetadata(pin, name, paths)
+
+proc startUnblockKeycardUsingPuk*(self: Controller, keyUid, puk, newPin, keycardUid: string) =
+  self.keycardServiceV2.asyncUnblockUsingPUK(keyUid, puk, newPin, keycardUid)
 
 proc remainingKeypairCapacity*(self: Controller): int =
   return self.walletAccountService.remainingKeypairCapacity()

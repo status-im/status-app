@@ -9203,6 +9203,11 @@
       <comment>EnterPukState</comment>
       <translation>PUK doesn&#39;t match</translation>
     </message>
+    <message>
+      <source>Enter PUK</source>
+      <comment>EnterPukState</comment>
+      <translation>Enter PUK</translation>
+    </message>
   </context>
   <context>
     <name>EnterSeedPhrase</name>
@@ -12376,6 +12381,26 @@
       <comment>KeycardManagementPopup</comment>
       <translation>New name: %1</translation>
     </message>
+    <message>
+      <source>Unblock with PUK</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Unblock with PUK</translation>
+    </message>
+    <message>
+      <source>Unblocking Keycard...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Unblocking Keycard...</translation>
+    </message>
+    <message>
+      <source>Keycard has been unblocked</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Keycard has been unblocked</translation>
+    </message>
+    <message>
+      <source>You can now use your Keycard again</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>You can now use your Keycard again</translation>
+    </message>
   </context>
   <context>
     <name>KeycardNotEmptyPage</name>
@@ -12906,6 +12931,16 @@
       <source>Keycard is blocked due to three failed PIN input attempts</source>
       <comment>KeycardProgressState</comment>
       <translation>Keycard is blocked due to three failed PIN input attempts</translation>
+    </message>
+    <message>
+      <source>PUK incorrect</source>
+      <comment>KeycardProgressState</comment>
+      <translation>PUK incorrect</translation>
+    </message>
+    <message>
+      <source>Keycard is blocked due to five failed PUK input attempts</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Keycard is blocked due to five failed PUK input attempts</translation>
     </message>
   </context>
   <context>

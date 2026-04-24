@@ -64,7 +64,7 @@ ColumnLayout {
 
         readonly property bool isBlockedPUK: !d.isEmpty
                                              && (root.keycardState === Constants.keycard.state.blockedPUK
-                                                 || !!root.keycardUid && root.remainingPukAttempts <= 0)
+                                                 || !!root.keycardUid && root.remainingPukAttempts === 0)
 
         readonly property bool isEmpty: !d.noKnownAndNoAvailablePairingSlots
                                         && (root.keycardState === Constants.keycard.state.emptyKeycard
@@ -325,6 +325,7 @@ ColumnLayout {
     StatusListItem {
         Layout.fillWidth: true
         visible: d.isBlockedPIN
+                 && !d.isBlockedPUK
         title: qsTr("Unblock with PUK")
         subTitle: qsTr("If you set your PUK earlier for this Keycard")
         components: [
@@ -334,13 +335,15 @@ ColumnLayout {
             }
         ]
         onClicked: {
-            console.warn("TODO: unblock with puk flow...")
+            d.startFlow(Constants.keycard.flow.unblockWithPuk)
         }
     }
 
     StatusListItem {
         Layout.fillWidth: true
         visible: d.hasKeyPair
+                 && !d.isBlockedPIN
+                 && !d.isBlockedPUK
                  && !d.isKnownKeyPair
                  && !d.noKnownAndNoAvailablePairingSlots
         title: qsTr("Add key pair to Status wallet")

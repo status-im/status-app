@@ -78,6 +78,7 @@ Control {
             wrapMode: Text.WordWrap
             text: {
                 switch(root.mode) {
+                case EnterPukState.Mode.EnterPuk: return qsTr("Enter PUK")
                 case EnterPukState.Mode.RepeatPuk: return qsTr("Repeat your Keycard PUK")
                 default: return qsTr("Choose a Keycard PUK")
                 }

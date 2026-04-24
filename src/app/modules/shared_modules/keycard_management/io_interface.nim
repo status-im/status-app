@@ -109,6 +109,12 @@ method startRenameKeycard*(self: AccessInterface, currentPin, newName, metadataA
 method onRenameKeycardFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startUnblockKeycardUsingPuk*(self: AccessInterface, newPin, puk: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onUnblockKeycardFinished*(self: AccessInterface, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getKeyPairItemForKeyUid*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
