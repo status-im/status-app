@@ -37,6 +37,7 @@ type FlowType {.pure.} = enum
   ChangingKeycardPUK = "ChangingKeycardPUK" # sets or changes the Keycard PUK
   RenamingKeycard = "RenamingKeycard" # renames the Keycard (stores a new keycard metadata name)
   UnblockingKeycard = "UnblockingKeycard" # unblocks a Keycard with a blocked PIN by providing the PUK and a new PIN
+  UnblockingKeycardWithRecoveryPhrase = "UnblockingKeycardWithRecoveryPhrase" # unblocks a Keycard by recovering it from the seed phrase and setting a new PIN
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -47,6 +48,7 @@ type
     tmpFlowType: FlowType
     tmpPassword: string
     tmpKeyUid: string
+    tmpKeycardUid: string
     tmpKeypairName: string
     tmpXpub: string
     tmpAccountsData: seq[AccountData]
@@ -83,6 +85,26 @@ method startGetMetadata*[T](self: Module[T], pin: string) =
 method stopKeycardAction*[T](self: Module[T]) =
   self.controller.stopKeycardAction()
 
+proc setPathsFromMetadataAccountsJson*[T](self: Module[T], paths: var seq[string], metadataAccountsJson: string): string =
+  try:
+    let parsed = parseJson(metadataAccountsJson)
+    if parsed.kind == JArray:
+      for acc in parsed.elems:
+        if acc.kind == JObject and acc.hasKey("path") and acc["path"].kind == JString:
+          paths.add(acc["path"].getStr())
+  except Exception as e:
+    return "failed to parse keycard metadata accounts json: " & e.msg
+
+proc createWalletAccountsJson*[T](self: Module[T], walletAccounts: seq[keycard_serviceV2.WalletAccountDto]): JsonNode =
+  var walletsJson = newJArray()
+  for acc in walletAccounts:
+    walletsJson.add(%*{
+      "path": acc.path,
+      "address": acc.address,
+      "publicKey": acc.publicKey,
+    })
+  return walletsJson
+
 method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
   self.view.setKeycardState($kcEvent.stateString)
   self.view.setRemainingPinAttempts(kcEvent.keycardStatus.remainingAttemptsPIN)
@@ -90,6 +112,9 @@ method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
   self.view.setAvailableSlots(kcEvent.keycardInfo.availableSlots)
   self.view.setKeyUid(kcEvent.keycardInfo.keyUID)
   self.view.setKeycardUid(kcEvent.keycardInfo.instanceUID)
+  self.view.setCardMetadataName(kcEvent.metadata.name)
+  let jsonObj = self.createWalletAccountsJson(kcEvent.metadata.walletAccounts)
+  self.view.setCardMetadataWalletAccountsJson($jsonObj)
 
 method onKeycardGetMetadataFinished*[T](self: Module[T], metadata: CardMetadataDto, error: string) =
   if error.len > 0:
@@ -97,14 +122,8 @@ method onKeycardGetMetadataFinished*[T](self: Module[T], metadata: CardMetadataD
     self.view.keycardGetMetadataError(error)
     return
   self.view.setCardMetadataName(metadata.name)
-  var walletsJson = newJArray()
-  for acc in metadata.walletAccounts:
-    walletsJson.add(%*{
-      "path": acc.path,
-      "address": acc.address,
-      "publicKey": acc.publicKey,
-    })
-  self.view.setCardMetadataWalletAccountsJson($walletsJson)
+  let jsonObj = self.createWalletAccountsJson(metadata.walletAccounts)
+  self.view.setCardMetadataWalletAccountsJson($jsonObj)
   self.view.keycardGetMetadataSuccess()
 
 method startFactoryReset*[T](self: Module[T], keycardUid: string) =
@@ -197,6 +216,8 @@ proc emitError[T](self: Module[T], err: string) =
   elif self.tmpFlowType == FlowType.RenamingKeycard:
     self.view.keycardRenameError(err)
   elif self.tmpFlowType == FlowType.UnblockingKeycard:
+    self.view.keycardUnblockError(err)
+  elif self.tmpFlowType == FlowType.UnblockingKeycardWithRecoveryPhrase:
     self.view.keycardUnblockError(err)
   else:
     error "invalid flow type", flowType=($self.tmpFlowType)
@@ -359,14 +380,9 @@ method onChangeKeycardPUKFinished*[T](self: Module[T], error: string) =
 method startRenameKeycard*[T](self: Module[T], currentPin, newName, metadataAccountsJson: string) =
   self.tmpFlowType = FlowType.RenamingKeycard
   var paths: seq[string] = @[]
-  try:
-    let parsed = parseJson(metadataAccountsJson)
-    if parsed.kind == JArray:
-      for acc in parsed.elems:
-        if acc.kind == JObject and acc.hasKey("path") and acc["path"].kind == JString:
-          paths.add(acc["path"].getStr())
-  except Exception as e:
-    self.emitError("failed to parse keycard metadata accounts json: " & e.msg)
+  let err = self.setPathsFromMetadataAccountsJson(paths, metadataAccountsJson)
+  if err.len > 0:
+    self.emitError(err)
     return
   self.controller.startRenameKeycard(currentPin, newName, paths)
 
@@ -390,6 +406,33 @@ method onUnblockKeycardFinished*[T](self: Module[T], error: string) =
   if error.len > 0:
     self.emitError("keycard unblock error: " & error)
     return
+  self.view.keycardUnblockSuccess()
+
+method startUnblockKeycardUsingRecoveryPhrase*[T](self: Module[T], newPin: string, seedPhrase: string, metadataName: string,
+    metadataAccountsJson: string) =
+  self.tmpFlowType = FlowType.UnblockingKeycardWithRecoveryPhrase
+  self.tmpKeycardUid = self.view.getKeycardUid()
+  var paths: seq[string] = @[]
+  let err = self.setPathsFromMetadataAccountsJson(paths, metadataAccountsJson)
+  if err.len > 0:
+    self.emitError(err)
+    return
+  let puk = keycard_serviceV2.generateRandomPUK()
+  self.controller.startRecover(newPin, puk, seedPhrase, metadataName, paths, self.tmpKeycardUid)
+
+method onKeycardRecoverFinished*[T](self: Module[T], error: string) =
+  if self.tmpFlowType != FlowType.UnblockingKeycardWithRecoveryPhrase:
+    return
+  if error.len > 0:
+    self.emitError("keycard recover error: " & error)
+    return
+  ## #########################################################
+  ## TODO: remove the part below once we remove the keycard management on the status-go side
+  ## For now, we just update the keycard uid in the db and don't care (listen for signal) about the result of that operation
+  let newKeycardUid = self.view.getKeycardUid()
+  if self.tmpKeycardUid.len > 0 and newKeycardUid.len > 0 and self.tmpKeycardUid != newKeycardUid:
+    self.controller.updateKeycardUid(self.tmpKeycardUid, newKeycardUid)
+  ## #########################################################
   self.view.keycardUnblockSuccess()
 
 method startStopUsingKeycardForProfileKeyPair*[T](self: Module[T], seedPhrase, newPassword: string) =

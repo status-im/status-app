@@ -27,12 +27,16 @@ proc asyncLogin*(self: Service, keyUid: string, pin: string) {.featureGuard(KEYC
     self.events.emit(SIGNAL_KEYCARD_LOGIN_FINISHED, data)
   )
 
-proc asyncRecover*(self: Service, pin: string, puk: string, mnemonic: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncRecover*(self: Service, pin: string, puk: string, mnemonic: string, metadataName: string = "", metadataPaths: seq[string] = @[],
+    keycardUid: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "pin": pin,
     "puk": puk,
     "pairingPassword": "", # we keep it empty for now
     "mnemonic": mnemonic,
+    "metadataName": metadataName,
+    "metadataPaths": metadataPaths,
+    "keycardUid": keycardUid,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
@@ -54,7 +58,7 @@ proc asyncRecover*(self: Service, pin: string, puk: string, mnemonic: string) {.
     except Exception as e:
       error "recover action error", err=e.msg
       data.error = e.msg
-    self.events.emit(SIGNAL_KEYCARD_LOGIN_FINISHED, data)
+    self.events.emit(SIGNAL_KEYCARD_RECOVER_FINISHED, data)
   )
 
 proc asyncExportPublicKey*(self: Service, keyUid: string, paths: seq[string], exportPrivate: bool, exportMasterAddr: bool,

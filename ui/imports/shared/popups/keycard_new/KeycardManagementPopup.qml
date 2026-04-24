@@ -67,6 +67,8 @@ StatusDialog {
             return qsTr("Rename Keycard")
         case Constants.keycard.flow.unblockWithPuk:
             return qsTr("Unblock with PUK")
+        case Constants.keycard.flow.unblockWithRecoveryPhrase:
+            return qsTr("Unblock with recovery phrase")
         default:
             return qsTr("Keycard Flow")
         }
@@ -131,6 +133,8 @@ StatusDialog {
                 return KeycardManagementPopup.FlowStep.EnterPin
             case Constants.keycard.flow.unblockWithPuk:
                 return KeycardManagementPopup.FlowStep.EnterNewPin
+            case Constants.keycard.flow.unblockWithRecoveryPhrase:
+                return KeycardManagementPopup.FlowStep.EnterNewPin
             default:
                 return d.keycardHasOnlyPinSet
                     ? KeycardManagementPopup.FlowStep.EnterPin
@@ -177,6 +181,8 @@ StatusDialog {
                     return stopUsingEnterSeedPhraseComponent
                 if (root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)
                     return stopUsingForProfileEnterSeedPhraseComponent
+                if (root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase)
+                    return unblockWithRecoveryPhraseEnterSeedPhraseComponent
                 return enterSeedPhraseComponent
             case KeycardManagementPopup.FlowStep.EnterKeyPairName:
                 return enterKeyPairNameComponent
@@ -319,6 +325,17 @@ StatusDialog {
                                     })()
         }
 
+        function startUnblockKeycardUsingRecoveryPhrase() {
+            d.currentStep = KeycardManagementPopup.FlowStep.UnblockingKeycard
+            d.processing = true
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startUnblockKeycardUsingRecoveryPhrase(d.newPin,
+                                                                                          d.seedPhrase,
+                                                                                          root.cardMetadataName,
+                                                                                          root.cardMetadataWalletAccountsJson)
+                                    })()
+        }
+
         function nextStep() {
             if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
                 d.currentStep = d.keycardHasOnlyPinSet
@@ -398,6 +415,10 @@ StatusDialog {
                     d.currentStep = KeycardManagementPopup.FlowStep.EnterPuk
                     return
                 }
+                if (root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase) {
+                    d.currentStep = KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                    return
+                }
                 if (root.flow === Constants.keycard.flow.importNewKeyPair) {
                     d.seedPhrase = root.store.generateMnemonic()
                     d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
@@ -428,6 +449,10 @@ StatusDialog {
                 if (root.flow === Constants.keycard.flow.stopUsingKeycard
                         || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
                     d.currentStep = KeycardManagementPopup.FlowStep.CreatePassword
+                    return
+                }
+                if (root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase) {
+                    d.startUnblockKeycardUsingRecoveryPhrase()
                     return
                 }
 
@@ -520,6 +545,12 @@ StatusDialog {
                 if (root.flow === Constants.keycard.flow.stopUsingKeycard
                         || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
                     d.currentStep = KeycardManagementPopup.FlowStep.ConfirmKeyPair
+                    return
+                }
+                if (root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase) {
+                    d.seedPhrase = ""
+                    d.seedPhraseKeyUid = ""
+                    d.currentStep = KeycardManagementPopup.FlowStep.RepeatPin
                     return
                 }
                 d.newPin = ""
@@ -872,6 +903,9 @@ StatusDialog {
                          || (root.flow === Constants.keycard.flow.unblockWithPuk
                              && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
                                  || d.currentStep === KeycardManagementPopup.FlowStep.EnterPuk))
+                         || (root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase
+                             && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase))
 
                 onClicked: {
                     d.previousStep()
@@ -903,7 +937,8 @@ StatusDialog {
                                || root.flow === Constants.keycard.flow.changePin
                                || root.flow === Constants.keycard.flow.setOrChangePuk
                                || root.flow === Constants.keycard.flow.rename
-                               || root.flow === Constants.keycard.flow.unblockWithPuk) {
+                               || root.flow === Constants.keycard.flow.unblockWithPuk
+                               || root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase) {
                         if (!d.processing && !d.success && !d.error) {
                             return qsTr("Cancel")
                         }
@@ -1014,7 +1049,10 @@ StatusDialog {
                                  && d.currentStep === KeycardManagementPopup.FlowStep.RenameInput)
                              || (root.flow === Constants.keycard.flow.unblockWithPuk
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
-                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterPuk)))
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterPuk))
+                             || (root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase
+                                 && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase)))
                 enabled: visible
                          && ((d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
@@ -1086,7 +1124,8 @@ StatusDialog {
                     }
                     if (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase) {
                         if (root.flow === Constants.keycard.flow.moveKeyPair
-                                || root.flow === Constants.keycard.flow.moveProfileKeyPair) {
+                                || root.flow === Constants.keycard.flow.moveProfileKeyPair
+                                || root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase) {
                             d.nextStep()
                             return
                         }
@@ -1226,6 +1265,7 @@ StatusDialog {
                 case Constants.keycard.flow.rename:
                     return qsTr("Renaming Keycard...")
                 case Constants.keycard.flow.unblockWithPuk:
+                case Constants.keycard.flow.unblockWithRecoveryPhrase:
                     return qsTr("Unblocking Keycard...")
                 default:
                     return qsTr("Reading...")
@@ -1260,6 +1300,7 @@ StatusDialog {
                 case Constants.keycard.flow.setOrChangePuk:
                 case Constants.keycard.flow.rename:
                 case Constants.keycard.flow.unblockWithPuk:
+                case Constants.keycard.flow.unblockWithRecoveryPhrase:
                     return Assets.png("keycard/card_insert/insert")
                 default:
                     return ""
@@ -1289,6 +1330,7 @@ StatusDialog {
                 case Constants.keycard.flow.rename:
                     return qsTr("Keycard has been renamed")
                 case Constants.keycard.flow.unblockWithPuk:
+                case Constants.keycard.flow.unblockWithRecoveryPhrase:
                     return qsTr("Keycard has been unblocked")
                 default:
                     return qsTr("Success")
@@ -1316,6 +1358,8 @@ StatusDialog {
                     return qsTr("New name: %1").arg(d.newName)
                 case Constants.keycard.flow.unblockWithPuk:
                     return qsTr("You can now use your Keycard again")
+                case Constants.keycard.flow.unblockWithRecoveryPhrase:
+                    return qsTr("It is now ready to use.")
                 default:
                     return ""
                 }
@@ -1341,6 +1385,7 @@ StatusDialog {
                 case Constants.keycard.flow.setOrChangePuk:
                 case Constants.keycard.flow.rename:
                 case Constants.keycard.flow.unblockWithPuk:
+                case Constants.keycard.flow.unblockWithRecoveryPhrase:
                     return Assets.png("keycard/wrong_card/something-went-wrong")
                 default:
                     return ""
@@ -1405,6 +1450,7 @@ StatusDialog {
                 case Constants.keycard.flow.moveProfileKeyPair:
                 case Constants.keycard.flow.changePin:
                 case Constants.keycard.flow.unblockWithPuk:
+                case Constants.keycard.flow.unblockWithRecoveryPhrase:
                     d.newPin = pinInput
                     d.nextStep()
                     return
@@ -1437,6 +1483,7 @@ StatusDialog {
                 case Constants.keycard.flow.moveProfileKeyPair:
                 case Constants.keycard.flow.changePin:
                 case Constants.keycard.flow.unblockWithPuk:
+                case Constants.keycard.flow.unblockWithRecoveryPhrase:
                     d.nextStep()
                     return
                 default:
@@ -1615,6 +1662,26 @@ StatusDialog {
                 if (keyUid === root.store.userProfileKeyUid)
                     return keyUid
                 console.error("provided seed phrase doesn't match the profile key pair being tried to stop using a keycard for")
+                return ""
+            }
+
+            onSeedPhraseValidated: function(phrase, keyUid) {
+                d.seedPhrase = phrase
+                d.seedPhraseKeyUid = keyUid
+            }
+        }
+    }
+
+    Component {
+        id: unblockWithRecoveryPhraseEnterSeedPhraseComponent
+        EnterSeedPhraseState {
+            initialSeedPhrase: d.seedPhrase
+
+            validateSeedPhrase: function(phrase) {
+                const keyUid = root.store.getKeyUidForSeedPhrase(phrase)
+                if (keyUid === root.keyUid)
+                    return keyUid
+                console.error("provided seed phrase doesn't match the keycard's key pair being unblocked")
                 return ""
             }
 
