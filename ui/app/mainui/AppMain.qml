@@ -1530,7 +1530,7 @@ Item {
         Item {
             id: mainLayoutItem
 
-            readonly property bool isPortraitMode: !sidebar.alwaysVisible
+            readonly property bool isPortraitMode: appMain.isPortraitMode
 
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -2503,6 +2503,7 @@ Item {
             PrimaryNavSidebar {
                 id: sidebar
                 height: parent.height
+                alwaysVisible: !appMain.isPortraitMode
 
                 PrimaryNavSidebarAdaptor {
                     id: sidebarAdaptor

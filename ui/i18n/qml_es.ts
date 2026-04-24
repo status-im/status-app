@@ -7893,6 +7893,13 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
+    <name>FeeRow</name>
+    <message>
+        <source>Max.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -9291,6 +9298,10 @@ Are you sure you want to do this?</source>
     <message>
         <source>PIN correct</source>
         <translation>PIN correcto</translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
+        <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
@@ -17823,12 +17834,12 @@ al cargar</translation>
         <translation>El impacto en el precio es demasiado alto. Reduce la cantidad de tokens o inténtalo de nuevo más tarde.</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>Algo salió mal. Cambia la cantidad, el token o inténtalo de nuevo más tarde.</translation>
-    </message>
-    <message>
         <source>No routes found with enough liquidity</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong. Change amount, token or try again later.</source>
+        <translation>Algo salió mal. Cambia la cantidad, el token o inténtalo de nuevo más tarde.</translation>
     </message>
 </context>
 <context>
@@ -18196,16 +18207,16 @@ This action cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Delete bookmark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished">Buscar</translation>
     </message>
     <message>
         <source>Add</source>
         <translation type="unfinished">Agregar</translation>
-    </message>
-    <message>
-        <source>Delete bookmark</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

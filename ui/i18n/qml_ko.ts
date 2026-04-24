@@ -7864,6 +7864,13 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
+    <name>FeeRow</name>
+    <message>
+        <source>Max.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -9254,6 +9261,10 @@ Are you sure you want to do this?</source>
     <message>
         <source>PIN correct</source>
         <translation>PIN이 올바릅니다</translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
+        <translation type="unfinished">Keycard가 차단됨</translation>
     </message>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
@@ -17761,12 +17772,12 @@ to load</source>
         <translation>가격 영향이 너무 큽니다. 토큰 수량을 줄이거나 나중에 다시 시도하세요.</translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
-        <translation>문제가 발생했습니다. 수량이나 토큰을 변경하거나 나중에 다시 시도하세요.</translation>
-    </message>
-    <message>
         <source>No routes found with enough liquidity</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Something went wrong. Change amount, token or try again later.</source>
+        <translation>문제가 발생했습니다. 수량이나 토큰을 변경하거나 나중에 다시 시도하세요.</translation>
     </message>
 </context>
 <context>
@@ -18134,16 +18145,16 @@ This action cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Delete bookmark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished">검색</translation>
     </message>
     <message>
         <source>Add</source>
         <translation type="unfinished">추가</translation>
-    </message>
-    <message>
-        <source>Delete bookmark</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

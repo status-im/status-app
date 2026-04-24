@@ -7879,6 +7879,13 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
+    <name>FeeRow</name>
+    <message>
+        <source>Max.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FeesBox</name>
     <message>
         <source>Fees</source>
@@ -9276,6 +9283,10 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>PIN correct</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
@@ -17804,11 +17815,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Something went wrong. Change amount, token or try again later.</source>
+        <source>No routes found with enough liquidity</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No routes found with enough liquidity</source>
+        <source>Something went wrong. Change amount, token or try again later.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -18177,15 +18188,15 @@ This action cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Delete bookmark</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Add</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Delete bookmark</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
