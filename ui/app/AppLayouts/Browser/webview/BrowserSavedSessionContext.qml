@@ -1,0 +1,100 @@
+import QtCore
+import QtQuick
+
+QtObject {
+    id: root
+
+    required property string userUID
+    required property var webViewContext
+    required property var tabs
+    required property var defaultProfileParams
+    required property var determineRealURL
+
+    readonly property alias uiSettings: sessionSettings
+
+    Settings {
+        id: sessionSettings
+        category: "BrowserSettings_%1".arg(root.userUID)
+        property bool restoreOpenTabs
+        property var openTabs: []
+        property int currentTabIndex: 0
+    }
+
+    function saveSession() {
+        if (!sessionSettings.restoreOpenTabs)
+            return
+
+        var tabsModel = []
+
+        for (let i = 0; i < tabs.count; i++) {
+            const webView = webViewContext.getWebView(i)
+            if (!!webView) {
+                const raw = webView.url.toString() || (webView.pendingUrl || "")
+                const url = determineRealURL(raw)
+                if (!!url)
+                    tabsModel.push({url: url, title: webView.title || ""})
+            }
+        }
+        sessionSettings.openTabs = tabsModel
+        sessionSettings.currentTabIndex = tabs.currentIndex
+    }
+
+    function getTabsInfo() {
+        var list = []
+        try {
+            list = JSON.parse(JSON.stringify(sessionSettings.openTabs || [])) || []
+        } catch (e) {
+            list = []
+        }
+        if (!Array.isArray(list))
+            list = []
+        return list.filter(t => t && String(t.url || "").trim() !== "")
+    }
+
+    function openDefaultTab() {
+        const tab = webViewContext.createEmptyTab(defaultProfileParams, true)
+        // For Devs: Uncomment the next line if you want to use the simpledapp on first load
+        // tab.url = determineRealURL("https://simpledapp.eth");
+    }
+
+    function commitPendingForCurrent() {
+        const w = webViewContext.currentWebView
+        if (!w) return
+        const p = w.pendingUrl
+        if (p && !w.url.toString()) {
+            w.pendingUrl = ""
+            w.url = p
+        }
+    }
+
+    function restoreSession() {
+        const tabsToRestore = sessionSettings.restoreOpenTabs ? getTabsInfo() : []
+        if (tabsToRestore.length === 0) {
+            openDefaultTab()
+            return
+        }
+        tabsToRestore.forEach((t, i) => {
+            const profileParams = (i === 0) ? defaultProfileParams : webViewContext.getWebView(0).profileParams
+            webViewContext.createEmptyTab(
+                profileParams, false, false,
+                determineRealURL(t.url), t.title)
+        })
+        const savedIndex = sessionSettings.currentTabIndex
+        Qt.callLater(() => {
+            if (tabs.count === 0) {
+                openDefaultTab()
+                return
+            }
+            if (savedIndex >= 0 && savedIndex < tabs.count)
+                tabs.activateTab(savedIndex)
+            commitPendingForCurrent()
+        })
+    }
+
+    Connections {
+        target: webViewContext
+        function onCurrentWebViewChanged() {
+            root.commitPendingForCurrent()
+        }
+    }
+}

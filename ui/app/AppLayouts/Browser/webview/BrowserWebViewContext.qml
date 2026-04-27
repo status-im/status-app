@@ -36,9 +36,6 @@ QtObject {
         EmptyContent
     }
 
-    // While true, do not commit pending url on tab switch (restore loop is running)
-    property bool restoringOpenTabs: false
-
     readonly property Item currentWebView: tabsModel.currentIndex < tabsModel.count ? (getCurrentWebView() ?? null) : null
     readonly property int currentContentMode: {
         if (!currentWebView)
@@ -48,19 +45,6 @@ QtObject {
         if (!currentWebView.url?.toString())
             return BrowserWebViewContext.ContentMode.EmptyContent
         return BrowserWebViewContext.ContentMode.WebContent
-    }
-
-    onCurrentWebViewChanged: if (!restoringOpenTabs) commitPendingForCurrent()
-
-    // Apply pendingUrl of the current webview (set when a restored tab is first activated)
-    function commitPendingForCurrent() {
-        const w = currentWebView
-        if (!w) return
-        const p = w.pendingUrl
-        if (p && !w.url.toString()) {
-            w.pendingUrl = ""
-            w.url = p
-        }
     }
 
     function createEmptyTab(profileParams, createAsStartPage = false, focusOnNewTab = true, url = undefined, initialTitle = undefined) {
