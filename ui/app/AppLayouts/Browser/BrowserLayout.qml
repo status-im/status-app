@@ -218,7 +218,8 @@ StatusSectionLayout {
             for (let i = 0; i < tabs.count; i++){
                 const webView = webViewContext.getWebView(i)
                 if (!!webView) {
-                    const url = root.browserRootStore.determineRealURL(webView.url.toString())
+                    const raw = webView.url.toString() || (webView.pendingUrl || "")
+                    const url = root.browserRootStore.determineRealURL(raw)
                     if (!!url)
                         tabsModel.push({url: url, title: webView.title || ""})
                 }
@@ -239,31 +240,38 @@ StatusSectionLayout {
             return list.filter(t => t && String(t.url || "").trim() !== "")
         }
 
+        function openDefaultTab() {
+            const tab = webViewContext.createEmptyTab(connectorBridge.defaultProfileParams, true)
+            // For Devs: Uncomment the next line if you want to use the simpledapp on first load
+            // tab.url = root.browserRootStore.determineRealURL("https://simpledapp.eth");
+        }
+
         function restoreSession() {
-            if (!uiSettings.restoreOpenTabs) {
-                const tab = webViewContext.createEmptyTab(connectorBridge.defaultProfileParams, true)
-                // For Devs: Uncomment the next line if you want to use the simpledapp on first load
-                // tab.url = root.browserRootStore.determineRealURL("https://simpledapp.eth");
+            const tabsToRestore = uiSettings.restoreOpenTabs ? getTabsInfo() : []
+            if (tabsToRestore.length === 0) {
+                openDefaultTab()
                 return
             }
-            const tabsToRestore = getTabsInfo()
-
-            if (tabsToRestore.length > 0) {
-                tabsToRestore.forEach(t => root.openUrlInNewTab(t.url, t.title))
-                const savedIndex = uiSettings.currentTabIndex
-                Qt.callLater(() => {
-                    if (tabs.count === 0) {
-                        webViewContext.createEmptyTab(connectorBridge.defaultProfileParams, true)
-                        return
-                    }
-                    if (savedIndex >= 0 && savedIndex < tabs.count)
-                        tabs.activateTab(savedIndex)
-                })
-            } else {
-                const tab = webViewContext.createEmptyTab(connectorBridge.defaultProfileParams, true)
-                // For Devs: Uncomment the next line if you want to use the simpledapp on first load
-                // tab.url = root.browserRootStore.determineRealURL("https://simpledapp.eth");
-            }
+            webViewContext.restoringOpenTabs = true
+            tabsToRestore.forEach((t, i) => {
+                const profileParams = (i === 0)
+                    ? connectorBridge.defaultProfileParams
+                    : webViewContext.getWebView(0).profileParams
+                webViewContext.createEmptyTab(
+                    profileParams, false, false,
+                    root.browserRootStore.determineRealURL(t.url), t.title)
+            })
+            const savedIndex = uiSettings.currentTabIndex
+            Qt.callLater(() => {
+                webViewContext.restoringOpenTabs = false
+                if (tabs.count === 0) {
+                    openDefaultTab()
+                    return
+                }
+                if (savedIndex >= 0 && savedIndex < tabs.count)
+                    tabs.activateTab(savedIndex)
+                webViewContext.commitPendingForCurrent()
+            })
         }
 
         onCurrentWebViewChanged: {
