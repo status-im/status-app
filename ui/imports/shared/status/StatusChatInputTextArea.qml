@@ -73,7 +73,7 @@ StatusQ.StatusTextArea {
     textFormat: Text.RichText
     color: Theme.palette.textColor
     background: null
-    inputMethodHints: Qt.ImhMultiLine | Qt.ImhNoEditMenu
+    inputMethodHints: Qt.ImhMultiLine | (StatusQUtils.Utils.isMobile ? 0 : Qt.ImhNoEditMenu)
 
     EnterKey.type: Qt.EnterKeyReturn // insert newlines hint for OSK
 
