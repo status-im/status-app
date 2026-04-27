@@ -65,4 +65,6 @@ TextField {
             return root.hovered ? Theme.palette.primaryColor2 : "transparent"
         }
     }
+
+    VirtualKeyboardBehaviorFix {}
 }

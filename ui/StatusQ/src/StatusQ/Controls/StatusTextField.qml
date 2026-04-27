@@ -24,4 +24,6 @@ TextField {
     cursorDelegate: StatusCursorDelegate {
         cursorVisible: root.cursorVisible
     }
+
+    VirtualKeyboardBehaviorFix {}
 }

@@ -155,6 +155,7 @@
         <file>StatusQ/Controls/StatusTokenInlineSelector.qml</file>
         <file>StatusQ/Controls/StatusToolTip.qml</file>
         <file>StatusQ/Controls/StatusWarningBox.qml</file>
+        <file>StatusQ/Controls/VirtualKeyboardBehaviorFix.qml</file>
         <file>StatusQ/Controls/Validators/StatusAddressOrEnsValidator.qml</file>
         <file>StatusQ/Controls/Validators/StatusAddressValidator.qml</file>
         <file>StatusQ/Controls/Validators/StatusAsyncEnsValidator.qml</file>

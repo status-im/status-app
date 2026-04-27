@@ -101,4 +101,6 @@ TextArea {
     cursorDelegate: StatusCursorDelegate {
         cursorVisible: root.cursorVisible
     }
+
+    VirtualKeyboardBehaviorFix {}
 }

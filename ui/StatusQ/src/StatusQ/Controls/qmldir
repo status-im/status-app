@@ -66,3 +66,4 @@ StatusTextWithLoadingState 0.1 StatusTextWithLoadingState.qml
 StatusTokenInlineSelector 0.1 StatusTokenInlineSelector.qml
 StatusToolTip 0.1 StatusToolTip.qml
 StatusWarningBox 0.1 StatusWarningBox.qml
+VirtualKeyboardBehaviorFix 0.1 VirtualKeyboardBehaviorFix.qml

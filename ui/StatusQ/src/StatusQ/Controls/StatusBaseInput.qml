@@ -464,6 +464,8 @@ Item {
                             elide: root.multiline? Text.ElideNone : Text.ElideRight
                             color: root.enabled ? Theme.palette.baseColor1 : Theme.palette.directColor6
                         }
+
+                        VirtualKeyboardBehaviorFix {}
                     }
                 } // Flickable
 
