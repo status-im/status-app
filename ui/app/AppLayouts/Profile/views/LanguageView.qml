@@ -45,6 +45,7 @@ SettingsContentBase {
 
             StatusCurrencySelector {
                 id: currencyPicker
+                objectName: "languageViewCurrencySelector"
                 currentCurrency: root.currentCurrency
                 currenciesModel: root.currenciesModel
                 onCurrencySelected: shortName => root.changeCurrencyRequested(shortName)
@@ -64,6 +65,7 @@ SettingsContentBase {
             StatusLanguageSelector {
                 Layout.preferredWidth: currencyPicker.width
                 id: languagePicker
+                objectName: "languageViewLanguageSelector"
                 enabled: root.languageSelectionEnabled
                 currentLanguage: root.currentLanguage
                 languageCodes: root.availableLanguages
@@ -89,6 +91,7 @@ SettingsContentBase {
             iconColor: Theme.palette.baseColor1
             text: qsTr("We need your help to translate Status, so that together we can bring privacy and free speech to the people everywhere, including those who need it most.")
             extraContentComponent: StatusFlatButton {
+                objectName: "languageViewLearnMoreButton"
                 icon.name: "external-link"
                 text: qsTr("Learn more")
                 size: StatusBaseButton.Size.Small
@@ -138,6 +141,7 @@ SettingsContentBase {
                 property string newCode
 
                 destroyOnClose: true
+                confirmButtonObjectName: "languageViewLanguageChangeConfirmButton"
                 title: qsTr("Change language")
                 confirmationText: qsTr("Display language has been changed. You must restart the application for changes to take effect.")
                 confirmButtonLabel: qsTr("Restart")

@@ -105,7 +105,7 @@ Button {
     StatusDropdown {
         id: dropdown
 
-        objectName: "dropdown"
+        objectName: "statusCurrencySelectorDropdown"
 
         directParent: root
         relativeX: root.width - width

@@ -111,7 +111,7 @@ Button {
     StatusDropdown {
         id: dropdown
 
-        objectName: "dropdown"
+        objectName: "statusLanguageSelectorDropdown"
 
         directParent: root
         relativeX: root.width - width
@@ -142,6 +142,7 @@ Button {
                 Layout.maximumHeight: dropdown.bottomSheet ? -1 : d.maxPopupHeight
 
                 id: userSelectorPanel
+                objectName: "statusLanguageSelectorListView"
                 model: d.languageModel
                 highlightFollowsCurrentItem: true
                 highlight: Rectangle {
