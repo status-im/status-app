@@ -1,4 +1,5 @@
 import QtQuick
+import QtQml
 import QtWebEngine
 
 import StatusQ.Core.Theme
@@ -8,7 +9,11 @@ import AppLayouts.Browser.views
 AbstractWebView {
     id: root
 
-    property var profile: ProfileManager.getProfile(root.profileParams)
+    property var profile: root.profileParams
+        ? ProfileManager.getOrCreateStorageProfile(
+              root.profileParams.userId,
+              root.profileParams.offTheRecord)
+        : null
 
     // Expose internal WebEngineView properties
     property alias url: webView.url
@@ -214,20 +219,25 @@ AbstractWebView {
         }
     }
 
+    Binding {
+        when: !!(root.profile && root.profileParams && root.profileParams.userAgent)
+        target: root.profile
+        property: "httpUserAgent"
+        value: root.profileParams.userAgent
+    }
+
+    function applyProfileScripts() {
+        if (!root.profile || !root.profile.userScripts || !root.profileParams)
+            return
+        root.profile.userScripts.collection = ProfileManager.scriptListForParams(root.profileParams)
+    }
+
+    onProfileChanged: applyProfileScripts()
+
     Connections {
-        // This connection is needed because changing profileParams.offTheRecord doesn't trigger the root.profile update
         target: root.profileParams
-        function onOffTheRecordChanged() {
-            root.profile = ProfileManager.getProfile(root.profileParams)
-        }
-        function onUserAgentChanged() {
-            root.profile = ProfileManager.getProfile(root.profileParams)
-        }
         function onScriptsChanged() {
-            root.profile = ProfileManager.getProfile(root.profileParams)
-        }
-        function onUserIdChanged() {
-            root.profile = ProfileManager.getProfile(root.profileParams)
+            root.applyProfileScripts()
         }
     }
 }

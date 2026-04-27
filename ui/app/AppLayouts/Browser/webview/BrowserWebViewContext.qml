@@ -36,7 +36,7 @@ QtObject {
         EmptyContent
     }
 
-    readonly property Item currentWebView: tabsModel.currentIndex < tabsModel.count ? getCurrentWebView() : null
+    readonly property Item currentWebView: tabsModel.currentIndex < tabsModel.count ? (getCurrentWebView() ?? null) : null
     readonly property int currentContentMode: {
         if (!currentWebView)
             return BrowserWebViewContext.ContentMode.EmptyContent
