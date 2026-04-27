@@ -153,7 +153,7 @@ BrowserToolbarBase {
             asset.rotation: 90
             icon.name: "more"
             tooltip.text: qsTr("Menu")
-            onClicked: root.openSettingMenu(this, Qt.point(pressX, pressY))
+            onClicked: root.openSettingMenu(this, Qt.point(pressX, height))
         }
     }
 

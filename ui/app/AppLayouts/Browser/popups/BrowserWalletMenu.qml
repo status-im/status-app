@@ -32,7 +32,8 @@ Dialog {
     signal accountSwitchRequested(string address)
     signal filterAddressesChangeRequested(string addressesJson)
 
-    modal: false
+    modal: true
+    dim: false
 
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     parent: Overlay.overlay
