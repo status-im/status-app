@@ -224,12 +224,22 @@ StatusSectionLayout {
                 }
             }
             uiSettings.openTabs = tabsModel
+            uiSettings.currentTabIndex = tabs.currentIndex
         }
 
         function restoreSession() {
-            if (uiSettings.restoreOpenTabs && !!uiSettings.openTabs && uiSettings.openTabs.length > 0)
+            if (uiSettings.restoreOpenTabs && !!uiSettings.openTabs && uiSettings.openTabs.length > 0) {
                 uiSettings.openTabs.forEach((url) => root.openUrlInNewTab(url))
-            else {
+                const savedIndex = uiSettings.currentTabIndex
+                Qt.callLater(() => {
+                    if (tabs.count === 0) {
+                        webViewContext.createEmptyTab(connectorBridge.defaultProfileParams, true)
+                        return
+                    }
+                    if (savedIndex >= 0 && savedIndex < tabs.count)
+                        tabs.activateTab(savedIndex)
+                })
+            } else {
                 const tab = webViewContext.createEmptyTab(connectorBridge.defaultProfileParams, true)
                 // For Devs: Uncomment the next line if you want to use the simpledapp on first load
                 // tab.url = root.browserRootStore.determineRealURL("https://simpledapp.eth");
@@ -253,6 +263,7 @@ StatusSectionLayout {
         category: "BrowserSettings_%1".arg(root.userUID)
         property bool restoreOpenTabs
         property var openTabs: []
+        property int currentTabIndex: 0
     }
 
     BrowserFavoritesContext {
