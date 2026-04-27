@@ -73,7 +73,13 @@ Control {
 
             incognitoMode: root.incognitoMode
             icon.name: root.currentTabLoading ? "close-circle" : "refresh"
-            interactive: root.url.toString() !== ""
+            visible: {
+                if (root.currentTabLoading)
+                    return true
+                if (root.url.toString() === "")
+                    return false
+                return !addressBar.cursorVisible
+            }
             tooltip.text: root.currentTabLoading ? qsTr("Stop") : qsTr("Reload")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
             onClicked: root.currentTabLoading ? root.requestStopLoadingPage(): root.requestReloadPage()
