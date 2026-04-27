@@ -118,7 +118,8 @@ Control {
             id: listView
 
             objectName: "assetsListView"
-            reuseItems: true
+            // TODO: add Component.onReusued
+            reuseItems: false
 
             clip: true
 
