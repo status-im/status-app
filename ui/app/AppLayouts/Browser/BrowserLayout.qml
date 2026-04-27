@@ -55,7 +55,7 @@ StatusSectionLayout {
 
     readonly property string userAgent: connectorBridge.httpUserAgent
 
-    readonly property alias uiSettings: uiSettings
+    readonly property alias uiSettings: savedSessionContext.uiSettings
 
     signal sendToRecipientRequested(string address)
 
@@ -68,11 +68,11 @@ StatusSectionLayout {
     }
 
     Component.onCompleted: {
-        _internal.restoreSession()
+        savedSessionContext.restoreSession()
     }
 
     Component.onDestruction: {
-        _internal.saveSession()
+        savedSessionContext.saveSession()
     }
 
     Connections {
@@ -209,71 +209,6 @@ StatusSectionLayout {
             favoriteMenu.createObject(root, {url, name}).popup(parent, pos)
         }
 
-        function saveSession() {
-            if (!uiSettings.restoreOpenTabs)
-                return
-
-            var tabsModel = []
-
-            for (let i = 0; i < tabs.count; i++){
-                const webView = webViewContext.getWebView(i)
-                if (!!webView) {
-                    const raw = webView.url.toString() || (webView.pendingUrl || "")
-                    const url = root.browserRootStore.determineRealURL(raw)
-                    if (!!url)
-                        tabsModel.push({url: url, title: webView.title || ""})
-                }
-            }
-            uiSettings.openTabs = tabsModel
-            uiSettings.currentTabIndex = tabs.currentIndex
-        }
-
-        function getTabsInfo() {
-            var list = []
-            try {
-                list = JSON.parse(JSON.stringify(uiSettings.openTabs || [])) || []
-            } catch (e) {
-                list = []
-            }
-            if (!Array.isArray(list))
-                list = []
-            return list.filter(t => t && String(t.url || "").trim() !== "")
-        }
-
-        function openDefaultTab() {
-            const tab = webViewContext.createEmptyTab(connectorBridge.defaultProfileParams, true)
-            // For Devs: Uncomment the next line if you want to use the simpledapp on first load
-            // tab.url = root.browserRootStore.determineRealURL("https://simpledapp.eth");
-        }
-
-        function restoreSession() {
-            const tabsToRestore = uiSettings.restoreOpenTabs ? getTabsInfo() : []
-            if (tabsToRestore.length === 0) {
-                openDefaultTab()
-                return
-            }
-            webViewContext.restoringOpenTabs = true
-            tabsToRestore.forEach((t, i) => {
-                const profileParams = (i === 0)
-                    ? connectorBridge.defaultProfileParams
-                    : webViewContext.getWebView(0).profileParams
-                webViewContext.createEmptyTab(
-                    profileParams, false, false,
-                    root.browserRootStore.determineRealURL(t.url), t.title)
-            })
-            const savedIndex = uiSettings.currentTabIndex
-            Qt.callLater(() => {
-                webViewContext.restoringOpenTabs = false
-                if (tabs.count === 0) {
-                    openDefaultTab()
-                    return
-                }
-                if (savedIndex >= 0 && savedIndex < tabs.count)
-                    tabs.activateTab(savedIndex)
-                webViewContext.commitPendingForCurrent()
-            })
-        }
-
         onCurrentWebViewChanged: {
             onCurrentTabUrlChanged()
             findBar.reset()
@@ -285,14 +220,6 @@ StatusSectionLayout {
     showFooter: false
     headerPadding: 0
     backgroundColor: Theme.palette.statusAppNavBar.backgroundColor
-
-    Settings {
-        id: uiSettings
-        category: "BrowserSettings_%1".arg(root.userUID)
-        property bool restoreOpenTabs
-        property var openTabs: []
-        property int currentTabIndex: 0
-    }
 
     BrowserFavoritesContext {
         id: favoritesContext
@@ -345,6 +272,15 @@ StatusSectionLayout {
                 findBar.activeMatch = result.activeMatch
             }
         }
+    }
+
+    BrowserSavedSessionContext {
+        id: savedSessionContext
+        userUID: root.userUID
+        webViewContext: webViewContext
+        tabs: tabs
+        defaultProfileParams: connectorBridge.defaultProfileParams
+        determineRealURL: (u) => root.browserRootStore.determineRealURL(u)
     }
 
     headerContent: ColumnLayout {
