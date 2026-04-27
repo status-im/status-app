@@ -28,13 +28,14 @@ FocusScope {
     signal openNewTabTriggered()
     signal removeView(int index)
 
-    function createEmptyTab(createAsStartPage = false, focusOnNewTab = true, webview = undefined) {
+    function createEmptyTab(createAsStartPage = false, focusOnNewTab = true, webview = undefined, initialTitle = undefined) {
         const tabTitle = Qt.binding(function() {
             var tabTitle = ""
             if (webview && webview.title) {
                 tabTitle = webview.title
-            }
-            else if (createAsStartPage) {
+            } else if (initialTitle) {
+                tabTitle = initialTitle
+            } else if (createAsStartPage) {
                 tabTitle = qsTr("Start Page")
             } else {
                 tabTitle = qsTr("New Tab")
