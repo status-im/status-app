@@ -41,29 +41,30 @@ QtObject {
         `, root, "ProfilePrototype_" + storageName)
     }
 
-    function getProfile(profileParams) {
-        const key = root._key(profileParams.userId, profileParams.offTheRecord)
+    function getOrCreateStorageProfile(userId, offTheRecord) {
+        const key = root._key(userId, offTheRecord)
         let p = root.profiles[key]
 
         if (!p) {
-            const storageName = profileParams.offTheRecord
-                ? ("IncognitoProfile_" + profileParams.userId)
-                : ("Profile_" + profileParams.userId)
+            const storageName = offTheRecord
+                ? ("IncognitoProfile_" + userId)
+                : ("Profile_" + userId)
 
-            const prototype = root._getProfilePrototype(storageName, profileParams.offTheRecord)
+            const prototype = root._getProfilePrototype(storageName, offTheRecord)
             p = prototype.instance()
             root.profiles[key] = p
         }
 
-        if (profileParams.userAgent && p.httpUserAgent !== profileParams.userAgent) {
-            p.httpUserAgent = profileParams.userAgent
-        }
-
-        if (profileParams.scripts && profileParams.scripts.length > 0) {
-            const scripts = profileParams.scripts.map(path => createScriptFromPath(path))
-            p.userScripts.collection = scripts
-        }
-
         return p
+    }
+
+    function getProfile(profileParams) {
+        return getOrCreateStorageProfile(profileParams.userId, profileParams.offTheRecord)
+    }
+
+    function scriptListForParams(profileParams) {
+        if (!profileParams.scripts || profileParams.scripts.length === 0)
+            return []
+        return profileParams.scripts.map(path => createScriptFromPath(path))
     }
 }
