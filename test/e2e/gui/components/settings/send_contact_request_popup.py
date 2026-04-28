@@ -1,6 +1,7 @@
 import allure
 
 import configs
+import driver
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.text_edit import TextEdit
@@ -18,8 +19,13 @@ class SendContactRequest(QObject):
 
     @allure.step('Send contact request')
     def send(self, chat_key: str, message: str):
-        self._chat_key_text_edit.text = chat_key
-        self._message_text_edit.text = message
+        # Inner QQuickTextEdit is inside StatusBaseInput; driver.type() cannot set focus. Use direct assignment.
+        self._chat_key_text_edit.set_text_property(chat_key)
+        self._message_text_edit.set_text_property(message)
+        assert driver.waitFor(
+            lambda: self._send_button.is_enabled,
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        ), 'Send Contact Request button stayed disabled after filling fields'
         self._send_button.click()
         self.wait_until_hidden()
 
@@ -38,5 +44,5 @@ class SendContactRequestFromProfile(QObject):
 
     @allure.step('Send contact request')
     def send(self, message: str):
-        self._message_text_edit.text = message
+        self._message_text_edit.set_text_property(message)
         self._send_button.click()

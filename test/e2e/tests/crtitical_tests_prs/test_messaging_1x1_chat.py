@@ -124,10 +124,13 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             left_panel_chat.click()
 
         with step(f'User {user_one.name}, edit message and verify it was changed'):
+            # edit_message() replaces the whole composer contents; pass full final text, not only the suffix.
+            edited_body = chat_message1 + additional_text
+            message = chat.find_message_by_text(chat_message1, 0)
             message_actions = message.hover_message()
-            message_actions.edit_message(additional_text)
+            message_actions.edit_message(edited_body)
             message_object = messages_screen.chat.messages(0)[0]
-            assert chat_message1 + additional_text in str(message_object.object.unparsedText), \
+            assert edited_body in str(message_object.object.unparsedText), \
                 f"Message text is not found in last message"
             assert message_object.delegate_button.object.isEdited, \
                 f"Message status was not changed to edited"

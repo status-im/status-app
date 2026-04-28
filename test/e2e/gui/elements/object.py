@@ -27,10 +27,30 @@ class QObject:
                 f"Object {self.real_name} was not found within {configs.timeouts.UI_LOAD_TIMEOUT_MSEC} ms") from e
 
     def set_text_property(self, text):
-        self.object.forceActiveFocus()
-        self.object.clear()
-        self.object.text = text
-        assert self.object.text == text, 'Text was not set'
+        """Assign text without driver.type(). Verifies via plain text when available (e.g. RichText inputs)."""
+        expected = str(text)
+        obj = self.object
+        obj.forceActiveFocus()
+        obj.clear()
+        obj.text = text
+
+        def _content_matches() -> bool:
+            plain_getter = getattr(obj, 'getPlainText', None)
+            if callable(plain_getter):
+                try:
+                    if str(plain_getter()) == expected:
+                        return True
+                except (RuntimeError, AttributeError, TypeError):
+                    pass
+            try:
+                return str(obj.text) == expected
+            except (RuntimeError, AttributeError):
+                return False
+
+        assert driver.waitFor(_content_matches, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), (
+            f'Text was not set; expected length={len(expected)} '
+            f'text={getattr(obj, "text", "")!r}'
+        )
 
     @property
     @allure.step('Get object exists {0}')
