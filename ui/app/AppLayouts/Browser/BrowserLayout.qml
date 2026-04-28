@@ -55,8 +55,6 @@ StatusSectionLayout {
 
     readonly property string userAgent: connectorBridge.httpUserAgent
 
-    readonly property alias uiSettings: savedSessionContext.uiSettings
-
     signal sendToRecipientRequested(string address)
 
     function openUrlInNewTab(url, initialTitle) {
@@ -276,7 +274,6 @@ StatusSectionLayout {
 
     BrowserSavedSessionContext {
         id: savedSessionContext
-        userUID: root.userUID
         webViewContext: webViewContext
         tabs: tabs
         defaultProfileParams: connectorBridge.defaultProfileParams

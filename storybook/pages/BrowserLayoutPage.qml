@@ -11,6 +11,7 @@ import utils
 
 import AppLayouts.Browser
 import AppLayouts.Browser.stores as BrowserStores
+import AppLayouts.Browser.webview
 import AppLayouts.Wallet.stores
 import shared.stores as SharedStores
 import shared.stores.send
@@ -230,17 +231,17 @@ SplitView {
             Layout.fillWidth: true
             Switch {
                 text: "Restore open tabs"
-                checked: browserLayout.uiSettings.restoreOpenTabs
+                checked: BrowserUiSettings.restoreOpenTabs
                 onToggled: {
-                    browserLayout.uiSettings.restoreOpenTabs = checked
-                    browserLayout.uiSettings.sync()
+                    BrowserUiSettings.restoreOpenTabs = checked
+                    BrowserUiSettings.sync()
                 }
             }
             Button {
                 text: "Clear saved tabs"
                 onClicked: {
-                    browserLayout.uiSettings.openTabs = []
-                    browserLayout.uiSettings.sync()
+                    BrowserUiSettings.openTabs = []
+                    BrowserUiSettings.sync()
                 }
             }
         }

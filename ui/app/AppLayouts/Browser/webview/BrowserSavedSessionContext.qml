@@ -1,27 +1,15 @@
-import QtCore
 import QtQuick
 
 QtObject {
     id: root
 
-    required property string userUID
     required property var webViewContext
     required property var tabs
     required property var defaultProfileParams
     required property var determineRealURL
 
-    readonly property var sessionSettings: Settings {
-        id: _sessionSettings
-        category: "BrowserSettings_%1".arg(root.userUID)
-        property bool restoreOpenTabs
-        property var openTabs: []
-        property int currentTabIndex: 0
-    }
-
-    readonly property alias uiSettings: _sessionSettings
-
     function saveSession() {
-        if (!sessionSettings.restoreOpenTabs)
+        if (!BrowserUiSettings.restoreOpenTabs)
             return
 
         var tabsModel = []
@@ -35,14 +23,15 @@ QtObject {
                     tabsModel.push({url: url, title: webView.title || ""})
             }
         }
-        sessionSettings.openTabs = tabsModel
-        sessionSettings.currentTabIndex = tabs.currentIndex
+        BrowserUiSettings.openTabs = tabsModel
+        BrowserUiSettings.currentTabIndex = tabs.currentIndex
+        BrowserUiSettings.sync()
     }
 
     function getTabsInfo() {
         var list = []
         try {
-            list = JSON.parse(JSON.stringify(sessionSettings.openTabs || [])) || []
+            list = JSON.parse(JSON.stringify(BrowserUiSettings.openTabs || [])) || []
         } catch (e) {
             list = []
         }
@@ -68,7 +57,7 @@ QtObject {
     }
 
     function restoreSession() {
-        const tabsToRestore = sessionSettings.restoreOpenTabs ? getTabsInfo() : []
+        const tabsToRestore = BrowserUiSettings.restoreOpenTabs ? getTabsInfo() : []
         if (tabsToRestore.length === 0) {
             openDefaultTab()
             return
@@ -79,7 +68,7 @@ QtObject {
                 profileParams, false, false,
                 determineRealURL(t.url), t.title)
         })
-        const savedIndex = sessionSettings.currentTabIndex
+        const savedIndex = BrowserUiSettings.currentTabIndex
         Qt.callLater(() => {
             if (tabs.count === 0) {
                 openDefaultTab()
