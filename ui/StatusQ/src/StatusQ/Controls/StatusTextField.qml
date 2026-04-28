@@ -24,4 +24,15 @@ TextField {
     cursorDelegate: StatusCursorDelegate {
         cursorVisible: root.cursorVisible
     }
+
+    // selectedText is not notified correctly when selection is cleared on Android.
+    // Similarly cursorVisible is not updated properly to be visible when text is
+    // deselected. As a workaround selection is tracked via selectionStart
+    // and selectionEnd and deselect is called manually to update cursor visibility.
+    readonly property bool noSelection: selectionStart === selectionEnd
+
+    onNoSelectionChanged: {
+        if (noSelection && activeFocus)
+            deselect()
+    }
 }
