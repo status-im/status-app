@@ -83,6 +83,7 @@ QtObject {
             isDownloadView: true
         })
         tabsModel.createDownloadTab()
+        webview.ensureLoaded()
         return webview
     }
 

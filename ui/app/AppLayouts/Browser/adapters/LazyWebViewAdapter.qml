@@ -1,25 +1,23 @@
 import QtQuick
 
+// Thin AbstractWebView that wraps WebViewAdapter in a Loader so WebEngineView is not created for
+// empty tabs. Activation is imperative and one-shot (loader.active flips true once, never back).
+// BrowserWebViewContext calls ensureLoaded() when switching to or loading a tab. Proxied state
+// defaults until the inner item exists. Capability flags are also proxied from loader.item so that
+// the correct per-platform values are reported automatically (e.g. +mobile/WebViewAdapter reports
+// supportsDevTools=false, supportsIncognito=false, dynamic hasNativeFindPanel); no separate
+// +mobile/LazyWebViewAdapter.qml is needed.
+
 AbstractWebView {
     id: root
 
-    // -------------------------------------------------------------------------
-    // AbstractWebView required capability flags – same as WebViewAdapter so that
-    // toolbar/menu bindings (zoom, find, incognito …) work from the moment the
-    // tab is created, even before a WebEngineView is instantiated.
-    // -------------------------------------------------------------------------
-    supportsZoom:       true
-    supportsDevTools:   true
-    supportsFindInPage: true
-    supportsIncognito:  true
-    supportsHistory:    true
-    hasNativeFindPanel: false
+    supportsZoom:       loader.item ? loader.item.supportsZoom       : false
+    supportsDevTools:   loader.item ? loader.item.supportsDevTools   : false
+    supportsFindInPage: loader.item ? loader.item.supportsFindInPage : false
+    supportsIncognito:  loader.item ? loader.item.supportsIncognito  : false
+    supportsHistory:    loader.item ? loader.item.supportsHistory    : false
+    hasNativeFindPanel: loader.item ? loader.item.hasNativeFindPanel : false
 
-    // -------------------------------------------------------------------------
-    // Proxied state – defaults while loader is inactive, live values once loaded.
-    // Must redeclare each inherited readonly property from AbstractWebView as
-    // `readonly property … : …` (simple assignment lines are invalid on readonly).
-    // -------------------------------------------------------------------------
     readonly property string title: loader.item ? loader.item.title : ""
     readonly property bool loading: loader.item ? loader.item.loading : false
     readonly property bool canGoBack: loader.item ? loader.item.canGoBack : false
@@ -31,25 +29,11 @@ AbstractWebView {
     readonly property bool htmlPageLoaded: loader.item ? loader.item.htmlPageLoaded : false
     readonly property var scrollPosition: loader.item ? loader.item.scrollPosition : Qt.point(0, 0)
 
-    // -------------------------------------------------------------------------
-    // One-shot imperative activation: loader.active is flipped to true once and
-    // never back, so the inner WebViewAdapter is never destroyed (e.g. url = ""
-    // after a page loaded won't lose history or scroll state).
-    // When to load is driven by BrowserWebViewContext (ensureLoaded): address bar,
-    // tab switch, createEmptyTab for the foreground tab — not StackLayout attached
-    // properties (avoids races when the stack is hidden behind EmptyWebPage overlay).
-    // Same for download tabs: no WebEngineView until ensureLoaded (non-empty URL / navigation).
-    // -------------------------------------------------------------------------
-    /// Called from BrowserWebViewContext when this tab should materialise WebEngineView.
     function ensureLoaded() {
         if (!loader.active)
             loader.active = true
     }
 
-    // -------------------------------------------------------------------------
-    // Function overrides – forward to inner adapter when alive, else no-op.
-    // loadUrl() also works as the primary activation path.
-    // -------------------------------------------------------------------------
     function loadUrl(u) {
         root.url = u
         if (u && u.toString())
@@ -72,17 +56,11 @@ AbstractWebView {
             loader.item.detachView()
     }
 
-    // Push address-bar / programmatic URL changes into the inner adapter once it
-    // exists. The initial URL is set in the sourceComponent's Component.onCompleted
-    // so it fires after the item is fully constructed.
     onUrlChanged: {
         if (loader.item && loader.item.url !== url)
             loader.item.url = url
     }
 
-    // -------------------------------------------------------------------------
-    // Inner WebViewAdapter, created on demand.
-    // -------------------------------------------------------------------------
     Loader {
         id: loader
         anchors.fill: parent
@@ -97,26 +75,13 @@ AbstractWebView {
             localAccountSensitiveSettings: root.localAccountSensitiveSettings
             isDownloadView:              root.isDownloadView
             freeze:                      root.freeze
-            supportsZoom:                true
-            supportsDevTools:            true
-            supportsFindInPage:          true
-            supportsIncognito:           true
-            supportsHistory:             true
-            hasNativeFindPanel:          false
 
-            // Set initial URL when the component is constructed (not as a binding,
-            // because WebEngine navigation breaks QML bindings on the url property).
             Component.onCompleted: if (root.url.toString()) url = root.url
 
-            // Push browser-driven navigation (link clicks, redirects) back to the
-            // outer wrapper so callers observing root.url stay up to date.
             onUrlChanged: { if (root.url !== url) root.url = url }
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Signal forwarding from inner adapter.
-    // -------------------------------------------------------------------------
     Connections {
         target: loader.item
         function onLinkHovered(hoveredUrl)             { root.linkHovered(hoveredUrl) }
