@@ -311,6 +311,8 @@ Control {
             StatusChatInputSendButton {
                 id: sendButton
 
+                objectName: "statusChatInputSendButton"
+
                 anchors.right: parent.right
             }
 
