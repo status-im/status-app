@@ -54,7 +54,7 @@ QtObject {
         }
     }
 
-    function createEmptyTab(profileParams, createAsStartPage = false, focusOnNewTab = true, url = undefined, initialTitle = undefined) {
+    function createEmptyTab(profileParams, createAsStartPage = false, focusOnNewTab = true, url = undefined, initialTitle = undefined, initialIcon = undefined) {
         focusOnNewTab = focusOnNewTab && !createAsStartPage
 
         var webview = webViewAdapterComponent.createObject(hostStackLayout, {
@@ -62,7 +62,7 @@ QtObject {
             isDownloadView: false
         })
 
-        tabsModel.createEmptyTab(createAsStartPage, focusOnNewTab, webview, initialTitle)
+        tabsModel.createEmptyTab(createAsStartPage, focusOnNewTab, webview, initialTitle, initialIcon)
 
         if (createAsStartPage && thirdpartyServicesEnabled)
             webview.url = Constants.browserDefaultHomepage

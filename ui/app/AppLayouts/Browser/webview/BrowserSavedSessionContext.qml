@@ -8,6 +8,10 @@ QtObject {
     required property var defaultProfileParams
     required property var determineRealURL
 
+    function determineFaviconURL(iconUrl) {
+        return iconUrl ? iconUrl.toString().replace("image://favicon/", "") : ""
+    }
+
     function saveSession() {
         if (!BrowserUiSettings.restoreOpenTabs)
             return
@@ -19,8 +23,10 @@ QtObject {
             if (!!webView && !webView.offTheRecord) {
                 const raw = webView.url.toString()
                 const url = determineRealURL(raw)
-                if (!!url)
-                    tabsModel.push({url: url, title: webView.title || ""})
+                if (!!url) {
+                    const icon = determineFaviconURL(webView.icon)
+                    tabsModel.push({url: url, title: webView.title || "", icon: icon})
+                }
             }
         }
         BrowserUiSettings.openTabs = tabsModel
@@ -56,7 +62,7 @@ QtObject {
             const profileParams = (i === 0) ? defaultProfileParams : webViewContext.getWebView(0).profileParams
             webViewContext.createEmptyTab(
                 profileParams, false, false,
-                determineRealURL(t.url), t.title)
+                determineRealURL(t.url), t.title, t.icon)
         })
         const savedIndex = BrowserUiSettings.currentTabIndex
         Qt.callLater(() => {

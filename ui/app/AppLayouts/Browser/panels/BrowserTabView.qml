@@ -28,7 +28,7 @@ FocusScope {
     signal openNewTabTriggered()
     signal removeView(int index)
 
-    function createEmptyTab(createAsStartPage = false, focusOnNewTab = true, webview = undefined, initialTitle = undefined) {
+    function createEmptyTab(createAsStartPage = false, focusOnNewTab = true, webview = undefined, initialTitle = undefined, initialIcon = undefined) {
         const tabTitle = Qt.binding(function() {
             var tabTitle = ""
             if (webview && webview.title) {
@@ -44,7 +44,7 @@ FocusScope {
             return SQUtils.StringUtils.escapeHtml(tabTitle);
         })
 
-        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle})
+        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle, tabIcon: initialIcon || ""})
         tabBar.addItem(newTabButton)
 
         if (focusOnNewTab) {
@@ -71,6 +71,10 @@ FocusScope {
 
     function activatePreviousTab() {
         tabBar.decrementCurrentIndex()
+    }
+
+    function determineFaviconURL(iconUrl) {
+        return iconUrl ? iconUrl.toString().replace("image://favicon/", "") : ""
     }
 
     QtObject {
@@ -146,6 +150,7 @@ FocusScope {
         StatusTabButton {
             id: tabButton
             property string tabTitle
+            property string tabIcon
 
             readonly property bool incognito: root.fnGetWebView(tabButton.TabBar.index)?.offTheRecord ?? false
 
@@ -175,7 +180,10 @@ FocusScope {
                 StatusIcon {
                     Layout.preferredWidth: d.iconSize
                     Layout.preferredHeight: d.iconSize
-                    readonly property string favicon: root.fnGetWebView(tabButton.TabBar.index)?.icon.toString().replace("image://favicon/", "") ?? ""
+                    readonly property string favicon: {
+                        const live = determineFaviconURL(root.fnGetWebView(tabButton.TabBar.index)?.icon)
+                        return live || tabButton.tabIcon || ""
+                    }
                     sourceSize: Qt.size(width, height)
                     icon: favicon || "globe"
                     visible: !loadingIndicator.visible
