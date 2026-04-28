@@ -51,7 +51,7 @@ class InviteContactsPopup(QObject):
         assert set(contacts) == set(selected), f'Selected contacts: {selected}, expected: {contacts}'
 
         self.next_button.click()
-        self.message_text_edit.text = message
+        self.message_text_edit.set_text_property(message)
 
         for contact in contacts:
             assert driver.waitFor(lambda: contact in self.invited_contacts, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), \

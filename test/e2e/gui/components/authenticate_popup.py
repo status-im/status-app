@@ -12,14 +12,14 @@ class AuthenticatePopup(QObject):
     def __init__(self):
         super().__init__(names.authenticatePopup)
         self._authenticate_popup_content = QObject(names.keycardSharedPopupContent_KeycardPopupContent)
-        self._password_text_edit = TextEdit(names.password_PlaceholderText)
+        self._password_text_edit = TextEdit(names.authenticate_keycardPasswordInput)
         self._authenticate_button = Button(names.authenticate_StatusButton)
         self._primary_button = Button(names.sharedPopup_Primary_Button)
         self._close_button = Button(names.headerCloseButton_StatusFlatRoundButton)
 
     @allure.step('Authenticate actions with password {0}')
     def authenticate(self, password: str):
-        self._password_text_edit.type_text(password)
+        self._password_text_edit.set_text_property(password)
         # TODO https://github.com/status-im/status-app/issues/15345
         self._primary_button.click()
 

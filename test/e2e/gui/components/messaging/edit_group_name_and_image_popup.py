@@ -15,7 +15,8 @@ class EditGroupNameAndImagePopup(QObject):
 
     @allure.step('Change group name')
     def change_group_name(self, name: str):
-        self.group_name_field.text = name
+        # Same as SendContactRequest: wrapped TextEdit; driver.type() cannot acquire focus.
+        self.group_name_field.set_text_property(name)
 
     @allure.step('Save changes')
     def save_changes(self):

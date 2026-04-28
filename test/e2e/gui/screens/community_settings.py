@@ -564,7 +564,7 @@ class PermissionsSettingsView(QObject):
     def __init__(self):
         super(PermissionsSettingsView, self).__init__(communities_names.mainWindow_PermissionsSettingsPanel)
         self._who_holds_checkbox = CheckBox(communities_names.editPermissionView_whoHoldsSwitch_StatusSwitch)
-        self._who_holds_asset_field = TextEdit(communities_names.edit_TextEdit)
+        self._who_holds_asset_field = TextEdit(communities_names.holdingsDropdown_assetSearch_TextEdit)
         self._who_holds_amount_field = TextEdit(communities_names.inputValue_StyledTextField)
         self._asset_item = QObject(communities_names.o_TokenItem)
         self._is_allowed_to_option_button = Button(communities_names.customPermissionListItem)
@@ -634,7 +634,7 @@ class PermissionsSettingsView(QObject):
         if asset:
             self.who_holds_plus_button.click()
             self._who_holds_asset_field.wait_until_appears(15000)
-            self._who_holds_asset_field.clear().text = asset
+            self._who_holds_asset_field.set_text_property(asset)
             # Wait for search results to appear
             time.sleep(0.5)
             # Wait for asset items to appear with timeout
@@ -697,7 +697,7 @@ class PermissionsSettingsView(QObject):
             self._asset_item.real_name['index'] = item_index_in_full_list
             self._asset_item.click()
             self._who_holds_asset_field.wait_until_hidden()
-            self._who_holds_amount_field.text = amount
+            self._who_holds_amount_field.set_text_property(amount)
             self.click_add_button_who_holds()
 
     @allure.step('Choose option from Is allowed to context menu')

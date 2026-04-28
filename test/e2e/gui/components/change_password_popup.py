@@ -24,7 +24,7 @@ class ChangePasswordPopup(QObject):
         In case it does not please check https://github.com/status-im/status-app/issues/13013 for context
         """
         # Platform-specific timeout: Windows CI needs more time for re-encryption
-        timeout_msec = 60000 if get_platform() == "Windows" else 30000
+        timeout_msec = 60000
         timeout_sec = timeout_msec / 1000
         
         self.re_encrypt_data_restart_button.click()

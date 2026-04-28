@@ -415,7 +415,8 @@ class ChatMessagesView(QObject):
         self._close_chat_item = QObject(messaging_names.close_Chat_StatusMenuItem)
         self._chat_input = QObject(messaging_names.mainWindow_statusChatInput_StatusChatInput)
         self._message_input_area = QObject(messaging_names.inputScrollView_messageInputField_TextArea)
-        self._message_field = TextEdit(messaging_names.inputScrollView_Message_PlaceholderText)
+        # Composer text lives on messageInputField (TextArea); PlaceholderText is only the hint label.
+        self._message_field = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._emoji_button = Button(messaging_names.mainWindow_statusChatInputEmojiButton_StatusFlatRoundButton)
         self._image_button = Button(messaging_names.mainWindow_imageBtn_StatusFlatRoundButton)
         self._link_preview_title = QObject(messaging_names.mainWindow_linkPreviewTitleText_StatusBaseText)
@@ -425,6 +426,7 @@ class ChatMessagesView(QObject):
         self._link_preview_card = QObject(messaging_names.mainWindow_settingsCard_LinkPreviewSettingsCard)
         self._options_combobox = QObject(messaging_names.mainWindow_optionsComboBox_ComboBox)
         self._close_preview_button = QObject(messaging_names.mainWindow_closeLinkPreviewButton_StatusFlatRoundButton)
+        self._send_message_button = Button(messaging_names.mainWindow_statusChatInputSendButton)
 
     @property
     @allure.step('Get group name')
@@ -475,13 +477,17 @@ class ChatMessagesView(QObject):
 
     @allure.step('Type text to message field')
     def type_message(self, message: str):
-        self._message_field.type_text(message)
+        # StatusChatInputTextArea: driver.type() cannot set input focus; assign text directly.
+        self._message_field.set_text_property(message)
 
     @allure.step('Confirm sending message')
     def confirm_sending_message(self):
-        self._message_input_area.click()
-        for i in range(2):
-            driver.nativeType('<Return>')
+        # Enter via nativeType often does not reach Keys.forwardTo (tryFinalizeMessage); click send like the app.
+        assert driver.waitFor(
+            lambda: self._send_message_button.is_enabled,
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        ), 'Send button stayed disabled after composing message'
+        self._send_message_button.click()
 
     @allure.step('Click options combobox')
     def click_options(self):
@@ -542,8 +548,11 @@ class ChatMessagesView(QObject):
 
     @allure.step('Confirm sending message')
     def send_message(self):
-        for i in range(2):
-            driver.nativeType('<Return>')
+        assert driver.waitFor(
+            lambda: self._send_message_button.is_enabled,
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        ), 'Send button stayed disabled'
+        self._send_message_button.click()
 
     @allure.step('Remove member from chat')
     def remove_member_from_chat(self, member):
@@ -588,6 +597,7 @@ class MessageQuickActions(QObject):
         self._reply_panel = QObject(messaging_names.mainWindow_replyPanel_StatusChatInputReplyPanel)
         self._save_text_button = Button(messaging_names.chatMessageViewDelegate_Save_StatusButton)
         self._message_input_area = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
+        self._send_message_button = Button(messaging_names.mainWindow_statusChatInputSendButton)
 
     @allure.step('Click pin button')
     def pin_message(self):
@@ -600,7 +610,7 @@ class MessageQuickActions(QObject):
     @allure.step('Edit message and save changes')
     def edit_message(self, text: str):
         self._edit_button.click()
-        self._edit_message_field.type_text(text)
+        self._edit_message_field.set_text_property(text)
         self._save_text_button.click()
 
     @allure.step('Delete message')
@@ -612,9 +622,12 @@ class MessageQuickActions(QObject):
     def reply_own_message(self, text: str):
         self._reply_button.click()
         assert self._reply_panel.exists
-        self._message_input_area.type_text(text)
-        for i in range(2):
-            driver.nativeType('<Return>')
+        self._message_input_area.set_text_property(text)
+        assert driver.waitFor(
+            lambda: self._send_message_button.is_enabled,
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        ), 'Send button stayed disabled after reply text'
+        self._send_message_button.click()
 
     @allure.step('Delete button is visible')
     def is_delete_button_visible(self) -> bool:

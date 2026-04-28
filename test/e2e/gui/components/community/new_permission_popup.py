@@ -11,7 +11,7 @@ class NewPermissionPopup(PermissionsSettingsView):
     def __init__(self):
         super(NewPermissionPopup, self).__init__()
         self._who_holds_checkbox = CheckBox(communities_names.whoHoldsSwitch_StatusSwitch)
-        self._who_holds_asset_field = TextEdit(communities_names.edit_TextEdit)
+        self._who_holds_asset_field = TextEdit(communities_names.holdingsDropdown_assetSearch_TextEdit)
         self._who_holds_amount_field = TextEdit(communities_names.inputValue_StyledTextField)
         self._asset_item = QObject(communities_names.o_TokenItem)
         self._is_allowed_to_option_button = Button(communities_names.customPermissionListItem)

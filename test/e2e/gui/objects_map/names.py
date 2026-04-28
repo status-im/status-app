@@ -613,8 +613,9 @@ authenticatePopup = {"container": statusDesktop_mainWindow_overlay, "objectName"
 keycardSharedPopupContent_KeycardPopupContent = {"container": statusDesktop_mainWindow_overlay,
                                                  "objectName": "KeycardSharedPopupContent",
                                                  "type": "KeycardPopupContent", "visible": True}
-password_PlaceholderText = {"container": statusDesktop_mainWindow_overlay, "type": "PlaceholderText", "unnamed": 1,
-                            "visible": True}
+# EnterPassword.qml: StatusPasswordInput objectName keycardPasswordInput (not inner PlaceholderText)
+authenticate_keycardPasswordInput = {"container": statusDesktop_mainWindow_overlay,
+                                    "objectName": "keycardPasswordInput", "type": "StatusPasswordInput", "visible": True}
 authenticate_StatusButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "PrimaryButton",
                              "type": "StatusButton", "visible": True}
 headerCloseButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow_overlay,
