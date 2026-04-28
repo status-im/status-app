@@ -50,7 +50,16 @@ QtObject {
         readonly property int binanceSmartChainTestnetChainId: 97
 
         // Used for new chain advertisment
-        readonly property var newChains: []
+        readonly property var newChains: [chains.polygonZkEvmMainnetChainId,
+            chains.unichainMainnetChainId,
+            chains.katanaMainnetChainId,
+            chains.inkMainnetChainId,
+            chains.abstractMainnetChainId,
+            chains.zkSyncMainnetChainId,
+            chains.soneiumMainnetChainId,
+            chains.scrollMainnetChainId,
+            chains.blastMainnetChainId
+        ]
     }
 
     readonly property QtObject predefinedKeycardData: QtObject {
