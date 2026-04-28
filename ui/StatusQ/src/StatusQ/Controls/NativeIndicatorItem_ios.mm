@@ -29,6 +29,7 @@ protected:
 
 private:
     UIView *getUIView() const;
+    UIWindow *createOverlayWindow(UIView *root);
     void ensureViews();
     void destroyViews();
     void attachParentWatchers();
@@ -70,6 +71,30 @@ UIView *NativeIndicatorItem_iOS::getUIView() const
     return reinterpret_cast<UIView *>(window()->winId());
 }
 
+UIWindow *NativeIndicatorItem_iOS::createOverlayWindow(UIView *root)
+{
+    CGRect overlayFrame = CGRectZero;
+    if (root.window)
+        overlayFrame = root.window.bounds;
+    if (CGRectIsEmpty(overlayFrame))
+        overlayFrame = root.bounds;
+    if (CGRectIsEmpty(overlayFrame))
+        overlayFrame = UIScreen.mainScreen.bounds;
+
+    if (@available(iOS 13.0, *)) {
+        UIWindowScene *scene = root.window.windowScene;
+        if (!scene) {
+            // Scene not ready yet; polish() will be triggered again once the window attaches.
+            QTimer::singleShot(0, this, [this]() { polish(); });
+            return nullptr;
+        }
+        UIWindow *w = [[UIWindow alloc] initWithWindowScene:scene];
+        w.frame = overlayFrame;
+        return w;
+    }
+    return [[UIWindow alloc] initWithFrame:overlayFrame];
+}
+
 void NativeIndicatorItem_iOS::ensureViews()
 {
     if (m_containerView && m_imageView)
@@ -79,14 +104,10 @@ void NativeIndicatorItem_iOS::ensureViews()
     if (!root)
         return;
 
-    UIWindowScene *scene = root.window.windowScene;
-    if (!scene) {
-        // Scene not ready yet; polish() will be triggered again once the window attaches.
-        QTimer::singleShot(0, this, [this]() { polish(); });
+    m_overlayWindow = createOverlayWindow(root);
+    if (!m_overlayWindow)
         return;
-    }
 
-    m_overlayWindow = [[UIWindow alloc] initWithWindowScene:scene];
     // UIWindowLevelNormal + 1 keeps the overlay above WKWebView (normal level)
     // but below the system keyboard (UIWindowLevelAlert range).
     m_overlayWindow.windowLevel = UIWindowLevelNormal + 1;
