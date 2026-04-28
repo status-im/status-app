@@ -168,7 +168,7 @@ MenuItem {
 
     background: Rectangle {
         color: {
-            if (!root.hovered && !d.subMenuOpened)
+            if (!hoverHandler.hovered && !d.subMenuOpened)
                 return "transparent"
             if (d.isStatusDangerAction)
                 return Theme.palette.dangerColor3;
@@ -179,6 +179,8 @@ MenuItem {
     }
 
     HoverHandler {
+        id: hoverHandler
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         cursorShape: hovered ? Qt.PointingHandCursor : undefined
         enabled: root.enabled
     }
