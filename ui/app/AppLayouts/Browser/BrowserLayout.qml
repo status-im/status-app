@@ -399,7 +399,7 @@ StatusSectionLayout {
                 currentTabLoading: _internal.currentTabLoading
                 currentTabIsDownloads: webStackView.children[tabs.currentIndex]?.isDownloadView ?? false
                 browserDappsModel: browserDappsProvider.model
-                historyModel: _internal.currentWebView && _internal.currentWebView.history.items
+                historyModel: _internal.currentWebView?.history?.items ?? null
             }
         }
 
@@ -416,7 +416,7 @@ StatusSectionLayout {
                 currentTabLoading: _internal.currentTabLoading
                 currentTabIsDownloads: webStackView.children[tabs.currentIndex]?.isDownloadView ?? false
                 browserDappsModel: browserDappsProvider.model
-                historyModel: _internal.currentWebView && _internal.currentWebView.history.items
+                historyModel: _internal.currentWebView?.history?.items ?? null
             }
         }
 

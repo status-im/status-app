@@ -47,6 +47,13 @@ QtObject {
         return BrowserWebViewContext.ContentMode.WebContent
     }
 
+    readonly property Connections _currentIndexConnections: Connections {
+        target: tabsModel
+        function onCurrentIndexChanged() {
+            root.ensureCurrentWebViewLoaded()
+        }
+    }
+
     function createEmptyTab(profileParams, createAsStartPage = false, focusOnNewTab = true, url = undefined, initialTitle = undefined) {
         focusOnNewTab = focusOnNewTab && !createAsStartPage
 
@@ -57,16 +64,15 @@ QtObject {
 
         tabsModel.createEmptyTab(createAsStartPage, focusOnNewTab, webview, initialTitle)
 
-        const lazy = !focusOnNewTab && url !== undefined
-        if (lazy) {
-            webview.pendingUrl = url
-        } else if (createAsStartPage && thirdpartyServicesEnabled) {
+        if (createAsStartPage && thirdpartyServicesEnabled)
             webview.url = Constants.browserDefaultHomepage
-        } else if (url !== undefined) {
+        else if (url !== undefined)
             webview.url = url
-        } else if (!!browserSettings.browserHomepage) {
+        else if (!!browserSettings.browserHomepage)
             webview.url = determineRealURLFn(browserSettings.browserHomepage)
-        }
+
+        if ((focusOnNewTab || createAsStartPage) && webview.url.toString() && typeof webview.ensureLoaded === "function")
+            webview.ensureLoaded()
 
         return webview
     }
@@ -88,16 +94,24 @@ QtObject {
         return hostStackLayout.children[index]
     }
 
+    function ensureCurrentWebViewLoaded() {
+        const w = getCurrentWebView()
+        if (w && w.url && w.url.toString() && typeof w.ensureLoaded === "function")
+            w.ensureLoaded()
+    }
+
     function setCurrentWebUrl(url) {
-        if (!currentWebView) {
+        var target = currentWebView
+        if (!target) {
             console.error("[Browser] currentWebView is null, cannot set URL")
             return
         }
 
         const newUrl = determineRealURLFn(url)
         Qt.callLater(function() {
-            if (currentWebView)
-                currentWebView.url = newUrl
+            target.url = newUrl
+            if (newUrl && newUrl.toString() && typeof target.ensureLoaded === "function")
+                target.ensureLoaded()
         })
     }
 
@@ -182,7 +196,7 @@ QtObject {
     }
 
     readonly property var webViewAdapterComponent: Component {
-        WebViewAdapter {
+        LazyWebViewAdapter {
             // On mobile, only the active tab must be visible; native WKWebView
             // subviews share the same UIKit window and ignore QML z-order,
             // so StackLayout alone cannot hide inactive tabs reliably.

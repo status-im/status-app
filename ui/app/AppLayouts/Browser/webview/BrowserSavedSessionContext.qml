@@ -17,7 +17,7 @@ QtObject {
         for (let i = 0; i < tabs.count; i++) {
             const webView = webViewContext.getWebView(i)
             if (!!webView && !webView.offTheRecord) {
-                const raw = webView.url.toString() || (webView.pendingUrl || "")
+                const raw = webView.url.toString()
                 const url = determineRealURL(raw)
                 if (!!url)
                     tabsModel.push({url: url, title: webView.title || ""})
@@ -46,16 +46,6 @@ QtObject {
         // tab.url = determineRealURL("https://simpledapp.eth");
     }
 
-    function commitPendingForCurrent() {
-        const w = webViewContext.currentWebView
-        if (!w) return
-        const p = w.pendingUrl
-        if (p && !w.url.toString()) {
-            w.pendingUrl = ""
-            w.url = p
-        }
-    }
-
     function restoreSession() {
         const tabsToRestore = BrowserUiSettings.restoreOpenTabs ? getTabsInfo() : []
         if (tabsToRestore.length === 0) {
@@ -76,14 +66,7 @@ QtObject {
             }
             if (savedIndex >= 0 && savedIndex < tabs.count)
                 tabs.activateTab(savedIndex)
-            commitPendingForCurrent()
+            webViewContext.ensureCurrentWebViewLoaded()
         })
-    }
-
-    readonly property var _currentWebViewConn: Connections {
-        target: webViewContext
-        function onCurrentWebViewChanged() {
-            root.commitPendingForCurrent()
-        }
     }
 }
