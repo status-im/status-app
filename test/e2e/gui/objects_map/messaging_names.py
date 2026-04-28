@@ -57,6 +57,8 @@ inputScrollView_messageInputField_TextArea = {"container": mainWindow_inputScrol
 mainWindow_statusChatInputEmojiButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow, "id": "emojiButton", "type": "ChatIcon", "unnamed": 1, "visible": True}
 mainWindow_imageBtn_StatusFlatRoundButton = {"container": statusDesktop_mainWindow, "id": "imageBtn", "type": "StatusFlatRoundButton", "unnamed": 1, "visible": True}
 mainWindow_statusChatInput_StatusChatInput = {"container": statusDesktop_mainWindow, "objectName": "statusChatInput", "type": "StatusChatInputNew", "visible": True}
+mainWindow_statusChatInputSendButton = {"container": statusDesktop_mainWindow, "objectName": "statusChatInputSendButton",
+                                       "type": "Control", "visible": True}
 mark_as_Read_StatusMenuItem = {"checkable": False, "container": mainWindow_Overlay, "enabled": True, "objectName": "chatMarkAsReadMenuItem", "type": "StatusMenuItem", "visible": True}
 clear_History_StatusMenuItem = {"checkable": False, "container": mainWindow_Overlay, "enabled": True, "objectName": "clearHistoryMenuItem", "type": "StatusMenuItem", "visible": True}
 clear_group_chat_history_item = {"checkable": False, "container": mainWindow_Overlay, "enabled": True, "objectName": "clearHistoryGroupMenuItem", "type": "StatusMenuItem", "visible": True}

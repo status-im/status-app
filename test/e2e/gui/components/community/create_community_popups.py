@@ -71,7 +71,7 @@ class CreateNewCommunityPopup(QObject):
     @allure.step('Set community name')
     def set_name(self, value: str):
         self._scroll.vertical_scroll_down(self._name_text_edit)
-        self._name_text_edit.text = value
+        self._name_text_edit.set_text_property(value)
 
     @property
     @allure.step('Get community description')
@@ -82,7 +82,7 @@ class CreateNewCommunityPopup(QObject):
     @allure.step('Set community name')
     def set_description(self, value: str):
         self._scroll.vertical_scroll_down(self._description_text_edit)
-        self._description_text_edit.text = value
+        self._description_text_edit.set_text_property(value)
 
     @allure.step('Set community logo without file upload dialog')
     def set_logo_without_file_upload_dialog(self, path):
@@ -131,7 +131,7 @@ class CreateNewCommunityPopup(QObject):
 
     @allure.step('Set community intro')
     def set_intro(self, value: str):
-        self._intro_text_edit.text = value
+        self._intro_text_edit.set_text_property(value)
 
     @property
     @allure.step('Get community outro')
@@ -140,7 +140,7 @@ class CreateNewCommunityPopup(QObject):
 
     @allure.step('Set community outro')
     def set_outro(self, value: str):
-        self._outro_text_edit.text = value
+        self._outro_text_edit.set_text_property(value)
 
     @allure.step('Open intro/outro form')
     def open_next_form(self):
