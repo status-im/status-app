@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import QtQuick.Controls
 
 import StatusQ
@@ -53,6 +54,9 @@ StatusMenu {
 
         size: MessageReactionsRow.Size.Big
         countLimit: 4
+
+        Layout.leftMargin: Theme.smallPadding
+        Layout.rightMargin: Theme.smallPadding
 
         visible: !root.emojiReactionLimitReached && (!root.disabledForChat || root.forceEnableEmojiReactions)
         emojiModel: root.emojiModel

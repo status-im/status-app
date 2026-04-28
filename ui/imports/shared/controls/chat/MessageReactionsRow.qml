@@ -1,14 +1,14 @@
 import QtQuick
+import QtQuick.Layouts
 
-import StatusQ
 import StatusQ.Core.Theme
 import StatusQ.Controls
 
-import shared.controls.chat
-
 import SortFilterProxyModel
 
-Row {
+import utils
+
+RowLayout {
     id: root
 
     enum Size {
@@ -24,52 +24,48 @@ Row {
 
     property int countLimit: 5
 
-    spacing: Theme.halfPadding
-    leftPadding: Theme.halfPadding
-    rightPadding: Theme.halfPadding
+    spacing: Theme.smallPadding
 
-    Loader {
-        active: root.visible
+    QtObject {
+        id: d
 
-        sourceComponent: Row {
-            spacing: Theme.halfPadding
+        readonly property int emojiSize:
+            root.Theme.fontSize(
+                root.size === MessageReactionsRow.Size.Regular ? 23 : 33)
+    }
 
-            Repeater {
-                id: recentEmojisRepeater
-                model: SortFilterProxyModel {
-                    sourceModel: root.emojiModel
-                    filters: IndexFilter {
-                        maximumIndex: root.countLimit - 1
-                    }
-                }
-                delegate: EmojiReaction {
-                    required property string unicode
+    Repeater {
+        id: recentEmojisRepeater
+        model: SortFilterProxyModel {
+            sourceModel: root.emojiModel
+            filters: IndexFilter {
+                maximumIndex: root.countLimit - 1
+            }
+        }
+        delegate: EmojiReaction {
+            required property string unicode
 
-                    emojiId: unicode
-                    emojiSize: Theme.fontSize(
-                                   root.size === MessageReactionsRow.Size.Regular ? 23 : 33)
+            Layout.alignment: Qt.AlignVCenter
 
-                    anchors.verticalCenter: parent.verticalCenter
-                    // TODO not implemented yet. We'll need to pass this info
-                    // reactedByUser: model.didIReactWithThisEmoji
-                    onToggleReaction: {
-                        root.toggleReaction(unicode)
-                    }
-                }
+            emojiId: unicode
+            emojiSize: d.emojiSize
+
+            // TODO not implemented yet. We'll need to pass this info
+            // reactedByUser: model.didIReactWithThisEmoji
+            onToggleReaction: {
+                root.toggleReaction(unicode)
             }
         }
     }
 
     StatusFlatRoundButton {
-        height: parent.height
-        width: height
+        Layout.alignment: Qt.AlignVCenter
 
-        Binding on icon.width {
-            when: root.size === MessageReactionsRow.Size.Big
-            value: height * 0.75
-        }
+        Layout.preferredHeight: d.emojiSize + Theme.halfPadding
+        Layout.preferredWidth: Layout.preferredHeight
 
-        icon.height: icon.width
+        icon.width: d.emojiSize
+        icon.height: d.emojiSize
         icon.name: "reaction-b"
         type: StatusFlatRoundButton.Type.Tertiary
         onClicked: mouse => root.openEmojiPopup(this, mouse)

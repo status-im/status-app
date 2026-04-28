@@ -1114,9 +1114,7 @@ Loader {
                             root.emojiReactionLimitReached
                             return !root.emojiReactionLimitReached && !root.isViewMemberMessagesePopup
                         }
-                        height: d.chatButtonSize
-                        leftPadding: 0
-                        rightPadding: 0
+                        anchors.verticalCenter: parent.verticalCenter
                         emojiModel: emojiPopup.fullModel
                         onToggleReaction: hexcode => root.emojiReactionToggled(root.messageId, hexcode)
                         onOpenEmojiPopup: (parent, mouse) => {
