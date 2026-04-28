@@ -16,7 +16,7 @@ QtObject {
 
         for (let i = 0; i < tabs.count; i++) {
             const webView = webViewContext.getWebView(i)
-            if (!!webView) {
+            if (!!webView && !webView.offTheRecord) {
                 const raw = webView.url.toString() || (webView.pendingUrl || "")
                 const url = determineRealURL(raw)
                 if (!!url)
