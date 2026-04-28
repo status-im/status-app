@@ -9,12 +9,15 @@ import shared
 import shared.panels
 
 Rectangle {
+    id: root
+
     required property string emojiId
+
+    property int emojiSize: 23
     property bool reactedByUser: false
     property bool isHovered: false
     signal toggleReaction()
 
-    id: root
     width: statusEmoji.width + Theme.halfPadding
     height: width
     color: reactedByUser ? Theme.palette.secondaryBackground :
@@ -29,8 +32,8 @@ Rectangle {
     StatusEmoji {
         id: statusEmoji
         anchors.centerIn: parent
-        width: Theme.fontSize(23)
-        height: Theme.fontSize(23)
+        width: root.emojiSize
+        height: root.emojiSize
         emojiId: root.emojiId
     }
 

@@ -26,12 +26,6 @@ SplitView {
             SplitView.fillHeight: true
             color: Theme.palette.background
 
-            Button {
-                anchors.centerIn: parent
-                text: "Reopen"
-                onClicked: messageContextMenuView.popup()
-            }
-
             MessageContextMenuView {
                 id: messageContextMenuView
                 anchors.centerIn: parent
@@ -61,6 +55,8 @@ SplitView {
                 onShowReplyArea: (senderId) => logs.logEvent("onShowReplyArea", ["senderId"], [senderId])
                 onCopyToClipboard: (text) => logs.logEvent("onCopyToClipboard", ["text"], [text])
                 onOpenEmojiPopup: logs.logEvent("onOpenEmojiPopup")
+
+                Component.onCompleted: popup()
             }
         }
     }

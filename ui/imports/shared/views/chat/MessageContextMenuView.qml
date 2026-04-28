@@ -50,6 +50,10 @@ StatusMenu {
     MessageReactionsRow {
         id: emojiRow
         objectName: "messageContextMenu_reactionsRow"
+
+        size: MessageReactionsRow.Size.Big
+        countLimit: 4
+
         visible: !root.emojiReactionLimitReached && (!root.disabledForChat || root.forceEnableEmojiReactions)
         emojiModel: root.emojiModel
         onToggleReaction: hexcode => {

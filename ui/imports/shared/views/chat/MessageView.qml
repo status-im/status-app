@@ -1114,7 +1114,7 @@ Loader {
                             root.emojiReactionLimitReached
                             return !root.emojiReactionLimitReached && !root.isViewMemberMessagesePopup
                         }
-                        buttonSize: d.chatButtonSize
+                        height: d.chatButtonSize
                         leftPadding: 0
                         rightPadding: 0
                         emojiModel: emojiPopup.fullModel
