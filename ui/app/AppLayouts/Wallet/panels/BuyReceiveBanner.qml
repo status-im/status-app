@@ -20,6 +20,21 @@ Control {
     signal closeBuy()
     signal closeReceive()
 
+    // Full-screen overlay (touch screens): resets any card on tap outside.
+    // TakeOverForbidden observes taps without consuming them.
+    Item {
+        parent: root.Window.contentItem
+        anchors.fill: parent
+
+        TapHandler {
+            grabPermissions: PointerHandler.TakeOverForbidden
+            onTapped: {
+                buyCard.reset()
+                receiveCard.reset()
+            }
+        }
+    }
+
     contentItem: RowLayout {
         id: layout
         spacing: Theme.padding
