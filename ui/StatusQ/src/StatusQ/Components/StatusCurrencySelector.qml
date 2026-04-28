@@ -140,6 +140,7 @@ Button {
                 Layout.maximumHeight: dropdown.bottomSheet ? -1 : d.maxPopupHeight
 
                 id: currencySelectorPanel
+                objectName: "statusCurrencySelectorListView"
                 model: d.searchableModel
                 highlightFollowsCurrentItem: true
                 highlight: Rectangle {
