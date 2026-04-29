@@ -9,8 +9,7 @@ Item {
     // If 0, native impl uses its internal heuristics.
     property real openDistance: 0
 
-    // Android: full-window native overlay + stationary tap emits tapToDismissRequested (e.g. over WebView).
-    property bool fullScreenTapToDismissEnabled: false
+    // Android: non-empty rect = native overlay region + stationary tap emits tapToDismissRequested (e.g. over WebView).
     property rect dismissTapOverlaySceneRect: Qt.rect(0, 0, 0, 0)
 
     // True while a swipe gesture is active (press+move until release/cancel).
@@ -46,7 +45,6 @@ Item {
     Binding { target: implLoader.item; property: "visible"; value: root.visible; when: implLoader.item !== null }
     Binding { target: implLoader.item; property: "enabled"; value: root.enabled; when: implLoader.item !== null }
     Binding { target: implLoader.item; property: "openDistance"; value: root.openDistance; when: implLoader.item !== null }
-    Binding { target: implLoader.item; property: "fullScreenTapToDismissEnabled"; value: root.fullScreenTapToDismissEnabled; when: implLoader.item !== null }
     Binding { target: implLoader.item; property: "dismissTapOverlaySceneRect"; value: root.dismissTapOverlaySceneRect; when: implLoader.item !== null }
 
     Connections {

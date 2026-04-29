@@ -2,14 +2,11 @@
 
 #ifdef Q_OS_ANDROID
 
-#include <QLoggingCategory>
 #include <QJniEnvironment>
 #include <QJniObject>
 #include <QPointer>
 #include <QQuickWindow>
 #include <QTimer>
-
-Q_LOGGING_CATEGORY(lcNativeSwipeHandler, "statusq.nativeSwipeHandler", QtInfoMsg)
 
 class NativeSwipeHandlerItem_Android : public NativeSwipeHandlerItem
 {
@@ -51,7 +48,6 @@ NativeSwipeHandlerItem_Android::NativeSwipeHandlerItem_Android(QQuickItem *paren
     m_changeConnections.append(connect(this, &QQuickItem::heightChanged, this, [this]() { polish(); }));
     m_changeConnections.append(connect(this, &QQuickItem::visibleChanged, this, [this]() { polish(); }));
     m_changeConnections.append(connect(this, &QQuickItem::enabledChanged, this, [this]() { polish(); }));
-    m_changeConnections.append(connect(this, &NativeSwipeHandlerItem::fullScreenTapToDismissEnabledChanged, this, [this]() { polish(); }));
     m_changeConnections.append(connect(this, &NativeSwipeHandlerItem::dismissTapOverlaySceneRectChanged, this, [this]() { polish(); }));
     QTimer::singleShot(0, this, [this]() { setupGestureRecognition(); });
 }
@@ -174,31 +170,21 @@ void NativeSwipeHandlerItem_Android::updateOverlayBounds()
     qreal wPx = 0;
     qreal hPx = 0;
     const qreal dpr = window()->effectiveDevicePixelRatio();
-    bool dismissMode = false;
+    const QRectF r = dismissTapOverlaySceneRect();
+    const bool dismissMode = r.width() > 0.0 && r.height() > 0.0;
 
-    if (fullScreenTapToDismissEnabled()) {
-        const QRectF r = dismissTapOverlaySceneRect();
-        if (r.width() > 0.0 && r.height() > 0.0) {
-            dismissMode = true;
-            xPx = r.x() * dpr;
-            yPx = r.y() * dpr;
-            wPx = r.width() * dpr;
-            hPx = r.height() * dpr;
-        }
-    }
-
-    if (!dismissMode) {
+    if (dismissMode) {
+        xPx = r.x() * dpr;
+        yPx = r.y() * dpr;
+        wPx = r.width() * dpr;
+        hPx = r.height() * dpr;
+    } else {
         const QPointF scenePos = mapToScene(QPointF(0, 0));
         xPx = scenePos.x() * dpr;
         yPx = scenePos.y() * dpr;
         wPx = width() * dpr;
         hPx = height() * dpr;
     }
-
-    qCInfo(lcNativeSwipeHandler).nospace()
-        << "applyTouchOverlay dismissMode=" << dismissMode << " rectPx=" << xPx << "," << yPx << " " << wPx << "x" << hPx
-        << " fullScreenTapToDismissEnabled=" << fullScreenTapToDismissEnabled()
-        << " dismissSceneRect=" << dismissTapOverlaySceneRect();
 
     m_javaHelper.callMethod<void>("applyTouchOverlayState", "(ZFFFF)V",
                                   dismissMode,
@@ -270,19 +256,11 @@ void NativeSwipeHandlerItem_Android::onTapToDismiss(JNIEnv *, jobject, jlong ptr
 
     QPointer<NativeSwipeHandlerItem_Android> weak(self);
     QMetaObject::invokeMethod(self, [weak]() {
-        if (!weak || !weak->window()) {
-            qCInfo(lcNativeSwipeHandler) << "onTapToDismiss dropped: no window or destroyed";
+        if (!weak || !weak->window() || !weak->isVisible() || !weak->isEnabled())
             return;
-        }
-        if (!weak->isVisible() || !weak->isEnabled()) {
-            qCInfo(lcNativeSwipeHandler) << "onTapToDismiss dropped: visible=" << weak->isVisible() << "enabled=" << weak->isEnabled();
+        const QRectF overlay = weak->dismissTapOverlaySceneRect();
+        if (overlay.width() <= 0.0 || overlay.height() <= 0.0)
             return;
-        }
-        if (!weak->fullScreenTapToDismissEnabled()) {
-            qCInfo(lcNativeSwipeHandler) << "onTapToDismiss dropped: fullScreenTapToDismissEnabled=false";
-            return;
-        }
-        qCInfo(lcNativeSwipeHandler) << "onTapToDismiss emitting tapToDismissRequested";
         emit weak->tapToDismissRequested();
     }, Qt::QueuedConnection);
 }

@@ -486,19 +486,13 @@ Control {
         enabled: root.interactive
         visible: enabled
 
-        fullScreenTapToDismissEnabled: SQUtils.Utils.isAndroid
-                                        && !root.alwaysVisible
-                                        && root.position > 0.5
-                                        && root.browserSectionActive
-
         dismissTapOverlaySceneRect: {
-            // Match navOutsideTapOverlay geometry; avoid .visible so the rect is non-zero in the
-            // same frame fullScreenTapToDismissEnabled becomes true (visible can lag one update).
             const ci = Window.window?.contentItem
-            if (!ci || root.alwaysVisible || root.position <= 0.5)
+            if (!ci || !SQUtils.Utils.isAndroid || root.alwaysVisible
+                || root.position <= 0.5 || !root.browserSectionActive)
                 return Qt.rect(0, 0, 0, 0)
-            // Some Qt/Android builds expose no callable mapToScene on reparented Items; mapToItem(null, p)
-            // maps p from this item's coords to scene (see Qt Quick Item docs).
+            // Match navOutsideTapOverlay; avoid .visible so rect is non-zero the frame the drawer opens.
+            // mapToItem(null, p) maps to scene for reparented Items.
             const tl = ci.mapToItem(null, Qt.point(navOutsideTapOverlay.x, navOutsideTapOverlay.y))
             return Qt.rect(tl.x, tl.y, navOutsideTapOverlay.width, navOutsideTapOverlay.height)
         }

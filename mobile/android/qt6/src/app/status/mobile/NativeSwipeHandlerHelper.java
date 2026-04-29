@@ -3,8 +3,6 @@ package app.status.mobile;
 import android.app.Activity;
 import android.graphics.Rect;
 import android.os.Build;
-import android.os.Looper;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -12,11 +10,8 @@ import android.view.ViewGroup;
 import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 import java.util.Collections;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class NativeSwipeHandlerHelper {
-    private static final String TAG = "StatusNativeSwipe";
     private final long nativePtr;
     private final Activity activity;
     private View touchOverlayView;
@@ -33,7 +28,7 @@ public class NativeSwipeHandlerHelper {
     private boolean swiping = false;
     private int touchSlopPx = 0;
     private View passthroughTarget;
-    private volatile boolean dismissTapMode = false;
+    private boolean dismissTapMode = false;
     private float startRawY = 0.0f;
 
     // Handler rect in parent pixels (contentView coordinates).
@@ -83,8 +78,6 @@ public class NativeSwipeHandlerHelper {
                     final float rawX = event.getRawX();
                     final float rawY = event.getRawY();
 
-                    Log.d(TAG, "touch DOWN dismissTapMode=" + dismissTapMode + " raw=(" + rawX + "," + rawY + ")");
-
                     active = true;
                     swiping = false;
                     activePointerId = event.getPointerId(0);
@@ -125,7 +118,6 @@ public class NativeSwipeHandlerHelper {
                 }
 
                 final int idx = activePointerId >= 0 ? event.findPointerIndex(activePointerId) : 0;
-                final float x = idx >= 0 ? event.getX(idx) : event.getX();
                 final float rawX = idx >= 0 ? event.getRawX(idx) : event.getRawX();
                 final float rawY = idx >= 0 ? event.getRawY(idx) : event.getRawY();
                 final long t = event.getEventTime();
@@ -160,22 +152,15 @@ public class NativeSwipeHandlerHelper {
                     final int tapSlop = Math.max(touchSlopPx * 2, touchSlopPx + 16);
                     final boolean tapLike = (dx * dx + dy * dy) <= (float) tapSlop * tapSlop;
 
-                    Log.d(TAG, "touch " + (action == MotionEvent.ACTION_UP ? "UP" : "CANCEL")
-                            + " dismissTapMode=" + dismissTapMode + " swiping=" + swiping
-                            + " d=(" + dx + "," + dy + ") tapLike=" + tapLike + " tapSlop=" + tapSlop);
-
                     // Use the last MOVE velocity; UP often has vx≈0 because there's no delta.
                     if (swiping) {
                         nativeOnSwipeEnded(nativePtr, dx, lastVx, action == MotionEvent.ACTION_CANCEL);
                     } else if (dismissTapMode
                             && action == MotionEvent.ACTION_UP
                             && tapLike) {
-                        Log.d(TAG, "nativeOnTapToDismiss");
                         nativeOnTapToDismiss(nativePtr);
                     } else if (passthroughTarget != null) {
                         dispatchToTarget(passthroughTarget, event, action);
-                    } else if (dismissTapMode && action == MotionEvent.ACTION_UP) {
-                        Log.d(TAG, "dismiss tap ignored: not tapLike");
                     }
 
                     if (velocityTracker != null) {
@@ -197,24 +182,17 @@ public class NativeSwipeHandlerHelper {
         });
     }
 
-    /**
-     * Applies dismiss mode, geometry, and view layout in one UI-thread step so the overlay size
-     * and {@link #dismissTapMode} never disagree (avoids taps missing the enlarged hit target).
-     * Called from Qt via JNI (non-UI thread): blocks until the UI runnable completes.
-     */
+    /** Applies dismiss mode and overlay geometry on the UI thread (posted from Qt/JNI). */
     public void applyTouchOverlayState(boolean dismissMode, float xPx, float yPx, float widthPx, float heightPx) {
         if (activity == null)
             return;
 
-        final Runnable apply = () -> {
+        activity.runOnUiThread(() -> {
             dismissTapMode = dismissMode;
             handlerX = xPx;
             handlerY = yPx;
             handlerWidth = widthPx;
             handlerHeight = heightPx;
-
-            Log.d(TAG, "applyTouchOverlayState dismiss=" + dismissMode
-                    + " x=" + xPx + " y=" + yPx + " w=" + widthPx + " h=" + heightPx);
 
             if (touchOverlayView == null)
                 return;
@@ -239,30 +217,7 @@ public class NativeSwipeHandlerHelper {
                 parent.bringChildToFront(touchOverlayView);
             }
             updateGestureExclusion();
-        };
-
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            apply.run();
-        } else {
-            final CountDownLatch done = new CountDownLatch(1);
-            activity.runOnUiThread(() -> {
-                try {
-                    apply.run();
-                } finally {
-                    done.countDown();
-                }
-            });
-            try {
-                if (!done.await(2, TimeUnit.SECONDS))
-                    Log.w(TAG, "applyTouchOverlayState: UI thread apply timed out");
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-
-    public void updateTouchOverlayBounds(float xPx, float yPx, float widthPx, float heightPx) {
-        applyTouchOverlayState(dismissTapMode, xPx, yPx, widthPx, heightPx);
+        });
     }
 
     private void updateGestureExclusion() {
@@ -338,5 +293,4 @@ public class NativeSwipeHandlerHelper {
         });
     }
 }
-
 
