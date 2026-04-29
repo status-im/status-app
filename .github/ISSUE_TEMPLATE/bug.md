@@ -22,4 +22,5 @@ labels: bug
 
 - Status app version:
 - Operating System and version:
+- Mobile Device:
 
