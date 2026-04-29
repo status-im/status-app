@@ -2,11 +2,14 @@
 
 #ifdef Q_OS_ANDROID
 
+#include <QLoggingCategory>
 #include <QJniEnvironment>
 #include <QJniObject>
 #include <QPointer>
 #include <QQuickWindow>
 #include <QTimer>
+
+Q_LOGGING_CATEGORY(lcNativeSwipeHandler, "statusq.nativeSwipeHandler", QtInfoMsg)
 
 class NativeSwipeHandlerItem_Android : public NativeSwipeHandlerItem
 {
@@ -30,6 +33,7 @@ private:
     static void onSwipeBegan(JNIEnv *, jobject, jlong ptr, jfloat velocityX);
     static void onSwipeChanged(JNIEnv *, jobject, jlong ptr, jfloat deltaX, jfloat velocityX);
     static void onSwipeEnded(JNIEnv *, jobject, jlong ptr, jfloat deltaX, jfloat velocityX, jboolean canceled);
+    static void onTapToDismiss(JNIEnv *, jobject, jlong ptr);
 
     QJniObject m_javaHelper;
     bool m_jniInitialized = false;
@@ -47,6 +51,8 @@ NativeSwipeHandlerItem_Android::NativeSwipeHandlerItem_Android(QQuickItem *paren
     m_changeConnections.append(connect(this, &QQuickItem::heightChanged, this, [this]() { polish(); }));
     m_changeConnections.append(connect(this, &QQuickItem::visibleChanged, this, [this]() { polish(); }));
     m_changeConnections.append(connect(this, &QQuickItem::enabledChanged, this, [this]() { polish(); }));
+    m_changeConnections.append(connect(this, &NativeSwipeHandlerItem::fullScreenTapToDismissEnabledChanged, this, [this]() { polish(); }));
+    m_changeConnections.append(connect(this, &NativeSwipeHandlerItem::dismissTapOverlaySceneRectChanged, this, [this]() { polish(); }));
     QTimer::singleShot(0, this, [this]() { setupGestureRecognition(); });
 }
 
@@ -64,6 +70,7 @@ void NativeSwipeHandlerItem_Android::initializeJNI()
         {"nativeOnSwipeBegan", "(JF)V", reinterpret_cast<void *>(onSwipeBegan)},
         {"nativeOnSwipeChanged", "(JFF)V", reinterpret_cast<void *>(onSwipeChanged)},
         {"nativeOnSwipeEnded", "(JFFZ)V", reinterpret_cast<void *>(onSwipeEnded)},
+        {"nativeOnTapToDismiss", "(J)V", reinterpret_cast<void *>(onTapToDismiss)},
     };
 
     QJniEnvironment env;
@@ -162,14 +169,39 @@ void NativeSwipeHandlerItem_Android::updateOverlayBounds()
     if (!m_javaHelper.isValid() || !window() || !isVisible() || !isEnabled())
         return;
 
-    const QPointF scenePos = mapToScene(QPointF(0, 0));
+    qreal xPx = 0;
+    qreal yPx = 0;
+    qreal wPx = 0;
+    qreal hPx = 0;
     const qreal dpr = window()->effectiveDevicePixelRatio();
-    const qreal xPx = scenePos.x() * dpr;
-    const qreal yPx = scenePos.y() * dpr;
-    const qreal wPx = width() * dpr;
-    const qreal hPx = height() * dpr;
+    bool dismissMode = false;
 
-    m_javaHelper.callMethod<void>("updateTouchOverlayBounds", "(FFFF)V",
+    if (fullScreenTapToDismissEnabled()) {
+        const QRectF r = dismissTapOverlaySceneRect();
+        if (r.width() > 0.0 && r.height() > 0.0) {
+            dismissMode = true;
+            xPx = r.x() * dpr;
+            yPx = r.y() * dpr;
+            wPx = r.width() * dpr;
+            hPx = r.height() * dpr;
+        }
+    }
+
+    if (!dismissMode) {
+        const QPointF scenePos = mapToScene(QPointF(0, 0));
+        xPx = scenePos.x() * dpr;
+        yPx = scenePos.y() * dpr;
+        wPx = width() * dpr;
+        hPx = height() * dpr;
+    }
+
+    qCInfo(lcNativeSwipeHandler).nospace()
+        << "applyTouchOverlay dismissMode=" << dismissMode << " rectPx=" << xPx << "," << yPx << " " << wPx << "x" << hPx
+        << " fullScreenTapToDismissEnabled=" << fullScreenTapToDismissEnabled()
+        << " dismissSceneRect=" << dismissTapOverlaySceneRect();
+
+    m_javaHelper.callMethod<void>("applyTouchOverlayState", "(ZFFFF)V",
+                                  dismissMode,
                                   static_cast<jfloat>(xPx),
                                   static_cast<jfloat>(yPx),
                                   static_cast<jfloat>(wPx),
@@ -227,6 +259,31 @@ void NativeSwipeHandlerItem_Android::onSwipeEnded(JNIEnv *, jobject, jlong ptr, 
 
         weak->m_active = false;
         emit weak->swipeEnded(delta, v, canceled == JNI_TRUE);
+    }, Qt::QueuedConnection);
+}
+
+void NativeSwipeHandlerItem_Android::onTapToDismiss(JNIEnv *, jobject, jlong ptr)
+{
+    auto *self = reinterpret_cast<NativeSwipeHandlerItem_Android *>(ptr);
+    if (!self)
+        return;
+
+    QPointer<NativeSwipeHandlerItem_Android> weak(self);
+    QMetaObject::invokeMethod(self, [weak]() {
+        if (!weak || !weak->window()) {
+            qCInfo(lcNativeSwipeHandler) << "onTapToDismiss dropped: no window or destroyed";
+            return;
+        }
+        if (!weak->isVisible() || !weak->isEnabled()) {
+            qCInfo(lcNativeSwipeHandler) << "onTapToDismiss dropped: visible=" << weak->isVisible() << "enabled=" << weak->isEnabled();
+            return;
+        }
+        if (!weak->fullScreenTapToDismissEnabled()) {
+            qCInfo(lcNativeSwipeHandler) << "onTapToDismiss dropped: fullScreenTapToDismissEnabled=false";
+            return;
+        }
+        qCInfo(lcNativeSwipeHandler) << "onTapToDismiss emitting tapToDismissRequested";
+        emit weak->tapToDismissRequested();
     }, Qt::QueuedConnection);
 }
 

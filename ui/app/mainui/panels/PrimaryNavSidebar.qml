@@ -55,6 +55,9 @@ Control {
     required property bool profileSectionHasNotification
     required property bool thirdpartyServicesEnabled
 
+    // Set from AppMain: used on Android so native overlay can dismiss the drawer over Browser WebView.
+    property bool browserSectionActive: false
+
     required property bool acVisible // FIXME AC should not be a section
     required property bool acHasUnseenNotifications // ActivityCenterStore.hasUnseenNotifications
     required property int acUnreadNotificationsCount // ActivityCenterStore.unreadNotificationsCount
@@ -140,6 +143,7 @@ Control {
     // Overlay area outside the sidebar that captures the first tap
     // to close it and prevents click-through to underlying content.
     Item {
+        id: navOutsideTapOverlay
         parent: Window.window?.contentItem
         readonly property point sidebarTopLeft: parent?.mapFromItem(root, 0, 0) ?? Qt.point(0, 0)
         readonly property point sidebarBottomRight: parent?.mapFromItem(root, root.width * root.position, root.height) ?? Qt.point(0, 0)
@@ -482,7 +486,26 @@ Control {
         enabled: root.interactive
         visible: enabled
 
+        fullScreenTapToDismissEnabled: SQUtils.Utils.isAndroid
+                                        && !root.alwaysVisible
+                                        && root.position > 0.5
+                                        && root.browserSectionActive
+
+        dismissTapOverlaySceneRect: {
+            // Match navOutsideTapOverlay geometry; avoid .visible so the rect is non-zero in the
+            // same frame fullScreenTapToDismissEnabled becomes true (visible can lag one update).
+            const ci = Window.window?.contentItem
+            if (!ci || root.alwaysVisible || root.position <= 0.5)
+                return Qt.rect(0, 0, 0, 0)
+            // Some Qt/Android builds expose no callable mapToScene on reparented Items; mapToItem(null, p)
+            // maps p from this item's coords to scene (see Qt Quick Item docs).
+            const tl = ci.mapToItem(null, Qt.point(navOutsideTapOverlay.x, navOutsideTapOverlay.y))
+            return Qt.rect(tl.x, tl.y, navOutsideTapOverlay.width, navOutsideTapOverlay.height)
+        }
+
         property real _startPos: 0
+
+        onTapToDismissRequested: root.close()
 
         onSwipeStarted: () => {
             d.dragActive = true

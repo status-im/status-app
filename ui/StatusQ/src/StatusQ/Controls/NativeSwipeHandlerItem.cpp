@@ -16,6 +16,22 @@ void NativeSwipeHandlerItem::setOpenDistance(qreal d)
     emit openDistanceChanged();
 }
 
+void NativeSwipeHandlerItem::setFullScreenTapToDismissEnabled(bool enabled)
+{
+    if (m_fullScreenTapToDismissEnabled == enabled)
+        return;
+    m_fullScreenTapToDismissEnabled = enabled;
+    emit fullScreenTapToDismissEnabledChanged();
+}
+
+void NativeSwipeHandlerItem::setDismissTapOverlaySceneRect(const QRectF &rect)
+{
+    if (m_dismissTapOverlaySceneRect == rect)
+        return;
+    m_dismissTapOverlaySceneRect = rect;
+    emit dismissTapOverlaySceneRectChanged();
+}
+
 void NativeSwipeHandlerItem::setupGestureRecognition()
 {
     // Default no-op. Platform-specific implementations override.
