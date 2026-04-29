@@ -10,8 +10,8 @@ from gui.main_window import MainWindow
 
 
 @pytest.mark.case(703005)
-@pytest.mark.critical
-# TODO: follow up on https://github.com/status-im/status-desktop/issues/13013
+# @pytest.mark.critical
+# TODO: follow up on https://github.com/status-im/status-app/issues/20581
 def test_change_password_and_login(aut: AUT, main_screen: MainWindow, user_account):
     with step('Open change password view'):
         password_view = main_screen.left_panel.open_settings().left_panel.open_password_settings()
