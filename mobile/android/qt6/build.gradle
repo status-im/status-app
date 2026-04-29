@@ -27,6 +27,8 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
     //noinspection GradleDependency
     implementation 'androidx.core:core:1.16.0'
+    // Required for WebViewFeature / addDocumentStartJavaScript
+    implementation 'androidx.webkit:webkit:1.12.1'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.core:core-splashscreen:1.0.1'
     implementation 'com.google.android.material:material:1.12.0'
