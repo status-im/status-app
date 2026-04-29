@@ -27,6 +27,8 @@ private:
     void initializeJNI();
     void cleanupJNI();
     void updateOverlayBounds();
+    bool canHandleInput() const;
+    bool hasDismissOverlay() const;
     static void onSwipeBegan(JNIEnv *, jobject, jlong ptr, jfloat velocityX);
     static void onSwipeChanged(JNIEnv *, jobject, jlong ptr, jfloat deltaX, jfloat velocityX);
     static void onSwipeEnded(JNIEnv *, jobject, jlong ptr, jfloat deltaX, jfloat velocityX, jboolean canceled);
@@ -162,7 +164,7 @@ void NativeSwipeHandlerItem_Android::updatePolish()
 
 void NativeSwipeHandlerItem_Android::updateOverlayBounds()
 {
-    if (!m_javaHelper.isValid() || !window() || !isVisible() || !isEnabled())
+    if (!m_javaHelper.isValid() || !canHandleInput())
         return;
 
     qreal xPx = 0;
@@ -171,7 +173,7 @@ void NativeSwipeHandlerItem_Android::updateOverlayBounds()
     qreal hPx = 0;
     const qreal dpr = window()->effectiveDevicePixelRatio();
     const QRectF r = dismissTapOverlaySceneRect();
-    const bool dismissMode = r.width() > 0.0 && r.height() > 0.0;
+    const bool dismissMode = hasDismissOverlay();
 
     if (dismissMode) {
         xPx = r.x() * dpr;
@@ -194,16 +196,27 @@ void NativeSwipeHandlerItem_Android::updateOverlayBounds()
                                   static_cast<jfloat>(hPx));
 }
 
+bool NativeSwipeHandlerItem_Android::canHandleInput() const
+{
+    return window() && isVisible() && isEnabled();
+}
+
+bool NativeSwipeHandlerItem_Android::hasDismissOverlay() const
+{
+    const QRectF overlay = dismissTapOverlaySceneRect();
+    return overlay.width() > 0.0 && overlay.height() > 0.0;
+}
+
 
 void NativeSwipeHandlerItem_Android::onSwipeBegan(JNIEnv *, jobject, jlong ptr, jfloat)
 {
     auto *self = reinterpret_cast<NativeSwipeHandlerItem_Android *>(ptr);
-    if (!self || !self->window() || !self->isVisible() || !self->isEnabled())
+    if (!self || !self->canHandleInput())
         return;
 
     QPointer<NativeSwipeHandlerItem_Android> weak(self);
     QMetaObject::invokeMethod(self, [weak]() {
-        if (!weak || !weak->window() || !weak->isVisible() || !weak->isEnabled())
+        if (!weak || !weak->canHandleInput())
             return;
         weak->m_active = true;
         emit weak->swipeStarted();
@@ -218,7 +231,7 @@ void NativeSwipeHandlerItem_Android::onSwipeChanged(JNIEnv *, jobject, jlong ptr
 
     QPointer<NativeSwipeHandlerItem_Android> weak(self);
     QMetaObject::invokeMethod(self, [weak, deltaX, velocityX]() {
-        if (!weak || !weak->m_active || !weak->window() || !weak->isVisible() || !weak->isEnabled())
+        if (!weak || !weak->m_active || !weak->canHandleInput())
             return;
 
         const qreal dpr = weak->window()->effectiveDevicePixelRatio();
@@ -256,10 +269,7 @@ void NativeSwipeHandlerItem_Android::onTapToDismiss(JNIEnv *, jobject, jlong ptr
 
     QPointer<NativeSwipeHandlerItem_Android> weak(self);
     QMetaObject::invokeMethod(self, [weak]() {
-        if (!weak || !weak->window() || !weak->isVisible() || !weak->isEnabled())
-            return;
-        const QRectF overlay = weak->dismissTapOverlaySceneRect();
-        if (overlay.width() <= 0.0 || overlay.height() <= 0.0)
+        if (!weak || !weak->canHandleInput() || !weak->hasDismissOverlay())
             return;
         emit weak->tapToDismissRequested();
     }, Qt::QueuedConnection);

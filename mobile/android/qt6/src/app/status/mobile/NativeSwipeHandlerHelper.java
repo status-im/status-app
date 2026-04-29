@@ -151,13 +151,14 @@ public class NativeSwipeHandlerHelper {
                     // Slightly looser than touchSlop so small jitter still counts as a tap.
                     final int tapSlop = Math.max(touchSlopPx * 2, touchSlopPx + 16);
                     final boolean tapLike = (dx * dx + dy * dy) <= (float) tapSlop * tapSlop;
+                    final boolean tapToDismiss = dismissTapMode
+                            && action == MotionEvent.ACTION_UP
+                            && tapLike;
 
                     // Use the last MOVE velocity; UP often has vx≈0 because there's no delta.
                     if (swiping) {
                         nativeOnSwipeEnded(nativePtr, dx, lastVx, action == MotionEvent.ACTION_CANCEL);
-                    } else if (dismissTapMode
-                            && action == MotionEvent.ACTION_UP
-                            && tapLike) {
+                    } else if (tapToDismiss) {
                         nativeOnTapToDismiss(nativePtr);
                     } else if (passthroughTarget != null) {
                         dispatchToTarget(passthroughTarget, event, action);

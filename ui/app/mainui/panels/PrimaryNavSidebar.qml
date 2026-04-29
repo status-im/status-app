@@ -55,8 +55,12 @@ Control {
     required property bool profileSectionHasNotification
     required property bool thirdpartyServicesEnabled
 
-    // Set from AppMain: used on Android so native overlay can dismiss the drawer over Browser WebView.
+    // Set from AppMain: used on mobile so native overlay can dismiss the drawer over Browser WebView.
     property bool browserSectionActive: false
+    readonly property bool dismissTapOverlayEnabled: SQUtils.Utils.isMobile
+                                                     && !root.alwaysVisible
+                                                     && root.position > 0.5
+                                                     && root.browserSectionActive
 
     required property bool acVisible // FIXME AC should not be a section
     required property bool acHasUnseenNotifications // ActivityCenterStore.hasUnseenNotifications
@@ -489,8 +493,7 @@ Control {
         dismissTapOverlaySceneRect: {
             const ci = Window.window?.contentItem
             // iOS/Android: non-empty rect drives native overlay so taps over WebView close the navbar.
-            if (!ci || !SQUtils.Utils.isMobile || root.alwaysVisible
-                || root.position <= 0.5 || !root.browserSectionActive)
+            if (!ci || !root.dismissTapOverlayEnabled)
                 return Qt.rect(0, 0, 0, 0)
             // Match navOutsideTapOverlay; avoid .visible so rect is non-zero the frame the drawer opens.
             // mapToItem(null, p) maps to scene for reparented Items.

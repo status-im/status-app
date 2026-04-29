@@ -31,6 +31,8 @@ public:
     void handlePanEnded(qreal translationX, qreal velocityX, bool canceled);
     QPointF mapViewPointToScene(const CGPoint &point) const;
     QPointF mapViewDeltaToScene(const CGPoint &delta) const;
+    bool canHandleInput() const;
+    bool hasDismissOverlay() const;
 
 protected:
     void setupGestureRecognition() override;
@@ -106,6 +108,17 @@ CGRect NativeSwipeHandlerItem_iOS::sceneRectToViewRect(const QRectF &sceneRect) 
                       sceneRect.width() * s, sceneRect.height() * s);
 }
 
+bool NativeSwipeHandlerItem_iOS::canHandleInput() const
+{
+    return window() && isVisible() && isEnabled();
+}
+
+bool NativeSwipeHandlerItem_iOS::hasDismissOverlay() const
+{
+    const QRectF overlay = dismissTapOverlaySceneRect();
+    return overlay.width() > 0.0 && overlay.height() > 0.0;
+}
+
 QPointF NativeSwipeHandlerItem_iOS::mapViewPointToScene(const CGPoint &point) const
 {
     if (!window())
@@ -157,16 +170,16 @@ void NativeSwipeHandlerItem_iOS::disconnectWindowGeometryUpdates()
 
 void NativeSwipeHandlerItem_iOS::updateDismissOverlay()
 {
-    if (!window() || !isVisible() || !isEnabled()) {
+    if (!canHandleInput()) {
         removeDismissOverlay();
         return;
     }
 
-    const QRectF r = dismissTapOverlaySceneRect();
-    if (r.width() <= 0.0 || r.height() <= 0.0) {
+    if (!hasDismissOverlay()) {
         removeDismissOverlay();
         return;
     }
+    const QRectF r = dismissTapOverlaySceneRect();
 
     UIView *view = getUIView();
     if (!view) {
@@ -299,12 +312,11 @@ void NativeSwipeHandlerItem_iOS::handlePanEnded(qreal translationX, qreal veloci
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
 {
     NativeSwipeHandlerItem_iOS *handler = self.handler;
-    if (!handler || !handler->window() || !handler->isVisible() || !handler->isEnabled())
+    if (!handler || !handler->canHandleInput())
         return NO;
 
     if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]]) {
-        const QRectF overlay = handler->dismissTapOverlaySceneRect();
-        if (overlay.width() <= 0.0 || overlay.height() <= 0.0)
+        if (!handler->hasDismissOverlay())
             return NO;
         const CGPoint loc = [touch locationInView:gestureRecognizer.view];
         return CGRectContainsPoint(gestureRecognizer.view.bounds, loc);
@@ -323,7 +335,7 @@ void NativeSwipeHandlerItem_iOS::handlePanEnded(qreal translationX, qreal veloci
 - (void)handlePan:(UIPanGestureRecognizer *)recognizer
 {
     NativeSwipeHandlerItem_iOS *handler = self.handler;
-    if (!handler || !handler->window() || !handler->isVisible() || !handler->isEnabled())
+    if (!handler || !handler->canHandleInput())
         return;
 
     UIView *view = recognizer.view;
@@ -361,12 +373,7 @@ void NativeSwipeHandlerItem_iOS::handlePanEnded(qreal translationX, qreal veloci
 
     QPointer<NativeSwipeHandlerItem_iOS> weak(handler);
     QMetaObject::invokeMethod(handler, [weak]() {
-        if (!weak || !weak->window())
-            return;
-        if (!weak->isVisible() || !weak->isEnabled())
-            return;
-        const QRectF overlay = weak->dismissTapOverlaySceneRect();
-        if (overlay.width() <= 0.0 || overlay.height() <= 0.0)
+        if (!weak || !weak->canHandleInput() || !weak->hasDismissOverlay())
             return;
         emit weak->tapToDismissRequested();
     }, Qt::QueuedConnection);
