@@ -488,7 +488,8 @@ Control {
 
         dismissTapOverlaySceneRect: {
             const ci = Window.window?.contentItem
-            if (!ci || !SQUtils.Utils.isAndroid || root.alwaysVisible
+            // iOS/Android: non-empty rect drives native overlay so taps over WebView close the navbar.
+            if (!ci || !SQUtils.Utils.isMobile || root.alwaysVisible
                 || root.position <= 0.5 || !root.browserSectionActive)
                 return Qt.rect(0, 0, 0, 0)
             // Match navOutsideTapOverlay; avoid .visible so rect is non-zero the frame the drawer opens.
