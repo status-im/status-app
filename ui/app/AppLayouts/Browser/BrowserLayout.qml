@@ -434,28 +434,6 @@ StatusSectionLayout {
                 onFavMenuRequested: (parent, pos, url, name) => _internal.openFavoriteMenu(parent, pos, url, name)
             }
         }
-
-        FindBar {
-            id: findBar
-            visible: false
-
-            Layout.fillWidth: true
-            Layout.preferredHeight: tabs.tabHeight
-
-            onFindNext: {
-                if (text)
-                    webViewContext.findTextCurrent(text)
-                else if (!visible)
-                    _internal.showFindBar()
-            }
-            onFindPrevious: {
-                if (text)
-                    webViewContext.findTextCurrent(text, true)
-                else if (!visible)
-                    _internal.showFindBar()
-            }
-            onVisibleChanged: if (!visible) webViewContext.findTextCurrent("") // reset the highlight
-        }
     }
 
     footer: Loader {
@@ -488,6 +466,28 @@ StatusSectionLayout {
             onRequestOpenDapp: url => _internal.onRequestOpenDapp(url)
             onRequestDisconnectDapp: dappUrl => connectorBridge.disconnect(dappUrl)
             onRequestWalletMenu: dialogsContext.openWalletMenu(browserWalletMenu)
+        }
+
+        FindBar {
+            id: findBar
+            visible: false
+
+            Layout.fillWidth: true
+            Layout.preferredHeight: tabs.tabHeight
+
+            onFindNext: {
+                if (text)
+                    webViewContext.findTextCurrent(text)
+                else if (!visible)
+                    _internal.showFindBar()
+            }
+            onFindPrevious: {
+                if (text)
+                    webViewContext.findTextCurrent(text, true)
+                else if (!visible)
+                    _internal.showFindBar()
+            }
+            onVisibleChanged: if (!visible) webViewContext.findTextCurrent("") // reset the highlight
         }
 
         StackLayout {
