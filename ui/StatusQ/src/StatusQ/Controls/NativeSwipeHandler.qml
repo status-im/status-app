@@ -9,6 +9,9 @@ Item {
     // If 0, native impl uses its internal heuristics.
     property real openDistance: 0
 
+    // Android: non-empty rect = native overlay region + stationary tap emits tapToDismissRequested (e.g. over WebView).
+    property rect dismissTapOverlaySceneRect: Qt.rect(0, 0, 0, 0)
+
     // True while a swipe gesture is active (press+move until release/cancel).
     // Useful for consumers that want to show UI affordances during the gesture.
     property bool isSwipeActive: false
@@ -18,6 +21,7 @@ Item {
     signal swipeStarted()
     signal swipeUpdated(real delta, real velocity)
     signal swipeEnded(real delta, real velocity, bool canceled)
+    signal tapToDismissRequested()
 
     Loader {
         id: implLoader
@@ -41,6 +45,7 @@ Item {
     Binding { target: implLoader.item; property: "visible"; value: root.visible; when: implLoader.item !== null }
     Binding { target: implLoader.item; property: "enabled"; value: root.enabled; when: implLoader.item !== null }
     Binding { target: implLoader.item; property: "openDistance"; value: root.openDistance; when: implLoader.item !== null }
+    Binding { target: implLoader.item; property: "dismissTapOverlaySceneRect"; value: root.dismissTapOverlaySceneRect; when: implLoader.item !== null }
 
     Connections {
         target: implLoader.item ?? null
@@ -55,6 +60,7 @@ Item {
             root.isSwipeActive = false
             root.swipeEnded(delta, velocity, canceled)
         }
+        function onTapToDismissRequested() { root.tapToDismissRequested() }
     }
 }
 

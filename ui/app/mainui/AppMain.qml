@@ -2504,6 +2504,8 @@ Item {
                 id: sidebar
                 height: parent.height
 
+                browserSectionActive: d.activeSectionType === Constants.appSection.browser
+
                 PrimaryNavSidebarAdaptor {
                     id: sidebarAdaptor
                     sectionsModel: appMain.rootStore.sectionsModel
