@@ -974,6 +974,14 @@ Item {
             // is opened after the new menu is introduce, if the nav bar is in collapsed mode
             d.tryOpenNavigationEducationPopup()
         }
+
+        readonly property var _conn: Connections {
+            target: appMain
+            function onIsPortraitModeChanged() {
+                ThemeUtils.setFontSize(appMain.Window.window, appMainLocalSettings.fontSize)
+                ThemeUtils.setPaddingFactor(appMain.Window.window, appMainLocalSettings.paddingFactor)
+            }
+        }
     }
 
     Popups {
