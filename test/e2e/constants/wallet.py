@@ -66,6 +66,10 @@ class WalletAddress(Enum):
     RECEIVER_ADDRESS = '0x3286c371ef648fe6232324b27ee0515f4ded24d9'
 
 
+class WalletTokenSymbols(Enum):
+    SNT = 'SNT'
+
+
 class DerivationPathValue(Enum):
     STATUS_ACCOUNT_DERIVATION_PATH = "m / 44' / 60' / 0' / 0 / 0"
     GENERATED_ACCOUNT_DERIVATION_PATH_1 = "m / 44' / 60' / 0' / 0 / 1"
