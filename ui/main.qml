@@ -114,6 +114,9 @@ Window {
     }
 
     function restoreAppState() {
+        if (SQUtils.Utils.isMobile) // no point in restoring geometry or visibility
+            return
+
         let geometry = localAppSettings.geometry;
         let visibility = localAppSettings.visibility;
 
@@ -152,6 +155,9 @@ Window {
     }
 
     function storeAppState() {
+        if (SQUtils.Utils.isMobile) // no point in storing geometry or visibility
+            return
+
         if (!applicationWindow.appIsReady)
             return;
 
@@ -199,10 +205,11 @@ Window {
             }
         }
 
-        readonly property bool macOSWindowed: Qt.platform.os === SQUtils.Utils.mac &&
-                                              applicationWindow.visibility !== Window.FullScreen
+        readonly property bool macOSWindowed: SQUtils.Utils.isMacOS && applicationWindow.visibility !== Window.FullScreen
 
         function restoreWindowState() {
+            if (SQUtils.Utils.isMobile) // no point in restoring window state
+                return
             switch(lastNonMinVisibility) {
             case Window.Windowed:
                 applicationWindow.showNormal()
@@ -508,8 +515,8 @@ Window {
         id: loader
 
         anchors.fill: parent
-        anchors.topMargin: Qt.platform.os === SQUtils.Utils.mac && !applicationWindow.portraitLayout ?
-                               0 : parent.SafeArea.margins.top
+        anchors.topMargin: SQUtils.Utils.isMacOS && !applicationWindow.portraitLayout ? 0
+                                                                                      : parent.SafeArea.margins.top
         anchors.bottomMargin: parent.SafeArea.margins.bottom
         anchors.leftMargin: applicationWindow.portraitLayout ? parent.SafeArea.margins.left
                                                   : 0 // the PrimaryNavSidebar is visible in landscape and already has it
