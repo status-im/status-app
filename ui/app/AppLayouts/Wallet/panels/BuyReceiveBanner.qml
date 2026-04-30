@@ -20,6 +20,21 @@ Control {
     signal closeBuy()
     signal closeReceive()
 
+    // Full-screen overlay resets any card on tap outside.
+    Item {
+        parent: root.Window.contentItem
+        anchors.fill: parent
+
+        PointHandler {
+            onActiveChanged: {
+                if (active) {
+                    buyCard.reset()
+                    receiveCard.reset()
+                }
+            }
+        }
+    }
+
     contentItem: RowLayout {
         id: layout
         spacing: Theme.padding

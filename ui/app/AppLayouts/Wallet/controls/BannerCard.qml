@@ -17,8 +17,17 @@ Control {
     property alias subTitle: subTitle.text
     property bool closeEnabled: true
 
+    // Dismisses the long-press state, e.g. when tapping outside the card.
+    function reset() { d.closeVisible = false }
+
     signal clicked()
     signal close()
+
+    QtObject {
+        id: d
+        // Touch screens: long-press pins the close button visible.
+        property bool closeVisible: false
+    }
 
     implicitHeight: 70
     implicitWidth: 400
@@ -27,11 +36,24 @@ Control {
 
     TapHandler {
         acceptedButtons: Qt.LeftButton
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
+        enabled: !closeHandler.pressed
+        onTapped: root.clicked()
+    }
+
+    // Long press (touch screens): pins the close button visible.
+    // exclusiveSignals ensures tapped and longPressed are mutually exclusive.
+    TapHandler {
+        acceptedDevices: PointerDevice.TouchScreen
+        exclusiveSignals: TapHandler.SingleTap | TapHandler.LongPress
         enabled: !closeHandler.pressed
         onTapped: {
+            d.closeVisible = false
             root.clicked()
         }
+        onLongPressed: d.closeVisible = true
     }
+
     HoverHandler {
         cursorShape: Qt.PointingHandCursor
     }
@@ -83,15 +105,16 @@ Control {
             Layout.topMargin: 4
             Layout.rightMargin: 4
             Layout.alignment: Qt.AlignTop
-            Layout.preferredWidth: 16
-            Layout.preferredHeight: 16
+            Layout.preferredWidth: 24
+            Layout.preferredHeight: 24
             icon: "close"
             color: closeHoverHandler.hovered ? Theme.palette.directColor1 : Theme.palette.baseColor1
-            visible: root.closeEnabled && root.hovered
+            visible: root.closeEnabled && (d.closeVisible || root.hovered)
             TapHandler {
                 id: closeHandler
                 acceptedButtons: Qt.LeftButton
                 onTapped: {
+                    d.closeVisible = false
                     root.close()
                 }
             }
