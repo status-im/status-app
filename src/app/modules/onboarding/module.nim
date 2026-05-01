@@ -377,6 +377,13 @@ method onNodeLogin*[T](self: Module[T], err: string, account: AccountDto, settin
     self.onAccountLoginError(err2)
     return
 
+
+method onMessengerStarted*[T](self: Module[T], err: string) =
+  if err.len != 0:
+    error "error starting messenger", err
+    self.onAccountLoginError(err)
+    return
+
   if self.localPairingStatus != nil and self.localPairingStatus.installation != nil and
       self.localPairingStatus.installation.id != "" and self.localPairingStatus.state == LocalPairingState.Error:
     # We tried to login by pairing, so finalize the process
