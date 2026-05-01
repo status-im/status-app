@@ -9,8 +9,10 @@ import AppLayouts.Browser.views
 AbstractWebView {
     id: root
 
+    required property var profileManager
+
     property var profile: root.profileParams
-        ? ProfileManager.getOrCreateStorageProfile(
+        ? root.profileManager.getOrCreateStorageProfile(
               root.profileParams.userId,
               root.profileParams.offTheRecord)
         : null
@@ -229,7 +231,7 @@ AbstractWebView {
     function applyProfileScripts() {
         if (!root.profile || !root.profile.userScripts || !root.profileParams)
             return
-        root.profile.userScripts.collection = ProfileManager.scriptListForParams(root.profileParams)
+        root.profile.userScripts.collection = root.profileManager.scriptListForParams(root.profileParams)
     }
 
     onProfileChanged: applyProfileScripts()
