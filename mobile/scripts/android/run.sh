@@ -189,6 +189,13 @@ fi
 
 echo "App installed. Starting app"
 
+# Profile-mode: forward the QML debug/profiler port from host to device so
+# qmlprofiler / Qt Creator can attach via localhost.
+if [[ -n "${QML_DEBUG_PORT}" ]]; then
+    echo "Setting up adb port forward for QML profiler: tcp:${QML_DEBUG_PORT}"
+    $ADB -s $ANDROID_SERIAL forward tcp:${QML_DEBUG_PORT} tcp:${QML_DEBUG_PORT}
+fi
+
 ACTIVITY_NAME="${APP_PACKAGE}/${APP_ACTIVITY}"
 $ADB -s $ANDROID_SERIAL shell am start -a android.intent.action.MAIN -n $ACTIVITY_NAME
 # wait for the app to start and then start logcat

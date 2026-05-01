@@ -29,8 +29,14 @@ echo "Building DOtherSide for ${ARCH} using compiler: ${CC}"
 
 printf 'COMMON_CMAKE_CONFIG: %s\n' "${COMMON_CMAKE_CONFIG[@]}"
 
+EXTRA_CMAKE_ARGS=()
+if [[ -n "${QML_DEBUG_PORT}" ]]; then
+    EXTRA_CMAKE_ARGS+=("-DQML_DEBUG_PORT=${QML_DEBUG_PORT}")
+fi
+
 cmake -S "${DOTHERSIDE}" -B "${BUILD_DIR}" \
     "${COMMON_CMAKE_CONFIG[@]}" \
+    "${EXTRA_CMAKE_ARGS[@]}" \
     -DENABLE_DOCS:BOOL=OFF \
     -DENABLE_DYNAMIC_LIBS:BOOL="${ENABLE_DYNAMIC_LIBS}" \
     -DENABLE_STATIC_LIBS:BOOL="${ENABLE_STATIC_LIBS}" \
