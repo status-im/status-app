@@ -15,3 +15,21 @@ proc asyncImportLocalBackupFileTask(argEncoded: string) {.gcsafe, nimcall.} =
     arg.finish(%* {
       "error": e.msg,
     })
+
+type
+  AsyncStartMessengerTaskArg = ref object of QObjectTaskArg
+    discard
+
+proc asyncStartMessengerTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncStartMessengerTaskArg](argEncoded)
+  try:
+    let response = status_general.startMessenger()
+    let resultJson = if response.result.isNil: newJObject() else: response.result
+    arg.finish(%* {
+      "response": resultJson,
+      "error": "",
+    })
+  except Exception as e:
+    arg.finish(%* {
+      "error": e.msg,
+    })

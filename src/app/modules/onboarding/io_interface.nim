@@ -97,6 +97,9 @@ method onKeycardExportLoginKeysSuccess*(self: AccessInterface, exportedKeys: Key
 method onAccountLoginError*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onMessengerStarted*(self: AccessInterface, err: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method exportRecoverKeys*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
