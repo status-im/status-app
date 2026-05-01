@@ -107,7 +107,12 @@ type TrustStatus* {.pure.}= enum
 
 const SIGNAL_LOCAL_BACKUP_IMPORT_COMPLETED* = "localBackupImportCompletedSignal"
 
+const SIGNAL_MESSENGER_STARTED* = "messengerStartedSignal"
+
 type
   LocalBackupImportArg* = ref object of Args
     error*: string
     response*: JsonNode
+
+  MessengerStartedArgs* = ref object of Args
+    error*: string

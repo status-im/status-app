@@ -12,6 +12,7 @@ import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/devices/service as devices_service
 import app_service/service/keycardV2/service as keycard_serviceV2
 import app_service/common/utils
+import app_service/common/types
 from app_service/service/keycardV2/dto import KeycardExportedKeysDto
 from app_service/service/chat/service import SIGNAL_CHATS_LOADING_FAILED
 
@@ -154,6 +155,11 @@ proc init*(self: Controller) =
 
   handlerId = self.events.onWithUUID(SIGNAL_CHATS_LOADING_FAILED) do(e: Args):
     self.delegate.onMainFailedToLoad()
+  self.connectionIds.add(handlerId)
+
+  handlerId = self.events.onWithUUID(SIGNAL_MESSENGER_STARTED) do(e: Args):
+    let args = MessengerStartedArgs(e)
+    self.delegate.onMessengerStarted(args.error)
   self.connectionIds.add(handlerId)
 
 proc initialize*(self: Controller, pin: string) =
