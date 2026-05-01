@@ -24,9 +24,12 @@ proc asyncStartMessengerTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncStartMessengerTaskArg](argEncoded)
   try:
     let response = status_general.startMessenger()
-    let resultJson = if response.result.isNil: newJObject() else: response.result
+    var trimmed = newJObject()
+    if not response.result.isNil and response.result.kind == JObject and
+        response.result.hasKey("activityCenterNotifications"):
+      trimmed["activityCenterNotifications"] = response.result["activityCenterNotifications"]
     arg.finish(%* {
-      "response": resultJson,
+      "response": trimmed,
       "error": "",
     })
   except Exception as e:
