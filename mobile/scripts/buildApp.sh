@@ -94,7 +94,9 @@ if [[ "${OS}" == "android" ]]; then
   mkdir -p "$BIN_DIR"
 
   # Determine build type from GRADLE_TARGETS
-  if [[ "$GRADLE_TARGETS" == *"Debug"* ]]; then
+  if [[ "$GRADLE_TARGETS" == *"Profile"* ]]; then
+    BUILD_TYPE="profile"
+  elif [[ "$GRADLE_TARGETS" == *"Debug"* ]]; then
     BUILD_TYPE="debug"
   elif [[ "$GRADLE_TARGETS" == *"Fdroid"* ]]; then
     BUILD_TYPE="fdroid"

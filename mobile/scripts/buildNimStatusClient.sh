@@ -9,6 +9,7 @@ LIB_DIR=${LIB_DIR}
 LIB_SUFFIX=${LIB_SUFFIX:-""}
 OS=${OS:-"android"}
 DEBUG=${DEBUG:-0}
+PROFILE=${PROFILE:-0}
 FLAG_DAPPS_ENABLED=${FLAG_DAPPS_ENABLED:-0}
 FLAG_CONNECTOR_ENABLED=${FLAG_CONNECTOR_ENABLED:-0}
 FLAG_KEYCARD_ENABLED=${FLAG_KEYCARD_ENABLED:-0}
@@ -84,9 +85,15 @@ NIM_FLAGS=(
 )
 
 if [ "$DEBUG" -eq 1 ]; then
-    NIM_FLAGS+=(-d:debug -d:nimTypeNames)
+    NIM_FLAGS+=(-d:debug)
 else
     NIM_FLAGS+=(-d:release -d:production)
+fi
+
+# Profile-mode build: emit Nim type names so Android Studio's CPU profiler
+# can resolve native frames into typed names. See docs/profiling-mobile.md.
+if [ "$PROFILE" -eq 1 ]; then
+    NIM_FLAGS+=(-d:nimTypeNames)
 fi
 
 # build status-client with feature flags

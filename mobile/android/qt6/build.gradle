@@ -136,6 +136,30 @@ android {
             debuggable = true
             applicationIdSuffix ".debug"
             resValue "string", "app_name", "Status Debug"
+            packaging {
+                jniLibs {
+                    // Keep Nim debug symbols so Android Studio
+                    // can resolve native frames into Nim names.
+                    keepDebugSymbols += '**/libnim_status_client.so'
+                }
+            }
+        }
+        profile {
+            // See docs/profiling-mobile.md.
+            debuggable = false
+            minifyEnabled = false
+            profileable = true
+            // Reuse the debug applicationIdSuffix so the profile install
+            // replaces the debug install at the same package id, keeping
+            // a single Status flavor on the device.
+            applicationIdSuffix ".debug"
+            resValue "string", "app_name", "Status Debug"
+            signingConfig signingConfigs.debug
+            packaging {
+                jniLibs {
+                    keepDebugSymbols += '**/libnim_status_client.so'
+                }
+            }
         }
     }
 }
