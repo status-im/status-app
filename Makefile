@@ -50,7 +50,12 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	storybook-build \
 	run-storybook \
 	run-storybook-tests \
-	update
+	update \
+	mobile-run \
+	mobile-build \
+	mobile-clean \
+	mobile-profile \
+	mobile-profile-mode-check
 
 ifeq ($(NIM_PARAMS),)
 # "variables.mk" was not included, so we update the submodules.
@@ -993,9 +998,38 @@ endef
 export PATH := $(call qmkq,QT_INSTALL_BINS):$(call qmkq,QT_HOST_BINS):$(call qmkq,QT_HOST_LIBEXECS):$(PATH)
 export QTDIR := $(call qmkq,QT_INSTALL_PREFIX)
 
-mobile-run: deps-common
+# Mobile profile-mode tracking: QML_DEBUG_PORT is baked into libDOtherSide.so
+# at compile time, so toggling profile mode requires a DOtherSide rebuild.
+# A sentinel file records the last build's mode and forces clean-dotherside
+# whenever it disagrees with the desired mode.
+MOBILE_PROFILE_SENTINEL := mobile/build/.profile-mode
+
+mobile-run: MOBILE_PROFILE_DESIRED := 0
+mobile-profile: MOBILE_PROFILE_DESIRED := 1
+
+mobile-profile-mode-check:
+	@mkdir -p $(dir $(MOBILE_PROFILE_SENTINEL))
+	@current=$$(cat $(MOBILE_PROFILE_SENTINEL) 2>/dev/null || echo 0); \
+	if [ "$$current" != "$(MOBILE_PROFILE_DESIRED)" ]; then \
+	  echo -e "\033[92mProfile mode change\033[39m ($$current -> $(MOBILE_PROFILE_DESIRED)): cleaning DOtherSide"; \
+	  $(MAKE) -C mobile clean-dotherside; \
+	fi
+	@echo $(MOBILE_PROFILE_DESIRED) > $(MOBILE_PROFILE_SENTINEL)
+
+mobile-run: deps-common mobile-profile-mode-check
 	echo -e "\033[92mRunning:\033[39m mobile app"
 	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug
+
+mobile-profile: deps-common mobile-profile-mode-check
+ifeq ($(mkspecs),ios)
+	@echo "TODO: iOS profiling is not implemented yet"; exit 1
+else
+	echo -e "\033[92mRunning:\033[39m mobile app (PROFILE)"
+	$(MAKE) -C mobile run \
+	    PROFILE=1 \
+	    GRADLE_TARGETS=assembleProfile \
+	    QML_DEBUG_PORT=$(QML_DEBUG_PORT)
+endif
 
 mobile-build: USE_SYSTEM_NIM=1
 mobile-build: | deps-common
