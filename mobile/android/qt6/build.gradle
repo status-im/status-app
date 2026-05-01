@@ -146,20 +146,9 @@ android {
         }
         profile {
             // See docs/profiling-mobile.md.
+            initWith debug
             debuggable = false
-            minifyEnabled = false
             profileable = true
-            // Reuse the debug applicationIdSuffix so the profile install
-            // replaces the debug install at the same package id, keeping
-            // a single Status flavor on the device.
-            applicationIdSuffix ".debug"
-            resValue "string", "app_name", "Status Debug"
-            signingConfig signingConfigs.debug
-            packaging {
-                jniLibs {
-                    keepDebugSymbols += '**/libnim_status_client.so'
-                }
-            }
         }
     }
 }
