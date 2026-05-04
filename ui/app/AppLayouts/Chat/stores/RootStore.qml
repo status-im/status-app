@@ -622,7 +622,7 @@ QtObject {
                 publicKey: d.activeChatId
                 contactsModel: root.contactsModel
                 onPopulateContactDetailsRequested: {
-                    root.populateContactDetails(d.activeChatId)
+                    root.populateContactDetailsRequested(d.activeChatId)
                 }
             }
         }
