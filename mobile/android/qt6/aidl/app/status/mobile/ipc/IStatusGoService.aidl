@@ -1,16 +1,18 @@
 package app.status.mobile.ipc;
 
 import app.status.mobile.ipc.IStatusGoSignalListener;
+import app.status.mobile.ipc.RpcResponse;
 
 interface IStatusGoService {
-    /** Generic call into status-go exports (method name is the C export name). */
-    String call(String method, String argsJson);
-
     /**
-     * Same as call(), but writes the response to a file in the service's cache dir
-     * and returns the absolute file path. This avoids Binder size limits for large JSON.
+     * Hybrid status-go RPC.
+     *
+     * Returns the response inline in the Binder reply Parcel when small enough, otherwise
+     * via an ashmem-backed SharedMemory region carried by the returned RpcResponse. The
+     * server picks the path based on response size; the client must release the
+     * RpcResponse via close() (try-with-resources).
      */
-    String callToFile(String method, String argsJson);
+    RpcResponse rpcCall(String method, String argsJson);
 
     /** Register a signal listener. */
     void registerSignalListener(IStatusGoSignalListener listener);
@@ -26,4 +28,3 @@ interface IStatusGoService {
      */
     void setUiVisible(boolean visible);
 }
-
