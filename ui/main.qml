@@ -114,16 +114,13 @@ Window {
     }
 
     function restoreAppState() {
-        if (SQUtils.Utils.isMobile) // no point in restoring geometry or visibility
-            return
-
         let geometry = localAppSettings.geometry;
         let visibility = localAppSettings.visibility;
 
         if (visibility !== Window.Windowed &&
             visibility !== Window.Maximized &&
             visibility !== Window.FullScreen) {
-            visibility = Window.Windowed;
+            visibility = SQUtils.Utils.isMobile ? Window.Maximized : Window.Windowed
         }
 
         if (geometry === undefined ||
