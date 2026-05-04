@@ -2263,7 +2263,10 @@ method contactUpdated*[T](self: Module[T], contactId: string) =
   )
 
 proc getAllCommunityMemberItems[T](self: Module[T], community: CommunityDto): seq[MemberItem] =
-  # Add members who were kicked from the community after the ownership change for auto-rejoin after they share addresses
+  # Pre-populate the contacts cache with the community members
+  self.controller.seedContactsFromChatMembers(community.members)
+
+  # Add members who were kicked from the community after the ownership change for auto-rejoin after they share addresses.
   var members = community.members
   for requestForAutoRejoin in community.waitingForSharedAddressesRequestsToJoin:
     var chatMember = ChatMember()
@@ -2271,6 +2274,8 @@ proc getAllCommunityMemberItems[T](self: Module[T], community: CommunityDto): se
     chatMember.joined = false
     chatMember.role = MemberRole.None
     members.add(chatMember)
+    # Resolve contact
+    discard self.controller.getContactDetails(requestForAutoRejoin.publicKey)
 
   var bannedMembers = newSeq[MemberItem]()
   for memberId, memberState in community.pendingAndBannedMembers.pairs:

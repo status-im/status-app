@@ -24,6 +24,7 @@ proc toContactStatus*(value: ContactRequestState): ContactRequest =
 type
   UserItem* = ref object of RootObj
     pubKey: string
+    compressedPubKey: string
     emojiHash: string
     displayName: string
     usesDefaultName: bool
@@ -64,6 +65,8 @@ proc setup*(self: UserItem,
   isBlocked: bool,
   contactRequest: ContactRequest,
   #TODO: #14964 - remove defaults
+  compressedPubKey: string = "",
+  emojiHash: string = "[]",
   isCurrentUser: bool = false,
   lastUpdated: int64 = 0,
   lastUpdatedLocally: int64 = 0,
@@ -98,12 +101,8 @@ proc setup*(self: UserItem,
   self.isContactRequestSent = isContactRequestSent
   self.isRemoved = isRemoved
   self.trustStatus = trustStatus
-
-  # Setup emojiHash:
-  if pubKey == "" or not singletonInstance.utils.isChatKey(pubKey):
-    self.emojiHash = ""
-  else:
-    self.emojiHash = singletonInstance.utils.getEmojiHashAsJson(pubKey)
+  self.compressedPubKey = compressedPubKey
+  self.emojiHash = emojiHash
 
 # FIXME: remove defaults
 # TODO: #14964
@@ -121,6 +120,8 @@ proc initUserItem*(
     isContact: bool,
     isBlocked: bool,
     contactRequest: ContactRequest = ContactRequest.None,
+    compressedPubKey: string = "",
+    emojiHash: string = "[]",
     isCurrentUser: bool = false,
     lastUpdated: int64 = 0,
     lastUpdatedLocally: int64 = 0,
@@ -147,6 +148,8 @@ proc initUserItem*(
     isContact = isContact,
     isBlocked = isBlocked,
     contactRequest = contactRequest,
+    compressedPubKey = compressedPubKey,
+    emojiHash = emojiHash,
     isCurrentUser = isCurrentUser,
     lastUpdated = lastUpdated,
     lastUpdatedLocally = lastUpdatedLocally,
@@ -195,6 +198,12 @@ proc emojiHash*(self: UserItem): string {.inline.} =
 
 proc `emojiHash=`*(self: UserItem, value: string) {.inline.} =
   self.emojiHash = value
+
+proc compressedPubKey*(self: UserItem): string {.inline.} =
+  self.compressedPubKey
+
+proc `compressedPubKey=`*(self: UserItem, value: string) {.inline.} =
+  self.compressedPubKey = value
 
 proc displayName*(self: UserItem): string {.inline.} =
   self.displayName

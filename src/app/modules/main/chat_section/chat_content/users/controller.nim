@@ -92,11 +92,19 @@ proc init*(self: Controller) =
     self.events.on(SIGNAL_CHAT_MEMBERS_ADDED) do(e: Args):
       let args = ChatMembersAddedArgs(e)
       if (args.chatId == self.chatId):
+        # The signal carries only IDs (no enriched ChatMembers). Touch the
+        # cache for each just-added member so the placeholder gets
+        # constructed
+        for memberId in args.ids:
+          discard self.contactService.getContactDetails(memberId)
         self.delegate.onChatMembersAdded(args.ids)
 
     self.events.on(SIGNAL_CHAT_MEMBERS_CHANGED) do(e: Args):
       var args = ChatMembersChangedArgs(e)
       if (args.chatId == self.chatId):
+        # Args carry status-go-enriched members — seed before delegating
+        # so `processChatMember` reads enriched data from the cache.
+        self.contactService.seedFromChatMembers(args.members)
         self.delegate.onMembersChanged(args.members)
 
     self.events.on(SIGNAL_CHAT_MEMBER_REMOVED) do(e: Args):
