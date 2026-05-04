@@ -184,7 +184,7 @@ LayoutChooser {
     readonly property int windowWidth: root.Window?.width ?? Screen.width
 
     criteria: [
-        root.windowWidth < root.implicitWidth, // Portrait mode
+        root.windowWidth < ThemeUtils.portraitBreakpoint.width, // Portrait mode
         true // Defaults to landscape mode
     ]
 
