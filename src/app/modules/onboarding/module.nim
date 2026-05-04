@@ -291,6 +291,7 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
 
 method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJson: string) =
   try:
+    self.tmpKeyUid = keyUid
     self.loginFlow = LoginMethod(loginFlow)
 
     let data = parseJson(dataJson)
@@ -301,7 +302,6 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
         self.controller.login(account, data["password"].str)
       of LoginMethod.Keycard:
         featureGuard USE_KEYCARD_QT:
-          self.tmpKeyUid = keyUid
           self.loginKeycard(self.tmpKeyUid, data["pin"].str)
         else:
           self.authorize(data["pin"].str)
@@ -448,7 +448,6 @@ method onKeycardExportLoginKeysFailure*[T](self: Module[T], error: string) =
   self.view.accountLoginError(error, wrongPassword = true)
 
 method onKeycardExportLoginKeysSuccess*[T](self: Module[T], exportedKeys: KeycardExportedKeysDto) =
-  let keycardInfo = self.view.getKeycardEvent().keycardInfo
   # We got the keys, now we can login. If everything goes well, we will finish the app loading
   let accountDto = self.controller.getAccountByKeyUid(self.tmpKeyUid)
   self.controller.login(
