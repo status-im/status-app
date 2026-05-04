@@ -19501,10 +19501,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Polygon zkEVM Explorer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Unichain Explorer</source>
         <translation type="unfinished"></translation>
     </message>
