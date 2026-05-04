@@ -45,7 +45,7 @@ Item {
             StatusIcon {
                 Layout.topMargin: 28
                 Layout.alignment: Qt.AlignHCenter
-
+                color: Theme.palette.directColor1
                 icon: "communities"
             }
 
