@@ -19603,10 +19603,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>LineaScan</translation>
     </message>
     <message>
-        <source>Polygon zkEVM Explorer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Unichain Explorer</source>
         <translation type="unfinished"></translation>
     </message>

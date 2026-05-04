@@ -26,8 +26,6 @@ QtObject {
         readonly property int baseSepoliaChainId: 84532
         readonly property int lineaMainnetChainId: 59144
         readonly property int lineaSepoliaChainId: 59141
-        readonly property int polygonZkEvmMainnetChainId: 1101
-        readonly property int polygonZkEvmCardonaChainId: 2442
         readonly property int unichainMainnetChainId: 130
         readonly property int unichainSepoliaChainId: 1301
         readonly property int katanaMainnetChainId: 747474
@@ -50,8 +48,7 @@ QtObject {
         readonly property int binanceSmartChainTestnetChainId: 97
 
         // Used for new chain advertisment
-        readonly property var newChains: [chains.polygonZkEvmMainnetChainId,
-            chains.unichainMainnetChainId,
+        readonly property var newChains: [chains.unichainMainnetChainId,
             chains.katanaMainnetChainId,
             chains.inkMainnetChainId,
             chains.abstractMainnetChainId,
@@ -823,7 +820,6 @@ QtObject {
         readonly property string optimism: "oeth"
         readonly property string base: "base"
         readonly property string linea: "linea"
-        readonly property string polygonZkEvm: "polygon-zkevm"
         readonly property string unichain: "unichain"
         readonly property string katana: "katana"
         readonly property string ink: "ink"
@@ -848,8 +844,6 @@ QtObject {
         readonly property string sepoliaBase: "Base Sepolia"
         readonly property string linea: "Linea"
         readonly property string sepoliaLinea: "Linea Sepolia"
-        readonly property string polygonZkEvm: "Polygon zkEVM"
-        readonly property string cardonaPolygonZkEvm: "Polygon zkEVM Cardona"
         readonly property string unichain: "Unichain"
         readonly property string sepoliaUnichain: "Unichain Sepolia"
         readonly property string katana: "Katana"
@@ -878,7 +872,6 @@ QtObject {
         readonly property string optimism: "https://optimistic.etherscan.io"
         readonly property string base: "https://basescan.org"
         readonly property string linea: "https://lineascan.build"
-        readonly property string polygonZkEvm: "https://www.oklink.com/polygon-zkevm"
         readonly property string unichain: "https://unichain.blockscout.com"
         readonly property string katana: "https://katanascan.com"
         readonly property string ink: "https://explorer.inkonchain.com"
@@ -894,7 +887,6 @@ QtObject {
         readonly property string sepoliaOptimism: "https://sepolia-optimism.etherscan.io"
         readonly property string sepoliaBase: "https://sepolia.basescan.org"
         readonly property string sepoliaLinea: "https://sepolia.lineascan.build"
-        readonly property string cardonaPolygonZkEvm: "https://www.oklink.com/polygon-zkevm-testnet"
         readonly property string sepoliaUnichain: "https://unichain-sepolia.blockscout.com"
         readonly property string bokutoKatana: "https://bokuto.katanascan.com"
         readonly property string sepoliaInk: "https://explorer-sepolia.inkonchain.com"
@@ -918,7 +910,6 @@ QtObject {
         readonly property string optimism: "optimism"
         readonly property string base: "base"
         readonly property string linea: "linea"
-        readonly property string polygonZkEvm: "polygon-zkevm" //opensea does not support polygon zkEVM yet
         readonly property string unichain: "unichain"
         readonly property string katana: "katana" // opensea does not support katana yet
         readonly property string ink: "ink" // opensea does not support ink yet
