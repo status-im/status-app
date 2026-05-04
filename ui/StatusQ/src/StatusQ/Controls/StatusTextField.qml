@@ -6,6 +6,7 @@ import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils
+import StatusQ.Popups
 
 TextField {
     id: root
@@ -35,4 +36,34 @@ TextField {
         if (noSelection && activeFocus)
             deselect()
     }
+
+    StatusMenu {
+        id: contextMenu
+
+        hideDisabledItems: false
+
+        StatusAction {
+            text: qsTr("Cut")
+            enabled: !noSelection
+            onTriggered: root.cut()
+        }
+        StatusAction {
+            text: qsTr("Copy")
+            enabled: !noSelection
+            onTriggered: root.copy()
+        }
+        StatusAction {
+            text: qsTr("Paste")
+            enabled: root.canPaste
+            onTriggered: root.paste()
+        }
+        StatusMenuSeparator {}
+        StatusAction {
+            text: qsTr("Select All")
+            enabled: !noSelection
+            onTriggered: root.selectAll()
+        }
+    }
+
+    ContextMenu.menu: Utils.isMobile ? null : contextMenu
 }
