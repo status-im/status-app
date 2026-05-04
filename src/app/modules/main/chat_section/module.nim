@@ -373,6 +373,9 @@ method onChatsLoaded*(
   ) =
   self.chatsLoaded = true
 
+  # Pre-populate the contacts cache with community members
+  contactService.seedFromChatMembers(community.members)
+
   self.buildChatSectionUI(community, chats, events, settingsService, nodeConfigurationService,
     contactService, chatService, communityService, messageService, mailserversService, sharedUrlsService)
 
@@ -423,6 +426,8 @@ method getSectionMemberList*(self: Module): QVariant =
   return self.membersListModule.getUsersListVariant()
 
 method updateCommunityMemberList*(self: Module, members: seq[ChatMember]) =
+  # Re-seed the contacts cache for late joiners.
+  self.controller.seedContactsFromChatMembers(members)
   self.membersListModule.updateMembersList(members)
 
 method viewDidLoad*(self: Module) =

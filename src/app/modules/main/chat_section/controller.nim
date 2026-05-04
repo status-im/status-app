@@ -538,6 +538,9 @@ proc getContactById*(self: Controller, id: string): ContactsDto =
 proc getContactDetails*(self: Controller, id: string): ContactDetails =
   return self.contactService.getContactDetails(id)
 
+proc seedContactsFromChatMembers*(self: Controller, members: seq[ChatMember]) =
+  self.contactService.seedFromChatMembers(members)
+
 proc getStatusForContactWithId*(self: Controller, publicKey: string): StatusUpdateDto =
   return self.contactService.getStatusForContactWithId(publicKey)
 
