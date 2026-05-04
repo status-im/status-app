@@ -645,11 +645,6 @@ QtObject {
             if (testnetMode) {
                 link = Constants.networkExplorerLinks.sepoliaLinea
             }
-        } else if (networkShortName === Constants.networkShortChainNames.polygonZkEvm) {
-            link = Constants.networkExplorerLinks.polygonZkEvm
-            if (testnetMode) {
-                link = Constants.networkExplorerLinks.cardonaPolygonZkEvm
-            }
         } else if (networkShortName === Constants.networkShortChainNames.unichain) {
             link = Constants.networkExplorerLinks.unichain
             if (testnetMode) {
@@ -737,9 +732,6 @@ QtObject {
         if (networkShortName === Constants.networkShortChainNames.linea) {
             return qsTr("LineaScan")
         }
-        if (networkShortName === Constants.networkShortChainNames.polygonZkEvm) {
-            return qsTr("Polygon zkEVM Explorer")
-        }
         if (networkShortName === Constants.networkShortChainNames.unichain) {
             return qsTr("Unichain Explorer")
         }
@@ -792,9 +784,6 @@ QtObject {
             case Constants.chains.lineaMainnetChainId:
             case Constants.chains.lineaSepoliaChainId:
                 return Constants.networkShortChainNames.linea
-            case Constants.chains.polygonZkEvmMainnetChainId:
-            case Constants.chains.polygonZkEvmCardonaChainId:
-                return Constants.networkShortChainNames.polygonZkEvm
             case Constants.chains.unichainMainnetChainId:
             case Constants.chains.unichainSepoliaChainId:
                 return Constants.networkShortChainNames.unichain
@@ -853,10 +842,6 @@ QtObject {
                 return Constants.networkNames.linea
             case Constants.chains.lineaSepoliaChainId:
                 return Constants.networkNames.sepoliaLinea
-            case Constants.chains.polygonZkEvmMainnetChainId:
-                return Constants.networkNames.polygonZkEvm
-            case Constants.chains.polygonZkEvmCardonaChainId:
-                return Constants.networkNames.cardonaPolygonZkEvm
             case Constants.chains.unichainMainnetChainId:
                 return Constants.networkNames.unichain
             case Constants.chains.unichainSepoliaChainId:
@@ -906,7 +891,6 @@ QtObject {
             case Constants.chains.optimismChainId:
             case Constants.chains.baseChainId:
             case Constants.chains.lineaMainnetChainId:
-            case Constants.chains.polygonZkEvmMainnetChainId:
             case Constants.chains.unichainMainnetChainId:
             case Constants.chains.katanaMainnetChainId:
             case Constants.chains.inkMainnetChainId:

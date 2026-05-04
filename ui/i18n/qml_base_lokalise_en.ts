@@ -23700,11 +23700,6 @@
       <translation>LineaScan</translation>
     </message>
     <message>
-      <source>Polygon zkEVM Explorer</source>
-      <comment>Utils</comment>
-      <translation>Polygon zkEVM Explorer</translation>
-    </message>
-    <message>
       <source>Unichain Explorer</source>
       <comment>Utils</comment>
       <translation>Unichain Explorer</translation>
