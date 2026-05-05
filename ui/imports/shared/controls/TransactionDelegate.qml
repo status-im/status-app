@@ -253,6 +253,13 @@ StatusListItem {
             return qsTr("%1 (community asset) from %2 on %3").arg(root.transactionValue).arg(communityInfo).arg(root.networkName)
         }
 
+        if (!modelData.symbol) {
+            if (!!modelData.tokenAddress) {
+                return qsTr("Unknown token (%1)").arg(modelData.tokenAddress)
+            }
+            return qsTr("Unknown token")
+        }
+
         switch(d.txType) {
         case Constants.TransactionType.Send:
             // Cross chain send. Use bridge pattern
@@ -477,7 +484,11 @@ StatusListItem {
                         if (root.loading) {
                             return "dummy text"
                         } else if (!root.isModelDataValid || root.isNFT) {
-                            return ""
+                            return "-"
+                        }
+
+                        if (!modelData.symbol) {
+                            return root.currenciesStore.formatCurrencyAmount(root.cryptoValue, "")
                         }
 
                         switch(d.txType) {
@@ -499,7 +510,7 @@ StatusListItem {
                         case Constants.TransactionType.Bridge:
                         case Constants.TransactionType.Approve:
                         default:
-                            return ""
+                            return "-"
                         }
                     }
                     horizontalAlignment: Qt.AlignRight
@@ -527,7 +538,7 @@ StatusListItem {
                         if (root.loading) {
                             return "dummy text"
                         } else if (!root.isModelDataValid || root.isNFT || !modelData.symbol) {
-                            return ""
+                            return "-"
                         }
 
                         switch(d.txType) {
@@ -541,7 +552,7 @@ StatusListItem {
                         case Constants.TransactionType.Bridge:
                         case Constants.TransactionType.Approve:
                         default:
-                            return ""
+                            return "-"
                         }
                     }
                     font.pixelSize: root.loading ? d.loadingPixelSize : 12

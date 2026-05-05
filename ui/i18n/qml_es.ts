@@ -18909,6 +18909,14 @@ This action cannot be undone.</source>
         <source>Retry</source>
         <translation>Reintentar</translation>
     </message>
+    <message>
+        <source>Unknown token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown token (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TransactionSettings</name>
