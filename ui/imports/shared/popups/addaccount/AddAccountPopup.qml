@@ -192,7 +192,6 @@ StatusModal {
                 property string address
 
                 closePolicy: Popup.NoAutoClose
-                hasCloseButton: false
                 headerSettings.title: qsTr("Removing saved address")
                 confirmationText: qsTr("The account you're trying to add <b>%1</b> is already saved under the name <b>%2</b>.<br/><br/>Do you want to remove it from saved addresses in favour of adding it to the Wallet?")
                 .arg(address)
