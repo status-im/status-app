@@ -95,6 +95,7 @@ SettingsContentBase {
         StatusBaseText {
             Layout.fillWidth: true
             text: qsTr("Adjust how compact or spacious the layout looks")
+            wrapMode: Text.Wrap
         }
 
         StatusQ.StatusLabeledSlider {
@@ -140,6 +141,7 @@ SettingsContentBase {
                 image.source: Assets.png("appearance-light")
                 control.text: qsTr("Light")
                 control.checked: root.theme === ThemeUtils.Style.Light
+                control.font.pixelSize: Theme.fontSize(14)
                 onRadioCheckedChanged: function(checked) {
                     if (checked) {
                         root.themeChangeRequested(ThemeUtils.Style.Light)
@@ -152,6 +154,7 @@ SettingsContentBase {
                 image.source: Assets.png("appearance-dark")
                 control.text: qsTr("Dark")
                 control.checked: root.theme === ThemeUtils.Style.Dark
+                control.font.pixelSize: Theme.fontSize(14)
                 onRadioCheckedChanged: function(checked) {
                     if (checked) {
                         root.themeChangeRequested(ThemeUtils.Style.Dark)
@@ -164,6 +167,7 @@ SettingsContentBase {
                 image.source: Assets.png("appearance-system")
                 control.text: qsTr("System")
                 control.checked: root.theme === ThemeUtils.Style.System
+                control.font.pixelSize: Theme.fontSize(14)
                 onRadioCheckedChanged: function(checked) {
                     if (checked) {
                         root.themeChangeRequested(ThemeUtils.Style.System)
