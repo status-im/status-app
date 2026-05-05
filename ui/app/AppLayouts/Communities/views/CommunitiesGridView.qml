@@ -24,6 +24,8 @@ StatusScrollView {
     property var assetsModel
     property var collectiblesModel
 
+    property bool compactMode
+
     readonly property bool isEmpty: !featuredRepeater.count && !root.popularCommunitiesCount
     readonly property int popularCommunitiesCount: firstPopularElementsRepeater.count + restOfPopularElementsRepeater.count
 
@@ -31,22 +33,15 @@ StatusScrollView {
 
     clip: false
     contentWidth: availableWidth
-    contentItem.scale: d.scale
-    contentItem.width: availableWidth / contentItem.scale
-    contentItem.height: availableHeight / contentItem.scale
-    contentItem.transformOrigin: Item.TopLeft
 
     QtObject {
         id: d
 
         // Values from the design
         readonly property int scrollViewTopMargin: 20
-        readonly property int subtitlePixelSize: 17
+        readonly property int subtitlePixelSize: root.Theme.fontSize(17)
         readonly property int promotionalCardPosition: Math.max(gridLayout.delegateCountPerRow - 1, 1)
-        property int delegateWidth: 335
-
-        readonly property real minWidth: d.delegateWidth + root.rightPadding + root.leftPadding + 2 * Theme.padding
-        readonly property real scale: Math.min(1, root.availableWidth / minWidth)
+        property int delegateWidth: root.compactMode ? 300 : 335
 
         Behavior on delegateWidth {
             PropertyAnimation { duration: ThemeUtils.AnimationDuration.Fast }
@@ -82,11 +77,10 @@ StatusScrollView {
                 maximumIndex: d.promotionalCardPosition - 1
             }
         ]
-
     }
 
     SortFilterProxyModel {
-        id: sfpmRestOfPopularElementsModel//popularModel
+        id: sfpmRestOfPopularElementsModel
 
         sourceModel: root.model
 
@@ -157,9 +151,7 @@ StatusScrollView {
 
     ColumnLayout {
         id: contentColumn
-        width: root.availableWidth / d.scale
-        anchors.leftMargin: root.anchors.leftMargin
-        anchors.rightMargin: root.anchors.rightMargin
+        width: root.availableWidth
 
         StatusBaseText {
             id: featuredLabel
@@ -189,12 +181,8 @@ StatusScrollView {
                 model: root.searchLayout ? root.model : featuredModel
                 delegate: communityCardDelegate
             }
-            move: Transition {
-                NumberAnimation { properties: "x,y"; }
-            }
-            add: Transition {
-                NumberAnimation { properties: "x,y"; from: 0; duration: ThemeUtils.AnimationDuration.Fast }
-            }
+            move: FastXYTransition {}
+            add: FastXYZeroTransition {}
         }
 
         StatusBaseText {
@@ -236,21 +224,24 @@ StatusScrollView {
                 model: sfpmRestOfPopularElementsModel
                 delegate: communityCardDelegate
             }
-            move: Transition {
-                NumberAnimation { properties: "x,y"; }
-            }
-            add: Transition {
-                NumberAnimation { properties: "x,y"; from: 0; duration: ThemeUtils.AnimationDuration.Fast }
-            }
+            move: FastXYTransition {}
+            add: FastXYZeroTransition {}
         }
 
         StatusBaseText {
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: Theme.xlPadding * 2
             width: d.delegateWidth
-            visible: root.model.ModelCount.count === 0
+            visible: root.model.ModelCount.empty
             text: qsTr("No communities found")
             color: Theme.palette.baseColor1
         }
+    }
+
+    component FastXYTransition: Transition {
+        NumberAnimation { properties: "x,y"; duration: ThemeUtils.AnimationDuration.Fast}
+    }
+    component FastXYZeroTransition: Transition {
+        NumberAnimation { properties: "x,y"; from: 0; duration: ThemeUtils.AnimationDuration.Fast}
     }
 }

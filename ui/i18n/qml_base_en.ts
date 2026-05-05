@@ -3404,34 +3404,6 @@ file format</source>
         <source>Create New Community</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>Create new community</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Create a new Status community</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Create new</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&apos;%1&apos; import in progress...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Import existing Discord community into Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Import existing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your current import must be finished or cancelled before a new import can be started.</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>CommunitiesView</name>
@@ -17560,6 +17532,25 @@ to load</source>
     </message>
     <message>
         <source>Unpair</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>StatusTextField</name>
+    <message>
+        <source>Cut</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Select All</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -3409,34 +3409,6 @@ no compatible</translation>
         <source>Create New Community</source>
         <translation>Crear nueva comunidad</translation>
     </message>
-    <message>
-        <source>Create new community</source>
-        <translation>Crear nueva comunidad</translation>
-    </message>
-    <message>
-        <source>Create a new Status community</source>
-        <translation>Crear una nueva comunidad de Status</translation>
-    </message>
-    <message>
-        <source>Create new</source>
-        <translation>Crear nueva</translation>
-    </message>
-    <message>
-        <source>&apos;%1&apos; import in progress...</source>
-        <translation>Importación de &apos;%1&apos; en progreso...</translation>
-    </message>
-    <message>
-        <source>Import existing Discord community into Status</source>
-        <translation>Importar comunidad de Discord existente a Status</translation>
-    </message>
-    <message>
-        <source>Import existing</source>
-        <translation>Importar existente</translation>
-    </message>
-    <message>
-        <source>Your current import must be finished or cancelled before a new import can be started.</source>
-        <translation>Tu importación actual debe finalizarse o cancelarse antes de que se pueda iniciar una nueva importación.</translation>
-    </message>
 </context>
 <context>
     <name>CommunitiesView</name>
@@ -17580,6 +17552,25 @@ al cargar</translation>
     <message>
         <source>Unpair</source>
         <translation>Desemparejar</translation>
+    </message>
+</context>
+<context>
+    <name>StatusTextField</name>
+    <message>
+        <source>Cut</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished">Copiar</translation>
+    </message>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished">Pegar</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
