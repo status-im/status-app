@@ -136,7 +136,7 @@ Control {
                             roleName: "balance"
                         }
                         tagPrimaryLabel.text: root.formatBalance(aggregatedbalance)
-                        tagPrimaryLabel.color: model.chainColor
+                        tagPrimaryLabel.color: Theme.palette.directColor1
                         asset.name: Assets.svg(model.iconUrl)
                         asset.isImage: true
                         loading: root.isLoading
