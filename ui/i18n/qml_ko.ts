@@ -3397,34 +3397,6 @@ file format</source>
         <source>Create New Community</source>
         <translation>새 커뮤니티 만들기</translation>
     </message>
-    <message>
-        <source>Create new community</source>
-        <translation>새 커뮤니티 만들기</translation>
-    </message>
-    <message>
-        <source>Create a new Status community</source>
-        <translation>새 Status 커뮤니티 만들기</translation>
-    </message>
-    <message>
-        <source>Create new</source>
-        <translation>새로 만들기</translation>
-    </message>
-    <message>
-        <source>&apos;%1&apos; import in progress...</source>
-        <translation>&apos;%1&apos; 가져오는 중...</translation>
-    </message>
-    <message>
-        <source>Import existing Discord community into Status</source>
-        <translation>기존 Discord 커뮤니티를 Status로 가져오기</translation>
-    </message>
-    <message>
-        <source>Import existing</source>
-        <translation>기존 가져오기</translation>
-    </message>
-    <message>
-        <source>Your current import must be finished or cancelled before a new import can be started.</source>
-        <translation>새 가져오기를 시작하려면, 현재 가져오기를 끝내거나 취소해야 합니다.</translation>
-    </message>
 </context>
 <context>
     <name>CommunitiesView</name>
@@ -17520,6 +17492,25 @@ to load</source>
     <message>
         <source>Unpair</source>
         <translation>연결 해제</translation>
+    </message>
+</context>
+<context>
+    <name>StatusTextField</name>
+    <message>
+        <source>Cut</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished">클립보드로 복사</translation>
+    </message>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished">붙여넣기</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

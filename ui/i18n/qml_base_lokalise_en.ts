@@ -4158,41 +4158,6 @@
       <comment>CommunitiesPortalLayout</comment>
       <translation>Create New Community</translation>
     </message>
-    <message>
-      <source>Create new community</source>
-      <comment>CommunitiesPortalLayout</comment>
-      <translation>Create new community</translation>
-    </message>
-    <message>
-      <source>Create a new Status community</source>
-      <comment>CommunitiesPortalLayout</comment>
-      <translation>Create a new Status community</translation>
-    </message>
-    <message>
-      <source>Create new</source>
-      <comment>CommunitiesPortalLayout</comment>
-      <translation>Create new</translation>
-    </message>
-    <message>
-      <source>&#39;%1&#39; import in progress...</source>
-      <comment>CommunitiesPortalLayout</comment>
-      <translation>&#39;%1&#39; import in progress...</translation>
-    </message>
-    <message>
-      <source>Import existing Discord community into Status</source>
-      <comment>CommunitiesPortalLayout</comment>
-      <translation>Import existing Discord community into Status</translation>
-    </message>
-    <message>
-      <source>Import existing</source>
-      <comment>CommunitiesPortalLayout</comment>
-      <translation>Import existing</translation>
-    </message>
-    <message>
-      <source>Your current import must be finished or cancelled before a new import can be started.</source>
-      <comment>CommunitiesPortalLayout</comment>
-      <translation>Your current import must be finished or cancelled before a new import can be started.</translation>
-    </message>
   </context>
   <context>
     <name>CommunitiesView</name>
@@ -21381,6 +21346,29 @@
       <source>Unpair</source>
       <comment>StatusSyncDeviceDelegate</comment>
       <translation>Unpair</translation>
+    </message>
+  </context>
+  <context>
+    <name>StatusTextField</name>
+    <message>
+      <source>Cut</source>
+      <comment>StatusTextField</comment>
+      <translation>Cut</translation>
+    </message>
+    <message>
+      <source>Copy</source>
+      <comment>StatusTextField</comment>
+      <translation>Copy</translation>
+    </message>
+    <message>
+      <source>Paste</source>
+      <comment>StatusTextField</comment>
+      <translation>Paste</translation>
+    </message>
+    <message>
+      <source>Select All</source>
+      <comment>StatusTextField</comment>
+      <translation>Select All</translation>
     </message>
   </context>
   <context>
