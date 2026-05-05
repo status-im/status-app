@@ -1,135 +1,93 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQml.Models
 
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
-import StatusQ.Popups
+import StatusQ.Popups.Dialog
 
-StatusModal {
-    id: confirmationDialog
+StatusDialog {
+    id: root
 
-    property var parentPopup
-    property var value
     property var executeConfirm
-    property var executeReject
-    property var executeCancel
     property string confirmButtonObjectName: ""
     property string btnType: "warn"
     property string cancelBtnType: "warn"
     property string confirmButtonLabel: qsTr("Confirm")
-    property string rejectButtonLabel: qsTr("Reject")
     property string cancelButtonLabel: qsTr("Cancel")
     property string confirmationText: qsTr("Are you sure you want to do this?")
-    property bool showRejectButton: false
     property bool showCancelButton: false
     property alias checkbox: checkbox
 
+    property StatusModalHeaderSettings headerSettings: StatusModalHeaderSettings {
+        title: qsTr("Confirm your action")
+    }
 
-    headerSettings.title: qsTr("Confirm your action")
+    width: 480
+    margins: contentItem.Theme.padding
+
+    title: headerSettings.title
     focus: visible
-    fullScreenSheet: false
+    standardButtons: Dialog.NoButton
 
     signal confirmButtonClicked()
-    signal rejectButtonClicked()
     signal cancelButtonClicked()
 
+    contentItem: ColumnLayout {
+        spacing: Theme.padding
 
-    contentItem: Item {
-        width: confirmationDialog.width
-        implicitHeight: childrenRect.height
-        Column {
-            width: parent.width - 32
-            anchors.horizontalCenter: parent.horizontalCenter
+        StatusBaseText {
+            Layout.fillWidth: true
+            Layout.topMargin: Theme.padding
+            Layout.bottomMargin: checkbox.visible ? 0: Theme.padding
 
-            Item {
-                width: parent.width
-                height: 16
-            }
+            text: root.confirmationText
+            font.pixelSize: Theme.primaryTextFontSize
+            wrapMode: Text.WordWrap
+            color: Theme.palette.directColor1
+        }
 
-            StatusBaseText {
-                text: confirmationDialog.confirmationText
-                font.pixelSize: Theme.primaryTextFontSize
-                anchors.left: parent.left
-                anchors.right: parent.right
-                wrapMode: Text.WordWrap
-                color: Theme.palette.directColor1
-            }
+        StatusCheckBox {
+            id: checkbox
+            visible: false
 
-            Item {
-                width: parent.width
-                height: 16
-            }
+            Layout.fillWidth: true
+            Layout.bottomMargin: Theme.padding
 
-            StatusCheckBox {
-                id: checkbox
-                visible: false
-                Layout.preferredWidth: parent.width
-                text: qsTr("Do not show this again")
-            }
-
-            Item {
-                width: parent.width
-                height: visible ? 16 : 0
-                visible: checkbox.visible
-            }
+            text: qsTr("Do not show this again")
         }
     }
 
-    rightButtons: [
-        StatusFlatButton {
-            id: cancelButton
-            visible: showCancelButton
-            text: confirmationDialog.cancelButtonLabel
-            type: {
-                switch (confirmationDialog.cancelBtnType) {
-                    case "warn":
-                        return StatusBaseButton.Type.Danger
-                    default:
-                        return StatusBaseButton.Type.Normal
-                }
+    footer: StatusDialogFooter {
+        rightButtons: ObjectModel {
+            StatusFlatButton {
+                id: cancelButton
+                visible: root.showCancelButton
+                text: root.cancelButtonLabel
+                type: root.cancelBtnType === "warn"
+                      ? StatusBaseButton.Type.Danger
+                      : StatusBaseButton.Type.Normal
+                onClicked: root.cancelButtonClicked()
             }
-            onClicked: {
-                if (executeCancel && typeof executeCancel === "function") {
-                    executeCancel()
+            StatusButton {
+                id: confirmButton
+                objectName: root.confirmButtonObjectName
+                Layout.maximumWidth: root.availableWidth / 2
+                type: root.btnType === "warn"
+                      ? StatusBaseButton.Type.Danger
+                      : StatusBaseButton.Type.Normal
+                text: root.confirmButtonLabel
+                focus: true
+                Keys.onReturnPressed: confirmButton.clicked()
+                onClicked: {
+                    if (root.executeConfirm
+                            && typeof root.executeConfirm === "function")
+                        root.executeConfirm()
+                    root.confirmButtonClicked()
                 }
-                confirmationDialog.cancelButtonClicked()
-            }
-        },
-        StatusFlatButton {
-            visible: showRejectButton
-            text: confirmationDialog.rejectButtonLabel
-            onClicked: {
-                if (executeReject && typeof executeReject === "function") {
-                    executeReject()
-                }
-                confirmationDialog.rejectButtonClicked()
-            }
-        },
-        StatusButton {
-            Layout.maximumWidth: confirmationDialog.availableWidth/2
-            id: confirmButton
-            objectName: confirmationDialog.confirmButtonObjectName
-            type: {
-                switch (confirmationDialog.btnType) {
-                    case "warn":
-                        return StatusBaseButton.Type.Danger
-                    default:
-                        return StatusBaseButton.Type.Normal
-                }
-            }
-            text: confirmationDialog.confirmButtonLabel
-            focus: true
-            Keys.onReturnPressed: function(event) {
-                confirmButton.clicked()
-            }
-            onClicked: {
-                if (executeConfirm && typeof executeConfirm === "function") {
-                    executeConfirm()
-                }
-                confirmationDialog.confirmButtonClicked()
             }
         }
-    ]
+    }
 }
