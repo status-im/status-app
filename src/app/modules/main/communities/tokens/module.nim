@@ -111,8 +111,7 @@ method load*(self: Module) =
   self.view.load()
 
 proc createOwnerAndMasterDeploymentParams(self: Module, communityId: string): (DeploymentParameters, DeploymentParameters) =
-  let communityDto = self.controller.getCommunityById(communityId)
-  let commName = communityDto.name
+  let commName = self.controller.getCommunityById(communityId).name
   let commNameShort = try: commName[0 .. 2].toUpper except: commName.toUpper
   return (
     DeploymentParameters(
@@ -463,9 +462,7 @@ method onCommunityTokenReceived*(self: Module, name: string, symbol: string, ima
   self.view.emitCommunityTokenReceived(name, symbol, image, communityId, communityName, balance, chainId, txHash, isFirst, tokenType, accountName, accountAddress)
 
 method onLostOwnership*(self: Module, communityId: string) =
-  let communityDto = self.controller.getCommunityById(communityId)
-  let communityName = communityDto.name
-  self.view.emitOwnershipLost(communityId, communityName)
+  self.view.emitOwnershipLost(communityId, self.controller.getCommunityById(communityId).name)
 
 method declineOwnership*(self: Module, communityId: string) =
   self.controller.declineOwnership(communityId)

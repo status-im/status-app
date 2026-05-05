@@ -128,11 +128,12 @@ proc setSearchLocation*(self: Controller, location: string, subLocation: string)
     self.searchLocation = location
     self.searchSubLocation = subLocation
 
-proc getCommunityById*(self: Controller, communityId: string): CommunityDto =
+proc getCommunityById*(self: Controller, communityId: string): lent CommunityDto =
   return self.communityService.getCommunityById(communityId)
 
-proc getJoinedAndSpectatedCommunities*(self: Controller): seq[CommunityDto] =
-  return self.communityService.getJoinedAndSpectatedCommunities()
+iterator joinedAndSpectatedCommunities*(self: Controller): lent CommunityDto =
+  for c in self.communityService.joinedAndSpectatedCommunities():
+    yield c
 
 proc getChatsForPersonalSection*(self: Controller): seq[ChatDto] =
   return self.chatService.getChatsForPersonalSection()
@@ -140,7 +141,7 @@ proc getChatsForPersonalSection*(self: Controller): seq[ChatDto] =
 proc getChatDetailsForChatTypes*(self: Controller, types: seq[ChatType]): seq[ChatDto] =
   return self.chatService.getChatsOfChatTypes(types)
 
-proc getChatDetails*(self: Controller, communityId, chatId: string): ChatDto =
+proc getChatDetails*(self: Controller, communityId, chatId: string): lent ChatDto =
   let fullId = communityId & chatId
   return self.chatService.getChatById(fullId)
 
@@ -202,7 +203,7 @@ proc resultItemClicked*(self: Controller, itemId: string) =
     messageId: itemDetails.messageId)
   self.events.emit(SIGNAL_MAKE_SECTION_CHAT_ACTIVE, data)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: seq[ChatDto]): string =
+proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
   return self.messageService.getRenderedText(parsedTextArray, communityChats)
 
 proc getColorId*(self: Controller, pubkey: string): int =
@@ -214,5 +215,5 @@ proc getAllChats*(self: Controller): seq[ChatDto] =
 proc getContactDetails*(self: Controller, contactId: string): ContactDetails =
   return self.contactsService.getContactDetails(contactId)
 
-proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communityChats: seq[ChatDto]): string =
+proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communityChats: openArray[ChatDto]): string =
   return self.messageService.getMessagesParsedPlainText(message, communityChats)

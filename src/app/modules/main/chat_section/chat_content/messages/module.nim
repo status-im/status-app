@@ -133,10 +133,7 @@ proc createMessageItemsFromMessageDtos(self: Module, messages: seq[MessageDto], 
     if(index != -1):
       self.view.model().removeItem(message.replace)
 
-    var communityChats: seq[ChatDto]
-    communityChats = self.controller.getCommunityDetails().chats
-
-    var renderedMessageText = self.controller.getRenderedText(message.parsedText, communityChats)
+    var renderedMessageText = self.controller.getRenderedText(message.parsedText, self.controller.getCommunityDetails().chats)
 
     var transactionContract = message.transactionParameters.contract
     var transactionValue = message.transactionParameters.value
@@ -157,7 +154,7 @@ proc createMessageItemsFromMessageDtos(self: Module, messages: seq[MessageDto], 
       albumMessageIds = @[],
       deletedByContactDetails,
       quotedMessageAuthorDetails,
-      self.controller.getRenderedText(message.quotedMessage.parsedText, communityChats),
+      self.controller.getRenderedText(message.quotedMessage.parsedText, self.controller.getCommunityDetails().chats),
       transactionContract,
       transactionValue,
     )
@@ -390,20 +387,17 @@ method getChatIcon*(self: Module): string =
 
 method amIChatAdmin*(self: Module): bool =
   if not self.controller.belongsToCommunity():
-    let chatDto = self.controller.getChatDetails()
-    for member in chatDto.members:
+    for member in self.controller.getChatDetails().members:
       if (member.id == singletonInstance.userProfile.getPubKey()):
         # TODO untangle this. There is no special roles for group chats
         return member.role == MemberRole.Owner or member.role == MemberRole.Admin or member.role == MemberRole.TokenMaster
     return false
   else:
-    let communityDto = self.controller.getCommunityDetails()
-    return communityDto.isPrivilegedUser
+    return self.controller.getCommunityDetails().isPrivilegedUser
 
 method pinMessageAllowedForMembers*(self: Module): bool =
   if(self.controller.belongsToCommunity()):
-    let communityDto = self.controller.getCommunityDetails()
-    return communityDto.adminSettings.pinMessageAllMembersEnabled
+    return self.controller.getCommunityDetails().adminSettings.pinMessageAllMembersEnabled
   return false
 
 method getNumberOfPinnedMessages*(self: Module): int =
@@ -428,8 +422,7 @@ method updateContactDetails*(self: Module, contactId: string) =
       item.quotedMessageAuthorAvatar = updatedContact.icon
 
     if item.messageContainsMentions and item.mentionedUsersPks.anyIt(it == contactId):
-      let communityChats = self.controller.getCommunityDetails().chats
-      item.messageText = self.controller.getRenderedText(item.parsedText, communityChats)
+      item.messageText = self.controller.getRenderedText(item.parsedText, self.controller.getCommunityDetails().chats)
 
     item.linkPreviewModel.setContactInfo(updatedContact)
 
@@ -464,14 +457,13 @@ method onMessageEdited*(self: Module, message: MessageDto) =
     return
 
   let mentionedUsersPks = itemBeforeChange.mentionedUsersPks
-  let communityChats = self.controller.getCommunityDetails().chats
 
   var updatedText = ""
   if message.contentType == ContentType.BridgeMessage:
     # message from bridge does not have any tags, we need to add them here to show correctly edited message
     updatedText = "<p>" & message.bridgeMessage.content & "</p>"
   else:
-    updatedText = self.controller.getRenderedText(message.parsedText, communityChats)
+    updatedText = self.controller.getRenderedText(message.parsedText, self.controller.getCommunityDetails().chats)
 
   self.view.model().updateEditedMsg(
     message.id,
@@ -661,8 +653,7 @@ proc updateLinkPreviewsContacts(self: Module, item: Item, requestFromMailserver:
 
 proc updateLinkPreviewsCommunities(self: Module, item: Item, requestFromMailserver: bool) =
   for communityId, url in item.linkPreviewModel.getCommunityLinks().pairs:
-    let community = self.controller.getCommunityById(communityId)
-
+    let community {.cursor.} = self.controller.getCommunityById(communityId)
     if community.id != "":
       item.linkPreviewModel.setCommunityInfo(community)
 
