@@ -873,9 +873,9 @@ method prepareTokenModelForCommunity*(self: Module, communityId: string) =
   self.joiningCommunityDetails.communityIdForRevealedAccounts = communityId
   self.controller.asyncGetRevealedAccountsForMember(communityId, singletonInstance.userProfile.getPubKey())
 
-  let community = self.controller.getCommunityById(communityId)
   var tokenPermissionsItems: seq[TokenPermissionItem] = @[]
 
+  let community {.cursor.} = self.controller.getCommunityById(communityId)
   for id, tokenPermission in community.tokenPermissions:
     let chats = community.getCommunityChats(tokenPermission.chatIds)
     let tokenPermissionItem = buildTokenPermissionItem(tokenPermission, chats)
@@ -885,8 +885,8 @@ method prepareTokenModelForCommunity*(self: Module, communityId: string) =
   self.checkPermissions(communityId, @[])
 
 method prepareTokenModelForCommunityChat*(self: Module, communityId: string, chatId: string) =
-  let community = self.controller.getCommunityById(communityId)
   var tokenPermissionsItems: seq[TokenPermissionItem] = @[]
+  let community {.cursor.} = self.controller.getCommunityById(communityId)
   for id, tokenPermission in community.tokenPermissions:
     var containsChat = false
     for id in tokenPermission.chatIds:
@@ -904,9 +904,8 @@ method prepareTokenModelForCommunityChat*(self: Module, communityId: string, cha
   self.checkPermissions(communityId, @[])
 
 proc applyPermissionResponse*(self: Module, communityId: string, permissions: Table[string, CheckPermissionsResultDto]) =
-  let community = self.controller.getCommunityById(communityId)
   for id, criteriaResult in permissions:
-    if not community.tokenPermissions.hasKey(id):
+    if not self.controller.getCommunityById(communityId).tokenPermissions.hasKey(id):
       warn "unknown permission", id
       continue
 

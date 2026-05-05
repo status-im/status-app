@@ -26,7 +26,7 @@ method load*(self: AccessInterface, buildChats: bool = false) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onChatsLoaded*(self: AccessInterface,
-    community: CommunityDto,
+    communityId: string,
     chats: seq[ChatDto],
     events: UniqueUUIDEventEmitter,
     settingsService: settings_service.Service,
@@ -75,7 +75,7 @@ method doesTopLevelChatExist*(self: AccessInterface, chatId: string): bool {.bas
 
 method addOrUpdateChat*(self: AccessInterface,
     chat: ChatDto,
-    community: CommunityDto,
+    communityId: string,
     belongsToCommunity: bool,
     events: UniqueUUIDEventEmitter,
     settingsService: settings_service.Service,

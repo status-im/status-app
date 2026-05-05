@@ -230,13 +230,13 @@ proc getMySectionId*(self: Controller): string =
 proc getMyChatId*(self: Controller): string =
   return self.chatId
 
-proc getChatDetails*(self: Controller): ChatDto =
+proc getChatDetails*(self: Controller): lent ChatDto =
   return self.chatService.getChatById(self.chatId)
 
-proc getCommunityDetails*(self: Controller): CommunityDto =
+proc getCommunityDetails*(self: Controller): lent CommunityDto =
   return self.communityService.getCommunityById(self.sectionId)
 
-proc getCommunityById*(self: Controller, communityId: string): CommunityDto =
+proc getCommunityById*(self: Controller, communityId: string): lent CommunityDto =
   return self.communityService.getCommunityById(communityId)
 
 proc requestCommunityInfo*(self: Controller, communityId: string, useDatabase: bool,
@@ -279,7 +279,7 @@ proc requestContactInfo*(self: Controller, contactId: string) =
 proc getNumOfPinnedMessages*(self: Controller): int =
   return self.messageService.getNumOfPinnedMessages(self.chatId)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: seq[ChatDto]): string =
+proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
   return self.messageService.getRenderedText(parsedTextArray, communityChats)
 
 proc deleteMessage*(self: Controller, messageId: string) =

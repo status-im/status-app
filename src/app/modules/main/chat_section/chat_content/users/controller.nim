@@ -121,13 +121,13 @@ proc init*(self: Controller) =
 proc belongsToCommunity*(self: Controller): bool =
   self.belongsToCommunity
 
-proc getMyCommunity*(self: Controller): CommunityDto =
+proc getMyCommunity*(self: Controller): lent CommunityDto =
   return self.communityService.getCommunityById(self.sectionId)
 
 proc getMyChatId*(self: Controller): string =
   return self.chatId
 
-proc getMyChat*(self: Controller): ChatDto =
+proc getMyChat*(self: Controller): lent ChatDto =
   return self.chatService.getChatById(self.chatId)
 
 proc getContactNameAndImage*(self: Controller, contactId: string):

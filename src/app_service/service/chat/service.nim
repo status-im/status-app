@@ -124,6 +124,10 @@ QtObject:
     events: EventEmitter
     chats: Table[string, ChatDto] # [chat_id, ChatDto]
     contactService: contact_service.Service
+    # Read-only sentinel returned via `lent` borrow when a lookup misses.
+    # Mutation is observable across all callers and will corrupt subsequent
+    # miss results — never pass to procs that take `var T`.
+    emptyChat: ChatDto
 
   proc delete*(self: Service)
   proc newService*(
@@ -141,7 +145,7 @@ QtObject:
   # Forward declarations
   proc updateOrAddChat*(self: Service, chat: ChatDto)
   proc processMessengerResponse*(self: Service, response: RpcResponse[JsonNode]): (seq[ChatDto], seq[MessageDto])
-  proc getChatById*(self: Service, chatId: string, showWarning: bool = true): ChatDto
+  proc getChatById*(self: Service, chatId: string, showWarning: bool = true): lent ChatDto
 
   proc parseChatsInMessengerResponse*(self: Service, chatsInResponse: seq[ChatDto]) =
     var chats: seq[ChatDto] = @[]
@@ -337,11 +341,11 @@ QtObject:
   proc getChatsForCommunity*(self: Service, communityId: string): seq[ChatDto] =
     return self.getAllChats().filterIt(it.communityId == communityId)
 
-  proc getChatById*(self: Service, chatId: string, showWarning: bool = true): ChatDto =
+  proc getChatById*(self: Service, chatId: string, showWarning: bool = true): lent ChatDto =
     if(not self.chats.contains(chatId)):
       if (showWarning):
         warn "trying to get chat data for an unexisting chat id", chatId
-      return
+      return self.emptyChat
 
     return self.chats[chatId]
 
