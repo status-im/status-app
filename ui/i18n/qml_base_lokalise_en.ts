@@ -23001,6 +23001,16 @@
       <comment>TransactionDelegate</comment>
       <translation>%1 from %2</translation>
     </message>
+    <message>
+      <source>Unknown token</source>
+      <comment>TransactionDelegate</comment>
+      <translation>Unknown token</translation>
+    </message>
+    <message>
+      <source>Unknown token (%1)</source>
+      <comment>TransactionDelegate</comment>
+      <translation>Unknown token (%1)</translation>
+    </message>
   </context>
   <context>
     <name>TransactionSettings</name>

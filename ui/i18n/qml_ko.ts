@@ -18846,6 +18846,14 @@ This action cannot be undone.</source>
         <source>%1 from %2</source>
         <translation>%2에서 %1</translation>
     </message>
+    <message>
+        <source>Unknown token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown token (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TransactionSettings</name>

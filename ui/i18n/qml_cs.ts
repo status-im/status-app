@@ -19016,6 +19016,14 @@ Tuto akci nelze vzít zpět.</translation>
         <source>%1 from %2</source>
         <translation>%1 od %2</translation>
     </message>
+    <message>
+        <source>Unknown token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown token (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TransactionSettings</name>
