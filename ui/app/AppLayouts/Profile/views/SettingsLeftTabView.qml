@@ -43,15 +43,17 @@ Item {
                 return
             }
 
-            const event = { accepted: false, item: subsection };
+            if (subsection === Constants.settingsSubsection.signout) {
+                Global.quitAppRequested()
+                return
+            }
+
+            const event = { accepted: false, item: subsection }
 
             root.menuItemClicked(event)
 
             if (event.accepted)
                 return
-
-            if (subsection === Constants.settingsSubsection.signout)
-                return Global.quitAppRequested()
 
             root.settingsSubsection = subsection
         }
