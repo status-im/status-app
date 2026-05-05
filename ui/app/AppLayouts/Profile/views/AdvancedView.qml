@@ -122,6 +122,7 @@ SettingsContentBase {
                 checked: root.advancedStore.isNimbusProxyEnabled
                 onClicked: {
                     Global.openPopup(enableNimbusProxyComponent)
+                    checked = Qt.binding(() => root.advancedStore.isNimbusProxyEnabled)
                 }
             }
 
@@ -185,7 +186,9 @@ SettingsContentBase {
                 isSwitch: true
                 checked: localAccountSensitiveSettings.isBrowserEnabled // user setting
                 onToggled: {
-                    if (checked) {
+                    checked = Qt.binding(() => localAccountSensitiveSettings.isBrowserEnabled)
+
+                    if (!checked) {
                         confirmationPopup.experimentalFeature = root.advancedStore.experimentalFeatures.browser
                         confirmationPopup.open()
                     } else {
@@ -200,7 +203,9 @@ SettingsContentBase {
                 isSwitch: true
                 checked: localAccountSensitiveSettings.nodeManagementEnabled
                 onToggled: {
-                    if (checked) {
+                    checked = Qt.binding(() => localAccountSensitiveSettings.nodeManagementEnabled)
+
+                    if (!checked) {
                         confirmationPopup.experimentalFeature = root.advancedStore.experimentalFeatures.nodeManagement
                         confirmationPopup.open()
                     } else {
@@ -369,6 +374,7 @@ SettingsContentBase {
                 checked: root.advancedStore.isDebugEnabled
 
                 onClicked: {
+                    checked = Qt.binding(() => root.advancedStore.isDebugEnabled)
                     Global.openPopup(enableDebugComponent)
                 }
 
