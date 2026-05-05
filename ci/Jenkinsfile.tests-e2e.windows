@@ -98,6 +98,11 @@ pipeline {
     /* Set to a non-zero value to make Qt print out diagnostic information about the each (C++) plugin it tries to load. */
     /* QT_DEBUG_PLUGINS = 0 */
 
+    /* Use local waku fleet */
+    E2E_LOCAL_WAKU_FLEET = '1'
+    STATUS_FLEET = 'status-app.test'
+    STATUS_FLEET_CONFIG_FILE = "${WORKSPACE}\\assets\\local-waku-fleets-config.json"
+
     /* Hack fix for params not being set in job on first run */
     BUILD_SOURCE =      "${params.BUILD_SOURCE}"
     TEST_NAME =         "${params.TEST_NAME}"
@@ -172,32 +177,39 @@ pipeline {
 
     stage('Test') {
       steps {
-        timeout(time: getTestStageTimeout()) {
-          dir('test/e2e') {
-            /* Lock the agent so we run only one e2e build at a time */
-            lock(resource: "e2e-windows-${env.NODE_NAME}", quantity: 1) {
-              script {
-                def flags = []
-                if (params.TEST_NAME)       { flags.add("-k=${params.TEST_NAME}") }
-                if (params.TEST_SCOPE_FLAG) { flags.add(params.TEST_SCOPE_FLAG) }
-                if (params.LOG_LEVEL)       { flags.addAll(["--log-level=${params.LOG_LEVEL}", "--log-cli-level=${params.LOG_LEVEL}"]) }
-                def flagStr = flags.join(' ')
+        lock(resource: "e2e-windows-${env.NODE_NAME}", quantity: 1) {
+          script {
+            try {
+              timeout(2) {
+                sh 'docker compose -p e2e-fleet -f docker-compose.waku.yml down --remove-orphans || true'
+                sh 'docker compose -p e2e-fleet -f docker-compose.waku.yml up -d'
+                sh 'sleep 15'
+              }
+              timeout(time: getTestStageTimeout()) {
+                dir('test/e2e') {
+                  def flags = []
+                  if (params.TEST_NAME)       { flags.add("-k=${params.TEST_NAME}") }
+                  if (params.TEST_SCOPE_FLAG) { flags.add(params.TEST_SCOPE_FLAG) }
+                  if (params.LOG_LEVEL)       { flags.addAll(["--log-level=${params.LOG_LEVEL}", "--log-cli-level=${params.LOG_LEVEL}"]) }
+                  def flagStr = flags.join(' ')
 
-                withCredentials([
-                  usernamePassword(credentialsId: 'test-rail-api-devops', usernameVariable: 'TESTRAIL_USR', passwordVariable: 'TESTRAIL_PSW'),
-                  string(credentialsId: 'wallet-test-user-seed', variable: 'WALLET_TEST_USER_SEED')
-                ]) {
-                  sh"""
-                    pushd configs
-                    ln -sf _local.ci.py _local.py || cp _local.ci.py _local.py
-                    popd
-
-                  """
-                  bat"""
-                    ${VIRTUAL_ENV}\\Scripts\\python.exe -m pytest -m "not keycard and not benchmark" -v --reruns=1 --timeout=300 ${flagStr} --disable-warnings --alluredir=./allure-results -o timeout_func_only=true
-                  """
+                  withCredentials([
+                    usernamePassword(credentialsId: 'test-rail-api-devops', usernameVariable: 'TESTRAIL_USR', passwordVariable: 'TESTRAIL_PSW'),
+                    string(credentialsId: 'wallet-test-user-seed', variable: 'WALLET_TEST_USER_SEED')
+                  ]) {
+                    sh """
+                      pushd configs
+                      ln -sf _local.ci.py _local.py || cp _local.ci.py _local.py
+                      popd
+                    """
+                    bat """
+                      ${VIRTUAL_ENV}\\Scripts\\python.exe -m pytest -m "not keycard and not benchmark" -v --reruns=1 --timeout=300 ${flagStr} --disable-warnings --alluredir=./allure-results -o timeout_func_only=true
+                    """
+                  }
                 }
               }
+            } finally {
+              sh 'docker compose -p e2e-fleet -f docker-compose.waku.yml down --remove-orphans || true'
             }
           }
         }

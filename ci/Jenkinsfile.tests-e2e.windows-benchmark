@@ -58,7 +58,7 @@ pipeline {
   environment {
     PLATFORM = 'tests/e2e-windows'
 
-    SQUISH_DIR = 'C:\\squish-runner-9.1.0-qt-6.9'
+    SQUISH_DIR = 'C:\\squish-runner-9.2.2-qt-6.11'
     PYTHONPATH = "${SQUISH_DIR}\\lib;${SQUISH_DIR}\\bin;${SQUISH_DIR}\\lib\\python;${PYTHONPATH}"
 
     /* To stop e2e tests using port 8545 */
@@ -183,8 +183,8 @@ pipeline {
 
 
   post {
-    always { 
-      script { 
+    always {
+      script {
         dir('test/e2e') {
           archiveArtifacts('aut/Status/bin/*.log')
 

@@ -1,7 +1,10 @@
 services:
   boot-1:
     image: wakuorg/nwaku:v0.36.0
-    network_mode: host
+    ports:
+      - "60001:60001"
+      - "8645:8645"
+      - "49000:49000/udp"
     entrypoint: [
       "/usr/bin/wakunode",
       "--discv5-discovery=true",
@@ -27,8 +30,8 @@ services:
       "--shard=64",
       "--shard=128",
       "--shard=256",
-      "--staticnode=/ip4/127.0.0.1/tcp/60002/p2p/16Uiu2HAm4y9o3GARfphq8jN1wsVhezCHPMmRuekHCCKJ1EsgzVBi",
-      "--storenode=/ip4/127.0.0.1/tcp/60002/p2p/16Uiu2HAm4y9o3GARfphq8jN1wsVhezCHPMmRuekHCCKJ1EsgzVBi",
+      "--staticnode=/dns4/store/tcp/60002/p2p/16Uiu2HAm4y9o3GARfphq8jN1wsVhezCHPMmRuekHCCKJ1EsgzVBi",
+      "--storenode=/dns4/store/tcp/60002/p2p/16Uiu2HAm4y9o3GARfphq8jN1wsVhezCHPMmRuekHCCKJ1EsgzVBi",
       "--tcp-port=60001",
       "--nat=extip:127.0.0.1",
     ]
@@ -40,7 +43,10 @@ services:
 
   store:
     image: wakuorg/nwaku:v0.36.0
-    network_mode: host
+    ports:
+      - "60002:60002"
+      - "8646:8646"
+      - "49001:49001/udp"
     entrypoint: [
       "/usr/bin/wakunode",
       "--discv5-discovery=true",
@@ -65,7 +71,7 @@ services:
       "--shard=64",
       "--shard=128",
       "--shard=256",
-      "--staticnode=/ip4/127.0.0.1/tcp/60001/p2p/16Uiu2HAmMgYeJrjruJGCgL96aaP2nf85PGsRVkXLyhG2joJMH4pH",
+      "--staticnode=/dns4/boot-1/tcp/60001/p2p/16Uiu2HAmMgYeJrjruJGCgL96aaP2nf85PGsRVkXLyhG2joJMH4pH",
       "--store=true",
       "--store-message-db-url=sqlite:///tmp/store1.db",
       "--store-message-retention-policy=time:86400",
@@ -80,7 +86,10 @@ services:
 
   store-2:
     image: wakuorg/nwaku:v0.36.0
-    network_mode: host
+    ports:
+      - "60003:60003"
+      - "8647:8647"
+      - "49002:49002/udp"
     entrypoint: [
       "/usr/bin/wakunode",
       "--discv5-discovery=true",
@@ -105,7 +114,7 @@ services:
       "--shard=64",
       "--shard=128",
       "--shard=256",
-      "--staticnode=/ip4/127.0.0.1/tcp/60001/p2p/16Uiu2HAmMgYeJrjruJGCgL96aaP2nf85PGsRVkXLyhG2joJMH4pH",
+      "--staticnode=/dns4/boot-1/tcp/60001/p2p/16Uiu2HAmMgYeJrjruJGCgL96aaP2nf85PGsRVkXLyhG2joJMH4pH",
       "--store=true",
       "--store-message-db-url=sqlite:///tmp/store2.db",
       "--store-message-retention-policy=time:86400",
