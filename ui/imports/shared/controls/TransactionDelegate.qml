@@ -253,6 +253,13 @@ StatusListItem {
             return qsTr("%1 (community asset) from %2 on %3").arg(root.transactionValue).arg(communityInfo).arg(root.networkName)
         }
 
+        if (!modelData.symbol) {
+            if (!!modelData.tokenAddress) {
+                return qsTr("Unknown token (%1)").arg(modelData.tokenAddress)
+            }
+            return qsTr("Unknown token")
+        }
+
         switch(d.txType) {
         case Constants.TransactionType.Send:
             // Cross chain send. Use bridge pattern
@@ -478,6 +485,10 @@ StatusListItem {
                             return "dummy text"
                         } else if (!root.isModelDataValid || root.isNFT) {
                             return ""
+                        }
+
+                        if (!modelData.symbol) {
+                            return root.currenciesStore.formatCurrencyAmount(root.cryptoValue, "")
                         }
 
                         switch(d.txType) {
