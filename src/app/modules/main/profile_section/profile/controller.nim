@@ -66,7 +66,7 @@ proc deleteIdentityImage*(self: Controller, address: string): bool =
 proc setDisplayName*(self: Controller, displayName: string): bool =
   self.profileService.setDisplayName(displayName)
 
-proc getCommunityById*(self: Controller, id: string): CommunityDto =
+proc getCommunityById*(self: Controller, id: string): lent CommunityDto =
   self.communityService.getCommunityById(id)
 
 proc getAccountByAddress*(self: Controller, address: string): WalletAccountDto =

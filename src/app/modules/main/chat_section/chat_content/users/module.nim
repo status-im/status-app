@@ -217,16 +217,15 @@ proc resolveMembersForUpdate(self: Module, membersToReset: seq[ChatMember]):
     result.members = membersToReset
     return
   if self.controller.belongsToCommunity():
-    let myCommunity = self.controller.getMyCommunity()
-
+    let community {.cursor.} = self.controller.getMyCommunity()
     if self.isSectionMemberList:
-      result.members = myCommunity.members
+      result.members = community.members
     else:
       # TODO: when a new channel is added, chat may arrive earlier and we have no up to date community yet
       # see log here: https://github.com/status-im/status-app/issues/14442#issuecomment-2120756598
       # should be resolved in https://github.com/status-im/status-app/issues/11694
       let myChatId = self.controller.getMyChatId()
-      let chat = myCommunity.getCommunityChat(myChatId)
+      let chat {.cursor.} = community.getCommunityChat(myChatId)
       if not chat.tokenGated:
         # No need to get the members, this channel is not encrypted and can use the section member list
         self.isPublicCommunityChannel = true
@@ -241,7 +240,7 @@ proc resolveMembersForUpdate(self: Module, membersToReset: seq[ChatMember]):
           result.returnEarly = true
           return
         # The channel now has a permission, but the re-eval wasn't performed yet. Show all members for now
-        result.members = myCommunity.members
+        result.members = community.members
   if result.members.len == 0:
     result.members = self.controller.getMyChat().members
 

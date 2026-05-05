@@ -31,7 +31,7 @@ type
     messageService: message_service.Service
 
 # Forward declaration
-proc getChatDetails*(self: Controller): ChatDto
+proc getChatDetails*(self: Controller): lent ChatDto
 
 proc newController*(delegate: io_interface.AccessInterface, events: EventEmitter, sectionId: string, chatId: string,
     belongsToCommunity: bool, isUsersListAvailable: bool, settingsService: settings_service.Service,
@@ -197,10 +197,10 @@ proc init*(self: Controller) =
 proc getMyChatId*(self: Controller): string =
   return self.chatId
 
-proc getChatDetails*(self: Controller): ChatDto =
+proc getChatDetails*(self: Controller): lent ChatDto =
   return self.chatService.getChatById(self.chatId)
 
-proc getCommunityDetails*(self: Controller): CommunityDto =
+proc getCommunityDetails*(self: Controller): lent CommunityDto =
   return self.communityService.getCommunityById(self.sectionId)
 
 proc getOneToOneChatNameAndImage*(self: Controller): tuple[name: string, image: string, largeImage: string] =
@@ -248,7 +248,7 @@ proc getContactById*(self: Controller, contactId: string): ContactsDto =
 proc getContactDetails*(self: Controller, contactId: string): ContactDetails =
   return self.contactService.getContactDetails(contactId)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: seq[ChatDto]): string =
+proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
   return self.messageService.getRenderedText(parsedTextArray, communityChats)
 
 proc getTransactionDetails*(self: Controller, message: MessageDto): (string,string) =

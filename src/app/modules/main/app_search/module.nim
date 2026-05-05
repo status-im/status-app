@@ -158,8 +158,7 @@ method prepareLocationMenuModel*(self: Module) =
   items.add(personalItem)
 
   # Community sections
-  let communities = self.controller.getJoinedAndSpectatedCommunities()
-  for c in communities:
+  for c in self.controller.joinedAndSpectatedCommunities():
     if c.joined:
       items.add(self.buildLocationMenuForCommunity(c))
 
@@ -252,10 +251,8 @@ method onSearchMessagesDone*(self: Module, messages: seq[MessageDto]) =
   var channels = personalItems
 
   # Add Communities
-  let communities = self.controller.getJoinedAndSpectatedCommunities()
-
   let searchTerm = self.controller.searchTerm().toLower
-  for community in communities:
+  for community in self.controller.joinedAndSpectatedCommunities():
     if self.controller.searchLocation().len == 0 and
         community.name.toLower.contains(searchTerm):
       let item = result_item.initItem(
@@ -294,9 +291,8 @@ method onSearchMessagesDone*(self: Module, messages: seq[MessageDto]) =
     if(m.`from` == singletonInstance.userProfile.getPubKey()):
       senderName = "You"
 
-    let communityChats = self.controller.getCommunityById(chatDto.communityId).chats
-
-    let renderedMessageText = self.controller.getRenderedText(m.parsedText, communityChats)
+    let community {.cursor.} = self.controller.getCommunityById(chatDto.communityId)
+    let renderedMessageText = self.controller.getRenderedText(m.parsedText, community.chats)
     let colorId = self.controller.getColorId(m.`from`)
 
     if(chatDto.communityId.len == 0):
@@ -312,12 +308,13 @@ method onSearchMessagesDone*(self: Module, messages: seq[MessageDto]) =
         chatDto.id, m.id)
       items.add(item)
     else:
-      let community = self.controller.getCommunityById(chatDto.communityId)
       let channelName = "#" & chatDto.name
-
       let item = result_item.initItem(m.id, renderedMessageText, $m.timestamp, m.`from`, senderName,
-        SEARCH_RESULT_MESSAGES_SECTION_NAME, senderImage, chatDto.color, community.name,
-        channelName, community.images.thumbnail, community.color, false, true, colorId)
+        SEARCH_RESULT_MESSAGES_SECTION_NAME, senderImage, chatDto.color,
+        community.name,
+        channelName,
+        community.images.thumbnail,
+        community.color, false, true, colorId)
 
       self.controller.addResultItemDetails(m.id, chatDto.communityId, chatDto.id, m.id)
       items.add(item)
@@ -333,19 +330,15 @@ method updateSearchLocationIfPointToChatWithId*(self: Module, chatId: string) =
     self.controller.setSearchLocation(self.controller.activeSectionId(), "")
 
 proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, personalChatSectionName: string): ChatSearchItem =
-  var communityChats: seq[ChatDto] = @[]
+  let isCommunity = chat.chatType == ChatType.CommunityChat and chat.communityId != ""
 
   # skip hidden chats
-  if chat.chatType == ChatType.CommunityChat and chat.communityId != "":
-    let communityDto = self.controller.getCommunityById(chat.communityId)
-    if communityDto.hasCommunityChat(chat.id):
-      let communityChat = communityDto.getCommunityChat(chat.id)
-      if communityChat.isHiddenChat:
-        return nil
-    else:
+  if isCommunity:
+    let community {.cursor.} = self.controller.getCommunityById(chat.communityId)
+    if not community.hasCommunityChat(chat.id):
       return nil
-
-    communityChats = communityDto.chats
+    if community.getCommunityChat(chat.id).isHiddenChat:
+      return nil
 
   var chatName = chat.name
   var chatImage = chat.icon
@@ -371,7 +364,12 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
     sectionName,
     chat.emoji,
     chat.chatType.int,
-    lastMessageText = self.controller.getMessagesParsedPlainText(chat.lastMessage, communityChats),
+    lastMessageText =
+      if isCommunity:
+        self.controller.getMessagesParsedPlainText(chat.lastMessage,
+          self.controller.getCommunityById(chat.communityId).chats)
+      else:
+        self.controller.getMessagesParsedPlainText(chat.lastMessage, []),
   )
 
 method buildChatSearchModel*(self: Module) =
@@ -436,12 +434,11 @@ method chatRemoved*(self: Module, chatId: string) =
   self.view.chatSearchModel().removeItemById(chatId)
 
 method updateLastMessage*(self: Module, chatId, communityId: string, chatType: ChatType, lastMessage: MessageDto) =
-  var communityChats: seq[ChatDto] = @[]
-  if chatType == ChatType.CommunityChat and communityId != "":
-    let communityDto = self.controller.getCommunityById(communityId)
-    communityChats = communityDto.chats
-
   self.view.chatSearchModel().updateLastMessageTextOnChatItem(
     chatId,
-    self.controller.getMessagesParsedPlainText(lastMessage, communityChats)
+    if chatType == ChatType.CommunityChat and communityId != "":
+      self.controller.getMessagesParsedPlainText(lastMessage,
+        self.controller.getCommunityById(communityId).chats)
+    else:
+      self.controller.getMessagesParsedPlainText(lastMessage, [])
   )

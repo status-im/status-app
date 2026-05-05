@@ -1137,7 +1137,7 @@ QtObject:
     return uuid
 
 # See render-inline in status-mobile/src/status_im/ui/screens/chat/message/message.cljs
-proc renderInline(self: Service, parsedText: ParsedText, communityChats: seq[ChatDto]): string =
+proc renderInline(self: Service, parsedText: ParsedText, communityChats: openArray[ChatDto]): string =
   let value = escape_html(parsedText.literal)
     .multiReplace(("\r\n", "<br/>"))
     .multiReplace(("\n", "<br/>"))
@@ -1182,7 +1182,7 @@ proc renderInline(self: Service, parsedText: ParsedText, communityChats: seq[Cha
       result = fmt(" {value} ")
 
 # See render-block in status-mobile/src/status_im/ui/screens/chat/message/message.cljs
-proc getRenderedText*(self: Service, parsedTextArray: seq[ParsedText], communityChats: seq[ChatDto]): string =
+proc getRenderedText*(self: Service, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
   for parsedText in parsedTextArray:
     case parsedText.type:
       of PARSED_TEXT_TYPE_PARAGRAPH:
@@ -1198,7 +1198,7 @@ proc getRenderedText*(self: Service, parsedTextArray: seq[ParsedText], community
 
 # Parses the message and returns the plain text representation of it.
 # If the message is a sticker or an image with no text, it returns "🖼️".
-proc getMessagesParsedPlainText*(self: Service, message: MessageDto, communityChats: seq[ChatDto]): string =
+proc getMessagesParsedPlainText*(self: Service, message: MessageDto, communityChats: openArray[ChatDto]): string =
   if message.contentType == ContentType.BridgeMessage:
     return message.bridgeMessage.content
   if message.contentType == ContentType.Sticker or (message.contentType == ContentType.Image and len(message.text) == 0):

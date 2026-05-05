@@ -591,10 +591,14 @@ proc switchTo*(self: Controller, sectionId, chatId, messageId: string) =
   let data = ActiveSectionChatArgs(sectionId: sectionId, chatId: chatId, messageId: messageId)
   self.events.emit(SIGNAL_MAKE_SECTION_CHAT_ACTIVE, data)
 
-proc getJoinedAndSpectatedCommunities*(self: Controller): seq[CommunityDto] =
-  return self.communityService.getJoinedAndSpectatedCommunities()
+iterator joinedAndSpectatedCommunities*(self: Controller): lent CommunityDto =
+  for c in self.communityService.joinedAndSpectatedCommunities():
+    yield c
 
-proc getCommunityById*(self: Controller, communityId: string): CommunityDto =
+proc joinedAndSpectatedCommunityIds*(self: Controller): seq[string] =
+  return self.communityService.joinedAndSpectatedCommunityIds()
+
+proc getCommunityById*(self: Controller, communityId: string): lent CommunityDto =
   return self.communityService.getCommunityById(communityId)
 
 proc spectateCommunity*(self: Controller, communityId: string) =

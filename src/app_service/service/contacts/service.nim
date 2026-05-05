@@ -138,7 +138,7 @@ QtObject:
     self.contacts[contact.dto.id] = contact
     self.contactsStatus[contact.dto.id] = StatusUpdateDto(publicKey: contact.dto.id, statusType: StatusType.Unknown)
 
-  proc seedFromChatMembers*(self: Service, members: seq[ChatMember]) =
+  proc seedFromChatMembers*(self: Service, members: openArray[ChatMember]) =
     for member in members:
       if member.id.len == 0:
         continue
