@@ -1,14 +1,25 @@
-"""Module-level fixtures for messaging tests.
+"""Session-level fixtures for messaging tests.
 
 Provides shared session setup for tests that require established contacts.
-This avoids re-running the contact establishment flow for each test function.
+The contact establishment flow runs once per pytest session, then all messaging
+tests across all messaging-test modules share the same pair of onboarded
+devices and established chat. This saves ~7-8 min of redundant setup per
+additional messaging module compared to module scope.
 
-Note on pytest-xdist: Module-scoped fixtures are per-worker-per-module, not global.
-With -n=5, each worker that runs tests from this module will create its own
-established_chat session. This is expected behavior for module scope.
+State pollution between tests is managed by each test cleaning up its own UI
+state (e.g. ``MessageContextMenuPage.dismiss`` uses Android back-button to avoid
+mis-tapping the chat header). If session-wide pollution surfaces, an autouse
+``_reset_chat_view`` fixture is the next safety net.
+
+Note on pytest-xdist: Session-scoped fixtures are per-worker. With -n=5, each
+worker that runs messaging tests creates its own established_chat session. For
+2-device tests on Pi local (only 2 phones available), xdist effectively
+serialises them so a single fixture is reused across the whole worker.
 """
 
 from __future__ import annotations
+
+import threading
 
 from dataclasses import dataclass
 
@@ -19,10 +30,58 @@ from config.logging_config import get_logger
 from core.device_context import DeviceContext
 from core.multi_device_context import MultiDeviceContext
 from core.session_pool import PoolConfig, SessionPool
+from utils.chat_state import ensure_chat_visible
 from utils.contact_helpers import establish_contact
 from utils.generators import generate_account_name
 
 logger = get_logger("messaging_conftest")
+
+
+class _SessionKeepAlive:
+    """Polls ``driver.orientation`` every ``interval_s`` from a daemon
+    thread to keep idle BS sessions alive across our 300s cross-device
+    waits (``appium:newCommandTimeout`` is coerced by BS).
+
+    Selenium WebDriver isn't formally thread-safe; we only fire while the
+    main thread is blocked on the OTHER device, so concurrent commands on
+    the same driver are structurally avoided.
+
+    TODO(upstream): drop once BS honours ``newCommandTimeout``.
+    """
+
+    def __init__(self, driver, label: str = "?", interval_s: int = 30) -> None:
+        self.driver = driver
+        self.label = label
+        self.interval_s = interval_s
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    def start(self) -> None:
+        if self._thread is not None:
+            return
+        self._thread = threading.Thread(
+            target=self._run, name=f"keepalive-{self.label}", daemon=True
+        )
+        self._thread.start()
+        logger.info("Started keep-alive heartbeat for %s (every %ds)", self.label, self.interval_s)
+
+    def stop(self) -> None:
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join(timeout=5)
+        logger.debug("Stopped keep-alive heartbeat for %s", self.label)
+
+    def _run(self) -> None:
+        while not self._stop.wait(self.interval_s):
+            try:
+                _ = self.driver.orientation
+            except Exception as exc:
+                logger.warning(
+                    "Keep-alive ping failed for %s: %s — stopping heartbeat",
+                    self.label, exc,
+                )
+                return
+
 
 # Track test outcomes at module level for BrowserStack status reporting
 _module_test_failures: dict[str, list[str]] = {}
@@ -37,21 +96,21 @@ _module_pools = []
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Track test outcomes for BrowserStack status reporting.
-    
+
     This hook runs after each test phase (setup, call, teardown) and records
     outcomes to module-level tracking dicts.
-    
+
     Note: Page dump capture on failure is handled by the main conftest.py hook.
     """
     outcome = yield
     rep = outcome.get_result()
-    
+
     # Only track test outcomes from the call phase (actual test execution)
     if rep.when != "call":
         return
-    
+
     module_name = item.module.__name__ if hasattr(item, "module") else "unknown"
-    
+
     if rep.failed:
         if module_name not in _module_test_failures:
             _module_test_failures[module_name] = []
@@ -69,7 +128,7 @@ def pytest_runtest_makereport(item, call):
 @dataclass
 class EstablishedChatContext:
     """Context for tests that require an established chat between two users.
-    
+
     Attributes:
         primary: The device that sent the contact request.
         secondary: The device that accepted the contact request.
@@ -82,12 +141,12 @@ class EstablishedChatContext:
     primary_suffix: str
     secondary_suffix: str
     multi_ctx: MultiDeviceContext
-    
+
     @property
     def primary_driver(self):
         return self.primary.driver
-    
-    @property 
+
+    @property
     def secondary_driver(self):
         return self.secondary.driver
 
@@ -112,22 +171,23 @@ async def _establish_contact(
 
 def _report_browserstack_status(pool: SessionPool, status: str, reason: str | None = None) -> None:
     """Report session status to BrowserStack for all sessions in the pool.
-    
-    This is needed for module-scoped fixtures because they bypass the standard
-    conftest.py pytest_runtest_makereport hook that normally reports status.
+
+    Needed because the session-scoped ``established_chat`` fixture bypasses
+    the standard ``conftest.py:pytest_runtest_makereport`` hook that normally
+    reports per-test status.
     """
     if not pool or pool.session_count == 0:
         return
-    
+
     for device_name in pool.device_names:
         session_manager = pool.get_session_manager(device_name)
         driver = pool.get_driver(device_name)
-        
+
         if not session_manager or not driver:
             continue
-        
+
         session_id = getattr(driver, "session_id", None)
-        
+
         # Try to report via driver first (executor command)
         try:
             session_manager.provider.report_session_status(driver, status, reason)
@@ -135,7 +195,7 @@ def _report_browserstack_status(pool: SessionPool, status: str, reason: str | No
             continue
         except Exception as e:
             logger.debug("Executor status report failed for %s: %s", device_name, e)
-        
+
         # Fall back to REST API
         if session_id:
             try:
@@ -190,17 +250,22 @@ async def _setup_established_chat(
     )
 
 
-@pytest_asyncio.fixture(scope="module")
+@pytest_asyncio.fixture(scope="session")
 async def established_chat(request, test_environment) -> EstablishedChatContext:
-    """Module-scoped fixture providing two devices with an established chat.
-    
-    This runs the contact establishment flow once per module, then all tests
-    in the module share the same session with contacts already connected.
+    """Session-scoped fixture providing two devices with an established chat.
+
+    This runs the contact establishment flow once per pytest session, then all
+    messaging tests across modules share the same session with contacts already
+    connected. Saves ~7-8 min per additional messaging module vs module scope.
+
+    State isolation between tests is the responsibility of each test (clean up
+    overlays, dismiss context menus). If session-wide pollution surfaces, the
+    next defence is an autouse ``_reset_chat_view`` fixture.
 
     If the setup fails (e.g. BrowserStack connection drop, biometrics prompt
     timing, device allocation, accessibility tree blocking), it cleans up and
     retries once with fresh sessions.
-    
+
     Usage:
         class TestMessageContextMenu:
             @pytest.fixture(autouse=True)
@@ -208,25 +273,55 @@ async def established_chat(request, test_environment) -> EstablishedChatContext:
                 self.ctx = established_chat
                 self.primary = established_chat.primary
                 self.driver = self.primary.driver
-            
+
             async def test_context_menu(self):
                 chat_page = ChatPage(self.driver)
                 ...
     """
     global _module_pools
 
-    logger.info("Setting up module-scoped established_chat fixture")
+    logger.info("Setting up session-scoped established_chat fixture")
 
     pool = None
     ctx = None
     setup_failed = False
     max_attempts = 2
     last_error: BaseException | None = None
-    
+
     for attempt in range(1, max_attempts + 1):
         try:
+            # For local environments, assign each session to a different
+            # device from the YAML matrix (set via local.local.yaml overlay).
+            device_overrides = None
+            if test_environment == "local":
+                try:
+                    from core.config_manager import ConfigurationManager
+                    cfg_mgr = ConfigurationManager()
+                    env_cfg = cfg_mgr.load_environment("local")
+                    matrix_devices = list(env_cfg.devices.values())
+                    if len(matrix_devices) >= 2:
+                        defaults = env_cfg.device_defaults.get("capabilities", {})
+                        device_overrides = []
+                        for i in range(2):
+                            device = matrix_devices[i]
+                            override = {"capabilities": device.merged_capabilities(defaults)}
+                            if device.provider_overrides:
+                                override.update(device.provider_overrides)
+                            device_overrides.append(override)
+                        for idx, ov in enumerate(device_overrides):
+                            caps = ov.get("capabilities", {})
+                            logger.info(
+                                "Local device override %d: udid=%s server_url=%s",
+                                idx,
+                                caps.get("appium:udid", "?"),
+                                ov.get("server_url", "default"),
+                            )
+                except Exception as exc:
+                    logger.warning("Failed to build local device overrides: %s", exc)
+
             pool_config = PoolConfig.from_environment(
                 test_environment, parallel=True,
+                device_overrides=device_overrides,
             )
             pool = SessionPool(config=pool_config)
 
@@ -269,14 +364,35 @@ async def established_chat(request, test_environment) -> EstablishedChatContext:
         setup_failed = True
         raise last_error  # type: ignore[misc]
 
+    # Start keep-alive heartbeats on both device sessions to prevent
+    # BrowserStack idle-timeout death during long cross-device sync waits.
+    # See _SessionKeepAlive docstring for the failure mode.
+    keepalives: list[_SessionKeepAlive] = []
+    try:
+        if ctx and ctx.primary and ctx.secondary:
+            keepalives = [
+                _SessionKeepAlive(ctx.primary.driver, label="primary"),
+                _SessionKeepAlive(ctx.secondary.driver, label="secondary"),
+            ]
+            for ka in keepalives:
+                ka.start()
+    except Exception as exc:
+        logger.warning("Could not start keep-alive heartbeats: %s", exc)
+
     try:
         yield ctx
-        
+
     except Exception:
         setup_failed = True
         raise
-        
+
     finally:
+        # Stop heartbeats first so they don't race with cleanup
+        for ka in keepalives:
+            try:
+                ka.stop()
+            except Exception:
+                pass
         # Report status to BrowserStack before cleanup
         if pool:
             if setup_failed:
@@ -286,7 +402,7 @@ async def established_chat(request, test_environment) -> EstablishedChatContext:
                 failed_tests = _module_test_failures.get(module_name, [])
                 skipped_tests = _module_test_skipped.get(module_name, [])
                 passed_tests = _module_test_passed.get(module_name, [])
-                
+
                 if failed_tests:
                     failure_count = len(failed_tests)
                     reason = f"{failure_count} test(s) failed"
@@ -306,16 +422,45 @@ async def established_chat(request, test_environment) -> EstablishedChatContext:
                         reason = f"All {passed_count} test(s) passed"
                     _report_browserstack_status(pool, "passed", reason)
                     logger.info("Reported 'passed' to BrowserStack: %s", reason)
-                
+
                 for tracking_dict in (_module_test_failures, _module_test_skipped, _module_test_passed):
                     if module_name in tracking_dict:
                         del tracking_dict[module_name]
-            
-            logger.info("Cleaning up module-scoped sessions")
+
+            logger.info("Cleaning up session-scoped fixture sessions")
             try:
                 await pool.cleanup()
             except Exception as e:
                 logger.warning("Cleanup error (non-fatal): %s", e)
-            
+
             if pool in _module_pools:
                 _module_pools.remove(pool)
+
+
+@pytest.fixture
+def chat_ready(established_chat) -> EstablishedChatContext:
+    """Function-scoped state guarantee on top of session-scoped infrastructure.
+
+    Ensures both devices have the chat with their peer open and message input
+    visible before the test runs. Recovers from any state the previous test
+    left (chat closed on either side, scrolled off, etc.) so tests don't
+    need to know what came before them — and so xdist dispatch order doesn't
+    matter.
+
+    Recovery is via ``utils.chat_state.ensure_chat_visible``; see there for
+    the strategy ladder.
+
+    Sync rather than async-with-``asyncio.to_thread``: pytest-asyncio's
+    function-scoped event loops shut down the default executor on teardown,
+    which can hang for minutes if a thread-pool worker is mid-Selenium-call.
+    Calling ``ensure_chat_visible`` synchronously sequentially keeps execution
+    on the main thread; recovery on both devices runs ~30s slower in the
+    worst case but doesn't leave executor threads to track.
+    """
+    ctx = established_chat
+    primary_display = ctx.primary.user.display_name if ctx.primary.user else None
+    secondary_display = ctx.secondary.user.display_name if ctx.secondary.user else None
+
+    ensure_chat_visible(ctx.primary, ctx.secondary_suffix, secondary_display)
+    ensure_chat_visible(ctx.secondary, ctx.primary_suffix, primary_display)
+    return ctx

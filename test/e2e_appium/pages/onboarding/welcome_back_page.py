@@ -37,7 +37,7 @@ class WelcomeBackPage(BasePage):
                 return False
 
             if not self.qt_safe_input(
-                self.locators.PASSWORD_INPUT, password, verify=False
+                self.locators.PASSWORD_INPUT, password, verify=True
             ):
                 self.logger.error("Password input failed on attempt %s", attempt)
                 return False
@@ -79,7 +79,10 @@ class WelcomeBackPage(BasePage):
             except Exception:
                 pass
 
-    def _focus_password_field(self, retries: int = 5, wait_between: float = 2.0) -> bool:
+    def _focus_password_field(self, retries: int = 3, wait_between: float = 1.5) -> bool:
+        # Qt accessibility doesn't reliably expose `focused` for QML TextInput,
+        # so we don't gate on is_focused. Tap-and-trust; qt_safe_input verifies
+        # input actually lands.
         for attempt in range(retries):
             overlay = self.find_element_safe(
                 self.locators.PASSWORD_INPUT_OVERLAY, timeout=2
@@ -98,16 +101,9 @@ class WelcomeBackPage(BasePage):
                 time.sleep(wait_between)
 
             field = self.find_element_safe(self.locators.PASSWORD_INPUT, timeout=3)
-            if not field:
+            if not field or not ElementStateChecker.is_displayed(field):
                 time.sleep(wait_between)
                 continue
-
-            if not ElementStateChecker.is_displayed(field):
-                time.sleep(wait_between)
-                continue
-
-            if ElementStateChecker.is_focused(field):
-                return True
 
             try:
                 rect = field.rect
@@ -117,16 +113,13 @@ class WelcomeBackPage(BasePage):
                     self.gestures.double_tap(tap_x, tap_y)
             except Exception:
                 self.logger.debug("Password field tap failed on attempt %s", attempt + 1)
+                time.sleep(wait_between)
+                continue
 
             time.sleep(wait_between)
+            return True
 
-            refreshed = self.find_element_safe(self.locators.PASSWORD_INPUT, timeout=1)
-            if refreshed and ElementStateChecker.is_focused(refreshed):
-                return True
-
-            time.sleep(wait_between)
-
-        self.logger.warning("Unable to focus password input on welcome back screen")
+        self.logger.warning("Unable to find/tap password input on welcome back screen")
         return False
 
     def _wait_for_login_transition(self, timeout: int = 10) -> bool:

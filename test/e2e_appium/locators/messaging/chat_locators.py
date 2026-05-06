@@ -11,25 +11,33 @@ class ChatLocators(BaseLocators):
     """
 
     CHAT_LIST = BaseLocators.xpath("//*[contains(@resource-id,'ContactsColumnView_chatList')]")
-    CHAT_SEARCH_BOX = BaseLocators.content_desc_contains("tid:statusBaseInput")
-    CHAT_HEADER = BaseLocators.content_desc_contains(
-        "[tid:ContactsColumnView_MessagesHeadline]"
-    )
-    TOOLBAR_BACK_BUTTON = BaseLocators.xpath(
-        "//android.widget.Button[@content-desc=' [tid:toolBarBackButton]']"
-    )
+    CHAT_SEARCH_BOX = BaseLocators.tid("statusBaseInput")
+    CHAT_HEADER = BaseLocators.tid("ContactsColumnView_MessagesHeadline")
+    TOOLBAR_BACK_BUTTON = BaseLocators.tid("toolBarBackButton")
     MESSAGE_INPUT = BaseLocators.resource_id_contains("messageInputField")
+    # Tablet's BaseProxyPanel-based input sets objectName on QML buttons
+    # (matching `.NAME`); phone's StatusChatInputToolBar doesn't, so the
+    # same buttons surface as auto-named class identifiers
+    # (`StatusChatInputSendButton_QMLTYPE_NNNN`) or identical `.ChatIcon`
+    # resource-ids. Position [9] under StatusChatInputToolBar lands on
+    # the emoji button on phone (XPath document-order is off-by-one vs
+    # AT bounds order).
+    # TODO(upstream): drop the position fallback once
+    # StatusChatInputToolBar.qml sets objectName on each ChatIcon.
     SEND_BUTTON = BaseLocators.xpath(
-        "//*[contains(@resource-id,'statusChatInputSendButton')]"
+        "//*[contains(@content-desc, 'tid:statusChatInputSendButton') "
+        "or contains(@resource-id, '.statusChatInputSendButton')]"
+        " | "
+        "//*[contains(@resource-id, 'StatusChatInputSendButton')]"
     )
     EMOJI_BUTTON = BaseLocators.xpath(
-        "//*[contains(@content-desc, '[tid:statusChatInputEmojiButton]') or "
-        "contains(@resource-id,'statusChatInputEmojiButton')]"
+        "//*[contains(@content-desc, 'tid:statusChatInputEmojiButton') "
+        "or contains(@resource-id, '.statusChatInputEmojiButton')]"
+        " | "
+        "(//*[contains(@resource-id,'StatusChatInputToolBar')]"
+        "//*[contains(@resource-id, '.ChatIcon')])[9]"
     )
-    COMMAND_BUTTON = BaseLocators.xpath(
-        "//*[contains(@content-desc, '[tid:statusChatInputCommandButton]') or "
-        "contains(@resource-id,'statusChatInputCommandButton')]"
-    )
+    COMMAND_BUTTON = BaseLocators.tid("statusChatInputCommandButton")
     CHAT_MORE_OPTIONS_BUTTON = BaseLocators.resource_id_contains("chatToolbarMoreOptionsButton")
     CHAT_MORE_OPTIONS_MENU = BaseLocators.resource_id_contains("moreOptionsContextMenu")
     # Use the 1:1 chat variant (clearHistoryMenuItem) — not the group variant
@@ -47,21 +55,14 @@ class ChatLocators(BaseLocators):
     CLOSE_CHAT_CONFIRM_BUTTON = BaseLocators.resource_id_contains(
         "deleteChatConfirmationDialogDeleteButton"
     )
-    ADD_IMAGE_ACTION = BaseLocators.xpath(
-        "//*[contains(@content-desc, '[tid:chatCommandMenu_addImage]') or "
-        "contains(@resource-id,'chatCommandMenu_addImage')]"
-    )
+    ADD_IMAGE_ACTION = BaseLocators.tid("chatCommandMenu_addImage")
     CHAT_LOG_VIEW = BaseLocators.xpath("//*[contains(@resource-id,'chatLogView')]")
-    INTRODUCE_SKIP_BUTTON = BaseLocators.content_desc_contains(
-        "[tid:introduceSkipStatusFlatButton]"
-    )
-    BACKUP_SKIP_BUTTON = BaseLocators.content_desc_contains(
-        "[tid:backupMessageSkipStatusFlatButton]"
-    )
+    INTRODUCE_SKIP_BUTTON = BaseLocators.tid("introduceSkipStatusFlatButton")
+    BACKUP_SKIP_BUTTON = BaseLocators.tid("backupMessageSkipStatusFlatButton")
     START_CHAT_BUTTON = BaseLocators.xpath(
         "//*[contains(@resource-id,'startChatButton')]"
     )
-    
+
     # First chat item in the list (for open_first_chat)
     FIRST_CHAT_ITEM = BaseLocators.xpath(
         "(//android.widget.Button[contains(@resource-id,'StatusDraggableListItem')])[1]"
@@ -114,17 +115,21 @@ class ChatLocators(BaseLocators):
         escaped = content.replace('"', '\\"')
         return BaseLocators.xpath(f"//*[contains(@content-desc,\"{escaped}\")]")
 
-    # Reply mode indicator - when replying, there's a reply preview bar
-    # QML: StatusChatInputReplyArea has objectName "statusChatInputReplyArea"
-    # and Accessible.name "Replying to {userName}"
-    REPLY_PREVIEW = BaseLocators.resource_id_contains("statusChatInputReplyArea")
-    REPLY_CLOSE_BUTTON = BaseLocators.resource_id_contains("replyAreaCloseButton")
-    REPLY_DETAILS = BaseLocators.xpath(
-        "//*[contains(@content-desc, '[tid:StatusMessage_replyDetails]') or "
-        "contains(@resource-id,'StatusMessage_replyDetails')]"
+    # Reply preview bar shown above the chat input when replying.
+    # QML: StatusChatInputReplyArea (objectName "statusChatInputReplyArea")
+    # on the tablet input; phone surfaces the auto-named class
+    # "StatusChatInputReplyPanel_QMLTYPE_NNNN". Union handles both;
+    # see EMOJI_BUTTON for the form-factor rationale.
+    REPLY_PREVIEW = BaseLocators.xpath(
+        "//*[contains(@content-desc, 'tid:statusChatInputReplyArea') "
+        "or contains(@resource-id, '.statusChatInputReplyArea')]"
+        " | "
+        "//*[contains(@resource-id, 'StatusChatInputReplyPanel')]"
     )
+    REPLY_CLOSE_BUTTON = BaseLocators.resource_id_contains("replyAreaCloseButton")
+    REPLY_DETAILS = BaseLocators.tid("StatusMessage_replyDetails")
     REPLY_CORNER = BaseLocators.resource_id_contains("statusMessageReplyCorner")
-    
+
     @staticmethod
     def reply_preview_for_user(username: str) -> tuple:
         """Locator for reply preview showing we're replying to a specific user."""
@@ -141,7 +146,7 @@ class ChatLocators(BaseLocators):
             f"//*[contains(@content-desc,'{escaped}')]/ancestor::*"
             f"//*[contains(@resource-id,'statusMessageReplyCorner')]"
         )
-    
+
     # Edited message indicator - "(edited)" text appended to message
     # The "(edited)" text is part of the message content-desc
     @staticmethod
@@ -152,12 +157,12 @@ class ChatLocators(BaseLocators):
             f"//android.widget.EditText[contains(@content-desc,'{escaped}') "
             f"and contains(@content-desc,'(edited)')]"
         )
-    
+
     # Pinned message indicator - shows "Pinned by" text
     # QML: StatusPinMessageDetails has objectName "statusPinMessageDetails"
     # and Accessible.name "{pinnedMsgInfoText} {pinnedBy}"
     PINNED_INDICATOR = BaseLocators.resource_id_contains("statusPinMessageDetails")
-    
+
     @staticmethod
     def pinned_indicator_by_user(username: str) -> tuple:
         """Locator for pinned indicator showing who pinned the message."""
@@ -165,7 +170,7 @@ class ChatLocators(BaseLocators):
             f"//*[contains(@resource-id,'statusPinMessageDetails')]"
             f"[contains(@content-desc,'{username}')]"
         )
-    
+
     @staticmethod
     def message_pinned_indicator(content: str) -> tuple:
         """Locator for pinned indicator near a specific message."""
@@ -174,19 +179,19 @@ class ChatLocators(BaseLocators):
             f"//*[contains(@content-desc,'{escaped}')]/ancestor::*"
             f"//*[contains(@resource-id,'statusPinMessageDetails')]"
         )
-    
+
     # Reaction on message - emoji reactions shown below the message
     # QML: StatusMessageEmojiReactions has objectName "statusMessageEmojiReactions"
     # Each reaction button has objectName "messageReaction_{emoji}" and Accessible.name "{emoji}"
     MESSAGE_REACTIONS_ROW = BaseLocators.resource_id_contains("statusMessageEmojiReactions")
-    
+
     @staticmethod
     def reaction_on_message(emoji_code: str) -> tuple:
         """Locator for a reaction emoji displayed on a message (not in context menu).
-        
+
         The reaction button has objectName "messageReaction_{emoji}" which maps to
         resource-id, and Accessible.name set to the emoji hex code (content-desc).
-        
+
         Args:
             emoji_code: Unicode hex code (e.g., '1f600' for 😀)
         """

@@ -1,9 +1,10 @@
+import faulthandler
 import multiprocessing
 import os
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, TextIO
 
 import pytest
 
@@ -30,6 +31,46 @@ _logging_setup = None
 _saved_failure_logs: List[Path] = []
 _bs_pending_counter = None
 _counter_manager: Optional[Any] = None
+_faulthandler_log: Optional[TextIO] = None
+
+
+def _install_faulthandler(reports_dir: Path) -> None:
+    """Periodically dump stacks of ALL threads when E2E_FAULTHANDLER_INTERVAL>0.
+
+    Diagnostic for hangs in pytest-asyncio _scoped_runner shutdown: when
+    loop.shutdown_default_executor() blocks because a worker thread is
+    mid-call, the dumps reveal which thread and what it's waiting on.
+    Opt-in to keep normal runs quiet.
+    """
+    global _faulthandler_log
+    interval_s = int(os.environ.get("E2E_FAULTHANDLER_INTERVAL", "0"))
+    if interval_s <= 0:
+        return
+
+    log_path = reports_dir / "faulthandler.log"
+    _faulthandler_log = open(log_path, "a", buffering=1)
+    faulthandler.enable(file=_faulthandler_log, all_threads=True)
+    faulthandler.dump_traceback_later(
+        timeout=interval_s,
+        repeat=True,
+        file=_faulthandler_log,
+    )
+    get_logger("conftest").info(
+        "faulthandler thread dumps: every %ds → %s", interval_s, log_path,
+    )
+
+
+def _shutdown_faulthandler() -> None:
+    global _faulthandler_log
+    try:
+        faulthandler.cancel_dump_traceback_later()
+    except Exception:
+        pass
+    if _faulthandler_log is not None:
+        try:
+            _faulthandler_log.close()
+        finally:
+            _faulthandler_log = None
 
 
 def _extract_summary_details(test_report) -> dict[str, str | int | None]:
@@ -129,6 +170,8 @@ def pytest_configure(config):
 
     reports_dir.mkdir(parents=True, exist_ok=True)
 
+    _install_faulthandler(reports_dir)
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     if not hasattr(config.option, "xmlpath") or not config.option.xmlpath:
@@ -206,6 +249,7 @@ def pytest_configure_node(node):
 
 def pytest_unconfigure(config):
     """Cleanup shared counter."""
+    _shutdown_faulthandler()
     set_shared_pending_counter(None)
     globals()["_bs_pending_counter"] = None
     global _counter_manager
@@ -247,10 +291,8 @@ def pytest_runtest_setup(item):
 def pytest_collection_modifyitems(config, items):
     """Automatically add single_device marker to tests with device_count(1)."""
     for item in items:
-        # Check if test has device_count marker with value 1
         device_count_marker = item.get_closest_marker("device_count")
         if device_count_marker:
-            # Extract count from marker args or kwargs
             count = None
             if device_count_marker.args:
                 count = device_count_marker.args[0]
@@ -258,8 +300,6 @@ def pytest_collection_modifyitems(config, items):
                 count = device_count_marker.kwargs["count"]
             elif "value" in device_count_marker.kwargs:
                 count = device_count_marker.kwargs["value"]
-            
-            # If count is 1, add single_device marker
             if count == 1:
                 item.add_marker(pytest.mark.single_device)
 

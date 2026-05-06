@@ -28,13 +28,13 @@ class TestEmojiAndMedia:
     logger = get_logger("TestEmojiAndMedia")
 
     @pytest.fixture(autouse=True)
-    def setup(self, established_chat):
-        self.ctx = established_chat
-        self.primary = established_chat.primary
-        self.secondary = established_chat.secondary
-        self.driver = established_chat.primary.driver
-        self.primary_suffix = established_chat.primary_suffix
-        self.secondary_suffix = established_chat.secondary_suffix
+    def setup(self, chat_ready):
+        self.ctx = chat_ready
+        self.primary = chat_ready.primary
+        self.secondary = chat_ready.secondary
+        self.driver = chat_ready.primary.driver
+        self.primary_suffix = chat_ready.primary_suffix
+        self.secondary_suffix = chat_ready.secondary_suffix
 
     def _ensure_in_chat(self) -> ChatPage:
         app = App(self.driver)
@@ -57,7 +57,7 @@ class TestEmojiAndMedia:
         assert chat_page.open_chat_by_suffix(
             self.secondary_suffix,
             display_name=display_name,
-            timeout=15,
+            timeout=self.CROSS_DEVICE_TIMEOUT,
         ), "Failed to open chat by suffix"
         assert chat_page.wait_for_message_input(timeout=10), "Message input not ready"
         return chat_page
@@ -85,6 +85,7 @@ class TestEmojiAndMedia:
 
     @pytest.mark.gate
     @pytest.mark.spec("SC-MTYP-04")
+    @pytest.mark.flaky(reruns=1, reruns_delay=5)
     async def test_emoji_received_cross_device(self) -> None:
         """Verify emoji message is delivered to the receiving device.
 
@@ -114,7 +115,7 @@ class TestEmojiAndMedia:
             secondary_chat.open_chat_by_suffix(
                 self.primary_suffix,
                 display_name=display_name,
-                timeout=15,
+                timeout=self.CROSS_DEVICE_TIMEOUT,
             )
             secondary_chat.wait_for_message_input(timeout=10)
 

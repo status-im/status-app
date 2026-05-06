@@ -141,15 +141,17 @@ class AppInitializationManager:
             return False
 
     def _get_safe_tap_coordinates(self) -> tuple:
-        """Centre of screen — portrait/landscape safe, away from the
-        drawer swipe handle and system edge-gesture zones.
+        """Upper-right area — keeps the activation tap clear of common
+        interactive controls (account selector dropdowns near centre, drawer
+        swipe handle on the left edge) while staying well inside the screen
+        bounds (away from system edge-gesture zones).
         """
         try:
             size = self.driver.get_window_size()
-            return (int(size["width"] * 0.5), int(size["height"] * 0.5))
+            return (int(size["width"] * 0.9), int(size["height"] * 0.1))
         except Exception:
             self.logger.warning("⚠ Could not get window size; using fallback coords")
-            return (540, 1200)  # typical 1080×2400 portrait phone
+            return (970, 240)  # typical 1080×2400 portrait phone, upper-right
 
     def _wait_for_ui_response(
         self, timeout: int = 5, poll_interval: float = 0.5

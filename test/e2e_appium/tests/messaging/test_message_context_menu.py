@@ -5,8 +5,12 @@ Tests the long-press context menu on messages including:
 - Quick reactions
 - Reply, Edit, Delete, Copy, Pin actions
 
-These tests share the ``established_chat`` fixture so every test operates
-on the same onboarded device pair with contacts already set up.
+Split into two classes so xdist's loadscope can parallelise:
+- ``TestMessageContextMenuLocal``: tests that don't wait for cross-device sync
+- ``TestMessageContextMenuCrossDevice``: tests that verify on both devices
+
+Both share the ``chat_ready`` fixture so every test starts with a usable chat
+on both devices, regardless of what came before.
 """
 
 import asyncio
@@ -32,11 +36,12 @@ def _unique_message(prefix: str = "test") -> str:
 @pytest.mark.device_count(2)
 @pytest.mark.timeout(1200)
 @pytest.mark.flaky(reruns=1, reruns_delay=5)
-class TestMessageContextMenu:
-    """Tests for message context menu interactions.
+class _MessageContextMenuBase:
+    """Shared helpers + setup for context-menu test classes.
 
-    Uses the shared ``established_chat`` fixture; each test sends its own
-    unique message to operate on.
+    Underscore-prefixed so pytest doesn't collect it as a test class.
+    Tests live in the two subclasses below; this class only carries the
+    fixture wiring, navigation helpers, and shared constants.
     """
 
     UI_TIMEOUT = 30
@@ -47,11 +52,11 @@ class TestMessageContextMenu:
     logger = get_logger("TestMessageContextMenu")
 
     @pytest.fixture(autouse=True)
-    def setup(self, established_chat):
-        """Auto-setup using the shared established_chat fixture."""
-        self.ctx = established_chat
-        self.driver = established_chat.primary.driver
-        self.device = established_chat.primary
+    def setup(self, chat_ready):
+        """Auto-setup using the chat_ready fixture (recovers state per test)."""
+        self.ctx = chat_ready
+        self.driver = chat_ready.primary.driver
+        self.device = chat_ready.primary
 
     @asynccontextmanager
     async def step(self, description: str):
@@ -170,6 +175,15 @@ class TestMessageContextMenu:
 
         return secondary_chat
 
+
+class TestMessageContextMenuLocal(_MessageContextMenuBase):
+    """Context-menu actions that don't require cross-device sync.
+
+    These tests interact with the menu and verify primary-only state, so they
+    finish in seconds. Faster than the cross-device class — schedules well
+    on either xdist worker.
+    """
+
     @pytest.mark.gate
     @pytest.mark.smoke
     async def test_context_menu_own_message_actions(self) -> None:
@@ -244,6 +258,15 @@ class TestMessageContextMenu:
                 "Context menu should close after copying"
             )
             # Note: Clipboard verification would require platform-specific APIs
+
+
+class TestMessageContextMenuCrossDevice(_MessageContextMenuBase):
+    """Context-menu actions that verify cross-device sync.
+
+    These tests assert on both primary and secondary, so each pays the
+    cross-device delivery wait (180–300s). Heavier scope — runs in parallel
+    with the local class on the other xdist worker.
+    """
 
     @pytest.mark.smoke
     @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)

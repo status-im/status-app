@@ -14,6 +14,7 @@ from core.device_context import DeviceContext
 from pages.app import App
 from pages.messaging.chat_page import ChatPage
 from pages.settings.settings_page import SettingsPage
+from utils.timeouts import cross_device_timeout
 
 logger = get_logger("contact_helpers")
 
@@ -81,9 +82,10 @@ async def establish_contact(
     assert modal.send(), "Sender failed to send contact request"
 
     # Navigate sender back to messages
-    assert sender_app.click_messages_button(), "Sender failed to navigate to messages"
     sender_chat = ChatPage(sender.driver)
     sender_chat.dismiss_backup_prompt(timeout=4)
+    assert sender_app.click_messages_button(), "Sender failed to navigate to messages"
+    sender_chat.dismiss_backup_prompt(timeout=2)
 
     # Receiver accepts contact request
     receiver_app = App(receiver.driver)
@@ -115,9 +117,10 @@ async def establish_contact(
     await asyncio.sleep(5)
 
     # Navigate receiver to messages
-    assert receiver_app.click_messages_button(), "Receiver failed to navigate to messages"
     receiver_chat = ChatPage(receiver.driver)
     receiver_chat.dismiss_backup_prompt(timeout=4)
+    assert receiver_app.click_messages_button(), "Receiver failed to navigate to messages"
+    receiver_chat.dismiss_backup_prompt(timeout=2)
 
     sender_display = sender.user.display_name if sender.user else None
     receiver_display = receiver.user.display_name if receiver.user else None
@@ -143,6 +146,7 @@ async def establish_contact(
     # Wait for the chat on sender side — re-tap Messages to refresh the
     # list in case the P2P message arrived but the UI hasn't updated.
     logger.info("Sender waiting for DM from receiver")
+    sender_chat.dismiss_backup_prompt(timeout=2)
     assert sender_app.click_messages_button(), "Sender failed to refresh messages tab"
     sender_chat.dismiss_backup_prompt(timeout=2)
     sender_chat.dismiss_introduce_prompt(timeout=2)
@@ -161,6 +165,27 @@ async def establish_contact(
 
     assert sender_chat.wait_for_message_input(timeout=15), (
         "Message input not ready on sender"
+    )
+
+    # Delivery gate — bidirectional (status-go#7393).
+    # The Waku filter subscription race means messages sent immediately after
+    # contact acceptance can be dropped in either direction.  Verify both
+    # directions before yielding so tests don't run against a half-working session.
+
+    # Direction 1: receiver → sender (setup message already sent above)
+    assert sender_chat.message_exists(setup_msg, timeout=cross_device_timeout()), (
+        "Delivery gate failed: setup message from receiver not visible on sender. "
+        "Waku filter subscription may not have propagated yet."
+    )
+
+    # Direction 2: sender → receiver
+    ping_msg = f"Ping from {sender_suffix}"
+    assert sender_chat.send_message(ping_msg, timeout=15), (
+        "Delivery gate failed: sender could not send ping message"
+    )
+    assert receiver_chat.message_exists(ping_msg, timeout=cross_device_timeout()), (
+        "Delivery gate failed: ping from sender not visible on receiver. "
+        "Waku filter subscription may not have propagated yet."
     )
 
     logger.info("Contact established: %s <-> %s", sender_suffix, receiver_suffix)

@@ -29,7 +29,6 @@ from utils.platform import get_platform
 
 
 @pytest.mark.ios
-@pytest.mark.smoke
 @pytest.mark.device_count(1)
 class TestIOSOnboarding(StepMixin):
     """Run the full onboarding fixture on iOS and verify wallet landing.

@@ -40,10 +40,10 @@ class TestChatManagement:
     logger = get_logger("TestChatManagement")
 
     @pytest.fixture(autouse=True)
-    def setup(self, established_chat):
-        self.ctx = established_chat
-        self.driver = established_chat.primary.driver
-        self.device = established_chat.primary
+    def setup(self, chat_ready):
+        self.ctx = chat_ready
+        self.driver = chat_ready.primary.driver
+        self.device = chat_ready.primary
 
     @asynccontextmanager
     async def step(self, description: str):

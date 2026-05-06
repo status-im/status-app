@@ -1,4 +1,5 @@
 from typing import Any
+import time
 
 from appium.webdriver.webdriver import WebDriver
 
@@ -122,47 +123,33 @@ class DeviceContext:
     def capture_profile_link(self) -> str | None:
         """Capture the user's profile link.
 
-        On Android mobile the "Copy link to profile" action
-        (``userStatusCopyLinkAction``) is permanently disabled in QML
-        (``enabled: !SQUtils.Utils.isMobile``).  We still attempt it
-        briefly (1 attempt, 2s timeout) because the profile popup needs
-        those Appium driver interactions to render in the accessibility
-        tree.  Then we fall back to the mobile "Invite contacts" path.
+        On Android the "Copy link to profile" action (``userStatusCopyLinkAction``)
+        is permanently disabled in QML (``enabled: !SQUtils.Utils.isMobile``), so
+        we go directly to the mobile "Invite contacts" path via ShareProfileDialog.
 
         Returns the captured link if successful, otherwise None.
         """
         from pages.app import App
-        from utils.exceptions import ElementInteractionError
         self.logger.info("Capturing profile link for device %s", self.device_id)
 
         main_app = App(self.driver)
 
-        # Try the quick clipboard copy — this also opens the profile
-        # popup.  On mobile the copy action is disabled, so this fails
-        # fast.  The important side effect is that the popup renders
-        # during the brief interaction attempt.
-        profile_link = None
-        try:
-            profile_link = main_app.copy_profile_link_from_menu(timeout=2)
-        except (ElementInteractionError, Exception) as exc:
-            self.logger.debug("Profile menu copy not available (expected on mobile): %s", exc)
+        self.logger.info("Using Messages-panel shareProfileButton path for profile link")
+        profile_link = self._capture_via_messages_panel(main_app)
 
-        if profile_link:
-            self.logger.info("Profile link captured via clipboard: %s", profile_link)
-            self.set_state("profile_link", profile_link)
-            if self.user:
-                self.user.profile_link = profile_link
-            return profile_link
-
-        # The profile popup should still be open from the copy attempt.
-        # Use the mobile-only "Invite contacts" path.
-        self.logger.info("Using Invite contacts path for profile link")
-        profile_link = self._capture_via_settings(main_app)
-
-        # Re-activate app and verify the main UI is usable.
         # The overlay cleanup uses driver.back() which can over-navigate
-        # and send the app to the background on Android.
+        # on Android — _restore_main_ui foregrounds the app again.
         self._restore_main_ui(main_app)
+
+        # _restore_main_ui's activate_app shake unsticks the drawer's
+        # gesture handler, so a second whole-path retry materially helps
+        # if outer-5-retries inside the first call exhausted.
+        if not profile_link:
+            self.logger.warning(
+                "First capture_profile_link pass failed — retrying after activate_app()"
+            )
+            profile_link = self._capture_via_messages_panel(main_app)
+            self._restore_main_ui(main_app)
 
         if not profile_link:
             self.logger.error("All profile-link capture paths failed")
@@ -175,6 +162,146 @@ class DeviceContext:
             self.user.profile_link = profile_link
 
         return profile_link
+
+    def _capture_via_messages_panel(self, app) -> str | None:
+        """Capture profile link via the Messages section's
+        shareProfileButton (ContactsColumnView header).
+
+        The drawer's profile-avatar tap is unusable on BS portrait — the
+        avatar exposes as ``android.app.ActionBar.Tab`` with
+        ``clickable=false``, so both ``element.click()`` and
+        ``mobile: clickGesture`` no-op.
+        """
+        from locators.app_locators import AppLocators
+        from locators.messaging.chat_locators import ChatLocators
+        from locators.settings.profile_locators import ProfileSettingsLocators
+        from pages.settings.share_profile_dialog import ShareProfileDialog
+        from utils.gestures import Gestures
+
+        gestures = Gestures(self.driver)
+        app_locators = AppLocators()
+        chat_locators = ChatLocators()
+        profile_locators = ProfileSettingsLocators()
+        overlays_to_dismiss = 0
+
+        try:
+            on_messages = False
+            max_outer_attempts = 5
+            for outer_attempt in range(1, max_outer_attempts + 1):
+                self.logger.info(
+                    "Messages-nav outer attempt %d/%d", outer_attempt, max_outer_attempts
+                )
+
+                app._ensure_main_nav_visible()
+                time.sleep(1.5)  # drawer slide-in animation settle
+
+                max_taps = 5
+                for tap_attempt in range(1, max_taps + 1):
+                    if not app.is_element_visible(
+                        app_locators.LEFT_NAV_SETTINGS, timeout=1
+                    ):
+                        self.logger.info(
+                            "Drawer closed after %d tap(s)", tap_attempt - 1
+                        )
+                        break
+
+                    msg_el = app.find_element_safe(
+                        app_locators.LEFT_NAV_MESSAGES, timeout=3
+                    )
+                    if msg_el is None:
+                        self.logger.warning(
+                            "LEFT_NAV_MESSAGES not visible at tap attempt %d",
+                            tap_attempt,
+                        )
+                        app._ensure_main_nav_visible()
+                        time.sleep(1.0)
+                        continue
+
+                    rect = msg_el.rect
+                    cx = int(rect["x"] + rect["width"] / 2)
+                    cy = int(rect["y"] + rect["height"] / 2)
+                    self.logger.info(
+                        "Messages-navbar W3C-pointer click attempt %d at (%d,%d) "
+                        "rect=[x=%d,y=%d,w=%d,h=%d]",
+                        tap_attempt, cx, cy,
+                        rect["x"], rect["y"], rect["width"], rect["height"],
+                    )
+                    if not gestures.tap(cx, cy):
+                        self.logger.warning(
+                            "W3C-pointer click failed on attempt %d", tap_attempt
+                        )
+                    # Brief wait so the next drawer-closed check sees
+                    # post-tap state; the real patience is in the 30s
+                    # SHARE_PROFILE_BUTTON poll below.
+                    time.sleep(2.0)
+
+                # Dismiss backup-recovery popup that may overlay
+                # Messages section. mobile:clickGesture with elementId
+                # — element.click() has the same BS-portrait mis-routing.
+                for dismiss_attempt in range(1, 4):
+                    skip_el = app.find_element_safe(chat_locators.BACKUP_SKIP_BUTTON, timeout=2)
+                    if skip_el is None:
+                        break
+                    self.logger.info(
+                        "Dismissing backup popup via clickGesture (attempt %d)",
+                        dismiss_attempt,
+                    )
+                    try:
+                        self.driver.execute_script(
+                            "mobile: clickGesture",
+                            {"elementId": skip_el.id},
+                        )
+                    except Exception as exc:
+                        self.logger.debug("clickGesture on Skip suppressed: %s", exc)
+                    time.sleep(1.0)  # popup dismiss animation
+
+                time.sleep(1.0)  # let any final overlay settle before polling
+
+                # 30s — landmark can take 15-25s on BS portrait (section
+                # transition + AT-tree settle). Re-tapping resets it.
+                if app.is_element_visible(profile_locators.SHARE_PROFILE_BUTTON, timeout=30):
+                    on_messages = True
+                    self.logger.info(
+                        "Messages section + shareProfileButton confirmed on outer attempt %d",
+                        outer_attempt,
+                    )
+                    break
+
+                self.logger.warning(
+                    "Drawer closed but shareProfileButton not visible — retrying (outer attempt %d)",
+                    outer_attempt,
+                )
+
+            if not on_messages:
+                self.logger.error(
+                    "Failed to navigate to Messages section after %d outer attempts",
+                    max_outer_attempts,
+                )
+                return None
+
+            if not app.safe_click(profile_locators.SHARE_PROFILE_BUTTON, timeout=5):
+                self.logger.error("Failed to click shareProfileButton")
+                return None
+
+            dialog = ShareProfileDialog(self.driver)
+            if not dialog.is_displayed(timeout=10):
+                self.logger.error("ShareProfileDialog did not appear after shareProfileButton tap")
+                return None
+            overlays_to_dismiss = 1
+
+            link = dialog.get_profile_link()
+            if not link:
+                self.logger.error("ShareProfileDialog did not contain a profile link")
+                return None
+
+            return link
+        finally:
+            dialog_locator = ("xpath", "//*[contains(@resource-id,'ShareProfileDialog')]")
+            if overlays_to_dismiss and app.is_element_visible(dialog_locator, timeout=1):
+                try:
+                    self.driver.back()
+                except Exception:
+                    self.logger.debug("driver.back() suppressed during overlay cleanup")
 
     def _capture_via_settings(self, app) -> str | None:
         """Capture profile link via the mobile 'Invite contacts' flow.
@@ -198,7 +325,7 @@ class DeviceContext:
         try:
             invite_visible = app.is_element_visible(INVITE_ACTION, timeout=2)
             if invite_visible:
-                # Profile popup already open from a previous attempt.
+                # Profile popup is already open (e.g. retry after partial failure).
                 overlays_to_dismiss = 1
             else:
                 try:

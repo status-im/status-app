@@ -41,8 +41,7 @@ class App(BasePage):
         return "unknown"
 
     def click_settings_left_nav(self) -> bool:
-        self._ensure_main_nav_visible()
-        return self._click_nav_item(self.locators.LEFT_NAV_SETTINGS)
+        return self.click_settings_button()
 
     def click_messages_button(self) -> bool:
         self.logger.info("Clicking Messages button")
@@ -70,38 +69,82 @@ class App(BasePage):
         self._ensure_main_nav_visible()
         return self._click_nav_item(self.locators.LEFT_NAV_MARKET)
 
-    def _click_nav_item(self, locator: tuple, timeout: int = 10) -> bool:
-        """Click a nav-bar item and, in portrait mode, wait for the drawer to close.
+    def _click_nav_item(
+        self,
+        locator: tuple,
+        timeout: int = 10,
+        strategy: str = "w3c",
+    ) -> bool:
+        # Branch on app layout (side-nav visible?), not device orientation —
+        # wide tablets in portrait still render the side-nav which never
+        # disappears, so the drawer-close wait below would never succeed.
+        if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
+            return self.safe_click(locator, timeout=timeout, max_attempts=2)
 
-        After the click the PrimaryNavSidebar drawer plays a close animation.
-        If the caller checks for the target section immediately it may not be
-        visible yet.  This helper waits for the nav bar to disappear before
-        returning.
-        """
-        clicked = self.safe_click(locator, timeout=timeout, max_attempts=2)
-        if not clicked:
-            return False
+        for attempt in range(1, 4):
+            el = self.find_element_safe(locator, timeout=timeout)
+            if el is None:
+                self.logger.warning(
+                    "Nav item not found on attempt %d", attempt
+                )
+                self.dump_page_source(f"nav_item_not_found_a{attempt}")
+                # Try re-opening the drawer in case it closed between
+                # _ensure_main_nav_visible and the lookup.
+                if attempt < 3:
+                    self._ensure_main_nav_visible()
+                    time.sleep(0.5)
+                    continue
+                return False
+            rect = el.rect
+            cx = int(rect["x"] + rect["width"] / 2)
+            cy = int(rect["y"] + rect["height"] / 2)
 
-        if self.is_portrait_mode():
-            # Wait for the drawer to close — nav items should disappear
-            self.wait_for_invisibility(self.locators.LEFT_NAV_ANY, timeout=5)
-            # Allow destination page to begin rendering after drawer animation
-            time.sleep(0.5)
+            try:
+                if strategy == "native":
+                    self.logger.info(
+                        "Nav-item mobile:clickGesture attempt %d at (%d,%d)",
+                        attempt, cx, cy,
+                    )
+                    self.driver.execute_script(
+                        "mobile: clickGesture", {"elementId": el.id},
+                    )
+                else:
+                    self.logger.info(
+                        "Nav-item W3C-pointer click attempt %d at (%d,%d)",
+                        attempt, cx, cy,
+                    )
+                    if not self.gestures.tap(cx, cy):
+                        raise RuntimeError("gestures.tap returned False")
+            except Exception as exc:
+                self.logger.warning(
+                    "Nav-item click failed on attempt %d: %s", attempt, exc
+                )
+                continue
 
-        return True
+            if self.wait_for_invisibility(self.locators.LEFT_NAV_ANY, timeout=5):
+                # Drawer closed → tap registered. Allow destination page to
+                # begin rendering after drawer animation.
+                time.sleep(0.5)
+                return True
+
+            self.logger.warning(
+                "Drawer still open after nav-item click attempt %d — retrying",
+                attempt,
+            )
+
+        return False
 
     def _ensure_main_nav_visible(self) -> bool:
         """Ensure the left navigation bar is visible.
 
-        In landscape the nav bar is always visible.  In portrait it is a
-        drawer that slides from the left edge.  This method first presses
-        back buttons to unwind deep navigation, then swipes from the left
-        edge to open the drawer.
+        Detect layout by side-nav visibility — don't trust device orientation;
+        the app's QML picks layout based on width, so wide tablets in portrait
+        still get the always-visible side-nav.
         """
         if self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=2):
             return True
 
-        if not self.is_portrait_mode():
+        if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
             return self.is_element_visible(self.locators.LEFT_NAV_SETTINGS, timeout=5)
 
         # Phase 1: unwind deep navigation stack via back button
@@ -211,8 +254,89 @@ class App(BasePage):
         if self.active_section() == "settings":
             self.logger.info("Already in Settings section — skipping nav")
             return True
-        self._ensure_main_nav_visible()
-        return self._click_nav_item(self.locators.LEFT_NAV_SETTINGS)
+        from locators.settings.settings_locators import SettingsLocators
+        settings_locators = SettingsLocators()
+        return self._click_drawer_nav_with_verify(
+            nav_locator=self.locators.LEFT_NAV_SETTINGS,
+            landmark_locator=settings_locators.PROFILE_MENU_ITEM,
+            nav_name="Settings",
+        )
+
+    def _click_drawer_nav_with_verify(
+        self,
+        nav_locator: tuple,
+        landmark_locator: tuple,
+        nav_name: str,
+    ) -> bool:
+        """Drawer nav click + landmark verify, retrying with strategy variation.
+
+        On BS portrait the nav-item tap can close the drawer without firing
+        onClicked. We verify by destination-page landmark and retry, varying
+        strategy so a deterministic gesture race doesn't pin us at the same
+        failure mode. ``activate_app()`` between attempts unsticks the
+        drawer's gesture handler.
+        """
+        # Defensive armour for phone-portrait sessions; on the tablet gate
+        # device, attempt 1 (native) reliably wins and the rest is dormant.
+        strategies = ["native", "native", "w3c", "w3c"]
+        pkg = self.driver.capabilities.get("appPackage") or "app.status.mobile"
+
+        # On a second call within ~1min of a successful first, the
+        # drawer's gesture handler stays wedged and consumes taps
+        # without firing onClicked. activate_app shakes it loose.
+        def _shake_app():
+            try:
+                self.driver.activate_app(pkg)
+            except Exception as exc:
+                self.logger.debug("activate_app suppressed: %s", exc)
+
+        # BACK closes the drawer cleanly when activate_app's foregrounding
+        # alone fails to unstick a wedged gesture handler.
+        def _reset_drawer_state():
+            try:
+                self.driver.press_keycode(4)  # KEYCODE_BACK
+            except Exception as exc:
+                self.logger.debug("press_keycode(BACK) suppressed: %s", exc)
+            time.sleep(0.5)
+
+        _shake_app()
+        time.sleep(0.6)  # let activate_app foregrounding settle
+
+        slug = nav_name.lower().replace(" ", "_")
+        for attempt in range(1, len(strategies) + 1):
+            if attempt > 1:
+                _reset_drawer_state()
+                _shake_app()
+                time.sleep(1.0)  # longer settle on retry — the drawer
+                # state we're recovering from is already wedged
+
+            self._ensure_main_nav_visible()
+            # Drawer slide-in keeps animating for ~200-400ms after the
+            # locator is in the AT tree; mid-animation taps land on stale
+            # bounds and trigger CloseOnPressOutside instead of onClicked.
+            time.sleep(0.6)
+            strategy = strategies[attempt - 1]
+            if not self._click_nav_item(nav_locator, strategy=strategy):
+                self.logger.warning(
+                    "click_%s_button: nav-item click did not register on "
+                    "attempt %d (strategy=%s)", slug, attempt, strategy,
+                )
+                self.dump_page_source(f"{slug}_nav_no_click_a{attempt}_{strategy}")
+                self.take_screenshot(f"{slug}_nav_no_click_a{attempt}_{strategy}")
+                continue
+            # Brief settle before the 15s landmark check — Qt layout
+            # sometimes lags a frame behind the SwipeView transition.
+            time.sleep(0.5)
+            if self.is_element_visible(landmark_locator, timeout=15):
+                return True
+            self.logger.warning(
+                "click_%s_button: drawer closed but %s page not "
+                "visible on attempt %d (strategy=%s)",
+                slug, nav_name, attempt, strategy,
+            )
+            self.dump_page_source(f"{slug}_drawer_closed_no_page_a{attempt}_{strategy}")
+            self.take_screenshot(f"{slug}_drawer_closed_no_page_a{attempt}_{strategy}")
+        return False
 
     def open_profile_menu(self) -> bool:
         self.logger.info("Opening profile menu from main navigation")
@@ -297,8 +421,8 @@ class App(BasePage):
 
     def _is_toast_stable(self, duration: float) -> bool:
         """Check if toast remains visible for the specified duration."""
-        end_time = time.time() + duration
-        while time.time() < end_time:
+        endtime = time.time() + duration
+        while time.time() < endtime:
             if not self.is_element_visible(self.locators.ANY_TOAST, timeout=0.1):
                 return False
             time.sleep(0.05)
