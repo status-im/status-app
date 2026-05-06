@@ -17,7 +17,7 @@ class SeedPhraseInputLocators(BaseLocators):
         base = str(word_count)
         return [BaseLocators.accessibility_id(f"{base} word(s)")]
 
-    CONTINUE_BUTTON = BaseLocators.content_desc_contains("[tid:btnContinue]")
+    CONTINUE_BUTTON = BaseLocators.tid("btnContinue")
     IMPORT_BUTTON = BaseLocators.accessibility_id("Import")
     IMPORT_BUTTON_ALT = BaseLocators.accessibility_id("Import seed phrase")
 

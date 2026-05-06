@@ -7,15 +7,6 @@ class PushNotificationsLocators(BaseLocators):
     DIALOG = BaseLocators.xpath(
         "//*[contains(@resource-id,'EnablePushNotificationsPopup')]"
     )
-    MAYBE_LATER_BUTTON = BaseLocators.xpath(
-        "//*[contains(@content-desc, 'tid:btnPushNotificationsLater') "
-        "or contains(@name, 'btnPushNotificationsLater')]"
-    )
-    CONTINUE_BUTTON = BaseLocators.xpath(
-        "//*[contains(@content-desc, 'tid:btnPushNotificationsPrimary') "
-        "or contains(@name, 'btnPushNotificationsPrimary')]"
-    )
-    CLOSE_BUTTON = BaseLocators.xpath(
-        "//*[contains(@content-desc, 'tid:headerActionsCloseButton') "
-        "or contains(@name, 'headerActionsCloseButton')]"
-    )
+    MAYBE_LATER_BUTTON = BaseLocators.tid("btnPushNotificationsLater")
+    CONTINUE_BUTTON = BaseLocators.tid("btnPushNotificationsPrimary")
+    CLOSE_BUTTON = BaseLocators.tid("headerActionsCloseButton")

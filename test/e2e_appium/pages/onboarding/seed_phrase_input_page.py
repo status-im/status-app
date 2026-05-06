@@ -2,6 +2,7 @@ import time
 from typing import List, Union
 
 from ..base_page import BasePage
+from locators.base_locators import BaseLocators
 from locators.onboarding.seed_phrase_input_locators import SeedPhraseInputLocators
 
 
@@ -17,55 +18,73 @@ class SeedPhraseInputPage(BasePage):
             self.IDENTITY_LOCATOR = self.locators.SEED_PHRASE_INPUT_SCREEN_CREATE
 
     def paste_seed_phrase_via_clipboard(self, seed_phrase: str) -> bool:
-        """Paste the seed phrase via clipboard into the first input."""
-        PASTE_CHIP_X_OFFSET = 20
-        PASTE_CHIP_Y_OFFSET = -36
-        LONG_PRESS_DURATION = 800
+        """Enter the seed phrase by typing each word into its own field.
 
+        Method name is legacy — we no longer paste. ``EnterSeedPhrase.qml``'s
+        paste-split handler fires on ``Keys.onPressed StandardKey.Paste``
+        (Ctrl+V) which the Android paste chip does not emit, so per-field
+        typing is the only path that populates all N fields. Step 1 selects
+        the length tab so the matching field count renders.
+        """
         try:
-            self.driver.set_clipboard_text(seed_phrase)
-            self.logger.debug("Seed phrase set to clipboard")
-
-            first_field_locator = self.locators.get_seed_word_input_field(1)
-            element = self.find_element_safe(first_field_locator)
-            if not element:
-                self.logger.error("First seed input field not found")
+            words = seed_phrase.strip().split()
+            if not words:
+                self.logger.error("Empty seed phrase")
                 return False
 
-            if not self.ensure_element_visible(first_field_locator):
-                self.logger.warning("First field not fully visible; continuing anyway")
-
-            self.gestures.element_tap(element)
-            self.logger.debug("Clicked first input field")
-
-            if not self.long_press_element(element, LONG_PRESS_DURATION):
-                self.logger.error("Failed to perform long-press on input field")
+            length = len(words)
+            if length not in (12, 18, 24):
+                self.logger.error("Unsupported seed length %d (must be 12/18/24)", length)
                 return False
 
-            if not self.tap_coordinate_relative(
-                element, PASTE_CHIP_X_OFFSET, PASTE_CHIP_Y_OFFSET
-            ):
-                self.logger.error("Failed to tap paste chip")
-                return False
+            # Step 1: select the length tab so EnterSeedPhrase renders N fields.
+            self.logger.info("Selecting %d-word length", length)
+            length_button = BaseLocators.tid(f"{length}SeedButton")
+            if not self.safe_click(length_button, timeout=5):
+                self.logger.warning(
+                    "Failed to click %dSeedButton — proceeding (default may be %d already)",
+                    length, length,
+                )
+            time.sleep(0.3)  # let the field-count repeater settle
 
-            time.sleep(0.5)
-            self.logger.info("✅ Seed phrase paste completed successfully")
-            self.hide_keyboard()
+            self.logger.info("Entering seed phrase across %d fields", length)
+            for idx, word in enumerate(words, start=1):
+                field_locator = self.locators.get_seed_word_input_field(idx)
+                if not self.ensure_element_visible(field_locator):
+                    self.logger.warning("Field %d not visible; trying anyway", idx)
+                if not self.qt_safe_input(field_locator, word, verify=False):
+                    self.logger.error("Failed to enter word %d", idx)
+                    return False
+                self.logger.debug("Entered word %d/%d: %s", idx, length, word)
+
+            try:
+                self.hide_keyboard()
+                time.sleep(0.3)
+            except Exception:
+                pass
+
+            self.logger.info("✅ Seed phrase entry completed (%d words)", length)
             return True
 
         except Exception as e:
-            self.logger.error(f"Clipboard paste failed: {e}")
+            self.logger.error(f"Seed phrase entry failed: {e}")
             return False
 
     def click_continue(self) -> bool:
         self.logger.info("Clicking Continue button")
 
-        continue_locators = [self.locators.CONTINUE_BUTTON]
+        # btnContinue sits BELOW the seed-input column inside SeedphrasePage's
+        # StatusScrollView. With 12+ fields above it the button is offscreen
+        # and Qt does not surface offscreen elements via accessibility — so a
+        # plain xpath search returns nothing. Scroll it into view first.
+        if not self.is_element_visible(self.locators.CONTINUE_BUTTON, timeout=2):
+            self.scroll_to_element(
+                self.locators.CONTINUE_BUTTON, max_swipes=4, timeout=2,
+            )
 
-        for locator in continue_locators:
-            if self.safe_click(locator):
-                self.logger.info("✅ Continue button clicked successfully")
-                return True
+        if self.safe_click(self.locators.CONTINUE_BUTTON):
+            self.logger.info("✅ Continue button clicked successfully")
+            return True
 
         self.logger.error("❌ Failed to click Continue button")
         return False

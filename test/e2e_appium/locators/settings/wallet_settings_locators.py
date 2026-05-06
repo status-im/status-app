@@ -5,10 +5,7 @@ class WalletSettingsLocators(BaseLocators):
     """Locators for the Wallet Settings view (Settings → Wallet)."""
 
     # Navigation - Wallet menu item in settings
-    # Prefer the stable tid selector; keep resource-id fallback for older builds.
-    WALLET_MENU_ITEM = BaseLocators.xpath(
-        "//*[contains(@content-desc, '[tid:5-MenuItem]') or contains(@resource-id, '5-MenuItem')]"
-    )
+    WALLET_MENU_ITEM = BaseLocators.tid("5-MenuItem")
 
     # Add new account button in wallet settings main view
     ADD_ACCOUNT_BUTTON = BaseLocators.resource_id_contains(

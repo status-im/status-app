@@ -14,7 +14,7 @@ from ..base_page import BasePage
 
 class MessageContextMenuPage(BasePage):
     """Page object for the Message Context Menu.
-    
+
     Provides actions for interacting with messages via the context menu:
     - Reply to message
     - Edit message (own messages only)
@@ -22,11 +22,11 @@ class MessageContextMenuPage(BasePage):
     - Copy message
     - Pin/Unpin message
     - React with emoji
-    
+
     Usage:
         chat_page = ChatPage(driver)
         chat_page.send_message("Hello")
-        
+
         context_menu = MessageContextMenuPage(driver)
         context_menu.long_press_message("Hello")
         context_menu.tap_reply()
@@ -57,12 +57,12 @@ class MessageContextMenuPage(BasePage):
         duration_ms: int = 1000,
     ) -> bool:
         """Long-press on a message to open the context menu.
-        
+
         Args:
             message_content: The text content of the message to long-press.
             timeout: Maximum wait time to find the message.
             duration_ms: Duration of the long-press gesture in milliseconds.
-            
+
         Returns:
             bool: True if context menu opened successfully.
         """
@@ -71,13 +71,13 @@ class MessageContextMenuPage(BasePage):
             self.chat_locators.message_text_exact(message_content),
             self.chat_locators.message_text(message_content),
         )
-        
+
         element = None
         for locator in locators:
             element = self.find_element_safe(locator, timeout=timeout // 2)
             if element:
                 break
-        
+
         if not element:
             self.logger.error(f"Message '{message_content}' not found")
             return False
@@ -119,11 +119,11 @@ class MessageContextMenuPage(BasePage):
         duration_ms: int = 1000,
     ) -> bool:
         """Long-press on a message element to open the context menu.
-        
+
         Args:
             element: WebElement of the message to long-press.
             duration_ms: Duration of the long-press gesture in milliseconds.
-            
+
         Returns:
             bool: True if context menu opened successfully.
         """
@@ -137,7 +137,7 @@ class MessageContextMenuPage(BasePage):
             actions.pointer_action.pause(duration_ms / 1000)
             actions.pointer_action.pointer_up()
             actions.perform()
-            
+
             return self.is_displayed(timeout=5)
         except Exception as e:
             self.logger.error(f"Long-press on element failed: {e}")
@@ -148,11 +148,11 @@ class MessageContextMenuPage(BasePage):
         if not self.is_displayed(timeout=2):
             self.logger.error(f"Context menu not visible when trying to tap {action_name}")
             return False
-        
+
         if not self.safe_click(locator, timeout=timeout):
             self.logger.error(f"Failed to tap {action_name}")
             return False
-        
+
         self.logger.info(f"Tapped {action_name}")
         return True
 
@@ -160,7 +160,7 @@ class MessageContextMenuPage(BasePage):
 
     def tap_reply(self, timeout: int = 5) -> bool:
         """Tap 'Reply to' to start replying to the message.
-        
+
         Returns:
             bool: True if reply action was triggered.
         """
@@ -168,9 +168,9 @@ class MessageContextMenuPage(BasePage):
 
     def tap_edit(self, timeout: int = 5) -> bool:
         """Tap 'Edit message' to edit own message.
-        
+
         Note: Only visible for user's own messages.
-        
+
         Returns:
             bool: True if edit action was triggered.
         """
@@ -178,9 +178,9 @@ class MessageContextMenuPage(BasePage):
 
     def tap_delete(self, timeout: int = 5) -> bool:
         """Tap 'Delete message' to delete own message.
-        
+
         Note: Only visible for user's own messages or if user is admin.
-        
+
         Returns:
             bool: True if delete action was triggered.
         """
@@ -188,7 +188,7 @@ class MessageContextMenuPage(BasePage):
 
     def tap_copy(self, timeout: int = 5) -> bool:
         """Tap 'Copy message' to copy message text to clipboard.
-        
+
         Returns:
             bool: True if copy action was triggered.
         """
@@ -196,7 +196,7 @@ class MessageContextMenuPage(BasePage):
 
     def tap_pin(self, timeout: int = 5) -> bool:
         """Tap 'Pin' or 'Unpin' to toggle message pin status.
-        
+
         Returns:
             bool: True if pin/unpin action was triggered.
         """
@@ -204,7 +204,7 @@ class MessageContextMenuPage(BasePage):
 
     def tap_mark_as_unread(self, timeout: int = 5) -> bool:
         """Tap 'Mark as unread' to mark conversation unread from this message.
-        
+
         Returns:
             bool: True if mark as unread action was triggered.
         """
@@ -212,9 +212,9 @@ class MessageContextMenuPage(BasePage):
 
     def tap_copy_message_id(self, timeout: int = 5) -> bool:
         """Tap 'Copy Message Id' to copy message ID (debug feature).
-        
+
         Note: Only visible when debug mode is enabled.
-        
+
         Returns:
             bool: True if copy ID action was triggered.
         """
@@ -224,11 +224,11 @@ class MessageContextMenuPage(BasePage):
 
     def tap_quick_reaction(self, emoji: str, timeout: int = 5) -> bool:
         """Tap a quick reaction emoji from the reactions row.
-        
+
         Args:
             emoji: The emoji character (e.g., '👍', '❤', '😂')
             timeout: Maximum wait time.
-            
+
         Returns:
             bool: True if reaction was added.
         """
@@ -236,13 +236,13 @@ class MessageContextMenuPage(BasePage):
         if not self.safe_click(locator, timeout=timeout):
             self.logger.error(f"Failed to tap quick reaction '{emoji}'")
             return False
-        
+
         self.logger.info(f"Added quick reaction '{emoji}'")
         return True
 
     # ===== Default Quick Reactions (shown in context menu) =====
     # These are the default quick reactions visible in the menu row
-    
+
     def tap_grin(self, timeout: int = 5) -> bool:
         """Add grinning face (😀) reaction - first quick reaction."""
         return self._tap_menu_action(self.locators.REACTION_GRIN, "😀 reaction", timeout)
@@ -265,7 +265,7 @@ class MessageContextMenuPage(BasePage):
 
     # ===== Additional Reactions (via emoji picker) =====
     # These may not be in the quick reactions row - use open_emoji_picker() first
-    
+
     def tap_thumbs_up(self, timeout: int = 5) -> bool:
         """Add thumbs up (👍) reaction. May require emoji picker."""
         return self._tap_menu_action(self.locators.REACTION_THUMBS_UP, "👍 reaction", timeout)
@@ -292,28 +292,28 @@ class MessageContextMenuPage(BasePage):
 
     def open_emoji_picker(self, timeout: int = 5) -> bool:
         """Tap 'Add reaction' to open the full emoji picker.
-        
+
         Returns:
             bool: True if emoji picker opened.
         """
         if not self.safe_click(self.locators.ADD_REACTION_BUTTON, timeout=timeout):
             self.logger.error("Failed to tap Add reaction button")
             return False
-        
+
         if self.is_element_visible(self.emoji_locators.POPUP_CONTAINER, timeout=5):
             self.logger.info("Emoji picker opened")
             return True
-        
+
         self.logger.warning("Emoji picker did not appear")
         return False
 
     def select_emoji_from_picker(self, emoji: str, timeout: int = 5) -> bool:
         """Select an emoji from the emoji picker popup.
-        
+
         Args:
             emoji: The emoji character to select.
             timeout: Maximum wait time.
-            
+
         Returns:
             bool: True if emoji was selected.
         """
@@ -321,33 +321,20 @@ class MessageContextMenuPage(BasePage):
         if not self.safe_click(locator, timeout=timeout):
             self.logger.error(f"Failed to select emoji '{emoji}' from picker")
             return False
-        
+
         self.logger.info(f"Selected emoji '{emoji}' from picker")
         return True
 
     def dismiss(self, timeout: int = 5) -> bool:
-        """Dismiss the context menu by tapping outside.
-        
-        Returns:
-            bool: True if menu was dismissed.
+        """Dismiss the context menu via Android BACK. Tapping outside at
+        center-horizontal/10%-from-top lands on the chat header in
+        portrait and opens ProfileDialog as a side-effect.
         """
         if not self.is_displayed(timeout=2):
             return True  # Already dismissed
-        
+
         try:
-            # Tap outside the menu area (top of screen)
-            size = self.driver.get_window_size()
-            x = int(size["width"] * 0.5)
-            y = int(size["height"] * 0.1)
-            
-            actions = ActionBuilder(
-                self.driver,
-                mouse=PointerInput(interaction.POINTER_TOUCH, "finger"),
-            )
-            actions.pointer_action.move_to_location(x, y)
-            actions.pointer_action.click()
-            actions.perform()
-            
+            self.driver.back()
             return self.wait_until_hidden(timeout=timeout)
         except Exception as e:
             self.logger.error(f"Failed to dismiss context menu: {e}")
@@ -384,21 +371,21 @@ class MessageContextMenuPage(BasePage):
         timeout: int = 10,
     ) -> bool:
         """Long-press a message and reply to it.
-        
+
         Args:
             message_content: The message text to reply to.
             reply_text: The reply message text.
             timeout: Maximum wait time for each operation.
-            
+
         Returns:
             bool: True if reply was sent successfully.
         """
         if not self.long_press_message(message_content, timeout=timeout):
             return False
-        
+
         if not self.tap_reply(timeout=timeout):
             return False
-        
+
         # Type and send the reply (assumes reply input is focused)
         from pages.messaging.chat_page import ChatPage
         chat = ChatPage(self.driver)
@@ -406,9 +393,9 @@ class MessageContextMenuPage(BasePage):
 
     def confirm_delete(self, timeout: int = 5) -> bool:
         """Confirm the delete message dialog.
-        
+
         Call this after tap_delete() when the confirmation dialog appears.
-        
+
         Returns:
             bool: True if confirmation was successful.
         """
@@ -418,30 +405,30 @@ class MessageContextMenuPage(BasePage):
         ):
             self.logger.warning("Delete confirmation dialog not visible")
             return False
-        
+
         if not self.safe_click(self.locators.DELETE_CONFIRMATION_BUTTON, timeout=timeout):
             self.logger.error("Failed to click delete confirmation button")
             return False
-        
+
         self.logger.info("Confirmed message deletion")
         return True
 
     def delete_message(self, message_content: str, timeout: int = 10) -> bool:
         """Long-press a message and delete it (with confirmation).
-        
+
         Args:
             message_content: The message text to delete.
             timeout: Maximum wait time for each operation.
-            
+
         Returns:
             bool: True if message was deleted.
         """
         if not self.long_press_message(message_content, timeout=timeout):
             return False
-        
+
         if not self.tap_delete(timeout=timeout):
             return False
-        
+
         # Handle confirmation dialog
         return self.confirm_delete(timeout=timeout)
 
@@ -452,16 +439,16 @@ class MessageContextMenuPage(BasePage):
         timeout: int = 10,
     ) -> bool:
         """Long-press a message and add a reaction.
-        
+
         Args:
             message_content: The message text to react to.
             emoji: The emoji to react with (default: thumbs up).
             timeout: Maximum wait time for each operation.
-            
+
         Returns:
             bool: True if reaction was added.
         """
         if not self.long_press_message(message_content, timeout=timeout):
             return False
-        
+
         return self.tap_quick_reaction(emoji, timeout=timeout)

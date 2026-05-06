@@ -16,12 +16,7 @@ class PasswordScreenLocators(BaseLocators):
         "or contains(@name, 'passwordViewNewPasswordConfirm')]"
     )
 
-    # On Android content-desc contains "[tid:btnConfirmPassword]";
-    # on iOS name contains "btnConfirmPassword".
-    CONFIRM_PASSWORD_BUTTON = BaseLocators.xpath(
-        "//*[contains(@content-desc, '[tid:btnConfirmPassword]') "
-        "or contains(@name, 'btnConfirmPassword')]"
-    )
+    CONFIRM_PASSWORD_BUTTON = BaseLocators.tid("btnConfirmPassword")
 
     ONBOARDING_CONTAINER = BaseLocators.object_name_contains(
         "startupOnboardingLayout"

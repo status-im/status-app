@@ -92,7 +92,7 @@ class BasePage:
 
     def is_screen_displayed(self, timeout: int | None = None) -> bool:
         """Check if this page/screen is currently displayed.
-        
+
         Subclasses must define IDENTITY_LOCATOR as a class attribute - this is
         the locator that uniquely identifies the screen (e.g., a header element).
         """
@@ -166,8 +166,16 @@ class BasePage:
                 element = None
                 try:
                     element = self._wait_for_clickable(loc, timeout)
+                    # Prefer a real W3C touch event over native element.click().
+                    # element.click() routes through AccessibilityNodeInfo.
+                    # ACTION_CLICK and silently no-ops on QML widgets that
+                    # expose clickable="false" in the AT tree (e.g.
+                    # StatusNavigationListItem in SettingsList) — the request
+                    # returns 200 OK but no MouseArea fires.
+                    if element and self._gesture_tap_fallback(element, loc):
+                        return True
                     element.click()
-                    self.logger.debug(f"Clicked: {loc[1]}")
+                    self.logger.debug(f"Clicked (native): {loc[1]}")
                     return True
                 except (
                     ElementClickInterceptedException,
@@ -450,21 +458,18 @@ class BasePage:
     def long_press_element(self, element, duration: int = 800) -> bool:
         """Perform long-press gesture on element to trigger context menu.
 
-        Args:
-            element: WebElement to long-press
-            duration: Long-press duration in milliseconds
-
-        Returns:
-            bool: True if long-press successful, False otherwise
+        Delegates to ``gestures.element_long_press`` which uses W3C
+        Actions on Android (real touch via ``pointerDown + pause(duration)
+        + pointerUp``). Coordinate-based dispatch is required for QML
+        widgets that expose ``clickable=false`` in the AT tree (e.g.
+        wallet account rows, chat list items) — the elementId path
+        routes through ``ACTION_LONG_CLICK`` and silently no-ops on
+        those nodes.
         """
-        try:
-            if self.gestures.long_press(element.id, duration):
-                self.logger.debug(f"Long-press performed (duration: {duration}ms)")
-                return True
-            return False
-        except Exception as e:
-            self.logger.debug(f"Long-press gesture failed: {e}")
-            return False
+        if self.gestures.element_long_press(element, duration_ms=duration):
+            self.logger.debug(f"Long-press performed (duration: {duration}ms)")
+            return True
+        return False
 
     def tap_coordinate_relative(self, element, x_offset: int, y_offset: int) -> bool:
         """Tap at coordinates relative to element position.
@@ -490,15 +495,16 @@ class BasePage:
             return False
 
     def _gesture_tap_fallback(self, element, locator) -> bool:
-        """Fallback tap using Appium gestures when native click fails."""
+        """Tap element using a real W3C touch event at its centre coords.
+
+        QML widgets that expose ``clickable=false`` in the AT tree (e.g.
+        ``StatusNavigationListItem`` in SettingsList) silently no-op the
+        elementId-based tap path; coordinate dispatch fires the underlying
+        MouseArea reliably.
+        """
         if self.gestures.element_tap(element):
             self.logger.debug(f"Gesture tap fallback succeeded for {locator}")
             return True
-
-        if self.gestures.element_center_tap(element):
-            self.logger.debug(f"Coordinate tap fallback succeeded for {locator}")
-            return True
-
         return False
 
     def restart_app(self, app_package: str | None = None) -> bool:

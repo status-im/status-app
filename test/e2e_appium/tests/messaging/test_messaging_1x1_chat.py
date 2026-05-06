@@ -7,7 +7,6 @@ from pages.messaging.chat_page import ChatPage
 from pages.app import App
 from pages.settings.messaging_page import MessagingSettingsPage
 from pages.settings.settings_page import SettingsPage
-from pages.settings.contacts_page import ContactsSettingsPage
 from utils.multi_device_helpers import StepMixin
 
 
@@ -17,9 +16,10 @@ class TestMessaging1x1Chat(StepMixin):
     UI_TIMEOUT = 12
 
     @pytest.mark.messaging
+    @pytest.mark.portrait
     @pytest.mark.smoke
     @pytest.mark.device_count(2)
-    @pytest.mark.xfail(reason="message delivery issues", strict=False)
+    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
     async def test_contact_request_flow(self) -> None:
         primary_device = self.device
         secondary_device = self.get_device(1)
@@ -125,9 +125,10 @@ class TestMessaging1x1Chat(StepMixin):
             assert modal.send(), "Failed to send contact request"
 
         async with self.step(device, "Navigate back to messages"):
-            assert main_app.click_messages_button(), "Failed to navigate to messages"
             chat_page = ChatPage(device.driver)
             chat_page.dismiss_backup_prompt(timeout=4)  # Dismiss if visible
+            assert main_app.click_messages_button(), "Failed to navigate to messages"
+            chat_page.dismiss_backup_prompt(timeout=2)
             assert chat_page.is_loaded(timeout=self.UI_TIMEOUT), "Chat page did not load"
 
         return request_message

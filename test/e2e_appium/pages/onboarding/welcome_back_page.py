@@ -87,8 +87,8 @@ class WelcomeBackPage(BasePage):
             if overlay and ElementStateChecker.is_displayed(overlay):
                 try:
                     rect = overlay.rect
-                    tap_x = int(rect.get("x", 0) + rect.get("width", 0) * 0.25)
-                    tap_y = int(rect.get("y", 0) + rect.get("height", 0) * 0.25)
+                    tap_x = int(rect.get("x", 0) + rect.get("width", 0) * 0.5)
+                    tap_y = int(rect.get("y", 0) + rect.get("height", 0) * 0.5)
                     if not self.gestures.tap(tap_x, tap_y):
                         self.gestures.double_tap(tap_x, tap_y)
                 except Exception:
@@ -111,8 +111,8 @@ class WelcomeBackPage(BasePage):
 
             try:
                 rect = field.rect
-                tap_x = int(rect.get("x", 0) + rect.get("width", 0) * 0.25)
-                tap_y = int(rect.get("y", 0) + rect.get("height", 0) * 0.25)
+                tap_x = int(rect.get("x", 0) + rect.get("width", 0) * 0.5)
+                tap_y = int(rect.get("y", 0) + rect.get("height", 0) * 0.5)
                 if not self.gestures.tap(tap_x, tap_y):
                     self.gestures.double_tap(tap_x, tap_y)
             except Exception:

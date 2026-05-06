@@ -11,6 +11,7 @@ from pages.onboarding import (
     SplashScreen,
 )
 from models.user_model import User, UserProfile
+from utils.gestures import Gestures
 from utils.generators import generate_seed_phrase
 from utils.exceptions import ProfileCreationFlowError
 from core.models import DEFAULT_USER_PASSWORD
@@ -88,7 +89,7 @@ class ProfileCreationFlow:
 
         # Initial tap to dismiss any overlay and activate the app
         try:
-            self.driver.tap([(500, 300)])
+            Gestures(self.driver).activation_tap()
             time.sleep(1)
         except Exception:
             self.logger.debug("Initial tap attempt skipped")

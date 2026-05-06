@@ -4,7 +4,6 @@ from utils.generators import generate_ethereum_address, generate_account_name
 from utils.multi_device_helpers import StepMixin
 from pages.wallet.add_saved_address_modal import AddSavedAddressModal
 from pages.app import App
-from locators.app_locators import AppLocators
 from locators.wallet.saved_addresses_locators import SavedAddressesLocators
 from pages.wallet.saved_addresses_page import SavedAddressesPage
 
@@ -17,9 +16,11 @@ class TestSavedAddresses(StepMixin):
     async def test_add_and_remove_saved_address(self):
         async with self.step(self.device, "Navigate to Saved Addresses"):
             app = App(self.device.driver)
-            assert app.safe_click(AppLocators().LEFT_NAV_WALLET, timeout=6), (
-                "Failed to open Wallet"
-            )
+            # click_wallet_button() opens the drawer first in portrait mode
+            # via _ensure_main_nav_visible(); a raw safe_click on
+            # LEFT_NAV_WALLET fails in portrait because the nav item is
+            # behind a closed drawer.
+            assert app.click_wallet_button(), "Failed to open Wallet"
             loc = SavedAddressesLocators()
             assert app.safe_click(loc.WALLET_SAVED_ADDRESSES_BUTTON), (
                 "Failed to open Saved addresses from Wallet"

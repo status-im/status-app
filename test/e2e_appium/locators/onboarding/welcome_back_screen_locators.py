@@ -20,4 +20,4 @@ class WelcomeBackScreenLocators(BaseLocators):
     PASSWORD_INPUT_OVERLAY = BaseLocators.xpath(
         "//*[contains(@resource-id, 'loginPasswordInput')]"
     )
-    LOGIN_BUTTON = BaseLocators.content_desc_contains("[tid:loginButton]")
+    LOGIN_BUTTON = BaseLocators.tid("loginButton")

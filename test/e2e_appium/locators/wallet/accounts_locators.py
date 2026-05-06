@@ -39,35 +39,21 @@ class WalletAccountsLocators(BaseLocators):
     REMOVE_ACCOUNT_ACK_CHECKBOX = BaseLocators.xpath(
         "//*[contains(@resource-id,'RemoveAccountPopup-HavePenPaper')]"
     )
-    REMOVE_ACCOUNT_CONFIRM_BUTTON = BaseLocators.content_desc_contains(
-        "[tid:RemoveAccountPopup-ConfirmButton]"
-    )
-    REMOVE_ACCOUNT_CANCEL_BUTTON = BaseLocators.content_desc_contains(
-        "[tid:RemoveAccountPopup-CancelButton]"
-    )
+    REMOVE_ACCOUNT_CONFIRM_BUTTON = BaseLocators.tid("RemoveAccountPopup-ConfirmButton")
+    REMOVE_ACCOUNT_CANCEL_BUTTON = BaseLocators.tid("RemoveAccountPopup-CancelButton")
     ADD_ACCOUNT_MODAL = BaseLocators.xpath(
         "//*[contains(@resource-id,'AddAccountPopup')]"
     )
-    DEFAULT_ACCOUNT_ROW = BaseLocators.content_desc_exact(
-        "Account 1 [tid:walletAccountListItem]"
-    )
-    ACCOUNT_NAME_INPUT = BaseLocators.content_desc_exact(
-        "Account name [tid:statusBaseInput]"
-    )
-    ADD_ACCOUNT_PRIMARY = BaseLocators.content_desc_contains(
-        "[tid:AddAccountPopup-PrimaryButton]"
-    )
-    EDIT_DERIVATION_BUTTON = BaseLocators.content_desc_exact(
-        "Edit [tid:AddAccountPopup-EditDerivationPath]"
-    )
+    DEFAULT_ACCOUNT_ROW = BaseLocators.tid("walletAccountListItem")
+    ACCOUNT_NAME_INPUT = BaseLocators.tid("statusBaseInput")
+    ADD_ACCOUNT_PRIMARY = BaseLocators.tid("AddAccountPopup-PrimaryButton")
+    EDIT_DERIVATION_BUTTON = BaseLocators.tid("AddAccountPopup-EditDerivationPath")
     RECEIVE_CARD = BaseLocators.xpath("//*[contains(@resource-id,'receiveCard')]")
-    WALLET_HEADER_ADDRESS = BaseLocators.content_desc_contains(
-        "[tid:walletHeaderButton]"
-    )
-    FOOTER_SEND = BaseLocators.content_desc_contains("[tid:walletFooterSendButton]")
+    WALLET_HEADER_ADDRESS = BaseLocators.tid("walletHeaderButton")
+    FOOTER_SEND = BaseLocators.tid("walletFooterSendButton")
     FOOTER_RECEIVE = BaseLocators.resource_id_contains("walletFooterReceiveButton")
-    FOOTER_BUY = BaseLocators.content_desc_contains("[tid:walletFooterBuyButton]")
-    FOOTER_SWAP = BaseLocators.content_desc_contains("[tid:walletFooterSwapButton]")
+    FOOTER_BUY = BaseLocators.tid("walletFooterBuyButton")
+    FOOTER_SWAP = BaseLocators.tid("walletFooterSwapButton")
 
     # Add account modal — origin selector
     ORIGIN_SELECTOR = BaseLocators.xpath(

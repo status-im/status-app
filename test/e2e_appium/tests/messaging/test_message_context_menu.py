@@ -5,8 +5,8 @@ Tests the long-press context menu on messages including:
 - Quick reactions
 - Reply, Edit, Delete, Copy, Pin actions
 
-These tests use a module-scoped fixture that establishes a chat once,
-then all tests in this module share that session.
+These tests share the ``established_chat`` fixture so every test operates
+on the same onboarded device pair with contacts already set up.
 """
 
 import asyncio
@@ -19,6 +19,7 @@ from config.logging_config import get_logger
 from pages.app import App
 from pages.messaging.chat_page import ChatPage
 from pages.messaging.message_context_menu_page import MessageContextMenuPage
+from utils.timeouts import cross_device_timeout
 
 
 def _unique_message(prefix: str = "test") -> str:
@@ -27,22 +28,27 @@ def _unique_message(prefix: str = "test") -> str:
 
 
 @pytest.mark.messaging
+@pytest.mark.portrait
 @pytest.mark.device_count(2)
 @pytest.mark.timeout(1200)
 @pytest.mark.flaky(reruns=1, reruns_delay=5)
 class TestMessageContextMenu:
     """Tests for message context menu interactions.
-    
-    Uses module-scoped established_chat fixture for shared session.
-    Each test sends its own unique message to operate on.
+
+    Uses the shared ``established_chat`` fixture; each test sends its own
+    unique message to operate on.
     """
 
     UI_TIMEOUT = 30
+    # Env-aware: 180s on Pi LAN, 300s on BrowserStack cloud.
+    # See ``utils.timeouts.cross_device_timeout`` for rationale (MVDS
+    # resend cycle + Waku MissingMessageVerifier ticker).
+    CROSS_DEVICE_TIMEOUT = cross_device_timeout()
     logger = get_logger("TestMessageContextMenu")
 
     @pytest.fixture(autouse=True)
     def setup(self, established_chat):
-        """Auto-setup using the module-scoped established_chat fixture."""
+        """Auto-setup using the shared established_chat fixture."""
         self.ctx = established_chat
         self.driver = established_chat.primary.driver
         self.device = established_chat.primary
@@ -56,21 +62,22 @@ class TestMessageContextMenu:
 
     async def _ensure_in_chat(self) -> ChatPage:
         """Ensure we're in a chat with message input visible.
-        
+
         Handles various app states and navigates to an open chat with input ready.
         """
         app = App(self.driver)
         chat_page = ChatPage(self.driver)
-        
+
         # Check if already in a chat with message input
         if chat_page.is_element_visible(chat_page.locators.MESSAGE_INPUT, timeout=2):
             self.logger.info("Already in chat with message input visible")
             return chat_page
-        
+
         # Navigate to messages tab
         self.logger.info("Navigating to Messages tab")
-        app.click_messages_button()
         chat_page.dismiss_backup_prompt(timeout=3)
+        app.click_messages_button()
+        chat_page.dismiss_backup_prompt(timeout=2)
 
         # Allow the UI to settle after navigation (BrowserStack latency)
         await asyncio.sleep(0.5)
@@ -79,14 +86,14 @@ class TestMessageContextMenu:
         if chat_page.wait_for_message_input(timeout=5):
             self.logger.info("Message input ready after navigation")
             return chat_page
-        
+
         # Try opening the chat with the secondary user by suffix
         if hasattr(self, 'ctx') and self.ctx.secondary_suffix:
             self.logger.info(f"Opening chat with secondary user ({self.ctx.secondary_suffix})")
             secondary_name = None
             if self.ctx.secondary.user:
                 secondary_name = self.ctx.secondary.user.display_name
-            
+
             if chat_page.open_chat_by_suffix(
                 self.ctx.secondary_suffix,
                 display_name=secondary_name,
@@ -94,14 +101,14 @@ class TestMessageContextMenu:
                 if chat_page.wait_for_message_input(timeout=self.UI_TIMEOUT):
                     self.logger.info("Opened chat with secondary user")
                     return chat_page
-        
+
         # Fallback: try opening first available chat
         self.logger.info("Attempting to open first available chat")
         if chat_page.open_first_chat(timeout=self.UI_TIMEOUT):
             if chat_page.wait_for_message_input(timeout=self.UI_TIMEOUT):
                 self.logger.info("Opened first chat successfully")
                 return chat_page
-        
+
         raise AssertionError(
             "Could not navigate to a chat with message input. "
             "App may be in unexpected state."
@@ -122,22 +129,23 @@ class TestMessageContextMenu:
 
     async def _ensure_secondary_in_chat(self) -> ChatPage:
         """Ensure secondary device is in the chat with primary.
-        
+
         The fixture establishes the chat, but secondary may have navigated away.
         This ensures secondary is viewing the same conversation as primary.
         """
         secondary_chat = ChatPage(self.ctx.secondary.driver)
         secondary_app = App(self.ctx.secondary.driver)
-        
+
         # Check if already in chat with message visible
         if secondary_chat.is_element_visible(secondary_chat.locators.MESSAGE_INPUT, timeout=2):
             self.logger.info("Secondary already in chat")
             return secondary_chat
-        
+
         # Navigate to messages
         self.logger.info("Navigating secondary to Messages tab")
-        secondary_app.click_messages_button()
         secondary_chat.dismiss_backup_prompt(timeout=3)
+        secondary_app.click_messages_button()
+        secondary_chat.dismiss_backup_prompt(timeout=2)
 
         # Allow the UI to settle after navigation (BrowserStack latency)
         await asyncio.sleep(0.5)
@@ -147,7 +155,7 @@ class TestMessageContextMenu:
             primary_name = None
             if self.ctx.primary.user:
                 primary_name = self.ctx.primary.user.display_name
-            
+
             if secondary_chat.open_chat_by_suffix(
                 self.ctx.primary_suffix,
                 display_name=primary_name,
@@ -155,18 +163,18 @@ class TestMessageContextMenu:
                 if secondary_chat.wait_for_message_input(timeout=self.UI_TIMEOUT):
                     self.logger.info("Secondary opened chat with primary")
                     return secondary_chat
-        
+
         # Fallback: open first chat
         if secondary_chat.open_first_chat(timeout=self.UI_TIMEOUT):
             secondary_chat.wait_for_message_input(timeout=self.UI_TIMEOUT)
-        
+
         return secondary_chat
 
     @pytest.mark.gate
     @pytest.mark.smoke
     async def test_context_menu_own_message_actions(self) -> None:
         """Verify context menu shows correct actions for own message.
-        
+
         Own messages should show: Reply, Edit, Copy, Pin, Mark as unread, Delete
         """
         test_message = _unique_message("ctx_menu_test")
@@ -193,6 +201,7 @@ class TestMessageContextMenu:
 
     @pytest.mark.gate
     @pytest.mark.smoke
+    @pytest.mark.spec("SC-MACT-09")
     async def test_add_reaction_to_message(self) -> None:
         """Verify adding a quick reaction to a message."""
         test_message = _unique_message("react_test")
@@ -215,6 +224,7 @@ class TestMessageContextMenu:
 
     @pytest.mark.gate
     @pytest.mark.smoke
+    @pytest.mark.spec("SC-MACT-11")
     async def test_copy_message_action(self) -> None:
         """Verify copy message action works."""
         test_message = _unique_message("copy_test")
@@ -236,10 +246,11 @@ class TestMessageContextMenu:
             # Note: Clipboard verification would require platform-specific APIs
 
     @pytest.mark.smoke
-    @pytest.mark.xfail(reason="message delivery issues", strict=False)
+    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
+    @pytest.mark.spec("SC-MACT-03")
     async def test_delete_own_message(self) -> None:
         """Verify deleting own message removes it from both devices.
-        
+
         Multi-device: Verifies deletion syncs to secondary device.
         """
         test_message = _unique_message("delete_test")
@@ -250,7 +261,7 @@ class TestMessageContextMenu:
 
         async with self.step("Ensure secondary is in chat and verify message visible"):
             secondary_chat = await self._ensure_secondary_in_chat()
-            assert secondary_chat.message_exists(test_message, timeout=self.UI_TIMEOUT), (
+            assert secondary_chat.message_exists(test_message, timeout=self.CROSS_DEVICE_TIMEOUT), (
                 "Secondary should see message before deletion"
             )
 
@@ -270,22 +281,37 @@ class TestMessageContextMenu:
             )
 
         async with self.step("Verify message deleted on secondary"):
-            assert not secondary_chat.message_exists(test_message, timeout=self.UI_TIMEOUT), (
+            assert not secondary_chat.message_exists(test_message, timeout=self.CROSS_DEVICE_TIMEOUT), (
                 "Secondary: Message should be deleted (sync)"
             )
 
     @pytest.mark.smoke
     @pytest.mark.gate
-    async def test_reply_to_message(self) -> None:
-        """Verify replying to a message activates reply mode.
-        
-        Desktop parity: test_messaging_1x1_chat.py verifies reply corner appears.
+    @pytest.mark.spec("SC-MACT-01")
+    async def test_reply_to_message_and_verify_on_both_devices(self) -> None:
+        """Verify replying to a message shows reply indicator on both devices.
+
+        Desktop parity: D9 from test_messaging_1x1_chat.py verifies
+        reply_corner.exists on the reply message.
+        Mobile equivalent: message_is_reply() checks statusMessageReplyCorner.
+
+        NOTE: If statusMessageReplyCorner is not exposed in the accessibility
+        tree, the reply-corner assertions will fail.  In that case the QML
+        needs ``objectName: "statusMessageReplyCorner"`` on the reply corner
+        element in StatusMessage.qml.
         """
         test_message = _unique_message("reply_test")
+        reply_text = _unique_message("reply_body")
         context_menu = MessageContextMenuPage(self.driver)
 
         async with self.step("Send test message"):
             chat_page = await self._send_test_message(test_message)
+
+        async with self.step("Ensure secondary sees the original message"):
+            secondary_chat = await self._ensure_secondary_in_chat()
+            assert secondary_chat.message_exists(
+                test_message, timeout=self.CROSS_DEVICE_TIMEOUT,
+            ), "Secondary should see original message before reply"
 
         async with self.step("Open context menu and tap Reply"):
             assert context_menu.long_press_message(test_message), (
@@ -297,28 +323,46 @@ class TestMessageContextMenu:
             assert context_menu.wait_until_hidden(timeout=5), (
                 "Context menu should close after Reply"
             )
-            # Reply mode shows a preview bar above the input
             assert chat_page.is_reply_mode_active(timeout=5), (
                 "Reply mode should be active after tapping Reply"
             )
 
-        async with self.step("Cancel reply mode"):
-            # Clean up by canceling reply mode
-            chat_page.cancel_reply(timeout=3)
+        async with self.step("Send reply message"):
+            assert chat_page.send_message(reply_text), (
+                f"Failed to send reply: {reply_text}"
+            )
+            assert chat_page.message_exists(reply_text, timeout=self.UI_TIMEOUT), (
+                "Reply message not visible after sending"
+            )
+
+        async with self.step("Verify reply indicator on primary device"):
+            assert chat_page.message_is_reply(reply_text, timeout=self.UI_TIMEOUT), (
+                "Primary: Reply message should show reply corner indicator"
+            )
+
+        async with self.step("Verify reply received on secondary device"):
+            assert secondary_chat.message_exists(
+                reply_text, timeout=self.CROSS_DEVICE_TIMEOUT,
+            ), "Secondary: Reply message not received"
+
+        async with self.step("Verify reply indicator on secondary device"):
+            assert secondary_chat.message_is_reply(
+                reply_text, timeout=self.CROSS_DEVICE_TIMEOUT,
+            ), "Secondary: Reply message should show reply corner indicator (cross-device sync)"
 
     @pytest.mark.smoke
-    @pytest.mark.xfail(reason="message delivery issues", strict=False)
+    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
     async def test_pin_message(self) -> None:
         """Verify pinning a message via context menu syncs to both devices.
-        
+
         Desktop parity: test_create_edit_join_community_pin_unpin_message.py
         verifies pinned state with color and 'Pinned by' text.
-        
+
         Multi-device: Verifies pin is visible on both primary and secondary.
-        
+
         Uses the setup message from fixture (already confirmed visible on both devices)
         to avoid sync timing issues.
-        
+
         Requires QML: StatusPinMessageDetails with objectName "statusPinMessageDetails"
         and Accessible.name containing "Pinned by".
         """
@@ -353,12 +397,99 @@ class TestMessageContextMenu:
             # Ensure secondary is in the chat
             secondary_chat = await self._ensure_secondary_in_chat()
             # Setup message is already confirmed visible on secondary (from fixture)
-            assert secondary_chat.message_is_pinned(setup_message, timeout=self.UI_TIMEOUT), (
+            assert secondary_chat.message_is_pinned(setup_message, timeout=self.CROSS_DEVICE_TIMEOUT), (
                 "Secondary: Message should show 'Pinned by' indicator (sync)"
             )
 
     @pytest.mark.gate
     @pytest.mark.smoke
+    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
+    @pytest.mark.spec("SC-MACT-05")
+    async def test_cannot_delete_other_users_message(self) -> None:
+        """Verify delete action is NOT available on another user's message.
+
+        Desktop parity: D11 from test_messaging_1x1_chat.py verifies
+        not is_delete_button_visible() on the other user's message.
+        """
+        other_message = _unique_message("other_msg")
+        context_menu = MessageContextMenuPage(self.driver)
+
+        async with self.step("Secondary sends a message"):
+            secondary_chat = await self._ensure_secondary_in_chat()
+            assert secondary_chat.send_message(other_message), (
+                "Secondary failed to send message"
+            )
+
+        async with self.step("Wait for message on primary"):
+            chat_page = await self._ensure_in_chat()
+            assert chat_page.message_exists(other_message, timeout=self.CROSS_DEVICE_TIMEOUT), (
+                "Primary should see secondary's message"
+            )
+
+        async with self.step("Long-press other user's message"):
+            assert context_menu.long_press_message(other_message), (
+                "Failed to open context menu on other user's message"
+            )
+            assert context_menu.is_displayed(), "Context menu not visible"
+
+        async with self.step("Verify Delete action is NOT visible"):
+            assert not context_menu.is_delete_visible(), (
+                "Delete action should NOT be visible for another user's message"
+            )
+
+        async with self.step("Dismiss context menu"):
+            assert context_menu.dismiss(), "Failed to dismiss context menu"
+
+    @pytest.mark.gate
+    @pytest.mark.smoke
+    @pytest.mark.spec("SC-MACT-02")
+    async def test_edit_message_and_verify_on_both_devices(self) -> None:
+        """Verify editing a sent message updates text and shows edit indicator on both devices.
+
+        Desktop parity: D5 from test_messaging_1x1_chat.py verifies edited text
+        content and isEdited flag.
+
+        Multi-device: Verifies edit indicator and updated text on both primary
+        and secondary.
+        """
+        original_text = _unique_message("edit_orig")
+        additional_text = " edited"
+        edited_text = original_text + additional_text
+        context_menu = MessageContextMenuPage(self.driver)
+
+        async with self.step("Send original message"):
+            chat_page = await self._send_test_message(original_text)
+
+        async with self.step("Ensure secondary sees the original message"):
+            secondary_chat = await self._ensure_secondary_in_chat()
+            assert secondary_chat.message_exists(original_text, timeout=self.CROSS_DEVICE_TIMEOUT), (
+                "Secondary should see original message before edit"
+            )
+
+        async with self.step("Long-press message and tap Edit"):
+            assert context_menu.long_press_message(original_text), (
+                "Failed to open context menu"
+            )
+            assert context_menu.tap_edit(), "Failed to tap Edit action"
+
+        async with self.step("Modify text and submit edit"):
+            assert chat_page.submit_message_edit(edited_text), (
+                "Failed to submit message edit"
+            )
+
+        async with self.step("Verify edited message on primary"):
+            assert chat_page.message_is_edited(edited_text, timeout=self.UI_TIMEOUT), (
+                "Primary: Edit indicator should be visible for edited message"
+            )
+
+        async with self.step("Verify edited message on secondary"):
+            assert secondary_chat.message_is_edited(edited_text, timeout=self.CROSS_DEVICE_TIMEOUT), (
+                "Secondary: Edit indicator should be visible (cross-device sync)"
+            )
+
+    @pytest.mark.gate
+    @pytest.mark.smoke
+    @pytest.mark.spec("SC-MACT-09")
     async def test_verify_reaction_on_message(self) -> None:
         """Verify that a reaction appears on the message and syncs to both devices.
 
@@ -399,6 +530,6 @@ class TestMessageContextMenu:
 
         async with self.step("Verify reaction appears on secondary device"):
             secondary_chat = await self._ensure_secondary_in_chat()
-            assert secondary_chat.message_has_reaction(emoji_code, timeout=self.UI_TIMEOUT), (
+            assert secondary_chat.message_has_reaction(emoji_code, timeout=self.CROSS_DEVICE_TIMEOUT), (
                 f"Secondary: Reaction {emoji_code} should appear on message (sync)"
             )

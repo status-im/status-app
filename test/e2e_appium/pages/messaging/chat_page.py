@@ -35,7 +35,7 @@ class ChatPage(BasePage):
 
     def has_any_chat(self, timeout: int = 5) -> bool:
         """Check if there are any chats in the chat list.
-        
+
         Returns:
             bool: True if at least one chat exists.
         """
@@ -74,9 +74,9 @@ class ChatPage(BasePage):
 
     def open_first_chat(self, timeout: int = 10) -> bool:
         """Open the first chat in the chat list.
-        
+
         Useful for tests that need any available chat without knowing specific names.
-        
+
         Returns:
             bool: True if a chat was opened successfully.
         """
@@ -109,6 +109,10 @@ class ChatPage(BasePage):
         for locator in locators:
             if self.scroll_to_element(locator, max_swipes=3, timeout=3):
                 return self.safe_click(locator, timeout=timeout, max_attempts=3)
+        # Diagnostic: dump page source so we can tell whether the chat list
+        # is genuinely empty (status-go fresh-contact race) vs populated but
+        # using AT names our locators don't match.
+        self.dump_page_source(f"open_chat_by_suffix_failure_{chat_identifier}")
         return False
 
     def chat_exists_in_list(
@@ -141,19 +145,41 @@ class ChatPage(BasePage):
         return self.safe_click(self.locators.START_CHAT_BUTTON, timeout=timeout)
 
     def send_message(self, message: str, timeout: int | None = None) -> bool:
+        """Type, tap SEND_BUTTON, fall back to newline if the button
+        isn't clickable. Newline-as-send is unreliable across soft-
+        keyboard layouts; the button can be unclickable on first render
+        or behind the keyboard in portrait.
+        """
         self.dismiss_introduce_prompt(timeout=2)
-        payload = f"{message}\n"
-        result = self.qt_safe_input(
+        if not self.qt_safe_input(
             self.locators.MESSAGE_INPUT,
-            payload,
+            message,
             verify=False,
             timeout=timeout,
-        )
-        if result:
-            # Brief wait for Qt a11y tree to reflect the sent message.
-            # The message bubble renders asynchronously after input clears.
-            time.sleep(1)
-        return result
+        ):
+            return False
+
+        button_clicked = False
+        try:
+            button_clicked = self.safe_click(
+                self.locators.SEND_BUTTON, timeout=3, max_attempts=1
+            )
+        except Exception as exc:
+            self.logger.debug("Send-button click suppressed: %s", exc)
+
+        if not button_clicked:
+            self.logger.info("Send button not clickable — falling back to newline trigger")
+            if not self.qt_safe_input(
+                self.locators.MESSAGE_INPUT,
+                "\n",
+                verify=False,
+                timeout=timeout,
+            ):
+                return False
+
+        # Brief wait for Qt a11y tree to reflect the sent message.
+        time.sleep(1)
+        return True
 
     def submit_message_edit(self, updated_text: str, timeout: int = 10) -> bool:
         """Replace current edit text and submit the edited message."""
@@ -303,7 +329,7 @@ class ChatPage(BasePage):
 
     def message_is_edited(self, content: str, timeout: int = 10) -> bool:
         """Check if a message shows the '(edited)' indicator.
-        
+
         Args:
             content: The message text (without the '(edited)' suffix).
         """
@@ -312,11 +338,11 @@ class ChatPage(BasePage):
 
     def message_is_pinned(self, content: str, timeout: int = 10) -> bool:
         """Check if a message shows the 'Pinned by' indicator.
-        
+
         Approach: The StatusPinMessageDetails component (a Loader) is only active/visible
         when a message is pinned. We check if this component exists and optionally verify
         it's for the expected message.
-        
+
         Note: Desktop tests use `delegate_button.object.isPinned` (direct property access).
         Appium can only use accessibility properties (resource-id, content-desc).
         """
@@ -324,13 +350,13 @@ class ChatPage(BasePage):
         if not self.message_exists(content, timeout=5):
             self.logger.warning(f"Message '{content}' not found")
             return False
-        
+
         # Check for ANY pinned indicator visible (statusPinMessageDetails component)
         # The Loader component is only active when a message is pinned
         if not self.is_element_visible(self.locators.PINNED_INDICATOR, timeout=timeout):
             self.logger.debug("No pinned indicator found")
             return False
-        
+
         # Pinned indicator found - optionally verify content-desc contains "Pinned by"
         # (Accessible.name = pinnedMsgInfoText + " " + pinnedBy, e.g., "Pinned by Alice")
         element = self.find_element_safe(self.locators.PINNED_INDICATOR, timeout=2)
@@ -341,13 +367,13 @@ class ChatPage(BasePage):
                 self.logger.info(f"Found pinned indicator: {content_desc}")
                 return True
             self.logger.debug(f"Pinned indicator content-desc: '{content_desc}'")
-        
+
         # Fallback: indicator visible but couldn't read content-desc, assume pinned
         return True
 
     def message_has_reaction(self, emoji_code: str, timeout: int = 10) -> bool:
         """Check if any message has a specific reaction emoji visible.
-        
+
         Args:
             emoji_code: Unicode hex code (e.g., '1f600' for 😀)
         """
@@ -355,9 +381,17 @@ class ChatPage(BasePage):
         return self.is_element_visible(locator, timeout=timeout)
 
     def message_is_reply(self, content: str, timeout: int = 10) -> bool:
-        """Check if a message shows the reply corner indicator."""
+        """Check if a message shows the reply corner indicator.
+
+        Tries statusMessageReplyCorner first; falls back to
+        StatusMessage_replyDetails (the "Replying to ..." banner) if the
+        corner objectName is not exposed in the accessibility tree.
+        """
         locator = self.locators.message_is_reply(content)
-        return self.is_element_visible(locator, timeout=timeout)
+        if self.is_element_visible(locator, timeout=timeout):
+            return True
+        self.logger.debug("Reply corner not found, falling back to REPLY_DETAILS")
+        return self.is_element_visible(self.locators.REPLY_DETAILS, timeout=3)
 
     def message_count(self) -> int:
         """Return the count of message content elements in the chat log."""
@@ -405,13 +439,19 @@ class ChatPage(BasePage):
             self.logger.error("Failed to type in emoji search")
             return False
 
-        first_result = emoji_locators.emoji_by_grid_position(0)
-        if not self.is_element_visible(first_result, timeout=5):
-            self.logger.error(f"No emoji results for search '{search_term}'")
-            return False
+        # Prefer shortname locator (stable objectName) over grid position, which
+        # shifts when recently-used emojis are prepended to the grid.
+        shortname_locator = emoji_locators.emoji_by_shortname(search_term)
+        if self.is_element_visible(shortname_locator, timeout=5):
+            target = shortname_locator
+        else:
+            target = emoji_locators.emoji_by_grid_position(0)
+            if not self.is_element_visible(target, timeout=5):
+                self.logger.error(f"No emoji results for search '{search_term}'")
+                return False
 
-        if not self.safe_click(first_result, timeout=5):
-            self.logger.error(f"Failed to tap first emoji for '{search_term}'")
+        if not self.safe_click(target, timeout=5):
+            self.logger.error(f"Failed to tap emoji for '{search_term}'")
             return False
 
         return self.safe_click(self.locators.SEND_BUTTON, timeout=5)

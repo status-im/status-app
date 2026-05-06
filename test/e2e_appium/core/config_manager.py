@@ -29,6 +29,13 @@ class ConfigurationManager:
         env_config = self._load_yaml(env_file)
         merged_config = self._deep_merge(base_config, env_config)
 
+        # Apply a gitignored local override if it exists (e.g.
+        # local.local.yaml for machine-specific device config).
+        local_override = self.environments_dir / f"{environment}.local.yaml"
+        if local_override.exists():
+            override_config = self._load_yaml(local_override)
+            merged_config = self._deep_merge(merged_config, override_config)
+
         self._validate_schema(merged_config)
         config = self._create_config_object(merged_config)
         config.validate()

@@ -1,7 +1,9 @@
 import base64
+import time
 
 from selenium.webdriver.remote.webelement import WebElement
 
+from locators.base_locators import BaseLocators
 from locators.wallet.accounts_locators import WalletAccountsLocators
 
 from ..base_page import BasePage
@@ -16,7 +18,23 @@ class WalletLeftPanel(BasePage):
         super().__init__(driver)
         self.locators = WalletAccountsLocators()
 
+    def _ensure_on_left_panel(self) -> bool:
+        """In portrait, swipe back to the leftPanel (accounts list + ADD)
+        if a row click advanced the SwipeView to centerPanel.
+        """
+        if self.is_element_visible(self.locators.ADD_ACCOUNT_BUTTON, timeout=1):
+            return True
+        if not self.is_portrait_mode():
+            return False
+        toolbar_back = BaseLocators.tid("toolBarBackButton")
+        if self.is_element_visible(toolbar_back, timeout=2):
+            self.safe_click(toolbar_back, timeout=3)
+        return self.is_element_visible(self.locators.ADD_ACCOUNT_BUTTON, timeout=3)
+
     def is_loaded(self, timeout: int = 15) -> bool:
+        if self.is_element_visible(self.locators.ADD_ACCOUNT_BUTTON, timeout=2):
+            return True
+        self._ensure_on_left_panel()
         return self.is_element_visible(
             self.locators.ADD_ACCOUNT_BUTTON,
             timeout=timeout,
@@ -24,11 +42,11 @@ class WalletLeftPanel(BasePage):
 
     def copy_account_address_via_context_menu(self, index: int = 0, timeout: int | None = 10) -> str | None:
         """Copy wallet address via account context menu.
-        
+
         Args:
             index: Account row index (0 = first account).
             timeout: Wait timeout.
-            
+
         Returns:
             The wallet address from clipboard, or None if failed.
         """
@@ -49,13 +67,13 @@ class WalletLeftPanel(BasePage):
             before_clipboard = ""
         except Exception as exc:
             self.logger.debug("Unable to reset clipboard before copy: %s", exc)
-        
+
         if not self.safe_click(self.locators.ACCOUNT_MENU_COPY_ADDRESS, timeout=timeout):
             self.logger.error("Failed to click Copy Address in context menu")
             return None
-        
+
         clipboard_result = [None]
-        
+
         def check_clipboard():
             try:
                 raw_text = self.driver.get_clipboard_text()
@@ -83,10 +101,17 @@ class WalletLeftPanel(BasePage):
             except Exception:
                 pass
             return False
-        
+
         if self.wait_for_condition(check_clipboard, timeout=8, poll_interval=0.3):
-            # Wait for the context menu to fully dismiss before returning
+            # Popup can stay focused in the AT tree after visual close,
+            # silently swallowing the next tap via CloseOnPressOutside.
+            # BACK definitively dismisses.
             self.wait_for_invisibility(self.locators.ACCOUNT_CONTEXT_MENU, timeout=3)
+            try:
+                self.driver.press_keycode(4)  # Android BACK
+                time.sleep(0.4)
+            except Exception as exc:
+                self.logger.debug("BACK key dismiss after copy failed: %s", exc)
             return clipboard_result[0]
 
         self.logger.error("Clipboard did not contain a valid address after copy")
@@ -213,6 +238,10 @@ class WalletLeftPanel(BasePage):
             return False
 
     def open_context_menu_for_row(self, index: int = -1) -> bool:
+        # If the previous step (e.g. row click) advanced the SwipeView to the
+        # centerPanel, account_rows() will be empty. Restore the leftPanel
+        # before long-pressing.
+        self._ensure_on_left_panel()
         if not self.long_press_row(index=index):
             return False
         if self.is_element_visible(self.locators.ACCOUNT_CONTEXT_MENU, timeout=5):

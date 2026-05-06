@@ -16,15 +16,11 @@ class WalletLocators(BaseLocators):
         "//*[contains(@text, 'ETH') or contains(@text, 'USD')]"
     )
 
-    SAVED_ADDRESSES_BUTTON = BaseLocators.content_desc_contains(
-        "[tid:savedAddressesBtn]"
-    )
+    SAVED_ADDRESSES_BUTTON = BaseLocators.tid("savedAddressesBtn")
     ADD_NEW_ADDRESS_BUTTON = BaseLocators.xpath(
         "//*[contains(@resource-id, 'walletHeaderButton') or @content-desc='Add new address']"
     )
-    WALLET_HEADER_ADDRESS = BaseLocators.content_desc_contains(
-        "[tid:walletHeaderButton]"
-    )
+    WALLET_HEADER_ADDRESS = BaseLocators.tid("walletHeaderButton")
 
     # Account selection
     ACCOUNT_1_BY_TEXT = BaseLocators.xpath(

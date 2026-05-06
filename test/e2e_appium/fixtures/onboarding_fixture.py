@@ -6,6 +6,7 @@ used across multiple test suites. It follows the Page Object Model pattern and
 provides flexible configuration options.
 """
 
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -157,10 +158,13 @@ class OnboardingFlow:
 
             self._execute_loading_step()
 
+            # Dismiss the post-loading overlays before verifying the main
+            # app, so wallet locators aren't obscured by the popup. On
+            # landscape the popup reliably blocks wallet detection.
+            self._dismiss_push_notifications()
+
             if self.config.verify_main_app:
                 self._execute_main_app_verification()
-
-            self._dismiss_push_notifications()
 
             execution_result = self._build_success_result()
             self.logger.info(
@@ -199,20 +203,22 @@ class OnboardingFlow:
         )
 
         try:
-            self.app.driver.tap([(500, 300)])
+            from utils.gestures import Gestures
+            Gestures(self.app.driver).activation_tap()
         except Exception:
             self.logger.debug("Initial tap attempt skipped", exc_info=True)
 
         if self.config.validate_each_step:
             welcome_visible = False
             for attempt in range(3):
-                if self.welcome_page.is_screen_displayed(timeout=10):
+                if self.welcome_page.is_screen_displayed(timeout=15):
                     welcome_visible = True
                     break
                 if attempt < 2:
                     self.logger.debug(
                         f"Welcome screen not visible yet (attempt {attempt + 1}/3), waiting..."
                     )
+                    time.sleep(5)
 
             assert welcome_visible, (
                 "Welcome screen should be displayed"
@@ -309,8 +315,9 @@ class OnboardingFlow:
         self.logger.info("Step 4: Biometrics Screen (dismiss if present)")
         step_start = datetime.now()
 
-        self.logger.info("Checking for biometrics prompt (timeout=3s)")
-        if self.biometrics_page.is_screen_displayed(timeout=3):
+        # 15s — Pi/RC1 can take longer than the previous 3s to render.
+        self.logger.info("Checking for biometrics prompt (timeout=15s)")
+        if self.biometrics_page.is_screen_displayed(timeout=15):
             self.logger.info("Biometrics prompt detected, selecting 'Maybe later'")
             dismissed = self.biometrics_page.select_maybe_later()
             if not dismissed:
@@ -364,7 +371,7 @@ class OnboardingFlow:
         several wallet indicators before failing.
         """
         self.current_step = "wallet_verification"
-        self.logger.info("Step 6: Wallet Landing Verification")
+        self.logger.info("Step 7: Wallet Landing Verification")
         step_start = datetime.now()
 
         from locators.app_locators import AppLocators
@@ -397,7 +404,7 @@ class OnboardingFlow:
         )
 
         elapsed = (datetime.now() - step_start).total_seconds()
-        self.logger.info("Step 6 completed in %.1fs", elapsed)
+        self.logger.info("Step 7 completed in %.1fs", elapsed)
         self.step_results["wallet_verification"] = {
             "success": True,
             "timestamp": datetime.now(),
@@ -407,38 +414,68 @@ class OnboardingFlow:
             self._take_screenshot("onboarding_completed")
 
     def _dismiss_push_notifications(self):
-        """Dismiss the 'Enable push notifications' dialog if it appears.
-
-        This dialog can appear after the wallet landing screen loads and
-        blocks all interaction with the underlying UI.  We dismiss it
-        with 'Maybe later' so subsequent test steps can proceed.
+        """Dismiss post-onboarding overlays (EnablePushNotificationsPopup +
+        NavigationEducationDialog) that block the UI after the wallet
+        landing screen. Treated as expected primary-path; the previous 5s
+        timeout missed the popup and downstream drawer-open broke.
         """
         self.current_step = "push_notifications"
-        self.logger.info("Step 7: Push Notifications Dialog (dismiss if present)")
+        self.logger.info("Step 6: Post-onboarding overlays (push-notifications + nav-edu)")
         step_start = datetime.now()
 
-        if self.push_notifications_page.is_screen_displayed(timeout=5):
+        actions: list[str] = []
+        success = True
+
+        # 1. Push notifications — primary expected overlay.
+        if self.push_notifications_page.is_screen_displayed(timeout=30):
             self.logger.info(
                 "Push notifications dialog detected, selecting 'Maybe later'"
             )
-            dismissed = self.push_notifications_page.select_maybe_later()
-            if not dismissed:
+            if self.push_notifications_page.select_maybe_later():
+                actions.append("push_notifications:dismissed")
+            else:
                 self.logger.error("Failed to dismiss push notifications dialog")
-            self.step_results["push_notifications"] = {
-                "success": dismissed,
-                "action": "dismissed" if dismissed else "dismiss_failed",
-                "timestamp": datetime.now(),
-            }
+                actions.append("push_notifications:dismiss_failed")
+                success = False
         else:
-            self.logger.info("Push notifications dialog not displayed, skipping")
-            self.step_results["push_notifications"] = {
-                "success": True,
-                "action": "not_displayed",
-                "timestamp": datetime.now(),
-            }
+            self.logger.warning(
+                "Push notifications dialog did not appear within 30s — unexpected"
+            )
+            actions.append("push_notifications:not_displayed")
+
+        # 2. NavigationEducationDialog — appears after push-notifications is
+        # dismissed (or sometimes alone on RC1+). Tap its close (X) button.
+        nav_edu_locator = (
+            "xpath",
+            "//*[contains(@resource-id,'NavigationEducationDialog')]"
+            "//*[contains(@resource-id,'headerActionsCloseButton')]",
+        )
+        from pages.base_page import BasePage as _BasePage
+        base_for_edu = _BasePage(self.driver)
+        if base_for_edu.is_element_visible(nav_edu_locator, timeout=10):
+            self.logger.info("NavigationEducationDialog detected, closing")
+            if base_for_edu.safe_click(nav_edu_locator, timeout=5):
+                actions.append("nav_education:dismissed")
+            else:
+                self.logger.warning("NavigationEducationDialog close-tap failed")
+                actions.append("nav_education:dismiss_failed")
+        else:
+            actions.append("nav_education:not_displayed")
+
+        # 3. Push notifications can re-appear after nav-edu close on some flows.
+        if self.push_notifications_page.is_screen_displayed(timeout=5):
+            self.logger.info("Push-notifications popup re-appeared after nav-edu, dismissing again")
+            if self.push_notifications_page.select_maybe_later():
+                actions.append("push_notifications_2:dismissed")
+
+        self.step_results["push_notifications"] = {
+            "success": success,
+            "action": ",".join(actions),
+            "timestamp": datetime.now(),
+        }
 
         elapsed = (datetime.now() - step_start).total_seconds()
-        self.logger.info("Step 7 completed in %.1fs", elapsed)
+        self.logger.info("Step 6 completed in %.1fs (actions=%s)", elapsed, ",".join(actions))
 
         if self.config.take_screenshots:
             self._take_screenshot("push_notifications_handled")

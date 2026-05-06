@@ -127,8 +127,7 @@ class AppLifecycleManager:
             try:
                 from utils.gestures import Gestures
 
-                gestures = Gestures(self.driver)
-                gestures.tap(500, 300)
+                Gestures(self.driver).activation_tap()
             except Exception:
                 pass
 

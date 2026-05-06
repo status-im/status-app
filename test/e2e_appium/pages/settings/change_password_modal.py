@@ -86,9 +86,22 @@ class ChangePasswordModal(BasePage):
                 self.logger.error("App never reached NOT_RUNNING after force-terminate")
                 return False
 
-        if not self.app_lifecycle.activate_app_with_ui_ready():
+        # 60s — re-encrypt + restart can take up to that on Pi devices.
+        if not self.app_lifecycle.activate_app_with_ui_ready(activation_timeout=60.0):
             self.logger.error("App activation with UI ready failed after password change")
             return False
+
+        # Push-notifications popup re-appears post-restart and overlays
+        # the WelcomeBack login screen — dismiss it so perform_login can
+        # focus the password input.
+        try:
+            from pages.onboarding.push_notifications_page import PushNotificationsPage
+            push = PushNotificationsPage(self.driver)
+            if push.is_screen_displayed(timeout=15):
+                self.logger.info("Push-notifications popup detected post-restart, dismissing")
+                push.select_maybe_later()
+        except Exception as exc:
+            self.logger.debug("Post-restart push-notifications dismiss suppressed: %s", exc)
 
         if user and new_password:
             user.password = new_password

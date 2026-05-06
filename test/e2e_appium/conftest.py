@@ -142,6 +142,12 @@ def pytest_configure(config):
             config.option.htmlpath = str(html_report)
             config.option.self_contained_html = True
 
+    # Allure results directory (allure-pytest generates JSON here)
+    if not getattr(config.option, "allure_report_dir", None):
+        allure_dir = reports_dir / "allure-results"
+        allure_dir.mkdir(parents=True, exist_ok=True)
+        config.option.allure_report_dir = str(allure_dir)
+
     logger = _logging_setup["loggers"]["main"] if _logging_setup else None
     if logger:
         logger.info("Automatic report generation enabled:")
@@ -149,6 +155,8 @@ def pytest_configure(config):
             logger.info("  XML report: %s", config.option.xmlpath)
         if hasattr(config.option, "htmlpath") and config.option.htmlpath:
             logger.info("  HTML report: %s", config.option.htmlpath)
+        if getattr(config.option, "allure_report_dir", None):
+            logger.info("  Allure results: %s", config.option.allure_report_dir)
 
     global _bs_pending_counter, _counter_manager
 
@@ -486,6 +494,24 @@ def pytest_runtest_makereport(item, call):
                     log.info(f"Saved failure screenshot: {s_path}")
                 if x_path:
                     log.info(f"Saved failure page source: {x_path}")
+
+                # Attach artifacts to Allure report
+                try:
+                    import allure
+                    if s_path:
+                        allure.attach.file(
+                            str(s_path),
+                            name=f"screenshot_{test_id}",
+                            attachment_type=allure.attachment_type.PNG,
+                        )
+                    if x_path:
+                        allure.attach.file(
+                            str(x_path),
+                            name=f"page_source_{test_id}",
+                            attachment_type=allure.attachment_type.XML,
+                        )
+                except ImportError:
+                    pass
 
                 # Capture Appium server/logcat logs for deeper diagnostics
                 log_paths: List[Path] = []

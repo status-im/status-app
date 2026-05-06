@@ -7,6 +7,7 @@ from pages.app import App
 from pages.messaging.chat_page import ChatPage
 from pages.messaging.message_context_menu_page import MessageContextMenuPage
 from utils.generators import generate_account_name
+from utils.timeouts import cross_device_timeout
 
 
 def _unique_message(prefix: str) -> str:
@@ -14,12 +15,16 @@ def _unique_message(prefix: str) -> str:
 
 
 @pytest.mark.messaging
+@pytest.mark.portrait
 @pytest.mark.smoke
 @pytest.mark.device_count(2)
 class TestEmojiAndMedia:
     """Emoji and media coverage for 1:1 chats."""
 
     UI_TIMEOUT = 30
+    # Env-aware: 180s on Pi LAN, 300s on BrowserStack cloud.
+    # See utils/timeouts.cross_device_timeout for rationale.
+    CROSS_DEVICE_TIMEOUT = cross_device_timeout()
     logger = get_logger("TestEmojiAndMedia")
 
     @pytest.fixture(autouse=True)
@@ -39,8 +44,9 @@ class TestEmojiAndMedia:
             return chat_page
 
         self.logger.info("Navigating to Messages tab")
-        assert app.click_messages_button(), "Failed to open Messages tab"
         chat_page.dismiss_backup_prompt(timeout=3)
+        assert app.click_messages_button(), "Failed to open Messages tab"
+        chat_page.dismiss_backup_prompt(timeout=2)
 
         if chat_page.wait_for_message_input(timeout=5):
             return chat_page
@@ -56,7 +62,7 @@ class TestEmojiAndMedia:
         assert chat_page.wait_for_message_input(timeout=10), "Message input not ready"
         return chat_page
 
-    @pytest.mark.xfail(reason="message delivery issues", strict=False)
+    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
     async def test_send_emoji_via_picker(self) -> None:
         chat_page = self._ensure_in_chat()
 
@@ -77,7 +83,62 @@ class TestEmojiAndMedia:
             timeout=self.UI_TIMEOUT,
         ), "Emoji message should appear in chat"
 
-    @pytest.mark.xfail(reason="message delivery issues", strict=False)
+    @pytest.mark.gate
+    @pytest.mark.spec("SC-MTYP-04")
+    async def test_emoji_received_cross_device(self) -> None:
+        """Verify emoji message is delivered to the receiving device.
+
+        Desktop parity: D7 from test_messaging_1x1_chat.py verifies emoji
+        character in unparsedText on both sender and receiver.
+
+        Note: emoji content is not assertable via content-desc — Emoji.parse()
+        converts the unicode character to an <img> tag in the QML RichText
+        renderer, leaving the accessibility label empty.  We assert delivery
+        via message count instead.  Content assertion requires adding
+        Accessible.name to StatusTextMessage_chatText (QML change, tracked
+        separately in OXI-123).
+        """
+        # Navigate secondary into chat and capture baseline count BEFORE
+        # primary sends, so we have a reliable baseline to wait against.
+        secondary_chat = ChatPage(self.secondary.driver)
+        secondary_app = App(self.secondary.driver)
+
+        if not secondary_chat.wait_for_message_input(timeout=3):
+            secondary_chat.dismiss_backup_prompt(timeout=3)
+            secondary_app.click_messages_button()
+            secondary_chat.dismiss_backup_prompt(timeout=2)
+
+            display_name = (
+                self.primary.user.display_name if self.primary and self.primary.user else None
+            )
+            secondary_chat.open_chat_by_suffix(
+                self.primary_suffix,
+                display_name=display_name,
+                timeout=15,
+            )
+            secondary_chat.wait_for_message_input(timeout=10)
+
+        secondary_count_before = secondary_chat.message_count()
+
+        chat_page = self._ensure_in_chat()
+        primary_count_before = chat_page.message_count()
+
+        assert chat_page.send_emoji_to_chat(
+            "thumbsup",
+            timeout=self.UI_TIMEOUT,
+        ), "Failed to send emoji via picker"
+
+        assert chat_page.wait_for_message_count(
+            primary_count_before + 1,
+            timeout=self.UI_TIMEOUT,
+        ), "Primary: Emoji message should appear in chat"
+
+        assert secondary_chat.wait_for_message_count(
+            secondary_count_before + 1,
+            timeout=self.CROSS_DEVICE_TIMEOUT,
+        ), "Secondary: Emoji message should be delivered (cross-device sync)"
+
+    @pytest.mark.xfail(reason="status-go#7393: cross-device delivery unreliable", strict=False)
     async def test_reply_shows_corner_indicator(self) -> None:
         chat_page = self._ensure_in_chat()
         context_menu = MessageContextMenuPage(self.driver)
@@ -104,7 +165,12 @@ class TestEmojiAndMedia:
             timeout=self.UI_TIMEOUT,
         ), "Reply details should be visible on the reply message"
 
-    @pytest.mark.skip(reason="File dialog automation not supported in Appium environment")
+    @pytest.mark.skip(
+        reason="D8 image send: native file picker (StatusFileDialog) cannot be "
+        "automated via Appium. Requires BrowserStack pushFile API integration "
+        "and adb share intent (~6h infrastructure work). Parked as manual-only "
+        "coverage — revisit when pushFile infra is built. See OXI-123."
+    )
     async def test_image_dialog_opens(self) -> None:
         chat_page = self._ensure_in_chat()
         assert chat_page.open_image_dialog(

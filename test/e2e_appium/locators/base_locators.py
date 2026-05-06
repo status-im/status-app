@@ -3,17 +3,17 @@ from appium.webdriver.common.appiumby import AppiumBy
 
 def xpath_string(value: str) -> str:
     """Escape a string for safe use in XPath 1.0 expressions.
-    
+
     XPath 1.0 does not support backslash escaping. Strings must be quoted
     with single or double quotes. If a string contains both quote types,
     it must be constructed using concat().
-    
+
     Args:
         value: The string to escape.
-        
+
     Returns:
         A string safe for embedding in XPath (includes outer quotes or concat()).
-        
+
     Output examples (as XPath literals):
         "hello"           -> "hello"
         "don't"           -> "don't"           (single quote inside double quotes)
@@ -24,7 +24,7 @@ def xpath_string(value: str) -> str:
         return f'"{value}"'
     if "'" not in value:
         return f"'{value}'"
-    
+
     # Contains both quote types - use concat()
     # Split on double quotes and insert literal '"' (single-quoted) between parts
     parts = value.split('"')
@@ -86,6 +86,25 @@ class BaseLocators:
     @staticmethod
     def content_desc_exact(desc: str) -> tuple:
         return (BaseLocators.BY_XPATH, f"//*[@content-desc='{desc}']")
+
+    @staticmethod
+    def tid(name: str) -> tuple:
+        """Match a test-id across older Android (``tid:NAME`` in content-desc),
+        current Android (``.NAME`` in resource-id), and iOS (``NAME`` in
+        ``name`` attr) — single xpath that hits any of the three.
+        """
+        # Leading '.' on the resource-id match anchors to a path segment.
+        # Bare contains() collides on numeric prefixes: tid('1-MenuItem')
+        # would also match '101-MenuItem' (backUpSeed).
+        return (
+            BaseLocators.BY_XPATH,
+            (
+                f"//*[contains(@content-desc, 'tid:{name}')"
+                f" or contains(@resource-id, '.{name}')"
+                f" or @resource-id='{name}'"
+                f" or contains(@name, '{name}')]"
+            ),
+        )
 
     @staticmethod
     def button_with_text(text: str) -> tuple:

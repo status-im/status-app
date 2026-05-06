@@ -44,9 +44,7 @@ class AppLocators(BaseLocators):
     )
 
     # Toolbar
-    TOOLBAR_BACK_BUTTON = BaseLocators.xpath(
-        "//android.widget.Button[@content-desc=' [tid:toolBarBackButton]']"
-    )
+    TOOLBAR_BACK_BUTTON = BaseLocators.tid("toolBarBackButton")
 
     # Toast notifications
     TOAST_MESSAGE = BaseLocators.id("QGuiApplication.mainWindow.statusToastMessage")

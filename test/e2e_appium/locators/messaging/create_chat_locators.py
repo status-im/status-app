@@ -9,15 +9,11 @@ class CreateChatLocators:
     CONTACT_REQUEST_MESSAGE_INPUT = BaseLocators.xpath(
         "//android.widget.EditText[contains(@resource-id, 'ProfileSendContactRequestModal_sayWhoYouAreInput')]"
     )
-    CONTACT_REQUEST_MESSAGE_PLACEHOLDER = BaseLocators.content_desc_contains(
-        "[tid:statusBaseInput]"
-    )
+    CONTACT_REQUEST_MESSAGE_PLACEHOLDER = BaseLocators.tid("statusBaseInput")
     CONFIRM_SELECTION_BUTTON = BaseLocators.xpath(
         "//*[contains(@resource-id,'inlineSelectorConfirmButton')]"
     )
-    CONTACT_REQUEST_MODAL_ROOT = BaseLocators.content_desc_contains(
-        "[tid:ProfileSendContactRequestModal_sendContactRequestButton]"
-    )
+    CONTACT_REQUEST_MODAL_ROOT = BaseLocators.tid("ProfileSendContactRequestModal_sendContactRequestButton")
     CONTACT_REQUEST_SEND_BUTTON = BaseLocators.xpath(
         "//*[contains(@resource-id,'ProfileSendContactRequestModal_sendContactRequestButton')]"
     )

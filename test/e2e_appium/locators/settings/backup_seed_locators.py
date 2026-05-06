@@ -3,7 +3,7 @@ from ..base_locators import BaseLocators
 
 class BackupSeedLocators(BaseLocators):
     MODAL_ROOT = BaseLocators.xpath("//*[contains(@resource-id, 'BackupSeedModal')]")
-    
+
     # Scroll container inside the modal (from XML: BackupSeedModal.StatusScrollView_QMLTYPE_*)
     SCROLL_CONTAINER = BaseLocators.xpath(
         "//*[contains(@resource-id,'BackupSeedModal') and contains(@resource-id,'StatusScrollView')]"
@@ -18,10 +18,13 @@ class BackupSeedLocators(BaseLocators):
     # Reveal step container (helps scoping seed word extraction)
     REVEAL_CONTAINER = BaseLocators.accessibility_id("Show recovery phrase")
 
-    REVEAL_BUTTON = BaseLocators.content_desc_contains("[tid:btnReveal]")
+    REVEAL_BUTTON = BaseLocators.tid("btnReveal")
     SEED_WORD_INPUT_ANY = BaseLocators.id("seedWordInput")
     # Test-mode TIDs: expose each word via Accessible.name with objectName seedWordText_<n>
-    SEED_WORD_TEXT_NODES = BaseLocators.content_desc_contains("[tid:seedWordText_")
+    SEED_WORD_TEXT_NODES = BaseLocators.xpath(
+        "//*[contains(@content-desc, '[tid:seedWordText_') "
+        "or contains(@resource-id, 'seedWordText_')]"
+    )
 
     NEXT_BUTTON = BaseLocators.accessibility_id("I've backed up phrase")
     CONTINUE_BUTTON = BaseLocators.accessibility_id("Continue")

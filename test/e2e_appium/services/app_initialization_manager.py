@@ -43,7 +43,7 @@ class AppInitializationManager:
                 if self._wait_for_ui_response(timeout=interval):
                     self.logger.info("✓ App UI surfaced after activation")
                     return True
-                
+
         self.logger.error("⚠ App activation timeout - UI never surfaced")
         raise RuntimeError("App activation timed out before UI became available")
 
@@ -115,6 +115,10 @@ class AppInitializationManager:
                 "startupOnboardingLayout",
                 "homeContainer.homeDock",
                 "Welcome to Status",
+                # Post-restart-from-settings can land directly in the main
+                # app section (e.g. password change keeps the user signed in).
+                "StatusSectionLayoutPortrait",
+                "StatusSectionLayout",
             ]
             return any(marker in src for marker in ui_markers)
         except Exception:
@@ -137,14 +141,15 @@ class AppInitializationManager:
             return False
 
     def _get_safe_tap_coordinates(self) -> tuple:
+        """Centre of screen — portrait/landscape safe, away from the
+        drawer swipe handle and system edge-gesture zones.
+        """
         try:
             size = self.driver.get_window_size()
-            tap_x = int(size["width"] * 0.2)
-            tap_y = int(size["height"] * 0.2)
-            return (tap_x, tap_y)
+            return (int(size["width"] * 0.5), int(size["height"] * 0.5))
         except Exception:
             self.logger.warning("⚠ Could not get window size; using fallback coords")
-            return (400, 300)
+            return (540, 1200)  # typical 1080×2400 portrait phone
 
     def _wait_for_ui_response(
         self, timeout: int = 5, poll_interval: float = 0.5
