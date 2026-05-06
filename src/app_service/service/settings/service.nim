@@ -63,6 +63,7 @@ QtObject:
     notifExemptionsCache: Table[string, NotificationsExemptions]
 
   # Forward declaration
+  proc saveSyncingOnMobileNetwork*(self: Service, value: bool): bool
   proc initNotificationSettings*(self: Service)
   proc getNotifSettingAllowNotifications*(self: Service): bool
   proc getNotifSettingOneToOneChats*(self: Service): string
@@ -136,6 +137,11 @@ QtObject:
       self.settings.newsNotificationsEnabled = status_newsfeed.notificationsEnabled().result.getBool
       self.settings.newsRSSEnabled = status_newsfeed.rssEnabled().result.getBool
       self.initNotificationSettings()
+      # v2.38: default to syncing on any network. Ensures status-go's
+      # CanSyncOnMobileNetwork() returns true on mobile connections.
+      # Remove this migration in v2.39 once WiFi-only behaviour is validated.
+      if not self.settings.syncingOnMobileNetwork:
+        discard self.saveSyncingOnMobileNetwork(true)
     except Exception as e:
       let errDesription = e.msg
       error "error: ", errDesription
@@ -305,10 +311,7 @@ QtObject:
     return false
 
   proc getSyncingOnMobileNetwork*(self: Service): bool =
-    # Hardcoded to true (Mobile data + Wi-Fi) for v2.38 while the feature is under review.
-    # Re-enable the line below in v2.39 once the WiFi-only behaviour is validated.
-    # self.settings.syncingOnMobileNetwork
-    true
+    self.settings.syncingOnMobileNetwork
 
   proc saveMnemonic*(self: Service, value: string): bool =
     if(self.saveSetting(KEY_MNEMONIC, value)):
