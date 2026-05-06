@@ -216,9 +216,8 @@ editPermissionView_In_StatusItemSelector = {"container": mainWindow_editPermissi
 editPermissionView_whoHoldsSwitch_StatusSwitch = {"checkable": True, "container": mainWindow_editPermissionView_EditPermissionView, "id": "whoHoldsSwitch", "type": "StatusSwitch", "unnamed": 1, "visible": True}
 # Legacy: top-level overlay TextEdit — unreliable since HoldingsDropdown uses SearchBox + inner edit (see holdingsDropdown_*).
 edit_TextEdit = {"container": statusDesktop_mainWindow_overlay, "type": "TextEdit", "unnamed": 1, "visible": True}
-# HoldingsDropdown (Who holds +) opens ExtendedDropdownContent with SearchBox; inner TextEdit id is "edit" (StatusBaseInput).
-holdingsDropdown_SearchBox = {"container": statusDesktop_mainWindow_overlay, "type": "SearchBox", "unnamed": 1, "visible": True}
-holdingsDropdown_assetSearch_TextEdit = {"container": holdingsDropdown_SearchBox, "id": "edit", "type": "TextEdit", "unnamed": 1, "visible": True}
+holdingsDropdown_SearchBox = {"container": statusDesktop_mainWindow_overlay, "type": "SearchBox", "unnamed": 1}
+holdingsDropdown_assetSearch_TextEdit = {"container": holdingsDropdown_SearchBox, "id": "edit", "type": "TextEdit", "unnamed": 1}
 inputValue_StyledTextField = {"container": statusDesktop_mainWindow_overlay, "id": "inputValue", "type": "StatusTextField", "unnamed": 1, "visible": True}
 o_TokenItem = {"container": statusDesktop_mainWindow_overlay, "index": 0, "type": "TokenItem", "unnamed": 1, "visible": True}
 add_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "addButton", "type": "StatusButton", "visible": True}
@@ -251,6 +250,13 @@ whoHoldsSwitch_StatusSwitch = {"checkable": True, "container": statusDesktop_mai
 whoHoldsPlusButton = {"container": statusDesktop_mainWindow, "objectName": RegularExpression("addItemButton_Who*"), "type": "StatusRoundButton", "visible": True}
 isAllowedPlusButton = {"container": statusDesktop_mainWindow, "objectName": RegularExpression("addItemButton_Is*"), "type": "StatusRoundButton", "visible": True}
 inPlusButton = {"container": statusDesktop_mainWindow, "objectName": "addItemButton_In", "type": "StatusRoundButton", "visible": True}
+holdingsPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "HoldingsDropdown", "type": "PopupItem", "visible": True}
+holdingsPopup_SearchBox = {"container": holdingsPopup, "type": "SearchBox", "unnamed": 1, "visible": True}
+holdingsPopup_assetSearch_TextEdit = {"container": holdingsPopup_SearchBox, "id": "edit", "type": "TextEdit", "unnamed": 1, "visible": True}
+holdingsPopup_TokenItem = {"container": holdingsPopup, "index": 0, "type": "TokenItem", "unnamed": 1, "visible": True}
+holdingsPopup_AssetsTab_StatusSwitchTabButton = {"container": holdingsPopup, "text": "Assets", "type": "StatusSwitchTabButton", "visible": True}
+holdingsPopup_CollectiblesTab_StatusSwitchTabButton = {"container": holdingsPopup, "text": "Collectibles", "type": "StatusSwitchTabButton", "visible": True}
+holdingsPopup_MintAsset_StatusIconTextButton = {"container": holdingsPopup, "text": "Mint asset", "type": "StatusIconTextButton", "visible": True}
 
 # Edit Community
 mainWindow_communityEditPanelScrollView_EditSettingsPanel = {"container": statusDesktop_mainWindow, "objectName": "communityEditPanelScrollView", "type": "EditSettingsPanel", "visible": True}
