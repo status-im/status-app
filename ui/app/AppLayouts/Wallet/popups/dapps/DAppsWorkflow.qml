@@ -224,6 +224,13 @@ SQUtils.QObject {
         property var key
         property var topic
 
+        property bool connectRequestHandled: false
+
+        function resolve(action) {
+            connectRequestHandled = true
+            action()
+        }
+
         property var connectionQueue: []
         onActiveChanged: {
             if (!active && connectionQueue.length > 0) {
@@ -243,6 +250,7 @@ SQUtils.QObject {
                 return
             }
 
+            connectDappLoader.connectRequestHandled = false
             connectDappLoader.dappChains = dappChains
             connectDappLoader.dappUrl = dappUrl
             connectDappLoader.dappName = dappName
@@ -275,7 +283,13 @@ SQUtils.QObject {
         sourceComponent: ConnectDAppModal {
             visible: true
 
-            onClosed: connectDappLoader.active = false
+            onClosed: {
+                if (!connectDappLoader.connectRequestHandled && connectDappLoader.key) {
+                    root.connectionDeclined(connectDappLoader.key)
+                }
+                connectDappLoader.connectRequestHandled = false
+                connectDappLoader.active = false
+            }
             accounts: root.accountsModel
             flatNetworks: SortFilterProxyModel {
                 sourceModel: root.networksModel
@@ -305,18 +319,18 @@ SQUtils.QObject {
                     return
                 }
 
-                root.connectionAccepted(connectDappLoader.key, selectedChains, selectedAccount.address)
+                connectDappLoader.resolve(() => root.connectionAccepted(connectDappLoader.key, selectedChains, selectedAccount.address))
             }
 
-            onDecline: {
+            onDecline: connectDappLoader.resolve(() => {
                 root.connectionDeclined(connectDappLoader.key)
                 close()
-            }
+            })
 
-           onDisconnect: {
+            onDisconnect: connectDappLoader.resolve(() => {
                 root.disconnectRequested(connectDappLoader.topic, connectDappLoader.dappUrl, Constants.DAppConnectors.WalletConnect, "walletconnect")
                 close()
-            }
+            })
         }
     }
 
