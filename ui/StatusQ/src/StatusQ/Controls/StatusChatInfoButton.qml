@@ -58,7 +58,6 @@ Button {
 
     component TruncatedTextWithTooltip: StatusBaseText {
         readonly property alias hovered: truncatedHandler.hovered
-        property alias cursorShape: truncatedHandler.cursorShape
 
         elide: Text.ElideRight
 
@@ -95,7 +94,7 @@ Button {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignLeading | Qt.AlignBottom
-                spacing: 1
+                spacing: 2
 
                 StatusIcon {
                     visible: root.type !== StatusChatInfoButton.Type.OneToOneChat && !forceHideTypeIcon && icon
@@ -199,9 +198,11 @@ Button {
                     font.underline: hovered
                     visible: root.pinnedMessagesCount
                     color: hovered ? Theme.palette.directColor1 : Theme.palette.baseColor1
-                    cursorShape: Qt.PointingHandCursor
-                    TapHandler {
-                        onSingleTapped: root.pinnedMessagesCountClicked()
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: parent.enabled && parent.visible
+                        cursorShape: containsMouse ? Qt.PointingHandCursor : undefined
+                        onClicked: root.pinnedMessagesCountClicked()
                     }
                 }
             }
