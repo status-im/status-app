@@ -7,6 +7,17 @@ from gui.keep_or_delete_recovery_phrase import KeepOrDeleteRecoveryPhrase
 from gui.objects_map import names
 
 
+def _seed_cell_object_name(cell) -> str:
+    """Squish remote objects expose objectName as an attribute."""
+    name = getattr(cell, 'objectName', None)
+    if name:
+        return str(name)
+    try:
+        return str(cell['objectName'])
+    except (TypeError, KeyError, AttributeError):
+        return ''
+
+
 class ConfirmRecoveryPhrase(QObject):
     def __init__(self):
         super().__init__(names.confirmRecoveryPhraseModal)
@@ -19,12 +30,21 @@ class ConfirmRecoveryPhrase(QObject):
 
         cells_to_fill = driver.findAllObjects(self.seed_input.real_name)
 
-        for cell in cells_to_fill:
-            word_to_confirm_index = int(str(cell['objectName']).split('_')[1])
+        def _cell_sort_key(cell):
+            oname = _seed_cell_object_name(cell)
+            try:
+                return int(oname.split('_')[1])
+            except (IndexError, ValueError):
+                return 0
+
+        for cell in sorted(cells_to_fill, key=_cell_sort_key):
+            oname = _seed_cell_object_name(cell)
+            word_to_confirm_index = int(oname.split('_')[1])
             word_to_put = words[word_to_confirm_index]
             self.seed_input.real_name['objectName'] = f'seedInput_{word_to_confirm_index}'
             self.seed_input.set_text_property(word_to_put)
 
-        assert self.continue_button.is_visible
+        # Footer Continue stays disabled until seedRepeater.allValid; wait for enabled, not inline btnContinue visibility.
+        self.continue_button.wait_until_enabled()
         self.continue_button.click()
         return KeepOrDeleteRecoveryPhrase()
