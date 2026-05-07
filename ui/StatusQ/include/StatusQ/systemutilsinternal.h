@@ -40,6 +40,8 @@ public:
     Q_INVOKABLE int iosKeyboardHeight() const;
     Q_INVOKABLE bool iosKeyboardVisible() const;
     Q_INVOKABLE void setupIOSKeyboardTracking();
+    Q_INVOKABLE void openIOSDocumentPicker(bool selectMultiple, const QStringList& nameFilters) const;
+    Q_INVOKABLE void openIOSPhotoLibraryPicker(bool selectMultiple) const;
 
     // iOS native share sheet
     Q_INVOKABLE void iosShareFile(const QUrl& fileUrl) const;
@@ -68,6 +70,8 @@ signals:
     void androidKeyboardVisibleChanged();
     void iosKeyboardHeightChanged();
     void iosKeyboardVisibleChanged();
+    void iosFilePickerAccepted(const QStringList& fileUrls);
+    void iosFilePickerRejected();
     void shakeDetected();
 
 private:

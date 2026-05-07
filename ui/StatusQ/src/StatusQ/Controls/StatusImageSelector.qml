@@ -229,6 +229,7 @@ Control {
         id: fileDialog
 
         currentFolder: picturesShortcut
+        usePhotoLibrary: true
         nameFilters: [ qsTr("Supported image formats (%1)").arg(d.getExtensionsFilterText())]
         onAccepted: d.loadFile(selectedFiles)
     }

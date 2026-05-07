@@ -2,6 +2,7 @@
 #include <QStringList>
 #import <Foundation/Foundation.h>
 #import <Photos/Photos.h>
+#import <PhotosUI/PhotosUI.h>
 #import <UIKit/UIKit.h>
 #import <CoreMotion/CoreMotion.h>
 #import <objc/runtime.h>
@@ -9,6 +10,310 @@
 #include <cmath>
 #include <QString>
 #include <QUrl>
+
+static IOSFilePickerAcceptedCallback g_filePickerAcceptedCallback = nullptr;
+static IOSFilePickerRejectedCallback g_filePickerRejectedCallback = nullptr;
+
+@interface StatusQDocumentPickerDelegate : NSObject<UIDocumentPickerDelegate>
+@end
+
+@interface StatusQPhotoLibraryPickerDelegate : NSObject<UIImagePickerControllerDelegate, UINavigationControllerDelegate, PHPickerViewControllerDelegate>
+@end
+
+static UIViewController *statusqActiveRootViewController()
+{
+    UIWindow *keyWindow = nil;
+
+    if (@available(iOS 13.0, *)) {
+        for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+            if (![scene isKindOfClass:[UIWindowScene class]])
+                continue;
+
+            UIWindowScene *windowScene = (UIWindowScene *)scene;
+            if (windowScene.activationState != UISceneActivationStateForegroundActive)
+                continue;
+
+            for (UIWindow *window in windowScene.windows) {
+                if (window.isKeyWindow) {
+                    keyWindow = window;
+                    break;
+                }
+            }
+
+            if (keyWindow)
+                break;
+        }
+    }
+
+    if (!keyWindow) {
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        keyWindow = [UIApplication sharedApplication].keyWindow;
+        #pragma clang diagnostic pop
+    }
+
+    if (!keyWindow)
+        return nil;
+
+    UIViewController *viewController = keyWindow.rootViewController;
+    while (viewController.presentedViewController)
+        viewController = viewController.presentedViewController;
+
+    return viewController;
+}
+
+@implementation StatusQDocumentPickerDelegate
+
+- (void)documentPicker:(UIDocumentPickerViewController *)controller didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls
+{
+    Q_UNUSED(controller);
+
+    QStringList selectedUrls;
+    selectedUrls.reserve(urls.count);
+
+    for (NSURL *url in urls) {
+        if (url.absoluteString.length > 0)
+            selectedUrls.push_back(QString::fromNSString(url.absoluteString));
+    }
+
+    if (g_filePickerAcceptedCallback)
+        g_filePickerAcceptedCallback(selectedUrls);
+}
+
+- (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller
+{
+    Q_UNUSED(controller);
+
+    if (g_filePickerRejectedCallback)
+        g_filePickerRejectedCallback();
+}
+
+@end
+
+static StatusQDocumentPickerDelegate *g_documentPickerDelegate = nil;
+static StatusQPhotoLibraryPickerDelegate *g_photoLibraryPickerDelegate = nil;
+
+void setIOSFilePickerCallbacks(IOSFilePickerAcceptedCallback acceptedCallback,
+                               IOSFilePickerRejectedCallback rejectedCallback)
+{
+    g_filePickerAcceptedCallback = acceptedCallback;
+    g_filePickerRejectedCallback = rejectedCallback;
+}
+
+void presentIOSDocumentPicker(bool selectMultiple, const QStringList& nameFilters)
+{
+    Q_UNUSED(nameFilters);
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *presentingViewController = statusqActiveRootViewController();
+        if (!presentingViewController) {
+            NSLog(@"presentIOSDocumentPicker: no active root view controller");
+            if (g_filePickerRejectedCallback)
+                g_filePickerRejectedCallback();
+            return;
+        }
+
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        UIDocumentPickerViewController *picker = [[UIDocumentPickerViewController alloc] initWithDocumentTypes:@[@"public.item"] inMode:UIDocumentPickerModeOpen];
+        #pragma clang diagnostic pop
+
+        g_documentPickerDelegate = [[StatusQDocumentPickerDelegate alloc] init];
+        picker.delegate = g_documentPickerDelegate;
+        picker.allowsMultipleSelection = selectMultiple;
+        picker.modalPresentationStyle = UIModalPresentationFullScreen;
+
+        [presentingViewController presentViewController:picker animated:YES completion:nil];
+    });
+}
+
+static UIImage *statusqScaledImageForTemporaryFile(UIImage *image)
+{
+    if (!image)
+        return nil;
+
+    const CGFloat maxDimension = 4096.0;
+    const CGFloat longestSide = MAX(image.size.width, image.size.height);
+    if (longestSide <= maxDimension)
+        return image;
+
+    const CGFloat scale = maxDimension / longestSide;
+    const CGSize targetSize = CGSizeMake(image.size.width * scale, image.size.height * scale);
+    UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
+    format.scale = 1.0;
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:targetSize format:format];
+
+    return [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+        Q_UNUSED(context);
+        [image drawInRect:CGRectMake(0, 0, targetSize.width, targetSize.height)];
+    }];
+}
+
+static NSURL *statusqWriteImageToTemporaryFile(UIImage *image)
+{
+    if (!image)
+        return nil;
+
+    UIImage *imageToWrite = statusqScaledImageForTemporaryFile(image);
+    if (!imageToWrite)
+        return nil;
+
+    NSData *imageData = UIImageJPEGRepresentation(imageToWrite, 0.9);
+    NSString *extension = @"jpg";
+
+    if (!imageData) {
+        imageData = UIImagePNGRepresentation(imageToWrite);
+        extension = @"png";
+    }
+
+    if (!imageData)
+        return nil;
+
+    NSString *fileName = [NSString stringWithFormat:@"%@.%@", [NSUUID UUID].UUIDString, extension];
+    NSURL *destinationUrl = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:fileName]];
+
+    return [imageData writeToURL:destinationUrl atomically:YES] ? destinationUrl : nil;
+}
+
+static void statusqCompletePhotoLibraryPicker(UIViewController *picker, NSArray<NSURL *> *urls)
+{
+    [picker dismissViewControllerAnimated:YES completion:^{
+        g_photoLibraryPickerDelegate = nil;
+        if (urls.count > 0 && g_filePickerAcceptedCallback) {
+            QStringList selectedUrls;
+            selectedUrls.reserve(urls.count);
+            for (NSURL *url in urls) {
+                if (url.absoluteString.length > 0)
+                    selectedUrls.push_back(QString::fromNSString(url.absoluteString));
+            }
+            g_filePickerAcceptedCallback(selectedUrls);
+        } else if (g_filePickerRejectedCallback) {
+            g_filePickerRejectedCallback();
+        }
+    }];
+}
+
+@implementation StatusQPhotoLibraryPickerDelegate
+{
+    BOOL _finished;
+}
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<UIImagePickerControllerInfoKey, id> *)info
+{
+    if (_finished)
+        return;
+    _finished = YES;
+
+    UIImage *image = info[UIImagePickerControllerOriginalImage];
+    NSURL *selectedUrl = statusqWriteImageToTemporaryFile(image);
+    if (!selectedUrl)
+        selectedUrl = info[UIImagePickerControllerImageURL];
+
+    statusqCompletePhotoLibraryPicker(picker, selectedUrl ? @[selectedUrl] : @[]);
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    if (_finished)
+        return;
+    _finished = YES;
+
+    statusqCompletePhotoLibraryPicker(picker, @[]);
+}
+
+- (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
+{
+    if (_finished)
+        return;
+    _finished = YES;
+
+    if (results.count == 0) {
+        statusqCompletePhotoLibraryPicker(picker, @[]);
+        return;
+    }
+
+    NSMutableArray *selectedUrls = [NSMutableArray arrayWithCapacity:results.count];
+    for (NSUInteger i = 0; i < results.count; i++)
+        [selectedUrls addObject:[NSNull null]];
+    __block NSInteger pendingResults = results.count;
+
+    void (^finishResult)(NSUInteger, NSURL *) = ^(NSUInteger index, NSURL *url) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (url)
+                selectedUrls[index] = url;
+
+            pendingResults--;
+            if (pendingResults == 0) {
+                NSMutableArray<NSURL *> *orderedUrls = [NSMutableArray arrayWithCapacity:selectedUrls.count];
+                for (id selectedUrl in selectedUrls) {
+                    if ([selectedUrl isKindOfClass:NSURL.class])
+                        [orderedUrls addObject:selectedUrl];
+                }
+                statusqCompletePhotoLibraryPicker(picker, orderedUrls);
+            }
+        });
+    };
+
+    [results enumerateObjectsUsingBlock:^(PHPickerResult *result, NSUInteger index, BOOL *stop) {
+        Q_UNUSED(stop);
+        NSItemProvider *provider = result.itemProvider;
+        if (![provider canLoadObjectOfClass:UIImage.class]) {
+            finishResult(index, nil);
+            return;
+        }
+
+        [provider loadObjectOfClass:UIImage.class completionHandler:^(id<NSItemProviderReading> object, NSError *error) {
+            Q_UNUSED(error);
+            finishResult(index, statusqWriteImageToTemporaryFile((UIImage *)object));
+        }];
+    }];
+}
+
+@end
+
+void presentIOSPhotoLibraryPicker(bool selectMultiple)
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIViewController *presentingViewController = statusqActiveRootViewController();
+        if (!presentingViewController) {
+            NSLog(@"presentIOSPhotoLibraryPicker: no active root view controller");
+            if (g_filePickerRejectedCallback)
+                g_filePickerRejectedCallback();
+            return;
+        }
+
+        if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
+            NSLog(@"presentIOSPhotoLibraryPicker: photo library source is not available");
+            if (g_filePickerRejectedCallback)
+                g_filePickerRejectedCallback();
+            return;
+        }
+
+        if (selectMultiple) {
+            if (@available(iOS 14.0, *)) {
+                PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
+                configuration.filter = [PHPickerFilter imagesFilter];
+                configuration.selectionLimit = 0;
+
+                PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:configuration];
+                g_photoLibraryPickerDelegate = [[StatusQPhotoLibraryPickerDelegate alloc] init];
+                picker.delegate = g_photoLibraryPickerDelegate;
+                picker.modalPresentationStyle = UIModalPresentationFullScreen;
+
+                [presentingViewController presentViewController:picker animated:YES completion:nil];
+                return;
+            }
+        }
+
+        UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+        g_photoLibraryPickerDelegate = [[StatusQPhotoLibraryPickerDelegate alloc] init];
+        picker.delegate = g_photoLibraryPickerDelegate;
+        picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+        picker.modalPresentationStyle = UIModalPresentationFullScreen;
+
+        [presentingViewController presentViewController:picker animated:YES completion:nil];
+    });
+}
 
 void saveImageToPhotosAlbum(const QByteArray &data)
 {

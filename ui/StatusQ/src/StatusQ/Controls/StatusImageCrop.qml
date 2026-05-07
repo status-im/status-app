@@ -347,6 +347,7 @@ Item {
         id: mainImage
 
         fillMode: Image.PreserveAspectFit
+        autoTransform: true
         z: windowRect.z - 1
 
         // Transform to keep the center of the image window in x and y coordinates
