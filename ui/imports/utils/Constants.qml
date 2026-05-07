@@ -43,7 +43,6 @@ QtObject {
         readonly property int blastMainnetChainId: 81457
         readonly property int blastSepoliaChainId: 168587773
         readonly property int hoodiChainId: 560048
-        readonly property int statusNetworkSepoliaChainId: 1660990954
         readonly property int binanceSmartChainMainnetChainId: 56
         readonly property int binanceSmartChainTestnetChainId: 97
 
@@ -737,7 +736,6 @@ QtObject {
     // Replicates src/app_service/service/network_connection/service.nim table UNSUPPORTED_MULTICHAIN_FEATURES
     readonly property var unsupportedMultichainFeatures: {
         "collectibles": [
-            chains.statusNetworkSepoliaChainId,
             chains.binanceSmartChainMainnetChainId,
             chains.binanceSmartChainTestnetChainId
         ]
@@ -828,7 +826,6 @@ QtObject {
         readonly property string soneium: "soneium"
         readonly property string scroll: "scroll"
         readonly property string blast: "blast"
-        readonly property string status: "status"
         readonly property string binanceSmartChain: "bsc"
     }
 
@@ -860,8 +857,6 @@ QtObject {
         readonly property string sepoliaScroll: "Scroll Sepolia"
         readonly property string blast: "Blast"
         readonly property string sepoliaBlast: "Blast Sepolia"
-        readonly property string status: "Status Network"
-        readonly property string sepoliaStatus: "Status Network Sepolia"
         readonly property string binanceSmartChain: "BNB Smart Chain"
         readonly property string testnetBinanceSmartChain: "BNB Smart Chain Testnet"
     }
@@ -895,7 +890,6 @@ QtObject {
         readonly property string minatoSoneium: "https://soneium-minato.blockscout.com"
         readonly property string sepoliaScroll: "https://sepolia.scrollscan.com"
         readonly property string sepoliaBlast: "https://sepolia.blastscan.io"
-        readonly property string sepoliaStatus: "https://sepoliascan.status.network"
         readonly property string testnetBinanceSmartChain: "https://testnet.bscscan.com"
         readonly property string addressPath: "address"
         readonly property string txPath: "tx"
@@ -925,7 +919,6 @@ QtObject {
         readonly property string sepoliaOptimism: "optimism-sepolia" // testnet not supported
         readonly property string sepoliaBase: "base-sepolia" // testnet not supported
         readonly property string sepoliaLinea: "linea-sepolia" // testnet not supported
-        readonly property string sepoliaStatus: "status-sepolia" // testnet not supported
     }
 
     readonly property string api_request: "api-request"

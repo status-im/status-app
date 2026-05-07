@@ -685,11 +685,6 @@ QtObject {
             if (testnetMode) {
                 link = Constants.networkExplorerLinks.sepoliaBlast
             }
-        } else if (networkShortName === Constants.networkShortChainNames.status) {
-            link = Constants.networkExplorerLinks.status
-            if (testnetMode) {
-                link = Constants.networkExplorerLinks.sepoliaStatus
-            }
         } else if (networkShortName === Constants.networkShortChainNames.binanceSmartChain) {
             link = Constants.networkExplorerLinks.binanceSmartChain
             if (testnetMode) {
@@ -756,9 +751,6 @@ QtObject {
         if (networkShortName === Constants.networkShortChainNames.blast) {
             return qsTr("BlastScan")
         }
-        if (networkShortName === Constants.networkShortChainNames.status) {
-            return qsTr("Status Explorer")
-        }
         if (networkShortName === Constants.networkShortChainNames.binanceSmartChain) {
             return qsTr("BscScan")
         }
@@ -808,8 +800,6 @@ QtObject {
             case Constants.chains.blastMainnetChainId:
             case Constants.chains.blastSepoliaChainId:
                 return Constants.networkShortChainNames.blast
-            case Constants.chains.statusNetworkSepoliaChainId:
-                return Constants.networkShortChainNames.status
             case Constants.chains.binanceSmartChainMainnetChainId:
             case Constants.chains.binanceSmartChainTestnetChainId:
                 return Constants.networkShortChainNames.binanceSmartChain
@@ -874,8 +864,6 @@ QtObject {
                 return Constants.networkNames.blast
             case Constants.chains.blastSepoliaChainId:
                 return Constants.networkNames.sepoliaBlast
-            case Constants.chains.statusNetworkSepoliaChainId:
-                return Constants.networkNames.sepoliaStatus
             case Constants.chains.binanceSmartChainMainnetChainId:
                 return Constants.networkNames.binanceSmartChain
             case Constants.chains.binanceSmartChainTestnetChainId:
