@@ -298,6 +298,55 @@ QtObject {
         showEnablePushNotificationsPopup()
     }
 
+    // Flat API — delegates to the nested handler instances above. Callers should
+    // prefer these over `popupHandler.<nestedHandler>.<method>()` chains.
+    function launchSwap() {
+        swapModalHandler.launchSwap()
+    }
+    function launchSwapSpecific(data) {
+        swapModalHandler.launchSwapSpecific(data)
+    }
+
+    function openSend() {
+        sendModalHandler.openSend()
+    }
+    function transferOwnership(tokenId, senderAddress) {
+        sendModalHandler.transferOwnership(tokenId, senderAddress)
+    }
+    function buyStickerPack(packId, price) {
+        sendModalHandler.buyStickerPack(packId, price)
+    }
+    function sendToRecipient(address) {
+        sendModalHandler.sendToRecipient(address)
+    }
+    function sendToken(senderAddress, groupKey, tokenType) {
+        sendModalHandler.sendToken(senderAddress, groupKey, tokenType)
+    }
+    function connectUsername(ensName, ownerAddress) {
+        sendModalHandler.connectUsername(ensName, ownerAddress)
+    }
+    function registerUsername(ensName, chainId) {
+        sendModalHandler.registerUsername(ensName, chainId)
+    }
+    function releaseUsername(ensName, senderAddress, chainId) {
+        sendModalHandler.releaseUsername(ensName, senderAddress, chainId)
+    }
+    function openTokenPaymentRequest(recipientAddress, tokenKey, rawAmount) {
+        sendModalHandler.openTokenPaymentRequest(recipientAddress, tokenKey, rawAmount)
+    }
+
+    function openGifs(params, cbOnGifSelected, cbOnClose) {
+        statusGifPopupHandler.openGifs(params, cbOnGifSelected, cbOnClose)
+    }
+
+    // Disambiguated names — both nested handlers expose `openPopup()`.
+    function openThirdpartyServicesPopup() {
+        thirdpartyServicesPopupHandler.openPopup()
+    }
+    function openEnableBiometricsPopup() {
+        enableBiometricsPopupHandler.openPopup()
+    }
+
     readonly property EnableBiometricsPopupHandler enableBiometricsPopupHandler: EnableBiometricsPopupHandler {
         popupParent: root.popupParent
         privacyStore: root.privacyStore
