@@ -92,9 +92,10 @@ proc init*(self: Controller) =
     self.events.on(SIGNAL_CHAT_MEMBERS_ADDED) do(e: Args):
       let args = ChatMembersAddedArgs(e)
       if (args.chatId == self.chatId):
-        # The signal carries only IDs (no enriched ChatMembers). Touch the
-        # cache for each just-added member so the placeholder gets
-        # constructed
+        # TODO(status-go): enrich the addMembers response with alias/colorId/
+        # compressedKey/emojiHash like community/contacts payloads do, then
+        # drop this loop. Until then, falling back to per-id getContactDetails
+        # synthesizes the visual identity via 4 RPCs per new member.
         for memberId in args.ids:
           discard self.contactService.getContactDetails(memberId)
         self.delegate.onChatMembersAdded(args.ids)
@@ -104,7 +105,7 @@ proc init*(self: Controller) =
       if (args.chatId == self.chatId):
         # Args carry status-go-enriched members — seed before delegating
         # so `processChatMember` reads enriched data from the cache.
-        self.contactService.seedFromChatMembers(args.members)
+        self.contactService.seedFromChatMembers(args.members.toMemberSeeds())
         self.delegate.onMembersChanged(args.members)
 
     self.events.on(SIGNAL_CHAT_MEMBER_REMOVED) do(e: Args):

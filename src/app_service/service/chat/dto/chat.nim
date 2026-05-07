@@ -1,6 +1,6 @@
 {.used.}
 
-import json, std/strformat, strutils, tables, marshal
+import json, std/strformat, strutils, tables
 import ../../shared_urls/dto/url_data
 import app_service/service/message/dto/message
 
@@ -240,10 +240,7 @@ proc toChannelMember*(jsonObj: JsonNode, memberId: string): ChatMember =
   result.emojiHash = "[]"
   var emojiHashNode: JsonNode
   if jsonObj.getProp("emojiHash", emojiHashNode) and emojiHashNode.kind == JArray:
-    var parts: seq[string] = @[]
-    for e in emojiHashNode:
-      parts.add(e.getStr)
-    result.emojiHash = $$ parts
+    result.emojiHash = $emojiHashNode
 
   result.role = MemberRole.None
   if roles.contains(MemberRole.Owner.int):
@@ -256,6 +253,20 @@ proc toChannelMember*(jsonObj: JsonNode, memberId: string): ChatMember =
     result.role = MemberRole.ModerateContent
   elif roles.contains(MemberRole.TokenMaster.int):
     result.role = MemberRole.TokenMaster
+
+proc toMemberSeed*(m: ChatMember): MemberSeed =
+  MemberSeed(
+    id: m.id,
+    alias: m.alias,
+    colorId: m.colorId,
+    compressedPubKey: m.compressedPubKey,
+    emojiHash: m.emojiHash,
+  )
+
+proc toMemberSeeds*(members: seq[ChatMember]): seq[MemberSeed] =
+  result = newSeqOfCap[MemberSeed](members.len)
+  for m in members:
+    result.add(m.toMemberSeed)
 
 proc toChatDto*(jsonObj: JsonNode): ChatDto =
   result = ChatDto()

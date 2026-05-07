@@ -539,7 +539,7 @@ proc getContactDetails*(self: Controller, id: string): ContactDetails =
   return self.contactService.getContactDetails(id)
 
 proc seedContactsFromChatMembers*(self: Controller, members: seq[ChatMember]) =
-  self.contactService.seedFromChatMembers(members)
+  self.contactService.seedFromChatMembers(members.toMemberSeeds())
 
 proc getStatusForContactWithId*(self: Controller, publicKey: string): StatusUpdateDto =
   return self.contactService.getStatusForContactWithId(publicKey)
@@ -703,7 +703,7 @@ proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communit
   return self.messageService.getMessagesParsedPlainText(message, communityChats)
 
 proc getColorId*(self: Controller, pubkey: string): int =
-  procs_from_visual_identity_service.colorIdOf(pubkey)
+  self.contactService.getContactColorId(pubkey)
 
 proc getTokenByKey*(self: Controller, tokenKey: string): TokenItem =
   return self.tokenService.getTokenByKey(tokenKey)

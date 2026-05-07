@@ -1,6 +1,6 @@
 {.used.}
 
-import json, std/strformat, strutils, marshal
+import json, std/strformat, strutils
 
 include ../../../common/json_utils
 include ../../../common/utils
@@ -140,10 +140,7 @@ proc toContactsDto*(jsonObj: JsonNode): ContactsDto =
   result.emojiHash = "[]"
   var emojiHashNode: JsonNode
   if jsonObj.getProp("emojiHash", emojiHashNode) and emojiHashNode.kind == JArray:
-    var parts: seq[string] = @[]
-    for e in emojiHashNode:
-      parts.add(e.getStr)
-    result.emojiHash = $$ parts
+    result.emojiHash = $emojiHashNode
 
 proc userExtractedName(contact: ContactsDto): string =
   if(contact.name.len > 0 and contact.ensVerified):
