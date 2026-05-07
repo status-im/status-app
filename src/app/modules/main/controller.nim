@@ -579,7 +579,7 @@ proc getContactDetails*(self: Controller, contactId: string): ContactDetails =
   return self.contactsService.getContactDetails(contactId)
 
 proc seedContactsFromChatMembers*(self: Controller, members: seq[ChatMember]) =
-  self.contactsService.seedFromChatMembers(members)
+  self.contactsService.seedFromChatMembers(members.toMemberSeeds())
 
 proc resolveENS*(self: Controller, ensName: string, uuid: string = "", reason: string = "") =
   self.contactsService.resolveENS(ensName, uuid, reason)

@@ -13,7 +13,6 @@ import ../settings/service as settings_service
 import ../network/service as network_service
 import ../message/dto/message as message_dto
 import ../visual_identity/service as procs_from_visual_identity_service
-from ../chat/dto/chat import ChatMember
 
 import ./dto/contacts as contacts_dto
 import ./dto/status_update as status_update_dto
@@ -138,7 +137,7 @@ QtObject:
     self.contacts[contact.dto.id] = contact
     self.contactsStatus[contact.dto.id] = StatusUpdateDto(publicKey: contact.dto.id, statusType: StatusType.Unknown)
 
-  proc seedFromChatMembers*(self: Service, members: seq[ChatMember]) =
+  proc seedFromChatMembers*(self: Service, members: seq[MemberSeed]) =
     for member in members:
       if member.id.len == 0:
         continue
@@ -164,18 +163,28 @@ QtObject:
           # optionalName, colorId) reflect the fresh data
           self.contacts[member.id] = self.constructContactDetails(dto, isCurrentUser)
       elif member.id != singletonInstance.userProfile.getPubKey():
+        let alias =
+          if member.alias.len > 0: member.alias
+          else: status_accounts.generateAlias(member.id).result.getStr
+        let colorId = member.colorId
+        let compressedPubKey =
+          if member.compressedPubKey.len > 0: member.compressedPubKey
+          else: status_accounts.compressPk(member.id).result
+        let emojiHash =
+          if member.emojiHash.len > 0 and member.emojiHash != "[]": member.emojiHash
+          else: procs_from_visual_identity_service.getEmojiHashAsJson(member.id)
         let placeholder = self.constructContactDetails(
           ContactsDto(
             id: member.id,
-            alias: member.alias,
+            alias: alias,
             ensVerified: false,
             added: false,
             blocked: false,
             hasAddedUs: false,
             trustStatus: TrustStatus.Unknown,
-            compressedPubKey: member.compressedPubKey,
-            colorId: member.colorId,
-            emojiHash: if member.emojiHash.len > 0: member.emojiHash else: "[]",
+            compressedPubKey: compressedPubKey,
+            colorId: colorId,
+            emojiHash: emojiHash,
           ),
           isCurrentUser = false,
         )
@@ -410,6 +419,20 @@ QtObject:
 
   proc getContactById*(self: Service, id: string): ContactsDto =
     return self.getContactDetails(id).dto
+
+  proc getContactColorId*(self: Service, id: string): int =
+    var pubkey = id
+
+    if service_conversion.isCompressedPubKey(id):
+      pubkey = status_accounts.decompressPk(id).result
+
+    if len(pubkey) == 0:
+      return 0
+
+    if self.contacts.hasKey(pubkey):
+      return self.contacts[pubkey].colorId
+
+    return procs_from_visual_identity_service.colorIdOf(pubkey)
 
   proc getStatusForContactWithId*(self: Service, publicKey: string): StatusUpdateDto =
     if publicKey == singletonInstance.userProfile.getPubKey():

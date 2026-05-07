@@ -374,7 +374,7 @@ method onChatsLoaded*(
   self.chatsLoaded = true
 
   # Pre-populate the contacts cache with community members
-  contactService.seedFromChatMembers(community.members)
+  contactService.seedFromChatMembers(community.members.toMemberSeeds())
 
   self.buildChatSectionUI(community, chats, events, settingsService, nodeConfigurationService,
     contactService, chatService, communityService, messageService, mailserversService, sharedUrlsService)
