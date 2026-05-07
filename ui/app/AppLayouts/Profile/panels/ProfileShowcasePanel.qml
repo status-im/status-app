@@ -147,28 +147,9 @@ DoubleFlickableWithFolding {
                 Layout.fillWidth: true
 
                 placeholderText: root.searchPlaceholderText
-                validators: [
-                    StatusValidator {
-                        property bool isEmoji: false
-
-                        name: "check-for-no-emojis"
-                        validate: (value) => {
-                                      if (!value) {
-                                          return true
-                                      }
-
-                                      isEmoji = Constants.regularExpressions.emoji.test(value)
-                                      if (isEmoji){
-                                          return false
-                                      }
-
-                                      return Constants.regularExpressions.alphanumericalExpanded1.test(value)
-                                  }
-                        errorMessage: isEmoji ?
-                                          qsTr("Your search is too cool (use A-Z and 0-9, hyphens and underscores only)")
-                                        : qsTr("Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)")
-                    }
-                ]
+                validator: RXValidator {
+                    regularExpression: Constants.regularExpressions.alphanumericalExpanded1
+                }
 
                 Binding {
                     target: d

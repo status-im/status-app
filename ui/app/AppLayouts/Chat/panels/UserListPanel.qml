@@ -59,11 +59,10 @@ ColumnLayout {
         }
 
         StatusFlatButton {
+            id: searchBtn
             icon.name: "search"
             isRoundIcon: true
             checkable: true
-            checked: searchField.visible
-            onToggled: searchField.visible = checked
             textColor: checked || hovered ? Theme.palette.primaryColor1 : Theme.palette.directColor1
             tooltip.text: qsTr("Search")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
@@ -73,14 +72,18 @@ ColumnLayout {
     SearchBox {
         id: searchField
         KeyNavigation.tab: userListView
-        Keys.onEscapePressed: visible = false
+        Keys.onEscapePressed: searchBtn.checked = false
         Layout.fillWidth: true
         Layout.leftMargin: Theme.padding
         Layout.rightMargin: Theme.padding
         placeholderText: qsTr("Search members...")
-        visible: false
-        onVisibleChanged: input.edit.clear()
-        focus: visible
+        visible: searchBtn.checked
+        onVisibleChanged: {
+            if (visible)
+                forceActiveFocus()
+            else
+                clear()
+        }
     }
 
     StatusBaseText {
@@ -118,7 +121,7 @@ ColumnLayout {
                 SQUtils.SearchFilter {
                     roleName: "preferredDisplayName"
                     searchPhrase: searchField.text
-                    enabled: !!searchPhrase
+                    enabled: searchField.visible && !!searchPhrase
                 }
             ]
             sorters: [

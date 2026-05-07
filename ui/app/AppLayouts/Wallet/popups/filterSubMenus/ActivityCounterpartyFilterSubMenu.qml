@@ -42,7 +42,7 @@ StatusMenu {
     Component.onCompleted: root.updateRecipientsModel()
 
     function resetView() {
-        searchBox.reset()
+        searchBox.clear()
     }
 
     contentItem: ColumnLayout {
@@ -66,9 +66,8 @@ StatusMenu {
             Layout.fillWidth: true
             Layout.leftMargin: 8
             Layout.rightMargin: 8
+            Layout.preferredHeight: 36
             font.pixelSize: Theme.additionalTextSize
-            placeholderFont.pixelSize: font.pixelSize
-            input.height: 36
             placeholderText: qsTr("Search name, ENS or address")
             onTextChanged: searchTimer.restart()
 

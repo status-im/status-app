@@ -29,7 +29,7 @@ StatusDropdown {
     property var toggleCategory: function(newCategory) {
         previousCategory = currentCategory
         currentCategory = newCategory
-        searchBox.text = ""
+        searchBox.clear()
         if (currentCategory === GifPopupDefinitions.Category.Trending) {
             root.getTrendingsGifs()
         } else if(currentCategory === GifPopupDefinitions.Category.Favorite) {
@@ -79,9 +79,9 @@ StatusDropdown {
     }
 
     onAboutToShow: {
-        searchBox.text = ""
+        searchBox.clear()
         if (!SQUtils.Utils.isMobile)
-            searchBox.input.edit.forceActiveFocus()
+            searchBox.forceActiveFocus()
         if (root.gifUnfurlingEnabled) {
             root.getTrendingsGifs()
         }
@@ -123,7 +123,7 @@ StatusDropdown {
                 Layout.rightMargin: d.headerMargin
                 Layout.leftMargin: d.headerMargin
 
-                input.edit.onTextChanged: {
+                onTextChanged: {
                     if (searchBox.text === "") {
                         toggleCategory(GifPopupDefinitions.Category.Trending)
                         return

@@ -1009,10 +1009,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Mainnet data verified by Nimbus</source>
-        <translation>Nimbus로 검증된 Mainnet 데이터</translation>
-    </message>
-    <message>
         <source>Application Logs</source>
         <translation>애플리케이션 로그</translation>
     </message>
@@ -1119,10 +1115,6 @@
     <message>
         <source>enable</source>
         <translation>활성화</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</source>
-        <translation>정말로 Nimbus 프록시를 %1하시겠어요? 이 변경 사항을 적용하려면 앱을 다시 시작해야 합니다.</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -3936,10 +3928,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <message>
         <source>Confirm</source>
         <translation>비밀번호 확인</translation>
-    </message>
-    <message>
-        <source>Reject</source>
-        <translation>거절</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -8065,14 +8053,6 @@ Are you sure you want to do this?</source>
     <message>
         <source>Search for name, ENS or address</source>
         <translation type="unfinished">이름, ENS 또는 주소 검색</translation>
-    </message>
-    <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished">검색어가 너무 쿨해요 (A-Z, 0-9, 공백 하나, 하이픈, 밑줄만 사용하세요)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished">검색어에 유효하지 않은 문자가 있습니다 (A-Z, 0-9, 단일 공백, 하이픈, 밑줄만 사용)</translation>
     </message>
     <message>
         <source>No following addresses found. Check spelling or whether the address is correct.</source>
@@ -14784,14 +14764,6 @@ to load</source>
 <context>
     <name>ProfileShowcasePanel</name>
     <message>
-        <source>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>검색어가 너무 힙해요 (A-Z, 0-9, 하이픈과 밑줄만 사용하세요)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>검색어에 유효하지 않은 문자가 포함되어 있습니다 (영문 대문자 A-Z, 숫자 0-9, 하이픈, 밑줄만 사용)</translation>
-    </message>
-    <message>
         <source>In showcase</source>
         <translation>쇼케이스에서</translation>
     </message>
@@ -15473,14 +15445,6 @@ to load</source>
     <message>
         <source>Search for name, ENS or address</source>
         <translation>이름, ENS 또는 주소 검색</translation>
-    </message>
-    <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>검색어가 너무 쿨해요 (A-Z, 0-9, 공백 하나, 하이픈, 밑줄만 사용하세요)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>검색어에 유효하지 않은 문자가 있습니다 (A-Z, 0-9, 단일 공백, 하이픈, 밑줄만 사용)</translation>
     </message>
     <message>
         <source>Your saved addresses will appear here</source>
@@ -19405,10 +19369,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>BaseScan</source>
         <translation>BaseScan</translation>
-    </message>
-    <message>
-        <source>Status Explorer</source>
-        <translation>Status 탐색기</translation>
     </message>
     <message>
         <source>BscScan</source>

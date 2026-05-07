@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ
 import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -41,28 +42,9 @@ ColumnLayout {
         visible: RootStore.savedAddresses.count > 0
         placeholderText: qsTr("Search for name, ENS or address")
 
-        validators: [
-            StatusValidator {
-                property bool isEmoji: false
-
-                name: "check-for-no-emojis"
-                validate: (value) => {
-                              if (!value) {
-                                  return true
-                              }
-
-                              isEmoji = Constants.regularExpressions.emoji.test(value)
-                              if (isEmoji){
-                                  return false
-                              }
-
-                              return Constants.regularExpressions.alphanumericalExpanded1.test(value)
-                          }
-                errorMessage: isEmoji?
-                                  qsTr("Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)")
-                                : qsTr("Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)")
-            }
-        ]
+        validator: RXValidator {
+            regularExpression: Constants.regularExpressions.alphanumericalExpanded1
+        }
     }
 
     ShapeRectangle {

@@ -10,6 +10,9 @@ import StatusQ.Popups
 
 TextField {
     id: root
+
+    property bool showBackground: true
+
     Accessible.name: Utils.formatAccessibleName(placeholderText, objectName)
 
     font.family: Fonts.baseFont.family
@@ -19,8 +22,33 @@ TextField {
     selectedTextColor: Theme.palette.directColor1
     selectionColor: Theme.palette.primaryColor2
     placeholderTextColor: Theme.palette.baseColor1
-
+    verticalAlignment: Text.AlignVCenter
     opacity: enabled ? 1 : ThemeUtils.disabledOpacity
+
+    leftPadding: Theme.defaultPadding
+    rightPadding: Theme.defaultPadding
+    topPadding: Theme.defaultHalfPadding
+    bottomPadding: Theme.defaultHalfPadding
+
+    HoverHandler {
+        id: hoverHandler
+        enabled: root.enabled
+    }
+
+    background: Rectangle {
+        implicitHeight: 44
+        color: root.showBackground ? Theme.palette.statusAppNavBar.backgroundColor : "transparent"
+        radius: Theme.radius
+
+        border.width: 1
+        border.color: {
+            if (!root.showBackground)
+                return "transparent"
+            if (root.cursorVisible)
+                return Theme.palette.primaryColor1
+            return hoverHandler.hovered ? Theme.palette.primaryColor2 : "transparent"
+        }
+    }
 
     cursorDelegate: StatusCursorDelegate {
         cursorVisible: root.cursorVisible

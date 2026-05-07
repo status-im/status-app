@@ -1240,11 +1240,6 @@
       <translation>Minimize to tray icon on close</translation>
     </message>
     <message>
-      <source>Mainnet data verified by Nimbus</source>
-      <comment>AdvancedView</comment>
-      <translation>Mainnet data verified by Nimbus</translation>
-    </message>
-    <message>
       <source>Application Logs</source>
       <comment>AdvancedView</comment>
       <translation>Application Logs</translation>
@@ -1378,11 +1373,6 @@
       <source>enable</source>
       <comment>AdvancedView</comment>
       <translation>enable</translation>
-    </message>
-    <message>
-      <source>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</source>
-      <comment>AdvancedView</comment>
-      <translation>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</translation>
     </message>
     <message>
       <source>How many log files do you want to keep archived?</source>
@@ -4812,11 +4802,6 @@
       <source>Confirm</source>
       <comment>ConfirmationDialog</comment>
       <translation>Confirm</translation>
-    </message>
-    <message>
-      <source>Reject</source>
-      <comment>ConfirmationDialog</comment>
-      <translation>Reject</translation>
     </message>
     <message>
       <source>Cancel</source>
@@ -9869,16 +9854,6 @@
       <source>Search for name, ENS or address</source>
       <comment>FollowingAddresses</comment>
       <translation>Search for name, ENS or address</translation>
-    </message>
-    <message>
-      <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-      <comment>FollowingAddresses</comment>
-      <translation>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</translation>
-    </message>
-    <message>
-      <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-      <comment>FollowingAddresses</comment>
-      <translation>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</translation>
     </message>
     <message>
       <source>No following addresses found. Check spelling or whether the address is correct.</source>
@@ -18060,16 +18035,6 @@
   <context>
     <name>ProfileShowcasePanel</name>
     <message>
-      <source>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-      <comment>ProfileShowcasePanel</comment>
-      <translation>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</translation>
-    </message>
-    <message>
-      <source>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-      <comment>ProfileShowcasePanel</comment>
-      <translation>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</translation>
-    </message>
-    <message>
       <source>In showcase</source>
       <comment>ProfileShowcasePanel</comment>
       <translation>In showcase</translation>
@@ -18899,16 +18864,6 @@
       <source>Search for name, ENS or address</source>
       <comment>SavedAddresses</comment>
       <translation>Search for name, ENS or address</translation>
-    </message>
-    <message>
-      <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-      <comment>SavedAddresses</comment>
-      <translation>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</translation>
-    </message>
-    <message>
-      <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-      <comment>SavedAddresses</comment>
-      <translation>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</translation>
     </message>
     <message>
       <source>Your saved addresses will appear here</source>
@@ -23664,11 +23619,6 @@
       <source>BaseScan</source>
       <comment>Utils</comment>
       <translation>BaseScan</translation>
-    </message>
-    <message>
-      <source>Status Explorer</source>
-      <comment>Utils</comment>
-      <translation>Status Explorer</translation>
     </message>
     <message>
       <source>BscScan</source>

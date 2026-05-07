@@ -42,9 +42,7 @@ ColumnLayout {
     SearchBox {
         id: filterInput
         placeholderText: qsTr("Search contacts")
-        maximumHeight: 36
-        topPadding: 0
-        bottomPadding: 0
+        Layout.preferredHeight: 36
         Layout.fillWidth: true
         Layout.topMargin: Theme.bigPadding
         Layout.bottomMargin: Theme.padding

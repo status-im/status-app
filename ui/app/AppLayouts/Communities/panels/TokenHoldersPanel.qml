@@ -51,11 +51,8 @@ Control {
             Layout.topMargin: 12
             Layout.leftMargin: Theme.padding
             Layout.rightMargin: Theme.padding
+            Layout.preferredHeight: 36
             visible: !root.empty
-            topPadding: 0
-            bottomPadding: 0
-            minimumHeight: 36 // by design
-            maximumHeight: minimumHeight
             placeholderText: qsTr("Search hodlers")
         }
         StatusBaseText {

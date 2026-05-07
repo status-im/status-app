@@ -32,21 +32,18 @@ StatusTextField {
         id: d
 
         readonly property int inputTextPadding: root.Theme.defaultPadding
-        readonly property int radius: root.Theme.defaultPadding / 2
     }
 
     leftPadding: d.inputTextPadding
     rightPadding: d.inputTextPadding
-    verticalAlignment: Text.AlignVCenter
     implicitWidth: 480
     implicitHeight: 44
-    selectByMouse: true
 
     echoMode: TextInput.Password
 
     background: Rectangle {
         color: Theme.palette.baseColor2
-        radius: d.radius
+        radius: Theme.radius
         border.width: root.focus || root.hasError ? 1 : 0
         border.color: root.hasError ? Theme.palette.dangerColor1 : Theme.palette.primaryColor1
     }
