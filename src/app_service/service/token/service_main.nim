@@ -31,12 +31,6 @@ proc addNewTokensToGroupsOfInterest(self: Service, tokens: seq[TokenItem]) =
 proc applyAllTokenListsData(self: Service, tokenListsDtos: seq[TokenListDto]) =
   self.allTokenLists = tokenListsDtos.map(tl => createTokenListItem(tl))
 
-proc rebuildAllTokensByGroupKeyIndex(self: Service) =
-  self.allTokensByGroupKey.clear()
-  let allTokens = getAllTokens()
-  for token in allTokens:
-    self.allTokensByGroupKey.mgetOrPut(token.groupKey, @[]).add(token)
-
 proc prefetchParaswapSupport(self: Service) =
   let chainIds = self.networkService.getEnabledChainIds()
   if chainIds.len == 0:
@@ -70,7 +64,7 @@ proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.} 
   except Exception as ex:
     error "prefetchParaswapSupportRetrieved", err = ex.msg
 
-proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], tokenPrefsNode: JsonNode) =
+proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], allTokenDtos: seq[TokenDtoSafe], tokenPrefsNode: JsonNode) =
   # Parse tokens of interest
   self.tokensOfInterestByKey.clear()
   self.groupsOfInterestByKey.clear()
@@ -94,9 +88,12 @@ proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], tokenPr
         visible: dto.visible,
         communityId: dto.communityId)
 
+  self.allTokensByGroupKey.clear()
+  for dto in allTokenDtos:
+    let item = createTokenItem(dto)
+    self.allTokensByGroupKey.mgetOrPut(item.groupKey, @[]).add(item)
   self.rebuildMarketData()
   self.fetchTokensDetails() # TODO: if the only place where we can see these details is account's details page, we should fetch this on demand, no need to have local cache
-  self.rebuildAllTokensByGroupKeyIndex()
   # notify modules
   self.events.emit(SIGNAL_TOKENS_LIST_UPDATED, Args())
   self.events.emit(SIGNAL_TOKEN_PREFERENCES_UPDATED, Args())
@@ -107,7 +104,7 @@ proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.} =
     if env.error.len > 0:
       error "async refresh tokens failed", errDescription = env.error
       return
-    self.applyRefreshTokensData(env.tokensOfInterest, env.tokenPreferences)
+    self.applyRefreshTokensData(env.tokensOfInterest, env.allTokens, env.tokenPreferences)
   except Exception as e:
     error "error processing async refresh tokens", msg = e.msg
 
