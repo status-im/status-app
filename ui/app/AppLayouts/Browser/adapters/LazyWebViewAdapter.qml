@@ -16,6 +16,7 @@ AbstractWebView {
 
     // Desktop-only: WebEngineProfile owner injected from BrowserWebViewContext.
     // Null on mobile (MobileWebViewAdapter doesn't need it).
+    // WARN: needs to remain a var to avoid mixing platform-specific types
     property var profileManager: null
 
     supportsZoom:       loader.item ? loader.item.supportsZoom       : false
@@ -87,6 +88,12 @@ AbstractWebView {
         anchors.fill: parent
         onLoaded: {
             if (root.url.toString()) loader.item.url = root.url
+        }
+
+        onStatusChanged: {
+            if (status === Loader.Error) {
+                console.error("Failed to load WebViewAdapter")
+            }
         }
 
         readonly property string adapterPath: SQUtils.Utils.isMobile
