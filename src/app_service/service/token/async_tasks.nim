@@ -17,6 +17,7 @@ type
   RefreshTokensResponse* = object
     tokensOfInterest*: seq[TokenDtoSafe]
     tokenPreferences*: JsonNode
+    allTokens*: seq[TokenDtoSafe]
     error*: string
 
   FetchAllTokenListsResponse* = object
@@ -48,6 +49,7 @@ proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
   var output = %*{
     "tokensOfInterest": newJArray(),
     "tokenPreferences": newJArray(),
+    "allTokens": newJArray(),
     "error": ""
   }
   try:
@@ -63,6 +65,18 @@ proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
     output["tokenPreferences"] = if prefsResponse.result.isNil: newJNull() else: prefsResponse.result
   except Exception as e:
     output["error"] = %* fmt"Error refreshing tokens: {e.msg}"
+
+  # fetch all tokens for the group-key index
+  try:
+    var allTokensResponse: JsonNode
+    let allTokensErr = status_go_tokens.getAllTokens(allTokensResponse)
+    if allTokensErr.len > 0:
+      warn "asyncRefreshTokensTask: getAllTokens failed", err = allTokensErr
+    else:
+      output["allTokens"] = if allTokensResponse.isNil: newJArray() else: allTokensResponse
+  except Exception as e:
+    warn "asyncRefreshTokensTask: getAllTokens exception", err = e.msg
+
   arg.finish(output)
 
 type
