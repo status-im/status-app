@@ -105,6 +105,8 @@ type
     mainModule: main_module.AccessInterface
     keycardChannelModule: keycard_channel_module.AccessInterface
 
+    resumeLogin: bool
+
 #################################################
 # Forward declaration section
 proc load(self: AppController)
@@ -285,6 +287,11 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   # Do connections
   result.connect()
 
+  let initialAccount = result.accountsService.fetchLoggedInAccount()
+  result.resumeLogin = initialAccount.isValid()
+  if result.resumeLogin:
+    result.accountsService.setLoggedInAccount(initialAccount)
+
 proc delete*(self: AppController) =
   when defined(android):
       info "Skipping logout on AppController.delete (Android keepalive enabled)"
@@ -349,8 +356,7 @@ proc initializeQmlContext(self: AppController) =
   singletonInstance.engine.setRootContextProperty("globalUtils", self.globalUtilsVariant)
 
   # Expose a lightweight login flag that is available as soon as `main.qml` starts evaluating.
-  let resumeLogin = self.accountsService.fetchLoggedInAccount().isValid()
-  singletonInstance.engine.setRootContextProperty("skipOnboardingContextProperty", newQVariant(resumeLogin))
+  singletonInstance.engine.setRootContextProperty("skipOnboardingContextProperty", newQVariant(self.resumeLogin))
 
   # Load keycard channel module (available before login for Session API)
   self.keycardChannelModule.load()
@@ -374,8 +380,12 @@ proc start*(self: AppController) =
   self.generalService.init()
   self.accountsService.init()
   self.devicesService.init()
-
-  self.onboardingModule.load()
+  
+  if not self.resumeLogin:
+    self.onboardingModule.load()
+  else:
+    self.initializeQmlContext()
+    self.finishAppLoading()
 
 proc load(self: AppController) =
   self.settingsService.init()
@@ -455,7 +465,8 @@ proc finishAppLoading*(self: AppController) =
     self.onboardingModule.onAppLoaded(account.keyUid)
     self.onboardingModule = nil
 
-  self.mainModule.checkAndPerformProfileMigrationIfNeeded()
+  if not self.resumeLogin:
+    self.mainModule.checkAndPerformProfileMigrationIfNeeded()
 
   self.notificationsManager.onAppReady()
 

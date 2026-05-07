@@ -1021,13 +1021,15 @@ method onChatsLoaded*[T](
 
   self.checkIfWeHaveNotifications()
 
-  self.events.emit(SIGNAL_MAIN_LOADED, Args())
-
   # Set active section if it is one of the channel sections
   if not activeSection.isEmpty():
     self.setActiveSection(activeSection)
 
   self.view.sectionsLoaded()
+
+  self.events.emit(SIGNAL_MAIN_LOADED, Args())
+  self.view.setMainLoaded(true)
+
   if self.statusDeepLinkToActivate != "":
     self.activateStatusDeepLink(self.statusDeepLinkToActivate)
 

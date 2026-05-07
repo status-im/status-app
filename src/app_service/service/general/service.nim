@@ -26,6 +26,7 @@ QtObject:
     events: EventEmitter
     threadpool: ThreadPool
     timeoutInMilliseconds: int
+    messengerStartScheduled: bool
 
   proc delete*(self: Service)
   proc newService*(events: EventEmitter, threadpool: ThreadPool): Service =
@@ -39,6 +40,9 @@ QtObject:
       createDir(app_constants.ROOTKEYSTOREDIR)
 
   proc startMessenger*(self: Service) =
+    if self.messengerStartScheduled:
+      return
+    self.messengerStartScheduled = true
     let arg = AsyncStartMessengerTaskArg(
       tptr: asyncStartMessengerTask,
       vptr: cast[uint](self.vptr),
