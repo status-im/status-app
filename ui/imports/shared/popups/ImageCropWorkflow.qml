@@ -41,6 +41,7 @@ Item {
 
         title: root.imageFileDialogTitle
         currentFolder: root.userSelectedImage ? imageCropper.source.substr(0, imageCropper.source.lastIndexOf("/")) : fileDialog.picturesShortcut
+        usePhotoLibrary: true
         nameFilters: [qsTr("Supported image formats (%1)").arg(UrlUtils.validImageNameFilters)]
         onAccepted: {
             if (fileDialog.selectedFiles.length > 0) {
@@ -81,25 +82,34 @@ Item {
         id: imageCropperModal
 
         headerSettings.title: root.title
+        fullScreenSheet: false
 
         width: root.roundedImage ? 480 : 580
-        StatusImageCropPanel {
-            id: imageCropper
-            objectName: "profileImageCropper"
+        topPadding: header.height
+        bottomPadding: footer.height
 
-            implicitHeight: root.roundedImage ? 350 : 370
+        contentItem: Item {
+            implicitWidth: imageCropper.implicitWidth + 2 * (Theme.bigPadding + Theme.halfPadding / 2)
+            implicitHeight: imageCropper.implicitHeight + 2 * Theme.bigPadding
 
-            anchors {
-                fill: parent
-                leftMargin: Theme.bigPadding + Theme.halfPadding / 2
-                rightMargin: Theme.bigPadding + Theme.halfPadding / 2
-                topMargin: Theme.bigPadding
-                bottomMargin: Theme.bigPadding
+            StatusImageCropPanel {
+                id: imageCropper
+                objectName: "profileImageCropper"
+
+                implicitHeight: root.roundedImage ? 350 : 370
+
+                anchors {
+                    fill: parent
+                    leftMargin: Theme.bigPadding + Theme.halfPadding / 2
+                    rightMargin: Theme.bigPadding + Theme.halfPadding / 2
+                    topMargin: Theme.bigPadding
+                    bottomMargin: Theme.bigPadding
+                }
+
+                margins: root.roundedImage ? 10 : 20
+                windowStyle: root.roundedImage ? StatusImageCrop.WindowStyle.Rounded : StatusImageCrop.WindowStyle.Rectangular
+                enableCheckers: true
             }
-
-            margins: root.roundedImage ? 10 : 20
-            windowStyle: root.roundedImage ? StatusImageCrop.WindowStyle.Rounded : StatusImageCrop.WindowStyle.Rectangular
-            enableCheckers: true
         }
 
         rightButtons: [
@@ -118,4 +128,3 @@ Item {
         onClosed: root.done()
     } // StatusModal
 } // Item
-

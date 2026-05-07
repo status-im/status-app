@@ -498,6 +498,7 @@ Control {
         title: qsTr("Please choose an image")
         currentFolder: picturesShortcut
         selectMultiple: true
+        usePhotoLibrary: true
         nameFilters: [
             qsTr("Image files (%1)").arg(UrlUtils.validImageNameFilters)
         ]

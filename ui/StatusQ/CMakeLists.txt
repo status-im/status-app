@@ -264,7 +264,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     find_library(WebKit WebKit)
     find_library(UserNotifications UserNotifications)
     find_library(CoreMotion CoreMotion)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion})
+    find_library(PhotosUI PhotosUI)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion} ${PhotosUI})
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/shareutils_ios.mm

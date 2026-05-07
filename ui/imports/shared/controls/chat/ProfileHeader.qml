@@ -146,7 +146,7 @@ Item {
 
                 onClicked: {
                     if (!!root.icon)
-                        Global.openMenu(editImageMenuComponent, this)
+                        Global.openMenu(editImageMenuComponent, this, {}, Qt.point(0, height + Theme.halfPadding))
                     else
                         Global.openChangeProfilePicPopup(setTempIcon);
                 }
