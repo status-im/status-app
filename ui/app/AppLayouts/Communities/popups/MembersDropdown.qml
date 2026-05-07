@@ -67,7 +67,7 @@ StatusDropdown {
     onOpened: {
         listView.positionViewAtBeginning()
         filterInput.text = ""
-        filterInput.input.edit.forceActiveFocus()
+        filterInput.forceActiveFocus()
     }
 
     QtObject {
@@ -105,17 +105,11 @@ StatusDropdown {
             id: filterInput
 
             Layout.fillWidth: true
+            Layout.preferredHeight: 36
 
             placeholderText: qsTr("Search members")
-            maximumHeight: 36
-            topPadding: 0
-            bottomPadding: 0
 
-            input.asset.width: 15
-            input.asset.height: 15
-            input.leftPadding: 13
-            input.font.pixelSize: Theme.additionalTextSize
-            input.placeholder.font.pixelSize: Theme.additionalTextSize
+            font.pixelSize: Theme.additionalTextSize
         }
 
         StatusBaseText {

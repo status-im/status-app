@@ -94,12 +94,11 @@ Item {
             }
 
             HeaderButton {
+                id: searchBtn
                 objectName: "searchButton"
                 icon.name: "search"
                 tooltip.text: qsTr("Search")
                 checkable: true
-                checked: searchInput.visible
-                onToggled: searchInput.visible = checked
             }
         }
 
@@ -113,11 +112,13 @@ Item {
             Layout.bottomMargin: 4
             Layout.preferredHeight: 40
             KeyNavigation.tab: channelList
-            Keys.onEscapePressed: visible = false
+            Keys.onEscapePressed: searchBtn.checked = false
             placeholderText: qsTr("Search chats...")
-            visible: false
-            onVisibleChanged: input.edit.clear()
-            focus: visible
+            visible: searchBtn.checked
+            onVisibleChanged: {
+                clear()
+                if (visible) forceActiveFocus()
+            }
         }
 
         // loading panel
@@ -147,7 +148,7 @@ Item {
                         SQUtils.SearchFilter {
                             roleName: "name"
                             searchPhrase: searchInput.text
-                            enabled: !!searchPhrase
+                            enabled: searchInput.visible && !!searchPhrase
                         }
                     ]
                     sorters: RoleSorter {

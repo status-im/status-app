@@ -1012,10 +1012,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Mainnet data verified by Nimbus</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Application Logs</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1121,10 +1117,6 @@
     </message>
     <message>
         <source>enable</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3943,10 +3935,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <name>ConfirmationDialog</name>
     <message>
         <source>Confirm</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reject</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -8079,14 +8067,6 @@ Are you sure you want to do this?</source>
     <name>FollowingAddresses</name>
     <message>
         <source>Search for name, ENS or address</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -14813,14 +14793,6 @@ to load</source>
 <context>
     <name>ProfileShowcasePanel</name>
     <message>
-        <source>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>In showcase</source>
         <translation type="unfinished"></translation>
     </message>
@@ -15503,14 +15475,6 @@ to load</source>
     <name>SavedAddresses</name>
     <message>
         <source>Search for name, ENS or address</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -19441,10 +19405,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>BaseScan</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status Explorer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

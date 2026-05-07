@@ -16,11 +16,10 @@ Control {
     property url image
     property color color
     property bool amISectionAdmin
-    property bool searchActive
+    property alias searchActive: searchButton.checked
 
     signal infoButtonClicked
     signal shareOwnProfileRequested
-    signal searchRequested(bool toggled)
 
     padding: Theme.halfPadding
     rightPadding: Theme.padding
@@ -55,11 +54,11 @@ Control {
         }
 
         HeaderButton {
+            id: searchButton
             objectName: "searchButton"
             icon.name: "search"
             checkable: true
-            checked: root.searchActive
-            onToggled: root.searchRequested(checked)
+            checked: false
             tooltip.text: qsTr("Search")
         }
     }

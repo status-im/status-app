@@ -1015,10 +1015,6 @@
         <translation>Minimalizovat do tray ikony při zavření</translation>
     </message>
     <message>
-        <source>Mainnet data verified by Nimbus</source>
-        <translation>Data mainnetu ověřena Nimbusem</translation>
-    </message>
-    <message>
         <source>Application Logs</source>
         <translation>Logy aplikace</translation>
     </message>
@@ -1125,10 +1121,6 @@
     <message>
         <source>enable</source>
         <translation>povolit</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</source>
-        <translation>Opravdu chcete %1 Nimbus proxy? Pro projevení této změny musíte restartovat aplikaci.</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -3965,10 +3957,6 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     <message>
         <source>Confirm</source>
         <translation>Potvrdit</translation>
-    </message>
-    <message>
-        <source>Reject</source>
-        <translation>Odmítnout</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -8124,14 +8112,6 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>Search for name, ENS or address</source>
         <translation>Hledat jméno, ENS nebo adresu</translation>
-    </message>
-    <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Vaše hledání je příliš cool (použijte pouze A-Z a 0-9, jednu mezeru, pomlčky a podtržítka)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Vaše hledání obsahuje neplatné znaky (použijte pouze A-Z a 0-9, jednu mezeru, pomlčky a podtržítka)</translation>
     </message>
     <message>
         <source>No following addresses found. Check spelling or whether the address is correct.</source>
@@ -14921,14 +14901,6 @@ selhalo</translation>
 <context>
     <name>ProfileShowcasePanel</name>
     <message>
-        <source>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Vaše hledání je příliš cool (použijte pouze A-Z a 0-9, pomlčky a podtržítka)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Vaše hledání obsahuje neplatné znaky (použijte pouze A-Z a 0-9, pomlčky a podtržítka)</translation>
-    </message>
-    <message>
         <source>In showcase</source>
         <translation>Ve vitríně</translation>
     </message>
@@ -15614,14 +15586,6 @@ selhalo</translation>
     <message>
         <source>Search for name, ENS or address</source>
         <translation>Hledat jméno, ENS nebo adresu</translation>
-    </message>
-    <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Vaše hledání je příliš cool (použijte pouze A-Z a 0-9, jednu mezeru, pomlčky a podtržítka)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Vaše hledání obsahuje neplatné znaky (použijte pouze A-Z a 0-9, jednu mezeru, pomlčky a podtržítka)</translation>
     </message>
     <message>
         <source>Your saved addresses will appear here</source>
@@ -19575,10 +19539,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>BaseScan</source>
         <translation>BaseScan</translation>
-    </message>
-    <message>
-        <source>Status Explorer</source>
-        <translation>Status Explorer</translation>
     </message>
     <message>
         <source>BscScan</source>

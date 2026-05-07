@@ -34,7 +34,7 @@ StatusMenu {
     implicitWidth: 289
 
     function resetView() {
-        tokensSearchBox.reset()
+        tokensSearchBox.clear()
         collectiblesSearchBox.reset()
     }
 
@@ -106,7 +106,7 @@ StatusMenu {
                     Layout.fillWidth: true
                     Layout.leftMargin: 8
                     Layout.rightMargin: 8
-                    input.height: 36
+                    Layout.preferredHeight: 36
                     placeholderText: qsTr("Search asset name")
                 }
 
@@ -169,7 +169,7 @@ StatusMenu {
                     Layout.fillWidth: true
                     Layout.leftMargin: 8
                     Layout.rightMargin: 8
-                    input.height: 36
+                    Layout.preferredHeight: 36
                     placeholderText: qsTr("Search collectible name")
                 }
 

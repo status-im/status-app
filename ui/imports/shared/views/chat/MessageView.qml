@@ -1114,7 +1114,6 @@ Loader {
                             root.emojiReactionLimitReached
                             return !root.emojiReactionLimitReached && !root.isViewMemberMessagesePopup
                         }
-                        anchors.verticalCenter: parent.verticalCenter
                         emojiModel: emojiPopup.fullModel
                         onToggleReaction: hexcode => root.emojiReactionToggled(root.messageId, hexcode)
                         onOpenEmojiPopup: (parent, mouse) => {

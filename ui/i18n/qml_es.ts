@@ -1012,10 +1012,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Mainnet data verified by Nimbus</source>
-        <translation>Datos de Mainnet verificados por Nimbus</translation>
-    </message>
-    <message>
         <source>Application Logs</source>
         <translation>Registros de la aplicación</translation>
     </message>
@@ -1122,10 +1118,6 @@
     <message>
         <source>enable</source>
         <translation>habilitar</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</source>
-        <translation>¿Estás seguro de que quieres %1 el proxy de Nimbus? Necesitas reiniciar la aplicación para que este cambio surta efecto.</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -3951,10 +3943,6 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <message>
         <source>Confirm</source>
         <translation>Confirmar</translation>
-    </message>
-    <message>
-        <source>Reject</source>
-        <translation>Rechazar</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -8094,14 +8082,6 @@ Are you sure you want to do this?</source>
     <message>
         <source>Search for name, ENS or address</source>
         <translation type="unfinished">Buscar por nombre, ENS o dirección</translation>
-    </message>
-    <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished">Tu búsqueda es demasiado genial (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished">Tu búsqueda contiene caracteres inválidos (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
     </message>
     <message>
         <source>No following addresses found. Check spelling or whether the address is correct.</source>
@@ -14831,14 +14811,6 @@ al cargar</translation>
 <context>
     <name>ProfileShowcasePanel</name>
     <message>
-        <source>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Tu búsqueda es demasiado genial (usa solo A-Z y 0-9, guiones y guiones bajos)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Tu búsqueda contiene caracteres inválidos (usa solo A-Z y 0-9, guiones y guiones bajos)</translation>
-    </message>
-    <message>
         <source>In showcase</source>
         <translation>En la vitrina</translation>
     </message>
@@ -15522,14 +15494,6 @@ al cargar</translation>
     <message>
         <source>Search for name, ENS or address</source>
         <translation>Buscar por nombre, ENS o dirección</translation>
-    </message>
-    <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Tu búsqueda es demasiado genial (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Tu búsqueda contiene caracteres inválidos (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
     </message>
     <message>
         <source>Your saved addresses will appear here</source>
@@ -19473,10 +19437,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>BaseScan</source>
         <translation>BaseScan</translation>
-    </message>
-    <message>
-        <source>Status Explorer</source>
-        <translation></translation>
     </message>
     <message>
         <source>BscScan</source>
