@@ -240,16 +240,24 @@ QtObject:
     if items.len == 0:
       return
 
+    var newItems: seq[MemberItem] = @[]
+    let first = self.items.len
+    for it in items:
+      if self.pubKeyIndex.hasKey(it.pubKey):
+        continue
+      self.pubKeyIndex[it.pubKey] = first + newItems.len
+      newItems.add(it)
+
+    if newItems.len == 0:
+      return
+
     let modelIndex = newQModelIndex()
     defer: modelIndex.delete
 
-    let first = self.items.len
-    let last = first + items.len - 1
+    let last = first + newItems.len - 1
 
     self.beginInsertRows(modelIndex, first, last)
-    for i, it in items:
-      self.pubKeyIndex[it.pubKey] = first + i
-    self.items.add(items)
+    self.items.add(newItems)
     self.endInsertRows()
     self.countChanged()
 

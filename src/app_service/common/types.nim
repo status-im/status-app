@@ -116,3 +116,13 @@ type
 
   MessengerStartedArgs* = ref object of Args
     error*: string
+
+  # Minimal projection of a ChatMember used to seed the contacts cache with
+  # status-go-enriched visual identity. Lives here so the contacts service does
+  # not have to import chat/dto.
+  MemberSeed* = object
+    id*: string
+    alias*: string
+    colorId*: int
+    compressedPubKey*: string
+    emojiHash*: string
