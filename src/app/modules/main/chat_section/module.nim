@@ -636,11 +636,13 @@ proc getChatItemFromChatDto(
 
   var memberRole = self.getUserMemberRole(chatDto.members)
 
+  let community {.cursor.} = self.controller.getCommunityById(communityId)
+
   if chatDto.chatType != ChatType.PrivateGroupChat:
-    memberRole = self.controller.getCommunityById(communityId).memberRole
+    memberRole = community.memberRole
 
   if memberRole == MemberRole.None and len(chatDto.communityId) != 0:
-    memberRole = self.controller.getCommunityById(communityId).memberRole
+    memberRole = community.memberRole
 
   var categoryOpened = true
 
@@ -661,8 +663,8 @@ proc getChatItemFromChatDto(
   var tokenGated = false
   if self.controller.isCommunity:
     # NOTE: workaround for new community chat, which is delivered in chatDto before the community will know about that
-    if self.controller.getCommunityById(communityId).hasCommunityChat(chatDto.id):
-      let communityChat = self.controller.getCommunityById(communityId).getCommunityChat(chatDto.id)
+    if community.hasCommunityChat(chatDto.id):
+      let communityChat {.cursor.} = community.getCommunityChat(chatDto.id)
       # Some properties are only available on CommunityChat (they are useless for normal chats)
       canPost = communityChat.canPost
       canView = communityChat.canView
@@ -690,7 +692,7 @@ proc getChatItemFromChatDto(
     chatDto.chatType.int,
     memberRole,
     chatDto.timestamp.int,
-    self.controller.getMessagesParsedPlainText(chatDto.lastMessage, self.controller.getCommunityById(communityId).chats),
+    self.controller.getMessagesParsedPlainText(chatDto.lastMessage, community.chats),
     hasNotification,
     notificationsCount,
     chatDto.muted,
