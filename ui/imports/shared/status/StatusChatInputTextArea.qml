@@ -249,6 +249,10 @@ StatusQ.StatusTextArea {
         suggestionsFilterAdaptor.invalidateFilter()
     }
 
+    onPreeditTextChanged: {
+        suggestionsFilterAdaptor.invalidateFilter()
+    }
+
     onLinkActivated: {
         const mention = d.getMentionAtPosition(cursorPosition - 1)
         if(mention) {
@@ -738,24 +742,31 @@ StatusQ.StatusTextArea {
 
         sourceModel: root.usersModel
 
-        filter: getFilter().substring(
-                    lastAtPosition + 1,
-                    root.cursorPosition).replace(/\*/g, "")
+        filter: {
+            const effectiveCursor = root.cursorPosition + root.preeditText.length
+            return getFilter().substring(lastAtPosition + 1, effectiveCursor).replace(/\*/g, "")
+        }
 
         property int lastAtPosition: -1 // todo: rename to lastMentionAtPosition
         property int cursorPosition: root.cursorPosition
 
         function getFilter() {
-            if (root.text.length === 0 ||
-                    root.cursorPosition === 0)
-                return ""
-
-            return StatusQUtils.StringUtils.plainText(root.text)
+            const committed = root.text.length > 0
+                ? StatusQUtils.StringUtils.plainText(root.text)
+                : ""
+            if (!root.preeditText)
+                return committed
+            // preeditText sits at cursorPosition in the visual text; splice it
+            // into the committed plain text so the filter sees the full input
+            return committed.substring(0, root.cursorPosition)
+                   + root.preeditText
+                   + committed.substring(root.cursorPosition)
         }
 
         function invalidateFilter() {
             const filter = getFilter()
-            lastAtPosition = filter.substring(0, root.cursorPosition).lastIndexOf("@")
+            const effectiveCursor = root.cursorPosition + root.preeditText.length
+            lastAtPosition = filter.substring(0, effectiveCursor).lastIndexOf("@")
         }
     }
 
