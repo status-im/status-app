@@ -539,6 +539,8 @@ Control {
         property bool shouldHide: false
 
         function selectItem(index: int) {
+            InputMethod.commit()
+
             const item = messageInputField.suggestionsModel.get(index)
 
             messageInputField.forceActiveFocus()
