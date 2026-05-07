@@ -371,11 +371,7 @@ method onNodeLogin*[T](self: Module[T], err: string, account: AccountDto, settin
 
   self.controller.setLoggedInAccount(account)
 
-  let err2 = self.delegate.userLoggedIn()
-  if err2.len != 0:
-    error "error from userLoggedIn", err2
-    self.onAccountLoginError(err2)
-    return
+  self.delegate.userLoggedIn()
 
 
 method onMessengerStarted*[T](self: Module[T], err: string) =
