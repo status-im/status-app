@@ -20,6 +20,7 @@ QtObject {
     property bool featureEnabled: true
     required property var connectorController
     property string httpUserAgent: ""          // Custom user agent for web profiles
+    property bool currentTabIncognito: false   // Drives off-the-record clientId for the active tab
 
     readonly property ProfileParams defaultProfileParams: ProfileParams {
         userId: root.userUID
@@ -51,6 +52,7 @@ QtObject {
     readonly property ConnectorManager connectorManager: ConnectorManager {
         id: connectorManager
         connectorController: root.connectorController  // (shared_modules/connector/controller.nim)
+        offTheRecord: root.currentTabIncognito
 
         // Forward events to Eip1193ProviderAdapter
         onConnectEvent: (info) => eip1193ProviderAdapter.connectEvent(info)

@@ -207,6 +207,11 @@ WalletConnectSDKBase {
                     continue
                 }
 
+                // Wallet section never shows off-the-record (ephemeral) sessions.
+                if ((dapp.clientId || "").indexOf("#ephemeral") > 0) {
+                    continue
+                }
+
                 activeSessions[dapp.url] = d.buildSession(dapp.url, dapp.name, dapp.iconUrl, "", dapp.sharedAccount, [dapp.chainId], dapp.clientId)
             }
             callback(activeSessions)
@@ -225,6 +230,7 @@ WalletConnectSDKBase {
     QtObject {
         id: d
         readonly property var sessionRequests: new Map()
+
         function buildSession(dappUrl, dappName, dappIcon, proposalId, account, chains, clientId) {
             let sessionTemplate = (dappUrl, dappName, dappIcon, proposalId, eipAccount, eipChains, clientId) => {
                 const session = {

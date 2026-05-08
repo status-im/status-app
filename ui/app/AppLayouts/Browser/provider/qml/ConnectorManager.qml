@@ -12,7 +12,10 @@ QtObject {
     property string dappName: ""
     property string dappIconUrl: ""
     property int dappChainId: 1
-    property string clientId: "status-desktop/dapp-browser"
+    property bool offTheRecord: false
+    readonly property string clientId: offTheRecord
+        ? "status-desktop/dapp-browser#ephemeral"
+        : "status-desktop/dapp-browser"
 
     // STATE
     property bool connected: false

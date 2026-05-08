@@ -225,6 +225,14 @@ QtObject:
       error "recallDAppPermissionFinishedRpc failed: ", err=e.msg
       return false
 
+  proc deleteEphemeralDApps*(self: Service): bool =
+    try:
+      return status_go.deleteEphemeralDAppsRpc()
+
+    except Exception as e:
+      error "deleteEphemeralDAppsRpc failed: ", err=e.msg
+      return false
+
   proc getDApps*(self: Service): string =
     try:
       let response = status_go.getPermittedDAppsList()
