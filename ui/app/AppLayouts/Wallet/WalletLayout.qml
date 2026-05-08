@@ -61,7 +61,7 @@ Item {
     signal manageNetworksRequested()
 
     // TODO: remove tokenType parameter from signals below
-    signal sendTokenRequested(string senderAddress, string gorupKey, int tokenType)
+    signal sendTokenRequested(string senderAddress, string groupKey, int tokenType)
 
     signal openSwapModalRequested(var swapFormData)
 
@@ -315,7 +315,7 @@ Item {
             onDappDisconnectRequested: (dappUrl) =>root.dappDisconnectRequested(dappUrl)
             onLaunchBuyCryptoModal: d.launchBuyCryptoModal()
 
-            onSendTokenRequested: (senderAddress, gorupKey, tokenType) => root.sendTokenRequested(senderAddress, gorupKey, tokenType)
+            onSendTokenRequested: (senderAddress, groupKey, tokenType) => root.sendTokenRequested(senderAddress, groupKey, tokenType)
 
             onManageNetworksRequested: root.manageNetworksRequested()
         }

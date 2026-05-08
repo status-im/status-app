@@ -239,8 +239,8 @@ Loader {
         function onRemoveContactRequested(publicKey) {
             root.invoke(() => root.item.openRemoveContactConfirmationPopup(publicKey))
         }
-        function onOpenPopupRequested(popupComponent, params, cb) {
-            root.invoke(() => root.item.openPopup(popupComponent, params, cb))
+        function onOpenPopupRequested(popupComponent, params) {
+            root.invoke(() => root.item.openPopup(popupComponent, params))
         }
         function onClosePopupRequested() {
             root.invoke(() => root.item.closePopup())
