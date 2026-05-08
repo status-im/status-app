@@ -251,6 +251,23 @@ StatusQ.StatusTextArea {
 
     onPreeditTextChanged: {
         suggestionsFilterAdaptor.invalidateFilter()
+
+        if (!preeditText) {
+            d.emojiFilter = ""
+            return
+        }
+
+        // Reconstruct plain text visible to the user up to the effective cursor
+        const committed = root.text.length > 0
+            ? StatusQUtils.StringUtils.plainText(root.text).substring(0, root.cursorPosition)
+            : ""
+        const beforeCursor = committed + preeditText
+        const colonIndex = beforeCursor.lastIndexOf(':')
+        if (colonIndex >= 0 && d.validSubstr(beforeCursor.substring(colonIndex))) {
+            d.emojiFilter = beforeCursor.substring(colonIndex)
+            return
+        }
+        d.emojiFilter = ""
     }
 
     onLinkActivated: {

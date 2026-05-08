@@ -513,6 +513,8 @@ Control {
         width: root.width
 
         onClicked: index => {
+            InputMethod.commit()
+
             if (index === undefined) {
                 index = emojiSuggestions.listView.currentIndex
             }
