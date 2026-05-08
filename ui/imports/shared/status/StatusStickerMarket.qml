@@ -198,6 +198,7 @@ Item {
 
         StatusBackButton {
             id: btnBack
+            objectName: "stickerMarketBackButton"
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.leftMargin: Theme.padding / 2
