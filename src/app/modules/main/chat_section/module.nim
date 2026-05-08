@@ -374,6 +374,7 @@ method onChatsLoaded*(
   ) =
   self.chatsLoaded = true
 
+  let community {.cursor.} = self.controller.getCommunityById(communityId)
   # Pre-populate the contacts cache with community members
   contactService.seedFromChatMembers(community.members.toMemberSeeds())
 
