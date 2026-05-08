@@ -16,6 +16,8 @@ import AppLayouts.Wallet.services.dapps.types
 import shared.stores
 import utils
 
+import AppLayouts.Browser.provider.qml 1.0
+
 import "types"
 
 /// Act as another layer of abstraction to the WalletConnectSDKBase
@@ -207,8 +209,8 @@ WalletConnectSDKBase {
                     continue
                 }
 
-                // Wallet section never shows off-the-record (ephemeral) sessions.
-                if ((dapp.clientId || "").indexOf("#ephemeral") > 0) {
+                // Wallet section never shows off-the-record (ephemeral) sessions (suffix matches DB cleanup).
+                if (ConnectorConstants.isEphemeralClientId(dapp.clientId)) {
                     continue
                 }
 

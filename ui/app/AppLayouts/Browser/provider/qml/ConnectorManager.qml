@@ -13,9 +13,7 @@ QtObject {
     property string dappIconUrl: ""
     property int dappChainId: 1
     property bool offTheRecord: false
-    readonly property string clientId: offTheRecord
-        ? "status-desktop/dapp-browser#ephemeral"
-        : "status-desktop/dapp-browser"
+    readonly property string clientId: ConnectorConstants.clientIdFor(offTheRecord)
 
     // STATE
     property bool connected: false
@@ -161,7 +159,6 @@ QtObject {
             console.log("[ConnectorManager] Ignoring signal for other origin:", event.url, "expected:", dappOrigin)
             return false
         }
-
         // Filter by clientId
         if (event.clientId !== undefined && event.clientId !== "" && clientId !== "" && event.clientId !== clientId) {
             console.log("[ConnectorManager] Ignoring signal for other clientId:", event.clientId, "expected:", clientId)
