@@ -261,23 +261,23 @@ QtObject {
         openSend(params)
     }
 
-    function sendToken(senderAddress, gorupKey, tokenType) {
+    function sendToken(senderAddress, groupKey, tokenType) {
         let sendType = Constants.SendType.Transfer
         let selectedChainId = 0
         if (tokenType === Constants.TokenType.ERC721)  {
             sendType = Constants.SendType.ERC721Transfer
             selectedChainId =
-                    SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "key", gorupKey, "chainId")
+                    SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "key", groupKey, "chainId")
         }
         else if(tokenType === Constants.TokenType.ERC1155) {
             sendType = Constants.SendType.ERC1155Transfer
             selectedChainId =
-                    SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "key", gorupKey, "chainId")
+                    SQUtils.ModelUtils.getByKey(root.collectiblesBySymbolModel, "key", groupKey, "chainId")
         }
         else {
             let layer1chainId = SQUtils.ModelUtils.getByKey(root.filteredFlatNetworksModel, "layer", "1", "chainId")
             let networksChainIdArray = SQUtils.ModelUtils.modelToFlatArray(root.filteredFlatNetworksModel, "chainId")
-            const tokensForSelectedAsset = SQUtils.ModelUtils.getByKey(root.tokenGroupsModel, "key", gorupKey)
+            const tokensForSelectedAsset = SQUtils.ModelUtils.getByKey(root.tokenGroupsModel, "key", groupKey)
             if (!!tokensForSelectedAsset) {
                 let chainToken = SQUtils.ModelUtils.getByKey(tokensForSelectedAsset.tokens, "chainId", layer1chainId)
                 if (!chainToken) {
@@ -298,7 +298,7 @@ QtObject {
         let params = {
             sendType: sendType,
             selectedAccountAddress: senderAddress,
-            selectedGroupKey: gorupKey,
+            selectedGroupKey: groupKey,
             selectedChainId: selectedChainId,
         }
 

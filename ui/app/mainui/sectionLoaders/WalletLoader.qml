@@ -110,8 +110,8 @@ Loader {
         function onDappDisconnectRequested(dappUrl) {
             root.dappsServiceLoader.dappDisconnectRequested(dappUrl)
         }
-        function onSendTokenRequested(senderAddress, gorupKey, tokenType) {
-            root.popupHandler.sendToken(senderAddress, gorupKey, tokenType)
+        function onSendTokenRequested(senderAddress, groupKey, tokenType) {
+            root.popupHandler.sendToken(senderAddress, groupKey, tokenType)
         }
         function onOpenSwapModalRequested(swapFormData) {
             root.popupHandler.launchSwapSpecific(swapFormData)
