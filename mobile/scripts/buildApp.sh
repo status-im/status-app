@@ -41,8 +41,21 @@ if [[ "${OS}" == "android" ]]; then
   # Export BUILD_VARIANT for build.gradle to pick up
   export BUILD_VARIANT
 
+  # Reproducibility flags for fdroid rebuilds:
+  #   --build-id=none drops the .note.gnu.build-id section
+  #   -ffile-prefix-map remaps absolute source paths so they don't depend on $HOME or $BUILD_DIR.
+  QMAKE_REPRO_ARGS=(
+    "QMAKE_LFLAGS+=-Wl,--build-id=none"
+    "QMAKE_CFLAGS+=-ffile-prefix-map=${BUILD_DIR}=."
+    "QMAKE_CFLAGS+=-ffile-prefix-map=${REPO_ROOT}=."
+    "QMAKE_CFLAGS+=-ffile-prefix-map=${HOME}=."
+    "QMAKE_CXXFLAGS+=-ffile-prefix-map=${BUILD_DIR}=."
+    "QMAKE_CXXFLAGS+=-ffile-prefix-map=${REPO_ROOT}=."
+    "QMAKE_CXXFLAGS+=-ffile-prefix-map=${HOME}=."
+  )
   "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec android-clang \
-    ANDROID_ABIS="${ANDROID_ABI:-arm64-v8a}" VERSION="$VERSION" "${QMAKE_DEFINES[@]}" -after
+    ANDROID_ABIS="${ANDROID_ABI:-arm64-v8a}" VERSION="$VERSION" "${QMAKE_DEFINES[@]}" \
+    -after "${QMAKE_REPRO_ARGS[@]}"
 
   make -j"$(nproc)" apk_install_target
 
@@ -88,6 +101,9 @@ if [[ "${OS}" == "android" ]]; then
   BUILT=""
   if [[ -f "$APK_OUT" ]]; then
     cp "$APK_OUT" "$BIN_DIR/${OUTPUT_NAME}.apk"
+    BUILT="$BIN_DIR/${OUTPUT_NAME}.apk"
+  elif [[ -f "$APK_OUT_UNSIGNED" ]]; then
+    cp "$APK_OUT_UNSIGNED" "$BIN_DIR/${OUTPUT_NAME}.apk"
     BUILT="$BIN_DIR/${OUTPUT_NAME}.apk"
   fi
   if [[ -f "$AAB_OUT" ]]; then

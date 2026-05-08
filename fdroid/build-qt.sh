@@ -6,6 +6,23 @@ QT_VERSION="${QT_VERSION:-6.9.2}"
 QT_MODULES=qtbase,qtdeclarative,qt5compat,qtmultimedia,qtshadertools,qtimageformats,qtwebview,qtscxml,qtsvg,qtconnectivity,qtwebsockets,qtpositioning,qtlottie,qtwebchannel
 (cd "$QT_SRCDIR" && perl init-repository --module-subset="$QT_MODULES")
 
+# Reproducibility: 
+#   add_link_options: strips .note.gnu.build-id from every .so
+#   add_compile_options: make sure that paths dont leak into final build.
+QT5_CMAKELISTS="$QT_SRCDIR/CMakeLists.txt"
+if ! grep -q 'build-id=none' "$QT5_CMAKELISTS"; then
+    sed -i '/^project(Qt$/,/^)$/{/^)$/a\
+add_link_options("LINKER:--build-id=none")\
+add_compile_options("-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.")\
+add_compile_options("-ffile-prefix-map=${CMAKE_BINARY_DIR}=.")\
+add_compile_options("-ffile-prefix-map=$ENV{HOME}=.")
+}' "$QT5_CMAKELISTS"
+fi
+
+# Reproducibility: rewrite absolute build/install paths embedded in compiled
+# objects (debug strings, __FILE__, etc.) so they match across rebuilders.
+QT_REPRO_CFLAGS="-ffile-prefix-map=${QT_SRCDIR}=. -ffile-prefix-map=${BUILD_DIR}=. -ffile-prefix-map=${HOME}=."
+
 # Build Qt for host (required as cross-compilation toolchain for Android)
 mkdir -p build_qt_host && cd build_qt_host
 
@@ -18,6 +35,8 @@ mkdir -p build_qt_host && cd build_qt_host
     -nomake tests \
     -- \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_FLAGS_INIT="$QT_REPRO_CFLAGS" \
+    -DCMAKE_CXX_FLAGS_INIT="$QT_REPRO_CFLAGS" \
     -DCMAKE_MESSAGE_LOG_LEVEL=WARNING \
     -Wno-dev
 
@@ -50,6 +69,8 @@ mkdir -p build_qt_android && cd build_qt_android
     -DFFMPEG_DIR="$FFMPEG_DIR" \
     -DFEATURE_ffmpeg=ON \
     -DQT_DEFAULT_MEDIA_BACKEND=ffmpeg \
+    -DCMAKE_C_FLAGS_INIT="$QT_REPRO_CFLAGS" \
+    -DCMAKE_CXX_FLAGS_INIT="$QT_REPRO_CFLAGS" \
     -DCMAKE_MESSAGE_LOG_LEVEL=WARNING \
     -Wno-dev
 

@@ -34,6 +34,11 @@ $(STATUS_GO_LIB):
 	@echo "Building status-go mobile library"
 	@mkdir -p $(LIB_PATH)
 ifeq ($(OS),android)
+	# Reproducibility flags for status-go (GOFLAGS,CGO_CFLAGS,CGO_CXXFLAGS,GOMODCACHE):
+	  GOFLAGS="-trimpath -buildvcs=false" \
+	  GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
+	  CGO_CFLAGS="-ffile-prefix-map=$(HOME)=." \
+	  CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=." \
 	  CC="$(CC)" $(MAKE) -C ../vendor/status-go statusgo-android-library \
 		ARCH=$(ARCH) \
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
@@ -43,6 +48,10 @@ ifeq ($(OS),android)
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
 else ifeq ($(OS),ios)
+	GOFLAGS="-trimpath -buildvcs=false" \
+	GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
+	CGO_CFLAGS="-ffile-prefix-map=$(HOME)=." \
+	CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=." \
 	$(MAKE) -C ../vendor/status-go statusgo-ios-library \
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
