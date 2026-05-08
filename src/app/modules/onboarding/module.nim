@@ -371,7 +371,7 @@ method onNodeLogin*[T](self: Module[T], err: string, account: AccountDto, settin
 
   self.controller.setLoggedInAccount(account)
 
-  self.delegate.userLoggedIn()
+  discard self.delegate.userLoggedIn()
 
 
 method onMessengerStarted*[T](self: Module[T], err: string) =
