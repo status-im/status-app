@@ -2,6 +2,8 @@ import QtQuick
 
 import StatusQ.Core.Utils
 
+import "../../../Browser/provider/qml/Utils.js" as BrowserProviderUtils
+
 QObject {
     id: root
     objectName: "DAppsModel"
@@ -36,7 +38,7 @@ QObject {
             }
 
             name = name || ""
-            iconUrl = iconUrl || ""
+            iconUrl = BrowserProviderUtils.normalizeFaviconUrl((iconUrl || "").toString())
             connectorBadge = connectorBadge || ""
             clientId = clientId || ""
             accountAddresses = accountAddresses || []

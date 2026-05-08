@@ -147,7 +147,7 @@ QtObject {
         dappUrl = urlStr
         dappOrigin = Utils.normalizeOrigin(urlStr)
         dappName = name || Utils.extractDomainName(urlStr)
-        dappIconUrl = iconUrl ? iconUrl.toString() : ""
+        dappIconUrl = Utils.normalizeFaviconUrl(iconUrl ? iconUrl.toString() : "")
         dappChainId = 1
     }
 
