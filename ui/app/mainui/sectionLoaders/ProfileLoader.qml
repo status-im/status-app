@@ -59,9 +59,28 @@ Loader {
     required property int paddingFactor
     required property var whitelistedDomainsModel
 
-    property int settingsSubsection: Constants.settingsSubsection.profile
+    property int settingsSubsection: -1
     property int settingsSubSubsection: -1
     property real leftPanelWidthOverride: 0
+    property bool forceSubsectionNavigation: false
+
+    onSettingsSubsectionChanged: {
+        if (root.item) {
+            root.item.settingsSubsection = root.settingsSubsection
+        }
+    }
+
+    onSettingsSubSubsectionChanged: {
+        if (root.item) {
+            root.item.settingsSubSubsection = root.settingsSubSubsection
+        }
+    }
+
+    onForceSubsectionNavigationChanged: {
+        if (root.item) {
+            root.item.forceSubsectionNavigation = root.forceSubsectionNavigation
+        }
+    }
 
     // Signals re-emitted so AppMain can mutate appMainLocalSettings / Theme outside the loader
     signal themeChangeRequested(int theme)
@@ -127,6 +146,7 @@ Loader {
             leftPanelWidthOverride:                 Qt.binding(() => root.leftPanelWidthOverride),
             settingsSubsection:                     Qt.binding(() => root.settingsSubsection),
             settingsSubSubsection:                  Qt.binding(() => root.settingsSubSubsection),
+            forceSubsectionNavigation:              Qt.binding(() => root.forceSubsectionNavigation)
         })
     }
 
