@@ -41,11 +41,6 @@ if [[ "${OS}" == "android" ]]; then
   # Export BUILD_VARIANT for build.gradle to pick up
   export BUILD_VARIANT
 
-  if [[ "$GRADLE_TARGETS" == *"Fdroid"* ]]; then
-    # shellcheck source=../../fdroid/generate-keystore.sh
-    source "$REPO_ROOT/fdroid/generate-keystore.sh" "$REPO_ROOT/status-fdroid.keystore"
-  fi
-
   "$QMAKE_BIN" "$CWD/../wrapperApp/Status.pro" "${QMAKE_CONFIG[@]}" -spec android-clang \
     ANDROID_ABIS="${ANDROID_ABI:-arm64-v8a}" VERSION="$VERSION" "${QMAKE_DEFINES[@]}" -after
 
@@ -88,13 +83,6 @@ if [[ "${OS}" == "android" ]]; then
 
   echo "APK outputs:"
   find build/outputs/apk -name '*.apk' 2>/dev/null || echo "No APKs found"
-
-  # If Gradle produced an unsigned APK (e.g. fdroid build where signing configs
-  # are stripped by fdroid's remove_signing_keys), sign it via the dedicated script.
-  if [[ ! -f "$APK_OUT" && -f "$APK_OUT_UNSIGNED" && -n "${FDROID_STORE_FILE:-}" ]]; then
-    echo "Signing unsigned APK..."
-    "$REPO_ROOT/fdroid/sign-apk.sh"
-  fi
 
   # Copy whichever artifacts were built
   BUILT=""
