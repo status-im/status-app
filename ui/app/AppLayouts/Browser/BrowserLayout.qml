@@ -65,6 +65,12 @@ StatusSectionLayout {
         webViewContext.reloadCurrent()
     }
 
+    function applyIncognitoMode(checked) {
+        webViewContext.setIncognitoCurrent(checked)
+        if (!checked && root.connectorController)
+            root.connectorController.deleteEphemeralDApps()
+    }
+
     Component.onCompleted: {
         savedSessionContext.restoreSession()
     }
@@ -378,7 +384,7 @@ StatusSectionLayout {
                     browserToolbarLoader.activateAddressBar()
                 }
                 function onGoIncognito(checked) {
-                    webViewContext.setIncognitoCurrent(checked)
+                    root.applyIncognitoMode(checked)
                 }
                 function onRequestDownloadsView() {
                     _internal.addNewDownloadTab()
@@ -632,7 +638,7 @@ StatusSectionLayout {
         zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
         onAddNewTab: _internal.addNewTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
-        onGoIncognito: (checked) => webViewContext.setIncognitoCurrent(checked)
+        onGoIncognito: (checked) => root.applyIncognitoMode(checked)
         onZoomIn: webViewContext.changeZoomCurrent(0.1)
         onZoomOut: webViewContext.changeZoomCurrent(-0.1)
         onResetZoomFactor: webViewContext.resetZoomCurrent()
@@ -668,7 +674,7 @@ StatusSectionLayout {
         supportsFind: _internal.currentTabSupportsFindInPage
         onLaunchFindBar: _internal.showFindBar()
 
-        onGoIncognito: checked => webViewContext.setIncognitoCurrent(checked)
+        onGoIncognito: checked => root.applyIncognitoMode(checked)
         onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)
     }
 
@@ -777,6 +783,7 @@ StatusSectionLayout {
         userUID: root.userUID
         featureEnabled: root.dappsEnabled
         connectorController: root.dappsEnabled ? root.connectorController : null
+        currentTabIncognito: _internal.currentTabIncognito
         httpUserAgent: {
             if (localAccountSensitiveSettings.compatibilityMode) {
                 // Google doesn't let you connect if the user agent is Chrome-ish and doesn't satisfy some sort of hidden requirement

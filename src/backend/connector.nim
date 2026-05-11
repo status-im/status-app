@@ -52,6 +52,9 @@ rpc(recallDAppPermissionV2, "connector"):
 rpc(getPermittedDAppsList, "connector"):
   discard
 
+rpc(deleteEphemeralDApps, "connector"):
+  discard
+
 rpc(signAccepted, "connector"):
   args: SignAcceptedArgs
 
@@ -119,6 +122,9 @@ proc sendTransactionRejectedFinishedRpc*(args: RejectedArgs): bool =
 
 proc recallDAppPermissionFinishedRpc*(dAppUrl: string, clientId: string): bool =
   return isSuccessResponse(recallDAppPermissionV2(dAppUrl, clientId))
+
+proc deleteEphemeralDAppsRpc*(): bool =
+  return isSuccessResponse(deleteEphemeralDApps())
 
 proc sendSignAcceptedFinishedRpc*(args: SignAcceptedArgs): bool =
   return isSuccessResponse(signAccepted(args))
