@@ -115,17 +115,6 @@ SettingsContentBase {
                 }
             }
 
-            StatusSettingsLineButton {
-                width: parent.width
-                text: qsTr("Mainnet data verified by Nimbus")
-                isSwitch: true
-                checked: root.advancedStore.isNimbusProxyEnabled
-                onClicked: {
-                    Global.openPopup(enableNimbusProxyComponent)
-                    checked = Qt.binding(() => root.advancedStore.isNimbusProxyEnabled)
-                }
-            }
-
             StatusBaseText {
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -449,27 +438,6 @@ SettingsContentBase {
                     qsTr("enable"))
                 onConfirmButtonClicked: {
                     root.advancedStore.toggleDebug()
-                    close()
-                }
-                onCancelButtonClicked: {
-                    close()
-                }
-            }
-        }
-
-        Component {
-            id: enableNimbusProxyComponent
-            ConfirmationDialog {
-                property bool mode: false
-
-                id: confirmDialog
-                destroyOnClose: true
-                showCancelButton: true
-                confirmationText: qsTr("Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.").arg(root.advancedStore.isNimbusProxyEnabled ?
-                    qsTr("disable") :
-                    qsTr("enable"))
-                onConfirmButtonClicked: {
-                    root.advancedStore.toggleNimbusProxy()
                     close()
                 }
                 onCancelButtonClicked: {
