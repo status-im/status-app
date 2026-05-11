@@ -29,6 +29,8 @@ StatusDropdown {
     QtObject {
         id: d
 
+        readonly property int minimumContentHeight: 440
+
         // FIXME: move me to store
         readonly property int installedPacksCount: root.store.stickersModuleInst.numInstalledStickerPacks
         readonly property var recentStickers: root.store.stickersModuleInst.recent
@@ -57,8 +59,11 @@ StatusDropdown {
     }
 
     enabled: !!d.recentStickers && !!d.stickerPackList
-    width: 360
-    height: 440
+
+    padding: 0
+    implicitWidth: 360
+    implicitHeight: Math.max(contentItem.implicitHeight, d.minimumContentHeight) + topPadding + bottomPadding
+
     background: Rectangle {
         radius: Theme.radius
         color: Theme.palette.background
@@ -86,8 +91,6 @@ StatusDropdown {
         footerContent.visible = true
         stickersContainer.visible = true
     }
-
-    padding: 0
 
     contentItem: ColumnLayout {
         spacing: 0

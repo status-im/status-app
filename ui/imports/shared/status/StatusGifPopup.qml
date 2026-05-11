@@ -62,7 +62,10 @@ StatusDropdown {
     signal gifSelected(string url)
     signal enableThirdpartyServicesRequested
 
-    width: 360
+    padding: 0
+    implicitWidth: 360
+
+    fillHeightOnBottomSheet: true
 
     background: Rectangle {
         radius: Theme.radius
@@ -95,19 +98,19 @@ StatusDropdown {
             confirmationPopupLoader.item.close()
     }
 
-    padding: 0
-
     QtObject {
         id: d
 
+        readonly property int minimumContentHeight: 440
         readonly property int headerMargin: root.Theme.halfPadding
     }
 
     contentItem: Item {
-        implicitWidth: parent.width
-        implicitHeight: childrenRect.height
+        implicitHeight: Math.max(d.minimumContentHeight, contentColumn.implicitHeight)
 
         ColumnLayout {
+            id: contentColumn
+
             anchors.fill: parent
             spacing: 0
 
@@ -160,7 +163,7 @@ StatusDropdown {
                 id: gifsLoader
 
                 active: root.thirdpartyServicesEnabled && root.opened && root.gifUnfurlingEnabled
-                visible: active
+                visible: root.thirdpartyServicesEnabled && root.gifUnfurlingEnabled
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 

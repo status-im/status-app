@@ -1316,6 +1316,7 @@ Item {
         active: appMain.rootStore.sectionsLoaded
         sourceComponent: StatusStickersPopup {
             directParent: appMain.Window.contentItem
+            height: 440
             store: appMain.rootChatStore
             isWalletEnabled: appMain.walletProfileStore.isWalletEnabled
             thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
