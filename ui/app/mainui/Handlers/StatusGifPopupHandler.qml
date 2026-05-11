@@ -41,6 +41,7 @@ QtObject {
 
             width: 360
             height: 440
+
             directParent: _d.popupParent
             relativeX: _d.relativeX !== undefined ? _d.relativeX : directParent.width - popup.width - Theme.halfPadding
             relativeY: -popup.height - Theme.halfPadding
