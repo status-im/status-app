@@ -11,6 +11,33 @@ from scripts.tools.image import Image
 LOG = logging.getLogger(__name__)
 
 
+def set_text_property_on_object(obj, text: str, timeout_msec: int = None) -> None:
+    if timeout_msec is None:
+        timeout_msec = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
+    expected = str(text)
+    obj.forceActiveFocus()
+    obj.clear()
+    obj.text = text
+
+    def _content_matches() -> bool:
+        plain_getter = getattr(obj, 'getPlainText', None)
+        if callable(plain_getter):
+            try:
+                if str(plain_getter()) == expected:
+                    return True
+            except (RuntimeError, AttributeError, TypeError):
+                pass
+        try:
+            return str(obj.text) == expected
+        except (RuntimeError, AttributeError):
+            return False
+
+    assert driver.waitFor(_content_matches, timeout_msec), (
+        f'Text was not set on {getattr(obj, "objectName", obj)!r}; expected={expected!r} '
+        f'text={getattr(obj, "text", "")!r}'
+    )
+
+
 class QObject:
 
     def __init__(self, real_name: [str, dict] = None):
@@ -28,29 +55,7 @@ class QObject:
 
     def set_text_property(self, text):
         """Assign text without driver.type(). Verifies via plain text when available (e.g. RichText inputs)."""
-        expected = str(text)
-        obj = self.object
-        obj.forceActiveFocus()
-        obj.clear()
-        obj.text = text
-
-        def _content_matches() -> bool:
-            plain_getter = getattr(obj, 'getPlainText', None)
-            if callable(plain_getter):
-                try:
-                    if str(plain_getter()) == expected:
-                        return True
-                except (RuntimeError, AttributeError, TypeError):
-                    pass
-            try:
-                return str(obj.text) == expected
-            except (RuntimeError, AttributeError):
-                return False
-
-        assert driver.waitFor(_content_matches, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), (
-            f'Text was not set; expected length={len(expected)} '
-            f'text={getattr(obj, "text", "")!r}'
-        )
+        set_text_property_on_object(self.object, text, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
     @property
     @allure.step('Get object exists {0}')

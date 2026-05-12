@@ -140,6 +140,7 @@ completeAndDeleteSeedPhraseButton = {"container": statusDesktop_mainWindow_overl
 """Confirm recovery phrase modal"""
 confirmRecoveryPhraseModal = {"container": statusDesktop_mainWindow_overlay, "type": "BackupSeedphraseVerify", "unnamed": 1, "visible": True}
 seedInput = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("seedInput_*"), "type": "SeedphraseVerifyInput", "visible": True}
+
 continueButton = {"container": statusDesktop_mainWindow_overlay, "text": "Continue", "type": "StatusButton", "unnamed": 1, "visible": True}
 
 """Keep or delete recovery phrase"""
