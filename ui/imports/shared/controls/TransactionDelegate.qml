@@ -261,7 +261,7 @@ StatusListItem {
             return qsTr("%1 (community asset) from %2 on %3").arg(root.transactionValue).arg(communityInfo).arg(root.networkName)
         }
 
-        if (!modelData.symbol) {
+        if (!modelData.symbol && !root.isNFT) {
             if (!!modelData.tokenAddress) {
                 return qsTr("Unknown token (%1)").arg(modelData.tokenAddress)
             }
@@ -496,7 +496,7 @@ StatusListItem {
                             return "-"
                         }
 
-                        if (!modelData.symbol) {
+                        if (!modelData.symbol && !root.isNFT) {
                             return root.currenciesStore.formatCurrencyAmount(root.cryptoValue, "")
                         }
 
