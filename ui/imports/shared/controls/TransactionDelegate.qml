@@ -240,6 +240,14 @@ StatusListItem {
             return ""
         }
         readonly property bool isSecondIconVisible: secondIconSource !== ""
+
+        readonly property bool stackTitleRow: {
+            if (!root.statusListItemTitleArea || !root.statusListItemTitle)
+                return false
+            const iconsItem = root.statusListItemTitleIcons.item
+            const iconsW = iconsItem ? iconsItem.width : 0
+            return (root.statusListItemTitle.implicitWidth + 4 + iconsW) > root.statusListItemTitleArea.width
+        }
     }
 
     function getSubtitle(allAccounts, description) {
@@ -422,6 +430,7 @@ StatusListItem {
     statusListItemTitleArea.anchors.rightMargin: root.rightPadding
     statusListItemTitle.font.weight: Font.DemiBold
     statusListItemTitle.font.pixelSize: root.loading ? d.loadingPixelSize : d.titlePixelSize
+    statusListItemTitle.wrapMode: Text.WordWrap
 
     // title icons and date
     statusListItemTitleIcons.sourceComponent: Row {
@@ -617,6 +626,25 @@ StatusListItem {
     ]
 
     states: [
+        State {
+            name: "narrowTitleRow"
+            when: d.stackTitleRow && root.state !== "header"
+            AnchorChanges {
+                target: root.statusListItemTitleIcons
+                anchors.left: root.statusListItemTitleArea.left
+                anchors.top: root.statusListItemTitle.bottom
+                anchors.verticalCenter: undefined
+            }
+            PropertyChanges {
+                target: root.statusListItemTitleIcons
+                anchors.leftMargin: 0
+                anchors.topMargin: 2
+            }
+            AnchorChanges {
+                target: root.statusListItemTagsRowLayout
+                anchors.top: root.statusListItemTitleIcons.bottom
+            }
+        },
         State {
             name: "header"
             PropertyChanges {
