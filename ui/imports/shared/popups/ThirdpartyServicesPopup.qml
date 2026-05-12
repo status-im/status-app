@@ -106,7 +106,6 @@ StatusDialog {
 
             InformationTag {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 40
 
                 backgroundColor: Theme.palette.primaryColor3
                 bgBorderColor: Theme.palette.primaryColor2
@@ -148,10 +147,6 @@ StatusDialog {
                     root.close()
                 }
             }
-            StatusButton {
-                text: qsTr("Close")
-                onClicked: root.close()
-            }
         }
     }
 
@@ -177,15 +172,20 @@ StatusDialog {
         Repeater {
             id: bodyItem
 
-            Layout.fillWidth: true
-            delegate: StatusItemDelegate {
+            delegate: RowLayout {
                 Layout.fillWidth: true
-                cursorShape: Qt.ArrowCursor
-                icon.width: 20
-                icon.height: 20
-                icon.name: "info"
-                icon.color: Theme.palette.dangerColor1
-                text: model.text
+                spacing: Theme.padding
+                StatusIcon {
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    icon: "info"
+                    color: Theme.palette.dangerColor1
+                }
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    text: model.text
+                }
             }
         }
     }
