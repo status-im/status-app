@@ -22,45 +22,57 @@ OnboardingPage {
 
     title: qsTr("Pair devices to sync")
 
-    contentItem: Item {
-        ColumnLayout {
-            anchors.fill: parent
-            spacing: Theme.xlPadding
+    contentItem: StatusScrollView {
+        id: scrollView
 
-            Item {
-                Layout.fillHeight: true
-            }
+        contentWidth: availableWidth
+        padding: 0
 
-            StatusBaseText {
-                Layout.fillWidth: true
-                text: root.title
-                font.pixelSize: Theme.fontSize(22)
-                font.bold: true
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-            }
-            StatusBaseText {
-                Layout.fillWidth: true
-                Layout.topMargin: -Theme.bigPadding
-                text: qsTr("If you have Status on another device")
-                color: Theme.palette.baseColor1
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-            }
+        Item {
+            width: scrollView.availableWidth
+            implicitHeight: Math.max(content.implicitHeight, scrollView.availableHeight)
 
-            SyncingEnterCode {
-                Layout.fillWidth: true
-                Layout.fillHeight: false
-                Layout.maximumWidth: implicitWidth * 1.5
-                Layout.alignment: Qt.AlignHCenter
-                validateConnectionString: root.validateConnectionString
+            ColumnLayout {
+                id: content
 
-                onDisplayInstructions: instructionsPopup.createObject(root).open()
-                onProceed: (connectionString) => root.syncProceedWithConnectionString(connectionString)
-            }
+                anchors.fill: parent
+                spacing: Theme.xlPadding
 
-            Item {
-                Layout.fillHeight: true
+                Item {
+                    Layout.fillHeight: true
+                }
+
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    text: root.title
+                    font.pixelSize: Theme.fontSize(22)
+                    font.bold: true
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                }
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    Layout.topMargin: -Theme.bigPadding
+                    text: qsTr("If you have Status on another device")
+                    color: Theme.palette.baseColor1
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                SyncingEnterCode {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: false
+                    Layout.maximumWidth: implicitWidth * 1.5
+                    Layout.alignment: Qt.AlignHCenter
+                    validateConnectionString: root.validateConnectionString
+
+                    onDisplayInstructions: instructionsPopup.createObject(root).open()
+                    onProceed: (connectionString) => root.syncProceedWithConnectionString(connectionString)
+                }
+
+                Item {
+                    Layout.fillHeight: true
+                }
             }
         }
     }
