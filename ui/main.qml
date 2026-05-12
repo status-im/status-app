@@ -114,13 +114,18 @@ Window {
     }
 
     function restoreAppState() {
-        let geometry = localAppSettings.geometry;
-        let visibility = localAppSettings.visibility;
+        // on mobile, we only set the visibility, we don't care about geometry
+        if (SQUtils.Utils.isMobile) {
+            applicationWindow.visibility = Window.Maximized
+            return
+        }
 
+        let visibility = localAppSettings.visibility;
+        let geometry = localAppSettings.geometry;
         if (visibility !== Window.Windowed &&
             visibility !== Window.Maximized &&
             visibility !== Window.FullScreen) {
-            visibility = SQUtils.Utils.isMobile ? Window.Maximized : Window.Windowed
+            visibility = Window.Windowed
         }
 
         if (geometry === undefined ||
@@ -205,8 +210,6 @@ Window {
         readonly property bool macOSWindowed: SQUtils.Utils.isMacOS && applicationWindow.visibility !== Window.FullScreen
 
         function restoreWindowState() {
-            if (SQUtils.Utils.isMobile) // no point in restoring window state
-                return
             switch(lastNonMinVisibility) {
             case Window.Windowed:
                 applicationWindow.showNormal()
@@ -248,6 +251,7 @@ Window {
     }
 
     Action {
+        enabled: !SQUtils.Utils.isMobile
         shortcut: StandardKey.FullScreen
         onTriggered: {
             if (applicationWindow.visibility === Window.FullScreen) {
@@ -318,7 +322,7 @@ Window {
         function onShakeDetected() {
             const nowMs = Date.now()
             if (nowMs - d.lastShakeShareMs < 3000) {
-                openShakeToSharePopup()
+                applicationWindow.openShakeToSharePopup()
                 return
             }
             d.lastShakeShareMs = nowMs
@@ -336,7 +340,7 @@ Window {
         function onVisibilityChanged(visibility) {
             if (applicationWindow.visibility !== Window.Minimized
                         && applicationWindow.visibility !== Window.Hidden) {
-                d.lastNonMinVisibility = applicationWindow.visibility
+                d.lastNonMinVisibility = SQUtils.Utils.isMobile ? Window.Maximized : applicationWindow.visibility
             }
         }
         function onClosing(close) {
