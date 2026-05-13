@@ -7,8 +7,8 @@ Item {
     id: root
 
     property StatusAssetSettings icon: StatusAssetSettings {
-        width: 24
-        height: 24
+        width: 28
+        height: 28
         name: ""
     }
 
@@ -16,8 +16,8 @@ Item {
 
     signal clicked(var mouse)
 
-    implicitWidth: 40
-    implicitHeight: 40
+    implicitWidth: 44
+    implicitHeight: 44
 
     StatusMouseArea {
         id: sensor
