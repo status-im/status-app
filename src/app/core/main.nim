@@ -23,6 +23,7 @@ proc newStatusFoundation*(): StatusFoundation =
 proc delete*(self: StatusFoundation) =
   self.signalsManager.delete()
   self.urlsManager.delete()
+  self.threadpool.teardown()
 
 proc initUrlSchemeManager*(self: StatusFoundation, urlSchemeEvent: StatusEvent,
     singleInstance: SingleInstance, protocolUriOnStart: string) =
