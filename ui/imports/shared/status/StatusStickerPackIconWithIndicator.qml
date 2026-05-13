@@ -14,8 +14,8 @@ Item {
     property url source: Assets.svg("history")
     signal clicked
 
-    implicitHeight: 24
-    implicitWidth: 24
+    implicitHeight: 28
+    implicitWidth: 28
 
     RoundedImage {
         visible: !useIconInsteadOfImage

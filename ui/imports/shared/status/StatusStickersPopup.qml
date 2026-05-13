@@ -305,8 +305,8 @@ StatusDropdown {
 
             StatusRoundButton {
                 id: btnAddStickerPack
-                Layout.preferredWidth: 24
-                Layout.preferredHeight: 24
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
                 icon.name: "add"
                 type: StatusFlatRoundButton.Type.Secondary
                 loading: d.stickerPacksLoading

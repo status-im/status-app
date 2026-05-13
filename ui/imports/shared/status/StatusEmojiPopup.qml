@@ -255,6 +255,9 @@ StatusDropdown {
                 model: root.emojiModel.categoryIcons
 
                 StatusTabBarIconButton {
+                    width: 40
+                    height: 40
+
                     icon.name: modelData
                     highlighted: !!d.searchString ? index === 0 : index == emojiGrid.currentCategoryIndex
                     onClicked: {

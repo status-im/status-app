@@ -201,8 +201,8 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.leftMargin: Theme.padding / 2
-            width: 24
-            height: 24
+            width: 28
+            height: 28
             icon.width: 16
             icon.height: 16
             horizontalPadding: 0
