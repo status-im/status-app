@@ -1,6 +1,6 @@
 services:
   boot-1:
-    image: wakuorg/nwaku:v0.36.0
+    image: wakuorg/nwaku:v0.38.1
     ports:
       - "60001:60001"
       - "8645:8645"
@@ -12,8 +12,8 @@ services:
       "--discv5-udp-port=49000",
       "--cluster-id=16",
       "--num-shards-in-network=0",
+      "--dns-addrs-name-server=127.0.0.11",
       "--filter=true",
-      "--keep-alive=true",
       "--lightpush=true",
       "--log-level=INFO",
       "--max-connections=18000",
@@ -22,6 +22,7 @@ services:
       "--nodekey=697b008f979c8ae38c1e4e0b9bc3712dd39e2355f49eaf6c63d92f7edd13704d",
       "--peer-exchange=true",
       "--relay=true",
+      "--rest=true",
       "--rest-address=0.0.0.0",
       "--rest-admin",
       "--rest-port=8645",
@@ -42,7 +43,7 @@ services:
       retries: 10
 
   store:
-    image: wakuorg/nwaku:v0.36.0
+    image: wakuorg/nwaku:v0.38.1
     ports:
       - "60002:60002"
       - "8646:8646"
@@ -54,15 +55,15 @@ services:
       "--discv5-udp-port=49001",
       "--cluster-id=16",
       "--num-shards-in-network=0",
-      "--keep-alive=true",
+      "--dns-addrs-name-server=127.0.0.11",
       "--log-level=INFO",
-      "--legacy-store=true",
       "--max-connections=18000",
       "--max-msg-size=1024KiB",
       "--ip-colocation-limit=100",
       "--nodekey=ba4e531d4ef543fabd838ef4e731d35dfa4deceea8f4a5992ad7f29764c70035",
       "--peer-exchange=false",
       "--relay=true",
+      "--rest=true",
       "--rest-address=0.0.0.0",
       "--rest-admin",
       "--rest-port=8646",
@@ -85,7 +86,7 @@ services:
       retries: 10
 
   store-2:
-    image: wakuorg/nwaku:v0.36.0
+    image: wakuorg/nwaku:v0.38.1
     ports:
       - "60003:60003"
       - "8647:8647"
@@ -97,15 +98,15 @@ services:
       "--discv5-udp-port=49002",
       "--cluster-id=16",
       "--num-shards-in-network=0",
-      "--keep-alive=true",
+      "--dns-addrs-name-server=127.0.0.11",
       "--log-level=INFO",
-      "--legacy-store=true",
       "--max-connections=18000",
       "--max-msg-size=1024KiB",
       "--ip-colocation-limit=100",
       "--nodekey=c2a4e44652cd44b2b73093e7d2dba0a1e841e24e59db4a3a8c8e660e6e4d1b3a",
       "--peer-exchange=false",
       "--relay=true",
+      "--rest=true",
       "--rest-address=0.0.0.0",
       "--rest-admin",
       "--rest-port=8647",
