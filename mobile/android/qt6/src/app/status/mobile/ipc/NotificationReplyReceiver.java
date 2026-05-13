@@ -34,6 +34,20 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
         return t;
     });
 
+    /**
+     * Un-pauses the "messaging" service so a chat message sent while the app is backgrounded
+     * actually transmits (the mvds outbound loop is parked while messaging is paused). The
+     * subsequent CallPrivateRPC persists the message regardless, so a failure here only delays
+     * delivery; the send path schedules a re-pause via StatusGoService.scheduleMessagingRepause().
+     */
+    private static void resumeMessagingForBackgroundSend() {
+        try {
+            final String resp = StatusGoService.callRpc("ResumeService", "[\"messaging\"]");
+        } catch (Throwable t) {
+            Log.w(TAG, "failed to resume messaging for background send", t);
+        }
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent == null) return;
@@ -71,6 +85,7 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
 
         REPLY_EXECUTOR.execute(() -> {
             try {
+                resumeMessagingForBackgroundSend();
                 // Build sendChatMessage params (same format as Nim backend)
                 JSONObject msg = new JSONObject();
                 msg.put("chatId", conversationId);
@@ -135,6 +150,9 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                     NotificationManagerCompat.from(appContext).cancel(androidNotificationId);
                 }
             } finally {
+                // We resumed "messaging" above so the send transmits; ask the service to
+                // re-pause after a flush window (a real fg/bg transition supersedes it).
+                StatusGoService.scheduleMessagingRepause();
                 pendingResult.finish();
             }
         });
@@ -157,6 +175,7 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
 
         REPLY_EXECUTOR.execute(() -> {
             try {
+                resumeMessagingForBackgroundSend();
                 JSONObject params = new JSONObject();
                 params.put("id", contactId);
 
@@ -208,6 +227,9 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                     NotificationManagerCompat.from(appContext).cancel(androidNotificationId);
                 }
             } finally {
+                // We resumed "messaging" above so the send transmits; ask the service to
+                // re-pause after a flush window (a real fg/bg transition supersedes it).
+                StatusGoService.scheduleMessagingRepause();
                 pendingResult.finish();
             }
         });

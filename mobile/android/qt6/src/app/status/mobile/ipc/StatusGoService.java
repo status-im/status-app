@@ -7,7 +7,9 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.os.SharedMemory;
@@ -66,6 +68,47 @@ public final class StatusGoService extends Service {
 
     private final ExecutorService lifecycleExecutor = Executors.newSingleThreadExecutor();
     private final AtomicInteger lifecycleGen = new AtomicInteger(0);
+
+    /** Single instance per process; lets background components (NotificationReplyReceiver) reach the service. */
+    private static volatile StatusGoService sInstance;
+
+    /**
+     * Background work (e.g. an inline notification reply) sends a chat message while messaging
+     * is paused. The send path resumes the "messaging" service so the message actually
+     * transmits, then asks us to re-pause after a flush window. This delay must comfortably
+     * cover the mvds outbound loop picking up the queued message after resume.
+     */
+    private static final long MESSAGING_REPAUSE_DELAY_MS = 60_000L;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Runnable repauseMessagingRunnable = () -> {
+        if (uiVisible) return; // app came to foreground; foregrounding already resumed messaging
+        try {
+            lifecycleExecutor.execute(() -> {
+                if (uiVisible) return;
+                try {
+                    final String resp = nativeCall("PauseService", "[\"messaging\"]");
+                } catch (Throwable t) {
+                    Log.w(TAG, "failed to re-pause messaging after background send", t);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException ignored) {
+            // service shutting down; nothing to re-pause
+        }
+    };
+
+    /**
+     * Asks the service to re-pause the "messaging" service after a flush window, coalescing
+     * with any pending request. Called from background components after they Resume("messaging")
+     * + send a message while the app is backgrounded. A real foreground/background transition
+     * supersedes it (the pending callback is cancelled in applyUiVisibility, and the runnable
+     * re-checks uiVisible anyway).
+     */
+    public static void scheduleMessagingRepause() {
+        final StatusGoService s = sInstance;
+        if (s == null) return;
+        s.mainHandler.removeCallbacks(s.repauseMessagingRunnable);
+        s.mainHandler.postDelayed(s.repauseMessagingRunnable, MESSAGING_REPAUSE_DELAY_MS);
+    }
 
     private StatusNotificationManager notificationManager;
 
@@ -224,6 +267,9 @@ public final class StatusGoService extends Service {
 
     private void applyUiVisibility(boolean visible) {
         uiVisible = visible;
+        // A real fg/bg transition handles messaging via scheduleBackendLifecycleUpdate;
+        // drop any pending notification-driven re-pause so it can't fire stale.
+        mainHandler.removeCallbacks(repauseMessagingRunnable);
         notificationManager.setUiVisible(visible);
         scheduleBackendLifecycleUpdate(visible);
     }
@@ -294,6 +340,7 @@ public final class StatusGoService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        sInstance = this;
         notificationManager = new StatusNotificationManager(this);
         PushNotificationHelper.initialize(this);
         nativeInit(this);
@@ -323,6 +370,8 @@ public final class StatusGoService extends Service {
 
     @Override
     public void onDestroy() {
+        sInstance = null;
+        mainHandler.removeCallbacksAndMessages(null);
         StatusNotificationManager.clearInstance();
         listeners.kill();
         lifecycleExecutor.shutdownNow();
