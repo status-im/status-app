@@ -44,56 +44,33 @@ ColumnLayout {
 
     onKeycardUidChanged: d.refresh()
 
+    KeycardStateInfo {
+        id: stateInfo
+
+        keycardState: root.keycardState
+        keycardUid: root.keycardUid
+        keyUid: root.keyUid
+        remainingPinAttempts: root.remainingPinAttempts
+        remainingPukAttempts: root.remainingPukAttempts
+        availableSlots: root.availableSlots
+        cardMetadataWalletAccountsJson: root.cardMetadataWalletAccountsJson
+        knownPairingExists: d.pairingExists
+    }
+
     QtObject {
         id: d
 
         readonly property bool isProfileKeyPair: !!root.keyUid
                                                  && root.keyUid === root.keycardStore.userProfileKeyUid
 
-        readonly property bool hasKeyPair: !!root.keycardUid && !!root.keyUid
-
-        readonly property bool onlyPinSet: !!root.keycardUid && !root.keyUid
-
-        // pairing slot has the highest priority, cause the keycard cannot be read if the pairing doesn't exist or a new pairing cannot be made
-        readonly property bool noKnownAndNoAvailablePairingSlots: root.keycardState === Constants.keycard.state.noAvailablePairingSlots
-                                                                  || (!!root.keycardUid && root.availableSlots === 0 && !d.pairingExists)
-
-        readonly property bool isBlockedPIN: !d.isEmpty
-                                             && (root.keycardState === Constants.keycard.state.blockedPIN
-                                                 || !!root.keycardUid && root.remainingPinAttempts === 0)
-
-        readonly property bool isBlockedPUK: !d.isEmpty
-                                             && (root.keycardState === Constants.keycard.state.blockedPUK
-                                                 || !!root.keycardUid && root.remainingPukAttempts === 0)
-
-        readonly property bool isEmpty: !d.noKnownAndNoAvailablePairingSlots
-                                        && (root.keycardState === Constants.keycard.state.emptyKeycard
-                                            || !root.keycardUid)
-
-        readonly property bool knownCardMetadata: {
-            if (!d.hasKeyPair || d.cardMetadataWalletAccounts.length === 0) {
-                return false
-            }
-
-            let allAddressesKnown = true
-            for (const acc of d.cardMetadataWalletAccounts) {
-                if (!acc || !acc.address) {
-                    allAddressesKnown = false
-                    break
-                }
-            }
-            return allAddressesKnown
-        }
-
-        readonly property var cardMetadataWalletAccounts: {
-            try {
-                // format: [ {"path": "m/../", "address": "0xabcd...", "publicKey": "ox1234..."} ]
-                return JSON.parse(root.cardMetadataWalletAccountsJson)
-            } catch (e) {
-                console.warn("parsing card metadata wallet accounts: ", e.message)
-                return []
-            }
-        }
+        readonly property bool hasKeyPair: stateInfo.hasKeyPair
+        readonly property bool onlyPinSet: stateInfo.onlyPinSet
+        readonly property bool noKnownAndNoAvailablePairingSlots: stateInfo.noKnownAndNoAvailablePairingSlots
+        readonly property bool isBlockedPIN: stateInfo.isBlockedPIN
+        readonly property bool isBlockedPUK: stateInfo.isBlockedPUK
+        readonly property bool isEmpty: stateInfo.isEmpty
+        readonly property bool knownCardMetadata: stateInfo.knownCardMetadata
+        readonly property var cardMetadataWalletAccounts: stateInfo.cardMetadataWalletAccounts
 
         property bool pairingExists: false
         property bool isKnownKeyPair: false
