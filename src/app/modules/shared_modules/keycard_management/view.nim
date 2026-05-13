@@ -7,6 +7,7 @@ QtObject:
     View* = ref object of QObject
       delegate: io_interface.AccessInterface
       keycardState: string
+      keycardStatusAvailable: bool
       remainingPinAttempts: int
       remainingPukAttempts: int
       availableSlots: int
@@ -27,6 +28,7 @@ QtObject:
     result.QObject.setup
     result.delegate = delegate
     result.keycardState = ""
+    result.keycardStatusAvailable = false
     result.remainingPinAttempts = 0
     result.remainingPukAttempts = 0
     result.availableSlots = 0
@@ -99,6 +101,12 @@ QtObject:
   proc startUnblockKeycardUsingRecoveryPhrase*(self: View, newPin: string, seedPhrase: string,
       metadataName: string, metadataAccountsJson: string) {.slot.} =
     self.delegate.startUnblockKeycardUsingRecoveryPhrase(newPin, seedPhrase, metadataName, metadataAccountsJson)
+
+  proc keycardAsyncLoginSuccess*(self: View, dataJson: string) {.signal.}
+  proc keycardAsyncLoginError*(self: View, error: string) {.signal.}
+
+  proc startAsyncLogin*(self: View, keyUid: string, pin: string, generateXPub: bool) {.slot.} =
+    self.delegate.startAsyncLogin(keyUid, pin, generateXPub)
 
   proc keyPairModelChanged(self: View) {.signal.}
   proc getKeyPairModel(self: View): QVariant {.slot.} =
@@ -199,6 +207,18 @@ QtObject:
   QtProperty[string] keycardState:
     read = getKeycardState
     notify = keycardStateChanged
+
+  proc keycardStatusAvailableChanged*(self: View) {.signal.}
+  proc getKeycardStatusAvailable*(self: View): bool {.slot.} =
+    return self.keycardStatusAvailable
+  proc setKeycardStatusAvailable*(self: View, value: bool) =
+    if self.keycardStatusAvailable == value:
+      return
+    self.keycardStatusAvailable = value
+    self.keycardStatusAvailableChanged()
+  QtProperty[bool] keycardStatusAvailable:
+    read = getKeycardStatusAvailable
+    notify = keycardStatusAvailableChanged
 
   proc remainingPinAttemptsChanged*(self: View) {.signal.}
   proc getRemainingPinAttempts*(self: View): int {.slot.} =

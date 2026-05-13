@@ -76,6 +76,12 @@ type
     publicKey*: string
     privateKey*: string
 
+type KeycardExportedExtendedPublicKeyDto* = object
+  address*: string
+  publicKey*: string
+  chainCode*: string
+  xpub*: string
+
 type KeycardExportedKeysDto* = object
   eip1581Key*: KeyDetailsV2
   encryptionKey*: KeyDetailsV2
@@ -84,16 +90,11 @@ type KeycardExportedKeysDto* = object
   walletRootKey*: KeyDetailsV2
   whisperKey*: KeyDetailsV2
   masterKeyAddress*: string
+  extendedPublicKey*: KeycardExportedExtendedPublicKeyDto
 
 type KeycardExportedPublicKeysDto* = object
   masterKeyAddress*: string
   keys*: seq[KeyDetailsV2]
-
-type KeycardExportedExtendedPublicKeyDto* = object
-  address*: string
-  publicKey*: string
-  chainCode*: string
-  xpub*: string
 
 type KeycardSignatureDto* = object
   r*: string
@@ -196,14 +197,21 @@ proc toKeyDetails(jsonObj: JsonNode): KeyDetailsV2 =
     if not result.publicKey.startsWith("0x"):
       result.publicKey = "0x" & result.publicKey
 
+proc toKeycardExportedExtendedPublicKeyDto*(jsonObj: JsonNode): KeycardExportedExtendedPublicKeyDto =
+  result = KeycardExportedExtendedPublicKeyDto()
+  discard jsonObj.getProp("address", result.address)
+  discard jsonObj.getProp("publicKey", result.publicKey)
+  discard jsonObj.getProp("chainCode", result.chainCode)
+  discard jsonObj.getProp("xpub", result.xpub)
+
 proc toKeycardExportedKeysDto*(jsonObj: JsonNode): KeycardExportedKeysDto =
   result = KeycardExportedKeysDto()
 
   var obj: JsonNode
 
-  if jsonObj.getProp("eip1581", obj):
+  if jsonObj.getProp("eip1581", obj) or jsonObj.getProp("eip1581Key", obj):
     result.eip1581Key = toKeyDetails(obj)
-  if jsonObj.getProp("encryptionPrivateKey", obj):
+  if jsonObj.getProp("encryptionPrivateKey", obj) or jsonObj.getProp("encryptionKey", obj):
     result.encryptionKey = toKeyDetails(obj)
   if jsonObj.getProp("masterKey", obj):
     result.masterKey = toKeyDetails(obj)
@@ -211,8 +219,11 @@ proc toKeycardExportedKeysDto*(jsonObj: JsonNode): KeycardExportedKeysDto =
     result.walletKey = toKeyDetails(obj)
   if jsonObj.getProp("walletRootKey", obj):
     result.walletRootKey = toKeyDetails(obj)
-  if jsonObj.getProp("whisperPrivateKey", obj):
+  if jsonObj.getProp("whisperPrivateKey", obj) or jsonObj.getProp("whisperKey", obj):
     result.whisperKey = toKeyDetails(obj)
+
+  if jsonObj.getProp("extendedPublicKey", obj):
+    result.extendedPublicKey = toKeycardExportedExtendedPublicKeyDto(obj)
 
 proc toKeycardExportedPublicKeysDto*(jsonObj: JsonNode): KeycardExportedPublicKeysDto =
   result = KeycardExportedPublicKeysDto()
@@ -221,13 +232,6 @@ proc toKeycardExportedPublicKeysDto*(jsonObj: JsonNode): KeycardExportedPublicKe
   if jsonObj.getProp("exportedKeys", obj) and obj.kind == JArray:
     for key in obj:
       result.keys.add(toKeyDetails(key))
-
-proc toKeycardExportedExtendedPublicKeyDto*(jsonObj: JsonNode): KeycardExportedExtendedPublicKeyDto =
-  result = KeycardExportedExtendedPublicKeyDto()
-  discard jsonObj.getProp("address", result.address)
-  discard jsonObj.getProp("publicKey", result.publicKey)
-  discard jsonObj.getProp("chainCode", result.chainCode)
-  discard jsonObj.getProp("xpub", result.xpub)
 
 proc toKeycardSignatureDto*(jsonObj: JsonNode): KeycardSignatureDto =
   result = KeycardSignatureDto()

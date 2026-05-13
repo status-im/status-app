@@ -122,6 +122,12 @@ method startUnblockKeycardUsingRecoveryPhrase*(self: AccessInterface, newPin: st
 method onKeycardRecoverFinished*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method startAsyncLogin*(self: AccessInterface, keyUid, pin: string, generateXPub: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onKeycardAsyncLoginFinished*(self: AccessInterface, exportedKeys: KeycardExportedKeysDto, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getKeyPairItemForKeyUid*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 

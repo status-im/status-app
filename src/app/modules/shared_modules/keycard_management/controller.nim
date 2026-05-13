@@ -102,6 +102,11 @@ proc init*(self: Controller) =
     self.delegate.onKeycardRecoverFinished(args.error)
   self.connectionIds.add(handlerId)
 
+  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_LOGIN_FINISHED) do(e: Args):
+    let args = KeycardLoginArgs(e)
+    self.delegate.onKeycardAsyncLoginFinished(args.exportedKeys, args.error)
+  self.connectionIds.add(handlerId)
+
 proc startGetMetadata*(self: Controller, pin: string) =
   self.keycardServiceV2.asyncGetKeycardMetadata(pin)
 
@@ -184,6 +189,9 @@ proc startUnblockKeycardUsingPuk*(self: Controller, keyUid, puk, newPin, keycard
 
 proc startRecover*(self: Controller, pin, puk, mnemonic, metadataName: string, metadataPaths: seq[string], keycardUid: string) =
   self.keycardServiceV2.asyncRecover(pin, puk, mnemonic, metadataName, metadataPaths, keycardUid)
+
+proc startAsyncLogin*(self: Controller, keyUid, pin, xPubPath: string) =
+  self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath)
 
 proc updateKeycardUid*(self: Controller, oldKeycardUid, newKeycardUid: string) =
   discard self.walletAccountService.updateKeycardUid(oldKeycardUid, newKeycardUid)

@@ -1,10 +1,11 @@
-proc asyncLogin*(self: Service, keyUid: string, pin: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncLogin*(self: Service, keyUid: string, pin: string, xPubPath: string = "") {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
     "keyUid": keyUid,
     "pin": pin,
+    "xPubPath": xPubPath, # optional, if provided, will export the extended public key
   }
   self.asyncCallRPC(KeycardAction.Login, params, proc (responseObj: JsonNode, err: string) =
     var data = KeycardLoginArgs()

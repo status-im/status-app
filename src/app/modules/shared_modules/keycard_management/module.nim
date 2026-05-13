@@ -1,4 +1,4 @@
-import nimqml, sugar, strutils, sequtils, chronicles, json, json_serialization
+import nimqml, sugar, strutils, sequtils, chronicles, json, marshal, json_serialization
 
 import io_interface
 import view, controller
@@ -38,6 +38,7 @@ type FlowType {.pure.} = enum
   RenamingKeycard = "RenamingKeycard" # renames the Keycard (stores a new keycard metadata name)
   UnblockingKeycard = "UnblockingKeycard" # unblocks a Keycard with a blocked PIN by providing the PUK and a new PIN
   UnblockingKeycardWithRecoveryPhrase = "UnblockingKeycardWithRecoveryPhrase" # unblocks a Keycard by recovering it from the seed phrase and setting a new PIN
+  AsyncLogin = "AsyncLogin" # exports the keys for the keycard's stored profile
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -107,6 +108,7 @@ proc createWalletAccountsJson*[T](self: Module[T], walletAccounts: seq[keycard_s
 
 method onKeycardStateUpdated*[T](self: Module[T], kcEvent: KeycardEventDto) =
   self.view.setKeycardState($kcEvent.stateString)
+  self.view.setKeycardStatusAvailable(kcEvent.keycardStatus.keyInitialized)
   self.view.setRemainingPinAttempts(kcEvent.keycardStatus.remainingAttemptsPIN)
   self.view.setRemainingPukAttempts(kcEvent.keycardStatus.remainingAttemptsPUK)
   self.view.setAvailableSlots(kcEvent.keycardInfo.availableSlots)
@@ -167,6 +169,9 @@ method getKeyPairAccountPathsJsonForKeyUid*[T](self: Module[T], keyUid: string):
   return $paths
 
 proc prepareAccountsData[T](self: Module[T], extendedPublicKey: string, metadataAccounts: string): bool =
+  self.tmpAccountsData = @[]
+  if metadataAccounts.len == 0:
+    return true
   try:
     self.tmpAccountsData = Json.decode(metadataAccounts, seq[AccountData])
   except Exception as e:
@@ -434,6 +439,47 @@ method onKeycardRecoverFinished*[T](self: Module[T], error: string) =
     self.controller.updateKeycardUid(self.tmpKeycardUid, newKeycardUid)
   ## #########################################################
   self.view.keycardUnblockSuccess()
+
+method startAsyncLogin*[T](self: Module[T], keyUid, pin: string, generateXPub: bool) =
+  self.tmpFlowType = FlowType.AsyncLogin
+  self.tmpKeyUid = keyUid
+  var xPubPath = ""
+  if generateXPub:
+    xPubPath = PATH_WALLET_XPUB
+  self.controller.startAsyncLogin(keyUid, pin, xPubPath)
+
+method onKeycardAsyncLoginFinished*[T](self: Module[T], exportedKeys: KeycardExportedKeysDto, error: string) =
+  if self.tmpFlowType != FlowType.AsyncLogin:
+    return
+  if error.len > 0:
+    self.view.keycardAsyncLoginError(error)
+    return
+  try:
+    var exportedKeysCopy = exportedKeys
+    # if extended public key is generated, means the keycard login action is used to create a new profile, and we need to derive default wallet account
+    if exportedKeysCopy.extendedPublicKey.xpub.len > 0:
+      let defaultWalletAccountsJson = $(%* [{"path": PATH_DEFAULT_WALLET}])
+      if not self.prepareAccountsData(exportedKeysCopy.extendedPublicKey.xpub, defaultWalletAccountsJson) or self.tmpAccountsData.len == 0:
+        self.emitError("failed to prepare accounts data")
+        return
+      # We don't need to set master address, walletRootAddress and eip1581Address, cause they are not needed anymore, we should remove those from the code
+      exportedKeysCopy.walletKey = KeyDetailsV2(
+        address: self.tmpAccountsData[0].address,
+        publicKey: self.tmpAccountsData[0].publicKey,
+      )
+
+    let exportedKeysJsonObj = parseJson($$exportedKeysCopy)
+
+    let payload = %*{
+      "flow": "onboarding-login-with-keycard",
+      "keyUid": self.tmpKeyUid,
+      "keycardUid": self.view.getKeycardUid(),
+      "exportedKeys": exportedKeysJsonObj
+    }
+    self.view.keycardAsyncLoginSuccess($payload)
+  except Exception as e:
+    error "failed to parse exported keys", err=e.msg
+    self.view.keycardAsyncLoginError(e.msg)
 
 method startStopUsingKeycardForProfileKeyPair*[T](self: Module[T], seedPhrase, newPassword: string) =
   self.tmpFlowType = FlowType.StoppingKeycardForProfileKeyPair
