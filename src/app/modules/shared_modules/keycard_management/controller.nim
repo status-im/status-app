@@ -37,6 +37,9 @@ proc newController*(delegate: io_interface.AccessInterface,
   result.walletAccountService = walletAccountService
   result.privacyService = privacyService
 
+## Forward declarations:
+proc serviceApplicable[T](service: T): bool
+
 proc delete*(self: Controller) =
   for id in self.connectionIds:
     self.events.disconnect(id)
@@ -124,55 +127,85 @@ proc stopKeycardAction*(self: Controller) =
   self.keycardServiceV2.asyncStop()
 
 proc getKeyUidForSeedPhrase*(self: Controller, seedPhrase: string): string =
+  if not serviceApplicable(self.accountsService):
+    return
   let (keyUID, err) = self.accountsService.validateMnemonic(seedPhrase)
   if err.len > 0:
     return ""
   return keyUID
 
 proc getKeypairByKeyUid*(self: Controller, keyUid: string): KeypairDto =
+  if not serviceApplicable(self.walletAccountService):
+    return
   return self.walletAccountService.getKeypairByKeyUid(keyUid)
 
 proc addNewColdWalletStoredKeypair*(self: Controller, keyUid, keypairName, xpub, coldWallet: string, accounts: seq[wallet_account_service.WalletAccountDto]): string =
+  if not serviceApplicable(self.walletAccountService):
+    return
   return self.walletAccountService.addNewColdWalletStoredKeypair(keyUid, keypairName, xpub, coldWallet,
     rootWalletMasterKey = "", accounts)
 
 proc addKeycardOrAccounts*(self: Controller, keyPair: KeycardDto, password: string) =
+  if not serviceApplicable(self.walletAccountService):
+    return
   self.walletAccountService.addKeycardOrAccountsAsync(keyPair, password)
 
 proc deriveAccountsPublicInfoFromExtendedPublicKeyForPaths*(self: Controller, extendedPublicKey: string, paths: seq[string]): DerivedAccounts =
+  if not serviceApplicable(self.accountsService):
+    return
   return self.accountsService.deriveAccountsPublicInfoFromExtendedPublicKeyForPaths(extendedPublicKey, paths)
 
 proc deriveExtendedPublicKeyAtPath*(self: Controller, mnemonic: string, passphrase: string, path: string): string =
+  if not serviceApplicable(self.accountsService):
+    return
   return self.accountsService.deriveExtendedPublicKeyAtPath(mnemonic, passphrase, path)
 
 proc generateMnemonic*(self: Controller): string =
+  if not serviceApplicable(self.walletAccountService):
+    return
   return self.walletAccountService.getRandomMnemonic()
 
 proc getKeypairs*(self: Controller): seq[wallet_account_service.KeypairDto] =
+  if not serviceApplicable(self.walletAccountService):
+    return
   return self.walletAccountService.getKeypairs()
 
 proc updateKeypairExtendedPublicKey*(self: Controller, keyUid, extendedPublicKey, coldWalletType: string): string =
+  if not serviceApplicable(self.walletAccountService):
+    return
   return self.walletAccountService.updateKeypairExtendedPublicKey(keyUid, extendedPublicKey, coldWalletType)
 
 proc isMnemonicBackedUp*(self: Controller): bool =
+  if not serviceApplicable(self.privacyService):
+    return
   return self.privacyService.isMnemonicBackedUp()
 
 proc getMnemonic*(self: Controller): string =
+  if not serviceApplicable(self.privacyService):
+    return
   return self.privacyService.getMnemonic()
 
 proc createAccountFromMnemonic*(self: Controller, mnemonic: string, includeEncryption: bool): GeneratedAccountDto =
+  if not serviceApplicable(self.accountsService):
+    return
   return self.accountsService.createAccountFromMnemonic(mnemonic, includeEncryption = includeEncryption)
 
 proc convertRegularProfileKeypairToKeycard*(self: Controller, keycardUid, currentPassword, newPassword: string) =
+  if not serviceApplicable(self.accountsService):
+    return
   self.accountsService.convertRegularProfileKeypairToKeycard(keycardUid, currentPassword, newPassword)
 
 proc convertKeycardProfileKeypairToRegular*(self: Controller, mnemonic, currentPassword, newPassword: string) =
+  if not serviceApplicable(self.accountsService):
+    return
   self.accountsService.convertKeycardProfileKeypairToRegular(mnemonic, currentPassword, newPassword)
 
 proc setStoreToKeychainValueNotNow*(self: Controller) =
   singletonInstance.localAccountSettings.setStoreToKeychainValue(LS_VALUE_NOT_NOW)
 
 proc startStopUsingKeycardForKeyPair*(self: Controller, keyUid, seedPhrase, newPassword: string) =
+  if not serviceApplicable(self.walletAccountService):
+    return
   self.walletAccountService.migrateNonProfileKeycardKeypairToAppAsync(keyUid, seedPhrase, newPassword, doPasswordHashing = true)
 
 proc startChangeKeycardPIN*(self: Controller, keyUid, currentPin, newPin, keycardUid: string) =
@@ -194,10 +227,37 @@ proc startAsyncLogin*(self: Controller, keyUid, pin, xPubPath: string) =
   self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath)
 
 proc updateKeycardUid*(self: Controller, oldKeycardUid, newKeycardUid: string) =
+  if not serviceApplicable(self.walletAccountService):
+    return
   discard self.walletAccountService.updateKeycardUid(oldKeycardUid, newKeycardUid)
 
 proc remainingKeypairCapacity*(self: Controller): int =
+  if not serviceApplicable(self.walletAccountService):
+    return
   return self.walletAccountService.remainingKeypairCapacity()
 
 proc remainingAccountCapacity*(self: Controller): int =
+  if not serviceApplicable(self.walletAccountService):
+    return
   return self.walletAccountService.remainingAccountCapacity()
+
+# Keep this function at the end of the file.
+# There's a bug in Nim: https://github.com/nim-lang/Nim/issues/23002
+# that blocks us from enabling back the warning pragma.
+
+{.warning[UnreachableCode]: off.}
+proc serviceApplicable[T](service: T): bool =
+  if not service.isNil:
+    return true
+  when (service is keycard_serviceV2.Service):
+    error "KeycardServiceV2 is mandatory for shared keycard_management module"
+    return
+  var serviceName = ""
+  when service is wallet_account_service.Service:
+    serviceName = "WalletAccountService"
+  when service is privacy_service.Service:
+    serviceName = "PrivacyService"
+  when service is accounts_service.Service:
+    serviceName = "AccountsService"
+  debug "service not set in shared keycard_management module - call short-circuits",
+    service = serviceName
