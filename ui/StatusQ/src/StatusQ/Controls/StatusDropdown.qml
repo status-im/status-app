@@ -119,8 +119,7 @@ QC.Popup {
         when: root.bottomSheet
 
         root {
-            parent: QC.Overlay && QC.Overlay.overlay ? QC.Overlay.overlay:
-                    d.window && d.window.contentItem ? d.window.contentItem : parent
+            parent: root.QC.Overlay.overlay || parent
             modal: true
             dim: true
             closePolicy: QC.Popup.CloseOnPressOutside
@@ -128,8 +127,9 @@ QC.Popup {
             x: 0
             y: d.windowHeight - height
             width: d.windowWidth
-            height: root.fillHeightOnBottomSheet ? d.windowHeight * d.bottomSheetHeightRatio : Math.min(implicitHeight, d.windowHeight * d.bottomSheetHeightRatio)
-            bottomPadding: !!d.window ? d.window.SafeArea.margins.bottom: 0
+            height: root.fillHeightOnBottomSheet ? d.windowHeight * d.bottomSheetHeightRatio
+                                                 : Math.min(implicitHeight, d.windowHeight * d.bottomSheetHeightRatio)
+            bottomPadding: root.QC.Overlay.overlay ? root.QC.Overlay.overlay.SafeArea.margins.bottom : 0
             margins: 0
         }
     }

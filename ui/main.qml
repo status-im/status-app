@@ -59,10 +59,6 @@ Window {
     readonly property bool portraitLayout: height > width
     property bool biometricFlowPending: false
 
-    // Store the native SafeArea bottom margin (e.g., iOS home indicator)
-    // Must be set in Component.onCompleted before any additionalMargins are applied
-    property real nativeSafeAreaBottom: applicationWindow.contentItem.SafeArea.margins.bottom
-
     // Use native Android keyboard tracking via WindowInsets API
     // This bypasses Qt's unreliable inputMethod and works with any windowSoftInputMode
     // Both Android and iOS keyboard heights are in physical pixels and need devicePixelRatio conversion
@@ -72,12 +68,12 @@ Window {
                                                                      SQUtils.Utils.isIOS ? SystemUtils.iosKeyboardHeight / Screen.devicePixelRatio :
                                                                                            Qt.inputMethod.visible ? Qt.inputMethod.keyboardRectangle.height : 0
 
-    // Calculate additional margin so that total = max(nativeSafeAreaBottom, keyboardHeight)
+    // Calculate additional margin so that total = max(SafeArea.margins.bottom, keyboardHeight)
     // When keyboard shows, we want the keyboard height to replace the native safe area, not add to it
     // The Behavior animation ensures smooth transitions even during rapid keyboard show/hide sequences
-    property real additionalBottomMargin: Math.max(0, keyboardHeight - nativeSafeAreaBottom)
+    property real additionalBottomMargin: Math.max(0, keyboardHeight - SafeArea.margins.bottom)
 
-    SafeArea.additionalMargins.bottom: additionalBottomMargin
+    Overlay.overlay.SafeArea.additionalMargins.bottom: additionalBottomMargin
 
     // On Android 15 taking a screenshot and invoking sharing popup triggers full-screen mode. It's not restored back
     // when exiting sharing popup. The change is not reflected in visibility property, so there is no direct way to detect it.
@@ -288,50 +284,6 @@ Window {
         }
     }
 
-    AppMainLoader {
-        id: loader
-
-        anchors.fill: parent
-        anchors.topMargin: SQUtils.Utils.isMacOS && !applicationWindow.portraitLayout ? 0
-                                                                                      : parent.SafeArea.margins.top
-        anchors.bottomMargin: parent.SafeArea.margins.bottom
-        anchors.leftMargin: applicationWindow.portraitLayout ? parent.SafeArea.margins.left
-                                                  : 0 // the PrimaryNavSidebar is visible in landscape and already has it
-        anchors.rightMargin: parent.SafeArea.margins.right
-
-        opacity: 0
-        visible: !startupOnboardingLoader.active
-
-        Behavior on opacity {
-            NumberAnimation { duration: 120 }
-        }
-
-        active: d.appMainTriggered && (typeof mainModule !== "undefined") && (mainModule?.mainLoaded ?? false)
-
-        featureFlagsStore: applicationWindow.featureFlagsStore
-        languageStore: applicationWindow.languageStore
-        keychain: appKeychain
-        systemTrayIconAvailable: systemTray.available
-        utilsStore: applicationWindow.utilsStore
-
-        onLoaded: {
-            Global.appIsReady = true
-            appMainFadeIn.running = true
-            startupOnboardingLoader.active = false
-            splashScreenLoader.active = false
-            applicationWindow.contentLoaded()
-            if (d.showSkippedBiometricFlow)
-                loader.item.showEnableBiometricsFlow()
-        }
-
-        onStatusChanged: {
-            if (status === Loader.Error) {
-                console.error("Failed to load AppMain.qml")
-                Qt.quit()
-            }
-        }
-    }
-
     OpacityAnimator {
         id: appMainFadeIn
         target: loader
@@ -500,158 +452,207 @@ Window {
         }
     }
 
-    Loader {
-        id: shakeToShareLoader
-        active: false
-        sourceComponent: StatusDialog {
-            id: shakeLogFilesPopup
-            title: qsTr("Share logs or report a bug?")
-            visible: true
-            contentItem: ColumnLayout {
-                spacing: Theme.padding
-                StatusButton {
-                    id: exportLogFilesButton
-                    Layout.fillWidth: true
-                    text: qsTr("Export log files")
-                    onClicked: {
-                        try {
-                            const json = globalUtils.collectLogFilesJson()
-                            const paths = JSON.parse(json)
-                            if (!paths || paths.length === 1) {
-                                exportLogFilesButton.enabled = false
-                                exportLogFilesButton.text = qsTr("No log files found")
-                                return
+    Item {
+        anchors.fill: parent
+        SafeArea.additionalMargins.bottom: applicationWindow.additionalBottomMargin
+
+        AppMainLoader {
+            id: loader
+
+            anchors.fill: parent
+            anchors.topMargin: SQUtils.Utils.isMacOS && !applicationWindow.portraitLayout ? 0
+                                                                                          : parent.SafeArea.margins.top
+            anchors.bottomMargin: parent.SafeArea.margins.bottom
+            anchors.leftMargin: applicationWindow.portraitLayout ? parent.SafeArea.margins.left
+                                                      : 0 // the PrimaryNavSidebar is visible in landscape and already has it
+            anchors.rightMargin: parent.SafeArea.margins.right
+
+            opacity: 0
+            visible: !startupOnboardingLoader.active
+
+            Behavior on opacity {
+                NumberAnimation { duration: 120 }
+            }
+
+            active: d.appMainTriggered && (typeof mainModule !== "undefined") && (mainModule?.mainLoaded ?? false)
+
+            featureFlagsStore: applicationWindow.featureFlagsStore
+            languageStore: applicationWindow.languageStore
+            keychain: appKeychain
+            systemTrayIconAvailable: systemTray.available
+            utilsStore: applicationWindow.utilsStore
+
+            onLoaded: {
+                Global.appIsReady = true
+                appMainFadeIn.running = true
+                startupOnboardingLoader.active = false
+                splashScreenLoader.active = false
+                applicationWindow.contentLoaded()
+                if (d.showSkippedBiometricFlow)
+                    loader.item.showEnableBiometricsFlow()
+            }
+
+            onStatusChanged: {
+                if (status === Loader.Error) {
+                    console.error("Failed to load AppMain.qml")
+                    Qt.quit()
+                }
+            }
+        }
+
+        Loader {
+            id: shakeToShareLoader
+            active: false
+            sourceComponent: StatusDialog {
+                id: shakeLogFilesPopup
+                title: qsTr("Share logs or report a bug?")
+                visible: true
+                contentItem: ColumnLayout {
+                    spacing: Theme.padding
+                    StatusButton {
+                        id: exportLogFilesButton
+                        Layout.fillWidth: true
+                        text: qsTr("Export log files")
+                        onClicked: {
+                            try {
+                                const json = globalUtils.collectLogFilesJson()
+                                const paths = JSON.parse(json)
+                                if (!paths || paths.length === 1) {
+                                    exportLogFilesButton.enabled = false
+                                    exportLogFilesButton.text = qsTr("No log files found")
+                                    return
+                                }
+
+                                SystemUtils.sharePaths(paths)
+                            } catch (e) {
+                                console.error("[Shake] handler threw: " + e)
                             }
-
-                            SystemUtils.sharePaths(paths)
-                        } catch (e) {
-                            console.error("[Shake] handler threw: " + e)
+                            shakeLogFilesPopup.close()
                         }
-                        shakeLogFilesPopup.close()
+                    }
+                    StatusButton {
+                        Layout.fillWidth: true
+                        text: qsTr("Report a bug on GitHub")
+                        onClicked: {
+                            Qt.openUrlExternally(Constants.bugReportUrl)
+                            shakeLogFilesPopup.close()
+                        }
                     }
                 }
-                StatusButton {
-                    Layout.fillWidth: true
-                    text: qsTr("Report a bug on GitHub")
-                    onClicked: {
-                        Qt.openUrlExternally(Constants.bugReportUrl)
-                        shakeLogFilesPopup.close()
-                    }
+
+                footer: null
+
+                onClosed: shakeToShareLoader.active = false
+            }
+        }
+
+        Loader {
+            id: splashScreenLoader
+            anchors.fill: parent
+            sourceComponent: DidYouKnowSplashScreen {
+                messagesEnabled: true
+                infiniteLoading: true
+            }
+            onLoaded: {
+                applicationWindow.contentLoaded()
+            }
+        }
+
+        Loader {
+            id: startupOnboardingLoader
+
+            anchors.fill: parent
+            anchors.topMargin: Qt.platform.os === SQUtils.Utils.mac ? 0 : parent.SafeArea.margins.top
+            anchors.leftMargin: parent.SafeArea.margins.left
+            anchors.rightMargin: parent.SafeArea.margins.right
+            anchors.bottomMargin: parent.SafeArea.margins.bottom
+            active: !applicationWindow.skipOnboarding
+
+            source: active ? "app/AppLayouts/Onboarding/StartupOnboardingWrapper.qml" : ""
+
+            onLoaded: {
+                item.featureFlagsStore = applicationWindow.featureFlagsStore
+                item.languageStore = applicationWindow.languageStore
+                item.keychain = appKeychain
+                item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
+                item.biometricFlowPending = Qt.binding(() => applicationWindow.biometricFlowPending)
+                splashScreenLoader.active = false
+                applicationWindow.contentLoaded()
+                Qt.callLater(() => QmlCompiler.precompileAll()) // precompile all components after onboarding is loaded to speed up the login flow
+            }
+        }
+
+        Connections {
+            target: startupOnboardingLoader.item
+            ignoreUnknownSignals: true
+
+            function onAppReady() {
+                applicationWindow.appIsReady = true
+            }
+            function onStoreAppStateRequested() {
+                applicationWindow.storeAppState()
+            }
+            function onRequestMoveToAppMain() {
+                applicationWindow.moveToAppMain()
+            }
+            function onBiometricFlowStarted() {
+                applicationWindow.biometricFlowPending = true
+            }
+            function onSkippedBiometricFlow(available) {
+                d.showSkippedBiometricFlow = available
+            }
+            function onProfileSelected(keyUid) {
+                localAppSettings.selectedProfileKeyUid = keyUid
+            }
+        }
+
+        Keychain {
+            service: "StatusDesktop"
+
+            id: appKeychain
+
+            // These signal handlers keep the compatibility with the old keychain approach,
+            // which is used by `keycard_popup` (any auth inside the app) and the old onboarding.
+            // NOTE: this hack won't work if changes are made with another Keychain instance.
+            onCredentialSaved: function (account) {
+                applicationWindow.biometricFlowPending = false
+                // load appMain if not already after biometric flow is complete
+                if(!loader.item && applicationWindow.appIsReady) {
+                    moveToAppMain()
+                }
+                localAccountSettings.storeToKeychainValue = Constants.keychain.storedValue.store
+            }
+            onCredentialDeleted: (account) => localAccountSettings.storeToKeychainValue = Constants.keychain.storedValue.never
+            onGetCredentialRequestCompleted: function(status, secret) {
+                // Handle Failure to safely move on to appMain
+                if (status !== Keychain.StatusSuccess &&
+                        !loader.item &&
+                        applicationWindow.appIsReady) {
+                    moveToAppMain()
                 }
             }
-
-            footer: null
-
-            onClosed: shakeToShareLoader.active = false
         }
-    }
 
-    Loader {
-        id: splashScreenLoader
-        anchors.fill: parent
-        sourceComponent: DidYouKnowSplashScreen {
-            messagesEnabled: true
-            infiniteLoading: true
-        }
-        onLoaded: {
-            applicationWindow.contentLoaded()
-        }
-    }
-
-    Loader {
-        id: startupOnboardingLoader
-
-        anchors.fill: parent
-        anchors.topMargin: Qt.platform.os === SQUtils.Utils.mac ? 0 : parent.SafeArea.margins.top
-        anchors.leftMargin: parent.SafeArea.margins.left
-        anchors.rightMargin: parent.SafeArea.margins.right
-        anchors.bottomMargin: parent.SafeArea.margins.bottom
-        active: !applicationWindow.skipOnboarding
-
-        source: active ? "app/AppLayouts/Onboarding/StartupOnboardingWrapper.qml" : ""
-
-        onLoaded: {
-            item.featureFlagsStore = applicationWindow.featureFlagsStore
-            item.languageStore = applicationWindow.languageStore
-            item.keychain = appKeychain
-            item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
-            item.biometricFlowPending = Qt.binding(() => applicationWindow.biometricFlowPending)
-            splashScreenLoader.active = false
-            applicationWindow.contentLoaded()
-            Qt.callLater(() => QmlCompiler.precompileAll()) // precompile all components after onboarding is loaded to speed up the login flow
-        }
-    }
-
-    Connections {
-        target: startupOnboardingLoader.item
-        ignoreUnknownSignals: true
-
-        function onAppReady() {
-            applicationWindow.appIsReady = true
-        }
-        function onStoreAppStateRequested() {
-            applicationWindow.storeAppState()
-        }
-        function onRequestMoveToAppMain() {
-            applicationWindow.moveToAppMain()
-        }
-        function onBiometricFlowStarted() {
-            applicationWindow.biometricFlowPending = true
-        }
-        function onSkippedBiometricFlow(available) {
-            d.showSkippedBiometricFlow = available
-        }
-        function onProfileSelected(keyUid) {
-            localAppSettings.selectedProfileKeyUid = keyUid
-        }
-    }
-
-    Keychain {
-        service: "StatusDesktop"
-
-        id: appKeychain
-
-        // These signal handlers keep the compatibility with the old keychain approach,
-        // which is used by `keycard_popup` (any auth inside the app) and the old onboarding.
-        // NOTE: this hack won't work if changes are made with another Keychain instance.
-        onCredentialSaved: function (account) {
-            applicationWindow.biometricFlowPending = false
-            // load appMain if not already after biometric flow is complete
-            if(!loader.item && applicationWindow.appIsReady) {
-                moveToAppMain()
-            }
-            localAccountSettings.storeToKeychainValue = Constants.keychain.storedValue.store
-        }
-        onCredentialDeleted: (account) => localAccountSettings.storeToKeychainValue = Constants.keychain.storedValue.never
-        onGetCredentialRequestCompleted: function(status, secret) {
-            // Handle Failure to safely move on to appMain
-            if (status !== Keychain.StatusSuccess &&
-                    !loader.item &&
-                    applicationWindow.appIsReady) {
-                moveToAppMain()
+        Loader {
+            active: SQUtils.Utils.isAndroid
+            sourceComponent: KeycardChannelDrawer {
+                id: keycardChannelDrawer
+                currentState: applicationWindow.keycardStateStore.state
+                onDismissed: {
+                    applicationWindow.keycardStateStore.keycardDismissed()
+                }
             }
         }
-    }
 
-    Loader {
-        active: SQUtils.Utils.isAndroid
-        sourceComponent: KeycardChannelDrawer {
-            id: keycardChannelDrawer
-            currentState: applicationWindow.keycardStateStore.state
-            onDismissed: {
-                applicationWindow.keycardStateStore.keycardDismissed()
-            }
+        Loader {
+            id: macOSSafeAreaLoader
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.right: parent.right
+            height: active ? parent.SafeArea.margins.top : 0
+            active: d.macOSWindowed
+            sourceComponent: macHeaderComponent
         }
-    }
-
-    Loader {
-        id: macOSSafeAreaLoader
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.right: parent.right
-        height: active ? parent.SafeArea.margins.top : 0
-        active: d.macOSWindowed
-        sourceComponent: macHeaderComponent
     }
 
     Component {
