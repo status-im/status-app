@@ -26,6 +26,8 @@ StatusDropdown {
     signal stickerSelected(string hashId, string packId, string url)
     signal buyClicked(string packId, string price)
 
+    fillHeightOnBottomSheet: true
+
     QtObject {
         id: d
 
@@ -209,6 +211,7 @@ StatusDropdown {
         Item {
             id: stickersContainer
             Layout.fillWidth: true
+            Layout.fillHeight: true
             Layout.leftMargin: 4
             Layout.topMargin: 4
             Layout.bottomMargin: 0
