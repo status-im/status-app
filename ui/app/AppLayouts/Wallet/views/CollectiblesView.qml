@@ -45,6 +45,8 @@ ColumnLayout {
 
     property alias selectedFilterGroupIds: cmbFilter.selectedFilterGroupIds
 
+    required property var unsupportedChainIds
+
     signal collectibleClicked(int chainId, string contractAddress, string tokenId, string uid, int tokenType, string communityId)
     signal sendRequested(string collectionUid, int tokenType, string fromAddress)
     signal receiveRequested(string symbol)
@@ -189,8 +191,7 @@ ColumnLayout {
 
         function getUnsupportedChainIds() {
             let activeChainIds = ModelUtils.modelToFlatArray(root.activeNetworks, "chainId")
-            let unsupportedChainIds = Constants.unsupportedMultichainFeatures[Constants.walletConnections.collectibles]
-            return unsupportedChainIds.filter(chainId => activeChainIds.includes(chainId))
+            return root.unsupportedChainIds.filter(chainId => activeChainIds.includes(chainId))
         }
 
         property FunctionAggregator hasAllTimestampsAggregator: FunctionAggregator {

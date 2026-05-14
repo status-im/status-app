@@ -60,3 +60,6 @@ method refreshMarketValues*(self: Module) =
 
 method refreshCollectiblesValues*(self: Module) =
   self.controller.refreshCollectiblesValues()
+
+method onUnsupportedCollectibleChainsLoaded*(self: Module, chains: seq[int]) =
+  self.view.setUnsupportedCollectibleChains(chains)

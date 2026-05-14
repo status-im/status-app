@@ -293,3 +293,6 @@ proc reevaluateRouterPath*(routerInputParamsUuid: string, pathName: string, chai
 
 rpc(refetchTxHistory, "wallet"):
   discard
+
+rpc(getUnsupportedCollectibleChainIds, "wallet"):
+  discard
