@@ -74,6 +74,7 @@ QObject {
     signal resetZoomFactor()
     signal nextTabRequested()
     signal previousTabRequested()
+    signal removeViewRequested()
 
     Shortcut {
         sequences: ["Ctrl+L", "F6"]
@@ -89,9 +90,7 @@ QObject {
     }
     Shortcut {
         sequences: [StandardKey.Close]
-        onActivated: {
-            triggerWebAction(AbstractWebView.WebAction.RequestClose)
-        }
+        onActivated: root.removeViewRequested() // might be trigerred from a downloads/empty page
     }
     Shortcut {
         sequence: "Escape"

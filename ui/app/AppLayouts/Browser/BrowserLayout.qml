@@ -539,6 +539,7 @@ StatusSectionLayout {
             onResetZoomFactor: webViewContext.resetZoomCurrent()
             onNextTabRequested: tabs.activateNextTab()
             onPreviousTabRequested: tabs.activatePreviousTab()
+            onRemoveViewRequested: webViewContext.removeView(tabs.currentIndex || 0)
         }
     }
 
