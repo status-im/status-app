@@ -51,6 +51,7 @@ Loader {
 
     required property bool createChatViewOpened
     required property bool isPortraitMode
+    readonly property bool navToMsgDetails: root.rootStore.navToMsgDetails
 
     property real leftPanelWidthOverride: 0
 
@@ -62,6 +63,12 @@ Loader {
     onStatusChanged: {
         if (status === Loader.Ready || status === Loader.Error)
             ready()
+    }
+
+    onNavToMsgDetailsChanged: {
+        if (root.item) {
+            root.item.navToMsgDetails = root.navToMsgDetails
+        }
     }
 
     Component {

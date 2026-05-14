@@ -47,6 +47,7 @@ Loader {
     required property bool isPortraitMode
 
     property real leftPanelWidthOverride: 0
+    readonly property bool navToMsgDetails: root.rootStore.navToMsgDetails
 
     // Re-emitted so AppMain owns the spinner toggle.
     signal ready()
@@ -58,6 +59,12 @@ Loader {
     onStatusChanged: {
         if (status === Loader.Ready || status === Loader.Error)
             ready()
+    }
+
+    onNavToMsgDetailsChanged: {
+        if (root.item) {
+            root.item.navToMsgDetails = root.navToMsgDetails
+        }
     }
 
     Component {

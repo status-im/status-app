@@ -32,7 +32,7 @@ Loader {
     property real leftPanelWidthOverride: 0
 
     // Routes the navigation request that was previously dispatched via globalConns.
-    signal appSectionRequested(int sectionType, int subsection, int subSubsection, var data)
+    signal appSectionRequested(int sectionType, var subsection, int subSubsection, var data)
 
     asynchronous: false
 
