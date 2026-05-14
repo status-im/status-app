@@ -57,8 +57,8 @@ StatusSectionLayout {
 
     signal sendToRecipientRequested(string address)
 
-    function openUrlInNewTab(url, initialTitle) {
-        Qt.callLater(() => _internal.addNewTab(root.browserRootStore.determineRealURL(url), initialTitle))
+    function openUrlInNewTab(url, initialTitle, activate=false) {
+        Qt.callLater(() => _internal.addNewTab(root.browserRootStore.determineRealURL(url), initialTitle, activate))
     }
 
     function reloadCurrentTab() {
@@ -141,10 +141,15 @@ StatusSectionLayout {
             tabs.activateTab(tabs.count - 1)
         }
 
-        function addNewTab(url, initialTitle) {
+        function addNewTab(url, initialTitle, activate) {
             var tab = webViewContext.createEmptyTab(tabs.count !== 0 ? currentWebView.profileParams : browserConfig.defaultProfileParams, false, true, url, initialTitle);
-            browserToolbarLoader.activateAddressBar()
+            if (activate)
+                browserToolbarLoader.activateAddressBar()
             return tab;
+        }
+
+        function addNewEmptyTab() {
+            addNewTab("", "", true)
         }
 
         function onRequestLaunchInBrowser(url) {
@@ -285,7 +290,7 @@ StatusSectionLayout {
             determineRealURL: function(url) {
                 return root.browserRootStore.determineRealURL(url)
             }
-            onOpenNewTabTriggered: _internal.addNewTab()
+            onOpenNewTabTriggered: _internal.addNewEmptyTab()
             fnGetWebView: (index) => {
                               return webViewContext.getWebView(index)
                           }
@@ -621,7 +626,7 @@ StatusSectionLayout {
 
         incognitoMode: _internal.currentTabIncognito
         zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
-        onAddNewTab: _internal.addNewTab()
+        onAddNewTab: _internal.addNewEmptyTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
         onGoIncognito: (checked) => root.applyIncognitoMode(checked)
         onZoomIn: webViewContext.changeZoomCurrent(0.1)
@@ -702,7 +707,7 @@ StatusSectionLayout {
             bookmarksModel: root.bookmarksStore.bookmarksModel
 
             onActivateTabRequested: tabIndex => tabs.activateTab(tabIndex)
-            onAddTabRequested: _internal.addNewTab()
+            onAddTabRequested: _internal.addNewEmptyTab()
             onAddBookmarkRequested: _internal.openFavoriteModal()
             onEditBookmarkRequested: (url, name) => _internal.openFavoriteModal(true, url, name)
             onDeleteBookmarkRequested: url => root.bookmarksStore.deleteBookmark(url)
