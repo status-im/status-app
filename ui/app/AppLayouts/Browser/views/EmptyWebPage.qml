@@ -25,10 +25,10 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: 60
-        width: 294
-        height: 294
+        width: 359
+        height: 240
 
-        source: Assets.png("browser/pepehand")
+        source: Assets.png("browser/new_tab")
         cache: false
     }
 
