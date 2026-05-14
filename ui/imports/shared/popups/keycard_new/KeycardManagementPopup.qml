@@ -234,14 +234,14 @@ StatusDialog {
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
                                         root.store.startGetMetadata(pin)
-                                    })()
+                                    })
         }
 
         function startFactoryReset() {
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
                                         root.store.startFactoryReset(root.keycardUid)
-                                    })()
+                                    })
         }
 
         function startImportingKeyPair() {
@@ -252,7 +252,7 @@ StatusDialog {
                                                                          d.seedPhrase,
                                                                          d.keyPairName,
                                                                          d.accountPathsJson)
-                                    })()
+                                    })
         }
 
         function startMigratingNonProfileKeypairToKeycard() {
@@ -262,7 +262,7 @@ StatusDialog {
                                         root.store.startMigratingNonProfileKeypairToKeycard(d.authenticationPassword,
                                                                                             d.newPin,
                                                                                             d.seedPhrase)
-                                    })()
+                                    })
         }
 
         function startMigratingProfileKeypairToKeycard() {
@@ -272,7 +272,7 @@ StatusDialog {
                                         root.store.startMigratingProfileKeypairToKeycard(d.authenticationPassword,
                                                                                          d.newPin,
                                                                                          d.seedPhrase)
-                                    })()
+                                    })
         }
 
         function startAddingKeyPairToStatus() {
@@ -283,7 +283,7 @@ StatusDialog {
                                                                                          root.keyUid,
                                                                                          d.keyPairName,
                                                                                          d.accountPathsJson)
-                                    })()
+                                    })
         }
 
         function startStopUsingKeycardForKeyPair() {
@@ -294,7 +294,7 @@ StatusDialog {
                                         root.store.startStopUsingKeycardForKeyPair(root.keyUid,
                                                                                    d.seedPhrase,
                                                                                    d.newStatusPassword)
-                                    })()
+                                    })
         }
 
         function startStopUsingKeycardForProfileKeyPair() {
@@ -304,7 +304,7 @@ StatusDialog {
             Backpressure.setTimeout(this, 500, () => {
                                         root.store.startStopUsingKeycardForProfileKeyPair(d.seedPhrase,
                                                                                           d.newStatusPassword)
-                                    })()
+                                    })
         }
 
         function startChangeKeycardPIN() {
@@ -312,7 +312,7 @@ StatusDialog {
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
                                         root.store.startChangeKeycardPIN(d.currentPin, d.newPin)
-                                    })()
+                                    })
         }
 
         function startChangeKeycardPUK() {
@@ -320,7 +320,7 @@ StatusDialog {
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
                                         root.store.startChangeKeycardPUK(d.currentPin, d.newPuk)
-                                    })()
+                                    })
         }
 
         function startRenameKeycard() {
@@ -330,7 +330,7 @@ StatusDialog {
                                         root.store.startRenameKeycard(d.currentPin,
                                                                       d.newName,
                                                                       root.cardMetadataWalletAccountsJson)
-                                    })()
+                                    })
         }
 
         function startUnblockKeycardUsingPuk() {
@@ -338,7 +338,7 @@ StatusDialog {
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
                                         root.store.startUnblockKeycardUsingPuk(d.newPin, d.puk)
-                                    })()
+                                    })
         }
 
         function startUnblockKeycardUsingRecoveryPhrase() {
@@ -349,14 +349,14 @@ StatusDialog {
                                                                                           d.seedPhrase,
                                                                                           root.cardMetadataName,
                                                                                           root.cardMetadataWalletAccountsJson)
-                                    })()
+                                    })
         }
 
         function startOnboardingLoginWithKeycard() {
             d.processing = true
             Backpressure.setTimeout(this, 500, () => {
                                         root.store.startAsyncLogin(root.keyUid, d.currentPin, true)
-                                    })()
+                                    })
         }
 
         function startOnboardingImportngKeyPair() {
@@ -371,7 +371,7 @@ StatusDialog {
                                                               path: Constants.walletRootPath + "/0" // default wallet account path
                                                           }]
                                         root.store.startImportingKeyPair(d.newPin, d.seedPhrase, d.keyPairName, JSON.stringify(accounts))
-                                    })()
+                                    })
         }
 
         function nextStep() {
