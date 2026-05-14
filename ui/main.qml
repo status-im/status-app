@@ -85,6 +85,18 @@ Window {
 
     SafeArea.additionalMargins.bottom: additionalBottomMargin
 
+    // On Android 15 taking a screenshot and invoking sharing popup triggers full-screen mode. It's not restored back
+    // when exiting sharing popup. The change is not reflected in visibility property, so there is no direct way to detect it.
+    // The workaround here tracks safe area margins to detect full screen mode to restore to maximized mode immediately.
+    readonly property int saBottom: SafeArea.margins.bottom
+    readonly property int saLeft: SafeArea.margins.left
+    readonly property int saRight: SafeArea.margins.right
+
+    onSaBottomChanged: if (SQUtils.Utils.isAndroid && saBottom === 0) applicationWindow.showMaximized()
+    onSaLeftChanged: if (SQUtils.Utils.isAndroid && saLeft === 0) applicationWindow.showMaximized()
+    onSaRightChanged: if (SQUtils.Utils.isAndroid && saRight === 0) applicationWindow.showMaximized()
+    // end of screenshot full-screen bug workaround
+
     objectName: "mainWindow"
     color: Theme.palette.background
     title: {
