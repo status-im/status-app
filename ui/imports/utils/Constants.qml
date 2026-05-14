@@ -737,7 +737,12 @@ QtObject {
     readonly property var unsupportedMultichainFeatures: {
         "collectibles": [
             chains.binanceSmartChainMainnetChainId,
-            chains.binanceSmartChainTestnetChainId
+            chains.binanceSmartChainTestnetChainId,
+            chains.hoodiChainId,
+            chains.inkMainnetChainId,
+            chains.inkSepoliaChainId,
+            chains.katanaMainnetChainId,
+            chains.katanaBokutoChainId
         ]
     }
 
