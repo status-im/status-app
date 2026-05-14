@@ -216,9 +216,7 @@ AbstractWebView {
         inspectedView: root.devToolsEnabled ? webView : null
         settings.forceDarkMode: Application.styleHints.colorScheme === Qt.ColorScheme.Dark
 
-        onWindowCloseRequested: {
-            root.devToolsEnabled = false
-        }
+        onWindowCloseRequested: root.devToolsToggled(false)
     }
 
     Binding {

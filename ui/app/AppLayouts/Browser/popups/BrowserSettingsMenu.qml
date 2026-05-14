@@ -12,6 +12,7 @@ StatusMenu {
 
     required property bool incognitoMode
     required property real zoomFactor
+    required property var browserSettings
 
     visualizeShortcuts: true
 
@@ -127,9 +128,9 @@ StatusMenu {
         icon.name: "gavel"
         shortcut: "F12"
         checkable: true
-        checked: localAccountSensitiveSettings.devToolsEnabled
+        checked: browserSettings.devToolsEnabled
         onTriggered: {
-            localAccountSensitiveSettings.devToolsEnabled = !localAccountSensitiveSettings.devToolsEnabled
+            browserSettings.devToolsEnabled = !browserSettings.devToolsEnabled
         }
     }
 

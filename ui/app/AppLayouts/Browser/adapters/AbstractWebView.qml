@@ -86,6 +86,7 @@ Item {
     signal linkHovered(string hoveredUrl)
     signal windowCloseRequested()
     signal downloadRequested(var download)
+    signal devToolsToggled(bool enabled)
 
     // Signals to be handled at Layout level
     // newWindowRequested passes ready-to-use parameters for tab creation:

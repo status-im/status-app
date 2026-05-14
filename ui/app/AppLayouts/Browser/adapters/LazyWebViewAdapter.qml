@@ -119,5 +119,6 @@ AbstractWebView {
         function onCertificateError(error)             { root.certificateError(error) }
         function onJavaScriptDialogRequested(request)  { root.javaScriptDialogRequested(request) }
         function onFindTextFinished(result)            { root.findTextFinished(result) }
+        function onDevToolsToggled(enabled)            { root.devToolsToggled(enabled) }
     }
 }
