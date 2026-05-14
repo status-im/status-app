@@ -626,6 +626,7 @@ StatusSectionLayout {
 
         incognitoMode: _internal.currentTabIncognito
         zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
+        browserSettings: localAccountSensitiveSettings
         onAddNewTab: _internal.addNewEmptyTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
         onGoIncognito: (checked) => root.applyIncognitoMode(checked)

@@ -260,7 +260,9 @@ QtObject {
             profileManager: root.profileManager
             enableJsLogs: root.isDebugEnabled
             localAccountSensitiveSettings: root.browserSettings
+
             devToolsEnabled: root.browserSettings.devToolsEnabled
+            onDevToolsToggled: enabled => root.browserSettings.devToolsEnabled = enabled
 
             onWindowCloseRequested: root.removeView(StackLayout.index)
             onNewWindowRequested: (makeCurrent, requestedUrl, callback) => {
