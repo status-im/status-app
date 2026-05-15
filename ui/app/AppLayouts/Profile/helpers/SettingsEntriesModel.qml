@@ -157,7 +157,7 @@ SortFilterProxyModel {
         },
         {
             subsection: Constants.settingsSubsection.notifications,
-            text: qsTr("Notifications & Sounds"),
+            text: qsTr("Notifications"),
             icon: "notification",
             group: root.preferencesGroupTitle,
             isExperimental: false
