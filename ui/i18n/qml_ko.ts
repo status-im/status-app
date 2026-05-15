@@ -6848,7 +6848,15 @@ key pair. Keycard will be required for signing</source>
 <context>
     <name>EnablePushNotificationsPopup</name>
     <message>
-        <source>Enable push notifications</source>
+        <source>Enable notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Receive notification alerts for incoming messages, mentions, and contact requests on your device so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;.&lt;br&gt;&lt;br&gt;Status uses APNs (Apple Push Notification service) solely to deliver notification signals; your end-to-end encrypted message content is never passed through or stored there.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Receive real-time notifications for incoming messages, mentions, and contact requests on your device so you can stay up to date and reply or react without opening the app. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6866,14 +6874,6 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Continue</source>
         <translation type="unfinished">계속</translation>
-    </message>
-    <message>
-        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -13028,16 +13028,24 @@ to load</source>
         <translation>다중 면제</translation>
     </message>
     <message>
-        <source>Enable Notifications in macOS Settings</source>
-        <translation>macOS 설정에서 알림 활성화</translation>
+        <source>Enable notifications</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>To receive Status notifications, make sure you&apos;ve enabled them in your computer&apos;s settings under &lt;b&gt;System Preferences &gt; Notifications&lt;/b&gt;</source>
-        <translation>Status 알림을 받으려면, 컴퓨터 설정의 &lt;b&gt;시스템 환경설정 &gt; 알림&lt;/b&gt;에서 알림이 활성화되어 있는지 확인하세요</translation>
+        <source>Receive notifications for incoming messages, mentions, and contact requests on your computer so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications directly through your operating system, with no third parties, centralized servers, or intermediaries involved.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Allow Notification Bubbles</source>
-        <translation>알림 버블 허용</translation>
+        <source>&lt;font color=&apos;%1&apos;&gt;Enable notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messages</source>
@@ -13124,6 +13132,10 @@ to load</source>
         <translation>테스트 알림 보내기</translation>
     </message>
     <message>
+        <source>Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Exemptions</source>
         <translation>면제</translation>
     </message>
@@ -13136,27 +13148,15 @@ to load</source>
         <translation>최신순</translation>
     </message>
     <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
+        <source>Including:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable mobile push notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>From non-contacts</source>
+        <source>Mentions and replies in communities</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Contact requests and group messages</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Communities</source>
-        <translation type="unfinished">커뮤니티</translation>
-    </message>
-    <message>
-        <source>Mentions and replies</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -16104,8 +16104,8 @@ to load</source>
         <translation>테마</translation>
     </message>
     <message>
-        <source>Notifications &amp; Sounds</source>
-        <translation>알림 및 사운드</translation>
+        <source>Notifications</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Language &amp; Currency</source>
@@ -18215,10 +18215,6 @@ This action cannot be undone.</source>
     <message>
         <source>Enable third-party services</source>
         <translation>서드파티 서비스 활성화</translation>
-    </message>
-    <message>
-        <source>Close</source>
-        <translation>닫기</translation>
     </message>
     <message>
         <source>Disable services and restart the app</source>

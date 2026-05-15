@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import SortFilterProxyModel
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -162,7 +163,7 @@ SettingsContentBase {
         Rectangle {
             Layout.preferredWidth: root.contentWidth
             implicitHeight: col1.height + 2 * Theme.padding
-            visible: SQUtils.Utils.isMacOS
+            visible: false // It will be evaluated on the next release 2.39
             radius: Constants.settingsSection.radius
             color: Theme.palette.primaryColor3
 
@@ -176,7 +177,7 @@ SettingsContentBase {
 
                 StatusBaseText {
                     Layout.preferredWidth: parent.width
-                    text: qsTr("Enable Notifications in macOS Settings")
+                    text: qsTr("Enable notifications")
                     font.pixelSize: d.infoFontSize
                     lineHeight: d.infoLineHeight
                     lineHeightMode: Text.FixedHeight
@@ -185,7 +186,7 @@ SettingsContentBase {
 
                 StatusBaseText {
                     Layout.preferredWidth: parent.width
-                    text: qsTr("To receive Status notifications, make sure you've enabled them in your computer's settings under <b>System Preferences > Notifications</b>")
+                    text: qsTr("Receive notifications for incoming messages, mentions, and contact requests on your computer so you can stay up to date in real time. Customize anytime in <b>Settings → Notifications</b><br><br>Status delivers notifications directly through your operating system, with no third parties, centralized servers, or intermediaries involved.")
                     font.pixelSize: d.infoFontSize
                     lineHeight: d.infoLineHeight
                     lineHeightMode: Text.FixedHeight
@@ -214,7 +215,7 @@ SettingsContentBase {
             }
 
             contentItem: StatusBaseText {
-                text: qsTr("<font color='%1'>Enable Push notifications in your device Settings</font><br><br>Before enabling mobile push notifications in the app below, enable them in <font color='%1'>your device settings</font> first.").arg(Theme.palette.primaryColor1)
+                text: qsTr("<font color='%1'>Enable notifications in your device Settings</font><br><br>Before enabling notifications in the app below, enable them in <font color='%1'>your device settings</font> first.").arg(Theme.palette.primaryColor1)
                 font.pixelSize: d.infoFontSize
                 lineHeight: d.infoLineHeight
                 lineHeightMode: Text.FixedHeight
@@ -225,9 +226,12 @@ SettingsContentBase {
 
         StatusListItem {
             Layout.preferredWidth: root.contentWidth
-            title: SQUtils.Utils.isMobile
-                   ? qsTr("Enable mobile push notifications")
-                   : qsTr("Allow Notification Bubbles")
+            title: qsTr("Enable notifications")
+            tertiaryTitle:  !SQUtils.Utils.isMobile ?
+                                qsTr("Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings") :
+                                SQUtils.Utils.isIOS ?
+                                    qsTr("Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.") :
+                                    qsTr("Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.")
             components: [
                 StatusSwitch {
                     id: allowNotifSwitch
@@ -440,79 +444,9 @@ SettingsContentBase {
                 }
             }
 
-            StatusListItem {
+            Loader {
                 Layout.preferredWidth: root.contentWidth
-                title: qsTr("Play a Sound When Receiving a Notification")
-                components: [
-                    StatusSwitch {
-                        id: soundSwitch
-                        checked: d.notificationsSettings.notificationSoundsEnabled
-                        onClicked: {
-                            d.notificationsSettings.notificationSoundsEnabled = !d.notificationsSettings.notificationSoundsEnabled
-                        }
-                    }
-                ]
-                onClicked: {
-                    soundSwitch.clicked()
-                }
-            }
-
-            StatusBaseText {
-                Layout.preferredWidth: root.contentWidth
-                Layout.leftMargin: Theme.padding
-                text: qsTr("Volume")
-                color: Theme.palette.directColor1
-            }
-
-            Item {
-                Layout.preferredWidth: root.contentWidth
-                Layout.preferredHeight: Constants.settingsSection.itemHeight + Theme.padding
-
-                StatusSlider {
-                    id: volumeSlider
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.topMargin: Theme.bigPadding
-                    anchors.leftMargin: Theme.padding
-                    anchors.rightMargin: Theme.padding
-                    from: 0
-                    to: 100
-                    stepSize: 1
-
-                    onValueChanged: {
-                        d.notificationsSettings.volume = value
-                    }
-
-                    Component.onCompleted: {
-                        value = d.notificationsSettings.volume
-                        volumeSlider.valueChanged.connect(() => {
-                                                            // play a sound preview, but not on startup
-                                                            Global.playNotificationSound()
-                                                        });
-                    }
-                }
-
-                RowLayout {
-                    anchors.top: volumeSlider.bottom
-                    anchors.left: volumeSlider.left
-                    anchors.topMargin: Theme.halfPadding
-                    width: volumeSlider.width
-
-                    StatusBaseText {
-                        font.pixelSize: Theme.primaryTextFontSize
-                        text: volumeSlider.from
-                        Layout.preferredWidth: volumeSlider.width/2
-                        color: Theme.palette.baseColor1
-                    }
-
-                    StatusBaseText {
-                        font.pixelSize: Theme.primaryTextFontSize
-                        text: volumeSlider.to
-                        Layout.alignment: Qt.AlignRight
-                        color: Theme.palette.baseColor1
-                    }
-                }
+                sourceComponent: soundAndVolumeComponent
             }
 
             StatusButton {
@@ -569,10 +503,15 @@ SettingsContentBase {
                     Layout.preferredWidth: root.contentWidth
                     Layout.preferredHeight: Theme.bigPadding
                 }
+
+                StatusBaseText {
+                    Layout.leftMargin: Theme.padding
+                    text: qsTr("Including:")
+                }
+
                 StatusListItem {
                     Layout.preferredWidth: root.contentWidth
-                    title: qsTr("From non-contacts")
-                    subTitle: qsTr("Contact requests and group messages")
+                    title: qsTr("Contact requests and group messages")
                     enabled: d.notificationsSettings.notifSettingAllowNotifications
                     components: [
                         StatusSwitch {
@@ -598,8 +537,7 @@ SettingsContentBase {
 
                 StatusListItem {
                     Layout.preferredWidth: root.contentWidth
-                    title: qsTr("Communities")
-                    subTitle: qsTr("Mentions and replies")
+                    title: qsTr("Mentions and replies in communities")
                     enabled: d.notificationsSettings.notifSettingAllowNotifications
                     components: [
                         StatusSwitch {
@@ -620,6 +558,106 @@ SettingsContentBase {
                     onClicked: {
                         if (enabled)
                             communitiesSwitch.clicked()
+                    }
+                }
+
+                Separator {
+                    Layout.preferredWidth: root.contentWidth
+                    Layout.preferredHeight: Theme.bigPadding
+                }
+
+                Loader {
+                    Layout.preferredWidth: root.contentWidth
+                    sourceComponent: soundAndVolumeComponent
+                }
+
+                StatusButton {
+                    Layout.leftMargin: Theme.padding
+                    text: qsTr("Send a Test Notification")
+                    onClicked: {
+                        root.notificationsStore.sendTestNotification("Status",
+                                                                    qsTr("You have a new message"))
+                    }
+                }
+            }
+        }
+
+        Component {
+            id: soundAndVolumeComponent
+
+            ColumnLayout {
+                StatusListItem {
+                    Layout.preferredWidth: root.contentWidth
+                    title: qsTr("Play a Sound When Receiving a Notification")
+                    components: [
+                        StatusSwitch {
+                            id: soundSwitch
+                            checked: d.notificationsSettings.notificationSoundsEnabled
+                            onClicked: {
+                                d.notificationsSettings.notificationSoundsEnabled = !d.notificationsSettings.notificationSoundsEnabled
+                            }
+                        }
+                    ]
+                    onClicked: {
+                        soundSwitch.clicked()
+                    }
+                }
+
+                StatusBaseText {
+                    Layout.preferredWidth: root.contentWidth
+                    Layout.leftMargin: Theme.padding
+                    text: qsTr("Volume")
+                    color: Theme.palette.directColor1
+                }
+
+                Item {
+                    Layout.preferredWidth: root.contentWidth
+                    Layout.preferredHeight: Constants.settingsSection.itemHeight + Theme.padding
+
+                    StatusSlider {
+                        id: volumeSlider
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.topMargin: Theme.bigPadding
+                        anchors.leftMargin: Theme.padding
+                        anchors.rightMargin: Theme.padding
+                        from: 0
+                        to: 100
+                        stepSize: 1
+
+                        onValueChanged: {
+                            d.notificationsSettings.volume = value
+                        }
+
+                        Component.onCompleted: {
+                            value = d.notificationsSettings.volume
+                            volumeSlider.valueChanged.connect(() => {
+                                                            // play a sound preview, but not on startup
+                                                            Global.playNotificationSound()
+                                                        });
+                        }
+                    }
+
+                    RowLayout {
+                        anchors.top: volumeSlider.bottom
+                        anchors.left: volumeSlider.left
+                        anchors.topMargin: Theme.halfPadding
+                        width: volumeSlider.width
+
+                        StatusBaseText {
+                            font.pixelSize: Theme.primaryTextFontSize
+                            text: volumeSlider.from
+                            Layout.preferredWidth: volumeSlider.width/2
+                            color: Theme.palette.baseColor1
+                        }
+
+                        StatusBaseText {
+                            font.pixelSize: Theme.primaryTextFontSize
+                            text: volumeSlider.to
+                            Layout.alignment: Qt.AlignRight
+                            color: Theme.palette.baseColor1
+                        }
                     }
                 }
             }

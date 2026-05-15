@@ -8382,9 +8382,19 @@
   <context>
     <name>EnablePushNotificationsPopup</name>
     <message>
-      <source>Enable push notifications</source>
+      <source>Enable notifications</source>
       <comment>EnablePushNotificationsPopup</comment>
-      <translation>Enable push notifications</translation>
+      <translation>Enable notifications</translation>
+    </message>
+    <message>
+      <source>Receive notification alerts for incoming messages, mentions, and contact requests on your device so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;.&lt;br&gt;&lt;br&gt;Status uses APNs (Apple Push Notification service) solely to deliver notification signals; your end-to-end encrypted message content is never passed through or stored there.</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Receive notification alerts for incoming messages, mentions, and contact requests on your device so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;.&lt;br&gt;&lt;br&gt;Status uses APNs (Apple Push Notification service) solely to deliver notification signals; your end-to-end encrypted message content is never passed through or stored there.</translation>
+    </message>
+    <message>
+      <source>Receive real-time notifications for incoming messages, mentions, and contact requests on your device so you can stay up to date and reply or react without opening the app. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Receive real-time notifications for incoming messages, mentions, and contact requests on your device so you can stay up to date and reply or react without opening the app. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</translation>
     </message>
     <message>
       <source>Maybe later</source>
@@ -8405,16 +8415,6 @@
       <source>Continue</source>
       <comment>EnablePushNotificationsPopup</comment>
       <translation>Continue</translation>
-    </message>
-    <message>
-      <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</source>
-      <comment>EnablePushNotificationsPopup</comment>
-      <translation>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</translation>
-    </message>
-    <message>
-      <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</source>
-      <comment>EnablePushNotificationsPopup</comment>
-      <translation>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</translation>
     </message>
   </context>
   <context>
@@ -15908,19 +15908,29 @@
       <translation>Multiple Exemptions</translation>
     </message>
     <message>
-      <source>Enable Notifications in macOS Settings</source>
+      <source>Enable notifications</source>
       <comment>NotificationsView</comment>
-      <translation>Enable Notifications in macOS Settings</translation>
+      <translation>Enable notifications</translation>
     </message>
     <message>
-      <source>To receive Status notifications, make sure you&#39;ve enabled them in your computer&#39;s settings under &lt;b&gt;System Preferences &gt; Notifications&lt;/b&gt;</source>
+      <source>Receive notifications for incoming messages, mentions, and contact requests on your computer so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications directly through your operating system, with no third parties, centralized servers, or intermediaries involved.</source>
       <comment>NotificationsView</comment>
-      <translation>To receive Status notifications, make sure you&#39;ve enabled them in your computer&#39;s settings under &lt;b&gt;System Preferences &gt; Notifications&lt;/b&gt;</translation>
+      <translation>Receive notifications for incoming messages, mentions, and contact requests on your computer so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications directly through your operating system, with no third parties, centralized servers, or intermediaries involved.</translation>
     </message>
     <message>
-      <source>Allow Notification Bubbles</source>
+      <source>&lt;font color=&#39;%1&#39;&gt;Enable notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</source>
       <comment>NotificationsView</comment>
-      <translation>Allow Notification Bubbles</translation>
+      <translation>&lt;font color=&#39;%1&#39;&gt;Enable notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</translation>
+    </message>
+    <message>
+      <source>Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.</source>
+      <comment>NotificationsView</comment>
+      <translation>Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.</translation>
+    </message>
+    <message>
+      <source>Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
+      <comment>NotificationsView</comment>
+      <translation>Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</translation>
     </message>
     <message>
       <source>Messages</source>
@@ -16028,6 +16038,11 @@
       <translation>Send a Test Notification</translation>
     </message>
     <message>
+      <source>Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings</source>
+      <comment>NotificationsView</comment>
+      <translation>Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings</translation>
+    </message>
+    <message>
       <source>Exemptions</source>
       <comment>NotificationsView</comment>
       <translation>Exemptions</translation>
@@ -16043,34 +16058,19 @@
       <translation>Most recent</translation>
     </message>
     <message>
-      <source>From non-contacts</source>
+      <source>Including:</source>
       <comment>NotificationsView</comment>
-      <translation>From non-contacts</translation>
+      <translation>Including:</translation>
+    </message>
+    <message>
+      <source>Mentions and replies in communities</source>
+      <comment>NotificationsView</comment>
+      <translation>Mentions and replies in communities</translation>
     </message>
     <message>
       <source>Contact requests and group messages</source>
       <comment>NotificationsView</comment>
       <translation>Contact requests and group messages</translation>
-    </message>
-    <message>
-      <source>Communities</source>
-      <comment>NotificationsView</comment>
-      <translation>Communities</translation>
-    </message>
-    <message>
-      <source>Mentions and replies</source>
-      <comment>NotificationsView</comment>
-      <translation>Mentions and replies</translation>
-    </message>
-    <message>
-      <source>&lt;font color=&#39;%1&#39;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</source>
-      <comment>NotificationsView</comment>
-      <translation>&lt;font color=&#39;%1&#39;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</translation>
-    </message>
-    <message>
-      <source>Enable mobile push notifications</source>
-      <comment>NotificationsView</comment>
-      <translation>Enable mobile push notifications</translation>
     </message>
   </context>
   <context>
@@ -19662,9 +19662,9 @@
       <translation>Appearance</translation>
     </message>
     <message>
-      <source>Notifications &amp; Sounds</source>
+      <source>Notifications</source>
       <comment>SettingsEntriesModel</comment>
-      <translation>Notifications &amp; Sounds</translation>
+      <translation>Notifications</translation>
     </message>
     <message>
       <source>Language &amp; Currency</source>
@@ -22217,11 +22217,6 @@
       <source>Share feedback or suggest improvements on our %1.</source>
       <comment>ThirdpartyServicesPopup</comment>
       <translation>Share feedback or suggest improvements on our %1.</translation>
-    </message>
-    <message>
-      <source>Close</source>
-      <comment>ThirdpartyServicesPopup</comment>
-      <translation>Close</translation>
     </message>
     <message>
       <source>Disable services and restart the app</source>
