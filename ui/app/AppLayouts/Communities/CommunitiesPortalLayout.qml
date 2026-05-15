@@ -37,11 +37,6 @@ StatusSectionLayout {
 
     objectName: "communitiesPortalLayout"
 
-    onVisibleChanged: {
-        if(visible)
-            searcher.input.edit.forceActiveFocus()
-    }
-
     QtObject {
         id: d
 
@@ -125,8 +120,6 @@ StatusSectionLayout {
                         Layout.maximumWidth: 327
                         Layout.preferredHeight: 38
                         Layout.alignment: Qt.AlignVCenter
-                        topPadding: 0
-                        bottomPadding: 0
                     }
 
                     // filler
