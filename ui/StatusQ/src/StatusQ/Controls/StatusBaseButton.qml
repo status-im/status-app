@@ -266,8 +266,8 @@ AbstractButton {
 
         StatusRoundIcon {
             asset.name: root.icon.name
-            asset.width: d.iconSize
-            asset.height: d.iconSize
+            asset.width: root.icon.width
+            asset.height: root.icon.height
             asset.color: root.icon.color
             asset.bgColor: root.asset.bgColor
         }
