@@ -30,15 +30,10 @@ ToolBar {
     position: ToolBar.Top
     background: StatusDialogBackground {
         color: root.color
-        radius: root.radius
-
-        // cover for the bottom rounded corners
-        Rectangle {
-            width: parent.width
-            height: parent.radius
-            anchors.bottom: parent.bottom
-            color: parent.color
-        }
+        topLeftRadius: root.radius
+        topRightRadius: root.radius
+        bottomLeftRadius: 0
+        bottomRightRadius: 0
     }
 
     Item {
