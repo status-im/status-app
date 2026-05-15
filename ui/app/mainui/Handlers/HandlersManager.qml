@@ -260,13 +260,21 @@ QtObject {
                 appSettings.registerForCentralizedPushNotifications(PushNotifications.token)
             }
         }
+
+        Component.onCompleted: {
+            if (PushNotifications.token !== "" && SQUtils.Utils.isIOS) {
+                appSettings.registerForCentralizedPushNotifications(PushNotifications.token)
+            }
+        }
     }
 
     readonly property Connections pushNotificationsStatusConnections: Connections {
         target: PushNotifications
         enabled: false
         function onStatusChanged() {
-            if (PushNotifications.status !== PushNotifications.Granted) {
+            if (PushNotifications.status === PushNotifications.Granted) {
+                PushNotifications.requestToken()
+            } else {
                 showEnablePushNotificationsPopup()
             }
 
