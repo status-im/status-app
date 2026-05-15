@@ -205,8 +205,6 @@ StatusDialog {
                             StatusRoundedImage {
                                 Layout.preferredWidth: d.iconSize
                                 Layout.preferredHeight: d.iconSize
-                                border.width: 2
-                                border.color: Theme.palette.separator
                                 image.source: root.getFaviconFn(d.searchableTabsModel.mapToSource(index))
                             }
                             StatusBaseText {
