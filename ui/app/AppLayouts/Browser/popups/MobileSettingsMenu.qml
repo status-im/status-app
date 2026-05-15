@@ -31,8 +31,7 @@ StatusDialog {
     footer: null
 
     contentItem: ColumnLayout {
-        StatusListItem {
-            Layout.fillWidth: true
+        SettingsListItem {
             visible: root.supportsIncognito
             title: qsTr("Incognito")
             asset.name: "privacy"
@@ -48,8 +47,7 @@ StatusDialog {
                 root.close()
             }
         }
-        StatusListItem {
-            Layout.fillWidth: true
+        SettingsListItem {
             visible: root.supportsFind
             title: qsTr("Find in page")
             asset.name: "search-custom"
@@ -58,14 +56,13 @@ StatusDialog {
                 root.close()
             }
         }
-        StatusListItem {
-            id: zoomItem
-            Layout.fillWidth: true
+        SettingsListItem {
             visible: root.supportsZoom
             title: qsTr("Zoom")
             asset.name: "zoom"
             components: [
                 RowLayout {
+                    spacing: Theme.defaultHalfPadding
                     StatusFlatButton {
                         icon.name: "zoom-out"
                         tooltip.text: qsTr("Zoom Out")
@@ -100,9 +97,7 @@ StatusDialog {
                 root.close()
             }
         }
-
-        StatusListItem {
-            Layout.fillWidth: true
+        SettingsListItem {
             title: qsTr("Settings")
             asset.name: "settings"
             onClicked: {
@@ -110,5 +105,11 @@ StatusDialog {
                 root.close()
             }
         }
+    }
+
+    component SettingsListItem: StatusListItem {
+        Layout.fillWidth: true
+        asset.width: 24
+        asset.height: 24
     }
 }

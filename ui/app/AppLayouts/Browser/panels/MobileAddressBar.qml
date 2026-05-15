@@ -48,7 +48,7 @@ Control {
     }
 
     contentItem: RowLayout {
-        spacing: 4
+        spacing: 0
 
         BrowserAddressField {
             id: addressBar
@@ -88,7 +88,8 @@ Control {
         DappsComboBox {
             Layout.fillHeight: true
             Layout.preferredWidth: height
-            spacing: Theme.halfPadding
+            iconSize: 28
+            spacing: Theme.defaultHalfPadding
             visible: !addressBar.cursorVisible
             incognitoMode: root.incognitoMode
             popupDirectParent: root
@@ -124,8 +125,9 @@ Control {
             tooltip.text: qsTr("Close")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
             icon.name: "close"
-            icon.width: 24
-            icon.height: 24
+            icon.width: 28
+            icon.height: 28
+            isRoundIcon: true
             onClicked: root.deactivateAddressBar()
         }
     }

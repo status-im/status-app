@@ -11,12 +11,14 @@ StatusFlatButton {
     signal contextMenuRequested(var parent, point pos)
 
     // as per design
-    implicitWidth: 36
-    implicitHeight: 36
+    implicitWidth: 44
+    implicitHeight: 44
     radius: width/2
     padding: 4
 
-    asset.color: {
+    icon.width: 28
+    icon.height: 28
+    icon.color: {
         if (!root.enabled || !root.interactive) {
             return root.incognitoMode ?
                         Theme.palette.privacyColors.tertiaryOpaque:

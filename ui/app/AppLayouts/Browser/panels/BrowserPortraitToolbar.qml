@@ -28,7 +28,7 @@ BrowserToolbarBase {
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter
 
-                font.pixelSize: Theme.fontSize(11)
+                font.pixelSize: Theme.fontSize(12)
                 color: parent.asset.color
                 font.weight: Font.DemiBold
                 text: root.openTabsCount

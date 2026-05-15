@@ -46,7 +46,7 @@ TextField {
                 return "transparent"
             if (root.cursorVisible)
                 return Theme.palette.primaryColor1
-            return hoverHandler.hovered ? Theme.palette.primaryColor2 : "transparent"
+            return hoverHandler.hovered ? Theme.palette.primaryColor2 : Theme.palette.primaryColor3
         }
     }
 

@@ -16,8 +16,8 @@ Control {
     property color color: Theme.palette.statusModal.backgroundColor
     property bool dropShadowEnabled
 
-    spacing: Theme.halfPadding
-    padding: Theme.padding
+    spacing: Theme.defaultHalfPadding
+    padding: Theme.defaultPadding
     bottomPadding: padding + root.parent.SafeArea.margins.bottom
 
     background: Rectangle {
