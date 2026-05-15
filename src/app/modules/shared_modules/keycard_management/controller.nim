@@ -127,8 +127,9 @@ proc getKeyUidForSeedPhrase*(self: Controller, seedPhrase: string): string =
 proc getKeypairByKeyUid*(self: Controller, keyUid: string): KeypairDto =
   return self.walletAccountService.getKeypairByKeyUid(keyUid)
 
-proc addNewKeycardStoredKeypair*(self: Controller, keyUid, keypairName, xpub, coldWallet: string, accounts: seq[wallet_account_service.WalletAccountDto]): string =
-  return self.walletAccountService.addNewKeycardStoredKeypairNew(keyUid, keypairName, xpub, coldWallet, rootWalletMasterKey="", accounts)
+proc addNewColdWalletStoredKeypair*(self: Controller, keyUid, keypairName, xpub, coldWallet: string, accounts: seq[wallet_account_service.WalletAccountDto]): string =
+  return self.walletAccountService.addNewColdWalletStoredKeypair(keyUid, keypairName, xpub, coldWallet,
+    rootWalletMasterKey = "", accounts)
 
 proc addKeycardOrAccounts*(self: Controller, keyPair: KeycardDto, password: string) =
   self.walletAccountService.addKeycardOrAccountsAsync(keyPair, password)

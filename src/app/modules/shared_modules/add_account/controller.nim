@@ -199,7 +199,7 @@ proc addNewSeedPhraseKeypair*(self: Controller, seedPhrase: string, doPasswordHa
     info "cannot create keystore file if provided password is empty", keypairName=keypairName
     return false
   let err = self.walletAccountService.addNewSeedPhraseKeypair(seedPhrase, password, doPasswordHashing, keypairName,
-    accountCreationDetails)
+    coldWallet = wallet_account_service.ColdWalletTypeNoNone, accountCreationDetails)
   if err.len > 0:
     info "adding new keypair from seed phrase failed", keypairName=keypairName
     return false

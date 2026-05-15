@@ -9,6 +9,7 @@ import ./dto/restore_account_request
 
 from ../keycard/service import KeycardEvent, KeyDetails
 from ../keycardV2/dto import KeycardExportedKeysDto, KeyDetailsV2
+from ../wallet_account/dto/keypair_dto import ColdWalletTypeStatusKeycard
 import backend/general as status_general
 import backend/core as status_core
 import backend/privacy as status_privacy
@@ -270,6 +271,8 @@ QtObject:
       walletRootAddress: keycardData.walletRootKey.address,
       eip1581Address: keycardData.eip1581Key.address,
       encryptionPublicKey: keycardData.encryptionKey.publicKey,
+      walletXPub: "",
+      coldWallet: ColdWalletTypeStatusKeycard,
     )
 
     var request = RestoreAccountRequest(
@@ -284,6 +287,7 @@ QtObject:
     keyUid: string,
     instanceUid: string,
     keycardKeys: KeycardExportedKeysDto,
+    walletXPub: string,
     thirdpartyServicesEnabled: bool
     ): string =
 
@@ -298,6 +302,8 @@ QtObject:
       walletRootAddress: keycardKeys.walletRootKey.address,
       eip1581Address: keycardKeys.eip1581Key.address,
       encryptionPublicKey: keycardKeys.encryptionKey.publicKey,
+      walletXPub: walletXPub,
+      coldWallet: ColdWalletTypeStatusKeycard,
     )
 
     var request = RestoreAccountRequest(

@@ -105,11 +105,11 @@ method onMainFailedToLoad*[T](self: Module[T]) =
 method load*[T](self: Module[T]) =
   singletonInstance.engine.setRootContextProperty("onboardingModule", self.viewVariant)
   self.controller.init()
-  
+
   let loggedInAccount = self.accountsService.fetchLoggedInAccount()
   self.resumeLogin = loggedInAccount.isValid()
   if (self.resumeLogin):
-    self.controller.setLoggedInAccount(loggedInAccount)    
+    self.controller.setLoggedInAccount(loggedInAccount)
     self.finishAppLoading2()
     return
 
@@ -247,6 +247,7 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
           keycardInfo.keyUID,
           keycardInfo.instanceUID,
           self.exportedKeys,
+          walletXPub = "",
           thirdpartyServicesEnabled,
         )
       of OnboardingFlow.LoginWithLostKeycardSeedphrase:

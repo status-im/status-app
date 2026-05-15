@@ -740,11 +740,12 @@ proc updateKeycardUid*(self: Controller, keyUid: string, keycardUid: string) =
       self.tmpKeycardUid = keycardUid
       info "update keycard uid failed", oldKeycardUid=self.tmpKeycardUid, newKeycardUid=keycardUid
 
-proc addNewKeycardStoredKeypair*(self: Controller, keyUid, keypairName, rootWalletMasterKey: string,
-  accounts: seq[WalletAccountDto]): bool =
-  let err = self.walletAccountService.addNewKeycardStoredKeypair(keyUid, keypairName, rootWalletMasterKey, accounts)
+proc addNewColdWalletStoredKeypair*(self: Controller, keyUid, keypairName, walletXPub, coldWallet,
+  rootWalletMasterKey: string, accounts: seq[WalletAccountDto]): bool =
+  let err = self.walletAccountService.addNewColdWalletStoredKeypair(keyUid, keypairName, walletXPub, coldWallet,
+    rootWalletMasterKey, accounts)
   if err.len > 0:
-    info "adding new keypair from keycard failed", keypairName=keypairName, keyUid=keyUid
+    info "adding new keypair to cold wallet failed", keypairName=keypairName, keyUid=keyUid
     return false
   return true
 

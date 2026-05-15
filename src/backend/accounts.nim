@@ -69,11 +69,13 @@ proc addKeypairViaPrivateKey*(privateKey, password, name: string, accountCreatio
   let payload = %* [privateKey, password, name, accountCreationDetails]
   return core.callPrivateRPC("accounts_addKeypairViaPrivateKey", payload)
 
-proc addKeypairViaSeedPhrase*(seedPhrase, password, name: string, accountCreationDetails: AccountCreationDetails): RpcResponse[JsonNode] =
-  let payload = %* [seedPhrase, password, name, accountCreationDetails]
+proc addKeypairViaSeedPhrase*(seedPhrase, password, name, coldWallet: string,
+  accountCreationDetails: AccountCreationDetails): RpcResponse[JsonNode] =
+  let payload = %* [seedPhrase, password, name, coldWallet, accountCreationDetails]
   return core.callPrivateRPC("accounts_addKeypairViaSeedPhrase", payload)
 
-proc addKeypairStoredToKeycard*(keyUID, masterAddress, name: string, walletAccounts: seq[WalletAccountDto]): RpcResponse[JsonNode] =
+proc addKeypairStoredToColdWallet*(keyUID, masterAddress, name, walletXPub, coldWallet: string,
+  walletAccounts: seq[WalletAccountDto]): RpcResponse[JsonNode] =
   var accountsJson: JsonNode = %* []
   for acc in walletAccounts:
     accountsJson.add(%*{
@@ -92,30 +94,8 @@ proc addKeypairStoredToKeycard*(keyUID, masterAddress, name: string, walletAccou
       }
     )
 
-  let payload = %* [keyUID, masterAddress, name, accountsJson]
-  return core.callPrivateRPC("accounts_addKeypairStoredToKeycard", payload)
-
-proc addKeypairStoredToKeycardNew*(keyUID, masterAddress, name, xpub, coldWallet: string, walletAccounts: seq[WalletAccountDto]): RpcResponse[JsonNode] =
-  var accountsJson: JsonNode = %* []
-  for acc in walletAccounts:
-    accountsJson.add(%*{
-        "address": acc.address,
-        "key-uid": acc.keyUID,
-        "wallet": acc.isWallet,
-        "chat": acc.isChat,
-        "type": acc.walletType,
-        "path": acc.path,
-        "public-key": acc.publicKey,
-        "name": acc.name,
-        "emoji": acc.emoji,
-        "colorId": acc.colorId,
-        "hidden": acc.hideFromTotalBalance
-        # other fields are set on the status-go side
-      }
-    )
-
-  let payload = %* [keyUID, masterAddress, name, xpub, coldWallet, accountsJson]
-  return core.callPrivateRPC("accounts_addKeypairStoredToKeycardNew", payload)
+  let payload = %* [keyUID, masterAddress, name, walletXPub, coldWallet, accountsJson]
+  return core.callPrivateRPC("accounts_addKeypairStoredToColdWallet", payload)
 
 ## Adds a new account without creating a Keystore file and notifies paired devices
 proc addAccountWithoutKeystoreFileCreation*(name, address, path, publicKey, keyUid, accountType, colorId, emoji: string, hideFromTotalBalance: bool):

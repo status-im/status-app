@@ -12,6 +12,8 @@ type
     walletRootAddress*: string
     eip1581Address*: string
     encryptionPublicKey*: string
+    walletXPub*: string
+    coldWallet*: string
 
 proc toJson*(self: KeycardData): JsonNode =
   result = %*{
@@ -24,5 +26,7 @@ proc toJson*(self: KeycardData): JsonNode =
     "walletAddress": self.walletAddress,
     "walletRootAddress": self.walletRootAddress,
     "eip1581Address": self.eip1581Address,
-    "encryptionPublicKey": self.encryptionPublicKey
+    "encryptionPublicKey": self.encryptionPublicKey,
+    "walletXPub": self.walletXPub,
+    "coldWallet": self.coldWallet
   }

@@ -402,12 +402,13 @@ proc makePrivateKeyKeypairFullyOperable*(self: Service, keyUid, privateKey, pass
 
 ## Mandatory fields for all accounts are `path`, `name`, `emoji`, `colorId`
 proc addNewSeedPhraseKeypair*(self: Service, seedPhrase, password: string, doPasswordHashing: bool,
-  keypairName: string, accountCreationDetails: AccountCreationDetails): string =
+  keypairName, coldWallet: string, accountCreationDetails: AccountCreationDetails): string =
   var finalPassword = password
   if password.len > 0 and doPasswordHashing:
     finalPassword = utils.hashPassword(password)
   try:
-    var response = status_go_accounts.addKeypairViaSeedPhrase(seedPhrase, finalPassword, keypairName, accountCreationDetails)
+    var response = status_go_accounts.addKeypairViaSeedPhrase(seedPhrase, finalPassword, keypairName, coldWallet,
+      accountCreationDetails)
     if not response.error.isNil:
       error "status-go error adding keypair", procName="addNewSeedPhraseKeypair", errCode=response.error.code, errDesription=response.error.message
       return response.error.message
@@ -418,32 +419,20 @@ proc addNewSeedPhraseKeypair*(self: Service, seedPhrase, password: string, doPas
     error "error: ", procName="addNewSeedPhraseKeypair", errName=e.name, errDesription=e.msg
     return e.msg
 
-proc addNewKeycardStoredKeypair*(self: Service, keyUid, keypairName, rootWalletMasterKey: string, accounts: seq[WalletAccountDto]): string =
+proc addNewColdWalletStoredKeypair*(self: Service, keyUid, keypairName, walletXPub, coldWallet, rootWalletMasterKey: string,
+  accounts: seq[WalletAccountDto]): string =
   try:
-    var response = status_go_accounts.addKeypairStoredToKeycard(keyUid, rootWalletMasterKey, keypairName, accounts)
+    var response = status_go_accounts.addKeypairStoredToColdWallet(keyUid, rootWalletMasterKey, keypairName, walletXPub,
+      coldWallet, accounts)
     if not response.error.isNil:
-      error "status-go error adding keypair", procName="addNewKeycardStoredKeypair", errCode=response.error.code, errDesription=response.error.message
+      error "status-go error adding keypair", procName="addNewColdWalletStoredKeypair", errCode=response.error.code, errDesription=response.error.message
       return response.error.message
 
     for i in 0 ..< accounts.len:
       self.addNewKeypairsAccountsToLocalStoreAndNotify()
     return ""
   except Exception as e:
-    error "error: ", procName="addNewKeycardStoredKeypair", errName=e.name, errDesription=e.msg
-    return e.msg
-
-proc addNewKeycardStoredKeypairNew*(self: Service, keyUid, keypairName, xpub, coldWallet, rootWalletMasterKey: string = "", accounts: seq[WalletAccountDto]): string =
-  try:
-    var response = status_go_accounts.addKeypairStoredToKeycardNew(keyUid, rootWalletMasterKey, keypairName, xpub, coldWallet, accounts)
-    if not response.error.isNil:
-      error "status-go error adding keypair", procName="addNewKeycardStoredKeypair", errCode=response.error.code, errDesription=response.error.message
-      return response.error.message
-
-    for i in 0 ..< accounts.len:
-      self.addNewKeypairsAccountsToLocalStoreAndNotify()
-    return ""
-  except Exception as e:
-    error "error: ", procName="addNewKeycardStoredKeypair", errName=e.name, errDesription=e.msg
+    error "error: ", procName="addNewColdWalletStoredKeypair", errName=e.name, errDesription=e.msg
     return e.msg
 
 proc makeSeedPhraseKeypairFullyOperable*(self: Service, keyUid, mnemonic, password: string, doPasswordHashing: bool): string =

@@ -297,7 +297,7 @@ proc addNewKeycardKeypair*[T](self: Module[T]): string =
       colorId: account.colorId,
       emoji: account.emoji,
     ))
-  return self.controller.addNewKeycardStoredKeypair(self.tmpKeyUid, self.tmpKeypairName, self.tmpXpub,
+  return self.controller.addNewColdWalletStoredKeypair(self.tmpKeyUid, self.tmpKeypairName, self.tmpXpub,
     wallet_account_service.ColdWalletTypeStatusKeycard, walletAccounts)
 
 ## #########################################################

@@ -25,9 +25,11 @@ proc addAccountsToWallet(self: ImportingFromKeycardState, controller: Controller
       colorId: account.getColorId(),
       emoji: account.getEmoji()
     ))
-  return controller.addNewKeycardStoredKeypair(
+  return controller.addNewColdWalletStoredKeypair(
     keyUid = kpForProcessing.getKeyUid(),
     keypairName = kpForProcessing.getName(),
+    walletXPub = "",
+    coldWallet = ColdWalletTypeStatusKeycard,
     rootWalletMasterKey = kpForProcessing.getDerivedFrom(),
     accounts = walletAccounts
   )

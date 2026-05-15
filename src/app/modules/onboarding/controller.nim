@@ -216,11 +216,12 @@ proc deleteMultiaccount*(self: Controller, keyUid: string): string =
   return self.accountsService.deleteMultiaccount(keyUid)
 
 proc restoreKeycardAccountAndLogin*(self: Controller, keyUid, instanceUid: string,
-  keycardKeys: KeycardExportedKeysDto, thirdpartyServicesEnabled: bool): string =
+  keycardKeys: KeycardExportedKeysDto, walletXPub: string, thirdpartyServicesEnabled: bool): string =
   return self.accountsService.restoreKeycardAccountAndLoginV2(
     keyUid,
     instanceUid,
     keycardKeys,
+    walletXPub,
     thirdpartyServicesEnabled,
   )
 
