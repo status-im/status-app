@@ -28,8 +28,7 @@ Item {
     property bool isFillCropMode: false
 
     // Determines whether album images respond to user click.
-    // - true (default): images are clickable; each image installs a MouseArea
-    //   and emits the `imageClicked` signal when tapped or clicked.
+    // - true (default): images are clickable; TapHandlers emit `clicked` on tap.
     // - false: images are display-only with no interaction.
     property bool imageClickable: true
 
@@ -97,19 +96,29 @@ Item {
             }
         }
 
-        StatusMouseArea {
-            cursorShape: imageContainer.imageCursorShape
+        HoverHandler {
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
             enabled: imageContainer.imageClickable
+            cursorShape: imageContainer.imageCursorShape
+        }
+
+        TapHandler {
+            gesturePolicy: TapHandler.ReleaseWithinBounds
             acceptedButtons: Qt.LeftButton | Qt.RightButton
-            anchors.fill: parent
-            onClicked: (mouse) => {
-                if (imageContainer.isAnimated) {
+            enabled: imageContainer.imageClickable
+            onTapped: (eventPoint, button) => {
+                if (_internal.isAnimated && button === Qt.LeftButton) {
                     // FIXME the ListView completely removes Items that scroll out of view
                     // so when we scroll backto the image, it gets reloaded and playing is reset
-                    _internal.pausePlaying = ! _internal.pausePlaying
+                    _internal.pausePlaying = !_internal.pausePlaying
                     return
                 }
-                imageContainer.clicked(imageMessage, mouse, imageMessage.source)
+                imageContainer.clicked(imageMessage, { button }, imageMessage.source)
+            }
+            onLongPressed: {
+                if (point.device.type !== PointerDevice.TouchScreen)
+                    return
+                imageContainer.clicked(imageMessage, { button: Qt.RightButton }, imageMessage.source)
             }
         }
     }
