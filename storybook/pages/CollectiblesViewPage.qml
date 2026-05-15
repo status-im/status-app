@@ -126,6 +126,7 @@ SplitView {
         activeNetworks: NetworksModel.flatNetworks
         networkFilters: d.networksChainsCurrentlySelected
         addressFilters: d.addressesSelected
+        unsupportedChainIds: [56, 97, 560048, 57073, 763373, 747474, 737373]
         filterVisible: ctrlFilterVisible.checked
         customOrderAvailable: controller.hasSettings
         onCollectibleClicked: logs.logEvent("onCollectibleClicked", ["chainId", "contractAddress", "tokenId", "uid", "tokenType", "communityId"], arguments)

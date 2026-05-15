@@ -1,4 +1,4 @@
-import nimqml
+import nimqml, json
 
 import ./io_interface
 import ./network_connection_item
@@ -11,6 +11,7 @@ QtObject:
       blockchainNetworkConnection: NetworkConnectionItem
       collectiblesNetworkConnection: NetworkConnectionItem
       marketValuesNetworkConnection: NetworkConnectionItem
+      unsupportedCollectibleChainsJsonValue: string
 
   proc setup(self: View)
   proc delete*(self: View)
@@ -20,6 +21,7 @@ QtObject:
     result.blockchainNetworkConnection = newNetworkConnectionItem()
     result.collectiblesNetworkConnection = newNetworkConnectionItem()
     result.marketValuesNetworkConnection = newNetworkConnectionItem()
+    result.unsupportedCollectibleChainsJsonValue = "[]"
     result.setup()
 
   proc load*(self: View) =
@@ -54,6 +56,20 @@ QtObject:
 
   proc refreshCollectiblesValues*(self: View) {.slot.} =
     self.delegate.refreshCollectiblesValues()
+
+  proc unsupportedCollectibleChainsJsonChanged*(self: View) {.signal.}
+  proc getUnsupportedCollectibleChainsJson(self: View): string {.slot.} =
+    return self.unsupportedCollectibleChainsJsonValue
+  QtProperty[string] unsupportedCollectibleChainsJson:
+    read = getUnsupportedCollectibleChainsJson
+    notify = unsupportedCollectibleChainsJsonChanged
+
+  proc setUnsupportedCollectibleChains*(self: View, chains: seq[int]) =
+    let encoded = $(%* chains)
+    if self.unsupportedCollectibleChainsJsonValue == encoded:
+      return
+    self.unsupportedCollectibleChainsJsonValue = encoded
+    self.unsupportedCollectibleChainsJsonChanged()
 
   proc networkConnectionStatusUpdate*(self: View, website: string, completelyDown: bool, connectionState: int, chainIds: string, lastCheckedAt: float) {.signal.}
 

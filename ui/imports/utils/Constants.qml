@@ -733,14 +733,6 @@ QtObject {
         readonly property string market: "market"
     }
 
-    // Replicates src/app_service/service/network_connection/service.nim table UNSUPPORTED_MULTICHAIN_FEATURES
-    readonly property var unsupportedMultichainFeatures: {
-        "collectibles": [
-            chains.binanceSmartChainMainnetChainId,
-            chains.binanceSmartChainTestnetChainId
-        ]
-    }
-
     readonly property QtObject walletConstants: QtObject {
         readonly property string maxNumberOfAccountsTitle: qsTr("Limit of 20 accounts reached")
         readonly property string maxNumberOfAccountsContent: qsTr("Remove any account to add a new one.")
