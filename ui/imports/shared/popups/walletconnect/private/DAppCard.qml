@@ -48,6 +48,7 @@ ColumnLayout {
             elide: Text.ElideRight
             font.bold: true
             font.pixelSize: Theme.secondaryAdditionalTextSize
+            textFormat: Text.PlainText
         }
 
         StatusFlatButton {

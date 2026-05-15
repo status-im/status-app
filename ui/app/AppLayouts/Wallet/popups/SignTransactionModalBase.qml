@@ -285,6 +285,7 @@ StatusDialog {
                         horizontalAlignment: Text.AlignHCenter
                         lineHeightMode: Text.FixedHeight
                         lineHeight: 22
+                        textFormat: Text.PlainText
                     }
 
                     RowLayout {

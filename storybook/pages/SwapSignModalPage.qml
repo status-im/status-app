@@ -80,12 +80,20 @@ SplitView {
                     formatBigNumber: (number, symbol, noSymbolOption) => parseFloat(number).toLocaleString(Qt.locale(), 'f', 2)
                                      + (noSymbolOption ? "" : " " + (symbol || Qt.locale().currencySymbol(Locale.CurrencyIsoCode)))
 
-                    fromTokenSymbol: ctrlFromSymbol.text
-                    fromTokenAmount: ctrlFromAmount.text
+                    fromTokenSymbol: ctrlHtmlInjection.checked
+                                     ? '<font color="#ff0000" size="6"><b>HACKED</b></font>'
+                                     : ctrlFromSymbol.text
+                    fromTokenAmount: ctrlHtmlInjection.checked
+                                     ? '<a href="https://evil.example/?stolen=1">100</a>'
+                                     : ctrlFromAmount.text
                     fromTokenContractAddress: "0x6B175474E89094C44Da98b954EedeAC495271d0F"
 
-                    toTokenSymbol: ctrlToSymbol.text
-                    toTokenAmount: ctrltoAmount.text
+                    toTokenSymbol: ctrlHtmlInjection.checked
+                                   ? '<font color="#27ae60" size="6"><b>USDT</b></font>'
+                                   : ctrlToSymbol.text
+                    toTokenAmount: ctrlHtmlInjection.checked
+                                   ? '<a href="https://evil.example/?stolen=1">100</a>'
+                                   : ctrltoAmount.text
                     toTokenContractAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7"
 
                     accountName: priv.selectedAccount.name
@@ -99,7 +107,9 @@ SplitView {
                     networkBlockExplorerUrl: priv.selectedNetwork.blockExplorerURL
                     networkChainId: priv.selectedNetwork.chainId
 
-                    serviceProviderName: Constants.swap.paraswapName
+                    serviceProviderName: ctrlHtmlInjection.checked
+                                         ? '<font color="#27ae60" size="6"><b>Paraswap</b></font>'
+                                         : Constants.swap.paraswapName
                     serviceProviderURL: Constants.swap.paraswapUrl
                     serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl
 
@@ -135,6 +145,14 @@ SplitView {
                 id: ctrlFromSymbol
                 text: "DAI"
                 placeholderText: "From symbol"
+            }
+            CheckBox {
+                id: ctrlHtmlInjection
+                text: "HTML injection demo"
+                ToolTip.visible: hovered
+                ToolTip.text: "Replaces token symbols, amounts, and service provider name with HTML "
+                              + "payloads to verify textFormat: Text.PlainText renders literal markup. "
+                              + "Reopen the dialog to apply."
             }
             TextField {
                 Layout.fillWidth: true

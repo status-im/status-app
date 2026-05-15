@@ -96,6 +96,7 @@ Control {
                               root.name : ""
                     font.pixelSize: Theme.additionalTextSize
                     elide: Text.ElideRight
+                    textFormat: Text.PlainText
                 }
                 StatusBaseText {
                     Layout.fillWidth: true
@@ -104,6 +105,7 @@ Control {
                               root.tokenId : ""
                     font.pixelSize: Theme.additionalTextSize
                     color: Theme.palette.baseColor1
+                    textFormat: Text.PlainText
                 }
             }
 

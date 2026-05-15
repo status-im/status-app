@@ -61,7 +61,9 @@ Item {
                 }
 
                 dAppUrl: dAppUrlField.text
-                dAppName:  dAppNameField.text
+                dAppName: ctrlHtmlInjection.checked
+                          ? '<font color="#27ae60" size="6"><b>app.uniswap.org</b></font>'
+                          : dAppNameField.text
                 dAppIconUrl: hasIconCheckbox.checked ? "https://avatars.githubusercontent.com/u/37784886" : ""
                 dAppConnectorBadge: Constants.dappImageByType[dAppBadgeComboBox.currentIndex]
                 connectionStatus: pairedCheckbox.checked ? pairedStatusCheckbox.checked ? connectionSuccessfulStatus : connectionFailedStatus : notConnectedStatus
@@ -99,6 +101,13 @@ Item {
                 id: dAppNameField
 
                 text: "React App"
+            }
+            CheckBox {
+                id: ctrlHtmlInjection
+                text: "HTML injection demo"
+                ToolTip.visible: hovered
+                ToolTip.text: "Replaces dappName with an HTML payload to verify "
+                              + "textFormat: Text.PlainText renders literal markup, not styled text."
             }
             Label {
                 text: "DApp URL"
