@@ -12,6 +12,7 @@ import StatusQ.Components
 import StatusQ.Popups.Dialog
 
 import utils
+import shared.controls
 
 import SortFilterProxyModel
 
@@ -56,8 +57,8 @@ StatusDialog {
 
         // Tabs Overview
         readonly property int cardWidth: 162
-        readonly property int cardHeight: 106
-        readonly property real cardSpacing: Theme.halfPadding
+        readonly property int cardHeight: 200
+        readonly property real cardSpacing: 10
         readonly property int columnCount: root.bottomSheet ? 2 : 3
         readonly property int iconSize: 28
 
@@ -101,50 +102,17 @@ StatusDialog {
     }
 
     contentItem: ColumnLayout {
-        spacing: Theme.halfPadding
+        spacing: Theme.defaultPadding
 
-        StatusTextField {
+        SearchBox {
             id: searchField
 
             Layout.fillWidth: true
-            Layout.preferredHeight: 40
             visible: searchButton.checked
             onVisibleChanged: clear()
 
-            background: Rectangle {
-                color: Theme.palette.background
-                radius: searchField.height
-            }
-            leftPadding: Theme.halfPadding + searchIcon.width + searchIcon.anchors.leftMargin
-            rightPadding: Theme.halfPadding + clearButton.width
             placeholderText: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs ? qsTr("Search in open tabs")
                                                                                                   : qsTr("Search in bookmarks")
-            font.pixelSize: Theme.fontSize(14)
-            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhSensitiveData | Qt.ImhNoAutoUppercase
-            EnterKey.type: Qt.EnterKeySearch
-
-            StatusIcon {
-                id: searchIcon
-                height: parent.height/2
-                width: height
-                anchors.left: parent.left
-                anchors.leftMargin: height/2
-                anchors.verticalCenter: parent.verticalCenter
-                icon: "search"
-                color: Theme.palette.primaryColor1
-            }
-
-            StatusClearButton {
-                id: clearButton
-                anchors.right: parent.right
-                anchors.rightMargin: Theme.halfPadding
-                anchors.verticalCenter: parent.verticalCenter
-                visible: parent.cursorVisible && !!parent.text
-                onClicked: {
-                    parent.forceActiveFocus()
-                    parent.clear()
-                }
-            }
         }
 
         StackLayout {
@@ -181,7 +149,7 @@ StatusDialog {
                     width: d.cardWidth
                     height: d.cardHeight
                     padding: 0
-                    spacing: 6
+                    spacing: Theme.defaultHalfPadding
 
                     background: Rectangle {
                         id: openTabDelegateBg
@@ -192,14 +160,13 @@ StatusDialog {
                     }
 
                     contentItem: ColumnLayout {
-                        spacing: Theme.halfPadding
+                        spacing: 0
 
                         RowLayout {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 48
                             Layout.leftMargin: openTabDelegate.spacing
                             Layout.rightMargin: openTabDelegate.spacing
-                            Layout.topMargin: parent.spacing
                             spacing: openTabDelegate.spacing
 
                             StatusRoundedImage {
@@ -214,15 +181,15 @@ StatusDialog {
                                 verticalAlignment: Text.AlignVCenter
                                 elide: Text.ElideRight
                                 color: Theme.palette.primaryColor1
-                                font.pixelSize: Theme.fontSize(12)
+                                font.pixelSize: Theme.fontSize(13)
                                 font.weight: Font.Medium
                                 wrapMode: Text.WordWrap
                                 text: model.title
                             }
                         }
                         Image {
-                            Layout.preferredWidth: parent.width - openTabDelegateBg.border.width
-                            Layout.preferredHeight: 58
+                            Layout.preferredWidth: parent.width - openTabDelegateBg.border.width*2
+                            Layout.preferredHeight: 150 - openTabDelegateBg.border.width*2
                             Layout.alignment: Qt.AlignHCenter
                             fillMode: Image.PreserveAspectCrop
                             mipmap: true
@@ -251,12 +218,12 @@ StatusDialog {
                     required property int index
                     required property var model
 
-                    spacing: Theme.halfPadding
+                    spacing: Theme.padding
                     width: ListView.view.width
 
                     icon.source: model.imageUrl || Assets.svg("globe")
-                    icon.width: 24
-                    icon.height: 24
+                    icon.width: d.iconSize
+                    icon.height: d.iconSize
 
                     background: Rectangle {
                         radius: Theme.radius
@@ -329,7 +296,7 @@ StatusDialog {
                     StatusBaseText {
                         anchors.centerIn: parent
 
-                        font.pixelSize: Theme.fontSize(11)
+                        font.pixelSize: Theme.fontSize(12)
                         color: parent.icon.color
                         font.weight: Font.DemiBold
                         text: d.searchableTabsModel.count
@@ -344,12 +311,16 @@ StatusDialog {
             StatusFlatButton {
                 id: searchButton
                 icon.name: "search"
+                icon.width: d.iconSize
+                icon.height: d.iconSize
                 checkable: true
                 tooltip.text: qsTr("Search")
                 onToggled: searchField.focus = checked
             }
             StatusFlatButton {
                 icon.name: "add"
+                icon.width: d.iconSize
+                icon.height: d.iconSize
                 tooltip.text: qsTr("Add")
                 onClicked: {
                     switch (mainTabBar.currentIndex) {
@@ -375,6 +346,8 @@ StatusDialog {
                 anchors.centerIn: parent
                 icon: customSwitchButton.icon.name
                 color: customSwitchButton.icon.color
+                width: d.iconSize
+                height: d.iconSize
             }
         }
     }

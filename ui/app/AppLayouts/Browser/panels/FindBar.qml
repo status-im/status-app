@@ -98,7 +98,6 @@ Rectangle {
                 color: Theme.palette.baseColor2
                 radius: Theme.radius
             }
-            font.pixelSize: Theme.fontSize(14)
             Layout.fillWidth: true
             Layout.fillHeight: true
             onAccepted: root.findNext()
@@ -109,33 +108,33 @@ Rectangle {
         StatusBaseText {
             text: root.activeMatch + "/" + root.numberOfMatches
             visible: findTextField.text !== ""
-            font.pixelSize: Theme.fontSize(14)
         }
 
-        StatusFlatRoundButton {
-            implicitWidth: 32
-            implicitHeight: 32
+        FindBarButton {
             icon.name: "chevron-up"
             enabled: root.numberOfMatches > 0
             type: StatusFlatRoundButton.Type.Tertiary
             onClicked: root.findPrevious()
         }
 
-        StatusFlatRoundButton {
-            implicitWidth: 32
-            implicitHeight: 32
+        FindBarButton {
             icon.name: "chevron-down"
             enabled: root.numberOfMatches > 0
             type: StatusFlatRoundButton.Type.Tertiary
             onClicked: root.findNext()
         }
 
-        StatusFlatRoundButton {
-            implicitWidth: 32
-            implicitHeight: 32
-            icon.name: "close-circle"
+        FindBarButton {
+            icon.name: "close"
             type: StatusFlatRoundButton.Type.Tertiary
             onClicked: root.visible = false
         }
+    }
+
+    component FindBarButton: StatusFlatRoundButton {
+        Layout.fillHeight: true
+        Layout.preferredWidth: height
+        icon.width: 28
+        icon.height: 28
     }
 }
