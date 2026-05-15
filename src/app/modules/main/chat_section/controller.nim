@@ -44,7 +44,7 @@ type
     networkService: network_service.Service
 
 # Forward declarations
-proc getMyCommunity*(self: Controller): CommunityDto
+proc getMyCommunity*(self: Controller): lent CommunityDto
 
 proc newController*(delegate: io_interface.AccessInterface, sectionId: string, isCommunity: bool, events: EventEmitter,
     settingsService: settings_service.Service, nodeConfigurationService: node_configuration_service.Service,
@@ -159,20 +159,14 @@ proc init*(self: Controller) =
     var args = ChatUpdateArgs(e)
     for chat in args.chats:
       let belongsToCommunity = chat.communityId.len > 0
-      var community = CommunityDto()
-      if belongsToCommunity:
-        community = self.getMyCommunity()
-      discard self.delegate.addOrUpdateChat(chat, community, belongsToCommunity, self.events, self.settingsService, self.nodeConfigurationService,
+      discard self.delegate.addOrUpdateChat(chat, chat.communityId, belongsToCommunity, self.events, self.settingsService, self.nodeConfigurationService,
         self.contactService, self.chatService, self.communityService, self.messageService,
         self.mailserversService, self.sharedUrlsService, setChatAsActive = false)
 
   self.events.on(SIGNAL_CHAT_CREATED) do(e: Args):
     var args = CreatedChatArgs(e)
     let belongsToCommunity = args.chat.communityId.len > 0
-    var community = CommunityDto()
-    if belongsToCommunity:
-      community = self.getMyCommunity()
-    discard self.delegate.addOrUpdateChat(args.chat, community, belongsToCommunity, self.events, self.settingsService, self.nodeConfigurationService,
+    discard self.delegate.addOrUpdateChat(args.chat, args.chat.communityId, belongsToCommunity, self.events, self.settingsService, self.nodeConfigurationService,
       self.contactService, self.chatService, self.communityService, self.messageService,
       self.mailserversService, self.sharedUrlsService, setChatAsActive = true)
 
@@ -180,10 +174,7 @@ proc init*(self: Controller) =
     self.events.on(SIGNAL_COMMUNITY_CHANNEL_CREATED) do(e:Args):
       let args = CommunityChatArgs(e)
       let belongsToCommunity = args.chat.communityId.len > 0
-      var community = CommunityDto()
-      if belongsToCommunity:
-        community = self.getMyCommunity()
-      discard self.delegate.addOrUpdateChat(args.chat, community, belongsToCommunity, self.events, self.settingsService,
+      discard self.delegate.addOrUpdateChat(args.chat, args.chat.communityId, belongsToCommunity, self.events, self.settingsService,
         self.nodeConfigurationService, self.contactService, self.chatService, self.communityService,
         self.messageService, self.mailserversService, self.sharedUrlsService, setChatAsActive = true)
 
@@ -419,8 +410,11 @@ proc init*(self: Controller) =
 proc isCommunity*(self: Controller): bool =
   return self.isCommunitySection
 
-proc getMyCommunity*(self: Controller): CommunityDto =
+proc getMyCommunity*(self: Controller): lent CommunityDto =
   return self.communityService.getCommunityById(self.sectionId)
+
+proc getCommunityById*(self: Controller, communityId: string): lent CommunityDto =
+  return self.communityService.getCommunityById(communityId)
 
 proc getCategories*(self: Controller, communityId: string): seq[Category] =
   return self.communityService.getCategories(communityId)
@@ -433,14 +427,13 @@ proc getAllChats*(self: Controller, communityId: string): seq[ChatDto] =
 
 proc getChatsAndBuildUI*(self: Controller) =
   var chats: seq[ChatDto]
-  var community: CommunityDto
+  let communityId = if self.isCommunity(): self.getMySectionId() else: ""
   if self.isCommunity():
-    community = self.getMyCommunity()
-    let normalChats = self.chatService.getChatsForCommunity(community.id)
+    let normalChats = self.chatService.getChatsForCommunity(communityId)
 
     # TODO remove this once we do this refactor https://github.com/status-im/status-app/issues/11694
     var fullChats: seq[ChatDto] = @[]
-    for communityChat in community.chats:
+    for communityChat in self.getMyCommunity().chats:
       for chat in normalChats:
         if chat.id == communityChat.id:
           var c = chat
@@ -449,12 +442,11 @@ proc getChatsAndBuildUI*(self: Controller) =
           break
     chats = fullChats
   else:
-    community = CommunityDto()
     chats = self.chatService.getChatsForPersonalSection()
 
-  # Build chat section with the preloaded community (empty community for personal chat)
+  # Build chat section (communityId is "" for personal chat — getCommunityById returns sentinel)
   self.delegate.onChatsLoaded(
-        community,
+        communityId,
         chats,
         self.events,
         self.settingsService,
@@ -471,7 +463,7 @@ proc sectionUnreadMessagesAndMentionsCount*(self: Controller, communityId: strin
     tuple[unviewedMessagesCount: int, unviewedMentionsCount: int] =
   return self.chatService.sectionUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
 
-proc getChatDetails*(self: Controller, chatId: string): ChatDto =
+proc getChatDetails*(self: Controller, chatId: string): lent ChatDto =
   return self.chatService.getChatById(chatId)
 
 proc getChatDetailsForChatTypes*(self: Controller, types: seq[ChatType]): seq[ChatDto] =
@@ -483,7 +475,7 @@ proc getChatDetailsByIds*(self: Controller, chatIds: seq[string]): seq[ChatDto] 
 proc categoryHasUnreadMessages*(self: Controller, communityId: string, categoryId: string): bool =
   return self.communityService.categoryHasUnreadMessages(communityId, categoryId)
 
-proc getCommunityCategoryDetails*(self: Controller, communityId: string, categoryId: string): Category =
+proc getCommunityCategoryDetails*(self: Controller, communityId: string, categoryId: string): lent Category =
   return self.communityService.getCategoryById(communityId, categoryId)
 
 proc setActiveItem*(self: Controller, itemId: string) =
@@ -507,7 +499,7 @@ proc getOneToOneChatNameAndImage*(self: Controller, chatId: string):
 proc createOneToOneChat*(self: Controller, communityID: string, chatId: string, ensName: string) =
   let response = self.chatService.createOneToOneChat(communityID, chatId, ensName)
   if response.success:
-    discard self.delegate.addOrUpdateChat(response.chatDto, CommunityDto(), false, self.events, self.settingsService, self.nodeConfigurationService,
+    discard self.delegate.addOrUpdateChat(response.chatDto, "", false, self.events, self.settingsService, self.nodeConfigurationService,
       self.contactService, self.chatService, self.communityService, self.messageService,
       self.mailserversService, self.sharedUrlsService)
 
@@ -537,6 +529,9 @@ proc getContactById*(self: Controller, id: string): ContactsDto =
 
 proc getContactDetails*(self: Controller, id: string): ContactDetails =
   return self.contactService.getContactDetails(id)
+
+proc seedContactsFromChatMembers*(self: Controller, members: seq[ChatMember]) =
+  self.contactService.seedFromChatMembers(members.toMemberSeeds())
 
 proc getStatusForContactWithId*(self: Controller, publicKey: string): StatusUpdateDto =
   return self.contactService.getStatusForContactWithId(publicKey)
@@ -574,7 +569,7 @@ proc makeAdmin*(self: Controller, communityID: string, chatId: string, pubKey: s
 proc createGroupChat*(self: Controller, communityID: string, groupName: string, pubKeys: seq[string]) =
   let response = self.chatService.createGroupChat(communityID, groupName, pubKeys)
   if response.success:
-    discard self.delegate.addOrUpdateChat(response.chatDto, CommunityDto(), false, self.events, self.settingsService, self.nodeConfigurationService,
+    discard self.delegate.addOrUpdateChat(response.chatDto, "", false, self.events, self.settingsService, self.nodeConfigurationService,
       self.contactService, self.chatService, self.communityService, self.messageService,
       self.mailserversService, self.sharedUrlsService)
 
@@ -693,14 +688,14 @@ proc toggleCollapsedCommunityCategoryAsync*(self: Controller, categoryId: string
 proc reorderCommunityChat*(self: Controller, categoryId: string, chatId: string, position: int) =
   self.communityService.reorderCommunityChat(self.sectionId, categoryId, chatId, position)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: seq[ChatDto]): string =
+proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
   return self.messageService.getRenderedText(parsedTextArray, communityChats)
 
-proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communityChats: seq[ChatDto]): string =
+proc getMessagesParsedPlainText*(self: Controller, message: MessageDto, communityChats: openArray[ChatDto]): string =
   return self.messageService.getMessagesParsedPlainText(message, communityChats)
 
 proc getColorId*(self: Controller, pubkey: string): int =
-  procs_from_visual_identity_service.colorIdOf(pubkey)
+  self.contactService.getContactColorId(pubkey)
 
 proc getTokenByKey*(self: Controller, tokenKey: string): TokenItem =
   return self.tokenService.getTokenByKey(tokenKey)

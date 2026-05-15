@@ -96,8 +96,6 @@ method onMainLoaded*[T](self: Module[T]) =
   self.viewVariant = nil
   self.controller.delete
   self.controller = nil
-  if self.resumeLogin:
-    self.delegate.onboardingDidLoad()
 
 method onMainFailedToLoad*[T](self: Module[T]) =
   self.view.accountLoginError("Failed to load main module, please restart the app and try again.", wrongPassword = false)
@@ -105,13 +103,6 @@ method onMainFailedToLoad*[T](self: Module[T]) =
 method load*[T](self: Module[T]) =
   singletonInstance.engine.setRootContextProperty("onboardingModule", self.viewVariant)
   self.controller.init()
-  
-  let loggedInAccount = self.accountsService.fetchLoggedInAccount()
-  self.resumeLogin = loggedInAccount.isValid()
-  if (self.resumeLogin):
-    self.controller.setLoggedInAccount(loggedInAccount)    
-    self.finishAppLoading2()
-    return
 
   let openedAccounts = self.controller.getOpenedAccounts()
   if openedAccounts.len > 0:
@@ -371,10 +362,13 @@ method onNodeLogin*[T](self: Module[T], err: string, account: AccountDto, settin
 
   self.controller.setLoggedInAccount(account)
 
-  let err2 = self.delegate.userLoggedIn()
-  if err2.len != 0:
-    error "error from userLoggedIn", err2
-    self.onAccountLoginError(err2)
+  discard self.delegate.userLoggedIn()
+
+
+method onMessengerStarted*[T](self: Module[T], err: string) =
+  if err.len != 0:
+    error "error starting messenger", err
+    self.onAccountLoginError(err)
     return
 
   if self.localPairingStatus != nil and self.localPairingStatus.installation != nil and

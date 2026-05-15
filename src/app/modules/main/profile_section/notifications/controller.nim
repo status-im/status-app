@@ -106,11 +106,12 @@ proc removeNotifSettingExemptions*(self: Controller, id: string): bool =
 proc getChatsForPersonalSection*(self: Controller): seq[ChatDto] =
   return self.chatService.getChatsForPersonalSection()
 
-proc getChatDetails*(self: Controller, chatId: string): ChatDto =
+proc getChatDetails*(self: Controller, chatId: string): lent ChatDto =
   return self.chatService.getChatById(chatId)
 
 proc getContactDetails*(self: Controller, id: string): ContactDetails =
   return self.contactService.getContactDetails(id)
 
-proc getJoinedAndSpectatedCommunities*(self: Controller): seq[CommunityDto] =
-  return self.communityService.getJoinedAndSpectatedCommunities()
+iterator joinedAndSpectatedCommunities*(self: Controller): lent CommunityDto =
+  for c in self.communityService.joinedAndSpectatedCommunities():
+    yield c

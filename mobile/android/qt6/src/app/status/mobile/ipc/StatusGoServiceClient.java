@@ -8,12 +8,9 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
+import android.system.ErrnoException;
 import android.util.Log;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -200,27 +197,7 @@ public final class StatusGoServiceClient {
             return "{\"error\":\"status-go service not connected\"}";
         }
         try {
-            final String pathOrErr = s.callToFile(method, argsJson);
-            if (pathOrErr == null) {
-                return "{\"error\":\"status-go service returned null\"}";
-            }
-            if (!pathOrErr.startsWith("/")) {
-                // service returned an error JSON (small)
-                return pathOrErr;
-            }
-            final File f = new File(pathOrErr);
-            byte[] data;
-            try {
-                data = Files.readAllBytes(f.toPath());
-            } catch (IOException e) {
-                Log.w(TAG, "Failed to read response file: " + pathOrErr, e);
-                return "{\"error\":\"failed to read response file\"}";
-            } finally {
-                // best-effort cleanup
-                //noinspection ResultOfMethodCallIgnored
-                f.delete();
-            }
-            return new String(data, StandardCharsets.UTF_8);
+            return readRpc(s, method, argsJson);
         } catch (RemoteException e) {
             Log.w(TAG, "call failed", e);
             // After reinstall/update (or service crash), binder can become a dead object.
@@ -243,31 +220,30 @@ public final class StatusGoServiceClient {
                 }
                 if (s != null) {
                     try {
-                        final String pathOrErr2 = s.callToFile(method, argsJson);
-                        if (pathOrErr2 == null) {
-                            return "{\"error\":\"status-go service returned null\"}";
-                        }
-                        if (!pathOrErr2.startsWith("/")) {
-                            return pathOrErr2;
-                        }
-                        final File f2 = new File(pathOrErr2);
-                        byte[] data2;
-                        try {
-                            data2 = Files.readAllBytes(f2.toPath());
-                        } catch (IOException io) {
-                            Log.w(TAG, "Failed to read response file: " + pathOrErr2, io);
-                            return "{\"error\":\"failed to read response file\"}";
-                        } finally {
-                            //noinspection ResultOfMethodCallIgnored
-                            f2.delete();
-                        }
-                        return new String(data2, StandardCharsets.UTF_8);
+                        return readRpc(s, method, argsJson);
                     } catch (RemoteException e2) {
                         Log.w(TAG, "call retry failed", e2);
                     }
                 }
             }
             return "{\"error\":\"status-go service call failed\"}";
+        }
+    }
+
+    /**
+     * Issues an rpcCall and reads the response. The RpcResponse is closed unconditionally
+     * via try-with-resources so the SharedMemory fd (if any) is released on every exit path.
+     */
+    private static String readRpc(IStatusGoService s, String method, String argsJson)
+            throws RemoteException {
+        try (RpcResponse resp = s.rpcCall(method, argsJson)) {
+            if (resp == null) {
+                return "{\"error\":\"status-go service returned null\"}";
+            }
+            return resp.readJson();
+        } catch (ErrnoException e) {
+            Log.w(TAG, "rpcCall: shared memory read failed", e);
+            return "{\"error\":\"shared memory read failed\"}";
         }
     }
 

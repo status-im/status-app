@@ -1,5 +1,6 @@
-singleton ProfileManager 1.0 ProfileManager.qml
+ProfileManager 1.0 ProfileManager.qml
 AbstractWebView 1.0 AbstractWebView.qml
 LazyWebViewAdapter 1.0 LazyWebViewAdapter.qml
 ProfileParams 1.0 ProfileParams.qml
 WebViewAdapter 1.0 WebViewAdapter.qml
+MobileWebViewAdapter 1.0 MobileWebViewAdapter.qml

@@ -619,10 +619,15 @@ proc getCommunityChats*(self: CommunityDto, chatIds: seq[string]): seq[ChatDto] 
         break
   return chats
 
-proc getCommunityChat*(self: CommunityDto, chatId: string): ChatDto =
-  let chats = self.getCommunityChats(@[chatId])
-  if chats.len > 0:
-    return chats[0]
+# Read-only sentinel returned via `lent` borrow when getCommunityChat misses.
+# Mutation is observable across all callers — never pass to procs that take `var T`.
+let emptyCommunityChat = ChatDto()
+
+proc getCommunityChat*(self: CommunityDto, chatId: string): lent ChatDto =
+  for communityChat in self.chats:
+    if communityChat.id == chatId:
+      return communityChat
+  return emptyCommunityChat
 
 proc getCommunityChatIndex*(self: CommunityDto, chatId: string): int =
   var idx = 0

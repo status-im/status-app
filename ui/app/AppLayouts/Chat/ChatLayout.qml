@@ -40,9 +40,9 @@ StackLayout {
     property ChatStores.RootStore rootStore
 
     // WIP: This is the new store's structure, now used, `PermissionsStore` and `CommunityAccessStore`. More stores will be added in next steps
-    property CommunityStores.CommunityRootStore newCommnityStore
-    readonly property CommunityStores.CommunityAccessStore communityAccessStore: newCommnityStore.communityAccessStore
-    readonly property CommunityStores.PermissionsStore communityPermissionsStore: newCommnityStore.communityPermissionsStore
+    property CommunityStores.CommunityRootStore newCommunityStore
+    readonly property CommunityStores.CommunityAccessStore communityAccessStore: newCommunityStore.communityAccessStore
+    readonly property CommunityStores.PermissionsStore communityPermissionsStore: newCommunityStore.communityPermissionsStore
 
     // Rest of stores references (to be reviewed)
     property ChatStores.CreateChatPropertiesStore createChatPropertiesStore
@@ -375,62 +375,27 @@ StackLayout {
         }
     }
 
-    Loader {
+    CommunitySettingsLoader {
         id: communitySettingsLoader
+
         active: root.rootStore.chatCommunitySectionModule.isCommunity() &&
                 root.isPrivilegedUser &&
                 (root.currentIndex === 1 || !!communitySettingsLoader.item) // lazy load and preserve state after loading
-        asynchronous: false // It's false on purpose. We want to load the component synchronously
 
-        sourceComponent: CommunitySettingsView {
-            id: communitySettingsView
+        rootStore: root.rootStore
+        networksStore: root.networksStore
+        tokensStore: root.tokensStore
+        transactionStore: root.transactionStore
+        advancedStore: root.advancedStore
+        communityAccessStore: root.communityAccessStore
+        communityPermissionsStore: root.communityPermissionsStore
 
-            rootStore: root.rootStore
-            walletAccountsModel: WalletStore.RootStore.nonWatchAccounts
-            enabledChainIds: root.networksStore.networkFilters
-            onEnableNetwork: root.networksStore.enableNetwork(chainId)
-            activeNetworks: root.networksStore.activeNetworks
-            tokensStore: root.tokensStore
-            transactionStore: root.transactionStore
-            advancedStore: root.advancedStore
+        isPendingOwnershipRequest: root.isPendingOwnershipRequest
+        sectionItemModel: root.sectionItemModel
+        communitySettingsDisabled: root.communitySettingsDisabled
+        leftPanelWidthOverride: root.leftPanelWidthOverride
 
-            isPendingOwnershipRequest: root.isPendingOwnershipRequest
-            ensCommunityPermissionsEnabled: root.advancedStore.ensCommunityPermissionsEnabled
-
-            chatCommunitySectionModule: root.rootStore.chatCommunitySectionModule
-            community: root.sectionItemModel
-            communitySettingsDisabled: root.communitySettingsDisabled
-            permissionsModel: root.communityPermissionsStore.permissionsModel
-
-            onLoadMembersRequested: rootStore.loadMembersForSectionId(root.sectionItemModel.id)
-
-            onCommunitySettingsDisabledChanged: if (communitySettingsDisabled) goTo(Constants.CommunitySettingsSections.Overview)
-
-            onBackToCommunityClicked: root.currentIndex = 0
-            onFinaliseOwnershipClicked: Global.openFinaliseOwnershipPopup(community.id)
-
-            // Permissions Related requests:
-            onCreatePermissionRequested: (holdings, permissionType, isPrivate, channels) => {
-                root.communityPermissionsStore.createPermission(holdings, permissionType, isPrivate, channels)
-            }
-            onRemovePermissionRequested: (key) => {
-                root.communityPermissionsStore.removePermission(key)
-            }
-            onEditPermissionRequested: (key, holdings, permissionType, channels, isPrivate) => {
-                root.communityPermissionsStore.editPermission(key, holdings, permissionType, channels, isPrivate)
-            }
-
-            // Communtiy access related requests:
-            onAcceptRequestToJoinCommunityRequested: (requestId, communityId) => {
-                root.communityAccessStore.acceptRequestToJoinCommunityRequested(requestId, communityId)
-            }
-            onDeclineRequestToJoinCommunityRequested: (requestId, communityId) => {
-                root.communityAccessStore.declineRequestToJoinCommunityRequested(requestId, communityId)
-            }
-
-            // Layout
-            leftPanelWidthOverride: root.leftPanelWidthOverride
-        }
+        onBackToCommunityClicked: root.currentIndex = 0
     }
 
     Component {

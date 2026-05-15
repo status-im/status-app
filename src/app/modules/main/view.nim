@@ -21,6 +21,7 @@ QtObject:
       ephemeralNotificationModel: ephemeralNotification_model.Model
       ephemeralNotificationModelVariant: QVariant
       tmpCommunityId: string # shouldn't be used anywhere except in prepareCommunitySectionModuleForCommunityId/getCommunitySectionModule procs
+      mainLoaded: bool
 
   proc activeSectionSet*(self: View, item: SectionItem)
 
@@ -38,12 +39,26 @@ QtObject:
     result.activeSectionVariant = newQVariant(result.activeSection)
     result.ephemeralNotificationModel = ephemeralNotification_model.newModel()
     result.ephemeralNotificationModelVariant = newQVariant(result.ephemeralNotificationModel)
+    result.mainLoaded = false
 
     signalConnect(result.model, "notificationsCountChanged()", result, "onNotificationsCountChanged()", 2)
 
   proc load*(self: View) =
     # In some point, here, we will setup some exposed main module related things.
     self.delegate.viewDidLoad()
+
+  proc mainLoadedChanged*(self: View) {.signal.}
+  proc getMainLoaded(self: View): bool {.slot.} =
+    return self.mainLoaded
+  proc setMainLoaded*(self: View, mainLoaded: bool) =
+    if self.mainLoaded == mainLoaded:
+      return
+    self.mainLoaded = mainLoaded
+    self.mainLoadedChanged()
+
+  QtProperty[bool] mainLoaded:
+    read = getMainLoaded
+    notify = mainLoadedChanged
 
   proc appNetworkChanged*(self: View) {.signal.}
   proc getAppNetworkId*(self: View): int {.slot.} =

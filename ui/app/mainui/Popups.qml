@@ -122,62 +122,6 @@ QtObject {
         return sharedContactModelEntryLoader.item
     }
 
-    Component.onCompleted: {
-        Global.openMarkAsIDVerifiedPopup.connect(openMarkAsIDVerifiedPopup)
-        Global.openRemoveIDVerificationDialog.connect(openRemoveIDVerificationDialog)
-        Global.openInviteFriendsToCommunityPopup.connect(openInviteFriendsToCommunityPopup)
-        Global.openInviteFriendsToCommunityByIdPopup.connect(openInviteFriendsToCommunityByIdPopup)
-        Global.openContactRequestPopup.connect(openContactRequestPopup)
-        Global.openReviewContactRequestPopup.connect(openReviewContactRequestPopup)
-        Global.openDownloadModalRequested.connect(openDownloadModal)
-        Global.openImagePopup.connect(openImagePopup)
-        Global.openVideoPopup.connect(openVideoPopup)
-        Global.openProfilePopupRequested.connect(openProfilePopup)
-        Global.openNicknamePopupRequested.connect(openNicknamePopup)
-        Global.markAsUntrustedRequested.connect(openMarkAsUntrustedPopup)
-        Global.blockContactRequested.connect(openBlockContactPopup)
-        Global.unblockContactRequested.connect(openUnblockContactPopup)
-        Global.openChangeProfilePicPopup.connect(openChangeProfilePicPopup)
-        Global.openBackUpSeedPopup.connect(openBackUpSeedPopup)
-        Global.openAuthenticationPopup.connect(openAuthenticationPopup)
-        Global.openSigningPopup.connect(openSigningPopup)
-        Global.openKeycardManagementPopup.connect(openKeycardManagementPopup)
-        Global.openPinnedMessagesPopupRequested.connect(openPinnedMessagesPopup)
-        Global.openCommunityProfilePopupRequested.connect(openCommunityProfilePopup)
-        Global.createCommunityPopupRequested.connect(openCreateCommunityPopup)
-        Global.importCommunityPopupRequested.connect(openImportCommunityPopup)
-        Global.communityShareAddressesPopupRequested.connect(openCommunityShareAddressesPopup)
-        Global.communityIntroPopupRequested.connect(openCommunityIntroPopup)
-        Global.removeContactRequested.connect(openRemoveContactConfirmationPopup)
-        Global.openPopupRequested.connect(openPopup)
-        Global.closePopupRequested.connect(closePopup)
-        Global.openDeleteMessagePopup.connect(openDeleteMessagePopup)
-        Global.openDownloadImageDialog.connect(openDownloadImageDialog)
-        Global.leaveCommunityRequested.connect(openLeaveCommunityPopup)
-        Global.openTestnetPopup.connect(openTestnetPopup)
-        Global.openExportControlNodePopup.connect(openExportControlNodePopup)
-        Global.openImportControlNodePopup.connect(openImportControlNodePopup)
-        Global.openEditSharedAddressesFlow.connect(openEditSharedAddressesPopup)
-        Global.openTransferOwnershipPopup.connect(openTransferOwnershipPopup)
-        Global.openFinaliseOwnershipPopup.connect(openFinaliseOwnershipPopup)
-        Global.openDeclineOwnershipPopup.connect(openDeclineOwnershipPopup)
-        Global.openFirstTokenReceivedPopup.connect(openFirstTokenReceivedPopup)
-        Global.openConfirmHideAssetPopup.connect(openConfirmHideAssetPopup)
-        Global.openConfirmHideCollectiblePopup.connect(openConfirmHideCollectiblePopup)
-        Global.openCommunityMemberMessagesPopupRequested.connect(openCommunityMemberMessagesPopup)
-        Global.openBuyCryptoModalRequested.connect(openBuyCryptoModal)
-        Global.privacyPolicyRequested.connect(() => openPopup(privacyPolicyPopupComponent))
-        Global.openPaymentRequestModalRequested.connect(openPaymentRequestModal)
-        Global.termsOfUseRequested.connect(() => openPopup(termsOfUsePopupComponent))
-        Global.openNewsMessagePopupRequested.connect(openNewsMessagePopup)
-        Global.quitAppRequested.connect(() => openPopup(quitConfirmPopupComponent))
-        Global.openQRScannerRequested.connect(() => openPopup(qrCodeScannerDialogComponent))
-        Global.openInfoPopup.connect(openInfoPopup)
-        Global.shareProfileDialogRequested.connect(openShareProfilePopup)
-        Global.openNavigationEducationPopupRequested.connect(openNavigationEducationPopup)
-        Global.openLimitReachedPopupRequested.connect(openLimitReachedPopup)
-    }
-
     property var currentPopup
     function openPopup(popupComponent, params = {}, cb = null) {
         if (root.activePopupComponents.includes(popupComponent)) {
@@ -595,6 +539,22 @@ QtObject {
             return
         }
         openPopup(limitReachedPopupComponent, { title, contentText: content })
+    }
+
+    function openPrivacyPolicyPopup() {
+        openPopup(privacyPolicyPopupComponent)
+    }
+
+    function openTermsOfUsePopup() {
+        openPopup(termsOfUsePopupComponent)
+    }
+
+    function openQuitConfirmPopup() {
+        openPopup(quitConfirmPopupComponent)
+    }
+
+    function openQRScannerPopup() {
+        openPopup(qrCodeScannerDialogComponent)
     }
 
     readonly property list<Component> _components: [

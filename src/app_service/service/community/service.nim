@@ -268,6 +268,11 @@ QtObject:
       historyArchiveDownloadTaskCommunityIds*: HashSet[string]
       communityMetrics: Table[string, CommunityMetricsDto]
       communityInfoRequests: Table[string, Time]
+      # Read-only sentinels returned via `lent` borrow when a lookup misses.
+      # Mutation is observable across all callers and will corrupt subsequent
+      # miss results — never pass these to procs that take `var T`.
+      emptyCommunity: CommunityDto
+      emptyCategory: Category
 
   # Forward declaration
   proc asyncLoadCuratedCommunities*(self: Service)
@@ -304,11 +309,24 @@ QtObject:
     result.communityMetrics = initTable[string, CommunityMetricsDto]()
     result.communityInfoRequests = initTable[string, Time]()
 
-  proc getFilteredJoinedAndSpectatedCommunities(self: Service): Table[string, CommunityDto] =
-    result = initTable[string, CommunityDto]()
-    for communityId, community in self.communities.pairs:
+  # Iterates joined/spectated communities by borrow. Cheap, but the borrow is
+  # tied to the underlying Table — any mutation of `self.communities` during
+  # iteration (including via re-entrant signal handlers triggered by the loop
+  # body) will invalidate the iterator. If the loop body may re-enter the
+  # service, use `joinedAndSpectatedCommunityIds()` and re-look-up each community
+  # by id inside the loop instead.
+  iterator joinedAndSpectatedCommunities*(self: Service): lent CommunityDto =
+    for community in self.communities.values:
       if community.joined or community.spectated:
-        result[communityId] = community
+        yield community
+
+  proc joinedAndSpectatedCommunityIds*(self: Service): seq[string] =
+    # Iterate keys + withValue to avoid the per-iteration CommunityDto copy that
+    # `Table.pairs` value-binding triggers.
+    for communityId in self.communities.keys:
+      self.communities.withValue(communityId, c):
+        if c.joined or c.spectated:
+          result.add(communityId)
 
   proc getFilteredCuratedCommunities(self: Service): Table[string, CommunityDto] =
     result = initTable[string, CommunityDto]()
@@ -872,19 +890,12 @@ QtObject:
   proc getCommunityTags*(self: Service): string =
     return self.communityTags
 
-  proc getJoinedAndSpectatedCommunities*(self: Service): seq[CommunityDto] =
-    return toSeq(self.getFilteredJoinedAndSpectatedCommunities().values)
-
   proc getAllCommunities*(self: Service): seq[CommunityDto] =
     return toSeq(self.communities.values)
 
-  proc getCommunityById*(self: Service, communityId: string): CommunityDto =
-    if communityId == "":
-      return
-
-    if not self.communities.hasKey(communityId):
-      return
-
+  proc getCommunityById*(self: Service, communityId: string): lent CommunityDto =
+    if communityId == "" or not self.communities.hasKey(communityId):
+      return self.emptyCommunity
     return self.communities[communityId]
 
   proc getCommunityIds*(self: Service): seq[string] =
@@ -936,14 +947,16 @@ QtObject:
     else:
       return 0
 
-  proc getCategoryById*(self: Service, communityId: string, categoryId: string): Category =
-    if not self.communities.contains(communityId):
-      error "trying to get community categories for an unexisting community id"
-      return
-
-    let categories = self.getCommunityById(communityId).categories
-    let categoryIndex = findIndexById(categoryId, categories)
-    return categories[categoryIndex]
+  proc getCategoryById*(self: Service, communityId: string, categoryId: string): lent Category =
+    self.communities.withValue(communityId, communityPtr):
+      let idx = findIndexById(categoryId, communityPtr[].categories)
+      if idx == -1:
+        warn "category not found in community", communityId, categoryId
+        return self.emptyCategory
+      return communityPtr[].categories[idx]
+    do:
+      error "trying to get community categories for a non-existing community id", communityId
+      return self.emptyCategory
 
   proc getCategories*(self: Service, communityId: string, order: SortOrder = SortOrder.Ascending): seq[Category] =
     if(not self.communities.contains(communityId)):
@@ -2186,8 +2199,7 @@ QtObject:
       return false
 
     let myPublicKey = singletonInstance.userProfile.getPubKey()
-    var community = self.getCommunityById(communityId)
-    for pendingRequest in community.pendingRequestsToJoin:
+    for pendingRequest in self.getCommunityById(communityId).pendingRequestsToJoin:
       if pendingRequest.publicKey == myPublicKey:
         return true
     return false
@@ -2198,8 +2210,7 @@ QtObject:
       return false
 
     let myPublicKey = singletonInstance.userProfile.getPubKey()
-    var community = self.getCommunityById(communityId)
-    for request in community.waitingForSharedAddressesRequestsToJoin:
+    for request in self.getCommunityById(communityId).waitingForSharedAddressesRequestsToJoin:
       if request.publicKey == myPublicKey:
         return true
     return false
@@ -2406,17 +2417,17 @@ QtObject:
     if communityId == "" or categoryId == "":
       return false
 
-    if not self.communities.contains(communityId):
+    self.communities.withValue(communityId, communityPtr):
+      for chat in communityPtr[].chats:
+        if chat.categoryId != categoryId:
+          continue
+        let chatDto = self.chatService.getChatById(chat.id)
+        if (not chatDto.muted and chatDto.unviewedMessagesCount > 0) or chatDto.unviewedMentionsCount > 0:
+          return true
+      return false
+    do:
       warn "unknown community", communityId
       return false
-
-    for chat in self.communities[communityId].chats:
-      if chat.categoryId != categoryId:
-        continue
-      let chatDto = self.chatService.getChatById(chat.id)
-      if (not chatDto.muted and chatDto.unviewedMessagesCount > 0) or chatDto.unviewedMentionsCount > 0:
-        return true
-    return false
 
   proc markAllReadInCommunity*(self: Service, communityId: string) =
     try:

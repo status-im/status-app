@@ -151,7 +151,7 @@ proc getOwnerToken*(self: Controller, communityId: string): CommunityTokenDto =
 proc getTokenMasterToken*(self: Controller, communityId: string): CommunityTokenDto =
   return self.communityTokensService.getTokenMasterToken(communityId)
 
-proc getCommunityById*(self: Controller, communityId: string): CommunityDto =
+proc getCommunityById*(self: Controller, communityId: string): lent CommunityDto =
   return self.communityService.getCommunityById(communityId)
 
 proc declineOwnership*(self: Controller, communityId: string) =

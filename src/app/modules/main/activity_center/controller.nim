@@ -113,7 +113,7 @@ proc hasUnseenActivityCenterNotifications*(self: Controller): bool =
 proc getContactDetails*(self: Controller, contactId: string): ContactDetails =
   return self.contactsService.getContactDetails(contactId)
 
-proc getCommunityById*(self: Controller, communityId: string): CommunityDto =
+proc getCommunityById*(self: Controller, communityId: string): lent CommunityDto =
   return self.communityService.getCommunityById(communityId)
 
 proc getActivityCenterNotifications*(self: Controller): seq[ActivityCenterNotificationDto] =
@@ -143,14 +143,14 @@ proc dismissActivityCenterNotification*(self: Controller,notificationId: string)
 proc replacePubKeysWithDisplayNames*(self: Controller, message: string): string =
   return self.messageService.replacePubKeysWithDisplayNames(message)
 
-proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: seq[ChatDto]): string =
+proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
   return self.messageService.getRenderedText(parsedTextArray, communityChats)
 
 proc switchTo*(self: Controller, sectionId, chatId, messageId: string) =
   let data = ActiveSectionChatArgs(sectionId: sectionId, chatId: chatId, messageId: messageId)
   self.events.emit(SIGNAL_MAKE_SECTION_CHAT_ACTIVE, data)
 
-proc getChatDetails*(self: Controller, chatId: string): ChatDto =
+proc getChatDetails*(self: Controller, chatId: string): lent ChatDto =
   return self.chatService.getChatById(chatId)
 
 proc getOneToOneChatNameAndImage*(self: Controller, chatId: string):

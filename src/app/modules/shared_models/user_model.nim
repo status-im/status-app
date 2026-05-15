@@ -2,7 +2,6 @@ import nimqml, tables, std/strformat, sequtils, sugar
 import user_item
 
 import ../../../app_service/common/types
-import ../../../app_service/service/accounts/utils
 import ../../../app_service/service/contacts/dto/[contacts, contact_details]
 import contacts_utils
 import model_utils
@@ -42,6 +41,10 @@ QtObject:
   type
     Model* = ref object of QAbstractListModel
       items: seq[UserItem]
+      # O(1) pubkey -> row index lookup. Maintained by every mutation
+      # (setItems / addItem / addItems / removeItemWithIndex / clear).
+      # Mirrors `member_model.nim`'s pubKeyIndex.
+      pubKeyIndex: Table[string, int]
 
   # Forward declarations for ORC
   proc delete(self: Model)
@@ -59,9 +62,15 @@ QtObject:
 
   proc countChanged(self: Model) {.signal.}
 
+  proc rebuildPubKeyIndex(self: Model) =
+    self.pubKeyIndex.clear()
+    for i, it in self.items:
+      self.pubKeyIndex[it.pubKey] = i
+
   proc setItems*(self: Model, items: seq[UserItem]) =
     self.beginResetModel()
     self.items = items
+    self.rebuildPubKeyIndex()
     self.endResetModel()
     self.countChanged()
 
@@ -126,7 +135,7 @@ QtObject:
     of ModelRole.PubKey:
       result = newQVariant(item.pubKey)
     of ModelRole.CompressedPubKey:
-      result = newQVariant(utils.compressPk(item.pubKey))
+      result = newQVariant(item.compressedPubKey)
     of ModelRole.DisplayName:
       result = newQVariant(item.displayName)
     of ModelRole.PreferredDisplayName:
@@ -188,33 +197,35 @@ QtObject:
     if(items.len == 0):
       return
 
+    var newItems: seq[UserItem] = @[]
+    let first = self.items.len
+    for it in items:
+      if self.pubKeyIndex.hasKey(it.pubKey):
+        continue
+      self.pubKeyIndex[it.pubKey] = first + newItems.len
+      newItems.add(it)
+
+    if newItems.len == 0:
+      return
+
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
 
-    let first = self.items.len
-    let last = first + items.len - 1
+    let last = first + newItems.len - 1
     self.beginInsertRows(parentModelIndex, first, last)
-    self.items.add(items)
+    self.items.add(newItems)
     self.endInsertRows()
     self.countChanged()
 
   proc findIndexByPubKey*(self: Model, pubKey: string): int =
-    for i in 0 ..< self.items.len:
-      if self.items[i].pubKey == pubKey:
-        return i
-
-    return -1
+    return self.pubKeyIndex.getOrDefault(pubKey, -1)
 
   proc hasUser*(self: Model, pubKey: string): bool {.slot.} =
-    for i in 0 ..< self.items.len:
-      if self.items[i].pubKey == pubKey:
-        return true
+    return self.pubKeyIndex.hasKey(pubKey)
 
-    return false
 
   proc addItem*(self: Model, item: UserItem) =
-    let ind = self.findIndexByPubKey(item.pubKey)
-    if ind != -1:
+    if self.pubKeyIndex.hasKey(item.pubKey):
       return
 
     let position = self.items.len
@@ -223,6 +234,7 @@ QtObject:
     defer: parentModelIndex.delete
 
     self.beginInsertRows(parentModelIndex, position, position)
+    self.pubKeyIndex[item.pubKey] = position
     self.items.insert(item, position)
     self.endInsertRows()
     self.countChanged()
@@ -230,20 +242,25 @@ QtObject:
   proc clear*(self: Model) =
      self.beginResetModel()
      self.items = @[]
+     self.pubKeyIndex.clear()
      self.endResetModel()
 
   proc getItemByPubKey*(self: Model, pubKey: string): UserItem =
-    for item in self.items:
-      if item.pubKey == pubKey:
-        return item
+    let ind = self.pubKeyIndex.getOrDefault(pubKey, -1)
+    if ind != -1:
+      return self.items[ind]
 
   proc removeItemWithIndex(self: Model, index: int) =
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
 
+    let removedPubKey = self.items[index].pubKey
     self.beginRemoveRows(parentModelIndex, index, index)
-    let pubKey = self.items[index].pubKey
     self.items.delete(index)
+    self.pubKeyIndex.del(removedPubKey)
+    for v in self.pubKeyIndex.mvalues:
+      if v > index:
+        dec v
     self.endRemoveRows()
     self.countChanged()
 
@@ -326,7 +343,8 @@ QtObject:
     updateRole(displayName, DisplayName)
     updateRole(ensName, EnsName)
     updateRole(localNickname, LocalNickname)
-    updateRole(alias, Alias)
+    # `alias` is deterministic from the pubkey — preserve if set
+    updateRolePreserveOnEmpty(alias, Alias)
     updateRole(icon, Icon)
     updateRole(trustStatus, TrustStatus)
     updateRole(onlineStatus, OnlineStatus)
@@ -459,6 +477,8 @@ QtObject:
       isBlocked = contactDetails.dto.isBlocked(),
       isCurrentUser = contactDetails.isCurrentUser,
       contactRequest = toContactStatus(contactRequest),
+      compressedPubKey = contactDetails.dto.compressedPubKey,
+      emojiHash = contactDetails.dto.emojiHash,
       lastUpdated = contactDetails.dto.lastUpdated,
       lastUpdatedLocally = contactDetails.dto.lastUpdatedLocally,
       bio = contactDetails.dto.bio,

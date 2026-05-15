@@ -68,16 +68,6 @@ proc determineStatusAppIconPath(): string =
 
   return "/../status-dev.png"
 
-proc ensureQmlSelector(selector: string) =
-  let current = getEnv("QT_FILE_SELECTORS")
-  if current.len == 0:
-    putEnv("QT_FILE_SELECTORS", selector)
-    return
-
-  let selectors = current.split(",")
-  if selector notin selectors:
-    putEnv("QT_FILE_SELECTORS", current & "," & selector)
-
 proc prepareLogging() =
   # Outputs logs in the node tab
   for output in defaultChroniclesStream.outputs.fields():
@@ -189,10 +179,6 @@ proc mainProc() =
     setCurrentDir(getAppDir())
 
   ensureDirectories(DATADIR, TMPDIR, LOGDIR)
-
-  # Mobile builds use the mobile selector for browser WebView adapter replacement.
-  when main_constants.IS_MOBILE:
-    ensureQmlSelector("mobile")
 
   let isExperimental = isExperimental()
   let resourcesPath = determineResourcePath()
