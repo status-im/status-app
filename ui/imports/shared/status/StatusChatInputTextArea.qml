@@ -706,7 +706,11 @@ StatusQ.StatusTextArea {
             // cursor position must be stored in a helper property because setting readonly to true causes change
             // of the cursor position to the end of the input
             d.copyTextStart = root.cursorPosition
-            root.readOnly = true
+            // Toggling readOnly while handling the native iOS edit menu hides
+            // the keyboard, so keep the input editable on that path.
+            const toggleReadOnly = !StatusQUtils.Utils.isIOS
+            if (toggleReadOnly)
+                root.readOnly = true
 
             const copiedText = StatusQUtils.StringUtils.plainText(d.copiedTextPlain)
 
@@ -746,7 +750,8 @@ StatusQ.StatusTextArea {
             // Reset readOnly immediately after paste completes
             // Don't wait for onReleased which might not fire on mobile
             if (StatusQUtils.Utils.isMobile || immediateCleanup) {
-                root.readOnly = false
+                if (toggleReadOnly)
+                    root.readOnly = false
                 root.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard)
             }
 
@@ -807,6 +812,8 @@ StatusQ.StatusTextArea {
         id: contextMenu
 
         hideDisabledItems: false
+        // Use the platform popup on iOS to match native text editing behavior.
+        popupType: StatusQUtils.Utils.isIOS ? Popup.Native : Popup.Item
 
         StatusAction {
             text: qsTr("Cut")
@@ -831,5 +838,6 @@ StatusQ.StatusTextArea {
         }
     }
 
-    ContextMenu.menu: StatusQUtils.Utils.isMobile ? null : contextMenu
+    ContextMenu.menu: StatusQUtils.Utils.isAndroid ? null
+                      : contextMenu
 }
