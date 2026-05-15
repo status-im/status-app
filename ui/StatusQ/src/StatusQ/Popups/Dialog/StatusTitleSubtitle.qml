@@ -29,6 +29,7 @@ Item {
                 bold: true
             }
             elide: Text.ElideMiddle
+            textFormat: Text.PlainText
         }
 
         StatusBaseText {
@@ -39,6 +40,7 @@ Item {
             visible: text !== ""
             color: Theme.palette.baseColor1
             elide: Text.ElideMiddle
+            textFormat: Text.PlainText
         }
     }
 }

@@ -18,6 +18,7 @@ ColumnLayout {
         font.pixelSize: Theme.additionalTextSize
         elide: Text.ElideMiddle
         color: Theme.palette.baseColor1
+        textFormat: Text.PlainText
     }
 
     StatusBaseText {
