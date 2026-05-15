@@ -26,6 +26,7 @@ ComboBox {
     property bool incognitoMode: false
     property var popupDirectParent: root
     property int backgroundRadius: Theme.radius
+    property int iconSize: 24
 
     implicitHeight: 38
     implicitWidth: 38
@@ -65,8 +66,8 @@ ComboBox {
         StatusIcon {
             objectName: "dappIcon"
             anchors.centerIn: parent
-            width: 24
-            height: 24
+            width: root.iconSize
+            height: root.iconSize
             icon: "dapp"
             color: root.incognitoMode ?
                        Theme.palette.privacyColors.tertiary:

@@ -23,14 +23,13 @@ StatusTextField {
 
     background: Rectangle {
         color: root.bgColor
-        radius: root.height
+        radius: Theme.radius
     }
     verticalAlignment: TextInput.AlignVCenter
     leftPadding: showFavicon ? Theme.halfPadding + favicon.width + favicon.anchors.leftMargin
                              : Theme.padding
     rightPadding: clearButton.width
     placeholderText: qsTr("Search or enter address")
-    font.pixelSize: Theme.fontSize(14)
     color: root.incognitoMode ? Theme.palette.privacyColors.tertiary : Theme.palette.textColor
 
     inputMethodHints: Qt.ImhUrlCharactersOnly | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
@@ -49,7 +48,7 @@ StatusTextField {
     StatusRoundedImage {
         id: favicon
         visible: root.showFavicon
-        height: parent.height/2
+        height: parent.height*.6
         width: height
         anchors.left: parent.left
         anchors.leftMargin: height/2

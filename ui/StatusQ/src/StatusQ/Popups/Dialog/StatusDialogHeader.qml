@@ -50,7 +50,7 @@ ToolBar {
 
             anchors {
                 fill: parent
-                margins: Theme.padding
+                margins: Theme.defaultPadding
             }
 
             spacing: Theme.halfPadding

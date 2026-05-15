@@ -50,4 +50,3 @@ Rectangle {
         onFavMenuRequested: (parent, pos, url, name) => root.favMenuRequested(parent, pos, url, name)
     }
 }
-
