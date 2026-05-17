@@ -60,6 +60,7 @@ Loader {
             permissionsModel:               Qt.binding(() => root.communityPermissionsStore.permissionsModel),
             leftPanelWidthOverride:         Qt.binding(() => root.leftPanelWidthOverride),
         })
+        root.rootStore.loadMembersForSectionId(root.sectionItemModel.id)
     }
 
     onActiveChanged: loadSection()
