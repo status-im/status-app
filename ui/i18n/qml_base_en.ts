@@ -6872,6 +6872,10 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Don&apos;t ask me again</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Maybe later</source>
         <translation type="unfinished"></translation>
     </message>

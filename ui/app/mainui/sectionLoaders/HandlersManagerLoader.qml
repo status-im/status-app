@@ -35,6 +35,7 @@ Loader {
 
     required property ChatStores.RootStore rootChatStore
 
+    required property ProfileStores.AboutStore aboutStore
     required property ProfileStores.EnsUsernamesStore ensUsernamesStore
     required property ProfileStores.PrivacyStore privacyStore
 
@@ -79,6 +80,7 @@ Loader {
             transactionStoreNew:    Qt.binding(() => root.transactionStoreNew),
             tokensStore:            Qt.binding(() => root.tokensStore),
             rootChatStore:          Qt.binding(() => root.rootChatStore),
+            aboutStore:             Qt.binding(() => root.aboutStore),
             ensUsernamesStore:      Qt.binding(() => root.ensUsernamesStore),
             privacyStore:           Qt.binding(() => root.privacyStore),
             keychain:               Qt.binding(() => root.keychain),

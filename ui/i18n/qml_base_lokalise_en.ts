@@ -8397,6 +8397,11 @@
       <translation>Receive real-time notifications for incoming messages, mentions, and contact requests on your device so you can stay up to date and reply or react without opening the app. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</translation>
     </message>
     <message>
+      <source>Don&#39;t ask me again</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Don&#39;t ask me again</translation>
+    </message>
+    <message>
       <source>Maybe later</source>
       <comment>EnablePushNotificationsPopup</comment>
       <translation>Maybe later</translation>
