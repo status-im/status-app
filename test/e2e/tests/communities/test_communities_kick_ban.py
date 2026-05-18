@@ -28,14 +28,17 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
                 authorize_user_in_aut(aut, main_screen, account)
 
         with step(f'User {user_two.name}, get chat key'):
+            switch_to_aut(aut_two, main_screen)
             chat_key = get_chat_key(aut_two, main_screen)
             main_screen.minimize()
 
         with step(f'User {user_one.name}, send contact request to {user_two.name}'):
+            switch_to_aut(aut_one, main_screen)
             send_contact_request_from_settings(aut_one, main_screen, chat_key, f'Hello {user_two.name}')
             main_screen.minimize()
 
         with step(f'User {user_two.name}, accept contact request from {user_one.name}'):
+            switch_to_aut(aut_two, main_screen)
             accept_contact_request_from_settings(aut_two, main_screen, user_one.name)
 
         with step(f'User {user_two.name}, create community and invite {user_one.name}'):
@@ -70,7 +73,7 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
             community_setting = community_screen.left_panel.open_community_settings()
             members = community_setting.left_panel.open_members()
             members.open_all_members_tab()
-            time.sleep(1)  # Allow list to load (CI timing)
+            time.sleep(1)  # Allow list to load
             members.ban_member(user_one.name).confirm_banning()
 
         with step('Check toast message about banned member'):
@@ -94,7 +97,6 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
             assert banned_community_screen.community_banned_member_panel.is_visible
             assert banned_community_screen.banned_title() == f"You've been banned from {community.name}"
             main_screen.left_panel.open_community_context_menu(community.name).leave_community_option.click()
-            # TODO: think of better check here assert not main_screen.left_panel.communities()
             main_screen.minimize()
 
 
