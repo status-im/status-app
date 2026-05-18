@@ -254,6 +254,11 @@ Loader {
         if (root.isChatBlocked && !d.addReactionAllowed)
             return
 
+        if (chatLogView?.moving)
+            return
+
+        d.contextMenu?.close() // will run destruction/cleanup
+
         const params = {
             myPublicKey: userProfile.pubKey,
             amIChatAdmin: root.amIChatAdmin,
@@ -270,7 +275,8 @@ Loader {
         }
 
         d.preventVirtualKeyboardOpening()
-        messageContextMenuComponent.createObject(root, params).popup(point)
+        d.contextMenu = messageContextMenuComponent.createObject(root, params)
+        d.contextMenu.popup(point)
     }
 
     function setMessageActive(messageId, active) {
@@ -518,6 +524,16 @@ Loader {
         function preventVirtualKeyboardOpening() {
             if (!SystemUtils.androidKeyboardVisible && !SystemUtils.iosKeyboardVisible && !Qt.inputMethod.visible) {
                 root.forceActiveFocus()
+            }
+        }
+
+        // messageContextMenuComponent lifetime trackers
+        property var contextMenu: null
+        readonly property var _contextMenuConn: Connections {
+            target: root?.chatLogView ?? null
+            function onMovementEnded() {
+                // prevent spurios context menus coming from the Flickable, at the end of the move/drag operations
+                d.contextMenu?.close() // will run destruction/cleanup
             }
         }
     }
@@ -920,6 +936,7 @@ Loader {
                     root.messageStore.resendMessage(root.messageId)
                 }
 
+                onContextMenuRequested: pos => root.openMessageContextMenu(pos) // for StatusTextMessage which would eat the press events internally
                 TapHandler {
                     gesturePolicy: TapHandler.ReleaseWithinBounds // exclusive grab on press
                     acceptedDevices: PointerDevice.TouchScreen

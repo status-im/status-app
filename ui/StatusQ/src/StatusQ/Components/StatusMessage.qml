@@ -88,6 +88,7 @@ Control {
     signal senderNameClicked(var sender)
     signal replyProfileClicked(var sender, var mouse)
     signal replyMessageClicked(var mouse)
+    signal contextMenuRequested(point pos)
 
     signal addReactionClicked(var sender, var mouse)
     signal toggleReactionClicked(string hexcode)
@@ -287,6 +288,7 @@ Control {
                             textField.onHoveredLinkChanged: {
                                 root.hoveredLink = hoveredLink;
                             }
+                            onContextMenuRequested: pos => root.contextMenuRequested(pos)
                         }
                     }
                     Loader {
@@ -315,6 +317,7 @@ Control {
                                     textField.onHoveredLinkChanged: {
                                         root.hoveredLink = hoveredLink
                                     }
+                                    onContextMenuRequested: pos => root.contextMenuRequested(pos)
                                 }
                             }
 
