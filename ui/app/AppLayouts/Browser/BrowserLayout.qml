@@ -310,6 +310,10 @@ StatusSectionLayout {
                     mobileAddressBar.activateAddressBar()
                 else
                     item.activateAddressBar()
+                Qt.callLater(() => {
+                                 if (!InputMethod.visible)
+                                     InputMethod.show()
+                             })
             }
 
             Connections {
