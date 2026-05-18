@@ -30,8 +30,7 @@ RowLayout {
     property bool addFiller: true
 
     // Determines whether album images respond to user click.
-    // - true (default): images are clickable; each image installs a MouseArea
-    //   and emits the `imageClicked` signal when tapped or clicked.
+    // - true (default): images are clickable; each image uses TapHandlers and emits `imageClicked`.
     // - false: images are display-only with no interaction.
     property bool imageClickable: true
 
