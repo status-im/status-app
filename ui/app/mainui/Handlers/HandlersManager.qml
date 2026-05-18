@@ -47,6 +47,7 @@ QtObject {
 
     required property ChatStores.RootStore rootChatStore
 
+    required property ProfileStores.AboutStore aboutStore
     required property ProfileStores.EnsUsernamesStore ensUsernamesStore
     required property ProfileStores.PrivacyStore privacyStore
 
@@ -212,6 +213,12 @@ QtObject {
             destroyOnClose: true
             hasPermission: PushNotifications.status === PushNotifications.Granted
 
+            onClosed: {
+                appMainLocalSettings.enablePushNotificationsFreshInstallSeen = true
+                appMainLocalSettings.enablePushNotificationsDontAskAgain = enablePushNotificationsPopup.dontAskAgain
+                appMainLocalSettings.enablePushNotificationsLastShownVersion = currentMinorVersion()
+            }
+
             onContinueRequested: {
                 PushNotifications.request()
 
@@ -249,6 +256,27 @@ QtObject {
         }
     }
 
+    function currentMinorVersion(): string {
+        const match = /^v?(\d+)\.(\d+)/.exec(root.aboutStore.getCurrentVersion() || "")
+        if (!match) {
+            return ""
+        }
+        return "%1.%2".arg(match[1]).arg(match[2])
+    }
+
+    function isAtLeastMinorVersion(version: string, minimum: string): bool {
+        const versionParts = version.split(".").map(Number)
+        const minimumParts = minimum.split(".").map(Number)
+        if (versionParts.length < 2 || minimumParts.length < 2 ||
+                isNaN(versionParts[0]) || isNaN(versionParts[1]) ||
+                isNaN(minimumParts[0]) || isNaN(minimumParts[1])) {
+            return false
+        }
+
+        return versionParts[0] > minimumParts[0] ||
+                (versionParts[0] === minimumParts[0] && versionParts[1] >= minimumParts[1])
+    }
+
     function showEnablePushNotificationsPopup() {
         enablePushNotificationsPopupComponent.createObject(root.popupParent).open()
     }
@@ -283,6 +311,18 @@ QtObject {
 
         if (PushNotifications.status === PushNotifications.Granted) {
             PushNotifications.requestToken()
+            return
+        }
+
+        const version = currentMinorVersion()
+        const shouldDisplayAfterFreshInstall = !appMainLocalSettings.enablePushNotificationsFreshInstallSeen
+        const shouldDisplayAfterMinorUpdate = !appSettings.notifSettingAllowNotifications &&
+                !appMainLocalSettings.enablePushNotificationsDontAskAgain &&
+                version !== "" &&
+                isAtLeastMinorVersion(version, "2.38") &&
+                appMainLocalSettings.enablePushNotificationsLastShownVersion !== version
+
+        if (!shouldDisplayAfterFreshInstall && !shouldDisplayAfterMinorUpdate) {
             return
         }
 

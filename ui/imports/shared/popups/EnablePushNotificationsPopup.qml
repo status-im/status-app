@@ -18,6 +18,7 @@ StatusDialog {
     property bool hasPermission: false
     property bool attemptedRequest: false
     property bool loading: false
+    property bool dontAskAgain: false
 
     signal continueRequested()
     signal openSettingsRequested()
@@ -38,6 +39,14 @@ StatusDialog {
             text: SQUtils.Utils.isIOS
                   ? qsTr("Receive notification alerts for incoming messages, mentions, and contact requests on your device so you can stay up to date in real time. Customize anytime in <b>Settings → Notifications</b>.<br><br>Status uses APNs (Apple Push Notification service) solely to deliver notification signals; your end-to-end encrypted message content is never passed through or stored there.")
                   : qsTr("Receive real-time notifications for incoming messages, mentions, and contact requests on your device so you can stay up to date and reply or react without opening the app. Customize anytime in <b>Settings → Notifications</b><br><br>Status delivers notifications via its on-device background service, with no third parties, centralized servers, or intermediaries involved.")
+        }
+
+        StatusSwitch {
+            Layout.fillWidth: true
+            Layout.bottomMargin: Theme.defaultPadding
+            text: qsTr("Don't ask me again")
+            checked: root.dontAskAgain
+            onToggled: root.dontAskAgain = checked
         }
     }
 

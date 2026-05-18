@@ -909,6 +909,9 @@ Item {
         property var whitelistedUnfurledDomains: []
         property bool introduceYourselfPopupSeen
         property bool enableMessageBackupPopupSeen
+        property bool enablePushNotificationsFreshInstallSeen
+        property bool enablePushNotificationsDontAskAgain
+        property string enablePushNotificationsLastShownVersion
         property var recentEmojis
         property string skinColor // NB: must be a string for the twemoji lib to work; we don't want the `#` in the name
         property int theme: ThemeUtils.Style.System
@@ -1011,6 +1014,7 @@ Item {
         tokensStore: appMain.tokensStore
         rootChatStore: appMain.rootChatStore
         ensUsernamesStore: appMain.ensUsernamesStore
+        aboutStore: appMain.aboutStore
         privacyStore: appMain.privacyStore
         keychain: appMain.keychain
 
