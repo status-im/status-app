@@ -69,6 +69,7 @@ TextField {
         id: contextMenu
 
         hideDisabledItems: false
+        popupType: Utils.isIOS ? Popup.Native : Popup.Item
 
         StatusAction {
             text: qsTr("Cut")
@@ -93,5 +94,5 @@ TextField {
         }
     }
 
-    ContextMenu.menu: Utils.isMobile ? null : contextMenu
+    ContextMenu.menu: Utils.isAndroid ? null : contextMenu
 }
