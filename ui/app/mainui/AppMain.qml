@@ -887,7 +887,6 @@ Item {
                 return
             }
             globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
-            changeAppSectionBySectionId(Constants.appSection.browser)
             Qt.callLater(() => browserLayoutContainer.item.openUrlInNewTab(link))
         }
 

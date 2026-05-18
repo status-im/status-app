@@ -27,6 +27,7 @@ Item {
     property bool allowShowMore: true
 
     signal linkActivated(string link)
+    signal contextMenuRequested(point pos)
 
     implicitWidth: chatText.implicitWidth
     implicitHeight: chatText.height + d.showMoreHeight / 2
@@ -88,7 +89,7 @@ Item {
         color: Theme.palette.baseColor1
     }
 
-    TextEdit {
+    StatusTextArea {
         id: chatText
         objectName: "StatusTextMessage_chatText"
 
@@ -101,28 +102,39 @@ Item {
         anchors.leftMargin: d.isQuote ? Theme.halfPadding : 0
         anchors.right: parent.right
         opacity: !showMoreOpacityMask.active && !horizontalOpacityMask.active ? 1 : 0
+        background: null
+        leftPadding: 0
+        rightPadding: 0
+        topPadding: 0
+        bottomPadding: 0
         text: d.text
         selectedTextColor: Theme.palette.directColor1
-        selectionColor: Theme.palette.primaryColor3
         color: d.isQuote ? Theme.palette.baseColor1 : Theme.palette.directColor1
-        font.family: Fonts.baseFont.family
-        font.pixelSize: Theme.primaryTextFontSize
         textFormat: Text.RichText
         wrapMode: root.convertToSingleLine ? Text.NoWrap : Text.Wrap
         readOnly: true
         selectByMouse: true  // applies to mouse only, not touch
-        enabled: !Utils.isMobile // eats the internal touch events to enable the external context menu on long press
-
-        // disable native (edit) context menu; we're really not an edit control
-        inputMethodHints: Qt.ImhNoEditMenu
 
         onLinkActivated: function(link) {
             if(d.showDisabledTooltipForAddressEnsName(link)) {
                 return
             }
             root.linkActivated(link)
+            chatText.deselect()
         }
         onLinkHovered: (link) => disabledLinkTooltip.visible = d.showDisabledTooltipForAddressEnsName(link)
+
+        // context menu handlers
+        ContextMenu.menu: null // disable builtin "edit" menu; we're not an edit control
+        inputMethodHints: Qt.ImhNoEditMenu // ditto for mobile
+        onPressAndHold: event => root.contextMenuRequested(Qt.point(event.x, event.y))
+        onPressed: function(event) {
+            if (event.button === Qt.RightButton) {
+                event.accepted = true
+                root.contextMenuRequested(Qt.point(event.x, event.y))
+            }
+        }
+
         HoverHandler {
             id: hoverHandler
         }
