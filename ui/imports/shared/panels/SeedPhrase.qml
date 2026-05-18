@@ -21,6 +21,11 @@ Control {
         cellHeight: 48
         interactive: false
         visible: root.seedPhraseRevealed
+        // Exclude word nodes from the accessibility tree until the user
+        // explicitly reveals the phrase. `visible: false` alone does not
+        // remove QML items from the a11y tree, so accessibility services
+        // could read the words before the reveal button is tapped.
+        Accessible.ignored: !root.seedPhraseRevealed
         model: 12
         readonly property var wordIndex: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
         readonly property int spacing: 4
@@ -30,6 +35,10 @@ Control {
             height: (grid.cellHeight - grid.spacing)
             textEdit.input.edit.enabled: false
             text: {
+                // Only populate word text after the user taps Reveal so the
+                // phrase is never present in the object tree before that point.
+                if (!root.seedPhraseRevealed)
+                    return "";
                 const idx = parseInt(leftComponentText) - 1;
                 if (!root.seedPhrase || idx < 0 || idx > root.seedPhrase.length - 1)
                     return "";
