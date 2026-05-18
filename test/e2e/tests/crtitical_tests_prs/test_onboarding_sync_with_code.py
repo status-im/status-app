@@ -16,7 +16,7 @@ from gui.screens.onboarding import OnboardingWelcomeToStatusView, SyncResultView
 
 
 @pytest.mark.case(703592, 738760)
-@pytest.mark.critical
+# @pytest.mark.critical # TODO: temp disable in release
 @pytest.mark.smoke
 def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instances):
     user: UserAccount = RandomUser()
