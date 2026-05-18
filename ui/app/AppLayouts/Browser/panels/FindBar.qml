@@ -98,6 +98,8 @@ Rectangle {
                 color: Theme.palette.baseColor2
                 radius: Theme.radius
             }
+            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhSensitiveData
+            EnterKey.type: Qt.EnterKeySearch
             Layout.fillWidth: true
             Layout.fillHeight: true
             onAccepted: root.findNext()
