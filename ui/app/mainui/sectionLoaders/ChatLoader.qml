@@ -47,7 +47,7 @@ Loader {
     required property bool isPortraitMode
 
     property real leftPanelWidthOverride: 0
-    readonly property bool navToMsgDetails: root.rootStore.navToMsgDetails
+    property bool navToMsgDetails: root.rootStore.navToMsgDetails
 
     // Re-emitted so AppMain owns the spinner toggle.
     signal ready()
@@ -62,9 +62,16 @@ Loader {
     }
 
     onNavToMsgDetailsChanged: {
-        if (root.item) {
+        if (root.item && root.item.navToMsgDetails !== root.navToMsgDetails) {
             root.item.navToMsgDetails = root.navToMsgDetails
         }
+    }
+
+    // TODO: refactor this into a single shot function that navigates the view
+    // The bindings are getting messy
+    Binding {
+        when: !!root.item
+        root.navToMsgDetails: root.item.navToMsgDetails || root.rootStore.navToMsgDetails
     }
 
     Component {
