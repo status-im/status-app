@@ -243,6 +243,8 @@ Control {
                 Layout.maximumWidth: root.width - currencyField.width - 2*layout.spacing - root.amountInputRightPadding
                 padding: 0
                 leftPadding: 0
+                topPadding: 0
+                bottomPadding: 0
                 background: null
 
                 inputMethodHints: Qt.ImhFormattedNumbersOnly | Qt.ImhNoPredictiveText
