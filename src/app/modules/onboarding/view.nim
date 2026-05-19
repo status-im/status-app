@@ -19,6 +19,7 @@ QtObject:
       loginAccountsModel: login_acc_model.Model
       loginAccountsModelVariant: QVariant
       convertKeycardAccountState: ProgressState
+      keycardModule: QVariant
 
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface): View =
@@ -27,6 +28,7 @@ QtObject:
     result.delegate = delegate
     result.loginAccountsModel = login_acc_model.newModel()
     result.loginAccountsModelVariant = newQVariant(result.loginAccountsModel)
+    result.keycardModule = newQVariant()
 
   ### QtSignals ###
 
@@ -158,6 +160,16 @@ QtObject:
     read = getConvertKeycardAccountState
     notify = convertKeycardAccountStateChanged
 
+  proc keycardModuleChanged*(self: View) {.signal.}
+  proc getKeycardModule(self: View): QVariant {.slot.} =
+    return self.keycardModule
+  proc setKeycardModule*(self: View, value: QVariant) =
+    self.keycardModule = value
+    self.keycardModuleChanged()
+  QtProperty[QVariant] keycardModule:
+    read = getKeycardModule
+    notify = keycardModuleChanged
+
   ### slots ###
 
   proc setPin(self: View, pin: string) {.slot.} =
@@ -207,6 +219,12 @@ QtObject:
 
   proc startKeycardDetection(self: View) {.slot.} =
     self.delegate.startKeycardDetection()
+
+  proc prepareKeycardModule(self: View) {.slot.} =
+    self.delegate.prepareKeycardModule()
+
+  proc destroyKeycardModule(self: View) {.slot.} =
+    self.delegate.destroyKeycardModule()
 
   proc requestDeleteMultiaccount(self: View, keyUid: string): string {.slot.} =
     return self.delegate.requestDeleteMultiaccount(keyUid)

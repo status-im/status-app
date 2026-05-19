@@ -88,6 +88,8 @@ Page {
         property string keyUid // Used in LoginWithLostKeycardSeedphrase
         property url backupImportFileUrl
 
+        property var keycardPayload: null
+
         // login screen state
         property string selectedProfileKeyId
 
@@ -102,6 +104,7 @@ Page {
             d.backupImportFileUrl = ""
             d.selectedProfileKeyId = ""
             d.thirdpartyServicesEnabled = true
+            d.keycardPayload = null
         }
 
         readonly property var settings: Settings { /* https://bugreports.qt.io/browse/QTBUG-135039 */
@@ -120,7 +123,8 @@ Page {
                 keyUid: d.keyUid,
                 backupImportFileUrl: d.backupImportFileUrl,
                 enableBiometrics: d.enableBiometrics,
-                thirdpartyServicesEnabled: d.thirdpartyServicesEnabled
+                thirdpartyServicesEnabled: d.thirdpartyServicesEnabled,
+                keycardPayload: d.keycardPayload
             }
 
             root.finished(flow, data)
@@ -205,6 +209,14 @@ Page {
         onLinkActivated: (link) => Qt.openUrlExternally(link)
         onExportKeysRequested: root.onboardingStore.exportRecoverKeys()
         onImportLocalBackupRequested: (importFilePath) => d.backupImportFileUrl = importFilePath
+        onOnboardingKeycardFlowCompletedWithData: (flow, dataJson) => {
+            try {
+                d.keycardPayload = JSON.parse(dataJson)
+            } catch (e) {
+                console.warn("OnboardingLayout: failed to parse keycard popup payload:", e.message)
+                d.keycardPayload = null
+            }
+        }
         onFinished: (flow) => d.finishFlow(flow)
         onKeycardRequested: {
             root.onboardingStore.startKeycardDetection()

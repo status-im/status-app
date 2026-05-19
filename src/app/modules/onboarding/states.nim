@@ -11,7 +11,11 @@ type OnboardingFlow* {.pure} = enum
   LoginWithSyncing,
   LoginWithKeycard,
   LoginWithLostKeycardSeedphrase,
-  LoginWithRestoredKeycard
+  LoginWithRestoredKeycard,
+
+  OnboardingLoginWithKeycard,
+  OnboardingImportNewKeyPair,
+  OnboardingImportSeedPhrase
 
 type LoginMethod* {.pure} = enum
   Unknown = 0,

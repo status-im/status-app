@@ -706,9 +706,9 @@ QtObject {
                 store: root.keycardManagementStore
                 emojiPopup: root.emojiPopup
                 passwordStrengthScoreFunction: root.sharedRootStore.getPasswordStrengthScore
-                onMetadataResult: function(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
+                onMetadataResult: function(keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts, remainingPukAttempts,
                                            availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
-                    Global.keycardManagementResult(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
+                    Global.keycardManagementResult(keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts, remainingPukAttempts,
                                                    availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
                 }
                 onKeycardFlowCompleted: function(flow, keyUid, keycardUid, success) {

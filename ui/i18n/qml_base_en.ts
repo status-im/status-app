@@ -9213,6 +9213,113 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
+    <name>KeycardDetailsPage</name>
+    <message>
+        <source>No free pairing slots</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is blocked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard stores only PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Profile already exists</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard stores key pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>, </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>UID: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Profile for key pair stored on Keycard already added to this device.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard stores information about your accounts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>What you can do:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import a new key pair to Keycard and create new profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard will be required for signing and logging in to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import a key pair from recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You’ll create a new profile or login if key pair already associated with existing Status profile. Keycard will be required for signing and logging in to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unblock with recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unblock with PUK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you set your PUK earlier for this Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Login with this Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Go back to login screen</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You can login with password and move your profile to Keycard, from the settings/Keycard section</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Factory reset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove everything from Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>KeycardEmptyPage</name>
     <message>
         <source>Keycard is empty</source>
@@ -9908,11 +10015,23 @@ to login to Status?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Log in with this Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import a key pair from recovery phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Factory reset this Keycard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Resetting Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Logging in with Keycard...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -9929,6 +10048,14 @@ to login to Status?</source>
     </message>
     <message>
         <source>Keycard is now empty.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue to finish logging in.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue to finish setting up your profile.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10050,6 +10177,10 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Key pair has been moved to Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard read completed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

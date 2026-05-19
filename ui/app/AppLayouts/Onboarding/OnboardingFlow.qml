@@ -14,10 +14,12 @@ import StatusQ.Core.Utils as SQUtils
 import AppLayouts.Onboarding.pages
 import AppLayouts.Onboarding.enums
 import AppLayouts.Onboarding.controls
+import AppLayouts.Onboarding.stores
 
 import QtModelsToolkit
 
 import shared.popups
+import shared.popups.keycard_new
 import utils
 import SortFilterProxyModel
 
@@ -83,6 +85,8 @@ OnboardingStackView {
 
     signal finished(int flow)
     signal keycardRequested()
+
+    signal onboardingKeycardFlowCompletedWithData(string flow, string dataJson)
 
     // Thirdparty services
     required property bool privacyModeFeatureEnabled
@@ -550,6 +554,134 @@ OnboardingStackView {
 
             onPerformKeycardFactoryResetRequested: root.performKeycardFactoryResetRequested()
             onFinished: root.pop(null)
+        }
+    }
+
+    OnboardingKeycardStore {
+        id: onboardingKeycardStore
+    }
+
+    function openKeycardPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson) {
+        console.info("onboarding - openning keycard popup for flow: ", flow, " keyUid: ", keyUid, " keycardUid: ", keycardUid, " cardMetadataName: ", cardMetadataName, " cardMetadataWalletAccountsJson: ", cardMetadataWalletAccountsJson)
+        keycardManagementPopupComponent.createObject(root, {
+            flow: flow,
+            keyUid: keyUid || "",
+            keycardUid: keycardUid || "",
+            cardMetadataName: cardMetadataName || "",
+            cardMetadataWalletAccountsJson: cardMetadataWalletAccountsJson || "[]"
+        }).open()
+    }
+
+    Component {
+        id: keycardManagementPopupComponent
+
+        KeycardManagementPopup {
+            store: onboardingKeycardStore
+            passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
+
+            destroyOnClose: true
+
+            onMetadataResult: function(state, kcUid, kUid, statusAvailable, pinAttempts, pukAttempts, slots, name, accountsJson) {
+                const args = {
+                    keycardState: state,
+                    keycardUid: kcUid,
+                    keyUid: kUid,
+                    keycardStatusAvailable: statusAvailable,
+                    remainingPinAttempts: pinAttempts,
+                    remainingPukAttempts: pukAttempts,
+                    availableSlots: slots,
+                    cardMetadataName: name,
+                    cardMetadataWalletAccountsJson: accountsJson
+                }
+
+                const top = root.currentItem
+                if (top && top.objectName === "keycardDetailsPage") {
+                    for (const k in args)
+                        top[k] = args[k]
+                } else {
+                    root.push(keycardDetailsComponent, args)
+                }
+            }
+
+            onKeycardFlowCompletedWithData: function(flow, dataJson) {
+                let onboardingFlow = Onboarding.OnboardingFlow.Unknown
+                switch (flow) {
+                case Constants.keycard.flow.onboardingLoginWithKeycard:
+                    onboardingFlow = Onboarding.OnboardingFlow.OnboardingLoginWithKeycard
+                    break
+                case Constants.keycard.flow.onboardingImportNewKeyPair:
+                    onboardingFlow = Onboarding.OnboardingFlow.OnboardingImportNewKeyPair
+                    break
+                case Constants.keycard.flow.onboardingImportSeedPhrase:
+                    onboardingFlow = Onboarding.OnboardingFlow.OnboardingImportSeedPhrase
+                    break
+                default:
+                    console.warn("onboarding - unexpected keycard flow:", flow)
+                    return
+                }
+                console.info("onboarding - onbordingFlow: ", onboardingFlow, " keycard-flow: ", flow)
+                d.flow = onboardingFlow
+                root.skippedBiometricFlow()
+                root.onboardingKeycardFlowCompletedWithData(flow, dataJson)
+                root.finished(onboardingFlow)                
+            }
+
+            onKeycardFlowCompleted: function(flow, kUid, kcUid, success) {
+                console.info("onboarding - keycard flow completed, flow: ", flow, " keyUid: ", keyUid, " keycardUid: ", keycardUid," done successfully: ", success)
+                if (flow === Constants.keycard.flow.readKeycard) {
+                    return
+                }
+                if (flow === Constants.keycard.flow.onboardingLoginWithKeycard
+                        || flow === Constants.keycard.flow.onboardingImportNewKeyPair
+                        || flow === Constants.keycard.flow.onboardingImportSeedPhrase) {
+                    // successful keycard flow continues in onKeycardFlowCompletedWithData (continue-onboarding flow), unsuccessful returns to previous screen
+                    if (!success) {
+                        root.pop()
+                    }
+                    return
+                }
+                // the user returns to the screen the popup was opened from
+                if (root.currentItem && root.currentItem.objectName === "keycardDetailsPage") {
+                    root.pop()
+                }
+            }
+        }
+    }
+
+    Component {
+        id: keycardDetailsComponent
+
+        KeycardDetailsPage {
+            objectName: "keycardDetailsPage"
+
+            loginAccountsModel: root.loginAccountsModel
+
+            onLoginWithThisKeycardRequested: {
+                const matched = SQUtils.ModelUtils.getByKey(
+                    root.loginAccountsModel, "keyUid", keyUid)
+                if (matched) {
+                    root.profileSelected(matched.keyUid)
+                    root.pop(null)
+                    return
+                }
+                root.openKeycardPopup(Constants.keycard.flow.onboardingLoginWithKeycard, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+            }
+            onImportNewKeyPairAndCreateProfileRequested: {
+                root.openKeycardPopup(Constants.keycard.flow.onboardingImportNewKeyPair, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+            }
+            onImportFromRecoveryPhraseRequested: {
+                root.openKeycardPopup(Constants.keycard.flow.onboardingImportSeedPhrase, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+            }
+            onUnblockWithRecoveryPhraseRequested: {
+                root.openKeycardPopup(Constants.keycard.flow.unblockWithRecoveryPhrase, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+            }
+            onUnblockWithPukRequested: {
+                root.openKeycardPopup(Constants.keycard.flow.unblockWithPuk, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+            }
+            onFactoryResetRequested: {
+                root.openKeycardPopup(Constants.keycard.flow.factoryReset, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson)
+            }
+            onGoBackToLoginRequested: root.pop(null)
         }
     }
 

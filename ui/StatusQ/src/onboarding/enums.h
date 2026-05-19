@@ -41,7 +41,11 @@ public:
         LoginWithKeycard,
 
         LoginWithLostKeycardSeedphrase,
-        LoginWithRestoredKeycard
+        LoginWithRestoredKeycard,
+
+        OnboardingLoginWithKeycard,
+        OnboardingImportNewKeyPair,
+        OnboardingImportSeedPhrase
     };
 
     enum class LoginMethod {

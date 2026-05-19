@@ -58,6 +58,7 @@ SettingsContentBase {
             property string keycardState: ""
             property string keycardUid: ""
             property string keyUid: ""
+            property bool keycardStatusAvailable: false
             property int remainingPinAttempts: -1
             property int remainingPukAttempts: -1
             property int availableSlots: -1
@@ -70,11 +71,12 @@ SettingsContentBase {
                 root.backButtonNameRequested("")
             }
 
-            function showDetailsScreen(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
-                                 availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
+            function showDetailsScreen(keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts,
+                                       remainingPukAttempts, availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
                 d.keycardState = keycardState
                 d.keycardUid = keycardUid
                 d.keyUid = keyUid
+                d.keycardStatusAvailable = keycardStatusAvailable
                 d.remainingPinAttempts = remainingPinAttempts
                 d.remainingPukAttempts = remainingPukAttempts
                 d.availableSlots = availableSlots
@@ -104,6 +106,7 @@ SettingsContentBase {
             keycardState: d.keycardState
             keycardUid: d.keycardUid
             keyUid: d.keyUid
+            keycardStatusAvailable: d.keycardStatusAvailable
             remainingPinAttempts: d.remainingPinAttempts
             remainingPukAttempts: d.remainingPukAttempts
             availableSlots: d.availableSlots
@@ -115,9 +118,9 @@ SettingsContentBase {
     Connections {
         target: Global
 
-        function onKeycardManagementResult(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
-                                           availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
-            d.showDetailsScreen(keycardState, keycardUid, keyUid, remainingPinAttempts, remainingPukAttempts,
+        function onKeycardManagementResult(keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts,
+                                           remainingPukAttempts, availableSlots, cardMetadataName, cardMetadataWalletAccountsJson) {
+            d.showDetailsScreen(keycardState, keycardUid, keyUid, keycardStatusAvailable, remainingPinAttempts, remainingPukAttempts,
                                 availableSlots, cardMetadataName, cardMetadataWalletAccountsJson)
         }
 

@@ -124,6 +124,12 @@ method requestLocalBackup*(self: AccessInterface, backupImportFileUrl: string) {
 method startKeycardDetection*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method prepareKeycardModule*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method destroyKeycardModule*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method requestDeleteMultiaccount*(self: AccessInterface, keyUid: string): string {.base.} =
   raise newException(ValueError, "No implementation available")
 

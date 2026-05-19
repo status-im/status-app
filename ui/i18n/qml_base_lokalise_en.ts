@@ -11240,6 +11240,139 @@
     </message>
   </context>
   <context>
+    <name>KeycardDetailsPage</name>
+    <message>
+      <source>No free pairing slots</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>No free pairing slots</translation>
+    </message>
+    <message>
+      <source>Keycard is empty</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Keycard is empty</translation>
+    </message>
+    <message>
+      <source>Keycard is blocked</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Keycard is blocked</translation>
+    </message>
+    <message>
+      <source>Keycard stores only PIN</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Keycard stores only PIN</translation>
+    </message>
+    <message>
+      <source>Profile already exists</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Profile already exists</translation>
+    </message>
+    <message>
+      <source>Keycard stores key pair</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Keycard stores key pair</translation>
+    </message>
+    <message>
+      <source>Keycard</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Keycard</translation>
+    </message>
+    <message>
+      <source>, </source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>,</translation>
+    </message>
+    <message>
+      <source>UID: %1</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>UID: %1</translation>
+    </message>
+    <message>
+      <source>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</translation>
+    </message>
+    <message>
+      <source>Profile for key pair stored on Keycard already added to this device.</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Profile for key pair stored on Keycard already added to this device.</translation>
+    </message>
+    <message>
+      <source>Keycard stores information about your accounts</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Keycard stores information about your accounts</translation>
+    </message>
+    <message>
+      <source>What you can do:</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>What you can do:</translation>
+    </message>
+    <message>
+      <source>Import a new key pair to Keycard and create new profile</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Import a new key pair to Keycard and create new profile</translation>
+    </message>
+    <message>
+      <source>Keycard will be required for signing and logging in to Status</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Keycard will be required for signing and logging in to Status</translation>
+    </message>
+    <message>
+      <source>Import a key pair from recovery phrase</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Import a key pair from recovery phrase</translation>
+    </message>
+    <message>
+      <source>You’ll create a new profile or login if key pair already associated with existing Status profile. Keycard will be required for signing and logging in to Status</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>You’ll create a new profile or login if key pair already associated with existing Status profile. Keycard will be required for signing and logging in to Status</translation>
+    </message>
+    <message>
+      <source>Unblock with recovery phrase</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Unblock with recovery phrase</translation>
+    </message>
+    <message>
+      <source>Requires providing the recovery phrase for the key pair stored on Keycard</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Requires providing the recovery phrase for the key pair stored on Keycard</translation>
+    </message>
+    <message>
+      <source>Unblock with PUK</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Unblock with PUK</translation>
+    </message>
+    <message>
+      <source>If you set your PUK earlier for this Keycard</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>If you set your PUK earlier for this Keycard</translation>
+    </message>
+    <message>
+      <source>Login with this Keycard</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Login with this Keycard</translation>
+    </message>
+    <message>
+      <source>Go back to login screen</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Go back to login screen</translation>
+    </message>
+    <message>
+      <source>You can login with password and move your profile to Keycard, from the settings/Keycard section</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>You can login with password and move your profile to Keycard, from the settings/Keycard section</translation>
+    </message>
+    <message>
+      <source>Factory reset</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Factory reset</translation>
+    </message>
+    <message>
+      <source>Remove everything from Keycard</source>
+      <comment>KeycardDetailsPage</comment>
+      <translation>Remove everything from Keycard</translation>
+    </message>
+  </context>
+  <context>
     <name>KeycardEmptyPage</name>
     <message>
       <source>Keycard is empty</source>
@@ -12075,6 +12208,16 @@
       <translation>Factory reset</translation>
     </message>
     <message>
+      <source>Log in with this Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Log in with this Keycard</translation>
+    </message>
+    <message>
+      <source>Import a key pair from recovery phrase</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Import a key pair from recovery phrase</translation>
+    </message>
+    <message>
       <source>Factory reset this Keycard</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Factory reset this Keycard</translation>
@@ -12083,6 +12226,11 @@
       <source>Resetting Keycard...</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Resetting Keycard...</translation>
+    </message>
+    <message>
+      <source>Logging in with Keycard...</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Logging in with Keycard...</translation>
     </message>
     <message>
       <source>Reading...</source>
@@ -12103,6 +12251,16 @@
       <source>Keycard is now empty.</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Keycard is now empty.</translation>
+    </message>
+    <message>
+      <source>Continue to finish logging in.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Continue to finish logging in.</translation>
+    </message>
+    <message>
+      <source>Continue to finish setting up your profile.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Continue to finish setting up your profile.</translation>
     </message>
     <message>
       <source>Something went wrong</source>
@@ -12253,6 +12411,11 @@
       <source>Key pair has been moved to Status</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Key pair has been moved to Status</translation>
+    </message>
+    <message>
+      <source>Keycard read completed</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Keycard read completed</translation>
     </message>
     <message>
       <source>Status password is now required to sign.</source>

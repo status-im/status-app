@@ -25,6 +25,7 @@ ColumnLayout {
     property string keycardState: ""
     property string keycardUid: ""
     property string keyUid: ""
+    property bool keycardStatusAvailable
     property int remainingPinAttempts: -1
     property int remainingPukAttempts: -1
     property int availableSlots: -1
@@ -50,6 +51,7 @@ ColumnLayout {
         keycardState: root.keycardState
         keycardUid: root.keycardUid
         keyUid: root.keyUid
+        keycardStatusAvailable: root.keycardStatusAvailable
         remainingPinAttempts: root.remainingPinAttempts
         remainingPukAttempts: root.remainingPukAttempts
         availableSlots: root.availableSlots

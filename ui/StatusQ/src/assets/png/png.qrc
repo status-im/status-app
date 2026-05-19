@@ -33,6 +33,7 @@
     <file>keycard/factory_reset/keycard-factory-reset-negative.png</file>
     <file>keycard/factory_reset/keycard-factory-reset-positive.png</file>
     <file>keycard/factory_reset/keycard-factory-reset.png</file>
+    <file>keycard/keycards.png</file>
     <file>keycard/pin/in-progress.png</file>
     <file>keycard/pin/negative.png</file>
     <file>keycard/pin/positive.png</file>

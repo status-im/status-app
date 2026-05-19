@@ -3,6 +3,7 @@ import chronicles
 
 import io_interface, states
 import view, controller
+import app/modules/shared_modules/keycard_management/module as kc_management_module
 
 import ../../../constants as main_constants
 
@@ -17,7 +18,7 @@ import app_service/service/devices/service as devices_service
 import app_service/service/keycardV2/service as keycard_serviceV2
 from app_service/service/settings/dto/settings import SettingsDto
 from app_service/service/accounts/dto/accounts import AccountDto
-from app_service/service/keycardV2/dto import KeycardEventDto, KeycardExportedKeysDto, KeycardState
+from app_service/service/keycardV2/dto import KeycardEventDto, KeycardExportedKeysDto, KeycardState, toKeycardExportedKeysDto
 import app/modules/onboarding/post_onboarding/[keycard_replacement_task, keycard_convert_account, save_biometrics_task, local_backup_task]
 
 import models/login_account_item as login_acc_item
@@ -42,7 +43,11 @@ type
     accountsService: accounts_service.Service
     generalService: general_service.Service
     resumeLogin: bool
-    tmpKeyUid: string
+    tmpKeyUid: string # TODO: remove this, once we switch fully to new keycard approach
+    tmpKeycardUid: string # TODO: remove this, once we switch fully to new keycard approach
+    keycardModule: kc_management_module.Module[Module[T]]
+    events: EventEmitter
+    keycardServiceV2: keycard_serviceV2.Service
 
 proc newModule*[T](
     delegate: T,
@@ -63,6 +68,8 @@ proc newModule*[T](
   result.postLoginTasks = newSeq[PostOnboardingTask]()
   result.accountsService = accountsService
   result.generalService = generalService
+  result.events = events
+  result.keycardServiceV2 = keycardServiceV2
   result.controller = controller.newController(
     result,
     events,
@@ -78,7 +85,24 @@ proc newModule*[T](
 # Forward declarations (needed because some methods call procs defined later).
 proc finishAppLoading2*[T](self: Module[T])
 
+method prepareKeycardModule*[T](self: Module[T]) =
+  if not self.keycardModule.isNil:
+    return
+  self.keycardModule = kc_management_module.newModule[Module[T]](self, self.events, self.keycardServiceV2,
+    self.accountsService, walletAccountService = nil, privacyService = nil)
+  self.view.setKeycardModule(self.keycardModule.getModuleAsVariant())
+
+method destroyKeycardModule*[T](self: Module[T]) =
+  if self.keycardModule.isNil:
+    return
+  self.keycardModule.delete
+  self.keycardModule = nil
+  self.view.setKeycardModule(newQVariant())
+
 method delete*[T](self: Module[T]) =
+  if not self.keycardModule.isNil:
+    self.keycardModule.delete
+    self.keycardModule = nil
   self.view.delete
   self.viewVariant.delete
   self.controller.delete
@@ -90,6 +114,9 @@ method onAppLoaded*[T](self: Module[T], keyUid: string) =
 method onMainLoaded*[T](self: Module[T]) =
   self.view.appLoaded()
   singletonInstance.engine.setRootContextProperty("onboardingModule", newQVariant())
+  if not self.keycardModule.isNil:
+    self.keycardModule.delete
+    self.keycardModule = nil
   self.view.delete
   self.view = nil
   self.viewVariant.delete
@@ -265,6 +292,46 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
           LoginMethod.Keycard.int,
           $ %*{ "pin": pin },
         )
+
+      # #########################################################
+      # New Onboarding Keycard flows
+      # #########################################################
+      of OnboardingFlow.OnboardingLoginWithKeycard:
+        let payload = data{"keycardPayload"}
+        if payload.isNil or payload.kind != JObject:
+          raise newException(ValueError, "OnboardingLoginWithKeycard: missing keycardPayload")
+        let payloadKeyUid = payload{"keyUid"}.getStr
+        let payloadKeycardUid = payload{"keycardUid"}.getStr
+        let exportedKeys = toKeycardExportedKeysDto(payload{"exportedKeys"})
+        # #########################################################
+        # TODO: remove the temporary workaround once we switch fully to new keycard approach
+        self.tmpKeyUid = payloadKeyUid
+        self.tmpKeycardUid = payloadKeycardUid
+        # #########################################################
+        err = self.controller.restoreKeycardAccountAndLogin(
+          payloadKeyUid,
+          payloadKeycardUid,
+          exportedKeys,
+          thirdpartyServicesEnabled,
+        )
+      of OnboardingFlow.OnboardingImportNewKeyPair, OnboardingFlow.OnboardingImportSeedPhrase:
+        let payload = data{"keycardPayload"}
+        if payload.isNil or payload.kind != JObject:
+          raise newException(ValueError, "Onboarding import flow: missing keycardPayload")
+        let payloadSeedPhrase = payload{"seedPhrase"}.getStr
+        let payloadKeyUid = payload{"keyUid"}.getStr
+        let payloadKeycardUid = payload{"keycardUid"}.getStr
+        # #########################################################
+        # TODO: remove the temporary workaround once we switch fully to new keycard approach
+        self.tmpKeyUid = payloadKeyUid
+        self.tmpKeycardUid = payloadKeycardUid
+        # #########################################################
+        err = self.controller.restoreAccountAndLogin(
+          password = "",
+          mnemonic = payloadSeedPhrase,
+          keycardInstanceUID = payloadKeycardUid,
+          thirdpartyServicesEnabled,
+        )
       else:
         raise newException(ValueError, "Unknown onboarding flow: " & $self.onboardingFlow)
 
@@ -307,7 +374,16 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
     self.view.accountLoginError(e.msg, wrongPassword = false)
 
 proc syncAppAndKeycardState[T](self: Module[T]) =
-  let kcEvent = self.view.getKeycardEvent()
+  var kcEvent = self.view.getKeycardEvent()
+  ## Temporary workaround to use the old keycard approach
+  ## TODO: once we switch fully to new keycard approach, we will remove this, and not only this but the entire `syncAppAndKeycardState` procedure
+  if self.tmpKeycardUid.len > 0 and self.tmpKeyUid.len > 0:
+    kcEvent = KeycardEventDto(
+      keycardInfo: KeycardInfoDto(
+        keyUID: self.tmpKeyUid,
+        instanceUID: self.tmpKeycardUid,
+      ),
+    )
   if kcEvent.keycardInfo.keyUID == "":
     return
   let keypair = self.controller.getKeypairByKeyUidFromDb(kcEvent.keycardInfo.keyUID)

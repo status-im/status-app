@@ -10,6 +10,7 @@ QtObject {
     property string keycardState: ""
     property string keycardUid: ""
     property string keyUid: ""
+    property bool keycardStatusAvailable: false
     property int remainingPinAttempts: -1
     property int remainingPukAttempts: -1
     property int availableSlots: -1
@@ -25,11 +26,11 @@ QtObject {
 
     readonly property bool isBlockedPIN: !root.isEmpty
                                          && (root.keycardState === Constants.keycard.state.blockedPIN
-                                             || !!root.keycardUid && root.remainingPinAttempts === 0)
+                                             || !!root.keycardUid && root.keycardStatusAvailable && root.remainingPinAttempts === 0)
 
     readonly property bool isBlockedPUK: !root.isEmpty
                                          && (root.keycardState === Constants.keycard.state.blockedPUK
-                                             || !!root.keycardUid && root.remainingPukAttempts === 0)
+                                             || !!root.keycardUid && root.keycardStatusAvailable && root.remainingPukAttempts === 0)
 
     readonly property bool isEmpty: !root.noKnownAndNoAvailablePairingSlots
                                     && (root.keycardState === Constants.keycard.state.emptyKeycard

@@ -117,8 +117,8 @@ QtObject {
     ///////////////// Global Keycard Management popup //////////////
     signal openKeycardManagementPopup(string flow, string keyUid, string keycardUid,
                                       string cardMetadataName, string cardMetadataWalletAccountsJson)
-    signal keycardManagementResult(string keycardState, string keycardUid, string keyUid, int remainingPinAttempts, int remainingPukAttempts,
-                                   int availableSlots, string cardMetadataName, string cardMetadataWalletAccountsJson)
+    signal keycardManagementResult(string keycardState, string keycardUid, string keyUid, bool keycardStatusAvailable, int remainingPinAttempts,
+                                   int remainingPukAttempts, int availableSlots, string cardMetadataName, string cardMetadataWalletAccountsJson)
     signal keycardFlowDone(string flow, string keyUid, string keycardUid, bool success)
     ///////////////////////////////////////////////////////////////
 
