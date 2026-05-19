@@ -39,7 +39,7 @@ RowLayout {
     // - Common alternatives: Qt.ArrowCursor, Qt.CrossCursor, etc.
     property int imageCursorShape: Qt.PointingHandCursor
 
-    signal imageClicked(var image, var mouse, var imageSource)
+    signal imageClicked(var image, var mouse, var imageSource, point pos)
 
     QtObject {
         id: d
@@ -76,7 +76,7 @@ RowLayout {
             imageClickable: root.imageClickable
             imageCursorShape: root.imageCursorShape
 
-            onClicked: (image, mouse, imageSource) => root.imageClicked(image, mouse, imageSource)
+            onClicked: (image, mouse, imageSource, pos) => root.imageClicked(image, mouse, imageSource, pos)
         }
     }
 

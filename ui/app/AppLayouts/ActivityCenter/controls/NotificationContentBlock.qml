@@ -113,7 +113,7 @@ Control {
 
     // Interactions
     signal linkActivated(string href)
-    signal imageClicked(var image, var mouse, var imageSource)
+    signal imageClicked(var image, var mouse, var imageSource, point pos)
 
     // ──────────────────────────────────────────────────────────────────────────
     // Content (Banner (preImage) (Optional) + Text + Media sripe (Optional))
@@ -195,7 +195,7 @@ Control {
             imageClickable: root.imageClickable
             imageCursorShape: root.imageCursorShape
 
-            onImageClicked: (image, mouse, imageSource) => root.imageClicked(image, mouse, imageSource)
+            onImageClicked: (image, mouse, imageSource, pos) => root.imageClicked(image, mouse, imageSource, pos)
         }
     }
 }
