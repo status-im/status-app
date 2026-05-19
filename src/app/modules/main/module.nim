@@ -1687,15 +1687,18 @@ method displayEphemeralNotification*[T](
   self.view.ephemeralNotificationModel().addItem(item)
 
 method displayEphemeralNotification*[T](self: Module[T], title: string, subTitle: string, details: NotificationDetails) =
+  # Message toasts create high-frequency UI noise, so keep them disabled until their value is reassessed.
   if details.notificationType == NotificationType.NewMessage or
       details.notificationType == NotificationType.NewMessageWithPersonalMention or
-      details.notificationType == NotificationType.CommunityTokenPermissionCreated or
+      details.notificationType == NotificationType.NewMessageWithGlobalMention:
+    return
+
+  if details.notificationType == NotificationType.CommunityTokenPermissionCreated or
       details.notificationType == NotificationType.CommunityTokenPermissionUpdated or
       details.notificationType == NotificationType.CommunityTokenPermissionDeleted or
       details.notificationType == NotificationType.CommunityTokenPermissionCreationFailed or
       details.notificationType == NotificationType.CommunityTokenPermissionUpdateFailed or
-      details.notificationType == NotificationType.CommunityTokenPermissionDeletionFailed or
-      details.notificationType == NotificationType.NewMessageWithGlobalMention:
+      details.notificationType == NotificationType.CommunityTokenPermissionDeletionFailed:
     self.displayEphemeralNotification(
       title,
       subTitle,
