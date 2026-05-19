@@ -18,6 +18,26 @@ export global_events
 export loader_deactivator
 export feature_flags
 
+
+# #########################################################
+# Application Handle
+# #########################################################
+type
+  ApplicationHandle* = object
+    app: QGuiApplication
+
+when defined(ios) or defined(android):
+  proc c_exit(code: cint) {.importc: "_exit", header: "<unistd.h>".}
+
+proc quit*(self: ApplicationHandle) =
+  if not self.app.isNil:
+    self.app.quit()
+
+  when defined(ios) or defined(android):
+    c_exit(0) # terminates the process immediately without running any static destructors or atexit handlers — no cascade possible.
+# #########################################################
+
+
 type
   GlobalSingleton = object
   # Don't export GlobalSingleton type.
@@ -30,6 +50,14 @@ proc engine*(self: GlobalSingleton): QQmlApplicationEngine =
   if (qmlEngine.isNil):
     qmlEngine = newQQmlApplicationEngine()
   return qmlEngine
+
+var qGuiApplicationInstance {.global.}: QGuiApplication
+
+proc setApplication*(self: GlobalSingleton, app: QGuiApplication) =
+  qGuiApplicationInstance = app
+
+proc application*(self: GlobalSingleton): ApplicationHandle =
+  ApplicationHandle(app: qGuiApplicationInstance)
 
 proc localAccountSettings*(self: GlobalSingleton): LocalAccountSettings =
   var localAccountSettings {.global.}: LocalAccountSettings
