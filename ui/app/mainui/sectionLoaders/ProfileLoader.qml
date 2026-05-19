@@ -65,21 +65,28 @@ Loader {
     property bool forceSubsectionNavigation: false
 
     onSettingsSubsectionChanged: {
-        if (root.item) {
+        if (root.item && root.item.settingsSubsection !== root.settingsSubsection) {
             root.item.settingsSubsection = root.settingsSubsection
         }
     }
 
     onSettingsSubSubsectionChanged: {
-        if (root.item) {
+        if (root.item && root.item.settingsSubSubsection !== root.settingsSubSubsection) {
             root.item.settingsSubSubsection = root.settingsSubSubsection
         }
     }
 
     onForceSubsectionNavigationChanged: {
-        if (root.item) {
+        if (root.item && root.item.forceSubsectionNavigation !== root.forceSubsectionNavigation) {
             root.item.forceSubsectionNavigation = root.forceSubsectionNavigation
         }
+    }
+
+    Binding {
+        when: !!root.item
+        root.settingsSubsection: root.item.settingsSubsection
+        root.settingsSubSubsection: root.item.settingsSubSubsection
+        root.forceSubsectionNavigation: root.item.forceSubsectionNavigation
     }
 
     // Signals re-emitted so AppMain can mutate appMainLocalSettings / Theme outside the loader
