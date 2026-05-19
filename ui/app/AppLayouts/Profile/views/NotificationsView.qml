@@ -35,6 +35,7 @@ SettingsContentBase {
         readonly property int infoSpacing: 5
 
         readonly property var notificationsSettings: root.notificationsStore.notificationsSettings
+        property real unfilteredExemptionsListHeight: 0
     }
 
     Component.onCompleted: root.notificationsStore.loadExemptions()
@@ -59,13 +60,7 @@ SettingsContentBase {
         Component {
             id: exemptionDelegateComponent
             StatusListItem {
-                property string lowerCaseSearchString: searchBox.text.toLowerCase()
-
                 width: ListView.view.width
-                height: visible ? implicitHeight : 0
-                visible: lowerCaseSearchString === "" ||
-                         model.itemId.toLowerCase().includes(lowerCaseSearchString) ||
-                         model.name.toLowerCase().includes(lowerCaseSearchString)
                 title: model.name
                 subTitle: {
                     if(model.type === Constants.settingsSection.exemptions.community)
@@ -487,10 +482,40 @@ SettingsContentBase {
 
             StatusListView {
                 Layout.preferredWidth: root.contentWidth
-                Layout.preferredHeight: this.contentHeight
+                Layout.preferredHeight: this.isFiltering && d.unfilteredExemptionsListHeight > 0 ?
+                                            Math.max(this.contentHeight,
+                                                     Math.min(d.unfilteredExemptionsListHeight,
+                                                              root.availableHeight)) :
+                                            this.contentHeight
                 visible: root.notificationsStore.exemptionsModel.count > 0
 
-                model: root.notificationsStore.exemptionsModel
+                readonly property bool isFiltering: searchBox.text.trim() !== ""
+
+                onContentHeightChanged: {
+                    if (!isFiltering)
+                        d.unfilteredExemptionsListHeight = contentHeight
+                }
+
+                model: SortFilterProxyModel {
+                    id: exemptionsSearchModel
+
+                    readonly property string searchText: searchBox.text.trim()
+
+                    sourceModel: root.notificationsStore.exemptionsModel
+                    filters: AnyOf {
+                        enabled: exemptionsSearchModel.searchText !== ""
+
+                        SQUtils.SearchFilter {
+                            roleName: "itemId"
+                            searchPhrase: exemptionsSearchModel.searchText
+                        }
+
+                        SQUtils.SearchFilter {
+                            roleName: "name"
+                            searchPhrase: exemptionsSearchModel.searchText
+                        }
+                    }
+                }
                 delegate: exemptionDelegateComponent
             }
             }
