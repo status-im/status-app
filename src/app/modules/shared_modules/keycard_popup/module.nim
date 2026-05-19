@@ -671,7 +671,8 @@ proc proceedWithRunFlow[T](self: Module[T], flowToRun: FlowType, keyUid: string,
     if keyUid != singletonInstance.userProfile.getKeyUid():
       error "sm_cannot MigrateFromAppToKeycard flow can be run only for the profile keypair and should not be run directly"
       self.controller.terminateCurrentFlow(lastStepInTheCurrentFlow = false)
-      quit() # quit the app
+      singletonInstance.application.quit()
+      return
     self.prepareKeyPairForProcessing(keyUid)
     self.view.setCurrentState(newMigrateKeypairToKeycardState(flowToRun, nil))
     self.controller.readyToDisplayPopup()

@@ -23,10 +23,6 @@ featureGuard KEYCARD_ENABLED:
 when defined(macosx) and defined(arm64):
   import posix
 
-when defined(android) or defined(ios):
-  # Bypass libc static destructors on shutdown, anyway the OS reclaims process resources.
-  proc cExit(code: cint) {.importc: "_exit", header: "<unistd.h>".}
-
 when defined(windows):
     {.link: "../status.o".}
 
@@ -200,6 +196,7 @@ proc mainProc() =
   installSelfSignedCertificate(imageCert)
 
   let app = newQGuiApplication()
+  singletonInstance.setApplication(app)
 
   # force default language ("en") if not "Settings/Advanced/Enable translations"
   if not singletonInstance.localAppSettings.getTranslationsEnabled():
@@ -263,9 +260,7 @@ proc mainProc() =
     appController.delete()
     statusFoundation.delete()
     singleInstance.delete()
-    app.delete()
-    when defined(android) or defined(ios):
-      cExit(0)
+    singletonInstance.application.quit()
 
   featureGuard SINGLE_STATUS_INSTANCE_ENABLED:
     # Checks below must be always after "defer", in case anything fails destructors will freed a memory.

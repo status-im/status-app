@@ -13,18 +13,20 @@ method executeCancelCommand*(self: KeyPairMigrateSuccessState, controller: Contr
     let profileMigrated = controller.getSelectedKeyPairIsProfile()
     if profileMigrated:
       info "quit the app cause this is not an available option in the context of SetupNewKeycard flow for profile keypair"
-      quit() # quit the app
+      singletonInstance.application.quit()
+      return
 
     controller.terminateCurrentFlow(lastStepInTheCurrentFlow = true)
   if self.flowType == FlowType.MigrateFromKeycardToApp:
     if controller.getKeyPairForProcessing().getKeyUid() == singletonInstance.userProfile.getKeyUid():
       info "quit the app cause this is not an available option in the context of MigrateFromKeycardToApp flow for profile keypair"
-      quit() # quit the app
+      singletonInstance.application.quit()
+      return
 
     controller.terminateCurrentFlow(lastStepInTheCurrentFlow = true)
   if self.flowType == FlowType.MigrateFromAppToKeycard:
     info "quit the app cause this is not an available option in the context of MigrateFromAppToKeycard"
-    quit() # quit the app
+    singletonInstance.application.quit()
 
 method executePrePrimaryStateCommand*(self: KeyPairMigrateSuccessState, controller: Controller) =
   if self.flowType == FlowType.SetupNewKeycard:
@@ -32,16 +34,18 @@ method executePrePrimaryStateCommand*(self: KeyPairMigrateSuccessState, controll
     controller.terminateCurrentFlow(lastStepInTheCurrentFlow = true)
     if profileMigrated:
       info "restart the app because of successfully migrated profile keypair"
-      quit() # quit the app
+      singletonInstance.application.quit()
+      return
   if self.flowType == FlowType.MigrateFromKeycardToApp:
     let profileMigrated = controller.getKeyPairForProcessing().getKeyUid() == singletonInstance.userProfile.getKeyUid()
     controller.terminateCurrentFlow(lastStepInTheCurrentFlow = true)
     if profileMigrated:
       info "restart the app because of successfully migrated profile keypair"
-      quit() # quit the app
+      singletonInstance.application.quit()
+      return
   if self.flowType == FlowType.MigrateFromAppToKeycard:
     info "restart the app because of successfully migrated profile keypair"
-    quit() # quit the app
+    singletonInstance.application.quit()
 
 method executePreSecondaryStateCommand*(self: KeyPairMigrateSuccessState, controller: Controller) =
   if self.flowType == FlowType.MigrateFromKeycardToApp:

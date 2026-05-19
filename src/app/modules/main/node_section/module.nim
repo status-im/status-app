@@ -56,7 +56,7 @@ method sendRPCMessageRaw*(self: Module, inputJSON: string): string =
 
 method setLightClient*(self: Module, enabled: bool) =
   if(self.controller.setLightClient(enabled)):
-    quit(QuitSuccess) # quits the app TODO: change this to logout instead when supported
+    singletonInstance.application.quit() # TODO: change this to logout instead when supported
 
 method isLightClient*(self: Module): bool =
   return self.controller.isLightClient()
