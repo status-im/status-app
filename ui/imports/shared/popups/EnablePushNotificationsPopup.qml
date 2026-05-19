@@ -20,8 +20,8 @@ StatusDialog {
     property bool loading: false
     property bool dontAskAgain: false
 
-    signal continueRequested()
     signal openSettingsRequested()
+    signal enablePushNotifications()
 
     width: 480
     title: qsTr("Enable notifications")
@@ -65,22 +65,21 @@ StatusDialog {
                 objectName: "btnPushNotificationsPrimary"
                 loading: root.loading
                 text: {
-                    if (root.hasPermission) return qsTr("Done")
                     if (root.attemptedRequest) return qsTr("Open settings")
                     return qsTr("Continue")
                 }
                 onClicked: {
-                    if (root.hasPermission) {
-                        root.close()
-                        return
-                    }
                     if (root.attemptedRequest) {
                         root.openSettingsRequested()
                         return
                     }
 
+                    root.enablePushNotifications()
+                    if (root.hasPermission) {
+                        root.close()
+                        return
+                    }
                     root.attemptedRequest = true
-                    root.continueRequested()
                 }
             }
         }

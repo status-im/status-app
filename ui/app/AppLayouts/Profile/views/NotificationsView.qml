@@ -195,7 +195,8 @@ SettingsContentBase {
             id: mobileHelperBanner
             Layout.preferredWidth: root.contentWidth
             visible: SQUtils.Utils.isMobile &&
-                    d.notificationsSettings.notifSettingAllowNotifications &&
+                    (SQUtils.Utils.isIOS ? d.notificationsSettings.remotePushNotificationsEnabled
+                                         : d.notificationsSettings.notifSettingAllowNotifications) &&
                     PushNotifications.status !== PushNotifications.Granted
 
             padding: Theme.defaultPadding
@@ -219,33 +220,6 @@ SettingsContentBase {
             }
         }
 
-        StatusListItem {
-            Layout.preferredWidth: root.contentWidth
-            title: qsTr("Enable notifications")
-            tertiaryTitle:  !SQUtils.Utils.isMobile ?
-                                qsTr("Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings") :
-                                SQUtils.Utils.isIOS ?
-                                    qsTr("Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.") :
-                                    qsTr("Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.")
-            components: [
-                StatusSwitch {
-                    id: allowNotifSwitch
-                    checked: d.notificationsSettings.notifSettingAllowNotifications
-                    onClicked: {
-                        d.notificationsSettings.notifSettingAllowNotifications = !d.notificationsSettings.notifSettingAllowNotifications
-                        if (d.notificationsSettings.notifSettingAllowNotifications) {
-                            PushNotifications.request()
-                        } else {
-                            appSettings.unregisterFromPushNotifications()
-                        }
-                    }
-                }
-            ]
-            onClicked: {
-                allowNotifSwitch.clicked()
-            }
-        }
-
         Loader {
             Layout.preferredWidth: root.contentWidth
             sourceComponent: SQUtils.Utils.isIOS ? centralizedPushNotificationsMenuComponent : generalMenuComponent
@@ -256,6 +230,23 @@ SettingsContentBase {
             id: generalMenuComponent
             ColumnLayout {
             id: generalMenu
+            StatusListItem {
+                Layout.preferredWidth: root.contentWidth
+                title: qsTr("Enable notifications")
+                tertiaryTitle:  SQUtils.Utils.isAndroid ?
+                                    qsTr("Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.") :
+                                    qsTr("Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings")
+                components: [
+                    StatusSwitch {
+                        id: allowNotifSwitch
+                        checked: d.notificationsSettings.notifSettingAllowNotifications
+                        onClicked: () => d.notificationsSettings.notifSettingAllowNotifications = !d.notificationsSettings.notifSettingAllowNotifications
+                    }
+                ]
+                onClicked: {
+                    allowNotifSwitch.clicked()
+                }
+            }
             StatusBaseText {
                 Layout.preferredWidth: root.contentWidth
                 Layout.leftMargin: Theme.padding
@@ -524,6 +515,21 @@ SettingsContentBase {
         Component {
             id: centralizedPushNotificationsMenuComponent
             ColumnLayout {
+                StatusListItem {
+                    Layout.preferredWidth: root.contentWidth
+                    title: qsTr("Enable notifications")
+                    tertiaryTitle: qsTr("Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.")
+                    components: [
+                        StatusSwitch {
+                            id: allowNotifSwitch
+                            checked: d.notificationsSettings.remotePushNotificationsEnabled
+                            onClicked: () => d.notificationsSettings.remotePushNotificationsEnabled = !d.notificationsSettings.remotePushNotificationsEnabled
+                        }
+                    ]
+                    onClicked: {
+                        allowNotifSwitch.clicked()
+                    }
+                }
                 Separator {
                     Layout.preferredWidth: root.contentWidth
                     Layout.preferredHeight: Theme.bigPadding
@@ -537,21 +543,13 @@ SettingsContentBase {
                 StatusListItem {
                     Layout.preferredWidth: root.contentWidth
                     title: qsTr("Contact requests and group messages")
-                    enabled: d.notificationsSettings.notifSettingAllowNotifications
+                    enabled: d.notificationsSettings.remotePushNotificationsEnabled
                     components: [
                         StatusSwitch {
                             id: nonContactsSwitch
-                            checked: !d.notificationsSettings.notifSettingAllowNotifications ? false : nonContactsSwitch.allowFromNonContacts
-                            property bool allowFromNonContacts: true
-                            enabled: d.notificationsSettings.notifSettingAllowNotifications
-                            onClicked: {
-                                allowFromNonContacts = !allowFromNonContacts
-                                if (allowFromNonContacts) {
-                                    appSettings.disablePushNotificationsFromContactsOnly()
-                                } else {
-                                    appSettings.enablePushNotificationsFromContactsOnly()
-                                }
-                            }
+                            checked: !d.notificationsSettings.pushNotificationsFromContactsOnly
+                            enabled: d.notificationsSettings.remotePushNotificationsEnabled
+                            onClicked: () => d.notificationsSettings.pushNotificationsFromContactsOnly = !d.notificationsSettings.pushNotificationsFromContactsOnly
                         }
                     ]
                     onClicked: {
@@ -563,21 +561,13 @@ SettingsContentBase {
                 StatusListItem {
                     Layout.preferredWidth: root.contentWidth
                     title: qsTr("Mentions and replies in communities")
-                    enabled: d.notificationsSettings.notifSettingAllowNotifications
+                    enabled: d.notificationsSettings.remotePushNotificationsEnabled
                     components: [
                         StatusSwitch {
                             id: communitiesSwitch
-                            checked: !d.notificationsSettings.notifSettingAllowNotifications ? false : communitiesSwitch.allowCommunities
-                            property bool allowCommunities: true
-                            enabled: d.notificationsSettings.notifSettingAllowNotifications
-                            onClicked: {
-                                allowCommunities = !allowCommunities
-                                if (allowCommunities) {
-                                    appSettings.disablePushNotificationsBlockMentions()
-                                } else {
-                                    appSettings.enablePushNotificationsBlockMentions()
-                                }
-                            }
+                            checked: !d.notificationsSettings.pushNotificationsBlockMentions
+                            enabled: d.notificationsSettings.remotePushNotificationsEnabled
+                            onClicked: () => d.notificationsSettings.pushNotificationsBlockMentions = !d.notificationsSettings.pushNotificationsBlockMentions
                         }
                     ]
                     onClicked: {
