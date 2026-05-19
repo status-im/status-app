@@ -57,6 +57,7 @@ import mainui.sectionLoaders
 
 import QtModelsToolkit
 import SortFilterProxyModel
+import MobileUI
 
 Item {
     id: appMain
@@ -1017,6 +1018,7 @@ Item {
         aboutStore: appMain.aboutStore
         privacyStore: appMain.privacyStore
         keychain: appMain.keychain
+        notificationsStore: appMain.notificationsStore
 
         Component.onCompleted: {
             Qt.callLater(() => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
@@ -1173,6 +1175,57 @@ Item {
                 appMain.rootStore.windowActivated()
             else
                 appMain.rootStore.windowDeactivated()
+        }
+    }
+
+    /**
+        * iOS Push Notifications flow:
+        * - When the app is opened, if the user has already granted permissions, we get the token immediately and set it in the store
+        * - If the user hasn't granted permissions yet, we wait for them to change (onStatusChanged). If they grant permissions, we request the token and set it in the store
+        * Additionally, when the user enables notifications from our in-app settings, we request the OS permission at that moment
+        * (showing the native dialog when it hasn't been decided yet), and request the token in case we don't have it yet
+    */
+    Connections {
+        target: PushNotifications
+        enabled: SQUtils.Utils.isIOS
+
+        function onTokenChanged() {
+            appMain.notificationsStore.notificationsSettings.deviceToken = PushNotifications.token
+        }
+
+        function onStatusChanged() {
+            if (PushNotifications.status === PushNotifications.Granted && PushNotifications.token === "") {
+                PushNotifications.requestToken()
+            }
+        }
+
+        // in case PushNotifications has already processed the token
+        Component.onCompleted: {
+            if (SQUtils.Utils.isIOS && !!PushNotifications.token && !!appMain.notificationsStore.notificationsSettings)
+                appMain.notificationsStore.notificationsSettings.deviceToken = PushNotifications.token
+        }
+    }
+
+    Connections {
+        target: appMain.notificationsStore.notificationsSettings
+        enabled: SQUtils.Utils.isIOS
+
+        function onRemotePushNotificationsEnabledChanged() {
+            if (!appMain.notificationsStore.notificationsSettings.remotePushNotificationsEnabled)
+                return
+            if (PushNotifications.status !== PushNotifications.Granted)
+                PushNotifications.request()
+            else if (appMain.notificationsStore.notificationsSettings.deviceToken === "")
+                PushNotifications.requestToken()
+        }
+    }
+
+    Connections {
+        target: appMain.notificationsStore
+        enabled: SQUtils.Utils.isIOS
+        function onNotificationsSettingsChanged() {
+            if (!!appMain.notificationsStore.notificationsSettings)
+                appMain.notificationsStore.notificationsSettings.deviceToken = PushNotifications.token
         }
     }
 
