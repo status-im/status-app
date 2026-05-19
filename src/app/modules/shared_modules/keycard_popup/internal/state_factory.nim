@@ -1,4 +1,4 @@
-import parseutils, sequtils, sugar, chronicles
+import parseutils, sequtils, sugar, chronicles, nimqml
 
 import app/global/global_singleton
 import app_service/service/keycard/constants

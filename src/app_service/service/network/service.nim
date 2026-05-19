@@ -1,6 +1,7 @@
-import json, json_serialization, chronicles, sugar, sequtils
+import json, json_serialization, chronicles, sugar, sequtils, nimqml
 
 import ../../../app/core/eventemitter
+import ../../../app/global/global_singleton
 import backend/network as backend
 import ../settings/service as settings_service
 import ./network_item
@@ -117,7 +118,7 @@ proc getAppNetwork*(self: Service): NetworkItem =
   if network.isNil:
     # we should not be here ever
     error "the app network cannot be resolved"
-    quit() # quit the app
+    singletonInstance.application.quit()
   return network
 
 proc updateNetworkEndPointValues*(self: Service, chainId: int, newMainRpcInput, newFailoverRpcUrl: string) =

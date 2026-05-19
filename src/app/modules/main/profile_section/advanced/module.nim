@@ -5,6 +5,7 @@ import view, controller
 
 import ../../../../../constants
 import ../../../../core/eventemitter
+import ../../../../global/global_singleton
 import ../../../../../app_service/service/settings/service as settings_service
 import ../../../../../app_service/service/stickers/service as stickers_service
 import ../../../../../app_service/service/node_configuration/service as node_configuration_service
@@ -60,7 +61,7 @@ method setFleet*(self: Module, fleet: string) =
 
 method onFleetSet*(self: Module) =
   info "quit the app because of successful fleet change"
-  quit(QuitSuccess) # quits the app TODO: change this to logout instead when supported
+  singletonInstance.application.quit() # TODO: change this to logout instead when supported
 
 method getLogDir*(self: Module): string =
   return constants.LOGDIR
@@ -73,7 +74,7 @@ method setWakuV2LightClientEnabled*(self: Module, enabled: bool) =
 
 method onWakuV2LightClientSet*(self: Module) =
   info "quit the app because of successful WakuV2 light client change"
-  quit(QuitSuccess) # quits the app TODO: change this to logout instead when supported
+  singletonInstance.application.quit() # TODO: change this to logout instead when supported
 
 method isDebugEnabled*(self: Module): bool =
   self.controller.isDebugEnabled()
