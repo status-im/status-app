@@ -38,7 +38,6 @@ StatusDialog {
     // bookmarks
     required property var bookmarksModel
 
-    signal addBookmarkRequested()
     signal editBookmarkRequested(string url, string name)
     signal deleteBookmarkRequested(string url)
     signal bookmarkClicked(string url)
@@ -323,16 +322,8 @@ StatusDialog {
                 icon.height: d.iconSize
                 tooltip.text: qsTr("Add")
                 onClicked: {
-                    switch (mainTabBar.currentIndex) {
-                    case TabsBookmarksOverviewModal.Mode.OpenTabs:
-                        root.addTabRequested()
-                        root.close()
-                        break
-                    case TabsBookmarksOverviewModal.Mode.Bookmarks:
-                        root.addBookmarkRequested()
-                        root.close()
-                        break
-                    }
+                    root.addTabRequested()
+                    root.close()
                 }
             }
         }
