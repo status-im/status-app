@@ -713,7 +713,6 @@ StatusSectionLayout {
 
             onActivateTabRequested: tabIndex => tabs.activateTab(tabIndex)
             onAddTabRequested: _internal.addNewEmptyTab()
-            onAddBookmarkRequested: _internal.openFavoriteModal()
             onEditBookmarkRequested: (url, name) => _internal.openFavoriteModal(true, url, name)
             onDeleteBookmarkRequested: url => root.bookmarksStore.deleteBookmark(url)
             onBookmarkClicked: url => root.openUrlInNewTab(url)
