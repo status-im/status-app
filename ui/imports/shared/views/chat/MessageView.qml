@@ -499,15 +499,16 @@ Loader {
             d.emojiPopupOpened = true
         }
 
-        function onImageClicked(image, mouse, imageSource, url = "") {
+        function onImageClicked(image, mouse, imageSource, url = "", pos = undefined) {
             switch (mouse.button) {
             case Qt.LeftButton:
+            case Qt.NoButton: // touch event
                 d.preventVirtualKeyboardOpening()
                 Global.openImagePopup(image, url, false)
                 break;
             case Qt.RightButton:
                 d.preventVirtualKeyboardOpening()
-                Global.openMenu(imageContextMenuComponent, image, { imageSource, url })
+                Global.openMenu(imageContextMenuComponent, image, { imageSource, url }, pos)
                 break;
             }
         }
@@ -879,8 +880,8 @@ Loader {
 
                 onEditCompleted: delegate.editCompletedHandler(newMsgText)
 
-                onImageClicked: (image, mouse, imageSource) => {
-                    d.onImageClicked(image, mouse, imageSource)
+                onImageClicked: (image, mouse, imageSource, pos) => {
+                    d.onImageClicked(image, mouse, imageSource, "", pos)
                 }
 
                 onLinkActivated: link => {

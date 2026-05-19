@@ -30,9 +30,9 @@ StatusDialog {
     QtObject {
         id: d
 
-        property int maxHeight: root.contentItem.Window.window.height - 80
-        property int maxWidth: root.contentItem.Window.window.width - 80
-        readonly property int radius: Theme.radius
+        readonly property int maxHeight: root.contentItem.Window.window.height - 80
+        readonly property int maxWidth: root.contentItem.Window.window.width - 80
+        readonly property int radius: root.Theme.radius
     }
 
     onOpened: imageLoader.source = root.image.source;
@@ -52,7 +52,7 @@ StatusDialog {
         StatusMouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: {
+            onClicked: function (mouse) {
                 if (mouse.button === Qt.LeftButton)
                     root.close()
                 if (imageLoader.isError || imageLoader.isLoading || mouse.button !== Qt.RightButton)
@@ -60,7 +60,7 @@ StatusDialog {
                 const isGif = (!root.plain && imageLoader.item && imageLoader.item.playing)
                 Global.openMenu(imageContextMenu,
                                 imageLoader.item,
-                                { imageSource: imageLoader.source, url: root.url, isGif: isGif})
+                                { imageSource: imageLoader.source, url: root.url, isGif: isGif}, Qt.point(mouse.x, mouse.y))
             }
         }
 
