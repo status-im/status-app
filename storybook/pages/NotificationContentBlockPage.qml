@@ -60,7 +60,7 @@ SplitView {
                 imageClickable: contentBlockEditor.areImagesClickable
                 imageCursorShape: contentBlockEditor.changeImageCursorShape ? Qt.PointingHandCursor : Qt.ArrowCursor
 
-                onImageClicked: (image, mouse, imageSource) => logs.logEvent("NotificationContentBlock::onImageClicked: " + imageSource)
+                onImageClicked: (image, mouse, imageSource, pos) => logs.logEvent("NotificationContentBlock::onImageClicked: " + imageSource)
                 onLinkActivated: href => logs.logEvent("NotificationContentBlock::onLinkActivated --> Link clicked: " + href)
             }
         }

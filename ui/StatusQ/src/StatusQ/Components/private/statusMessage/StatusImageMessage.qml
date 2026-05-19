@@ -40,7 +40,7 @@ Item {
     property string loadingImageText: ""
     property string errorLoadingImageText: ""
 
-    signal clicked(var image, var mouse, var imageSource)
+    signal clicked(var image, var mouse, var imageSource, point pos)
 
     implicitWidth: imageMessage.width
     implicitHeight: imageMessage.paintedHeight
@@ -113,12 +113,12 @@ Item {
                     _internal.pausePlaying = !_internal.pausePlaying
                     return
                 }
-                imageContainer.clicked(imageMessage, { button }, imageMessage.source)
+                imageContainer.clicked(imageMessage, { button }, imageMessage.source, eventPoint.position)
             }
             onLongPressed: {
                 if (point.device.type !== PointerDevice.TouchScreen)
                     return
-                imageContainer.clicked(imageMessage, { button: Qt.RightButton }, imageMessage.source)
+                imageContainer.clicked(imageMessage, { button: Qt.RightButton }, imageMessage.source, point.position)
             }
         }
     }
