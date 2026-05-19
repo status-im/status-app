@@ -536,6 +536,10 @@ QtObject {
             readonly property string rename: "rename"
             readonly property string unblockWithPuk: "unblock-with-puk"
             readonly property string unblockWithRecoveryPhrase: "unblock-with-recovery-phrase"
+
+            readonly property string onboardingLoginWithKeycard: "onboarding-login-with-keycard"
+            readonly property string onboardingImportNewKeyPair: "onboarding-import-new-key-pair"
+            readonly property string onboardingImportSeedPhrase: "onboarding-import-seed-phrase"
         }
     }
 

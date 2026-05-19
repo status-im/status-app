@@ -25,15 +25,17 @@ StatusDialog {
     required property string cardMetadataName
     required property string cardMetadataWalletAccountsJson
 
-    required property KeycardManagementStore store
+    required property QtObject store // shared between onboarding and the main app parts
 
     property var emojiPopup: null
 
     property var passwordStrengthScoreFunction: (password) => { console.error("passwordStrengthScoreFunction: IMPLEMENT ME") }
 
-    signal metadataResult(string keycardState, string keycardUid, string keyUid, int remainingPinAttempts, int remainingPukAttempts,
-                          int availableSlots, string cardMetadataName, string cardMetadataWalletAccountsJson)
+    signal metadataResult(string keycardState, string keycardUid, string keyUid, bool keycardStatusAvailable, int remainingPinAttempts,
+                          int remainingPukAttempts, int availableSlots, string cardMetadataName, string cardMetadataWalletAccountsJson)
     signal keycardFlowCompleted(string flow, string keyUid, string keycardUid, bool success)
+
+    signal keycardFlowCompletedWithData(string flow, string dataJson)
 
     width: Constants.keycard.general.popupWidth
     padding: Theme.halfPadding
@@ -69,6 +71,12 @@ StatusDialog {
             return qsTr("Unblock with PUK")
         case Constants.keycard.flow.unblockWithRecoveryPhrase:
             return qsTr("Unblock with recovery phrase")
+        case Constants.keycard.flow.onboardingLoginWithKeycard:
+            return qsTr("Log in with this Keycard")
+        case Constants.keycard.flow.onboardingImportNewKeyPair:
+            return qsTr("Import a new key pair to Keycard")
+        case Constants.keycard.flow.onboardingImportSeedPhrase:
+            return qsTr("Import a key pair from recovery phrase")
         default:
             return qsTr("Keycard Flow")
         }
@@ -98,7 +106,8 @@ StatusDialog {
         RenameInput,
         RenamingKeycard,
         EnterPuk,
-        UnblockingKeycard
+        UnblockingKeycard,
+        OnboardingMixedFlowSuccess // added to easier deal with keycard-related flows while Onboarding (keycard part is just one step of the entire flow, clicking "Continue" button emits keycardFlowCompletedWithData)
     }
 
     QtObject {
@@ -109,6 +118,7 @@ StatusDialog {
         property bool keycardInteractionCompleted: false
         property bool processing: false
         property bool success: false
+        property bool mixedFlowSuccess: false
         property string error: ""
 
         property bool factoryResetConfirmationChecked: false
@@ -135,6 +145,8 @@ StatusDialog {
                 return KeycardManagementPopup.FlowStep.EnterNewPin
             case Constants.keycard.flow.unblockWithRecoveryPhrase:
                 return KeycardManagementPopup.FlowStep.EnterNewPin
+            case Constants.keycard.flow.onboardingLoginWithKeycard:
+                return KeycardManagementPopup.FlowStep.EnterPin
             default:
                 return d.keycardHasOnlyPinSet
                     ? KeycardManagementPopup.FlowStep.EnterPin
@@ -164,6 +176,8 @@ StatusDialog {
         property bool stopUsingUnderstandChecked: false
         property string newStatusPassword: ""
 
+        property string onboardingResultDataJson: ""
+
         function componentForStep(step) {
             switch (step) {
             case KeycardManagementPopup.FlowStep.EnterPin:
@@ -183,6 +197,8 @@ StatusDialog {
                     return stopUsingForProfileEnterSeedPhraseComponent
                 if (root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase)
                     return unblockWithRecoveryPhraseEnterSeedPhraseComponent
+                if (root.flow === Constants.keycard.flow.onboardingImportSeedPhrase)
+                    return onboardingEnterSeedPhraseComponent
                 return enterSeedPhraseComponent
             case KeycardManagementPopup.FlowStep.EnterKeyPairName:
                 return enterKeyPairNameComponent
@@ -336,6 +352,28 @@ StatusDialog {
                                     })()
         }
 
+        function startOnboardingLoginWithKeycard() {
+            d.processing = true
+            Backpressure.setTimeout(this, 500, () => {
+                                        root.store.startAsyncLogin(root.keyUid, d.currentPin, true)
+                                    })()
+        }
+
+        function startOnboardingImportngKeyPair() {
+            d.currentStep = KeycardManagementPopup.FlowStep.Importing
+            d.processing = true
+            Backpressure.setTimeout(this, 500, () => {
+                                        // default wallet account only
+                                        const accounts = [{
+                                                              name: "",
+                                                              colorId: "",
+                                                              emoji: "",
+                                                              path: Constants.walletRootPath + "/0" // default wallet account path
+                                                          }]
+                                        root.store.startImportingKeyPair(d.newPin, d.seedPhrase, d.keyPairName, JSON.stringify(accounts))
+                                    })()
+        }
+
         function nextStep() {
             if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
                 d.currentStep = d.keycardHasOnlyPinSet
@@ -360,6 +398,10 @@ StatusDialog {
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.EnterPin) {
+                if (root.flow === Constants.keycard.flow.onboardingLoginWithKeycard) {
+                    d.startOnboardingLoginWithKeycard()
+                    return
+                }
                 if (root.flow === Constants.keycard.flow.importNewKeyPair) {
                     d.seedPhrase = root.store.generateMnemonic()
                     d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
@@ -419,7 +461,8 @@ StatusDialog {
                     d.currentStep = KeycardManagementPopup.FlowStep.EnterSeedPhrase
                     return
                 }
-                if (root.flow === Constants.keycard.flow.importNewKeyPair) {
+                if (root.flow === Constants.keycard.flow.importNewKeyPair
+                        || root.flow === Constants.keycard.flow.onboardingImportNewKeyPair) {
                     d.seedPhrase = root.store.generateMnemonic()
                     d.currentStep = KeycardManagementPopup.FlowStep.DisplaySeedPhrase
                     return
@@ -455,6 +498,10 @@ StatusDialog {
                     d.startUnblockKeycardUsingRecoveryPhrase()
                     return
                 }
+                if (root.flow === Constants.keycard.flow.onboardingImportSeedPhrase) {
+                    d.startOnboardingImportngKeyPair()
+                    return
+                }
 
                 if (d.keyPairKnown) {
                     d.startImportingKeyPair()
@@ -474,6 +521,10 @@ StatusDialog {
                     return
                 }
                 d.seedPhraseKeyUid = root.store.getKeyUidForSeedPhrase(d.seedPhrase)
+                if (root.flow === Constants.keycard.flow.onboardingImportNewKeyPair) {
+                    d.startOnboardingImportngKeyPair()
+                    return
+                }
                 d.currentStep = KeycardManagementPopup.FlowStep.EnterKeyPairName
                 return
             }
@@ -611,6 +662,7 @@ StatusDialog {
 
     Connections {
         target: root.store
+        ignoreUnknownSignals: true
 
         function onKeycardInteractionSuccessfullyCompleted() {
             switch(root.flow) {
@@ -636,6 +688,7 @@ StatusDialog {
             root.metadataResult(root.store.keycardState,
                                 root.store.keycardUid,
                                 root.store.keyUid,
+                                root.store.keycardStatusAvailable,
                                 root.store.remainingPinAttempts,
                                 root.store.remainingPukAttempts,
                                 root.store.availableSlots,
@@ -645,7 +698,7 @@ StatusDialog {
         }
 
         function onKeycardGetMetadataError(error) {
-            console.error("Keycard get metadata error:", error)
+            console.error("Keycard get metadata, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
 
@@ -664,6 +717,7 @@ StatusDialog {
             root.metadataResult(root.store.keycardState,
                                 root.store.keycardUid,
                                 root.store.keyUid,
+                                root.store.keycardStatusAvailable,
                                 root.store.remainingPinAttempts,
                                 root.store.remainingPukAttempts,
                                 root.store.availableSlots,
@@ -678,7 +732,7 @@ StatusDialog {
         }
 
         function onKeycardFactoryResetError(error) {
-            console.error("Keycard factory reset error:", error)
+            console.error("Keycard factory reset, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -686,10 +740,38 @@ StatusDialog {
         function onKeycardImportKeyPairSuccess() {
             d.processing = false
             d.success = true
+
+            if (root.flow === Constants.keycard.flow.onboardingImportNewKeyPair
+                    || root.flow === Constants.keycard.flow.onboardingImportSeedPhrase) {
+                d.onboardingResultDataJson = JSON.stringify({
+                    flow: root.flow,
+                    keyUid: d.seedPhraseKeyUid,
+                    keycardUid: root.store.keycardUid,
+                    keyPairName: d.keyPairName,
+                    seedPhrase: d.seedPhrase
+                })
+                d.currentStep = KeycardManagementPopup.FlowStep.OnboardingMixedFlowSuccess
+            }
         }
 
         function onKeycardImportKeyPairError(error) {
-            console.error("Keycard import key pair error:", error)
+            console.error("Keycard import key pair, flow:", root.flow, "error:", error)
+            d.processing = false
+            d.error = error
+        }
+
+        function onKeycardAsyncLoginSuccess(dataJson) {
+            d.processing = false
+            d.success = true
+
+            if (flow === Constants.keycard.flow.onboardingLoginWithKeycard) {
+                d.onboardingResultDataJson = dataJson
+                d.currentStep = KeycardManagementPopup.FlowStep.OnboardingMixedFlowSuccess
+            }
+        }
+
+        function onKeycardAsyncLoginError(error) {
+            console.error("Keycard async login, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -700,7 +782,7 @@ StatusDialog {
         }
 
         function onKeycardMoveKeyPairError(error) {
-            console.error("Keycard move key pair error:", error)
+            console.error("Keycard move key pair, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -711,7 +793,7 @@ StatusDialog {
         }
 
         function onKeycardMoveProfileKeyPairError(error) {
-            console.error("Keycard move profile key pair error:", error)
+            console.error("Keycard move profile key pair, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -722,7 +804,7 @@ StatusDialog {
         }
 
         function onKeycardAddKeyPairError(error) {
-            console.error("Keycard add key pair error:", error)
+            console.error("Keycard add key pair, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -733,7 +815,7 @@ StatusDialog {
         }
 
         function onStopUsingKeycardForKeyPairError(error) {
-            console.error("Stop using Keycard for key pair error:", error)
+            console.error("Stop using Keycard for key pair, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -744,7 +826,7 @@ StatusDialog {
         }
 
         function onStopUsingKeycardForProfileKeyPairError(error) {
-            console.error("Stop using Keycard for profile key pair error:", error)
+            console.error("Stop using Keycard for profile key pair, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -755,7 +837,7 @@ StatusDialog {
         }
 
         function onKeycardChangePinError(error) {
-            console.error("Keycard change PIN error:", error)
+            console.error("Keycard change PIN, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -766,7 +848,7 @@ StatusDialog {
         }
 
         function onKeycardChangePukError(error) {
-            console.error("Keycard change PUK error:", error)
+            console.error("Keycard change PUK, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -777,7 +859,7 @@ StatusDialog {
         }
 
         function onKeycardRenameError(error) {
-            console.error("Keycard rename error:", error)
+            console.error("Keycard rename, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -788,7 +870,7 @@ StatusDialog {
         }
 
         function onKeycardUnblockError(error) {
-            console.error("Keycard unblock error:", error)
+            console.error("Keycard unblock, flow:", root.flow, "error:", error)
             d.processing = false
             d.error = error
         }
@@ -906,6 +988,13 @@ StatusDialog {
                          || (root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase
                              && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
                                  || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase))
+                         || (root.flow === Constants.keycard.flow.onboardingImportNewKeyPair
+                             && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords))
+                         || (root.flow === Constants.keycard.flow.onboardingImportSeedPhrase
+                             && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase))
 
                 onClicked: {
                     d.previousStep()
@@ -916,6 +1005,7 @@ StatusDialog {
         rightButtons: ObjectModel {
             StatusFlatButton {
                 visible: d.currentStep !== KeycardManagementPopup.FlowStep.ManageAccounts
+                         && d.currentStep !== KeycardManagementPopup.FlowStep.OnboardingMixedFlowSuccess
                 text: {
                     if (root.flow === Constants.keycard.flow.readKeycard) {
                         if (contentLoader.status === Loader.Ready
@@ -938,7 +1028,10 @@ StatusDialog {
                                || root.flow === Constants.keycard.flow.setOrChangePuk
                                || root.flow === Constants.keycard.flow.rename
                                || root.flow === Constants.keycard.flow.unblockWithPuk
-                               || root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase) {
+                               || root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase
+                               || root.flow === Constants.keycard.flow.onboardingLoginWithKeycard
+                               || root.flow === Constants.keycard.flow.onboardingImportNewKeyPair
+                               || root.flow === Constants.keycard.flow.onboardingImportSeedPhrase) {
                         if (!d.processing && !d.success && !d.error) {
                             return qsTr("Cancel")
                         }
@@ -974,6 +1067,19 @@ StatusDialog {
                 enabled: !d.processing
                 text: qsTr("I don't have or don't know PIN")
                 onClicked: d.startKeycardReading("")
+            }
+
+            StatusButton {
+                visible: d.currentStep === KeycardManagementPopup.FlowStep.OnboardingMixedFlowSuccess
+                         && (root.flow === Constants.keycard.flow.onboardingLoginWithKeycard
+                             || root.flow === Constants.keycard.flow.onboardingImportNewKeyPair
+                             || root.flow === Constants.keycard.flow.onboardingImportSeedPhrase)
+                text: qsTr("Continue")
+                onClicked: {
+                    d.mixedFlowSuccess = true
+                    root.keycardFlowCompletedWithData(root.flow, d.onboardingResultDataJson)
+                    root.close()
+                }
             }
 
             StatusButton {
@@ -1052,6 +1158,13 @@ StatusDialog {
                                      || d.currentStep === KeycardManagementPopup.FlowStep.EnterPuk))
                              || (root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase))
+                             || (root.flow === Constants.keycard.flow.onboardingImportNewKeyPair
+                                 && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords))
+                             || (root.flow === Constants.keycard.flow.onboardingImportSeedPhrase
+                                 && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
                                      || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase)))
                 enabled: visible
                          && ((d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
@@ -1125,7 +1238,8 @@ StatusDialog {
                     if (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase) {
                         if (root.flow === Constants.keycard.flow.moveKeyPair
                                 || root.flow === Constants.keycard.flow.moveProfileKeyPair
-                                || root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase) {
+                                || root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase
+                                || root.flow === Constants.keycard.flow.onboardingImportSeedPhrase) {
                             d.nextStep()
                             return
                         }
@@ -1216,7 +1330,14 @@ StatusDialog {
             break
         }
 
-        root.keycardFlowCompleted(root.flow, keyUid, keycardUid, d.success)
+        let success = d.success
+        if (flow === Constants.keycard.flow.onboardingLoginWithKeycard
+                || flow === Constants.keycard.flow.onboardingImportNewKeyPair
+                || flow === Constants.keycard.flow.onboardingImportSeedPhrase) {
+            success = d.mixedFlowSuccess
+        }
+
+        root.keycardFlowCompleted(root.flow, keyUid, keycardUid, success)
 
         root.store.teardown()
     }
@@ -1267,6 +1388,11 @@ StatusDialog {
                 case Constants.keycard.flow.unblockWithPuk:
                 case Constants.keycard.flow.unblockWithRecoveryPhrase:
                     return qsTr("Unblocking Keycard...")
+                case Constants.keycard.flow.onboardingLoginWithKeycard:
+                    return qsTr("Logging in with Keycard...")
+                case Constants.keycard.flow.onboardingImportNewKeyPair:
+                case Constants.keycard.flow.onboardingImportSeedPhrase:
+                    return qsTr("Importing key pair to Keycard...")
                 default:
                     return qsTr("Reading...")
                 }
@@ -1301,6 +1427,9 @@ StatusDialog {
                 case Constants.keycard.flow.rename:
                 case Constants.keycard.flow.unblockWithPuk:
                 case Constants.keycard.flow.unblockWithRecoveryPhrase:
+                case Constants.keycard.flow.onboardingLoginWithKeycard:
+                case Constants.keycard.flow.onboardingImportNewKeyPair:
+                case Constants.keycard.flow.onboardingImportSeedPhrase:
                     return Assets.png("keycard/card_insert/insert")
                 default:
                     return ""
@@ -1332,6 +1461,11 @@ StatusDialog {
                 case Constants.keycard.flow.unblockWithPuk:
                 case Constants.keycard.flow.unblockWithRecoveryPhrase:
                     return qsTr("Keycard has been unblocked")
+                case Constants.keycard.flow.onboardingLoginWithKeycard:
+                    return qsTr("Keycard read completed")
+                case Constants.keycard.flow.onboardingImportNewKeyPair:
+                case Constants.keycard.flow.onboardingImportSeedPhrase:
+                    return qsTr("Key pair has been imported to Keycard")
                 default:
                     return qsTr("Success")
                 }
@@ -1360,6 +1494,11 @@ StatusDialog {
                     return qsTr("You can now use your Keycard again")
                 case Constants.keycard.flow.unblockWithRecoveryPhrase:
                     return qsTr("It is now ready to use.")
+                case Constants.keycard.flow.onboardingLoginWithKeycard:
+                    return qsTr("Continue to finish logging in.")
+                case Constants.keycard.flow.onboardingImportNewKeyPair:
+                case Constants.keycard.flow.onboardingImportSeedPhrase:
+                    return qsTr("Continue to finish setting up your profile.")
                 default:
                     return ""
                 }
@@ -1386,6 +1525,9 @@ StatusDialog {
                 case Constants.keycard.flow.rename:
                 case Constants.keycard.flow.unblockWithPuk:
                 case Constants.keycard.flow.unblockWithRecoveryPhrase:
+                case Constants.keycard.flow.onboardingLoginWithKeycard:
+                case Constants.keycard.flow.onboardingImportNewKeyPair:
+                case Constants.keycard.flow.onboardingImportSeedPhrase:
                     return Assets.png("keycard/wrong_card/something-went-wrong")
                 default:
                     return ""
@@ -1426,6 +1568,10 @@ StatusDialog {
                     d.currentPin = pinInput
                     d.nextStep()
                     return
+                case Constants.keycard.flow.onboardingLoginWithKeycard:
+                    d.currentPin = pinInput
+                    d.nextStep()
+                    return
                 default:
                     return
                 }
@@ -1451,6 +1597,8 @@ StatusDialog {
                 case Constants.keycard.flow.changePin:
                 case Constants.keycard.flow.unblockWithPuk:
                 case Constants.keycard.flow.unblockWithRecoveryPhrase:
+                case Constants.keycard.flow.onboardingImportNewKeyPair:
+                case Constants.keycard.flow.onboardingImportSeedPhrase:
                     d.newPin = pinInput
                     d.nextStep()
                     return
@@ -1484,6 +1632,8 @@ StatusDialog {
                 case Constants.keycard.flow.changePin:
                 case Constants.keycard.flow.unblockWithPuk:
                 case Constants.keycard.flow.unblockWithRecoveryPhrase:
+                case Constants.keycard.flow.onboardingImportNewKeyPair:
+                case Constants.keycard.flow.onboardingImportSeedPhrase:
                     d.nextStep()
                     return
                 default:
@@ -1682,6 +1832,27 @@ StatusDialog {
                 if (keyUid === root.keyUid)
                     return keyUid
                 console.error("provided seed phrase doesn't match the keycard's key pair being unblocked")
+                return ""
+            }
+
+            onSeedPhraseValidated: function(phrase, keyUid) {
+                d.seedPhrase = phrase
+                d.seedPhraseKeyUid = keyUid
+            }
+        }
+    }
+
+    Component {
+        id: onboardingEnterSeedPhraseComponent
+        EnterSeedPhraseState {
+            initialSeedPhrase: d.seedPhrase
+
+            validateSeedPhrase: function(phrase) {
+                const keyUid = root.store.getKeyUidForSeedPhrase(phrase)
+                if (!root.store.isKnownKeyUid(keyUid) || root.store.isKeyPairMigratedToKeycard(keyUid)) {
+                    return keyUid
+                }
+                console.error("trying to import onto a keycard a profile that exists in the app or not migrated to keycard (hint: login and use move flow)")
                 return ""
             }
 
