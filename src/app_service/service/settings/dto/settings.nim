@@ -27,6 +27,10 @@ const KEY_PREVIEW_PRIVACY* = "preview-privacy?"
 const KEY_PUBLIC_KEY* = "public-key"
 const KEY_DEFAULT_SYNC_PERIOD* = "default-sync-period"
 const KEY_SEND_PUSH_NOTIFICATIONS* = "send-push-notifications?"
+const KEY_REMOTE_PUSH_NOTIFICATIONS_ENABLED* = "remote-push-notifications-enabled?"
+const KEY_PUSH_NOTIFICATIONS_FROM_CONTACTS_ONLY* = "push-notifications-from-contacts-only?"
+const KEY_PUSH_NOTIFICATIONS_BLOCK_MENTIONS* = "push-notifications-block-mentions?"
+const KEY_PUSH_NOTIFICATIONS_SERVER_ENABLED* = "push-notifications-server-enabled?"
 const KEY_APPEARANCE* = "appearance"
 const KEY_USE_MAILSERVERS* = "use-mailservers?"
 const KEY_WALLET_ROOT_ADDRESS* = "wallet-root-address"
@@ -137,6 +141,10 @@ type
     publicKey*: string
     defaultSyncPeriod*: int
     sendPushNotifications*: bool
+    remotePushNotificationsEnabled*: bool
+    pushNotificationsFromContactsOnly*: bool
+    pushNotificationsBlockMentions*: bool
+    pushNotificationsServerEnabled*: bool
     appearance*: int
     useMailservers*: bool
     walletRootAddress*: string
@@ -217,6 +225,10 @@ proc toSettingsDto*(jsonObj: JsonNode): SettingsDto =
   discard jsonObj.getProp(KEY_PUBLIC_KEY, result.publicKey)
   discard jsonObj.getProp(KEY_DEFAULT_SYNC_PERIOD, result.defaultSyncPeriod)
   discard jsonObj.getProp(KEY_SEND_PUSH_NOTIFICATIONS, result.sendPushNotifications)
+  discard jsonObj.getProp(KEY_REMOTE_PUSH_NOTIFICATIONS_ENABLED, result.remotePushNotificationsEnabled)
+  discard jsonObj.getProp(KEY_PUSH_NOTIFICATIONS_FROM_CONTACTS_ONLY, result.pushNotificationsFromContactsOnly)
+  discard jsonObj.getProp(KEY_PUSH_NOTIFICATIONS_BLOCK_MENTIONS, result.pushNotificationsBlockMentions)
+  discard jsonObj.getProp(KEY_PUSH_NOTIFICATIONS_SERVER_ENABLED, result.pushNotificationsServerEnabled)
   discard jsonObj.getProp(KEY_APPEARANCE, result.appearance)
   discard jsonObj.getProp(KEY_USE_MAILSERVERS, result.useMailservers)
   discard jsonObj.getProp(KEY_WALLET_ROOT_ADDRESS, result.walletRootAddress)

@@ -50,6 +50,7 @@ QtObject {
     required property ProfileStores.AboutStore aboutStore
     required property ProfileStores.EnsUsernamesStore ensUsernamesStore
     required property ProfileStores.PrivacyStore privacyStore
+    required property ProfileStores.NotificationsStore notificationsStore
 
     required property Keychain keychain
 
@@ -211,7 +212,8 @@ QtObject {
         EnablePushNotificationsPopup {
             id: enablePushNotificationsPopup
             destroyOnClose: true
-            hasPermission: PushNotifications.status === PushNotifications.Granted
+            hasPermission: PushNotifications.status === PushNotifications.Granted &&
+                            root.notificationsStore.notificationsSettings.remotePushNotificationsEnabled
 
             onClosed: {
                 appMainLocalSettings.enablePushNotificationsFreshInstallSeen = true
@@ -219,10 +221,17 @@ QtObject {
                 appMainLocalSettings.enablePushNotificationsLastShownVersion = currentMinorVersion()
             }
 
-            onContinueRequested: {
-                PushNotifications.request()
-
-                enablePushNotificationsPopup.loading = true
+            onEnablePushNotifications: {
+                if (SQUtils.Utils.isIOS) {
+                    root.notificationsStore.notificationsSettings.remotePushNotificationsEnabled = true
+                } else {
+                    root.notificationsStore.notificationsSettings.notifSettingAllowNotifications = true
+                }
+                if (PushNotifications.status !== PushNotifications.Granted) {
+                    pushNotificationsConnections.enabled = true
+                    PushNotifications.request()
+                    enablePushNotificationsPopup.loading = true
+                }
             }
 
             onOpenSettingsRequested: {
@@ -232,6 +241,7 @@ QtObject {
 
 
             Connections {
+                id: pushNotificationsConnections
                 target: PushNotifications
 
                 function onStatusChanged() {
@@ -247,8 +257,8 @@ QtObject {
                             Constants.ephemeralNotificationType.success,
                             ""
                         )
-                        PushNotifications.requestToken()
                         enablePushNotificationsPopup.close()
+                        pushNotificationsConnections.enabled = false
                         return
                     }
                 }
@@ -281,57 +291,28 @@ QtObject {
         enablePushNotificationsPopupComponent.createObject(root.popupParent).open()
     }
 
-    readonly property Connections pushNotificationsConnections: Connections {
-        target: PushNotifications
-        function onTokenChanged() {
-            if (PushNotifications.token !== "" && SQUtils.Utils.isIOS) {
-                appSettings.registerForCentralizedPushNotifications(PushNotifications.token)
-            }
-        }
-    }
-
-    readonly property Connections pushNotificationsStatusConnections: Connections {
-        target: PushNotifications
-        enabled: false
-        function onStatusChanged() {
-            if (PushNotifications.status !== PushNotifications.Granted) {
-                showEnablePushNotificationsPopup()
-            }
-
-            Qt.callLater(() => {
-                pushNotificationsStatusConnections.enabled = false
-            })
-        }
-    }
-
     function maybeDisplayEnablePushNotificationsPopup() {
         if (!SQUtils.Utils.isMobile) {
             return
         }
 
-        if (PushNotifications.status === PushNotifications.Granted) {
-            PushNotifications.requestToken()
+        const inAppNotificationsEnabled = SQUtils.Utils.isIOS ? root.notificationsStore.notificationsSettings.remotePushNotificationsEnabled :
+                root.notificationsStore.notificationsSettings.notifSettingAllowNotifications
+
+        if (inAppNotificationsEnabled &&
+                PushNotifications.status === PushNotifications.Granted) {
             return
         }
 
         const version = currentMinorVersion()
         const shouldDisplayAfterFreshInstall = !appMainLocalSettings.enablePushNotificationsFreshInstallSeen
-        const shouldDisplayAfterMinorUpdate = !appSettings.notifSettingAllowNotifications &&
+        const shouldDisplayAfterMinorUpdate = !inAppNotificationsEnabled &&
                 !appMainLocalSettings.enablePushNotificationsDontAskAgain &&
                 version !== "" &&
                 isAtLeastMinorVersion(version, "2.38") &&
                 appMainLocalSettings.enablePushNotificationsLastShownVersion !== version
 
         if (!shouldDisplayAfterFreshInstall && !shouldDisplayAfterMinorUpdate) {
-            return
-        }
-
-        // Delay the popup display to avoid false negative when the status is unknown
-        // If might take a while to get the status, so we delay the popup display
-        // Platform specifics - iOS might take a while to get the status, so we delay the popup display
-        // Platform specifics - Android won't return the status until the first request is made
-        if (PushNotifications.status === PushNotifications.Unknown && SQUtils.Utils.isIOS) {
-            pushNotificationsStatusConnections.enabled = true
             return
         }
 

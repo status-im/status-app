@@ -61,6 +61,7 @@ QtObject:
     settings: SettingsDto
     initialized: bool
     notifExemptionsCache: Table[string, NotificationsExemptions]
+    deviceToken: string
 
   # Forward declaration
   proc saveSyncingOnMobileNetwork*(self: Service, value: bool): bool
@@ -75,6 +76,7 @@ QtObject:
   proc getNotificationSoundsEnabled*(self: Service): bool
   proc getNotificationVolume*(self: Service): int
   proc getNotificationMessagePreview*(self: Service): int
+  proc initPushNotificationsSettings*(self: Service)
 
   proc delete*(self: Service)
   proc newService*(events: EventEmitter): Service =
@@ -163,6 +165,8 @@ QtObject:
 
     self.initialized = true
 
+    initPushNotificationsSettings(self)
+
   # Backup Path migration
   # New local setting needs to be initialized from old setting value
   # TODO remove this migration in 2.37 (one release cycle interval)
@@ -186,6 +190,59 @@ QtObject:
     discard self.getNotificationSoundsEnabled()
     discard self.getNotificationVolume()
     discard self.getNotificationMessagePreview()
+
+  proc updateCentralizedPushNotifications*(self: Service, deviceToken: string, enable: bool): bool {.slot.} =
+    if enable and deviceToken.len == 0:
+      error "cannot enable push notifications without device token"
+      return false
+    try:
+      let response = 
+        if enable:
+          status_push_notifications.registerForPushNotifications(deviceToken, PUSH_TOPIC, PUSH_TOKEN_TYPE)
+        else:
+          status_push_notifications.unregisterFromPushNotifications()
+      if not response.error.isNil:
+        error "error registering for push notifications", errDescription = response.error.message
+        return false
+    except Exception as e:
+      error "error registering for push notifications", errDescription = e.msg
+      return false
+    return true
+
+  proc updatePushNotificationsFromContactsOnly(self: Service, enable: bool): bool {.slot.} =
+    try:
+      let response =
+        if enable:
+          status_push_notifications.enablePushNotificationsFromContactsOnly()
+        else:
+          status_push_notifications.disablePushNotificationsFromContactsOnly()
+      if not response.error.isNil:
+        error "error updating push notifications from contacts only", errDescription = response.error.message
+        return false
+    except Exception as e:
+      error "error updating push notifications from contacts only", errDescription = e.msg
+      return false
+    return true
+
+  proc updatePushNotificationsBlockMentions(self: Service, enable: bool): bool {.slot.} =
+    try:
+      let response =
+        if enable:
+          status_push_notifications.enablePushNotificationsBlockMentions()
+        else:
+          status_push_notifications.disablePushNotificationsBlockMentions()
+      if not response.error.isNil:
+        error "error updating push notifications block mentions", errDescription = response.error.message
+        return false
+    except Exception as e:
+      error "error updating push notifications block mentions", errDescription = e.msg
+      return false
+    return true
+
+  proc initPushNotificationsSettings*(self: Service) =
+    discard self.updateCentralizedPushNotifications(self.deviceToken, self.settings.remotePushNotificationsEnabled)
+    discard self.updatePushNotificationsFromContactsOnly(self.settings.pushNotificationsFromContactsOnly)
+    discard self.updatePushNotificationsBlockMentions(self.settings.pushNotificationsBlockMentions)
 
 
   proc saveSetting(self: Service, attribute: string, value: string | JsonNode | bool | int | int64): bool =
@@ -377,59 +434,96 @@ QtObject:
   proc getSendPushNotifications*(self: Service): bool =
     self.settings.sendPushNotifications
 
-  proc registerForCentralizedPushNotifications*(self: Service, deviceToken: string) {.slot.} =
-    try:
-      let response = status_push_notifications.registerForPushNotifications(deviceToken, PUSH_TOPIC, PUSH_TOKEN_TYPE)
-      if not response.error.isNil:
-        error "error registering for push notifications", errDescription = response.error.message
-        return
-    except Exception as e:
-      error "error registering for push notifications", errDescription = e.msg
+  proc getDeviceToken*(self: Service): string {.slot.} =
+    self.deviceToken
 
-  proc unregisterFromPushNotifications*(self: Service) {.slot.} =
-    try:
-      let response = status_push_notifications.unregisterFromPushNotifications()
-      if not response.error.isNil:
-        error "error unregistering from push notifications", errDescription = response.error.message
-        return
-    except Exception as e:
-      error "error unregistering from push notifications", errDescription = e.msg
+  proc deviceTokenChanged*(self: Service) {.signal.}
+  proc setDeviceToken*(self: Service, value: string) {.slot.} =
+    if (self.deviceToken != value):
+      self.deviceToken = value
+      if self.initialized:
+        self.initPushNotificationsSettings()
 
-  proc enablePushNotificationsFromContactsOnly*(self: Service) {.slot.} =
-    try:
-      let response = status_push_notifications.enablePushNotificationsFromContactsOnly()
-      if not response.error.isNil:
-        error "error enabling push notifications from contacts only", errDescription = response.error.message
-        return
-    except Exception as e:
-      error "error enabling push notifications from contacts only", errDescription = e.msg
+      self.deviceTokenChanged()
 
-  proc disablePushNotificationsFromContactsOnly*(self: Service) {.slot.} =
-    try:
-      let response = status_push_notifications.disablePushNotificationsFromContactsOnly()
-      if not response.error.isNil:
-        error "error disabling push notifications from contacts only", errDescription = response.error.message
-        return
-    except Exception as e:
-      error "error disabling push notifications from contacts only", errDescription = e.msg
+  QtProperty[string] deviceToken:
+    read = getDeviceToken
+    write = setDeviceToken
+    notify = deviceTokenChanged
 
-  proc enablePushNotificationsBlockMentions*(self: Service) {.slot.} =
-    try:
-      let response = status_push_notifications.enablePushNotificationsBlockMentions()
-      if not response.error.isNil:
-        error "error enabling push notifications block mentions", errDescription = response.error.message
-        return
-    except Exception as e:
-      error "error enabling push notifications block mentions", errDescription = e.msg
+  proc pushNotificationsFromContactsOnlyChanged*(self: Service) {.signal.}
 
-  proc disablePushNotificationsBlockMentions*(self: Service) {.slot.} =
-    try:
-      let response = status_push_notifications.disablePushNotificationsBlockMentions()
-      if not response.error.isNil:
-        error "error disabling push notifications block mentions", errDescription = response.error.message
-        return
-    except Exception as e:
-      error "error disabling push notifications block mentions", errDescription = e.msg
+  proc getPushNotificationsFromContactsOnly*(self: Service): bool {.slot.} =
+    self.settings.pushNotificationsFromContactsOnly
+
+  proc setPushNotificationsFromContactsOnly*(self: Service, value: bool) {.slot.} =
+    if self.settings.pushNotificationsFromContactsOnly == value:
+      return
+    if not self.updatePushNotificationsFromContactsOnly(value):
+      return
+    self.settings.pushNotificationsFromContactsOnly = value
+    self.pushNotificationsFromContactsOnlyChanged()
+
+  QtProperty[bool] pushNotificationsFromContactsOnly:
+    read = getPushNotificationsFromContactsOnly
+    write = setPushNotificationsFromContactsOnly
+    notify = pushNotificationsFromContactsOnlyChanged
+
+  proc pushNotificationsBlockMentionsChanged*(self: Service) {.signal.}
+
+  proc getPushNotificationsBlockMentions*(self: Service): bool {.slot.} =
+    self.settings.pushNotificationsBlockMentions
+
+  proc setPushNotificationsBlockMentions*(self: Service, value: bool) {.slot.} =
+    if self.settings.pushNotificationsBlockMentions == value:
+      return
+    if not self.updatePushNotificationsBlockMentions(value):
+      return
+    self.settings.pushNotificationsBlockMentions = value
+    self.pushNotificationsBlockMentionsChanged()
+
+  QtProperty[bool] pushNotificationsBlockMentions:
+    read = getPushNotificationsBlockMentions
+    write = setPushNotificationsBlockMentions
+    notify = pushNotificationsBlockMentionsChanged
+
+  proc remotePushNotificationsEnabledChanged*(self: Service) {.signal.}
+
+  proc getRemotePushNotificationsEnabled*(self: Service): bool {.slot.} =
+    self.settings.remotePushNotificationsEnabled
+
+  proc setRemotePushNotificationsEnabled*(self: Service, value: bool) {.slot.} =
+    if self.settings.remotePushNotificationsEnabled == value:
+      return
+    discard self.saveSendPushNotifications(value)
+    self.settings.remotePushNotificationsEnabled = value
+    self.remotePushNotificationsEnabledChanged()
+    # Just discard. It also depends on device token. We'll enable the setting value even if we cannot register for push
+    # The push registration will be attempted when the device token changes if this setting is enabled.
+    discard self.updateCentralizedPushNotifications(self.deviceToken, value)
+
+  QtProperty[bool] remotePushNotificationsEnabled:
+    read = getRemotePushNotificationsEnabled
+    write = setRemotePushNotificationsEnabled
+    notify = remotePushNotificationsEnabledChanged
+
+  proc pushNotificationsServerEnabledChanged*(self: Service) {.signal.}
+
+  proc getPushNotificationsServerEnabled*(self: Service): bool {.slot.} =
+    self.settings.pushNotificationsServerEnabled
+
+  proc setPushNotificationsServerEnabled*(self: Service, value: bool) =
+    if self.settings.pushNotificationsServerEnabled == value:
+      return
+    if not self.saveSetting(KEY_PUSH_NOTIFICATIONS_SERVER_ENABLED, value):
+      return
+    self.settings.pushNotificationsServerEnabled = value
+    self.pushNotificationsServerEnabledChanged()
+
+  QtProperty[bool] pushNotificationsServerEnabled:
+    read = getPushNotificationsServerEnabled
+    write = setPushNotificationsServerEnabled
+    notify = pushNotificationsServerEnabledChanged
 
   proc saveAppearance*(self: Service, value: int): bool =
     if(self.saveSetting(KEY_APPEARANCE, value)):
