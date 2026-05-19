@@ -9,9 +9,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.Settings;
+import android.util.Log;
 import im.status.mobileui.PushNotificationHelper;
 
 public class StatusQtActivity extends QtActivity {
+    private static final String TAG = "StatusQtActivity";
+
+    // QtActivityBase.onDestroy() can deadlock on Android during Qt/EGL teardown;
+    // if it hasn't completed within this window we force-kill the UI process.
+    private static final long TEARDOWN_WATCHDOG_MS = 3000L;
+
     private static final AtomicBoolean splashShouldHide = new AtomicBoolean(false);
     private static StatusQtActivity sInstance = null;
 
@@ -70,7 +77,35 @@ public class StatusQtActivity extends QtActivity {
     @Override
     protected void onDestroy() {
         sInstance = null;
+        // QtActivityBase.onDestroy() can deadlock on Android: the Qt render
+        // thread blocks in eglSwapBuffers on a Surface Android already
+        // destroyed, the Qt GUI thread waits on it, and this (Android UI)
+        // thread waits on the GUI thread inside flushWindowSystemEvents.
+        // When the activity is really finishing, guarantee the process dies
+        // so the task clears from recents and the next launch is a clean
+        // cold start. Armed before super.onDestroy() since that call is what
+        // hangs; runs on its own daemon thread because the main thread is
+        // exactly what gets stuck.
+        if (isFinishing()) {
+            Thread watchdog = new Thread(() -> {
+                try { Thread.sleep(TEARDOWN_WATCHDOG_MS); }
+                catch (InterruptedException ignored) {}
+                Log.w(TAG, "Qt teardown did not complete within "
+                        + TEARDOWN_WATCHDOG_MS + "ms; force-killing UI process "
+                        + android.os.Process.myPid());
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }, "status-teardown-watchdog");
+            watchdog.setDaemon(true);
+            watchdog.start();
+        }
         super.onDestroy();
+        if (isFinishing()) {
+            // Teardown returned without deadlocking — still ensure the
+            // process exits so no stale activity lingers in the task.
+            Log.w(TAG, "onDestroy complete; force-killing UI process "
+                    + android.os.Process.myPid() + " to clear the task");
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }
     }
 
     // Called from Qt via JNI when main window is visible
