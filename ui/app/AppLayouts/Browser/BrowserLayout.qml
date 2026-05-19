@@ -65,6 +65,12 @@ StatusSectionLayout {
         webViewContext.reloadCurrent()
     }
 
+    function applyIncognitoMode(checked) {
+        webViewContext.setIncognitoCurrent(checked)
+        if (!checked && root.connectorController)
+            root.connectorController.deleteEphemeralDApps()
+    }
+
     Component.onCompleted: {
         savedSessionContext.restoreSession()
     }
@@ -98,6 +104,7 @@ StatusSectionLayout {
         readonly property Item currentWebView: webViewContext.currentWebView
         readonly property bool currentTabIncognito: currentWebView?.offTheRecord ?? false
         readonly property bool currentTabLoading: currentWebView?.loading ?? false
+        readonly property bool currentTabIsDownloads: webStackView.children[tabs.currentIndex]?.isDownloadView ?? false
 
         property real lastScrollPos: 0
         property bool scrolledUp: true
@@ -356,7 +363,10 @@ StatusSectionLayout {
                     root.bookmarksStore.deleteBookmark(url)
                 }
                 function onRequestLaunchInBrowser(url) {
-                    _internal.onRequestLaunchInBrowser(url)
+                    if (_internal.currentTabIsDownloads)
+                        root.openUrlInNewTab(url)
+                    else
+                        _internal.onRequestLaunchInBrowser(url)
                 }
                 function onRequestWalletMenu() {
                     dialogsContext.openWalletMenu(browserWalletMenu)
@@ -374,7 +384,7 @@ StatusSectionLayout {
                     browserToolbarLoader.activateAddressBar()
                 }
                 function onGoIncognito(checked) {
-                    webViewContext.setIncognitoCurrent(checked)
+                    root.applyIncognitoMode(checked)
                 }
                 function onRequestDownloadsView() {
                     _internal.addNewDownloadTab()
@@ -397,7 +407,7 @@ StatusSectionLayout {
                 currentTabIncognito: _internal.currentTabIncognito
                 currentTabIsBookmark: favoritesContext.currentTabIsBookmark
                 currentTabLoading: _internal.currentTabLoading
-                currentTabIsDownloads: webStackView.children[tabs.currentIndex]?.isDownloadView ?? false
+                currentTabIsDownloads: _internal.currentTabIsDownloads
                 browserDappsModel: browserDappsProvider.model
                 historyModel: _internal.currentWebView?.history?.items ?? null
             }
@@ -414,7 +424,7 @@ StatusSectionLayout {
                 currentTabIncognito: _internal.currentTabIncognito
                 currentTabIsBookmark: favoritesContext.currentTabIsBookmark
                 currentTabLoading: _internal.currentTabLoading
-                currentTabIsDownloads: webStackView.children[tabs.currentIndex]?.isDownloadView ?? false
+                currentTabIsDownloads: _internal.currentTabIsDownloads
                 browserDappsModel: browserDappsProvider.model
                 historyModel: _internal.currentWebView?.history?.items ?? null
             }
@@ -428,7 +438,7 @@ StatusSectionLayout {
             sourceComponent: FavoritesBar {
                 currentTabIncognito: _internal.currentTabIncognito
                 bookmarkModel: root.bookmarksStore.bookmarksModel
-                onSetAsCurrentWebUrl: url => webViewContext.setCurrentWebUrl(url)
+                onSetAsCurrentWebUrl: url => _internal.currentTabIsDownloads ? root.openUrlInNewTab(url) : webViewContext.setCurrentWebUrl(url)
                 onOpenInNewTab: url => root.openUrlInNewTab(url)
                 onAddBookmarkRequested: _internal.openFavoriteModal()
                 onFavMenuRequested: (parent, pos, url, name) => _internal.openFavoriteMenu(parent, pos, url, name)
@@ -460,7 +470,10 @@ StatusSectionLayout {
             onRequestReloadPage: webViewContext.reloadCurrent()
             onRequestStopLoadingPage: webViewContext.stopCurrent()
             onRequestLaunchInBrowser: url => {
-                                          _internal.onRequestLaunchInBrowser(url)
+                                          if (_internal.currentTabIsDownloads)
+                                              root.openUrlInNewTab(url)
+                                          else
+                                              _internal.onRequestLaunchInBrowser(url)
                                           deactivateAddressBar()
                                       }
             onRequestOpenDapp: url => _internal.onRequestOpenDapp(url)
@@ -625,7 +638,7 @@ StatusSectionLayout {
         zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
         onAddNewTab: _internal.addNewTab()
         onAddNewDownloadTab: _internal.addNewDownloadTab()
-        onGoIncognito: (checked) => webViewContext.setIncognitoCurrent(checked)
+        onGoIncognito: (checked) => root.applyIncognitoMode(checked)
         onZoomIn: webViewContext.changeZoomCurrent(0.1)
         onZoomOut: webViewContext.changeZoomCurrent(-0.1)
         onResetZoomFactor: webViewContext.resetZoomCurrent()
@@ -661,7 +674,7 @@ StatusSectionLayout {
         supportsFind: _internal.currentTabSupportsFindInPage
         onLaunchFindBar: _internal.showFindBar()
 
-        onGoIncognito: checked => webViewContext.setIncognitoCurrent(checked)
+        onGoIncognito: checked => root.applyIncognitoMode(checked)
         onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)
     }
 
@@ -770,6 +783,7 @@ StatusSectionLayout {
         userUID: root.userUID
         featureEnabled: root.dappsEnabled
         connectorController: root.dappsEnabled ? root.connectorController : null
+        currentTabIncognito: _internal.currentTabIncognito
         httpUserAgent: {
             if (localAccountSensitiveSettings.compatibilityMode) {
                 // Google doesn't let you connect if the user agent is Chrome-ish and doesn't satisfy some sort of hidden requirement

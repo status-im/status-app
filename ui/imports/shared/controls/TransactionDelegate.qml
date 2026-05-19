@@ -240,6 +240,14 @@ StatusListItem {
             return ""
         }
         readonly property bool isSecondIconVisible: secondIconSource !== ""
+
+        readonly property bool stackTitleRow: {
+            if (!root.statusListItemTitleArea || !root.statusListItemTitle)
+                return false
+            const iconsItem = root.statusListItemTitleIcons.item
+            const iconsW = iconsItem ? iconsItem.width : 0
+            return (root.statusListItemTitle.implicitWidth + 4 + iconsW) > root.statusListItemTitleArea.width
+        }
     }
 
     function getSubtitle(allAccounts, description) {
@@ -251,6 +259,13 @@ StatusListItem {
             }
             communityInfo += root.communityName
             return qsTr("%1 (community asset) from %2 on %3").arg(root.transactionValue).arg(communityInfo).arg(root.networkName)
+        }
+
+        if (!modelData.symbol && !root.isNFT) {
+            if (!!modelData.tokenAddress) {
+                return qsTr("Unknown token (%1)").arg(modelData.tokenAddress)
+            }
+            return qsTr("Unknown token")
         }
 
         switch(d.txType) {
@@ -415,6 +430,7 @@ StatusListItem {
     statusListItemTitleArea.anchors.rightMargin: root.rightPadding
     statusListItemTitle.font.weight: Font.DemiBold
     statusListItemTitle.font.pixelSize: root.loading ? d.loadingPixelSize : d.titlePixelSize
+    statusListItemTitle.wrapMode: Text.WordWrap
 
     // title icons and date
     statusListItemTitleIcons.sourceComponent: Row {
@@ -477,7 +493,11 @@ StatusListItem {
                         if (root.loading) {
                             return "dummy text"
                         } else if (!root.isModelDataValid || root.isNFT) {
-                            return ""
+                            return "-"
+                        }
+
+                        if (!modelData.symbol && !root.isNFT) {
+                            return root.currenciesStore.formatCurrencyAmount(root.cryptoValue, "")
                         }
 
                         switch(d.txType) {
@@ -499,7 +519,7 @@ StatusListItem {
                         case Constants.TransactionType.Bridge:
                         case Constants.TransactionType.Approve:
                         default:
-                            return ""
+                            return "-"
                         }
                     }
                     horizontalAlignment: Qt.AlignRight
@@ -527,7 +547,7 @@ StatusListItem {
                         if (root.loading) {
                             return "dummy text"
                         } else if (!root.isModelDataValid || root.isNFT || !modelData.symbol) {
-                            return ""
+                            return "-"
                         }
 
                         switch(d.txType) {
@@ -541,7 +561,7 @@ StatusListItem {
                         case Constants.TransactionType.Bridge:
                         case Constants.TransactionType.Approve:
                         default:
-                            return ""
+                            return "-"
                         }
                     }
                     font.pixelSize: root.loading ? d.loadingPixelSize : 12
@@ -606,6 +626,25 @@ StatusListItem {
     ]
 
     states: [
+        State {
+            name: "narrowTitleRow"
+            when: d.stackTitleRow && root.state !== "header"
+            AnchorChanges {
+                target: root.statusListItemTitleIcons
+                anchors.left: root.statusListItemTitleArea.left
+                anchors.top: root.statusListItemTitle.bottom
+                anchors.verticalCenter: undefined
+            }
+            PropertyChanges {
+                target: root.statusListItemTitleIcons
+                anchors.leftMargin: 0
+                anchors.topMargin: 2
+            }
+            AnchorChanges {
+                target: root.statusListItemTagsRowLayout
+                anchors.top: root.statusListItemTitleIcons.bottom
+            }
+        },
         State {
             name: "header"
             PropertyChanges {

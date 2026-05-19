@@ -53,7 +53,7 @@ ComboBox {
 
         readonly property int defaultDelegateHeight: 34
 
-        readonly property string searchTextLowerCase: searchBox.input.text
+        readonly property string searchTextLowerCase: searchBox.text
 
         readonly property SQUtils.ModelChangeTracker sourceModelTracker: SQUtils.ModelChangeTracker {
             model: root.sourceModel
@@ -210,14 +210,8 @@ ComboBox {
                 Layout.leftMargin: Theme.halfPadding
                 Layout.rightMargin: Theme.halfPadding
                 Layout.bottomMargin: 12
-                minimumHeight: d.defaultDelegateHeight
-                maximumHeight: d.defaultDelegateHeight
-                input.edit.font.pixelSize: root.font.pixelSize
-                input.placeholder.font.pixelSize: root.font.pixelSize
-                input.asset.width: 16
-                input.asset.height: 16
-                topPadding: 0
-                bottomPadding: 0
+                Layout.preferredHeight: d.defaultDelegateHeight
+                font.pixelSize: root.font.pixelSize
                 placeholderText: qsTr("Collection, community, name or #")
             }
             StatusListView {

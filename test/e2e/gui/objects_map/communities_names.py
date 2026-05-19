@@ -216,8 +216,9 @@ editPermissionView_In_StatusItemSelector = {"container": mainWindow_editPermissi
 editPermissionView_whoHoldsSwitch_StatusSwitch = {"checkable": True, "container": mainWindow_editPermissionView_EditPermissionView, "id": "whoHoldsSwitch", "type": "StatusSwitch", "unnamed": 1, "visible": True}
 # Legacy: top-level overlay TextEdit — unreliable since HoldingsDropdown uses SearchBox + inner edit (see holdingsDropdown_*).
 edit_TextEdit = {"container": statusDesktop_mainWindow_overlay, "type": "TextEdit", "unnamed": 1, "visible": True}
-holdingsDropdown_SearchBox = {"container": statusDesktop_mainWindow_overlay, "type": "SearchBox", "unnamed": 1}
-holdingsDropdown_assetSearch_TextEdit = {"container": holdingsDropdown_SearchBox, "id": "edit", "type": "TextEdit", "unnamed": 1}
+# HoldingsDropdown (Who holds +) opens ExtendedDropdownContent with SearchBox; inner TextEdit id is "edit" (StatusBaseInput).
+holdingsDropdown_SearchBox = {"container": statusDesktop_mainWindow_overlay, "id": "searcher", "type": "SearchBox", "unnamed": 1, "visible": True}
+holdingsDropdown_assetSearch_TextEdit = {"container": statusDesktop_mainWindow_overlay, "id": "searcher", "type": "SearchBox", "unnamed": 1, "visible": True}
 inputValue_StyledTextField = {"container": statusDesktop_mainWindow_overlay, "id": "inputValue", "type": "StatusTextField", "unnamed": 1, "visible": True}
 o_TokenItem = {"container": statusDesktop_mainWindow_overlay, "index": 0, "type": "TokenItem", "unnamed": 1, "visible": True}
 add_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "addButton", "type": "StatusButton", "visible": True}

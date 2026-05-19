@@ -26,6 +26,7 @@ QtObject:
     events: EventEmitter
     threadpool: ThreadPool
     timeoutInMilliseconds: int
+    messengerStartScheduled: bool
 
   proc delete*(self: Service)
   proc newService*(events: EventEmitter, threadpool: ThreadPool): Service =
@@ -39,12 +40,35 @@ QtObject:
       createDir(app_constants.ROOTKEYSTOREDIR)
 
   proc startMessenger*(self: Service) =
-    let response = status_general.startMessenger()
-    if response.result.contains("activityCenterNotifications"):
-      let notifications = JsonNode(%{"notifications": response.result["activityCenterNotifications"]})
-      let activityCenterNotificationsTuple = parseActivityCenterNotifications(notifications)
-      self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_RECEIVED,
-        ActivityCenterNotificationsArgs(activityCenterNotifications: activityCenterNotificationsTuple[1]))
+    if self.messengerStartScheduled:
+      return
+    self.messengerStartScheduled = true
+    let arg = AsyncStartMessengerTaskArg(
+      tptr: asyncStartMessengerTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncStartMessengerDone",
+    )
+    self.threadpool.start(arg)
+
+  proc onAsyncStartMessengerDone(self: Service, response: string) {.slot.} =
+    var startError = ""
+    try:
+      let rpcResponseObj = response.parseJson
+
+      if rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != "":
+        raise newException(CatchableError, rpcResponseObj{"error"}.getStr)
+
+      let responseResult = rpcResponseObj{"response"}
+      if not responseResult.isNil and responseResult.kind == JObject and
+          responseResult.contains("activityCenterNotifications"):
+        let notifications = JsonNode(%{"notifications": responseResult["activityCenterNotifications"]})
+        let activityCenterNotificationsTuple = parseActivityCenterNotifications(notifications)
+        self.events.emit(SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_RECEIVED,
+          ActivityCenterNotificationsArgs(activityCenterNotifications: activityCenterNotificationsTuple[1]))
+    except Exception as e:
+      startError = e.msg
+      error "error:", procName="startMessenger", errName = e.name, errDesription = startError
+    self.events.emit(SIGNAL_MESSENGER_STARTED, MessengerStartedArgs(error: startError))
 
   proc logout*(self: Service) =
     discard status_general.logout()

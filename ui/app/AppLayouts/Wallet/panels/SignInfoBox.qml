@@ -34,8 +34,10 @@ ColumnLayout {
         statusListItemTitle.font.pixelSize: Theme.additionalTextSize
         statusListItemTitle.elide: Text.ElideMiddle
         statusListItemTitle.customColor: root.primaryTextCustomColor
+        statusListItemTitle.textFormat: Text.PlainText
         subTitle: root.secondaryText
         statusListItemSubTitle.font.pixelSize: Theme.additionalTextSize
+        statusListItemSubTitle.textFormat: Text.PlainText
         asset.name: root.icon
         asset.isImage: true
         asset.bgWidth: 40

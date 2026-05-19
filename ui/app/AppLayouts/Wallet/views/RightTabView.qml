@@ -57,7 +57,7 @@ RightTabBaseView {
     signal launchShareAddressModal()
     signal launchBuyCryptoModal()
     signal launchSwapModal(string groupKey)
-    signal sendTokenRequested(string senderAddress, string gorupKey, int tokenType)
+    signal sendTokenRequested(string senderAddress, string groupKey, int tokenType)
     signal manageNetworksRequested()
 
     signal dappListRequested()
@@ -485,6 +485,7 @@ RightTabBaseView {
                         activeNetworks: root.networksStore.activeNetworks
                         networkFilters: root.networksStore.networkFilters
                         addressFilters: RootStore.addressFilters
+                        unsupportedChainIds: root.networkConnectionStore.unsupportedCollectibleChains
                         sendEnabled: root.networkConnectionStore.walletReadyForTransactionsEnabled && !RootStore.overview.isWatchOnlyAccount && RootStore.overview.canSend
                         filterVisible: filterButton.checked
                         customOrderAvailable: controller.hasSettings

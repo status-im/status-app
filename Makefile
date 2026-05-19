@@ -400,6 +400,11 @@ run-statusq-tests: statusq-tests
 STORYBOOK_SOURCE_PATH := storybook
 STORYBOOK_BUILD_PATH := $(STORYBOOK_SOURCE_PATH)/build/Qt$(QT_VERSION)
 STORYBOOK_CMAKE_CACHE := $(STORYBOOK_BUILD_PATH)/CMakeCache.txt
+ifeq ($(mkspecs),macx)
+ STORYBOOK_BINARY := $(STORYBOOK_BUILD_PATH)/bin/Storybook.app/Contents/MacOS/Storybook
+else
+ STORYBOOK_BINARY := $(STORYBOOK_BUILD_PATH)/bin/Storybook
+endif
 
 $(STORYBOOK_CMAKE_CACHE): | check-qt-dir
 	echo -e "\033[92mConfiguring:\033[39m Storybook"
@@ -423,7 +428,7 @@ storybook-build: | storybook-configure
 
 run-storybook: storybook-build
 	echo -e "\033[92mRunning:\033[39m Storybook"
-	$(STORYBOOK_BUILD_PATH)/bin/Storybook ${ARGS}
+	$(STORYBOOK_BINARY) ${ARGS}
 
 run-storybook-tests: storybook-build
 	echo -e "\033[92mRunning:\033[39m Storybook Tests"

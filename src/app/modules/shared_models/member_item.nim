@@ -37,6 +37,8 @@ proc initMemberItem*(
   requestToJoinLoading: bool = false,
   airdropAddress: string = "",
   membershipRequestState: MembershipRequestState = MembershipRequestState.None,
+  compressedPubKey: string = "",
+  emojiHash: string = "[]",
 ): MemberItem =
   result = MemberItem()
   result.memberRole = memberRole
@@ -61,6 +63,8 @@ proc initMemberItem*(
     isBlocked = isBlocked,
     contactRequest = contactRequest,
     trustStatus = trustStatus,
+    compressedPubKey = compressedPubKey,
+    emojiHash = emojiHash,
   )
 
 proc `$`*(self: MemberItem): string =

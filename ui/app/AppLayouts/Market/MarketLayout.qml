@@ -31,6 +31,9 @@ StatusSectionLayout {
     /** property to enable/disable swap button **/
     property bool swapEnabled: true
 
+    /** Number of items per page **/
+    readonly property int pageSize: 100
+
     /** signal to request the launch of Swap Modal **/
     signal requestLaunchSwap()
     /** signal to request fetching tokens as per selected page and page size **/
@@ -42,15 +45,14 @@ StatusSectionLayout {
 
     QtObject {
         id: d
-        readonly property int pageSize: 100
-        property int startIndex: ((root.currentPage - 1) * d.pageSize) + 1
+        property int startIndex: ((root.currentPage - 1) * root.pageSize) + 1
 
         // Read-only flag that turns true when the component enters a “compact” layout automatically on resize.
         readonly property bool compactMode: root.width < 600
     }
 
     onCurrentPageChanged: listView.positionViewAtBeginning()
-    Component.onCompleted: root.fetchMarketTokens(1, d.pageSize)
+    Component.onCompleted: root.fetchMarketTokens(1, root.pageSize)
 
     centerPanel: ColumnLayout {
         anchors.fill: parent
@@ -99,10 +101,10 @@ StatusSectionLayout {
             footer: MarketFooter {
                 objectName: "marketFooter"
                 width: listView.width
-                pageSize: d.pageSize
+                pageSize: root.pageSize
                 totalCount: root.totalTokensCount
                 currentPage: root.currentPage
-                onSwitchPage: root.fetchMarketTokens(pageNumber, d.pageSize)
+                onSwitchPage: root.fetchMarketTokens(pageNumber, root.pageSize)
                 visible: listView.count > 0 && !root.loading
                 height: visible ? implicitHeight : 0
                 compactMode: d.compactMode
@@ -117,7 +119,7 @@ StatusSectionLayout {
 
             objectName: "loadingModel"
 
-            model: d.pageSize
+            model: root.pageSize
 
             delegate: MarketLoadingTokenDelegate {
                 width: listView.width

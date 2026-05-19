@@ -14,8 +14,6 @@ import utils
 import shared.panels
 import shared.controls
 
-import "../stores"
-
 StatusModal {
     id: popup
 
@@ -28,6 +26,7 @@ StatusModal {
     signal renameAccountRequested(string newName, string newColorId, string newEmoji)
 
     headerSettings.title: qsTr("Rename %1").arg(popup.accountName)
+    padding: Theme.padding
 
     property int marginBetweenInputs: 30
 
@@ -37,7 +36,7 @@ StatusModal {
 
     Connections {
         enabled: popup.opened
-        target: emojiPopup
+        target: root.emojiPopup ?? null
         function onEmojiSelected(emojiText: string, atCursor: bool) {
             popup.contentItem.accountNameInput.input.asset.emoji = emojiText
         }
@@ -46,21 +45,19 @@ StatusModal {
     contentItem: Column {
         property alias accountNameInput: accountNameInput
 
-        width: popup.width
         spacing: marginBetweenInputs
-        topPadding: Theme.padding
 
         StatusInput {
             id: accountNameInput
 
-            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width
             input.edit.objectName: "renameAccountNameInput"
             input.isIconSelectable: true
             placeholderText: qsTr("Enter an account name...")
             input.text: popup.accountName
             input.asset.emoji: popup.accountEmoji
             input.asset.color: Utils.getColorForId(Theme.palette, popup.accountColorId)
-            input.asset.name: !popup.accountEmoji ? "filled-account": ""
+            input.asset.name: popup.accountEmoji || "filled-account"
 
             validationMode: StatusInput.ValidationMode.Always
 
@@ -84,20 +81,18 @@ StatusModal {
 
         StatusColorSelectorGrid {
             id: accountColorInput
-            anchors.top: selectedColor.bottom
-            anchors.topMargin: 10
-            anchors.horizontalCenter: parent.horizontalCenter
-            model: Theme.palette.customisationColorsArray
+
+            width: parent.width
             titleText: qsTr("COLOUR")
             selectedColor: Utils.getColorForId(Theme.palette, popup.accountColorId)
             selectedColorIndex: {
                 for (let i = 0; i < model.length; i++) {
-                    if(model[i] === popup.accountColorId)
+                    if(model[i].toString() === selectedColor)
                         return i
                 }
                 return -1
             }
-            onSelectedColorChanged: {
+            onColorSelected: color => {
                 if(selectedColor !== popup.accountColorId) {
                     accountNameInput.input.asset.color = selectedColor
                 }
@@ -112,7 +107,6 @@ StatusModal {
 
     rightButtons: [
         StatusButton {
-            id: saveBtn
             objectName: "renameAccountModalSaveBtn"
             text: qsTr("Change Name")
 
@@ -130,8 +124,8 @@ StatusModal {
 
             onClicked : {
                 if (!accountNameInput.valid) {
-                     return
-                 }
+                    return
+                }
 
                 popup.renameAccountRequested(accountNameInput.text, Utils.getIdForColor(Theme.palette, accountColorInput.selectedColor), accountNameInput.input.asset.emoji)
                 popup.close()

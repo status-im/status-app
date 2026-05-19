@@ -259,8 +259,7 @@ method getDetails*(self: Module, sectionId: string, chatId: string): string =
     jsonObject["sColor"] = %* ""
   else:
     # Community
-    let community = self.controller.getCommunityById(sectionId)
-
+    let community {.cursor.} = self.controller.getCommunityById(sectionId)
     jsonObject["sType"] = %* ChatSectionType.Community
     jsonObject["sName"] = %* community.name
     jsonObject["sImage"] = %* community.images.thumbnail

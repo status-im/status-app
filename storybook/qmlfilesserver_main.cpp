@@ -39,11 +39,6 @@ int main(int argc, char *argv[])
         QML_IMPORT_ROOT u"/../ui/imports"_s,
     }, QML_IMPORT_ROOT u"/pages"_s, true, &app);
 
-    const QStringList selectors{"+noWebEngine"};
-    qInfo() << "Using file selectors:" << selectors;
-
-    server->setFileSelectors(selectors);
-
     if (!server->start(port))
         return EXIT_FAILURE;
 

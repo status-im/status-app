@@ -26,8 +26,6 @@ QtObject {
         readonly property int baseSepoliaChainId: 84532
         readonly property int lineaMainnetChainId: 59144
         readonly property int lineaSepoliaChainId: 59141
-        readonly property int polygonZkEvmMainnetChainId: 1101
-        readonly property int polygonZkEvmCardonaChainId: 2442
         readonly property int unichainMainnetChainId: 130
         readonly property int unichainSepoliaChainId: 1301
         readonly property int katanaMainnetChainId: 747474
@@ -45,13 +43,11 @@ QtObject {
         readonly property int blastMainnetChainId: 81457
         readonly property int blastSepoliaChainId: 168587773
         readonly property int hoodiChainId: 560048
-        readonly property int statusNetworkSepoliaChainId: 1660990954
         readonly property int binanceSmartChainMainnetChainId: 56
         readonly property int binanceSmartChainTestnetChainId: 97
 
         // Used for new chain advertisment
-        readonly property var newChains: [chains.polygonZkEvmMainnetChainId,
-            chains.unichainMainnetChainId,
+        readonly property var newChains: [chains.unichainMainnetChainId,
             chains.katanaMainnetChainId,
             chains.inkMainnetChainId,
             chains.abstractMainnetChainId,
@@ -737,15 +733,6 @@ QtObject {
         readonly property string market: "market"
     }
 
-    // Replicates src/app_service/service/network_connection/service.nim table UNSUPPORTED_MULTICHAIN_FEATURES
-    readonly property var unsupportedMultichainFeatures: {
-        "collectibles": [
-            chains.statusNetworkSepoliaChainId,
-            chains.binanceSmartChainMainnetChainId,
-            chains.binanceSmartChainTestnetChainId
-        ]
-    }
-
     readonly property QtObject walletConstants: QtObject {
         readonly property string maxNumberOfAccountsTitle: qsTr("Limit of 20 accounts reached")
         readonly property string maxNumberOfAccountsContent: qsTr("Remove any account to add a new one.")
@@ -823,7 +810,6 @@ QtObject {
         readonly property string optimism: "oeth"
         readonly property string base: "base"
         readonly property string linea: "linea"
-        readonly property string polygonZkEvm: "polygon-zkevm"
         readonly property string unichain: "unichain"
         readonly property string katana: "katana"
         readonly property string ink: "ink"
@@ -832,7 +818,6 @@ QtObject {
         readonly property string soneium: "soneium"
         readonly property string scroll: "scroll"
         readonly property string blast: "blast"
-        readonly property string status: "status"
         readonly property string binanceSmartChain: "bsc"
     }
 
@@ -848,8 +833,6 @@ QtObject {
         readonly property string sepoliaBase: "Base Sepolia"
         readonly property string linea: "Linea"
         readonly property string sepoliaLinea: "Linea Sepolia"
-        readonly property string polygonZkEvm: "Polygon zkEVM"
-        readonly property string cardonaPolygonZkEvm: "Polygon zkEVM Cardona"
         readonly property string unichain: "Unichain"
         readonly property string sepoliaUnichain: "Unichain Sepolia"
         readonly property string katana: "Katana"
@@ -866,8 +849,6 @@ QtObject {
         readonly property string sepoliaScroll: "Scroll Sepolia"
         readonly property string blast: "Blast"
         readonly property string sepoliaBlast: "Blast Sepolia"
-        readonly property string status: "Status Network"
-        readonly property string sepoliaStatus: "Status Network Sepolia"
         readonly property string binanceSmartChain: "BNB Smart Chain"
         readonly property string testnetBinanceSmartChain: "BNB Smart Chain Testnet"
     }
@@ -878,7 +859,6 @@ QtObject {
         readonly property string optimism: "https://optimistic.etherscan.io"
         readonly property string base: "https://basescan.org"
         readonly property string linea: "https://lineascan.build"
-        readonly property string polygonZkEvm: "https://www.oklink.com/polygon-zkevm"
         readonly property string unichain: "https://unichain.blockscout.com"
         readonly property string katana: "https://katanascan.com"
         readonly property string ink: "https://explorer.inkonchain.com"
@@ -894,7 +874,6 @@ QtObject {
         readonly property string sepoliaOptimism: "https://sepolia-optimism.etherscan.io"
         readonly property string sepoliaBase: "https://sepolia.basescan.org"
         readonly property string sepoliaLinea: "https://sepolia.lineascan.build"
-        readonly property string cardonaPolygonZkEvm: "https://www.oklink.com/polygon-zkevm-testnet"
         readonly property string sepoliaUnichain: "https://unichain-sepolia.blockscout.com"
         readonly property string bokutoKatana: "https://bokuto.katanascan.com"
         readonly property string sepoliaInk: "https://explorer-sepolia.inkonchain.com"
@@ -903,7 +882,6 @@ QtObject {
         readonly property string minatoSoneium: "https://soneium-minato.blockscout.com"
         readonly property string sepoliaScroll: "https://sepolia.scrollscan.com"
         readonly property string sepoliaBlast: "https://sepolia.blastscan.io"
-        readonly property string sepoliaStatus: "https://sepoliascan.status.network"
         readonly property string testnetBinanceSmartChain: "https://testnet.bscscan.com"
         readonly property string addressPath: "address"
         readonly property string txPath: "tx"
@@ -918,7 +896,6 @@ QtObject {
         readonly property string optimism: "optimism"
         readonly property string base: "base"
         readonly property string linea: "linea"
-        readonly property string polygonZkEvm: "polygon-zkevm" //opensea does not support polygon zkEVM yet
         readonly property string unichain: "unichain"
         readonly property string katana: "katana" // opensea does not support katana yet
         readonly property string ink: "ink" // opensea does not support ink yet
@@ -934,7 +911,6 @@ QtObject {
         readonly property string sepoliaOptimism: "optimism-sepolia" // testnet not supported
         readonly property string sepoliaBase: "base-sepolia" // testnet not supported
         readonly property string sepoliaLinea: "linea-sepolia" // testnet not supported
-        readonly property string sepoliaStatus: "status-sepolia" // testnet not supported
     }
 
     readonly property string api_request: "api-request"

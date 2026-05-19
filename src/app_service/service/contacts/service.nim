@@ -137,6 +137,59 @@ QtObject:
     self.contacts[contact.dto.id] = contact
     self.contactsStatus[contact.dto.id] = StatusUpdateDto(publicKey: contact.dto.id, statusType: StatusType.Unknown)
 
+  proc seedFromChatMembers*(self: Service, members: seq[MemberSeed]) =
+    for member in members:
+      if member.id.len == 0:
+        continue
+      if self.contacts.hasKey(member.id):
+        var dto = self.contacts[member.id].dto
+        let isCurrentUser = self.contacts[member.id].isCurrentUser
+        var changed = false
+        if dto.alias.len == 0 and member.alias.len > 0:
+          dto.alias = member.alias
+          changed = true
+        if dto.colorId == 0 and member.colorId != 0:
+          dto.colorId = member.colorId
+          changed = true
+        if dto.compressedPubKey.len == 0 and member.compressedPubKey.len > 0:
+          dto.compressedPubKey = member.compressedPubKey
+          changed = true
+        if (dto.emojiHash.len == 0 or dto.emojiHash == "[]") and
+           member.emojiHash.len > 0 and member.emojiHash != "[]":
+          dto.emojiHash = member.emojiHash
+          changed = true
+        if changed:
+          # Rebuild ContactDetails so derived fields (defaultDisplayName,
+          # optionalName, colorId) reflect the fresh data
+          self.contacts[member.id] = self.constructContactDetails(dto, isCurrentUser)
+      elif member.id != singletonInstance.userProfile.getPubKey():
+        let alias =
+          if member.alias.len > 0: member.alias
+          else: status_accounts.generateAlias(member.id).result.getStr
+        let colorId = member.colorId
+        let compressedPubKey =
+          if member.compressedPubKey.len > 0: member.compressedPubKey
+          else: status_accounts.compressPk(member.id).result
+        let emojiHash =
+          if member.emojiHash.len > 0 and member.emojiHash != "[]": member.emojiHash
+          else: procs_from_visual_identity_service.getEmojiHashAsJson(member.id)
+        let placeholder = self.constructContactDetails(
+          ContactsDto(
+            id: member.id,
+            alias: alias,
+            ensVerified: false,
+            added: false,
+            blocked: false,
+            hasAddedUs: false,
+            trustStatus: TrustStatus.Unknown,
+            compressedPubKey: compressedPubKey,
+            colorId: colorId,
+            emojiHash: emojiHash,
+          ),
+          isCurrentUser = false,
+        )
+        self.addContact(placeholder)
+
   proc fetchContacts*(self: Service) =
     let arg = AsyncFetchContactsTaskArg(
       tptr: asyncFetchContactsTask,
@@ -296,7 +349,7 @@ QtObject:
     result.defaultDisplayName = name
     result.optionalName = optionalName
     result.icon = icon
-    result.colorId = procs_from_visual_identity_service.colorIdOf(contactDto.id)
+    result.colorId = contactDto.colorId
     result.isCurrentUser = isCurrentUser
     result.dto = contactDto
 
@@ -309,16 +362,15 @@ QtObject:
     if len(pubkey) == 0:
       return
 
-    ## Returns contact details based on passed id (public key)
-    ## If we don't have stored contact localy or in the db then we create it based on public key.
     if self.contacts.hasKey(pubkey):
       return self.contacts[pubkey]
 
     if pubkey == singletonInstance.userProfile.getPubKey():
-      # If we try to get the contact details of ourselves, just return our own info
+      # If we try to get the contact details of ourselves, just return our own info.
+      let myPubKey = singletonInstance.userProfile.getPubKey()
       return self.constructContactDetails(
         ContactsDto(
-          id: singletonInstance.userProfile.getPubKey(),
+          id: myPubKey,
           displayName: singletonInstance.userProfile.getDisplayName(),
           name: singletonInstance.userProfile.getPreferredName(),
           alias: singletonInstance.userProfile.getUsername(),
@@ -330,6 +382,9 @@ QtObject:
           ),
           trustStatus: TrustStatus.Trusted,
           bio: self.settingsService.getBio(),
+          colorId: procs_from_visual_identity_service.colorIdOf(myPubKey),
+          compressedPubKey: status_accounts.compressPk(myPubKey).result,
+          emojiHash: procs_from_visual_identity_service.getEmojiHashAsJson(myPubKey),
         ),
         isCurrentUser = true,
       )
@@ -353,6 +408,9 @@ QtObject:
         blocked: false,
         hasAddedUs: false,
         trustStatus: TrustStatus.Unknown,
+        compressedPubKey: status_accounts.compressPk(pubkey).result,
+        colorId: procs_from_visual_identity_service.colorIdOf(pubkey),
+        emojiHash: procs_from_visual_identity_service.getEmojiHashAsJson(pubkey),
       ),
       isCurrentUser = false,
     )
@@ -361,6 +419,20 @@ QtObject:
 
   proc getContactById*(self: Service, id: string): ContactsDto =
     return self.getContactDetails(id).dto
+
+  proc getContactColorId*(self: Service, id: string): int =
+    var pubkey = id
+
+    if service_conversion.isCompressedPubKey(id):
+      pubkey = status_accounts.decompressPk(id).result
+
+    if len(pubkey) == 0:
+      return 0
+
+    if self.contacts.hasKey(pubkey):
+      return self.contacts[pubkey].colorId
+
+    return procs_from_visual_identity_service.colorIdOf(pubkey)
 
   proc getStatusForContactWithId*(self: Service, publicKey: string): StatusUpdateDto =
     if publicKey == singletonInstance.userProfile.getPubKey():
@@ -384,11 +456,29 @@ QtObject:
     let tempRes = self.getContactNameAndImageInternal(contactDto)
     return (tempRes.name, tempRes.image, tempRes.largeImage)
 
+  proc preserveCachedEnrichment(self: Service, contact: ContactsDto): ContactsDto =
+    ## Defense-in-depth: an incoming wire ContactsDto can in principle have
+    ## empty visual-identity fields. Merge only empty fields
+    result = contact
+    if not self.contacts.hasKey(contact.id):
+      return
+    let cached = self.contacts[contact.id].dto
+    if result.alias.len == 0:
+      result.alias = cached.alias
+    if result.colorId == 0:
+      result.colorId = cached.colorId
+    if result.compressedPubKey.len == 0:
+      result.compressedPubKey = cached.compressedPubKey
+    if result.emojiHash.len == 0 or result.emojiHash == "[]":
+      if cached.emojiHash.len > 0 and cached.emojiHash != "[]":
+        result.emojiHash = cached.emojiHash
+
   proc saveContact(self: Service, contact: ContactsDto) =
     # we must keep local contacts updated
-    self.contacts[contact.id] = self.constructContactDetails(
-      contact,
-      isCurrentUser = contact.id == singletonInstance.userProfile.getPubKey()
+    let merged = self.preserveCachedEnrichment(contact)
+    self.contacts[merged.id] = self.constructContactDetails(
+      merged,
+      isCurrentUser = merged.id == singletonInstance.userProfile.getPubKey()
     )
 
   # fromBackup is used to indicate that the contact was loaded from a backup
@@ -401,9 +491,10 @@ QtObject:
       if contact.removed and not self.contacts[publicKey].dto.removed:
         singletonInstance.globalEvents.showContactRemoved("Contact removed", fmt "You removed {contact.displayName} as a contact", contact.id)
         signal = SIGNAL_CONTACT_REMOVED
+    let merged = self.preserveCachedEnrichment(contact)
     self.contacts[publicKey] = self.constructContactDetails(
-      contact,
-      isCurrentUser = contact.id == singletonInstance.userProfile.getPubKey()
+      merged,
+      isCurrentUser = merged.id == singletonInstance.userProfile.getPubKey()
     )
     self.events.emit(signal, ContactArgs(contactId: publicKey, fromBackup: fromBackup))
 

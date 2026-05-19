@@ -18,3 +18,12 @@ macro updateRoleWithValue*(propertyName: untyped, roleName: untyped, value: unty
     if self.items[ind].`propertyName` != `value`:
       self.items[ind].`propertyName` = `value`
       roles.add(ModelRole.`roleName`.int)
+
+# Like updateRole but skip the assignment when the incoming string value is
+# empty AND the existing value is non-empty. Use for fields that are
+# deterministic and cannot change once set
+macro updateRolePreserveOnEmpty*(propertyName: untyped, roleName: untyped): untyped =
+  quote do:
+    if `propertyName`.len > 0 and self.items[ind].`propertyName` != `propertyName`:
+      self.items[ind].`propertyName` = `propertyName`
+      roles.add(ModelRole.`roleName`.int)

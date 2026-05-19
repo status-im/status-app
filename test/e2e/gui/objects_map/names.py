@@ -140,7 +140,7 @@ completeAndDeleteSeedPhraseButton = {"container": statusDesktop_mainWindow_overl
 """Confirm recovery phrase modal"""
 confirmRecoveryPhraseModal = {"container": statusDesktop_mainWindow_overlay, "type": "BackupSeedphraseVerify", "unnamed": 1, "visible": True}
 seedInput = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("seedInput_*"), "type": "SeedphraseVerifyInput", "visible": True}
-continueButton = {"container": backUpSeedModal, "text": "Continue", "type": "StatusButton", "unnamed": 1, "visible": True}
+continueButton = {"container": statusDesktop_mainWindow_overlay, "text": "Continue", "type": "StatusButton", "unnamed": 1, "visible": True}
 
 """Keep or delete recovery phrase"""
 keepOrDeleteRecoveryPhraseModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "BackupSeedModal", "type": "PopupItem", "visible": True}
@@ -578,9 +578,7 @@ o_DropShadow = {"container": statusDesktop_mainWindow_overlay, "type": "DropShad
 # Emoji Popup
 emojiPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusEmojiPopup", "type": "PopupItem",
               "visible": True}
-mainWallet_AddEditAccountPopup_AccountEmojiSearchBox = {"container": statusDesktop_mainWindow,
-                                                        "objectName": "StatusEmojiPopup_searchBox", "type": "TextEdit",
-                                                        "visible": True}
+mainWallet_AddEditAccountPopup_AccountEmojiSearchBox = {"container": statusDesktop_mainWindow_overlay, "echoMode": 0, "objectName": "StatusEmojiPopup_searchBox", "type": "SearchBox", "visible": True}
 mainWallet_AddEditAccountPopup_AccountEmoji = {"container": statusDesktop_mainWindow, "type": "StatusEmoji",
                                                "visible": True}
 

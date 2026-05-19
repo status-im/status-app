@@ -23,6 +23,9 @@ proc delete*(self: Controller) =
   discard
 
 proc init*(self: Controller) =
+  let chains = self.networkConnectionService.loadUnsupportedCollectibleChains()
+  self.delegate.onUnsupportedCollectibleChainsLoaded(chains)
+
   self.events.on(SIGNAL_CONNECTION_UPDATE) do(e:Args):
     let args = NetworkConnectionsArgs(e)
     self.delegate.networkConnectionStatusUpdate(args.website, args.completelyDown, ord(args.connectionState), args.chainIds, args.lastCheckedAt)

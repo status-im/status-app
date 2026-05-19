@@ -8,6 +8,7 @@ import shared.popups
 import shared.stores
 
 import mainui
+import mainui.sectionLoaders
 import AppLayouts.stores as AppStores
 import AppLayouts.Profile.stores
 
@@ -57,9 +58,8 @@ Window {
     readonly property KeycardStateStore keycardStateStore: KeycardStateStore {}
     readonly property bool portraitLayout: height > width
     readonly property bool suppressKeyboardResize: SQUtils.Utils.isMobile
-                                                && loader.item
-                                                && loader.item.objectName === "appMain"
-                                                && loader.item.rootStore
+                                                && !!loader.item
+                                                && !!loader.item.rootStore
                                                 && loader.item.rootStore.activeSectionType === Constants.appSection.browser
     property bool biometricFlowPending: false
 
@@ -85,6 +85,18 @@ Window {
 
     SafeArea.additionalMargins.bottom: additionalBottomMargin
 
+    // On Android 15 taking a screenshot and invoking sharing popup triggers full-screen mode. It's not restored back
+    // when exiting sharing popup. The change is not reflected in visibility property, so there is no direct way to detect it.
+    // The workaround here tracks safe area margins to detect full screen mode to restore to maximized mode immediately.
+    readonly property int saBottom: SafeArea.margins.bottom
+    readonly property int saLeft: SafeArea.margins.left
+    readonly property int saRight: SafeArea.margins.right
+
+    onSaBottomChanged: if (SQUtils.Utils.isAndroid && saBottom === 0) applicationWindow.showMaximized()
+    onSaLeftChanged: if (SQUtils.Utils.isAndroid && saLeft === 0) applicationWindow.showMaximized()
+    onSaRightChanged: if (SQUtils.Utils.isAndroid && saRight === 0) applicationWindow.showMaximized()
+    // end of screenshot full-screen bug workaround
+
     objectName: "mainWindow"
     color: Theme.palette.background
     title: {
@@ -108,7 +120,8 @@ Window {
     }
 
     function contentLoaded() {
-        if (SQUtils.Utils.isAndroid) {
+        if (SQUtils.Utils.isAndroid && !d.splashDismissed) {
+            d.splashDismissed = true
             SystemUtils.setMainWindowReady()
         }
     }
@@ -179,7 +192,8 @@ Window {
 
     QtObject {
         id: d
-
+        property bool appMainTriggered: false
+        property bool splashDismissed: false
         property var mockedKeycardControllerWindow
         property double lastShakeShareMs: 0
         function runMockedKeycardControllerWindow() {
@@ -280,18 +294,61 @@ Window {
         }
     }
 
-    function moveToAppMain() {
-        Global.appIsReady = true
-        loader.setSource("app/mainui/AppMain.qml", {
-            "objectName": "appMain",
-            "utilsStore": applicationWindow.utilsStore,
-            "featureFlagsStore": applicationWindow.featureFlagsStore,
-            "languageStore": applicationWindow.languageStore,
-            "visible": Qt.binding(() => !startupOnboardingLoader.active),
-            "systemTrayIconAvailable": Qt.binding(() => systemTray.available),
-            "keychain": appKeychain
-        })
+    AppMainLoader {
+        id: loader
 
+        anchors.fill: parent
+        anchors.topMargin: SQUtils.Utils.isMacOS && !applicationWindow.portraitLayout ? 0
+                                                                                      : parent.SafeArea.margins.top
+        anchors.bottomMargin: parent.SafeArea.margins.bottom
+        anchors.leftMargin: applicationWindow.portraitLayout ? parent.SafeArea.margins.left
+                                                  : 0 // the PrimaryNavSidebar is visible in landscape and already has it
+        anchors.rightMargin: parent.SafeArea.margins.right
+
+        opacity: 0
+        visible: !startupOnboardingLoader.active
+
+        Behavior on opacity {
+            NumberAnimation { duration: 120 }
+        }
+
+        active: d.appMainTriggered && (typeof mainModule !== "undefined") && (mainModule?.mainLoaded ?? false)
+
+        featureFlagsStore: applicationWindow.featureFlagsStore
+        languageStore: applicationWindow.languageStore
+        keychain: appKeychain
+        systemTrayIconAvailable: systemTray.available
+        utilsStore: applicationWindow.utilsStore
+
+        onLoaded: {
+            Global.appIsReady = true
+            appMainFadeIn.running = true
+            startupOnboardingLoader.active = false
+            splashScreenLoader.active = false
+            applicationWindow.contentLoaded()
+            if (d.showSkippedBiometricFlow)
+                loader.item.showEnableBiometricsFlow()
+        }
+
+        onStatusChanged: {
+            if (status === Loader.Error) {
+                console.error("Failed to load AppMain.qml")
+                Qt.quit()
+            }
+        }
+    }
+
+    OpacityAnimator {
+        id: appMainFadeIn
+        target: loader
+        from: 0
+        to: 1
+        duration: 120
+        running: false
+    }
+
+    function moveToAppMain() {
+        d.appMainTriggered = true
         d.runMockedKeycardControllerWindow()
     }
 
@@ -509,41 +566,6 @@ Window {
     }
 
     Loader {
-        id: loader
-
-        anchors.fill: parent
-        anchors.topMargin: SQUtils.Utils.isMacOS && !applicationWindow.portraitLayout ? 0
-                                                                                      : parent.SafeArea.margins.top
-        anchors.bottomMargin: parent.SafeArea.margins.bottom
-        anchors.leftMargin: applicationWindow.portraitLayout ? parent.SafeArea.margins.left
-                                                  : 0 // the PrimaryNavSidebar is visible in landscape and already has it
-        anchors.rightMargin: parent.SafeArea.margins.right
-        opacity: active ? 1.0 : 0.0
-        visible: (opacity > 0.0001)
-        Behavior on opacity { NumberAnimation { duration: 120 }}
-        /* only unload splash screen once appmain is loaded else we see
-        an empty screen for a sec until it is loaded */
-        onLoaded: {
-            startupOnboardingLoader.active = false
-            splashScreenLoader.active = false
-            if (item) {
-                applicationWindow.contentLoaded()
-                if (d.showSkippedBiometricFlow) {
-                    // IN case of Login via syncing, request to show Biometrics Page after onboarding
-                    item.showEnableBiometricsFlow()
-                }
-            }
-        }
-
-        onStatusChanged: {
-            if (status === Loader.Error) {
-                console.error("Failed to load AppMain.qml")
-                Qt.quit()
-            }
-        }
-    }
-
-    Loader {
         id: startupOnboardingLoader
 
         anchors.fill: parent
@@ -561,23 +583,33 @@ Window {
             item.keychain = appKeychain
             item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
             item.biometricFlowPending = Qt.binding(() => applicationWindow.biometricFlowPending)
-
-            item.appReady.connect(() => {
-                applicationWindow.appIsReady = true
-            })
-            item.storeAppStateRequested.connect(applicationWindow.storeAppState)
-            item.requestMoveToAppMain.connect(moveToAppMain)
-            item.biometricFlowStarted.connect(() => {
-                applicationWindow.biometricFlowPending = true
-            })
-            item.skippedBiometricFlow.connect((available) => {
-                d.showSkippedBiometricFlow = available
-            })
-            item.profileSelected.connect((keyUid) => {
-                localAppSettings.selectedProfileKeyUid = keyUid
-            })
             splashScreenLoader.active = false
             applicationWindow.contentLoaded()
+            Qt.callLater(() => QmlCompiler.precompileAll()) // precompile all components after onboarding is loaded to speed up the login flow
+        }
+    }
+
+    Connections {
+        target: startupOnboardingLoader.item
+        ignoreUnknownSignals: true
+
+        function onAppReady() {
+            applicationWindow.appIsReady = true
+        }
+        function onStoreAppStateRequested() {
+            applicationWindow.storeAppState()
+        }
+        function onRequestMoveToAppMain() {
+            applicationWindow.moveToAppMain()
+        }
+        function onBiometricFlowStarted() {
+            applicationWindow.biometricFlowPending = true
+        }
+        function onSkippedBiometricFlow(available) {
+            d.showSkippedBiometricFlow = available
+        }
+        function onProfileSelected(keyUid) {
+            localAppSettings.selectedProfileKeyUid = keyUid
         }
     }
 

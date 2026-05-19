@@ -49,6 +49,8 @@ static SystemUtilsInternal* s_systemUtilsInternal = nullptr;
 
 #ifdef Q_OS_IOS
 static void iosShakeDetected();
+static void handleIOSFilePickerAccepted(const QStringList& fileUrls);
+static void handleIOSFilePickerRejected();
 #endif
 
 #ifdef Q_OS_ANDROID
@@ -104,6 +106,7 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
 #ifdef Q_OS_IOS
     // Set up iOS keyboard tracking
     ::setupIOSKeyboardTracking();
+    ::setIOSFilePickerCallbacks(handleIOSFilePickerAccepted, handleIOSFilePickerRejected);
     
     // Poll iOS keyboard state and emit property change signals
     m_iosKeyboardPollTimer = new QTimer(this);
@@ -396,6 +399,25 @@ void SystemUtilsInternal::setupIOSKeyboardTracking()
 #endif
 }
 
+void SystemUtilsInternal::openIOSDocumentPicker(bool selectMultiple, const QStringList& nameFilters) const
+{
+#ifdef Q_OS_IOS
+    ::presentIOSDocumentPicker(selectMultiple, nameFilters);
+#else
+    Q_UNUSED(selectMultiple);
+    Q_UNUSED(nameFilters);
+#endif
+}
+
+void SystemUtilsInternal::openIOSPhotoLibraryPicker(bool selectMultiple) const
+{
+#ifdef Q_OS_IOS
+    ::presentIOSPhotoLibraryPicker(selectMultiple);
+#else
+    Q_UNUSED(selectMultiple);
+#endif
+}
+
 void SystemUtilsInternal::iosShareFile(const QUrl& fileUrl) const
 {
 #ifdef Q_OS_IOS
@@ -566,6 +588,22 @@ static void iosShakeDetected()
         qInfo() << "[iOS Shake] SystemUtilsInternal: shakeDetected signal emitted";
         emit s_systemUtilsInternal->shakeDetected();
     }, Qt::QueuedConnection);
+}
+
+static void handleIOSFilePickerAccepted(const QStringList& fileUrls)
+{
+    if (!s_systemUtilsInternal)
+        return;
+    QMetaObject::invokeMethod(s_systemUtilsInternal, &SystemUtilsInternal::iosFilePickerAccepted,
+                              Qt::QueuedConnection, fileUrls);
+}
+
+static void handleIOSFilePickerRejected()
+{
+    if (!s_systemUtilsInternal)
+        return;
+    QMetaObject::invokeMethod(s_systemUtilsInternal, &SystemUtilsInternal::iosFilePickerRejected,
+                              Qt::QueuedConnection);
 }
 #endif
 

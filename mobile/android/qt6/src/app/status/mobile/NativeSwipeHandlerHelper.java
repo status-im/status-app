@@ -28,6 +28,8 @@ public class NativeSwipeHandlerHelper {
     private boolean swiping = false;
     private int touchSlopPx = 0;
     private View passthroughTarget;
+    private boolean dismissTapMode = false;
+    private float startRawY = 0.0f;
 
     // Handler rect in parent pixels (contentView coordinates).
     private float handlerX = 0.0f;
@@ -38,6 +40,7 @@ public class NativeSwipeHandlerHelper {
     private static native void nativeOnSwipeBegan(long ptr, float velocityX);
     private static native void nativeOnSwipeChanged(long ptr, float deltaX, float velocityX);
     private static native void nativeOnSwipeEnded(long ptr, float deltaX, float velocityX, boolean canceled);
+    private static native void nativeOnTapToDismiss(long ptr);
 
     public NativeSwipeHandlerHelper(long ptr, Activity activity) {
         this.nativePtr = ptr;
@@ -72,17 +75,19 @@ public class NativeSwipeHandlerHelper {
 
                 if (action == MotionEvent.ACTION_DOWN) {
                     // The overlay view is sized/positioned to the swipe rect, so any DOWN here is in-bounds.
-                    final float x = event.getX();
                     final float rawX = event.getRawX();
+                    final float rawY = event.getRawY();
 
                     active = true;
                     swiping = false;
                     activePointerId = event.getPointerId(0);
                     startRawX = rawX;
+                    startRawY = rawY;
                     lastRawX = rawX;
                     lastEventTimeMs = event.getEventTime();
                     lastVx = 0.0f;
-                    passthroughTarget = findPassthroughTarget();
+                    // Full-window dismiss mode must not forward to WebView, or taps never reach Qt.
+                    passthroughTarget = dismissTapMode ? null : findPassthroughTarget();
 
                     if (velocityTracker != null) {
                         velocityTracker.recycle();
@@ -113,8 +118,8 @@ public class NativeSwipeHandlerHelper {
                 }
 
                 final int idx = activePointerId >= 0 ? event.findPointerIndex(activePointerId) : 0;
-                final float x = idx >= 0 ? event.getX(idx) : event.getX();
                 final float rawX = idx >= 0 ? event.getRawX(idx) : event.getRawX();
+                final float rawY = idx >= 0 ? event.getRawY(idx) : event.getRawY();
                 final long t = event.getEventTime();
                 final long dt = Math.max(1, t - lastEventTimeMs);
                 final float vx = ((rawX - lastRawX) / (float) dt) * 1000.0f;
@@ -142,9 +147,19 @@ public class NativeSwipeHandlerHelper {
 
                 if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
                     final float dx = rawX - startRawX;
+                    final float dy = rawY - startRawY;
+                    // Slightly looser than touchSlop so small jitter still counts as a tap.
+                    final int tapSlop = Math.max(touchSlopPx * 2, touchSlopPx + 16);
+                    final boolean tapLike = (dx * dx + dy * dy) <= (float) tapSlop * tapSlop;
+                    final boolean tapToDismiss = dismissTapMode
+                            && action == MotionEvent.ACTION_UP
+                            && tapLike;
+
                     // Use the last MOVE velocity; UP often has vx≈0 because there's no delta.
                     if (swiping) {
                         nativeOnSwipeEnded(nativePtr, dx, lastVx, action == MotionEvent.ACTION_CANCEL);
+                    } else if (tapToDismiss) {
+                        nativeOnTapToDismiss(nativePtr);
                     } else if (passthroughTarget != null) {
                         dispatchToTarget(passthroughTarget, event, action);
                     }
@@ -168,34 +183,42 @@ public class NativeSwipeHandlerHelper {
         });
     }
 
-    public void updateTouchOverlayBounds(float xPx, float yPx, float widthPx, float heightPx) {
-        handlerX = xPx;
-        handlerY = yPx;
-        handlerWidth = widthPx;
-        handlerHeight = heightPx;
+    /** Applies dismiss mode and overlay geometry on the UI thread (posted from Qt/JNI). */
+    public void applyTouchOverlayState(boolean dismissMode, float xPx, float yPx, float widthPx, float heightPx) {
+        if (activity == null)
+            return;
 
-        if (activity != null) {
-            activity.runOnUiThread(() -> {
-                if (touchOverlayView == null) return;
-                // Re-attach if rotation/activity changes detached the view.
-                if (touchOverlayView.getParent() == null) {
-                    ViewGroup contentView = (ViewGroup) activity.getWindow().getDecorView().findViewById(android.R.id.content);
-                    if (contentView != null) {
-                        contentView.addView(touchOverlayView);
-                    }
-                }
+        activity.runOnUiThread(() -> {
+            dismissTapMode = dismissMode;
+            handlerX = xPx;
+            handlerY = yPx;
+            handlerWidth = widthPx;
+            handlerHeight = heightPx;
 
-                ViewGroup.LayoutParams lp = touchOverlayView.getLayoutParams();
-                if (lp != null) {
-                    lp.width = (int) Math.max(1, handlerWidth);
-                    lp.height = (int) Math.max(1, handlerHeight);
-                    touchOverlayView.setLayoutParams(lp);
-                }
-                touchOverlayView.setX(handlerX);
-                touchOverlayView.setY(handlerY);
-                updateGestureExclusion();
-            });
-        }
+            if (touchOverlayView == null)
+                return;
+
+            ViewGroup contentView = (ViewGroup) activity.getWindow().getDecorView().findViewById(android.R.id.content);
+            if (touchOverlayView.getParent() == null && contentView != null) {
+                contentView.addView(touchOverlayView);
+            }
+
+            ViewGroup.LayoutParams lp = touchOverlayView.getLayoutParams();
+            if (lp != null) {
+                lp.width = (int) Math.max(1, handlerWidth);
+                lp.height = (int) Math.max(1, handlerHeight);
+                touchOverlayView.setLayoutParams(lp);
+            }
+            touchOverlayView.setX(handlerX);
+            touchOverlayView.setY(handlerY);
+            touchOverlayView.setElevation(dismissMode ? 48f : 1f);
+
+            ViewGroup parent = (ViewGroup) touchOverlayView.getParent();
+            if (parent != null && dismissMode) {
+                parent.bringChildToFront(touchOverlayView);
+            }
+            updateGestureExclusion();
+        });
     }
 
     private void updateGestureExclusion() {
@@ -271,5 +294,4 @@ public class NativeSwipeHandlerHelper {
         });
     }
 }
-
 

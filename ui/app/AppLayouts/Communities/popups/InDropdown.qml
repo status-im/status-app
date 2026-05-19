@@ -56,7 +56,7 @@ StatusDropdown {
     }
 
     onAboutToShow: {
-        searcher.input.edit.forceActiveFocus()
+        searcher.forceActiveFocus()
         listView.Layout.preferredHeight = Math.min(
                        listView.implicitHeight, 420)
     }
@@ -157,11 +157,7 @@ StatusDropdown {
             id: searcher
 
             Layout.fillWidth: true
-
-            topPadding: 0
-            bottomPadding: 0
-            minimumHeight: 36
-            maximumHeight: 36
+            Layout.preferredHeight: 36
         }
 
         StatusListItem {

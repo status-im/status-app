@@ -66,7 +66,9 @@ StatusDialog {
     objectName: "paymentRequestModal"
 
     width: 480
+    padding: 0
     topPadding: Theme.bigPadding
+    horizontalPadding: Theme.bigPadding
     modal: true
     backgroundColor: Theme.palette.statusModal.backgroundColor
 
@@ -242,8 +244,6 @@ StatusDialog {
                 emoji: !!account ? account.emoji : ""
                 walletColor: !!account ? account.color : ""
 
-                leftPadding: 0
-                rightPadding: 0
                 statusListItemTitle.customColor: Theme.palette.directColor1
                 enabled: false
             }
@@ -288,8 +288,6 @@ StatusDialog {
                 asset.isImage: true
                 asset.name: Assets.svg(network.iconUrl)
                 subTitle: qsTr("Only")
-                leftPadding: 0
-                rightPadding: 0
                 statusListItemTitle.customColor: Theme.palette.directColor1
                 bgColor: "transparent"
                 enabled: false

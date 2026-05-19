@@ -210,48 +210,52 @@ method addGroupMembers*(self: Module, pubKeys: seq[string]) =
 method removeGroupMembers*(self: Module, pubKeys: seq[string]) =
   self.controller.removeGroupMembers(pubKeys)
 
-method updateMembersList*(self: Module, membersToReset: seq[ChatMember] = @[]) =
-  let reset = membersToReset.len > 0
-  var members: seq[ChatMember]
-  if reset:
-    members = membersToReset
-  else:
-    if self.controller.belongsToCommunity():
-      let myCommunity = self.controller.getMyCommunity()
-
-      if self.isSectionMemberList:
-        members = myCommunity.members
+proc resolveMembersForUpdate(self: Module, membersToReset: seq[ChatMember]):
+    tuple[members: seq[ChatMember], reset: bool, returnEarly: bool] =
+  result.reset = membersToReset.len > 0
+  if result.reset:
+    result.members = membersToReset
+    return
+  if self.controller.belongsToCommunity():
+    let community {.cursor.} = self.controller.getMyCommunity()
+    if self.isSectionMemberList:
+      result.members = community.members
+    else:
+      # TODO: when a new channel is added, chat may arrive earlier and we have no up to date community yet
+      # see log here: https://github.com/status-im/status-app/issues/14442#issuecomment-2120756598
+      # should be resolved in https://github.com/status-im/status-app/issues/11694
+      let myChatId = self.controller.getMyChatId()
+      let chat {.cursor.} = community.getCommunityChat(myChatId)
+      if not chat.tokenGated:
+        # No need to get the members, this channel is not encrypted and can use the section member list
+        self.isPublicCommunityChannel = true
+        result.returnEarly = true
+        return
+      self.isPublicCommunityChannel = false
+      if chat.members.len > 0:
+        result.members = chat.members
       else:
-        # TODO: when a new channel is added, chat may arrive earlier and we have no up to date community yet
-        # see log here: https://github.com/status-im/status-app/issues/14442#issuecomment-2120756598
-        # should be resolved in https://github.com/status-im/status-app/issues/11694
-        let myChatId = self.controller.getMyChatId()
-        let chat = myCommunity.getCommunityChat(myChatId)
-        if not chat.tokenGated:
-          # No need to get the members, this channel is not encrypted and can use the section member list
-          self.isPublicCommunityChannel = true
+        if chat.missingEncryptionKey:
+          # We don't have the encryption keys, so we can't show the members
+          result.returnEarly = true
           return
-        self.isPublicCommunityChannel = false
-        if chat.members.len > 0:
-          members = chat.members
-        else:
-          if chat.missingEncryptionKey:
-            # We don't have the enryption keys, so we can't show the members
-            return
-          # The channel now has a permisison, but the re-eval wasn't performed yet. Show all members for now
-          members = myCommunity.members
+        # The channel now has a permission, but the re-eval wasn't performed yet. Show all members for now
+        result.members = community.members
+  if result.members.len == 0:
+    result.members = self.controller.getMyChat().members
 
-    if members.len == 0:
-      members = self.controller.getMyChat().members
+method updateMembersList*(self: Module, membersToReset: seq[ChatMember] = @[]) =
+  let resolved = self.resolveMembersForUpdate(membersToReset)
+  if resolved.returnEarly:
+    return
 
   var memberItems: seq[MemberItem] = @[]
-
-  for member in members:
-    let (doAdd, item) = self.processChatMember(member, reset)
+  for member in resolved.members:
+    let (doAdd, item) = self.processChatMember(member, resolved.reset)
     if doAdd:
       memberItems.add(item)
 
-  if reset:
+  if resolved.reset:
     self.view.model().setItems(memberItems)
   else:
     self.view.model().addItems(memberItems)

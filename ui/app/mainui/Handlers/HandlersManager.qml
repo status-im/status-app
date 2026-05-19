@@ -47,6 +47,7 @@ QtObject {
 
     required property ChatStores.RootStore rootChatStore
 
+    required property ProfileStores.AboutStore aboutStore
     required property ProfileStores.EnsUsernamesStore ensUsernamesStore
     required property ProfileStores.PrivacyStore privacyStore
 
@@ -212,6 +213,12 @@ QtObject {
             destroyOnClose: true
             hasPermission: PushNotifications.status === PushNotifications.Granted
 
+            onClosed: {
+                appMainLocalSettings.enablePushNotificationsFreshInstallSeen = true
+                appMainLocalSettings.enablePushNotificationsDontAskAgain = enablePushNotificationsPopup.dontAskAgain
+                appMainLocalSettings.enablePushNotificationsLastShownVersion = currentMinorVersion()
+            }
+
             onContinueRequested: {
                 PushNotifications.request()
 
@@ -247,6 +254,27 @@ QtObject {
                 }
             }
         }
+    }
+
+    function currentMinorVersion(): string {
+        const match = /^v?(\d+)\.(\d+)/.exec(root.aboutStore.getCurrentVersion() || "")
+        if (!match) {
+            return ""
+        }
+        return "%1.%2".arg(match[1]).arg(match[2])
+    }
+
+    function isAtLeastMinorVersion(version: string, minimum: string): bool {
+        const versionParts = version.split(".").map(Number)
+        const minimumParts = minimum.split(".").map(Number)
+        if (versionParts.length < 2 || minimumParts.length < 2 ||
+                isNaN(versionParts[0]) || isNaN(versionParts[1]) ||
+                isNaN(minimumParts[0]) || isNaN(minimumParts[1])) {
+            return false
+        }
+
+        return versionParts[0] > minimumParts[0] ||
+                (versionParts[0] === minimumParts[0] && versionParts[1] >= minimumParts[1])
     }
 
     function showEnablePushNotificationsPopup() {
@@ -286,6 +314,18 @@ QtObject {
             return
         }
 
+        const version = currentMinorVersion()
+        const shouldDisplayAfterFreshInstall = !appMainLocalSettings.enablePushNotificationsFreshInstallSeen
+        const shouldDisplayAfterMinorUpdate = !appSettings.notifSettingAllowNotifications &&
+                !appMainLocalSettings.enablePushNotificationsDontAskAgain &&
+                version !== "" &&
+                isAtLeastMinorVersion(version, "2.38") &&
+                appMainLocalSettings.enablePushNotificationsLastShownVersion !== version
+
+        if (!shouldDisplayAfterFreshInstall && !shouldDisplayAfterMinorUpdate) {
+            return
+        }
+
         // Delay the popup display to avoid false negative when the status is unknown
         // If might take a while to get the status, so we delay the popup display
         // Platform specifics - iOS might take a while to get the status, so we delay the popup display
@@ -296,6 +336,55 @@ QtObject {
         }
 
         showEnablePushNotificationsPopup()
+    }
+
+    // Flat API — delegates to the nested handler instances above. Callers should
+    // prefer these over `popupHandler.<nestedHandler>.<method>()` chains.
+    function launchSwap() {
+        swapModalHandler.launchSwap()
+    }
+    function launchSwapSpecific(data) {
+        swapModalHandler.launchSwapSpecific(data)
+    }
+
+    function openSend() {
+        sendModalHandler.openSend()
+    }
+    function transferOwnership(tokenId, senderAddress) {
+        sendModalHandler.transferOwnership(tokenId, senderAddress)
+    }
+    function buyStickerPack(packId, price) {
+        sendModalHandler.buyStickerPack(packId, price)
+    }
+    function sendToRecipient(address) {
+        sendModalHandler.sendToRecipient(address)
+    }
+    function sendToken(senderAddress, groupKey, tokenType) {
+        sendModalHandler.sendToken(senderAddress, groupKey, tokenType)
+    }
+    function connectUsername(ensName, ownerAddress) {
+        sendModalHandler.connectUsername(ensName, ownerAddress)
+    }
+    function registerUsername(ensName, chainId) {
+        sendModalHandler.registerUsername(ensName, chainId)
+    }
+    function releaseUsername(ensName, senderAddress, chainId) {
+        sendModalHandler.releaseUsername(ensName, senderAddress, chainId)
+    }
+    function openTokenPaymentRequest(recipientAddress, tokenKey, rawAmount) {
+        sendModalHandler.openTokenPaymentRequest(recipientAddress, tokenKey, rawAmount)
+    }
+
+    function openGifs(params, cbOnGifSelected, cbOnClose) {
+        statusGifPopupHandler.openGifs(params, cbOnGifSelected, cbOnClose)
+    }
+
+    // Disambiguated names — both nested handlers expose `openPopup()`.
+    function openThirdpartyServicesPopup() {
+        thirdpartyServicesPopupHandler.openPopup()
+    }
+    function openEnableBiometricsPopup() {
+        enableBiometricsPopupHandler.openPopup()
     }
 
     readonly property EnableBiometricsPopupHandler enableBiometricsPopupHandler: EnableBiometricsPopupHandler {

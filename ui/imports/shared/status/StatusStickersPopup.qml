@@ -26,8 +26,12 @@ StatusDropdown {
     signal stickerSelected(string hashId, string packId, string url)
     signal buyClicked(string packId, string price)
 
+    fillHeightOnBottomSheet: true
+
     QtObject {
         id: d
+
+        readonly property int minimumContentHeight: 440
 
         // FIXME: move me to store
         readonly property int installedPacksCount: root.store.stickersModuleInst.numInstalledStickerPacks
@@ -57,8 +61,11 @@ StatusDropdown {
     }
 
     enabled: !!d.recentStickers && !!d.stickerPackList
-    width: 360
-    height: 440
+
+    padding: 0
+    implicitWidth: 360
+    implicitHeight: Math.max(contentItem.implicitHeight, d.minimumContentHeight) + topPadding + bottomPadding
+
     background: Rectangle {
         radius: Theme.radius
         color: Theme.palette.background
@@ -86,8 +93,6 @@ StatusDropdown {
         footerContent.visible = true
         stickersContainer.visible = true
     }
-
-    padding: 0
 
     contentItem: ColumnLayout {
         spacing: 0
@@ -206,6 +211,7 @@ StatusDropdown {
         Item {
             id: stickersContainer
             Layout.fillWidth: true
+            Layout.fillHeight: true
             Layout.leftMargin: 4
             Layout.topMargin: 4
             Layout.bottomMargin: 0
@@ -299,8 +305,8 @@ StatusDropdown {
 
             StatusRoundButton {
                 id: btnAddStickerPack
-                Layout.preferredWidth: 24
-                Layout.preferredHeight: 24
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
                 icon.name: "add"
                 type: StatusFlatRoundButton.Type.Secondary
                 loading: d.stickerPacksLoading

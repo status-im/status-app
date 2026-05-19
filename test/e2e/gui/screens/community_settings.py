@@ -566,6 +566,7 @@ class PermissionsSettingsView(QObject):
     def __init__(self):
         super(PermissionsSettingsView, self).__init__(communities_names.mainWindow_PermissionsSettingsPanel)
         self._who_holds_checkbox = CheckBox(communities_names.editPermissionView_whoHoldsSwitch_StatusSwitch)
+        self._who_holds_asset_field = TextEdit(communities_names.holdingsDropdown_assetSearch_TextEdit)
         self._who_holds_amount_field = TextEdit(communities_names.inputValue_StyledTextField)
         self._is_allowed_to_option_button = Button(communities_names.customPermissionListItem)
         self._in_general_checkbox = Button(communities_names.checkBox_StatusCheckBox)
@@ -651,9 +652,71 @@ class PermissionsSettingsView(QObject):
     @allure.step('Set asset and amount')
     def set_who_holds_asset_and_amount(self, asset: str, amount: str, index: int = None):
         if asset:
-            popup = self._open_holdings_popup()
-            popup.search_and_select_asset(asset, index=index)
-            popup.wait_until_list_search_hidden()
+            self.who_holds_plus_button.click()
+            self._who_holds_asset_field.wait_until_appears(15000)
+            self._who_holds_asset_field.set_text_property(asset)
+            # Wait for search results to appear
+            time.sleep(0.5)
+            # Wait for asset items to appear with timeout
+            started_at = time.monotonic()
+            asset_items = []
+            while not asset_items and (time.monotonic() - started_at) < configs.timeouts.UI_LOAD_TIMEOUT_SEC:
+                asset_items = driver.findAllObjects(self._asset_item.real_name)
+                if not asset_items:
+                    time.sleep(0.2)
+            assert asset_items, f'Assets are not displayed'
+
+            # Filter items by asset name (check title, name, and symbol attributes)
+            matching_indices = []
+            available_attributes = []
+            for i, item in enumerate(asset_items):
+                item_title = getattr(item, 'title', '')
+                item_name = getattr(item, 'name', '')
+                item_symbol = getattr(item, 'symbol', '')
+                # Collect available attributes for debugging
+                if i == 0:
+                    available_attributes = [attr for attr in ['title', 'name', 'symbol']
+                                          if getattr(item, attr, None) is not None]
+                # Check if asset matches any of the attributes
+                if (asset.lower() in str(item_title).lower() or
+                    asset.lower() in str(item_name).lower() or
+                    asset.lower() in str(item_symbol).lower()):
+                    matching_indices.append(i)
+
+            if not matching_indices:
+                # Get sample attributes for better error message
+                sample_attrs = []
+                if asset_items:
+                    sample_item = asset_items[0]
+                    for attr in ['title', 'name', 'symbol']:
+                        val = getattr(sample_item, attr, None)
+                        if val:
+                            sample_attrs.append(f'{attr}="{val}"')
+                raise AssertionError(
+                    f'No assets found matching "{asset}". '
+                    f'Found {len(asset_items)} items. '
+                    f'Sample attributes: {", ".join(sample_attrs) if sample_attrs else "none"}'
+                )
+
+            # If there are duplicates, use index to select the right one
+            selected_index_in_matching = 0
+            if len(matching_indices) > 1:
+                if index is not None:
+                    # Select by index (0-based)
+                    assert 0 <= index < len(matching_indices), \
+                        f'Index {index} is out of range. Found {len(matching_indices)} matching items'
+                    selected_index_in_matching = index
+                else:
+                    # If no index provided, select the first one
+                    selected_index_in_matching = 0
+            else:
+                selected_index_in_matching = 0
+
+            # Use index in real_name to select the specific item
+            item_index_in_full_list = matching_indices[selected_index_in_matching]
+            self._asset_item.real_name['index'] = item_index_in_full_list
+            self._asset_item.click()
+            self._who_holds_asset_field.wait_until_hidden()
             self._who_holds_amount_field.set_text_property(amount)
             self.click_add_button_who_holds()
         return self

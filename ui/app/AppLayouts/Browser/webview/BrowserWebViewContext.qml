@@ -24,6 +24,13 @@ QtObject {
     required property var bookmarksStore
     required property var downloadsStore
 
+    readonly property var profileManager: _profileManagerLoader.item
+
+    readonly property Loader _profileManagerLoader: Loader {
+        active: !root.isMobile
+        source: "../adapters/ProfileManager.qml"
+    }
+
     required property var determineRealURLFn
     required property var downloadRequestHandler
     required property var sslErrorHandler
@@ -208,6 +215,7 @@ QtObject {
 
             bookmarksStore: root.bookmarksStore
             downloadsStore: root.downloadsStore
+            profileManager: root.profileManager
             webChannel: root.webChannel
             enableJsLogs: root.isDebugEnabled
             localAccountSensitiveSettings: root.browserSettings

@@ -264,7 +264,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     find_library(WebKit WebKit)
     find_library(UserNotifications UserNotifications)
     find_library(CoreMotion CoreMotion)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion})
+    find_library(PhotosUI PhotosUI)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion} ${PhotosUI})
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/shareutils_ios.mm
@@ -296,7 +297,7 @@ if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
       MobileWebView
 
       GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
-      GIT_TAG 9b39e091f71402eb83319794367f867bf0908ff7
+      GIT_TAG 71e6bf981ee07284e1f4b4e39decff9540173d80
       SOURCE_SUBDIR mobilewebview
     )
     FetchContent_MakeAvailable(MobileWebView)

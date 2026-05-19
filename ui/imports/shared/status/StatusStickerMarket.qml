@@ -40,15 +40,15 @@ Item {
     StatusGridView {
         id: availableStickerPacks
         objectName: "stickerMarketStatusGridView"
-        width: parent.width
-        height: 380
         anchors.left: parent.left
         anchors.leftMargin: Theme.padding
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.topMargin: Theme.padding
+        anchors.bottom: footer.top
+
         cellWidth: parent.width - (Theme.padding * 2)
-        cellHeight: height - 72
+        cellHeight: 308
         visible: root.marketVisible
 
         ScrollBar.vertical: StatusScrollBar {}
@@ -191,15 +191,18 @@ Item {
     Item {
         id: footer
         height: 44
-        anchors.top: availableStickerPacks.bottom
+
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
 
         StatusBackButton {
             id: btnBack
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.leftMargin: Theme.padding / 2
-            width: 24
-            height: 24
+            width: 28
+            height: 28
             icon.width: 16
             icon.height: 16
             horizontalPadding: 0

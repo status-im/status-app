@@ -34,6 +34,9 @@ type ContactsDto* = object
   removed*: bool
   trustStatus*: TrustStatus
   contactRequestState*: ContactRequestState
+  colorId*: int
+  compressedPubKey*: string
+  emojiHash*: string
 
 proc `$`(self: Images): string =
   result = fmt"""Images(
@@ -60,6 +63,9 @@ proc `$`*(self: ContactsDto): string =
     removed:{self.removed},
     trustStatus:{self.trustStatus},
     contactRequestState:{self.contactRequestState},
+    colorId:{self.colorId},
+    compressedPubKey:{self.compressedPubKey},
+    emojiHash:{self.emojiHash}
     )"""
 
 proc toImages*(jsonObj: JsonNode): Images =
@@ -127,6 +133,14 @@ proc toContactsDto*(jsonObj: JsonNode): ContactsDto =
   discard jsonObj.getProp("blocked", result.blocked)
   discard jsonObj.getProp("hasAddedUs", result.hasAddedUs)
   discard jsonObj.getProp("Removed", result.removed)
+
+  discard jsonObj.getProp("colorId", result.colorId)
+  discard jsonObj.getProp("compressedKey", result.compressedPubKey)
+
+  result.emojiHash = "[]"
+  var emojiHashNode: JsonNode
+  if jsonObj.getProp("emojiHash", emojiHashNode) and emojiHashNode.kind == JArray:
+    result.emojiHash = $emojiHashNode
 
 proc userExtractedName(contact: ContactsDto): string =
   if(contact.name.len > 0 and contact.ensVerified):

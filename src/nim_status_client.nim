@@ -23,6 +23,10 @@ featureGuard KEYCARD_ENABLED:
 when defined(macosx) and defined(arm64):
   import posix
 
+when defined(android) or defined(ios):
+  # Bypass libc static destructors on shutdown, anyway the OS reclaims process resources.
+  proc cExit(code: cint) {.importc: "_exit", header: "<unistd.h>".}
+
 when defined(windows):
     {.link: "../status.o".}
 
@@ -67,16 +71,6 @@ proc determineStatusAppIconPath(): string =
     return "/../status.png"
 
   return "/../status-dev.png"
-
-proc ensureQmlSelector(selector: string) =
-  let current = getEnv("QT_FILE_SELECTORS")
-  if current.len == 0:
-    putEnv("QT_FILE_SELECTORS", selector)
-    return
-
-  let selectors = current.split(",")
-  if selector notin selectors:
-    putEnv("QT_FILE_SELECTORS", current & "," & selector)
 
 proc prepareLogging() =
   # Outputs logs in the node tab
@@ -190,10 +184,6 @@ proc mainProc() =
 
   ensureDirectories(DATADIR, TMPDIR, LOGDIR)
 
-  # Mobile builds use the mobile selector for browser WebView adapter replacement.
-  when main_constants.IS_MOBILE:
-    ensureQmlSelector("mobile")
-
   let isExperimental = isExperimental()
   let resourcesPath = determineResourcePath()
   let openUri = determineOpenUri()
@@ -274,6 +264,8 @@ proc mainProc() =
     statusFoundation.delete()
     singleInstance.delete()
     app.delete()
+    when defined(android) or defined(ios):
+      cExit(0)
 
   featureGuard SINGLE_STATUS_INSTANCE_ENABLED:
     # Checks below must be always after "defer", in case anything fails destructors will freed a memory.

@@ -32,7 +32,7 @@ QtObject:
 
   # Forward declarations
   proc fetchAllCurrencyFormats(self: Service)
-  proc getCachedCurrencyFormats(self: Service): Table[string, CurrencyFormatDto]
+  proc loadCachedCurrencyFormats(self: Service)
 
   proc delete*(self: Service)
   proc newService*(
@@ -55,9 +55,7 @@ QtObject:
         of "wallet-currency-tick-update-format":
           self.fetchAllCurrencyFormats()
           discard
-    # Load cache from DB
-    self.currencyFormatCache = self.getCachedCurrencyFormats()
-    # Trigger async fetch
+    self.loadCachedCurrencyFormats()
     self.fetchAllCurrencyFormats()
 
   proc jsonToFormatsTable(node: JsonNode) : Table[string, CurrencyFormatDto] =
@@ -66,13 +64,34 @@ QtObject:
     for (key, formatObj) in node.pairs:
       result[key] = formatObj.toCurrencyFormatDto()
 
-  proc getCachedCurrencyFormats(self: Service): Table[string, CurrencyFormatDto] =
+  proc onCachedCurrencyFormatsLoaded(self: Service, response: string) {.slot.} =
     try:
-      let response = backend.getCachedCurrencyFormats()
-      result = jsonToFormatsTable(response.result)
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        return
+
+      var formatsJson: JsonNode
+      discard responseObj.getProp("formats", formatsJson)
+      if formatsJson.isNil or formatsJson.kind == JNull:
+        return
+
+      let formatsPerKey = jsonToFormatsTable(formatsJson)
+      # Don't overwrite entries possibly already populated by a fresher network fetch.
+      for key, format in formatsPerKey:
+        if not self.currencyFormatCache.hasKey(key):
+          self.currencyFormatCache[key] = format
+      self.events.emit(SIGNAL_CURRENCY_FORMATS_UPDATED, CurrencyFormatsUpdatedArgs())
     except Exception as e:
-      let errDesription = e.msg
-      error "error getCachedCurrencyFormats: ", errDesription
+      let errDescription = e.msg
+      error "error onCachedCurrencyFormatsLoaded: ", errDescription
+
+  proc loadCachedCurrencyFormats(self: Service) =
+    let arg = AsyncGetCachedCurrencyFormatsTaskArg(
+      tptr: asyncGetCachedCurrencyFormatsTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onCachedCurrencyFormatsLoaded",
+    )
+    self.threadpool.start(arg)
 
   proc onAllCurrencyFormatsFetched(self: Service, response: string) {.slot.} =
     try:

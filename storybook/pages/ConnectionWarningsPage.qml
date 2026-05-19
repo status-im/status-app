@@ -59,6 +59,7 @@ SplitView {
                         logs.logEvent("NetworkConnectionStore.retryConnection", ["websiteDown"], arguments)
                     }
                     readonly property var networkConnectionModuleInst: QtObject {
+                        readonly property string unsupportedCollectibleChainsJson: "[]"
                         signal networkConnectionStatusUpdate(website: string, completelyDown: bool, connectionState: int, chainIds: string, lastCheckedAtUnix: double)
                     }
                 }

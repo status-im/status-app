@@ -19,6 +19,8 @@ QtObject {
 
     readonly property var networkConnectionModuleInst: networkConnectionModule
 
+    readonly property var unsupportedCollectibleChains: !!networkConnectionModuleInst ? JSON.parse(networkConnectionModuleInst.unsupportedCollectibleChainsJson) : []
+
     property bool isOnline: true
 
     readonly property bool balanceCache: walletSectionAssets.hasBalanceCache

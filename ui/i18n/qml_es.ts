@@ -1012,10 +1012,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Mainnet data verified by Nimbus</source>
-        <translation>Datos de Mainnet verificados por Nimbus</translation>
-    </message>
-    <message>
         <source>Application Logs</source>
         <translation>Registros de la aplicación</translation>
     </message>
@@ -1122,10 +1118,6 @@
     <message>
         <source>enable</source>
         <translation>habilitar</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</source>
-        <translation>¿Estás seguro de que quieres %1 el proxy de Nimbus? Necesitas reiniciar la aplicación para que este cambio surta efecto.</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -3409,34 +3401,6 @@ no compatible</translation>
         <source>Create New Community</source>
         <translation>Crear nueva comunidad</translation>
     </message>
-    <message>
-        <source>Create new community</source>
-        <translation>Crear nueva comunidad</translation>
-    </message>
-    <message>
-        <source>Create a new Status community</source>
-        <translation>Crear una nueva comunidad de Status</translation>
-    </message>
-    <message>
-        <source>Create new</source>
-        <translation>Crear nueva</translation>
-    </message>
-    <message>
-        <source>&apos;%1&apos; import in progress...</source>
-        <translation>Importación de &apos;%1&apos; en progreso...</translation>
-    </message>
-    <message>
-        <source>Import existing Discord community into Status</source>
-        <translation>Importar comunidad de Discord existente a Status</translation>
-    </message>
-    <message>
-        <source>Import existing</source>
-        <translation>Importar existente</translation>
-    </message>
-    <message>
-        <source>Your current import must be finished or cancelled before a new import can be started.</source>
-        <translation>Tu importación actual debe finalizarse o cancelarse antes de que se pueda iniciar una nueva importación.</translation>
-    </message>
 </context>
 <context>
     <name>CommunitiesView</name>
@@ -3979,10 +3943,6 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     <message>
         <source>Confirm</source>
         <translation>Confirmar</translation>
-    </message>
-    <message>
-        <source>Reject</source>
-        <translation>Rechazar</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -6913,8 +6873,20 @@ key pair. Keycard will be required for signing</source>
 <context>
     <name>EnablePushNotificationsPopup</name>
     <message>
-        <source>Enable push notifications</source>
+        <source>Enable notifications</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Receive notification alerts for incoming messages, mentions, and contact requests on your device so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;.&lt;br&gt;&lt;br&gt;Status uses APNs (Apple Push Notification service) solely to deliver notification signals; your end-to-end encrypted message content is never passed through or stored there.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Receive real-time notifications for incoming messages, mentions, and contact requests on your device so you can stay up to date and reply or react without opening the app. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t ask me again</source>
+        <translation type="unfinished">No me vuelvas a preguntar</translation>
     </message>
     <message>
         <source>Maybe later</source>
@@ -6931,14 +6903,6 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Continue</source>
         <translation type="unfinished">Continuar</translation>
-    </message>
-    <message>
-        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -8122,14 +8086,6 @@ Are you sure you want to do this?</source>
     <message>
         <source>Search for name, ENS or address</source>
         <translation type="unfinished">Buscar por nombre, ENS o dirección</translation>
-    </message>
-    <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished">Tu búsqueda es demasiado genial (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished">Tu búsqueda contiene caracteres inválidos (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
     </message>
     <message>
         <source>No following addresses found. Check spelling or whether the address is correct.</source>
@@ -13117,16 +13073,24 @@ al cargar</translation>
         <translation>Múltiples exenciones</translation>
     </message>
     <message>
-        <source>Enable Notifications in macOS Settings</source>
-        <translation>Habilitar notificaciones en Configuración de macOS</translation>
+        <source>Enable notifications</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>To receive Status notifications, make sure you&apos;ve enabled them in your computer&apos;s settings under &lt;b&gt;System Preferences &gt; Notifications&lt;/b&gt;</source>
-        <translation>Para recibir notificaciones de Status, asegúrate de haberlas habilitado en la configuración de tu computadora en &lt;b&gt;Preferencias del Sistema &gt; Notificaciones&lt;/b&gt;</translation>
+        <source>Receive notifications for incoming messages, mentions, and contact requests on your computer so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications directly through your operating system, with no third parties, centralized servers, or intermediaries involved.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Allow Notification Bubbles</source>
-        <translation>Permitir burbujas de notificación</translation>
+        <source>&lt;font color=&apos;%1&apos;&gt;Enable notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messages</source>
@@ -13213,6 +13177,10 @@ al cargar</translation>
         <translation>Enviar una notificación de prueba</translation>
     </message>
     <message>
+        <source>Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Exemptions</source>
         <translation>Exenciones</translation>
     </message>
@@ -13225,27 +13193,15 @@ al cargar</translation>
         <translation>Más reciente</translation>
     </message>
     <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
+        <source>Including:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable mobile push notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>From non-contacts</source>
+        <source>Mentions and replies in communities</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Contact requests and group messages</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Communities</source>
-        <translation type="unfinished">Comunidades</translation>
-    </message>
-    <message>
-        <source>Mentions and replies</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -14859,14 +14815,6 @@ al cargar</translation>
 <context>
     <name>ProfileShowcasePanel</name>
     <message>
-        <source>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Tu búsqueda es demasiado genial (usa solo A-Z y 0-9, guiones y guiones bajos)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>Tu búsqueda contiene caracteres inválidos (usa solo A-Z y 0-9, guiones y guiones bajos)</translation>
-    </message>
-    <message>
         <source>In showcase</source>
         <translation>En la vitrina</translation>
     </message>
@@ -15552,14 +15500,6 @@ al cargar</translation>
         <translation>Buscar por nombre, ENS o dirección</translation>
     </message>
     <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Tu búsqueda es demasiado genial (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>Tu búsqueda contiene caracteres inválidos (usa solo A-Z y 0-9, un solo espacio en blanco, guiones y guiones bajos)</translation>
-    </message>
-    <message>
         <source>Your saved addresses will appear here</source>
         <translation>Tus direcciones guardadas aparecerán aquí</translation>
     </message>
@@ -16221,8 +16161,8 @@ al cargar</translation>
         <translation>Apariencia</translation>
     </message>
     <message>
-        <source>Notifications &amp; Sounds</source>
-        <translation>Notificaciones y Sonidos</translation>
+        <source>Notifications</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Language &amp; Currency</source>
@@ -17583,6 +17523,25 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>StatusTextField</name>
+    <message>
+        <source>Cut</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished">Copiar</translation>
+    </message>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished">Pegar</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>StatusTextMessage</name>
     <message>
         <source>(edited)</source>
@@ -18332,10 +18291,6 @@ This action cannot be undone.</source>
         <translation>Habilitar servicios y reiniciar la aplicación</translation>
     </message>
     <message>
-        <source>Close</source>
-        <translation>Cerrar</translation>
-    </message>
-    <message>
         <source>Browser (browse web-pages, connect dApps)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -18920,6 +18875,14 @@ This action cannot be undone.</source>
         <source>Retry</source>
         <translation>Reintentar</translation>
     </message>
+    <message>
+        <source>Unknown token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown token (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TransactionSettings</name>
@@ -19476,10 +19439,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
         <translation>BaseScan</translation>
     </message>
     <message>
-        <source>Status Explorer</source>
-        <translation></translation>
-    </message>
-    <message>
         <source>BscScan</source>
         <translation>BscScan</translation>
     </message>
@@ -19509,10 +19468,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>LineaScan</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Polygon zkEVM Explorer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

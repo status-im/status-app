@@ -26,6 +26,7 @@ StatusDialog {
         text: qsTr("Are you sure you want to disconnect %1 from all accounts?").arg(dappUrl ? StringUtils.extractDomainFromLink(dappUrl) : dappName)
 
         wrapMode: Text.WrapAnywhere
+        textFormat: Text.PlainText
     }
 
     header: StatusDialogHeader {

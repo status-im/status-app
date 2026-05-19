@@ -4,13 +4,13 @@ import ../../../app/global/global_singleton
 import ../../../app/core/eventemitter
 import ../../../app/core/signals/types
 
-import app_service/common/wallet_constants
 import app_service/service/wallet_account/service as wallet_service
 import app_service/service/network/service as network_service
 import app_service/service/node/service as node_service
 import backend/connection_status as connection_status_backend
 import app_service/service/token/service as token_service
 import backend/collectibles as collectibles_backend
+import backend/wallet as wallet_rpc
 import backend/provider_status_types
 
 logScope:
@@ -40,11 +40,6 @@ const BLOCKCHAINS* = "blockchains"
 const MARKET* = "market"
 const COLLECTIBLES* = "collectibles"
 
-const UNSUPPORTED_MULTICHAIN_FEATURES: Table[string, seq[int]] = {
-  COLLECTIBLES: @[BSC_MAINNET, BSC_TESTNET, STATUS_NETWORK_SEPOLIA]
-}.toTable
-
-
 include  ../../common/json_utils
 
 proc newConnectionStatus(): ConnectionStatus =
@@ -63,8 +58,10 @@ QtObject:
     nodeService: node_service.Service
     tokenService: token_service.Service
     connectionStatus: Table[string, ConnectionStatus]
+    unsupportedCollectibleChains: seq[int]
 
   # Forward declaration
+  proc loadUnsupportedCollectibleChains*(self: Service): seq[int]
   proc updateSimpleStatus(self: Service, website: string, isDown: bool, at: int)
   proc updateMultichainStatus(self: Service, website: string, completelyDown: bool, chaindIdsDown: seq[int], at: int)
   proc getChainIdsDown(self: Service, chainStatusTable: ConnectionStatusNotification, inhibitChainIds: seq[int]): (bool, bool, seq[int], int)
@@ -91,13 +88,24 @@ QtObject:
                                 MARKET: newConnectionStatus(),
                                 COLLECTIBLES: newConnectionStatus()}.toTable
 
+  proc loadUnsupportedCollectibleChains*(self: Service): seq[int] =
+    self.unsupportedCollectibleChains = @[]
+    let res = wallet_rpc.getUnsupportedCollectibleChainIds()
+    if not res.error.isNil:
+      warn "unsupportedCollectibleChains: RPC error", err = res.error.message
+      return self.unsupportedCollectibleChains
+    if res.result.isNil or res.result.kind != JArray:
+      return self.unsupportedCollectibleChains
+    self.unsupportedCollectibleChains = res.result.getElems().mapIt(it.getInt)
+    return self.unsupportedCollectibleChains
+
   proc init*(self: Service) =
     self.events.on(SignalType.NetworksBlockchainHealthChanged.event) do(e:Args):
       var data = NetworksBlockchainHealthChangedSignal(e)
       if self.nodeService.isConnected():
         let website = BLOCKCHAINS
         let chainStateTable = getChainStatusTable(data.fullStatus.statusPerChain)
-        let (allKnown, allDown, chainsDown, at) =  self.getChainIdsDown(chainStateTable, UNSUPPORTED_MULTICHAIN_FEATURES.getOrDefault(website))
+        let (allKnown, allDown, chainsDown, at) =  self.getChainIdsDown(chainStateTable, @[])
         self.updateMultichainStatus(website, allDown, chainsDown, at)
     self.events.on(SignalType.Wallet.event) do(e:Args):
       var data = WalletSignal(e)
@@ -108,7 +116,7 @@ QtObject:
           if self.nodeService.isConnected():
             let website = COLLECTIBLES
             let chainStateTable = fromJson(parseJson(data.message), ConnectionStatusNotification)
-            let (allKnown, allDown, chainsDown, at) = self.getChainIdsDown(chainStateTable, UNSUPPORTED_MULTICHAIN_FEATURES.getOrDefault(website))
+            let (allKnown, allDown, chainsDown, at) = self.getChainIdsDown(chainStateTable, self.unsupportedCollectibleChains)
             if allKnown:
               self.updateMultichainStatus(website, allDown, chainsDown, at)
 

@@ -234,6 +234,9 @@ QtObject:
   proc disconnect*(self: Controller, dAppUrl: string, clientId: string = ""): bool {.slot.} =
     result = self.service.recallDAppPermission(dAppUrl, clientId)
 
+  proc deleteEphemeralDApps*(self: Controller) {.slot.} =
+    discard self.service.deleteEphemeralDApps()
+
   proc nextWcRequestId(self: Controller, prefix: string): string =
     self.wcRequestCounter += 1
     return prefix & "-" & $self.wcRequestCounter

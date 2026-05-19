@@ -29,3 +29,6 @@ method refreshMarketValues*(self: AccessInterface)  {.base.} =
 method refreshCollectiblesValues*(self: AccessInterface)  {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onUnsupportedCollectibleChainsLoaded*(self: AccessInterface, chains: seq[int]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+

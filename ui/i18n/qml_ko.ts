@@ -1009,10 +1009,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Mainnet data verified by Nimbus</source>
-        <translation>Nimbus로 검증된 Mainnet 데이터</translation>
-    </message>
-    <message>
         <source>Application Logs</source>
         <translation>애플리케이션 로그</translation>
     </message>
@@ -1119,10 +1115,6 @@
     <message>
         <source>enable</source>
         <translation>활성화</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</source>
-        <translation>정말로 Nimbus 프록시를 %1하시겠어요? 이 변경 사항을 적용하려면 앱을 다시 시작해야 합니다.</translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>
@@ -3397,34 +3389,6 @@ file format</source>
         <source>Create New Community</source>
         <translation>새 커뮤니티 만들기</translation>
     </message>
-    <message>
-        <source>Create new community</source>
-        <translation>새 커뮤니티 만들기</translation>
-    </message>
-    <message>
-        <source>Create a new Status community</source>
-        <translation>새 Status 커뮤니티 만들기</translation>
-    </message>
-    <message>
-        <source>Create new</source>
-        <translation>새로 만들기</translation>
-    </message>
-    <message>
-        <source>&apos;%1&apos; import in progress...</source>
-        <translation>&apos;%1&apos; 가져오는 중...</translation>
-    </message>
-    <message>
-        <source>Import existing Discord community into Status</source>
-        <translation>기존 Discord 커뮤니티를 Status로 가져오기</translation>
-    </message>
-    <message>
-        <source>Import existing</source>
-        <translation>기존 가져오기</translation>
-    </message>
-    <message>
-        <source>Your current import must be finished or cancelled before a new import can be started.</source>
-        <translation>새 가져오기를 시작하려면, 현재 가져오기를 끝내거나 취소해야 합니다.</translation>
-    </message>
 </context>
 <context>
     <name>CommunitiesView</name>
@@ -3964,10 +3928,6 @@ You will remain logged in, and your recovery phrase will be entirely in your han
     <message>
         <source>Confirm</source>
         <translation>비밀번호 확인</translation>
-    </message>
-    <message>
-        <source>Reject</source>
-        <translation>거절</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -6888,8 +6848,20 @@ key pair. Keycard will be required for signing</source>
 <context>
     <name>EnablePushNotificationsPopup</name>
     <message>
-        <source>Enable push notifications</source>
+        <source>Enable notifications</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Receive notification alerts for incoming messages, mentions, and contact requests on your device so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;.&lt;br&gt;&lt;br&gt;Status uses APNs (Apple Push Notification service) solely to deliver notification signals; your end-to-end encrypted message content is never passed through or stored there.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Receive real-time notifications for incoming messages, mentions, and contact requests on your device so you can stay up to date and reply or react without opening the app. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Don&apos;t ask me again</source>
+        <translation type="unfinished">다시 묻지 않기</translation>
     </message>
     <message>
         <source>Maybe later</source>
@@ -6906,14 +6878,6 @@ key pair. Keycard will be required for signing</source>
     <message>
         <source>Continue</source>
         <translation type="unfinished">계속</translation>
-    </message>
-    <message>
-        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -8093,14 +8057,6 @@ Are you sure you want to do this?</source>
     <message>
         <source>Search for name, ENS or address</source>
         <translation type="unfinished">이름, ENS 또는 주소 검색</translation>
-    </message>
-    <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished">검색어가 너무 쿨해요 (A-Z, 0-9, 공백 하나, 하이픈, 밑줄만 사용하세요)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation type="unfinished">검색어에 유효하지 않은 문자가 있습니다 (A-Z, 0-9, 단일 공백, 하이픈, 밑줄만 사용)</translation>
     </message>
     <message>
         <source>No following addresses found. Check spelling or whether the address is correct.</source>
@@ -13076,16 +13032,24 @@ to load</source>
         <translation>다중 면제</translation>
     </message>
     <message>
-        <source>Enable Notifications in macOS Settings</source>
-        <translation>macOS 설정에서 알림 활성화</translation>
+        <source>Enable notifications</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>To receive Status notifications, make sure you&apos;ve enabled them in your computer&apos;s settings under &lt;b&gt;System Preferences &gt; Notifications&lt;/b&gt;</source>
-        <translation>Status 알림을 받으려면, 컴퓨터 설정의 &lt;b&gt;시스템 환경설정 &gt; 알림&lt;/b&gt;에서 알림이 활성화되어 있는지 확인하세요</translation>
+        <source>Receive notifications for incoming messages, mentions, and contact requests on your computer so you can stay up to date in real time. Customize anytime in &lt;b&gt;Settings → Notifications&lt;/b&gt;&lt;br&gt;&lt;br&gt;Status delivers notifications directly through your operating system, with no third parties, centralized servers, or intermediaries involved.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Allow Notification Bubbles</source>
-        <translation>알림 버블 허용</translation>
+        <source>&lt;font color=&apos;%1&apos;&gt;Enable notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status uses APNs (Apple Push Notification service) solely to deliver notification signals on your device; your end-to-end encrypted message content is never passed through or stored there.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Messages</source>
@@ -13172,6 +13136,10 @@ to load</source>
         <translation>테스트 알림 보내기</translation>
     </message>
     <message>
+        <source>Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Exemptions</source>
         <translation>면제</translation>
     </message>
@@ -13184,27 +13152,15 @@ to load</source>
         <translation>최신순</translation>
     </message>
     <message>
-        <source>&lt;font color=&apos;%1&apos;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
+        <source>Including:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable mobile push notifications</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>From non-contacts</source>
+        <source>Mentions and replies in communities</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Contact requests and group messages</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Communities</source>
-        <translation type="unfinished">커뮤니티</translation>
-    </message>
-    <message>
-        <source>Mentions and replies</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -14812,14 +14768,6 @@ to load</source>
 <context>
     <name>ProfileShowcasePanel</name>
     <message>
-        <source>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>검색어가 너무 힙해요 (A-Z, 0-9, 하이픈과 밑줄만 사용하세요)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
-        <translation>검색어에 유효하지 않은 문자가 포함되어 있습니다 (영문 대문자 A-Z, 숫자 0-9, 하이픈, 밑줄만 사용)</translation>
-    </message>
-    <message>
         <source>In showcase</source>
         <translation>쇼케이스에서</translation>
     </message>
@@ -15503,14 +15451,6 @@ to load</source>
         <translation>이름, ENS 또는 주소 검색</translation>
     </message>
     <message>
-        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>검색어가 너무 쿨해요 (A-Z, 0-9, 공백 하나, 하이픈, 밑줄만 사용하세요)</translation>
-    </message>
-    <message>
-        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
-        <translation>검색어에 유효하지 않은 문자가 있습니다 (A-Z, 0-9, 단일 공백, 하이픈, 밑줄만 사용)</translation>
-    </message>
-    <message>
         <source>Your saved addresses will appear here</source>
         <translation>저장한 주소가 여기 표시됩니다</translation>
     </message>
@@ -16168,8 +16108,8 @@ to load</source>
         <translation>테마</translation>
     </message>
     <message>
-        <source>Notifications &amp; Sounds</source>
-        <translation>알림 및 사운드</translation>
+        <source>Notifications</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Language &amp; Currency</source>
@@ -17523,6 +17463,25 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StatusTextField</name>
+    <message>
+        <source>Cut</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation type="unfinished">클립보드로 복사</translation>
+    </message>
+    <message>
+        <source>Paste</source>
+        <translation type="unfinished">붙여넣기</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>StatusTextMessage</name>
     <message>
         <source>(edited)</source>
@@ -18262,10 +18221,6 @@ This action cannot be undone.</source>
         <translation>서드파티 서비스 활성화</translation>
     </message>
     <message>
-        <source>Close</source>
-        <translation>닫기</translation>
-    </message>
-    <message>
         <source>Disable services and restart the app</source>
         <translation>서비스 비활성화 및 앱 재시작</translation>
     </message>
@@ -18857,6 +18812,14 @@ This action cannot be undone.</source>
         <source>%1 from %2</source>
         <translation>%2에서 %1</translation>
     </message>
+    <message>
+        <source>Unknown token</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown token (%1)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TransactionSettings</name>
@@ -19408,10 +19371,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
         <translation>BaseScan</translation>
     </message>
     <message>
-        <source>Status Explorer</source>
-        <translation>Status 탐색기</translation>
-    </message>
-    <message>
         <source>BscScan</source>
         <translation>BscScan</translation>
     </message>
@@ -19441,10 +19400,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>LineaScan</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Polygon zkEVM Explorer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

@@ -115,16 +115,6 @@ SettingsContentBase {
                 }
             }
 
-            StatusSettingsLineButton {
-                width: parent.width
-                text: qsTr("Mainnet data verified by Nimbus")
-                isSwitch: true
-                checked: root.advancedStore.isNimbusProxyEnabled
-                onClicked: {
-                    Global.openPopup(enableNimbusProxyComponent)
-                }
-            }
-
             StatusBaseText {
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -185,7 +175,9 @@ SettingsContentBase {
                 isSwitch: true
                 checked: localAccountSensitiveSettings.isBrowserEnabled // user setting
                 onToggled: {
-                    if (checked) {
+                    checked = Qt.binding(() => localAccountSensitiveSettings.isBrowserEnabled)
+
+                    if (!checked) {
                         confirmationPopup.experimentalFeature = root.advancedStore.experimentalFeatures.browser
                         confirmationPopup.open()
                     } else {
@@ -200,7 +192,9 @@ SettingsContentBase {
                 isSwitch: true
                 checked: localAccountSensitiveSettings.nodeManagementEnabled
                 onToggled: {
-                    if (checked) {
+                    checked = Qt.binding(() => localAccountSensitiveSettings.nodeManagementEnabled)
+
+                    if (!checked) {
                         confirmationPopup.experimentalFeature = root.advancedStore.experimentalFeatures.nodeManagement
                         confirmationPopup.open()
                     } else {
@@ -369,6 +363,7 @@ SettingsContentBase {
                 checked: root.advancedStore.isDebugEnabled
 
                 onClicked: {
+                    checked = Qt.binding(() => root.advancedStore.isDebugEnabled)
                     Global.openPopup(enableDebugComponent)
                 }
 
@@ -443,27 +438,6 @@ SettingsContentBase {
                     qsTr("enable"))
                 onConfirmButtonClicked: {
                     root.advancedStore.toggleDebug()
-                    close()
-                }
-                onCancelButtonClicked: {
-                    close()
-                }
-            }
-        }
-
-        Component {
-            id: enableNimbusProxyComponent
-            ConfirmationDialog {
-                property bool mode: false
-
-                id: confirmDialog
-                destroyOnClose: true
-                showCancelButton: true
-                confirmationText: qsTr("Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.").arg(root.advancedStore.isNimbusProxyEnabled ?
-                    qsTr("disable") :
-                    qsTr("enable"))
-                onConfirmButtonClicked: {
-                    root.advancedStore.toggleNimbusProxy()
                     close()
                 }
                 onCancelButtonClicked: {

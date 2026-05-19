@@ -127,11 +127,14 @@ Dialog {
         when: root.bottomSheet
         value: d.windowWidth
     }
+
     Binding on height {
         when: root.bottomSheet && !enterTransition.running && !root.fullScreenSheet
-        value: root.fillHeightOnBottomSheet ? d.windowHeight * d.bottomSheetHeightRatio : Math.min(implicitHeight, d.windowHeight * d.bottomSheetHeightRatio)
-
+        delayed: true
+        value: root.fillHeightOnBottomSheet ? d.windowHeight * d.bottomSheetHeightRatio
+                                            : Math.min(implicitHeight, d.windowHeight * d.bottomSheetHeightRatio)
     }
+
     Binding on height {
         when: root.bottomSheet && root.fullScreenSheet
         value: d.windowHeight
@@ -141,6 +144,7 @@ Dialog {
     // Limit the height to the smaller value between the content’s implicitHeight
     // and 80% of the window height (leaving 10% margin top and bottom)
     Binding on height {
+        delayed: true
         when: !root.bottomSheet
         value: Math.min(implicitHeight, d.windowHeight * 0.8)
     }

@@ -437,12 +437,9 @@ Item {
             Layout.leftMargin: d.padding
             Layout.rightMargin: d.padding
             Layout.topMargin: root.state === d.depth1_ListState ? 0 : 8
+            Layout.preferredHeight: 36
 
             visible: d.availableData && !loadingIndicator.visible
-            topPadding: 0
-            bottomPadding: 0
-            minimumHeight: 36
-            maximumHeight: 36
 
             placeholderText: {
                 if (root.type === ExtendedDropdownContent.Type.Assets) {

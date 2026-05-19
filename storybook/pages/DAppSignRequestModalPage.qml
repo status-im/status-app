@@ -38,7 +38,9 @@ SplitView {
             modal: false
             dappUrl: "https://example.com"
             dappIcon: "https://picsum.photos/200/200"
-            dappName: "OpenSea"
+            dappName: ctrlHtmlInjection.checked
+                        ? '<font color="#27ae60" size="6"><b>app.uniswap.org</b></font>'
+                        : "OpenSea"
             accountColor: "blue"
             accountName: "Account Name"
             accountAddress: "0xE2d622C817878dA5143bBE06866ca8E35273Ba8"
@@ -154,6 +156,13 @@ Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Fusce nibh. Etiam quis
                 id: signingTransaction
                 text: "Signing transaction"
                 checked: false
+            }
+            CheckBox {
+                id: ctrlHtmlInjection
+                text: "HTML injection demo"
+                ToolTip.visible: hovered
+                ToolTip.text: "Replaces dappName with an HTML payload to verify "
+                              + "textFormat: Text.PlainText renders literal markup, not styled text."
             }
             TextField {
                 Layout.fillWidth: true

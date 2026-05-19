@@ -249,6 +249,27 @@ StatusQ.StatusTextArea {
         suggestionsFilterAdaptor.invalidateFilter()
     }
 
+    onPreeditTextChanged: {
+        suggestionsFilterAdaptor.invalidateFilter()
+
+        if (!preeditText) {
+            d.emojiFilter = ""
+            return
+        }
+
+        // Reconstruct plain text visible to the user up to the effective cursor
+        const committed = root.text.length > 0
+            ? StatusQUtils.StringUtils.plainText(root.text).substring(0, root.cursorPosition)
+            : ""
+        const beforeCursor = committed + preeditText
+        const colonIndex = beforeCursor.lastIndexOf(':')
+        if (colonIndex >= 0 && d.validSubstr(beforeCursor.substring(colonIndex))) {
+            d.emojiFilter = beforeCursor.substring(colonIndex)
+            return
+        }
+        d.emojiFilter = ""
+    }
+
     onLinkActivated: {
         const mention = d.getMentionAtPosition(cursorPosition - 1)
         if(mention) {
@@ -685,7 +706,11 @@ StatusQ.StatusTextArea {
             // cursor position must be stored in a helper property because setting readonly to true causes change
             // of the cursor position to the end of the input
             d.copyTextStart = root.cursorPosition
-            root.readOnly = true
+            // Toggling readOnly while handling the native iOS edit menu hides
+            // the keyboard, so keep the input editable on that path.
+            const toggleReadOnly = !StatusQUtils.Utils.isIOS
+            if (toggleReadOnly)
+                root.readOnly = true
 
             const copiedText = StatusQUtils.StringUtils.plainText(d.copiedTextPlain)
 
@@ -725,7 +750,8 @@ StatusQ.StatusTextArea {
             // Reset readOnly immediately after paste completes
             // Don't wait for onReleased which might not fire on mobile
             if (StatusQUtils.Utils.isMobile || immediateCleanup) {
-                root.readOnly = false
+                if (toggleReadOnly)
+                    root.readOnly = false
                 root.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard)
             }
 
@@ -738,24 +764,31 @@ StatusQ.StatusTextArea {
 
         sourceModel: root.usersModel
 
-        filter: getFilter().substring(
-                    lastAtPosition + 1,
-                    root.cursorPosition).replace(/\*/g, "")
+        filter: {
+            const effectiveCursor = root.cursorPosition + root.preeditText.length
+            return getFilter().substring(lastAtPosition + 1, effectiveCursor).replace(/\*/g, "")
+        }
 
         property int lastAtPosition: -1 // todo: rename to lastMentionAtPosition
         property int cursorPosition: root.cursorPosition
 
         function getFilter() {
-            if (root.text.length === 0 ||
-                    root.cursorPosition === 0)
-                return ""
-
-            return StatusQUtils.StringUtils.plainText(root.text)
+            const committed = root.text.length > 0
+                ? StatusQUtils.StringUtils.plainText(root.text)
+                : ""
+            if (!root.preeditText)
+                return committed
+            // preeditText sits at cursorPosition in the visual text; splice it
+            // into the committed plain text so the filter sees the full input
+            return committed.substring(0, root.cursorPosition)
+                   + root.preeditText
+                   + committed.substring(root.cursorPosition)
         }
 
         function invalidateFilter() {
             const filter = getFilter()
-            lastAtPosition = filter.substring(0, root.cursorPosition).lastIndexOf("@")
+            const effectiveCursor = root.cursorPosition + root.preeditText.length
+            lastAtPosition = filter.substring(0, effectiveCursor).lastIndexOf("@")
         }
     }
 
@@ -779,6 +812,8 @@ StatusQ.StatusTextArea {
         id: contextMenu
 
         hideDisabledItems: false
+        // Use the platform popup on iOS to match native text editing behavior.
+        popupType: StatusQUtils.Utils.isIOS ? Popup.Native : Popup.Item
 
         StatusAction {
             text: qsTr("Cut")
@@ -803,5 +838,6 @@ StatusQ.StatusTextArea {
         }
     }
 
-    ContextMenu.menu: StatusQUtils.Utils.isMobile ? null : contextMenu
+    ContextMenu.menu: StatusQUtils.Utils.isAndroid ? null
+                      : contextMenu
 }

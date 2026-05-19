@@ -37,19 +37,13 @@ StatusSectionLayout {
 
     objectName: "communitiesPortalLayout"
 
-    onVisibleChanged: {
-        if(visible)
-            searcher.input.edit.forceActiveFocus()
-    }
-
     QtObject {
         id: d
 
         // values from the design
-        readonly property int layoutTopMargin: Theme.smallPadding
-        readonly property int layoutBottomMargin: Theme.xlPadding*2
-        readonly property int titlePixelSize: 28
-        readonly property int preventShadowClipMargin: Theme.padding
+        readonly property int layoutTopMargin: root.Theme.smallPadding
+        readonly property int layoutBottomMargin: root.Theme.xlPadding*2
+        readonly property int titlePixelSize: root.Theme.fontSize(28)
  
         readonly property bool searchMode: searcher.text.length > 0
 
@@ -95,8 +89,7 @@ StatusSectionLayout {
         anchors.fill: parent
 
         anchors.topMargin: d.layoutTopMargin
-        anchors.leftMargin: Theme.xlPadding*2
-        anchors.rightMargin: Theme.xlPadding
+        anchors.leftMargin: Theme.xlPadding
 
         ColumnLayout {
             id: column
@@ -117,6 +110,8 @@ StatusSectionLayout {
 
             ColumnLayout {
                 spacing: Theme.padding
+                Layout.fillWidth: true
+                Layout.rightMargin: Theme.xlPadding
 
                 RowLayout {
                     SearchBox {
@@ -125,8 +120,6 @@ StatusSectionLayout {
                         Layout.maximumWidth: 327
                         Layout.preferredHeight: 38
                         Layout.alignment: Qt.AlignVCenter
-                        topPadding: 0
-                        bottomPadding: 0
                     }
 
                     // filler
@@ -156,6 +149,7 @@ StatusSectionLayout {
             TagsRow {
                 id: communityTags
                 Layout.fillWidth: true
+                Layout.rightMargin: Theme.xlPadding
 
                 tags: root.communitiesStore.communityTags
             }
@@ -165,12 +159,10 @@ StatusSectionLayout {
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.leftMargin: d.preventShadowClipMargin
-                Layout.rightMargin: d.preventShadowClipMargin
 
-                contentWidth: availableWidth
                 padding: 0
                 bottomPadding: d.layoutBottomMargin
+                compactMode: d.compactMode
 
                 model: filteredCommunitiesModel
                 searchLayout: d.searchMode
@@ -215,43 +207,44 @@ StatusSectionLayout {
         }
     }
 
-    Component {
-        id: chooseCommunityCreationTypePopupComponent
-        StatusDialog {
-            id: chooseCommunityCreationTypePopup
-            title: qsTr("Create new community")
-            horizontalPadding: 40
-            verticalPadding: 60
-            footer: null
-            onClosed: destroy()
+    // hidden as part of https://github.com/status-im/status-app/issues/17726
+    // Component {
+    //     id: chooseCommunityCreationTypePopupComponent
+    //     StatusDialog {
+    //         id: chooseCommunityCreationTypePopup
+    //         title: qsTr("Create new community")
+    //         horizontalPadding: 40
+    //         verticalPadding: 60
+    //         footer: null
+    //         onClosed: destroy()
 
-            contentItem: RowLayout {
-                spacing: 20
-                BannerPanel {
-                    objectName: "createCommunityBanner"
-                    text: qsTr("Create a new Status community")
-                    buttonText: qsTr("Create new")
-                    icon.name: "favourite"
-                    onButtonClicked: {
-                        chooseCommunityCreationTypePopup.close()
-                        Global.createCommunityPopupRequested(false /*isDiscordImport*/)
-                    }
-                }
-                BannerPanel {
-                    readonly property bool importInProgress: root.communitiesStore.discordImportInProgress && !root.communitiesStore.discordImportCancelled
-                    text: importInProgress ?
-                              qsTr("'%1' import in progress...").arg(root.communitiesStore.discordImportCommunityName || root.communitiesStore.discordImportChannelName) :
-                              qsTr("Import existing Discord community into Status")
-                    buttonText: qsTr("Import existing")
-                    icon.name: "download"
-                    buttonTooltipText: qsTr("Your current import must be finished or cancelled before a new import can be started.")
-                    buttonLoading: importInProgress
-                    onButtonClicked: {
-                        chooseCommunityCreationTypePopup.close()
-                        Global.createCommunityPopupRequested(true /*isDiscordImport*/)
-                    }
-                }
-            }
-        }
-    }
+    //         contentItem: RowLayout {
+    //             spacing: 20
+    //             BannerPanel {
+    //                 objectName: "createCommunityBanner"
+    //                 text: qsTr("Create a new Status community")
+    //                 buttonText: qsTr("Create new")
+    //                 icon.name: "favourite"
+    //                 onButtonClicked: {
+    //                     chooseCommunityCreationTypePopup.close()
+    //                     Global.createCommunityPopupRequested(false /*isDiscordImport*/)
+    //                 }
+    //             }
+    //             BannerPanel {
+    //                 readonly property bool importInProgress: root.communitiesStore.discordImportInProgress && !root.communitiesStore.discordImportCancelled
+    //                 text: importInProgress ?
+    //                           qsTr("'%1' import in progress...").arg(root.communitiesStore.discordImportCommunityName || root.communitiesStore.discordImportChannelName) :
+    //                           qsTr("Import existing Discord community into Status")
+    //                 buttonText: qsTr("Import existing")
+    //                 icon.name: "download"
+    //                 buttonTooltipText: qsTr("Your current import must be finished or cancelled before a new import can be started.")
+    //                 buttonLoading: importInProgress
+    //                 onButtonClicked: {
+    //                     chooseCommunityCreationTypePopup.close()
+    //                     Global.createCommunityPopupRequested(true /*isDiscordImport*/)
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 }

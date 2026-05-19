@@ -30,6 +30,7 @@ RowLayout {
         Layout.topMargin: 1 // compensate for the underline
         text: "%1.".arg(root.serviceProviderName)
         font.weight: Font.Normal
+        textFormat: Text.PlainText
         onClicked: root.linkClicked()
     }
     StatusBaseText {

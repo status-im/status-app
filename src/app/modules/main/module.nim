@@ -990,13 +990,12 @@ method onChatsLoaded*[T](
   # For the personal chat section we load the chats immediately
   self.chatSectionModules[myPubKey].load(buildChats = true)
 
-  let communities = self.controller.getJoinedAndSpectatedCommunities()
   # Create Community sections
-  for community in communities:
-    self.chatSectionModules[community.id] = chat_section_module.newModule(
+  for communityId in self.controller.joinedAndSpectatedCommunityIds():
+    self.chatSectionModules[communityId] = chat_section_module.newModule(
       self,
       events,
-      community.id,
+      communityId,
       isCommunity = true,
       settingsService,
       nodeConfigurationService,
@@ -1011,24 +1010,26 @@ method onChatsLoaded*[T](
       sharedUrlsService,
       networkService
     )
-    let communitySectionItem = self.createCommunitySectionItem(community)
+    let communitySectionItem = self.createCommunitySectionItem(self.controller.getCommunityById(communityId))
     items.add(communitySectionItem)
     if activeSectionId == communitySectionItem.id:
       activeSection = communitySectionItem
 
-    self.chatSectionModules[community.id].load()
+    self.chatSectionModules[communityId].load()
 
   self.view.model().addItems(items)
 
   self.checkIfWeHaveNotifications()
-
-  self.events.emit(SIGNAL_MAIN_LOADED, Args())
 
   # Set active section if it is one of the channel sections
   if not activeSection.isEmpty():
     self.setActiveSection(activeSection)
 
   self.view.sectionsLoaded()
+
+  self.events.emit(SIGNAL_MAIN_LOADED, Args())
+  self.view.setMainLoaded(true)
+
   if self.statusDeepLinkToActivate != "":
     self.activateStatusDeepLink(self.statusDeepLinkToActivate)
 
@@ -1554,8 +1555,7 @@ method onRemoteDestructed*[T](self: Module[T], communityId: string, chainId: int
     item.updateRemoteDestructedAddresses(chainId, contractAddress, addresses)
 
 method onRequestReevaluateMembersPermissionsIfRequired*[T](self: Module[T], communityId: string, chainId: int, contractAddress: string) =
-  let communityDto = self.controller.getCommunityById(communityId)
-  for _, tokenPermission in communityDto.tokenPermissions.pairs:
+  for _, tokenPermission in self.controller.getCommunityById(communityId).tokenPermissions.pairs:
     if tokenPermission.type != TokenPermissionType.BecomeTokenOwner:
       for tokenCriteria in tokenPermission.tokenCriteria:
         if tokenCriteria.contractAddresses.hasKey(chainId):
@@ -1630,7 +1630,7 @@ method osNotificationClicked*[T](self: Module[T], details: NotificationDetails) 
 
 method newCommunityMembershipRequestReceived*[T](self: Module[T], membershipRequest: CommunityMembershipRequestDto) =
   let (contactName, _, _) = self.controller.getContactNameAndImage(membershipRequest.publicKey)
-  let community =  self.controller.getCommunityById(membershipRequest.communityId)
+  let community {.cursor.} = self.controller.getCommunityById(membershipRequest.communityId)
   singletonInstance.globalEvents.newCommunityMembershipRequestNotification("New membership request",
     fmt "{contactName} asks to join {community.name}", community.id)
 
@@ -2263,7 +2263,10 @@ method contactUpdated*[T](self: Module[T], contactId: string) =
   )
 
 proc getAllCommunityMemberItems[T](self: Module[T], community: CommunityDto): seq[MemberItem] =
-  # Add members who were kicked from the community after the ownership change for auto-rejoin after they share addresses
+  # Pre-populate the contacts cache with the community members
+  self.controller.seedContactsFromChatMembers(community.members)
+
+  # Add members who were kicked from the community after the ownership change for auto-rejoin after they share addresses.
   var members = community.members
   for requestForAutoRejoin in community.waitingForSharedAddressesRequestsToJoin:
     var chatMember = ChatMember()
@@ -2271,6 +2274,8 @@ proc getAllCommunityMemberItems[T](self: Module[T], community: CommunityDto): se
     chatMember.joined = false
     chatMember.role = MemberRole.None
     members.add(chatMember)
+    # Resolve contact
+    discard self.controller.getContactDetails(requestForAutoRejoin.publicKey)
 
   var bannedMembers = newSeq[MemberItem]()
   for memberId, memberState in community.pendingAndBannedMembers.pairs:
@@ -2322,7 +2327,7 @@ method loadMembersForSectionId*[T](self: Module[T], sectionId: string) =
     error "Cannot load members for section", sectionId
     return
 
-  let community = self.controller.getCommunityById(sectionId)
+  let community {.cursor.} = self.controller.getCommunityById(sectionId)
 
   if community.memberRole == MemberRole.Owner or community.memberRole == MemberRole.TokenMaster:
     self.controller.getCommunityTokensDetailsAsync(community.id)

@@ -7,15 +7,18 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
+import android.os.SharedMemory;
+import android.system.OsConstants;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,6 +43,14 @@ import im.status.mobileui.PushNotificationHelper;
 public final class StatusGoService extends Service {
     private static final String TAG = "StatusGoService";
 
+    /**
+     * Responses shorter than this (in UTF-8 bytes) are returned inline in the Binder reply
+     * Parcel; larger responses are transferred via SharedMemory to stay under Android's
+     * per-process Binder transaction budget (~1 MB hard cap). Empirically ~97% of calls fit
+     * at 64 KB.
+     */
+    private static final int INLINE_THRESHOLD_BYTES = 64 * 1024;
+
     public static final String ACTION_START =
             BuildConfig.APPLICATION_ID + ".ipc.StatusGoService.START";
     public static final String ACTION_STOP =
@@ -57,6 +68,47 @@ public final class StatusGoService extends Service {
 
     private final ExecutorService lifecycleExecutor = Executors.newSingleThreadExecutor();
     private final AtomicInteger lifecycleGen = new AtomicInteger(0);
+
+    /** Single instance per process; lets background components (NotificationReplyReceiver) reach the service. */
+    private static volatile StatusGoService sInstance;
+
+    /**
+     * Background work (e.g. an inline notification reply) sends a chat message while messaging
+     * is paused. The send path resumes the "messaging" service so the message actually
+     * transmits, then asks us to re-pause after a flush window. This delay must comfortably
+     * cover the mvds outbound loop picking up the queued message after resume.
+     */
+    private static final long MESSAGING_REPAUSE_DELAY_MS = 60_000L;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Runnable repauseMessagingRunnable = () -> {
+        if (uiVisible) return; // app came to foreground; foregrounding already resumed messaging
+        try {
+            lifecycleExecutor.execute(() -> {
+                if (uiVisible) return;
+                try {
+                    final String resp = nativeCall("PauseService", "[\"messaging\"]");
+                } catch (Throwable t) {
+                    Log.w(TAG, "failed to re-pause messaging after background send", t);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException ignored) {
+            // service shutting down; nothing to re-pause
+        }
+    };
+
+    /**
+     * Asks the service to re-pause the "messaging" service after a flush window, coalescing
+     * with any pending request. Called from background components after they Resume("messaging")
+     * + send a message while the app is backgrounded. A real foreground/background transition
+     * supersedes it (the pending callback is cancelled in applyUiVisibility, and the runnable
+     * re-checks uiVisible anyway).
+     */
+    public static void scheduleMessagingRepause() {
+        final StatusGoService s = sInstance;
+        if (s == null) return;
+        s.mainHandler.removeCallbacks(s.repauseMessagingRunnable);
+        s.mainHandler.postDelayed(s.repauseMessagingRunnable, MESSAGING_REPAUSE_DELAY_MS);
+    }
 
     private StatusNotificationManager notificationManager;
 
@@ -215,34 +267,45 @@ public final class StatusGoService extends Service {
 
     private void applyUiVisibility(boolean visible) {
         uiVisible = visible;
+        // A real fg/bg transition handles messaging via scheduleBackendLifecycleUpdate;
+        // drop any pending notification-driven re-pause so it can't fire stale.
+        mainHandler.removeCallbacks(repauseMessagingRunnable);
         notificationManager.setUiVisible(visible);
         scheduleBackendLifecycleUpdate(visible);
     }
 
     private final IStatusGoService.Stub binder = new IStatusGoService.Stub() {
         @Override
-        public String call(String method, String argsJson) {
-            enforceCallerIsSameApp();
-            String resp = nativeCall(method, argsJson);
-            maybeStopOnLogoutCall(method, resp);
-            return resp;
-        }
-
-        @Override
-        public String callToFile(String method, String argsJson) {
+        public RpcResponse rpcCall(String method, String argsJson) {
             enforceCallerIsSameApp();
             String resp = nativeCall(method, argsJson);
             if (resp == null) resp = "{\"error\":\"null response\"}";
             maybeStopOnLogoutCall(method, resp);
+
+            final byte[] bytes = resp.getBytes(StandardCharsets.UTF_8);
+            if (bytes.length < INLINE_THRESHOLD_BYTES) {
+                return RpcResponse.inline(bytes);
+            }
+
+            SharedMemory shm = null;
             try {
-                File f = File.createTempFile("statusgo_", ".json", getCacheDir());
-                try (FileOutputStream os = new FileOutputStream(f, false)) {
-                    os.write(resp.getBytes(StandardCharsets.UTF_8));
+                shm = SharedMemory.create("statusgo-rpc", bytes.length);
+                final ByteBuffer buf = shm.mapReadWrite();
+                try {
+                    buf.put(bytes);
+                } finally {
+                    SharedMemory.unmap(buf);
                 }
-                return f.getAbsolutePath();
+                shm.setProtect(OsConstants.PROT_READ);
+
+                final RpcResponse result = RpcResponse.shared(shm);
+                shm = null; // ownership transferred; closure happens in writeToParcel
+                return result;
             } catch (Throwable t) {
-                Log.w(TAG, "callToFile failed", t);
-                return "{\"error\":\"callToFile failed\"}";
+                if (shm != null) shm.close();
+                Log.w(TAG, "rpcCall: SharedMemory path failed; returning error JSON", t);
+                return RpcResponse.inline(
+                        "{\"error\":\"shared memory transfer failed\"}".getBytes(StandardCharsets.UTF_8));
             }
         }
 
@@ -277,6 +340,7 @@ public final class StatusGoService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        sInstance = this;
         notificationManager = new StatusNotificationManager(this);
         PushNotificationHelper.initialize(this);
         nativeInit(this);
@@ -306,6 +370,8 @@ public final class StatusGoService extends Service {
 
     @Override
     public void onDestroy() {
+        sInstance = null;
+        mainHandler.removeCallbacksAndMessages(null);
         StatusNotificationManager.clearInstance();
         listeners.kill();
         lifecycleExecutor.shutdownNow();

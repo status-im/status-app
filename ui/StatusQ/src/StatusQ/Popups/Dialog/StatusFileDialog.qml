@@ -3,6 +3,7 @@ import QtQuick.Dialogs
 import QtCore
 
 import StatusQ
+import StatusQ.Core
 import StatusQ.Core.Utils
 import MobileUI
 
@@ -14,6 +15,7 @@ QObject {
     readonly property alias selectedFile: d.resolvedFile
     readonly property alias selectedFiles: d.resolvedFiles
     property bool selectMultiple
+    property bool usePhotoLibrary
 
     property alias modality: dlg.modality
     property alias currentFolder: dlg.currentFolder
@@ -28,10 +30,22 @@ QObject {
     signal rejected
 
     function open() {
+        if (Utils.isIOS) {
+            d.nativeSelectedFiles = []
+            d.nativeDialogOpen = true
+            if (usePhotoLibrary)
+                SystemUtils.openIOSPhotoLibraryPicker(selectMultiple)
+            else
+                SystemUtils.openIOSDocumentPicker(selectMultiple, nameFilters)
+            return
+        }
+
         dlg.open()
     }
 
     function close() {
+        if (Utils.isIOS)
+            d.nativeDialogOpen = false
         dlg.close()
     }
 
@@ -39,9 +53,11 @@ QObject {
         id: d
 
         readonly property list<url> standardPictureLocations: StandardPaths.standardLocations(StandardPaths.PicturesLocation)
+        property var nativeSelectedFiles: []
+        property bool nativeDialogOpen: false
 
-        readonly property url resolvedFile: resolveFile(dlg.selectedFile)
-        readonly property var resolvedFiles: resolveSelectedFiles(dlg.selectedFiles)
+        readonly property url resolvedFile: Utils.isIOS ? resolveFile(nativeSelectedFiles[0]) : resolveFile(dlg.selectedFile)
+        readonly property var resolvedFiles: Utils.isIOS ? resolveSelectedFiles(nativeSelectedFiles) : resolveSelectedFiles(dlg.selectedFiles)
 
         function resolveFile(file) {
             if (!file)
@@ -49,7 +65,7 @@ QObject {
 
             let resolvedLocalFile = UrlUtils.convertUrlToLocalPath(file)
             // This will reserve the access to the file for the duration of the app
-            if (Utils.isIOS && !MobileUI.startAccessingPath(resolvedLocalFile)) {
+            if (Utils.isIOS && !root.usePhotoLibrary && !MobileUI.startAccessingPath(resolvedLocalFile)) {
                 console.warn("StatusFileDialog failed to start access for selected file")
             }
             if (!resolvedLocalFile.startsWith("file:"))
@@ -62,6 +78,27 @@ QObject {
                 return []
 
             return selectedFiles.map(file => d.resolveFile(file)).filter(file => !!file)
+        }
+    }
+
+    Connections {
+        target: SystemUtils
+
+        function onIosFilePickerAccepted(fileUrls) {
+            if (!d.nativeDialogOpen)
+                return
+
+            d.nativeDialogOpen = false
+            d.nativeSelectedFiles = fileUrls
+            root.accepted()
+        }
+
+        function onIosFilePickerRejected() {
+            if (!d.nativeDialogOpen)
+                return
+
+            d.nativeDialogOpen = false
+            root.rejected()
         }
     }
 

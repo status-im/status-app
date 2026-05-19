@@ -41,6 +41,14 @@ type ChatMember* = object
   id*: string
   joined*: bool
   role*: MemberRole
+  # Visual identity baked into the member entry by status-go's
+  # Community.MarshalJSON enrichment (see `EnrichedCommunityMember`). The
+  # desktop side reads these directly onto MemberItem/UserItem at
+  # construction time — no separate cache, no per-pubkey RPC fan-out.
+  alias*: string
+  colorId*: int
+  compressedPubKey*: string
+  emojiHash*: string
 
 type CheckPermissionsResultDto* = object
   criteria*: seq[bool]
@@ -226,6 +234,14 @@ proc toChannelMember*(jsonObj: JsonNode, memberId: string): ChatMember =
   # People in the community members' list are joined by default
   result.joined = true
 
+  discard jsonObj.getProp("alias", result.alias)
+  discard jsonObj.getProp("colorId", result.colorId)
+  discard jsonObj.getProp("compressedKey", result.compressedPubKey)
+  result.emojiHash = "[]"
+  var emojiHashNode: JsonNode
+  if jsonObj.getProp("emojiHash", emojiHashNode) and emojiHashNode.kind == JArray:
+    result.emojiHash = $emojiHashNode
+
   result.role = MemberRole.None
   if roles.contains(MemberRole.Owner.int):
     result.role = MemberRole.Owner
@@ -237,6 +253,20 @@ proc toChannelMember*(jsonObj: JsonNode, memberId: string): ChatMember =
     result.role = MemberRole.ModerateContent
   elif roles.contains(MemberRole.TokenMaster.int):
     result.role = MemberRole.TokenMaster
+
+proc toMemberSeed*(m: ChatMember): MemberSeed =
+  MemberSeed(
+    id: m.id,
+    alias: m.alias,
+    colorId: m.colorId,
+    compressedPubKey: m.compressedPubKey,
+    emojiHash: m.emojiHash,
+  )
+
+proc toMemberSeeds*(members: seq[ChatMember]): seq[MemberSeed] =
+  result = newSeqOfCap[MemberSeed](members.len)
+  for m in members:
+    result.add(m.toMemberSeed)
 
 proc toChatDto*(jsonObj: JsonNode): ChatDto =
   result = ChatDto()

@@ -468,7 +468,7 @@ Item {
 
                         StatusBaseText {
                             id: placeholder
-                            visible: (edit.length === 0)
+                            visible: edit.length === 0 && edit.preeditText === ""
                             anchors.fill: parent
                             verticalAlignment: parent.verticalAlignment
                             wrapMode: root.multiline ? Text.WrapAnywhere : Text.NoWrap

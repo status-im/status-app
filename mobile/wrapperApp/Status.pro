@@ -99,6 +99,7 @@ ios {
             -framework Security \
             -framework CoreMotion \
             -framework UIKit \
+            -framework PhotosUI \
             -framework Foundation \
             -framework UserNotifications
 

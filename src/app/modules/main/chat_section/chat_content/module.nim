@@ -158,7 +158,6 @@ proc buildPinnedMessageItem(self: Module, message: MessageDto, actionInitiatedBy
     item: var pinned_msg_item.Item, reactions: seq[ReactionDto]):bool =
 
   let contactDetails = self.controller.getContactDetails(message.`from`)
-  let communityChats = self.controller.getCommunityDetails().chats
   var quotedMessageAuthorDetails = ContactDetails()
   if message.quotedMessage.`from` != "":
     if(message.`from` == message.quotedMessage.`from`):
@@ -179,13 +178,13 @@ proc buildPinnedMessageItem(self: Module, message: MessageDto, actionInitiatedBy
     message.communityId,
     contactDetails,
     isCurrentUser,
-    self.controller.getRenderedText(message.parsedText, communityChats),
+    self.controller.getRenderedText(message.parsedText, self.controller.getCommunityDetails().chats),
     clearText = message.text,
     albumImages = @[],
     albumMessageIds = @[],
     deletedByContactDetails = ContactDetails(),
     quotedMessageAuthorDetails,
-    self.controller.getRenderedText(message.quotedMessage.parsedText, communityChats),
+    self.controller.getRenderedText(message.quotedMessage.parsedText, self.controller.getCommunityDetails().chats),
     transactionContract,
     transactionValue,
   )
@@ -413,15 +412,13 @@ method onMadeInactive*(self: Module) =
 
 method amIChatAdmin*(self: Module): bool =
   if not self.controller.belongsToCommunity():
-    let chatDto = self.controller.getChatDetails()
-    for member in chatDto.members:
+    for member in self.controller.getChatDetails().members:
       if member.id == singletonInstance.userProfile.getPubKey():
         return member.role == MemberRole.Owner or member.role == MemberRole.Admin or member.role == MemberRole.TokenMaster
     return false
   else:
-    let communityDto = self.controller.getCommunityDetails()
-    return communityDto.memberRole == MemberRole.Owner or
-      communityDto.memberRole == MemberRole.Admin or communityDto.memberRole == MemberRole.TokenMaster
+    let role = self.controller.getCommunityDetails().memberRole
+    return role == MemberRole.Owner or role == MemberRole.Admin or role == MemberRole.TokenMaster
 
 method scrollToMessage*(self: Module, messageId: string) =
   self.messagesModule.scrollToMessage(messageId)

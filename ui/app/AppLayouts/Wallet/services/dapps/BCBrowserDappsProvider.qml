@@ -20,6 +20,8 @@ DAppsModel {
     signal connected(string dappUrl)
     signal disconnected(string dappUrl)
     
+    onClientIdFilterChanged: d.refreshModel()
+    
     Connections {
         target: root.connectorController
         enabled: root.enabled

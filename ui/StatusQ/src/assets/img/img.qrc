@@ -426,14 +426,10 @@
         <file>icons/network/linea-test.svg</file>
         <file>icons/network/optimism.svg</file>
         <file>icons/network/optimism-test.svg</file>
-        <file>icons/network/polygon-zkevm.svg</file>
-        <file>icons/network/polygon-zkevm-test.svg</file>
         <file>icons/network/scroll.svg</file>
         <file>icons/network/scroll-test.svg</file>
         <file>icons/network/soneium.svg</file>
         <file>icons/network/soneium-test.svg</file>
-        <file>icons/network/status.svg</file>
-        <file>icons/network/status-test.svg</file>
         <file>icons/network/testnet.svg</file>
         <file>icons/network/unichain.svg</file>
         <file>icons/network/unichain-test.svg</file>

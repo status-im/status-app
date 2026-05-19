@@ -16,6 +16,8 @@ import AppLayouts.Wallet.services.dapps.types
 import shared.stores
 import utils
 
+import AppLayouts.Browser.provider.qml 1.0
+
 import "types"
 
 /// Act as another layer of abstraction to the WalletConnectSDKBase
@@ -207,6 +209,11 @@ WalletConnectSDKBase {
                     continue
                 }
 
+                // Wallet section never shows off-the-record (ephemeral) sessions (suffix matches DB cleanup).
+                if (ConnectorConstants.isEphemeralClientId(dapp.clientId)) {
+                    continue
+                }
+
                 activeSessions[dapp.url] = d.buildSession(dapp.url, dapp.name, dapp.iconUrl, "", dapp.sharedAccount, [dapp.chainId], dapp.clientId)
             }
             callback(activeSessions)
@@ -225,6 +232,7 @@ WalletConnectSDKBase {
     QtObject {
         id: d
         readonly property var sessionRequests: new Map()
+
         function buildSession(dappUrl, dappName, dappIcon, proposalId, account, chains, clientId) {
             let sessionTemplate = (dappUrl, dappName, dappIcon, proposalId, eipAccount, eipChains, clientId) => {
                 const session = {

@@ -97,16 +97,15 @@ Item {
         spacing: Theme.halfPadding
 
         ColumnHeaderPanel {
+            id: headerPanel
             Layout.fillWidth: true
             name: communityData.name
             membersCount: root.joinedMembersCount
             image: communityData.image
             color: communityData.color
             amISectionAdmin: root.isSectionAdmin
-            searchActive: searchField.visible
             onInfoButtonClicked: root.infoButtonClicked()
             onShareOwnProfileRequested: root.shareOwnProfileRequested()
-            onSearchRequested: toggled => searchField.visible = toggled
         }
 
         Loader {
@@ -128,11 +127,15 @@ Item {
             Layout.bottomMargin: 4
             Layout.preferredHeight: 40
             KeyNavigation.tab: communityChatListAndCategories
-            Keys.onEscapePressed: visible = false
+            Keys.onEscapePressed: headerPanel.searchActive = false
             placeholderText: qsTr("Search channels...")
-            visible: false
-            onVisibleChanged: input.edit.clear()
-            focus: visible
+            visible: headerPanel.searchActive
+            onVisibleChanged: {
+                if (visible)
+                    forceActiveFocus()
+                else
+                    clear()
+            }
         }
 
         ChatsLoadingPanel {
@@ -220,7 +223,7 @@ Item {
                         SQUtils.SearchFilter {
                             roleName: "name"
                             searchPhrase: searchField.text
-                            enabled: !!searchPhrase
+                            enabled: searchField.visible && !!searchPhrase
                         }
                     ]
                 }

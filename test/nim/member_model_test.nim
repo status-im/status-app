@@ -129,3 +129,45 @@ suite "updating member items":
     check(itemD.displayName == "amanda")
     let itemE = model.getMemberItem("0xe")
     check(itemE.displayName == "gina")
+
+suite "pubKeyIndex invariants":
+  test "addItems drops duplicates against existing rows":
+    let model = newModel()
+    model.addItems(@[memberA, memberB])
+    # memberA is already in the model; memberC is new
+    model.addItems(@[memberA, memberC])
+    check(model.rowCount == 3)
+    check(model.findIndexForMember("0xa") == 0)
+    check(model.findIndexForMember("0xb") == 1)
+    check(model.findIndexForMember("0xc") == 2)
+
+  test "addItems drops duplicates within the same batch":
+    let model = newModel()
+    model.addItems(@[memberA, memberA, memberB])
+    check(model.rowCount == 2)
+    check(model.findIndexForMember("0xa") == 0)
+    check(model.findIndexForMember("0xb") == 1)
+
+  test "removeItemById shifts pubKeyIndex of later rows":
+    let model = newModel()
+    model.addItems(@[memberA, memberB, memberC, memberD])
+    model.removeItemById("0xb")
+    check(model.rowCount == 3)
+    check(model.findIndexForMember("0xa") == 0)
+    check(model.findIndexForMember("0xb") == -1)
+    check(model.findIndexForMember("0xc") == 1)
+    check(model.findIndexForMember("0xd") == 2)
+    # The shifted index must point at the right item
+    check(model.getMemberItemByIndex(1).pubKey == "0xc")
+    check(model.getMemberItemByIndex(2).pubKey == "0xd")
+
+  test "updateToTheseItems with empty seq clears pubKeyIndex":
+    let model = newModel()
+    model.addItems(@[memberA, memberB])
+    model.updateToTheseItems(@[])
+    check(model.rowCount == 0)
+    check(model.findIndexForMember("0xa") == -1)
+    check(model.findIndexForMember("0xb") == -1)
+    # New inserts after a clear must start at row 0
+    model.addItems(@[memberC])
+    check(model.findIndexForMember("0xc") == 0)

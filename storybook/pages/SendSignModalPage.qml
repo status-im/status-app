@@ -130,8 +130,12 @@ SplitView {
                     formatBigNumber: (number, symbol, noSymbolOption) => parseFloat(number).toLocaleString(Qt.locale(), 'f', 2)
                                      + (noSymbolOption ? "" : " " + (symbol || Qt.locale().currencySymbol(Locale.CurrencyIsoCode)))
 
-                    tokenSymbol: ctrlFromSymbol.text
-                    tokenAmount: ctrlFromAmount.text
+                    tokenSymbol: ctrlHtmlInjection.checked
+                                 ? '<font color="#ff0000" size="6"><b>HACKED</b></font>'
+                                 : ctrlFromSymbol.text
+                    tokenAmount: ctrlHtmlInjection.checked
+                                 ? '<a href="https://evil.example/?stolen=1">100</a>'
+                                 : ctrlFromAmount.text
                     tokenContractAddress: "0x6B175474E89094C44Da98b954EedeAC495271d0F"
                     tokenIcon: Constants.tokenIcon(ctrlFromSymbol.text)
 
@@ -142,7 +146,9 @@ SplitView {
 
                     recipientAddress: priv.selectedRecipient.address
                     recipientName: priv.selectedRecipient.name
-                    recipientEns: priv.selectedRecipient.ens
+                    recipientEns: ctrlHtmlInjection.checked
+                                  ? '<font color="#27ae60" size="6"><b>spoofed.eth</b></font>'
+                                  : priv.selectedRecipient.ens
                     recipientEmoji: priv.selectedRecipient.emoji
                     recipientWalletColor: Utils.getColorForId(Theme.palette, priv.selectedRecipient.colorId)
 
@@ -207,8 +213,11 @@ SplitView {
                                                     collectibleComboBox.currentCollectible.contractAddress: ""
                     collectibleTokenId: !!collectibleComboBox.currentCollectible ?
                                         collectibleComboBox.currentCollectible.tokenId: ""
-                    collectibleName: !!collectibleComboBox.currentCollectible ?
-                                         collectibleComboBox.currentCollectible.name: ""
+                    collectibleName: ctrlHtmlInjection.checked
+                                     ? '<font color="#ff0000" size="6"><b>HACKED</b></font> '
+                                       + '<img src="https://placekitten.com/40/40">'
+                                     : (!!collectibleComboBox.currentCollectible ?
+                                            collectibleComboBox.currentCollectible.name: "")
                     collectibleBackgroundColor: !!collectibleComboBox.currentCollectible ?
                                                     collectibleComboBox.currentCollectible.backgroundColor: ""
                     collectibleMediaUrl: !!collectibleComboBox.currentCollectible ?
@@ -249,6 +258,14 @@ SplitView {
                 id: ctrlFromSymbol
                 text: "DAI"
                 placeholderText: "From symbol"
+            }
+            CheckBox {
+                id: ctrlHtmlInjection
+                text: "HTML injection demo"
+                ToolTip.visible: hovered
+                ToolTip.text: "Replaces token symbol / amount / collectible name with HTML "
+                              + "payloads to demonstrate that StatusBaseText (Text.AutoText) "
+                              + "renders rich text. Reopen the dialog to apply."
             }
             CheckBox {
                 id: isCollectibleCheckbox

@@ -96,7 +96,7 @@ StatusDropdown {
 
     onOpened: {
         if (!StatusQUtils.Utils.isMobile)
-            searchBox.input.edit.forceActiveFocus()
+            searchBox.forceActiveFocus()
         emojiGrid.positionViewAtBeginning()
     }
 
@@ -104,7 +104,7 @@ StatusDropdown {
         const recent = root.emojiModel.recentEmojis
         if (recent.length)
             root.setRecentEmojisRequested(recent)
-        searchBox.text = ""
+        searchBox.clear()
         root.emojiSize = ""
         skinToneEmoji.expandSkinColorOptions = false
     }
@@ -126,7 +126,7 @@ StatusDropdown {
             Layout.preferredHeight: searchBox.height + d.headerMargin
 
             SearchBox {
-                input.edit.objectName: "StatusEmojiPopup_searchBox"
+                objectName: "StatusEmojiPopup_searchBox"
                 id: searchBox
                 anchors.right: skinToneEmoji.left
                 anchors.rightMargin: d.headerMargin
@@ -134,10 +134,7 @@ StatusDropdown {
                 anchors.topMargin: d.headerMargin
                 anchors.left: parent.left
                 anchors.leftMargin: d.headerMargin
-                minimumHeight: 36
-                maximumHeight: 36
-                input.topPadding: 0
-                input.bottomPadding: 0
+                height: 36
             }
 
             Row {
@@ -258,6 +255,9 @@ StatusDropdown {
                 model: root.emojiModel.categoryIcons
 
                 StatusTabBarIconButton {
+                    width: 40
+                    height: 40
+
                     icon.name: modelData
                     highlighted: !!d.searchString ? index === 0 : index == emojiGrid.currentCategoryIndex
                     onClicked: {

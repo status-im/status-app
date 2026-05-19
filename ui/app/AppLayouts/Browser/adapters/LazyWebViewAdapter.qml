@@ -1,15 +1,23 @@
 import QtQuick
 
-// Thin AbstractWebView that wraps WebViewAdapter in a Loader so WebEngineView is not created for
-// empty tabs. Activation is imperative and one-shot (loader.active flips true once, never back).
-// BrowserWebViewContext calls ensureLoaded() when switching to or loading a tab. Proxied state
-// defaults until the inner item exists. Capability flags are also proxied from loader.item so that
-// the correct per-platform values are reported automatically (e.g. +mobile/WebViewAdapter reports
-// supportsDevTools=false, supportsIncognito=false, dynamic hasNativeFindPanel); no separate
-// +mobile/LazyWebViewAdapter.qml is needed.
+import StatusQ.Core.Utils as SQUtils
+
+// Thin AbstractWebView that loads a per-platform WebViewAdapter on demand via
+// a Loader, so the heavy WebEngineView (or the native MobileWebViewBackend)
+// is not constructed for empty tabs. Activation is imperative and one-shot:
+// BrowserWebViewContext calls ensureLoaded() when switching to or loading a
+// tab. Capability flags and proxied state default while loader.item is null
+// and pick up the per-platform values once loaded — so reported flags such
+// as supportsDevTools/supportsIncognito/hasNativeFindPanel match the
+// underlying adapter automatically.
 
 AbstractWebView {
     id: root
+
+    // Desktop-only: WebEngineProfile owner injected from BrowserWebViewContext.
+    // Null on mobile (MobileWebViewAdapter doesn't need it).
+    // WARN: needs to remain a var to avoid mixing platform-specific types
+    property var profileManager: null
 
     supportsZoom:       loader.item ? loader.item.supportsZoom       : false
     supportsDevTools:   loader.item ? loader.item.supportsDevTools   : false
@@ -30,8 +38,22 @@ AbstractWebView {
     readonly property var scrollPosition: loader.item ? loader.item.scrollPosition : Qt.point(0, 0)
 
     function ensureLoaded() {
-        if (!loader.active)
-            loader.active = true
+        if (loader.status !== Loader.Null)
+            return
+        const props = {
+            profileParams:                 Qt.binding(() => root.profileParams),
+            bookmarksStore:                Qt.binding(() => root.bookmarksStore),
+            downloadsStore:                Qt.binding(() => root.downloadsStore),
+            webChannel:                    Qt.binding(() => root.webChannel),
+            enableJsLogs:                  Qt.binding(() => root.enableJsLogs),
+            localAccountSensitiveSettings: Qt.binding(() => root.localAccountSensitiveSettings),
+            isDownloadView:                Qt.binding(() => root.isDownloadView),
+            devToolsEnabled:               Qt.binding(() => root.devToolsEnabled),
+            freeze:                        Qt.binding(() => root.freeze),
+        }
+        if (!SQUtils.Utils.isMobile)
+            props.profileManager = Qt.binding(() => root.profileManager)
+        loader.setSource(loader.adapterPath, props)
     }
 
     function loadUrl(u) {
@@ -64,26 +86,26 @@ AbstractWebView {
     Loader {
         id: loader
         anchors.fill: parent
-        active: false
-        sourceComponent: WebViewAdapter {
-            profileParams:               root.profileParams
-            bookmarksStore:              root.bookmarksStore
-            downloadsStore:              root.downloadsStore
-            webChannel:                  root.webChannel
-            devToolsEnabled:             root.devToolsEnabled
-            enableJsLogs:                root.enableJsLogs
-            localAccountSensitiveSettings: root.localAccountSensitiveSettings
-            isDownloadView:              root.isDownloadView
-            freeze:                      root.freeze
-
-            Component.onCompleted: if (root.url.toString()) url = root.url
-
-            onUrlChanged: { if (root.url !== url) root.url = url }
+        onLoaded: {
+            if (root.url.toString()) loader.item.url = root.url
         }
+
+        onStatusChanged: {
+            if (status === Loader.Error) {
+                console.error("Failed to load WebViewAdapter")
+            }
+        }
+
+        readonly property string adapterPath: SQUtils.Utils.isMobile
+            ? "MobileWebViewAdapter.qml"
+            : "WebViewAdapter.qml"
     }
 
     Connections {
         target: loader.item
+        function onUrlChanged() {
+            if (root.url !== loader.item.url) root.url = loader.item.url
+        }
         function onLinkHovered(hoveredUrl)             { root.linkHovered(hoveredUrl) }
         function onWindowCloseRequested()              { root.windowCloseRequested() }
         function onDownloadRequested(download)         { root.downloadRequested(download) }

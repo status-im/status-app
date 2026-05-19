@@ -12,7 +12,8 @@ QtObject {
     property string dappName: ""
     property string dappIconUrl: ""
     property int dappChainId: 1
-    property string clientId: "status-desktop/dapp-browser"
+    property bool offTheRecord: false
+    readonly property string clientId: ConnectorConstants.clientIdFor(offTheRecord)
 
     // STATE
     property bool connected: false
@@ -147,7 +148,7 @@ QtObject {
         dappUrl = urlStr
         dappOrigin = Utils.normalizeOrigin(urlStr)
         dappName = name || Utils.extractDomainName(urlStr)
-        dappIconUrl = iconUrl ? iconUrl.toString() : ""
+        dappIconUrl = Utils.normalizeFaviconUrl(iconUrl ? iconUrl.toString() : "")
         dappChainId = 1
     }
 
@@ -158,7 +159,6 @@ QtObject {
             console.log("[ConnectorManager] Ignoring signal for other origin:", event.url, "expected:", dappOrigin)
             return false
         }
-
         // Filter by clientId
         if (event.clientId !== undefined && event.clientId !== "" && clientId !== "" && event.clientId !== clientId) {
             console.log("[ConnectorManager] Ignoring signal for other clientId:", event.clientId, "expected:", clientId)

@@ -1,7 +1,6 @@
 import nimqml, tables, std/strformat, sequtils, sugar
 # TODO: use generics to remove duplication between user_model and member_model
 
-import app/global/global_singleton
 import ../../../app_service/common/types
 import ../../../app_service/service/contacts/dto/[contacts, contact_details]
 import member_item
@@ -41,6 +40,9 @@ QtObject:
   type
     Model* = ref object of QAbstractListModel
       items: seq[MemberItem]
+      # O(1) pubkey -> row index lookup for hasMember and the various per-pubkey
+      # update procs. Maintained by every mutation below.
+      pubKeyIndex: Table[string, int]
 
   proc delete(self: Model)
   proc setup(self: Model)
@@ -50,9 +52,15 @@ QtObject:
 
   proc countChanged(self: Model) {.signal.}
 
+  proc rebuildPubKeyIndex(self: Model) =
+    self.pubKeyIndex.clear()
+    for i, it in self.items:
+      self.pubKeyIndex[it.pubKey] = i
+
   proc setItems*(self: Model, items: seq[MemberItem]) =
     self.beginResetModel()
     self.items = items
+    self.rebuildPubKeyIndex()
     self.endResetModel()
     self.countChanged()
 
@@ -119,7 +127,7 @@ QtObject:
     of ModelRole.PubKey:
       result = newQVariant(item.pubKey)
     of ModelRole.CompressedPubKey:
-      result = newQVariant(compressPk(item.pubKey))
+      result = newQVariant(item.compressedPubKey)
     of ModelRole.IsCurrentUser:
       result = newQVariant(item.isCurrentUser)
     of ModelRole.DisplayName:
@@ -136,14 +144,10 @@ QtObject:
     of ModelRole.LocalNickname:
       result = newQVariant(item.localNickname)
     of ModelRole.Alias:
-      if item.alias == "":
-        item.alias = singletonInstance.utils.generateAlias(item.pubKey)
       result = newQVariant(item.alias)
     of ModelRole.Icon:
       result = newQVariant(item.icon)
     of ModelRole.ColorId:
-      if item.colorId == 0:
-        item.colorId = singletonInstance.utils.getColorId(item.pubKey)
       result = newQVariant(item.colorId)
     of ModelRole.OnlineStatus:
       result = newQVariant(item.onlineStatus.int)
@@ -178,16 +182,13 @@ QtObject:
     let modelIndex = newQModelIndex()
     defer: modelIndex.delete
     self.beginInsertRows(modelIndex, self.items.len, self.items.len)
+    self.pubKeyIndex[item.pubKey] = self.items.len
     self.items.add(item)
     self.endInsertRows()
     self.countChanged()
 
   proc findIndexForMember*(self: Model, pubKey: string): int =
-    for i in 0 ..< self.items.len:
-      if self.items[i].pubKey == pubKey:
-        return i
-
-    return -1
+    return self.pubKeyIndex.getOrDefault(pubKey, -1)
 
   proc getMemberItemByIndex*(self: Model, ind: int): MemberItem =
     if ind >= 0 and ind < self.items.len:
@@ -199,15 +200,21 @@ QtObject:
       return self.items[ind]
 
   proc hasMember*(self: Model, pubKey: string): bool {.slot.} =
-    let ind = self.findIndexForMember(pubKey)
-    return ind != -1
+    return self.pubKeyIndex.hasKey(pubKey)
+
 
   proc removeItemWithIndex(self: Model, index: int) =
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
 
+    let removedPubKey = self.items[index].pubKey
     self.beginRemoveRows(parentModelIndex, index, index)
     self.items.delete(index)
+    self.pubKeyIndex.del(removedPubKey)
+    # seq.delete shifts every later entry left by one — reflect that in the index.
+    for v in self.pubKeyIndex.mvalues:
+      if v > index:
+        dec v
     self.endRemoveRows()
     self.countChanged()
 
@@ -217,6 +224,7 @@ QtObject:
 
     self.beginResetModel()
     self.items = @[]
+    self.pubKeyIndex.clear()
     self.endResetModel()
     self.countChanged()
 
@@ -232,14 +240,24 @@ QtObject:
     if items.len == 0:
       return
 
+    var newItems: seq[MemberItem] = @[]
+    let first = self.items.len
+    for it in items:
+      if self.pubKeyIndex.hasKey(it.pubKey):
+        continue
+      self.pubKeyIndex[it.pubKey] = first + newItems.len
+      newItems.add(it)
+
+    if newItems.len == 0:
+      return
+
     let modelIndex = newQModelIndex()
     defer: modelIndex.delete
 
-    let first = self.items.len
-    let last = first + items.len - 1
+    let last = first + newItems.len - 1
 
     self.beginInsertRows(modelIndex, first, last)
-    self.items.add(items)
+    self.items.add(newItems)
     self.endInsertRows()
     self.countChanged()
 
@@ -324,7 +342,10 @@ QtObject:
     updateRole(ensName, EnsName)
     updateRole(localNickname, LocalNickname)
     updateRole(isEnsVerified, IsEnsVerified)
-    updateRole(alias, Alias)
+    # `alias` is deterministic from the pubkey — preserve any previously
+    # resolved value when the incoming alias is empty (typical for
+    # `getContactDetails` placeholders that haven't been enriched yet).
+    updateRolePreserveOnEmpty(alias, Alias)
     updateRole(icon, Icon)
     updateRole(isContact, IsContact)
     updateRole(memberRole, MemberRole)
@@ -541,14 +562,9 @@ QtObject:
       ModelRole.MembershipRequestState.int
     ])
 
-  proc getNewMembers*(self: Model, pubkeys: seq[string]): seq[string] = 
+  proc getNewMembers*(self: Model, pubkeys: seq[string]): seq[string] =
     for pubkey in pubkeys:
-      var found = false
-      for item in self.items:
-        if item.pubKey == pubkey:
-          found = true
-          break
-      if not found:
+      if not self.pubKeyIndex.hasKey(pubkey):
         result.add(pubkey)
 
   proc createMemberItemFromDtos*(
@@ -585,6 +601,8 @@ QtObject:
       requestToJoinId = requestId,
       airdropAddress = airdropAddress,
       joined = joined,
+      compressedPubKey = contactDetails.dto.compressedPubKey,
+      emojiHash = contactDetails.dto.emojiHash,
     )
 
   proc delete(self: Model) =

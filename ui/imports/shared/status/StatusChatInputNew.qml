@@ -498,6 +498,7 @@ Control {
         title: qsTr("Please choose an image")
         currentFolder: picturesShortcut
         selectMultiple: true
+        usePhotoLibrary: true
         nameFilters: [
             qsTr("Image files (%1)").arg(UrlUtils.validImageNameFilters)
         ]
@@ -513,6 +514,8 @@ Control {
         width: root.width
 
         onClicked: index => {
+            InputMethod.commit()
+
             if (index === undefined) {
                 index = emojiSuggestions.listView.currentIndex
             }
@@ -539,6 +542,8 @@ Control {
         property bool shouldHide: false
 
         function selectItem(index: int) {
+            InputMethod.commit()
+
             const item = messageInputField.suggestionsModel.get(index)
 
             messageInputField.forceActiveFocus()

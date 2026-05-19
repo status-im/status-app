@@ -107,7 +107,22 @@ type TrustStatus* {.pure.}= enum
 
 const SIGNAL_LOCAL_BACKUP_IMPORT_COMPLETED* = "localBackupImportCompletedSignal"
 
+const SIGNAL_MESSENGER_STARTED* = "messengerStartedSignal"
+
 type
   LocalBackupImportArg* = ref object of Args
     error*: string
     response*: JsonNode
+
+  MessengerStartedArgs* = ref object of Args
+    error*: string
+
+  # Minimal projection of a ChatMember used to seed the contacts cache with
+  # status-go-enriched visual identity. Lives here so the contacts service does
+  # not have to import chat/dto.
+  MemberSeed* = object
+    id*: string
+    alias*: string
+    colorId*: int
+    compressedPubKey*: string
+    emojiHash*: string

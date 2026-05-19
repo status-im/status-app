@@ -50,6 +50,8 @@ ColumnLayout {
         statusListItemTitle.customColor: Theme.palette.directColor1
         statusListItemTitle.font.pixelSize: Theme.additionalTextSize
         statusListItemTitle.elide: Text.ElideMiddle
+        statusListItemTitle.textFormat: Text.PlainText
+        statusListItemSubTitle.textFormat: Text.PlainText
         border.width: 1
         border.color: Theme.palette.baseColor2
 
