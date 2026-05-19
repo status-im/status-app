@@ -161,9 +161,9 @@ proc deriveExtendedPublicKeyAtPath*(self: Controller, mnemonic: string, passphra
   return self.accountsService.deriveExtendedPublicKeyAtPath(mnemonic, passphrase, path)
 
 proc generateMnemonic*(self: Controller): string =
-  if not serviceApplicable(self.walletAccountService):
+  if not serviceApplicable(self.accountsService):
     return
-  return self.walletAccountService.getRandomMnemonic()
+  return self.accountsService.getRandomMnemonic()
 
 proc getKeypairs*(self: Controller): seq[wallet_account_service.KeypairDto] =
   if not serviceApplicable(self.walletAccountService):

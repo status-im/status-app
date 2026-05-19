@@ -543,14 +543,12 @@ proc fetchENSNamesForAddressesAsync(self: Service, addresses: seq[string], chain
 
 proc getRandomMnemonic*(self: Service): string =
   try:
-    let response = status_go_accounts.getRandomMnemonic()
+    let response = status_general.getRandomMnemonic()
     if not response.error.isNil:
-      error "status-go error", procName="getRandomMnemonic", errCode=response.error.code, errDesription=response.error.message
-      return ""
+      raise newException(RpcException, response.error.message)
     return response.result.getStr
   except Exception as e:
     error "error: ", procName="getRandomMnemonic", errName=e.name, errDesription=e.msg
-    return ""
 
 proc deleteAccount*(self: Service, address: string, password: string) =
   try:

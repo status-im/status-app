@@ -92,6 +92,15 @@ QtObject:
   proc clear*(self: Service) =
     self.loggedInAccount = AccountDto()
 
+  proc getRandomMnemonic*(self: Service): string =
+    try:
+      let response = status_general.getRandomMnemonic()
+      if not response.error.isNil:
+        raise newException(RpcException, response.error.message)
+      return response.result.getStr
+    except Exception as e:
+      error "error: ", procName="getRandomMnemonic", errName = e.name, errDesription = e.msg
+
   proc validateMnemonic*(self: Service, mnemonic: string): (string, string) =
     try:
       let response = status_general.validateMnemonic(mnemonic)

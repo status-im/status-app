@@ -194,10 +194,6 @@ proc isAlias*(value: string): bool =
   let r = Json.decode(response, JsonNode)
   return r["result"].getBool()
 
-proc getRandomMnemonic*(): RpcResponse[JsonNode] =
-  let payload = %* []
-  return core.callPrivateRPC("accounts_getRandomMnemonic", payload)
-
 proc makeSeedPhraseKeypairFullyOperable*(mnemonic, password: string):
   RpcResponse[JsonNode] =
   let payload = %* [mnemonic, password]

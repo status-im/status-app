@@ -9,6 +9,19 @@ export response_type
 logScope:
   topics = "rpc-general"
 
+proc getRandomMnemonic*(): RpcResponse[JsonNode] =
+  let response = status_go.getRandomMnemonic() # returns raw mnemonic string
+  try:
+    let parsed = parseJson(response)
+    if parsed.kind == JObject and parsed.hasKey("error"):
+      let errMsg = parsed["error"].getStr
+      result.error = RpcError(code: -1, message: errMsg)
+      error "error: ", procName="getRandomMnemonic", errDesription = errMsg
+      return result
+  except Exception as e:
+    info "random mnemonic generated successfully"
+  result.result = %* response # mnemonic is here, so return it as is
+
 proc validateMnemonic*(mnemonic: string): RpcResponse[JsonNode] =
   try:
     let response = status_go.validateMnemonic(mnemonic.strip())
