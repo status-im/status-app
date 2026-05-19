@@ -2880,3 +2880,4 @@ Item {
         value: appMain.Theme.palette
     }
 }
+
