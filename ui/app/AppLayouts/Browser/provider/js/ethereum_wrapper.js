@@ -17,9 +17,9 @@ const EthereumWrapper = (function() {
             }
 
             this.listeners = new Map(); // event -> Set<handler>
+            this._signalHandlers = new Map(); // eventName -> handler (for disconnect on unload)
             this.nativeEthereum = nativeEthereum;
-            // Start from a per-instance random base to avoid requestId collisions
-            // between different frames/tabs that share connector callbacks.
+            // Per-instance counter avoids requestId collisions between frames/tabs.
             this.requestIdCounter = Math.floor(Math.random() * 1000000000) + 1;
             this.pendingRequests = new Map(); // requestId -> { resolve, reject, timestamp }
             this.requestTimeout = 600000; // 10min timeout for pending requests. (nim side has it's own timeouts)
@@ -45,9 +45,24 @@ const EthereumWrapper = (function() {
             const event = this.nativeEthereum[eventName];
             if (event && event.connect) {
                 event.connect(handler);
+                this._signalHandlers.set(eventName, handler);
                 return true;
             }
             return false;
+        }
+
+        _disconnectAllSignals() {
+            for (const [eventName, handler] of this._signalHandlers.entries()) {
+                const event = this.nativeEthereum[eventName];
+                if (event && event.disconnect) {
+                    try {
+                        event.disconnect(handler);
+                    } catch (e) {
+                        console.error("[Ethereum Wrapper] Error disconnecting signal:", eventName, e);
+                    }
+                }
+            }
+            this._signalHandlers.clear();
         }
 
         _rejectRequests(requestsToReject, deleteFromPending = false) {
@@ -115,6 +130,7 @@ const EthereumWrapper = (function() {
         _setupPageUnloadHandler() {
             window.addEventListener('beforeunload', () => {
                 this._stopTimeoutChecker();
+                this._disconnectAllSignals();
                 this._rejectAllPendingRequests({
                     code: -32603,
                     message: 'Page is being unloaded'
@@ -241,17 +257,25 @@ const EthereumWrapper = (function() {
                 entry.resolve(resp);
             }
         }
-
         handleRequestCompleted(payload) {
-            const requestId = payload && (payload.requestId || (payload.response && payload.response.id)) || 0;
+            const responseId = (() => {
+                try {
+                    const r = payload?.response;
+                    return (typeof r === "string" ? JSON.parse(r) : r)?.id;
+                } catch (e) {
+                    return undefined;
+                }
+            })();
+            const requestId = (payload && payload.requestId) || responseId || 0;
+
             try {
                 const entry = this.pendingRequests.get(requestId);
-                
+
                 if (!entry) {
                     console.warn("[Ethereum Wrapper] No pending request found for ID:", requestId);
                     return;
                 }
-                
+
                 this._processResponse(payload && payload.response, entry.method, entry);
             } catch (e) {
                 console.error('[Ethereum Wrapper] requestCompletedEvent handler error', e);
