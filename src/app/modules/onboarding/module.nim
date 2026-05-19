@@ -238,7 +238,6 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
           keycardInfo.keyUID,
           keycardInfo.instanceUID,
           self.exportedKeys,
-          walletXPub = "",
           thirdpartyServicesEnabled,
         )
       of OnboardingFlow.LoginWithLostKeycardSeedphrase:

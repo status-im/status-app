@@ -239,7 +239,7 @@ QtObject:
     displayName: string,
     imagePath: string,
     imageCropRectangle: ImageCropRectangle,
-    keycardInstanceUID: string = "",
+    keycardInstanceUID: string,
     thirdpartyServicesEnabled: bool
   ): string =
 
@@ -287,7 +287,6 @@ QtObject:
     keyUid: string,
     instanceUid: string,
     keycardKeys: KeycardExportedKeysDto,
-    walletXPub: string,
     thirdpartyServicesEnabled: bool
     ): string =
 
@@ -302,7 +301,7 @@ QtObject:
       walletRootAddress: keycardKeys.walletRootKey.address,
       eip1581Address: keycardKeys.eip1581Key.address,
       encryptionPublicKey: keycardKeys.encryptionKey.publicKey,
-      walletXPub: walletXPub,
+      walletXPub: keycardKeys.extendedPublicKey.xpub,
       coldWallet: ColdWalletTypeStatusKeycard,
     )
 
