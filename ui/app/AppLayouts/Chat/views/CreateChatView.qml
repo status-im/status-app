@@ -79,7 +79,7 @@ Page {
                     }
                     if (model.count === 1) {
                         const member = model.get(0)
-                        const ensName = member.displayName.includes(".eth") ? member.displayName : ""
+                        const ensName = Utils.isValidEns(member.displayName) ? member.displayName : ""
                         root.rootStore.chatCommunitySectionModule.createOneToOneChat("", member.pubKey, ensName)
                     } else {
                         var groupName = []

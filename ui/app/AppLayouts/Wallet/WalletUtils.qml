@@ -296,7 +296,7 @@ QtObject {
         case Constants.routerErrorCodes.router.errDisabledChainFoundAmongLockedNetworks:
             return qsTr("disabled chain found among locked networks")
         case Constants.routerErrorCodes.router.errENSSetPubKeyInvalidUsername:
-            return qsTr("a valid username, ending in '.eth', is required for setting public key")
+            return qsTr("a valid ENS name is required for setting public key")
         case Constants.routerErrorCodes.router.errLockedAmountExcludesAllSupported:
             return qsTr("all supported chains are excluded, routing impossible")
         case Constants.routerErrorCodes.router.errTokenNotFound:
