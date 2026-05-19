@@ -113,6 +113,10 @@ QtObject:
       self.events.emit(SIGNAL_LOCAL_BACKUP_IMPORT_COMPLETED, LocalBackupImportArg(error: e.msg))
 
   proc connectionChange*(self: Service, connectionType: string, isExpensive: bool) =
+    when defined(android):
+      # Connectivity is driven natively by StatusGoService on Android — see
+      # mobile/android/qt6/.../ipc/StatusGoService.java. This QML path is a no-op.
+      return
     try:
       let response = status_go.connectionChange($(%* {"type": connectionType, "expensive": isExpensive}))
       let rpcResponseObj = response.parseJson

@@ -4,7 +4,11 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -68,6 +72,17 @@ public final class StatusGoService extends Service {
 
     private final ExecutorService lifecycleExecutor = Executors.newSingleThreadExecutor();
     private final AtomicInteger lifecycleGen = new AtomicInteger(0);
+
+    /**
+     * Native network connectivity monitoring. On Android the status-go lib runs in this
+     * process; the QML NetworkChecker path (which lives in the killable/pausable UI
+     * process) is a no-op here, so we observe connectivity natively and push it into
+     * status-go via the ConnectionChange RPC.
+     */
+    private ConnectivityManager connectivityManager;
+    private ConnectivityManager.NetworkCallback networkCallback;
+    /** Last (type|expensive) sent to status-go. Accessed only on the lifecycleExecutor thread. */
+    private String lastConnectionKey = null;
 
     /** Single instance per process; lets background components (NotificationReplyReceiver) reach the service. */
     private static volatile StatusGoService sInstance;
@@ -265,6 +280,113 @@ public final class StatusGoService extends Service {
         });
     }
 
+    /**
+     * Observes the default network and pushes connectivity state into status-go.
+     *
+     * onCapabilitiesChanged fires immediately on registration for the current network and
+     * again on every capability change; onLost fires when the (single) default network is
+     * gone. onAvailable is not overridden — onCapabilitiesChanged always follows it and
+     * carries the data we need.
+     */
+    private final class NetworkConnectivityCallback extends ConnectivityManager.NetworkCallback {
+        @Override
+        public void onCapabilitiesChanged(Network network, NetworkCapabilities caps) {
+            dispatchConnectionChange(typeFromCapabilities(caps), meteredFromCapabilities(caps));
+        }
+
+        @Override
+        public void onLost(Network network) {
+            dispatchConnectionChange("none", false);
+        }
+    }
+
+    /** Maps Android transports to a status-go connection type ("wifi"/"cellular"/"unknown"). */
+    private static String typeFromCapabilities(NetworkCapabilities caps) {
+        if (caps == null) return "unknown";
+        // VPN networks normally retain the underlying transport bits, so checking the real
+        // transports first classifies VPN-over-wifi/cellular correctly. Wi-Fi takes priority
+        // over cellular so a Wi-Fi+VPN combo is never mislabeled.
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return "wifi";
+        // status-go has no ethernet type; "wifi" is the closest fast/non-expensive class.
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) return "wifi";
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) return "cellular";
+        return "unknown";
+    }
+
+    /** A network is "expensive" (metered) when it lacks the NOT_METERED capability. */
+    private static boolean meteredFromCapabilities(NetworkCapabilities caps) {
+        if (caps == null) return false;
+        return !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
+    }
+
+    /**
+     * Serializes a ConnectionChange RPC onto lifecycleExecutor (the JNI-call thread),
+     * de-duplicating so status-go only sees calls when (type, expensive) actually changed.
+     * De-dup matters: onCapabilitiesChanged fires often for capability churn that does not
+     * change the pair, and each offline->online transition triggers a hystrix.Flush() in
+     * status-go.
+     */
+    private void dispatchConnectionChange(String type, boolean expensive) {
+        final String key = type + "|" + expensive;
+        try {
+            lifecycleExecutor.execute(() -> {
+                if (key.equals(lastConnectionKey)) return;
+                try {
+                    final JSONObject payload = new JSONObject();
+                    payload.put("type", type);
+                    payload.put("expensive", expensive);
+                    // nativeCall expects a JSON array of string args; ConnectionChange takes
+                    // a single JSON-object string.
+                    final String argsJson = "[" + JSONObject.quote(payload.toString()) + "]";
+                    Log.d(TAG, "ConnectionChange args: " + argsJson);
+                    final String resp = nativeCall("ConnectionChange", argsJson);
+                    lastConnectionKey = key; // only on success, so a transient failure can retry
+                    if (resp != null && !resp.isEmpty()) {
+                        final String err = new JSONObject(resp).optString("error", "");
+                        if (!err.isEmpty()) Log.w(TAG, "ConnectionChange returned error: " + err);
+                    }
+                } catch (Throwable t) {
+                    Log.w(TAG, "Failed to push ConnectionChange to status-go", t);
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException ignored) {
+            // service shutting down; nothing to push
+        }
+    }
+
+    /**
+     * Registers a default-network callback. registerDefaultNetworkCallback delivers the
+     * current network's onCapabilitiesChanged immediately, which — together with StartNode
+     * re-applying the stored connection state — seeds status-go with connectivity at start.
+     */
+    private void registerNetworkCallback() {
+        try {
+            connectivityManager =
+                    (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connectivityManager == null) {
+                Log.w(TAG, "ConnectivityManager unavailable; network monitoring disabled");
+                return;
+            }
+            networkCallback = new NetworkConnectivityCallback();
+            connectivityManager.registerDefaultNetworkCallback(networkCallback);
+        } catch (Throwable t) {
+            // e.g. RuntimeException("TOO_MANY_REQUESTS"); best-effort only.
+            Log.w(TAG, "Failed to register network callback", t);
+            networkCallback = null;
+        }
+    }
+
+    private void unregisterNetworkCallback() {
+        if (connectivityManager != null && networkCallback != null) {
+            try {
+                connectivityManager.unregisterNetworkCallback(networkCallback);
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to unregister network callback", t);
+            }
+        }
+        networkCallback = null;
+    }
+
     private void applyUiVisibility(boolean visible) {
         uiVisible = visible;
         // A real fg/bg transition handles messaging via scheduleBackendLifecycleUpdate;
@@ -344,6 +466,7 @@ public final class StatusGoService extends Service {
         notificationManager = new StatusNotificationManager(this);
         PushNotificationHelper.initialize(this);
         nativeInit(this);
+        registerNetworkCallback();
     }
 
     @Override
@@ -372,6 +495,7 @@ public final class StatusGoService extends Service {
     public void onDestroy() {
         sInstance = null;
         mainHandler.removeCallbacksAndMessages(null);
+        unregisterNetworkCallback();
         StatusNotificationManager.clearInstance();
         listeners.kill();
         lifecycleExecutor.shutdownNow();
