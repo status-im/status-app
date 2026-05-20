@@ -6164,10 +6164,6 @@ key pair. Keycard will be required for signing</source>
         <source>Adjective-animal Display Name formats are not allowed</source>
         <translation>No se permiten nombres públicos con el formato adjetivo-animal</translation>
     </message>
-    <message>
-        <source>This Display Name is already in use in one of your joined communities</source>
-        <translation>Este nombre público ya está en uso en una de tus comunidades unidas</translation>
-    </message>
 </context>
 <context>
     <name>DisplaySeedPhrase</name>
@@ -12628,6 +12624,10 @@ al cargar</translation>
     <message>
         <source>Web</source>
         <translation>Web</translation>
+    </message>
+    <message>
+        <source>This Display Name is already in use in one of your joined communities</source>
+        <translation type="unfinished">Este nombre público ya está en uso en una de tus comunidades unidas</translation>
     </message>
 </context>
 <context>
