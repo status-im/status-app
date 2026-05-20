@@ -657,9 +657,11 @@ Loader {
             font.pixelSize: Theme.secondaryTextFontSize
             width: parent.width - 120
             horizontalAlignment: Text.AlignHCenter
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.left: parent.left
+            anchors.right: parent.right
             textFormat: Text.RichText
             topPadding: root.prevMessageIndex === 1 ? Theme.bigPadding : 0
+            wrapMode: Text.Wrap
         }
     }
 
