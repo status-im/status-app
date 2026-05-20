@@ -163,6 +163,10 @@ Page {
 
             StatusChatInputNew {
                 id: chatInput
+
+                // Pinpoint default padding
+                Theme.padding: Theme.defaultPadding
+
                 Layout.alignment: Qt.AlignBottom
                 Layout.fillWidth: true
                 visible: membersSelector.model.count > 0
