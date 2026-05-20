@@ -17,6 +17,7 @@ import shared.controls
 import shared.panels
 
 import SortFilterProxyModel
+import QtModelsToolkit
 import utils
 
 Item {
@@ -98,9 +99,9 @@ Item {
 
         readonly property bool searchMode: searcher.text.length > 0
         readonly property bool availableData: {
-            if(root.type === ExtendedDropdownContent.Type.Assets && root.assetsModel && root.assetsModel.count > 0)
+            if(root.type === ExtendedDropdownContent.Type.Assets && root.assetsModel && root.assetsModel.ModelCount.count > 0)
                 return true
-            if(root.type === ExtendedDropdownContent.Type.Collectibles && root.collectiblesModel && root.collectiblesModel.count > 0)
+            if(root.type === ExtendedDropdownContent.Type.Collectibles && root.collectiblesModel && root.collectiblesModel.ModelCount.count > 0)
                 return true
             return false
         }

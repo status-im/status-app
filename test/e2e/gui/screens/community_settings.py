@@ -630,23 +630,26 @@ class PermissionsSettingsView(QObject):
         if not state:
             self._who_holds_checkbox.set(state)
 
-    @allure.step('Open holdings dropdown (retry clicks on slow CI)')
+    @allure.step('Open holdings dropdown (retry only if popup never appears)')
     def _open_holdings_popup(self) -> HoldingsPopup:
         assert self.who_holds_plus_button.is_enabled
-        timeout_msec = configs.timeouts.FEES_TIMEOUT_MSEC
+        popup_timeout_msec = configs.timeouts.FEES_TIMEOUT_MSEC
         last_error: typing.Optional[BaseException] = None
         for attempt in range(3):
             self.who_holds_plus_button.click()
             time.sleep(0.2)
+            popup = HoldingsPopup()
             try:
-                return HoldingsPopup().wait_until_appears(timeout_msec=timeout_msec)
+                QObject(popup.real_name).wait_until_appears(timeout_msec=popup_timeout_msec)
             except (TimeoutError, Exception) as err:
                 last_error = err
                 if attempt < 2:
                     time.sleep(0.5)
+                continue
+            return popup.wait_until_appears()
         raise TimeoutError(
             f'Holdings dropdown did not open after 3 clicks on who holds plus '
-            f'(waited {timeout_msec} ms per attempt)'
+            f'(waited {popup_timeout_msec} ms per attempt for popup to appear)'
         ) from last_error
 
     @allure.step('Set asset and amount')

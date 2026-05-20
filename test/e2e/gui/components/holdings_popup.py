@@ -27,8 +27,9 @@ class HoldingsPopup(QObject):
             check_interval=0.5,
     ):
         # Slower CI (e.g. Jenkins Ubuntu) often needs >5s for dropdown + token list after plus click.
+        # On slow CI that token load can exceed FEES_TIMEOUT_MSEC, so we wait longer here.
         super().wait_until_appears(timeout_msec, check_interval)
-        self._search_edit.wait_until_appears(timeout_msec)
+        self._search_edit.wait_until_appears(configs.timeouts.LOADING_LIST_TIMEOUT_MSEC)
         return self
 
     @allure.step('Switch Holdings popup to Assets tab')
