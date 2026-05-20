@@ -777,11 +777,10 @@ Rectangle {
                     formatBalance: root.formatBalance
                     showLinkPreviewSettings: root.askToEnableLinkPreview
                     onImageRemoved: (index) => {
-                        //Just do a copy and replace the whole thing because it's a plain JS array and thre's no signal when a single item is removed
-                        let urls = root.fileUrlsAndSources
-                        if (urls.length > index && urls[index]) {
+                        // Spread into a new array so assigning back triggers the property change notification
+                        let urls = [...root.fileUrlsAndSources]
+                        if (index < urls.length)
                             urls.splice(index, 1)
-                        }
                         root.fileUrlsAndSources = urls
                         validateImages(root.fileUrlsAndSources)
                     }
