@@ -40,9 +40,17 @@ rightSideWalletTabBar_StatusTabBar = {"container": mainWindow_RightTabView, "obj
 rightSideWalletTabBar_Assets_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "assetsTabButton", "text": "Assets", "type": "StatusTabButton", "visible": True}
 rightSideWalletTabBar_Collectibles_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "collectiblesTabButton", "text": "Collectibles", "type": "StatusTabButton", "visible": True}
 rightSideWalletTabBar_Activity_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "activityTabButton", "text": "Activity", "type": "StatusTabButton", "visible": True}
-o_AssetsView = {"container": mainWindow_RightTabView, "type": "AssetsView", "unnamed": 1, "visible": True}
+
+"""Wallet assets view"""
+assets_view = {"container": mainWindow_RightTabView, "objectName": "assetViewStatusListView", "type": "StatusListView", "visible": True}
+assets_viewTokenItem = {"container": mainWindow_RightTabView, "objectName": RegularExpression("AssetView_TokenListItem_*"), "type": "TokenDelegate", "visible": True}
+asset_details_view = {"container": mainWindow_RightTabView, "id": "assetDetailView", "type": "AssetsDetailView", "unnamed": 1, "visible": True}
+asset_details_header = {"container": mainWindow_RightTabView, "id": "tokenDetailsHeader", "type": "AssetsDetailsHeader", "unnamed": 1, "visible": True}
+asset_details_tool_bar = {"container": statusDesktop_mainWindow, "objectName": "statusToolBar", "type": "StatusToolBar", "visible": True}
+asset_details_back_button = {"container": asset_details_tool_bar, "objectName": "toolBarBackButton", "type": "StatusFlatButton", "visible": True}
+asset_details_chart_panel = {"container": asset_details_view, "type": "StatusChartPanel", "visible": True}
+asset_details_chart_canvas = {"container": asset_details_view, "type": "ChartCanvas", "visible": True}
 itemDelegate = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "id": "menuDelegate", "type": "ItemDelegate", "unnamed": 1, "visible": True}
-assetView_TokenListItem_TokenDelegate = {"container": mainWindow_RightTabView, "objectName": RegularExpression("AssetView_TokenListItem_*"), "type": "TokenDelegate", "visible": True}
 arrow_icon_StatusIcon = {"container": statusDesktop_mainWindow_overlay, "objectName": "arrow-up-icon", "type": "StatusIcon", "visible": True}
 collectible_item = {"container": mainWindow_RightTabView, "type": "CollectibleView", "unnamed": 1, "visible": True}
 mainWindow_settingsContentBaseScrollView_StatusScrollView_general = {"container":  statusDesktop_mainWindow, "objectName": "settingsContentBaseScrollView", "type": "StatusScrollView", "visible": True}

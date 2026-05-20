@@ -68,6 +68,15 @@ class WalletAddress(Enum):
 
 class WalletTokenSymbols(Enum):
     SNT = 'SNT'
+    ETH = 'ETH'
+    DAI = 'DAI'
+
+    @classmethod
+    def random_asset_details_symbol(cls) -> str:
+        return random.choice([cls.SNT.value, cls.ETH.value, cls.DAI.value])
+
+
+WALLET_ACCOUNT_EXPECTED_ASSET_TITLES = frozenset({'Status', 'Ethereum', 'DAI'})
 
 
 class DerivationPathValue(Enum):

@@ -13,6 +13,7 @@ from driver.objects_access import walk_children
 from gui.components.context_menu import ContextMenu
 from gui.components.wallet.add_saved_address_popup import AddEditSavedAddressPopup
 from gui.components.wallet.asset_context_menu_popup import AssetContextMenuPopup
+from gui.components.wallet.assets_view import AssetsView
 from gui.components.wallet.bridge_popup import BridgePopup
 from gui.components.wallet.confirmation_popup import ConfirmationPopup
 from gui.components.wallet.delete_account_confirmation_popup import RemoveAccountWithConfirmation
@@ -244,7 +245,7 @@ class WalletAccountView(QObject):
         self._assets_tab_button = Button(wallet_names.rightSideWalletTabBar_Assets_StatusTabButton)
         self._collectibles_tab_button = Button(wallet_names.rightSideWalletTabBar_Collectibles_StatusTabButton)
         self._asset_item_delegate = QObject(wallet_names.itemDelegate)
-        self._asset_item = QObject(wallet_names.assetView_TokenListItem_TokenDelegate)
+        self._asset_item = QObject(wallet_names.assets_viewTokenItem)
         self._arrow_icon = QObject(wallet_names.arrow_icon_StatusIcon)
         self.footer_swap_button = Button(wallet_names.mainWindow_Swap_Button)
 
@@ -257,6 +258,11 @@ class WalletAccountView(QObject):
     @allure.step('Get address of account')
     def address(self) -> str:
         return str(self._addresses_panel.object.value)
+
+    @allure.step('Open assets list')
+    def open_assets_view(self):
+        self._assets_tab_button.click()
+        return AssetsView().wait_until_appears()
 
     @allure.step('Wait until appears {0}')
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
