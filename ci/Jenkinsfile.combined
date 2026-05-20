@@ -169,12 +169,6 @@ pipeline {
             }
           }
         }
-        stage('Fdroid/arm64') {
-          steps { script {
-            fdroid_arm64 = getArtifacts(
-              'Fdroid/arm64', jenkins.Build('status-app/systems/fdroid/arm64/package')
-            )
-        } } }
       }
     }
     stage('Publish') {
