@@ -6,6 +6,9 @@ import Qt5Compat.GraphicalEffects
 import StatusQ.Core
 import StatusQ.Controls
 
+import utils
+import shared.popups
+
 Control {
     id: root
 
@@ -57,7 +60,19 @@ Control {
         icon.name: "view"
         text: qsTr("Reveal recovery phrase")
         onClicked: {
-            root.seedPhraseRevealed = true
+            const services = SystemUtils.activeThirdPartyA11yServices()
+            console.log("A11Y_REVEAL: onClicked fired, services='" + services + "' len=" + services.length)
+            if (services.length > 0) {
+                a11yWarningPopup.serviceNames = services
+                a11yWarningPopup.open()
+            } else {
+                root.seedPhraseRevealed = true
+            }
         }
+    }
+
+    AccessibilityWarningPopup {
+        id: a11yWarningPopup
+        onRevealAccepted: root.seedPhraseRevealed = true
     }
 }

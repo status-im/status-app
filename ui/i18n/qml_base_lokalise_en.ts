@@ -107,6 +107,34 @@
     </message>
   </context>
   <context>
+    <name>AccessibilityWarningPopup</name>
+    <message>
+      <source>Accessibility service active</source>
+      <comment>AccessibilityWarningPopup</comment>
+      <translation>Accessibility service active</translation>
+    </message>
+    <message>
+      <source>&lt;b&gt;%1&lt;/b&gt; has accessibility access and can read content on your screen. Only reveal your recovery phrase if you trust this app.</source>
+      <comment>AccessibilityWarningPopup</comment>
+      <translation>&lt;b&gt;%1&lt;/b&gt; has accessibility access and can read content on your screen. Only reveal your recovery phrase if you trust this app.</translation>
+    </message>
+    <message>
+      <source>An app with accessibility access is active and can read content on your screen. Only reveal your recovery phrase if you trust it.</source>
+      <comment>AccessibilityWarningPopup</comment>
+      <translation>An app with accessibility access is active and can read content on your screen. Only reveal your recovery phrase if you trust it.</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <comment>AccessibilityWarningPopup</comment>
+      <translation>Cancel</translation>
+    </message>
+    <message>
+      <source>Reveal anyway</source>
+      <comment>AccessibilityWarningPopup</comment>
+      <translation>Reveal anyway</translation>
+    </message>
+  </context>
+  <context>
     <name>AccountAddressSelection</name>
     <message>
       <source>Scan addresses for activity</source>

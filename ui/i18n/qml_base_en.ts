@@ -88,6 +88,29 @@
     </message>
 </context>
 <context>
+    <name>AccessibilityWarningPopup</name>
+    <message>
+        <source>Accessibility service active</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;%1&lt;/b&gt; has accessibility access and can read content on your screen. Only reveal your recovery phrase if you trust this app.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>An app with accessibility access is active and can read content on your screen. Only reveal your recovery phrase if you trust it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reveal anyway</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AccountAddressSelection</name>
     <message>
         <source>Scan addresses for activity</source>
