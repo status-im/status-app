@@ -73,6 +73,8 @@ Dialog {
         property int windowHeight
 
         readonly property real bottomSheetHeightRatio: 0.90
+
+        property real yOffset
     }
 
     onAboutToShow: {
@@ -85,12 +87,14 @@ Dialog {
     // Test Android if you want to change this
     exit: Transition {
         id: exitTransition
+
         NumberAnimation {
             property: "opacity"; from: 1; to: 0
             duration: ThemeUtils.AnimationDuration.Fast
             easing.type: Easing.OutQuint
         }
         NumberAnimation {
+
             property: "y"; from: root.y; to: root.parent.height
             duration: ThemeUtils.AnimationDuration.Fast
             easing.type: Easing.OutCubic
@@ -99,6 +103,7 @@ Dialog {
 
     enter: Transition {
         id: enterTransition
+
         ParallelAnimation {
             NumberAnimation {
                 property: "opacity"
@@ -106,10 +111,15 @@ Dialog {
                 to: 1.0
                 duration: ThemeUtils.AnimationDuration.Fast
             }
+
+            // animate additional spacing to 0 to avoid inaccurate animation from outside to final position (the final position may
+            // change during animation and it's too late to take it into account. The result is may be mispaced then, causing effect
+            // of jumping at the end of animation.
             NumberAnimation {
-                property: "y"
-                from: root.parent.height
-                to: root.desiredY
+                target: d
+                property: "yOffset"
+                from: root.height
+                to: 0
                 duration: ThemeUtils.AnimationDuration.Fast
                 easing.type: Easing.OutCubic
             }
@@ -123,14 +133,14 @@ Dialog {
         when: root.bottomSheet && !enterTransition.running && (!footer || footer.height === 0 || !footer.visible)
         value: padding + root.parent.SafeArea.margins.bottom
     }
+
     Binding on width {
         when: root.bottomSheet
         value: d.windowWidth
     }
 
     Binding on height {
-        when: root.bottomSheet && !enterTransition.running && !root.fullScreenSheet
-        delayed: true
+        when: root.bottomSheet && !root.fullScreenSheet
         value: root.fillHeightOnBottomSheet ? d.windowHeight * d.bottomSheetHeightRatio
                                             : Math.min(implicitHeight, d.windowHeight * d.bottomSheetHeightRatio)
     }
@@ -140,18 +150,22 @@ Dialog {
         value: d.windowHeight
     }
 
+    // Binding on topMargin {
+    //     when: root.bottomSheet && !root.fullScreenSheet
+    //     value: d.windowHeight * (1 - d.bottomSheetHeightRatio)
+    // }
+
     // Landscape mode: dialogs should not take the full height.
     // Limit the height to the smaller value between the content’s implicitHeight
     // and 80% of the window height (leaving 10% margin top and bottom)
     Binding on height {
-        delayed: true
         when: !root.bottomSheet
         value: Math.min(implicitHeight, d.windowHeight * 0.8)
     }
 
     Binding on y {
         when: root.bottomSheet && !enterTransition.running && !root.fullScreenSheet
-        value: root.desiredY
+        value: root.desiredY //+ d.yOffset
     }
 
     Binding on y {
@@ -207,6 +221,7 @@ Dialog {
         readonly property int yesRoleFlags: Dialog.Yes | Dialog.YesToAll
 
         bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
+
         visible: rightButtons
                  && root.standardButtons & (rejectRoleFlags | noRoleFlags | acceptRoleFlags
                                             | yesRoleFlags | Dialog.ApplyRole)

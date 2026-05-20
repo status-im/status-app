@@ -7,7 +7,7 @@ import Qt5Compat.GraphicalEffects
 import StatusQ.Core
 import StatusQ.Core.Theme
 
-ToolBar {
+Control {
     id: root
 
     readonly property alias headline: headline
@@ -27,7 +27,6 @@ ToolBar {
     
     signal closeInternalPopup()
 
-    position: ToolBar.Top
     background: StatusDialogBackground {
         color: root.color
         radius: root.radius
@@ -41,8 +40,7 @@ ToolBar {
         }
     }
 
-    Item {
-        id: content
+    contentItem: Item {
         anchors.fill: parent
 
         implicitHeight: layout.implicitHeight + layout.anchors.topMargin + layout.anchors.bottomMargin

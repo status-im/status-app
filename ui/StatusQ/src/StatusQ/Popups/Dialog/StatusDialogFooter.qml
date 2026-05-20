@@ -18,7 +18,11 @@ Control {
 
     spacing: Theme.halfPadding
     padding: Theme.padding
-    bottomPadding: padding + root.parent.SafeArea.margins.bottom
+
+    //TODO: using popups parent's safe area eliminates binding loops (otherwise y/height/bottomPadding are interdepenent) for bottom sheet
+    // but for normal mode popup should use margins instead.
+    bottomPadding: padding + (root.parent && root.parent.parent ?
+                                  root.parent.parent.SafeArea.margins.bottom : 0)
 
     background: Rectangle {
         color: root.color
