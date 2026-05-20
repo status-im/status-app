@@ -17,6 +17,7 @@ import "../controls"
 import "./profile"
 
 import StatusQ.Core
+import StatusQ.Core.Backpressure
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils
 import StatusQ.Components
@@ -305,9 +306,38 @@ SettingsContentBase {
                 displayName.input.edit.readOnly: isEnsName
                 displayName.text: profileStore.displayName
                 displayName.placeholderText: profileStore.compressedPubKey
-                displayName.validationMode: StatusInput.ValidationMode.Always
-                displayName.validators: isEnsName || (profileStore.displayName === displayName.text) ? [] : displayNameValidators.validators
+                displayName.validators: []
                 bio.text: profileStore.bio
+
+                function setDisplayNameValidityAndErrorMessage(isValid, message) {
+                    displayName.valid = isValid
+                    displayName.errorMessage = message
+                    displayName.errorMessageCmp.text = message
+                }
+
+                function runFastDisplayNameValidation() {
+                    const value = descriptionPanel.displayName.text
+
+                    if (isEnsName || (profileStore.displayName === value)) {
+                        descriptionPanel.setDisplayNameValidityAndErrorMessage(true, "")
+                        return true
+                    }
+
+                    for (let idx in displayNameValidators.validators) {
+                        const validator = displayNameValidators.validators[idx]
+                        const result = validator.validate(value)
+                        const isValid = typeof result === "boolean" ? result : result.valid
+
+                        if (!isValid) {
+                            const message = (typeof result === "object" && result.errorMessage) ? result.errorMessage : validator.errorMessage
+                            descriptionPanel.setDisplayNameValidityAndErrorMessage(false, message)
+                            return false
+                        }
+                    }
+
+                    descriptionPanel.setDisplayNameValidityAndErrorMessage(true, "")
+                    return true
+                }
 
                 DisplayNameValidators {
                     id: displayNameValidators
@@ -315,6 +345,30 @@ SettingsContentBase {
                     utilsStore: root.utilsStore
                     myDisplayName: root.profileStore.name
                     communitiesStore: root.communitiesStore
+                }
+
+                Connections {
+                    target: descriptionPanel.displayName
+
+                    function onTextChanged() {
+                        if (!descriptionPanel.runFastDisplayNameValidation()) {
+                            return
+                        }
+
+                        Backpressure.debounce(root, 500, () => {
+                            const displayName = descriptionPanel.displayName.text
+                            if (!root.communitiesStore || displayName === root.profileStore.name) {
+                                descriptionPanel.setDisplayNameValidityAndErrorMessage(true, "")
+                                return
+                            }
+
+                            if (root.communitiesStore.isDisplayNameDupeOfCommunityMember(displayName)) {
+                                descriptionPanel.setDisplayNameValidityAndErrorMessage(false, qsTr("This Display Name is already in use in one of your joined communities"))
+                            } else {
+                                descriptionPanel.setDisplayNameValidityAndErrorMessage(true, "")
+                            }
+                        })()
+                    }
                 }
             }
         }

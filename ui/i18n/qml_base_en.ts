@@ -6155,10 +6155,6 @@ key pair. Keycard will be required for signing</source>
         <source>Adjective-animal Display Name formats are not allowed</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <source>This Display Name is already in use in one of your joined communities</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 <context>
     <name>DisplaySeedPhrase</name>
@@ -12855,6 +12851,10 @@ to load</source>
     </message>
     <message>
         <source>Web</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This Display Name is already in use in one of your joined communities</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

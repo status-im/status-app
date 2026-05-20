@@ -6145,10 +6145,6 @@ key pair. Keycard will be required for signing</source>
         <source>Adjective-animal Display Name formats are not allowed</source>
         <translation>형용사-동물 형태의 표시 이름은 허용되지 않습니다</translation>
     </message>
-    <message>
-        <source>This Display Name is already in use in one of your joined communities</source>
-        <translation>이 표시 이름은 당신이 가입한 커뮤니티 중 하나에서 이미 사용 중입니다</translation>
-    </message>
 </context>
 <context>
     <name>DisplaySeedPhrase</name>
@@ -12832,6 +12828,10 @@ to load</source>
     <message>
         <source>Web</source>
         <translation>웹</translation>
+    </message>
+    <message>
+        <source>This Display Name is already in use in one of your joined communities</source>
+        <translation type="unfinished">이 표시 이름은 당신이 가입한 커뮤니티 중 하나에서 이미 사용 중입니다</translation>
     </message>
 </context>
 <context>
