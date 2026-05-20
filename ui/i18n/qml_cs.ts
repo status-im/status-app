@@ -6186,10 +6186,6 @@ key pair. Keycard will be required for signing</source>
         <source>Adjective-animal Display Name formats are not allowed</source>
         <translation>Formáty zobrazovaných jmen Přídavné jméno-zvíře nejsou povoleny</translation>
     </message>
-    <message>
-        <source>This Display Name is already in use in one of your joined communities</source>
-        <translation>Toto zobrazované jméno se již používá v jedné z vašich připojených komunit</translation>
-    </message>
 </context>
 <context>
     <name>DisplaySeedPhrase</name>
@@ -12706,6 +12702,10 @@ selhalo</translation>
     <message>
         <source>Web</source>
         <translation>Web</translation>
+    </message>
+    <message>
+        <source>This Display Name is already in use in one of your joined communities</source>
+        <translation type="unfinished">Toto zobrazované jméno se již používá v jedné z vašich připojených komunit</translation>
     </message>
 </context>
 <context>

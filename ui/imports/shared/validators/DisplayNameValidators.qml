@@ -48,16 +48,6 @@ QtObject {
             name: "isAliasValidator"
             validate: function (t) { return !root.utilsStore.isAlias(t) }
             errorMessage: qsTr("Adjective-animal Display Name formats are not allowed")
-        },
-        StatusValidator {
-            name: "isDuplicateInComunitiesValidator"
-            validate: displayName => {
-                if (!root.communitiesStore || displayName === root.myDisplayName)
-                    return true
-
-                return !communitiesStore.isDisplayNameDupeOfCommunityMember(displayName)
-            }
-            errorMessage: qsTr("This Display Name is already in use in one of your joined communities")
         }
     ]
 }
