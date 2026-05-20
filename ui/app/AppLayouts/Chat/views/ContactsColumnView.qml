@@ -36,6 +36,16 @@ Item {
     property RootStore store
     property var emojiPopup
 
+    QtObject {
+        id: d
+
+        readonly property int listContentLeftMarginOffset: 1
+        readonly property int listContentLeftMargin: SQUtils.Utils.swipeIndicatorWidth + listContentLeftMarginOffset
+        readonly property int scrollBarWidth: Math.max(Theme.halfPadding, 8)
+        // Includes StatusScrollView's 1px scrollbar inset and 1px gap before it.
+        readonly property int scrollBarSpacing: 2
+    }
+
     signal shareOwnProfileRequested()
     signal openAppSearch()
     signal addRemoveGroupMemberClicked()
@@ -131,12 +141,15 @@ Item {
         StatusScrollView {
             id: scrollView
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.halfPadding
             Layout.fillHeight: true
 
             topPadding: 0
-            leftPadding: 0
+            leftPadding: d.listContentLeftMargin
+            rightPadding: d.scrollBarWidth + d.scrollBarSpacing
             contentWidth: availableWidth
+
+            ScrollBar.vertical.implicitWidth: d.scrollBarWidth
+            ScrollBar.vertical.width: d.scrollBarWidth
 
             StatusChatList {
                 id: channelList
