@@ -400,9 +400,8 @@ Window {
             // on mobile, we minimize to background (no tray icon or quitOnClose setting)
             if (SQUtils.Utils.isMobile) {
                 close.accepted = false
-                // In case of android, we need to handle moveTaskToBackground explicitly
                 if (SQUtils.Utils.isAndroid)
-                    close.accepted = true
+                    MobileUI.backToHomeScreen()
                 else
                     applicationWindow.showMinimized()
             // In case not logged in or loading, quit app
