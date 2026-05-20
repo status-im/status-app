@@ -2,6 +2,17 @@
 
 // IIFE start (https://developer.mozilla.org/ru/docs/Glossary/IIFE)
 const EthereumWrapper = (function() {
+    try {
+        const prev = window.__ETHEREUM_WRAPPER_INSTANCE__;
+        delete window.__ETHEREUM_WRAPPER_INSTANCE__;
+        delete window.__ETHEREUM_INSTALLED__;
+        if (window.ethereum && (window.ethereum.__statusStub__
+                || (prev && prev.EthereumProvider
+                    && window.ethereum instanceof prev.EthereumProvider))) {
+            try { delete window.ethereum; } catch (e) {}
+        }
+    } catch (e) {}
+
     if (window.__ETHEREUM_WRAPPER_INSTANCE__) {
         return window.__ETHEREUM_WRAPPER_INSTANCE__;
     }
@@ -355,7 +366,7 @@ const EthereumWrapper = (function() {
             Object.defineProperty(window, 'ethereum', {
                 value: provider,
                 writable: false,
-                configurable: false,
+                configurable: true,
                 enumerable: true
             });
             window.__ETHEREUM_INSTALLED__ = true;

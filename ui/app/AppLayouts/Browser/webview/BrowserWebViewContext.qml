@@ -7,6 +7,8 @@ import utils
 import AppLayouts.Browser.adapters
 import AppLayouts.Browser.provider.qml
 
+import "../provider/qml/Utils.js" as BrowserProviderUtils
+
 QtObject {
     id: root
 
@@ -138,7 +140,11 @@ QtObject {
     }
 
     function disconnectDapp(dappUrl) {
-        currentWebView?.bridge?.disconnect(dappUrl)
+        const origin = BrowserProviderUtils.normalizeOrigin(dappUrl)
+        if (!origin || !connectorController)
+            return false
+
+        return connectorController.disconnect(origin, currentClientId)
     }
 
     function changeAccountForCurrentDapp(address) {
@@ -166,6 +172,8 @@ QtObject {
     function reloadCurrent() {
         if (!currentWebView)
             return
+        if (typeof currentWebView.ensureLoaded === "function")
+            currentWebView.ensureLoaded()
         currentWebView.reload()
     }
 

@@ -91,9 +91,7 @@ AbstractWebView {
     }
 
     function reload() {
-        if (backend.url.toString() !== "") {
-            backend.loadUrl(backend.url)
-        }
+        backend.reload()
     }
 
     function stop() {

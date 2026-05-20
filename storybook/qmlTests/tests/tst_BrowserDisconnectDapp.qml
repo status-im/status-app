@@ -8,18 +8,15 @@ import AppLayouts.Browser.webview
 import "../../../ui/app/AppLayouts/Browser/provider/qml/Utils.js" as Utils
 
 /**
- * Regression: disconnecting a background dApp (OpenSea) while another tab (hub) is active.
- *
- * Bug (BrowserWebViewContext.disconnectDapp): uses currentWebView.bridge only, so Nim
- * disconnect is invoked from the wrong tab context and the matching tab stays connected.
- *
- * Fix: resolve the webview/bridge whose tab URL matches the dApp being disconnected.
+ * Regression: BrowserWebViewContext.disconnectDapp for browser dApp combobox.
+ * Disconnect goes through connectorController using currentClientId (browser profile).
  */
 Item {
     id: root
 
     readonly property string hubUrl: "https://hub.status.network"
     readonly property string openseaUrl: "https://opensea.io"
+    readonly property string browserClientId: ConnectorConstants.clientIdFor(false)
 
     Component {
         id: mockConnectorControllerComponent
@@ -33,7 +30,6 @@ Item {
             signal chainIdSwitched(string payload)
             signal accountChanged(string payload)
 
-            property string lastDisconnectInvokerOrigin: ""
             property var disconnectCalls: []
 
             function connectorCallRPC(requestId, json) {
@@ -44,11 +40,8 @@ Item {
 
             function disconnect(hostname, clientId) {
                 const target = Utils.normalizeOrigin(hostname)
-                const invoker = lastDisconnectInvokerOrigin
-                const ok = invoker === target
-                disconnectCalls.push({ target: target, invoker: invoker, ok: ok, clientId: clientId })
-                lastDisconnectInvokerOrigin = ""
-                return ok
+                disconnectCalls.push({ target: target, clientId: clientId })
+                return true
             }
 
             function changeAccount() {}
@@ -67,29 +60,11 @@ Item {
     }
 
     Component {
-        id: bridgeDisconnectProxyComponent
-
-        QtObject {
-            required property var innerBridge
-            required property var mockController
-
-            readonly property string dappOrigin: innerBridge.dappOrigin
-            readonly property var connectorManager: innerBridge.connectorManager
-            readonly property var eip1193ProviderAdapter: innerBridge.eip1193ProviderAdapter
-
-            function disconnect(hostname) {
-                mockController.lastDisconnectInvokerOrigin = innerBridge.dappOrigin
-                return innerBridge.disconnect(hostname)
-            }
-        }
-    }
-
-    Component {
         id: tabHostComponent
 
         Item {
             id: tabHost
-            property url tabUrl
+            property url url
             property var bridge
         }
     }
@@ -100,6 +75,18 @@ Item {
         QtObject {
             property int currentIndex: 0
             readonly property int count: 2
+            function createEmptyTab() {}
+            function createDownloadTab() {}
+            function removeTab() {}
+        }
+    }
+
+    Component {
+        id: tabsModelSingleTabComponent
+
+        QtObject {
+            property int currentIndex: 0
+            readonly property int count: 1
             function createEmptyTab() {}
             function createDownloadTab() {}
             function removeTab() {}
@@ -142,8 +129,8 @@ Item {
         property Item hostStack: null
         property var tabsModel: null
         property BrowserWebViewContext webViewContext: null
-        property var hubBridgeProxy: null
-        property var openseaBridgeProxy: null
+        property var hubBridge: null
+        property var openseaBridge: null
 
         function init() {
             mock = createTemporaryObject(mockConnectorControllerComponent, root)
@@ -152,33 +139,24 @@ Item {
             hostStack = createTemporaryObject(tabHostComponent, root, { width: 1, height: 1 })
             tabsModel = createTemporaryObject(tabsModelComponent, root)
 
-            const hubInner = createTemporaryObject(connectorBridgeComponent, root, {
+            hubBridge = createTemporaryObject(connectorBridgeComponent, root, {
                 controller: mock,
                 tabUrl: root.hubUrl,
                 tabIncognito: false
             })
-            const openseaInner = createTemporaryObject(connectorBridgeComponent, root, {
+            openseaBridge = createTemporaryObject(connectorBridgeComponent, root, {
                 controller: mock,
                 tabUrl: root.openseaUrl,
                 tabIncognito: false
             })
 
-            hubBridgeProxy = createTemporaryObject(bridgeDisconnectProxyComponent, root, {
-                innerBridge: hubInner,
-                mockController: mock
-            })
-            openseaBridgeProxy = createTemporaryObject(bridgeDisconnectProxyComponent, root, {
-                innerBridge: openseaInner,
-                mockController: mock
-            })
-
             createTemporaryObject(tabHostComponent, hostStack, {
-                tabUrl: root.hubUrl,
-                bridge: hubBridgeProxy
+                url: root.hubUrl,
+                bridge: hubBridge
             })
             createTemporaryObject(tabHostComponent, hostStack, {
-                tabUrl: root.openseaUrl,
-                bridge: openseaBridgeProxy
+                url: root.openseaUrl,
+                bridge: openseaBridge
             })
 
             webViewContext = createTemporaryObject(browserWebViewContextComponent, root, {
@@ -189,46 +167,79 @@ Item {
         }
 
         function connectOpenSea() {
-            const clientId = ConnectorConstants.clientIdFor(false)
             mock.connected(JSON.stringify({
                 url: root.openseaUrl,
-                clientId: clientId,
+                clientId: root.browserClientId,
                 sharedAccount: "0xda4a19b7aec958688d2531175e2757427372c6d1",
                 chainId: 1
             }))
         }
 
-        // Hub is the active tab; disconnect OpenSea from wallet must use OpenSea's bridge.
-        function test_disconnectDappTargetsMatchingTabNotCurrentTab() {
+        // Hub is active; disconnect OpenSea from combobox must not use the hub tab bridge.
+        function test_disconnectDappUsesControllerNotActiveTabBridge() {
             connectOpenSea()
 
-            compare(openseaBridgeProxy.connectorManager.connected, true,
+            compare(openseaBridge.connectorManager.connected, true,
                     "OpenSea tab should be connected before disconnect")
-            compare(hubBridgeProxy.connectorManager.connected, false,
+            compare(hubBridge.connectorManager.connected, false,
                     "Hub tab must stay disconnected")
 
             tabsModel.currentIndex = 0
             compare(webViewContext.currentWebView.bridge.dappOrigin, root.hubUrl,
                     "Active tab must be hub while disconnecting background OpenSea")
 
-            webViewContext.disconnectDapp(root.openseaUrl)
+            verify(webViewContext.disconnectDapp(root.openseaUrl))
 
             compare(mock.disconnectCalls.length, 1, "disconnect must be invoked once")
-            compare(mock.disconnectCalls[0].invoker, root.openseaUrl,
-                    "disconnect must run through the OpenSea tab bridge, not the active hub tab")
             compare(mock.disconnectCalls[0].target, root.openseaUrl)
-            verify(mock.disconnectCalls[0].ok,
-                    "backend disconnect must succeed when invoked from the matching tab bridge")
+            compare(mock.disconnectCalls[0].clientId, root.browserClientId)
 
             mock.disconnected(JSON.stringify({
                 url: root.openseaUrl,
-                clientId: ConnectorConstants.clientIdFor(false)
+                clientId: root.browserClientId
             }))
 
-            compare(openseaBridgeProxy.connectorManager.connected, false,
+            compare(openseaBridge.connectorManager.connected, false,
                     "OpenSea provider state must clear after disconnect")
-            compare(hubBridgeProxy.connectorManager.connected, false,
+            compare(hubBridge.connectorManager.connected, false,
                     "Hub tab must remain disconnected")
+        }
+
+        // OpenSea tab closed; clientId comes from the active tab profile (currentClientId).
+        function test_disconnectDappUsesCurrentProfileClientIdWhenTabClosed() {
+            const localMock = createTemporaryObject(mockConnectorControllerComponent, root)
+            localMock.disconnectCalls = []
+
+            const localHostStack = createTemporaryObject(tabHostComponent, root, { width: 1, height: 1 })
+            const localTabsModel = createTemporaryObject(tabsModelSingleTabComponent, root)
+
+            const hubBridgeLocal = createTemporaryObject(connectorBridgeComponent, root, {
+                controller: localMock,
+                tabUrl: root.hubUrl,
+                tabIncognito: false
+            })
+
+            createTemporaryObject(tabHostComponent, localHostStack, {
+                url: root.hubUrl,
+                bridge: hubBridgeLocal
+            })
+
+            const localWebViewContext = createTemporaryObject(browserWebViewContextComponent, root, {
+                hostStack: localHostStack,
+                tabsModelRef: localTabsModel,
+                connectorControllerRef: localMock
+            })
+
+            compare(localTabsModel.count, 1, "OpenSea tab must be closed")
+            compare(localWebViewContext.currentWebView.url, root.hubUrl,
+                    "Only hub tab is open while disconnecting OpenSea from combobox")
+
+            verify(localWebViewContext.disconnectDapp(root.openseaUrl),
+                   "disconnect from browser dApp combobox must succeed without a matching tab")
+            compare(localMock.disconnectCalls.length, 1,
+                    "controller.disconnect must be invoked when no tab matches the dApp URL")
+            compare(localMock.disconnectCalls[0].target, root.openseaUrl)
+            compare(localMock.disconnectCalls[0].clientId, root.browserClientId)
         }
     }
 }

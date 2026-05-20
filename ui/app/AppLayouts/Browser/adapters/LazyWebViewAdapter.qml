@@ -64,7 +64,11 @@ AbstractWebView {
     function goBack()             { if (loader.item) loader.item.goBack() }
     function goForward()          { if (loader.item) loader.item.goForward() }
     function goBackOrForward(o)   { if (loader.item) loader.item.goBackOrForward(o) }
-    function reload()             { if (loader.item) loader.item.reload() }
+    function reload() {
+        ensureLoaded()
+        if (loader.item)
+            loader.item.reload()
+    }
     function stop()               { if (loader.item) loader.item.stop() }
     function findText(text, flags){ if (loader.item) loader.item.findText(text, flags) }
     function showFindPanel()      { if (loader.item) loader.item.showFindPanel() }
