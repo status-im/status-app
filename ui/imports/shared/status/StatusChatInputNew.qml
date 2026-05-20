@@ -722,7 +722,7 @@ Control {
 
                         topPadding: 9
                         bottomPadding: 9
-                        leftPadding: 0
+                        leftPadding: Theme.halfPadding // for the nav bar handle
                         rightPadding: Theme.halfPadding // for the scrollbar
 
                         messageLimit: root.messageLimit
