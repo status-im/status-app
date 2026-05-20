@@ -283,6 +283,8 @@ Control {
                     onClicked: (mouse) => {
                         textField.cursorPosition = textField.positionAt(mouse.x,mouse.y)
                         textField.forceActiveFocus()
+                        if (!InputMethod.visible)
+                            InputMethod.show()
                     }
                     onWheel: {
                         if(wheel.angleDelta.y>0)
