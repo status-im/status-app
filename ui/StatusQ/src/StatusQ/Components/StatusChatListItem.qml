@@ -36,6 +36,9 @@ Rectangle {
     property bool dragged: false
     property alias sensor: sensor
 
+    readonly property int verticalPadding: 4
+    readonly property int horizontalMargin: Math.max(Theme.halfPadding, 8)
+
     signal clicked(var mouse)
     signal unmute()
 
@@ -55,7 +58,7 @@ Rectangle {
     }
 
     implicitWidth: 288
-    implicitHeight: 40
+    implicitHeight: 40 + 2 * verticalPadding
 
     radius: Theme.radius
 
@@ -84,7 +87,7 @@ Rectangle {
         StatusSmartIdenticon {
             id: identicon
             anchors.left: parent.left
-            anchors.leftMargin: Theme.halfPadding
+            anchors.leftMargin: root.horizontalMargin
             anchors.verticalCenter: parent.verticalCenter
             asset: root.asset
             name: root.name
@@ -141,7 +144,7 @@ Rectangle {
             anchors.leftMargin: statusIcon.visible ? 1 : Theme.halfPadding
             anchors.right: mutedIcon.visible ? mutedIcon.left :
                                                statusBadge.visible ? statusBadgeContainer.left : parent.right
-            anchors.rightMargin: Theme.halfPadding
+            anchors.rightMargin: root.horizontalMargin
             anchors.verticalCenter: parent.verticalCenter
 
             text: root.name
@@ -169,7 +172,7 @@ Rectangle {
         StatusIcon {
             id: mutedIcon
             anchors.right: statusBadge.visible ? statusBadgeContainer.left : parent.right
-            anchors.rightMargin: Theme.halfPadding
+            anchors.rightMargin: root.horizontalMargin
             anchors.verticalCenter: parent.verticalCenter
             width: 14
             opacity: mutedIconSensor.containsMouse ? 1.0 : 0.2
@@ -194,7 +197,7 @@ Rectangle {
             width: 32
             height: parent.height
             anchors.right: parent.right
-            anchors.rightMargin: Theme.halfPadding
+            anchors.rightMargin: root.horizontalMargin
             StatusBadge {
                 id: statusBadge
                 readonly property bool onlyUnread: !root.muted && root.notificationsCount === 0 && root.hasUnreadMessages
