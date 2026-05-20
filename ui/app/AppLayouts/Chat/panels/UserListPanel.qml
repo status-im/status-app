@@ -42,6 +42,15 @@ ColumnLayout {
 
     spacing: Theme.halfPadding
 
+    QtObject {
+        id: d
+
+        readonly property int delegateHorizontalPadding: Math.max(Theme.halfPadding, 8)
+        readonly property int scrollBarWidth: Math.max(Theme.halfPadding, 8)
+        // Includes the scrollbar width and a 1px gap before it.
+        readonly property int delegateRightSpacing: scrollBarWidth + 1
+    }
+
     RowLayout {
         Layout.fillWidth: true
         Layout.margins: Theme.padding
@@ -113,7 +122,10 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.leftMargin: Theme.padding
-        Layout.rightMargin: Theme.padding
+        Layout.rightMargin: 0
+
+        verticalScrollBar.implicitWidth: d.scrollBarWidth
+        verticalScrollBar.width: d.scrollBarWidth
 
         model: SortFilterProxyModel {
             sourceModel: root.usersModel
@@ -138,7 +150,8 @@ ColumnLayout {
         section.property: "onlineStatus"
         section.delegate: (root.width > 58) ? sectionDelegateComponent : null
         delegate: StatusMemberListItem {
-            width: ListView.view.width
+            width: Math.max(0, ListView.view.width - d.delegateRightSpacing)
+            horizontalPadding: d.delegateHorizontalPadding
 
             usesDefaultName: model.usesDefaultName
             nickName: model.localNickname
@@ -185,7 +198,7 @@ ColumnLayout {
         id: sectionDelegateComponent
 
         Item {
-            width: ListView.view.width
+            width: Math.max(0, ListView.view.width - d.delegateRightSpacing)
             height: 24
 
             StatusBaseText {

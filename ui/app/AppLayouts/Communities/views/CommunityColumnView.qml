@@ -87,6 +87,12 @@ Item {
 
         readonly property int requestToJoinState: root.communitySectionModule.requestToJoinState
         readonly property bool invitationPending: d.requestToJoinState !== Constants.RequestToJoinState.None
+
+        readonly property int listContentLeftMarginOffset: 1
+        readonly property int listContentLeftMargin: SQUtils.Utils.swipeIndicatorWidth + listContentLeftMarginOffset
+        readonly property int scrollBarWidth: Math.max(Theme.halfPadding, 8)
+        // Includes StatusScrollView's 1px scrollbar inset and 1px gap before it.
+        readonly property int scrollBarSpacing: 2
     }
 
     ColumnLayout {
@@ -199,17 +205,20 @@ Item {
             id: scrollView
 
             Layout.fillWidth: true
-            Layout.leftMargin: Theme.halfPadding
             Layout.fillHeight: true
 
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
             topPadding: 0
-            leftPadding: 0
+            leftPadding: d.listContentLeftMargin
+            rightPadding: d.scrollBarWidth + d.scrollBarSpacing
             contentWidth: availableWidth
             contentHeight: communityChatListAndCategories.height
                            + bannerColumn.height
                            + bannerColumn.anchors.topMargin
+
+            ScrollBar.vertical.implicitWidth: d.scrollBarWidth
+            ScrollBar.vertical.width: d.scrollBarWidth
 
             StatusChatListAndCategories {
                 id: communityChatListAndCategories
