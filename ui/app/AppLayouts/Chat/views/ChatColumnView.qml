@@ -393,6 +393,8 @@ Item {
                     width: parent.width
                     visible: !!d.activeChatContentModule
 
+                    Theme.padding: Theme.defaultPadding
+
                     property string replyMessageId
 
                     // When `enabled` is switched true->false, `textInput.text` is cleared before d.activeChatContentModule updates.
