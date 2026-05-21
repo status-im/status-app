@@ -19,6 +19,7 @@ QtObject {
     property bool connected: false
     property var accounts: []
     property bool _initialConnectionDone: false
+    property var _ownRequestIds: ({})
 
     // SIGNALS
     // Notify to re-read all properties
@@ -67,6 +68,7 @@ QtObject {
         }
 
         connectorController.connectorCallRPC(requestId, JSON.stringify(rpcRequest))
+        _ownRequestIds[requestId] = true
 
         // Return immediately - response comes via connectorCallRPCResult signal
         return JSON.stringify({
@@ -126,14 +128,6 @@ QtObject {
     }
 
     // PUBLIC API
-    function disconnect() {
-        clearState()
-
-        if (connectorController) {
-            connectorController.disconnect(dappOrigin, clientId)
-        }
-    }
-
     function changeAccount(newAccount) {
         if (connectorController) {
             connectorController.disconnect(dappOrigin, clientId)
@@ -209,6 +203,11 @@ QtObject {
         }
 
         function onConnectorCallRPCResult(requestId, payload) {
+            if (!_ownRequestIds[requestId])
+                return
+
+            delete _ownRequestIds[requestId]
+
             // Emit to Eip1193ProviderAdapter → ethereum_wrapper.js
             requestCompletedEvent({
                 requestId: requestId,

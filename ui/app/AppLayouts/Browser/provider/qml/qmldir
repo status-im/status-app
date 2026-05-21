@@ -1,4 +1,5 @@
 singleton ConnectorConstants 1.0 ConnectorConstants.qml
+BrowserConfig 1.0 BrowserConfig.qml
 ConnectorBridge 1.0 ConnectorBridge.qml
 ConnectorManager 1.0 ConnectorManager.qml
 Eip1193ProviderAdapter 1.0 Eip1193ProviderAdapter.qml

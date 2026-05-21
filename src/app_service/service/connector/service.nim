@@ -288,7 +288,7 @@ QtObject:
     try:
       let responseObj = response.parseJson
       let requestId = responseObj{"requestId"}.getInt(0)
-      
+
       var data = ConnectorCallRPCResultArgs()
       data.requestId = requestId
       data.payload = response

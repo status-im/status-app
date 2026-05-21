@@ -1,47 +1,23 @@
 import QtQuick
 import QtWebChannel
 
-import AppLayouts.Browser.adapters
-
 import "Utils.js" as BrowserUtils
 
 /**
  * ConnectorBridge
  *
- * Simplified connector infrastructure for BrowserLayout.
+ * Per-tab connector infrastructure.
  * Provides WebChannel, ConnectorManager, and direct connection to Nim backend.
- *
- * This component bridges the Browser UI with the Connector backend system.
  */
 QtObject {
     id: root
 
-    required property string userUID
-    property bool featureEnabled: true
     required property var connectorController
-    property string httpUserAgent: ""          // Custom user agent for web profiles
-    property bool currentTabIncognito: false   // Drives off-the-record clientId for the active tab
 
-    readonly property ProfileParams defaultProfileParams: ProfileParams {
-        userId: root.userUID
-        userAgent: root.httpUserAgent
-        scripts: root.scriptPaths
-        offTheRecord: false
-    }
-
-    readonly property ProfileParams otrProfileParams: ProfileParams {
-        userId: root.userUID
-        userAgent: root.httpUserAgent
-        scripts: root.scriptPaths
-        offTheRecord: true
-    }
-
-    readonly property var scriptPaths: root.featureEnabled ? [
-        { path: Qt.resolvedUrl("../js/qwebchannel.js"), runOnSubFrames: true },
-        { path: Qt.resolvedUrl("../js/ethereum_wrapper.js"), runOnSubFrames: true },
-        { path: Qt.resolvedUrl("../js/eip6963_announcer.js"), runOnSubFrames: false },
-        { path: Qt.resolvedUrl("../js/ethereum_injector.js"), runOnSubFrames: true }
-    ] : []
+    required property url tabUrl
+    required property bool tabIncognito
+    property string tabTitle: ""
+    property url tabIconUrl: ""
 
     readonly property alias dappUrl: connectorManager.dappUrl
     readonly property alias dappOrigin: connectorManager.dappOrigin
@@ -52,7 +28,7 @@ QtObject {
     readonly property ConnectorManager connectorManager: ConnectorManager {
         id: connectorManager
         connectorController: root.connectorController  // (shared_modules/connector/controller.nim)
-        offTheRecord: root.currentTabIncognito
+        offTheRecord: root.tabIncognito
 
         // Forward events to Eip1193ProviderAdapter
         onConnectEvent: (info) => eip1193ProviderAdapter.connectEvent(info)
@@ -82,41 +58,24 @@ QtObject {
         registeredObjects: [eip1193ProviderAdapter]
     }
 
-    function hasWalletConnected(hostname, address) {
-        if (!connectorController) return false
-
-        const dApps = connectorController.getDApps()
-        try {
-            const dAppsObj = JSON.parse(dApps)
-            if (Array.isArray(dAppsObj)) {
-                return dAppsObj.some(function(dapp) {
-                    return dapp.url && dapp.url.indexOf(hostname) >= 0
-                })
-            }
-        } catch (e) {
-            console.warn("[ConnectorBridge] Error checking wallet connection:", e)
-        }
-        return false
+    function syncTabMetadata() {
+        if (!tabUrl || !tabUrl.toString())
+            return
+        connectorManager.updateDAppUrl(tabUrl, tabTitle, tabIconUrl)
     }
+
+    onTabUrlChanged: syncTabMetadata()
+    onTabTitleChanged: syncTabMetadata()
+    onTabIconUrlChanged: syncTabMetadata()
+    onTabIncognitoChanged: syncTabMetadata()
+
+    Component.onCompleted: syncTabMetadata()
 
     function disconnect(hostname) {
         if (!connectorController) {
             return false
         }
 
-        const result = connectorController.disconnect(hostname, clientId)
-        return result
-    }
-
-    function disconnectCurrentTab() {
-        if (!dappOrigin) {
-            return false
-        }
-
-        return disconnect(dappOrigin)
-    }
-
-    function updateDAppUrl(url, name) {
-        connectorManager.updateDAppUrl(url, name)
+        return connectorController.disconnect(hostname, clientId)
     }
 }

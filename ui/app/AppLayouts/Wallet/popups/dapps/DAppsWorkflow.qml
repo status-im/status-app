@@ -14,6 +14,7 @@ import StatusQ.Popups.Dialog
 import QtModelsToolkit
 import SortFilterProxyModel
 
+import AppLayouts.Browser.provider.qml
 import AppLayouts.Wallet
 import AppLayouts.Wallet.controls
 import AppLayouts.Wallet.services.dapps
@@ -117,8 +118,8 @@ SQUtils.QObject {
     }
 
     /// Request to connect to a dApp
-    function connectDApp(dappChains, dappUrl, dappName, dappIcon, connectorIcon, pairingId) {
-        connectDappLoader.connect(dappChains, dappUrl, dappName, dappIcon, connectorIcon, pairingId)
+    function connectDApp(dappChains, dappUrl, dappName, dappIcon, connectorId, pairingId) {
+        connectDappLoader.connect(dappChains, dappUrl, dappName, dappIcon, connectorId, pairingId)
     }
 
     function openPairing() {
@@ -221,6 +222,7 @@ SQUtils.QObject {
         property string dappName
         property url dappIcon
         property string connectorIcon
+        property int dappConnectorId: Constants.DAppConnectors.WalletConnect
         property var key
         property var topic
 
@@ -238,15 +240,22 @@ SQUtils.QObject {
                         connectionQueue[0].dappUrl,
                         connectionQueue[0].dappName,
                         connectionQueue[0].dappIcon,
-                        connectionQueue[0].connectorIcon,
+                        connectionQueue[0].connectorId,
                         connectionQueue[0].key)
                 connectionQueue.shift()
             }
         }
 
-        function connect(dappChains, dappUrl, dappName, dappIcon, connectorIcon, key) {
+        function connect(dappChains, dappUrl, dappName, dappIcon, connectorId, key) {
+            console.log("[StatusConnect] DAppsWorkflow connect",
+                         "key=" + key,
+                         "url=" + dappUrl,
+                         "connectorId=" + connectorId,
+                         "chains=" + JSON.stringify(dappChains),
+                         "loaderActive=" + connectDappLoader.active,
+                         "queueLen=" + connectionQueue.length)
             if (connectDappLoader.active) {
-                connectionQueue.push({ dappChains, dappUrl, dappName, dappIcon, key, connectorIcon })
+                connectionQueue.push({ dappChains, dappUrl, dappName, dappIcon, connectorId, key })
                 return
             }
 
@@ -255,7 +264,8 @@ SQUtils.QObject {
             connectDappLoader.dappUrl = dappUrl
             connectDappLoader.dappName = dappName
             connectDappLoader.dappIcon = dappIcon
-            connectDappLoader.connectorIcon = connectorIcon
+            connectDappLoader.connectorIcon = Constants.dappImageByType[connectorId] || ""
+            connectDappLoader.dappConnectorId = connectorId
             connectDappLoader.key = key
 
             if (pairWCLoader.item) {
@@ -282,6 +292,12 @@ SQUtils.QObject {
 
         sourceComponent: ConnectDAppModal {
             visible: true
+
+            Component.onCompleted: {
+                console.log("[StatusConnect] ConnectDAppModal shown",
+                             "url=" + connectDappLoader.dappUrl,
+                             "key=" + connectDappLoader.key)
+            }
 
             onClosed: {
                 if (!connectDappLoader.connectRequestHandled && connectDappLoader.key) {
@@ -328,7 +344,17 @@ SQUtils.QObject {
             })
 
             onDisconnect: connectDappLoader.resolve(() => {
-                root.disconnectRequested(connectDappLoader.topic, connectDappLoader.dappUrl, Constants.DAppConnectors.WalletConnect, "walletconnect")
+                const connectorId = connectDappLoader.dappConnectorId
+                const isStatusConnect = connectorId === Constants.DAppConnectors.StatusConnect
+                const clientId = isStatusConnect
+                        ? ConnectorConstants.clientIdFor(false)
+                        : "walletconnect"
+                const topic = connectDappLoader.topic || connectDappLoader.dappUrl
+                console.log("[StatusConnect] ConnectDAppModal disconnect",
+                             "url=" + connectDappLoader.dappUrl,
+                             "connectorId=" + connectorId,
+                             "clientId=" + clientId)
+                root.disconnectRequested(topic, connectDappLoader.dappUrl, connectorId, clientId)
                 close()
             })
         }

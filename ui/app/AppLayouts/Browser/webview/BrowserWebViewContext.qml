@@ -5,6 +5,9 @@ import QtQuick.Layouts
 import utils
 
 import AppLayouts.Browser.adapters
+import AppLayouts.Browser.provider.qml
+
+import "../provider/qml/Utils.js" as BrowserProviderUtils
 
 QtObject {
     id: root
@@ -15,7 +18,8 @@ QtObject {
     required property bool hasPopups
 
     required property var browserSettings
-    required property var webChannel
+    required property var connectorController
+    required property bool dappsEnabled
 
     required property Item hostStackLayout
     required property var tabsModel
@@ -54,6 +58,9 @@ QtObject {
         return BrowserWebViewContext.ContentMode.WebContent
     }
 
+    readonly property string currentClientId: currentWebView?.bridge?.clientId
+                                              ?? ConnectorConstants.clientIdFor(currentWebView ? currentWebView.offTheRecord : false)
+
     readonly property Connections _currentIndexConnections: Connections {
         target: tabsModel
         function onCurrentIndexChanged() {
@@ -68,6 +75,10 @@ QtObject {
             profileParams: profileParams,
             isDownloadView: false
         })
+        if (!webview) {
+            console.error("[Browser] Failed to create webview")
+            return null
+        }
 
         tabsModel.createEmptyTab(createAsStartPage, focusOnNewTab, webview, initialTitle, initialIcon)
 
@@ -89,6 +100,11 @@ QtObject {
             profileParams: profileParams,
             isDownloadView: true
         })
+        if (!webview) {
+            console.error("[Browser] Failed to create download webview")
+            return null
+        }
+
         tabsModel.createDownloadTab()
         webview.ensureLoaded()
         return webview
@@ -123,6 +139,18 @@ QtObject {
         })
     }
 
+    function disconnectDapp(dappUrl) {
+        const origin = BrowserProviderUtils.normalizeOrigin(dappUrl)
+        if (!origin || !connectorController)
+            return false
+
+        return connectorController.disconnect(origin, currentClientId)
+    }
+
+    function changeAccountForCurrentDapp(address) {
+        currentWebView?.bridge?.connectorManager.changeAccount(address)
+    }
+
     function goBackCurrent() {
         if (!currentWebView)
             return
@@ -144,6 +172,8 @@ QtObject {
     function reloadCurrent() {
         if (!currentWebView)
             return
+        if (typeof currentWebView.ensureLoaded === "function")
+            currentWebView.ensureLoaded()
         currentWebView.reload()
     }
 
@@ -205,6 +235,8 @@ QtObject {
 
     readonly property var webViewAdapterComponent: Component {
         LazyWebViewAdapter {
+            id: lazyView
+
             // On mobile, only the active tab must be visible; native WKWebView
             // subviews share the same UIKit window and ignore QML z-order,
             // so StackLayout alone cannot hide inactive tabs reliably.
@@ -213,10 +245,19 @@ QtObject {
             // Freeze native webview while QML popup is shown
             freeze: root.isMobile && root.hasPopups
 
+            readonly property ConnectorBridge bridge: ConnectorBridge {
+                connectorController: root.dappsEnabled ? root.connectorController : null
+                tabUrl: lazyView.url
+                tabIncognito: lazyView.offTheRecord
+                tabTitle: lazyView.title
+                tabIconUrl: lazyView.icon
+            }
+
+            webChannel: bridge.channel
+
             bookmarksStore: root.bookmarksStore
             downloadsStore: root.downloadsStore
             profileManager: root.profileManager
-            webChannel: root.webChannel
             enableJsLogs: root.isDebugEnabled
             localAccountSensitiveSettings: root.browserSettings
             devToolsEnabled: root.browserSettings.devToolsEnabled
