@@ -495,7 +495,8 @@ QtObject:
   proc setRemotePushNotificationsEnabled*(self: Service, value: bool) {.slot.} =
     if self.settings.remotePushNotificationsEnabled == value:
       return
-    discard self.saveSendPushNotifications(value)
+    if not self.saveSetting(KEY_REMOTE_PUSH_NOTIFICATIONS_ENABLED, value):
+      return
     self.settings.remotePushNotificationsEnabled = value
     self.remotePushNotificationsEnabledChanged()
     # Just discard. It also depends on device token. We'll enable the setting value even if we cannot register for push
