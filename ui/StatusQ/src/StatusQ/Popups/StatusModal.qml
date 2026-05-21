@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 import StatusQ.Core
 import StatusQ.Controls
@@ -232,24 +233,27 @@ StatusDialog {
 
     footer: ToolBar {
         visible: root.showFooter || root.showAdvancedFooter
-        background: StatusDialogBackground {
-            implicitHeight: footerImpl.implicitHeight
-        }
+        background: StatusDialogBackground {}
         position: ToolBar.Bottom
-        Spares.StatusModalFooter {
-            id: footerImpl
-            anchors.bottom: parent.bottom
-            width: visible ? parent.width : 0
-            height: visible ? implicitHeight : 0
-            showFooter: root.showFooter
-            visible: root.showFooter
-        }
 
-        Loader {
-            id: advancedFooter
-            anchors.bottom: parent.bottom
-            width: visible ? parent.width : 0
-            active: root.showAdvancedFooter
+        ColumnLayout {
+            anchors.fill: parent
+
+            Spares.StatusModalFooter {
+                id: footerImpl
+
+                Layout.fillWidth: true
+                showFooter: root.showFooter
+                visible: root.showFooter
+            }
+
+            Loader {
+                id: advancedFooter
+
+                Layout.fillWidth: true
+                active: root.showAdvancedFooter
+                visible: active
+            }
         }
     }
 }
