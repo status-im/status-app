@@ -26,7 +26,7 @@ class AssetsView(QObject):
 
         started_at = time.monotonic()
         raw_items: typing.List = []
-        while not raw_items and (time.monotonic() - started_at) < configs.timeouts.LOADING_LIST_TIMEOUT_MSEC:
+        while not raw_items and (time.monotonic() - started_at) < configs.timeouts.UI_LOAD_TIMEOUT_MSEC:
             raw_items = driver.findAllObjects(real_name)
             if not raw_items:
                 time.sleep(0.2)
