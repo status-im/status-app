@@ -8,6 +8,7 @@ type
     chainId*: int
     tokenAddress*: string
     balance*: Uint256
+    loading*: bool ## true while status-go has no fetched balance for this (account, chain, token) yet
 
 type
   AssetGroupItem* = ref object of RootObj

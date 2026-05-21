@@ -8412,11 +8412,6 @@
       <translation>Maybe later</translation>
     </message>
     <message>
-      <source>Done</source>
-      <comment>EnablePushNotificationsPopup</comment>
-      <translation>Done</translation>
-    </message>
-    <message>
       <source>Open settings</source>
       <comment>EnablePushNotificationsPopup</comment>
       <translation>Open settings</translation>

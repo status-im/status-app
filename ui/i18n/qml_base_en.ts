@@ -6884,10 +6884,6 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Done</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Open settings</source>
         <translation type="unfinished"></translation>
     </message>

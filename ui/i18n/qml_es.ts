@@ -6897,10 +6897,6 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished">Quizás más tarde</translation>
     </message>
     <message>
-        <source>Done</source>
-        <translation type="unfinished">Listo</translation>
-    </message>
-    <message>
         <source>Open settings</source>
         <translation type="unfinished"></translation>
     </message>

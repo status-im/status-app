@@ -59,7 +59,8 @@ proc onAllTokensBuilt(self: Service, response: string) {.slot.} =
             if not rawBalanceStr.contains("nil"):
               rawBalance = rawBalanceStr.parse(Uint256)
 
-            if not balanceDetail{"hasError"}.getBool:
+            let hasError = balanceDetail{"hasError"}.getBool
+            if not hasError:
               allTokensHaveError = false
 
             let groupKey = token.groupKey
@@ -72,16 +73,17 @@ proc onAllTokensBuilt(self: Service, response: string) {.slot.} =
               tokenKey: token.key,
               tokenAddress: token.address,
               chainId: token.chainId,
-              balance: rawBalance
+              balance: rawBalance,
+              loading: hasError
             ))
 
         # set assetsLoading to false once the tokens are loaded
         self.updateAssetsLoadingState(accountAddress, false)
 
     groupedAssets = toSeq(groupedAssetsBalances.values)
+    self.groupedAssets = groupedAssets
     if not allTokensHaveError:
       self.hasBalanceCache = true
-      self.groupedAssets = groupedAssets
   except Exception as e:
     error "error: ", procName="onAllTokensBuilt", errName = e.name, errDesription = e.msg
 

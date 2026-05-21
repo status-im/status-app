@@ -65,12 +65,14 @@ QObject {
         All roles from the source model are passed directly to the output model,
         additionally:
 
-        key         [string] - refers to token group key
-        icon        [url]    - from image or fetched by symbol for well-known tokens
-        balance     [double] - tokens balance is the commonly used unit, e.g. 1.2 for 1.2 ETH,
-                               computed from balances according to provided criteria
-        balanceText [string] - formatted and localized balance
-        error       [string] - error message related to balance
+        key            [string] - refers to token group key
+        icon           [url]    - from image or fetched by symbol for well-known tokens
+        balance        [double] - tokens balance is the commonly used unit, e.g. 1.2 for 1.2 ETH,
+                                  computed from balances according to provided criteria
+        balanceText    [string] - formatted and localized balance
+        balanceLoading [bool]   - true while any per-(chain, account) balance matching the
+                                  active filter has not been fetched yet from status-go
+        error          [string] - error message related to balance
 
         marketDetailsAvailable [bool]   - specifies if market datails are available for given token
         marketDetailsLoading   [bool]   - specifies if market datails are available for given token
@@ -103,6 +105,7 @@ QObject {
             readonly property double balance:
                 AmountsArithmetic.toNumber(totalBalanceAggregator.value, model.decimals)
             readonly property string balanceText: root.formatBalance(balance, model.key)
+            readonly property bool balanceLoading: loadingBalancesAggregator.value > 0
 
             readonly property bool marketDetailsAvailable: !hasCommunityId
             readonly property bool marketDetailsLoading: model.detailsLoading
@@ -117,6 +120,11 @@ QObject {
                     return false
 
                 if (hasCommunityId)
+                    return true
+
+                // Keep mandatory/known tokens visible while their balances are still being fetched,
+                // so the user sees them in a loading state instead of having an empty Assets tab.
+                if (balanceLoading)
                     return true
 
                 return balance * marketPrice >= root.marketValueThreshold
@@ -179,6 +187,16 @@ QObject {
 
                 aggregateFunction: (aggr, value) => [...aggr, value]
             }
+
+            FunctionAggregator {
+                id: loadingBalancesAggregator
+
+                model: filteredBalances
+                initialValue: 0
+                roleName: "loading"
+
+                aggregateFunction: (aggr, value) => aggr + (value ? 1 : 0)
+            }
         }
 
         expectedRoles:
@@ -186,7 +204,7 @@ QObject {
              "detailsLoading", "marketDetails", "communityId", "communityImage",
              "visible"]
         exposedRoles:
-            ["error", "balance", "balanceText", "icon",
+            ["error", "balance", "balanceText", "balanceLoading", "icon",
              "visible", "canBeHidden", "marketDetailsAvailable", "marketDetailsLoading",
              "marketPrice", "marketChangePct24hour", "communityIcon"]
     }
