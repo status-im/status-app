@@ -1,5 +1,11 @@
 "use strict";
 
+// Clear reinjection guards when user script runs again on same-URL reload
+try {
+    delete window.__STATUS_ETHEREUM_INJECTOR_INIT__;
+    delete window.__STATUS_QWEBCHANNEL_CONNECTED__;
+} catch (e) {}
+
 // Ethereum Injector - Initializes QWebChannel and sets up the Ethereum provider
 // This script handles the connection between the page and the Status wallet
 

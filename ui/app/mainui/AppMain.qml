@@ -2900,8 +2900,8 @@ Item {
 
                 dappsWorkflow.connectionSuccessful(pairingId, newConnectionId)
             }
-            onConnectDApp: (dappChains, dappUrl, dappName, dappIcon, connectorIcon, pairingId) => {
-                dappsWorkflow.connectDApp(dappChains, dappUrl, dappName, dappIcon, connectorIcon, pairingId)
+            onConnectDApp: (dappChains, dappUrl, dappName, dappIcon, connectorId, pairingId) => {
+                dappsWorkflow.connectDApp(dappChains, dappUrl, dappName, dappIcon, connectorId, pairingId)
             }
         }
     }

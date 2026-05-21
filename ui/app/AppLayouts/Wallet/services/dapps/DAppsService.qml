@@ -36,7 +36,7 @@ SQUtils.QObject {
     readonly property bool isServiceOnline: dappsModule.isServiceOnline
 
     // signals
-    signal connectDApp(var dappChains, url dappUrl, string dappName, url dappIcon, string connectorIcon, string key)
+    signal connectDApp(var dappChains, url dappUrl, string dappName, url dappIcon, int connectorId, string key)
     // Emitted as a response to DAppsService.approveSession
     // @param key The key of the session proposal
     // @param error The error message
@@ -200,8 +200,12 @@ SQUtils.QObject {
 
         function onConnectDApp(dappChains, dappUrl, dappName, dappIcon, connectorId, key) {
             timeoutTimer.stop()
-            const connectorIcon = Constants.dappImageByType[connectorId]
-            root.connectDApp(dappChains, dappUrl, dappName, dappIcon, connectorIcon, key)
+            console.log("[StatusConnect] DAppsService connectDApp",
+                         "key=" + key,
+                         "url=" + dappUrl,
+                         "connectorId=" + connectorId,
+                         "chains=" + JSON.stringify(dappChains))
+            root.connectDApp(dappChains, dappUrl, dappName, dappIcon, connectorId, key)
         }
 
         function onDappConnected(proposal, topic, url, connectorId) {

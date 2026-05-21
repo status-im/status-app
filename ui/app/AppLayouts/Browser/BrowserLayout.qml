@@ -53,7 +53,7 @@ StatusSectionLayout {
     property bool isDebugEnabled: false
     property string platformOS: Qt.platform.os
 
-    readonly property string userAgent: connectorBridge.httpUserAgent
+    readonly property string userAgent: browserConfig.httpUserAgent
 
     signal sendToRecipientRequested(string address)
 
@@ -81,9 +81,6 @@ StatusSectionLayout {
 
     Connections {
         target: _internal.currentWebView
-        function onUrlChanged() {
-            _internal.onCurrentTabUrlChanged()
-        }
         function onScrollPositionChanged() {
             const delta = _internal.currentWebView.scrollPosition.y - _internal.lastScrollPos
             _internal.scrolledUp = delta < 0
@@ -140,12 +137,12 @@ StatusSectionLayout {
         }
 
         function addNewDownloadTab() {
-            webViewContext.createDownloadTab(tabs.count !== 0 ? currentWebView.profileParams : connectorBridge.defaultProfileParams);
+            webViewContext.createDownloadTab(tabs.count !== 0 ? currentWebView.profileParams : browserConfig.defaultProfileParams);
             tabs.activateTab(tabs.count - 1)
         }
 
         function addNewTab(url, initialTitle) {
-            var tab = webViewContext.createEmptyTab(tabs.count !== 0 ? currentWebView.profileParams : connectorBridge.defaultProfileParams, false, true, url, initialTitle);
+            var tab = webViewContext.createEmptyTab(tabs.count !== 0 ? currentWebView.profileParams : browserConfig.defaultProfileParams, false, true, url, initialTitle);
             browserToolbarLoader.activateAddressBar()
             return tab;
         }
@@ -162,20 +159,6 @@ StatusSectionLayout {
                 url = "https://" + url
             }
             webViewContext.setCurrentWebUrl(url);
-        }
-
-        function onCurrentTabUrlChanged() {
-            const rawUrl = _internal.currentWebView?.url ?? ""
-
-            if (!rawUrl)
-                return
-
-            // Update ConnectorBridge with current dApp metadata
-            connectorBridge.connectorManager.updateDAppUrl(
-                        rawUrl,
-                        _internal.currentWebView.title,
-                        _internal.currentWebView.icon
-                        )
         }
 
         function onRequestOpenDapp(url) {
@@ -258,10 +241,11 @@ StatusSectionLayout {
         isMobile: root.isMobile
         hasPopups: SQUtils.Utils.hasPopups(root.Overlay.overlay.children)
         browserSettings: localAccountSensitiveSettings
-        webChannel: connectorBridge.channel
+        connectorController: root.dappsEnabled ? root.connectorController : null
+        dappsEnabled: root.dappsEnabled
         hostStackLayout: webStackView
         tabsModel: tabs
-        defaultProfileParams: connectorBridge.defaultProfileParams
+        defaultProfileParams: browserConfig.defaultProfileParams
         bookmarksStore: root.bookmarksStore
         downloadsStore: root.downloadsStore
         determineRealURLFn: (url) => root.browserRootStore.determineRealURL(url)
@@ -283,7 +267,7 @@ StatusSectionLayout {
         id: savedSessionContext
         webViewContext: webViewContext
         tabs: tabs
-        defaultProfileParams: connectorBridge.defaultProfileParams
+        defaultProfileParams: browserConfig.defaultProfileParams
         determineRealURL: (u) => root.browserRootStore.determineRealURL(u)
     }
 
@@ -342,7 +326,7 @@ StatusSectionLayout {
                     _internal.onRequestOpenDapp(url)
                 }
                 function onRequestDisconnectDapp(dappUrl) {
-                    connectorBridge.disconnect(dappUrl)
+                    webViewContext.disconnectDapp(dappUrl)
                 }
                 function onAddBookmarkRequested() {
                     const currentUrl = favoritesContext.currentUrl
@@ -477,7 +461,7 @@ StatusSectionLayout {
                                           deactivateAddressBar()
                                       }
             onRequestOpenDapp: url => _internal.onRequestOpenDapp(url)
-            onRequestDisconnectDapp: dappUrl => connectorBridge.disconnect(dappUrl)
+            onRequestDisconnectDapp: dappUrl => webViewContext.disconnectDapp(dappUrl)
             onRequestWalletMenu: dialogsContext.openWalletMenu(browserWalletMenu)
         }
 
@@ -603,7 +587,7 @@ StatusSectionLayout {
             networksStore: root.networksStore
 
             onSendTriggered: (address) => root.sendToRecipientRequested(address)
-            onAccountChanged: (newAddress) => connectorBridge.connectorManager.changeAccount(newAddress)
+            onAccountChanged: (newAddress) => webViewContext.changeAccountForCurrentDapp(newAddress)
             onReload: {
                 for (let i = 0; i < tabs.count; ++i){
                     webViewContext.getWebView(i).reload();
@@ -777,13 +761,11 @@ StatusSectionLayout {
         }
     }
 
-    ConnectorBridge {
-        id: connectorBridge
+    BrowserConfig {
+        id: browserConfig
 
         userUID: root.userUID
         featureEnabled: root.dappsEnabled
-        connectorController: root.dappsEnabled ? root.connectorController : null
-        currentTabIncognito: _internal.currentTabIncognito
         httpUserAgent: {
             if (localAccountSensitiveSettings.compatibilityMode) {
                 // Google doesn't let you connect if the user agent is Chrome-ish and doesn't satisfy some sort of hidden requirement
@@ -811,8 +793,8 @@ StatusSectionLayout {
     BCBrowserDappsProvider {
         id: browserDappsProvider
         connectorController: root.dappsEnabled ? root.connectorController : null
-        clientId: connectorBridge.clientId
-        clientIdFilter: connectorBridge.clientId
+        clientId: webViewContext.currentClientId
+        clientIdFilter: clientId
     }
 
     Component {
