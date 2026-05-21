@@ -87,7 +87,7 @@ DropArea {
         hasImage: true
         icon.source: {
             // TODO unify via backend model for both assets and collectibles; handle communityPrivilegesLevel
-            let source = root.isCollectible || root.isCommunityToken ? model.imageUrl : ""
+            let source = model.imageUrl
             if (source === "")
                 source = Constants.tokenIcon(model.symbol)
             return source
