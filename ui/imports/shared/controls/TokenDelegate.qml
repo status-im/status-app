@@ -16,6 +16,7 @@ StatusListItem {
     property string name
     property url icon
     property string balance
+    property bool balanceLoading: false
 
     property bool marketDetailsAvailable: false
     property string marketBalance
@@ -46,6 +47,7 @@ StatusListItem {
 
     title: root.name
     subTitle: root.balance
+    loadingSubTitle: root.balanceLoading
     asset.name: root.icon
     asset.isImage: true
     asset.width: 32
@@ -86,7 +88,7 @@ StatusListItem {
                 anchors.right: parent.right
                 visible: !errorIcon.visible && root.marketDetailsAvailable
 
-                loading: root.marketDetailsLoading
+                loading: root.marketDetailsLoading || root.balanceLoading
                 text: loading ? Constants.dummyText : root.marketBalance
             }
             Row {

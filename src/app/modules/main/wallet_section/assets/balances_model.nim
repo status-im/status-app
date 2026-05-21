@@ -9,7 +9,8 @@ type
     TokenKey,
     ChainId,
     TokenAddress,
-    Balance
+    Balance,
+    Loading
 
 QtObject:
   type BalancesModel* = ref object of QAbstractListModel
@@ -43,7 +44,8 @@ QtObject:
       ModelRole.TokenKey.int:"tokenKey",
       ModelRole.ChainId.int:"chainId",
       ModelRole.TokenAddress.int:"tokenAddress",
-      ModelRole.Balance.int:"balance"
+      ModelRole.Balance.int:"balance",
+      ModelRole.Loading.int:"loading"
     }.toTable
 
   method data(self: BalancesModel, index: QModelIndex, role: int): QVariant =
@@ -67,6 +69,8 @@ QtObject:
         result = newQVariant(item.tokenAddress)
       of ModelRole.Balance:
         result = newQVariant(item.balance.toString(10))
+      of ModelRole.Loading:
+        result = newQVariant(item.loading)
 
   proc setup(self: BalancesModel) =
     self.QAbstractListModel.setup

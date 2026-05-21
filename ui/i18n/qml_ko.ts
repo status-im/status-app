@@ -6868,10 +6868,6 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished">나중에</translation>
     </message>
     <message>
-        <source>Done</source>
-        <translation type="unfinished">완료</translation>
-    </message>
-    <message>
         <source>Open settings</source>
         <translation type="unfinished"></translation>
     </message>

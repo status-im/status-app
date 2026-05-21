@@ -80,6 +80,7 @@ Control {
         detailsLoading              [bool]      - `true` if details are still being loaded
         balance                     [double]    - tokens balance is the commonly used unit, e.g. 1.2 for 1.2 ETH, used for sorting and computing market value
         balanceText                 [string]    - formatted and localized balance. This is not done internally because it may depend on many external factors
+        balanceLoading              [bool]      - true while at least one of the per-(chain, account) balances has not been fetched yet
         error                       [string]    - error message related to balance
         marketDetailsAvailable      [bool]      - specifies if market datails are available for given token
         marketDetailsLoading        [bool]      - specifies if market datails are available for given token
@@ -282,6 +283,7 @@ Control {
                 name: model.name
                 icon: model.logoUri
                 balance: model.balanceText
+                balanceLoading: model.balanceLoading
                 marketBalance: root.formatFiat(model.marketBalance)
 
                 marketDetailsAvailable: model.marketDetailsAvailable
