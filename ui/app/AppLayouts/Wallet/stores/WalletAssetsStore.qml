@@ -87,9 +87,21 @@ QtObject {
         ]
     }
 
+    /* PRIVATE: Adds an "imageUrl" proxy role mirroring "logoUri" (ManageTokensController can still use existing imageUrl)
+        while the original "logoUri" role is here. */
+    readonly property var _tokenGroupsModelWithImageUrl: SortFilterProxyModel {
+        sourceModel: root.walletTokensStore.tokenGroupsModel
+        proxyRoles: [
+            JoinRole {
+              name: "imageUrl"
+              roleNames: ["logoUri"]
+            }
+        ]
+    }
+
     /* PRIVATE: This model joins the "Token Groups Model" and "Communities Model" by communityId */
     property LeftJoinModel _tokenGroupsModelWithCommunityInfo: LeftJoinModel {
-        leftModel: root.walletTokensStore.tokenGroupsModel
+        leftModel: _tokenGroupsModelWithImageUrl
         rightModel: _renamedCommunitiesModel
         joinRole: "communityId"
     }
