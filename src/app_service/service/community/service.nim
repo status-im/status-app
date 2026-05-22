@@ -487,7 +487,15 @@ QtObject:
   proc saveUpdatedCommunity(self: Service, community: var CommunityDto) =
     # Community data we get from the signals and responses don't contgain the pending requests
     # therefore, we must keep the old one
-    community.pendingRequestsToJoin = self.communities[community.id].pendingRequestsToJoin
+    community.pendingRequestsToJoin = @[]
+    for request in self.communities[community.id].pendingRequestsToJoin:
+      var requestIsNowAMember = false
+      for member in community.members:
+        if member.id == request.publicKey:
+          requestIsNowAMember = true
+          break
+      if not requestIsNowAMember:
+        community.pendingRequestsToJoin.add(request)
     community.declinedRequestsToJoin = self.communities[community.id].declinedRequestsToJoin
     community.canceledRequestsToJoin = self.communities[community.id].canceledRequestsToJoin
     community.waitingForSharedAddressesRequestsToJoin = self.communities[community.id].waitingForSharedAddressesRequestsToJoin
@@ -815,6 +823,11 @@ QtObject:
       try:
         self.updateMembershipRequestToNewState(membershipRequest.communityId, membershipRequest.id, self.communities[membershipRequest.communityId],
           requestToJoinState)
+        if requestToJoinState == RequestToJoinType.Accepted:
+          self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
+            communityId: membershipRequest.communityId,
+            memberPubkey: membershipRequest.publicKey,
+            state: MembershipRequestState(membershipRequest.state)))
       except Exception as e:
         error "Unknown request", msg = e.msg
 
@@ -1831,6 +1844,10 @@ QtObject:
         return
 
       self.events.emit(SIGNAL_COMMUNITY_EDITED, CommunityArgs(community: self.communities[communityId]))
+      self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
+        communityId: communityId,
+        memberPubkey: userKey,
+        state: MembershipRequestState(requestToJoin.state)))
       self.events.emit(SIGNAL_COMMUNITY_MEMBER_APPROVED,
         CommunityMemberArgs(communityId: communityId, pubKey: userKey, requestId: requestId))
 

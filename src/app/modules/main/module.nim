@@ -1608,11 +1608,17 @@ method onMembershipStateUpdated*[T](self: Module[T], communityId: string, member
         singletonInstance.globalEvents.showCommunityMemberUnbannedNotification(fmt "You were unbanned from {communityDto.name}", "", communityId)
       else:
         discard
-  elif communityDto.isControlNode:
+  elif communityDto.isPrivilegedUser:
     let (contactName, _, _) = self.controller.getContactNameAndImage(memberPubkey)
     let item = self.view.model().getItemById(communityId)
     if item.id != "":
       item.updateMembershipStatus(memberPubkey, state)
+
+    # Privileged non-control nodes need local request state updates (e.g. AcceptedPending),
+    # but only the control node should emit authoritative member status notifications.
+    if not communityDto.isControlNode:
+      return
+
     case state:
       of MembershipRequestState.Banned, MembershipRequestState.Kicked,
           MembershipRequestState.Unbanned, MembershipRequestState.BannedWithAllMessagesDelete:
