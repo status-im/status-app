@@ -220,7 +220,7 @@ StatusSectionLayout {
     }
 
     onNavToMsgDetailsChanged: {
-        if (root.navToMsgDetails && root.visible) {
+        if (root.navToMsgDetails) {
             root.currentIndex = StatusSectionLayout.CentralPanel
             root.navToMsgDetailsRequested(false)
         }

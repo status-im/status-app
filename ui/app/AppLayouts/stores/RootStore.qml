@@ -42,6 +42,10 @@ QtObject {
     readonly property bool navToMsgDetails: internal.forceNavToMsgDetails
     function setNavToMsgDetailsFlag(navigate) {
         internal.forceNavToMsgDetails = navigate
+
+        // force actions even if the value is not changed to support deep navigation
+        // within swipe view if necessary (portrait mode)
+        internal.forceNavToMsgDetailsChanged()
     }
 
     // Here define the needed properties that access to `Context Properties`:
