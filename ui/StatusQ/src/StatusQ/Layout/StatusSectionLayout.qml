@@ -181,6 +181,12 @@ LayoutChooser {
             portraitView.decrementCurrentIndex()
     }
 
+    function tryGoBack() {
+        if (portraitView.visible)
+            return portraitView.tryGoBack()
+        return false
+    }
+
     readonly property int windowWidth: root.Window?.width ?? Screen.width
 
     criteria: [

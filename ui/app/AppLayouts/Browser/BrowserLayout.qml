@@ -75,6 +75,16 @@ StatusSectionLayout {
     function saveBrowserSession() {
         savedSessionContext.saveSession()
     }
+    //Back integration: step backward through web history first; only
+    // when the current tab is at the top of its history does Back fall through
+    // to AppMain's section-history pop. Wired into AppMain.tryGoBack().
+    function tryGoBack() {
+        if (!!_internal.currentWebView && _internal.currentWebView.canGoBack) {
+            webViewContext.goBackCurrent()
+            return true
+        }
+        return false
+    }
 
     Component.onCompleted: {
         savedSessionContext.restoreSession()

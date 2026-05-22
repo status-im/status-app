@@ -327,7 +327,9 @@ Item {
         anchors.fill: parent
         backButtonName: RootStore.backButtonName
         onBackButtonClicked: {
-            rightPanelStackView.currentItem.resetStack();
+            if (rightPanelStackView.currentItem && !!rightPanelStackView.currentItem.resetStack) {
+                rightPanelStackView.currentItem.resetStack()
+            }
         }
 
         leftPanel: LeftTabView {
