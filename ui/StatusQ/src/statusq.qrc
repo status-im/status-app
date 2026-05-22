@@ -205,6 +205,7 @@
         <file>StatusQ/Core/Utils/ModelEntryChangeTracker.qml</file>
         <file>StatusQ/Core/Utils/ModelUtils.qml</file>
         <file>StatusQ/Core/Utils/ModelsComparator.qml</file>
+        <file>StatusQ/Core/Utils/NavigationHistory.qml</file>
         <file>StatusQ/Core/Utils/OperatorsUtils.qml</file>
         <file>StatusQ/Core/Utils/QObject.qml</file>
         <file>StatusQ/Core/Utils/RecursiveStackView.qml</file>

@@ -155,24 +155,48 @@ SwipeView {
         // Cache wrapper items removed from the swipe view
         property list<Item> items: []
 
+        function canGoBack() {
+            return root.currentIndex > 0 || !!root.backButtonName
+        }
+
         function handleBackAction() {
             if (!!root.backButtonName) {
                 root.backButtonClicked()
                 return
             }
-
-            if (root.currentIndex > 0) {
+            if (root.currentIndex > 0)
                 root.currentIndex--
-            }
         }
     }
 
     Keys.onPressed: function(e) {
-        if (e.key === Qt.Key_Back && root.currentIndex > 0) {
+        if (e.key === Qt.Key_Back && d.canGoBack()) {
             e.accepted = true
             d.handleBackAction()
         }
     }
+
+    function tryGoBack() {
+        if (d.canGoBack()) {
+            d.handleBackAction()
+            return true
+        }
+        return false
+    }
+
+    onCurrentItemChanged: {
+        if (currentItem) {
+            currentItem.focus = true
+            currentItem.forceActiveFocus()
+        }
+    }
+
+    onVisibleChanged: {
+         if (visible && currentItem) {
+             currentItem.focus = true
+             currentItem.forceActiveFocus()
+         }
+     }
 
     component BaseProxyPanel : Control {
         id: baseProxyPanel

@@ -62,6 +62,14 @@ import MobileUI
 Item {
     id: appMain
 
+    focus: true
+    Component.onCompleted: {
+        // Ensure the app is focused on start to properly receive key events
+        appMain.forceActiveFocus()
+        // record only the initial value - no binding
+        d.lastRecordedSectionId = appMain.rootStore.activeSectionId
+    }
+
     // Primary store container — all additional stores should be initialized under this root
     readonly property AppStores.RootStore rootStore: AppStores.RootStore {
         localBackupEnabled: appMain.featureFlagsStore.localBackupEnabled
@@ -158,6 +166,28 @@ Item {
 
     function showEnableBiometricsFlow() {
         popupRequestsHandler.openEnableBiometricsPopup()
+    }
+
+    SQUtils.NavigationHistory {
+        id: sectionNavigationHistory
+        maxDepth: 16
+    }
+
+    // Records the *previous* active section id onto the back-navigation
+    // history whenever the active section changes — unless the change was
+    // triggered by the back-handler itself (re-entrancy guard).
+    //
+    // NOTE: Consolidated single-handler form so the record-previous /
+    // write-current ordering is explicit and cannot be reordered by an
+    // intervening handler.
+    Connections {
+        target: appMain.rootStore
+        function onActiveSectionIdChanged() {
+            if (!d.navigatingBack && d.lastRecordedSectionId) {
+                sectionNavigationHistory.record(d.lastRecordedSectionId)
+            }
+            d.lastRecordedSectionId = appMain.rootStore.activeSectionId
+        }
     }
 
     ContactDetails {
@@ -840,6 +870,14 @@ Item {
                                                         && d.isMessagingRelatedSectionType
                                                         && !d.messagingNetworkBannerDismissed
                                                         && d.networkChecker.isOnline
+
+        // True while the back-handler is navigating; suppresses recording
+        // the synthetic section change as a new history entry.
+        property bool navigatingBack: false
+
+        // Tracker for the most-recently-observed activeSectionId. Used by the
+        // history recorder to push the *previous* id when activeSectionId changes.
+        property string lastRecordedSectionId: ""
 
         // strict online/offline checker, doesn't care about the wallet services
         readonly property var networkChecker: NetworkChecker {
@@ -3015,5 +3053,72 @@ Item {
         target: appMain.walletRootStore
         property: "palette"
         value: appMain.Theme.palette
+    }
+
+    // ----- Android system back button (Key_Back) -----
+    // The four-link chain: link 1 (popup) and link 2 (section internal back)
+    // accept the event before it reaches here. This handler implements
+    // link 3 (section history) and link 4 (Quit confirmation).
+    //
+    // NOTE: On Android the key event may not reach this handler due to
+    // focus-chain quirks — Qt's Android platform may close the window
+    // before delivering Key_Back to QML. In that case main.qml's onClosing
+    // is the catch-all, and it calls tryGoBack() (defined below) to
+    // run the same link 3 logic. Both paths are kept so behaviour is
+    // identical whether the key event reaches QML or not.
+    Keys.onPressed: function(event) {
+        if (event.key !== Qt.Key_Back)
+            return
+        if (!SQUtils.Utils.isMobile)
+            return
+
+        if (tryGoBack()) {
+            event.accepted = true
+            return
+        }
+
+        event.accepted = true
+        MobileUI.backToHomeScreen()
+    }
+
+    // Links 2 + 3 of the back-navigation chain, callable from main.qml's
+    // onClosing as well as from the Keys.onPressed above. Returns true if
+    // the Back press was handled (either by the active section internally
+    // or by popping section history); false if everything is exhausted and
+    // the caller should fall through to link 4 (Quit confirmation).
+    function tryGoBack() {
+        // Link 1a: AppMain-level overlay-loader components (e.g. CreateChatView).
+        // These are Loaders with an `opened` property, NOT Qt Popups — so
+        // Qt's native popup-close doesn't reach them.
+        if (createChatView.opened) {
+            createChatView.opened = false
+            return true
+        }
+
+        // Link 2: ask the active section to handle Back internally first
+        // (e.g. browser navigates web history; sections with sub-panels can
+        // step them). Sections that don't expose tryGoBack() are skipped.
+        const sectionLoader = appView.children[appView.currentIndex]
+        const sectionItem = sectionLoader ? sectionLoader.item : null
+        if (sectionItem && typeof sectionItem.tryGoBack === "function"
+                && sectionItem.tryGoBack()) {
+            return true
+        }
+
+        // Link 3: pop section history, skipping stale tokens.
+        while (sectionNavigationHistory.canGoBack) {
+            const token = sectionNavigationHistory.back()
+            if (SQUtils.ModelUtils.indexOf(appMain.rootStore.sectionsModel, "id", token) >= 0) {
+                d.navigatingBack = true
+                try {
+                    appMain.rootStore.setActiveSectionById(token)
+                } finally {
+                    d.navigatingBack = false
+                }
+                return true
+            }
+            // token referred to a section no longer in the model; pop again
+        }
+        return false
     }
 }

@@ -348,12 +348,8 @@ Window {
             applicationWindow.storeAppState() // noop on mobile
             // on mobile, we minimize to background (no tray icon or quitOnClose setting)
             if (SQUtils.Utils.isMobile) {
-                close.accepted = false
-                if (SQUtils.Utils.isAndroid)
-                    MobileUI.backToHomeScreen()
-                else
-                    applicationWindow.showMinimized()
-            // In case not logged in or loading, quit app
+                close.accepted = true
+                return
             } else if (!loader.item) {
                 close.accepted = true
             }

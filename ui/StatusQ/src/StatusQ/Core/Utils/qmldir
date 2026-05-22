@@ -10,6 +10,7 @@ ModelChangeGuard 0.1 ModelChangeGuard.qml
 ModelChangeTracker 0.1 ModelChangeTracker.qml
 ModelEntryChangeTracker 0.1 ModelEntryChangeTracker.qml
 ModelsComparator 0.1 ModelsComparator.qml
+NavigationHistory 0.1 NavigationHistory.qml
 QObject 0.1 QObject.qml
 RecursiveStackView 0.1 RecursiveStackView.qml
 SearchFilter 0.1 SearchFilter.qml
