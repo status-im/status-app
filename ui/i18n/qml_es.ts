@@ -265,6 +265,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Accept pending</source>
+        <translation>Aceptar pendientes</translation>
+    </message>
+    <message>
+        <source>Reject pending</source>
+        <translation>Rechazar pendientes</translation>
+    </message>
+    <message>
+        <source>Pending</source>
+        <translation type="unfinished">Pendiente</translation>
+    </message>
+    <message>
         <source>Request to join community</source>
         <translation type="unfinished"></translation>
     </message>
@@ -12163,26 +12175,6 @@ al cargar</translation>
 <context>
     <name>MembersTabPanel</name>
     <message>
-        <source>Accept pending...</source>
-        <translation>Aceptar pendientes...</translation>
-    </message>
-    <message>
-        <source>Reject pending...</source>
-        <translation>Rechazar pendientes...</translation>
-    </message>
-    <message>
-        <source>Ban pending...</source>
-        <translation>Bloquear pendientes...</translation>
-    </message>
-    <message>
-        <source>Unban pending...</source>
-        <translation>Desbloquear pendientes...</translation>
-    </message>
-    <message>
-        <source>Kick pending...</source>
-        <translation>Expulsar pendientes...</translation>
-    </message>
-    <message>
         <source>Waiting for owner node to come online</source>
         <translation>Esperando que el nodo propietario se conecte</translation>
     </message>
@@ -12191,7 +12183,27 @@ al cargar</translation>
         <translation>Mensajes eliminados</translation>
     </message>
     <message>
-        <source>View Messages</source>
+        <source>Accept pending</source>
+        <translation>Aceptar pendientes</translation>
+    </message>
+    <message>
+        <source>Reject pending</source>
+        <translation>Rechazar pendientes</translation>
+    </message>
+    <message>
+        <source>Ban pending</source>
+        <translation>Bloquear pendientes</translation>
+    </message>
+    <message>
+        <source>Unban pending</source>
+        <translation>Desbloquear pendientes</translation>
+    </message>
+    <message>
+        <source>Kick pending</source>
+        <translation>Expulsar pendientes</translation>
+    </message>
+    <message>
+        <source>View messages</source>
         <translation>Ver mensajes</translation>
     </message>
     <message>

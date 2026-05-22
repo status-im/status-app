@@ -324,6 +324,21 @@
       <translation>Community membership request</translation>
     </message>
     <message>
+      <source>Accept pending</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Accept pending</translation>
+    </message>
+    <message>
+      <source>Reject pending</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Reject pending</translation>
+    </message>
+    <message>
+      <source>Pending</source>
+      <comment>ActivityCenterAdaptor</comment>
+      <translation>Pending</translation>
+    </message>
+    <message>
       <source>Request to join community</source>
       <comment>ActivityCenterAdaptor</comment>
       <translation>Request to join community</translation>
@@ -14803,31 +14818,6 @@
   <context>
     <name>MembersTabPanel</name>
     <message>
-      <source>Accept pending...</source>
-      <comment>MembersTabPanel</comment>
-      <translation>Accept pending...</translation>
-    </message>
-    <message>
-      <source>Reject pending...</source>
-      <comment>MembersTabPanel</comment>
-      <translation>Reject pending...</translation>
-    </message>
-    <message>
-      <source>Ban pending...</source>
-      <comment>MembersTabPanel</comment>
-      <translation>Ban pending...</translation>
-    </message>
-    <message>
-      <source>Unban pending...</source>
-      <comment>MembersTabPanel</comment>
-      <translation>Unban pending...</translation>
-    </message>
-    <message>
-      <source>Kick pending...</source>
-      <comment>MembersTabPanel</comment>
-      <translation>Kick pending...</translation>
-    </message>
-    <message>
       <source>Waiting for owner node to come online</source>
       <comment>MembersTabPanel</comment>
       <translation>Waiting for owner node to come online</translation>
@@ -14838,9 +14828,34 @@
       <translation>Messages deleted</translation>
     </message>
     <message>
-      <source>View Messages</source>
+      <source>Accept pending</source>
       <comment>MembersTabPanel</comment>
-      <translation>View Messages</translation>
+      <translation>Accept pending</translation>
+    </message>
+    <message>
+      <source>Reject pending</source>
+      <comment>MembersTabPanel</comment>
+      <translation>Reject pending</translation>
+    </message>
+    <message>
+      <source>Ban pending</source>
+      <comment>MembersTabPanel</comment>
+      <translation>Ban pending</translation>
+    </message>
+    <message>
+      <source>Unban pending</source>
+      <comment>MembersTabPanel</comment>
+      <translation>Unban pending</translation>
+    </message>
+    <message>
+      <source>Kick pending</source>
+      <comment>MembersTabPanel</comment>
+      <translation>Kick pending</translation>
+    </message>
+    <message>
+      <source>View messages</source>
+      <comment>MembersTabPanel</comment>
+      <translation>View messages</translation>
     </message>
     <message>
       <source>Kick</source>
