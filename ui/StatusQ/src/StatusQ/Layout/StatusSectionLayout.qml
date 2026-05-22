@@ -255,6 +255,10 @@ LayoutChooser {
         onCurrentIndexChanged: {
             root.swiped(currentIndexCache, currentIndex)
             currentIndexCache = currentIndex
+
+            // Workaround for QTBUG-74328
+            interactive = false
+            interactive = true
         }
 
         onBackButtonClicked: root.backButtonClicked()
