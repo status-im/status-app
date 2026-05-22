@@ -129,6 +129,13 @@ ItemDelegate {
     QtObject {
         id: d
 
+        readonly property real spacing: Math.max(Theme.halfPadding, 8)
+        readonly property real minDetailsWidth: 120
+
+        readonly property bool wrapped: componentsRow.visible &&
+                                        componentsRow.implicitWidth > 0 &&
+                                        componentsRow.implicitWidth + root.icon.width + 4 * spacing + minDetailsWidth > root.width
+
         // Subtitle composition:
         function composeSubtitle() {
             var compose = ""
@@ -177,10 +184,15 @@ ItemDelegate {
         onTriggered: pos => root.rightClicked(pos)
     }
 
-    contentItem: RowLayout {
-        spacing: root.spacing
+    contentItem: GridLayout {
+        id: contentLayout
+        columns: 4
+        columnSpacing: root.spacing
+        rowSpacing: 0
 
         StatusUserImage {
+            Layout.alignment: Qt.AlignVCenter
+            Layout.leftMargin: d.spacing
             name: root.nickName || root.userName
             usesDefaultName: root.usesDefaultName
             userColor: root.icon.color
@@ -193,8 +205,9 @@ ItemDelegate {
 
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.alignment: Qt.AlignVCenter
             spacing: 4
+
             Row {
                 spacing: 4
                 Layout.fillWidth: true
@@ -243,13 +256,21 @@ ItemDelegate {
             }
         }
 
-        Row {
+        RowLayout {
             id: componentsRow
-            Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-            spacing: 12
+            Layout.row: d.wrapped ? 1 : 0
+            Layout.column: d.wrapped ? 1 : 2
+            Layout.columnSpan: d.wrapped ? 3 : 1
+            Layout.alignment: d.wrapped ? Qt.AlignLeft : (Qt.AlignVCenter | Qt.AlignRight)
+            Layout.fillWidth: d.wrapped
+            Layout.leftMargin: d.wrapped ? 0 : d.spacing
+            Layout.rightMargin: d.spacing
+            spacing: d.spacing
         }
 
         Loader {
+            Layout.row: 0
+            Layout.column: 3
             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
             active: root.isOwner
             sourceComponent: StatusIcon {

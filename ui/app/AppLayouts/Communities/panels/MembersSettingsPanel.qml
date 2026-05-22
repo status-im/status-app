@@ -31,6 +31,8 @@ SettingsPage {
 
     property int memberRole
     property bool editable: true
+    readonly property int contentRightPadding: Math.max(root.headerRightPadding,
+                                                        root.width - root.preferredHeaderContentWidth - root.headerRightPadding)
 
     signal kickUserClicked(string id)
     signal banUserClicked(string id, bool deleteAllMessages)
@@ -84,9 +86,8 @@ SettingsPage {
         StatusTabBar {
             id: membersTabBar
 
-            Layout.maximumWidth: root.preferredContentWidth
             Layout.fillWidth: true
-            Layout.rightMargin: root.internalRightPadding
+            Layout.rightMargin: root.contentRightPadding
 
             StatusTabButton {
                 readonly property int subSection: MembersTabPanel.TabType.AllMembers
@@ -131,9 +132,8 @@ SettingsPage {
         SearchBox {
             id: memberSearch
 
-            Layout.maximumWidth: root.preferredContentWidth
             Layout.fillWidth: true
-            Layout.rightMargin: root.internalRightPadding
+            Layout.rightMargin: root.contentRightPadding
 
             placeholderText: qsTr("Search by name or chat key")
             enabled: membersTabBar.currentItem.enabled
@@ -143,8 +143,8 @@ SettingsPage {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            preferredContentWidth: root.preferredContentWidth
-            internalRightPadding: root.internalRightPadding
+            preferredContentWidth: width
+            internalRightPadding: root.contentRightPadding
 
             panelType: membersTabBar.currentItem.subSection
             model: {
