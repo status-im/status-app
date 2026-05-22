@@ -265,6 +265,18 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Accept pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reject pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Request to join community</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11899,26 +11911,6 @@ to load</source>
 <context>
     <name>MembersTabPanel</name>
     <message>
-        <source>Accept pending...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reject pending...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Ban pending...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unban pending...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Kick pending...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Waiting for owner node to come online</source>
         <translation type="unfinished"></translation>
     </message>
@@ -11927,7 +11919,27 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>View Messages</source>
+        <source>Accept pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reject pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ban pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unban pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Kick pending</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View messages</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
