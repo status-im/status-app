@@ -16,7 +16,11 @@ def set_text_property_on_object(obj, text: str, timeout_msec: int = None) -> Non
         timeout_msec = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
     expected = str(text)
     obj.forceActiveFocus()
-    obj.clear()
+    clear = getattr(obj, 'clear', None)
+    if callable(clear):
+        clear()
+    else:
+        obj.text = ''
     obj.text = text
 
     def _content_matches() -> bool:

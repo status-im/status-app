@@ -578,7 +578,9 @@ o_DropShadow = {"container": statusDesktop_mainWindow_overlay, "type": "DropShad
 # Emoji Popup
 emojiPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusEmojiPopup", "type": "PopupItem",
               "visible": True}
-mainWallet_AddEditAccountPopup_AccountEmojiSearchBox = {"container": statusDesktop_mainWindow_overlay, "echoMode": 0, "objectName": "StatusEmojiPopup_searchBox", "type": "SearchBox", "visible": True}
+mainWallet_AddEditAccountPopup_AccountEmojiSearchBox = {"container": statusDesktop_mainWindow_overlay,
+                                                        "echoMode": 0, "objectName": "StatusEmojiPopup_searchBox",
+                                                        "type": "SearchBox", "visible": True}
 mainWallet_AddEditAccountPopup_AccountEmoji = {"container": statusDesktop_mainWindow, "type": "StatusEmoji",
                                                "visible": True}
 

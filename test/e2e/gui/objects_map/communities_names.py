@@ -214,9 +214,9 @@ editPermissionView_Who_holds_StatusItemSelector = {"container": mainWindow_editP
 editPermissionView_Is_allowed_to_StatusFlowSelector = {"container": mainWindow_editPermissionView_EditPermissionView, "objectName": "permissionsSelector", "type": "StatusFlowSelector", "visible": True}
 editPermissionView_In_StatusItemSelector = {"container": mainWindow_editPermissionView_EditPermissionView, "id": "inSelector", "type": "StatusItemSelector", "unnamed": 1, "visible": True}
 editPermissionView_whoHoldsSwitch_StatusSwitch = {"checkable": True, "container": mainWindow_editPermissionView_EditPermissionView, "id": "whoHoldsSwitch", "type": "StatusSwitch", "unnamed": 1, "visible": True}
-# Legacy: top-level overlay TextEdit — unreliable since HoldingsDropdown uses SearchBox (see holdingsDropdown_*).
+# Legacy: top-level overlay TextEdit — unreliable since HoldingsDropdown uses SearchBox + inner edit (see holdingsDropdown_*).
 edit_TextEdit = {"container": statusDesktop_mainWindow_overlay, "type": "TextEdit", "unnamed": 1, "visible": True}
-# HoldingsDropdown SearchBox (StatusTextField-based since release 2.38; no nested TextEdit id="edit").
+# HoldingsDropdown (Who holds +) opens ExtendedDropdownContent with SearchBox id searcher (StatusTextField).
 holdingsDropdown_SearchBox = {"container": statusDesktop_mainWindow_overlay, "id": "searcher", "type": "SearchBox", "unnamed": 1, "visible": True}
 holdingsDropdown_assetSearch_TextEdit = holdingsDropdown_SearchBox
 inputValue_StyledTextField = {"container": statusDesktop_mainWindow_overlay, "id": "inputValue", "type": "StatusTextField", "unnamed": 1, "visible": True}
@@ -252,7 +252,7 @@ whoHoldsPlusButton = {"container": statusDesktop_mainWindow, "objectName": Regul
 isAllowedPlusButton = {"container": statusDesktop_mainWindow, "objectName": RegularExpression("addItemButton_Is*"), "type": "StatusRoundButton", "visible": True}
 inPlusButton = {"container": statusDesktop_mainWindow, "objectName": "addItemButton_In", "type": "StatusRoundButton", "visible": True}
 holdingsPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "HoldingsDropdown", "type": "PopupItem", "visible": True}
-holdingsPopup_SearchBox = {"container": holdingsPopup, "id": "searcher", "type": "SearchBox", "unnamed": 1, "visible": True}
+holdingsPopup_SearchBox = {"container": statusDesktop_mainWindow_overlay, "id": "searcher", "type": "SearchBox", "unnamed": 1, "visible": True}
 holdingsPopup_assetSearch_TextEdit = holdingsPopup_SearchBox
 holdingsPopup_TokenItem = {"container": holdingsPopup, "index": 0, "type": "TokenItem", "unnamed": 1, "visible": True}
 holdingsPopup_AssetsTab_StatusSwitchTabButton = {"container": holdingsPopup, "text": "Assets", "type": "StatusSwitchTabButton", "visible": True}
