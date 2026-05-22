@@ -219,6 +219,13 @@ StatusSectionLayout {
         return root.chatContentModule.chatDetails.isUsersListAvailable
     }
 
+    onNavToMsgDetailsChanged: {
+        if (root.navToMsgDetails && root.visible) {
+            root.currentIndex = StatusSectionLayout.CentralPanel
+            root.navToMsgDetailsRequested(false)
+        }
+    }
+
     rightPanel: UserListPanel {
         anchors.fill: parent
 
