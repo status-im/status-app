@@ -793,7 +793,15 @@ Control {
             Theme.fontSizeOffset: ThemeUtils.fontSizeOffsetM
 
             styleButtonVisible: false
-            showFormatting: messageInputField.selectionStart !== messageInputField.selectionEnd
+
+            // On iOS, backspace temporarily creates a selection (selectionStart != selectionEnd)
+            // around the character being removed. The binding is configured as delayed to avoid
+            // briefly setting showFormatting=true and therefore unnecessarily triggering the
+            // animation within the toolbar.
+            Binding on showFormatting {
+                delayed: true
+                value: messageInputField.selectionStart !== messageInputField.selectionEnd
+            }
 
             cameraButton.visible: false
 
