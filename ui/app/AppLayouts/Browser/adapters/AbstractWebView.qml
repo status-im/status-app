@@ -19,6 +19,7 @@ Item {
 
     // === State Properties ===
     property url url: ""
+    property string uid: ""
     readonly property string title: ""
     readonly property bool loading: false
     readonly property bool canGoBack: false

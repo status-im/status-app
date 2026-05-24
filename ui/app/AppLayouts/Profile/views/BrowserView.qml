@@ -7,7 +7,7 @@ import StatusQ.Controls
 import utils
 import shared.status
 
-import AppLayouts.Browser.webview
+import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Profile.popups
 import AppLayouts.Profile.views.browser
 
@@ -15,7 +15,13 @@ SettingsContentBase {
     id: root
 
     required property string userUID
+    required property BrowserStores.BrowserPreferencesStore browserPreferencesStore
     property var accountSettings
+
+    QtObject {
+        id: d
+        property bool restoreOpenTabs: root.browserPreferencesStore.getRestoreOpenTabs()
+    }
 
     property Component searchEngineModal: SearchEngineModal {
         accountSettings: root.accountSettings
@@ -82,12 +88,12 @@ SettingsContentBase {
                 components: [
                     StatusSwitch {
                         id: restoreTabsSwitch
-                        checked: BrowserUiSettings.restoreOpenTabs
+                        checked: d.restoreOpenTabs
                         onToggled: {
-                            BrowserUiSettings.restoreOpenTabs = checked
-                            if (!checked) // clear settings
-                                BrowserUiSettings.openTabs = []
-                            BrowserUiSettings.sync()
+                            d.restoreOpenTabs = checked
+                            root.browserPreferencesStore.setRestoreOpenTabs(checked)
+                            if (!checked)
+                                root.browserPreferencesStore.clearOpenTabsSession()
                         }
                     }
                 ]

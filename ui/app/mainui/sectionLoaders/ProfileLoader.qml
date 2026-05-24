@@ -10,6 +10,7 @@ import shared.stores as SharedStores
 import AppLayouts.stores as AppStores
 import AppLayouts.stores.Messaging as MessagingStores
 import AppLayouts.Communities.stores
+import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Wallet.stores as WalletStores
 
@@ -45,6 +46,7 @@ Loader {
     required property WalletStores.TokensStore tokensStore
     required property WalletStores.WalletAssetsStore walletAssetsStore
     required property WalletStores.CollectiblesStore walletCollectiblesStore
+    required property BrowserStores.BrowserPreferencesStore browserPreferencesStore
 
     required property ContactsModelAdaptor contactsAdaptor
     required property HandlersManagerLoader popupHandler
@@ -132,6 +134,7 @@ Loader {
             tokensStore:                            Qt.binding(() => root.tokensStore),
             walletAssetsStore:                      Qt.binding(() => root.walletAssetsStore),
             collectiblesStore:                      Qt.binding(() => root.walletCollectiblesStore),
+            browserPreferencesStore:                Qt.binding(() => root.browserPreferencesStore),
             currencyStore:                          Qt.binding(() => root.currencyStore),
             networksStore:                          Qt.binding(() => root.networksStore),
             messagingRootStore:                     Qt.binding(() => root.messagingRootStore),

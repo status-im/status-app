@@ -3,3 +3,4 @@ BrowserWalletStore 1.0 BrowserWalletStore.qml
 BrowserActivityStore 1.0 BrowserActivityStore.qml
 BookmarksStore 1.0 BookmarksStore.qml
 DownloadsStore 1.0 DownloadsStore.qml
+BrowserPreferencesStore 1.0 BrowserPreferencesStore.qml

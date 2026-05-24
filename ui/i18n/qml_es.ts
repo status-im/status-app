@@ -2463,14 +2463,6 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
 <context>
     <name>BrowserLayout</name>
     <message>
-        <source>Downloads</source>
-        <translation type="unfinished">Descargas</translation>
-    </message>
-    <message>
-        <source>Empty</source>
-        <translation type="unfinished">Vacío</translation>
-    </message>
-    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certificado del servidor no confiable</translation>
     </message>
@@ -2538,6 +2530,21 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Browse decentralized apps</source>
         <translation>Navega apps descentralizadas</translation>
+    </message>
+</context>
+<context>
+    <name>BrowserSavedSessionContext</name>
+    <message>
+        <source>Start Page</source>
+        <translation type="unfinished">Página de inicio</translation>
+    </message>
+    <message>
+        <source>New Tab</source>
+        <translation type="unfinished">Nueva pestaña</translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Descargas</translation>
     </message>
 </context>
 <context>
@@ -2613,14 +2620,6 @@ Do you wish to override the security check and continue?</source>
 </context>
 <context>
     <name>BrowserTabView</name>
-    <message>
-        <source>Start Page</source>
-        <translation>Página de inicio</translation>
-    </message>
-    <message>
-        <source>New Tab</source>
-        <translation>Nueva pestaña</translation>
-    </message>
     <message>
         <source>Downloads Page</source>
         <translation>Página de descargas</translation>
@@ -3150,7 +3149,7 @@ no compatible</translation>
     </message>
     <message>
         <source>Displaying collectibles on %1 is not currently supported by Status.</source>
-        <translation>Mostrar coleccionables en %1 no está actualmente soportado por Status.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

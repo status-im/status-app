@@ -2455,14 +2455,6 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
 <context>
     <name>BrowserLayout</name>
     <message>
-        <source>Downloads</source>
-        <translation type="unfinished">다운로드</translation>
-    </message>
-    <message>
-        <source>Empty</source>
-        <translation type="unfinished">비어 있음</translation>
-    </message>
-    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>서버의 인증서를 신뢰할 수 없습니다</translation>
     </message>
@@ -2530,6 +2522,21 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Browse decentralized apps</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>BrowserSavedSessionContext</name>
+    <message>
+        <source>Start Page</source>
+        <translation type="unfinished">시작 페이지</translation>
+    </message>
+    <message>
+        <source>New Tab</source>
+        <translation type="unfinished">새 탭</translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">다운로드</translation>
     </message>
 </context>
 <context>
@@ -2605,14 +2612,6 @@ Do you wish to override the security check and continue?</source>
 </context>
 <context>
     <name>BrowserTabView</name>
-    <message>
-        <source>Start Page</source>
-        <translation>시작 페이지</translation>
-    </message>
-    <message>
-        <source>New Tab</source>
-        <translation>새 탭</translation>
-    </message>
     <message>
         <source>Downloads Page</source>
         <translation>다운로드 페이지</translation>
@@ -3140,7 +3139,7 @@ file format</source>
     </message>
     <message>
         <source>Displaying collectibles on %1 is not currently supported by Status.</source>
-        <translation>현재 Status는 %1에서 수집품 표시를 지원하지 않습니다.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

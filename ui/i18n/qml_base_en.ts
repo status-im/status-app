@@ -2460,14 +2460,6 @@ To backup you recovery phrase, write it down and store it securely in a safe pla
 <context>
     <name>BrowserLayout</name>
     <message>
-        <source>Downloads</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Empty</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2533,6 +2525,21 @@ Do you wish to override the security check and continue?</source>
     </message>
     <message>
         <source>Browse decentralized apps</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>BrowserSavedSessionContext</name>
+    <message>
+        <source>Start Page</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New Tab</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2609,14 +2616,6 @@ Do you wish to override the security check and continue?</source>
 </context>
 <context>
     <name>BrowserTabView</name>
-    <message>
-        <source>Start Page</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>New Tab</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Downloads Page</source>
         <translation type="unfinished"></translation>
