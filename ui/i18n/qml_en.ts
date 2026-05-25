@@ -477,6 +477,16 @@
     </message>
 </context>
 <context>
+    <name>LoginKeycardBoxNew</name>
+    <message numerus="yes">
+        <source>PIN incorrect. %n attempt(s) remaining.</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>Main</name>
     <message numerus="yes">
         <source>Account name must be at least %n character(s)</source>

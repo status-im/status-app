@@ -43,6 +43,10 @@ OnboardingStackView {
     required property int syncState
     required property int remainingPinAttempts
     required property int remainingPukAttempts
+    required property bool keycardStatusAvailable
+    required property int keycardAvailableSlots
+    required property string keycardCardMetadataName
+    required property string keycardCardMetadataWalletAccountsJson
 
     required property bool biometricsAvailable
     required property bool displayKeycardPromoBanner
@@ -255,7 +259,25 @@ OnboardingStackView {
 
             onUnblockWithSeedphraseRequested: root.push(unblockWithSeedphraseFlowComponent)
             onUnblockWithPukRequested: root.push(unblockWithPukFlowComponent)
-            onKeycardRequested: root.keycardRequested()
+            onUnblockKeycardRequested: {
+                const stateStr = root.keycardState === Onboarding.KeycardState.BlockedPIN
+                                 ? Constants.keycard.state.blockedPIN
+                                 : Constants.keycard.state.blockedPUK
+                root.push(keycardDetailsComponent, {
+                    keycardState: stateStr,
+                    keycardUid: root.keycardUID,
+                    keyUid: root.keycardKeyUID,
+                    keycardStatusAvailable: root.keycardStatusAvailable,
+                    remainingPinAttempts: root.remainingPinAttempts,
+                    remainingPukAttempts: root.remainingPukAttempts,
+                    availableSlots: root.keycardAvailableSlots,
+                    cardMetadataName: root.keycardCardMetadataName,
+                    cardMetadataWalletAccountsJson: root.keycardCardMetadataWalletAccountsJson
+                })
+            }
+            onKeycardRequested: {
+                root.keycardRequested()
+            }
 
             onVisibleChanged: {
                 if (!visible)
@@ -330,6 +352,25 @@ OnboardingStackView {
             }
         }
     }
+
+    /* TODO: uncomment when integrating new onboarding
+    Component {
+        id: keycardLostPage
+
+        KeycardLostPageNew {
+
+            onReadSpareKeycardRequested: {
+                const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
+                root.openKeycardPopup(Constants.keycard.flow.readKeycard, keyUid, "", "", "[]")
+            }
+
+            onStopUsingKeycardForProfileRequested: {
+                const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
+                root.openKeycardPopup(Constants.keycard.flow.startUsingProfileWithoutKeycard, keyUid, "", "", "[]")
+            }
+        }
+    }
+    */
 
     Component {
         id: createNewProfileFlow
@@ -614,6 +655,9 @@ OnboardingStackView {
                     break
                 case Constants.keycard.flow.onboardingImportSeedPhrase:
                     onboardingFlow = Onboarding.OnboardingFlow.OnboardingImportSeedPhrase
+                    break
+                case Constants.keycard.flow.startUsingProfileWithoutKeycard:
+                    onboardingFlow = Onboarding.OnboardingFlow.LoginWithLostKeycardSeedphrase
                     break
                 default:
                     console.warn("onboarding - unexpected keycard flow:", flow)

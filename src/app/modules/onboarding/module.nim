@@ -3,7 +3,7 @@ import chronicles
 
 import io_interface, states
 import view, controller
-import app/modules/shared_modules/keycard_management/module as kc_management_module
+import app/modules/shared_modules/keycard_management/module as keycard_management_module
 
 import ../../../constants as main_constants
 
@@ -11,6 +11,7 @@ import app/global/feature_flags
 import app/global/global_singleton
 import app/core/eventemitter
 import app_service/common/utils
+import app_service/common/account_constants
 import app_service/service/general/service as general_service
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
@@ -45,7 +46,7 @@ type
     resumeLogin: bool
     tmpKeyUid: string # TODO: remove this, once we switch fully to new keycard approach
     tmpKeycardUid: string # TODO: remove this, once we switch fully to new keycard approach
-    keycardModule: kc_management_module.Module[Module[T]]
+    keycardModule: keycard_management_module.Module[Module[T]]
     events: EventEmitter
     keycardServiceV2: keycard_serviceV2.Service
 
@@ -88,7 +89,7 @@ proc finishAppLoading2*[T](self: Module[T])
 method prepareKeycardModule*[T](self: Module[T]) =
   if not self.keycardModule.isNil:
     return
-  self.keycardModule = kc_management_module.newModule[Module[T]](self, self.events, self.keycardServiceV2,
+  self.keycardModule = keycard_management_module.newModule[Module[T]](self, self.events, self.keycardServiceV2,
     self.accountsService, walletAccountService = nil, privacyService = nil)
   self.view.setKeycardModule(self.keycardModule.getModuleAsVariant())
 

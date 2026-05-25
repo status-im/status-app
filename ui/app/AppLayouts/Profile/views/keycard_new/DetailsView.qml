@@ -64,6 +64,7 @@ ColumnLayout {
 
         readonly property bool isProfileKeyPair: !!root.keyUid
                                                  && root.keyUid === root.keycardStore.userProfileKeyUid
+        readonly property bool isProfileKeyPairUsingKeycard: root.keycardStore.isKeycardUser
 
         readonly property bool hasKeyPair: stateInfo.hasKeyPair
         readonly property bool onlyPinSet: stateInfo.onlyPinSet
@@ -122,7 +123,9 @@ ColumnLayout {
                 return qsTr("Keycard is blocked due to three failed PIN input attempts")
             }
             if (d.isProfileKeyPair) {
-                return qsTr("You are using this Keycard to login to Status")
+                if (d.isProfileKeyPairUsingKeycard)
+                    return qsTr("You are using this Keycard to login to Status")
+                return qsTr("Status profile is not migrated to keycard.")
             }
             if (d.isKnownKeyPair) {
                 return qsTr("This key pair have been already added to Status wallet")
@@ -212,7 +215,7 @@ ColumnLayout {
 
     StatusListItem {
         Layout.fillWidth: true
-        visible: !root.keycardStore.isKeycardUser
+        visible: !d.isProfileKeyPairUsingKeycard
                  && (d.isEmpty
                      || d.onlyPinSet && !d.isBlockedPIN && !d.isBlockedPUK  && !d.noKnownAndNoAvailablePairingSlots)
         title: qsTr("Move profile key pair to Keycard")

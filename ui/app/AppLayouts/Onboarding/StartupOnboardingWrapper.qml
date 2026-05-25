@@ -8,6 +8,7 @@ import AppLayouts.Onboarding.enums
 import AppLayouts.Onboarding.stores
 import AppLayouts.Onboarding.pages
 
+import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Platform
 

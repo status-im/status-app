@@ -22,6 +22,7 @@ KeycardEnterPukPage 1.0 KeycardEnterPukPage.qml
 KeycardErrorPage 1.0 KeycardErrorPage.qml
 KeycardIntroPage 1.0 KeycardIntroPage.qml
 KeycardLostPage 1.0 KeycardLostPage.qml
+KeycardLostPageNew 1.0 KeycardLostPageNew.qml
 KeycardNotEmptyPage 1.0 KeycardNotEmptyPage.qml
 LoginBySyncingPage 1.0 LoginBySyncingPage.qml
 LoginScreen 1.0 LoginScreen.qml

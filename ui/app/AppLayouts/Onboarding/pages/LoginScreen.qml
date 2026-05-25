@@ -95,6 +95,7 @@ OnboardingPage {
     signal onboardingLoginFlowRequested()
     signal unblockWithSeedphraseRequested()
     signal unblockWithPukRequested()
+    signal unblockKeycardRequested(string keyUid)
     signal lostKeycardFlowRequested()
     signal keycardRequested()
     signal onboardingManageProfilesFlowRequested()
@@ -297,6 +298,31 @@ OnboardingPage {
                 onLoginRequested: (pin) => d.doKeycardLogin(pin)
             }
 
+            /* TODO: uncomment when integrating new onboarding
+            LoginKeycardBoxNew {
+                id: keycardBox
+                Layout.fillWidth: true
+                objectName: "keycardBox"
+                visible: d.currentProfileIsKeycard
+                isBiometricsLogin: root.isBiometricsLogin
+                biometricsSuccessful: d.biometricsSuccessful
+                biometricsFailed: d.biometricsFailed
+                keycardState: root.keycardState
+                isWrongKeycard: d.isWrongKeycard
+                keycardRemainingPinAttempts: root.keycardRemainingPinAttempts
+                keycardRemainingPukAttempts: root.keycardRemainingPukAttempts
+                onUnblockRequested: root.unblockKeycardRequested(loginUserSelector.selectedProfileKeyId)
+                onPinEditedManually: {
+                    // reset state when typing the PIN manually; not to break the bindings inside the component
+                    loginError = ""
+                    d.resetBiometricsResult()
+                }
+                onDetailedErrorPopupRequested: detailedErrorPopupComp.createObject(root, {detailedError: loginError}).open()
+                onBiometricsRequested: root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
+                onLoginRequested: (pin) => d.doKeycardLogin(pin)
+            }
+            */
+
             Item { Layout.fillHeight: true }
 
             StatusButton {
@@ -307,7 +333,7 @@ OnboardingPage {
                 isOutline: true
                 size: StatusBaseButton.Size.Small
                 visible: d.currentProfileIsKeycard
-                text: qsTr("Lost this Keycard?")
+                text: qsTr("Lost Keycard?")
 
                 onClicked: root.lostKeycardFlowRequested()
             }

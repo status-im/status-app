@@ -116,7 +116,9 @@ Page {
         }
 
         function finishFlow(flow) {
+            const keyUid = onboardingFlow.loginScreen ? onboardingFlow.loginScreen.selectedProfileKeyId : ""
             const data = {
+                selectedProfileKeyUid: keyUid, // used to determine whether import seed phrase was done for the login or onboarding purpose
                 password: d.password,
                 keycardPin: d.keycardPin,
                 seedphrase: d.seedphrase,
@@ -185,6 +187,10 @@ Page {
         // tryToSetPukFunction: root.onboardingStore.setPuk
         remainingPinAttempts: root.onboardingStore.keycardRemainingPinAttempts
         remainingPukAttempts: root.onboardingStore.keycardRemainingPukAttempts
+        keycardStatusAvailable: root.onboardingStore.keycardStatusAvailable
+        keycardAvailableSlots: root.onboardingStore.keycardAvailableSlots
+        keycardCardMetadataName: root.onboardingStore.keycardCardMetadataName
+        keycardCardMetadataWalletAccountsJson: root.onboardingStore.keycardCardMetadataWalletAccountsJson
 
         onChangeLanguageRequested: (newLanguageCode) => root.changeLanguageRequested(newLanguageCode)
 
@@ -211,7 +217,13 @@ Page {
         onImportLocalBackupRequested: (importFilePath) => d.backupImportFileUrl = importFilePath
         onOnboardingKeycardFlowCompletedWithData: (flow, dataJson) => {
             try {
-                d.keycardPayload = JSON.parse(dataJson)
+                const payload = JSON.parse(dataJson)
+                d.keycardPayload = payload
+                if (flow === Constants.keycard.flow.startUsingProfileWithoutKeycard) {
+                    d.keyUid = payload.keyUid ?? ""
+                    d.seedphrase = payload.seedPhrase ?? ""
+                    d.password = payload.password ?? ""
+                }
             } catch (e) {
                 console.warn("OnboardingLayout: failed to parse keycard popup payload:", e.message)
                 d.keycardPayload = null

@@ -35,6 +35,10 @@ QtObject {
     readonly property int convertKeycardAccountState: d.onboardingModuleInst.convertKeycardAccountState // cf. enum Onboarding.ProgressState
     readonly property int keycardRemainingPinAttempts: d.onboardingModuleInst.keycardRemainingPinAttempts
     readonly property int keycardRemainingPukAttempts: d.onboardingModuleInst.keycardRemainingPukAttempts
+    readonly property bool keycardStatusAvailable: d.onboardingModuleInst.keycardStatusAvailable
+    readonly property int keycardAvailableSlots: d.onboardingModuleInst.keycardAvailableSlots
+    readonly property string keycardCardMetadataName: d.onboardingModuleInst.keycardCardMetadataName
+    readonly property string keycardCardMetadataWalletAccountsJson: d.onboardingModuleInst.keycardCardMetadataWalletAccountsJson
 
     function resetKeycardProgressStates() {
         d.onboardingModuleInst.resetKeycardProgressStates()

@@ -291,9 +291,6 @@ OnboardingPage {
                     Layout.fillWidth: true
                     visible: stateInfo.hasKeyPair
                              || stateInfo.onlyPinSet
-                             || stateInfo.isEmpty
-                             || stateInfo.isBlockedPIN
-                             || stateInfo.isBlockedPUK
                              || stateInfo.noKnownAndNoAvailablePairingSlots
                     title: qsTr("Factory reset")
                     subTitle: qsTr("Remove everything from Keycard")

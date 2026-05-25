@@ -313,3 +313,6 @@ proc asyncImportLocalBackupFile*(self: Controller, filePath: string) =
 
 proc startKeycardDetection*(self: Controller) =
   self.keycardServiceV2.startDetection()
+
+proc createAccountFromMnemonic*(self: Controller, mnemonic: string, paths: seq[string]): GeneratedAccountDto =
+  return self.accountsService.createAccountFromMnemonic(mnemonic, paths)

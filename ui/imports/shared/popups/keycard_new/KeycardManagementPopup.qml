@@ -61,6 +61,8 @@ StatusDialog {
             return qsTr("Stop using Keycard for key pair")
         case Constants.keycard.flow.stopUsingKeycardForProfile:
             return qsTr("Stop using Keycard for profile key pair")
+        case Constants.keycard.flow.startUsingProfileWithoutKeycard:
+            return qsTr("Start using profile without Keycard")
         case Constants.keycard.flow.changePin:
             return qsTr("Change Keycard PIN")
         case Constants.keycard.flow.setOrChangePuk:
@@ -133,6 +135,8 @@ StatusDialog {
                 return KeycardManagementPopup.FlowStep.ConfirmKeyPair
             case Constants.keycard.flow.stopUsingKeycardForProfile:
                 return KeycardManagementPopup.FlowStep.ConfirmKeyPair
+            case Constants.keycard.flow.startUsingProfileWithoutKeycard:
+                return KeycardManagementPopup.FlowStep.EnterSeedPhrase
             case Constants.keycard.flow.addKeyPairToStatus:
                 return KeycardManagementPopup.FlowStep.EnterPin
             case Constants.keycard.flow.changePin:
@@ -195,6 +199,8 @@ StatusDialog {
                     return stopUsingEnterSeedPhraseComponent
                 if (root.flow === Constants.keycard.flow.stopUsingKeycardForProfile)
                     return stopUsingForProfileEnterSeedPhraseComponent
+                if (root.flow === Constants.keycard.flow.startUsingProfileWithoutKeycard)
+                    return startUsingProfileWithoutKeycardEnterSeedPhraseComponent
                 if (root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase)
                     return unblockWithRecoveryPhraseEnterSeedPhraseComponent
                 if (root.flow === Constants.keycard.flow.onboardingImportSeedPhrase)
@@ -390,6 +396,17 @@ StatusDialog {
                 return
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword) {
+                if (root.flow === Constants.keycard.flow.startUsingProfileWithoutKeycard) {
+                    d.onboardingResultDataJson = JSON.stringify({
+                        flow: root.flow,
+                        keyUid: root.keyUid,
+                        seedPhrase: d.seedPhrase,
+                        password: d.newStatusPassword
+                    })
+                    d.success = true
+                    d.currentStep = KeycardManagementPopup.FlowStep.OnboardingMixedFlowSuccess
+                    return
+                }
                 if (root.flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
                     d.startStopUsingKeycardForProfileKeyPair()
                 } else {
@@ -490,7 +507,8 @@ StatusDialog {
                     return
                 }
                 if (root.flow === Constants.keycard.flow.stopUsingKeycard
-                        || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile) {
+                        || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
+                        || root.flow === Constants.keycard.flow.startUsingProfileWithoutKeycard) {
                     d.currentStep = KeycardManagementPopup.FlowStep.CreatePassword
                     return
                 }
@@ -974,6 +992,9 @@ StatusDialog {
                              && (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
                                  || d.currentStep === KeycardManagementPopup.FlowStep.CreatePassword
                                  || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword))
+                         || (root.flow === Constants.keycard.flow.startUsingProfileWithoutKeycard
+                             && (d.currentStep === KeycardManagementPopup.FlowStep.CreatePassword
+                                 || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword))
                          || (root.flow === Constants.keycard.flow.changePin
                              && (d.currentStep === KeycardManagementPopup.FlowStep.EnterNewPin
                                  || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin))
@@ -1024,6 +1045,7 @@ StatusDialog {
                                || root.flow === Constants.keycard.flow.addKeyPairToStatus
                                || root.flow === Constants.keycard.flow.stopUsingKeycard
                                || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
+                               || root.flow === Constants.keycard.flow.startUsingProfileWithoutKeycard
                                || root.flow === Constants.keycard.flow.changePin
                                || root.flow === Constants.keycard.flow.setOrChangePuk
                                || root.flow === Constants.keycard.flow.rename
@@ -1073,7 +1095,8 @@ StatusDialog {
                 visible: d.currentStep === KeycardManagementPopup.FlowStep.OnboardingMixedFlowSuccess
                          && (root.flow === Constants.keycard.flow.onboardingLoginWithKeycard
                              || root.flow === Constants.keycard.flow.onboardingImportNewKeyPair
-                             || root.flow === Constants.keycard.flow.onboardingImportSeedPhrase)
+                             || root.flow === Constants.keycard.flow.onboardingImportSeedPhrase
+                             || root.flow === Constants.keycard.flow.startUsingProfileWithoutKeycard)
                 text: qsTr("Continue")
                 onClicked: {
                     d.mixedFlowSuccess = true
@@ -1144,6 +1167,10 @@ StatusDialog {
                              || (root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmKeyPair
                                      || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.CreatePassword
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword))
+                             || (root.flow === Constants.keycard.flow.startUsingProfileWithoutKeycard
+                                 && (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
                                      || d.currentStep === KeycardManagementPopup.FlowStep.CreatePassword
                                      || d.currentStep === KeycardManagementPopup.FlowStep.ConfirmPassword))
                              || (root.flow === Constants.keycard.flow.changePin
@@ -1239,7 +1266,9 @@ StatusDialog {
                         if (root.flow === Constants.keycard.flow.moveKeyPair
                                 || root.flow === Constants.keycard.flow.moveProfileKeyPair
                                 || root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase
-                                || root.flow === Constants.keycard.flow.onboardingImportSeedPhrase) {
+                                || root.flow === Constants.keycard.flow.onboardingImportSeedPhrase
+                                || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
+                                || root.flow === Constants.keycard.flow.startUsingProfileWithoutKeycard) {
                             d.nextStep()
                             return
                         }
@@ -1333,7 +1362,8 @@ StatusDialog {
         let success = d.success
         if (flow === Constants.keycard.flow.onboardingLoginWithKeycard
                 || flow === Constants.keycard.flow.onboardingImportNewKeyPair
-                || flow === Constants.keycard.flow.onboardingImportSeedPhrase) {
+                || flow === Constants.keycard.flow.onboardingImportSeedPhrase
+                || flow === Constants.keycard.flow.startUsingProfileWithoutKeycard) {
             success = d.mixedFlowSuccess
         }
 
@@ -1430,6 +1460,7 @@ StatusDialog {
                 case Constants.keycard.flow.onboardingLoginWithKeycard:
                 case Constants.keycard.flow.onboardingImportNewKeyPair:
                 case Constants.keycard.flow.onboardingImportSeedPhrase:
+                case Constants.keycard.flow.startUsingProfileWithoutKeycard:
                     return Assets.png("keycard/card_insert/insert")
                 default:
                     return ""
@@ -1452,6 +1483,8 @@ StatusDialog {
                     return qsTr("Key pair has been moved to Status")
                 case Constants.keycard.flow.stopUsingKeycardForProfile:
                     return qsTr("Profile key pair has been moved to Status")
+                case Constants.keycard.flow.startUsingProfileWithoutKeycard:
+                    return qsTr("Ready to recover your profile")
                 case Constants.keycard.flow.changePin:
                     return qsTr("Keycard PIN has been changed")
                 case Constants.keycard.flow.setOrChangePuk:
@@ -1486,6 +1519,8 @@ StatusDialog {
                     return qsTr("Status password is now required to sign.")
                 case Constants.keycard.flow.stopUsingKeycardForProfile:
                     return qsTr("Status password is now required to log in and sign.")
+                case Constants.keycard.flow.startUsingProfileWithoutKeycard:
+                    return qsTr("Continue to log in and convert your profile to use a Status password.")
                 case Constants.keycard.flow.changePin:
                     return qsTr("New PIN is required to interact with Keycard.")
                 case Constants.keycard.flow.rename:
@@ -1520,6 +1555,7 @@ StatusDialog {
                 case Constants.keycard.flow.addKeyPairToStatus:
                 case Constants.keycard.flow.stopUsingKeycard:
                 case Constants.keycard.flow.stopUsingKeycardForProfile:
+                case Constants.keycard.flow.startUsingProfileWithoutKeycard:
                 case Constants.keycard.flow.changePin:
                 case Constants.keycard.flow.setOrChangePuk:
                 case Constants.keycard.flow.rename:
@@ -1812,6 +1848,26 @@ StatusDialog {
                 if (keyUid === root.store.userProfileKeyUid)
                     return keyUid
                 console.error("provided seed phrase doesn't match the profile key pair being tried to stop using a keycard for")
+                return ""
+            }
+
+            onSeedPhraseValidated: function(phrase, keyUid) {
+                d.seedPhrase = phrase
+                d.seedPhraseKeyUid = keyUid
+            }
+        }
+    }
+
+    Component {
+        id: startUsingProfileWithoutKeycardEnterSeedPhraseComponent
+        EnterSeedPhraseState {
+            initialSeedPhrase: d.seedPhrase
+
+            validateSeedPhrase: function(phrase) {
+                const keyUid = root.store.getKeyUidForSeedPhrase(phrase)
+                if (keyUid === root.keyUid)
+                    return keyUid
+                console.error("provided seed phrase doesn't match the profile key pair selected for keycard-less recovery")
                 return ""
             }
 

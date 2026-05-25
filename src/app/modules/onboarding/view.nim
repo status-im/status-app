@@ -1,4 +1,4 @@
-import nimqml
+import nimqml, json
 import io_interface, states
 from app_service/service/keycardV2/dto import KeycardEventDto
 from app_service/service/devices/dto/local_pairing_status import LocalPairingState
@@ -124,6 +124,37 @@ QtObject:
     return self.keycardEvent.keycardStatus.remainingAttemptsPUK
   QtProperty[int] keycardRemainingPukAttempts:
     read = getKeycardRemainingPukAttempts
+    notify = keycardEventChanged
+
+  proc getKeycardStatusAvailable(self: View): bool {.slot.} =
+    return self.keycardEvent.keycardStatus.keyInitialized
+  QtProperty[bool] keycardStatusAvailable:
+    read = getKeycardStatusAvailable
+    notify = keycardEventChanged
+
+  proc getKeycardAvailableSlots(self: View): int {.slot.} =
+    return self.keycardEvent.keycardInfo.availableSlots
+  QtProperty[int] keycardAvailableSlots:
+    read = getKeycardAvailableSlots
+    notify = keycardEventChanged
+
+  proc getKeycardCardMetadataName(self: View): string {.slot.} =
+    return self.keycardEvent.metadata.name
+  QtProperty[string] keycardCardMetadataName:
+    read = getKeycardCardMetadataName
+    notify = keycardEventChanged
+
+  proc getKeycardCardMetadataWalletAccountsJson(self: View): string {.slot.} =
+    var walletsJson = newJArray()
+    for acc in self.keycardEvent.metadata.walletAccounts:
+      walletsJson.add(%*{
+        "path": acc.path,
+        "address": acc.address,
+        "publicKey": acc.publicKey,
+      })
+    return $walletsJson
+  QtProperty[string] keycardCardMetadataWalletAccountsJson:
+    read = getKeycardCardMetadataWalletAccountsJson
     notify = keycardEventChanged
 
   proc addKeyPairStateChanged*(self: View) {.signal.}

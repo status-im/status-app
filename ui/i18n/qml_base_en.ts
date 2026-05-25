@@ -5636,6 +5636,10 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Status profile is not migrated to keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>, </source>
         <translation type="unfinished"></translation>
     </message>
@@ -9989,6 +9993,45 @@ to login to Status?</source>
     </message>
 </context>
 <context>
+    <name>KeycardLostPageNew</name>
+    <message>
+        <source>Lost Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you don&apos;t have any other spare Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Buy new</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Go to Keycard.tech and order Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If you have a spare Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Read your spare Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You may need to factory reset it first and then import key pair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start using profile without Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter recovery phrase for your profile and login to status.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>KeycardManagementPopup</name>
     <message>
         <source>Read Keycard</source>
@@ -10012,6 +10055,10 @@ to login to Status?</source>
     </message>
     <message>
         <source>Factory reset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start using profile without Keycard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10043,11 +10090,19 @@ to login to Status?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Ready to recover your profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Success</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Keycard is now empty.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Continue to log in and convert your profile to use a Status password.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -11184,6 +11239,68 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>LoginKeycardBoxNew</name>
+    <message>
+        <source>Unblock</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Plug in Keycard reader...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Insert your Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reading Keycard...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wrong Keycard for this profile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Max pairing slots reached.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard blocked</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The scanned Keycard is empty.&lt;br&gt;Scan the correct Keycard for this profile.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>PIN incorrect. %n attempt(s) remaining.</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Login failed. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show details.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter Keycard PIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>LoginPasswordBox</name>
     <message>
         <source>Log In</source>
@@ -11264,7 +11381,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Lost this Keycard?</source>
+        <source>Lost Keycard?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

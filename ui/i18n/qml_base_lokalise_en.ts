@@ -6878,6 +6878,11 @@
       <translation>You can’t operate with Keycard content right now, because Keycard has no free pairing slots. But you can use it with previously paired installations.</translation>
     </message>
     <message>
+      <source>Status profile is not migrated to keycard.</source>
+      <comment>DetailsView</comment>
+      <translation>Status profile is not migrated to keycard.</translation>
+    </message>
+    <message>
       <source>, </source>
       <comment>DetailsView</comment>
       <translation>,</translation>
@@ -12176,6 +12181,54 @@
     </message>
   </context>
   <context>
+    <name>KeycardLostPageNew</name>
+    <message>
+      <source>Lost Keycard</source>
+      <comment>KeycardLostPageNew</comment>
+      <translation>Lost Keycard</translation>
+    </message>
+    <message>
+      <source>If you don&#39;t have any other spare Keycard</source>
+      <comment>KeycardLostPageNew</comment>
+      <translation>If you don&#39;t have any other spare Keycard</translation>
+    </message>
+    <message>
+      <source>Buy new</source>
+      <comment>KeycardLostPageNew</comment>
+      <translation>Buy new</translation>
+    </message>
+    <message>
+      <source>Go to Keycard.tech and order Keycard</source>
+      <comment>KeycardLostPageNew</comment>
+      <translation>Go to Keycard.tech and order Keycard</translation>
+    </message>
+    <message>
+      <source>If you have a spare Keycard</source>
+      <comment>KeycardLostPageNew</comment>
+      <translation>If you have a spare Keycard</translation>
+    </message>
+    <message>
+      <source>Read your spare Keycard</source>
+      <comment>KeycardLostPageNew</comment>
+      <translation>Read your spare Keycard</translation>
+    </message>
+    <message>
+      <source>You may need to factory reset it first and then import key pair</source>
+      <comment>KeycardLostPageNew</comment>
+      <translation>You may need to factory reset it first and then import key pair</translation>
+    </message>
+    <message>
+      <source>Start using profile without Keycard</source>
+      <comment>KeycardLostPageNew</comment>
+      <translation>Start using profile without Keycard</translation>
+    </message>
+    <message>
+      <source>Enter recovery phrase for your profile and login to status.</source>
+      <comment>KeycardLostPageNew</comment>
+      <translation>Enter recovery phrase for your profile and login to status.</translation>
+    </message>
+  </context>
+  <context>
     <name>KeycardManagementPopup</name>
     <message>
       <source>Read Keycard</source>
@@ -12206,6 +12259,11 @@
       <source>Factory reset</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Factory reset</translation>
+    </message>
+    <message>
+      <source>Start using profile without Keycard</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Start using profile without Keycard</translation>
     </message>
     <message>
       <source>Log in with this Keycard</source>
@@ -12243,6 +12301,11 @@
       <translation>Keycard has been reset</translation>
     </message>
     <message>
+      <source>Ready to recover your profile</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Ready to recover your profile</translation>
+    </message>
+    <message>
       <source>Success</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Success</translation>
@@ -12251,6 +12314,11 @@
       <source>Keycard is now empty.</source>
       <comment>KeycardManagementPopup</comment>
       <translation>Keycard is now empty.</translation>
+    </message>
+    <message>
+      <source>Continue to log in and convert your profile to use a Status password.</source>
+      <comment>KeycardManagementPopup</comment>
+      <translation>Continue to log in and convert your profile to use a Status password.</translation>
     </message>
     <message>
       <source>Continue to finish logging in.</source>
@@ -13631,6 +13699,82 @@
     </message>
   </context>
   <context>
+    <name>LoginKeycardBoxNew</name>
+    <message>
+      <source>Unblock</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Unblock</translation>
+    </message>
+    <message>
+      <source>Plug in Keycard reader...</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Plug in Keycard reader...</translation>
+    </message>
+    <message>
+      <source>Insert your Keycard...</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Insert your Keycard...</translation>
+    </message>
+    <message>
+      <source>Reading Keycard...</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Reading Keycard...</translation>
+    </message>
+    <message>
+      <source>This isn&#39;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>This isn&#39;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</translation>
+    </message>
+    <message>
+      <source>Wrong Keycard for this profile</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Wrong Keycard for this profile</translation>
+    </message>
+    <message>
+      <source>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</translation>
+    </message>
+    <message>
+      <source>Max pairing slots reached.</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Max pairing slots reached.</translation>
+    </message>
+    <message>
+      <source>Keycard blocked</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Keycard blocked</translation>
+    </message>
+    <message>
+      <source>The scanned Keycard is empty.&lt;br&gt;Scan the correct Keycard for this profile.</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>The scanned Keycard is empty.&lt;br&gt;Scan the correct Keycard for this profile.</translation>
+    </message>
+    <message numerus="yes">
+      <source>PIN incorrect. %n attempt(s) remaining.</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>
+        <numerusform></numerusform>
+        <numerusform></numerusform>
+      </translation>
+    </message>
+    <message>
+      <source>Login failed. %1</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Login failed. %1</translation>
+    </message>
+    <message>
+      <source>Show details.</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Show details.</translation>
+    </message>
+    <message>
+      <source>Enter Keycard PIN</source>
+      <comment>LoginKeycardBoxNew</comment>
+      <translation>Enter Keycard PIN</translation>
+    </message>
+  </context>
+  <context>
     <name>LoginPasswordBox</name>
     <message>
       <source>Log In</source>
@@ -13729,9 +13873,9 @@
       <translation>Welcome back</translation>
     </message>
     <message>
-      <source>Lost this Keycard?</source>
+      <source>Lost Keycard?</source>
       <comment>LoginScreen</comment>
-      <translation>Lost this Keycard?</translation>
+      <translation>Lost Keycard?</translation>
     </message>
     <message>
       <source>Login failed</source>

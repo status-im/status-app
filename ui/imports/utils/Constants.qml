@@ -531,6 +531,7 @@ QtObject {
             readonly property string addKeyPairToStatus: "add-key-pair-to-status"
             readonly property string stopUsingKeycard: "stop-using-keycard"
             readonly property string stopUsingKeycardForProfile: "stop-using-keycard-for-profile"
+            readonly property string startUsingProfileWithoutKeycard: "start-using-profile-without-keycard"
             readonly property string changePin: "change-pin"
             readonly property string setOrChangePuk: "set-or-change-puk"
             readonly property string rename: "rename"
