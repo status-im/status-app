@@ -17,6 +17,7 @@ BrowserToolbarBase {
     id: root
 
     contentItem: RowLayout {
+        spacing: 0
         BrowserHeaderButton {
             incognitoMode: root.currentTabIncognito
             icon.name: "open-tabs"
