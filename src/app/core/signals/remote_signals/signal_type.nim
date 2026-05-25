@@ -3,6 +3,7 @@
 type SignalType* {.pure.} = enum
   Message = "messages.new"
   MessageDelivered = "message.delivered"
+  LocalNotifications = "local-notifications"
   ## Wallet Signals
   Wallet = "wallet"
   WalletSignTransactions = "wallet.sign.transactions"
