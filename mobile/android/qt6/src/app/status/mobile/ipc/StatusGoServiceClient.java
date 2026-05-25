@@ -11,8 +11,11 @@ import android.os.RemoteException;
 import android.system.ErrnoException;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.nio.charset.StandardCharsets;
 
 import app.status.mobile.StatusGoStub;
 
@@ -20,6 +23,7 @@ import app.status.mobile.StatusGoStub;
 public final class StatusGoServiceClient {
     private static final String TAG = "StatusGoServiceClient";
     private static final long CONNECT_TIMEOUT_MS = 8000;
+    private static final int LARGE_SIGNAL_WARN_BYTES = 256 * 1024;
 
     private static volatile StatusGoServiceClient sInstance;
 
@@ -53,10 +57,49 @@ public final class StatusGoServiceClient {
     private final IStatusGoSignalListener signalListener = new IStatusGoSignalListener.Stub() {
         @Override
         public void onSignal(String jsonSignal) {
+            final int signalSizeBytes = jsonSignal != null
+                    ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
+                    : 0;
+            if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
+                Log.w(TAG, "received large status-go signal type=" + getSignalType(jsonSignal)
+                        + " sizeBytes=" + signalSizeBytes);
+            }
             // Forward into the native stub callback (SetSignalEventCallback).
             StatusGoStub.nativeDeliverSignal(jsonSignal);
         }
+
+        @Override
+        public void onSignalShm(RpcResponse signalPayload) {
+            if (signalPayload == null) {
+                Log.w(TAG, "onSignalShm: null payload");
+                return;
+            }
+
+            try (RpcResponse payload = signalPayload) {
+                final String jsonSignal = payload.readJson();
+                final int signalSizeBytes = jsonSignal != null
+                        ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
+                        : 0;
+                final String signalType = getSignalType(jsonSignal);
+                if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
+                    Log.w(TAG, "received large status-go signal type=" + signalType
+                            + " sizeBytes=" + signalSizeBytes);
+                }
+                StatusGoStub.nativeDeliverSignal(jsonSignal);
+            } catch (ErrnoException e) {
+                Log.w(TAG, "onSignalShm: shared memory read failed", e);
+            }
+        }
     };
+
+    private static String getSignalType(String jsonSignal) {
+        if (jsonSignal == null || jsonSignal.isEmpty()) return "";
+        try {
+            return new JSONObject(jsonSignal).optString("type", "");
+        } catch (Throwable t) {
+            return "";
+        }
+    }
 
     private final ServiceConnection conn = new ServiceConnection() {
         @Override
