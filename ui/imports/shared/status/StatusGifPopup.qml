@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
+import QtModelsToolkit
 
 import StatusQ.Components
 import StatusQ.Controls
@@ -167,7 +168,7 @@ StatusDropdown {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                sourceComponent: root.gifColumnA.rowCount() === 0 ?
+                sourceComponent: !root.gifColumnA || root.gifColumnA.ModelCount.empty ?
                                      emptyPlaceholderComponent : gifItemsComponent
             }
 
