@@ -203,7 +203,6 @@ StatusSectionLayout {
         }
 
         onCurrentWebViewChanged: {
-            onCurrentTabUrlChanged()
             findBar.reset()
             _internal.resetScroll()
         }
@@ -243,7 +242,7 @@ StatusSectionLayout {
         id: webViewContext
         thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
         isDebugEnabled: root.isDebugEnabled
-        isMobile: root.isMobile
+        isMobile: SQUtils.Utils.isMobile // non-UI, do not override with root.isMobile
         hasPopups: SQUtils.Utils.hasPopups(root.Overlay.overlay.children)
         browserSettings: localAccountSensitiveSettings
         connectorController: root.dappsEnabled ? root.connectorController : null
