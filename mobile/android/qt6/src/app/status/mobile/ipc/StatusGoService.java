@@ -46,6 +46,8 @@ import im.status.mobileui.PushNotificationHelper;
  */
 public final class StatusGoService extends Service {
     private static final String TAG = "StatusGoService";
+    private static final int LARGE_SIGNAL_WARN_BYTES = 256 * 1024;
+    private static final int SIGNAL_SHARED_MEMORY_THRESHOLD_BYTES = 128 * 1024;
 
     /**
      * Responses shorter than this (in UTF-8 bytes) are returned inline in the Binder reply
@@ -158,20 +160,75 @@ public final class StatusGoService extends Service {
     /** Called from native (status-go callback). */
     @SuppressWarnings("unused")
     private void onNativeSignal(String jsonSignal) {
+        final int signalSizeBytes = jsonSignal != null
+                ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
+                : 0;
+        final String signalType = getSignalType(jsonSignal);
+        if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
+            Log.w(TAG, "large status-go signal type=" + signalType
+                    + " sizeBytes=" + signalSizeBytes);
+        }
+
         maybeStartForegroundFromSignal(jsonSignal);
         notificationManager.handleSignal(jsonSignal);
 
         final int n = listeners.beginBroadcast();
+        final boolean useSharedMemorySignal = signalSizeBytes >= SIGNAL_SHARED_MEMORY_THRESHOLD_BYTES;
         try {
             for (int i = 0; i < n; i++) {
                 try {
-                    listeners.getBroadcastItem(i).onSignal(jsonSignal);
-                } catch (RemoteException ignored) {
-                    // RemoteCallbackList handles dead clients.
+                    final IStatusGoSignalListener listener = listeners.getBroadcastItem(i);
+                    if (useSharedMemorySignal) {
+                        final byte[] signalBytes = jsonSignal != null
+                                ? jsonSignal.getBytes(StandardCharsets.UTF_8)
+                                : new byte[0];
+                        try (RpcResponse signalResponse = sharedPayload(signalBytes, "statusgo-signal")) {
+                            listener.onSignalShm(signalResponse);
+                        }
+                    } else {
+                        listener.onSignal(jsonSignal);
+                    }
+                } catch (RemoteException e) {
+                    Log.w(TAG, "failed to deliver signal to UI listener type=" + signalType
+                            + " sizeBytes=" + signalSizeBytes, e);
+                } catch (RuntimeException e) {
+                    Log.w(TAG, "runtime failure delivering signal to UI listener type=" + signalType
+                            + " sizeBytes=" + signalSizeBytes, e);
+                } catch (Throwable e) {
+                    Log.w(TAG, "unexpected failure delivering signal to UI listener type=" + signalType
+                            + " sizeBytes=" + signalSizeBytes, e);
                 }
             }
         } finally {
             listeners.finishBroadcast();
+        }
+    }
+
+    private RpcResponse sharedPayload(byte[] bytes, String namePrefix) throws android.system.ErrnoException {
+        SharedMemory shm = null;
+        try {
+            shm = SharedMemory.create(namePrefix, bytes.length);
+            final ByteBuffer buf = shm.mapReadWrite();
+            try {
+                buf.put(bytes);
+            } finally {
+                SharedMemory.unmap(buf);
+            }
+            shm.setProtect(OsConstants.PROT_READ);
+            final RpcResponse result = RpcResponse.shared(shm);
+            shm = null;
+            return result;
+        } finally {
+            if (shm != null) shm.close();
+        }
+    }
+
+    private String getSignalType(String jsonSignal) {
+        if (jsonSignal == null || jsonSignal.isEmpty()) return "";
+        try {
+            return new JSONObject(jsonSignal).optString("type", "");
+        } catch (Throwable t) {
+            return "";
         }
     }
 
