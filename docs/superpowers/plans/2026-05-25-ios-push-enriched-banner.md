@@ -132,24 +132,11 @@ git -C vendor/status-go commit --no-gpg-sign -m "feat(push): set per-message apn
 
 ---
 
-## Task 3: status-go — ensure `LocalNotificationsConfig.Enabled` on iOS
+## Task 3: status-go — confirm the `local-notifications` signal fires on iOS — RESOLVED, NO CHANGE
 
-**Why:** status-go only emits the `local-notifications` signal when this is enabled; the consumer (Task 6) is dead otherwise.
+**Finding (verified 2026-05-25):** no config change is needed. `LocalNotificationsConfig.Enabled` is a **phantom field** — it exists only as a Nim DTO deserialization target (`node_config.nim:144`) and is **never used anywhere in status-go's Go code** (`grep LocalNotificationsConfig vendor/status-go` → empty). The `local-notifications` signal is emitted **unconditionally** by `pushMessage` → `signal.SendLocalNotifications` (`services/local-notifications/core.go:151`); the only upstream gate is `GetAllowNotifications()` (`internal/db/multiaccounts/settings_notifications/database.go`), which **defaults to `true`**, and the service is always registered (`pkg/backend/node/status_node_services.go:119` — "We ignore for now local notifications flag").
 
-**Files:** `src/app_service/service/node_configuration/` (the node-config builder used at account create/login) — exact site found in Step 1.
-
-- [ ] **Step 1: Find where node config is assembled for login/create.**
-Run:
-```bash
-grep -rn "LocalNotificationsConfig\|UpsertNodeConfig\|getDefaultNodeConfig\|NodeConfig(" src/app_service/service/node_configuration src/app_service/service/accounts 2>/dev/null | head
-```
-Determine whether `LocalNotificationsConfig.Enabled` is set true anywhere for mobile.
-
-- [ ] **Step 2: Verify at runtime first.** On a dev build, log the effective node config (or inspect the account DB `node_config`) for `LocalNotificationsConfig.Enabled`. If already `true` on iOS, **skip Steps 3–4** (no change needed) and note it.
-
-- [ ] **Step 3: Enable it for mobile (only if Step 2 shows false).** In the node-config assembly found in Step 1, set `LocalNotificationsConfig.Enabled = true` under `when defined(ios) or defined(android)` (follow the file's existing platform-guard idiom). Show the exact edit in the commit.
-
-- [ ] **Step 4: Commit** (status-desktop) if changed: `git add <file> && git commit --no-gpg-sign -m "fix(ios): enable LocalNotificationsConfig so local-notifications signal is emitted"`.
+**So:** the signal already fires on iOS by default. **No edit, no commit for this task.** The only residual risk — that something sets `AllowNotifications = false` on iOS — is confirmed at the device test (Task 7). If Task 7 shows the signal never arrives, investigate `AllowNotifications`, not `LocalNotificationsConfig`.
 
 ---
 

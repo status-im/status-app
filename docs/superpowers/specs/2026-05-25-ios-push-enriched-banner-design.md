@@ -26,7 +26,7 @@ When the background sync (Layer 1b) produces a `local-notifications` event, **re
 ## Constraints / Current State (confirmed in source)
 
 - **Show primitive:** MobileUI exposes `PushNotifications.showNotification(title, message, identifier)` (QML singleton). The existing `NotificationsManager` uses a **desktop-only** `StatusOSNotification`; iOS must route to MobileUI.
-- **`local-notifications` signal is NOT consumed on iOS.** The Nim `SignalType` enum (`src/app/core/signals/remote_signals/signal_type.nim`) has `Message = "messages.new"` but **no** `local-notifications` entry. status-go only emits it when `LocalNotificationsConfig.Enabled = true` (`src/app_service/service/node_configuration/dto/node_config.nim:144`); enablement on iOS is **unverified** and must be ensured.
+- **`local-notifications` signal is NOT consumed on iOS.** The Nim `SignalType` enum (`src/app/core/signals/remote_signals/signal_type.nim`) has `Message = "messages.new"` but **no** `local-notifications` entry. status-go **does** emit the signal by default: `pushMessage → signal.SendLocalNotifications` fires unconditionally (`services/local-notifications/core.go:151`), gated only by `GetAllowNotifications()` which defaults `true`. (`LocalNotificationsConfig.Enabled` in the Nim DTO is a **phantom field** — unused anywhere in status-go Go code; do not rely on it.) So no status-go config change is needed; the work is purely consuming the already-emitted signal on iOS.
 - **Signal payload** (status-go `services/local-notifications/core.go`): `DisplayTitle`, `DisplayMessage`, `Title`, `Message`, `ConversationID`, `id`, `Category`, `notificationAuthor` (name/icon), `communityIcon`, `chatIcon`, `isGroupConversation`, `timestamp`, `deepLink`, `isFromMe`, `deleted`. `DisplayTitle`/`DisplayMessage` are already privacy-filtered (`applyMessagePreview`/`applyAuthorPrivacy`).
 - **Push payload:** anonymous; `data.chatId = hex(Shake256(chatID))` already present (`pushnotificationserver/gorush.go`). No `apns-collapse-id` is set today.
 - **Layer 1b** delivers the background wake + sync; this design consumes the resulting signal.
@@ -52,11 +52,10 @@ The anonymous push's `apns-collapse-id` and the replacement local notification's
 
 ### Components
 
-**status-go (small, 2 changes):**
+**status-go (1 change):**
 1. `pushnotificationserver/gorush.go` — add `CollapseID` to `GoRushRequestNotification`, set it to `hex(messageID)` for APN tokens → APNS `apns-collapse-id`. The messageID is `PushNotificationRequest.MessageId`; plumb it from `sendPushNotification`/`buildPushNotificationRequestResponse` into `PushNotificationRegistrationToGoRushRequest`. (Extend `gorush_test.go`.)
-2. Ensure `LocalNotificationsConfig.Enabled = true` for the iOS node config so the signal is emitted (verify; enable if absent).
 
-*(No new local-notification field is needed — the signal already carries the message ID as `id`.)*
+*(No new local-notification field is needed — the signal already carries the message ID as `id`. No node-config change is needed — the signal fires by default; `LocalNotificationsConfig.Enabled` is a phantom field.)*
 
 **status-desktop (Nim):**
 4. Add a `local-notifications` `SignalType` (`= "local-notifications"`) + a signal struct (`signal_type.nim`, a new `*_signal.nim`, dispatch in `signals_manager.nim`) parsing the fields above.
