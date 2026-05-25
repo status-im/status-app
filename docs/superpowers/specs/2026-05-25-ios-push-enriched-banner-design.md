@@ -34,32 +34,37 @@ When the background sync (Layer 1b) produces a `local-notifications` event, **re
 ## Design
 
 ### Data flow
-1. Anonymous push (alert + `content-available` + **new** `apns-collapse-id = hex(Shake256(chatID))`) → Layer 1b wakes the app.
-2. App syncs; status-go processes messages and emits the `local-notifications` signal with privacy-filtered `DisplayTitle`/`DisplayMessage`, `ConversationID`, and **the same collapse-id value**.
-3. **New iOS consumer:** the Nim signal handler receives the event, applies the suppression rules (below), and calls `PushNotifications.showNotification(displayTitle, displayMessage, identifier = collapseId)`.
-4. iOS coalesces by `request.identifier` (== the push's `apns-collapse-id`) → **replaces the anonymous banner in place**. Multiple messages in one conversation collapse into a single updating notification (latest message shown).
+1. Anonymous push (alert + `content-available` + **new** `apns-collapse-id = hex(messageID)`) → Layer 1b wakes the app.
+2. App syncs; status-go processes messages and emits the `local-notifications` signal with privacy-filtered `DisplayTitle`/`DisplayMessage`, `ConversationID`, and the message `id` (== the push's messageID).
+3. **New iOS consumer:** the Nim signal handler receives the event, applies the suppression rules (below), and calls `PushNotifications.showNotification(displayTitle, displayMessage, identifier = id)` with `threadIdentifier = conversationId`.
+4. iOS coalesces by `request.identifier` (== the push's `apns-collapse-id` == `hex(messageID)`) → **replaces that message's anonymous banner in place**. Banners group per conversation via the device-side `threadIdentifier`.
 
-### Identifier scheme (the correlation key)
-The anonymous push's `apns-collapse-id` and the replacement local notification's `identifier` **must be the same string**, and that string must be derivable on the device without hashing. Therefore **status-go provides it in both places**:
-- gorush sets `apns-collapse-id = hex(Shake256(chatID))` (already computed as `data.chatId`).
-- the `local-notifications` signal includes the **same** `hex(Shake256(ConversationID))` as a dedicated field (e.g. `pushCollapseId`), so the Nim consumer uses it verbatim as the notification identifier.
+### Identifier scheme (the correlation key) — per-message, privacy-preserving
+The anonymous push's `apns-collapse-id` and the replacement local notification's `identifier` **must be the same string**. The chosen key is the **message ID** — a per-message value already shared by both sides, requiring **no new signal field and no app-side hashing**:
+- The push is sent for a specific message: gorush sets `apns-collapse-id = hex(messageID)` (plumbed from `PushNotificationRequest.MessageId`).
+- The `local-notifications` signal already carries that same message ID as its `id` field (`local_notifications.go:311` `ID: HexToHash(id)`; Android reads it as `optString("id")`). The Nim consumer uses `id` verbatim as the notification `identifier`.
 
-This mirrors Android keying notifications by `conversationId`; here the key is its Shake256 (privacy-preserving) so it matches the contentless push.
+**Why per-message, not per-conversation:** a stable `Shake256(chatID)` collapse-id would give Apple a persistent pseudonymous per-conversation key (social-graph leak). A per-message id is nonce-like — each push looks independent to Apple, so no stable conversation key is exposed (≈ what message timing already implies today). This is the privacy-preserving rule.
+
+**Grouping vs. coalescing:** the local notification sets `threadIdentifier = conversationId` (device-side only, never sent to Apple) so banners group per conversation in the shade. Replacement is therefore **per message** (each message: anonymous → enriched in place, grouped by conversation), not a single coalesced "N messages" banner. This is the privacy cost-of-business and is native iOS grouping behavior.
+
+**Group-message note (future hardening):** multiple recipients of a group message share the same `messageID`, so a per-message collapse-id still lets Apple observe per-message co-occurrence across devices (no worse than today's timing correlation, and 1-1 — the primary case — is unaffected since there is a single recipient). Salting the collapse-id with the recipient's identity (`hex(hash(messageID‖recipientPubKey))`, computed identically by sender and recipient, supplied via the signal) would remove even that; deferred.
 
 ### Components
 
-**status-go (small, 3 changes):**
-1. `pushnotificationserver/gorush.go` — add `CollapseID` to `GoRushRequestNotification`, set it to the hashed chatId (`data.chatId`) for APN tokens → APNS `apns-collapse-id`. (Extend `gorush_test.go`.)
-2. `services/local-notifications/core.go` — add the `pushCollapseId` field (= `hex(Shake256(ConversationID))`) to the emitted `Notification`, so the device need not hash.
-3. Ensure `LocalNotificationsConfig.Enabled = true` for the iOS node config so the signal is emitted (verify; enable if absent).
+**status-go (small, 2 changes):**
+1. `pushnotificationserver/gorush.go` — add `CollapseID` to `GoRushRequestNotification`, set it to `hex(messageID)` for APN tokens → APNS `apns-collapse-id`. The messageID is `PushNotificationRequest.MessageId`; plumb it from `sendPushNotification`/`buildPushNotificationRequestResponse` into `PushNotificationRegistrationToGoRushRequest`. (Extend `gorush_test.go`.)
+2. Ensure `LocalNotificationsConfig.Enabled = true` for the iOS node config so the signal is emitted (verify; enable if absent).
+
+*(No new local-notification field is needed — the signal already carries the message ID as `id`.)*
 
 **status-desktop (Nim):**
 4. Add a `local-notifications` `SignalType` (`= "local-notifications"`) + a signal struct (`signal_type.nim`, a new `*_signal.nim`, dispatch in `signals_manager.nim`) parsing the fields above.
-5. A handler (extend `NotificationsManager` or a small iOS-gated handler) that, on iOS, applies the suppression rules and calls `PushNotifications.showNotification(displayTitle, displayMessage, identifier = pushCollapseId)`. Reuse the foreground-visible state the app already tracks.
+5. A handler (extend `NotificationsManager` or a small iOS-gated handler) that, on iOS, applies the suppression rules and calls `PushNotifications.showNotification(displayTitle, displayMessage, identifier = id)` (the signal's `id` == the push messageID), with `threadIdentifier = conversationId`. Reuse the foreground-visible state the app already tracks.
 6. Keep desktop on its existing `messages.new → showMessageNotification → StatusOSNotification` path; this new consumer is **iOS-gated** so the two don't double-fire.
 
 **MobileUI:**
-7. Verify `PushNotificationIOS::showNotification` posts a `UNNotificationRequest` with `request.identifier = identifier` (required for coalescing with the remote push's collapse-id); set `content.threadIdentifier = identifier` for grouping. Extend if it doesn't.
+7. Verify `PushNotificationIOS::showNotification` posts a `UNNotificationRequest` with `request.identifier = identifier` (required for coalescing with the remote push's collapse-id == `hex(messageID)`). Extend the signature to accept a `threadIdentifier` (set to `conversationId`) for device-side per-conversation grouping; the current `showNotification(title, message, identifier)` has no thread param.
 
 ### Suppression rules (mirror Android `StatusNotificationManager`)
 - `deleted == true` → skip.
@@ -68,8 +73,9 @@ This mirrors Android keying notifications by `conversationId`; here the key is i
 - `category` other than message types (e.g. `contactRequest`) → out of scope for v1; only `newMessage`-category events enrich. Non-message categories leave the anonymous banner.
 
 ### Privacy
-- Content is the already-privacy-filtered `DisplayTitle`/`DisplayMessage`; users who reduced `notificationsMessagePreview` get less, automatically. Anonymous-level users get no enrichment by construction.
-- The push stays contentless **except** the new `apns-collapse-id`. That value is `Shake256(chatID)` — the same one-way hash already in the payload, so no new *content* is exposed. **Tradeoff to accept:** `apns-collapse-id` is an APNS *header* Apple actively uses, so Apple gains a **stable pseudonymous per-conversation key** (it can correlate/count pushes for a given hashed conversation over time). It is not reversible to the chat, and it is required for seamless in-place replacement. A rotating collapse-id would defeat the matching, so the stable hash is intentional.
+- Content is the already-privacy-filtered `DisplayTitle`/`DisplayMessage`; users who reduced `notificationsMessagePreview` get less, automatically. Anonymous-level users get no enrichment by construction. Decryption is on-device; nothing readable transits the PNS/APNS.
+- The push stays contentless. The only new exposure is the `apns-collapse-id`, set to **`hex(messageID)` — a per-message, nonce-like value**. Apple sees a fresh, unlinkable id per push, so **no stable per-conversation key is created** and no persistent social graph is exposed — preserving the current privacy posture (a unique-per-message id is ≈ what message timing already implies). The `threadIdentifier` used for per-conversation grouping is set **only on the local notification (device-side)** and is never transmitted to Apple.
+- **Residual (group only, deferred):** recipients of the same group message share a `messageID`, so Apple could observe per-message co-occurrence across device tokens — no worse than today's timing correlation. 1-1 (the primary case) has a single recipient and is unaffected. Salting the collapse-id with the recipient identity removes even this; deferred.
 
 ## The make-or-break unknown (must device-verify early)
 Does posting a **local** `UNNotificationRequest` whose `identifier` equals a **delivered remote** notification's `apns-collapse-id` **replace it in place without re-alerting**? This is the crux of "seamless." Verify on a physical device first. Fallbacks if it re-alerts or double-shows: (a) accept the re-alert; (b) investigate suppressing the replacement's alert (interruption level / sound = none on the update); (c) remove-then-repost (flash). This verification gates the rest of the implementation.
@@ -77,14 +83,15 @@ Does posting a **local** `UNNotificationRequest` whose `identifier` equals a **d
 ## Edge cases
 - App not woken (Layer 1b best-effort) → anonymous banner stays (graceful, today's behavior).
 - Sync fails / message not retrieved → anonymous stays.
-- Multiple messages, same conversation → one notification, updated to the latest (coalesced by identifier).
-- Multiple conversations → one notification each (distinct collapse-ids).
-- Group/community: works because status-go supplies the identical collapse-id in both the push and the signal; whether a push fires for group/community at all is existing push behavior, not this design.
+- Multiple messages, same conversation → one banner **per message**, each replaced anonymous→enriched in place, grouped in the shade by `threadIdentifier = conversationId` (iOS-native grouping; not a single coalesced "N messages" banner — that would require the rejected per-conversation collapse-id).
+- Multiple conversations → grouped into distinct conversation threads via `threadIdentifier`.
+- Late-arriving push for an already-enriched message (retry) → same `apns-collapse-id` (`hex(messageID)`) → harmlessly re-shows that one message's banner (anonymous, then re-enriched on the next signal).
+- Group/community: matching is automatic because both the push collapse-id and the signal `id` are the same messageID; whether a push fires for group/community at all is existing push behavior, not this design.
 - `DisplayTitle`/`DisplayMessage` empty (older status-go path) → fall back to `Title`/`Message`, mirroring Android.
 
 ## Testing
-- **status-go unit test:** extend `gorush_test.go` to assert `apns-collapse-id` (CollapseID) is set to the hashed chatId for APN tokens and absent for Firebase; assert the `pushCollapseId` field is emitted on the local-notification.
-- **Nim:** test the signal handler dispatches `showNotification` with `identifier == pushCollapseId` and honors the `deleted`/`isFromMe`/foreground suppression rules (mock the MobileUI show).
+- **status-go unit test:** extend `gorush_test.go` to assert `CollapseID == hex(messageID)` for APN tokens and absent/empty for Firebase tokens.
+- **Nim:** test the signal handler dispatches `showNotification` with `identifier == ` the signal's `id` (the messageID) and `threadIdentifier == conversationId`, and honors the `deleted`/`isFromMe`/foreground suppression rules (mock the MobileUI show).
 - **On-device smoke test (device-bound):** 1-1 message, app backgrounded → anonymous banner appears → after sync, replaced **in place** with sender + message, **no second buzz**. Verify `isFromMe` (send from paired desktop → no notification), `deleted`, and foreground suppression.
 
 ## References (code)
