@@ -66,6 +66,7 @@ type
 # Forward declaration
 proc getRemainingSupply*(self: Controller, chainId: int, contractAddress: string): Uint256
 proc getRemoteDestructedAmount*(self: Controller, chainId: int, contractAddress: string): Uint256
+proc onLocalNotificationSignal(self: Controller, s: LocalNotificationSignal)
 
 proc newController*(delegate: io_interface.AccessInterface,
   events: EventEmitter,
@@ -177,6 +178,14 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_MAILSERVER_NOT_WORKING) do(e: Args):
     self.delegate.emitMailserverNotWorking()
+
+  self.events.on(SIGNAL_MAILSERVER_HISTORY_REQUEST_COMPLETED) do(e: Args):
+    self.delegate.onBackgroundSyncCompleted()
+
+  self.events.on(SignalType.LocalNotifications.event) do(e: Args):
+    let s = LocalNotificationSignal(e)
+    debug "PNDBG local-notification signal received", id=s.id, category=s.category, convId=s.conversationId, isFromMe=s.isFromMe, deleted=s.deleted, displayTitle=s.displayTitle
+    self.onLocalNotificationSignal(s)
 
   self.events.on(SIGNAL_COMMUNITY_JOINED) do(e:Args):
     let args = CommunityArgs(e)
@@ -660,3 +669,25 @@ proc connectionChange*(self: Controller, connectionType: string, isExpensive: bo
 
 proc logout*(self: Controller) =
   self.generalService.logout()
+
+proc triggerBackgroundSync*(self: Controller) =
+  self.mailserversService.requestAllHistoricMessagesWithRetries()
+
+# iOS enriched push (Layer 2): turns a status-go `local-notifications` signal
+# into an enriched in-app notification that replaces the anonymous OS banner.
+# Suppression mirrors Android's `StatusNotificationManager`.
+proc onLocalNotificationSignal(self: Controller, s: LocalNotificationSignal) =
+  if s.deleted:
+    debug "PNDBG suppress: deleted"
+    return
+  if s.category != "newMessage":
+    debug "PNDBG suppress: category", category=s.category
+    return
+  if s.isFromMe:
+    debug "PNDBG suppress: isFromMe"
+    return
+  let title = if s.displayTitle.len > 0: s.displayTitle else: s.title
+  let body  = if s.displayMessage.len > 0: s.displayMessage else: s.message
+  debug "PNDBG (foreground suppression not yet applied)"
+  debug "PNDBG showing enriched notification", id=s.id, title=title, threadId=s.conversationId
+  self.delegate.emitShowEnrichedNotification(title, body, s.id, s.conversationId)

@@ -171,6 +171,15 @@ method emitMailserverWorking*(self: AccessInterface) {.base.} =
 method emitMailserverNotWorking*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method triggerBackgroundSync*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onBackgroundSyncCompleted*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method emitShowEnrichedNotification*(self: AccessInterface, title, body, identifier, threadId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method activeSectionSet*(self: AccessInterface, sectionId: string, skipSavingInSettings: bool = false) {.base.} =
   raise newException(ValueError, "No implementation available")
 

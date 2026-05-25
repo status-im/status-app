@@ -1197,6 +1197,18 @@ method emitMailserverWorking*[T](self: Module[T]) =
 method emitMailserverNotWorking*[T](self: Module[T]) =
   self.view.emitMailserverNotWorking()
 
+method triggerBackgroundSync*[T](self: Module[T]) =
+  self.controller.triggerBackgroundSync()
+
+method onBackgroundSyncCompleted*[T](self: Module[T]) =
+  # The history.request.completed signal carries no payload about whether new
+  # messages were fetched, so we report best-effort `hadNewData = true` to let
+  # iOS know the background sync ran to completion.
+  self.view.emitBackgroundSyncCompleted(true)
+
+method emitShowEnrichedNotification*[T](self: Module[T], title, body, identifier, threadId: string) =
+  self.view.emitShowEnrichedNotification(title, body, identifier, threadId)
+
 method setCommunityIdToSpectate*[T](self: Module[T], communityId: string) =
   self.pendingSpectateRequest.communityId = communityId
   self.pendingSpectateRequest.channelUuid = ""

@@ -1198,10 +1198,42 @@ Item {
             }
         }
 
+        // iOS background push: run the full historic message sync on the warm
+        // (suspended) app. On a cold launch no account is logged in yet, so we
+        // finish the background fetch gracefully and do nothing else.
+        function onRemoteNotificationReceived() {
+            if (appMain.rootStore.sectionsLoaded)
+                appMain.rootStore.triggerBackgroundSync()
+            else
+                PushNotifications.finishBackgroundFetch(false)
+        }
+
         // in case PushNotifications has already processed the token
         Component.onCompleted: {
             if (SQUtils.Utils.isIOS && !!PushNotifications.token && !!appMain.notificationsStore.notificationsSettings)
                 appMain.notificationsStore.notificationsSettings.deviceToken = PushNotifications.token
+        }
+    }
+
+    Connections {
+        target: appMain.rootStore
+        enabled: SQUtils.Utils.isIOS
+
+        function onBackgroundSyncCompleted(hadNewData) {
+            PushNotifications.finishBackgroundFetch(hadNewData)
+        }
+    }
+
+    // iOS enriched push (Layer 2): a status-go local-notification was decoded
+    // in-app; show an enriched banner whose identifier matches the original
+    // anonymous push messageID so it replaces it in place.
+    Connections {
+        target: appMain.rootStore
+        enabled: SQUtils.Utils.isIOS
+
+        function onShowEnrichedNotification(title, body, identifier, threadId) {
+            console.log("[StatusPNDiag] QML showEnrichedNotification ->", identifier, title)
+            PushNotifications.showNotification(title, body, identifier, threadId)
         }
     }
 

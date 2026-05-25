@@ -147,6 +147,23 @@ QtObject:
   proc emitMailserverNotWorking*(self: View) =
     self.mailserverNotWorking()
 
+  # Background sync (iOS background push). Triggers the existing full historic
+  # message sync; completion is reported back via `backgroundSyncCompleted`.
+  proc triggerBackgroundSync*(self: View) {.slot.} =
+    self.delegate.triggerBackgroundSync()
+
+  proc backgroundSyncCompleted*(self: View, hadNewData: bool) {.signal.}
+
+  proc emitBackgroundSyncCompleted*(self: View, hadNewData: bool) =
+    self.backgroundSyncCompleted(hadNewData)
+
+  # iOS enriched push (Layer 2). Relayed to QML where (on iOS) it triggers an
+  # enriched local notification that replaces the anonymous push banner.
+  proc showEnrichedNotification*(self: View, title, body, identifier, threadId: string) {.signal.}
+
+  proc emitShowEnrichedNotification*(self: View, title, body, identifier, threadId: string) =
+    self.showEnrichedNotification(title, body, identifier, threadId)
+
   proc activeSection*(self: View): SectionDetails =
     return self.activeSection
 
