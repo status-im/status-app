@@ -266,6 +266,7 @@ StatusSectionLayout {
         hostStackLayout: webStackView
         tabsModel: tabs
         defaultProfileParams: browserConfig.defaultProfileParams
+        otrProfileParams: browserConfig.otrProfileParams
         bookmarksStore: root.bookmarksStore
         downloadsStore: root.downloadsStore
         determineRealURLFn: (url) => root.browserRootStore.determineRealURL(url)

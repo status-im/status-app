@@ -26,6 +26,7 @@ QtObject {
     required property Item hostStackLayout
     required property var tabsModel
     required property ProfileParams defaultProfileParams
+    required property ProfileParams otrProfileParams
 
     required property var bookmarksStore
     required property var downloadsStore
@@ -206,7 +207,9 @@ QtObject {
     function setIncognitoCurrent(checked) {
         if (!currentWebView)
             return
-        currentWebView.profileParams.offTheRecord = checked
+        const target = checked ? otrProfileParams : defaultProfileParams
+        if (currentWebView.profileParams !== target)
+            currentWebView.profileParams = target
     }
 
     function changeZoomCurrent(delta) {

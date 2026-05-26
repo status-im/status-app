@@ -110,7 +110,18 @@ Item {
             dappsEnabled: true
             hostStackLayout: hostStack
             tabsModel: tabsModelRef
-            defaultProfileParams: ProfileParams {}
+            defaultProfileParams: ProfileParams {
+                userId: ""
+                userAgent: ""
+                scripts: []
+                offTheRecord: false
+            }
+            otrProfileParams: ProfileParams {
+                userId: ""
+                userAgent: ""
+                scripts: []
+                offTheRecord: true
+            }
             bookmarksStore: QtObject {}
             downloadsStore: QtObject {}
             determineRealURLFn: function(url) { return url }
