@@ -172,17 +172,13 @@ LayoutChooser {
         This method is used to focus the panel that needs to be active.
     */
     function goToNextPanel() {
-        if (portraitView.visible) {
+        if (portraitView.visible)
             portraitView.incrementCurrentIndex()
-            Qt.callLater(d.positionPortraitViewAtCurrentIndex)
-        }
     }
 
     function goToPreviousPanel() {
-        if (portraitView.visible) {
+        if (portraitView.visible)
             portraitView.decrementCurrentIndex()
-            Qt.callLater(d.positionPortraitViewAtCurrentIndex)
-        }
     }
 
     readonly property int windowWidth: root.Window?.width ?? Screen.width
@@ -237,20 +233,6 @@ LayoutChooser {
         invertedLayout: root.invertedLayout
 
         property int currentIndexCache
-
-        QtObject {
-            id: d
-
-            // On Android, changing SwipeView.currentIndex can leave the
-            // internal ListView at the previous contentX. Reposition it after
-            // the index change has been processed so the visible page matches.
-            function positionPortraitViewAtCurrentIndex() {
-                if (!portraitView.contentItem || !portraitView.contentItem.positionViewAtIndex)
-                    return
-
-                portraitView.contentItem.positionViewAtIndex(portraitView.currentIndex, ListView.SnapPosition)
-            }
-        }
 
         onCurrentIndexChanged: {
             root.swiped(currentIndexCache, currentIndex)

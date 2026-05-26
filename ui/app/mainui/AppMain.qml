@@ -1086,7 +1086,7 @@ Item {
             if (sectionType === Constants.appSection.profile) {
                 profileLoader.settingsSubsection = subsection || Constants.settingsSubsection.profile
                 profileLoader.settingsSubSubsection = subSubsection
-                profileLoader.forceSubsectionNavigation = true
+                profileLoader.forceSubsectionNavigation()
             } else if (sectionType === Constants.appSection.wallet) {
                 appView.children[Constants.appViewStackIndex.wallet].item.openDesiredView(subsection, subSubsection, data)
             } else if (sectionType === Constants.appSection.swap) {
