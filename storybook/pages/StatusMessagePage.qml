@@ -46,12 +46,25 @@ SplitView {
             outgoingStatus: StatusMessage.OutgoingStatus.Delivered,
             reactionsModel: d.reactionsModels.twentyReactions
         }]
+        readonly property var longMessage: [{
+            timestamp: 1667937830123,
+            senderId: "zq123456791",
+            senderDisplayName: "Paperback Writer",
+            contentType: StatusMessage.ContentType.Text,
+            message: ModelsData.descriptions.longLoremIpsum,
+            isContact: false,
+            isAReply: false,
+            trustIndicator: StatusContactVerificationIcons.TrustedType.None,
+            outgoingStatus: StatusMessage.OutgoingStatus.Delivered,
+            reactionsModel: []
+        }]
 
 
         readonly property var messagesModel: ListModel {
             Component.onCompleted:  {
                 append(d.messageWithThreeReactions)
                 append(d.messageWithTwentyReactions)
+                append(d.longMessage)
             }
 
             ListElement {
@@ -97,7 +110,7 @@ SplitView {
                 senderId: "zqdeadbeef"
                 senderDisplayName: "replicator.stateofus.eth"
                 contentType: StatusMessage.ContentType.Text
-                message: "Test message with a link https://github.com/. Try to copy the link!"
+                message: "Test message with a link https://github.com/. Try to click the link!"
                 isContact: true
                 isAReply: true
                 trustIndicator: StatusContactVerificationIcons.TrustedType.None
@@ -216,10 +229,22 @@ SplitView {
                 senderId: "zq123456790"
                 senderDisplayName: "Alice"
                 contentType: StatusMessage.ContentType.Image
-                message: "This message contains images"
+                message: "This message contains 2 images"
                 isContact: true
                 isAReply: false
                 trustIndicator: StatusContactVerificationIcons.TrustedType.None
+                outgoingStatus: StatusMessage.OutgoingStatus.Delivered
+                reactionsModel: []
+            }
+            ListElement {
+                timestamp: 1719769718000
+                senderId: "zq12345676767"
+                senderDisplayName: "Bob"
+                contentType: StatusMessage.ContentType.Text
+                message: "<blockquote>This is a block quoted text paragraph from a verified contact</blockquote>"
+                isContact: true
+                isAReply: false
+                trustIndicator: StatusContactVerificationIcons.TrustedType.Verified
                 outgoingStatus: StatusMessage.OutgoingStatus.Delivered
                 reactionsModel: []
             }
@@ -252,6 +277,7 @@ SplitView {
                     disabledTooltipText: disableLinkCheckbox.checked ? "Send not available": ""
                     reactionsModel: model.reactionsModel
                     maxEmojiReactionsPerMessage: 20
+                    isMobile: ctrlIsMobile.checked
 
                     messageDetails {
                         readonly property bool isEnsVerified: model.senderDisplayName.endsWith(".eth")
@@ -305,9 +331,17 @@ SplitView {
 
             logsView.logText: logs.logText
 
-            CheckBox {
-                id: disableLinkCheckbox
-                text: "Disable Address/Ens link"
+            ColumnLayout {
+                anchors.fill: parent
+                CheckBox {
+                    id: ctrlIsMobile
+                    text: "Is mobile"
+                }
+
+                CheckBox {
+                    id: disableLinkCheckbox
+                    text: "Disable Address/Ens link"
+                }
             }
         }
     }

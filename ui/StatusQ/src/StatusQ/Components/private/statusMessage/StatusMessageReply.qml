@@ -14,6 +14,7 @@ Item {
 
     property StatusMessageDetails replyDetails
     property bool profileClickable: true
+    property bool isMobile: Utils.isMobile
 
     signal replyProfileClicked(var sender, var mouse)
     signal messageClicked(var mouse)
@@ -124,8 +125,8 @@ Item {
                             visible: active
                             sourceComponent: StatusTextMessage {
                                 objectName: "StatusMessage_replyDetails_textMessage"
-                                textField.font.pixelSize: Theme.secondaryTextFontSize
-                                textField.color: Theme.palette.baseColor1
+                                isReply: true
+                                isMobile: root.isMobile
                                 allowShowMore: false
                                 stripHtmlTags: true
                                 convertToSingleLine: true
