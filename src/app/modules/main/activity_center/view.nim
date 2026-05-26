@@ -119,6 +119,9 @@ QtObject:
   proc dismissActivityCenterNotificationDone*(self: View, notificationId: string) =
     self.model.activityCenterNotificationDismissed(notificationId)
 
+  proc updateCommunityMembershipStatus*(self: View, communityId: string, memberPubkey: string, status: ActivityCenterMembershipStatus) =
+    self.model.updateCommunityMembershipStatus(communityId, memberPubkey, status)
+
   proc addActivityCenterNotifications*(self: View, activityCenterNotifications: seq[Item]) =
     self.model.upsertActivityCenterNotifications(activityCenterNotifications)
 

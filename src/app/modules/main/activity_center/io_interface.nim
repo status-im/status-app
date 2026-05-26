@@ -1,6 +1,7 @@
 import tables
 import ./item
 import ../../../../app_service/service/activity_center/service as activity_center_service
+from app_service/common/types import MembershipRequestState
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -79,6 +80,9 @@ method acceptActivityCenterNotificationDone*(self: AccessInterface, notification
   raise newException(ValueError, "No implementation available")
 
 method dismissActivityCenterNotificationDone*(self: AccessInterface, notificationId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method updateCommunityMembershipStatus*(self: AccessInterface, communityId: string, memberPubkey: string, state: MembershipRequestState) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method addActivityCenterNotifications*(self: AccessInterface, activityCenterNotifications: seq[ActivityCenterNotificationDto], initialLoad: bool) {.base.} =

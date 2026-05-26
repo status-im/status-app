@@ -137,7 +137,7 @@ Item {
                 default: return true
                 }
             }
-            readonly property bool showActions: ctaAllowed
+            readonly property bool showActions: ctaAllowed || model.requestToJoinLoading
             readonly property bool canDeleteMessages: model.isCurrentUser || model.memberRole !== Constants.memberRole.owner
 
             /// Button visibility ///

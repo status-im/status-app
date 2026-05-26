@@ -1,5 +1,6 @@
 import nimqml, tables, json, sequtils, strutils
 import ./item
+import ../../../../app_service/service/activity_center/dto/notification
 
 type
   NotifRoles {.pure.} = enum
@@ -179,6 +180,16 @@ QtObject:
     defer: index.delete
     self.dataChanged(index, index, @[NotifRoles.Dismissed.int, NotifRoles.Read.int])
 
+  proc updateCommunityMembershipStatus*(self: Model, communityId: string, memberPubkey: string, status: ActivityCenterMembershipStatus) =
+    for i, notification in self.activityCenterNotifications:
+      if notification.notificationType == ActivityCenterNotificationType.CommunityMembershipRequest and
+          notification.communityId == communityId and
+          (notification.author == memberPubkey or notification.chatId == memberPubkey):
+        notification.membershipStatus = status
+        let index = self.createIndex(i, 0, nil)
+        defer: index.delete
+        self.dataChanged(index, index, @[NotifRoles.MembershipStatus.int])
+
   proc removeNotifications*(self: Model, ids: seq[string]) =
     var i = 0
     var indexesToDelete: seq[int] = @[]
@@ -205,6 +216,17 @@ QtObject:
     self.endResetModel()
 
   proc updateActivityCenterNotification*(self: Model, ind: int, newNotification: Item) =
+    if self.activityCenterNotifications[ind].notificationType == ActivityCenterNotificationType.CommunityMembershipRequest and
+        self.activityCenterNotifications[ind].membershipStatus in [
+          ActivityCenterMembershipStatus.Accepted,
+          ActivityCenterMembershipStatus.Declined,
+        ] and
+        newNotification.membershipStatus notin [
+          ActivityCenterMembershipStatus.Accepted,
+          ActivityCenterMembershipStatus.Declined,
+        ]:
+      newNotification.membershipStatus = self.activityCenterNotifications[ind].membershipStatus
+
     self.activityCenterNotifications[ind] = newNotification
     let index = self.createIndex(ind, 0, nil)
     defer: index.delete
@@ -246,4 +268,3 @@ QtObject:
     self.QAbstractListModel.setup
   proc delete(self: Model) =
     self.QAbstractListModel.delete
-

@@ -94,19 +94,21 @@ QObject {
                 roleName: "membershipRequestState"
                 value: Constants.CommunityMembershipRequestState.AcceptedPending
             }
-            ValueFilter {
-                roleName: "membershipRequestState"
-                value: Constants.CommunityMembershipRequestState.RejectedPending
-            }
         }
     }
 
     readonly property var declinedMembers: SortFilterProxyModel {
         sourceModel: root.allMembers ?? null
 
-        filters: ValueFilter {
-            roleName: "membershipRequestState"
-            value: Constants.CommunityMembershipRequestState.Rejected
+        filters: AnyOf {
+            ValueFilter {
+                roleName: "membershipRequestState"
+                value: Constants.CommunityMembershipRequestState.Rejected
+            }
+            ValueFilter {
+                roleName: "membershipRequestState"
+                value: Constants.CommunityMembershipRequestState.RejectedPending
+            }
         }
     }
 }

@@ -645,6 +645,10 @@ QtObject {
                                                                     notification.membershipStatus :
                                                                     ActivityCenterTypes.ActivityCenterMembershipStatus.None
                         readonly property bool pending: membershipStatus === ActivityCenterTypes.ActivityCenterMembershipStatus.Pending
+                        readonly property bool accepted: membershipStatus === ActivityCenterTypes.ActivityCenterMembershipStatus.Accepted
+                        readonly property bool declined: membershipStatus === ActivityCenterTypes.ActivityCenterMembershipStatus.Declined
+                        readonly property bool acceptedPending: membershipStatus === ActivityCenterTypes.ActivityCenterMembershipStatus.AcceptedPending
+                        readonly property bool declinedPending: membershipStatus === ActivityCenterTypes.ActivityCenterMembershipStatus.DeclinedPending
 
                         readonly property NotificationSenderResolver senderResolver: NotificationSenderResolver {
                             isOutgoingMessage: row.notification?.message?.amISender ?? false
@@ -663,10 +667,19 @@ QtObject {
                         actionText: qsTr("Community membership request")
 
                         // Content related
-                        content: senderResolver.sender?.displayName
-                                 ? "<font color='%1'>@%2</font>".arg(Theme.palette.primaryColor1)
-                                                                .arg(senderResolver.sender.displayName)
-                                 : ""
+                        content: {
+                            const sender = senderResolver.sender?.displayName
+                                           ? "<font color='%1'>@%2</font>".arg(Theme.palette.primaryColor1)
+                                                                          .arg(senderResolver.sender.displayName)
+                                           : ""
+                            const status = accepted ? "<font color='%1'>%2</font>".arg(Theme.palette.successColor1).arg(qsTr("Accepted"))
+                                                    : declined ? "<font color='%1'>%2</font>".arg(Theme.palette.dangerColor1).arg(qsTr("Declined"))
+                                                               : acceptedPending ? qsTr("Accept pending")
+                                                                                 : declinedPending ? qsTr("Reject pending")
+                                                                                                   : qsTr("Pending")
+                            return pending && sender ? sender :
+                                                       sender ? sender + "<br>" + status : status
+                        }
 
                         // Quick actions — only when genuinely pending (excludes AcceptedPending=4, DeclinedPending=5)
                         showQuickActions: pending

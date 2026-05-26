@@ -1613,6 +1613,7 @@ method onMembershipStateUpdated*[T](self: Module[T], communityId: string, member
     let item = self.view.model().getItemById(communityId)
     if item.id != "":
       item.updateMembershipStatus(memberPubkey, state)
+    self.activityCenterModule.updateCommunityMembershipStatus(communityId, memberPubkey, state)
 
     # Privileged non-control nodes need local request state updates (e.g. AcceptedPending),
     # but only the control node should emit authoritative member status notifications.
