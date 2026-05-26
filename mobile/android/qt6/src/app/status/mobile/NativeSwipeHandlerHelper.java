@@ -3,6 +3,7 @@ package app.status.mobile;
 import android.app.Activity;
 import android.graphics.Rect;
 import android.os.Build;
+import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -164,14 +165,7 @@ public class NativeSwipeHandlerHelper {
                         dispatchToTarget(passthroughTarget, event, action);
                     }
 
-                    if (velocityTracker != null) {
-                        velocityTracker.recycle();
-                        velocityTracker = null;
-                    }
-                    active = false;
-                    activePointerId = -1;
-                    swiping = false;
-                    passthroughTarget = null;
+                    resetGestureState();
                     return true;
                 }
 
@@ -212,6 +206,7 @@ public class NativeSwipeHandlerHelper {
             touchOverlayView.setX(handlerX);
             touchOverlayView.setY(handlerY);
             touchOverlayView.setElevation(dismissMode ? 48f : 1f);
+            touchOverlayView.setVisibility(View.VISIBLE);
 
             ViewGroup parent = (ViewGroup) touchOverlayView.getParent();
             if (parent != null && dismissMode) {
@@ -219,6 +214,45 @@ public class NativeSwipeHandlerHelper {
             }
             updateGestureExclusion();
         });
+    }
+
+    /** Hide overlay when QML handler is disabled (e.g. popup opens). Reversible via applyTouchOverlayState. */
+    public void hideTouchOverlay() {
+        if (activity == null) return;
+        activity.runOnUiThread(() -> {
+            if (touchOverlayView != null
+                    && touchOverlayView.getVisibility() == View.GONE
+                    && !active) {
+                return;
+            }
+            cancelActiveGesture();
+            resetGestureState();
+            dismissTapMode = false;
+            if (touchOverlayView != null) touchOverlayView.setVisibility(View.GONE);
+        });
+    }
+
+    /** Sends ACTION_CANCEL to in-flight passthrough target and ends any active swipe. UI-thread only. */
+    private void cancelActiveGesture() {
+        if (active && passthroughTarget != null) {
+            long t = SystemClock.uptimeMillis();
+            MotionEvent cancel = MotionEvent.obtain(t, t, MotionEvent.ACTION_CANCEL, 0f, 0f, 0);
+            dispatchToTarget(passthroughTarget, cancel, MotionEvent.ACTION_CANCEL);
+            cancel.recycle();
+        }
+        if (swiping) nativeOnSwipeEnded(nativePtr, 0f, 0f, true);
+    }
+
+    /** Releases per-gesture resources and resets flags. UI-thread only. */
+    private void resetGestureState() {
+        if (velocityTracker != null) {
+            velocityTracker.recycle();
+            velocityTracker = null;
+        }
+        active = false;
+        swiping = false;
+        activePointerId = -1;
+        passthroughTarget = null;
     }
 
     private void updateGestureExclusion() {
@@ -284,13 +318,7 @@ public class NativeSwipeHandlerHelper {
                 if (parent != null) parent.removeView(touchOverlayView);
                 touchOverlayView = null;
             }
-
-            if (velocityTracker != null) {
-                velocityTracker.recycle();
-                velocityTracker = null;
-            }
-            active = false;
-            activePointerId = -1;
+            resetGestureState();
         });
     }
 }
