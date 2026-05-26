@@ -64,7 +64,12 @@ Loader {
     property int settingsSubsection: -1
     property int settingsSubSubsection: -1
     property real leftPanelWidthOverride: 0
-    property bool forceSubsectionNavigation: false
+
+    function forceSubsectionNavigation() {
+        if (root.item && root.item.forceSubsectionNavigation) {
+            root.item.forceSubsectionNavigation()
+        }
+    }
 
     onSettingsSubsectionChanged: {
         if (root.item && root.item.settingsSubsection !== root.settingsSubsection) {
@@ -78,17 +83,10 @@ Loader {
         }
     }
 
-    onForceSubsectionNavigationChanged: {
-        if (root.item && root.item.forceSubsectionNavigation !== root.forceSubsectionNavigation) {
-            root.item.forceSubsectionNavigation = root.forceSubsectionNavigation
-        }
-    }
-
     Binding {
         when: !!root.item
         root.settingsSubsection: root.item.settingsSubsection
         root.settingsSubSubsection: root.item.settingsSubSubsection
-        root.forceSubsectionNavigation: root.item.forceSubsectionNavigation
     }
 
     // Signals re-emitted so AppMain can mutate appMainLocalSettings / Theme outside the loader
@@ -155,8 +153,7 @@ Loader {
             whitelistedDomainsModel:                Qt.binding(() => root.whitelistedDomainsModel),
             leftPanelWidthOverride:                 Qt.binding(() => root.leftPanelWidthOverride),
             settingsSubsection:                     Qt.binding(() => root.settingsSubsection),
-            settingsSubSubsection:                  Qt.binding(() => root.settingsSubSubsection),
-            forceSubsectionNavigation:              Qt.binding(() => root.forceSubsectionNavigation)
+            settingsSubSubsection:                  Qt.binding(() => root.settingsSubSubsection)
         })
     }
 
