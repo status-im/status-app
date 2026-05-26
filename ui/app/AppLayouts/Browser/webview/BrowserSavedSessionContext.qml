@@ -1,6 +1,6 @@
 import QtQuick
 
-import "BrowserSessionUtils.js" as BrowserSessionUtils
+import AppLayouts.Browser.webview
 
 QtObject {
     id: root

@@ -1,3 +1,5 @@
+.pragma library
+
 function normalizeIcon(iconUrl) {
     return iconUrl ? iconUrl.toString().replace("image://favicon/", "") : ""
 }

@@ -1,7 +1,7 @@
 import QtQuick
 import StatusQ
 
-import "BrowserSessionUtils.js" as BrowserSessionUtils
+import AppLayouts.Browser.webview
 
 QtObject {
     id: root

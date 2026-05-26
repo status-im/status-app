@@ -14,7 +14,6 @@ class ImageEncoderUtils : public QObject
     explicit ImageEncoderUtils(QQmlEngine *engine);
 
 public:
-    // Match browser snapshot persistence default for smaller thumbnail payloads.
     Q_INVOKABLE QString encodeJpegBase64(const QImage &image, int quality = 65) const;
     Q_INVOKABLE QString encodeJpegBase64FromUrl(const QUrl &url, int quality = 65) const;
 
