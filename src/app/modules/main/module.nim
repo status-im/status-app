@@ -56,6 +56,7 @@ import app_service/service/privacy/service as privacy_service
 import app_service/service/stickers/service as stickers_service
 import app_service/service/activity_center/service as activity_center_service
 import app_service/service/saved_address/service as saved_address_service
+import app_service/service/browser_preferences/service as browser_preferences_service
 import app_service/service/following_address/service as following_address_service
 import app_service/service/node/service as node_service
 import app_service/service/node_configuration/service as node_configuration_service
@@ -174,6 +175,7 @@ proc newModule*[T](
   stickersService: stickers_service.Service,
   activityCenterService: activity_center_service.Service,
   savedAddressService: saved_address_service.Service,
+  browserPreferencesService: browser_preferences_service.Service,
   followingAddressService: following_address_service.Service,
   nodeConfigurationService: node_configuration_service.Service,
   devicesService: devices_service.Service,
@@ -248,7 +250,7 @@ proc newModule*[T](
   result.browserSectionModule = browser_section_module.newModule(
     result, events, bookmarkService, settingsService, networkService,
     dappPermissionsService, walletAccountService,
-    tokenService, currencyService, savedAddressService
+    tokenService, currencyService, savedAddressService, browserPreferencesService
   )
   result.profileSectionModule = profile_section_module.newModule(
     result, events, accountsService, settingsService, stickersService,

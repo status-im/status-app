@@ -27,3 +27,12 @@ method viewDidLoad*(self: AccessInterface) {.base.} =
 
 method openUrl*(self: AccessInterface, url: string) {.base.} =
   raise newException(ValueError, "No implementation available")
+
+method purgePreferenceCategory*(self: AccessInterface, category: string, validKeys: seq[string]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method putPreference*(self: AccessInterface, category, key, value: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method getPreference*(self: AccessInterface, category, key: string): string {.base.} =
+  raise newException(ValueError, "No implementation available")

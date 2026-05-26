@@ -19,6 +19,7 @@ FocusScope {
     readonly property alias count: tabBar.count
     required property bool currentTabIncognito
     required property bool isMobile
+    required property var savedSessionContext
 
     property var fnGetWebView: (index) => {}
 
@@ -28,23 +29,10 @@ FocusScope {
     signal openNewTabTriggered()
     signal removeView(int index)
 
-    function createEmptyTab(createAsStartPage = false, focusOnNewTab = true, webview = undefined, initialTitle = undefined, initialIcon = undefined) {
-        const tabTitle = Qt.binding(function() {
-            var tabTitle = ""
-            if (webview && webview.title) {
-                tabTitle = webview.title
-            } else if (initialTitle) {
-                tabTitle = initialTitle
-            } else if (createAsStartPage) {
-                tabTitle = qsTr("Start Page")
-            } else {
-                tabTitle = qsTr("New Tab")
-            }
-
-            return SQUtils.StringUtils.escapeHtml(tabTitle);
+    function createEmptyTab(createAsStartPage = false, focusOnNewTab = true) {
+        var newTabButton = tabButtonComponent.createObject(tabBar, {
+            isStartPage: createAsStartPage
         })
-
-        var newTabButton = tabButtonComponent.createObject(tabBar, {tabTitle, tabIcon: initialIcon || ""})
         tabBar.addItem(newTabButton)
 
         if (focusOnNewTab) {
@@ -150,10 +138,14 @@ FocusScope {
 
         StatusTabButton {
             id: tabButton
-            property string tabTitle
-            property string tabIcon
+            property bool isStartPage: false
 
             readonly property bool incognito: root.fnGetWebView(tabButton.TabBar.index)?.offTheRecord ?? false
+            readonly property var webView: root.fnGetWebView(tabButton.TabBar.index)
+
+            readonly property string tabTitle: SQUtils.StringUtils.escapeHtml(
+                root.savedSessionContext.displayTitle(webView, isStartPage)
+            )
 
             width: Math.min(Math.max(implicitWidth, d.minTabButtonWidth), d.maxTabButtonWidth)
             anchors.top: parent ? parent.top : undefined
@@ -182,8 +174,8 @@ FocusScope {
                     Layout.preferredWidth: d.iconSize
                     Layout.preferredHeight: d.iconSize
                     readonly property string favicon: {
-                        const live = determineFaviconURL(root.fnGetWebView(tabButton.TabBar.index)?.icon)
-                        return live || tabButton.tabIcon || ""
+                        const icon = root.savedSessionContext.displayIcon(webView)
+                        return determineFaviconURL(icon) || ""
                     }
                     sourceSize: Qt.size(width, height)
                     icon: favicon || "globe"

@@ -118,6 +118,9 @@ Item {
             sslErrorHandler: function() {}
             jsDialogHandler: function() {}
             findTextFinishedHandler: function() {}
+            savedSessionContext: QtObject {
+                function seedWebView() {}
+            }
         }
     }
 

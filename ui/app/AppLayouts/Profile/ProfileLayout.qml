@@ -23,6 +23,7 @@ import StatusQ.Layout
 import StatusQ.Popups.Dialog
 
 import AppLayouts.Communities.stores as CommunitiesStore
+import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Profile.helpers
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Wallet.controls
@@ -62,6 +63,7 @@ StatusSectionLayout {
     required property ProfileStores.WalletStore walletStore
     required property ProfileStores.EnsUsernamesStore ensUsernamesStore
     required property ProfileStores.AboutStore aboutStore
+    required property BrowserStores.BrowserPreferencesStore browserPreferencesStore
 
     property SharedStores.RootStore sharedRootStore
     property SharedStores.UtilsStore utilsStore
@@ -460,6 +462,7 @@ StatusSectionLayout {
 
                 userUID: root.userUID
                 accountSettings: localAccountSensitiveSettings
+                browserPreferencesStore: root.browserPreferencesStore
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.browserSettings)
                 contentWidth: d.contentWidth
             }

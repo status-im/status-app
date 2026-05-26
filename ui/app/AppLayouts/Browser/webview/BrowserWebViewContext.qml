@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import StatusQ.Core.Utils as SQUtils
+
 import utils
 
 import AppLayouts.Browser.adapters
@@ -40,6 +42,7 @@ QtObject {
     required property var sslErrorHandler
     required property var jsDialogHandler
     required property var findTextFinishedHandler
+    required property var savedSessionContext
 
     enum ContentMode {
         WebContent = 0,
@@ -68,7 +71,7 @@ QtObject {
         }
     }
 
-    function createEmptyTab(profileParams, createAsStartPage = false, focusOnNewTab = true, url = undefined, initialTitle = undefined, initialIcon = undefined) {
+    function createEmptyTab(profileParams, createAsStartPage = false, focusOnNewTab = true, url = undefined, initialTitle = undefined, initialIcon = undefined, initialUid = undefined) {
         focusOnNewTab = focusOnNewTab && !createAsStartPage
 
         var webview = webViewAdapterComponent.createObject(hostStackLayout, {
@@ -80,7 +83,11 @@ QtObject {
             return null
         }
 
-        tabsModel.createEmptyTab(createAsStartPage, focusOnNewTab, webview, initialTitle, initialIcon)
+        webview.uid = (initialUid || "").trim() || SQUtils.Utils.uuid()
+
+        savedSessionContext.seedWebView(webview, { title: initialTitle, icon: initialIcon })
+
+        tabsModel.createEmptyTab(createAsStartPage, focusOnNewTab)
 
         if (createAsStartPage && thirdpartyServicesEnabled)
             webview.url = Constants.browserDefaultHomepage
@@ -106,6 +113,7 @@ QtObject {
         }
 
         tabsModel.createDownloadTab()
+        webview.uid = SQUtils.Utils.uuid()
         webview.ensureLoaded()
         return webview
     }

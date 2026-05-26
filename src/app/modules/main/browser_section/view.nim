@@ -1,4 +1,5 @@
 import nimqml
+import json
 import io_interface
 import ../wallet_section/activity/controller as activity_controller
 
@@ -29,6 +30,26 @@ QtObject:
 
   QtProperty[QVariant] activityController:
     read = getActivityController
+
+  proc purgePreferenceCategory(self: View, category: string, validKeysJson: string) {.slot.} =
+    var validKeys: seq[string] = @[]
+    if validKeysJson.len > 0:
+      try:
+        let parsed = parseJson(validKeysJson)
+        if parsed.kind == JArray:
+          for keyNode in parsed.items:
+            let prefKey = keyNode.getStr()
+            if prefKey.len > 0:
+              validKeys.add(prefKey)
+      except CatchableError:
+        discard
+    self.delegate.purgePreferenceCategory(category, validKeys)
+
+  proc putPreference(self: View, category: string, prefKey: string, value: string) {.slot.} =
+    self.delegate.putPreference(category, prefKey, value)
+
+  proc getPreference(self: View, category: string, prefKey: string): string {.slot.} =
+    self.delegate.getPreference(category, prefKey)
 
   proc setup(self: View) =
     self.QObject.setup

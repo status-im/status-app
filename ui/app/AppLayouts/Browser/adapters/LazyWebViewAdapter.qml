@@ -26,22 +26,41 @@ AbstractWebView {
     supportsHistory:    loader.item ? loader.item.supportsHistory    : false
     hasNativeFindPanel: loader.item ? loader.item.hasNativeFindPanel : false
 
-    readonly property string title: loader.item ? loader.item.title : ""
+    property string title: ""
+    property url icon: ""
+    property bool htmlPageLoaded: false
     readonly property bool loading: loader.item ? loader.item.loading : false
     readonly property bool canGoBack: loader.item ? loader.item.canGoBack : false
     readonly property bool canGoForward: loader.item ? loader.item.canGoForward : false
     readonly property real loadProgress: loader.item ? loader.item.loadProgress : 0
     readonly property real zoomFactor: loader.item ? loader.item.zoomFactor : 1.0
     readonly property var history: loader.item ? loader.item.history : null
-    readonly property url icon: loader.item ? loader.item.icon : ""
-    readonly property bool htmlPageLoaded: loader.item ? loader.item.htmlPageLoaded : false
     readonly property var scrollPosition: loader.item ? loader.item.scrollPosition : Qt.point(0, 0)
+
+    function syncFromAdapterItem() {
+        const item = loader.item
+        if (!item)
+            return
+
+        const nextTitle = item.title || ""
+        if (nextTitle && root.title !== nextTitle)
+            root.title = nextTitle
+
+        const nextIcon = item.icon || ""
+        if (nextIcon && String(root.icon) !== String(nextIcon))
+            root.icon = nextIcon
+
+        const nextLoaded = !!item.htmlPageLoaded
+        if (root.htmlPageLoaded !== nextLoaded)
+            root.htmlPageLoaded = nextLoaded
+    }
 
     function ensureLoaded() {
         if (loader.status !== Loader.Null)
             return
         const props = {
             profileParams:                 Qt.binding(() => root.profileParams),
+            uid:                           Qt.binding(() => root.uid),
             bookmarksStore:                Qt.binding(() => root.bookmarksStore),
             downloadsStore:                Qt.binding(() => root.downloadsStore),
             webChannel:                    Qt.binding(() => root.webChannel),
@@ -76,6 +95,15 @@ AbstractWebView {
     function changeZoomFactor(f)  { if (loader.item) loader.item.changeZoomFactor(f) }
     function acceptAsNewWindow(req){ if (loader.item) loader.item.acceptAsNewWindow(req) }
     function triggerWebAction(a)  { if (loader.item) loader.item.triggerWebAction(a) }
+    function grabToImage(callback, targetSize) {
+        ensureLoaded()
+        if (loader.item && typeof loader.item.grabToImage === "function") {
+            loader.item.grabToImage(callback, targetSize)
+            return
+        }
+        if (callback)
+            callback({ url: "", image: null })
+    }
 
     function detachView() {
         if (loader.item)
@@ -92,6 +120,7 @@ AbstractWebView {
         anchors.fill: parent
         onLoaded: {
             if (root.url.toString()) loader.item.url = root.url
+            root.syncFromAdapterItem()
         }
 
         onStatusChanged: {
@@ -120,5 +149,8 @@ AbstractWebView {
         function onJavaScriptDialogRequested(request)  { root.javaScriptDialogRequested(request) }
         function onFindTextFinished(result)            { root.findTextFinished(result) }
         function onDevToolsToggled(enabled)            { root.devToolsToggled(enabled) }
+        function onTitleChanged()                      { root.syncFromAdapterItem() }
+        function onIconChanged()                       { root.syncFromAdapterItem() }
+        function onHtmlPageLoadedChanged()             { root.syncFromAdapterItem() }
     }
 }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Profile.views
 import AppLayouts.Profile.stores
 
@@ -34,6 +35,7 @@ SplitView {
             
             userUID: "0xdeadbeef"
             accountSettings: mockData.accountSettings
+            browserPreferencesStore: BrowserStores.BrowserPreferencesStore {}
         }
 
         LogsAndControlsPanel {

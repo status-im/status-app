@@ -85,6 +85,7 @@ SplitView {
         leftPortraitPadding: 0
 
         bookmarksStore: BrowserStores.BookmarksStore {}
+        browserPreferencesStore: BrowserStores.BrowserPreferencesStore { id: browserPrefsStore }
         downloadsStore: BrowserStores.DownloadsStore {
             property ListModel downloadModel : ListModel {
                 property var downloads: []
@@ -231,18 +232,12 @@ SplitView {
             Layout.fillWidth: true
             Switch {
                 text: "Restore open tabs"
-                checked: BrowserUiSettings.restoreOpenTabs
-                onToggled: {
-                    BrowserUiSettings.restoreOpenTabs = checked
-                    BrowserUiSettings.sync()
-                }
+                checked: browserPrefsStore.getRestoreOpenTabs()
+                onToggled: browserPrefsStore.setRestoreOpenTabs(checked)
             }
             Button {
                 text: "Clear saved tabs"
-                onClicked: {
-                    BrowserUiSettings.openTabs = []
-                    BrowserUiSettings.sync()
-                }
+                onClicked: browserPrefsStore.clearOpenTabsSession()
             }
         }
     }

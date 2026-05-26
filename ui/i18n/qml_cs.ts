@@ -2470,14 +2470,6 @@ Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezp
 <context>
     <name>BrowserLayout</name>
     <message>
-        <source>Downloads</source>
-        <translation type="unfinished">Stažené soubory</translation>
-    </message>
-    <message>
-        <source>Empty</source>
-        <translation type="unfinished">Prázdné</translation>
-    </message>
-    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certifikát serveru není důvěryhodný</translation>
     </message>
@@ -2545,6 +2537,21 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Browse decentralized apps</source>
         <translation>Procházet decentralizované aplikace</translation>
+    </message>
+</context>
+<context>
+    <name>BrowserSavedSessionContext</name>
+    <message>
+        <source>Start Page</source>
+        <translation type="unfinished">Úvodní stránka</translation>
+    </message>
+    <message>
+        <source>New Tab</source>
+        <translation type="unfinished">Nová karta</translation>
+    </message>
+    <message>
+        <source>Downloads</source>
+        <translation type="unfinished">Stažené soubory</translation>
     </message>
 </context>
 <context>
@@ -2620,14 +2627,6 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
 </context>
 <context>
     <name>BrowserTabView</name>
-    <message>
-        <source>Start Page</source>
-        <translation>Úvodní stránka</translation>
-    </message>
-    <message>
-        <source>New Tab</source>
-        <translation>Nová karta</translation>
-    </message>
     <message>
         <source>Downloads Page</source>
         <translation>Stránka stahování</translation>
@@ -3159,7 +3158,7 @@ formát souboru</translation>
     </message>
     <message>
         <source>Displaying collectibles on %1 is not currently supported by Status.</source>
-        <translation>Zobrazování sběratelských předmětů na %1 není momentálně podporováno aplikací Status.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

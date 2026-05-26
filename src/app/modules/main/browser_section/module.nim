@@ -15,6 +15,7 @@ import ../../../../app_service/service/wallet_account/service as wallet_account_
 import ../../../../app_service/service/token/service as token_service
 import ../../../../app_service/service/currency/service as currency_service
 import ../../../../app_service/service/saved_address/service as saved_address_service
+import ../../../../app_service/service/browser_preferences/service as browser_preferences_service
 import ../wallet_section/activity/controller as activity_controller
 
 export io_interface
@@ -30,6 +31,7 @@ type
     dappsModule: dapps_module.AccessInterface
     currentAccountModule: current_account_module.AccessInterface
     activityController: activity_controller.Controller
+    browserPreferencesService: browser_preferences_service.Service
 
 proc newModule*(delegate: delegate_interface.AccessInterface,
     events: EventEmitter,
@@ -40,7 +42,8 @@ proc newModule*(delegate: delegate_interface.AccessInterface,
     walletAccountService: wallet_account_service.Service,
     tokenService: token_service.Service,
     currencyService: currency_service.Service,
-    savedAddressService: saved_address_service.Service
+    savedAddressService: saved_address_service.Service,
+    browserPreferencesService: browser_preferences_service.Service
 ): Module =
   result = Module()
   result.delegate = delegate
@@ -57,6 +60,7 @@ proc newModule*(delegate: delegate_interface.AccessInterface,
   result.bookmarkModule = bookmark_module.newModule(result, events, bookmarkService)
   result.dappsModule = dapps_module.newModule(result, dappPermissionsService, walletAccountService)
   result.currentAccountModule = current_account_module.newModule(result, events, walletAccountService, networkService, tokenService, currencyService)
+  result.browserPreferencesService = browserPreferencesService
 
 method delete*(self: Module) =
   self.view.delete
@@ -104,3 +108,12 @@ method viewDidLoad*(self: Module) =
 
 method openUrl*(self: Module, url: string) =
   self.view.sendOpenUrlSignal(url)
+
+method putPreference*(self: Module, category, key, value: string) =
+  discard self.browserPreferencesService.put(category, key, value)
+
+method getPreference*(self: Module, category, key: string): string =
+  self.browserPreferencesService.get(category, key)
+
+method purgePreferenceCategory*(self: Module, category: string, validKeys: seq[string]) =
+  discard self.browserPreferencesService.purgeCategory(category, validKeys)
