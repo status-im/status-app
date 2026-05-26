@@ -7,6 +7,7 @@ import ./dto/sign_params as sign_params_dto
 import ../community_tokens/dto/community_token as community_token_dto
 
 import ../activity_center/service as activity_center_service
+import ../activity_center/dto/notification as activity_center_notification_dto
 import ../message/service as message_service
 import ../chat/service as chat_service
 
@@ -246,6 +247,9 @@ const SIGNAL_CURATED_COMMUNITIES_LOADING_FAILED* = "curatedCommunitiesLoadingFai
 const SIGNAL_ACCEPT_REQUEST_TO_JOIN_LOADING* = "acceptRequestToJoinLoading"
 const SIGNAL_ACCEPT_REQUEST_TO_JOIN_FAILED* = "acceptRequestToJoinFailed"
 const SIGNAL_ACCEPT_REQUEST_TO_JOIN_FAILED_NO_PERMISSION* = "acceptRequestToJoinFailedNoPermission"
+const SIGNAL_DECLINE_REQUEST_TO_JOIN_LOADING* = "declineRequestToJoinLoading"
+const SIGNAL_DECLINE_REQUEST_TO_JOIN_FAILED* = "declineRequestToJoinFailed"
+const SIGNAL_DECLINE_REQUEST_TO_JOIN_SUCCESS* = "declineRequestToJoinSuccess"
 
 const SIGNAL_CHECK_PERMISSIONS_TO_JOIN_RESPONSE* = "checkPermissionsToJoinResponse"
 const SIGNAL_CHECK_PERMISSIONS_TO_JOIN_FAILED* = "checkPermissionsToJoinFailed"
@@ -277,13 +281,16 @@ QtObject:
   # Forward declaration
   proc asyncLoadCuratedCommunities*(self: Service)
   proc asyncAcceptRequestToJoinCommunity*(self: Service, communityId: string, requestId: string)
+  proc asyncDeclineRequestToJoinCommunity*(self: Service, communityId: string, requestId: string)
   proc handleCommunityUpdates(self: Service, communities: seq[CommunityDto], updatedChats: seq[ChatDto], removedChats: seq[string])
   proc handleCommunitiesRequestsToJoin(self: Service, membershipRequests: seq[CommunityMembershipRequestDto])
+  proc reconcileMembershipRequestFromActivityCenter(self: Service, notification: activity_center_notification_dto.ActivityCenterNotificationDto)
   proc handleCommunitiesSettingsUpdates(self: Service, communitiesSettings: seq[CommunitySettingsDto])
   proc getPendingRequestIndex(self: Service, communityId: string, requestId: string): int
+  proc getDeclinedRequestIndex(self: Service, communityId: string, requestId: string): int
   proc getWaitingForSharedAddressesRequestIndex(self: Service, communityId: string, requestId: string): int
   proc updateMembershipRequestToNewState*(self: Service, communityId: string, requestId: string,
-    updatedCommunity: CommunityDto, newState: RequestToJoinType)
+    updatedCommunity: CommunityDto, newState: RequestToJoinType): bool
   proc getUserPubKeyFromPendingRequest*(self: Service, communityId: string, requestId: string): string
 
   proc delete*(self: Service) =
@@ -356,6 +363,9 @@ QtObject:
       if(receivedData.membershipRequests.len > 0):
         self.handleCommunitiesRequestsToJoin(receivedData.membershipRequests)
 
+      for notification in receivedData.activityCenterNotifications:
+        self.reconcileMembershipRequestFromActivityCenter(notification)
+
       # Handling community updates
       if (receivedData.communities.len > 0):
         # Channel added removed is notified in the chats param
@@ -363,6 +373,18 @@ QtObject:
 
       if (receivedData.communitiesSettings.len > 0):
         self.handleCommunitiesSettingsUpdates(receivedData.communitiesSettings)
+
+    self.events.on(SIGNAL_PARSE_RAW_ACTIVITY_CENTER_NOTIFICATIONS) do(e: Args):
+      let raw = RawActivityCenterNotificationsArgs(e)
+      if raw.activityCenterNotifications.kind != JNull:
+        for notificationJson in raw.activityCenterNotifications:
+          self.reconcileMembershipRequestFromActivityCenter(
+            activity_center_notification_dto.toActivityCenterNotificationDto(notificationJson))
+
+    self.events.on(activity_center_service.SIGNAL_ACTIVITY_CENTER_NOTIFICATIONS_RECEIVED) do(e: Args):
+      let args = activity_center_service.ActivityCenterNotificationsArgs(e)
+      for notification in args.activityCenterNotifications:
+        self.reconcileMembershipRequestFromActivityCenter(notification)
 
     self.events.on(SignalType.DiscordCategoriesAndChannelsExtracted.event) do(e: Args):
       var receivedData = DiscordCategoriesAndChannelsExtractedSignal(e)
@@ -809,7 +831,10 @@ QtObject:
         continue
 
       let requestToJoinState = RequestToJoinType(membershipRequest.state)
-      let noAwaitingIndex = self.getWaitingForSharedAddressesRequestIndex(membershipRequest.communityId, membershipRequest.id) == -1
+      let pendingIndex = self.getPendingRequestIndex(membershipRequest.communityId, membershipRequest.id)
+      let declinedIndex = self.getDeclinedRequestIndex(membershipRequest.communityId, membershipRequest.id)
+      let awaitingIndex = self.getWaitingForSharedAddressesRequestIndex(membershipRequest.communityId, membershipRequest.id)
+      let noAwaitingIndex = awaitingIndex == -1
       if requestToJoinState == RequestToJoinType.AwaitingAddress and noAwaitingIndex:
         self.communities[membershipRequest.communityId].waitingForSharedAddressesRequestsToJoin.add(membershipRequest)
         let myPublicKey = singletonInstance.userProfile.getPubKey()
@@ -824,16 +849,59 @@ QtObject:
         self.events.emit(SIGNAL_NEW_REQUEST_TO_JOIN_COMMUNITY_ACCEPTED,
           CommunityRequestArgs(communityRequest: membershipRequest))
 
+      if requestToJoinState == RequestToJoinType.Declined and pendingIndex == -1 and declinedIndex == -1 and awaitingIndex == -1:
+        var community = self.communities[membershipRequest.communityId]
+        community.declinedRequestsToJoin.add(membershipRequest)
+        self.communities[membershipRequest.communityId] = community
+        self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
+          communityId: membershipRequest.communityId,
+          memberPubkey: membershipRequest.publicKey,
+          state: MembershipRequestState.Declined))
+        continue
+
       try:
-        self.updateMembershipRequestToNewState(membershipRequest.communityId, membershipRequest.id, self.communities[membershipRequest.communityId],
+        let membershipRequestUpdated = self.updateMembershipRequestToNewState(membershipRequest.communityId, membershipRequest.id, self.communities[membershipRequest.communityId],
           requestToJoinState)
-        if requestToJoinState == RequestToJoinType.Accepted:
+        if membershipRequestUpdated and requestToJoinState in [RequestToJoinType.Accepted, RequestToJoinType.Declined, RequestToJoinType.DeclinedPending]:
           self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
             communityId: membershipRequest.communityId,
             memberPubkey: membershipRequest.publicKey,
             state: MembershipRequestState(membershipRequest.state)))
       except Exception as e:
         error "Unknown request", msg = e.msg
+
+  proc reconcileMembershipRequestFromActivityCenter(self: Service, notification: activity_center_notification_dto.ActivityCenterNotificationDto) =
+    if notification.notificationType != activity_center_notification_dto.ActivityCenterNotificationType.CommunityMembershipRequest:
+      return
+
+    if notification.membershipStatus != activity_center_notification_dto.ActivityCenterMembershipStatus.Declined:
+      return
+
+    if notification.communityId.len == 0 or notification.id.len == 0 or notification.author.len == 0:
+      return
+
+    if not self.communities.contains(notification.communityId):
+      return
+
+    let pendingIndex = self.getPendingRequestIndex(notification.communityId, notification.id)
+    let declinedIndex = self.getDeclinedRequestIndex(notification.communityId, notification.id)
+    if pendingIndex == -1 and declinedIndex == -1:
+      return
+
+    try:
+      let membershipRequestUpdated = self.updateMembershipRequestToNewState(
+        notification.communityId,
+        notification.id,
+        self.communities[notification.communityId],
+        RequestToJoinType.Declined)
+
+      if membershipRequestUpdated:
+        self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
+          communityId: notification.communityId,
+          memberPubkey: notification.author,
+          state: MembershipRequestState.Declined))
+    except Exception as e:
+      error "Error reconciling membership request from activity center notification", msg = e.msg
 
   proc init*(self: Service) =
     self.doConnect()
@@ -1840,7 +1908,7 @@ QtObject:
       let updatedCommunity = rpcResponseObj["response"]["result"]["communities"][0].toCommunityDto
       let requestToJoin = rpcResponseObj["response"]["result"]["requestsToJoinCommunity"][0].toCommunityMembershipRequestDto
 
-      self.updateMembershipRequestToNewState(communityId, requestId, updatedCommunity,
+      let membershipRequestUpdated = self.updateMembershipRequestToNewState(communityId, requestId, updatedCommunity,
         RequestToJoinType(requestToJoin.state))
 
       if (userKey == ""):
@@ -1848,12 +1916,13 @@ QtObject:
         return
 
       self.events.emit(SIGNAL_COMMUNITY_EDITED, CommunityArgs(community: self.communities[communityId]))
-      self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
-        communityId: communityId,
-        memberPubkey: userKey,
-        state: MembershipRequestState(requestToJoin.state)))
-      self.events.emit(SIGNAL_COMMUNITY_MEMBER_APPROVED,
-        CommunityMemberArgs(communityId: communityId, pubKey: userKey, requestId: requestId))
+      if membershipRequestUpdated:
+        self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
+          communityId: communityId,
+          memberPubkey: userKey,
+          state: MembershipRequestState(requestToJoin.state)))
+        self.events.emit(SIGNAL_COMMUNITY_MEMBER_APPROVED,
+          CommunityMemberArgs(communityId: communityId, pubKey: userKey, requestId: requestId))
 
       let rpcResponse = Json.decode($rpcResponseObj["response"], RpcResponse[JsonNode])
       checkAndEmitACNotificationsFromResponse(self.events, rpcResponse.result{"activityCenterNotifications"})
@@ -1995,7 +2064,7 @@ QtObject:
     return -1
 
   proc updateMembershipRequestToNewState*(self: Service, communityId: string, requestId: string,
-      updatedCommunity: CommunityDto, newState: RequestToJoinType) =
+      updatedCommunity: CommunityDto, newState: RequestToJoinType): bool =
     let indexPending = self.getPendingRequestIndex(communityId, requestId)
     let indexDeclined = self.getDeclinedRequestIndex(communityId, requestId)
     let indexAwaitingAddresses = self.getWaitingForSharedAddressesRequestIndex(communityId, requestId)
@@ -2004,6 +2073,13 @@ QtObject:
       raise newException(RpcException, fmt"Community request not found: {requestId}")
 
     var community = self.getCommunityById(communityId)
+
+    if indexDeclined != -1 and newState == RequestToJoinType.DeclinedPending:
+      return false
+
+    if indexDeclined != -1 and newState == RequestToJoinType.Declined and
+        community.declinedRequestsToJoin[indexDeclined].state == RequestToJoinType.Declined.int:
+      return false
 
     if (indexPending != -1):
       community.pendingRequestsToJoin[indexPending].state = newState.int
@@ -2024,7 +2100,10 @@ QtObject:
         community.pendingRequestsToJoin.delete(indexPending)
 
     elif indexDeclined != -1:
-      community.declinedRequestsToJoin.delete(indexDeclined)
+      if newState == RequestToJoinType.Declined:
+        community.declinedRequestsToJoin[indexDeclined].state = newState.int
+      else:
+        community.declinedRequestsToJoin.delete(indexDeclined)
     elif indexAwaitingAddresses != -1 and newState != RequestToJoinType.AwaitingAddress:
       if newState == RequestToJoinType.Declined:
         community.declinedRequestsToJoin.add(community.waitingForSharedAddressesRequestsToJoin[indexAwaitingAddresses])
@@ -2037,6 +2116,7 @@ QtObject:
 
     community.members = updatedCommunity.members
     self.communities[communityId] = community
+    result = true
 
   proc cancelRequestToJoinCommunity*(self: Service, communityId: string) =
     try:
@@ -2071,19 +2151,54 @@ QtObject:
     except Exception as e:
       error "Error canceled request to join community", msg = e.msg
 
-  proc declineRequestToJoinCommunity*(self: Service, communityId: string, requestId: string) =
+  proc asyncDeclineRequestToJoinCommunity*(self: Service, communityId: string, requestId: string) =
     try:
-      let response = status_go.declineRequestToJoinCommunity(requestId)
-      let requestToJoin = response.result["requestsToJoinCommunity"][0].toCommunityMembershipRequestDto
-      let updatedCommunity = response.result["communities"][0].toCommunityDto
+      let userKey = self.getUserPubKeyFromPendingRequest(communityId, requestId)
+      self.events.emit(SIGNAL_DECLINE_REQUEST_TO_JOIN_LOADING, CommunityMemberArgs(communityId: communityId, pubKey: userKey, requestId: requestId))
+      let arg = AsyncDeclineRequestToJoinCommunityTaskArg(
+        tptr: asyncDeclineRequestToJoinCommunityTask,
+        vptr: cast[uint](self.vptr),
+        slot: "onAsyncDeclineRequestToJoinCommunityDone",
+        communityId: communityId,
+        requestId: requestId
+      )
+      self.threadpool.start(arg)
+    except Exception as e:
+      error "Error declining request to join community", msg = e.msg
 
-      self.updateMembershipRequestToNewState(communityId, requestId, updatedCommunity,
+  proc onAsyncDeclineRequestToJoinCommunityDone*(self: Service, response: string) {.slot.} =
+    var communityId: string
+    var requestId: string
+    var userKey: string
+    try:
+      let rpcResponseObj = response.parseJson
+      communityId = rpcResponseObj{"communityId"}.getStr
+      requestId = rpcResponseObj{"requestId"}.getStr
+      userKey = self.getUserPubKeyFromPendingRequest(communityId, requestId)
+      if rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != "":
+        self.events.emit(SIGNAL_DECLINE_REQUEST_TO_JOIN_FAILED,
+          CommunityMemberArgs(communityId: communityId, pubKey: userKey, requestId: requestId))
+        return
+
+      let updatedCommunity = rpcResponseObj["response"]["result"]["communities"][0].toCommunityDto
+      let requestToJoin = rpcResponseObj["response"]["result"]["requestsToJoinCommunity"][0].toCommunityMembershipRequestDto
+
+      let membershipRequestUpdated = self.updateMembershipRequestToNewState(communityId, requestId, updatedCommunity,
         RequestToJoinType(requestToJoin.state))
 
       self.events.emit(SIGNAL_COMMUNITY_EDITED, CommunityArgs(community: self.communities[communityId]))
-      checkAndEmitACNotificationsFromResponse(self.events, response.result{"activityCenterNotifications"})
+      if membershipRequestUpdated:
+        self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
+          communityId: communityId,
+          memberPubkey: requestToJoin.publicKey,
+          state: MembershipRequestState(requestToJoin.state)))
+      self.events.emit(SIGNAL_DECLINE_REQUEST_TO_JOIN_SUCCESS,
+        CommunityMemberArgs(communityId: communityId, pubKey: userKey, requestId: requestId))
+      checkAndEmitACNotificationsFromResponse(self.events, rpcResponseObj["response"]["result"]{"activityCenterNotifications"})
     except Exception as e:
-      error "Error declining request to join community", msg = e.msg
+      error "error declining request to join: ", msg = e.msg
+      self.events.emit(SIGNAL_DECLINE_REQUEST_TO_JOIN_FAILED,
+        CommunityMemberArgs(communityId: communityId, pubKey: userKey, requestId: requestId))
 
   proc shareCommunityToUsers*(self: Service, communityId: string, pubKeysJson: string, inviteMessage: string): string =
     try:

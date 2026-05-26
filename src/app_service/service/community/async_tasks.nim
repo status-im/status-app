@@ -107,6 +107,24 @@ proc asyncAcceptRequestToJoinCommunityTask(argEncoded: string) {.gcsafe, nimcall
     })
 
 type
+  AsyncDeclineRequestToJoinCommunityTaskArg = ref object of QObjectTaskArg
+    communityId: string
+    requestId: string
+
+proc asyncDeclineRequestToJoinCommunityTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncDeclineRequestToJoinCommunityTaskArg](argEncoded)
+  try:
+    let response = status_go.declineRequestToJoinCommunity(arg.requestId)
+    let tpl: tuple[communityId: string, requestId: string, response: RpcResponse[JsonNode], error: string] = (arg.communityId, arg.requestId, response, "")
+    arg.finish(tpl)
+  except Exception as e:
+    arg.finish(%* {
+      "error": e.msg,
+      "communityId": arg.communityId,
+      "requestId": arg.requestId
+    })
+
+type
   AsyncCommunityMemberActionTaskArg = ref object of QObjectTaskArg
     communityId: string
     pubKey: string

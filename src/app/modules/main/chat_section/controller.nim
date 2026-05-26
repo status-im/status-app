@@ -577,7 +577,7 @@ proc acceptRequestToJoinCommunity*(self: Controller, requestId: string, communit
   self.communityService.asyncAcceptRequestToJoinCommunity(communityId, requestId)
 
 proc declineRequestToJoinCommunity*(self: Controller, requestId: string, communityId: string) =
-  self.communityService.declineRequestToJoinCommunity(communityId, requestId)
+  self.communityService.asyncDeclineRequestToJoinCommunity(communityId, requestId)
 
 proc createCommunityChannel*(
     self: Controller,

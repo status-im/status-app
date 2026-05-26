@@ -1577,10 +1577,20 @@ method onAcceptRequestToJoinLoading*[T](self: Module[T], communityId: string, me
   if item.id != "":
     item.updatePendingRequestLoadingState(memberKey, true)
 
+method onDeclineRequestToJoinLoading*[T](self: Module[T], communityId: string, memberKey: string) =
+  let item = self.view.model().getItemById(communityId)
+  if item.id != "":
+    item.updateDeclineRequestLoadingState(memberKey, true)
+
 method onAcceptRequestToJoinFailed*[T](self: Module[T], communityId: string, memberKey: string, requestId: string) =
   let item = self.view.model().getItemById(communityId)
   if item.id != "":
     item.updatePendingRequestLoadingState(memberKey, false)
+
+method onDeclineRequestToJoinFailed*[T](self: Module[T], communityId: string, memberKey: string, requestId: string) =
+  let item = self.view.model().getItemById(communityId)
+  if item.id != "":
+    item.updateDeclineRequestLoadingState(memberKey, false)
 
 method onAcceptRequestToJoinFailedNoPermission*[T](self: Module[T], communityId: string, memberKey: string, requestId: string) =
   let item = self.view.model().getItemById(communityId)
@@ -1591,6 +1601,11 @@ method onAcceptRequestToJoinSuccess*[T](self: Module[T], communityId: string, me
   let item = self.view.model().getItemById(communityId)
   if item.id != "":
     item.updatePendingRequestLoadingState(memberKey, false)
+
+method onDeclineRequestToJoinSuccess*[T](self: Module[T], communityId: string, memberKey: string, requestId: string) =
+  let item = self.view.model().getItemById(communityId)
+  if item.id != "":
+    item.updateDeclineRequestLoadingState(memberKey, false)
 
 method onMembershipStateUpdated*[T](self: Module[T], communityId: string, memberPubkey: string, state: MembershipRequestState) =
   let myPublicKey = singletonInstance.userProfile.getPubKey()

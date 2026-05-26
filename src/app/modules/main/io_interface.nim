@@ -416,13 +416,22 @@ method onRequestReevaluateMembersPermissionsIfRequired*(self: AccessInterface, c
 method onAcceptRequestToJoinFailed*(self: AccessInterface, communityId: string, memberKey: string, requestId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onDeclineRequestToJoinFailed*(self: AccessInterface, communityId: string, memberKey: string, requestId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onAcceptRequestToJoinFailedNoPermission*(self: AccessInterface, communityId: string, memberKey: string, requestId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onAcceptRequestToJoinLoading*(self: AccessInterface, communityId: string, memberKey: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onDeclineRequestToJoinLoading*(self: AccessInterface, communityId: string, memberKey: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onAcceptRequestToJoinSuccess*(self: AccessInterface, communityId: string, memberKey: string, requestId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onDeclineRequestToJoinSuccess*(self: AccessInterface, communityId: string, memberKey: string, requestId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onMembershipStateUpdated*(self: AccessInterface, communityId: string, memberPubkey: string, state: MembershipRequestState) {.base.} =
