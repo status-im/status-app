@@ -4,4 +4,5 @@ BrowserOverlayContext 1.0 BrowserOverlayContext.qml
 BrowserFavoritesContext 1.0 BrowserFavoritesContext.qml
 BrowserDialogsContext 1.0 BrowserDialogsContext.qml
 BrowserDownloadsContext 1.0 BrowserDownloadsContext.qml
+SnapshotPersister 1.0 SnapshotPersister.qml
 BrowserSessionUtils 1.0 BrowserSessionUtils.js
