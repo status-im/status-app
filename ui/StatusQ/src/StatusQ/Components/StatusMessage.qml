@@ -81,6 +81,8 @@ Control {
     property bool linkAddressAndEnsName
     property string disabledTooltipText
 
+    property bool isMobile: Utils.isMobile
+
     property StatusMessageDetails messageDetails: StatusMessageDetails {}
     property StatusMessageDetails replyDetails: StatusMessageDetails {}
 
@@ -208,6 +210,7 @@ Control {
                 visible: active
                 sourceComponent: StatusMessageReply {
                     objectName: "StatusMessage_replyDetails"
+                    isMobile: root.isMobile
                     replyDetails: root.replyDetails
                     profileClickable: root.profileClickable
                     onReplyProfileClicked: (sender, mouse) => root.replyProfileClicked(sender, mouse)
@@ -275,21 +278,7 @@ Control {
                                      (root.messageDetails.contentType === StatusMessage.ContentType.Invitation) ||
                                      (root.messageDetails.contentType === StatusMessage.ContentType.BridgeMessage)))
                         visible: active
-                        sourceComponent: StatusTextMessage {
-                            objectName: "StatusMessage_textMessage"
-                            messageDetails: root.messageDetails
-                            isEdited: root.isEdited
-                            allowShowMore: !root.isInPinnedPopup
-                            textField.anchors.rightMargin: root.isInPinnedPopup ? Theme.xlPadding : 0 // margin for the "Unpin" floating button
-                            highlightedLink: root.highlightedLink
-                            linkAddressAndEnsName: root.linkAddressAndEnsName
-                            disabledTooltipText: root.disabledTooltipText
-                            onLinkActivated: link => root.linkActivated(link)
-                            textField.onHoveredLinkChanged: {
-                                root.hoveredLink = hoveredLink;
-                            }
-                            onContextMenuRequested: pos => root.contextMenuRequested(pos)
-                        }
+                        sourceComponent: StatusTextMessageCommon {}
                     }
                     Loader {
                         active: root.messageDetails.contentType === StatusMessage.ContentType.Image && !editMode
@@ -304,21 +293,7 @@ Control {
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 visible: active
-                                sourceComponent: StatusTextMessage {
-                                    objectName: "StatusMessage_textMessage"
-                                    messageDetails: root.messageDetails
-                                    isEdited: root.isEdited
-                                    allowShowMore: !root.isInPinnedPopup
-                                    textField.anchors.rightMargin: root.isInPinnedPopup ? Theme.xlPadding : 0 // margin for the "Unpin" floating button
-                                    highlightedLink: root.highlightedLink
-                                    linkAddressAndEnsName: root.linkAddressAndEnsName
-                                    disabledTooltipText: root.disabledTooltipText
-                                    onLinkActivated: link => root.linkActivated(link)
-                                    textField.onHoveredLinkChanged: {
-                                        root.hoveredLink = hoveredLink
-                                    }
-                                    onContextMenuRequested: pos => root.contextMenuRequested(pos)
-                                }
+                                sourceComponent: StatusTextMessageCommon {}
                             }
 
                             Loader {
@@ -428,5 +403,20 @@ Control {
         Component.onCompleted: {
             root.prepareAttachmentsModel()
         }
+    }
+
+    component StatusTextMessageCommon: StatusTextMessage {
+        objectName: "StatusMessage_textMessage"
+        messageDetails: root.messageDetails
+        isEdited: root.isEdited
+        allowShowMore: !root.isInPinnedPopup
+        textField.anchors.rightMargin: root.isInPinnedPopup ? Theme.xlPadding : 0 // margin for the "Unpin" floating button
+        highlightedLink: root.highlightedLink
+        linkAddressAndEnsName: root.linkAddressAndEnsName
+        disabledTooltipText: root.disabledTooltipText
+        isMobile: root.isMobile
+        onLinkActivated: link => root.linkActivated(link)
+        onHoveredLinkChanged: root.hoveredLink = hoveredLink
+        onContextMenuRequested: pos => root.contextMenuRequested(pos)
     }
 }
