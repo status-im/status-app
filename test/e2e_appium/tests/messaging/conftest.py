@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import threading
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pytest
 import pytest_asyncio
@@ -30,8 +30,13 @@ from config.logging_config import get_logger
 from core.device_context import DeviceContext
 from core.multi_device_context import MultiDeviceContext
 from core.session_pool import PoolConfig, SessionPool
+from core.stash_keys import (
+    ESTABLISHED_CHAT_BROKEN_KEY,
+    ESTABLISHED_CHAT_FAILURE_COUNT_KEY,
+)
 from utils.chat_state import ensure_chat_visible
 from utils.contact_helpers import establish_contact
+from utils.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
 from utils.generators import generate_account_name
 
 logger = get_logger("messaging_conftest")
@@ -49,7 +54,7 @@ class _SessionKeepAlive:
     TODO(upstream): drop once BS honours ``newCommandTimeout``.
     """
 
-    def __init__(self, driver, label: str = "?", interval_s: int = 30) -> None:
+    def __init__(self, driver, label: str = "?", interval_s: int = 120) -> None:
         self.driver = driver
         self.label = label
         self.interval_s = interval_s
@@ -91,6 +96,12 @@ _module_test_passed: dict[str, list[str]] = {}
 
 # Module-level storage for cleanup
 _module_pools = []
+
+# Sentinel fires once pytest-rerunfailures' single ``reruns=1`` retry has been
+# exhausted. Setting it on the first failure would cause the rerun to re-raise
+# the sentinel before getting a fresh setup attempt.
+_FIXTURE_FAILURES_BEFORE_SENTINEL = 2
+
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -135,12 +146,16 @@ class EstablishedChatContext:
         primary_suffix: Last 6 chars of primary's chat key (for display/matching).
         secondary_suffix: Last 6 chars of secondary's chat key.
         multi_ctx: The underlying MultiDeviceContext.
+        _keepalives: Fixture-internal heartbeat threads. Tests should not
+            touch these — they're carried back from ``_setup_established_chat``
+            so the outer fixture's cleanup block can ``stop()`` them.
     """
     primary: DeviceContext
     secondary: DeviceContext
     primary_suffix: str
     secondary_suffix: str
     multi_ctx: MultiDeviceContext
+    _keepalives: list["_SessionKeepAlive"] = field(default_factory=list)
 
     @property
     def primary_driver(self):
@@ -154,7 +169,7 @@ class EstablishedChatContext:
 async def _establish_contact(
     primary: DeviceContext,
     secondary: DeviceContext,
-    timeout: int = 180,
+    timeout: int = CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS,
 ) -> tuple[str, str]:
     """Establish contact between two devices.
 
@@ -221,33 +236,57 @@ async def _setup_established_chat(
         test_nodeid=f"{test_nodeid}::module_setup",
     )
 
-    contexts = {
-        name: DeviceContext(driver=driver, device_id=name)
-        for name, driver in drivers.items()
-    }
-    multi_ctx = MultiDeviceContext(contexts)
+    # Start keep-alive heartbeats immediately after session creation so the
+    # receiver doesn't BS-idle-timeout (default 90s, max 300s configurable)
+    # during the sequential phases of fixture setup — sender's
+    # capture_profile_link takes ~2 min while receiver is fully idle, and the
+    # delivery-gate poll waits up to CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS for
+    # waku to propagate, again with one side idle.
+    keepalives: list[_SessionKeepAlive] = []
+    for name, driver in drivers.items():
+        ka = _SessionKeepAlive(driver, label=name)
+        ka.start()
+        keepalives.append(ka)
 
-    display_names = [generate_account_name(12) for _ in range(2)]
-    await multi_ctx.onboard_users_parallel(
-        display_names=display_names,
-        require_all=True,
-    )
+    try:
+        contexts = {
+            name: DeviceContext(driver=driver, device_id=name)
+            for name, driver in drivers.items()
+        }
+        multi_ctx = MultiDeviceContext(contexts)
 
-    device_names = list(contexts.keys())
-    primary = contexts[device_names[0]]
-    secondary = contexts[device_names[1]]
+        display_names = [generate_account_name(12) for _ in range(2)]
+        await multi_ctx.onboard_users_parallel(
+            display_names=display_names,
+            require_all=True,
+        )
 
-    primary_suffix, secondary_suffix = await _establish_contact(
-        primary, secondary, timeout=240
-    )
+        device_names = list(contexts.keys())
+        primary = contexts[device_names[0]]
+        secondary = contexts[device_names[1]]
 
-    return EstablishedChatContext(
-        primary=primary,
-        secondary=secondary,
-        primary_suffix=primary_suffix,
-        secondary_suffix=secondary_suffix,
-        multi_ctx=multi_ctx,
-    )
+        primary_suffix, secondary_suffix = await _establish_contact(
+            primary, secondary,
+        )
+
+        return EstablishedChatContext(
+            primary=primary,
+            secondary=secondary,
+            primary_suffix=primary_suffix,
+            secondary_suffix=secondary_suffix,
+            multi_ctx=multi_ctx,
+            _keepalives=keepalives,
+        )
+    except BaseException:
+        # Stop heartbeats before the caller's pool.cleanup() racing with them.
+        # Threads self-terminate on the next failed ping when the driver dies,
+        # but explicit stop avoids the window where they ping a dying session.
+        for ka in keepalives:
+            try:
+                ka.stop()
+            except Exception:
+                pass
+        raise
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -262,9 +301,10 @@ async def established_chat(request, test_environment) -> EstablishedChatContext:
     overlays, dismiss context menus). If session-wide pollution surfaces, the
     next defence is an autouse ``_reset_chat_view`` fixture.
 
-    If the setup fails (e.g. BrowserStack connection drop, biometrics prompt
-    timing, device allocation, accessibility tree blocking), it cleans up and
-    retries once with fresh sessions.
+    Setup runs once; retry on failure is delegated to ``@pytest.mark.flaky``
+    on the test classes. After both attempts fail, a session-wide sentinel
+    causes subsequent messaging tests to fast-fail rather than each re-paying
+    the full setup cost.
 
     Usage:
         class TestMessageContextMenu:
@@ -279,105 +319,90 @@ async def established_chat(request, test_environment) -> EstablishedChatContext:
                 ...
     """
     global _module_pools
+    cached_exc = request.session.stash.get(ESTABLISHED_CHAT_BROKEN_KEY, None)
+    if cached_exc is not None:
+        logger.info(
+            "established_chat broken earlier in this session "
+            "(%s); re-raising cached exception without re-attempting setup",
+            type(cached_exc).__name__,
+        )
+        raise cached_exc
 
     logger.info("Setting up session-scoped established_chat fixture")
 
     pool = None
     ctx = None
     setup_failed = False
-    max_attempts = 2
-    last_error: BaseException | None = None
 
-    for attempt in range(1, max_attempts + 1):
-        try:
-            # For local environments, assign each session to a different
-            # device from the YAML matrix (set via local.local.yaml overlay).
-            device_overrides = None
-            if test_environment == "local":
-                try:
-                    from core.config_manager import ConfigurationManager
-                    cfg_mgr = ConfigurationManager()
-                    env_cfg = cfg_mgr.load_environment("local")
-                    matrix_devices = list(env_cfg.devices.values())
-                    if len(matrix_devices) >= 2:
-                        defaults = env_cfg.device_defaults.get("capabilities", {})
-                        device_overrides = []
-                        for i in range(2):
-                            device = matrix_devices[i]
-                            override = {"capabilities": device.merged_capabilities(defaults)}
-                            if device.provider_overrides:
-                                override.update(device.provider_overrides)
-                            device_overrides.append(override)
-                        for idx, ov in enumerate(device_overrides):
-                            caps = ov.get("capabilities", {})
-                            logger.info(
-                                "Local device override %d: udid=%s server_url=%s",
-                                idx,
-                                caps.get("appium:udid", "?"),
-                                ov.get("server_url", "default"),
-                            )
-                except Exception as exc:
-                    logger.warning("Failed to build local device overrides: %s", exc)
-
-            pool_config = PoolConfig.from_environment(
-                test_environment, parallel=True,
-                device_overrides=device_overrides,
-            )
-            pool = SessionPool(config=pool_config)
-
-            ctx = await _setup_established_chat(
-                pool, request.node.nodeid,
-            )
-            _module_pools.append(pool)
-            break  # success
-
-        except Exception as e:
-            last_error = e
-            logger.error(
-                "Fixture setup failed (attempt %d/%d): %s",
-                attempt, max_attempts, e,
-            )
-            # Clean up the failed pool before retrying
-            if pool:
-                try:
-                    _report_browserstack_status(
-                        pool, "failed", f"Setup failed (attempt {attempt}): {e}"
-                    )
-                except Exception:
-                    pass
-                try:
-                    await pool.cleanup()
-                except Exception as cleanup_err:
-                    logger.warning("Cleanup after failed attempt: %s", cleanup_err)
-                pool = None
-
-            if attempt < max_attempts:
-                logger.info(
-                    "Retrying fixture setup with fresh sessions "
-                    "(attempt %d failed: %s)", attempt, e,
-                )
-                continue
-
-            setup_failed = True
-            raise
-    else:
-        setup_failed = True
-        raise last_error  # type: ignore[misc]
-
-    # Start keep-alive heartbeats on both device sessions to prevent
-    # BrowserStack idle-timeout death during long cross-device sync waits.
-    # See _SessionKeepAlive docstring for the failure mode.
-    keepalives: list[_SessionKeepAlive] = []
+    # Single attempt; pytest-rerunfailures owns retry via the test classes'
+    # ``@pytest.mark.flaky(reruns=1)``. A second retry layer here compounds
+    # with ``@pytest.mark.timeout(1200)`` and starves the per-test budget.
     try:
-        if ctx and ctx.primary and ctx.secondary:
-            keepalives = [
-                _SessionKeepAlive(ctx.primary.driver, label="primary"),
-                _SessionKeepAlive(ctx.secondary.driver, label="secondary"),
-            ]
-            for ka in keepalives:
-                ka.start()
-    except Exception as exc:
-        logger.warning("Could not start keep-alive heartbeats: %s", exc)
+        # For local environments, assign each session to a different device
+        # from the YAML matrix (set via local.local.yaml overlay).
+        device_overrides = None
+        if test_environment == "local":
+            try:
+                from core.config_manager import ConfigurationManager
+                cfg_mgr = ConfigurationManager()
+                env_cfg = cfg_mgr.load_environment("local")
+                matrix_devices = list(env_cfg.devices.values())
+                if len(matrix_devices) >= 2:
+                    defaults = env_cfg.device_defaults.get("capabilities", {})
+                    device_overrides = []
+                    for i in range(2):
+                        device = matrix_devices[i]
+                        override = {"capabilities": device.merged_capabilities(defaults)}
+                        if device.provider_overrides:
+                            override.update(device.provider_overrides)
+                        device_overrides.append(override)
+                    for idx, ov in enumerate(device_overrides):
+                        caps = ov.get("capabilities", {})
+                        logger.info(
+                            "Local device override %d: udid=%s server_url=%s",
+                            idx,
+                            caps.get("appium:udid", "?"),
+                            ov.get("server_url", "default"),
+                        )
+            except Exception as exc:
+                logger.warning("Failed to build local device overrides: %s", exc)
+
+        pool_config = PoolConfig.from_environment(
+            test_environment, parallel=True,
+            device_overrides=device_overrides,
+        )
+        pool = SessionPool(config=pool_config)
+
+        ctx = await _setup_established_chat(pool, request.node.nodeid)
+        _module_pools.append(pool)
+
+    except Exception as e:
+        stash = request.session.stash
+        failure_count = stash.get(ESTABLISHED_CHAT_FAILURE_COUNT_KEY, 0) + 1
+        stash[ESTABLISHED_CHAT_FAILURE_COUNT_KEY] = failure_count
+        logger.error(
+            "Fixture setup failed (attempt %d/%d before sentinel fires): %s",
+            failure_count, _FIXTURE_FAILURES_BEFORE_SENTINEL, e,
+        )
+        if pool:
+            try:
+                _report_browserstack_status(pool, "failed", f"Setup failed: {e}")
+            except Exception:
+                pass
+            try:
+                await pool.cleanup()
+            except Exception as cleanup_err:
+                logger.warning("Cleanup after failed setup: %s", cleanup_err)
+            pool = None
+        setup_failed = True
+        if failure_count >= _FIXTURE_FAILURES_BEFORE_SENTINEL:
+            stash[ESTABLISHED_CHAT_BROKEN_KEY] = e
+        raise
+
+    # Keep-alives were started inside _setup_established_chat so they cover
+    # the entire fixture-setup window (not just post-setup). Inherit the list
+    # for cleanup; if setup failed we have an empty list which is fine.
+    keepalives: list[_SessionKeepAlive] = ctx._keepalives if ctx is not None else []
 
     try:
         yield ctx

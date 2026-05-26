@@ -29,7 +29,7 @@ class SplashScreen(BasePage):
     def is_progress_bar_visible(self) -> bool:
         return self.is_element_visible(self.locators.PROGRESS_BAR)
 
-    def wait_for_loading_completion(self, timeout: int = 60) -> bool:
+    def wait_for_loading_completion(self, timeout: int = 120) -> bool:
         """Wait for loading to complete using explicit invisibility wait"""
         self.logger.info(f"Waiting for loading completion (timeout: {timeout}s)")
         try:

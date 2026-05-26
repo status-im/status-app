@@ -14,7 +14,7 @@ from core.device_context import DeviceContext
 from pages.app import App
 from pages.messaging.chat_page import ChatPage
 from pages.settings.settings_page import SettingsPage
-from utils.timeouts import cross_device_timeout
+from utils.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
 
 logger = get_logger("contact_helpers")
 
@@ -33,7 +33,7 @@ async def establish_contact(
     sender: DeviceContext,
     receiver: DeviceContext,
     *,
-    timeout: int = 240,
+    timeout: int = CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS,
 ) -> tuple[str, str, str, str]:
     """Establish a 1:1 contact between *sender* and *receiver*.
 
@@ -44,10 +44,11 @@ async def establish_contact(
     Returns:
         ``(sender_suffix, receiver_suffix, sender_chat_key, receiver_chat_key)``
     """
-    # Capture profile links — capture_profile_link() already calls
-    # activate_app() internally when the settings fallback is used.
-    sender_link = await asyncio.to_thread(sender.capture_profile_link)
-    receiver_link = await asyncio.to_thread(receiver.capture_profile_link)
+    # Parallel: each call drives only its own driver. Saves ~2 min on BS.
+    sender_link, receiver_link = await asyncio.gather(
+        asyncio.to_thread(sender.capture_profile_link),
+        asyncio.to_thread(receiver.capture_profile_link),
+    )
 
     assert sender_link, "Sender device did not return a profile link"
     assert receiver_link, "Receiver device did not return a profile link"
@@ -155,13 +156,9 @@ async def establish_contact(
         receiver_suffix, display_name=receiver_display, timeout=timeout,
     ), "Chat did not arrive on sender"
 
-    if not sender_chat.open_chat_by_suffix(
+    assert sender_chat.open_chat_by_suffix(
         receiver_suffix, display_name=receiver_display,
-    ):
-        logger.warning(
-            "open_chat_by_suffix failed for sender; falling back to open_first_chat"
-        )
-        assert sender_chat.open_first_chat(timeout=15), "Sender failed to open chat"
+    ), "Sender failed to open chat"
 
     assert sender_chat.wait_for_message_input(timeout=15), (
         "Message input not ready on sender"
@@ -173,7 +170,7 @@ async def establish_contact(
     # directions before yielding so tests don't run against a half-working session.
 
     # Direction 1: receiver → sender (setup message already sent above)
-    assert sender_chat.message_exists(setup_msg, timeout=cross_device_timeout()), (
+    assert sender_chat.message_exists(setup_msg, timeout=CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS), (
         "Delivery gate failed: setup message from receiver not visible on sender. "
         "Waku filter subscription may not have propagated yet."
     )
@@ -183,7 +180,7 @@ async def establish_contact(
     assert sender_chat.send_message(ping_msg, timeout=15), (
         "Delivery gate failed: sender could not send ping message"
     )
-    assert receiver_chat.message_exists(ping_msg, timeout=cross_device_timeout()), (
+    assert receiver_chat.message_exists(ping_msg, timeout=CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS), (
         "Delivery gate failed: ping from sender not visible on receiver. "
         "Waku filter subscription may not have propagated yet."
     )

@@ -67,9 +67,9 @@ def ensure_chat_visible(
     if not contacts:
         raise RuntimeError("Failed to open contacts during chat recovery")
 
-    # ContactPanel.content-desc on an accepted contact carries the chat-key
-    # (``zQ3...{suffix}``), not the human display name — open_chat_with is
-    # named for display_name but does a substring match. Pass the suffix.
+    # display_name here is informational — open_chat_with falls back to the
+    # first ContactPanel's chatBtn because Status tags ContactPanel
+    # content-desc with an auto-generated identity name, not the suffix.
     if not contacts.open_chat_with(peer_suffix):
         raise RuntimeError(
             f"Failed to open chat with contact suffix '{peer_suffix}' from contacts list"

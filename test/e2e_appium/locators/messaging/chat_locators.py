@@ -24,15 +24,21 @@ class ChatLocators(BaseLocators):
     # AT bounds order).
     # TODO(upstream): drop the position fallback once
     # StatusChatInputToolBar.qml sets objectName on each ChatIcon.
+    # End-anchored substring on resource-id avoids prefix collisions with
+    # longer object names. Inlined (not BaseLocators.tid()) so the union
+    # with the phone-form-factor fallback after ``|`` can stay alongside.
+    # TODO: extract a tid_or_phone() helper if more locators need this.
     SEND_BUTTON = BaseLocators.xpath(
-        "//*[contains(@content-desc, 'tid:statusChatInputSendButton') "
-        "or contains(@resource-id, '.statusChatInputSendButton')]"
+        "//*[contains(@content-desc, '[tid:statusChatInputSendButton]') "
+        "or substring(@resource-id, string-length(@resource-id) - 25) "
+        "= '.statusChatInputSendButton']"
         " | "
         "//*[contains(@resource-id, 'StatusChatInputSendButton')]"
     )
     EMOJI_BUTTON = BaseLocators.xpath(
-        "//*[contains(@content-desc, 'tid:statusChatInputEmojiButton') "
-        "or contains(@resource-id, '.statusChatInputEmojiButton')]"
+        "//*[contains(@content-desc, '[tid:statusChatInputEmojiButton]') "
+        "or substring(@resource-id, string-length(@resource-id) - 26) "
+        "= '.statusChatInputEmojiButton']"
         " | "
         "(//*[contains(@resource-id,'StatusChatInputToolBar')]"
         "//*[contains(@resource-id, '.ChatIcon')])[9]"
@@ -121,8 +127,9 @@ class ChatLocators(BaseLocators):
     # "StatusChatInputReplyPanel_QMLTYPE_NNNN". Union handles both;
     # see EMOJI_BUTTON for the form-factor rationale.
     REPLY_PREVIEW = BaseLocators.xpath(
-        "//*[contains(@content-desc, 'tid:statusChatInputReplyArea') "
-        "or contains(@resource-id, '.statusChatInputReplyArea')]"
+        "//*[contains(@content-desc, '[tid:statusChatInputReplyArea]') "
+        "or substring(@resource-id, string-length(@resource-id) - 24) "
+        "= '.statusChatInputReplyArea']"
         " | "
         "//*[contains(@resource-id, 'StatusChatInputReplyPanel')]"
     )

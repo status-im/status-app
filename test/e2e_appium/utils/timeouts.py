@@ -1,30 +1,49 @@
-"""Environment-aware timeout helpers.
+"""Cross-device delivery timeouts for waku-mediated messaging tests.
 
-Different test environments have different propagation characteristics:
+These constants align with the MVDS retransmit schedule and the
+MissingMessageVerifier ticker observed in status-go / go-waku:
 
-- ``local`` — Pi devices on shared LAN. Cross-device delivery is fast
-  (typically <30s when the underlying status-go race isn't hitting).
-- ``browserstack`` — geographically distributed cloud devices. Cross-device
-  delivery rides over the public internet between BS data centres + Waku
-  store nodes. Empirically slower; 180s is borderline (verified
-  2026-05-02 — ``test_clear_history_is_local_only`` failed at 180s on BS).
+- 1st MVDS retry: ~72s + 0–9s jitter (foreground)
+- 2nd MVDS retry: ~144s
+- 3rd MVDS retry: ~288s
+- MissingMessageVerifier ticker: 30s
 
-Tests that assert cross-device delivery should use ``cross_device_timeout()``
-rather than a hardcoded constant so they auto-tune per environment.
+The same constants apply to both Pi-local and BrowserStack environments
+because both connect to the same public Status waku fleet over the
+public internet (verified 2026-05-21 — mobile e2e has no
+``--waku-fleet`` injection; the ``docker-compose.waku.yml`` fleet is
+desktop-test infrastructure, not used by ``test/e2e_appium``).
 """
 
-import os
+CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS = 360
+"""Hard delivery deadline covering all automatic recovery paths.
+
+Covers:
+  * 1st MVDS retry (~72-81s wall-clock)
+  * 2nd MVDS retry (~144-153s)
+  * 3rd MVDS retry (~288-297s)
+  * ~60s margin past the 3rd retry
+
+After this, recovery requires explicit user action: restart triggers
+a separate storenode history fetch that bypasses the live-delivery
+chain entirely. Tests that assert eventual cross-device delivery
+under nominal conditions should use this value.
+"""
 
 
-def cross_device_timeout() -> int:
-    """Cross-device delivery timeout (seconds) for the current environment.
+APP_BOOT_TIMEOUT_SECONDS = 120
+"""Splash-screen budget for status-go's first-boot DB initialisation.
 
-    Aligned with the MVDS resend cycle (60s base) + Waku
-    MissingMessageVerifier ticker (60s):
-      * Pi (local LAN): 180s — comfortably catches the 1st MVDS retry
-        + first verifier tick.
-      * BrowserStack (cloud): 300s — adds headroom for inter-region
-        WAN latency between BS device + Waku store nodes.
-    """
-    env = os.environ.get("CURRENT_TEST_ENVIRONMENT", "browserstack").lower()
-    return 300 if env == "browserstack" else 180
+On Pi mid-range phones (Samsung A36, Moto G55) the splash can take
+70-90s after a fresh seed-phrase import. The default 60s is too tight
+there; 120s matches what the shared onboarding fixture already uses.
+"""
+
+
+ONBOARDING_SCREEN_TRANSITION_TIMEOUT_SECONDS = 30
+"""Inter-screen navigation budget during onboarding.
+
+The default 15s screen-displayed wait is fine for clean transitions
+but too tight when status-go derives keys in the background between
+seed-phrase entry and the password screen on CI/slower devices.
+"""

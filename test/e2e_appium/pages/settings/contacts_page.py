@@ -57,21 +57,43 @@ class ContactsSettingsPage(BasePage):
                 return True
         return self.is_element_visible(self.locators.PENDING_REQUEST_ROW, timeout=timeout)
 
-    def accept_contact_request(self, display_name: Optional[str] = None) -> bool:
-        if not display_name:
-            self.logger.error("accept_contact_request requires display_name to be provided")
-            return False
+    def accept_contact_request(self, display_name: str) -> bool:
+        """Accept a pending contact request.
 
-        locator = self.locators.accept_button(display_name)
+        Primary is ``FIRST_PENDING_ACCEPT_BUTTON`` — the receiver's UI tags
+        the incoming request with an auto-generated identity name (e.g.
+        "Negligible Authorized Chafer"), not ``display_name``, so the
+        filtered xpath never matches in the one-pending-request flow. The
+        filtered xpath remains as a fallback for future multi-request
+        scenarios where the receiver knows the contact.
+        """
         try:
-            return self.safe_click(locator, timeout=6, max_attempts=2)
+            return self.safe_click(
+                self.locators.FIRST_PENDING_ACCEPT_BUTTON,
+                fallback_locators=[self.locators.accept_button(display_name)],
+                timeout=6,
+                max_attempts=2,
+            )
         except Exception as exc:
-            self.logger.error("Accept click failed for %s: %s", locator, exc)
+            self.logger.error("Accept click failed for sender '%s': %s", display_name, exc)
             return False
 
     def open_chat_with(self, display_name: str) -> bool:
-        target = self.locators.chat_button(display_name)
-        return self.safe_click(target, max_attempts=1)
+        """Open chat with a specific contact.
+
+        Primary is ``FIRST_CONTACT_CHAT_BUTTON`` — Status's ContactPanel
+        content-desc carries the auto-generated identity name (e.g.
+        "Unselfish Free Crocodile"), not the chat-key suffix, so the
+        filtered xpath misses. Mirrors ``accept_contact_request``. The
+        filtered locator stays as fallback for future scenarios where
+        the contact panel does carry the suffix or display_name.
+        """
+        return self.safe_click(
+            self.locators.FIRST_CONTACT_CHAT_BUTTON,
+            fallback_locators=[self.locators.chat_button(display_name)],
+            timeout=10,
+            max_attempts=2,
+        )
 
     def contacts_row_exists(
         self, identifier: str, timeout: Optional[int] = 10

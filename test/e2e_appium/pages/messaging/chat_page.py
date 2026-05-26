@@ -2,6 +2,7 @@
 import time
 
 from locators.messaging.chat_locators import ChatLocators
+from utils.exceptions import ElementInteractionError
 
 from ..base_page import BasePage
 
@@ -87,9 +88,19 @@ class ChatPage(BasePage):
         return self.safe_click(self.locators.FIRST_CHAT_ITEM, timeout=timeout)
 
     def _resolve_chat_locators(self, chat_identifier: str, display_name: str | None = None):
+        """Locators for a chat row, in priority order.
+
+        Status tags fresh-contact chat rows with an auto-generated 3-word
+        identity name (e.g. "Whopping Insecure Frilledlizard") in
+        ``resource-id`` on both sides, so identifier-specific locators
+        miss. ``FIRST_CHAT_ITEM`` is the load-bearing fallback in the
+        one-chat fixture scenario. Strict-uniqueness assertions are not
+        supported by these locators today.
+        """
         locators = [self.locators.dm_row_button(chat_identifier)]
         if display_name:
             locators.append(self.locators.chat_list_item(display_name))
+        locators.append(self.locators.FIRST_CHAT_ITEM)
         return locators
 
     def open_chat_by_suffix(
@@ -100,13 +111,16 @@ class ChatPage(BasePage):
         timeout: int | None = 15,
     ) -> bool:
         self._ensure_chat_list_visible()
-        locators = self._resolve_chat_locators(chat_identifier, display_name)
-        for locator in locators:
-            if self.is_element_visible(locator, timeout=timeout):
-                return self.safe_click(locator, timeout=timeout, max_attempts=3)
-        # Chat row may be below the fold — scroll and retry
-        self.logger.debug("Chat not visible; attempting scroll in chat list")
-        for locator in locators:
+        primary, *fallbacks = self._resolve_chat_locators(chat_identifier, display_name)
+        try:
+            return self.safe_click(
+                primary, fallback_locators=fallbacks, timeout=timeout, max_attempts=3,
+            )
+        except ElementInteractionError as exc:
+            self.logger.debug(
+                "Direct click chain failed (%s); attempting scroll in chat list", exc,
+            )
+        for locator in (primary, *fallbacks):
             if self.scroll_to_element(locator, max_swipes=3, timeout=3):
                 return self.safe_click(locator, timeout=timeout, max_attempts=3)
         # Diagnostic: dump page source so we can tell whether the chat list

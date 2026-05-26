@@ -14,6 +14,9 @@ class ContactsSettingsLocators(BaseLocators):
     FIRST_PENDING_ACCEPT_BUTTON = BaseLocators.xpath(
         "(//*[contains(@resource-id,'ContactPanel')]//*[contains(@resource-id,'acceptBtn')])[1]"
     )
+    FIRST_CONTACT_CHAT_BUTTON = BaseLocators.xpath(
+        "(//*[contains(@resource-id,'ContactPanel')]//*[contains(@resource-id,'chatBtn')])[1]"
+    )
     DISMISSED_TAB = BaseLocators.xpath(
         "//*[contains(@resource-id,'ContactsView_DismissedRequest_Button')]"
     )

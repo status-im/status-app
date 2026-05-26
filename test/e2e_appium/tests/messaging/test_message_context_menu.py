@@ -23,7 +23,7 @@ from config.logging_config import get_logger
 from pages.app import App
 from pages.messaging.chat_page import ChatPage
 from pages.messaging.message_context_menu_page import MessageContextMenuPage
-from utils.timeouts import cross_device_timeout
+from utils.timeouts import CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
 
 
 def _unique_message(prefix: str = "test") -> str:
@@ -45,10 +45,7 @@ class _MessageContextMenuBase:
     """
 
     UI_TIMEOUT = 30
-    # Env-aware: 180s on Pi LAN, 300s on BrowserStack cloud.
-    # See ``utils.timeouts.cross_device_timeout`` for rationale (MVDS
-    # resend cycle + Waku MissingMessageVerifier ticker).
-    CROSS_DEVICE_TIMEOUT = cross_device_timeout()
+    CROSS_DEVICE_TIMEOUT = CROSS_DEVICE_DELIVERY_TIMEOUT_SECONDS
     logger = get_logger("TestMessageContextMenu")
 
     @pytest.fixture(autouse=True)

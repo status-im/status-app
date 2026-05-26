@@ -29,7 +29,7 @@ device_defaults:
     automationName: "UiAutomator2"
     newCommandTimeout: 300
     bstack:options:
-      deviceOrientation: "landscape"
+      deviceOrientation: "portrait"
       "appiumVersion": "2.19.0"
       video: true
       debug: false
@@ -37,13 +37,14 @@ device_defaults:
       appiumLogs: true
       deviceLogs: true
       appProfiling: false
-    orientation: "LANDSCAPE"
+      idleTimeout: 300
+    orientation: "PORTRAIT"
     appium:unicodeKeyboard: true
     appium:resetKeyboard: true
 
 
 devices:
-  default: "galaxy_tab_s10p_android_15"
+  default: "pixel_8_android_14"
   matrix:
     - id: "dynamic_samsung_tab"
       display_name: "Any Galaxy Tab (Android 12-16)"

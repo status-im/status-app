@@ -366,28 +366,21 @@ class OnboardingFlow:
     def _execute_main_app_verification(self):
         """Execute main app verification with multi-locator fallback.
 
-        The primary ADD_ACCOUNT_BUTTON may not be visible on all device
-        form-factors (portrait tablets, phones). Fall back through
-        several wallet indicators before failing.
+        On portrait phones the wallet's SwipeView lands on centerPanel by
+        default (showing the first account's send/receive footer), so
+        FOOTER_SEND is the primary signal. ADD_ACCOUNT_BUTTON only
+        renders when we happen to land on leftPanel.
         """
         self.current_step = "wallet_verification"
         self.logger.info("Step 7: Wallet Landing Verification")
         step_start = datetime.now()
 
-        from locators.app_locators import AppLocators
-
         wallet_visible = (
             self.app.is_element_visible(
-                WalletAccountsLocators.ADD_ACCOUNT_BUTTON, timeout=15
+                WalletAccountsLocators.FOOTER_SEND, timeout=10
             )
             or self.app.is_element_visible(
-                AppLocators().LEFT_NAV_WALLET, timeout=5
-            )
-            or self.app.is_element_visible(
-                WalletAccountsLocators.WALLET_HEADER_ADDRESS, timeout=5
-            )
-            or self.app.is_element_visible(
-                WalletAccountsLocators.FOOTER_SEND, timeout=5
+                WalletAccountsLocators.ADD_ACCOUNT_BUTTON, timeout=10
             )
         )
 

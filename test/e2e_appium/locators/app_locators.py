@@ -42,6 +42,12 @@ class AppLocators(BaseLocators):
     COPY_PROFILE_LINK_ACTION = BaseLocators.xpath(
         "//*[contains(@resource-id,'userStatusCopyLinkAction')]"
     )
+    SHARE_PROFILE_ACTION = BaseLocators.xpath(
+        "//*[contains(@resource-id,'userStatusShareProfileAction')]"
+    )
+    PROFILE_MENU_CONTAINER = BaseLocators.xpath(
+        "//*[contains(@resource-id,'ProfileMenu')]"
+    )
 
     # Toolbar
     TOOLBAR_BACK_BUTTON = BaseLocators.tid("toolBarBackButton")

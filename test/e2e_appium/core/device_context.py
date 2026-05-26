@@ -127,41 +127,46 @@ class DeviceContext:
         is permanently disabled in QML (``enabled: !SQUtils.Utils.isMobile``), so
         we go directly to the mobile "Invite contacts" path via ShareProfileDialog.
 
-        Returns the captured link if successful, otherwise None.
+        Tries strategies in order; the second attempt at messages-panel exists
+        because ``_restore_main_ui``'s ``activate_app`` shake unsticks the
+        drawer's gesture handler, so a fresh whole-path retry materially helps
+        if the inner retries inside the first call exhausted. The Settings
+        path uses a different QML route (Profile menu → "Invite contacts") and
+        recovers when both messages-panel attempts hit the same flake.
+
+        Returns the captured link, otherwise ``None``.
         """
         from pages.app import App
         self.logger.info("Capturing profile link for device %s", self.device_id)
 
         main_app = App(self.driver)
+        strategies = (
+            ("messages-panel", self._capture_via_messages_panel),
+            ("messages-panel retry after activate_app()", self._capture_via_messages_panel),
+            ("settings 'Invite contacts'", self._capture_via_settings),
+        )
 
-        self.logger.info("Using Messages-panel shareProfileButton path for profile link")
-        profile_link = self._capture_via_messages_panel(main_app)
-
-        # The overlay cleanup uses driver.back() which can over-navigate
-        # on Android — _restore_main_ui foregrounds the app again.
-        self._restore_main_ui(main_app)
-
-        # _restore_main_ui's activate_app shake unsticks the drawer's
-        # gesture handler, so a second whole-path retry materially helps
-        # if outer-5-retries inside the first call exhausted.
-        if not profile_link:
-            self.logger.warning(
-                "First capture_profile_link pass failed — retrying after activate_app()"
-            )
-            profile_link = self._capture_via_messages_panel(main_app)
+        for name, strategy in strategies:
+            self.logger.info("Trying profile-link strategy: %s", name)
+            try:
+                link = strategy(main_app)
+            except Exception as exc:
+                self.logger.warning("Strategy '%s' raised: %s", name, exc)
+                link = None
+            # The overlay cleanup uses driver.back() which can over-navigate
+            # on Android — _restore_main_ui foregrounds the app again between
+            # strategies so each gets a clean starting state.
             self._restore_main_ui(main_app)
+            if link:
+                self.logger.info("Profile link captured via '%s': %s", name, link)
+                self.set_state("profile_link", link)
+                if self.user:
+                    self.user.profile_link = link
+                return link
+            self.logger.warning("Strategy '%s' returned no link", name)
 
-        if not profile_link:
-            self.logger.error("All profile-link capture paths failed")
-            return None
-
-        self.logger.info("Profile link captured: %s", profile_link)
-        self.set_state("profile_link", profile_link)
-
-        if self.user:
-            self.user.profile_link = profile_link
-
-        return profile_link
+        self.logger.error("All profile-link capture paths failed")
+        return None
 
     def _capture_via_messages_panel(self, app) -> str | None:
         """Capture profile link via the Messages section's
@@ -315,27 +320,23 @@ class DeviceContext:
         gets a clean navigation state.
         """
         from locators.app_locators import AppLocators
+        from locators.settings.profile_locators import ProfileSettingsLocators
         from pages.settings.share_profile_dialog import ShareProfileDialog
 
-        locators = AppLocators()
+        invite_action = AppLocators.SHARE_PROFILE_ACTION
         overlays_to_dismiss = 0
 
-        INVITE_ACTION = ("xpath", "//*[contains(@resource-id,'userStatusShareProfileAction')]")
-
         try:
-            invite_visible = app.is_element_visible(INVITE_ACTION, timeout=2)
+            invite_visible = app.is_element_visible(invite_action, timeout=2)
             if invite_visible:
                 # Profile popup is already open (e.g. retry after partial failure).
                 overlays_to_dismiss = 1
             else:
-                try:
-                    app._ensure_main_nav_visible()
-                    app.safe_click(locators.PROFILE_NAV_BUTTON, timeout=5)
-                    overlays_to_dismiss = 1
-                except Exception as exc:
-                    self.logger.error("Failed to open profile menu for invite path: %s", exc)
+                if not app.open_profile_menu():
+                    self.logger.error("Failed to open profile menu for invite path")
                     return None
-                invite_visible = app.is_element_visible(INVITE_ACTION, timeout=15)
+                overlays_to_dismiss = 1
+                invite_visible = app.is_element_visible(invite_action, timeout=15)
 
             if not invite_visible:
                 self.logger.error("Invite contacts action not visible in profile menu")
@@ -343,7 +344,7 @@ class DeviceContext:
                 return None
 
             try:
-                app.safe_click(INVITE_ACTION, timeout=5)
+                app.safe_click(invite_action, timeout=5)
             except Exception as exc:
                 self.logger.error("Failed to click Invite contacts: %s", exc)
                 return None
@@ -366,13 +367,11 @@ class DeviceContext:
             # Dismiss overlays cautiously — verify each one is still
             # present before pressing back, to avoid navigating out of
             # the app entirely.
-            dialog_locator = ("xpath", "//*[contains(@resource-id,'ShareProfileDialog')]")
-            popup_locator = ("xpath", "//*[contains(@resource-id,'userStatusShareProfileAction') "
-                             "or contains(@resource-id,'ProfileMenu')]")
-
-            for i, check_locator in enumerate(
-                [dialog_locator, popup_locator][:overlays_to_dismiss]
-            ):
+            overlay_checks = [
+                ProfileSettingsLocators.SHARE_PROFILE_DIALOG,
+                AppLocators.PROFILE_MENU_CONTAINER,
+            ]
+            for i, check_locator in enumerate(overlay_checks[:overlays_to_dismiss]):
                 if app.is_element_visible(check_locator, timeout=1):
                     try:
                         self.driver.back()

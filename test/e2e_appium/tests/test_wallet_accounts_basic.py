@@ -17,6 +17,10 @@ class TestWalletAccountsBasic(StepMixin):
         async with self.step(self.device, "Verify wallet panel loaded"):
             panel = WalletLeftPanel(self.device.driver)
             app = App(self.device.driver)
+            # Onboarding's Step 7 wallet-landing check accepts LEFT_NAV_WALLET
+            # (the bottom-nav button) as proof; that doesn't mean we're inside
+            # the wallet section. Tap it explicitly first.
+            assert app.click_wallet_button(), "Failed to navigate to Wallet"
             assert panel.is_loaded(timeout=20), "Wallet left panel not visible"
 
         async with self.step(self.device, "Select first account"):
@@ -92,13 +96,31 @@ class TestWalletAccountsBasic(StepMixin):
             assert welcome_back.perform_login(user_password), (
                 "Unable to authenticate after restart"
             )
+            # Login returns as soon as the welcome screen is dismissed,
+            # but the main app's nav drawer isn't populated until the
+            # splash-screen loading completes. Wait for that before any
+            # nav action — on slower devices ``click_wallet_button``
+            # otherwise retries ~3x with the Wallet nav item missing.
+            from pages.onboarding.loading_page import SplashScreen
+            assert SplashScreen(self.device.driver).wait_for_loading_completion(
+                timeout=60
+            ), "App did not finish loading after re-auth"
 
         async with self.step(self.device, "Verify wallet panel loads after restart"):
             panel = WalletLeftPanel(self.device.driver)
             app = App(self.device.driver)
-            assert panel.is_loaded(timeout=20), "Wallet panel not visible after restart"
-            # Push notification dialog may re-appear after restart + login
+            # The push-notifications dialog can re-appear after re-auth and
+            # blocks the nav drawer from opening, so dismiss it before any
+            # nav action.
             PushNotificationsPage(self.device.driver).dismiss_if_present(timeout=5)
+            # is_loaded checks ADD_ACCOUNT_BUTTON first; the app often
+            # lands on the wallet leftPanel directly after re-auth, so a
+            # nav click is only needed when the panel isn't already up.
+            if not panel.is_loaded(timeout=5):
+                assert app.click_wallet_button(), "Failed to navigate to Wallet"
+                assert panel.is_loaded(timeout=20), (
+                    "Wallet panel not visible after restart"
+                )
 
         async with self.step(self.device, "Verify renamed account persists after restart"):
             assert panel.wait_for_account_name(renamed_name, timeout=10), (

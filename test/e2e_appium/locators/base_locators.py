@@ -89,20 +89,26 @@ class BaseLocators:
 
     @staticmethod
     def tid(name: str) -> tuple:
-        """Match a test-id across older Android (``tid:NAME`` in content-desc),
-        current Android (``.NAME`` in resource-id), and iOS (``NAME`` in
-        ``name`` attr) — single xpath that hits any of the three.
+        """Match a test-id across older Android (``[tid:NAME]`` in content-desc),
+        current Android (resource-id ending in ``.NAME`` or equal to ``NAME``),
+        and iOS (``name`` attribute equal to ``NAME``).
+
+        Path-end-anchored on resource-id so ``tid('addSavedAddress')`` does
+        NOT also match ``addSavedAddressColor`` etc. The earlier ``contains``
+        form bled into prefix collisions: the modal's
+        ``addSavedAddressColor`` wrapper + 12 colour-picker rows leaked into
+        the match set and ``find_element`` returned the wrapper (first in
+        document order) instead of the actual save button at the bottom.
+        Brackets around ``[tid:NAME]`` give the content-desc check the same
+        word-boundary guarantee.
         """
-        # Leading '.' on the resource-id match anchors to a path segment.
-        # Bare contains() collides on numeric prefixes: tid('1-MenuItem')
-        # would also match '101-MenuItem' (backUpSeed).
         return (
             BaseLocators.BY_XPATH,
             (
-                f"//*[contains(@content-desc, 'tid:{name}')"
-                f" or contains(@resource-id, '.{name}')"
+                f"//*[contains(@content-desc, '[tid:{name}]')"
+                f" or substring(@resource-id, string-length(@resource-id) - {len(name)}) = '.{name}'"
                 f" or @resource-id='{name}'"
-                f" or contains(@name, '{name}')]"
+                f" or @name='{name}']"
             ),
         )
 
