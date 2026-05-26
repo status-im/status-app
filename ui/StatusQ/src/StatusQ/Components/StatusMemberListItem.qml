@@ -129,7 +129,7 @@ ItemDelegate {
     QtObject {
         id: d
 
-        readonly property real spacing: Math.max(Theme.halfPadding, 8)
+        readonly property real spacing: Math.max(root.Theme.halfPadding, 8)
         readonly property real minDetailsWidth: 120
 
         readonly property bool wrapped: componentsRow.visible &&
@@ -205,7 +205,6 @@ ItemDelegate {
 
         ColumnLayout {
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignVCenter
             spacing: 4
 
             Row {

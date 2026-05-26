@@ -416,6 +416,9 @@ proc communityTokens*(self: SectionItem): community_tokens_model.TokenModel {.in
 proc updatePendingRequestLoadingState*(self: SectionItem, memberKey: string, loading: bool) {.inline.} =
   self.membersModel.updateLoadingState(memberKey, loading)
 
+proc updateDeclineRequestLoadingState*(self: SectionItem, memberKey: string, loading: bool) {.inline.} =
+  self.membersModel.updateDeclineLoadingState(memberKey, loading)
+
 proc updateMembershipStatus*(self: SectionItem, memberKey: string, state: MembershipRequestState) {.inline.} =
   self.membersModel.updateMembershipStatus(memberKey, state)
 

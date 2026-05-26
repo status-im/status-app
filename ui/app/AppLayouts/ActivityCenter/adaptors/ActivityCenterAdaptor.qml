@@ -215,11 +215,25 @@ QtObject {
 
         // Pre-filter dismissed notifications before ObjectProxyModel to skip
         // heavy delegate processing for entries that will never be shown.
+        // Community membership decisions are kept so pending/final states remain visible.
         readonly property SortFilterProxyModel filteredNotifications: SortFilterProxyModel {
             sourceModel: root.notifications
-            filters: FastExpressionFilter {
-                expression: !dismissed
-                expectedRoles: "dismissed"
+            filters: AnyOf {
+                ValueFilter {
+                    roleName: "dismissed"
+                    value: false
+                }
+                AllOf {
+                    ValueFilter {
+                        roleName: "notificationType"
+                        value: ActivityCenterTypes.NotificationType.CommunityMembershipRequest
+                    }
+                    ValueFilter {
+                        roleName: "membershipStatus"
+                        value: ActivityCenterTypes.ActivityCenterMembershipStatus.None
+                        inverted: true
+                    }
+                }
             }
         }
 
