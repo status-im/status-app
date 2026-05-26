@@ -43,6 +43,7 @@ StatusSectionLayout {
 
     required property BrowserStores.BookmarksStore bookmarksStore
     required property BrowserStores.DownloadsStore downloadsStore
+    required property BrowserStores.BrowserPreferencesStore browserPreferencesStore
     required property BrowserStores.BrowserRootStore browserRootStore
     required property BrowserStores.BrowserWalletStore browserWalletStore
     required property BrowserStores.BrowserActivityStore browserActivityStore
@@ -71,12 +72,26 @@ StatusSectionLayout {
             root.connectorController.deleteEphemeralDApps()
     }
 
+    function saveBrowserSession() {
+        savedSessionContext.saveSession()
+    }
+
     Component.onCompleted: {
         savedSessionContext.restoreSession()
     }
 
     Component.onDestruction: {
-        savedSessionContext.saveSession()
+        saveBrowserSession()
+    }
+
+    Connections {
+        target: tabs
+        function onCountChanged() {
+            savedSessionContext.scheduleSaveSession()
+        }
+        function onCurrentIndexChanged() {
+            savedSessionContext.scheduleSaveSession()
+        }
     }
 
     Connections {
@@ -240,6 +255,7 @@ StatusSectionLayout {
 
     BrowserWebViewContext {
         id: webViewContext
+        savedSessionContext: savedSessionContext
         thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
         isDebugEnabled: root.isDebugEnabled
         isMobile: SQUtils.Utils.isMobile // non-UI, do not override with root.isMobile
@@ -273,6 +289,8 @@ StatusSectionLayout {
         tabs: tabs
         defaultProfileParams: browserConfig.defaultProfileParams
         determineRealURL: (u) => root.browserRootStore.determineRealURL(u)
+        preferencesStore: root.browserPreferencesStore
+        currentWebView: _internal.currentWebView
     }
 
     headerContent: ColumnLayout {
@@ -284,6 +302,7 @@ StatusSectionLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: tabHeight
 
+            savedSessionContext: savedSessionContext
             isMobile: root.isMobile
             currentTabIncognito: _internal.currentTabIncognito
             determineRealURL: function(url) {
@@ -677,30 +696,40 @@ StatusSectionLayout {
         TabsBookmarksOverviewModal {
             getTitleFn: function(tabIndex) {
                 const webView = webViewContext.getWebView(tabIndex)
-                if (!webView)
-                    return qsTr("Empty")
-
-                return webView.isDownloadView ? qsTr("Downloads") : webView.title || qsTr("Empty")
+                return savedSessionContext.displayTitle(webView, false)
             }
             getFaviconFn: function(tabIndex) {
                 const webView = webViewContext.getWebView(tabIndex)
                 if (!webView)
                     return Assets.svg("globe")
 
-                return root.browserRootStore.determineRealURL(webView.icon?.toString() || Assets.svg("globe"))
+                const icon = savedSessionContext.displayIcon(webView)
+                return root.browserRootStore.determineRealURL(icon || Assets.svg("globe"))
             }
-            getWebViewScreenshot: function (tabIndex, targetImage, targetSize) {
+            getWebViewScreenshot: function (tabIndex, targetImage) {
                 const webView = webViewContext.getWebView(tabIndex)
                 if (!webView)
                     return ""
 
                 function grabImage() {
-                    webView.grabToImage(result => {targetImage.source = result.url}, targetSize)
+                    savedSessionContext.snapshotPersister.grabSnapshot(webView, result => {
+                        if (result && result.url)
+                            targetImage.source = result.url
+                    })
                 }
 
                 function grabImageWhenLoaded() {
                     if (webView.htmlPageLoaded)
                         grabImage()
+                }
+
+                const isCurrentTab = tabIndex === currentTabIndex
+                if (!isCurrentTab) {
+                    const cached = browserPreferencesStore.getSnapshot(webView.uid)
+                    if (cached) {
+                        targetImage.source = cached
+                        return ""
+                    }
                 }
 
                 if (webView.htmlPageLoaded)

@@ -165,6 +165,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/fastexpressionsorter.h
         include/StatusQ/formatteddoubleproperty.h
         include/StatusQ/genericvalidator.h
+        include/StatusQ/imageencoderutils.h
         include/StatusQ/keychain.h
         include/StatusQ/NativeSwipeHandlerItem.h
         include/StatusQ/NativeIndicatorItem.h
@@ -195,6 +196,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/fastexpressionsorter.cpp
         src/formatteddoubleproperty.cpp
         src/genericvalidator.cpp
+        src/imageencoderutils.cpp
         src/keychain.cpp
         src/localnetworkpermission.cpp
         src/localnetworkpermission_backend.h

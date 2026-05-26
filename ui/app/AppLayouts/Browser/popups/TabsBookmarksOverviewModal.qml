@@ -30,7 +30,7 @@ StatusDialog {
     required property int currentTabIndex
     property var getTitleFn: (tabIndex) => {console.error("getTitleFn not implemented"); return ""}
     property var getFaviconFn: (tabIndex) => {console.error("getFaviconFn not implemented"); return ""}
-    property var getWebViewScreenshot: (tabIndex, targetImage, targetSize) => {console.error("getWebViewScreenshot not implemented"); return ""}
+    property var getWebViewScreenshot: (tabIndex, targetImage) => {console.error("getWebViewScreenshot not implemented"); return ""}
 
     signal activateTabRequested(int tabIndex)
     signal addTabRequested()
@@ -192,7 +192,7 @@ StatusDialog {
                             Layout.alignment: Qt.AlignHCenter
                             fillMode: Image.PreserveAspectCrop
                             mipmap: true
-                            Component.onCompleted: root.getWebViewScreenshot(d.searchableTabsModel.mapToSource(index), this, Qt.size(d.cardWidth, height))
+                            Component.onCompleted: root.getWebViewScreenshot(d.searchableTabsModel.mapToSource(index), this)
                         }
                     }
 

@@ -3017,16 +3017,6 @@
   <context>
     <name>BrowserLayout</name>
     <message>
-      <source>Downloads</source>
-      <comment>BrowserLayout</comment>
-      <translation>Downloads</translation>
-    </message>
-    <message>
-      <source>Empty</source>
-      <comment>BrowserLayout</comment>
-      <translation>Empty</translation>
-    </message>
-    <message>
       <source>Server&#39;s certificate not trusted</source>
       <comment>BrowserLayout</comment>
       <translation>Server&#39;s certificate not trusted</translation>
@@ -3106,6 +3096,24 @@
       <source>Browse decentralized apps</source>
       <comment>BrowserPrivacyWall</comment>
       <translation>Browse decentralized apps</translation>
+    </message>
+  </context>
+  <context>
+    <name>BrowserSavedSessionContext</name>
+    <message>
+      <source>Start Page</source>
+      <comment>BrowserSavedSessionContext</comment>
+      <translation>Start Page</translation>
+    </message>
+    <message>
+      <source>New Tab</source>
+      <comment>BrowserSavedSessionContext</comment>
+      <translation>New Tab</translation>
+    </message>
+    <message>
+      <source>Downloads</source>
+      <comment>BrowserSavedSessionContext</comment>
+      <translation>Downloads</translation>
     </message>
   </context>
   <context>
@@ -3198,16 +3206,6 @@
   </context>
   <context>
     <name>BrowserTabView</name>
-    <message>
-      <source>Start Page</source>
-      <comment>BrowserTabView</comment>
-      <translation>Start Page</translation>
-    </message>
-    <message>
-      <source>New Tab</source>
-      <comment>BrowserTabView</comment>
-      <translation>New Tab</translation>
-    </message>
     <message>
       <source>Downloads Page</source>
       <comment>BrowserTabView</comment>

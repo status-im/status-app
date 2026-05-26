@@ -48,6 +48,7 @@ Loader {
     Component { id: browserRootStoreComp; BrowserStores.BrowserRootStore {} }
     Component { id: browserWalletStoreComp; BrowserStores.BrowserWalletStore {} }
     Component { id: browserActivityStoreComp; BrowserStores.BrowserActivityStore {} }
+    Component { id: browserPreferencesStoreComp; BrowserStores.BrowserPreferencesStore {} }
     Component { id: storeParentComp; QtObject {} }
 
     Component.onCompleted: {
@@ -80,6 +81,7 @@ Loader {
         const bookmarksStore = bookmarksStoreComp.createObject(d.storeParent)
         const downloadsStore = downloadsStoreComp.createObject(d.storeParent)
         const browserRootStore = browserRootStoreComp.createObject(d.storeParent)
+        const browserPreferencesStore = browserPreferencesStoreComp.createObject(d.storeParent)
 
         setSource(d.targetUrl, {
             isMobile:                   SQUtils.Utils.isMobile,
@@ -87,6 +89,7 @@ Loader {
             bookmarksStore:             bookmarksStore,
             downloadsStore:             downloadsStore,
             browserRootStore:           browserRootStore,
+            browserPreferencesStore:    browserPreferencesStore,
             browserWalletStore:         browserWalletStore,
             browserActivityStore:       browserActivityStore,
             userUID:                    Qt.binding(() => root.profileStore.pubKey),

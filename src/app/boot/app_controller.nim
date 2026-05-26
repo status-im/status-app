@@ -15,6 +15,7 @@ import app_service/service/ramp/service as ramp_service
 import app_service/service/transaction/service as transaction_service
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/bookmarks/service as bookmark_service
+import app_service/service/browser_preferences/service as browser_preferences_service
 import app_service/service/dapp_permissions/service as dapp_permissions_service
 import app_service/service/privacy/service as privacy_service
 import app_service/service/node/service as node_service
@@ -79,6 +80,7 @@ type
     transactionService: transaction_service.Service
     walletAccountService: wallet_account_service.Service
     bookmarkService: bookmark_service.Service
+    browserPreferencesService: browser_preferences_service.Service
     dappPermissionsService: dapp_permissions_service.Service
     profileService: profile_service.Service
     settingsService: settings_service.Service
@@ -195,6 +197,7 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   result.transactionService = transaction_service.newService(statusFoundation.events, statusFoundation.threadpool,
     result.currencyService, result.networkService, result.settingsService, result.tokenService)
   result.bookmarkService = bookmark_service.newService(statusFoundation.events)
+  result.browserPreferencesService = browser_preferences_service.newService()
   result.profileService = profile_service.newService(statusFoundation.events, statusFoundation.threadpool, result.settingsService)
   result.stickersService = stickers_service.newService(
     statusFoundation.events,
@@ -266,6 +269,7 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
     result.stickersService,
     result.activityCenterService,
     result.savedAddressService,
+    result.browserPreferencesService,
     result.followingAddressService,
     result.nodeConfigurationService,
     result.devicesService,
@@ -303,6 +307,7 @@ proc delete*(self: AppController) =
   self.notificationsManager.delete
   self.contactsService.delete
   self.bookmarkService.delete
+  self.browserPreferencesService.delete
   self.gifService.delete
   if not self.onboardingModule.isNil:
     self.onboardingModule.delete

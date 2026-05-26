@@ -43,6 +43,7 @@ import StatusQ.Popups.Dialog
 
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Communities.stores
+import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Profile.helpers
 import AppLayouts.Wallet.popups as WalletPopups
@@ -135,6 +136,7 @@ Item {
         networksStore: appMain.networksStore
     }
     readonly property WalletStores.BuyCryptoStore buyCryptoStore: WalletStores.BuyCryptoStore {}
+    readonly property BrowserStores.BrowserPreferencesStore browserPreferencesStore: BrowserStores.BrowserPreferencesStore {}
 
     required property AppStores.FeatureFlagsStore featureFlagsStore
     required property ProfileStores.LanguageStore languageStore
@@ -2030,6 +2032,7 @@ Item {
                         tokensStore: appMain.tokensStore
                         walletAssetsStore: appMain.walletAssetsStore
                         walletCollectiblesStore: appMain.walletCollectiblesStore
+                        browserPreferencesStore: appMain.browserPreferencesStore
 
                         contactsAdaptor: contactsModelAdaptor
                         popupHandler: popupRequestsHandler

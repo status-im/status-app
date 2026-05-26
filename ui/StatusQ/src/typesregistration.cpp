@@ -6,6 +6,7 @@
 #include "StatusQ/fastexpressionsorter.h"
 #include "StatusQ/formatteddoubleproperty.h"
 #include "StatusQ/genericvalidator.h"
+#include "StatusQ/imageencoderutils.h"
 #include "StatusQ/keychain.h"
 #include "StatusQ/localnetworkpermission.h"
 #include "StatusQ/networkchecker.h"
@@ -85,6 +86,10 @@ void registerStatusQTypes() {
     qmlRegisterType<SBarcodeScanner>("com.scythestudio.scodes", 1, 0, "SBarcodeScanner");
 
     qmlRegisterSingletonType<ClipboardUtils>("StatusQ", 0, 1, "ClipboardUtils", &ClipboardUtils::qmlInstance);
+    qmlRegisterSingletonType<ImageEncoderUtils>("StatusQ", 0, 1, "ImageEncoderUtils",
+                                                [](QQmlEngine *engine, QJSEngine *scriptEngine) {
+        return ImageEncoderUtils::qmlInstance(engine, scriptEngine);
+    });
     qmlRegisterSingletonType<UrlUtils>("StatusQ", 0, 1, "UrlUtils", [](QQmlEngine* engine, QJSEngine*) {
         return new UrlUtils(engine);
     });
