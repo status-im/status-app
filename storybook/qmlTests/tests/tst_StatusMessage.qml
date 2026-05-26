@@ -80,7 +80,7 @@ Item {
             verify(!!statusTextMessage)
 
             // Use regular expression to match all <a> tags in the text
-            var linkMatches = statusTextMessage.textField.text.match(/<a\b[^>]*>(.*?)<\/a>/gi)
+            var linkMatches = statusTextMessage.textField.item.text.match(/<a\b[^>]*>(.*?)<\/a>/gi)
             var actualLinkCount = linkMatches ? linkMatches.length : 0
 
             compare(actualLinkCount, data.validAddressEnsCount, "TextEdit should contain a link %1".arg(data.messageText))

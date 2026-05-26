@@ -12,7 +12,7 @@ import StatusQ.Core.Utils
 Item {
     id: root
 
-    readonly property alias hoveredLink: chatText.hoveredLink
+    readonly property alias hoveredLink: chatTextLoader.hoveredLink
 
     property string highlightedLink: ""
     property bool linkAddressAndEnsName
@@ -22,23 +22,27 @@ Item {
     property bool isEdited: false
     property bool convertToSingleLine: false
     property bool stripHtmlTags: false
-
-    property alias textField: chatText
     property bool allowShowMore: true
+    property bool isReply
+
+    property bool isMobile
+
+    property alias textField: chatTextLoader
 
     signal linkActivated(string link)
     signal contextMenuRequested(point pos)
 
-    implicitWidth: chatText.implicitWidth
-    implicitHeight: chatText.height + d.showMoreHeight / 2
+    implicitWidth: chatTextLoader.width
+    implicitHeight: chatTextLoader.height + d.showMoreHeight / 2
 
     QtObject {
         id: d
-        property string hoveredLink: chatText.hoveredLink || root.highlightedLink
+        readonly property string hoveredLink: chatTextLoader.hoveredLink || root.highlightedLink
 
         property bool readMore: false
         property bool isQuote: false
         readonly property int showMoreHeight: showMoreButtonLoader.visible ? showMoreButtonLoader.height : 0
+        readonly property int maxHeight: 200
 
         readonly property string text: {
             if (root.messageDetails.contentType === StatusMessage.ContentType.Sticker)
@@ -49,7 +53,7 @@ Item {
 
             let formattedMessage = Utils.linkifyAndXSS(root.messageDetails.messageText, root.linkAddressAndEnsName);
 
-            isQuote = (formattedMessage.startsWith("<blockquote>") && formattedMessage.endsWith("</blockquote>"));
+            isQuote = formattedMessage.startsWith("<blockquote>") && formattedMessage.endsWith("</blockquote>")
 
             if (root.isEdited) {
                 const index = formattedMessage.endsWith("code>") ? formattedMessage.length : (formattedMessage.endsWith(">") ? formattedMessage.length - 4 : formattedMessage.length);
@@ -73,7 +77,7 @@ Item {
                 return formattedMessage
 
             return Utils.getMessageWithStyle(root.Theme.palette, formattedMessage,
-                                             chatText.hoveredLink, !!root.disabledTooltipText)
+                                             chatTextLoader.hoveredLink, !!root.disabledTooltipText)
         }
 
         function showDisabledTooltipForAddressEnsName(link) {
@@ -83,57 +87,27 @@ Item {
 
     Rectangle {
         width: 1
-        height: chatText.height
+        height: chatTextLoader.height
         radius: Theme.radius
         visible: d.isQuote
         color: Theme.palette.baseColor1
     }
 
-    StatusTextArea {
-        id: chatText
-        objectName: "StatusTextMessage_chatText"
+    Loader {
+        id: chatTextLoader
 
-        readonly property int effectiveHeight: showMoreButtonLoader.active && !d.readMore
-                                               ? 200
-                                               : chatText.implicitHeight
+        readonly property string hoveredLink: item ? item.hoveredLink : ""
 
+        readonly property int effectiveHeight: showMoreButtonLoader.active && !d.readMore ? d.maxHeight
+                                                                                          : item.implicitHeight
         height: effectiveHeight + d.showMoreHeight / 2
         anchors.left: parent.left
         anchors.leftMargin: d.isQuote ? Theme.halfPadding : 0
         anchors.right: parent.right
+
         opacity: !showMoreOpacityMask.active && !horizontalOpacityMask.active ? 1 : 0
-        background: null
-        leftPadding: 0
-        rightPadding: 0
-        topPadding: 0
-        bottomPadding: 0
-        text: d.text
-        selectedTextColor: Theme.palette.directColor1
-        color: d.isQuote ? Theme.palette.baseColor1 : Theme.palette.directColor1
-        textFormat: Text.RichText
-        wrapMode: root.convertToSingleLine ? Text.NoWrap : Text.Wrap
-        readOnly: true
-        selectByMouse: true  // applies to mouse only, not touch
 
-        onLinkActivated: function(link) {
-            if(d.showDisabledTooltipForAddressEnsName(link)) {
-                return
-            }
-            root.linkActivated(link)
-            chatText.deselect()
-        }
-        onLinkHovered: (link) => disabledLinkTooltip.visible = d.showDisabledTooltipForAddressEnsName(link)
-
-        // context menu handlers
-        ContextMenu.menu: null // disable builtin "edit" menu; we're not an edit control
-        inputMethodHints: Qt.ImhNoEditMenu // ditto for mobile
-        onPressAndHold: event => root.contextMenuRequested(Qt.point(event.x, event.y))
-        onPressed: function(event) {
-            if (event.button === Qt.RightButton) {
-                event.accepted = true
-                root.contextMenuRequested(Qt.point(event.x, event.y))
-            }
-        }
+        sourceComponent: root.isMobile ? chatTextMobileComp : chatTextDesktopComp
 
         HoverHandler {
             id: hoverHandler
@@ -147,8 +121,71 @@ Item {
         }
     }
 
+    Component {
+        id: chatTextMobileComp
+        StatusBaseText {
+            objectName: "StatusTextMessage_chatText"
+            text: d.text
+            color: d.isQuote || root.isReply ? Theme.palette.baseColor1 : Theme.palette.directColor1
+            font.pixelSize: root.isReply ? Theme.secondaryTextFontSize : Theme.primaryTextFontSize
+            textFormat: Text.RichText
+            wrapMode: root.convertToSingleLine ? Text.NoWrap : Text.Wrap
+
+            onLinkActivated: function(link) {
+                if(d.showDisabledTooltipForAddressEnsName(link)) {
+                    return
+                }
+                root.linkActivated(link)
+            }
+            onLinkHovered: (link) => disabledLinkTooltip.visible = d.showDisabledTooltipForAddressEnsName(link)
+        }
+    }
+
+    Component {
+        id: chatTextDesktopComp
+        StatusTextArea {
+            objectName: "StatusTextMessage_chatText"
+            background: null
+            leftPadding: 0
+            rightPadding: 0
+            topPadding: 0
+            bottomPadding: 0
+            text: d.text
+            selectedTextColor: Theme.palette.directColor1
+            color: d.isQuote || root.isReply ? Theme.palette.baseColor1 : Theme.palette.directColor1
+            font.pixelSize: root.isReply ? Theme.secondaryTextFontSize : Theme.primaryTextFontSize
+            textFormat: Text.RichText
+            wrapMode: root.convertToSingleLine ? Text.NoWrap : Text.Wrap
+            readOnly: true
+            selectByMouse: true  // applies to mouse only, not touch
+
+            onLinkActivated: function(link) {
+                if(d.showDisabledTooltipForAddressEnsName(link)) {
+                    return
+                }
+                root.linkActivated(link)
+                deselect()
+            }
+            onLinkHovered: (link) => disabledLinkTooltip.visible = d.showDisabledTooltipForAddressEnsName(link)
+
+            // context menu handlers
+            ContextMenu.menu: null // disable builtin "edit" menu; we're not an edit control
+            inputMethodHints: Qt.ImhNoEditMenu
+            onPressAndHold: function(event) {
+                event.accepted = true
+                root.contextMenuRequested(Qt.point(event.x, event.y))
+            }
+            onPressed: function(event) {
+                if (event.button === Qt.RightButton) {
+                    event.accepted = true
+                    root.contextMenuRequested(Qt.point(event.x, event.y))
+                }
+            }
+        }
+    }
+
     StatusSyntaxHighlighter {
-        quickTextDocument: chatText.textDocument
+        quickTextDocument: chatTextLoader.item?.textDocument ?? null
         hyperlinkHoverColor: Theme.palette.primaryColor3
         highlightedHyperlink: d.hoveredLink
         features: StatusSyntaxHighlighter.HighlightedHyperlink
@@ -157,12 +194,12 @@ Item {
     // Horizontal crop mask
     Loader {
         id: horizontalClipMask
-        anchors.fill: chatText
+        anchors.fill: chatTextLoader
         active: horizontalOpacityMask.active
         visible: false
         sourceComponent: LinearGradient {
             start: Qt.point(0, 0)
-            end: Qt.point(chatText.width, 0)
+            end: Qt.point(chatTextLoader.width, 0)
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "white" }
                 GradientStop { position: 0.85; color: "white" }
@@ -173,24 +210,23 @@ Item {
 
     Loader {
         id: horizontalOpacityMask
-        active: root.convertToSingleLine && chatText.implicitWidth > chatText.width
-        anchors.fill: chatText
+        active: root.convertToSingleLine && chatTextLoader.implicitWidth > chatTextLoader.width
+        anchors.fill: chatTextLoader
         sourceComponent: OpacityMask {
-            source: chatText
+            source: chatTextLoader
             maskSource: horizontalClipMask
         }
     }
 
-    // Vertical "show more" mask
-
+    // Vertical "show more" mask + button
     Loader {
         id: showMoreMaskGradient
-        anchors.fill: chatText
+        anchors.fill: chatTextLoader
         active: showMoreButtonLoader.active && !d.readMore
         visible: false
         sourceComponent: LinearGradient {
             start: Qt.point(0, 0)
-            end: Qt.point(0, chatText.height)
+            end: Qt.point(0, chatTextLoader.height)
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "white" }
                 GradientStop { position: 0.85; color: "white" }
@@ -202,18 +238,18 @@ Item {
     Loader {
         id: showMoreOpacityMask
         active: showMoreButtonLoader.active && !d.readMore
-        anchors.fill: chatText
+        anchors.fill: chatTextLoader
         sourceComponent: OpacityMask {
-            source: chatText
+            source: chatTextLoader
             maskSource: showMoreMaskGradient
         }
     }
 
     Loader {
         id: showMoreButtonLoader
-        active: root.allowShowMore && chatText.implicitHeight > 200
+        active: root.allowShowMore && chatTextLoader.item.implicitHeight > d.maxHeight
         visible: active
-        anchors.verticalCenter: chatText.bottom
+        anchors.verticalCenter: chatTextLoader.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         sourceComponent: StatusRoundButton {
             implicitWidth: 24
