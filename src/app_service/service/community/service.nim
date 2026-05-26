@@ -493,6 +493,10 @@ QtObject:
       for member in community.members:
         if member.id == request.publicKey:
           requestIsNowAMember = true
+          self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
+            communityId: community.id,
+            memberPubkey: request.publicKey,
+            state: MembershipRequestState.Accepted))
           break
       if not requestIsNowAMember:
         community.pendingRequestsToJoin.add(request)

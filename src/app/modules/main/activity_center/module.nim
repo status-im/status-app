@@ -9,6 +9,7 @@ import ../../../global/global_singleton
 import ../../../global/app_sections_config as conf
 import ../../../core/eventemitter
 import app_service/service/activity_center/service as activity_center_service
+from app_service/common/types import MembershipRequestState
 import app_service/service/contacts/service as contacts_service
 import app_service/service/message/service as message_service
 import app_service/service/chat/service as chat_service
@@ -163,7 +164,6 @@ method convertToItems*(
       )
 
       let chatDetails = self.controller.getChatDetails(notification.chatId)
-
       return notification_item.initItem(
         notification.id,
         notification.chatId,
@@ -239,6 +239,27 @@ method acceptActivityCenterNotificationDone*(self: Module, notificationId: strin
 
 method dismissActivityCenterNotificationDone*(self: Module, notificationId: string) =
   self.view.dismissActivityCenterNotificationDone(notificationId)
+
+proc toActivityCenterMembershipStatus(state: MembershipRequestState): ActivityCenterMembershipStatus =
+  case state:
+    of MembershipRequestState.Pending:
+      ActivityCenterMembershipStatus.Pending
+    of MembershipRequestState.Accepted:
+      ActivityCenterMembershipStatus.Accepted
+    of MembershipRequestState.Declined:
+      ActivityCenterMembershipStatus.Declined
+    of MembershipRequestState.AcceptedPending:
+      ActivityCenterMembershipStatus.AcceptedPending
+    of MembershipRequestState.DeclinedPending:
+      ActivityCenterMembershipStatus.DeclinedPending
+    else:
+      ActivityCenterMembershipStatus.Idle
+
+method updateCommunityMembershipStatus*(self: Module, communityId: string, memberPubkey: string, state: MembershipRequestState) =
+  let status = state.toActivityCenterMembershipStatus()
+  if status == ActivityCenterMembershipStatus.Idle:
+    return
+  self.view.updateCommunityMembershipStatus(communityId, memberPubkey, status)
 
 method markActivityCenterNotificationUnreadDone*(self: Module, notificationIds: seq[string]) =
   for notificationId in notificationIds:

@@ -1797,7 +1797,7 @@ Item {
                                        else if (notificationType === ActivityCenterTypes.NotificationType.CommunityMembershipRequest) {
                                            const store = appMain.messagingRootStore.createCommunityRootStore(appMain, requestId)
                                            store.communityAccessStore.acceptRequestToJoinCommunityRequested(actionId, requestId)
-                                           store.destroy()
+                                           Qt.callLater(() => store.destroy())
                                        }
                                        // This means, generic accept notification by id
                                        else {
@@ -1813,7 +1813,7 @@ Item {
                                         else if (notificationType === ActivityCenterTypes.NotificationType.CommunityMembershipRequest) {
                                             const store = appMain.messagingRootStore.createCommunityRootStore(appMain, requestId)
                                             store.communityAccessStore.declineRequestToJoinCommunityRequested(actionId, requestId)
-                                            store.destroy()
+                                            Qt.callLater(() => store.destroy())
                                         }
                                         // This means, generic dismiss notification by id
                                         else {
@@ -2940,4 +2940,3 @@ Item {
         value: appMain.Theme.palette
     }
 }
-
