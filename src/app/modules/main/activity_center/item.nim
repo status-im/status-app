@@ -148,6 +148,9 @@ proc communityId*(self: Item): string =
 proc membershipStatus*(self: Item): ActivityCenterMembershipStatus =
   return self.membershipStatus
 
+proc `membershipStatus=`*(self: Item, value: ActivityCenterMembershipStatus) =
+  self.membershipStatus = value
+
 proc sectionId*(self: Item): string =
   return self.sectionId
 
