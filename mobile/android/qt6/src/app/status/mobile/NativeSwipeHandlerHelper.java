@@ -212,12 +212,26 @@ public class NativeSwipeHandlerHelper {
             touchOverlayView.setX(handlerX);
             touchOverlayView.setY(handlerY);
             touchOverlayView.setElevation(dismissMode ? 48f : 1f);
+            touchOverlayView.setVisibility(View.VISIBLE);
 
             ViewGroup parent = (ViewGroup) touchOverlayView.getParent();
             if (parent != null && dismissMode) {
                 parent.bringChildToFront(touchOverlayView);
             }
             updateGestureExclusion();
+        });
+    }
+
+    /** Hide overlay when QML handler is disabled (e.g. popup opens). Reversible via applyTouchOverlayState. */
+    public void hideTouchOverlay() {
+        if (activity == null) return;
+        activity.runOnUiThread(() -> {
+            if (swiping) nativeOnSwipeEnded(nativePtr, 0f, 0f, true);
+            if (velocityTracker != null) { velocityTracker.recycle(); velocityTracker = null; }
+            active = swiping = false;
+            passthroughTarget = null;
+            dismissTapMode = false;
+            if (touchOverlayView != null) touchOverlayView.setVisibility(View.GONE);
         });
     }
 
