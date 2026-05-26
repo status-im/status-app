@@ -164,8 +164,13 @@ void NativeSwipeHandlerItem_Android::updatePolish()
 
 void NativeSwipeHandlerItem_Android::updateOverlayBounds()
 {
-    if (!m_javaHelper.isValid() || !canHandleInput())
+    if (!m_javaHelper.isValid())
         return;
+
+    if (!canHandleInput()) {
+        m_javaHelper.callMethod<void>("hideTouchOverlay");
+        return;
+    }
 
     qreal xPx = 0;
     qreal yPx = 0;
