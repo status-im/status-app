@@ -32,6 +32,7 @@ type
     Joined
     RequestToJoinId
     RequestToJoinLoading
+    DeclineRequestToJoinLoading
     AirdropAddress
     MembershipRequestState
     EmojiHash
@@ -108,6 +109,7 @@ QtObject:
       ModelRole.Joined.int: "joined",
       ModelRole.RequestToJoinId.int: "requestToJoinId",
       ModelRole.RequestToJoinLoading.int: "requestToJoinLoading",
+      ModelRole.DeclineRequestToJoinLoading.int: "declineRequestToJoinLoading",
       ModelRole.AirdropAddress.int: "airdropAddress",
       ModelRole.MembershipRequestState.int: "membershipRequestState",
       ModelRole.EmojiHash.int: "emojiHash"
@@ -171,6 +173,8 @@ QtObject:
       result = newQVariant(item.requestToJoinId)
     of ModelRole.RequestToJoinLoading:
       result = newQVariant(item.requestToJoinLoading)
+    of ModelRole.DeclineRequestToJoinLoading:
+      result = newQVariant(item.declineRequestToJoinLoading)
     of ModelRole.AirdropAddress:
       result = newQVariant(item.airdropAddress)
     of ModelRole.MembershipRequestState:
@@ -547,6 +551,21 @@ QtObject:
       ModelRole.RequestToJoinLoading.int
     ])
 
+  proc updateDeclineLoadingState*(self: Model, memberKey: string, declineRequestToJoinLoading: bool) =
+    let idx = self.findIndexForMember(memberKey)
+    if idx == -1:
+      return
+
+    if self.items[idx].declineRequestToJoinLoading == declineRequestToJoinLoading:
+      return
+
+    self.items[idx].declineRequestToJoinLoading = declineRequestToJoinLoading
+    let index = self.createIndex(idx, 0, nil)
+    defer: index.delete
+    self.dataChanged(index, index, @[
+      ModelRole.DeclineRequestToJoinLoading.int
+    ])
+
   proc updateMembershipStatus*(self: Model, memberKey: string, membershipRequestState: MembershipRequestState) {.inline.} =
     let idx = self.findIndexForMember(memberKey)
     if idx == -1:
@@ -610,4 +629,3 @@ QtObject:
 
   proc setup(self: Model) =
     self.QAbstractListModel.setup
-

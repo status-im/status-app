@@ -92,8 +92,6 @@ Item {
             // 3. Other conditions - actions are hidden for current user and privileged users that cannot be banned
             // 4. All members tab, member in AwaitingAddress state - buttons are not visible, sandwatch icon is shown
 
-            /// Helpers ///
-
             // Tab based buttons
             readonly property bool tabIsShowingKickBanButtons: root.panelType === MembersTabPanel.TabType.AllMembers
             readonly property bool tabIsShowingUnbanButton: root.panelType === MembersTabPanel.TabType.BannedMembers
@@ -137,7 +135,7 @@ Item {
                 default: return true
                 }
             }
-            readonly property bool showActions: ctaAllowed || model.requestToJoinLoading
+            readonly property bool showActions: ctaAllowed || model.requestToJoinLoading || model.declineRequestToJoinLoading
             readonly property bool canDeleteMessages: model.isCurrentUser || model.memberRole !== Constants.memberRole.owner
 
             /// Button visibility ///
@@ -269,6 +267,7 @@ Item {
                     size: StatusBaseButton.Size.Tiny
                     horizontalPadding: d.buttonPadding
                     verticalPadding: d.buttonPadding
+                    loading: model.declineRequestToJoinLoading
                     enabled: !rejectPendingButtonVisible
                     onClicked: root.declineRequestToJoin(model.requestToJoinId)
                 }

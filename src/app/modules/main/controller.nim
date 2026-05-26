@@ -426,9 +426,17 @@ proc init*(self: Controller) =
     var args = CommunityMemberArgs(e)
     self.delegate.onAcceptRequestToJoinLoading(args.communityId, args.pubKey)
 
+  self.events.on(SIGNAL_DECLINE_REQUEST_TO_JOIN_LOADING) do(e: Args):
+    var args = CommunityMemberArgs(e)
+    self.delegate.onDeclineRequestToJoinLoading(args.communityId, args.pubKey)
+
   self.events.on(SIGNAL_ACCEPT_REQUEST_TO_JOIN_FAILED) do(e: Args):
     var args = CommunityMemberArgs(e)
     self.delegate.onAcceptRequestToJoinFailed(args.communityId, args.pubKey, args.requestId)
+
+  self.events.on(SIGNAL_DECLINE_REQUEST_TO_JOIN_FAILED) do(e: Args):
+    var args = CommunityMemberArgs(e)
+    self.delegate.onDeclineRequestToJoinFailed(args.communityId, args.pubKey, args.requestId)
 
   self.events.on(SIGNAL_ACCEPT_REQUEST_TO_JOIN_FAILED_NO_PERMISSION) do(e: Args):
     var args = CommunityMemberArgs(e)
@@ -437,6 +445,10 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_COMMUNITY_MEMBER_APPROVED) do(e: Args):
     var args = CommunityMemberArgs(e)
     self.delegate.onAcceptRequestToJoinSuccess(args.communityId, args.pubKey, args.requestId)
+
+  self.events.on(SIGNAL_DECLINE_REQUEST_TO_JOIN_SUCCESS) do(e: Args):
+    var args = CommunityMemberArgs(e)
+    self.delegate.onDeclineRequestToJoinSuccess(args.communityId, args.pubKey, args.requestId)
 
   self.events.on(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED) do(e: Args):
     let args = CommunityMemberStatusUpdatedArgs(e)

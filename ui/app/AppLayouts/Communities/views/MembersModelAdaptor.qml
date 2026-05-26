@@ -34,7 +34,8 @@ QObject {
         memberRole                      [int]       - role of the member in the community
         joined                          [bool]      - whether the user has joined the community
         requestToJoinId                 [string]    - the user's request to join ID
-        requestToJoinLoading            [bool]      - whether the request is being processed after an admin made an action (loading state)
+        requestToJoinLoading            [bool]      - whether the accept request action is being processed
+        declineRequestToJoinLoading     [bool]      - whether the decline request action is being processed
         airdropAddress                  [string]    - the member's airdrop address (only available to TMs and owners)
         membershipRequestState          [int]       - the user's membership state (pending, joined, etc.)
     **/
@@ -94,21 +95,19 @@ QObject {
                 roleName: "membershipRequestState"
                 value: Constants.CommunityMembershipRequestState.AcceptedPending
             }
+            ValueFilter {
+                roleName: "membershipRequestState"
+                value: Constants.CommunityMembershipRequestState.RejectedPending
+            }
         }
     }
 
     readonly property var declinedMembers: SortFilterProxyModel {
         sourceModel: root.allMembers ?? null
 
-        filters: AnyOf {
-            ValueFilter {
-                roleName: "membershipRequestState"
-                value: Constants.CommunityMembershipRequestState.Rejected
-            }
-            ValueFilter {
-                roleName: "membershipRequestState"
-                value: Constants.CommunityMembershipRequestState.RejectedPending
-            }
+        filters: ValueFilter {
+            roleName: "membershipRequestState"
+            value: Constants.CommunityMembershipRequestState.Rejected
         }
     }
 }

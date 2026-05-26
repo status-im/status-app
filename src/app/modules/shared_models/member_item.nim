@@ -11,6 +11,7 @@ type
     joined: bool
     requestToJoinId: string
     requestToJoinLoading*: bool
+    declineRequestToJoinLoading*: bool
     airdropAddress*: string
     membershipRequestState*: MembershipRequestState
 
@@ -35,6 +36,7 @@ proc initMemberItem*(
   joined: bool = false,
   requestToJoinId: string = "",
   requestToJoinLoading: bool = false,
+  declineRequestToJoinLoading: bool = false,
   airdropAddress: string = "",
   membershipRequestState: MembershipRequestState = MembershipRequestState.None,
   compressedPubKey: string = "",
@@ -45,6 +47,7 @@ proc initMemberItem*(
   result.joined = joined
   result.requestToJoinId = requestToJoinId
   result.requestToJoinLoading = requestToJoinLoading
+  result.declineRequestToJoinLoading = declineRequestToJoinLoading
   result.airdropAddress = airdropAddress
   result.membershipRequestState = membershipRequestState
   result.UserItem.setup(
@@ -110,6 +113,9 @@ proc `requestToJoinId=`*(self: MemberItem, value: string) {.inline.} =
 
 proc requestToJoinLoading*(self: MemberItem): bool {.inline.} =
   self.requestToJoinLoading
+
+proc declineRequestToJoinLoading*(self: MemberItem): bool {.inline.} =
+  self.declineRequestToJoinLoading
 
 proc airdropAddress*(self: MemberItem): string {.inline.} =
   self.airdropAddress
