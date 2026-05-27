@@ -31,7 +31,7 @@ Rectangle {
     property bool highlighted: false
     property bool propagateTitleClicks: true
     property int type: StatusListItem.Type.Primary
-    property list<Item> components
+    property alias components: statusListItemComponentsSlot.children
     property var bottomModel: []
     property Component bottomDelegate
     property alias tagsModel: tagsRepeater.model
@@ -131,14 +131,6 @@ Rectangle {
         return Theme.palette.statusListItem.backgroundColor
     }
     radius: Theme.radius
-
-    onComponentsChanged: {
-        if (components.length) {
-            for (let idx in components) {
-                components[idx].parent = statusListItemComponentsSlot
-            }
-        }
-    }
 
     StatusMouseArea {
         anchors.fill: parent

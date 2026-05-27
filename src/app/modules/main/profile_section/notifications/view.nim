@@ -33,12 +33,10 @@ QtObject:
   proc exemptionsModel*(self: View): Model =
     return self.exemptionsModel
 
-  proc exemptionsModelChanged*(self: View) {.signal.}
   proc getExemptionsModel(self: View): QVariant {.slot.} =
     return self.exemptionsModelVariant
   QtProperty[QVariant] exemptionsModel:
     read = getExemptionsModel
-    notify = exemptionsModelChanged
 
   proc saveExemptions*(self: View, itemId: string, muteAllMessages: bool, personalMentions: string, 
     globalMentions: string, otherMessages: string) {.slot.} =
