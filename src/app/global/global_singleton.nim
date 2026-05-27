@@ -35,6 +35,13 @@ proc quit*(self: ApplicationHandle) =
 
   when defined(ios) or defined(android):
     c_exit(0) # terminates the process immediately without running any static destructors or atexit handlers — no cascade possible.
+
+proc exit*(self: ApplicationHandle) =
+  if not self.app.isNil:
+    self.app.exit()
+
+  when defined(ios) or defined(android):
+    c_exit(0) # terminates the process immediately without running any static destructors or atexit handlers — no cascade possible.
 # #########################################################
 
 

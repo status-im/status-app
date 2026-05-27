@@ -260,7 +260,7 @@ proc mainProc() =
     appController.delete()
     statusFoundation.delete()
     singleInstance.delete()
-    singletonInstance.application.quit()
+    singletonInstance.application.exit()
 
   featureGuard SINGLE_STATUS_INSTANCE_ENABLED:
     # Checks below must be always after "defer", in case anything fails destructors will freed a memory.

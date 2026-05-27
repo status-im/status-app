@@ -118,7 +118,7 @@ proc getAppNetwork*(self: Service): NetworkItem =
   if network.isNil:
     # we should not be here ever
     error "the app network cannot be resolved"
-    singletonInstance.application.quit()
+    singletonInstance.application.exit()
   return network
 
 proc updateNetworkEndPointValues*(self: Service, chainId: int, newMainRpcInput, newFailoverRpcUrl: string) =

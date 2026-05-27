@@ -61,7 +61,7 @@ method setFleet*(self: Module, fleet: string) =
 
 method onFleetSet*(self: Module) =
   info "quit the app because of successful fleet change"
-  singletonInstance.application.quit() # TODO: change this to logout instead when supported
+  singletonInstance.application.exit() # TODO: change this to logout instead when supported
 
 method getLogDir*(self: Module): string =
   return constants.LOGDIR
@@ -74,7 +74,7 @@ method setWakuV2LightClientEnabled*(self: Module, enabled: bool) =
 
 method onWakuV2LightClientSet*(self: Module) =
   info "quit the app because of successful WakuV2 light client change"
-  singletonInstance.application.quit() # TODO: change this to logout instead when supported
+  singletonInstance.application.exit() # TODO: change this to logout instead when supported
 
 method isDebugEnabled*(self: Module): bool =
   self.controller.isDebugEnabled()
