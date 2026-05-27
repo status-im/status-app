@@ -1,13 +1,12 @@
-import QtQuick
-import utils
+import QtQml
 
 QtObject {
     id: root
 
     property var notificationsModule
-    property var notificationsSettings: appSettings
+    readonly property var notificationsSettings: appSettings
 
-    property var exemptionsModel: notificationsModule.exemptionsModel
+    readonly property var exemptionsModel: notificationsModule.exemptionsModel
 
     function loadExemptions() {
         root.notificationsModule.loadExemptions()

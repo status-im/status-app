@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import SortFilterProxyModel
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -16,10 +15,14 @@ import utils
 import shared.panels
 import shared.controls
 
+import SortFilterProxyModel
+import QtModelsToolkit
+
 import "../stores"
 import "../controls"
 import "../panels"
 import "../popups"
+import "notifications"
 
 SettingsContentBase {
     id: root
@@ -30,23 +33,13 @@ SettingsContentBase {
     QtObject {
         id: d
 
-        readonly property int infoFontSize: root.Theme.primaryTextFontSize
         readonly property int infoLineHeight: 22
         readonly property int infoSpacing: 5
 
         readonly property var notificationsSettings: root.notificationsStore.notificationsSettings
-        property real unfilteredExemptionsListHeight: 0
     }
 
     Component.onCompleted: root.notificationsStore.loadExemptions()
-
-    Component {
-        id: exemptionNotificationsModal
-        ExemptionNotificationsModal {
-            notificationsStore: root.notificationsStore
-            destroyOnClose: true
-        }
-    }
 
     content: ColumnLayout {
         id: contentColumn
@@ -55,104 +48,6 @@ SettingsContentBase {
 
         ButtonGroup {
             id: messageSetting
-        }
-
-        Component {
-            id: exemptionDelegateComponent
-            StatusListItem {
-                width: ListView.view.width
-                title: model.name
-                subTitle: {
-                    if(model.type === Constants.settingsSection.exemptions.community)
-                        return qsTr("Community")
-                    else if(model.type === Constants.settingsSection.exemptions.oneToOneChat)
-                        return qsTr("1:1 Chat")
-                    else if(model.type === Constants.settingsSection.exemptions.groupChat)
-                        return qsTr("Group Chat")
-                    else
-                        return ""
-                }
-                label: {
-                    if(!model.customized)
-                        return ""
-
-                    let l = ""
-                    if(model.muteAllMessages)
-                        l += qsTr("Muted")
-                    else {
-                        let nbOfChanges = 0
-
-                        if(model.personalMentions !== Constants.settingsSection.notifications.sendAlertsValue)
-                        {
-                            nbOfChanges++
-                            let valueText = model.personalMentions === Constants.settingsSection.notifications.turnOffValue?
-                                    qsTr("Off") :
-                                    qsTr("Quiet")
-                            l = qsTr("Personal @ Mentions %1").arg(valueText)
-                        }
-
-                        if(model.globalMentions !== Constants.settingsSection.notifications.sendAlertsValue)
-                        {
-                            nbOfChanges++
-                            let valueText = model.globalMentions === Constants.settingsSection.notifications.turnOffValue?
-                                    qsTr("Off") :
-                                    qsTr("Quiet")
-                            l = qsTr("Global @ Mentions %1").arg(valueText)
-                        }
-
-                        if(model.otherMessages !== Constants.settingsSection.notifications.turnOffValue)
-                        {
-                            nbOfChanges++
-                            let valueText = model.otherMessages === Constants.settingsSection.notifications.sendAlertsValue?
-                                    qsTr("Alerts") :
-                                    qsTr("Quiet")
-                            l = qsTr("Other Messages %1").arg(valueText)
-                        }
-
-                        if(nbOfChanges > 1)
-                            l = qsTr("Multiple Exemptions")
-                    }
-
-                    return l
-                }
-
-                asset: StatusAssetSettings {
-                    name: model.image
-                    isImage: !!model.image && model.image !== ""
-                    color: model.type === Constants.settingsSection.exemptions.oneToOneChat?
-                               Utils.colorForPubkey(root.Theme.palette, model.itemId) :
-                               model.color
-                    charactersLen: model.type === Constants.settingsSection.exemptions.oneToOneChat? 2 : 1
-                    isLetterIdenticon: !model.image || model.image === ""
-                    height: 40
-                    width: 40
-                }
-
-                components: [
-                    StatusIcon {
-                        icon: model.customized ? "next" : "add"
-                        color: model.customized ? Theme.palette.baseColor1 : Theme.palette.primaryColor1
-                        StatusMouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                const props = {
-                                    name: model.name,
-                                    type: model.type,
-                                    itemId: model.itemId,
-                                    color: model.color,
-                                    image: model.image,
-                                    muteAllMessages: model.muteAllMessages,
-                                    personalMentions: model.personalMentions,
-                                    globalMentions: model.globalMentions,
-                                    otherMessages: model.otherMessages
-                                }
-                                exemptionNotificationsModal.createObject(root, props).open()
-                            }
-                        }
-                    }
-                ]
-            }
         }
 
         Rectangle {
@@ -173,7 +68,6 @@ SettingsContentBase {
                 StatusBaseText {
                     Layout.preferredWidth: parent.width
                     text: qsTr("Enable notifications")
-                    font.pixelSize: d.infoFontSize
                     lineHeight: d.infoLineHeight
                     lineHeightMode: Text.FixedHeight
                     color: Theme.palette.primaryColor1
@@ -182,7 +76,6 @@ SettingsContentBase {
                 StatusBaseText {
                     Layout.preferredWidth: parent.width
                     text: qsTr("Receive notifications for incoming messages, mentions, and contact requests on your computer so you can stay up to date in real time. Customize anytime in <b>Settings → Notifications</b><br><br>Status delivers notifications directly through your operating system, with no third parties, centralized servers, or intermediaries involved.")
-                    font.pixelSize: d.infoFontSize
                     lineHeight: d.infoLineHeight
                     lineHeightMode: Text.FixedHeight
                     color: Theme.palette.baseColor1
@@ -212,7 +105,6 @@ SettingsContentBase {
 
             contentItem: StatusBaseText {
                 text: qsTr("<font color='%1'>Enable notifications in your device Settings</font><br><br>Before enabling notifications in the app below, enable them in <font color='%1'>your device settings</font> first.").arg(Theme.palette.primaryColor1)
-                font.pixelSize: d.infoFontSize
                 lineHeight: d.infoLineHeight
                 lineHeightMode: Text.FixedHeight
                 color: Theme.palette.baseColor1
@@ -369,7 +261,7 @@ SettingsContentBase {
             ColumnLayout {
                 Layout.preferredWidth: root.contentWidth - Theme.padding * 2
                 Layout.leftMargin: Theme.padding
-                Layout.rightMargin: Theme.padding 
+                Layout.rightMargin: Theme.padding
 
                 StatusBaseText {
                     Layout.fillWidth: true
@@ -387,7 +279,7 @@ SettingsContentBase {
                     notificationMessage: qsTr("Hi there! So EIP-1559 will defini...")
                     buttonGroup: messageSetting
                     checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewNameAndMessage
-                    onRadioCheckedChanged: {
+                    onRadioCheckedChanged: checked => {
                         if (checked) {
                             d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewNameAndMessage
                         }
@@ -402,7 +294,7 @@ SettingsContentBase {
                     notificationMessage: qsTr("You have a new message")
                     buttonGroup: messageSetting
                     checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewNameOnly
-                    onRadioCheckedChanged: {
+                    onRadioCheckedChanged: checked => {
                         if (checked) {
                             d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewNameOnly
                         }
@@ -417,7 +309,7 @@ SettingsContentBase {
                     notificationMessage: qsTr("You have a new message")
                     buttonGroup: messageSetting
                     checked: d.notificationsSettings.notificationMessagePreview === Constants.settingsSection.notificationsBubble.previewAnonymous
-                    onRadioCheckedChanged: {
+                    onRadioCheckedChanged: checked => {
                         if (checked) {
                             d.notificationsSettings.notificationMessagePreview = Constants.settingsSection.notificationsBubble.previewAnonymous
                         }
@@ -440,7 +332,7 @@ SettingsContentBase {
                 text: qsTr("Send a Test Notification")
                 onClicked: {
                     root.notificationsStore.sendTestNotification(notifNameAndMsg.notificationTitle,
-                                                                notifNameAndMsg.notificationMessage)
+                                                                 notifNameAndMsg.notificationMessage)
                 }
             }
 
@@ -471,43 +363,25 @@ SettingsContentBase {
                 color: Theme.palette.baseColor1
             }
 
-            StatusListView {
+            ExemptionsView {
                 Layout.preferredWidth: root.contentWidth
-                Layout.preferredHeight: this.isFiltering && d.unfilteredExemptionsListHeight > 0 ?
-                                            Math.max(this.contentHeight,
-                                                     Math.min(d.unfilteredExemptionsListHeight,
-                                                              root.availableHeight)) :
-                                            this.contentHeight
-                visible: root.notificationsStore.exemptionsModel.count > 0
-
-                readonly property bool isFiltering: searchBox.text.trim() !== ""
-
-                onContentHeightChanged: {
-                    if (!isFiltering)
-                        d.unfilteredExemptionsListHeight = contentHeight
-                }
+                Layout.fillHeight: true
+                Layout.preferredHeight: contentHeight
 
                 model: SortFilterProxyModel {
-                    id: exemptionsSearchModel
-
-                    readonly property string searchText: searchBox.text.trim()
-
                     sourceModel: root.notificationsStore.exemptionsModel
-                    filters: AnyOf {
-                        enabled: exemptionsSearchModel.searchText !== ""
-
-                        SQUtils.SearchFilter {
-                            roleName: "itemId"
-                            searchPhrase: exemptionsSearchModel.searchText
-                        }
-
-                        SQUtils.SearchFilter {
-                            roleName: "name"
-                            searchPhrase: exemptionsSearchModel.searchText
-                        }
+                    filters: SQUtils.SearchFilter {
+                        roleName: "name"
+                        searchPhrase: searchBox.text
+                        enabled: !!searchPhrase
+                    }
+                    sorters: RoleSorter {
+                        roleName: "joinedTimestamp"
+                        sortOrder: Qt.DescendingOrder
                     }
                 }
-                delegate: exemptionDelegateComponent
+                onSaveExemptionsRequested: (itemId, muteAllMessages, personalMentions, globalMentions, allMessages) =>
+                                           root.notificationsStore.saveExemptions(itemId, muteAllMessages, personalMentions, globalMentions, allMessages)
             }
             }
         }
@@ -622,7 +496,6 @@ SettingsContentBase {
                     Layout.preferredWidth: root.contentWidth
                     Layout.leftMargin: Theme.padding
                     text: qsTr("Volume")
-                    color: Theme.palette.directColor1
                 }
 
                 Item {
@@ -661,14 +534,12 @@ SettingsContentBase {
                         width: volumeSlider.width
 
                         StatusBaseText {
-                            font.pixelSize: Theme.primaryTextFontSize
                             text: volumeSlider.from
                             Layout.preferredWidth: volumeSlider.width/2
                             color: Theme.palette.baseColor1
                         }
 
                         StatusBaseText {
-                            font.pixelSize: Theme.primaryTextFontSize
                             text: volumeSlider.to
                             Layout.alignment: Qt.AlignRight
                             color: Theme.palette.baseColor1

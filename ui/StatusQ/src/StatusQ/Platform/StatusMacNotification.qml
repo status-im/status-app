@@ -32,10 +32,7 @@ Control {
             Layout.preferredHeight: root.availableHeight
             Layout.preferredWidth: root.availableHeight
 
-            source: Qt.resolvedUrl("../../assets/png/status-logo-icon.png")
-
-            sourceSize.width: width * 2
-            sourceSize.height: height * 2
+            source: Assets.png("status-logo")
 
             fillMode: Image.PreserveAspectFit
         }

@@ -6,18 +6,15 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
 import StatusQ.Components
-import StatusQ.Popups
+import StatusQ.Popups.Dialog
 
 import utils
 import shared.panels
 
 import "../controls"
-import "../stores"
 
-StatusModal {
+StatusDialog {
     id: root
-
-    property NotificationsStore notificationsStore
 
     property string name
     property int type: Constants.settingsSection.exemptions.community
@@ -29,21 +26,24 @@ StatusModal {
     property string globalMentions: Constants.settingsSection.notifications.sendAlertsValue
     property string otherMessages: Constants.settingsSection.notifications.turnOffValue
 
-    headerSettings.title: qsTr("%1 exemption").arg(root.name)
-    headerSettings.asset: StatusAssetSettings {
-        // Once we introduce StatusSmartIdenticon in popup header, we should use the folowing
-//        color: root.type === Constants.settingsSection.exemptions.oneToOneChat?
-//                   Theme.palette.userCustomizationColors[Utils.colorIdForPubkey(root.itemId)] :
-//                   root.color
-        // until then the following is used
-        bgColor: d.isOneToOneChat ? Utils.colorForPubkey(root.Theme.palette, root.itemId) : root.color
-        name: root.image
-        isImage: !!root.image
-        charactersLen: d.isOneToOneChat ? 2 : 1
-        isLetterIdenticon: root.image === ""
-        height: 40
-        width: 40
+    signal saveExemptionsRequested(string itemId, bool muteAllMessages, string personalMentions, string globalMentions, string allMessages)
+
+    header: StatusDialogHeader {
+        headline.title: qsTr("%1 exemption").arg(root.name)
+        actions.closeButton.onClicked: root.closeHandler()
+
+        leftComponent: StatusSmartIdenticon {
+            asset.color: d.isOneToOneChat ? Utils.colorForPubkey(Theme.palette, root.itemId) : root.color
+            name: root.name
+            asset.name: root.image
+            asset.isImage: !!root.image
+            asset.charactersLen: d.isOneToOneChat ? 2 : 1
+            asset.isLetterIdenticon: root.image === ""
+            height: 32
+            width: 32
+        }
     }
+    width: 480
 
     QtObject {
         id: d
@@ -60,7 +60,6 @@ StatusModal {
     }
 
     contentItem: Column {
-        width: root.width
         spacing: d.contentSpacing
 
         StatusListItem {
@@ -127,28 +126,30 @@ StatusModal {
         }
     }
 
-    rightButtons: [
-        StatusFlatButton {
-            text: qsTr("Clear Exemptions")
-            enabled: d.customized
-            onClicked: {
-                d.muteAllMessages = false
-                d.personalMentions = Constants.settingsSection.notifications.sendAlertsValue
-                d.globalMentions = Constants.settingsSection.notifications.sendAlertsValue
-                d.otherMessages = Constants.settingsSection.notifications.turnOffValue
+    footer: StatusDialogFooter {
+        rightButtons: ObjectModel {
+            StatusFlatButton {
+                text: qsTr("Clear Exemptions")
+                enabled: d.customized
+                onClicked: {
+                    d.muteAllMessages = false
+                    d.personalMentions = Constants.settingsSection.notifications.sendAlertsValue
+                    d.globalMentions = Constants.settingsSection.notifications.sendAlertsValue
+                    d.otherMessages = Constants.settingsSection.notifications.turnOffValue
+                }
             }
-        },
-        StatusButton {
-            id: btnCreateEdit
-            text: qsTr("Done")
-            onClicked: {
-                root.notificationsStore.saveExemptions(root.itemId,
-                                                       d.muteAllMessages,
-                                                       d.personalMentions,
-                                                       d.globalMentions,
-                                                       d.otherMessages)
-                root.close()
+            StatusButton {
+                id: btnCreateEdit
+                text: qsTr("Done")
+                onClicked: {
+                    root.saveExemptionsRequested(root.itemId,
+                                                 d.muteAllMessages,
+                                                 d.personalMentions,
+                                                 d.globalMentions,
+                                                 d.otherMessages)
+                    root.close()
+                }
             }
         }
-    ]
+    }
 }

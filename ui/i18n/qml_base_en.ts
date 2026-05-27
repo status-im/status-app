@@ -7642,6 +7642,53 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
+    <name>ExemptionsView</name>
+    <message>
+        <source>Community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>1:1 Chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Group Chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Muted</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Quiet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Personal @ Mentions %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Global @ Mentions %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Alerts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Other Messages %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Multiple Exemptions</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ExportControlNodePopup</name>
     <message>
         <source>How to move the %1 control node to another device</source>
@@ -13255,50 +13302,6 @@ to load</source>
 </context>
 <context>
     <name>NotificationsView</name>
-    <message>
-        <source>Community</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>1:1 Chat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Group Chat</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Muted</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Off</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Quiet</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Personal @ Mentions %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Global @ Mentions %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Alerts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Other Messages %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Multiple Exemptions</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Enable notifications</source>
         <translation type="unfinished"></translation>

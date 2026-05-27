@@ -7626,6 +7626,53 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
+    <name>ExemptionsView</name>
+    <message>
+        <source>Community</source>
+        <translation type="unfinished">커뮤니티</translation>
+    </message>
+    <message>
+        <source>1:1 Chat</source>
+        <translation type="unfinished">1:1 채팅</translation>
+    </message>
+    <message>
+        <source>Group Chat</source>
+        <translation type="unfinished">그룹 채팅</translation>
+    </message>
+    <message>
+        <source>Muted</source>
+        <translation type="unfinished">음소거됨</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation type="unfinished">끄기</translation>
+    </message>
+    <message>
+        <source>Quiet</source>
+        <translation type="unfinished">조용히</translation>
+    </message>
+    <message>
+        <source>Personal @ Mentions %1</source>
+        <translation type="unfinished">개인 @ 멘션 %1</translation>
+    </message>
+    <message>
+        <source>Global @ Mentions %1</source>
+        <translation type="unfinished">글로벌 @ 멘션 %1</translation>
+    </message>
+    <message>
+        <source>Alerts</source>
+        <translation type="unfinished">알림</translation>
+    </message>
+    <message>
+        <source>Other Messages %1</source>
+        <translation type="unfinished">기타 메시지 %1</translation>
+    </message>
+    <message>
+        <source>Multiple Exemptions</source>
+        <translation type="unfinished">다중 면제</translation>
+    </message>
+</context>
+<context>
     <name>ExportControlNodePopup</name>
     <message>
         <source>How to move the %1 control node to another device</source>
@@ -13229,50 +13276,6 @@ to load</source>
 </context>
 <context>
     <name>NotificationsView</name>
-    <message>
-        <source>Community</source>
-        <translation>커뮤니티</translation>
-    </message>
-    <message>
-        <source>1:1 Chat</source>
-        <translation>1:1 채팅</translation>
-    </message>
-    <message>
-        <source>Group Chat</source>
-        <translation>그룹 채팅</translation>
-    </message>
-    <message>
-        <source>Muted</source>
-        <translation>음소거됨</translation>
-    </message>
-    <message>
-        <source>Off</source>
-        <translation>끄기</translation>
-    </message>
-    <message>
-        <source>Quiet</source>
-        <translation>조용히</translation>
-    </message>
-    <message>
-        <source>Personal @ Mentions %1</source>
-        <translation>개인 @ 멘션 %1</translation>
-    </message>
-    <message>
-        <source>Global @ Mentions %1</source>
-        <translation>글로벌 @ 멘션 %1</translation>
-    </message>
-    <message>
-        <source>Alerts</source>
-        <translation>알림</translation>
-    </message>
-    <message>
-        <source>Other Messages %1</source>
-        <translation>기타 메시지 %1</translation>
-    </message>
-    <message>
-        <source>Multiple Exemptions</source>
-        <translation>다중 면제</translation>
-    </message>
     <message>
         <source>Enable notifications</source>
         <translation type="unfinished"></translation>

@@ -7685,6 +7685,53 @@ Prosím přidejte jej a zkuste to znovu.</translation>
     </message>
 </context>
 <context>
+    <name>ExemptionsView</name>
+    <message>
+        <source>Community</source>
+        <translation type="unfinished">Komunita</translation>
+    </message>
+    <message>
+        <source>1:1 Chat</source>
+        <translation type="unfinished">Chat 1:1</translation>
+    </message>
+    <message>
+        <source>Group Chat</source>
+        <translation type="unfinished">Skupinový chat</translation>
+    </message>
+    <message>
+        <source>Muted</source>
+        <translation type="unfinished">Ztlumeno</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation type="unfinished">Vypnuto</translation>
+    </message>
+    <message>
+        <source>Quiet</source>
+        <translation type="unfinished">Potichu</translation>
+    </message>
+    <message>
+        <source>Personal @ Mentions %1</source>
+        <translation type="unfinished">Osobní zmínky @ %1</translation>
+    </message>
+    <message>
+        <source>Global @ Mentions %1</source>
+        <translation type="unfinished">Globální zmínky @ %1</translation>
+    </message>
+    <message>
+        <source>Alerts</source>
+        <translation type="unfinished">Upozornění</translation>
+    </message>
+    <message>
+        <source>Other Messages %1</source>
+        <translation type="unfinished">Ostatní zprávy %1</translation>
+    </message>
+    <message>
+        <source>Multiple Exemptions</source>
+        <translation type="unfinished">Více výjimek</translation>
+    </message>
+</context>
+<context>
     <name>ExportControlNodePopup</name>
     <message>
         <source>How to move the %1 control node to another device</source>
@@ -13356,50 +13403,6 @@ selhalo</translation>
 </context>
 <context>
     <name>NotificationsView</name>
-    <message>
-        <source>Community</source>
-        <translation>Komunita</translation>
-    </message>
-    <message>
-        <source>1:1 Chat</source>
-        <translation>Chat 1:1</translation>
-    </message>
-    <message>
-        <source>Group Chat</source>
-        <translation>Skupinový chat</translation>
-    </message>
-    <message>
-        <source>Muted</source>
-        <translation>Ztlumeno</translation>
-    </message>
-    <message>
-        <source>Off</source>
-        <translation>Vypnuto</translation>
-    </message>
-    <message>
-        <source>Quiet</source>
-        <translation>Potichu</translation>
-    </message>
-    <message>
-        <source>Personal @ Mentions %1</source>
-        <translation>Osobní zmínky @ %1</translation>
-    </message>
-    <message>
-        <source>Global @ Mentions %1</source>
-        <translation>Globální zmínky @ %1</translation>
-    </message>
-    <message>
-        <source>Alerts</source>
-        <translation>Upozornění</translation>
-    </message>
-    <message>
-        <source>Other Messages %1</source>
-        <translation>Ostatní zprávy %1</translation>
-    </message>
-    <message>
-        <source>Multiple Exemptions</source>
-        <translation>Více výjimek</translation>
-    </message>
     <message>
         <source>Enable notifications</source>
         <translation type="unfinished"></translation>

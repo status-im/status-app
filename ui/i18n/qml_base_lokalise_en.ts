@@ -9334,6 +9334,64 @@
     </message>
   </context>
   <context>
+    <name>ExemptionsView</name>
+    <message>
+      <source>Community</source>
+      <comment>ExemptionsView</comment>
+      <translation>Community</translation>
+    </message>
+    <message>
+      <source>1:1 Chat</source>
+      <comment>ExemptionsView</comment>
+      <translation>1:1 Chat</translation>
+    </message>
+    <message>
+      <source>Group Chat</source>
+      <comment>ExemptionsView</comment>
+      <translation>Group Chat</translation>
+    </message>
+    <message>
+      <source>Muted</source>
+      <comment>ExemptionsView</comment>
+      <translation>Muted</translation>
+    </message>
+    <message>
+      <source>Off</source>
+      <comment>ExemptionsView</comment>
+      <translation>Off</translation>
+    </message>
+    <message>
+      <source>Quiet</source>
+      <comment>ExemptionsView</comment>
+      <translation>Quiet</translation>
+    </message>
+    <message>
+      <source>Personal @ Mentions %1</source>
+      <comment>ExemptionsView</comment>
+      <translation>Personal @ Mentions %1</translation>
+    </message>
+    <message>
+      <source>Global @ Mentions %1</source>
+      <comment>ExemptionsView</comment>
+      <translation>Global @ Mentions %1</translation>
+    </message>
+    <message>
+      <source>Alerts</source>
+      <comment>ExemptionsView</comment>
+      <translation>Alerts</translation>
+    </message>
+    <message>
+      <source>Other Messages %1</source>
+      <comment>ExemptionsView</comment>
+      <translation>Other Messages %1</translation>
+    </message>
+    <message>
+      <source>Multiple Exemptions</source>
+      <comment>ExemptionsView</comment>
+      <translation>Multiple Exemptions</translation>
+    </message>
+  </context>
+  <context>
     <name>ExportControlNodePopup</name>
     <message>
       <source>How to move the %1 control node to another device</source>
@@ -16157,61 +16215,6 @@
   </context>
   <context>
     <name>NotificationsView</name>
-    <message>
-      <source>Community</source>
-      <comment>NotificationsView</comment>
-      <translation>Community</translation>
-    </message>
-    <message>
-      <source>1:1 Chat</source>
-      <comment>NotificationsView</comment>
-      <translation>1:1 Chat</translation>
-    </message>
-    <message>
-      <source>Group Chat</source>
-      <comment>NotificationsView</comment>
-      <translation>Group Chat</translation>
-    </message>
-    <message>
-      <source>Muted</source>
-      <comment>NotificationsView</comment>
-      <translation>Muted</translation>
-    </message>
-    <message>
-      <source>Off</source>
-      <comment>NotificationsView</comment>
-      <translation>Off</translation>
-    </message>
-    <message>
-      <source>Quiet</source>
-      <comment>NotificationsView</comment>
-      <translation>Quiet</translation>
-    </message>
-    <message>
-      <source>Personal @ Mentions %1</source>
-      <comment>NotificationsView</comment>
-      <translation>Personal @ Mentions %1</translation>
-    </message>
-    <message>
-      <source>Global @ Mentions %1</source>
-      <comment>NotificationsView</comment>
-      <translation>Global @ Mentions %1</translation>
-    </message>
-    <message>
-      <source>Alerts</source>
-      <comment>NotificationsView</comment>
-      <translation>Alerts</translation>
-    </message>
-    <message>
-      <source>Other Messages %1</source>
-      <comment>NotificationsView</comment>
-      <translation>Other Messages %1</translation>
-    </message>
-    <message>
-      <source>Multiple Exemptions</source>
-      <comment>NotificationsView</comment>
-      <translation>Multiple Exemptions</translation>
-    </message>
     <message>
       <source>Enable notifications</source>
       <comment>NotificationsView</comment>

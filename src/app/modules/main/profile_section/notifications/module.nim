@@ -44,11 +44,6 @@ method delete*(self: Module) =
   self.viewVariant.delete
   self.controller.delete
 
-proc comp[T](x,y: T):int = 
-  if x.joinedTimestamp > y.joinedTimestamp: return 1
-  elif x.joinedTimestamp < y.joinedTimestamp: return -1
-  else: return 0
-
 method load*(self: Module) =
   self.controller.init()
   self.view.load()
@@ -96,8 +91,6 @@ method initModel(self: Module) =
     )
     items.add(item)
 
-  # Sort to get most recent first
-  items.sort(comp, SortOrder.Descending)
   self.view.exemptionsModel().setItems(items)
 
 method viewDidLoad*(self: Module) =
@@ -121,7 +114,7 @@ method saveExemptions*(self: Module, itemId: string, muteAllMessages: bool, pers
   
 method addCommunity*(self: Module, communityDto: CommunityDto) =
   let ind = self.view.exemptionsModel().findIndexForItemId(communityDto.id)
-  if(ind != -1):
+  if ind != -1:
     return
   let item = self.createItem(communityDto.id, communityDto.name, communityDto.images.thumbnail, communityDto.color, 
     joinedTimestamp = 0, item.Type.Community)

@@ -32,39 +32,34 @@ Item {
                                                                                                                                                                      d.sendAlertsText
         icon.name: "chevron-down"
 
-        onClicked: {
-            if (selectMenu.opened) {
-                selectMenu.close()
-            } else {
-                selectMenu.popup(button.x, button.y + button.height + 8)
-            }
-        }
+        onClicked: Global.openMenu(selectMenu, button, {}, Qt.point(button.x, button.y + button.height + 8))
     }
 
-    StatusMenu {
+    Component {
         id: selectMenu
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
-        width: parent.width
-        clip: true
+        StatusMenu {
+            width: parent.width
+            onClosed: destroy()
 
-        StatusAction {
-            text: d.sendAlertsText
-            onTriggered: {
-                root.sendAlertsClicked()
+            StatusAction {
+                text: d.sendAlertsText
+                onTriggered: {
+                    root.sendAlertsClicked()
+                }
             }
-        }
 
-        StatusAction {
-            text: d.deliverQuietlyText
-            onTriggered: {
-                root.deliverQuietlyClicked()
+            StatusAction {
+                text: d.deliverQuietlyText
+                onTriggered: {
+                    root.deliverQuietlyClicked()
+                }
             }
-        }
 
-        StatusAction {
-            text: d.turnOffText
-            onTriggered: {
-                root.turnOffClicked()
+            StatusAction {
+                text: d.turnOffText
+                onTriggered: {
+                    root.turnOffClicked()
+                }
             }
         }
     }

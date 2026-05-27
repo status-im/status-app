@@ -7656,6 +7656,53 @@ Por favor, agrégala e intenta de nuevo.</translation>
     </message>
 </context>
 <context>
+    <name>ExemptionsView</name>
+    <message>
+        <source>Community</source>
+        <translation type="unfinished">Comunidad</translation>
+    </message>
+    <message>
+        <source>1:1 Chat</source>
+        <translation type="unfinished">Chat 1:1</translation>
+    </message>
+    <message>
+        <source>Group Chat</source>
+        <translation type="unfinished">Chat grupal</translation>
+    </message>
+    <message>
+        <source>Muted</source>
+        <translation type="unfinished">Silenciado</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation type="unfinished">Apagado</translation>
+    </message>
+    <message>
+        <source>Quiet</source>
+        <translation type="unfinished">Silencioso</translation>
+    </message>
+    <message>
+        <source>Personal @ Mentions %1</source>
+        <translation type="unfinished">Menciones personales @ %1</translation>
+    </message>
+    <message>
+        <source>Global @ Mentions %1</source>
+        <translation type="unfinished">Menciones globales @ %1</translation>
+    </message>
+    <message>
+        <source>Alerts</source>
+        <translation type="unfinished">Alertas</translation>
+    </message>
+    <message>
+        <source>Other Messages %1</source>
+        <translation type="unfinished">Otros mensajes %1</translation>
+    </message>
+    <message>
+        <source>Multiple Exemptions</source>
+        <translation type="unfinished">Múltiples exenciones</translation>
+    </message>
+</context>
+<context>
     <name>ExportControlNodePopup</name>
     <message>
         <source>How to move the %1 control node to another device</source>
@@ -13271,50 +13318,6 @@ al cargar</translation>
 </context>
 <context>
     <name>NotificationsView</name>
-    <message>
-        <source>Community</source>
-        <translation>Comunidad</translation>
-    </message>
-    <message>
-        <source>1:1 Chat</source>
-        <translation>Chat 1:1</translation>
-    </message>
-    <message>
-        <source>Group Chat</source>
-        <translation>Chat grupal</translation>
-    </message>
-    <message>
-        <source>Muted</source>
-        <translation>Silenciado</translation>
-    </message>
-    <message>
-        <source>Off</source>
-        <translation>Apagado</translation>
-    </message>
-    <message>
-        <source>Quiet</source>
-        <translation>Silencioso</translation>
-    </message>
-    <message>
-        <source>Personal @ Mentions %1</source>
-        <translation>Menciones personales @ %1</translation>
-    </message>
-    <message>
-        <source>Global @ Mentions %1</source>
-        <translation>Menciones globales @ %1</translation>
-    </message>
-    <message>
-        <source>Alerts</source>
-        <translation>Alertas</translation>
-    </message>
-    <message>
-        <source>Other Messages %1</source>
-        <translation>Otros mensajes %1</translation>
-    </message>
-    <message>
-        <source>Multiple Exemptions</source>
-        <translation>Múltiples exenciones</translation>
-    </message>
     <message>
         <source>Enable notifications</source>
         <translation type="unfinished"></translation>
