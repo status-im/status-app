@@ -8,7 +8,7 @@ import allure
 
 import configs
 import driver
-from driver.objects_access import walk_children
+from driver.objects_access import is_descendant_of, walk_children
 from gui.components.settings.send_contact_request_popup import SendContactRequestFromProfile
 from gui.components.community.pinned_messages_popup import PinnedMessagesPopup
 from gui.components.context_menu import ContextMenu
@@ -152,6 +152,8 @@ class Message:
                         self.community_invitation['description'] = str(getattr(child, 'text', ''))
                     elif child_id == 'titleLayout':
                         self.link_preview_title_object = child
+                    elif object_name == 'StatusTextMessage_chatText':
+                        self.text = str(getattr(child, 'text', ''))
                     else:
                         match child_id:
                             case 'profileImage':
@@ -178,6 +180,12 @@ class Message:
         except (RuntimeError, AttributeError, LookupError):
             # If walking children fails, continue with minimal initialization
             pass
+
+        if self.text is None:
+            for chat_text in driver.findAllObjects({'objectName': 'StatusTextMessage_chatText'}):
+                if is_descendant_of(self.object, chat_text):
+                    self.text = str(getattr(chat_text, 'text', ''))
+                    break
 
     @allure.step('Open community invitation')
     def open_community_invitation(self, attempts: int = 4):
