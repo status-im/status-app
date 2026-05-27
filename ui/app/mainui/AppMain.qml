@@ -918,7 +918,7 @@ Item {
         property bool enablePushNotificationsFreshInstallSeen
         property bool enablePushNotificationsDontAskAgain
         property string enablePushNotificationsLastShownVersion
-        property var recentEmojis
+        property var recentEmojis: []
         property string skinColor // NB: must be a string for the twemoji lib to work; we don't want the `#` in the name
         property int theme: ThemeUtils.Style.System
         property int fontSize: {
