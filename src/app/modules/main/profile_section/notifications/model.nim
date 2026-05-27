@@ -16,6 +16,7 @@ type
     PersonalMentions
     GlobalMentions
     OtherMessages
+    JoinedTimestamp
 
 QtObject:
   type
@@ -27,13 +28,6 @@ QtObject:
   proc newModel*(): Model =
     new(result, delete)
     result.setup
-
-  proc countChanged(self: Model) {.signal.}
-  proc getCount(self: Model): int {.slot.} =
-    self.items.len
-  QtProperty[int] count:
-    read = getCount
-    notify = countChanged
 
   method rowCount(self: Model, index: QModelIndex = nil): int =
     return self.items.len
@@ -49,7 +43,8 @@ QtObject:
       ModelRole.MuteAllMessages.int:"muteAllMessages",
       ModelRole.PersonalMentions.int:"personalMentions",
       ModelRole.GlobalMentions.int:"globalMentions",
-      ModelRole.OtherMessages.int:"otherMessages"
+      ModelRole.OtherMessages.int:"otherMessages",
+      ModelRole.JoinedTimestamp.int:"joinedTimestamp"
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
@@ -83,42 +78,31 @@ QtObject:
       result = newQVariant(item.globalMentions)
     of ModelRole.OtherMessages:
       result = newQVariant(item.otherMessages)
+    of ModelRole.JoinedTimestamp:
+      result = newQVariant(item.joinedTimestamp)
 
   proc addItem*(self: Model, item: Item) =
-    # add most recent item on top
-    var position = -1
-    for i in 0 ..< self.items.len:
-      if(item.joinedTimestamp >= self.items[i].joinedTimestamp):
-        position = i
-        break
-
-    if(position == -1):
-      position = self.items.len
-
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
 
+    let position = self.items.len
+
     self.beginInsertRows(parentModelIndex, position, position)
-    self.items.insert(item, position)
+    self.items.add(item)
     self.endInsertRows()
-    self.countChanged()
 
   proc setItems*(self: Model, items: seq[Item]) =
     if items.len == 0:
       return
 
-    let parentModelIndex = newQModelIndex()
-    defer: parentModelIndex.delete
-
-    self.beginInsertRows(parentModelIndex, 0, items.len - 1)
+    self.beginResetModel()
     self.items = items
-    self.endInsertRows()
-    self.countChanged()
+    self.endResetModel()
 
   proc findIndexForItemId*(self: Model, id: string): int =
     var ind = 0
     for it in self.items:
-      if(it.id == id):
+      if it.id == id:
         return ind
       ind.inc
     return -1
@@ -135,16 +119,10 @@ QtObject:
     self.items.delete(ind)
     self.endRemoveRows()
 
-    self.countChanged()
-
-  iterator modelIterator*(self: Model): Item =
-    for i in 0 ..< self.items.len:
-      yield self.items[i]
-
   proc updateExemptions*(self: Model, id: string, muteAllMessages = false, personalMentions = VALUE_NOTIF_SEND_ALERTS, 
     globalMentions = VALUE_NOTIF_SEND_ALERTS, otherMessages = VALUE_NOTIF_TURN_OFF) =
     let ind = self.findIndexForItemId(id)
-    if(ind == -1):
+    if ind == -1:
       return
     
     var roles: seq[int] = @[]
