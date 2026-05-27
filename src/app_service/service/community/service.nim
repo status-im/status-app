@@ -849,6 +849,13 @@ QtObject:
         self.events.emit(SIGNAL_NEW_REQUEST_TO_JOIN_COMMUNITY_ACCEPTED,
           CommunityRequestArgs(communityRequest: membershipRequest))
 
+      if requestToJoinState == RequestToJoinType.Accepted and pendingIndex == -1 and declinedIndex == -1 and awaitingIndex == -1:
+        self.events.emit(SIGNAL_COMMUNITY_MEMBER_STATUS_CHANGED, CommunityMemberStatusUpdatedArgs(
+          communityId: membershipRequest.communityId,
+          memberPubkey: membershipRequest.publicKey,
+          state: MembershipRequestState.Accepted))
+        continue
+
       if requestToJoinState == RequestToJoinType.Declined and pendingIndex == -1 and declinedIndex == -1 and awaitingIndex == -1:
         var community = self.communities[membershipRequest.communityId]
         community.declinedRequestsToJoin.add(membershipRequest)
