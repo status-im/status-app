@@ -20,7 +20,7 @@ method executePrePrimaryStateCommand*(self: KeyPairMigrateFailureState, controll
     controller.terminateCurrentFlow(lastStepInTheCurrentFlow = true)
     return
   info "quit the app because of profile migration failure"
-  singletonInstance.application.quit()
+  singletonInstance.application.exit()
 
 method executeCancelCommand*(self: KeyPairMigrateFailureState, controller: Controller) =
   var profileMigrated = false
@@ -34,4 +34,4 @@ method executeCancelCommand*(self: KeyPairMigrateFailureState, controller: Contr
     controller.terminateCurrentFlow(lastStepInTheCurrentFlow = true)
     return
   info "quit the app because of profile migration failure"
-  singletonInstance.application.quit()
+  singletonInstance.application.exit()
