@@ -407,12 +407,13 @@ Item {
 
                     // When `enabled` is switched true->false, `textInput.text` is cleared before d.activeChatContentModule updates.
                     // We delay the binding so that the `inputAreaModule.preservedProperties.text` doesn't get overriden with empty value.
+                    // sectionDetails is filtered by this section's own ID, so it stays stable when other sections become active.
                     Binding on enabled {
                         delayed: true
                         value: !!d.activeChatContentModule
                                  && !d.activeChatContentModule.chatDetails.blocked
-                                 && root.joined
-                                 && !root.amIBanned
+                                 && root.rootStore.sectionDetails.joined
+                                 && !root.rootStore.sectionDetails.amIBanned
                                  && root.rootStore.isUserAllowedToSendMessage
                     }
 
