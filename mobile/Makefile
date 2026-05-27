@@ -34,11 +34,12 @@ $(STATUS_GO_LIB):
 	@echo "Building status-go mobile library"
 	@mkdir -p $(LIB_PATH)
 ifeq ($(OS),android)
-	# Reproducibility flags for status-go (GOFLAGS,CGO_CFLAGS,CGO_CXXFLAGS,GOMODCACHE):
+	# Reproducibility flags for status-go (GOFLAGS,CGO_CFLAGS,CGO_CXXFLAGS,GOMODCACHE,CGO_LDFLAGS):
 	  GOFLAGS="-trimpath -buildvcs=false" \
 	  GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
-	  CGO_CFLAGS="-ffile-prefix-map=$(HOME)=." \
-	  CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=." \
+	  CGO_CFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
+	  CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
+	  CGO_LDFLAGS="-Wl,--build-id=none" \
 	  CC="$(CC)" $(MAKE) -C ../vendor/status-go statusgo-android-library \
 		ARCH=$(ARCH) \
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
@@ -47,6 +48,11 @@ ifeq ($(OS),android)
 		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
+	# Strip non-deterministic ELF notes in case any escaped the build flags:
+	@$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(HOST_OS)-x86_64/bin/llvm-objcopy \
+		--remove-section=.note.gnu.build-id \
+		--remove-section=.note.go.buildid \
+		../vendor/status-go/build/bin/libstatus$(LIB_EXT)
 else ifeq ($(OS),ios)
 	GOFLAGS="-trimpath -buildvcs=false" \
 	GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
