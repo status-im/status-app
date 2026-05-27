@@ -84,7 +84,7 @@ ColumnLayout {
                               && root.keycardStore.keycardPairingExists(root.keycardUid)
             d.isKnownKeyPair = d.hasKeyPair
                                && root.keycardStore.isKnownKeyUid(root.keyUid)
-            d.allNonProfileKeyPairsMigrated = root.keycardStore.allNonProfileKeyPairsMigratedToKeycard()
+            d.allNonProfileKeyPairsMigrated = root.keycardStore.allNonProfileKeyPairsMigratedToColdWallet()
 
             root.keycardStore.resolveKeyPairItemForKeyUid(root.keyUid)
         }
@@ -194,7 +194,7 @@ ColumnLayout {
         userProfileColor: Utils.colorForPubkey(Theme.palette, root.keycardStore.userProfilePubKey)
 
         keyPairKeyUid: root.keyUid
-        keyPairMigratedToKeycard: root.keycardStore.keyPairItem.migratedToKeycard
+        keyPairMigratedToColdWallet: root.keycardStore.keyPairItem.migratedToColdWallet
         keyPairName: root.keycardStore.keyPairItem.name
         keyPairIcon: root.keycardStore.keyPairItem.icon
         keyPairImage: root.keycardStore.keyPairItem.image

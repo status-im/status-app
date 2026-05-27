@@ -56,8 +56,8 @@ method signMessage*[T](self: Module[T], address: string, password: string, txHas
     return ""
   return res
 
-method isKeypairMigratedToKeycard*[T](self: Module[T], keyUid: string): bool =
-  return self.controller.isKeypairMigratedToKeycard(keyUid)
+method isKeypairMigratedToColdWallet*[T](self: Module[T], keyUid: string): bool =
+  return self.controller.isKeypairMigratedToColdWallet(keyUid)
 
 method buildKeyPairForProcessing*[T](self: Module[T], keyUid: string): KeyPairItem =
   let item = self.controller.buildKeyPairForProcessing(keyUid)

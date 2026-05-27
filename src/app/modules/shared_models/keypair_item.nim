@@ -23,7 +23,7 @@ QtObject:
     pairType: KeyPairType
     derivedFrom: string
     lastUsedDerivationIndex: int
-    migratedToKeycard: bool
+    migratedToColdWallet: bool
     operability: string
     syncedFrom: string
     accounts: KeyPairAccountModel
@@ -40,7 +40,7 @@ QtObject:
       pairType: KeyPairType,
       derivedFrom: string,
       lastUsedDerivationIndex: int,
-      migratedToKeycard: bool,
+      migratedToColdWallet: bool,
       syncedFrom: string,
       ownershipVerified: bool
       )
@@ -54,12 +54,12 @@ QtObject:
     pairType = KeyPairType.Unknown,
     derivedFrom = "",
     lastUsedDerivationIndex = 0,
-    migratedToKeycard = false,
+    migratedToColdWallet = false,
     syncedFrom = "",
     ownershipVerified = false): KeyPairItem =
     new(result, delete)
     result.setup(keyUid, pubKey, locked, name, image, icon, pairType, derivedFrom, lastUsedDerivationIndex,
-      migratedToKeycard, syncedFrom, ownershipVerified)
+      migratedToColdWallet, syncedFrom, ownershipVerified)
 
   proc `$`*(self: KeyPairItem): string =
     result = fmt"""KeyPairItem[
@@ -72,7 +72,7 @@ QtObject:
       pairType: {$self.pairType},
       derivedFrom: {self.derivedFrom},
       lastUsedDerivationIndex: {self.lastUsedDerivationIndex},
-      migratedToKeycard: {self.migratedToKeycard},
+      migratedToColdWallet: {self.migratedToColdWallet},
       operability: {self.operability},
       syncedFrom: {self.syncedFrom},
       ownershipVerified: {$self.ownershipVerified}
@@ -181,16 +181,16 @@ QtObject:
     write = setLastUsedDerivationIndex
     notify = lastUsedDerivationIndexChanged
 
-  proc migratedToKeycardChanged*(self: KeyPairItem) {.signal.}
-  proc getMigratedToKeycard*(self: KeyPairItem): bool {.slot.} =
-    return self.migratedToKeycard
-  proc setMigratedToKeycard*(self: KeyPairItem, value: bool) {.slot.} =
-    self.migratedToKeycard = value
-    self.migratedToKeycardChanged()
-  QtProperty[bool] migratedToKeycard:
-    read = getMigratedToKeycard
-    write = setMigratedToKeycard
-    notify = migratedToKeycardChanged
+  proc migratedToColdWalletChanged*(self: KeyPairItem) {.signal.}
+  proc getMigratedToColdWallet*(self: KeyPairItem): bool {.slot.} =
+    return self.migratedToColdWallet
+  proc setMigratedToColdWallet*(self: KeyPairItem, value: bool) {.slot.} =
+    self.migratedToColdWallet = value
+    self.migratedToColdWalletChanged()
+  QtProperty[bool] migratedToColdWallet:
+    read = getMigratedToColdWallet
+    write = setMigratedToColdWallet
+    notify = migratedToColdWalletChanged
 
   proc operabilityChanged*(self: KeyPairItem) {.signal.}
   proc getOperability*(self: KeyPairItem): string {.slot.} =
@@ -285,7 +285,7 @@ QtObject:
     self.setIcon(item.getIcon())
     self.setPairType(item.getPairType())
     self.setDerivedFrom(item.getDerivedFrom())
-    self.setMigratedToKeycard(item.getMigratedToKeycard())
+    self.setMigratedToColdWallet(item.getMigratedToColdWallet())
     self.setLastUsedDerivationIndex(item.getLastUsedDerivationIndex())
     self.setAccounts(item.getAccountsModel().getItems())
     self.setOwnershipVerified(item.getOwnershipVerified())
@@ -304,7 +304,7 @@ QtObject:
       pairType: KeyPairType,
       derivedFrom: string,
       lastUsedDerivationIndex: int,
-      migratedToKeycard: bool,
+      migratedToColdWallet: bool,
       syncedFrom: string,
       ownershipVerified: bool
       ) =
@@ -318,7 +318,7 @@ QtObject:
       self.pairType = pairType
       self.derivedFrom = derivedFrom
       self.lastUsedDerivationIndex = lastUsedDerivationIndex
-      self.migratedToKeycard = migratedToKeycard
+      self.migratedToColdWallet = migratedToColdWallet
       self.syncedFrom = syncedFrom
       self.ownershipVerified = ownershipVerified
       self.accounts = newKeyPairAccountModel()

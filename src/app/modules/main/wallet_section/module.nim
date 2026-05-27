@@ -553,7 +553,7 @@ method canProfileProveOwnershipOfProvidedAddresses*(self: Module, addresses: str
       return false
     if keypair.keyUid == singletonInstance.userProfile.getKeyUid():
       continue
-    if keypair.migratedToKeycard():
+    if keypair.migratedToColdWallet():
       return false
   return true
 

@@ -79,8 +79,8 @@ QtObject {
         console.error("isKnownKeyUid not implemented")
     }
 
-    function isKeyPairMigratedToKeycard(keyUid) {
-        console.error("isKeyPairMigratedToKeycard not implemented")
+    function isKeyPairMigratedToColdWallet(keyUid) {
+        console.error("isKeyPairMigratedToColdWallet not implemented")
     }
 
     function getKeyPairNameForKeyUid(keyUid) {

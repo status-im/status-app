@@ -290,7 +290,7 @@ QtObject:
         if kp.isNil:
           result.err = "cannot resolve keypair for provided keyUid"
           return
-        if kp.migratedToKeycard() or kp.keypairType == KeypairTypeProfile:
+        if kp.migratedToColdWallet() or kp.keypairType == KeypairTypeProfile:
           result.err = "keypair is migrated to a keycard or refers to a profile keypair"
           return
         if validateForExport:
@@ -304,7 +304,7 @@ QtObject:
     else:
       let keypairs = self.walletAccountService.getKeypairs()
       for kp in keypairs:
-        if kp.migratedToKeycard() or
+        if kp.migratedToColdWallet() or
           kp.keypairType == KeypairTypeProfile or
           validateForExport and kp.getOperability() == AccountNonOperable or
           not validateForExport and kp.getOperability() != AccountNonOperable:

@@ -223,7 +223,7 @@ proc addAccountsToKeycardItem(self: Module, item: KeycardItem, accounts: seq[Wal
       icon = icon))
 
 proc buildMainViewKeycardItem(self: Module, keypair: KeypairDto): KeycardItem =
-  if keypair.isNil or not keypair.migratedToKeycard():
+  if keypair.isNil or not keypair.migratedToColdWallet():
     return
   var item = initKeycardItem(keycardUid = "",
     keyUid = keypair.keyUid,
@@ -321,14 +321,14 @@ proc resolveRelatedKeycardsForKeypair(self: Module, keypair: KeypairDto) =
       detailsViewItems.add(item)
 
   if thereAreDisplayedKeycardsForKeypair:
-    if not keypair.migratedToKeycard():
+    if not keypair.migratedToColdWallet():
       # remove all related keycards from the app
       self.view.keycardModel().removeItemsWithKeyUid(keypair.keyUid)
       if not detailsViewCurrentlyDisplayed:
         return
       self.view.keycardDetailsModel().removeItemsWithKeyUid(keypair.keyUid)
       return
-    if keypair.migratedToKeycard():
+    if keypair.migratedToColdWallet():
       # replace displayed keycards
       if not mainViewItem.isNil:
         self.view.keycardModel().replaceItemWithKeyUid(mainViewItem)

@@ -2141,7 +2141,7 @@ method checkAndPerformProfileMigrationIfNeeded*[T](self: Module[T]) =
         currentFlow == FlowType.MigrateFromAppToKeycard:
           self.keycardSharedModule.onCancelActionClicked()
     return
-  if profileKeypair.migratedToKeycard():
+  if profileKeypair.migratedToColdWallet():
     if not self.keycardSharedModule.isNil:
       let currentFlow = self.keycardSharedModule.getCurrentFlowType()
       if currentFlow == FlowType.MigrateFromKeycardToApp:

@@ -149,7 +149,7 @@ method authenticateAndTransfer*(self: Module) =
     return
 
   let kp = self.controller.getKeypairByAccountAddress(self.tempAddressFrom)
-  if not kp.isNil and kp.migratedToKeycard():
+  if not kp.isNil and kp.migratedToColdWallet():
     let accounts = kp.accounts.filter(acc => cmpIgnoreCase(acc.address, self.tempAddressFrom) == 0)
     if accounts.len != 1:
       error "cannot resolve selected account to send from among known keypair accounts"

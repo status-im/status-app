@@ -48,7 +48,7 @@ Rectangle {
             Layout.fillWidth: true
             title: !!root.keyPair? d.isWatchOnly ? qsTr("Watched addresses") : root.keyPair.name : ""
             statusListItemSubTitle.textFormat: Qt.RichText
-            titleTextIcon: !!root.keyPair && keyPair.migratedToKeycard ? "keycard": ""
+            titleTextIcon: !!root.keyPair && keyPair.migratedToColdWallet ? "keycard": ""
             subTitle: Utils.getKeypairLocation(root.keyPair, false)
             statusListItemSubTitle.color: Utils.getKeypairLocationColor(Theme.palette, root.keyPair)
             color: StatusColors.transparent

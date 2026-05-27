@@ -43,7 +43,7 @@ QtObject {
 
 
     readonly property string defaultSelectedKeyUid: userProfile.keyUid
-    readonly property bool defaultSelectedKeyUidMigratedToKeycard: userProfile.isKeycardUser
+    readonly property bool defaultSelectedKeyUidMigratedToColdWallet: userProfile.isKeycardUser
 
     property string backButtonName: ""
     property var overview: walletSectionOverview

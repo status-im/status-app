@@ -27,7 +27,7 @@ method viewDidLoad*(self: AccessInterface) {.base.} =
 method isKnownKeyUid*(self: AccessInterface, keyUid: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method allNonProfileKeyPairsMigratedToKeycard*(self: AccessInterface): bool {.base.} =
+method allNonProfileKeyPairsMigratedToColdWallet*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method keycardPairingExists*(self: AccessInterface, keycardUid: string): bool {.base.} =

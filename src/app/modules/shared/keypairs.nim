@@ -25,7 +25,7 @@ proc buildKeypairItem*(keypair: KeypairDto, areTestNetworksEnabled: bool): KeyPa
     pairType = KeyPairType.Unknown,
     derivedFrom = keypair.derivedFrom,
     lastUsedDerivationIndex = keypair.lastUsedDerivationIndex,
-    migratedToKeycard = keypair.migratedToKeycard(),
+    migratedToColdWallet = keypair.migratedToColdWallet(),
     syncedFrom = keypair.syncedFrom)
 
   if keypair.keypairType == KeypairTypeProfile:
@@ -58,7 +58,7 @@ proc buildKeyPairsList*(keypairs: seq[KeypairDto], excludeAlreadyMigratedPairs: 
     let item = buildKeypairItem(kp, areTestNetworksEnabled)
     if item.isNil:
       continue
-    if excludeAlreadyMigratedPairs and item.getMigratedToKeycard():
+    if excludeAlreadyMigratedPairs and item.getMigratedToColdWallet():
       continue
     if item.getPairType() == KeypairType.Profile.int:
       items.insert(item, 0) # Status Account must be at first place

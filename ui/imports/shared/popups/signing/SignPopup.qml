@@ -31,7 +31,7 @@ PopupBase {
     remainingPinAttempts: root.store.remainingPinAttempts
     userProfileKeyUid: root.store.userProfileKeyUid
     userProfilePublicKey: root.store.userProfilePubKey
-    isKeycardKeyPair: root.store.ready && root.store.isKeypairMigratedToKeycard(root.keyUid)
+    isKeycardKeyPair: root.store.ready && root.store.isKeypairMigratedToColdWallet(root.keyUid)
     keyPairForProcessing: root.store.keyPairForProcessing
 
     performPasswordAction: function(password) {

@@ -14,6 +14,7 @@ import app_service/common/[utils]
 
 import dto/keypair_dto as keypair_dto
 import dto/derived_address_dto as derived_address_dto
+import dto/keycard_dto as keycard_dto
 
 import app/core/eventemitter
 import app/core/signals/types
@@ -28,7 +29,7 @@ import backend/wallet as status_go_wallet
 import constants as main_constants
 
 
-export keypair_dto, derived_address_dto
+export keypair_dto, derived_address_dto, keycard_dto
 
 logScope:
   topics = "wallet-account-service"

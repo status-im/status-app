@@ -101,7 +101,7 @@ Item {
             useTransparentItemBackgroundColor: true
 
             modelFilters: ExpressionFilter {
-                expression: model.keyPair.migratedToKeycard ||
+                expression: model.keyPair.migratedToColdWallet ||
                             model.keyPair.pairType == d.profileTypeValue  ||
                             model.keyPair.operability == d.fullyOperableValue ||
                             model.keyPair.operability == d.partiallyOperableValue

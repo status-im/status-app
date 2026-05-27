@@ -28,7 +28,7 @@ import QtModelsToolkit
         displayDecimals     [number] - optional number of decimals to display
         stripTrailingZeroes [bool]   - strip trailing zeroes
     walletType              [string] - wallet type e.g. Constants.watchWalletType. See `Constants` for possible values
-    migratedToKeycard       [bool]   - whether account is migrated to keycard
+    migratedToColdWallet       [bool]   - whether account is migrated to keycard
     accountBalance          [var]    - account balance for a specific network
         formattedBalance    [string] - formatted balance e.g. "1234.56B"
         balance             [string] - balance e.g. "123456000000"
@@ -120,7 +120,7 @@ StatusComboBox {
         walletColor: Utils.getColorForId(Theme.palette, model.colorId)
         currencyBalance: model.currencyBalance
         walletType: model.walletType
-        migratedToKeycard: model.migratedToKeycard ?? false
+        migratedToColdWallet: model.migratedToColdWallet ?? false
         accountBalance: model.accountBalance ?? null
         color: sensor.containsMouse || highlighted ?
                    Theme.palette.baseColor2 :

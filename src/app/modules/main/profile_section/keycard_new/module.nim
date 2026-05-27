@@ -52,13 +52,13 @@ method isKnownKeyUid*(self: Module, keyUid: string): bool =
     return false
   return true
 
-method allNonProfileKeyPairsMigratedToKeycard*(self: Module): bool =
+method allNonProfileKeyPairsMigratedToColdWallet*(self: Module): bool =
   let keypairs = self.controller.getKeypairs()
   for keypair in keypairs:
     if not keypair.isNil and
       keypair.keypairType != KeypairTypeProfile and
       not keypair.removed and
-      not keypair.migratedToKeycard():
+      not keypair.migratedToColdWallet():
         return false
   return true
 

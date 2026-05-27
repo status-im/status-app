@@ -60,7 +60,7 @@ Column {
                     continue
                 }
                 let kp = item.keyPair
-                if (kp.migratedToKeycard ||
+                if (kp.migratedToColdWallet ||
                         kp.pairType === Constants.keypair.type.profile ||
                         kp.pairType === Constants.keypair.type.watchOnly ||
                         kp.operability === Constants.keypair.operability.fullyOperable ||
@@ -80,7 +80,7 @@ Column {
                     continue
                 }
                 let kp = item.keyPair
-                if (!kp.migratedToKeycard &&
+                if (!kp.migratedToColdWallet &&
                         kp.pairType !== Constants.keypair.type.profile &&
                         kp.pairType !== Constants.keypair.type.watchOnly &&
                         kp.operability !== Constants.keypair.operability.nonOperable) {

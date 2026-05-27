@@ -19,11 +19,11 @@ QtObject:
       pairType = KeyPairType.Unknown,
       derivedFrom = "",
       lastUsedDerivationIndex = 0,
-      migratedToKeycard = true
+      migratedToColdWallet = true
       ): KeycardItem =
     new(result, delete)
     result.KeyPairItem.setup(keyUid, pubKey, locked, name, image, icon, pairType, derivedFrom,lastUsedDerivationIndex,
-      migratedToKeycard, syncedFrom = "", ownershipVerified = false)
+      migratedToColdWallet, syncedFrom = "", ownershipVerified = false)
     result.keycardUid = keycardUid
 
   proc `$`*(self: KeycardItem): string =

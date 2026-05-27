@@ -131,7 +131,7 @@ Item {
                     walletColor: Utils.getColorForId(Theme.palette, model.colorId)
                     currencyBalance: model.currencyBalance
                     walletType: model.walletType
-                    migratedToKeycard: model.migratedToKeycard ?? false
+                    migratedToColdWallet: model.migratedToColdWallet ?? false
                     accountBalance: model.accountBalance ?? null
                     // This should only pass a `key` role to identify the accounts object but not necessary to pass the complete object structure
                     // TODO issue: #15492
@@ -142,7 +142,7 @@ Item {
                                                      emoji: model.emoji,
                                                      walletType: model.walletType,
                                                      currencyBalance: model.currencyBalance,
-                                                     migratedToKeycard: model.migratedToKeycard
+                                                     migratedToColdWallet: model.migratedToColdWallet
                                                  },
                                                  Helpers.RecipientAddressObjectType.Account)
 

@@ -25,7 +25,7 @@ StatusMenu {
         enabled: root.hasPairedDevices &&
                  !!root.keyPair &&
                  root.keyPair.pairType !== Constants.keypair.type.profile &&
-                 !root.keyPair.migratedToKeycard &&
+                 !root.keyPair.migratedToColdWallet &&
                  root.keyPair.operability !== Constants.keypair.operability.nonOperable
         icon.name: "qr"
         icon.color: Theme.palette.primaryColor1
@@ -35,12 +35,12 @@ StatusMenu {
     }
 
     StatusAction {
-        text: enabled? root.keyPair.migratedToKeycard? qsTr("Stop using Keycard") : qsTr("Move key pair to a Keycard") : ""
+        text: enabled? root.keyPair.migratedToColdWallet? qsTr("Stop using Keycard") : qsTr("Move key pair to a Keycard") : ""
         enabled: !!root.keyPair && root.keyPair.pairType !== Constants.keypair.type.privateKeyImport
-        icon.name: !!root.keyPair && root.keyPair.migratedToKeycard? "keycard-crossed" : "keycard"
+        icon.name: !!root.keyPair && root.keyPair.migratedToColdWallet? "keycard-crossed" : "keycard"
         icon.color: Theme.palette.primaryColor1
         onTriggered: {
-            if (root.keyPair.migratedToKeycard)
+            if (root.keyPair.migratedToColdWallet)
                 root.runStopUsingKeycardFlow()
             else
                 root.runMoveKeypairToKeycardFlow()
@@ -52,7 +52,7 @@ StatusMenu {
         enabled: root.hasPairedDevices &&
                  !!root.keyPair &&
                  root.keyPair.pairType !== Constants.keypair.type.profile &&
-                 !root.keyPair.migratedToKeycard &&
+                 !root.keyPair.migratedToColdWallet &&
                  root.keyPair.operability === Constants.keypair.operability.nonOperable
         icon.name: "qr-scan"
         icon.color: Theme.palette.primaryColor1
@@ -64,7 +64,7 @@ StatusMenu {
     StatusAction {
         text: enabled? root.keyPair.pairType === Constants.keypair.type.privateKeyImport? qsTr("Import via entering private key") : qsTr("Import via entering recovery phrase") : ""
         enabled: !!root.keyPair &&
-                 !root.keyPair.migratedToKeycard &&
+                 !root.keyPair.migratedToColdWallet &&
                  root.keyPair.operability === Constants.keypair.operability.nonOperable &&
                  (root.keyPair.pairType === Constants.keypair.type.seedImport ||
                   root.keyPair.pairType === Constants.keypair.type.privateKeyImport)

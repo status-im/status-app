@@ -147,11 +147,11 @@ method isKnownKeyUid*[T](self: Module[T], keyUid: string): bool =
     return false
   return true
 
-method isKeyPairMigratedToKeycard*[T](self: Module[T], keyUid: string): bool =
+method isKeyPairMigratedToColdWallet*[T](self: Module[T], keyUid: string): bool =
   let keypair = self.controller.getKeypairByKeyUid(keyUid)
   if keypair.isNil or keypair.removed:
     return false
-  return keypair.migratedToKeycard()
+  return keypair.migratedToColdWallet()
 
 method getKeyPairNameForKeyUid*[T](self: Module[T], keyUid: string): string =
   let keypair = self.controller.getKeypairByKeyUid(keyUid)
@@ -546,7 +546,7 @@ method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], error: string) =
         self.emitError("failed to add new keycard stored keypair: " & err)
         return
       self.saveKeypairToKeycard() # this is just to add keycard to db and remove keystore files
-    elif not self.isKeyPairMigratedToKeycard(self.tmpKeyUid):
+    elif not self.isKeyPairMigratedToColdWallet(self.tmpKeyUid):
       self.emitError("key pair is not migrated to keycard, cannot be imported to keycard, keyUid: " & self.tmpKeyUid)
       return
     self.view.keycardImportKeyPairSuccess()

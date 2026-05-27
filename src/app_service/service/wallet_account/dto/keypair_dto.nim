@@ -32,8 +32,8 @@ type
     extendedPublicKey*: string
     coldWalletType*: string
 
-proc migratedToKeycard*(self: KeypairDto): bool =
-  return self.keycards.len > 0
+proc migratedToColdWallet*(self: KeypairDto): bool =
+  return self.coldWalletType != ColdWalletTypeNoNone
 
 proc toKeypairDto*(jsonObj: JsonNode): KeypairDto =
   result = KeypairDto()
