@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
+# Reproducibility env, applied to every cmake / ninja / qmlcachegen / moc /
+# rcc invocation below. Defense-in-depth against the three known classes of
+# Qt non-determinism that can affect a subset of modules:
+#   LC_ALL/LANG=C      - stable locale-dependent sort order (linker symbol
+#                        ordering, CMake file globs, ninja work-item order)
+#   SOURCE_DATE_EPOCH  - honored by gcc/clang for __DATE__/__TIME__ and by
+#                        qmlcachegen / qrc for any embedded timestamp
+# The matching -DCMAKE_UNITY_BUILD=OFF and -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF
+# below kill the other two: Unity Build's per-target source batching, and any
+# future Qt update silently enabling IPO/LTO.
+export LC_ALL=C
+export LANG=C
+export SOURCE_DATE_EPOCH="$(git -C "$BUILD_DIR" log -1 --pretty=%ct 2>/dev/null || echo 0)"
+
 QT_VERSION="${QT_VERSION:-6.9.2}"
 
 QT_MODULES=qtbase,qtdeclarative,qt5compat,qtmultimedia,qtshadertools,qtimageformats,qtwebview,qtscxml,qtsvg,qtconnectivity,qtwebsockets,qtpositioning,qtlottie,qtwebchannel
@@ -37,6 +51,8 @@ mkdir -p build_qt_host && cd build_qt_host
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS_INIT="$QT_REPRO_CFLAGS" \
     -DCMAKE_CXX_FLAGS_INIT="$QT_REPRO_CFLAGS" \
+    -DCMAKE_UNITY_BUILD=OFF \
+    -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
     -DCMAKE_MESSAGE_LOG_LEVEL=WARNING \
     -Wno-dev
 
@@ -71,6 +87,8 @@ mkdir -p build_qt_android && cd build_qt_android
     -DQT_DEFAULT_MEDIA_BACKEND=ffmpeg \
     -DCMAKE_C_FLAGS_INIT="$QT_REPRO_CFLAGS" \
     -DCMAKE_CXX_FLAGS_INIT="$QT_REPRO_CFLAGS" \
+    -DCMAKE_UNITY_BUILD=OFF \
+    -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
     -DCMAKE_MESSAGE_LOG_LEVEL=WARNING \
     -Wno-dev
 

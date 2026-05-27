@@ -34,7 +34,9 @@ $(STATUS_GO_LIB):
 	@echo "Building status-go mobile library"
 	@mkdir -p $(LIB_PATH)
 ifeq ($(OS),android)
-	# Reproducibility flags for status-go (GOFLAGS,CGO_CFLAGS,CGO_CXXFLAGS,GOMODCACHE,CGO_LDFLAGS):
+	# Reproducibility env for status-go. F-Droid byte-verifies the APK
+	# against a reference build, so libstatus.so must come out identical
+	# every time.
 	  GOFLAGS="-trimpath -buildvcs=false" \
 	  GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
 	  CGO_CFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
@@ -48,7 +50,11 @@ ifeq ($(OS),android)
 		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
-	# Strip non-deterministic ELF notes in case any escaped the build flags:
+	# Canonicalize cgo's per-build symbol hash, then strip ELF note sections.
+	# The build flags above aren't sufficient on their own because cgo bakes
+	# a random per-invocation hash into every _cgo[exp]_*_X symbol name.
+	@$(SCRIPTS_PATH)/canonicalize-cgo-symbols.sh \
+		../vendor/status-go/build/bin/libstatus$(LIB_EXT)
 	@$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(HOST_OS)-x86_64/bin/llvm-objcopy \
 		--remove-section=.note.gnu.build-id \
 		--remove-section=.note.go.buildid \
