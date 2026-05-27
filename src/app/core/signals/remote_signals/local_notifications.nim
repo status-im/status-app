@@ -14,6 +14,13 @@ type LocalNotificationSignal* = ref object of Signal
   deepLink*: string
   isFromMe*: bool
   deleted*: bool
+  # Avatar/icon images as base64 data URIs, resolved by status-go from raw image bytes
+  # (or identicon). These are the authoritative source for notification images — the
+  # contact/community services only expose media-server URLs. Same fields Android consumes.
+  authorIcon*: string
+  authorName*: string
+  communityIcon*: string
+  chatIcon*: string
 
 proc fromEvent*(T: type LocalNotificationSignal, jsonSignal: JsonNode): LocalNotificationSignal =
   result = LocalNotificationSignal()
@@ -29,3 +36,7 @@ proc fromEvent*(T: type LocalNotificationSignal, jsonSignal: JsonNode): LocalNot
     result.deepLink = jsonSignal["event"]{"deepLink"}.getStr()
     result.isFromMe = jsonSignal["event"]{"isFromMe"}.getBool()
     result.deleted = jsonSignal["event"]{"deleted"}.getBool()
+    result.communityIcon = jsonSignal["event"]{"communityIcon"}.getStr()
+    result.chatIcon = jsonSignal["event"]{"chatIcon"}.getStr()
+    result.authorIcon = jsonSignal["event"]{"notificationAuthor"}{"icon"}.getStr()
+    result.authorName = jsonSignal["event"]{"notificationAuthor"}{"name"}.getStr()

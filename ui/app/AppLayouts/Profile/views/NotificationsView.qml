@@ -222,17 +222,14 @@ SettingsContentBase {
 
         Loader {
             Layout.preferredWidth: root.contentWidth
-            sourceComponent: SQUtils.Utils.isIOS ? centralizedPushNotificationsMenuComponent : generalMenuComponent
+            sourceComponent: SQUtils.Utils.isIOS ? centralizedPushNotificationsMenuComponent : null
         }
 
-
-        Component {
-            id: generalMenuComponent
-            ColumnLayout {
+        ColumnLayout {
             id: generalMenu
             StatusListItem {
                 Layout.preferredWidth: root.contentWidth
-                title: qsTr("Enable notifications")
+                title: qsTr("Enable local notifications")
                 tertiaryTitle:  SQUtils.Utils.isAndroid ?
                                     qsTr("Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.") :
                                     qsTr("Status delivers notifications directly through your operating system, with no centralized servers or intermediaries. Ensure they are enabled for Status in your system settings")
@@ -475,8 +472,8 @@ SettingsContentBase {
                 Layout.preferredWidth: root.contentWidth
                 Layout.preferredHeight: this.isFiltering && d.unfilteredExemptionsListHeight > 0 ?
                                             Math.max(this.contentHeight,
-                                                     Math.min(d.unfilteredExemptionsListHeight,
-                                                              root.availableHeight)) :
+                                                        Math.min(d.unfilteredExemptionsListHeight,
+                                                                root.availableHeight)) :
                                             this.contentHeight
                 visible: root.notificationsStore.exemptionsModel.count > 0
 
@@ -508,7 +505,6 @@ SettingsContentBase {
                     }
                 }
                 delegate: exemptionDelegateComponent
-            }
             }
         }
 

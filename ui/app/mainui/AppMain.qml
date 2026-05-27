@@ -1198,13 +1198,14 @@ Item {
             }
         }
 
-        // iOS background push: run the full historic message sync on the warm
-        // (suspended) app. On a cold launch no account is logged in yet, so we
-        // finish the background fetch gracefully and do nothing else.
+        // iOS background push: the silent push only wakes the app; the native side
+        // keeps it alive (~25s). We do NOT force a fetch — the running app catches up
+        // naturally, and any message received fires a local-notification that
+        // enriches/replaces the anonymous push. If nothing arrives in time, the
+        // anonymous banner simply stays. On a cold launch (no account loaded) there is
+        // nothing to catch up, so finish the background fetch now.
         function onRemoteNotificationReceived() {
-            if (appMain.rootStore.sectionsLoaded)
-                appMain.rootStore.triggerBackgroundSync()
-            else
+            if (!appMain.rootStore.sectionsLoaded)
                 PushNotifications.finishBackgroundFetch(false)
         }
 
@@ -1215,12 +1216,17 @@ Item {
         }
     }
 
+    // iOS: clear delivered notifications + badge when the user genuinely foregrounds the
+    // app while logged in. Gated strictly on ApplicationActive — a silent-push background
+    // wake keeps the app in Background and never becomes Active, so it cannot trigger this
+    // (we never wipe notifications the user hasn't seen).
     Connections {
-        target: appMain.rootStore
+        target: Qt.application
         enabled: SQUtils.Utils.isIOS
 
-        function onBackgroundSyncCompleted(hadNewData) {
-            PushNotifications.finishBackgroundFetch(hadNewData)
+        function onStateChanged() {
+            if (Qt.application.state === Qt.ApplicationActive && appMain.rootStore.sectionsLoaded)
+                PushNotifications.clearAllNotifications()
         }
     }
 
@@ -1231,9 +1237,8 @@ Item {
         target: appMain.rootStore
         enabled: SQUtils.Utils.isIOS
 
-        function onShowEnrichedNotification(title, body, identifier, threadId) {
-            console.log("[StatusPNDiag] QML showEnrichedNotification ->", identifier, title)
-            PushNotifications.showNotification(title, body, identifier, threadId)
+        function onShowNotification(title, body, identifier, threadId, senderName, senderId, avatarBase64, conversationName, conversationImageBase64, deepLink) {
+            PushNotifications.showNotification(title, body, identifier, threadId, senderName, senderId, avatarBase64, conversationName, conversationImageBase64, deepLink)
         }
     }
 

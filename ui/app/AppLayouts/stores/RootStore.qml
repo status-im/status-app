@@ -121,18 +121,9 @@ QtObject {
         internal.mainModuleInst.setNthEnabledSectionActive(nthSection)
     }
 
-    // iOS background push: triggers the full historic message sync. Completion
-    // is reported back through the `backgroundSyncCompleted` signal below.
-    signal backgroundSyncCompleted(bool hadNewData)
-    function triggerBackgroundSync() {
-        if(!internal.mainModuleInst)
-            return
-        internal.mainModuleInst.triggerBackgroundSync()
-    }
-
-    // iOS enriched push (Layer 2): emitted when a status-go local-notification
-    // should replace the anonymous push banner with an enriched one.
-    signal showEnrichedNotification(string title, string body, string identifier, string threadId)
+    // iOS local notification: emitted when a status-go local-notification should
+    // enrich/replace the anonymous push banner (or create a new one).
+    signal showNotification(string title, string body, string identifier, string threadId, string senderName, string senderId, string avatarBase64, string conversationName, string conversationImageBase64, string deepLink)
 
     readonly property Connections _mainModuleConnections: Connections {
         target: internal.mainModuleInst
@@ -141,12 +132,8 @@ QtObject {
             root.activeSectionChanged()
         }
 
-        function onBackgroundSyncCompleted(hadNewData) {
-            root.backgroundSyncCompleted(hadNewData)
-        }
-
-        function onShowEnrichedNotification(title, body, identifier, threadId) {
-            root.showEnrichedNotification(title, body, identifier, threadId)
+        function onShowNotification(title, body, identifier, threadId, senderName, senderId, avatarBase64, conversationName, conversationImageBase64, deepLink) {
+            root.showNotification(title, body, identifier, threadId, senderName, senderId, avatarBase64, conversationName, conversationImageBase64, deepLink)
         }
     }
     // End of RootStore related stuff (Just the above code should be part of `RootStore`)

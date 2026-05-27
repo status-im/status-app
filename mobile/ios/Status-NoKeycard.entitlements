@@ -10,7 +10,13 @@
     <!-- NOTE: This works with a FREE Apple Developer account! -->
     <key>aps-environment</key>
     <string>development</string>
-    
+
+    <!-- Communication Notifications: required for INSendMessageIntent-enriched local
+         notifications (sender avatar + system app-icon overlay). Without this,
+         -[UNNotificationContent contentByUpdatingWithProvider:error:] fails. -->
+    <key>com.apple.developer.usernotifications.communication</key>
+    <true/>
+
     <!-- NOTE: NO NFC entitlement here - NFC requires paid Apple Developer account -->
     <!-- This version can be used with a free account for testing -->
 </dict>

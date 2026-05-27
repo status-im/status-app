@@ -395,6 +395,10 @@
         <source>Activity</source>
         <translation type="unfinished">Aktivita</translation>
     </message>
+    <message>
+        <source>Notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ActivityCenterPopupTopBarPanel</name>
@@ -1166,6 +1170,14 @@
         <source>Done</source>
         <translation>Hotovo</translation>
     </message>
+    <message>
+        <source>Mainnet data verified by Nimbus</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AirdropRecipientsSelector</name>
@@ -1852,6 +1864,14 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <source>POKT &amp; Infura down for &lt;a href=&apos;#&apos;&gt;multiple chains&lt;/a&gt;. Token balances for those chains cannot be retrieved.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Loading sections...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading chats, try closing the app and restarting</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AppSearch</name>
@@ -2412,6 +2432,33 @@ Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezp
     </message>
 </context>
 <context>
+    <name>BrowserConnectionModal</name>
+    <message>
+        <source>&apos;%1&apos; would like to connect to</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Allowing authorizes this DApp to retrieve your wallet address and enable Web3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Granting access authorizes this DApp to retrieve your chat key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown permission: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deny</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Allow</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
@@ -2616,6 +2663,10 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Zoom</source>
         <translation>Lupa</translation>
+    </message>
+    <message>
+        <source>Find</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3412,6 +3463,34 @@ formát souboru</translation>
         <source>Create New Community</source>
         <translation>Vytvořit novou komunitu</translation>
     </message>
+    <message>
+        <source>Create new community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create a new Status community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create new</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; import in progress...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import existing Discord community into Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import existing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your current import must be finished or cancelled before a new import can be started.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CommunitiesView</name>
@@ -3959,6 +4038,10 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <translation>Potvrdit</translation>
     </message>
     <message>
+        <source>Reject</source>
+        <translation type="unfinished">Odmítnout</translation>
+    </message>
+    <message>
         <source>Cancel</source>
         <translation>Zrušit</translation>
     </message>
@@ -4205,6 +4288,10 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
     </message>
     <message>
         <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open QR Scanner</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6162,6 +6249,10 @@ key pair. Keycard will be required for signing</source>
         <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
+        <translation type="unfinished">Neplatné znaky (používejte pouze A-Z a 0-9, pomlčky a podtržítka)</translation>
+    </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
         <translation>
@@ -6913,8 +7004,24 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished">Už se mě neptat</translation>
     </message>
     <message>
+        <source>Enable push notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Maybe later</source>
         <translation type="unfinished">Možná později</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation type="unfinished">Hotovo</translation>
     </message>
     <message>
         <source>Open settings</source>
@@ -8125,6 +8232,14 @@ Opravdu to chcete udělat?</translation>
         <source>Ethereum Follow Protocol</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FollowingAddressesDelegate</name>
@@ -8146,6 +8261,25 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>Between %1 and %2</source>
         <translation>Mezi %1 a %2</translation>
+    </message>
+</context>
+<context>
+    <name>GeneratorPage</name>
+    <message>
+        <source>Input</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished">Nastavení</translation>
+    </message>
+    <message>
+        <source>Generate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished">Uložit</translation>
     </message>
 </context>
 <context>
@@ -8395,6 +8529,13 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>Other</source>
         <translation>Jiná</translation>
+    </message>
+</context>
+<context>
+    <name>HistoryBetaTag</name>
+    <message>
+        <source>Activity is in beta. For any issues, go to Settings → Advanced → Refetch transaction history.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -13173,6 +13314,10 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Enable local notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Messages</source>
         <translation>Zprávy</translation>
     </message>
@@ -13282,6 +13427,26 @@ selhalo</translation>
     </message>
     <message>
         <source>Contact requests and group messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Notifications in macOS Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To receive Status notifications, make sure you&apos;ve enabled them in your computer&apos;s settings under &lt;b&gt;System Preferences &gt; Notifications&lt;/b&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable mobile push notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Allow Notification Bubbles</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -14928,6 +15093,14 @@ selhalo</translation>
         <source>Showcase limit of %1 reached. &lt;br&gt;Remove item from showcase to add more.</source>
         <translation>Dosažen limit vitríny %1. &lt;br&gt;Pro přidání dalších položek odeberte položku z vitríny.</translation>
     </message>
+    <message>
+        <source>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ProfileShowcaseSocialLinksView</name>
@@ -15130,6 +15303,34 @@ selhalo</translation>
     </message>
     <message>
         <source>WalletConnect to connect to dApps</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Qt5ScannerOverlay</name>
+    <message>
+        <source>Scan barcode</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Qt5ScannerPage</name>
+    <message>
+        <source>Scan again</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Qt6ScannerOverlay</name>
+    <message>
+        <source>Scan barcode</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Qt6ScannerPage</name>
+    <message>
+        <source>Scan again</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15543,6 +15744,10 @@ selhalo</translation>
         <source>History</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Activity</source>
+        <translation type="unfinished">Aktivita</translation>
+    </message>
 </context>
 <context>
     <name>RootStore</name>
@@ -15561,6 +15766,10 @@ selhalo</translation>
     <message>
         <source>Type something</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished">Zpráva</translation>
     </message>
 </context>
 <context>
@@ -15594,6 +15803,14 @@ selhalo</translation>
     <message>
         <source>No saved addresses found. Check spelling or address is correct.</source>
         <translation>Nebyly nalezeny žádné uložené adresy. Zkontrolujte pravopis nebo správnost adresy.</translation>
+    </message>
+    <message>
+        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16268,6 +16485,10 @@ selhalo</translation>
         <source>On-device backup</source>
         <translation>Záloha na zařízení</translation>
     </message>
+    <message>
+        <source>Notifications &amp; Sounds</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsLeftTabView</name>
@@ -16574,6 +16795,37 @@ selhalo</translation>
     <message>
         <source>Copied</source>
         <translation>Zkopírováno</translation>
+    </message>
+</context>
+<context>
+    <name>SignMessageModal</name>
+    <message>
+        <source>Signature request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation type="unfinished">Od</translation>
+    </message>
+    <message>
+        <source>Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished">Zpráva</translation>
+    </message>
+    <message>
+        <source>Reject</source>
+        <translation type="unfinished">Odmítnout</translation>
+    </message>
+    <message>
+        <source>Sign</source>
+        <translation type="unfinished">Podepsat</translation>
+    </message>
+    <message>
+        <source>Sign with password</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -17504,6 +17756,10 @@ selhalo</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Buy for %1 SNT</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Uninstall</source>
         <translation>Odinstalovat</translation>
     </message>
@@ -18385,6 +18641,10 @@ Tuto akci nelze vzít zpět.</translation>
         <translation>Povolit služby a restartovat aplikaci</translation>
     </message>
     <message>
+        <source>Close</source>
+        <translation type="unfinished">Zavřít</translation>
+    </message>
+    <message>
         <source>Disable third-party services</source>
         <translation>Zakázat služby třetích stran</translation>
     </message>
@@ -19142,6 +19402,37 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
 </context>
 <context>
+    <name>TransactionSigner</name>
+    <message>
+        <source>You need to enter a password</source>
+        <translation type="unfinished">Musíte zadat heslo</translation>
+    </message>
+    <message>
+        <source>Password needs to be 6 characters or more</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signing phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signing phrase is a 3 word combination that is displayed when you entered the wallet on this device for the first time.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter the password you use to unlock this device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation type="unfinished">Heslo</translation>
+    </message>
+    <message>
+        <source>Enter password</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>TransferOwnershipAlertPopup</name>
     <message>
         <source>Transfer ownership of %1</source>
@@ -19535,6 +19826,14 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>BaseScan</source>
         <translation>BaseScan</translation>
+    </message>
+    <message>
+        <source>Polygon zkEVM Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status Explorer</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>BscScan</source>
@@ -20338,6 +20637,82 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
 </context>
 <context>
+    <name>ZXingQt5CamReader</name>
+    <message>
+        <source>Format: 	 %1 
+Text: 	 %2 
+Type: 	 %3 
+Time: 	 %4 ms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Camera: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Rotate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Harder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Invert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Downscale</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Linear Codes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Matrix Codes</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ZXingQt6CamReader</name>
+    <message>
+        <source>Format: 	 %1 
+Text: 	 %2 
+Type: 	 %3 
+Time: 	 %4 ms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Camera: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Rotate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Harder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Invert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Downscale</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Linear Codes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Matrix Codes</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>main</name>
     <message>
         <source>Status Desktop</source>
@@ -20357,6 +20732,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Report a bug on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

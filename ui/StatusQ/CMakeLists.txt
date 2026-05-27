@@ -265,7 +265,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     find_library(UserNotifications UserNotifications)
     find_library(CoreMotion CoreMotion)
     find_library(PhotosUI PhotosUI)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion} ${PhotosUI})
+    find_library(Intents Intents)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion} ${PhotosUI} ${Intents})
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/shareutils_ios.mm
@@ -332,6 +333,12 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/status-im/MobileUI.git
   GIT_TAG 12802e2a1931917f84011bafecb2a86880ff110c
 )
+# Local dev: prefer the in-repo vendor/MobileUI checkout (carries unreleased iOS push changes).
+# Falls back to the upstream clone above when the vendor dir is absent (e.g. standalone StatusQ build).
+set(_status_local_mobileui "${CMAKE_CURRENT_SOURCE_DIR}/../../vendor/MobileUI")
+if(EXISTS "${_status_local_mobileui}/CMakeLists.txt")
+  set(FETCHCONTENT_SOURCE_DIR_MOBILEUI "${_status_local_mobileui}" CACHE PATH "Use local MobileUI checkout" FORCE)
+endif()
 FetchContent_MakeAvailable(MobileUI)
 
 # Build SCodes and ZXing as static deps so StatusQ can be shipped standalone.

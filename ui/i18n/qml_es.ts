@@ -395,6 +395,10 @@
         <source>Activity</source>
         <translation type="unfinished">Actividad</translation>
     </message>
+    <message>
+        <source>Notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ActivityCenterPopupTopBarPanel</name>
@@ -1163,6 +1167,14 @@
         <source>Done</source>
         <translation type="unfinished">Listo</translation>
     </message>
+    <message>
+        <source>Mainnet data verified by Nimbus</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AirdropRecipientsSelector</name>
@@ -1845,6 +1857,14 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <source>POKT &amp; Infura down for &lt;a href=&apos;#&apos;&gt;multiple chains&lt;/a&gt;. Token balances for those chains cannot be retrieved.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Loading sections...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Error loading chats, try closing the app and restarting</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AppSearch</name>
@@ -2405,6 +2425,33 @@ Para respaldar tu frase de recuperación, escríbela y guárdala de forma segura
     </message>
 </context>
 <context>
+    <name>BrowserConnectionModal</name>
+    <message>
+        <source>&apos;%1&apos; would like to connect to</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Allowing authorizes this DApp to retrieve your wallet address and enable Web3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Granting access authorizes this DApp to retrieve your chat key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown permission: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deny</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Allow</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>BrowserLandscapeToolbar</name>
     <message>
         <source>Back</source>
@@ -2609,6 +2656,10 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Settings</source>
         <translation>Ajustes</translation>
+    </message>
+    <message>
+        <source>Find</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3401,6 +3452,34 @@ no compatible</translation>
         <source>Create New Community</source>
         <translation>Crear nueva comunidad</translation>
     </message>
+    <message>
+        <source>Create new community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create a new Status community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create new</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&apos;%1&apos; import in progress...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import existing Discord community into Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Import existing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your current import must be finished or cancelled before a new import can be started.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CommunitiesView</name>
@@ -3945,6 +4024,10 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
         <translation>Confirmar</translation>
     </message>
     <message>
+        <source>Reject</source>
+        <translation type="unfinished">Rechazar</translation>
+    </message>
+    <message>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
@@ -4190,6 +4273,10 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
     </message>
     <message>
         <source>Invite contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open QR Scanner</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -6142,6 +6229,10 @@ key pair. Keycard will be required for signing</source>
         <source>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
+        <translation type="unfinished">Caracteres inválidos (usa solo A-Z y 0-9, guiones y guiones bajos)</translation>
+    </message>
     <message numerus="yes">
         <source>Display Names must be at least %n character(s) long</source>
         <translation>
@@ -6889,8 +6980,24 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished">No me vuelvas a preguntar</translation>
     </message>
     <message>
+        <source>Enable push notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Maybe later</source>
         <translation type="unfinished">Quizás más tarde</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation type="unfinished">Listo</translation>
     </message>
     <message>
         <source>Open settings</source>
@@ -8095,6 +8202,14 @@ Are you sure you want to do this?</source>
         <source>Ethereum Follow Protocol</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FollowingAddressesDelegate</name>
@@ -8116,6 +8231,25 @@ Are you sure you want to do this?</source>
     <message>
         <source>Between %1 and %2</source>
         <translation>Entre %1 y %2</translation>
+    </message>
+</context>
+<context>
+    <name>GeneratorPage</name>
+    <message>
+        <source>Input</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation type="unfinished">Ajustes</translation>
+    </message>
+    <message>
+        <source>Generate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation type="unfinished">Guardar</translation>
     </message>
 </context>
 <context>
@@ -8365,6 +8499,13 @@ Are you sure you want to do this?</source>
     <message>
         <source>Other</source>
         <translation>Otro</translation>
+    </message>
+</context>
+<context>
+    <name>HistoryBetaTag</name>
+    <message>
+        <source>Activity is in beta. For any issues, go to Settings → Advanced → Refetch transaction history.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -13089,6 +13230,10 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Enable local notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Messages</source>
         <translation>Mensajes</translation>
     </message>
@@ -13198,6 +13343,26 @@ al cargar</translation>
     </message>
     <message>
         <source>Contact requests and group messages</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable Notifications in macOS Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>To receive Status notifications, make sure you&apos;ve enabled them in your computer&apos;s settings under &lt;b&gt;System Preferences &gt; Notifications&lt;/b&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;font color=&apos;%1&apos;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&apos;%1&apos;&gt;your device settings&lt;/font&gt; first.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable mobile push notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Allow Notification Bubbles</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -14838,6 +15003,14 @@ al cargar</translation>
         <source>Showcase limit of %1 reached. &lt;br&gt;Remove item from showcase to add more.</source>
         <translation>Límite de vitrina de %1 alcanzado. &lt;br&gt;Elimina un elemento de la vitrina para agregar más.</translation>
     </message>
+    <message>
+        <source>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ProfileShowcaseSocialLinksView</name>
@@ -15040,6 +15213,34 @@ al cargar</translation>
     </message>
     <message>
         <source>WalletConnect to connect to dApps</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Qt5ScannerOverlay</name>
+    <message>
+        <source>Scan barcode</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Qt5ScannerPage</name>
+    <message>
+        <source>Scan again</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Qt6ScannerOverlay</name>
+    <message>
+        <source>Scan barcode</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Qt6ScannerPage</name>
+    <message>
+        <source>Scan again</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -15451,6 +15652,10 @@ al cargar</translation>
         <source>History</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Activity</source>
+        <translation type="unfinished">Actividad</translation>
+    </message>
 </context>
 <context>
     <name>RootStore</name>
@@ -15469,6 +15674,10 @@ al cargar</translation>
     <message>
         <source>Type something</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished">Mensaje</translation>
     </message>
 </context>
 <context>
@@ -15502,6 +15711,14 @@ al cargar</translation>
     <message>
         <source>No saved addresses found. Check spelling or address is correct.</source>
         <translation>No se encontraron direcciones guardadas. Verifica la ortografía o que la dirección sea correcta.</translation>
+    </message>
+    <message>
+        <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16176,6 +16393,10 @@ al cargar</translation>
         <source>Sign out &amp; Quit</source>
         <translation></translation>
     </message>
+    <message>
+        <source>Notifications &amp; Sounds</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>SettingsLeftTabView</name>
@@ -16478,6 +16699,37 @@ al cargar</translation>
     <message>
         <source>Copied</source>
         <translation>Copiado</translation>
+    </message>
+</context>
+<context>
+    <name>SignMessageModal</name>
+    <message>
+        <source>Signature request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation type="unfinished">De</translation>
+    </message>
+    <message>
+        <source>Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation type="unfinished">Mensaje</translation>
+    </message>
+    <message>
+        <source>Reject</source>
+        <translation type="unfinished">Rechazar</translation>
+    </message>
+    <message>
+        <source>Sign</source>
+        <translation type="unfinished">Firmar</translation>
+    </message>
+    <message>
+        <source>Sign with password</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -17402,6 +17654,10 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Buy for %1 SNT</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Uninstall</source>
         <translation>Desinstalar</translation>
     </message>
@@ -18287,6 +18543,10 @@ This action cannot be undone.</source>
         <translation>Habilitar servicios y reiniciar la aplicación</translation>
     </message>
     <message>
+        <source>Close</source>
+        <translation type="unfinished">Cerrar</translation>
+    </message>
+    <message>
         <source>Browser (browse web-pages, connect dApps)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -19046,6 +19306,37 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
 </context>
 <context>
+    <name>TransactionSigner</name>
+    <message>
+        <source>You need to enter a password</source>
+        <translation type="unfinished">Debe escribir una contraseña</translation>
+    </message>
+    <message>
+        <source>Password needs to be 6 characters or more</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signing phrase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signing phrase is a 3 word combination that is displayed when you entered the wallet on this device for the first time.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enter the password you use to unlock this device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Password</source>
+        <translation type="unfinished">Contraseña</translation>
+    </message>
+    <message>
+        <source>Enter password</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>TransferOwnershipAlertPopup</name>
     <message>
         <source>Transfer ownership of %1</source>
@@ -19433,6 +19724,14 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>BaseScan</source>
         <translation>BaseScan</translation>
+    </message>
+    <message>
+        <source>Polygon zkEVM Explorer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Status Explorer</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>BscScan</source>
@@ -20235,6 +20534,82 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
 </context>
 <context>
+    <name>ZXingQt5CamReader</name>
+    <message>
+        <source>Format: 	 %1 
+Text: 	 %2 
+Type: 	 %3 
+Time: 	 %4 ms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Camera: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Rotate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Harder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Invert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Downscale</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Linear Codes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Matrix Codes</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ZXingQt6CamReader</name>
+    <message>
+        <source>Format: 	 %1 
+Text: 	 %2 
+Type: 	 %3 
+Time: 	 %4 ms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Camera: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Rotate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Harder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Invert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Try Downscale</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Linear Codes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Matrix Codes</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>main</name>
     <message>
         <source>Status Desktop</source>
@@ -20254,6 +20629,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     </message>
     <message>
         <source>Report a bug on GitHub</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Hello World</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

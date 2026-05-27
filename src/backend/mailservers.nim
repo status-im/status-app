@@ -19,7 +19,3 @@ proc fillGaps*(chatId: string, messageIds: seq[string]): RpcResponse[JsonNode] =
   let payload = %*[chatId, messageIds]
   result = core.callPrivateRPC("fillGaps".prefix, payload)
   info "fillGaps", topics="mailserver-interaction", rpc_method="wakuext_fillGaps", chatId, messageIds, result
-
-proc requestAllHistoricMessagesWithRetries*(forceFetchingBackup: bool): RpcResponse[JsonNode] =
-  let payload = %*[forceFetchingBackup]
-  result = core.callPrivateRPC("requestAllHistoricMessagesWithRetries".prefix, payload)

@@ -9,7 +9,13 @@
     <!-- Push Notifications Entitlement -->
     <key>aps-environment</key>
     <string>development</string>
-    
+
+    <!-- Communication Notifications: required for INSendMessageIntent-enriched local
+         notifications (sender avatar + system app-icon overlay). Without this,
+         -[UNNotificationContent contentByUpdatingWithProvider:error:] fails. -->
+    <key>com.apple.developer.usernotifications.communication</key>
+    <true/>
+
     <!-- NFC Capability (for Keycard support) -->
     <!-- NOTE: Requires PAID Apple Developer account -->
     <key>com.apple.developer.nfc.readersession.formats</key>

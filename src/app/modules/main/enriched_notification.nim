@@ -1,4 +1,3 @@
-import json
 import app_service/service/chat/dto/chat as chat_dto
 
 type
@@ -7,18 +6,13 @@ type
     ectGroup = "group"
     ectCommunity = "community"
 
-  EnrichedBadgeKind* = enum
-    ebkStatus = "status"
-    ebkImage = "image"
-
   EnrichedNotificationPayload* = object
     title*, body*, identifier*, threadId*: string
     senderName*, senderId*: string
-    avatarBase64*, avatarUrl*: string
-    conversationType*: EnrichedConversationType
+    avatarBase64*: string
     conversationName*: string
-    badgeKind*: EnrichedBadgeKind
-    badgeBase64*, badgeUrl*: string
+    conversationImageBase64*: string   # group/community icon (base64) for the speakableGroupName image
+    deepLink*: string   # status-app:// URL; opens the conversation when the notification is tapped
 
 proc conversationTypeFor*(chatType: chat_dto.ChatType, communityId: string): EnrichedConversationType =
   if communityId.len > 0:
@@ -26,12 +20,3 @@ proc conversationTypeFor*(chatType: chat_dto.ChatType, communityId: string): Enr
   if chatType == chat_dto.ChatType.PrivateGroupChat:
     return ectGroup
   return ectOneToOne
-
-proc toJson*(p: EnrichedNotificationPayload): string =
-  result = $(%* {
-    "title": p.title, "body": p.body, "identifier": p.identifier, "threadId": p.threadId,
-    "senderName": p.senderName, "senderId": p.senderId,
-    "avatarBase64": p.avatarBase64, "avatarUrl": p.avatarUrl,
-    "conversationType": $p.conversationType, "conversationName": p.conversationName,
-    "badgeKind": $p.badgeKind, "badgeBase64": p.badgeBase64, "badgeUrl": p.badgeUrl,
-  })

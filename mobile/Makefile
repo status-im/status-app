@@ -101,7 +101,7 @@ $(STATUS_KEYCARD_QT_LIB): $(STATUS_KEYCARD_QT_FILES) $(STATUS_KEYCARD_QT_SCRIPT)
 	@STATUS_KEYCARD_QT=$(STATUS_KEYCARD_QT) KEYCARD_QT=$(KEYCARD_QT) BUILD_DIR=$(BUILD_PATH) $(STATUS_KEYCARD_QT_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "status-keycard-qt built $(STATUS_KEYCARD_QT_LIB)"
 
-$(STATUS_DESKTOP_RCC): $(STATUS_DESKTOP_UI_FILES) compile-translations
+$(STATUS_DESKTOP_RCC): $(STATUS_DESKTOP_UI_FILES)
 	@echo "Building Status Desktop rcc"
 	@make -C $(STATUS_DESKTOP) rcc $(HANDLE_OUTPUT)
 	@echo "Status Desktop rcc built"
@@ -154,14 +154,14 @@ endif
 makedir:
 	@mkdir -p $(BIN_PATH) $(LIB_PATH) $(BUILD_PATH)
 
-.PHONY: compile-translations
-compile-translations:
-	@echo "Building translations"
-ifeq ($(HOST_OS),linux)
-	@make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
-else
-	@CC= CXX= LDFLAGS= CGO_LDFLAGS= NIMFLAGS= make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
-endif
+# .PHONY: compile-translations
+# compile-translations:
+# 	@echo "Building translations"
+# ifeq ($(HOST_OS),linux)
+# 	@make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
+# else
+# 	@CC= CXX= LDFLAGS= CGO_LDFLAGS= NIMFLAGS= make -C $(STATUS_DESKTOP) compile-translations $(HANDLE_OUTPUT)
+# endif
 
 .PHONY: apk
 apk:

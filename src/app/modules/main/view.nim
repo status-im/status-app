@@ -147,22 +147,16 @@ QtObject:
   proc emitMailserverNotWorking*(self: View) =
     self.mailserverNotWorking()
 
-  # Background sync (iOS background push). Triggers the existing full historic
-  # message sync; completion is reported back via `backgroundSyncCompleted`.
-  proc triggerBackgroundSync*(self: View) {.slot.} =
-    self.delegate.triggerBackgroundSync()
+  # iOS local notification. Relayed to QML where (on iOS) it triggers a local
+  # notification that enriches/replaces the anonymous push banner.
+  # NOTE: nimqml parses signal parameters via `def[1]` as the type, so each
+  # parameter MUST have its own explicit type — comma-shared names
+  # (`title, body, ...: string`) make it read the 2nd name ("body") as a type
+  # and fail with "Unsupported conversion of body to metatype".
+  proc showNotification*(self: View, title: string, body: string, identifier: string, threadId: string, senderName: string, senderId: string, avatarBase64: string, conversationName: string, conversationImageBase64: string, deepLink: string) {.signal.}
 
-  proc backgroundSyncCompleted*(self: View, hadNewData: bool) {.signal.}
-
-  proc emitBackgroundSyncCompleted*(self: View, hadNewData: bool) =
-    self.backgroundSyncCompleted(hadNewData)
-
-  # iOS enriched push (Layer 2). Relayed to QML where (on iOS) it triggers an
-  # enriched local notification that replaces the anonymous push banner.
-  proc showEnrichedNotification*(self: View, title, body, identifier, threadId: string) {.signal.}
-
-  proc emitShowEnrichedNotification*(self: View, title, body, identifier, threadId: string) =
-    self.showEnrichedNotification(title, body, identifier, threadId)
+  proc emitShowNotification*(self: View, title, body, identifier, threadId, senderName, senderId, avatarBase64, conversationName, conversationImageBase64, deepLink: string) =
+    self.showNotification(title, body, identifier, threadId, senderName, senderId, avatarBase64, conversationName, conversationImageBase64, deepLink)
 
   proc activeSection*(self: View): SectionDetails =
     return self.activeSection

@@ -93,6 +93,13 @@
         <string>remote-notification</string>
         <string>fetch</string>
     </array>
+    <!-- Communication Notifications: declare the message intent so iOS treats our
+         INSendMessageIntent-enriched local notifications as supported (renders the
+         sender avatar) and allows donating the interaction. -->
+    <key>NSUserActivityTypes</key>
+    <array>
+        <string>INSendMessageIntent</string>
+    </array>
     <!-- Do not require paid apple accounts to build the app with NFC support -->
     <!-- KEYCARD_NFC_START
         <key>NFCReaderUsageDescription</key>

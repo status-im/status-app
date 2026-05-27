@@ -4,6 +4,7 @@ import app/global/app_signals
 import app/core/signals/types as signal_types
 import app/core/eventemitter
 import app/core/notifications/notifications_manager
+import app/modules/main/enriched_notification
 import app_service/common/types
 import app_service/service/general/service as general_service
 import app_service/service/settings/service as settings_service
@@ -179,12 +180,8 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_MAILSERVER_NOT_WORKING) do(e: Args):
     self.delegate.emitMailserverNotWorking()
 
-  self.events.on(SIGNAL_MAILSERVER_HISTORY_REQUEST_COMPLETED) do(e: Args):
-    self.delegate.onBackgroundSyncCompleted()
-
   self.events.on(SignalType.LocalNotifications.event) do(e: Args):
     let s = LocalNotificationSignal(e)
-    debug "PNDBG local-notification signal received", id=s.id, category=s.category, convId=s.conversationId, isFromMe=s.isFromMe, deleted=s.deleted, displayTitle=s.displayTitle
     self.onLocalNotificationSignal(s)
 
   self.events.on(SIGNAL_COMMUNITY_JOINED) do(e:Args):
@@ -670,24 +667,67 @@ proc connectionChange*(self: Controller, connectionType: string, isExpensive: bo
 proc logout*(self: Controller) =
   self.generalService.logout()
 
-proc triggerBackgroundSync*(self: Controller) =
-  self.mailserversService.requestAllHistoricMessagesWithRetries()
-
 # iOS enriched push (Layer 2): turns a status-go `local-notifications` signal
 # into an enriched in-app notification that replaces the anonymous OS banner.
 # Suppression mirrors Android's `StatusNotificationManager`.
 proc onLocalNotificationSignal(self: Controller, s: LocalNotificationSignal) =
   if s.deleted:
-    debug "PNDBG suppress: deleted"
     return
   if s.category != "newMessage":
-    debug "PNDBG suppress: category", category=s.category
     return
   if s.isFromMe:
-    debug "PNDBG suppress: isFromMe"
+    return
+  # Skip enrichment when the notification preview is Anonymous (0): the enriched local
+  # notification would be just as anonymous as the generic remote push, so replacing it is
+  # wasted work + a flicker. NameOnly (1) / NameAndMessage (2) still enrich.
+  const messagePreviewAnonymous = 0
+  if self.settingsService.getNotificationMessagePreview() == messagePreviewAnonymous:
+    debug "push: anonymous preview, leaving generic notification"
     return
   let title = if s.displayTitle.len > 0: s.displayTitle else: s.title
   let body  = if s.displayMessage.len > 0: s.displayMessage else: s.message
-  debug "PNDBG (foreground suppression not yet applied)"
-  debug "PNDBG showing enriched notification", id=s.id, title=title, threadId=s.conversationId
-  self.delegate.emitShowEnrichedNotification(title, body, s.id, s.conversationId)
+  # iOS replaces the original (remote) push banner instead of spawning a second
+  # notification only when the local notification identifier byte-matches the
+  # push's apns-collapse-id. gorush sets that collapse-id to the message id
+  # WITHOUT the "0x" prefix (so it fits APNs' 64-byte limit), so strip "0x" here.
+  let notificationId =
+    if s.id.len >= 2 and s.id[0] == '0' and s.id[1] == 'x': s.id[2 .. ^1]
+    else: s.id
+
+  let chat {.cursor.} = self.chatService.getChatById(s.conversationId)
+  let convType = conversationTypeFor(chat.chatType, chat.communityId)
+  # sender pubkey: 1:1 == conversationId; group/community == the message author.
+  let senderId =
+    if convType == ectOneToOne: s.conversationId
+    else: self.messageService.getMessageByMessageId(s.id).message.from
+
+  # Avatar/badge images come straight from the status-go local-notifications signal as
+  # base64 data URIs (notificationAuthor.icon / chatIcon / communityIcon) — the same source
+  # Android consumes. The contact/community *services* only expose media-server URLs
+  # (localUrl), which are unreachable while backgrounded, so they must NOT be used here.
+  var payload = EnrichedNotificationPayload(
+    title: title, body: body, identifier: notificationId, threadId: s.conversationId,
+    senderName: (if s.authorName.len > 0: s.authorName else: s.displayTitle), senderId: senderId,
+    avatarBase64: s.authorIcon,
+    deepLink: s.deepLink)   # status-app:// URL; routes tap -> conversation (same as Android)
+  # conversationName is shown as the notification subtitle (the sender's avatar is the
+  # icon for every type; we no longer composite a group/community badge).
+  case convType
+  of ectOneToOne:
+    discard                                        # sender name is the title; no subtitle
+  of ectGroup:
+    payload.conversationName = chat.name           # group title
+    payload.conversationImageBase64 = s.chatIcon   # group avatar (base64) for the speakableGroupName image
+  of ectCommunity:
+    let community {.cursor.} = self.communityService.getCommunityById(chat.communityId)
+    payload.conversationName =                     # "community · channel" (chat.name is the channel)
+      if chat.name.len > 0: community.name & " · " & chat.name
+      else: community.name
+    payload.conversationImageBase64 = s.communityIcon   # community avatar (base64)
+    payload.threadId = chat.communityId                 # group a community's notifications by community id, not channel
+
+  debug "push: enriching notification", convType = $convType,
+    hasAvatar = (payload.avatarBase64.len > 0)
+  self.delegate.emitShowNotification(payload.title, payload.body, payload.identifier, payload.threadId,
+    payload.senderName, payload.senderId, payload.avatarBase64, payload.conversationName,
+    payload.conversationImageBase64, payload.deepLink)

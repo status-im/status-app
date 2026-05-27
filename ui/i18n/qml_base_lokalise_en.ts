@@ -486,6 +486,11 @@
       <comment>ActivityCenterPanel</comment>
       <translation>Activity</translation>
     </message>
+    <message>
+      <source>Notifications</source>
+      <comment>ActivityCenterPanel</comment>
+      <translation>Notifications</translation>
+    </message>
   </context>
   <context>
     <name>ActivityCenterPopupTopBarPanel</name>
@@ -1429,6 +1434,16 @@
       <comment>AdvancedView</comment>
       <translation>Done</translation>
     </message>
+    <message>
+      <source>Mainnet data verified by Nimbus</source>
+      <comment>AdvancedView</comment>
+      <translation>Mainnet data verified by Nimbus</translation>
+    </message>
+    <message>
+      <source>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</source>
+      <comment>AdvancedView</comment>
+      <translation>Are you sure you want to %1 Nimbus proxy? You need to restart the app for this change to take effect.</translation>
+    </message>
   </context>
   <context>
     <name>AirdropRecipientsSelector</name>
@@ -2269,6 +2284,16 @@
       <comment>AppMain</comment>
       <translation>POKT &amp; Infura down for &lt;a href=&#39;#&#39;&gt;multiple chains&lt;/a&gt;. Token balances for those chains cannot be retrieved.</translation>
     </message>
+    <message>
+      <source>Loading sections...</source>
+      <comment>AppMain</comment>
+      <translation>Loading sections...</translation>
+    </message>
+    <message>
+      <source>Error loading chats, try closing the app and restarting</source>
+      <comment>AppMain</comment>
+      <translation>Error loading chats, try closing the app and restarting</translation>
+    </message>
   </context>
   <context>
     <name>AppSearch</name>
@@ -2947,6 +2972,39 @@
     </message>
   </context>
   <context>
+    <name>BrowserConnectionModal</name>
+    <message>
+      <source>&#39;%1&#39; would like to connect to</source>
+      <comment>BrowserConnectionModal</comment>
+      <translation>&#39;%1&#39; would like to connect to</translation>
+    </message>
+    <message>
+      <source>Allowing authorizes this DApp to retrieve your wallet address and enable Web3</source>
+      <comment>BrowserConnectionModal</comment>
+      <translation>Allowing authorizes this DApp to retrieve your wallet address and enable Web3</translation>
+    </message>
+    <message>
+      <source>Granting access authorizes this DApp to retrieve your chat key</source>
+      <comment>BrowserConnectionModal</comment>
+      <translation>Granting access authorizes this DApp to retrieve your chat key</translation>
+    </message>
+    <message>
+      <source>Unknown permission: %1</source>
+      <comment>BrowserConnectionModal</comment>
+      <translation>Unknown permission: %1</translation>
+    </message>
+    <message>
+      <source>Deny</source>
+      <comment>BrowserConnectionModal</comment>
+      <translation>Deny</translation>
+    </message>
+    <message>
+      <source>Allow</source>
+      <comment>BrowserConnectionModal</comment>
+      <translation>Allow</translation>
+    </message>
+  </context>
+  <context>
     <name>BrowserLandscapeToolbar</name>
     <message>
       <source>Back</source>
@@ -3194,6 +3252,11 @@
       <source>Zoom</source>
       <comment>BrowserSettingsMenu</comment>
       <translation>Zoom</translation>
+    </message>
+    <message>
+      <source>Find</source>
+      <comment>BrowserSettingsMenu</comment>
+      <translation>Find</translation>
     </message>
   </context>
   <context>
@@ -4148,6 +4211,41 @@
       <comment>CommunitiesPortalLayout</comment>
       <translation>Create New Community</translation>
     </message>
+    <message>
+      <source>Create new community</source>
+      <comment>CommunitiesPortalLayout</comment>
+      <translation>Create new community</translation>
+    </message>
+    <message>
+      <source>Create a new Status community</source>
+      <comment>CommunitiesPortalLayout</comment>
+      <translation>Create a new Status community</translation>
+    </message>
+    <message>
+      <source>Create new</source>
+      <comment>CommunitiesPortalLayout</comment>
+      <translation>Create new</translation>
+    </message>
+    <message>
+      <source>&#39;%1&#39; import in progress...</source>
+      <comment>CommunitiesPortalLayout</comment>
+      <translation>&#39;%1&#39; import in progress...</translation>
+    </message>
+    <message>
+      <source>Import existing Discord community into Status</source>
+      <comment>CommunitiesPortalLayout</comment>
+      <translation>Import existing Discord community into Status</translation>
+    </message>
+    <message>
+      <source>Import existing</source>
+      <comment>CommunitiesPortalLayout</comment>
+      <translation>Import existing</translation>
+    </message>
+    <message>
+      <source>Your current import must be finished or cancelled before a new import can be started.</source>
+      <comment>CommunitiesPortalLayout</comment>
+      <translation>Your current import must be finished or cancelled before a new import can be started.</translation>
+    </message>
   </context>
   <context>
     <name>CommunitiesView</name>
@@ -4804,6 +4902,11 @@
       <translation>Confirm</translation>
     </message>
     <message>
+      <source>Reject</source>
+      <comment>ConfirmationDialog</comment>
+      <translation>Reject</translation>
+    </message>
+    <message>
       <source>Cancel</source>
       <comment>ConfirmationDialog</comment>
       <translation>Cancel</translation>
@@ -5106,6 +5209,11 @@
       <source>Invite contacts</source>
       <comment>ContactsColumnView</comment>
       <translation>Invite contacts</translation>
+    </message>
+    <message>
+      <source>Open QR Scanner</source>
+      <comment>ContactsColumnView</comment>
+      <translation>Open QR Scanner</translation>
     </message>
   </context>
   <context>
@@ -7488,6 +7596,11 @@
       <comment>DisplayNameValidators</comment>
       <translation>Invalid characters (use A-Z and 0-9, hyphens, underscores and spaces only)</translation>
     </message>
+    <message>
+      <source>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
+      <comment>DisplayNameValidators</comment>
+      <translation>Invalid characters (use A-Z and 0-9, hyphens and underscores only)</translation>
+    </message>
     <message numerus="yes">
       <source>Display Names must be at least %n character(s) long</source>
       <comment>DisplayNameValidators</comment>
@@ -8402,9 +8515,29 @@
       <translation>Don&#39;t ask me again</translation>
     </message>
     <message>
+      <source>Enable push notifications</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Enable push notifications</translation>
+    </message>
+    <message>
+      <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses Apple (APNs) push services only to deliver notifications. No one — including Apple or Status — can access or read your messages. They remain private.</translation>
+    </message>
+    <message>
+      <source>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Notifications include alerts, sounds, and icon badges, and can be configured in Settings / Notifications &amp; Sounds.&lt;br&gt;&lt;br&gt;Status uses a device-local service to deliver notifications, ensuring they remain private and do not pass through any third-party or centralized servers.</translation>
+    </message>
+    <message>
       <source>Maybe later</source>
       <comment>EnablePushNotificationsPopup</comment>
       <translation>Maybe later</translation>
+    </message>
+    <message>
+      <source>Done</source>
+      <comment>EnablePushNotificationsPopup</comment>
+      <translation>Done</translation>
     </message>
     <message>
       <source>Open settings</source>
@@ -9870,6 +10003,16 @@
       <comment>FollowingAddresses</comment>
       <translation>Ethereum Follow Protocol</translation>
     </message>
+    <message>
+      <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+      <comment>FollowingAddresses</comment>
+      <translation>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</translation>
+    </message>
+    <message>
+      <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+      <comment>FollowingAddresses</comment>
+      <translation>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</translation>
+    </message>
   </context>
   <context>
     <name>FollowingAddressesDelegate</name>
@@ -9895,6 +10038,29 @@
       <source>Between %1 and %2</source>
       <comment>GapComponent</comment>
       <translation>Between %1 and %2</translation>
+    </message>
+  </context>
+  <context>
+    <name>GeneratorPage</name>
+    <message>
+      <source>Input</source>
+      <comment>GeneratorPage</comment>
+      <translation>Input</translation>
+    </message>
+    <message>
+      <source>Settings</source>
+      <comment>GeneratorPage</comment>
+      <translation>Settings</translation>
+    </message>
+    <message>
+      <source>Generate</source>
+      <comment>GeneratorPage</comment>
+      <translation>Generate</translation>
+    </message>
+    <message>
+      <source>Save</source>
+      <comment>GeneratorPage</comment>
+      <translation>Save</translation>
     </message>
   </context>
   <context>
@@ -10201,6 +10367,14 @@
       <source>Other</source>
       <comment>Helpers</comment>
       <translation>Other</translation>
+    </message>
+  </context>
+  <context>
+    <name>HistoryBetaTag</name>
+    <message>
+      <source>Activity is in beta. For any issues, go to Settings → Advanced → Refetch transaction history.</source>
+      <comment>HistoryBetaTag</comment>
+      <translation>Activity is in beta. For any issues, go to Settings → Advanced → Refetch transaction history.</translation>
     </message>
   </context>
   <context>
@@ -15933,6 +16107,11 @@
       <translation>Status delivers notifications on your device via its on-device background service, with no third parties, centralized servers, or intermediaries involved.</translation>
     </message>
     <message>
+      <source>Enable local notifications</source>
+      <comment>NotificationsView</comment>
+      <translation>Enable local notifications</translation>
+    </message>
+    <message>
       <source>Messages</source>
       <comment>NotificationsView</comment>
       <translation>Messages</translation>
@@ -16071,6 +16250,31 @@
       <source>Contact requests and group messages</source>
       <comment>NotificationsView</comment>
       <translation>Contact requests and group messages</translation>
+    </message>
+    <message>
+      <source>Enable Notifications in macOS Settings</source>
+      <comment>NotificationsView</comment>
+      <translation>Enable Notifications in macOS Settings</translation>
+    </message>
+    <message>
+      <source>To receive Status notifications, make sure you&#39;ve enabled them in your computer&#39;s settings under &lt;b&gt;System Preferences &gt; Notifications&lt;/b&gt;</source>
+      <comment>NotificationsView</comment>
+      <translation>To receive Status notifications, make sure you&#39;ve enabled them in your computer&#39;s settings under &lt;b&gt;System Preferences &gt; Notifications&lt;/b&gt;</translation>
+    </message>
+    <message>
+      <source>&lt;font color=&#39;%1&#39;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</source>
+      <comment>NotificationsView</comment>
+      <translation>&lt;font color=&#39;%1&#39;&gt;Enable Push notifications in your device Settings&lt;/font&gt;&lt;br&gt;&lt;br&gt;Before enabling mobile push notifications in the app below, enable them in &lt;font color=&#39;%1&#39;&gt;your device settings&lt;/font&gt; first.</translation>
+    </message>
+    <message>
+      <source>Enable mobile push notifications</source>
+      <comment>NotificationsView</comment>
+      <translation>Enable mobile push notifications</translation>
+    </message>
+    <message>
+      <source>Allow Notification Bubbles</source>
+      <comment>NotificationsView</comment>
+      <translation>Allow Notification Bubbles</translation>
     </message>
   </context>
   <context>
@@ -18069,6 +18273,16 @@
       <comment>ProfileShowcasePanel</comment>
       <translation>Showcase limit of %1 reached. &lt;br&gt;Remove item from showcase to add more.</translation>
     </message>
+    <message>
+      <source>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</source>
+      <comment>ProfileShowcasePanel</comment>
+      <translation>Your search is too cool (use A-Z and 0-9, hyphens and underscores only)</translation>
+    </message>
+    <message>
+      <source>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</source>
+      <comment>ProfileShowcasePanel</comment>
+      <translation>Your search contains invalid characters (use A-Z and 0-9, hyphens and underscores only)</translation>
+    </message>
   </context>
   <context>
     <name>ProfileShowcaseSocialLinksView</name>
@@ -18317,6 +18531,38 @@
       <source>WalletConnect to connect to dApps</source>
       <comment>QRCodeScannerDialog</comment>
       <translation>WalletConnect to connect to dApps</translation>
+    </message>
+  </context>
+  <context>
+    <name>Qt5ScannerOverlay</name>
+    <message>
+      <source>Scan barcode</source>
+      <comment>Qt5ScannerOverlay</comment>
+      <translation>Scan barcode</translation>
+    </message>
+  </context>
+  <context>
+    <name>Qt5ScannerPage</name>
+    <message>
+      <source>Scan again</source>
+      <comment>Qt5ScannerPage</comment>
+      <translation>Scan again</translation>
+    </message>
+  </context>
+  <context>
+    <name>Qt6ScannerOverlay</name>
+    <message>
+      <source>Scan barcode</source>
+      <comment>Qt6ScannerOverlay</comment>
+      <translation>Scan barcode</translation>
+    </message>
+  </context>
+  <context>
+    <name>Qt6ScannerPage</name>
+    <message>
+      <source>Scan again</source>
+      <comment>Qt6ScannerPage</comment>
+      <translation>Scan again</translation>
     </message>
   </context>
   <context>
@@ -18813,6 +19059,11 @@
       <comment>RightTabView</comment>
       <translation>History</translation>
     </message>
+    <message>
+      <source>Activity</source>
+      <comment>RightTabView</comment>
+      <translation>Activity</translation>
+    </message>
   </context>
   <context>
     <name>RootStore</name>
@@ -18835,6 +19086,11 @@
       <source>Type something</source>
       <comment>RootStore</comment>
       <translation>Type something</translation>
+    </message>
+    <message>
+      <source>Message</source>
+      <comment>RootStore</comment>
+      <translation>Message</translation>
     </message>
   </context>
   <context>
@@ -18874,6 +19130,16 @@
       <source>No saved addresses found. Check spelling or address is correct.</source>
       <comment>SavedAddresses</comment>
       <translation>No saved addresses found. Check spelling or address is correct.</translation>
+    </message>
+    <message>
+      <source>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+      <comment>SavedAddresses</comment>
+      <translation>Your search is too cool (use A-Z and 0-9, single whitespace, hyphens and underscores only)</translation>
+    </message>
+    <message>
+      <source>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</source>
+      <comment>SavedAddresses</comment>
+      <translation>Your search contains invalid characters (use A-Z and 0-9, single whitespace, hyphens and underscores only)</translation>
     </message>
   </context>
   <context>
@@ -19691,6 +19957,11 @@
       <comment>SettingsEntriesModel</comment>
       <translation>On-device backup</translation>
     </message>
+    <message>
+      <source>Notifications &amp; Sounds</source>
+      <comment>SettingsEntriesModel</comment>
+      <translation>Notifications &amp; Sounds</translation>
+    </message>
   </context>
   <context>
     <name>SettingsLeftTabView</name>
@@ -20057,6 +20328,44 @@
       <source>Copied</source>
       <comment>SignCollectibleInfoBox</comment>
       <translation>Copied</translation>
+    </message>
+  </context>
+  <context>
+    <name>SignMessageModal</name>
+    <message>
+      <source>Signature request</source>
+      <comment>SignMessageModal</comment>
+      <translation>Signature request</translation>
+    </message>
+    <message>
+      <source>From</source>
+      <comment>SignMessageModal</comment>
+      <translation>From</translation>
+    </message>
+    <message>
+      <source>Data</source>
+      <comment>SignMessageModal</comment>
+      <translation>Data</translation>
+    </message>
+    <message>
+      <source>Message</source>
+      <comment>SignMessageModal</comment>
+      <translation>Message</translation>
+    </message>
+    <message>
+      <source>Reject</source>
+      <comment>SignMessageModal</comment>
+      <translation>Reject</translation>
+    </message>
+    <message>
+      <source>Sign</source>
+      <comment>SignMessageModal</comment>
+      <translation>Sign</translation>
+    </message>
+    <message>
+      <source>Sign with password</source>
+      <comment>SignMessageModal</comment>
+      <translation>Sign with password</translation>
     </message>
   </context>
   <context>
@@ -21161,6 +21470,11 @@
       <translation>Buy for %L1 SNT</translation>
     </message>
     <message>
+      <source>Buy for %1 SNT</source>
+      <comment>StatusStickerButton</comment>
+      <translation>Buy for %1 SNT</translation>
+    </message>
+    <message>
       <source>Uninstall</source>
       <comment>StatusStickerButton</comment>
       <translation>Uninstall</translation>
@@ -22229,6 +22543,11 @@
       <translation>Enable services and restart the app</translation>
     </message>
     <message>
+      <source>Close</source>
+      <comment>ThirdpartyServicesPopup</comment>
+      <translation>Close</translation>
+    </message>
+    <message>
       <source>Disable third-party services</source>
       <comment>ThirdpartyServicesPopup</comment>
       <translation>Disable third-party services</translation>
@@ -23142,6 +23461,44 @@
     </message>
   </context>
   <context>
+    <name>TransactionSigner</name>
+    <message>
+      <source>You need to enter a password</source>
+      <comment>TransactionSigner</comment>
+      <translation>You need to enter a password</translation>
+    </message>
+    <message>
+      <source>Password needs to be 6 characters or more</source>
+      <comment>TransactionSigner</comment>
+      <translation>Password needs to be 6 characters or more</translation>
+    </message>
+    <message>
+      <source>Signing phrase</source>
+      <comment>TransactionSigner</comment>
+      <translation>Signing phrase</translation>
+    </message>
+    <message>
+      <source>Signing phrase is a 3 word combination that is displayed when you entered the wallet on this device for the first time.</source>
+      <comment>TransactionSigner</comment>
+      <translation>Signing phrase is a 3 word combination that is displayed when you entered the wallet on this device for the first time.</translation>
+    </message>
+    <message>
+      <source>Enter the password you use to unlock this device</source>
+      <comment>TransactionSigner</comment>
+      <translation>Enter the password you use to unlock this device</translation>
+    </message>
+    <message>
+      <source>Password</source>
+      <comment>TransactionSigner</comment>
+      <translation>Password</translation>
+    </message>
+    <message>
+      <source>Enter password</source>
+      <comment>TransactionSigner</comment>
+      <translation>Enter password</translation>
+    </message>
+  </context>
+  <context>
     <name>TransferOwnershipAlertPopup</name>
     <message>
       <source>Transfer ownership of %1</source>
@@ -23614,6 +23971,16 @@
       <source>BaseScan</source>
       <comment>Utils</comment>
       <translation>BaseScan</translation>
+    </message>
+    <message>
+      <source>Polygon zkEVM Explorer</source>
+      <comment>Utils</comment>
+      <translation>Polygon zkEVM Explorer</translation>
+    </message>
+    <message>
+      <source>Status Explorer</source>
+      <comment>Utils</comment>
+      <translation>Status Explorer</translation>
     </message>
     <message>
       <source>BscScan</source>
@@ -24599,6 +24966,92 @@
     </message>
   </context>
   <context>
+    <name>ZXingQt5CamReader</name>
+    <message>
+      <source>Format: &#x9; %1 &#xA;Text: &#x9; %2 &#xA;Type: &#x9; %3 &#xA;Time: &#x9; %4 ms</source>
+      <comment>ZXingQt5CamReader</comment>
+      <translation>Format: &#x9; %1 &#xA;Text: &#x9; %2 &#xA;Type: &#x9; %3 &#xA;Time: &#x9; %4 ms</translation>
+    </message>
+    <message>
+      <source>Camera: </source>
+      <comment>ZXingQt5CamReader</comment>
+      <translation>Camera:</translation>
+    </message>
+    <message>
+      <source>Try Rotate</source>
+      <comment>ZXingQt5CamReader</comment>
+      <translation>Try Rotate</translation>
+    </message>
+    <message>
+      <source>Try Harder</source>
+      <comment>ZXingQt5CamReader</comment>
+      <translation>Try Harder</translation>
+    </message>
+    <message>
+      <source>Try Invert</source>
+      <comment>ZXingQt5CamReader</comment>
+      <translation>Try Invert</translation>
+    </message>
+    <message>
+      <source>Try Downscale</source>
+      <comment>ZXingQt5CamReader</comment>
+      <translation>Try Downscale</translation>
+    </message>
+    <message>
+      <source>Linear Codes</source>
+      <comment>ZXingQt5CamReader</comment>
+      <translation>Linear Codes</translation>
+    </message>
+    <message>
+      <source>Matrix Codes</source>
+      <comment>ZXingQt5CamReader</comment>
+      <translation>Matrix Codes</translation>
+    </message>
+  </context>
+  <context>
+    <name>ZXingQt6CamReader</name>
+    <message>
+      <source>Format: &#x9; %1 &#xA;Text: &#x9; %2 &#xA;Type: &#x9; %3 &#xA;Time: &#x9; %4 ms</source>
+      <comment>ZXingQt6CamReader</comment>
+      <translation>Format: &#x9; %1 &#xA;Text: &#x9; %2 &#xA;Type: &#x9; %3 &#xA;Time: &#x9; %4 ms</translation>
+    </message>
+    <message>
+      <source>Camera: </source>
+      <comment>ZXingQt6CamReader</comment>
+      <translation>Camera:</translation>
+    </message>
+    <message>
+      <source>Try Rotate</source>
+      <comment>ZXingQt6CamReader</comment>
+      <translation>Try Rotate</translation>
+    </message>
+    <message>
+      <source>Try Harder</source>
+      <comment>ZXingQt6CamReader</comment>
+      <translation>Try Harder</translation>
+    </message>
+    <message>
+      <source>Try Invert</source>
+      <comment>ZXingQt6CamReader</comment>
+      <translation>Try Invert</translation>
+    </message>
+    <message>
+      <source>Try Downscale</source>
+      <comment>ZXingQt6CamReader</comment>
+      <translation>Try Downscale</translation>
+    </message>
+    <message>
+      <source>Linear Codes</source>
+      <comment>ZXingQt6CamReader</comment>
+      <translation>Linear Codes</translation>
+    </message>
+    <message>
+      <source>Matrix Codes</source>
+      <comment>ZXingQt6CamReader</comment>
+      <translation>Matrix Codes</translation>
+    </message>
+  </context>
+  <context>
     <name>main</name>
     <message>
       <source>Status Desktop</source>
@@ -24624,6 +25077,11 @@
       <source>Report a bug on GitHub</source>
       <comment>main</comment>
       <translation>Report a bug on GitHub</translation>
+    </message>
+    <message>
+      <source>Hello World</source>
+      <comment>main</comment>
+      <translation>Hello World</translation>
     </message>
   </context>
   <context>
