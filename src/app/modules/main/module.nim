@@ -2118,7 +2118,7 @@ proc runStartUsingKeycardForProfilePopup[T](self: Module[T]) =
 method signOutAndQuit*[T](self: Module[T]) =
   info "signOutAndQuit: logging out and quitting"
   self.controller.logout()
-  singletonInstance.application.quit()
+  singletonInstance.application.exit()
 
 method checkAndPerformProfileMigrationIfNeeded*[T](self: Module[T]) =
   let keyUid = singletonInstance.userProfile.getKeyUid()
@@ -2126,7 +2126,7 @@ method checkAndPerformProfileMigrationIfNeeded*[T](self: Module[T]) =
   let profileKeypair = self.walletAccountService.getKeypairByKeyUid(keyUid)
   if profileKeypair.isNil:
     info "quit the app because of unresolved profile keypair", keyUid
-    singletonInstance.application.quit()
+    singletonInstance.application.exit()
     return
   if not migrationNeeded:
     if not self.keycardSharedModule.isNil:
