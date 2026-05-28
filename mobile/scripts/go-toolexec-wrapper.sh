@@ -23,7 +23,37 @@ set -euo pipefail
 TOOL="$1"
 shift
 
-if [[ "$(basename "$TOOL")" != "cgo" ]]; then
+TOOL_NAME="$(basename "$TOOL")"
+
+# Intercept the linker to force deterministic output. status-go's Makefile
+# sets its own -ldflags but doesn't include the determinism switches; rather
+# than patch the submodule's Makefile we inject the flags here.
+#   -s          strip the Go symbol table (not needed at runtime for c-shared)
+#   -w          strip DWARF debug info
+#   -buildid=   force empty build ID (default is a content-hash that drifts
+#               when any input has any volatile bit; cmd/link uses last-wins
+#               on repeated flags, so we have to REPLACE any existing value
+#               that go build computed, not just append)
+if [[ "$TOOL_NAME" == "link" ]]; then
+  new_args=()
+  skip_next=false
+  injected_buildid=false
+  for arg in "$@"; do
+    if $skip_next; then skip_next=false; continue; fi
+    if [[ "$arg" == "-buildid" ]]; then
+      skip_next=true        # drop the value too
+      continue
+    elif [[ "$arg" == -buildid=* ]]; then
+      continue              # drop the whole -buildid=X
+    elif [[ "$arg" == "-s" || "$arg" == "-w" ]]; then
+      continue              # we re-add these below; drop to avoid duplicates
+    fi
+    new_args+=("$arg")
+  done
+  exec "$TOOL" -s -w -buildid= "${new_args[@]}"
+fi
+
+if [[ "$TOOL_NAME" != "cgo" ]]; then
   exec "$TOOL" "$@"
 fi
 
