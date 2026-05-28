@@ -104,32 +104,21 @@ proc init*(self: Controller) =
     self.delegate.onKeycardExportRestoreKeysSuccess(args.exportedKeys)
   self.connectionIds.add(handlerId)
 
-  featureGuard USE_KEYCARD_QT:
-    handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_LOGIN_FINISHED) do(e: Args):
-      let args = KeycardLoginArgs(e)
-      if args.error.len > 0:
-        self.delegate.onKeycardExportLoginKeysFailure(args.error)
-      else:
-        self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
-    self.connectionIds.add(handlerId)
-
-    handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_RECOVER_FINISHED) do(e: Args):
-      let args = KeycardLoginArgs(e)
-      if args.error.len > 0:
-        self.delegate.onKeycardExportLoginKeysFailure(args.error)
-      else:
-        self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
-    self.connectionIds.add(handlerId)
-  else:
-    handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_FAILURE) do(e: Args):
-      let args = KeycardErrorArg(e)
+  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_LOGIN_FINISHED) do(e: Args):
+    let args = KeycardLoginArgs(e)
+    if args.error.len > 0:
       self.delegate.onKeycardExportLoginKeysFailure(args.error)
-    self.connectionIds.add(handlerId)
-
-    handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_SUCCESS) do(e: Args):
-      let args = KeycardExportedKeysArg(e)
+    else:
       self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
-    self.connectionIds.add(handlerId)
+  self.connectionIds.add(handlerId)
+
+  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_RECOVER_FINISHED) do(e: Args):
+    let args = KeycardLoginArgs(e)
+    if args.error.len > 0:
+      self.delegate.onKeycardExportLoginKeysFailure(args.error)
+    else:
+      self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
+  self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SIGNAL_LOGIN_ERROR) do(e: Args):
     let args = LoginErrorArgs(e)

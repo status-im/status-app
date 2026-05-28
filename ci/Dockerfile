@@ -91,7 +91,7 @@ RUN apt update -yq && apt install -yq software-properties-common \
 
 # Install PCSC Lite
 COPY --from=pcsc-build /pcsc/builddir/pcscd   /usr/local/sbin/
-COPY --from=pcsc-build /pcsc/src/PCSC /usr/local/include/
+COPY --from=pcsc-build /pcsc/src/PCSC /usr/local/include/PCSC/
 COPY --from=pcsc-build /pcsc/builddir/meson-private/libpcsclite.pc /usr/local/lib/x86_64-linux-gnu/pkgconfig/
 COPY --from=pcsc-build /pcsc/builddir/libpcsclite_real.so.1 /pcsc/builddir/libpcsclite_real.so \
                        /pcsc/builddir/libpcsclite.so.1      /pcsc/builddir/libpcsclite.so \
