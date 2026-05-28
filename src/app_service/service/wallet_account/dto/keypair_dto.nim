@@ -1,10 +1,12 @@
 import tables, json, std/strformat, strutils, sequtils, sugar, chronicles
 
-import account_dto, keycard_dto
+import account_dto
+import keycard_dto
 
 include  app_service/common/json_utils
 
-export account_dto, keycard_dto
+export account_dto
+export keycard_dto
 
 const KeypairTypeProfile* = "profile"
 const KeypairTypeSeed* = "seed"
@@ -27,13 +29,12 @@ type
     lastUsedDerivationIndex*: int
     syncedFrom*: string
     accounts*: seq[WalletAccountDto]
-    keycards*: seq[KeycardDto]
     removed*: bool
     extendedPublicKey*: string
     coldWalletType*: string
 
 proc migratedToColdWallet*(self: KeypairDto): bool =
-  return self.keycards.len > 0
+  return self.coldWalletType != ColdWalletTypeNoNone
 
 proc toKeypairDto*(jsonObj: JsonNode): KeypairDto =
   result = KeypairDto()
@@ -58,11 +59,6 @@ proc toKeypairDto*(jsonObj: JsonNode): KeypairDto =
     for accObj in accountsObj:
       result.accounts.add(toWalletAccountDto(accObj))
 
-  var keycardsObj: JsonNode
-  if jsonObj.getProp("keycards", keycardsObj) and keycardsObj.kind != JNull:
-    for kcObj in keycardsObj:
-      result.keycards.add(toKeycardDto(kcObj))
-
 proc `$`*(self: KeypairDto): string =
   result = fmt"""KeypairDto[
     keyUid: {self.keyUid},
@@ -76,13 +72,6 @@ proc `$`*(self: KeypairDto): string =
     accounts:
   """
   for i in 0 ..< self.accounts.len:
-    result &= fmt"""
-    [{i}]:({$self.accounts[i]})
-    """
-  result &= fmt"""
-    keycards:
-  """
-  for i in 0 ..< self.keycards.len:
     result &= fmt"""
     [{i}]:({$self.accounts[i]})
     """

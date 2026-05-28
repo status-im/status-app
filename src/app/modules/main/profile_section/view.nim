@@ -67,11 +67,6 @@ QtObject:
   QtProperty[QVariant] communitiesModule:
     read = getCommunitiesModule
 
-  proc getKeycardModule(self: View): QVariant {.slot.} =
-    return self.delegate.getKeycardModule()
-  QtProperty[QVariant] keycardModule:
-    read = getKeycardModule
-
   proc getKeycardNewModule(self: View): QVariant {.slot.} =
     return self.delegate.getKeycardNewModule()
   QtProperty[QVariant] keycardNewModule:

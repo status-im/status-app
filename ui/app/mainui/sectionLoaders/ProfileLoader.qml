@@ -39,7 +39,6 @@ Loader {
     required property ProfileStores.PrivacyStore privacyStore
     required property ProfileStores.NotificationsStore notificationsStore
     required property ProfileStores.LanguageStore languageStore
-    required property ProfileStores.KeycardStore keycardStore
     required property ProfileStores.KeycardNewStore keycardNewStore
     required property ProfileStores.WalletStore walletProfileStore
     required property ProfileStores.EnsUsernamesStore ensUsernamesStore
@@ -121,7 +120,6 @@ Loader {
             privacyStore:                           Qt.binding(() => root.privacyStore),
             notificationsStore:                     Qt.binding(() => root.notificationsStore),
             languageStore:                          Qt.binding(() => root.languageStore),
-            keycardStore:                           Qt.binding(() => root.keycardStore),
             keycardNewStore:                        Qt.binding(() => root.keycardNewStore),
             walletStore:                            Qt.binding(() => root.walletProfileStore),
             messagingSettingsStore:                 Qt.binding(() => root.messagingSettingsStore),
