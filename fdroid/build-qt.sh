@@ -20,7 +20,7 @@ QT_VERSION="${QT_VERSION:-6.9.2}"
 QT_MODULES=qtbase,qtdeclarative,qt5compat,qtmultimedia,qtshadertools,qtimageformats,qtwebview,qtscxml,qtsvg,qtconnectivity,qtwebsockets,qtpositioning,qtlottie,qtwebchannel
 (cd "$QT_SRCDIR" && perl init-repository --module-subset="$QT_MODULES")
 
-# Reproducibility: 
+# Reproducibility:
 #   add_link_options: strips .note.gnu.build-id from every .so
 #   add_compile_options: make sure that paths dont leak into final build.
 QT5_CMAKELISTS="$QT_SRCDIR/CMakeLists.txt"
@@ -31,6 +31,28 @@ add_compile_options("-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.")\
 add_compile_options("-ffile-prefix-map=${CMAKE_BINARY_DIR}=.")\
 add_compile_options("-ffile-prefix-map=$ENV{HOME}=.")
 }' "$QT5_CMAKELISTS"
+fi
+
+# Reproducibility: force qmlcachegen --only-bytecode for every Qt-internal QML
+# module. qmlcachegen's AOT C++ codegen (AOTCompiledContext) makes per-call
+# decisions whose heuristics walk QHash containers; iteration order depends on
+# per-process memory layout, so different runs emit different amounts of AOT
+# code for the same QML inputs. Disassembly of two back-to-back builds showed
+# +800 bytes of AOT code in one libQt6QuickControls2Fusion vs the other.
+# --only-bytecode keeps QML bytecode compilation (deterministic) and skips AOT.
+QT_QML_MACROS="$QT_SRCDIR/qtdeclarative/src/qml/Qt6QmlMacros.cmake"
+if [ -f "$QT_QML_MACROS" ] && ! grep -q 'REPRODUCIBILITY_ONLY_BYTECODE' "$QT_QML_MACROS"; then
+    sed -i '/MATCHES "-NOTFOUND\$"/,/endforeach()/{
+/endforeach()/a\
+    # REPRODUCIBILITY_ONLY_BYTECODE: pin every Qt-internal QML module to\
+    # qmlcachegen --only-bytecode so AOT C++ codegen does not introduce\
+    # per-build non-determinism in compiled .so files.\
+    get_target_property(_qmlcg_args ${target} QT_QMLCACHEGEN_ARGUMENTS)\
+    if(NOT "--only-bytecode" IN_LIST _qmlcg_args)\
+        list(APPEND _qmlcg_args "--only-bytecode")\
+        set_target_properties(${target} PROPERTIES QT_QMLCACHEGEN_ARGUMENTS "${_qmlcg_args}")\
+    endif()
+}' "$QT_QML_MACROS"
 fi
 
 # Reproducibility: rewrite absolute build/install paths embedded in compiled
