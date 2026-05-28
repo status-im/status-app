@@ -551,10 +551,8 @@ method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], error: string) =
       return
     self.view.keycardImportKeyPairSuccess()
   elif self.tmpFlowType == FlowType.MigratingNonProfileKeypairToKeycard:
-    let error = self.controller.updateKeypairExtendedPublicKey(self.tmpKeyUid, self.tmpXpub, wallet_account_service.ColdWalletTypeStatusKeycard)
-    if error.len > 0:
-      self.emitError("failed to update keypair extended public key: " & error & " for key uid: " & self.tmpKeyUid)
-      return
+    # TODO: updating xpub explicitly (via updateKeypairXPub) is removed, cause once the key pair is added the xpub is always the same
+    # regardless if the key pair is migrated to a cold wallet device or not, just need to ensure that every (old - already added) key pair has xpub set
     self.saveKeypairToKeycard() # this is just to add keycard to db and remove keystore files
     self.view.keycardMoveKeyPairSuccess()
   elif self.tmpFlowType == FlowType.MigratingProfileKeypairToKeycard:
@@ -563,11 +561,9 @@ method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], error: string) =
     if newPassword.len == 0:
       self.emitError("failed to derive encryption public key from seed phrase")
       return
+    # TODO: updating xpub explicitly (via updateKeypairXPub) is removed, cause once the key pair is added the xpub is always the same
+    # regardless if the key pair is migrated to a cold wallet device or not, just need to ensure that every (old - already added) key pair has xpub set
     self.controller.setStoreToKeychainValueNotNow()
-    let err = self.controller.updateKeypairExtendedPublicKey(self.tmpKeyUid, self.tmpXpub, wallet_account_service.ColdWalletTypeStatusKeycard)
-    if err.len > 0:
-      self.emitError("failed to update keypair extended public key: " & err & " for key uid: " & self.tmpKeyUid)
-      return
     let keycardUid = self.view.getKeycardUid()
     self.controller.convertRegularProfileKeypairToKeycard(keycardUid, self.tmpPassword, newPassword)
   else:

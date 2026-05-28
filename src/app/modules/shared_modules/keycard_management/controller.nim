@@ -169,11 +169,6 @@ proc getKeypairs*(self: Controller): seq[wallet_account_service.KeypairDto] =
     return
   return self.walletAccountService.getKeypairs()
 
-proc updateKeypairExtendedPublicKey*(self: Controller, keyUid, extendedPublicKey, coldWalletType: string): string =
-  if not serviceApplicable(self.walletAccountService):
-    return
-  return self.walletAccountService.updateKeypairExtendedPublicKey(keyUid, extendedPublicKey, coldWalletType)
-
 proc isMnemonicBackedUp*(self: Controller): bool =
   if not serviceApplicable(self.privacyService):
     return
