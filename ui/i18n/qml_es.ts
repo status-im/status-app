@@ -5591,40 +5591,8 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
 <context>
     <name>DetailsView</name>
     <message>
-        <source>Configure your Keycard</source>
-        <translation>Configurar tu Keycard</translation>
-    </message>
-    <message>
-        <source>Rename Keycard</source>
-        <translation>Renombrar Keycard</translation>
-    </message>
-    <message>
         <source>Change PIN</source>
         <translation>Cambiar PIN</translation>
-    </message>
-    <message>
-        <source>Create a backup copy of this Keycard</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Stop using Keycard for this key pair</source>
-        <translation>Dejar de usar Keycard para este par de claves</translation>
-    </message>
-    <message>
-        <source>Unlock Keycard</source>
-        <translation>Desbloquear Keycard</translation>
-    </message>
-    <message>
-        <source>Advanced</source>
-        <translation>Avanzado</translation>
-    </message>
-    <message>
-        <source>Create a 12-digit personal unblocking key (PUK)</source>
-        <translation>Crear una clave de desbloqueo personal (PUK) de 12 dígitos</translation>
-    </message>
-    <message>
-        <source>Create a new pairing code</source>
-        <translation>Crear un nuevo código de emparejamiento</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
@@ -10880,13 +10848,6 @@ acceso a tus fondos.</translation>
     </message>
 </context>
 <context>
-    <name>KeycardView</name>
-    <message>
-        <source>Get Keycard</source>
-        <translation>Obtener Keycard</translation>
-    </message>
-</context>
-<context>
     <name>KeycardViewNew</name>
     <message>
         <source>Read Keycard</source>
@@ -11569,46 +11530,6 @@ al cargar</translation>
     <message>
         <source>Secure your funds. Keep your profile safe.</source>
         <translation>Protege tus fondos. Mantén tu perfil seguro.</translation>
-    </message>
-    <message>
-        <source>Your Keycard(s)</source>
-        <translation>Tu(s) Keycard(s)</translation>
-    </message>
-    <message>
-        <source>Setup a new Keycard with an existing account</source>
-        <translation>Configurar una nueva Keycard con una cuenta existente</translation>
-    </message>
-    <message>
-        <source>Migrate an existing account from Status Desktop to Keycard</source>
-        <translation>Migrar una cuenta existente de Status Desktop a Keycard</translation>
-    </message>
-    <message>
-        <source>Create, import or restore a Keycard account</source>
-        <translation>Crear, importar o restaurar una cuenta de Keycard</translation>
-    </message>
-    <message>
-        <source>Create a new Keycard account with a new recovery phrase</source>
-        <translation>Crear una nueva cuenta de Keycard con una nueva frase de recuperación</translation>
-    </message>
-    <message>
-        <source>Import or restore via a recovery phrase</source>
-        <translation>Importar o restaurar mediante una frase de recuperación</translation>
-    </message>
-    <message>
-        <source>Import from Keycard to Status Desktop</source>
-        <translation>Importar de Keycard a Status Desktop</translation>
-    </message>
-    <message>
-        <source>Other</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Check what’s on a Keycard</source>
-        <translation>Verificar qué hay en una Keycard</translation>
-    </message>
-    <message>
-        <source>Factory reset a Keycard</source>
-        <translation>Restablecer la Keycard a valores de fábrica</translation>
     </message>
     <message>
         <source>Networks</source>
@@ -16374,10 +16295,6 @@ al cargar</translation>
     <message>
         <source>Password</source>
         <translation>Contraseña</translation>
-    </message>
-    <message>
-        <source>Keycard</source>
-        <translation>Keycard</translation>
     </message>
     <message>
         <source>ENS usernames</source>

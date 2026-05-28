@@ -3,7 +3,7 @@ import parseutils, sequtils, sugar, chronicles
 import app/global/global_singleton
 import app_service/service/keycard/constants
 import app_service/common/account_constants
-import app_service/service/wallet_account/dto/[keypair_dto]
+import app_service/service/wallet_account/dto/[keypair_dto, keycard_dto]
 import app/modules/shared_models/[keypair_model]
 
 from app_service/service/keycard/service import KCSFlowType

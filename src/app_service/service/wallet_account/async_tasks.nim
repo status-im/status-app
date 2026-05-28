@@ -90,65 +90,6 @@ proc prepareTokensTask(argEncoded: string) {.gcsafe, nimcall.} =
   arg.finish(output)
 
 #################################################
-# Async add new keycard or accounts
-#################################################
-
-type
-  SaveOrUpdateKeycardTaskArg* = ref object of QObjectTaskArg
-    keycard: KeycardDto
-    password: string
-
-proc saveOrUpdateKeycardTask*(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[SaveOrUpdateKeycardTaskArg](argEncoded)
-  var responseJson = %*{
-    "success": false,
-    "keycard": arg.keycard.toJsonNode()
-  }
-  try:
-    let response = backend.saveOrUpdateKeycard(
-      %* {
-        "keycard-uid": arg.keycard.keycardUid,
-        "keycard-name": arg.keycard.keycardName,
-        # "keycard-locked" - no need to set it here, cause it will be set to false by the status-go
-        "key-uid": arg.keycard.keyUid,
-        "accounts-addresses": arg.keycard.accountsAddresses,
-        # "position": - no need to set it here, cause it is fully maintained by the status-go
-      },
-      arg.password
-      )
-    let success = responseHasNoErrors("saveOrUpdateKeycard", response)
-    responseJson["success"] = %* success
-  except Exception as e:
-    error "error adding new keycard: ", message = e.msg
-  arg.finish(responseJson)
-
-#################################################
-# Async remove migrated accounts for keycard
-#################################################
-
-type
-  DeleteKeycardAccountsTaskArg* = ref object of QObjectTaskArg
-    keycard: KeycardDto
-
-proc deleteKeycardAccountsTask*(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[DeleteKeycardAccountsTaskArg](argEncoded)
-  var responseJson = %*{
-    "success": false,
-    "keycard": arg.keycard.toJsonNode()
-  }
-  try:
-    let response = backend.deleteKeycardAccounts(
-      arg.keycard.keycardUid,
-      arg.keycard.accountsAddresses
-      )
-    let success = responseHasNoErrors("deleteKeycardAccounts", response)
-    responseJson["success"] = %* success
-  except Exception as e:
-    error "error remove accounts from keycard: ", message = e.msg
-
-  arg.finish(responseJson)
-
-#################################################
 # Async fetch chain id for url
 #################################################
 

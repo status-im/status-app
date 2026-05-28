@@ -283,7 +283,8 @@ proc getKeypairByKeyUidFromDb*(self: Controller, keyUid: string): wallet_account
   return self.walletAccountService.getKeypairByKeyUidFromDb(keyUid)
 
 proc addKeycardOrAccounts*(self: Controller, keyPair: KeycardDto, password: string) =
-  self.walletAccountService.addKeycardOrAccountsAsync(keyPair, password)
+  # TODO: re-implement when integrating new keycard approach
+  discard
 
 proc getMetadata*(self: Controller): keycard_serviceV2.CardMetadataDto =
   return self.keycardServiceV2.getMetadata()
