@@ -2164,7 +2164,6 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
   # Matched before the chat/community/contact routes so the reserved keywords never
   # collide with a public-chat link of the form `status-app://<id>`.
   let genericNavTarget = extractGenericNavTargetFromDeepLink(statusDeepLink)
-  info "activateStatusDeepLink", statusDeepLink, genericNavTarget # TODO(deep-link debug): remove
   case genericNavTarget
   of DEEP_LINK_NAV_ACTIVITY_CENTER:
     self.view.emitOpenActivityCenterSignal()
@@ -2173,6 +2172,7 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
     self.setActiveSectionById(singletonInstance.userProfile.getPubKey())
     return
   else:
+    info "No generic navigation target found in deep link"
     discard
   if self.activateChatDeepLink(statusDeepLink):
     return
