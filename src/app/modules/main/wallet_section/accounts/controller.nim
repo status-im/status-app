@@ -51,7 +51,8 @@ proc getCurrencyFormat*(self: Controller, key: string): CurrencyFormatDto =
   return self.currencyService.getCurrencyFormat(key)
 
 proc getKeycardsWithSameKeyUid*(self: Controller, keyUid: string): seq[KeycardDto] =
-  return self.walletAccountService.getKeycardsWithSameKeyUid(keyUid)
+  # TODO: re-implement when integrating new keycard approach
+  return @[]
 
 proc getWalletAccount*(self: Controller, address: string): WalletAccountDto =
   return self.walletAccountService.getAccountByAddress(address)

@@ -5609,40 +5609,8 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
 <context>
     <name>DetailsView</name>
     <message>
-        <source>Configure your Keycard</source>
-        <translation>Konfigurovat Keycard</translation>
-    </message>
-    <message>
-        <source>Rename Keycard</source>
-        <translation>Přejmenovat Keycard</translation>
-    </message>
-    <message>
         <source>Change PIN</source>
         <translation>Změnit PIN</translation>
-    </message>
-    <message>
-        <source>Create a backup copy of this Keycard</source>
-        <translation>Vytvořit záložní kopii této Keycard</translation>
-    </message>
-    <message>
-        <source>Stop using Keycard for this key pair</source>
-        <translation>Přestat používat Keycard pro tento pár klíčů</translation>
-    </message>
-    <message>
-        <source>Unlock Keycard</source>
-        <translation>Odemknout Keycard</translation>
-    </message>
-    <message>
-        <source>Advanced</source>
-        <translation>Pokročilé</translation>
-    </message>
-    <message>
-        <source>Create a 12-digit personal unblocking key (PUK)</source>
-        <translation>Vytvořit 12místný osobní odblokovací klíč (PUK)</translation>
-    </message>
-    <message>
-        <source>Create a new pairing code</source>
-        <translation>Vytvořit nový párovací kód</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
@@ -10947,13 +10915,6 @@ přístup ke svým prostředkům.</translation>
     </message>
 </context>
 <context>
-    <name>KeycardView</name>
-    <message>
-        <source>Get Keycard</source>
-        <translation>Získat Keycard</translation>
-    </message>
-</context>
-<context>
     <name>KeycardViewNew</name>
     <message>
         <source>Read Keycard</source>
@@ -11646,46 +11607,6 @@ selhalo</translation>
     <message>
         <source>Secure your funds. Keep your profile safe.</source>
         <translation>Zabezpečte své prostředky. Udržujte svůj profil v bezpečí.</translation>
-    </message>
-    <message>
-        <source>Your Keycard(s)</source>
-        <translation>Vaše Keycard(s)</translation>
-    </message>
-    <message>
-        <source>Setup a new Keycard with an existing account</source>
-        <translation>Nastavit novou Keycard s existujícím účtem</translation>
-    </message>
-    <message>
-        <source>Migrate an existing account from Status Desktop to Keycard</source>
-        <translation>Migrovat existující účet ze Status Desktop na Keycard</translation>
-    </message>
-    <message>
-        <source>Create, import or restore a Keycard account</source>
-        <translation>Vytvořit, importovat nebo obnovit účet Keycard</translation>
-    </message>
-    <message>
-        <source>Create a new Keycard account with a new recovery phrase</source>
-        <translation>Vytvořit nový účet Keycard s novou obnovovací frází</translation>
-    </message>
-    <message>
-        <source>Import or restore via a recovery phrase</source>
-        <translation>Importovat nebo obnovit pomocí obnovovací fráze</translation>
-    </message>
-    <message>
-        <source>Import from Keycard to Status Desktop</source>
-        <translation>Importovat z Keycard do Status Desktop</translation>
-    </message>
-    <message>
-        <source>Other</source>
-        <translation>Jiná</translation>
-    </message>
-    <message>
-        <source>Check what’s on a Keycard</source>
-        <translation>Zkontrolovat obsah Keycard</translation>
-    </message>
-    <message>
-        <source>Factory reset a Keycard</source>
-        <translation>Tovární nastavení Keycard</translation>
     </message>
     <message>
         <source>Networks</source>
@@ -16467,10 +16388,6 @@ selhalo</translation>
     <message>
         <source>Password</source>
         <translation>Heslo</translation>
-    </message>
-    <message>
-        <source>Keycard</source>
-        <translation>Keycard</translation>
     </message>
     <message>
         <source>ENS usernames</source>

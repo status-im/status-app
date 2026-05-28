@@ -687,58 +687,39 @@ proc buildAllTokens*(self: Controller, addresses: seq[string], forceRefresh: boo
   self.walletAccountService.buildAllTokens(addresses, forceRefresh)
 
 proc addKeycardOrAccounts*(self: Controller, keyPair: KeycardDto, password: string) =
-  if not serviceApplicable(self.walletAccountService):
-    return
-  if not serviceApplicable(self.accountsService):
-    return
-  self.walletAccountService.addKeycardOrAccountsAsync(keyPair, password)
+  # TODO: re-implement when integrating new keycard approach
+  discard
 
 proc removeMigratedAccountsForKeycard*(self: Controller, keyUid: string, keycardUid: string, accountsToRemove: seq[string]) =
-  if not serviceApplicable(self.walletAccountService):
-    return
-  self.walletAccountService.removeMigratedAccountsForKeycard(keyUid, keycardUid, accountsToRemove)
+  # TODO: re-implement when integrating new keycard approach
+  discard
 
 proc getAddingMigratedKeypairSuccess*(self: Controller): bool =
   return self.tmpAddingMigratedKeypairSuccess
 
 proc getKeycardsWithSameKeyUid*(self: Controller, keyUid: string): seq[KeycardDto] =
-  if not serviceApplicable(self.walletAccountService):
-    return
-  return self.walletAccountService.getKeycardsWithSameKeyUid(keyUid)
+  # TODO: re-implement when integrating new keycard approach
+  return @[]
 
 proc getAllKnownKeycards*(self: Controller): seq[KeycardDto] =
-  if not serviceApplicable(self.walletAccountService):
-    return
-  return self.walletAccountService.getAllKnownKeycards()
+  # TODO: re-implement when integrating new keycard approach
+  return @[]
 
 proc setCurrentKeycardStateToLocked*(self: Controller, keyUid: string, keycardUid: string) =
-  if not serviceApplicable(self.walletAccountService):
-    return
-  if not self.walletAccountService.setKeycardLocked(keyUid, keycardUid):
-    info "updating keycard locked state failed", keyUid=keyUid, keycardUid=keycardUid
+  # TODO: re-implement when integrating new keycard approach
+  discard
 
 proc setCurrentKeycardStateToUnlocked*(self: Controller, keyUid: string, keycardUid: string) =
-  if not serviceApplicable(self.walletAccountService):
-    return
-  if not self.walletAccountService.setKeycardUnlocked(keyUid, keycardUid):
-    info "updating keycard unlocked state failed", keyUid=keyUid, keycardUid=keycardUid
+  # TODO: re-implement when integrating new keycard approach
+  discard
 
 proc updateKeycardName*(self: Controller, keycardUid: string, keycardName: string): bool =
-  if not serviceApplicable(self.walletAccountService):
-    return false
-  if not self.walletAccountService.updateKeycardName(keycardUid, keycardName):
-    info "updating keycard name failed", keycardUid=keycardUid, keycardName=keycardName
-    return false
-  return true
+  # TODO: re-implement when integrating new keycard approach
+  return false
 
 proc updateKeycardUid*(self: Controller, keyUid: string, keycardUid: string) =
-  if not serviceApplicable(self.walletAccountService):
-    return
-  self.setCurrentKeycardStateToUnlocked(keyUid, self.tmpKeycardUid)
-  if self.tmpKeycardUid != keycardUid:
-    if not self.walletAccountService.updateKeycardUid(self.tmpKeycardUid, keycardUid):
-      self.tmpKeycardUid = keycardUid
-      info "update keycard uid failed", oldKeycardUid=self.tmpKeycardUid, newKeycardUid=keycardUid
+  # TODO: re-implement when integrating new keycard approach
+  discard
 
 proc addNewColdWalletStoredKeypair*(self: Controller, keyUid, keypairName, walletXPub, coldWallet,
   rootWalletMasterKey: string, accounts: seq[WalletAccountDto]): bool =

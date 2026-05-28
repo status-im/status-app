@@ -5572,40 +5572,8 @@ Remember your password and don&apos;t share it with anyone.</source>
 <context>
     <name>DetailsView</name>
     <message>
-        <source>Configure your Keycard</source>
-        <translation>Keycard 설정하기</translation>
-    </message>
-    <message>
-        <source>Rename Keycard</source>
-        <translation>Keycard 이름 변경</translation>
-    </message>
-    <message>
         <source>Change PIN</source>
         <translation>PIN 변경</translation>
-    </message>
-    <message>
-        <source>Create a backup copy of this Keycard</source>
-        <translation>이 Keycard의 백업 사본을 생성</translation>
-    </message>
-    <message>
-        <source>Stop using Keycard for this key pair</source>
-        <translation>이 키 페어에 Keycard 사용 중지</translation>
-    </message>
-    <message>
-        <source>Unlock Keycard</source>
-        <translation>Keycard 잠금 해제</translation>
-    </message>
-    <message>
-        <source>Advanced</source>
-        <translation>고급</translation>
-    </message>
-    <message>
-        <source>Create a 12-digit personal unblocking key (PUK)</source>
-        <translation>개인 잠금 해제 키(PUK) 12자리 만들기</translation>
-    </message>
-    <message>
-        <source>Create a new pairing code</source>
-        <translation>새 페어링 코드 만들기</translation>
     </message>
     <message>
         <source>Keycard is empty</source>
@@ -10856,13 +10824,6 @@ access to your funds.</source>
     </message>
 </context>
 <context>
-    <name>KeycardView</name>
-    <message>
-        <source>Get Keycard</source>
-        <translation>Keycard 받기</translation>
-    </message>
-</context>
-<context>
     <name>KeycardViewNew</name>
     <message>
         <source>Read Keycard</source>
@@ -11535,46 +11496,6 @@ to load</source>
     <message>
         <source>Secure your funds. Keep your profile safe.</source>
         <translation>자산을 지키세요. 프로필을 안전하게 보호하세요.</translation>
-    </message>
-    <message>
-        <source>Your Keycard(s)</source>
-        <translation>내 Keycard</translation>
-    </message>
-    <message>
-        <source>Setup a new Keycard with an existing account</source>
-        <translation>기존 계정으로 새 Keycard 설정</translation>
-    </message>
-    <message>
-        <source>Migrate an existing account from Status Desktop to Keycard</source>
-        <translation>Status 데스크톱에서 기존 계정을 Keycard로 마이그레이션</translation>
-    </message>
-    <message>
-        <source>Create, import or restore a Keycard account</source>
-        <translation>Keycard 계정을 생성, 가져오기 또는 복원</translation>
-    </message>
-    <message>
-        <source>Create a new Keycard account with a new recovery phrase</source>
-        <translation>새 복구 구문으로 새 Keycard 계정을 만들기</translation>
-    </message>
-    <message>
-        <source>Import or restore via a recovery phrase</source>
-        <translation>복구 구문으로 가져오기 또는 복원</translation>
-    </message>
-    <message>
-        <source>Import from Keycard to Status Desktop</source>
-        <translation>Keycard에서 Status 데스크톱으로 가져오기</translation>
-    </message>
-    <message>
-        <source>Other</source>
-        <translation>기타</translation>
-    </message>
-    <message>
-        <source>Check what’s on a Keycard</source>
-        <translation>Keycard에 무엇이 있는지 확인</translation>
-    </message>
-    <message>
-        <source>Factory reset a Keycard</source>
-        <translation>Keycard 공장 초기화</translation>
     </message>
     <message>
         <source>Networks</source>
@@ -16324,10 +16245,6 @@ to load</source>
     <message>
         <source>Password</source>
         <translation>비밀번호</translation>
-    </message>
-    <message>
-        <source>Keycard</source>
-        <translation>키카드</translation>
     </message>
     <message>
         <source>ENS usernames</source>

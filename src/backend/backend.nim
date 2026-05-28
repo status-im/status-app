@@ -217,43 +217,6 @@ rpc(deleteDappPermissionsByNameAndAddress, "permissions"):
 rpc(fetchTokenDetails, "wallet"):
   tokenKeys: seq[string]
 
-rpc(saveOrUpdateKeycard, "accounts"):
-  keycard: JsonNode
-  password: string
-
-rpc(deleteKeycardAccounts, "accounts"):
-  keycardUid: string
-  accountsToRemove: seq[string]
-
-rpc(getAllKnownKeycards, "accounts"):
-  discard
-
-rpc(getKeycardsWithSameKeyUID, "accounts"):
-  keyUid: string
-
-rpc(getKeycardByKeycardUID, "accounts"):
-  keycardUid: string
-
-rpc(setKeycardName, "accounts"):
-  keycardUid: string
-  keyPairName: string
-
-rpc(keycardLocked, "accounts"):
-  keycardUid: string
-
-rpc(keycardUnlocked, "accounts"):
-  keycardUid: string
-
-rpc(updateKeycardUID, "accounts"):
-  oldKeycardUID: string
-  newKeycardUID: string
-
-rpc(deleteKeycard, "accounts"):
-  keycardUid: string
-
-rpc(deleteAllKeycardsWithKeyUID, "accounts"):
-  keyUid: string
-
 rpc(moveWalletAccount, "accounts"):
   fromPosition: int
   toPosition: int

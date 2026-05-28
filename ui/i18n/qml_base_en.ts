@@ -5580,39 +5580,7 @@ Remember your password and don&apos;t share it with anyone.</source>
 <context>
     <name>DetailsView</name>
     <message>
-        <source>Configure your Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Rename Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Change PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Create a backup copy of this Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Stop using Keycard for this key pair</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unlock Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Advanced</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Create a 12-digit personal unblocking key (PUK)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Create a new pairing code</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10867,13 +10835,6 @@ access to your funds.</source>
     </message>
 </context>
 <context>
-    <name>KeycardView</name>
-    <message>
-        <source>Get Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>KeycardViewNew</name>
     <message>
         <source>Read Keycard</source>
@@ -11554,46 +11515,6 @@ to load</source>
     <name>MainView</name>
     <message>
         <source>Secure your funds. Keep your profile safe.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your Keycard(s)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Setup a new Keycard with an existing account</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Migrate an existing account from Status Desktop to Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Create, import or restore a Keycard account</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Create a new Keycard account with a new recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Import or restore via a recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Import from Keycard to Status Desktop</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Other</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Check what’s on a Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Factory reset a Keycard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16357,10 +16278,6 @@ to load</source>
     </message>
     <message>
         <source>Password</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Keycard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

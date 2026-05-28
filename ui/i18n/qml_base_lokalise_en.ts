@@ -6809,49 +6809,9 @@
   <context>
     <name>DetailsView</name>
     <message>
-      <source>Configure your Keycard</source>
-      <comment>DetailsView</comment>
-      <translation>Configure your Keycard</translation>
-    </message>
-    <message>
-      <source>Rename Keycard</source>
-      <comment>DetailsView</comment>
-      <translation>Rename Keycard</translation>
-    </message>
-    <message>
       <source>Change PIN</source>
       <comment>DetailsView</comment>
       <translation>Change PIN</translation>
-    </message>
-    <message>
-      <source>Create a backup copy of this Keycard</source>
-      <comment>DetailsView</comment>
-      <translation>Create a backup copy of this Keycard</translation>
-    </message>
-    <message>
-      <source>Stop using Keycard for this key pair</source>
-      <comment>DetailsView</comment>
-      <translation>Stop using Keycard for this key pair</translation>
-    </message>
-    <message>
-      <source>Unlock Keycard</source>
-      <comment>DetailsView</comment>
-      <translation>Unlock Keycard</translation>
-    </message>
-    <message>
-      <source>Advanced</source>
-      <comment>DetailsView</comment>
-      <translation>Advanced</translation>
-    </message>
-    <message>
-      <source>Create a 12-digit personal unblocking key (PUK)</source>
-      <comment>DetailsView</comment>
-      <translation>Create a 12-digit personal unblocking key (PUK)</translation>
-    </message>
-    <message>
-      <source>Create a new pairing code</source>
-      <comment>DetailsView</comment>
-      <translation>Create a new pairing code</translation>
     </message>
     <message>
       <source>Keycard is empty</source>
@@ -13263,14 +13223,6 @@
     </message>
   </context>
   <context>
-    <name>KeycardView</name>
-    <message>
-      <source>Get Keycard</source>
-      <comment>KeycardView</comment>
-      <translation>Get Keycard</translation>
-    </message>
-  </context>
-  <context>
     <name>KeycardViewNew</name>
     <message>
       <source>Read Keycard</source>
@@ -14086,56 +14038,6 @@
       <source>Secure your funds. Keep your profile safe.</source>
       <comment>MainView</comment>
       <translation>Secure your funds. Keep your profile safe.</translation>
-    </message>
-    <message>
-      <source>Your Keycard(s)</source>
-      <comment>MainView</comment>
-      <translation>Your Keycard(s)</translation>
-    </message>
-    <message>
-      <source>Setup a new Keycard with an existing account</source>
-      <comment>MainView</comment>
-      <translation>Setup a new Keycard with an existing account</translation>
-    </message>
-    <message>
-      <source>Migrate an existing account from Status Desktop to Keycard</source>
-      <comment>MainView</comment>
-      <translation>Migrate an existing account from Status Desktop to Keycard</translation>
-    </message>
-    <message>
-      <source>Create, import or restore a Keycard account</source>
-      <comment>MainView</comment>
-      <translation>Create, import or restore a Keycard account</translation>
-    </message>
-    <message>
-      <source>Create a new Keycard account with a new recovery phrase</source>
-      <comment>MainView</comment>
-      <translation>Create a new Keycard account with a new recovery phrase</translation>
-    </message>
-    <message>
-      <source>Import or restore via a recovery phrase</source>
-      <comment>MainView</comment>
-      <translation>Import or restore via a recovery phrase</translation>
-    </message>
-    <message>
-      <source>Import from Keycard to Status Desktop</source>
-      <comment>MainView</comment>
-      <translation>Import from Keycard to Status Desktop</translation>
-    </message>
-    <message>
-      <source>Other</source>
-      <comment>MainView</comment>
-      <translation>Other</translation>
-    </message>
-    <message>
-      <source>Check what’s on a Keycard</source>
-      <comment>MainView</comment>
-      <translation>Check what’s on a Keycard</translation>
-    </message>
-    <message>
-      <source>Factory reset a Keycard</source>
-      <comment>MainView</comment>
-      <translation>Factory reset a Keycard</translation>
     </message>
     <message>
       <source>Networks</source>
@@ -19940,11 +19842,6 @@
       <source>Password</source>
       <comment>SettingsEntriesModel</comment>
       <translation>Password</translation>
-    </message>
-    <message>
-      <source>Keycard</source>
-      <comment>SettingsEntriesModel</comment>
-      <translation>Keycard</translation>
     </message>
     <message>
       <source>ENS usernames</source>

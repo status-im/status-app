@@ -40,7 +40,8 @@ proc deleteKeypair*(self: Controller, keyUid: string, password: string) =
   self.walletAccountService.deleteKeypair(keyUid, password)
 
 proc getKeycardsWithSameKeyUid*(self: Controller, keyUid: string): seq[KeycardDto] =
-  return self.walletAccountService.getKeycardsWithSameKeyUid(keyUid)
+  # TODO: re-implement when integrating new keycard approach
+  return @[]
 
 proc isKeycardAccount*(self: Controller, account: WalletAccountDto): bool =
   return self.walletAccountService.isKeycardAccount(account)
