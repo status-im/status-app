@@ -118,27 +118,51 @@ proc fetchChainIdForUrlTask*(argEncoded: string) {.gcsafe, nimcall.} =
     })
 
 #################################################
-# Async migration of a non profile keycard keypair to the app
+# Async migration of a non profile cold-wallet keypair to the app
 #################################################
 
 type
-  MigrateNonProfileKeycardKeypairToAppTaskArg* = ref object of QObjectTaskArg
+  MigrateNonProfileColdWalletKeypairToAppTaskArg* = ref object of QObjectTaskArg
     keyUid: string
     seedPhrase: string
     password: string
 
-proc migrateNonProfileKeycardKeypairToAppTask*(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[MigrateNonProfileKeycardKeypairToAppTaskArg](argEncoded)
+proc migrateNonProfileColdWalletKeypairToAppTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[MigrateNonProfileColdWalletKeypairToAppTaskArg](argEncoded)
   var responseJson = %*{
     "success": false,
     "keyUid": arg.keyUid
   }
   try:
-    let response = status_go_accounts.migrateNonProfileKeycardKeypairToApp(arg.seedPhrase, arg.password)
-    let success = responseHasNoErrors("migrateNonProfileKeycardKeypairToApp", response)
+    let response = status_go_accounts.migrateNonProfileColdWalletKeypairToApp(arg.seedPhrase, arg.password)
+    let success = responseHasNoErrors("migrateNonProfileColdWalletKeypairToApp", response)
     responseJson["success"] = %* success
   except Exception as e:
-    error "error migrating a non profile keycard keypair: ", message = e.msg
+    error "error migrating a non profile cold-wallet keypair: ", message = e.msg
+  arg.finish(responseJson)
+
+#################################################
+# Async migration of a non profile keypair to a cold-wallet
+#################################################
+
+type
+  MigrateNonProfileKeypairToColdWalletTaskArg* = ref object of QObjectTaskArg
+    keyUid: string
+    password: string
+    coldWallet: string
+
+proc migrateNonProfileKeypairToColdWalletTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[MigrateNonProfileKeypairToColdWalletTaskArg](argEncoded)
+  var responseJson = %*{
+    "success": false,
+    "keyUid": arg.keyUid
+  }
+  try:
+    let response = status_go_accounts.migrateNonProfileKeypairToColdWallet(arg.keyUid, arg.password, arg.coldWallet)
+    let success = responseHasNoErrors("migrateNonProfileKeypairToColdWallet", response)
+    responseJson["success"] = %* success
+  except Exception as e:
+    error "error marking a non profile keypair as cold-wallet backed: ", message = e.msg
   arg.finish(responseJson)
 
 #################################################

@@ -69,7 +69,8 @@ QtObject:
   proc onDerivedAddressesForMnemonicFetched*(self: Service, jsonString: string) {.slot.}
   proc onAddressDetailsFetched*(self: Service, jsonString: string) {.slot.}
   proc onFetchChainIdForUrl*(self: Service, jsonString: string) {.slot.}
-  proc onNonProfileKeycardKeypairMigratedToApp*(self: Service, response: string) {.slot.}
+  proc onNonProfileColdWalletKeypairMigratedToApp*(self: Service, response: string) {.slot.}
+  proc onNonProfileKeypairMigratedToColdWallet*(self: Service, response: string) {.slot.}
   proc onENSNamesFetched*(self: Service, response: string) {.slot.}
 
   proc delete*(self: Service)

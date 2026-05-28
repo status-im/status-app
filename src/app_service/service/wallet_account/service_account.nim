@@ -485,7 +485,7 @@ proc cleanKeystoreFiles(self: Service, password: string) =
   except Exception as e:
     error "error: ", procName="makeSeedPhraseKeypairFullyOperable", errName=e.name, errDesription=e.msg
 
-proc onNonProfileKeycardKeypairMigratedToApp*(self: Service, response: string) {.slot.} =
+proc onNonProfileColdWalletKeypairMigratedToApp*(self: Service, response: string) {.slot.} =
   var data = KeycardArgs(
     success: false,
     keycard: KeycardDto()
@@ -498,20 +498,47 @@ proc onNonProfileKeycardKeypairMigratedToApp*(self: Service, response: string) {
     if kp.isNil:
       data.success = false
   except Exception as e:
-    error "error handling migrated keycard response", errDesription=e.msg
+    error "error handling migrated cold-wallet keypair response", errDesription=e.msg
   self.events.emit(SIGNAL_ALL_KEYCARDS_DELETED, data)
 
-proc migrateNonProfileKeycardKeypairToAppAsync*(self: Service, keyUid, seedPhrase, password: string, doPasswordHashing: bool) =
+proc migrateNonProfileColdWalletKeypairToAppAsync*(self: Service, keyUid, seedPhrase, password: string, doPasswordHashing: bool) =
   var finalPassword = password
   if doPasswordHashing:
     finalPassword = utils.hashPassword(password)
-  let arg = MigrateNonProfileKeycardKeypairToAppTaskArg(
-    tptr: migrateNonProfileKeycardKeypairToAppTask,
+  let arg = MigrateNonProfileColdWalletKeypairToAppTaskArg(
+    tptr: migrateNonProfileColdWalletKeypairToAppTask,
     vptr: cast[uint](self.vptr),
-    slot: "onNonProfileKeycardKeypairMigratedToApp",
+    slot: "onNonProfileColdWalletKeypairMigratedToApp",
     keyUid: keyUid,
     seedPhrase: seedPhrase,
     password: finalPassword
+  )
+  self.threadpool.start(arg)
+
+proc onNonProfileKeypairMigratedToColdWallet*(self: Service, response: string) {.slot.} =
+  var data = KeycardArgs(
+    success: false,
+    keycard: KeycardDto()
+  )
+  try:
+    let responseObj = response.parseJson
+    discard responseObj.getProp("success", data.success)
+    discard responseObj.getProp("keyUid", data.keycard.keyUid)
+  except Exception as e:
+    error "error handling cold-wallet flip response", errDesription=e.msg
+  self.events.emit(SIGNAL_NEW_KEYCARD_SET, data)
+
+proc migrateNonProfileKeypairToColdWalletAsync*(self: Service, keyUid, password, coldWallet: string, doPasswordHashing: bool) =
+  var finalPassword = password
+  if doPasswordHashing:
+    finalPassword = utils.hashPassword(password)
+  let arg = MigrateNonProfileKeypairToColdWalletTaskArg(
+    tptr: migrateNonProfileKeypairToColdWalletTask,
+    vptr: cast[uint](self.vptr),
+    slot: "onNonProfileKeypairMigratedToColdWallet",
+    keyUid: keyUid,
+    password: finalPassword,
+    coldWallet: coldWallet
   )
   self.threadpool.start(arg)
 
