@@ -147,9 +147,6 @@ QtObject:
     if status_const.IS_MACOS and status_const.IS_INTEL:
       sleep 700
     self.initializeRPC()
-    featureGuard (not USE_KEYCARD_QT):
-      self.startDetection()
-    discard
 
   proc receiveKeycardSignalV2(self: Service, signal: string) {.slot, featureGuard(KEYCARD_ENABLED).} =
     try:

@@ -333,7 +333,6 @@ The following environment variables can be used to customize the build:
 - REBUILD_NIM (true,false) - Force nim recompilation
 - REBUILD_UI (true,false) - Force qrc recompilation
 - STATUS_KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local status-keycard-qt folder. Defaults to `vendor/status-keycard-qt`
-- USE_STATUS_KEYCARD_QT (0,1) - Toggle to switch between `status-keycard-go` and `status-keycard-qt`. Defaults to `0`
 - VCINSTALLDIR (path) - Visual Studio compiler installation path. Defaults to `C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\`
 
 
