@@ -80,9 +80,8 @@ public final class StatusGoServiceClient {
                 final int signalSizeBytes = jsonSignal != null
                         ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
                         : 0;
-                final String signalType = getSignalType(jsonSignal);
                 if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
-                    Log.w(TAG, "received large status-go signal type=" + signalType
+                    Log.w(TAG, "received large status-go signal type=" + getSignalType(jsonSignal)
                             + " sizeBytes=" + signalSizeBytes);
                 }
                 StatusGoStub.nativeDeliverSignal(jsonSignal);
