@@ -17,17 +17,27 @@ SO_PATH="${1:?Usage: $0 <path-to-libstatus.so>}"
 NM="${NM:-llvm-nm}"
 OBJCOPY="${OBJCOPY:-llvm-objcopy}"
 
-# Discover every per-build hash present in the binary, sorted.
+# Fail loudly if our toolchain isn't on PATH — silent skip masks a broken
+# build (e.g., post-link stripping leaves no .symtab, then a misconfigured
+# nm reports "no symbols" and we never canonicalize anything).
+command -v "$NM" >/dev/null      || { echo "[canonicalize-cgo] $NM not found on PATH" >&2; exit 1; }
+command -v "$OBJCOPY" >/dev/null || { echo "[canonicalize-cgo] $OBJCOPY not found on PATH" >&2; exit 1; }
+
+# Read BOTH static and dynamic symbol tables (-D includes .dynsym, needed
+# when -s stripping has removed .symtab).
+list_symbols() { "$NM" -D -P "$SO_PATH"; "$NM" -P "$SO_PATH" 2>/dev/null || true; }
+
 mapfile -t HASHES < <(
-  "$NM" -P "$SO_PATH" | awk '{print $1}' \
+  list_symbols | awk '{print $1}' \
     | grep -Eo '^_cgo(exp)?_[0-9a-f]{12,16}_' \
     | sed -E 's/^_cgo(exp)?_([0-9a-f]+)_/\2/' \
     | sort -u
 )
 
 if [[ ${#HASHES[@]} -eq 0 ]]; then
-  echo "[canonicalize-cgo] no cgo hash symbols found in $SO_PATH"
-  exit 0
+  echo "[canonicalize-cgo] no cgo hash symbols found in $SO_PATH" >&2
+  echo "[canonicalize-cgo] this is unexpected for a cgo build; check that nm reads .dynsym" >&2
+  exit 1
 fi
 
 # Build the mapping: every discovered hash -> c0de<sha256-prefix>, where the
@@ -55,7 +65,7 @@ for HASH in "${HASHES[@]}"; do
   LEN=${#HASH}
   SHA_LEN=$((LEN - 4))
   STABLE=$(
-    "$NM" -P "$SO_PATH" | awk '{print $1}' \
+    list_symbols | awk '{print $1}' \
       | grep -E "_cgo(exp)?_${HASH}_" \
       | sed "s/${HASH}/X/g" \
       | sort -u \
@@ -68,7 +78,7 @@ for HASH in "${HASHES[@]}"; do
   fi
   rewrites=$((rewrites + 1))
 
-  "$NM" -P "$SO_PATH" | awk '{print $1}' \
+  list_symbols | awk '{print $1}' \
     | grep -E "_cgo(exp)?_${HASH}_" | sort -u \
     | while read -r SYM; do
         printf '%s %s\n' "$SYM" "${SYM/$HASH/$CANON}"

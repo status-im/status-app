@@ -80,8 +80,16 @@ else
   SHA256="shasum -a 256"
 fi
 
-# Sort by basename for stable concatenation order, then hash file contents.
-det=$(printf '%s\n' "${inputs[@]}" | sort -t/ -k99,99 | xargs cat | $SHA256 | awk '{print $1}' | cut -c1-16)
+# Order-independent file-set hash: hash each file individually, sort the
+# resulting hashes, then hash that. Same file SET in any order → same result.
+# (Previous attempt used `sort -t/ -k99,99` which is meaningless for paths
+# and left file order unchanged — that made the importpath depend on the
+# order Go passed files, which varies per build for some packages.)
+det=$(
+  for f in "${inputs[@]}"; do
+    $SHA256 < "$f"
+  done | sort | $SHA256 | awk '{print $1}' | cut -c1-16
+)
 new_importpath="reprodpkg-${det}"
 
 # Rebuild args, replacing -importpath value. Support both `-importpath X` and
