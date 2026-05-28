@@ -69,6 +69,10 @@ Item {
         thirdpartyServicesEnabled: appMain.featureFlagsStore.privacyModeFeatureEnabled ?
                                    appMain.privacyStore.thirdpartyServicesEnabled: true
         onOpenUrl: (link) => Global.requestOpenLink(link)
+        onOpenActivityCenter: () => {
+            appMain.activityCenterStore.setActiveNotificationGroup(ActivityCenterTypes.ActivityCenterGroup.All)
+            mainLayoutItem.openACCenterPanel = true
+        }
         onWcLinkActivated: (link) => {
             const wcUri = Utils.walletConnectUriFromStatusLink(link)
             if (!!wcUri) {

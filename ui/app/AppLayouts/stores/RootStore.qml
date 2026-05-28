@@ -200,6 +200,10 @@ QtObject {
                 root.openUrl(url)
             }
 
+            function onOpenActivityCenter() {
+                root.openActivityCenter()
+            }
+
             function onNavigateToMessageDetails() {
                 root.setNavToMsgDetailsFlag(true)
             }
@@ -230,6 +234,7 @@ QtObject {
 
     signal ensNameResolved(string resolvedPubKey, string resolvedAddress, string uuid)
     signal openUrl(string link)
+    signal openActivityCenter()
     signal wcLinkActivated(string link)
     signal displayUserProfile(string publicKey)
     signal showToastPairingFallbackCompleted()

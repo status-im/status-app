@@ -90,6 +90,12 @@ const STATUS_INTERNAL_DEEP_LINK_PREFIX = "status-app://"
 const STATUS_EXTERNAL_DEEP_LINK_PREFIX = "https://status.app/"
 const STATUS_EXTERNAL_DEEP_LINK_PREFIX_HTTP = "http://status.app/"
 
+# Reserved, id-less navigation keywords used by generic deep links (e.g. bundled in
+# remote push notifications: `status-app://ac`, `status-app://chats`). They carry no
+# chat/community id, so they map to a fixed destination rather than a specific item.
+const DEEP_LINK_NAV_ACTIVITY_CENTER = "ac"
+const DEEP_LINK_NAV_CHATS = "chats"
+
 type
   SpectateRequest = object
     communityId*: string
@@ -1886,6 +1892,13 @@ proc extractGroupChatIdFromDeepLink(statusDeepLink: string): string =
 
   return extractDeepLinkValueUntilSeparator(deepLinkPath[idx + groupChatQueryParam.len .. ^1])
 
+proc extractGenericNavTargetFromDeepLink(statusDeepLink: string): string =
+  ## Returns the reserved navigation keyword (e.g. `ac`, `chats`) for a generic,
+  ## id-less deep link, or "" for any link that carries a path/id (those are handled
+  ## by the regular chat/community/contact routes).
+  let path = extractDeepLinkValueUntilSeparator(extractStatusDeepLinkPath(statusDeepLink))
+  return path.strip(chars = {'/'})
+
 proc activateChatDeepLink[T](self: Module[T], statusDeepLink: string): bool =
   let oneToOneChatId = extractOneToOneChatIdFromDeepLink(statusDeepLink)
   if oneToOneChatId.len > 0:
@@ -2147,6 +2160,20 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
   if statusDeepLink.contains("/wc?"):
     self.view.wcLinkActivated(statusDeepLink)
     return
+  # Generic, id-less navigation deep links (e.g. bundled in remote push notifications).
+  # Matched before the chat/community/contact routes so the reserved keywords never
+  # collide with a public-chat link of the form `status-app://<id>`.
+  let genericNavTarget = extractGenericNavTargetFromDeepLink(statusDeepLink)
+  info "activateStatusDeepLink", statusDeepLink, genericNavTarget # TODO(deep-link debug): remove
+  case genericNavTarget
+  of DEEP_LINK_NAV_ACTIVITY_CENTER:
+    self.view.emitOpenActivityCenterSignal()
+    return
+  of DEEP_LINK_NAV_CHATS:
+    self.setActiveSectionById(singletonInstance.userProfile.getPubKey())
+    return
+  else:
+    discard
   if self.activateChatDeepLink(statusDeepLink):
     return
   let urlData = self.sharedUrlsModule.parseSharedUrl(statusDeepLink)
