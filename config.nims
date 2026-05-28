@@ -19,7 +19,7 @@ if hostOS == "macosx":
   # note: macdeployqt rewrites rpath appropriately when building the .app bundle
   switch("passL", "-rpath" & " " & getEnv("QT_LIBDIR"))
   switch("passL", "-rpath" & " " & getEnv("STATUSGO_LIBDIR"))
-  switch("passL", "-rpath" & " " & getEnv("STATUSKEYCARDGO_LIBDIR"))
+  switch("passL", "-rpath" & " " & getEnv("STATUSKEYCARD_QT_LIBDIR"))
   switch("passL", "-rpath" & " " & getEnv("STATUSQ_INSTALL_PATH") & "/StatusQ")
   # statically link these libs
   switch("passL", "bottles/openssl@3/lib/libcrypto.a")

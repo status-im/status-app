@@ -375,8 +375,7 @@ proc mainDidLoad*(self: AppController) =
   if not self.onboardingModule.isNil:
     self.runPostOnboardingTasks()
 
-  # NB: after onboarding is finished, we need to switch back to the old service (Settings/Keycard)
-  # TODO remove `keycardService` when everything is ported to `keycardServiceV2`
+  # Reset keycard library state from RPC mode (used during onboarding) to flow mode (used post-login)
   self.keycardService.resetAPI()
   self.keycardService.init()
 

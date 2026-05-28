@@ -367,11 +367,7 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
       of LoginMethod.Password:
         self.controller.login(account, data["password"].str)
       of LoginMethod.Keycard:
-        featureGuard USE_KEYCARD_QT:
-          self.loginKeycard(self.tmpKeyUid, data["pin"].str)
-        else:
-          self.authorize(data["pin"].str)
-          # We will continue the flow when the card is authorized in onKeycardStateUpdated
+        self.loginKeycard(keyUid, data["pin"].str)
       of LoginMethod.Mnemonic:
         self.controller.login(account, password = "", mnemonic = data["mnemonic"].str)
       else:
@@ -479,12 +475,6 @@ method onLocalPairingStatusUpdate*[T](self: Module[T], status: LocalPairingStatu
 
 method onKeycardStateUpdated*[T](self: Module[T], keycardEvent: KeycardEventDto) =
   self.view.setKeycardEvent(keycardEvent)
-  featureGuard (not USE_KEYCARD_QT):
-    if keycardEvent.state == KeycardState.Authorized and self.loginFlow == LoginMethod.Keycard:
-      # After authorizing, we export the keys
-      self.controller.exportLoginKeysFromKeycard()
-      # We will login once we have the keys in onKeycardExportLoginKeysSuccess
-
   if keycardEvent.state == KeycardState.NotEmpty and self.view.getPinSettingState() == ProgressState.InProgress.int:
     # We just finished setting the pin
     self.view.setPinSettingState(ProgressState.Success)
