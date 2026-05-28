@@ -25,7 +25,7 @@ pipeline {
     )
     string(
       name: 'DOCKER_TAG_LINUX',
-      defaultValue: '1.0.7-qt6.11.0',
+      defaultValue: '1.0.8-qt6.11.0',
       description: 'Docker image tag for the Linux image'
     )
     string(
