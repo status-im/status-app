@@ -30,20 +30,38 @@ if [[ ${#HASHES[@]} -eq 0 ]]; then
   exit 0
 fi
 
-# Build the mapping: every discovered hash -> cafef00d<index>, where <index>
-# is zero-padded hex of position in the sorted list. Same set of hashes
-# (same source code) always yields the same canonical mapping.
+# Build the mapping: every discovered hash -> c0de<sha256-prefix>, where the
+# sha256 is computed over the sorted set of symbol names that use this hash
+# (with the hash itself replaced by a placeholder so the input is content-only).
+# Same package source → same symbol set → same canonical, every build, every
+# machine. Sort-order-based assignment is NOT safe here: when two builds
+# produce different random hashes, sorting them yields different orderings
+# and the same package gets a different canonical position. Content-derivation
+# avoids that.
 MAPPING=$(mktemp)
 PERL_SCRIPT=""
 trap 'rm -f "$MAPPING"' EXIT
 
-i=0
+# Pick a sha256 tool that's available on both macOS and Debian-derived fdroid
+# builders. Both ship at least one of these.
+if command -v sha256sum >/dev/null 2>&1; then
+  SHA256="sha256sum"
+else
+  SHA256="shasum -a 256"
+fi
+
 rewrites=0
 for HASH in "${HASHES[@]}"; do
   LEN=${#HASH}
-  SUFFIX_LEN=$((LEN - 8))
-  printf -v CANON "cafef00d%0${SUFFIX_LEN}x" "$i"
-  i=$((i + 1))
+  SHA_LEN=$((LEN - 4))
+  STABLE=$(
+    "$NM" -P "$SO_PATH" | awk '{print $1}' \
+      | grep -E "_cgo(exp)?_${HASH}_" \
+      | sed "s/${HASH}/X/g" \
+      | sort -u \
+      | $SHA256 | awk '{print $1}'
+  )
+  CANON="c0de${STABLE:0:$SHA_LEN}"
 
   if [[ "$HASH" == "$CANON" ]]; then
     continue

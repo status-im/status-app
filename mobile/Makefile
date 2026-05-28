@@ -37,7 +37,14 @@ ifeq ($(OS),android)
 	# Reproducibility env for status-go. F-Droid byte-verifies the APK
 	# against a reference build, so libstatus.so must come out identical
 	# every time.
-	  GOFLAGS="-trimpath -buildvcs=false" \
+	#
+	# -toolexec wraps every cgo invocation and substitutes -importpath with a
+	# content-derived value. cgo's per-package hash prefix (the X in
+	# _cgo_X_Cfunc_*) is sha256(importPath)[:6]; without this wrapper, Go's
+	# build system passes import paths that contain $WORK temp-dir components
+	# which change per invocation, cascading into a ~32-byte pclntab drift in
+	# .data.rel.ro that no -trimpath / -buildvcs / -ldflags flag can address.
+	  GOFLAGS="-trimpath -buildvcs=false -toolexec=$(abspath $(SCRIPTS_PATH)/go-toolexec-wrapper.sh)" \
 	  GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
 	  CGO_CFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
 	  CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
@@ -50,9 +57,10 @@ ifeq ($(OS),android)
 		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
-	# Canonicalize cgo's per-build symbol hash, then strip ELF note sections.
-	# The build flags above aren't sufficient on their own because cgo bakes
-	# a random per-invocation hash into every _cgo[exp]_*_X symbol name.
+	# Belt-and-suspenders: even with the toolexec wrapper above, run our
+	# post-link canonicalizer to rewrite any cgo hash that might still vary
+	# (and to verify reproducibility — a no-op pass should print
+	# "all N hashes already canonical").
 	@$(SCRIPTS_PATH)/canonicalize-cgo-symbols.sh \
 		../vendor/status-go/build/bin/libstatus$(LIB_EXT)
 	@$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(HOST_OS)-x86_64/bin/llvm-objcopy \
