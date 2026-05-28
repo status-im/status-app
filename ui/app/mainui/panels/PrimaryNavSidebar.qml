@@ -62,6 +62,9 @@ Control {
                                                      && root.position > 0.5
                                                      && root.browserSectionActive
 
+    // Portrait mobile drawer on Browser: keep sidebar open while overlay popups are shown.
+    readonly property bool keepOpenWhenPopups: SQUtils.Utils.isMobile && !root.alwaysVisible && root.browserSectionActive
+
     required property bool acVisible // FIXME AC should not be a section
     required property bool acHasUnseenNotifications // ActivityCenterStore.hasUnseenNotifications
     required property int acUnreadNotificationsCount // ActivityCenterStore.unreadNotificationsCount
@@ -118,7 +121,7 @@ Control {
         readonly property bool hasPopups: SQUtils.Utils.hasPopups(root.Overlay.overlay.children)
 
         onHasPopupsChanged: {
-            if (d.hasPopups) {
+            if (d.hasPopups && !root.keepOpenWhenPopups) {
                 root.close()
             }
         }
@@ -307,7 +310,8 @@ Control {
 
                 onToggled: {
                     root.activityCenterRequested(checked)
-                    root.close()
+                    if (!root.keepOpenWhenPopups)
+                        root.close()
                 }
             }
         }
