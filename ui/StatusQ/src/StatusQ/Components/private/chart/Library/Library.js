@@ -72,19 +72,31 @@
             }
             
             canvas._eventSource[mapped].connect(qmlHandler)
-            canvas._eventSource.connectedHandlers[listener] = qmlHandler
+            canvas._eventSource.connectedHandlers.push({
+                listener: listener,
+                mapped: mapped,
+                qmlHandler: qmlHandler
+            })
         },
 
         removeEventListener: function(chart, type, listener) {
             const canvas = chart.canvas
-            if (!canvas._eventSource.connectedHandlers[listener]) {
+            const mapped = EVENTS[type]
+            if (!mapped) {
                 return
             }
 
-            const mapped = EVENTS[type]
-            const qmlHandler = canvas._eventSource.connectedHandlers[listener]
+            const index = canvas._eventSource.connectedHandlers.findIndex(entry => {
+                return entry.listener === listener && entry.mapped === mapped
+            })
+
+            if (index === -1) {
+                return
+            }
+
+            const qmlHandler = canvas._eventSource.connectedHandlers[index].qmlHandler
             canvas._eventSource[mapped].disconnect(qmlHandler)
-            delete canvas._eventSource.connectedHandlers[listener]
+            canvas._eventSource.connectedHandlers.splice(index, 1)
         }
     })
 

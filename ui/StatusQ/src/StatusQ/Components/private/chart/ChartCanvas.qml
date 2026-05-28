@@ -114,7 +114,7 @@ Canvas {
     onHeightChanged: d.resizeDebouncer()
     onWidthChanged: d.resizeDebouncer()
     onAvailableChanged: {
-        if (!d.instance) {
+        if (available) {
             rebuild()
         }
     }
@@ -125,10 +125,24 @@ Canvas {
         property var instance: null
 
         function refresh() {
+            if (!instance) {
+                return
+            }
+
             instance.config.options = canvas.options
             instance.config.plugins = canvas.plugins
             instance.data.labels = canvas.labels
-            instance.update()
+            instance.data.datasets = canvas.datasets
+            try {
+                instance.update()
+            } catch (e) {
+                const staleInstance = instance
+                instance = null
+                try {
+                    staleInstance.destroy()
+                } catch (destroyError) {}
+                canvas.rebuild()
+            }
         }
 
         function rebuild() {
