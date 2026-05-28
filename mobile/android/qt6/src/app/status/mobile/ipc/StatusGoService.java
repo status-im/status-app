@@ -163,9 +163,8 @@ public final class StatusGoService extends Service {
         final int signalSizeBytes = jsonSignal != null
                 ? jsonSignal.getBytes(StandardCharsets.UTF_8).length
                 : 0;
-        final String signalType = getSignalType(jsonSignal);
         if (signalSizeBytes >= LARGE_SIGNAL_WARN_BYTES) {
-            Log.w(TAG, "large status-go signal type=" + signalType
+            Log.w(TAG, "large status-go signal type=" + getSignalType(jsonSignal)
                     + " sizeBytes=" + signalSizeBytes);
         }
 
@@ -174,14 +173,14 @@ public final class StatusGoService extends Service {
 
         final int n = listeners.beginBroadcast();
         final boolean useSharedMemorySignal = signalSizeBytes >= SIGNAL_SHARED_MEMORY_THRESHOLD_BYTES;
+        final byte[] signalBytes = useSharedMemorySignal
+                ? (jsonSignal != null ? jsonSignal.getBytes(StandardCharsets.UTF_8) : new byte[0])
+                : null;
         try {
             for (int i = 0; i < n; i++) {
                 try {
                     final IStatusGoSignalListener listener = listeners.getBroadcastItem(i);
                     if (useSharedMemorySignal) {
-                        final byte[] signalBytes = jsonSignal != null
-                                ? jsonSignal.getBytes(StandardCharsets.UTF_8)
-                                : new byte[0];
                         try (RpcResponse signalResponse = sharedPayload(signalBytes, "statusgo-signal")) {
                             listener.onSignalShm(signalResponse);
                         }
@@ -189,13 +188,13 @@ public final class StatusGoService extends Service {
                         listener.onSignal(jsonSignal);
                     }
                 } catch (RemoteException e) {
-                    Log.w(TAG, "failed to deliver signal to UI listener type=" + signalType
+                    Log.w(TAG, "failed to deliver signal to UI listener type=" + getSignalType(jsonSignal)
                             + " sizeBytes=" + signalSizeBytes, e);
                 } catch (RuntimeException e) {
-                    Log.w(TAG, "runtime failure delivering signal to UI listener type=" + signalType
+                    Log.w(TAG, "runtime failure delivering signal to UI listener type=" + getSignalType(jsonSignal)
                             + " sizeBytes=" + signalSizeBytes, e);
                 } catch (Throwable e) {
-                    Log.w(TAG, "unexpected failure delivering signal to UI listener type=" + signalType
+                    Log.w(TAG, "unexpected failure delivering signal to UI listener type=" + getSignalType(jsonSignal)
                             + " sizeBytes=" + signalSizeBytes, e);
                 }
             }
