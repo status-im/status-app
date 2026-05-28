@@ -8,7 +8,7 @@ import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Backpressure
 import StatusQ.Core.Theme
-import StatusQ.Core.Utils
+import StatusQ.Core.Utils as SQUtils
 
 import shared
 import shared.controls
@@ -110,6 +110,14 @@ Item {
         root.createChatPropertiesStore.resetProperties()
     }
 
+    onVisibleChanged: {
+        // Refocus from input field to chat list when changing to not visible on mobile.
+        // It prevents opening keyboard automatically when component becomes visible again,
+        // e.g. when notification is clicked.
+        if (SQUtils.Utils.isMobile && !visible)
+            chatRepeater.forceActiveFocus()
+    }
+
     QtObject {
         id: d
         readonly property var activeChatContentModule: d.getChatContentModule(root.activeChatId)
@@ -121,10 +129,10 @@ Item {
                 return
             }
             urlsModelChangeTracker.revision
-            ModelUtils.modelToFlatArray(d.activeChatContentModule.inputAreaModule.urlsModel, "url")
+            SQUtils.ModelUtils.modelToFlatArray(d.activeChatContentModule.inputAreaModule.urlsModel, "url")
         }
 
-        readonly property ModelChangeTracker urlsModelChangeTracker: ModelChangeTracker {
+        readonly property SQUtils.ModelChangeTracker urlsModelChangeTracker: SQUtils.ModelChangeTracker {
             model: !!d.activeChatContentModule ? d.activeChatContentModule.inputAreaModule.urlsModel : null
         }
 
@@ -153,7 +161,7 @@ Item {
             if (!!d.activeChatContentModule)
                 d.activeChatContentModule.inputAreaModule.preservedProperties.replyMessageId = messageId
 
-            const msg = ModelUtils.getByKey(d.activeMessagesStore.messagesModel, "id", messageId)
+            const msg = SQUtils.ModelUtils.getByKey(d.activeMessagesStore.messagesModel, "id", messageId)
 
             const senderColor = Theme.palette.userCustomizationColors[Utils.colorIdForPubkey(obj.senderId)]
 
@@ -240,13 +248,13 @@ Item {
         function getSymbolAndDecimalsForTokenFomModel(model, key) {
             let decimals = 0
             let symbol = ""
-            const tokenGroup = ModelUtils.getByKey(model, "key", key)
+            const tokenGroup = SQUtils.ModelUtils.getByKey(model, "key", key)
             if (!!tokenGroup) {
                 return [tokenGroup.symbol, tokenGroup.decimals]
             } else {
                 for (let i = 0; i < model.ModelCount.count; i++) {
-                    let tG = ModelUtils.get(model, i)
-                    const token = ModelUtils.getByKey(tG.tokens, "key", key)
+                    let tG = SQUtils.ModelUtils.get(model, i)
+                    const token = SQUtils.ModelUtils.getByKey(tG.tokens, "key", key)
                     if (!!token) {
                         return [token.symbol, token.decimals]
                     }
@@ -280,7 +288,7 @@ Item {
                 return "0"
             }
 
-            const num = AmountsArithmetic.toNumber(amount, decimals)
+            const num = SQUtils.AmountsArithmetic.toNumber(amount, decimals)
             return root.rootStore.currencyStore.formatCurrencyAmount(num, symbol, {noSymbol: true})
         }
     }
