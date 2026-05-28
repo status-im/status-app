@@ -28,7 +28,12 @@ StatusChartPanel {
         d.requestCommunityMetrics()
     }
 
-    onVisibleChanged: if(visible) d.resetWithSpamProtection()
+    onVisibleChanged: {
+        if (visible) {
+            chart.rebuild()
+            d.resetWithSpamProtection()
+        }
+    }
     onTimeRangeTabBarIndexChanged: reset()
     onModelChanged: chart.refresh()
     onCollectCommunityMetricsMessagesCount: d.lastRequestModelMetadata = d.selectedTabInfo.modelItems
