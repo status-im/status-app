@@ -146,9 +146,8 @@ proc addNewColdWalletStoredKeypair*(self: Controller, keyUid, keypairName, xpub,
     rootWalletMasterKey = "", accounts)
 
 proc addKeycardOrAccounts*(self: Controller, keyPair: KeycardDto, password: string) =
-  if not serviceApplicable(self.walletAccountService):
-    return
-  self.walletAccountService.addKeycardOrAccountsAsync(keyPair, password)
+  # TODO: re-implement when integrating new keycard approach
+  discard
 
 proc deriveAccountsPublicInfoFromExtendedPublicKeyForPaths*(self: Controller, extendedPublicKey: string, paths: seq[string]): DerivedAccounts =
   if not serviceApplicable(self.accountsService):
@@ -227,9 +226,8 @@ proc startAsyncLogin*(self: Controller, keyUid, pin, xPubPath: string) =
   self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath)
 
 proc updateKeycardUid*(self: Controller, oldKeycardUid, newKeycardUid: string) =
-  if not serviceApplicable(self.walletAccountService):
-    return
-  discard self.walletAccountService.updateKeycardUid(oldKeycardUid, newKeycardUid)
+  # TODO: re-implement when integrating new keycard approach
+  discard
 
 proc remainingKeypairCapacity*(self: Controller): int =
   if not serviceApplicable(self.walletAccountService):

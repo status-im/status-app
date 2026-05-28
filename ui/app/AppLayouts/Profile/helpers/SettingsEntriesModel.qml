@@ -74,12 +74,6 @@ SortFilterProxyModel {
             icon: "password",
             isExperimental: false
         },
-        {
-            subsection: Constants.settingsSubsection.keycard,
-            text: qsTr("Keycard"),
-            icon: "keycard",
-            isExperimental: false
-        },
         // TODO: enable when integrate keycard settings
         // {
         //     subsection: Constants.settingsSubsection.keycardNew,
@@ -228,8 +222,6 @@ SortFilterProxyModel {
                         return root.showBrowserEntries
                     case Constants.settingsSubsection.backUpSeed:
                         return root.showBackUpSeed
-                    case Constants.settingsSubsection.keycard:
-                        return root.isKeycardEnabled
                     case Constants.settingsSubsection.keycardNew:
                         return root.isKeycardEnabled
                     case Constants.settingsSubsection.contacts:

@@ -94,7 +94,6 @@ Item {
     readonly property ProfileStores.AdvancedStore advancedStore: rootStore.profileSectionStore.advancedStore
     readonly property ProfileStores.PrivacyStore privacyStore: rootStore.profileSectionStore.privacyStore
     readonly property ProfileStores.NotificationsStore notificationsStore: rootStore.profileSectionStore.notificationsStore
-    readonly property ProfileStores.KeycardStore keycardStore: rootStore.profileSectionStore.keycardStore
     readonly property ProfileStores.KeycardNewStore keycardNewStore: rootStore.profileSectionStore.keycardNewStore
     readonly property ProfileStores.WalletStore walletProfileStore: rootStore.profileSectionStore.walletStore
     readonly property ProfileStores.EnsUsernamesStore ensUsernamesStore: rootStore.profileSectionStore.ensUsernamesStore
@@ -2040,7 +2039,6 @@ Item {
                         privacyStore: appMain.privacyStore
                         notificationsStore: appMain.notificationsStore
                         languageStore: appMain.languageStore
-                        keycardStore: appMain.keycardStore
                         keycardNewStore: appMain.keycardNewStore
                         walletProfileStore: appMain.walletProfileStore
                         ensUsernamesStore: appMain.ensUsernamesStore

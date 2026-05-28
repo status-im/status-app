@@ -58,7 +58,6 @@ StatusSectionLayout {
     required property ProfileStores.PrivacyStore privacyStore
     required property ProfileStores.NotificationsStore notificationsStore
     required property ProfileStores.LanguageStore languageStore
-    required property ProfileStores.KeycardStore keycardStore
     required property ProfileStores.KeycardNewStore keycardNewStore
     required property ProfileStores.WalletStore walletStore
     required property ProfileStores.EnsUsernamesStore ensUsernamesStore
@@ -125,9 +124,6 @@ StatusSectionLayout {
             break;
         case Constants.settingsSubsection.privacyAndSecurity:
             privacyAndSecurityView.item.resetStack()
-            break;
-        case Constants.settingsSubsection.keycard:
-            keycardView.item.handleBackAction()
             break;
         case Constants.settingsSubsection.keycardNew:
             keycardViewNew.item.handleBackAction()
@@ -217,8 +213,6 @@ StatusSectionLayout {
                 walletView.item.initStack()
             } else if (currentIndex === Constants.settingsSubsection.privacyAndSecurity) {
                 privacyAndSecurityView.item.resetStack()
-            } else if (currentIndex === Constants.settingsSubsection.keycard) {
-                keycardView.item.handleBackAction()
             } else if (currentIndex === Constants.settingsSubsection.keycardNew) {
                 keycardViewNew.item.handleBackAction()
             }
@@ -351,7 +345,6 @@ StatusSectionLayout {
                 isKeycardEnabled: root.isKeycardEnabled
 
                 walletStore: root.walletStore
-                keycardStore: root.keycardStore
                 tokensStore: root.tokensStore
                 networkConnectionStore: root.networkConnectionStore
                 assetsStore: root.walletAssetsStore
@@ -542,22 +535,6 @@ StatusSectionLayout {
         }
 
         Loader {
-            id: keycardView
-            active: false
-            sourceComponent: KeycardView {
-                implicitWidth: parent.width
-                implicitHeight: parent.height
-
-                keycardStore: root.keycardStore
-                emojiPopup: root.emojiPopup
-                sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.keycard)
-                mainSectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.keycard)
-                backButtonName: d.backButtonName
-                contentWidth: d.contentWidth
-            }
-        }
-
-        Loader {
             id: keycardViewNew
             active: false
             sourceComponent: KeycardViewNew {
@@ -671,49 +648,6 @@ StatusSectionLayout {
     rightPanel: Loader {
         active: root.showRightPanel
         sourceComponent: profileContainer.currentItem.sideBySidePreviewComponent
-    }
-
-    Connections {
-        target: root.keycardStore.keycardModule
-        enabled: profileContainer.currentIndex === Constants.settingsSubsection.wallet ||
-                 profileContainer.currentIndex === Constants.settingsSubsection.keycard
-
-        function onDisplayKeycardSharedModuleFlow() {
-            keycardPopup.active = true
-        }
-        function onDestroyKeycardSharedModuleFlow() {
-            keycardPopup.active = false
-        }
-        function onSharedModuleBusy() {
-            Global.openPopup(sharedModuleBusyPopupComponent)
-        }
-    }
-
-    Loader {
-        id: keycardPopup
-        active: false
-        sourceComponent: KeycardPopup {
-            myKeyUid: root.profileStore.keyUid
-            sharedKeycardModule: root.keycardStore.keycardModule.keycardSharedModule
-            emojiPopup: root.emojiPopup
-
-            // This connection ensures that when a PIN is chagned on Keycard, biometrics are updated (if enabled).
-            // Should be removed/simplified when KeycardPopup is refactored to use KeycardServiceV2.
-            // We put it here, because ProfileLayout has access to Keychain and it is also the only place
-            // where KeycardPopup can be used to change PIN.
-            Connections {
-                target: root.keycardStore.keycardModule.keycardSharedModule
-
-                function onKeycardPinChanged(pin) {
-                    const keyUid = root.profileStore.keyUid
-                    root.keychain.updateCredential(keyUid, pin)
-                }
-            }
-        }
-
-        onLoaded: {
-            keycardPopup.item.open()
-        }
     }
 
     Component {

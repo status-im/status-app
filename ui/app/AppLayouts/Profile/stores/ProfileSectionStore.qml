@@ -30,10 +30,6 @@ QtObject {
         collectibles: root.walletStore.collectibles
     }
 
-    property KeycardStore keycardStore: KeycardStore {
-        keycardModule: d.profileSectionModuleInst.keycardModule
-    }
-
     property KeycardNewStore keycardNewStore: KeycardNewStore {
         keycardNewModule: d.profileSectionModuleInst.keycardNewModule
     }

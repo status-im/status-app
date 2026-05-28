@@ -42,7 +42,6 @@ SettingsContentBase {
     readonly property alias backButtonName: priv.backButtonName
 
     property WalletStore walletStore
-    property KeycardStore keycardStore
     property AppLayoutStores.ContactsStore contactsStore
     required property TokensStore tokensStore
     property SharedStores.NetworkConnectionStore networkConnectionStore
@@ -290,10 +289,10 @@ SettingsContentBase {
                 removeKeypairPopup.active = true
             }
             onRunMoveKeypairToKeycardFlow: (model) => {
-                root.keycardStore.runSetupKeycardPopup(model.keyPair.keyUid)
+                console.log("TODO: add when integrate new keycard approach")
             }
             onRunStopUsingKeycardFlow: (model) => {
-                root.keycardStore.runStopUsingKeycardPopup(model.keyPair.keyUid)
+                console.log("TODO: add when integrate new keycard approach")
             }
             onGoToManageTokensView: priv.navigateToDetails(root.manageTokensViewIndex)
             onGoToSavedAddressesView: priv.navigateToDetails(root.savedAddressesViewIndex)
@@ -370,10 +369,10 @@ SettingsContentBase {
                 root.walletStore.runKeypairImportPopup(keyPair.keyUid, Constants.keypairImportPopup.mode.selectImportMethod)
             }
             onRunMoveKeypairToKeycardFlow: {
-                root.keycardStore.runSetupKeycardPopup(keyPair.keyUid)
+                console.log("TODO: add when integrate new keycard approach")
             }
             onRunStopUsingKeycardFlow: {
-                root.keycardStore.runStopUsingKeycardPopup(keyPair.keyUid)
+                console.log("TODO: add when integrate new keycard approach")
             }
             onUpdateWatchAccountHiddenFromTotalBalance: (address, hideFromTotalBalance) => {
                 root.walletStore.updateWatchAccountHiddenFromTotalBalance(address, hideFromTotalBalance)

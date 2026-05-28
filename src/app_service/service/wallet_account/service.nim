@@ -68,8 +68,6 @@ QtObject:
   proc onDerivedAddressesFetched*(self: Service, jsonString: string) {.slot.}
   proc onDerivedAddressesForMnemonicFetched*(self: Service, jsonString: string) {.slot.}
   proc onAddressDetailsFetched*(self: Service, jsonString: string) {.slot.}
-  proc onKeycardAdded*(self: Service, response: string) {.slot.}
-  proc onMigratedAccountsForKeycardRemoved*(self: Service, response: string) {.slot.}
   proc onFetchChainIdForUrl*(self: Service, jsonString: string) {.slot.}
   proc onNonProfileKeycardKeypairMigratedToApp*(self: Service, response: string) {.slot.}
   proc onENSNamesFetched*(self: Service, response: string) {.slot.}
