@@ -115,7 +115,9 @@ Item {
                     text: qsTr("Continue in Keycard settings")
                     onClicked: {
                         root.continueOnKeycard()
-                        Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.keycard)
+                        console.log("TODO: add when integrate new keycard approach")
+                        // TODO: enable the line below
+                        // Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.keycardNew)
                     }
                 }
             ]

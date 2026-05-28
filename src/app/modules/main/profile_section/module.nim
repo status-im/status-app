@@ -19,7 +19,6 @@ import ../../../../app_service/service/network/service as network_service
 import ../../../../app_service/service/wallet_account/service as wallet_account_service
 import ../../../../app_service/service/general/service as general_service
 import ../../../../app_service/service/community/service as community_service
-import ../../../../app_service/service/keycard/service as keycard_service
 import ../../../../app_service/service/token/service as token_service
 import ../../../../app_service/service/node/service as node_service
 
@@ -34,7 +33,6 @@ import ./waku/module as waku_module
 import ./notifications/module as notifications_module
 import ./ens_usernames/module as ens_usernames_module
 import ./communities/module as communities_module
-import ./keycard/module as keycard_module
 import ./keycard_new/module as keycard_new_module
 import ./wallet/module as wallet_module
 
@@ -59,7 +57,6 @@ type
     notificationsModule: notifications_module.AccessInterface
     ensUsernamesModule: ens_usernames_module.AccessInterface
     communitiesModule: communities_module.AccessInterface
-    keycardModule: keycard_module.AccessInterface
     keycardNewModule: keycard_new_module.AccessInterface
     walletModule: wallet_module.AccessInterface
 
@@ -81,7 +78,6 @@ proc newModule*(delegate: delegate_interface.AccessInterface,
   generalService: general_service.Service,
   communityService: community_service.Service,
   networkService: network_service.Service,
-  keycardService: keycard_service.Service,
   tokenService: token_service.Service,
   nodeService: node_service.Service
 ): Module =
@@ -110,8 +106,6 @@ proc newModule*(delegate: delegate_interface.AccessInterface,
     result, events, settingsService, ensService, walletAccountService, networkService, tokenService
   )
   result.communitiesModule = communities_module.newModule(result, communityService)
-  result.keycardModule = keycard_module.newModule(result, events, keycardService, settingsService, networkService,
-    privacyService, accountsService, walletAccountService)
 
   result.keycardNewModule = keycard_new_module.newModule(result, walletAccountService)
 
@@ -130,7 +124,6 @@ method delete*(self: Module) =
   self.syncModule.delete
   self.wakuModule.delete
   self.communitiesModule.delete
-  self.keycardModule.delete
   self.keycardNewModule.delete
 
   self.view.delete
@@ -150,7 +143,6 @@ method load*(self: Module) =
   self.notificationsModule.load()
   self.ensUsernamesModule.load()
   self.communitiesModule.load()
-  self.keycardModule.load()
   self.keycardNewModule.load()
   self.walletModule.load()
 
@@ -189,9 +181,6 @@ proc checkIfModuleDidLoad(self: Module) =
     return
 
   if(not self.communitiesModule.isLoaded()):
-    return
-
-  if(not self.keycardModule.isLoaded()):
     return
 
   if(not self.keycardNewModule.isLoaded()):
@@ -268,9 +257,6 @@ method getCommunitiesModule*(self: Module): QVariant =
 
 method communitiesModuleDidLoad*(self: Module) =
   self.checkIfModuleDidLoad()
-
-method getKeycardModule*(self: Module): QVariant =
-  self.keycardModule.getModuleAsVariant()
 
 method keycardNewModuleDidLoad*(self: Module) =
   self.checkIfModuleDidLoad()

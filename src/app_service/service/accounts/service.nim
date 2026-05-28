@@ -137,14 +137,9 @@ QtObject:
   proc addKeycardDetails(self: Service, kcInstance: string, settingsJson: var JsonNode, accountData: var JsonNode) =
     let keycardPairingJsonString = readFile(main_constants.KEYCARDPAIRINGDATAFILE)
     let keycardPairingJsonObj = keycardPairingJsonString.parseJSON
-    let now = now().toTime().toUnix()
     for instanceUid, kcDataObj in keycardPairingJsonObj:
       if instanceUid != kcInstance:
         continue
-      if not settingsJson.isNil:
-        settingsJson["keycard-instance-uid"] = %* instanceUid
-        settingsJson["keycard-paired-on"] = %* now
-        settingsJson["keycard-pairing"] = kcDataObj{"key"}
       if not accountData.isNil:
         accountData["keycard-pairing"] = kcDataObj{"key"}
 

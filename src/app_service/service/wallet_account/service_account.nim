@@ -26,7 +26,6 @@ proc replaceKeypair(self: Service, keypair: KeypairDto) =
   localKp.lastUsedDerivationIndex = keypair.lastUsedDerivationIndex
   localKp.syncedFrom = keypair.syncedFrom
   localKp.removed = keypair.removed
-  localKp.keycards = keypair.keycards
   for locAcc in localKp.accounts:
     for acc in keypair.accounts:
       if cmpIgnoreCase(locAcc.address, acc.address) != 0:
@@ -498,8 +497,6 @@ proc onNonProfileKeycardKeypairMigratedToApp*(self: Service, response: string) {
     let kp = self.getKeypairByKeyUid(data.keycard.keyUid)
     if kp.isNil:
       data.success = false
-    else:
-      kp.keycards = @[]
   except Exception as e:
     error "error handling migrated keycard response", errDesription=e.msg
   self.events.emit(SIGNAL_ALL_KEYCARDS_DELETED, data)
@@ -792,7 +789,6 @@ proc handleKeypair(self: Service, keypair: KeypairDto) =
     localKp.name = keypair.name
     localKp.lastUsedDerivationIndex = keypair.lastUsedDerivationIndex
     localKp.syncedFrom = keypair.syncedFrom
-    localKp.keycards = keypair.keycards
     # - first remove removed accounts from the UI
     let addresses = localKp.accounts.map(a => a.address)
     for address in addresses:
