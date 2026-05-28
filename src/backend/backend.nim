@@ -231,11 +231,6 @@ rpc(updateKeypairName, "accounts"):
   keyUid: string
   name: string
 
-rpc(updateKeypairXPub, "accounts"):
-  keyUid: string
-  extendedPublicKey: string
-  coldWalletType: string
-
 rpc(getHourlyMarketValues, "wallet"):
   tokenKey: string
   currency: string
