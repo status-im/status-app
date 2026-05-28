@@ -21,7 +21,7 @@ method executePrePrimaryStateCommand*(self: MigratingKeypairToAppState, controll
         controller.tryToStoreDataToKeychain(newPassword)
       controller.convertKeycardProfileKeypairToRegular(sp, password, newPassword)
       return
-    controller.migrateNonProfileKeycardKeypairToApp(kpForProcessing.getKeyUid(), sp, password,
+    controller.migrateNonProfileColdWalletKeypairToApp(kpForProcessing.getKeyUid(), sp, password,
       doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet())
 
 method executePreTertiaryStateCommand*(self: MigratingKeypairToAppState, controller: Controller) =
