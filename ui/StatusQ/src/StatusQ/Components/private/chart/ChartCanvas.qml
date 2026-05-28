@@ -133,7 +133,14 @@ Canvas {
 
         function rebuild() {
             if (instance) {
-                instance.destroy()
+                // Guard against "Not a Context2D object" if the canvas FBO was
+                // invalidated (e.g. hidden/resized) between the rebuild() call
+                // and this deferred execution. Without the try-catch, an
+                // exception here leaves `instance` non-null, so the chart can
+                // never be recreated.
+                try {
+                    instance.destroy()
+                } catch (e) {}
                 instance = null
             }
             var ctx = canvas.getContext('2d');
@@ -159,7 +166,9 @@ Canvas {
 
     Component.onDestruction: {
         if (d.instance) {
-            d.instance.destroy()
+            try {
+                d.instance.destroy()
+            } catch (e) {}
         }
     }
 }
