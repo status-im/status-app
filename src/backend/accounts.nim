@@ -209,10 +209,15 @@ proc cleanKeystoreFiles*(password: string):
   let payload = %* [password]
   return core.callPrivateRPC("accounts_cleanKeystoreFiles", payload)
 
-proc migrateNonProfileKeycardKeypairToApp*(mnemonic: string, password: string):
+proc migrateNonProfileColdWalletKeypairToApp*(mnemonic: string, password: string):
   RpcResponse[JsonNode] =
   let payload = %* [mnemonic, password]
-  return core.callPrivateRPC("accounts_migrateNonProfileKeycardKeypairToApp", payload)
+  return core.callPrivateRPC("accounts_migrateNonProfileColdWalletKeypairToApp", payload)
+
+proc migrateNonProfileKeypairToColdWallet*(keyUid: string, password: string, coldWallet: string):
+  RpcResponse[JsonNode] =
+  let payload = %* [keyUid, password, coldWallet]
+  return core.callPrivateRPC("accounts_migrateNonProfileKeypairToColdWallet", payload)
 
 proc createAccountFromMnemonicAndDeriveAccountsForPaths*(mnemonic: string, paths: seq[string]): RpcResponse[JsonNode] =
   let payload = %* {

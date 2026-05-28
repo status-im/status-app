@@ -205,7 +205,7 @@ proc setStoreToKeychainValueNotNow*(self: Controller) =
 proc startStopUsingKeycardForKeyPair*(self: Controller, keyUid, seedPhrase, newPassword: string) =
   if not serviceApplicable(self.walletAccountService):
     return
-  self.walletAccountService.migrateNonProfileKeycardKeypairToAppAsync(keyUid, seedPhrase, newPassword, doPasswordHashing = true)
+  self.walletAccountService.migrateNonProfileColdWalletKeypairToAppAsync(keyUid, seedPhrase, newPassword, doPasswordHashing = true)
 
 proc startChangeKeycardPIN*(self: Controller, keyUid, currentPin, newPin, keycardUid: string) =
   self.keycardServiceV2.asyncChangeKeycardPIN(keyUid, currentPin, newPin, keycardUid)

@@ -730,8 +730,8 @@ proc addNewColdWalletStoredKeypair*(self: Controller, keyUid, keypairName, walle
     return false
   return true
 
-proc migrateNonProfileKeycardKeypairToApp*(self: Controller, keyUid, seedPhrase, password: string, doPasswordHashing: bool) =
-  self.walletAccountService.migrateNonProfileKeycardKeypairToAppAsync(keyUid, seedPhrase, password, doPasswordHashing)
+proc migrateNonProfileColdWalletKeypairToApp*(self: Controller, keyUid, seedPhrase, password: string, doPasswordHashing: bool) =
+  self.walletAccountService.migrateNonProfileColdWalletKeypairToAppAsync(keyUid, seedPhrase, password, doPasswordHashing)
 
 proc getCurrency*(self: Controller): string =
   if not serviceApplicable(self.settingsService):
