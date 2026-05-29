@@ -309,16 +309,21 @@ def pytest_runtest_teardown(item, nextitem):
 
     # Determine test success from the test result
     success = True
+    is_xfail = False
     duration_ms = 0
 
     if hasattr(item, "rep_call"):
-        success = item.rep_call.passed
+        rep = item.rep_call
+        success = rep.passed
+        # An xfail reports as skipped-with-wasxfail (rep.passed is False), so
+        # log it as a distinct XFAIL outcome rather than FAILED.
+        is_xfail = getattr(rep, "wasxfail", None) is not None and rep.skipped
 
     if hasattr(item, "_test_start_time"):
         duration = datetime.now() - item._test_start_time
         duration_ms = int(duration.total_seconds() * 1000)
 
-    log_test_end(test_name, success, duration_ms)
+    log_test_end(test_name, success, duration_ms, xfail=is_xfail)
     _apply_test_cooldown(item)
 
 
