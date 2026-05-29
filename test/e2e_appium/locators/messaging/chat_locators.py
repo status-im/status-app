@@ -65,6 +65,12 @@ class ChatLocators(BaseLocators):
     CHAT_LOG_VIEW = BaseLocators.xpath("//*[contains(@resource-id,'chatLogView')]")
     INTRODUCE_SKIP_BUTTON = BaseLocators.tid("introduceSkipStatusFlatButton")
     BACKUP_SKIP_BUTTON = BaseLocators.tid("backupMessageSkipStatusFlatButton")
+    # QML: EnablePushNotificationsPopup.qml — "Maybe later" left footer button
+    PUSH_NOTIF_LATER_BUTTON = BaseLocators.tid("btnPushNotificationsLater")
+    # X close icon on any StatusDialog header — used to dismiss the
+    # drawer-intro dialog, which has no dedicated skip button.
+    # QML: StatusHeaderActions.qml objectName "headerActionsCloseButton"
+    DIALOG_HEADER_CLOSE_BUTTON = BaseLocators.tid("headerActionsCloseButton")
     START_CHAT_BUTTON = BaseLocators.xpath(
         "//*[contains(@resource-id,'startChatButton')]"
     )

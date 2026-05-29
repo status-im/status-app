@@ -245,6 +245,49 @@ class ChatPage(BasePage):
                 self.logger.debug(f"dismiss_backup_prompt click also failed: {e2}")
                 return False
 
+    def dismiss_push_notification_prompt(self, timeout: int | None = 2) -> bool:
+        """Tap "Maybe later" on EnablePushNotificationsPopup if it's up.
+
+        Status shows this modal after onboarding/login on Android 13+;
+        it sits on top of the nav drawer and silently swallows clicks
+        on Settings/Messages until dismissed.
+        """
+        element = self.find_element_safe(self.locators.PUSH_NOTIF_LATER_BUTTON, timeout=timeout)
+        if not element:
+            return False
+        try:
+            element.click()
+            return True
+        except Exception as e:
+            self.logger.debug(f"dismiss_push_notification_prompt direct click failed: {e}")
+            try:
+                return self.safe_click(self.locators.PUSH_NOTIF_LATER_BUTTON, timeout=timeout)
+            except Exception as e2:
+                self.logger.debug(f"dismiss_push_notification_prompt click also failed: {e2}")
+                return False
+
+    def dismiss_drawer_intro_prompt(self, timeout: int | None = 2) -> bool:
+        """Close NavigationEducationDialog ("To open app menu") if it's up.
+
+        Status shows this dialog the first time the user reaches the main
+        app after onboarding/login. It has footer.visible: false so the
+        only dismiss is the X close button in the StatusDialog header.
+        Safe to call when no dialog is up — returns False without clicking.
+        """
+        element = self.find_element_safe(self.locators.DIALOG_HEADER_CLOSE_BUTTON, timeout=timeout)
+        if not element:
+            return False
+        try:
+            element.click()
+            return True
+        except Exception as e:
+            self.logger.debug(f"dismiss_drawer_intro_prompt direct click failed: {e}")
+            try:
+                return self.safe_click(self.locators.DIALOG_HEADER_CLOSE_BUTTON, timeout=timeout)
+            except Exception as e2:
+                self.logger.debug(f"dismiss_drawer_intro_prompt click also failed: {e2}")
+                return False
+
     def wait_for_new_chat_to_arrive(
         self,
         chat_identifier: str,

@@ -291,12 +291,23 @@ class App(BasePage):
                 self.logger.debug("activate_app suppressed: %s", exc)
 
         # BACK closes the drawer cleanly when activate_app's foregrounding
-        # alone fails to unstick a wedged gesture handler.
+        # alone fails to unstick a wedged gesture handler. Status Mobile
+        # is a single-Activity app (StatusQtActivity), so BACK at the
+        # chat-list root with no drawer open exits the Activity to the
+        # system home screen, backgrounding Status. The subsequent
+        # activate_app doesn't always re-foreground in time before the
+        # next gesture lands on the launcher. So only press BACK when
+        # the drawer is actually open.
         def _reset_drawer_state():
-            try:
-                self.driver.press_keycode(4)  # KEYCODE_BACK
-            except Exception as exc:
-                self.logger.debug("press_keycode(BACK) suppressed: %s", exc)
+            if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
+                try:
+                    self.driver.press_keycode(4)  # KEYCODE_BACK
+                except Exception as exc:
+                    self.logger.debug("press_keycode(BACK) suppressed: %s", exc)
+            else:
+                self.logger.debug(
+                    "drawer already closed — skipping BACK to keep Status foreground"
+                )
             time.sleep(0.5)
 
         _shake_app()
