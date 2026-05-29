@@ -164,8 +164,6 @@ QtObject:
       raribleTestnetApiKey: RARIBLE_TESTNET_API_KEY_RESOLVED,
       alchemyApiKey: ALCHEMY_API_KEY_RESOLVED,
       statusProxyStageName: STATUS_PROXY_STAGE_NAME_RESOLVED,
-      statusProxyMarketUser: STATUS_PROXY_USER_RESOLVED,
-      statusProxyMarketPassword: STATUS_PROXY_PASSWORD_RESOLVED,
       marketDataProxyUrl: MARKET_DATA_PROXY_URL_RESOLVED,
       marketDataProxyUser: MARKET_DATA_PROXY_USER_RESOLVED,
       marketDataProxyPassword: MARKET_DATA_PROXY_PASSWORD_RESOLVED,
