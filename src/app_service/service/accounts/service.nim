@@ -167,8 +167,6 @@ QtObject:
       marketDataProxyUrl: MARKET_DATA_PROXY_URL_RESOLVED,
       marketDataProxyUser: MARKET_DATA_PROXY_USER_RESOLVED,
       marketDataProxyPassword: MARKET_DATA_PROXY_PASSWORD_RESOLVED,
-      statusProxyBlockchainUser: STATUS_PROXY_USER_RESOLVED,
-      statusProxyBlockchainPassword: STATUS_PROXY_PASSWORD_RESOLVED,
       ethRpcProxyUser: ETH_RPC_PROXY_USER_RESOLVED,
       ethRpcProxyPassword: ETH_RPC_PROXY_PASSWORD_RESOLVED,
       ethRpcProxyUrl: ETH_RPC_PROXY_URL_RESOLVED,

@@ -68,8 +68,6 @@ let
   RARIBLE_TESTNET_API_KEY_RESOLVED* = desktopConfig.raribleTestnetApiKey
   TENOR_API_KEY_RESOLVED* = desktopConfig.tenorApiKey
   STATUS_PROXY_STAGE_NAME_RESOLVED* = desktopConfig.statusProxyStageName
-  STATUS_PROXY_USER_RESOLVED* = desktopConfig.statusProxyUser
-  STATUS_PROXY_PASSWORD_RESOLVED* = desktopConfig.statusProxyPassword
   MARKET_DATA_PROXY_URL_RESOLVED* = desktopConfig.marketDataProxyUrl
   MARKET_DATA_PROXY_USER_RESOLVED* = desktopConfig.marketDataProxyUser
   MARKET_DATA_PROXY_PASSWORD_RESOLVED* = desktopConfig.marketDataProxyPassword
