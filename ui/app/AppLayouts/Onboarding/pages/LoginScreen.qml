@@ -221,15 +221,15 @@ OnboardingPage {
                                       root.keycardState === Onboarding.KeycardState.BlockedPUK
                 isKeycardEnabled: root.isKeycardEnabled
 
-                onSelectedProfileItemChanged: {
-                    if (!selectedProfileItem) {
+                onSelectedProfileKeyIdChanged: {
+                    if (!selectedProfileKeyId) {
                         return
                     }
 
                     root.dismissBiometricsRequested()
 
                     d.resetBiometricsResult()
-                    root.profileSelected(selectedProfileItem.keyUid)
+                    root.profileSelected(selectedProfileKeyId)
 
                     if (d.currentProfileIsKeycard) {
                         keycardBox.loginError = ""
