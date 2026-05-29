@@ -89,6 +89,8 @@ pipeline {
           sh 'mkdir -p pkg'
           sh "cp -v ${env.FDROIDDATA_PATH}/tmp/*.apk pkg/"
           env.STATUS_FDROID_APK = utils.findFile("pkg/*.apk")
+          /* Debug: archive the captured go.o + lld command line (see fdroid/build-app.sh). */
+          sh "cp -rv ${env.FDROIDDATA_PATH}/tmp/repro-goo pkg/repro-goo || true"
         }
       }
     }
@@ -110,7 +112,7 @@ pipeline {
 
     stage('Archive') {
       steps {
-        archiveArtifacts artifacts: 'pkg/*.apk', fingerprint: true
+        archiveArtifacts artifacts: 'pkg/*.apk, pkg/repro-goo/**', fingerprint: true, allowEmptyArchive: true
       }
     }
   }

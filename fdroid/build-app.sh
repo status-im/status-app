@@ -34,6 +34,10 @@ ulimit -n 65536 || true
 export USE_SYSTEM_NIM=1
 export NIM_SDS_SOURCE_DIR="$BUILD_DIR/vendor/nim-sds"
 
+# Debug: capture go.o + lld command line into /fdroiddata/tmp (the only dir the
+# fdroid container shares back to Jenkins). Consumed by go-toolexec-wrapper.sh.
+export REPRO_GOO_CAPTURE_DIR=/fdroiddata/tmp/repro-goo
+
 make deps
 
 make -C mobile apk-fdroid BUILD_VARIANT=release ARCH=arm64 V=3

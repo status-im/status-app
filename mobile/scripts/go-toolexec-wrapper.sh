@@ -50,6 +50,18 @@ if [[ "$TOOL_NAME" == "link" ]]; then
     fi
     new_args+=("$arg")
   done
+
+  # Debug: when REPRO_GOO_CAPTURE_DIR is set, keep go.o and the lld command line
+  # (-v, on stdout) from the c-shared link so two builds can be compared.
+  if [[ -n "${REPRO_GOO_CAPTURE_DIR:-}" && " $* " == *" -buildmode=c-shared "* ]]; then
+    mkdir -p "$REPRO_GOO_CAPTURE_DIR"
+    if "$TOOL" -s -w -buildid= -v -tmpdir="$REPRO_GOO_CAPTURE_DIR" "${new_args[@]}" \
+         > "$REPRO_GOO_CAPTURE_DIR/link-v.log" 2>&1; then status=0; else status=$?; fi
+    cat "$REPRO_GOO_CAPTURE_DIR/link-v.log" >&2
+    find "$REPRO_GOO_CAPTURE_DIR" -name '*.o' ! -name 'go.o' -delete
+    exit $status
+  fi
+
   exec "$TOOL" -s -w -buildid= "${new_args[@]}"
 fi
 
