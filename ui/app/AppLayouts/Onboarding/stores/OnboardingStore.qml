@@ -85,6 +85,10 @@ QtObject {
         d.onboardingModuleInst.requestDeleteMultiaccount(keyUid)
     }
 
+    function cleanupAfterMainTransition() {
+        d.onboardingModuleInst.cleanupAfterMainTransition()
+    }
+
     // password
     signal accountLoginError(string error, bool wrongPassword)
 

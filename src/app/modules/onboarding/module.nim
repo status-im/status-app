@@ -113,7 +113,15 @@ method onAppLoaded*[T](self: Module[T], keyUid: string) =
   discard
 
 method onMainLoaded*[T](self: Module[T]) =
+  if self.view.isNil:
+    return
+
   self.view.appLoaded()
+
+method cleanupAfterMainTransition*[T](self: Module[T]) =
+  if self.view.isNil:
+    return
+
   singletonInstance.engine.setRootContextProperty("onboardingModule", newQVariant())
   if not self.keycardModule.isNil:
     self.keycardModule.delete

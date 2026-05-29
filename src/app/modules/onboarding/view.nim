@@ -260,6 +260,9 @@ QtObject:
   proc requestDeleteMultiaccount(self: View, keyUid: string): string {.slot.} =
     return self.delegate.requestDeleteMultiaccount(keyUid)
 
+  proc cleanupAfterMainTransition(self: View) {.slot.} =
+    self.delegate.cleanupAfterMainTransition()
+
   proc delete*(self: View) =
     self.QObject.delete
 
