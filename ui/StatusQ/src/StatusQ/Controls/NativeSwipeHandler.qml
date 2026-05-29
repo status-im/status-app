@@ -45,11 +45,12 @@ Item {
     Binding { target: implLoader.item; property: "visible"; value: root.visible; when: implLoader.item !== null }
     Binding { target: implLoader.item; property: "enabled"; value: root.enabled; when: implLoader.item !== null }
     Binding { target: implLoader.item; property: "openDistance"; value: root.openDistance; when: implLoader.item !== null }
-    Binding { target: implLoader.item; property: "dismissTapOverlaySceneRect"; value: root.dismissTapOverlaySceneRect; when: implLoader.item !== null }
+    Binding { target: implLoader.item; property: "dismissTapOverlaySceneRect"; value: root.dismissTapOverlaySceneRect; when: implLoader.sourceComponent === nativeComponent && implLoader.item !== null }
 
     Connections {
         target: implLoader.item ?? null
         enabled: implLoader.item !== null && implLoader.status === Loader.Ready
+        ignoreUnknownSignals: true
 
         function onSwipeStarted() {
             root.isSwipeActive = true

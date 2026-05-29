@@ -17,6 +17,7 @@ import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
+import StatusQ.Core.Backpressure
 import StatusQ.Platform
 import StatusQ.Popups.Dialog
 
@@ -117,15 +118,23 @@ Window {
     }
 
     function restoreAppState() {
+        if (SQUtils.Utils.isMobile && applicationWindow.visibility !== Window.Windowed) {
+            // just correct visibility on mobile
+            applicationWindow.visibility = Window.Maximized
+            return
+        }
+
         let geometry = localAppSettings.geometry;
         let visibility = localAppSettings.visibility;
 
+        // correct the visibility; we don't want to start e.g. Hidden or Minimized
         if (visibility !== Window.Windowed &&
             visibility !== Window.Maximized &&
             visibility !== Window.FullScreen) {
-            visibility = SQUtils.Utils.isMobile ? Window.Maximized : Window.Windowed
+            visibility = Window.Windowed
         }
 
+        // first set the (normal) geometry, might get overridden later with the visibility
         if (geometry === undefined ||
             // If the monitor setup of the user changed, it's possible that the old geometry now falls out of the monitor range
             // In this case, we reset to the basic geometry
@@ -133,7 +142,9 @@ Window {
             geometry.y > Screen.desktopAvailableHeight ||
             geometry.width > Screen.desktopAvailableWidth ||
             geometry.height > Screen.desktopAvailableHeight ||
-            geometry.x < 0 || geometry.y < 0)
+            geometry.x < 0 || geometry.y < 0 ||
+            visibility !== Window.Windowed
+            )
         {
             let screen = Qt.application.screens[0];
 
@@ -145,40 +156,32 @@ Window {
             geometry.y = (screen.height - geometry.height) / 2;
         }
 
-        applicationWindow.visibility = visibility;
-        if (visibility === Window.Windowed) {
-            applicationWindow.x = geometry.x;
-            applicationWindow.y = geometry.y;
-            applicationWindow.width = Math.max(geometry.width, ThemeUtils.minimumDesktopSize.width)
-            applicationWindow.height = Math.max(geometry.height, ThemeUtils.minimumDesktopSize.height)
-        }
+        // apply (the corrected) geometry to the window
+        applicationWindow.x = geometry.x
+        applicationWindow.y = geometry.y
+        applicationWindow.width = geometry.width
+        applicationWindow.height = geometry.height
+
+        // finally set the visibility; might be e.g. Maximized but we still want to restore back to normal (windowed) geometry when unmaximizing
+        applicationWindow.visibility = visibility
     }
 
     function storeAppState() {
         if (SQUtils.Utils.isMobile) // no point in storing geometry or visibility
             return
 
-        if (!applicationWindow.appIsReady)
-            return;
-
-        localAppSettings.visibility = applicationWindow.visibility;
-        if (applicationWindow.visibility === Window.Windowed) {
-            localAppSettings.geometry = Qt.rect(applicationWindow.x, applicationWindow.y,
-                                                applicationWindow.width, applicationWindow.height);
-        }
+        localAppSettings.visibility = applicationWindow.visibility
+        let newRect = Qt.rect(applicationWindow.x, applicationWindow.y,
+                              applicationWindow.width, applicationWindow.height)
+        localAppSettings.geometry = newRect
     }
 
-    onXChanged: Qt.callLater(storeAppState)
-    onYChanged: Qt.callLater(storeAppState)
     onPortraitLayoutChanged: {
         // Android looses status bar icon color when switching orientation
         if (SQUtils.Utils.isAndroid) {
             SystemUtils.setAndroidStatusBarIconColor(applicationWindow.appThemeDark)
         }
     }
-
-    onWidthChanged: Qt.callLater(storeAppState)
-    onHeightChanged: Qt.callLater(storeAppState)
 
     QtObject {
         id: d
@@ -343,6 +346,8 @@ Window {
             }
         }
         function onClosing(close) {
+            // save the geometry just before closing
+            applicationWindow.storeAppState() // noop on mobile
             // on mobile, we minimize to background (no tray icon or quitOnClose setting)
             if (SQUtils.Utils.isMobile) {
                 close.accepted = false
@@ -402,6 +407,13 @@ Window {
         }
     }
 
+    Connections {
+        target: Application
+        function onAboutToQuit() {
+            applicationWindow.storeAppState()
+        }
+    }
+
     Component.onCompleted: {
 
         console.info(">>> %1 %2 started, using Qt version %3, QPA: %4".arg(Application.name).arg(Application.version).arg(SystemUtils.qtRuntimeVersion()).arg(Qt.platform.pluginName))
@@ -430,8 +442,6 @@ Window {
             moveToAppMain()
         }
     }
-
-    signal navigateTo(string path)
 
     function makeStatusAppActive() {
         d.restoreWindowState()
@@ -578,7 +588,9 @@ Window {
                 item.biometricFlowPending = Qt.binding(() => applicationWindow.biometricFlowPending)
                 splashScreenLoader.active = false
                 applicationWindow.contentLoaded()
-                Qt.callLater(() => QmlCompiler.precompileAll()) // precompile all components after onboarding is loaded to speed up the login flow
+                Backpressure.debounce(applicationWindow, 750, () => {
+                    Qt.callLater(() => QmlCompiler.precompileAll()) // precompile all components after onboarding is loaded to speed up the login flow
+                })()
             }
         }
 
