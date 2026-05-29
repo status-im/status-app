@@ -498,6 +498,10 @@ Window {
                 startupOnboardingLoader.active = false
                 splashScreenLoader.active = false
                 applicationWindow.contentLoaded()
+                if (typeof onboardingModule !== "undefined"
+                        && !!onboardingModule) {
+                    Qt.callLater(() => onboardingModule.cleanupAfterMainTransition())
+                }
                 if (d.showSkippedBiometricFlow)
                     loader.item.showEnableBiometricsFlow()
             }

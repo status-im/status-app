@@ -29,8 +29,10 @@ OnboardingPage {
         padding: 0
 
         Item {
+
             width: scrollView.availableWidth
-            implicitHeight: Math.max(content.implicitHeight, scrollView.availableHeight)
+            implicitHeight: content.implicitHeight
+            height: Math.max(implicitHeight, scrollView.availableHeight)
 
             ColumnLayout {
                 id: content

@@ -16,6 +16,9 @@ method onAppLoaded*(self: AccessInterface, keyUid: string) {.base.} =
 method onMainLoaded*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method cleanupAfterMainTransition*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onMainFailedToLoad*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
