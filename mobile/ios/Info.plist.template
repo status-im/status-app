@@ -93,6 +93,12 @@
         <string>remote-notification</string>
         <string>fetch</string>
     </array>
+    <!-- Required by the com.apple.developer.usernotifications.communication entitlement (Communication Notifications) -->
+    <key>NSUserActivityTypes</key>
+    <array>
+        <string>INSendMessageIntent</string>
+        <string>INStartCallIntent</string>
+    </array>
     <!-- Do not require paid apple accounts to build the app with NFC support -->
     <!-- KEYCARD_NFC_START
         <key>NFCReaderUsageDescription</key>
