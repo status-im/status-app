@@ -78,6 +78,12 @@ Control {
     Component.onCompleted: d.snapToMode()
     onAlwaysVisibleChanged: d.snapToMode()
 
+    // Leaving Browser before overlay popups dismiss: keepOpenWhenPopups is already false.
+    onBrowserSectionActiveChanged: {
+        if (!browserSectionActive)
+            root.close()
+    }
+
     // Slide in/out from the left.
     x: alwaysVisible ? 0 : (-width + width * position)
 
@@ -121,9 +127,8 @@ Control {
         readonly property bool hasPopups: SQUtils.Utils.hasPopups(root.Overlay.overlay.children)
 
         onHasPopupsChanged: {
-            if (d.hasPopups && !root.keepOpenWhenPopups) {
+            if (d.hasPopups !== root.keepOpenWhenPopups)
                 root.close()
-            }
         }
 
         // context menu guard
