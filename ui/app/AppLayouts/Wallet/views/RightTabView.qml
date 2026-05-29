@@ -103,16 +103,22 @@ RightTabBaseView {
 
         tokensLoading: root.walletRootStore.isAccountTokensReloading
 
-        showNetworksNotificationIcon: {
+        function hasUnseenNewChains(seenChainsJson) {
             const newChains = Constants.chains.newChains
-            const seenChains = localAppSettings.seenNetworkChains
-
+            const seen = JSON.parse(seenChainsJson)
             for (let i = 0; i < newChains.length; i++)
-                if (seenChains.indexOf(newChains[i]) === -1)
+                if (seen.indexOf(newChains[i]) === -1)
                     return true
-
             return false
         }
+
+        function markNewChainsSeen(seenChainsJson) {
+            const seen = JSON.parse(seenChainsJson)
+            return JSON.stringify([...seen, ...Constants.chains.newChains])
+        }
+
+        showNetworksNotificationIcon: header.hasUnseenNewChains(localAppSettings.seenNetworkChains)
+        showManageNetworksNotificationIcon: header.hasUnseenNewChains(localAppSettings.seenManageNetworksChains)
 
         FunctionAggregator {
             id: chainIdsAggregator
@@ -140,15 +146,16 @@ RightTabBaseView {
         onDappListRequested: root.dappListRequested()
         onDappConnectRequested: root.dappConnectRequested()
         onDappDisconnectRequested: (dappUrl) =>root.dappDisconnectRequested(dappUrl)
-        onManageNetworksRequested: root.manageNetworksRequested()
+        onManageNetworksRequested: {
+            if (showManageNetworksNotificationIcon)
+                localAppSettings.seenManageNetworksChains = header.markNewChainsSeen(localAppSettings.seenManageNetworksChains)
+            root.manageNetworksRequested()
+        }
         onAddressClicked: root.launchShareAddressModal()
         onToggleNetworkRequested: chainId => root.networksStore.toggleNetworkEnabled(chainId)
         onNetworksShown: {
-            if (!showNetworksNotificationIcon)
-                return
-            let seenChains = JSON.parse(localAppSettings.seenNetworkChains)
-            seenChains.push(...Constants.chains.newChains)
-            localAppSettings.seenNetworkChains = JSON.stringify(seenChains)
+            if (showNetworksNotificationIcon)
+                localAppSettings.seenNetworkChains = header.markNewChainsSeen(localAppSettings.seenNetworkChains)
         }
         onReloadRequested: root.walletRootStore.reloadAccountTokens()
     }

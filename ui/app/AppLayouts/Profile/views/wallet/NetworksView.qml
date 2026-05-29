@@ -111,7 +111,8 @@ Item {
                 iconUrl: model.iconUrl
                 isActive: model.isActive
                 isDeactivatable: model.isDeactivatable
-                
+                showNewIcon: Constants.chains.newChains.indexOf(model.chainId) >= 0
+
                 onSetNetworkActive: function (active) {
                     if (!active) {
                         // Launch confirmation popup

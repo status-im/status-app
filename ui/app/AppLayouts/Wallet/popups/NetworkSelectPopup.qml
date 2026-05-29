@@ -5,6 +5,7 @@ import Qt5Compat.GraphicalEffects
 
 import StatusQ
 import StatusQ.Core.Theme
+import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Popups.Dialog
 
@@ -28,6 +29,7 @@ StatusDropdown {
     property alias selection: scrollView.selection
 
     property bool showNewChainIcon: false
+    property bool showManageNetworksNotificationIcon: false
 
     signal toggleNetwork(int chainId, int index)
     signal manageNetworksClicked()
@@ -86,6 +88,25 @@ StatusDropdown {
             text: qsTr("Manage networks")
             isOutline: true
             onClicked: root.manageNetworksClicked()
+
+            Loader {
+                active: root.showManageNetworksNotificationIcon
+                anchors.verticalCenter: parent.top
+                anchors.verticalCenterOffset: 2
+                anchors.horizontalCenterOffset: -2
+                anchors.horizontalCenter: parent.right
+                sourceComponent: StatusRoundIcon {
+                    objectName: "manageNetworksNotificationIcon"
+                    asset.width: 10
+                    asset.height: 10
+                    asset.bgWidth: 15
+                    asset.bgColor: Theme.palette.background
+                    asset.bgHeight: 15
+                    asset.isImage: true
+                    asset.name: Assets.png("status-gradient-dot")
+                    asset.color: StatusColors.transparent
+                }
+            }
         }
     }
 }
