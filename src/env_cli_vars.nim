@@ -122,7 +122,7 @@ proc defaultDataDir*(): string =
         else:
           targetDir
     return absolutePath(joinPath(parentDir, "Status"))
-  except OSError:
+  except:
     echo "Error: Unable to determine home directory."
 
 type StatusDesktopConfig = object

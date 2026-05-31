@@ -124,3 +124,6 @@
 [submodule "vendor/status-keycard-qt"]
 	path = vendor/status-keycard-qt
 	url = https://github.com/status-im/status-keycard-qt
+[submodule "vendor/nim-intops"]
+	path = vendor/nim-intops
+	url = https://github.com/vacp2p/nim-intops.git
