@@ -20,6 +20,11 @@ Loader {
         })
     }
 
+    Component.onCompleted: {
+        Qt.callLater(() => QmlCompiler.precompile(QmlCompiler.nodeUrl))
+        loadSection()
+    }
+
     onActiveChanged: loadSection()
     onLoaded: item.anchors.fill = root
 }
