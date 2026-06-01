@@ -61,24 +61,13 @@ SettingsPage {
 
     contentItem: ColumnLayout {
         function goTo(tab: int) {
-            let tabButton = membersTabBar.currentItem
-            switch (tab) {
-            case Constants.CommunityMembershipSubSections.Members:
-                tabButton = allMembersBtn
-                break
-            case Constants.CommunityMembershipSubSections.MembershipRequests:
-                tabButton = pendingRequestsBtn
-                break
-            case Constants.CommunityMembershipSubSections.RejectedMembers:
-                tabButton = declinedRequestsBtn
-                break
-            case Constants.CommunityMembershipSubSections.BannedMembers:
-                tabButton = bannedBtn
-                break
+            for (let i = 0; i < membersTabBar.count; i++) {
+                const tabButton = membersTabBar.itemAt(i)
+                if (tabButton.subSection === tab && tabButton.enabled) {
+                    membersTabBar.currentIndex = i
+                    return
+                }
             }
-
-            if (tabButton.enabled)
-                membersTabBar.currentIndex = tabButton.TabBar.index
         }
 
         spacing: Theme.padding
@@ -90,7 +79,7 @@ SettingsPage {
             Layout.rightMargin: root.contentRightPadding
 
             StatusTabButton {
-                readonly property int subSection: MembersTabPanel.TabType.AllMembers
+                readonly property int subSection: Constants.CommunityMembershipSubSections.Members
 
                 id: allMembersBtn
                 objectName: "allMembersButton"
@@ -99,7 +88,7 @@ SettingsPage {
             }
 
             StatusTabButton {
-                readonly property int subSection: MembersTabPanel.TabType.PendingRequests
+                readonly property int subSection: Constants.CommunityMembershipSubSections.MembershipRequests
 
                 id: pendingRequestsBtn
                 objectName: "pendingRequestsButton"
@@ -109,7 +98,7 @@ SettingsPage {
             }
 
             StatusTabButton {
-                readonly property int subSection: MembersTabPanel.TabType.DeclinedRequests
+                readonly property int subSection: Constants.CommunityMembershipSubSections.RejectedMembers
 
                 id: declinedRequestsBtn
                 objectName: "declinedRequestsButton"
@@ -119,7 +108,7 @@ SettingsPage {
             }
 
             StatusTabButton {
-                readonly property int subSection: MembersTabPanel.TabType.BannedMembers
+                readonly property int subSection: Constants.CommunityMembershipSubSections.BannedMembers
 
                 id: bannedBtn
                 objectName: "bannedButton"
@@ -149,13 +138,13 @@ SettingsPage {
             panelType: membersTabBar.currentItem.subSection
             model: {
                 switch (panelType) {
-                case MembersTabPanel.TabType.PendingRequests:
+                case Constants.CommunityMembershipSubSections.MembershipRequests:
                     return root.pendingMembersModel
-                case MembersTabPanel.TabType.DeclinedRequests:
+                case Constants.CommunityMembershipSubSections.RejectedMembers:
                     return root.declinedMembersModel
-                case MembersTabPanel.TabType.BannedMembers:
+                case Constants.CommunityMembershipSubSections.BannedMembers:
                     return root.bannedMembersModel
-                case MembersTabPanel.TabType.AllMembers:
+                case Constants.CommunityMembershipSubSections.Members:
                 default:
                     return root.membersModel
                 }

@@ -123,13 +123,12 @@ SplitView {
                 id: viewStateSelector
                 textRole: "text"
                 valueRole: "value"
-                model: ListModel {
-                     id: model
-                     ListElement { text: "All members"; value: MembersTabPanel.TabType.AllMembers }
-                     ListElement { text: "Banned Members"; value: MembersTabPanel.TabType.BannedMembers }
-                     ListElement { text: "Pending Members"; value: MembersTabPanel.TabType.PendingRequests }
-                     ListElement { text: "Declined Members"; value: MembersTabPanel.TabType.DeclinedRequests }
-                 }
+                model: [
+                    { text: "All members", value: MembersTabPanel.TabType.AllMembers },
+                    { text: "Banned Members", value: MembersTabPanel.TabType.BannedMembers },
+                    { text: "Pending Members", value: MembersTabPanel.TabType.PendingRequests },
+                    { text: "Declined Members", value: MembersTabPanel.TabType.DeclinedRequests },
+                ]
             }
 
             Label { text: "Search" }

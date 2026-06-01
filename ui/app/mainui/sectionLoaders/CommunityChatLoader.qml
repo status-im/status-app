@@ -97,8 +97,12 @@ Loader {
         readonly property url url: QmlCompiler.chatUrl
         property ChatStores.RootStore chatRootStore: null
         property var newCommunityStore: null
+        property int pendingSettingsSection: -1
+        property int pendingSettingsSubsection: -1
 
         function clearStores() {
+            pendingSettingsSection = -1
+            pendingSettingsSubsection = -1
             if (d.chatRootStore) {
                 d.chatRootStore.destroy()
                 d.chatRootStore = null
@@ -114,6 +118,25 @@ Loader {
                 d.chatRootStore = chatRootStoreComp.createObject(root)
             if (!d.newCommunityStore)
                 d.newCommunityStore = root.messagingRootStore.createCommunityRootStore(root, root.sectionId)
+        }
+
+        function applyPendingCommunitySettingsSubsection() {
+            if (!root.item ||
+                    pendingSettingsSection === -1 ||
+                    pendingSettingsSubsection === -1) {
+                return
+            }
+
+            root.item.switchToCommunitySettingsSubsection(pendingSettingsSection,
+                                                          pendingSettingsSubsection)
+            pendingSettingsSection = -1
+            pendingSettingsSubsection = -1
+        }
+
+        function openCommunitySettingsSubsection(subsection, subsectionItem) {
+            pendingSettingsSection = subsection
+            pendingSettingsSubsection = subsectionItem
+            applyPendingCommunitySettingsSubsection()
         }
     }
 
@@ -156,6 +179,7 @@ Loader {
 
     onLoaded: {
         root.item.visible = true
+        d.applyPendingCommunitySettingsSubsection()
     }
     
     onActiveChanged: {
@@ -182,6 +206,11 @@ Loader {
                 return
             if (root.item)
                 root.item.currentIndex = 0
+        }
+        function onSwitchToCommunitySettingsSubsection(communityId, subsection, subsectionItem) {
+            if (communityId !== root.sectionId)
+                return
+            d.openCommunitySettingsSubsection(subsection, subsectionItem)
         }
     }
 
