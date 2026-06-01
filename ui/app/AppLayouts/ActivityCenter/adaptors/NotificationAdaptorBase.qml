@@ -56,6 +56,9 @@ SQUtils.QObject {
     property string subsectionItemId: ""
     property bool redirectToSection: false
     property bool redirectToDetails: false
+    property bool redirectToCommunitySettingsSubsection: false
+    property int communitySettingsSubsection: -1
+    property int communitySettingsSubsectionItem: -1
     property bool redirectToLink: false
     property bool redirectToWallet: false
 }

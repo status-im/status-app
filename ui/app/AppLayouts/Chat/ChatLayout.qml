@@ -155,10 +155,40 @@ StackLayout {
     Connections {
         target: root.communityAccessStore
         function onCommunityMembershipNotificationReceived() {
-            root.currentIndex = 1 // go to settings
-            if (communitySettingsLoader.item) {
-                communitySettingsLoader.item.goTo(Constants.CommunitySettingsSections.Members, Constants.CommunityMembershipSubSections.MembershipRequests)
+            root.switchToCommunitySettingsSubsection(Constants.CommunitySettingsSections.Members,
+                                                     Constants.CommunityMembershipSubSections.MembershipRequests)
+        }
+    }
+
+    function switchToCommunitySettingsSubsection(subsection: int, subsectionItem: int) {
+        d.openCommunitySettingsSubsection(subsection, subsectionItem)
+    }
+
+    QtObject {
+        id: d
+
+        property int pendingSettingsSection: -1
+        property int pendingSettingsSubsection: -1
+        readonly property int settingsPageIndex: 1
+
+        function applyPendingCommunitySettingsSubsection() {
+            if (!communitySettingsLoader.item ||
+                    pendingSettingsSection === -1 ||
+                    pendingSettingsSubsection === -1) {
+                return
             }
+
+            communitySettingsLoader.item.goTo(pendingSettingsSection,
+                                              pendingSettingsSubsection)
+            pendingSettingsSection = -1
+            pendingSettingsSubsection = -1
+        }
+
+        function openCommunitySettingsSubsection(subsection, subsectionItem) {
+            pendingSettingsSection = subsection
+            pendingSettingsSubsection = subsectionItem
+            root.currentIndex = d.settingsPageIndex // go to settings
+            applyPendingCommunitySettingsSubsection()
         }
     }
 
@@ -396,6 +426,7 @@ StackLayout {
         leftPanelWidthOverride: root.leftPanelWidthOverride
 
         onBackToCommunityClicked: root.currentIndex = 0
+        onLoaded: d.applyPendingCommunitySettingsSubsection()
     }
 
     Component {
@@ -431,4 +462,3 @@ StackLayout {
         }
     }
 }
-

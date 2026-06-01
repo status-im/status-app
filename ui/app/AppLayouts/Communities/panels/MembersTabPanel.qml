@@ -32,7 +32,7 @@ Item {
     property string searchString
     property RootStore rootStore
 
-    property int panelType: MembersTabPanel.TabType.AllMembers
+    property int panelType: Constants.CommunityMembershipSubSections.Members
     property int memberRole: Constants.memberRole.none
 
     readonly property bool isOwner: memberRole === Constants.memberRole.owner
@@ -45,13 +45,6 @@ Item {
 
     signal acceptRequestToJoin(string id)
     signal declineRequestToJoin(string id)
-
-    enum TabType {
-        AllMembers,
-        BannedMembers,
-        PendingRequests,
-        DeclinedRequests
-    }
 
     StatusListView {
         objectName: "CommunityMembersTabPanel_MembersListViews"
@@ -93,14 +86,14 @@ Item {
             // 4. All members tab, member in AwaitingAddress state - buttons are not visible, sandwatch icon is shown
 
             // Tab based buttons
-            readonly property bool tabIsShowingKickBanButtons: root.panelType === MembersTabPanel.TabType.AllMembers
-            readonly property bool tabIsShowingUnbanButton: root.panelType === MembersTabPanel.TabType.BannedMembers
-            readonly property bool tabIsShowingRejectButton: root.panelType === MembersTabPanel.TabType.PendingRequests
-            readonly property bool tabIsShowingAcceptButton: root.panelType === MembersTabPanel.TabType.PendingRequests ||
-                                                             root.panelType === MembersTabPanel.TabType.DeclinedRequests
+            readonly property bool tabIsShowingKickBanButtons: root.panelType === Constants.CommunityMembershipSubSections.Members
+            readonly property bool tabIsShowingUnbanButton: root.panelType === Constants.CommunityMembershipSubSections.BannedMembers
+            readonly property bool tabIsShowingRejectButton: root.panelType === Constants.CommunityMembershipSubSections.MembershipRequests
+            readonly property bool tabIsShowingAcceptButton: root.panelType === Constants.CommunityMembershipSubSections.MembershipRequests ||
+                                                             root.panelType === Constants.CommunityMembershipSubSections.RejectedMembers
             readonly property bool tabIsShowingViewMessagesButton: model.membershipRequestState !== Constants.CommunityMembershipRequestState.BannedWithAllMessagesDelete &&
-                                                                   (root.panelType === MembersTabPanel.TabType.AllMembers ||
-                                                                    root.panelType === MembersTabPanel.TabType.BannedMembers)
+                                                                   (root.panelType === Constants.CommunityMembershipSubSections.Members ||
+                                                                    root.panelType === Constants.CommunityMembershipSubSections.BannedMembers)
 
 
             // Request states

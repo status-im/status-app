@@ -104,6 +104,7 @@ Control {
     signal avatarClicked(string avatarId)
     signal redirectToDetails(string sectionId, string subsectionId, string itemId)
     signal redirectToSection(string sectionId)
+    signal redirectToCommunitySettingsSubsection(string communityId, int subsection, int subsectionItem)
     signal redirectToPopup(var notification)
     signal redirectToWallet(string address, string txHash)
 
@@ -275,6 +276,11 @@ Control {
 
                     if (model.redirectToSection)
                         return root.redirectToSection(model.sectionId)
+
+                    if (model.redirectToCommunitySettingsSubsection)
+                        return root.redirectToCommunitySettingsSubsection(model.communityId,
+                                                                         model.communitySettingsSubsection,
+                                                                         model.communitySettingsSubsectionItem)
 
                     if (model.redirectToLink)
                         return root.redirectToPopup(model)

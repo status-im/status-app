@@ -685,16 +685,21 @@ StatusSectionLayout {
         }
 
         function goTo(section: int, subSection: int) {
+            root.currentIndex = StatusSectionLayout.CentralPanel
+
             const stackContent = stackLayout.children
 
-            for (let i = 0; stackContent.length; i++) {
-                const item = stackContent[i]
+            for (let i = 0; i < stackContent.length; i++) {
+                const loader = stackContent[i]
 
-                if (item.sectionKey === section) {
+                if (loader.sectionKey === section) {
                     d.currentIndex = i
+                    loader.active = true
 
-                    if(item.goTo)
-                        item.goTo(subSection)
+                    Qt.callLater(() => {
+                        if (loader.item && loader.item.goTo)
+                            loader.item.goTo(subSection)
+                    })
 
                     break
                 }
