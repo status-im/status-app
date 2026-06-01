@@ -257,8 +257,8 @@ QtObject:
       debug "Add OS notification", notificationType=details.notificationType, identifier=identifier
       self.showOSNotification(data.title, data.message, identifier)
 
-    if self.settingsService.getNotificationSoundsEnabled():
-      self.events.emit(SIGNAL_PLAY_NOTIFICATION_SOUND, Args())
+      if self.settingsService.getNotificationSoundsEnabled():
+        self.events.emit(SIGNAL_PLAY_NOTIFICATION_SOUND, Args())
 
   proc processNotification(self: NotificationsManager, title: string, message: string, details: NotificationDetails) =
     ## This is the main method which need to be called to process an event according to the preferences set in the
