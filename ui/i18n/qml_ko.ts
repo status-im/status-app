@@ -19877,6 +19877,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
 <context>
     <name>WalletNetworkDelegate</name>
     <message>
+        <source>%1 chain integrated. You can now view and swap &lt;br&gt;%1 assets, as well as interact with %1 dApps.</source>
+        <translation type="unfinished">%1 체인이 통합되었습니다. 이제 &lt;br&gt;%1 자산을 확인하고 스왑하며, %1 dApps와 상호작용할 수 있습니다.</translation>
+    </message>
+    <message>
         <source>Required for some Status features</source>
         <translation>일부 Status 기능에 필요</translation>
     </message>

@@ -24242,6 +24242,11 @@
   <context>
     <name>WalletNetworkDelegate</name>
     <message>
+      <source>%1 chain integrated. You can now view and swap &lt;br&gt;%1 assets, as well as interact with %1 dApps.</source>
+      <comment>WalletNetworkDelegate</comment>
+      <translation>%1 chain integrated. You can now view and swap &lt;br&gt;%1 assets, as well as interact with %1 dApps.</translation>
+    </message>
+    <message>
       <source>Required for some Status features</source>
       <comment>WalletNetworkDelegate</comment>
       <translation>Required for some Status features</translation>

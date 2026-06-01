@@ -19946,6 +19946,10 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
 <context>
     <name>WalletNetworkDelegate</name>
     <message>
+        <source>%1 chain integrated. You can now view and swap &lt;br&gt;%1 assets, as well as interact with %1 dApps.</source>
+        <translation type="unfinished">Cadena %1 integrada. Ahora puedes ver e intercambiar &lt;br&gt;activos %1, así como interactuar con dApps %1.</translation>
+    </message>
+    <message>
         <source>Required for some Status features</source>
         <translation>Requerido para algunas funciones de Status</translation>
     </message>

@@ -19915,6 +19915,10 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
 <context>
     <name>WalletNetworkDelegate</name>
     <message>
+        <source>%1 chain integrated. You can now view and swap &lt;br&gt;%1 assets, as well as interact with %1 dApps.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Required for some Status features</source>
         <translation type="unfinished"></translation>
     </message>
