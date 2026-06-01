@@ -18,6 +18,9 @@ ColumnLayout {
     signal sendToAddressRequested(string address)
 
     SavedAddresses {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+
         contactsStore: root.contactsStore
         networkConnectionStore: root.networkConnectionStore
         networksStore: root.networksStore
