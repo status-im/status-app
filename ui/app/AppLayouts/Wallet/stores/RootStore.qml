@@ -343,11 +343,13 @@ QtObject {
     }
 
     function createOrUpdateSavedAddress(name, address, ens, colorId) {
+        console.warn("[saved-address] createOrUpdateSavedAddress name=", name, "address=", address)
         root.addingSavedAddress = true
         walletSectionSavedAddresses.createOrUpdateSavedAddress(name, address, ens, colorId)
     }
 
     function deleteSavedAddress(address) {
+        console.warn("[saved-address] deleteSavedAddress address=", address)
         root.deletingSavedAddress = true
         walletSectionSavedAddresses.deleteSavedAddress(address)
     }

@@ -2555,43 +2555,43 @@ Item {
                 addEditSavedAddress.close()
             }
         }
+    }
 
-        Connections {
-            target: WalletStores.RootStore
+    Connections {
+        target: WalletStores.RootStore
 
-            function onSavedAddressAddedOrUpdated(added: bool, name: string, address: string, errorMsg: string) {
-                WalletStores.RootStore.addingSavedAddress = false
-                WalletStores.RootStore.lastCreatedSavedAddress = { address: address, error: errorMsg }
+        function onSavedAddressAddedOrUpdated(added: bool, name: string, address: string, errorMsg: string) {
+            console.warn("[saved-address] onSavedAddressAddedOrUpdated added=", added, "name=", name, "address=", address, "errorMsg=", errorMsg)
+            WalletStores.RootStore.addingSavedAddress = false
+            WalletStores.RootStore.lastCreatedSavedAddress = { address: address, error: errorMsg }
 
-                if (!!errorMsg) {
-                    let mode = qsTr("adding")
-                    if (!added) {
-                        mode = qsTr("editing")
-                    }
-
-                    Global.displayToastMessage(qsTr("An error occurred while %1 %2 address").arg(mode).arg(name),
-                                               "",
-                                               "warning",
-                                               false,
-                                               Constants.ephemeralNotificationType.danger,
-                                               ""
-                                               )
-                    return
-                }
-
-                let msg = qsTr("%1 successfully added to your saved addresses")
+            if (!!errorMsg) {
+                let mode = qsTr("adding")
                 if (!added) {
-                    msg = qsTr("%1 saved address successfully edited")
+                    mode = qsTr("editing")
                 }
-                Global.displayToastMessage(msg.arg(name),
+
+                Global.displayToastMessage(qsTr("An error occurred while %1 %2 address").arg(mode).arg(name),
                                            "",
-                                           "checkmark-circle",
+                                           "warning",
                                            false,
-                                           Constants.ephemeralNotificationType.success,
+                                           Constants.ephemeralNotificationType.danger,
                                            ""
                                            )
-
+                return
             }
+
+            let msg = qsTr("%1 successfully added to your saved addresses")
+            if (!added) {
+                msg = qsTr("%1 saved address successfully edited")
+            }
+            Global.displayToastMessage(msg.arg(name),
+                                       "",
+                                       "checkmark-circle",
+                                       false,
+                                       Constants.ephemeralNotificationType.success,
+                                       ""
+                                       )
         }
     }
 
@@ -2630,33 +2630,34 @@ Item {
                 close()
             }
         }
+    }
 
-        Connections {
-            target: WalletStores.RootStore
+    Connections {
+        target: WalletStores.RootStore
 
-            function onSavedAddressDeleted(name: string, address: string, errorMsg: string) {
-                WalletStores.RootStore.deletingSavedAddress = false
+        function onSavedAddressDeleted(name: string, address: string, errorMsg: string) {
+            console.warn("[saved-address] onSavedAddressDeleted name=", name, "address=", address, "errorMsg=", errorMsg)
+            WalletStores.RootStore.deletingSavedAddress = false
 
-                if (!!errorMsg) {
+            if (!!errorMsg) {
 
-                    Global.displayToastMessage(qsTr("An error occurred while removing %1 address").arg(name),
-                                               "",
-                                               "warning",
-                                               false,
-                                               Constants.ephemeralNotificationType.danger,
-                                               ""
-                                               )
-                    return
-                }
-
-                Global.displayToastMessage(qsTr("%1 was successfully removed from your saved addresses").arg(name),
+                Global.displayToastMessage(qsTr("An error occurred while removing %1 address").arg(name),
                                            "",
-                                           "checkmark-circle",
+                                           "warning",
                                            false,
-                                           Constants.ephemeralNotificationType.success,
+                                           Constants.ephemeralNotificationType.danger,
                                            ""
                                            )
+                return
             }
+
+            Global.displayToastMessage(qsTr("%1 was successfully removed from your saved addresses").arg(name),
+                                       "",
+                                       "checkmark-circle",
+                                       false,
+                                       Constants.ephemeralNotificationType.success,
+                                       ""
+                                       )
         }
     }
 
