@@ -137,15 +137,9 @@ SettingsContentBase {
                             Global.openShakeToSharePopup()
                             return
                         }
-                        logsFolderDialog.open()
+                        Qt.openUrlExternally(UrlUtils.urlFromUserInput(root.advancedStore.logDir()))
                     }
                 }
-            }
-
-            StatusFolderDialog {
-                id: logsFolderDialog
-                title: qsTr("Application Logs")
-                currentFolder: root.advancedStore.logDir()
             }
 
             Item {
