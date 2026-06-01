@@ -494,21 +494,53 @@ Item {
     Component {
         id: acceptOrDeclineContactRequestComponent
 
-        RowLayout {
-            anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
+        Item {
+            id: contactRequestActions
 
-            StatusButton {
-                text: qsTr("Reject Contact Request")
-                type: StatusBaseButton.Type.Danger
-                onClicked: {
-                    root.dismissContactRequest(root.chatId, "")
+            readonly property real horizontalMargin: Theme.bigPadding + Theme.halfPadding
+            readonly property real verticalMargin: Theme.padding
+            readonly property real naturalWidth: rejectContactRequestButton.implicitWidth +
+                                                 acceptContactRequestButton.implicitWidth +
+                                                 buttonsRow.spacing
+            readonly property real availableWidth: Math.max(0, width - 2 * horizontalMargin)
+            readonly property bool compact: availableWidth < naturalWidth
+            readonly property real compactButtonWidth: Math.max(0, (availableWidth - buttonsRow.spacing) / 2)
+
+            width: parent ? parent.width : naturalWidth + 2 * horizontalMargin
+            implicitHeight: buttonsRow.implicitHeight + 2 * verticalMargin
+
+            RowLayout {
+                id: buttonsRow
+
+                anchors.centerIn: parent
+                width: Math.min(contactRequestActions.naturalWidth, contactRequestActions.availableWidth)
+                spacing: Theme.padding
+
+                StatusButton {
+                    id: rejectContactRequestButton
+
+                    Layout.fillWidth: contactRequestActions.compact
+                    Layout.preferredWidth: contactRequestActions.compact ? contactRequestActions.compactButtonWidth : implicitWidth
+                    Layout.maximumWidth: contactRequestActions.compact ? contactRequestActions.compactButtonWidth : implicitWidth
+                    textFillWidth: contactRequestActions.compact
+                    text: qsTr("Reject Contact Request")
+                    type: StatusBaseButton.Type.Danger
+                    onClicked: {
+                        root.dismissContactRequest(root.chatId, "")
+                    }
                 }
-            }
 
-            StatusButton {
-                text: qsTr("Accept Contact Request")
-                onClicked: {
-                    root.acceptContactRequest(root.chatId, "")
+                StatusButton {
+                    id: acceptContactRequestButton
+
+                    Layout.fillWidth: contactRequestActions.compact
+                    Layout.preferredWidth: contactRequestActions.compact ? contactRequestActions.compactButtonWidth : implicitWidth
+                    Layout.maximumWidth: contactRequestActions.compact ? contactRequestActions.compactButtonWidth : implicitWidth
+                    textFillWidth: contactRequestActions.compact
+                    text: qsTr("Accept Contact Request")
+                    onClicked: {
+                        root.acceptContactRequest(root.chatId, "")
+                    }
                 }
             }
         }
