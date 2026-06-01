@@ -1,3 +1,4 @@
+import QtQml
 import Qt.labs.platform
 
 import StatusQ.Core.Theme

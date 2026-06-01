@@ -505,7 +505,7 @@ Window {
             onStatusChanged: {
                 if (status === Loader.Error) {
                     console.error("Failed to load AppMain.qml")
-                    Qt.quit()
+                    Qt.exit(-1)
                 }
             }
         }
