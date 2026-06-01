@@ -1770,6 +1770,13 @@ Item {
                                          // Guard in case of portrait
                                          acPortraitPopup.close()
                                      }
+                onRedirectToCommunitySettingsSubsection: (communityId, subsection, subsectionItem) => {
+                                                             appMain.changeAppSectionBySectionId(communityId)
+                                                             Global.switchToCommunitySettingsSubsection(communityId, subsection, subsectionItem)
+
+                                                             // Guard in case of portrait
+                                                             acPortraitPopup.close()
+                                                         }
                 onRedirectToPopup: (notification) => {
                                        // Right now, this is the only popup open, when more, we can add a popup type to determine it
                                        Global.openNewsMessagePopupRequested(notification)

@@ -179,6 +179,24 @@ QtObject {
         chatId               [string]  - related chat identifier
         communityId          [string]  - related community identifier
         sectionId            [string]  - section identifier used for navigation
+        subsectionId         [string]  - section-specific child identifier. For message
+                                         redirects this is the chat id.
+        subsectionItemId     [string]  - section-specific item identifier. For message
+                                         redirects this is the message id.
+        redirectToDetails    [bool]    - whether clicking the notification opens a
+                                         section-specific detail view
+        redirectToSection    [bool]    - whether clicking the notification opens a section
+        redirectToCommunitySettingsSubsection [bool]
+                                       - whether clicking the notification opens a community
+                                         settings subsection
+        communitySettingsSubsection     [int]
+                                       - target community settings section
+                                         (enum: Constants.CommunitySettingsSections)
+        communitySettingsSubsectionItem [int]
+                                       - target community settings subsection item
+                                         (enum: Constants.CommunityMembershipSubSections)
+        redirectToLink       [bool]    - whether clicking the notification opens a popup/link
+        redirectToWallet     [bool]    - whether clicking the notification opens wallet activity
     */
     readonly property var model: SortFilterProxyModel {
         // Sort by newest first (dismissed entries already excluded upstream)
@@ -283,7 +301,9 @@ QtObject {
                 "timestamp",
 
                 // Passthrough for navigation/actions
-                "sectionId", "subsectionId", "subsectionItemId", "redirectToDetails", "redirectToSection", "redirectToLink", "redirectToWallet",
+                "sectionId", "subsectionId", "subsectionItemId", "redirectToDetails", "redirectToSection",
+                "redirectToCommunitySettingsSubsection", "communitySettingsSubsection", "communitySettingsSubsectionItem",
+                "redirectToLink", "redirectToWallet",
 
                 // Used by the filter above
                 "dismissed"
@@ -471,6 +491,9 @@ QtObject {
                 readonly property bool dismissed: model.dismissed
                 readonly property bool redirectToDetails: adaptor?.redirectToDetails ?? false
                 readonly property bool redirectToSection: adaptor?.redirectToSection ?? false
+                readonly property bool redirectToCommunitySettingsSubsection: adaptor?.redirectToCommunitySettingsSubsection ?? false
+                readonly property int communitySettingsSubsection: adaptor?.communitySettingsSubsection ?? -1
+                readonly property int communitySettingsSubsectionItem: adaptor?.communitySettingsSubsectionItem ?? -1
                 readonly property bool redirectToLink: adaptor?.redirectToLink ?? false
                 readonly property bool redirectToWallet: adaptor?.redirectToWallet ?? false
 
@@ -679,6 +702,12 @@ QtObject {
 
                         // Action text
                         actionText: qsTr("Community membership request")
+
+                        // Navigation related
+                        redirectToSection: false
+                        redirectToCommunitySettingsSubsection: true
+                        communitySettingsSubsection: Constants.CommunitySettingsSections.Members
+                        communitySettingsSubsectionItem: Constants.CommunityMembershipSubSections.MembershipRequests
 
                         // Content related
                         content: {

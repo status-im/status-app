@@ -68,6 +68,7 @@ QtObject {
 
     signal switchToCommunity(string communityId)
     signal switchToCommunitySettings(string communityId)
+    signal switchToCommunitySettingsSubsection(string communityId, int subsection, int subsectionItem)
     signal switchToCommunityChannelsView(string communityId)
     signal createCommunityPopupRequested(bool isDiscordImport)
     signal importCommunityPopupRequested()
