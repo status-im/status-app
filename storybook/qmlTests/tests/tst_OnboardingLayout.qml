@@ -1027,6 +1027,56 @@ Item {
             }
         }
 
+        function test_loginScreen_profileSelectionIsSavedAndRestoredAfterWrongPassword_data() {
+            return [{ tag: "profile selection persisted after wrong password" }] // dummy to skip global data, and run just once
+        }
+
+        function test_loginScreen_profileSelectionIsSavedAndRestoredAfterWrongPassword() {
+            verify(!!controlUnderTest)
+            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
+            controlUnderTest.lastSelectedProfileKeyUid = "uid_1"
+            controlUnderTest.restartFlow()
+
+            let page = getCurrentPage(controlUnderTest.stack, LoginScreen)
+            let userSelector = findChild(page, "loginUserSelector")
+            verify(!!userSelector)
+            tryCompare(userSelector, "selectedProfileKeyId", "uid_1")
+
+            dynamicSpy.setup(controlUnderTest, "profileSelected")
+            userSelector.setSelection("uid_2")
+
+            // Validate that profile change notification is emitted so caller can persist it.
+            tryCompare(dynamicSpy, "count", 1)
+            compare(dynamicSpy.signalArguments[0][0], "uid_2")
+            tryCompare(userSelector, "selectedProfileKeyId", "uid_2")
+
+            // Simulate StartupOnboardingWrapper persisting selected profile UID.
+            controlUnderTest.lastSelectedProfileKeyUid = dynamicSpy.signalArguments[0][0]
+
+            const passwordInput = findChild(page, "loginPasswordInput")
+            verify(!!passwordInput)
+            mouseClick(passwordInput)
+            keyClickSequence("wrong-password")
+
+            const loginButton = findChild(page, "loginButton")
+            verify(!!loginButton)
+            tryCompare(loginButton, "enabled", true)
+            mouseClick(loginButton)
+
+            tryCompare(loginSpy, "count", 1)
+            tryCompare(passwordInput, "hasError", true)
+
+            // Simulate startup wrapper behavior on failed login.
+            controlUnderTest.unwindToLoginScreen()
+
+            page = getCurrentPage(controlUnderTest.stack, LoginScreen)
+            userSelector = findChild(page, "loginUserSelector")
+            verify(!!userSelector)
+            // Validate that after a failed login attempt, the previously selected profile is still selected
+            // (instead of resetting to default or first profile).
+            tryCompare(userSelector, "selectedProfileKeyId", "uid_2")
+        }
+
         function test_loginScreen_launchesExternalFlow_data() {
             return [
               { tag: "onboarding: create profile", delegateName: "createProfileDelegate", signalName: "onboardingCreateProfileFlowRequested", landingPage: CreateProfilePage },
