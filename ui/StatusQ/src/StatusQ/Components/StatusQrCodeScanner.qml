@@ -92,7 +92,7 @@ Item {
     StatusScanCorners {
         id: scanCorners
         visible: !cameraUnavailableText.visible
-        width: root.width / 1.4
+        width: Math.min(root.width, root.height) / 1.4
         height: width
         anchors.centerIn: parent
         color: {
