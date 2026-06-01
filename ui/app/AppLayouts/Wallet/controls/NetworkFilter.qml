@@ -39,6 +39,7 @@ StatusComboBox {
 
     property bool showNewChainIcon: false
     property bool showNotificationIcon: false
+    property bool showManageNetworksNotificationIcon: false
 
     signal toggleNetwork(int chainId, int index)
     signal manageNetworksClicked()
@@ -176,6 +177,7 @@ StatusComboBox {
         showSelectionIndicator: root.showSelectionIndicator
         showManageNetworksButton: root.showManageNetworksButton
         showNewChainIcon: root.showNewChainIcon
+        showManageNetworksNotificationIcon: root.showManageNetworksNotificationIcon
 
         onToggleNetwork: (chainId, index) => root.toggleNetwork(chainId, index)
 

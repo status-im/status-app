@@ -18,6 +18,8 @@ const DEFAULT_LAS_KEY_TRANSLATIONS_ENABLED = true
 const LAS_KEY_REFRESH_TOKEN_ENABLED = "global/refresh_token_enabled"
 const LS_KEY_SEEN_NETWORK_CHAINS = "global/seenNetworkChains"
 const DEFAULT_SEEN_NETWORK_CHAINS = "[]"
+const LS_KEY_SEEN_MANAGE_NETWORKS_CHAINS = "global/seenManageNetworksChains"
+const DEFAULT_SEEN_MANAGE_NETWORKS_CHAINS = "[]"
 const LAS_KEY_SELECTED_PROFILE_KEY_UID = "global/selected_profile_key_uid"
 
 when constants.IS_MOBILE:
@@ -192,6 +194,26 @@ QtObject:
     read = getSeenNetworkChains
     write = setSeenNetworkChains
     notify = seenNetworkChainsChanged
+
+  proc seenManageNetworksChainsChanged*(self: LocalAppSettings) {.signal.}
+
+  proc getSeenManageNetworksChains*(self: LocalAppSettings): string {.slot.} =
+    if self.settings.isNil:
+      return DEFAULT_SEEN_MANAGE_NETWORKS_CHAINS
+
+    return self.settings.value(LS_KEY_SEEN_MANAGE_NETWORKS_CHAINS, newQVariant(DEFAULT_SEEN_MANAGE_NETWORKS_CHAINS)).stringVal
+
+  proc setSeenManageNetworksChains*(self: LocalAppSettings, value: string) {.slot.} =
+    if self.settings.isNil or self.getSeenManageNetworksChains() == value:
+      return
+
+    self.settings.setValue(LS_KEY_SEEN_MANAGE_NETWORKS_CHAINS, newQVariant(value))
+    self.seenManageNetworksChainsChanged()
+
+  QtProperty[string] seenManageNetworksChains:
+    read = getSeenManageNetworksChains
+    write = setSeenManageNetworksChains
+    notify = seenManageNetworksChainsChanged
 
   proc selectedProfileKeyUidChanged*(self: LocalAppSettings) {.signal.}
   proc getSelectedProfileKeyUid*(self: LocalAppSettings): string {.slot.} =

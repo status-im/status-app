@@ -55,6 +55,7 @@ SplitView {
                 showSelectionIndicator: (ctrlShowCheckBoxes.checked && multiSelection) || (ctrlShowRadioButtons.checked && !multiSelection)
                 showNewChainIcon: newChainsNotificationCheckbox.checked
                 showNotificationIcon: showNotificationIconCheckbox.checked
+                showManageNetworksNotificationIcon: showManageNetworksNotificationIconCheckbox.checked
             }
         }
 
@@ -122,6 +123,12 @@ SplitView {
             CheckBox {
                 id: showNotificationIconCheckbox
                 text: "Show notification icon"
+                checked: true
+            }
+
+            CheckBox {
+                id: showManageNetworksNotificationIconCheckbox
+                text: "Show 'Manage networks' notification icon"
                 checked: true
             }
 
