@@ -70,7 +70,8 @@ QtObject {
 
     onPrecompileFinished: function(componentUrl, success) {
         if (!success) {
-            Qt.quit()
+            console.error("Failed to precompile", componentUrl)
+            Qt.exit(-1)
         }
     }
 }
