@@ -65,6 +65,9 @@ Control {
     /* Indicates whether networks notification badge is visible */
     property bool showNetworksNotificationIcon
 
+    /* Indicates whether the manage networks notification badge is visible */
+    property bool showManageNetworksNotificationIcon
+
     /* Emitted when networks selection is changed */
     signal toggleNetworkRequested(string chainId)
 
@@ -275,6 +278,7 @@ Control {
             flatNetworks: root.networksModel
             showNewChainIcon: true
             showNotificationIcon: root.showNetworksNotificationIcon
+            showManageNetworksNotificationIcon: root.showManageNetworksNotificationIcon
 
             onToggleNetwork: chainId => root.toggleNetworkRequested(chainId)
             onManageNetworksClicked: root.manageNetworksRequested()

@@ -16,9 +16,17 @@ StatusListItem {
     property string iconUrl
     property bool isActive
     property bool isDeactivatable
+    property bool showNewIcon: false
 
     signal setNetworkActive(bool active)
     signal editNetwork()
+
+    statusListItemTitleIcons.active: root.showNewIcon
+    statusListItemTitleIcons.anchors.leftMargin: Theme.smallPadding
+    statusListItemTitleIcons.sourceComponent: StatusNewTag {
+        objectName: "walletNetworkNewIcon_" + root.chainName
+        tooltipText: qsTr("%1 chain integrated. You can now view and swap <br>%1 assets, as well as interact with %1 dApps.").arg(root.chainName)
+    }
 
     QtObject {
         id: d
