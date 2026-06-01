@@ -76,6 +76,7 @@ import app_service/common/utils as common_utils
 import app_service/service/network/network_item
 import app_service/service/market/service as market_service
 
+import app/core/notifications/notifications_manager
 import app/core/notifications/details
 import app/core/eventemitter
 import app/core/custom_urls/urls_manager
@@ -1715,6 +1716,9 @@ method displayEphemeralNotification*[T](
     details
   )
   self.view.ephemeralNotificationModel().addItem(item)
+
+  if self.settingsService.getNotificationSoundsEnabled() and not details.isEmpty():
+    self.events.emit(SIGNAL_PLAY_NOTIFICATION_SOUND, Args())
 
 method displayEphemeralNotification*[T](self: Module[T], title: string, subTitle: string, details: NotificationDetails) =
   # Message toasts create high-frequency UI noise, so keep them disabled until their value is reassessed.
