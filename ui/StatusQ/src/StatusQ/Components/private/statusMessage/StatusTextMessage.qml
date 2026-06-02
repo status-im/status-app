@@ -43,15 +43,18 @@ Item {
         readonly property int showMoreHeight: showMoreButtonLoader.visible ? showMoreButtonLoader.height : 0
         readonly property int maxHeight: 200
 
+        // Simple heuristic to check if message contains quote block.
+        readonly property bool hasBlockQuote: d.text.indexOf("<blockquote") !== -1
+
         // Character ranges ({ start, end }) of every quote block, used to draw a
-        // vertical bar per quote block (desktop only). layoutRevision is bumped on
-        // relayout to force the bars' geometry bindings (positionToRectangle calls)
-        // to re-evaluate, since method calls are not tracked by bindings.
+        // vertical bar per quote block. layoutRevision is bumped on relayout to
+        // force the bars' geometry bindings (positionToRectangle calls) to
+        // re-evaluate, since method calls are not tracked by bindings.
         property var quoteRanges: []
         property int layoutRevision: 0
         function updateQuoteRanges() {
             const item = chatTextLoader.item
-            d.quoteRanges = (!root.isMobile && item && item.textDocument)
+            d.quoteRanges = (item && item.textDocument)
                           ? TextDocumentUtils.blockquoteRanges(item.textDocument) : []
         }
 
@@ -107,7 +110,12 @@ Item {
 
         opacity: !showMoreOpacityMask.active && !horizontalOpacityMask.active ? 1 : 0
 
-        sourceComponent: root.isMobile ? chatTextMobileComp : chatTextDesktopComp
+        // Mobile uses the lightweight StatusBaseText, except for quote messages
+        // which need StatusTextArea (textDocument/positionToRectangle) to draw the
+        // quote bar. Desktop always uses StatusTextArea to allow selection by mouse.
+        sourceComponent: (root.isMobile && !d.hasBlockQuote) ? chatTextMobileComp
+                                                             : chatTextDesktopComp
+        onItemChanged: d.updateQuoteRanges()
 
         HoverHandler {
             id: hoverHandler
@@ -157,10 +165,10 @@ Item {
             textFormat: Text.RichText
             wrapMode: root.convertToSingleLine ? Text.NoWrap : Text.Wrap
             readOnly: true
-            selectByMouse: true  // applies to mouse only, not touch
+            selectByMouse: !root.isMobile  // mouse selection is desktop-only
 
-            // quote-bar overlay bookkeeping
-            Component.onCompleted: d.updateQuoteRanges()
+            // quote-bar overlay bookkeeping (initial compute handled by the
+            // loader's onItemChanged)
             onTextChanged: d.updateQuoteRanges()
             onContentHeightChanged: d.layoutRevision++
             onContentWidthChanged: d.layoutRevision++
@@ -252,7 +260,8 @@ Item {
         }
     }
 
-    // Vertical bar drawn for each quote block (desktop only).
+    // Vertical bar drawn for each quote block. Rendered whenever the text control
+    // exposes a textDocument (StatusTextArea) - desktop, and mobile quote messages.
     Item {
         anchors.fill: chatTextLoader
         clip: true
@@ -266,12 +275,14 @@ Item {
                 readonly property rect startRect: {
                     d.layoutRevision // dependency: re-evaluate on relayout
                     const item = chatTextLoader.item
-                    return item ? item.positionToRectangle(quoteBar.modelData.start) : Qt.rect(0, 0, 0, 0)
+                    return (item && item.positionToRectangle)
+                         ? item.positionToRectangle(quoteBar.modelData.start) : Qt.rect(0, 0, 0, 0)
                 }
                 readonly property rect endRect: {
                     d.layoutRevision // dependency: re-evaluate on relayout
                     const item = chatTextLoader.item
-                    return item ? item.positionToRectangle(quoteBar.modelData.end) : Qt.rect(0, 0, 0, 0)
+                    return (item && item.positionToRectangle)
+                         ? item.positionToRectangle(quoteBar.modelData.end) : Qt.rect(0, 0, 0, 0)
                 }
 
                 x: 0
