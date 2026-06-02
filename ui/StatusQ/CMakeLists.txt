@@ -181,6 +181,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/statussyntaxhighlighter.h
         include/StatusQ/stringutilsinternal.h
         include/StatusQ/systemutilsinternal.h
+        include/StatusQ/textdocumentutilsinternal.h
         include/StatusQ/theme.h
         include/StatusQ/themepalette.h
         include/StatusQ/typesregistration.h
@@ -210,6 +211,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/statussyntaxhighlighter.cpp
         src/stringutilsinternal.cpp
         src/systemutilsinternal.cpp
+        src/textdocumentutilsinternal.cpp
         src/theme.cpp
         src/themepalette.cpp
         src/typesregistration.cpp
