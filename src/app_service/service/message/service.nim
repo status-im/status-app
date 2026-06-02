@@ -1191,7 +1191,9 @@ proc getRenderedText*(self: Service, parsedTextArray: seq[ParsedText], community
           result = result & self.renderInline(child, communityChats)
         result = result & "</p>"
       of PARSED_TEXT_TYPE_BLOCKQUOTE:
-        result = result & "<blockquote>" & escape_html(parsedText.literal) & "</blockquote>"
+        let quoted = escape_html(parsedText.literal)
+          .multiReplace(("\r\n", "<br/>"), ("\n", "<br/>"))
+        result = result & "<blockquote>" & quoted & "</blockquote>"
       of PARSED_TEXT_TYPE_CODEBLOCK:
         result = result & "<code>" & escape_html(parsedText.literal) & "</code>"
     result = result.strip()
