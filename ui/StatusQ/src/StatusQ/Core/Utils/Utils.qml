@@ -204,7 +204,11 @@ QtObject {
         const ethLinkHoverColor = ethLinkDisabled ? palette.baseColor1 : palette.primaryColor1
         const ethLinkHoverBackgroundColor = ethLinkDisabled ? palette.directColor8 : palette.primaryColor3
         return `<style type="text/css">` +
-                    `img, a, del, code, blockquote { margin: 0; padding: 0; }` +
+                    `img, a, del, code { margin: 0; padding: 0; }` +
+                    `blockquote {` +
+                        `margin: 0 0 0 8px;` +
+                        `color: ${palette.baseColor1};` +
+                    `}` +
                     `code {` +
                         `font-family: ${Fonts.codeFont.family};` +
                         `font-weight: 400;` +
