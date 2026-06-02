@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, json, sequtils, strutils
 import ./item
 import ../../../../app_service/service/activity_center/dto/notification
@@ -60,10 +61,7 @@ QtObject:
   method rowCount*(self: Model, index: QModelIndex = nil): int = self.activityCenterNotifications.len
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.activityCenterNotifications.len:
-      return
+    guardModelData(index, self.activityCenterNotifications.len, role, NotifRoles)
 
     let activityNotificationItem = self.activityCenterNotifications[index.row]
     let notificationItemRole = role.NotifRoles

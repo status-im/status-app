@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, sequtils, chronicles
 
 type
@@ -41,13 +42,10 @@ QtObject:
     }.toTable
 
   method data(self: RecipientsModel, index: QModelIndex, role: int): QVariant =
-    if (not index.isValid):
-      return
-
-    if (index.row < 0 or index.row >= self.addresses.len):
-      return
+    guardModelData(index, self.addresses.len, role, ModelRole)
 
     let address = self.addresses[index.row]
+
     let enumRole = role.ModelRole
 
     case enumRole:
@@ -94,4 +92,3 @@ QtObject:
 
   proc setup(self: RecipientsModel) =
     self.QAbstractListModel.setup
-

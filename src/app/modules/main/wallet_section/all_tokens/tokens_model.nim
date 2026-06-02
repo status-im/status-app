@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables
 
 import io_interface
@@ -56,12 +57,10 @@ QtObject:
     }.toTable
 
   method data(self: TokensModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.rowCount():
-      return
+    guardModelData(index, self.rowCount(), role, ModelRole)
 
     let item = self.delegate.getTokens()[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.Key:
@@ -98,4 +97,3 @@ QtObject:
 
   proc delete(self: TokensModel) =
     self.QAbstractListModel.delete
-

@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables
 
 import app_service/common/types
@@ -46,11 +47,10 @@ QtObject:
     return self.items.len
 
   method data(self: TokenCriteriaModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.items.len:
-      return
+    guardModelData(index, self.items.len, role, ModelRole)
+
     let item = self.items[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.Key:
@@ -93,4 +93,3 @@ QtObject:
 
   proc delete(self: TokenCriteriaModel) =
     self.QAbstractListModel.delete
-

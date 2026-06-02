@@ -1,8 +1,8 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables
 
 import io_interface
 import tokens_model
-
 type
   ModelRole {.pure.} = enum
     Id = UserRole + 1
@@ -55,12 +55,10 @@ QtObject:
     )
 
   method data(self: TokenListsModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.rowCount():
-      return
+    guardModelData(index, self.rowCount(), role, ModelRole)
 
     var item = self.delegate.getAllTokenLists()[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.Id:

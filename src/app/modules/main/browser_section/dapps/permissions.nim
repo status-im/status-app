@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, std/strformat
 
 type
@@ -39,11 +40,8 @@ QtObject:
     }.toTable
 
   method data(self: PermissionsModel, index: QModelIndex, role: int): QVariant =
-    if (not index.isValid):
-      return
+    guardModelDataIndex(index, self.items.len)
 
-    if (index.row < 0 or index.row >= self.items.len):
-      return
     result = newQVariant(self.items[index.row])
 
   proc addItem*(self: PermissionsModel, item: string) =
@@ -68,4 +66,3 @@ QtObject:
 
   proc setup(self: PermissionsModel) =
     self.QAbstractListModel.setup
-

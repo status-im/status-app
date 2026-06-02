@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, std/strformat, sequtils, stint, options
 import chronicles
 
@@ -83,11 +84,7 @@ QtObject:
     }.toTable
 
   method data(self: CollectiblesModel, index: QModelIndex, role: int): QVariant =
-    if (not index.isValid):
-      return
-
-    if (index.row < 0 or index.row >= self.getCount()):
-      return
+    guardModelData(index, self.getCount(), role, CollectibleRole)
 
     let enumRole = role.CollectibleRole
 
@@ -208,4 +205,3 @@ QtObject:
 
   proc setup(self: CollectiblesModel) =
     self.QAbstractListModel.setup
-

@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables
 import discord_import_error_item, discord_import_errors_model
 import discord_import_task_item as taskItem 
@@ -35,11 +36,10 @@ QtObject:
     }.toTable
 
   method data(self: DiscordImportTasksModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.items.len:
-      return
+    guardModelData(index, self.items.len, role, ModelRole)
+
     let item = self.items[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.Type:
@@ -125,4 +125,3 @@ QtObject:
 
   proc delete(self: DiscordImportTasksModel) =
     self.QAbstractListModel.delete
-

@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, strutils
 import discord_channel_item
 
@@ -57,11 +58,10 @@ QtObject:
     }.toTable
 
   method data(self: DiscordChannelsModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.items.len:
-      return
+    guardModelData(index, self.items.len, role, ModelRole)
+
     let item = self.items[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.Id:
@@ -78,11 +78,10 @@ QtObject:
         result = newQVariant(item.getSelected())
 
   method setData(self: DiscordChannelsModel, index: QModelIndex, value: QVariant, role: int): bool =
-    if not index.isValid:
-      return false
     let row = index.row
-    if row < 0 or row >= self.items.len:
-      return false
+    guardModelSetDataIndex(index, row, self.items.len)
+    guardModelSetDataRole(role, ModelRole)
+
     case role.ModelRole:
       of ModelRole.Id:
         self.items[row].id = value.stringVal()
@@ -227,4 +226,3 @@ QtObject:
 
   proc delete(self: DiscordChannelsModel) =
     self.QAbstractListModel.delete
-

@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, sequtils
 
 import ./io_interface, ./balances_model
@@ -37,11 +38,9 @@ QtObject:
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
-    if (not index.isValid):
-      return
+    guardModelData(index, self.rowCount(), role, ModelRole)
 
-    if index.row < 0 or index.row >= self.rowCount() or
-      index.row >= self.balancesPerChain.len:
+    if index.row >= self.balancesPerChain.len:
       return
 
     let enumRole = role.ModelRole
@@ -74,4 +73,3 @@ QtObject:
   proc setup(self: Model) =
     self.QAbstractListModel.setup
     self.balancesPerChain = @[]
-

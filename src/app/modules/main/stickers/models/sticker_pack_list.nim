@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, sequtils, sugar
 import ./sticker_list
 import ../io_interface, ../item
@@ -45,10 +46,7 @@ QtObject:
   method rowCount(self: StickerPackList, index: QModelIndex = nil): int = self.packs.len
 
   method data(self: StickerPackList, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.packs.len:
-      return
+    guardModelData(index, self.packs.len, role, StickerPackRoles)
 
     let packInfo = self.packs[index.row]
     let stickerPack = packInfo.pack

@@ -1,6 +1,6 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, sequtils
 import ../io_interface, ../item
-
 type
   StickerRoles {.pure.} = enum
     Url = UserRole + 1
@@ -24,10 +24,7 @@ QtObject:
   method rowCount(self: StickerList, index: QModelIndex = nil): int = self.stickers.len
 
   method data(self: StickerList, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.stickers.len:
-      return
+    guardModelData(index, self.stickers.len, role, StickerRoles)
 
     let sticker = self.stickers[index.row]
     let stickerRole = role.StickerRoles
@@ -74,5 +71,4 @@ QtObject:
     self.endRemoveRows()
 
   proc setup(self: StickerList) = self.QAbstractListModel.setup
-
   proc delete(self: StickerList) = self.QAbstractListModel.delete
