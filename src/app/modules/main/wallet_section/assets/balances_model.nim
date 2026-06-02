@@ -1,7 +1,7 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, sequtils, stint
 
 import ./io_interface
-
 type
   ModelRole {.pure.} = enum
     Account = UserRole + 1,
@@ -49,12 +49,10 @@ QtObject:
     }.toTable
 
   method data(self: BalancesModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if self.index < 0 or self.index >= self.delegate.getGroupedAssetsList().len or
-      index.row < 0 or index.row >= self.delegate.getGroupedAssetsList()[self.index].balancesPerAccount.len:
-      return
+    guardModelData(index, self.rowCount(), role, ModelRole)
+
     let item = self.delegate.getGroupedAssetsList()[self.index].balancesPerAccount[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.Account:

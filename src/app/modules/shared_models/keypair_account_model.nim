@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, std/strformat, strutils
 import keypair_account_item
 import ./currency_amount
@@ -43,11 +44,10 @@ QtObject:
     }.toTable
 
   method data(self: KeyPairAccountModel, index: QModelIndex, role: int): QVariant =
-    if (not index.isValid):
-      return
-    if (index.row < 0 or index.row >= self.items.len):
-      return
+    guardModelData(index, self.items.len, role, ModelRole)
+
     let item = self.items[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
     of ModelRole.Account:
@@ -145,4 +145,3 @@ QtObject:
 
   proc setup(self: KeyPairAccountModel) =
     self.QAbstractListModel.setup
-

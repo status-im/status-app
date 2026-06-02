@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, algorithm
 
 import io_interface, tokens_model, market_details_item
@@ -127,14 +128,14 @@ QtObject:
     )
 
   method data(self: TokenGroupsModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
+    guardModelData(index, self.rowCount(), role, ModelRole)
+
     let noMarketDetails = ModelMode.NoMarketDetails in self.modelModes
-    if index.row < 0 or index.row >= self.rowCount() or
-      (not noMarketDetails and index.row >= self.tokenMarketDetails.len):
+    if not noMarketDetails and index.row >= self.tokenMarketDetails.len:
       return
 
     let item = self.getDisplayModel()[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.Key:
@@ -383,4 +384,3 @@ QtObject:
 
   proc delete(self: TokenGroupsModel) =
     self.QAbstractListModel.delete
-

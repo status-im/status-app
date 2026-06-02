@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables
 import discord_file_item
 
@@ -77,11 +78,10 @@ QtObject:
     }.toTable
 
   method setData(self: DiscordFileListModel, index: QModelIndex, value: QVariant, role: int): bool =
-    if not index.isValid:
-      return false
     let row = index.row
-    if row < 0 or row >= self.items.len:
-      return false
+    guardModelSetDataIndex(index, row, self.items.len)
+    guardModelSetDataRole(role, ModelRole)
+
     case role.ModelRole:
       of ModelRole.FilePath:
         self.items[index.row].filePath = value.stringVal()
@@ -103,11 +103,10 @@ QtObject:
     return true
 
   method data(self: DiscordFileListModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.items.len:
-      return
+    guardModelData(index, self.items.len, role, ModelRole)
+
     let item = self.items[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.FilePath:
@@ -186,4 +185,3 @@ QtObject:
 
   proc delete(self: DiscordFileListModel) =
     self.QAbstractListModel.delete
-
