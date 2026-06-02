@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, sequtils, sugar
 
 import ./io_interface
@@ -58,13 +59,10 @@ QtObject:
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
-    if (not index.isValid):
-      return
-
-    if (index.row < 0 or index.row >= self.rowCount()):
-      return
+    guardModelData(index, self.rowCount(), role, ModelRole)
 
     let item = self.delegate.getFlatNetworksList()[index.row]
+
     let enumRole = role.ModelRole
 
     case enumRole:
@@ -167,4 +165,3 @@ QtObject:
 
   proc setup(self: Model) =
     self.QAbstractListModel.setup
-

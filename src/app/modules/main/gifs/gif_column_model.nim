@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, sequtils
 
 import ../../../../app_service/service/gif/dto
@@ -30,11 +31,7 @@ QtObject:
     self.gifs.len
 
   method data(self: GifColumnModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-
-    if index.row < 0 or index.row >= self.gifs.len:
-      return
+    guardModelDataIndex(index, self.gifs.len)
 
     let gif = self.gifs[index.row]
     case role.GifRoles:

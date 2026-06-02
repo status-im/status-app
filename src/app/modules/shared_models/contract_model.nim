@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, std/strformat
 
 import ./contract_item
@@ -34,11 +35,10 @@ QtObject:
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.rowCount():
-      return
+    guardModelData(index, self.rowCount(), role, ModelRole)
+
     let item = self.items[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.Key:
@@ -58,4 +58,3 @@ QtObject:
 
   proc delete(self: Model) =
     self.QAbstractListModel.delete
-

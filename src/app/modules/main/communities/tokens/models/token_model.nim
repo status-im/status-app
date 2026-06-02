@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, std/strformat, sequtils, stint
 import token_item
 import token_owners_item
@@ -230,11 +231,10 @@ QtObject:
     }.toTable
 
   method data(self: TokenModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.items.len:
-      return
+    guardModelData(index, self.items.len, role, ModelRole)
+
     let item = self.items[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.ContractUniqueKey:
@@ -301,4 +301,3 @@ QtObject:
 
   proc delete(self: TokenModel) =
     self.QAbstractListModel.delete
-

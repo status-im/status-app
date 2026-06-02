@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, sequtils
 
 import ./io_interface
@@ -48,12 +49,10 @@ QtObject:
     }.toTable
 
   method data(self: RpcProvidersModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
+    guardModelData(index, self.rowCount(), role, ModelRole)
 
-    if index.row < 0 or index.row >= self.delegate.getRpcProvidersList().len:
-      return
     let item = self.delegate.getRpcProvidersList()[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.ChainId:
@@ -88,4 +87,3 @@ QtObject:
 
   proc delete(self: RpcProvidersModel) =
     self.QAbstractListModel.delete
-

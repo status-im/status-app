@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, sequtils, sugar, std/strformat
 
 import ./derived_address_item
@@ -46,13 +47,10 @@ QtObject:
     }.toTable
 
   method data(self: DerivedAddressModel, index: QModelIndex, role: int): QVariant =
-    if (not index.isValid):
-      return
-
-    if (index.row < 0 or index.row >= self.items.len):
-      return
+    guardModelData(index, self.items.len, role, ModelRole)
 
     let item = self.items[index.row]
+
     let enumRole = role.ModelRole
 
     case enumRole:
@@ -127,4 +125,3 @@ QtObject:
 
   proc setup(self: DerivedAddressModel) =
     self.QAbstractListModel.setup
-

@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, tables, options
 
 import app_service/service/market/service as market_service
@@ -50,12 +51,12 @@ QtObject:
     return none(int)
 
   method data(self: MarketLeaderboardModel, index: QModelIndex, role: int): QVariant =
-    if not index.isValid:
-      return
-    if index.row < 0 or index.row >= self.rowCount():
-      return
+    guardModelData(index, self.rowCount(), role, ModelRole)
+
     # the only way to read items from service is by this single method getMarketLeaderboardList
+
     let item = self.delegate.getMarketLeaderboardList()[index.row]
+
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.Key:
@@ -97,4 +98,3 @@ QtObject:
 
   proc delete(self: MarketLeaderboardModel) =
     self.QAbstractListModel.delete
-
