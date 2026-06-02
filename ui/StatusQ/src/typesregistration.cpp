@@ -19,6 +19,7 @@
 #include "StatusQ/statussyntaxhighlighter.h"
 #include "StatusQ/stringutilsinternal.h"
 #include "StatusQ/systemutilsinternal.h"
+#include "StatusQ/textdocumentutilsinternal.h"
 #include "StatusQ/theme.h"
 #include "StatusQ/undefinedfilter.h"
 #include "StatusQ/urlutils.h"
@@ -109,6 +110,11 @@ void registerStatusQTypes() {
     qmlRegisterSingletonType<StringUtilsInternal>(
         "StatusQ.Internal", 0, 1, "StringUtils", [](QQmlEngine* engine, QJSEngine*) {
             return new StringUtilsInternal(engine);
+        });
+
+    qmlRegisterSingletonType<TextDocumentUtilsInternal>(
+        "StatusQ.Internal", 0, 1, "TextDocumentUtils", [](QQmlEngine* engine, QJSEngine*) {
+            return new TextDocumentUtilsInternal(engine);
         });
 
     qmlRegisterSingletonType<SystemUtilsInternal>(
