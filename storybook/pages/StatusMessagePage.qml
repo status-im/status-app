@@ -241,7 +241,24 @@ SplitView {
                 senderId: "zq12345676767"
                 senderDisplayName: "Bob"
                 contentType: StatusMessage.ContentType.Text
-                message: "<blockquote>This is a block quoted text paragraph from a verified contact</blockquote>"
+                message: "<blockquote>This is a block quoted text paragraph<br />from a verified contact</blockquote><br />Some other thext there"
+                isContact: true
+                isAReply: false
+                trustIndicator: StatusContactVerificationIcons.TrustedType.Verified
+                outgoingStatus: StatusMessage.OutgoingStatus.Delivered
+                reactionsModel: []
+            }
+            ListElement {
+                timestamp: 1719769718000
+                senderId: "zq12345676767"
+                senderDisplayName: "Bob"
+                contentType: StatusMessage.ContentType.Text
+                message: `
+                    <blockquote>This is a block quoted text paragraph</blockquote>
+                    <br />Some other thext there<br />
+                    <blockquote>Another quoted text paragraph</blockquote>
+                    <br />Some other comment there
+                `
                 isContact: true
                 isAReply: false
                 trustIndicator: StatusContactVerificationIcons.TrustedType.Verified
