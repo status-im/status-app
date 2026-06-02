@@ -274,6 +274,11 @@ public final class StatusGoService extends Service {
                 if (!error.isEmpty()) {
                     Log.w(TAG, method + " returned error: " + error);
                 }
+
+                // Notify the messenger layer of background/foreground state so it can
+                // defer mailserver history syncs that would otherwise run while the
+                // screen is locked and drain the LTE radio (status-im/status-go#7508).
+                nativeCall("SetAppBackground", "[" + !visible + "]");
             } catch (Throwable t) {
                 Log.w(TAG, "Failed to update backend lifecycle for UI visibility", t);
             }
