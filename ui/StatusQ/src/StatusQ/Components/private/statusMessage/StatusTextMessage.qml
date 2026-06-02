@@ -40,7 +40,6 @@ Item {
         readonly property string hoveredLink: chatTextLoader.hoveredLink || root.highlightedLink
 
         property bool readMore: false
-        property bool isQuote: false
         readonly property int showMoreHeight: showMoreButtonLoader.visible ? showMoreButtonLoader.height : 0
         readonly property int maxHeight: 200
 
@@ -52,8 +51,6 @@ Item {
                 return Emoji.parse(root.messageDetails.messageText, Emoji.size.middle);
 
             let formattedMessage = Utils.linkifyAndXSS(root.messageDetails.messageText, root.linkAddressAndEnsName);
-
-            isQuote = formattedMessage.startsWith("<blockquote>") && formattedMessage.endsWith("</blockquote>")
 
             if (root.isEdited) {
                 const index = formattedMessage.endsWith("code>") ? formattedMessage.length : (formattedMessage.endsWith(">") ? formattedMessage.length - 4 : formattedMessage.length);
@@ -85,14 +82,6 @@ Item {
         }
     }
 
-    Rectangle {
-        width: 1
-        height: chatTextLoader.height
-        radius: Theme.radius
-        visible: d.isQuote
-        color: Theme.palette.baseColor1
-    }
-
     Loader {
         id: chatTextLoader
 
@@ -102,7 +91,6 @@ Item {
                                                                                           : item.implicitHeight
         height: effectiveHeight + d.showMoreHeight / 2
         anchors.left: parent.left
-        anchors.leftMargin: d.isQuote ? Theme.halfPadding : 0
         anchors.right: parent.right
 
         opacity: !showMoreOpacityMask.active && !horizontalOpacityMask.active ? 1 : 0
@@ -126,7 +114,7 @@ Item {
         StatusBaseText {
             objectName: "StatusTextMessage_chatText"
             text: d.text
-            color: d.isQuote || root.isReply ? Theme.palette.baseColor1 : Theme.palette.directColor1
+            color: root.isReply ? Theme.palette.baseColor1 : Theme.palette.directColor1
             font.pixelSize: root.isReply ? Theme.secondaryTextFontSize : Theme.primaryTextFontSize
             textFormat: Text.RichText
             wrapMode: root.convertToSingleLine ? Text.NoWrap : Text.Wrap
@@ -152,7 +140,7 @@ Item {
             bottomPadding: 0
             text: d.text
             selectedTextColor: Theme.palette.directColor1
-            color: d.isQuote || root.isReply ? Theme.palette.baseColor1 : Theme.palette.directColor1
+            color: root.isReply ? Theme.palette.baseColor1 : Theme.palette.directColor1
             font.pixelSize: root.isReply ? Theme.secondaryTextFontSize : Theme.primaryTextFontSize
             textFormat: Text.RichText
             wrapMode: root.convertToSingleLine ? Text.NoWrap : Text.Wrap
