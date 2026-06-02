@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Universal
 import QtQuick.Layouts
+import QtQuick.Window
 import Qt5Compat.GraphicalEffects
 
 import StatusQ.Core
@@ -103,6 +104,9 @@ ToolBar {
             id: popupLoader
             anchors.bottom: parent.bottom
             anchors.bottomMargin: internalOverlay.anchors.bottomMargin
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: Math.min(implicitWidth, parent.width, root.Window ? root.Window.width : parent.width)
+            height: Math.min(implicitHeight, Math.max(0, root.popupFullHeight))
             active: root.internalPopupActive
             sourceComponent: root.internalPopupComponent
         }
