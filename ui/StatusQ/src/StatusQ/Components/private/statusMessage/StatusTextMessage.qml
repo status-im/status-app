@@ -43,6 +43,18 @@ Item {
         readonly property int showMoreHeight: showMoreButtonLoader.visible ? showMoreButtonLoader.height : 0
         readonly property int maxHeight: 200
 
+        // Character ranges ({ start, end }) of every quote block, used to draw a
+        // vertical bar per quote block (desktop only). layoutRevision is bumped on
+        // relayout to force the bars' geometry bindings (positionToRectangle calls)
+        // to re-evaluate, since method calls are not tracked by bindings.
+        property var quoteRanges: []
+        property int layoutRevision: 0
+        function updateQuoteRanges() {
+            const item = chatTextLoader.item
+            d.quoteRanges = (!root.isMobile && item && item.textDocument)
+                          ? TextDocumentUtils.blockquoteRanges(item.textDocument) : []
+        }
+
         readonly property string text: {
             if (root.messageDetails.contentType === StatusMessage.ContentType.Sticker)
                 return "";
@@ -147,6 +159,13 @@ Item {
             readOnly: true
             selectByMouse: true  // applies to mouse only, not touch
 
+            // quote-bar overlay bookkeeping
+            Component.onCompleted: d.updateQuoteRanges()
+            onTextChanged: d.updateQuoteRanges()
+            onContentHeightChanged: d.layoutRevision++
+            onContentWidthChanged: d.layoutRevision++
+            onWidthChanged: d.layoutRevision++
+
             onLinkActivated: function(link) {
                 if(d.showDisabledTooltipForAddressEnsName(link)) {
                     return
@@ -230,6 +249,38 @@ Item {
         sourceComponent: OpacityMask {
             source: chatTextLoader
             maskSource: showMoreMaskGradient
+        }
+    }
+
+    // Vertical bar drawn for each quote block (desktop only).
+    Item {
+        anchors.fill: chatTextLoader
+        clip: true
+
+        Repeater {
+            model: d.quoteRanges
+            delegate: Rectangle {
+                id: quoteBar
+                required property var modelData
+
+                readonly property rect startRect: {
+                    d.layoutRevision // dependency: re-evaluate on relayout
+                    const item = chatTextLoader.item
+                    return item ? item.positionToRectangle(quoteBar.modelData.start) : Qt.rect(0, 0, 0, 0)
+                }
+                readonly property rect endRect: {
+                    d.layoutRevision // dependency: re-evaluate on relayout
+                    const item = chatTextLoader.item
+                    return item ? item.positionToRectangle(quoteBar.modelData.end) : Qt.rect(0, 0, 0, 0)
+                }
+
+                x: 0
+                y: startRect.y
+                width: 2
+                radius: width / 2
+                height: Math.max(0, endRect.y + endRect.height - startRect.y)
+                color: Theme.palette.baseColor1
+            }
         }
     }
 
