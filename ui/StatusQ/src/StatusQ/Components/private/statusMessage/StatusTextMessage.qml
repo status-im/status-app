@@ -63,7 +63,7 @@ Item {
                 return Utils.getMessageWithStyle(root.Theme.palette, Emoji.parse(editedMessage))
             }
 
-            if (root.convertToSingleLine || isQuote)
+            if (root.convertToSingleLine)
                 formattedMessage = Utils.convertToSingleLine(formattedMessage)
 
             if (root.stripHtmlTags)
