@@ -264,20 +264,48 @@ public final class StatusGoService extends Service {
             if (lifecycleGen.get() != gen) return;
             try {
                 final String namesJson = fetchPausableServiceNames();
-                if (namesJson == null) return;
+                if (namesJson == null) {
+                    // bgtrace: surfaces the case where the node isn't running / no pausable
+                    // services are registered, so a "nothing paused" episode is explainable.
+                    Log.w(TAG, "BG_LIFECYCLE_ANDROID visible=" + visible + " no pausable services (node not running?)");
+                    return;
+                }
                 final String method = visible ? "ResumeServices" : "PauseServices";
+                // bgtrace: log which services we are about to pause/resume so logs bracket the episode.
+                Log.w(TAG, "BG_LIFECYCLE_ANDROID visible=" + visible + " calling " + method + " services=" + namesJson);
                 final String argsJson = "[" + JSONObject.quote(namesJson) + "]";
                 final String response = nativeCall(method, argsJson);
-                if (response == null || response.isEmpty()) return;
+                if (response == null || response.isEmpty()) {
+                    Log.w(TAG, "BG_LIFECYCLE_ANDROID " + method + " empty response");
+                    return;
+                }
                 final JSONObject parsed = new JSONObject(response);
                 final String error = parsed.optString("error", "");
                 if (!error.isEmpty()) {
-                    Log.w(TAG, method + " returned error: " + error);
+                    Log.w(TAG, "BG_LIFECYCLE_ANDROID " + method + " returned error: " + error);
                 }
+                // bgtrace: dump the resulting per-service state so we can confirm every service
+                // actually reached paused/running after the transition.
+                logPausableServiceStates(method);
             } catch (Throwable t) {
                 Log.w(TAG, "Failed to update backend lifecycle for UI visibility", t);
             }
         });
+    }
+
+    /**
+     * bgtrace diagnostic: logs the {name, state} of every pausable service after a lifecycle
+     * transition, so an overnight capture can confirm whether services genuinely paused/resumed.
+     * Runs on the lifecycleExecutor thread (same as the Pause/Resume call).
+     */
+    private void logPausableServiceStates(String afterMethod) {
+        try {
+            final String response = nativeCall("PausableServices", "[]");
+            if (response == null || response.isEmpty()) return;
+            Log.w(TAG, "BG_LIFECYCLE_ANDROID state after " + afterMethod + ": " + response);
+        } catch (Throwable t) {
+            Log.w(TAG, "BG_LIFECYCLE_ANDROID failed to read PausableServices state", t);
+        }
     }
 
     /**

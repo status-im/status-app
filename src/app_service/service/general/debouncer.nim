@@ -1,4 +1,4 @@
-import nimqml, os
+import nimqml, os, chronicles
 
 import universal_container
 import app/core/tasks/[qt, threadpool]
@@ -54,6 +54,9 @@ QtObject:
     self.threadpool.start(arg)
 
   proc onTimeout(self: Debouncer, response: string) {.slot.} =
+    # bgtrace: a recurring tick in the UI/Nim process; should be silent while backgrounded.
+    # Reveals whether the debouncer keeps churning (e.g. from wallet-tick-reload events).
+    warn "BG_ACTIVITY_NIM debouncer tick", remainingMs = self.remaining, checkIntervalMs = self.checkInterval
     self.remaining = self.remaining - self.checkInterval
     if self.remaining <= 0:
       if not self.callback0.isNil:

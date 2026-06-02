@@ -63,6 +63,42 @@ import MobileUI
 Item {
     id: appMain
 
+    // === bgtrace: temporary diagnostics for background battery/CPU investigation ===
+    // These probes answer two questions from logcat alone:
+    //   1) Is the Qt event loop paused while the app is backgrounded/inactive?
+    //      -> If the "BG_ACTIVITY_QML heartbeat" lines STOP after backgrounding, the loop
+    //         is frozen (desired). If they keep coming with a non-Active state, it is alive.
+    //   2) When does the UI process pause/resume?
+    //      -> "BG_LIFECYCLE_QML" logs every application-state transition (the Active line on
+    //         return is the resume marker).
+    // Remove together with the status-go bgtrace instrumentation once the leaks are fixed.
+    QtObject {
+        id: bgTrace
+        function stateName(s) {
+            switch (s) {
+            case Qt.ApplicationActive: return "Active"
+            case Qt.ApplicationInactive: return "Inactive"
+            case Qt.ApplicationSuspended: return "Suspended"
+            case Qt.ApplicationHidden: return "Hidden"
+            default: return "Unknown(" + s + ")"
+            }
+        }
+    }
+    Timer {
+        id: bgTraceHeartbeat
+        interval: 5000
+        repeat: true
+        running: true
+        onTriggered: console.warn("BG_ACTIVITY_QML heartbeat state=" + bgTrace.stateName(Qt.application.state))
+    }
+    Connections {
+        target: Qt.application
+        function onStateChanged() {
+            console.warn("BG_LIFECYCLE_QML state=" + bgTrace.stateName(Qt.application.state))
+        }
+    }
+    // === end bgtrace diagnostics ===
+
     // Primary store container — all additional stores should be initialized under this root
     readonly property AppStores.RootStore rootStore: AppStores.RootStore {
         localBackupEnabled: appMain.featureFlagsStore.localBackupEnabled
