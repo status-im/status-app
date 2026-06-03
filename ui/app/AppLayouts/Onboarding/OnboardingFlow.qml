@@ -254,8 +254,11 @@ OnboardingStackView {
             onKeycardRequested: root.keycardRequested()
 
             onVisibleChanged: {
-                if (!visible)
+                if (!visible) {
                     root.dismissBiometricsRequested()
+                    loginScreen.resetBiometricsResult()
+                } /*else if (loginScreen.isBiometricsLogin)
+                    root.biometricsRequested(loginScreen.selectedProfileKeyId)*/
             }
 
             Component.onDestruction: root.dismissBiometricsRequested()

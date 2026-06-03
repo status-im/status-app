@@ -77,7 +77,7 @@ Keychain::Keychain(QObject *parent)
             &QGuiApplication::applicationStateChanged,
             this,
             [this](Qt::ApplicationState state) {
-                if (state == Qt::ApplicationActive) {
+                if (state == Qt::ApplicationActive && !m_future.isRunning() && !m_future.isStarted()) {
                     reevaluateAvailability();
                 }
             });

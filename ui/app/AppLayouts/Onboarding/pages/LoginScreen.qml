@@ -99,6 +99,11 @@ OnboardingPage {
     signal keycardRequested()
     signal onboardingManageProfilesFlowRequested()
 
+    function resetBiometricsResult() {
+        d.biometricsSuccessful = false
+        d.biometricsFailed = false
+    }
+
     QtObject {
         id: d
 
@@ -117,12 +122,6 @@ OnboardingPage {
                 if (!d.currentProfileIsKeycard)
                     passwordBox.forceActiveFocus()
             }
-        }
-
-
-        function resetBiometricsResult() {
-            d.biometricsSuccessful = false
-            d.biometricsFailed = false
         }
 
         function doPasswordLogin(password: string) {
@@ -227,7 +226,7 @@ OnboardingPage {
 
                     root.dismissBiometricsRequested()
 
-                    d.resetBiometricsResult()
+                    root.resetBiometricsResult()
                     root.profileSelected(selectedProfileKeyId)
 
                     if (d.currentProfileIsKeycard) {
@@ -266,7 +265,7 @@ OnboardingPage {
                 onPasswordEditedManually: {
                     // reset state when typing the pass manually; not to break the bindings inside the component
                     validationError = ""
-                    d.resetBiometricsResult()
+                    root.resetBiometricsResult()
                 }
                 onDetailedErrorPopupRequested: detailedErrorPopupComp.createObject(root, {detailedError}).open()
                 onBiometricsRequested: root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
@@ -290,7 +289,7 @@ OnboardingPage {
                 onPinEditedManually: {
                     // reset state when typing the PIN manually; not to break the bindings inside the component
                     loginError = ""
-                    d.resetBiometricsResult()
+                    root.resetBiometricsResult()
                 }
                 onDetailedErrorPopupRequested: detailedErrorPopupComp.createObject(root, {detailedError: loginError}).open()
                 onBiometricsRequested: root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
