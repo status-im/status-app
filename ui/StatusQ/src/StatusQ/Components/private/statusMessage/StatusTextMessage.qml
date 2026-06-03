@@ -186,11 +186,21 @@ Item {
             // context menu handlers
             ContextMenu.menu: null // disable builtin "edit" menu; we're not an edit control
             inputMethodHints: Qt.ImhNoEditMenu
+
+            // Workaround to ignore unnecessarily triggered onPressAndHold on mobile when dragging
+            // chat content
+            property int onPressY
+
             onPressAndHold: function(event) {
+                if (onPressY !== Math.floor(mapToGlobal(0, 0).y))
+                    return
+
                 event.accepted = true
                 root.contextMenuRequested(Qt.point(event.x, event.y))
             }
             onPressed: function(event) {
+                onPressY = mapToGlobal(0, 0).y
+
                 if (event.button === Qt.RightButton) {
                     event.accepted = true
                     root.contextMenuRequested(Qt.point(event.x, event.y))
