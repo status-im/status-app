@@ -4,7 +4,7 @@
 #include <QFuture>
 
 #ifdef __OBJC__
-#include <LocalAuthentication/LAContext.h>
+@class LAContext;
 #else
 class LAContext;
 #endif
@@ -70,9 +70,12 @@ private:
     void setLoading(bool loading);
 
     QFuture<void> m_future;
-    LAContext *m_activeAuthContext;
 
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    LAContext *m_activeAuthContext;
+
+    QMetaObject::Connection m_pendingActivationConn; // used to defer a credential request if the app is not active
+
     Status getCredential(const QString &reason, const QString &account, QString *out);
     void reevaluateAvailability();
 #endif

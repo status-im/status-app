@@ -128,7 +128,6 @@ void setNegativeButton(const QString &negativeButton)
 
 Keychain::Keychain(QObject *parent)
     : QObject(parent)
-    , m_activeAuthContext(nullptr)
 {
     s_keychain = this; // NOTE: single-owner short-cut; replace with registry if needed.
 

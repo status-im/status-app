@@ -125,8 +125,12 @@ Keychain::Status authenticate(const QString &reason, LAContext **context)
     loop.exec();
 
     if (!success && callbackError) {
-        qWarning() << "authentication failed:"
-                   << QString::fromNSString(callbackError.localizedDescription);
+        qWarning() << "Keychain: authentication failed:"
+                   << QString::fromNSString(callbackError.localizedDescription)
+                   << "code=" << (long) callbackError.code
+                   << "domain=" << QString::fromNSString(callbackError.domain)
+                   << "(LAErrorNotInteractive=" << (long) LAErrorNotInteractive
+                   << "LAErrorSystemCancel=" << (long) LAErrorSystemCancel << ")";
         return convertError(callbackError);
     }
 
@@ -136,6 +140,27 @@ Keychain::Status authenticate(const QString &reason, LAContext **context)
 void Keychain::requestGetCredential(const QString &reason, const QString &account)
 {
     if (m_future.isRunning()) {
+        qWarning() << "Keychain: getCredential already running, ignoring request";
+        return;
+    }
+
+    const auto appState = qApp->applicationState();
+    if (appState != Qt::ApplicationActive) {
+        qWarning() << "Keychain: app not active (state=" << appState << "), deferring credential request";
+
+        QObject::disconnect(m_pendingActivationConn);
+
+        m_pendingActivationConn = connect(
+            qApp,
+            &QGuiApplication::applicationStateChanged,
+            this,
+            [this, reason, account](Qt::ApplicationState state) {
+                if (state != Qt::ApplicationActive)
+                    return;
+                QObject::disconnect(m_pendingActivationConn);
+                qInfo() << "Keychain: app became active, resuming deferred credential request";
+                requestGetCredential(reason, account);
+            });
         return;
     }
 
@@ -143,6 +168,7 @@ void Keychain::requestGetCredential(const QString &reason, const QString &accoun
         setLoading(true);
         QString credential;
         const auto status = getCredential(reason, account, &credential);
+        qInfo() << "Keychain: getCredential completed status=" << status;
         emit getCredentialRequestCompleted(status, credential);
         setLoading(false);
     });
@@ -150,6 +176,8 @@ void Keychain::requestGetCredential(const QString &reason, const QString &accoun
 
 void Keychain::cancelActiveRequest()
 {
+    QObject::disconnect(m_pendingActivationConn); // cancel any pending activation connection
+
     if (m_activeAuthContext != nullptr)
         [m_activeAuthContext invalidate];
 }
@@ -218,6 +246,7 @@ Keychain::Status Keychain::deleteCredential(const QString &account)
 Keychain::Status Keychain::getCredential(const QString &reason, const QString &account, QString *out)
 {
     if (!m_available) {
+        qWarning() << "Keychain: getCredential called while unavailable (m_available=false)";
         return StatusUnavailable;
     }
 
@@ -225,6 +254,7 @@ Keychain::Status Keychain::getCredential(const QString &reason, const QString &a
     const auto authStatus = authenticate(reason, &m_activeAuthContext);
 
     if (authStatus != StatusSuccess) {
+        qWarning() << "Keychain: getCredential aborting, authenticate status=" << authStatus;
         return authStatus;
     }
 
@@ -249,6 +279,13 @@ Keychain::Status Keychain::getCredential(const QString &reason, const QString &a
 
     const auto status = SecItemCopyMatching((__bridge CFDictionaryRef) query, (CFTypeRef *) &data);
 
+    if (status != errSecSuccess) {
+        qWarning() << "Keychain: SecItemCopyMatching failed OSStatus=" << (long) status
+                   << "(errSecItemNotFound=" << (long) errSecItemNotFound
+                   << "errSecInteractionNotAllowed=" << (long) errSecInteractionNotAllowed
+                   << "errSecAuthFailed=" << (long) errSecAuthFailed << ")";
+    }
+
     // Convert and release CF data on success.
     if (out != nullptr) {
         auto dataString = [[NSString alloc] initWithData:(__bridge NSData *) data
@@ -268,8 +305,9 @@ void Keychain::reevaluateAvailability()
 
     const auto available = [context canEvaluatePolicy:authPolicy error:&authError];
 
-    // Later this description can be used if needed:
-    // const auto description = QString::fromNSString(authError.localizedDescription);
+    qInfo() << "Keychain: reevaluateAvailability available=" << available
+            << "appState=" << qApp->applicationState()
+            << (authError ? QString::fromNSString(authError.localizedDescription) : QString());
 
     if (m_available == available) {
         return;
