@@ -91,39 +91,42 @@ StatusDialog {
         root.sharedKeycardModule.currentState.doCancelAction();
     }
 
+    topPadding: 0
+    bottomPadding: 0
+
     contentItem: StatusScrollView {
         id: scrollView
         contentWidth: availableWidth
         padding: 0
 
         // keep content visible on mobile when keyboard activated
-        onHeightChanged: scrollView.scrollEnd()
+        onHeightChanged: {
+            Qt.callLater(() => {
+                scrollView.scrollEnd()
+            })
+        }
 
         KeycardPopupContent {
             id: content
             width: scrollView.availableWidth
-            implicitHeight: {
-                let baseHeight = Constants.keycard.general.popupHeight
-
+            height: {
                 // for all flows
                 if (root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.keycardMetadataDisplay ||
                         root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.factoryResetConfirmationDisplayMetadata) {
-                    if (!root.sharedKeycardModule.keyPairStoredOnKeycardIsKnown) {
-                        baseHeight = Constants.keycard.general.popupBiggerHeight
-                    }
+                    if (!root.sharedKeycardModule.keyPairStoredOnKeycardIsKnown)
+                        return Constants.keycard.general.popupBiggerHeight
                 }
 
                 if (root.sharedKeycardModule.currentState.flowType === Constants.keycardSharedFlow.importFromKeycard &&
                         root.sharedKeycardModule.currentState.stateType === Constants.keycardSharedState.manageKeycardAccounts &&
                         root.sharedKeycardModule.keyPairHelper.accounts.count > 1) {
-                    baseHeight = Constants.keycard.general.popupBiggerHeight
+                    return Constants.keycard.general.popupBiggerHeight
                 }
 
-                if (root.fullScreenBottomSheet) {
-                    return Math.max(baseHeight, content.implicitHeight)
-                }
+                if (root.fullScreenBottomSheet)
+                    return content.implicitHeight
 
-                return baseHeight
+                return Constants.keycard.general.popupHeight
             }
 
             sharedKeycardModule: root.sharedKeycardModule

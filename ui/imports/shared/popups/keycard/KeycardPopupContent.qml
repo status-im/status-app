@@ -24,9 +24,8 @@ Control {
     implicitHeight: loader.implicitHeight
     implicitWidth: loader.implicitWidth
 
-    Loader {
+    contentItem: Loader {
         id: loader
-        anchors.fill: parent
         sourceComponent: {
             switch (root.sharedKeycardModule.currentState.stateType) {
             case Constants.keycardSharedState.keycardFlowStarted:
