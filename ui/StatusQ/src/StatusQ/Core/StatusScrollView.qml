@@ -210,7 +210,7 @@ T.ScrollView {
     }
 
     function scrollEnd() {
-        flickable.contentY = flickable.contentHeight - flickable.height
+        flickable.contentY = Math.max(0, flickable.contentHeight - flickable.height)
     }
 
     function scrollPageUp() {
