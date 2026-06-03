@@ -1075,7 +1075,32 @@ Loader {
                         onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
 
                         Component.onCompleted: {
-                            parseMessage(root.messageText);
+                            // Workaround to restore original message to chat input.
+                            // Will be reworked later along with removal of in-place editing.
+                            //
+                            // Populate the edit field with the raw, unparsed text
+                            // (original markdown) while keeping mentions readable:
+                            //  - system mentions (e.g. "@0x00001") -> their tag
+                            //    ("@everyone"), mirroring SystemTagMapping in
+                            //    app_service/common/conversion.nim
+                            //  - user mentions ("@0x<pubkey>") -> the rendered mention
+                            //    link from root.messageText (matched in order), which
+                            //    parseMessage() then turns into a chip.
+                            // Other text is escaped/<br/>-converted so parseMessage()
+                            // treats it like the rendered message.
+                            const systemMentions = ({ "0x00001": "@everyone" })
+                            let seed = root.unparsedText
+                                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                                .replace(/\n/g, "<br/>")
+                            const userMentions = root.messageText.match(/<a href="\/\/0x[0-9a-fA-F]+"[^>]*class="mention"[^>]*>@[^<]*<\/a>/g) || []
+                            let u = 0
+                            seed = seed.replace(/@0x[0-9a-fA-F]+/g, function(token) {
+                                const key = token.substring(1) // drop leading '@'
+                                if (systemMentions[key] !== undefined)
+                                    return systemMentions[key]
+                                return u < userMentions.length ? userMentions[u++] : token
+                            })
+                            parseMessage(seed);
                             delegate.originalMessageText = editTextInput.textInput.text
                         }
                     }
