@@ -51,6 +51,8 @@ Rectangle {
         property bool loaded: false
 
         readonly property string removeAccountIdentifier: "wallet-section-remove-account"
+        readonly property real bottomSafeMargin: root.SafeArea.margins.bottom
+        readonly property real footerHeight: footer.height + followingAddressesFooter.height
     }
 
     Loader {
@@ -273,7 +275,7 @@ Rectangle {
                     left: parent.left
                     right: parent.right
                 }
-                height: parent.height - footer.height
+                height: Math.max(0, parent.height - d.footerHeight)
 
                 spacing: Theme.smallPadding
                 currentIndex: -1
@@ -281,6 +283,7 @@ Rectangle {
                 preferredHighlightBegin: 0
                 preferredHighlightEnd: height
                 bottomMargin: Theme.padding
+                verticalScrollBar.implicitWidth: Math.max(Theme.halfPadding, 8)
 
                 readonly property Item firstItem: count > 0 ? itemAtIndex(0) : null
                 readonly property bool footerOverlayed: d.loaded && contentHeight > availableHeight
@@ -422,7 +425,7 @@ Rectangle {
                 anchors {
                     top: parent.top
                     // Bottom Margin is not applied to ListView if it's fully visible
-                    topMargin: Math.min(walletAccountsListView.contentHeight, parent.height - height) + (walletAccountsListView.footerOverlayed ? 0 : walletAccountsListView.bottomMargin)
+                    topMargin: Math.min(walletAccountsListView.contentHeight, parent.height - d.footerHeight) + (walletAccountsListView.footerOverlayed ? 0 : walletAccountsListView.bottomMargin)
                     left: parent.left
                     right: parent.right
                 }
@@ -481,7 +484,8 @@ Rectangle {
                 }
 
                 horizontalPadding: Theme.padding
-                verticalPadding: 0
+                topPadding: 0
+                bottomPadding: d.bottomSafeMargin
 
                 contentItem: StatusFlatButton {
                     objectName: "followingAddressesBtn"
