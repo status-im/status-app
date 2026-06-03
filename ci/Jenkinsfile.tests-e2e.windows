@@ -45,9 +45,8 @@ pipeline {
       description: 'Which Windows host to run on (leave default for random selection)',
       choices: [
         '',
-        'windows-01-vm',
-        'windows-02-vm',
-        'windows-03-vm',
+        'windows-02',
+        'windows-03',
         'windows-04-vm'
       ],
     )
