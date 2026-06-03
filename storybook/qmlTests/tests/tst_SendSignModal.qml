@@ -156,6 +156,53 @@ Item {
             verify(controlUnderTest.height > 0)
         }
 
+        function test_transactionSettingsPopupCloseButton() {
+            verify(!!controlUnderTest)
+            controlUnderTest.width = 320
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened === true, 1000)
+
+            controlUnderTest.internalPopupActive = true
+            tryVerify(() => !!findChild(controlUnderTest, "transactionSettings"), 1000)
+            const transactionSettings = findChild(controlUnderTest, "transactionSettings")
+            verify(!!transactionSettings)
+            verify(transactionSettings.width <= controlUnderTest.width)
+            verify(transactionSettings.height <= controlUnderTest.height)
+
+            const closeButton = findChild(transactionSettings, "transactionSettingsCloseButton")
+            verify(!!closeButton)
+            verify(closeButton.visible)
+            verify(closeButton.enabled)
+            verify(closeButton.width > 0)
+            verify(closeButton.height > 0)
+            waitForRendering(closeButton)
+
+            mouseClick(closeButton, closeButton.width / 2, closeButton.height / 2)
+
+            tryCompare(controlUnderTest, "internalPopupActive", false)
+            compare(controlUnderTest.opened, true)
+            compare(signalSpyRejected.count, 0)
+        }
+
+        function test_transactionSettingsPopupEscape() {
+            verify(!!controlUnderTest)
+            controlUnderTest.open()
+            tryVerify(() => controlUnderTest.opened === true, 1000)
+
+            controlUnderTest.internalPopupActive = true
+            tryVerify(() => !!findChild(controlUnderTest, "transactionSettings"), 1000)
+            const transactionSettings = findChild(controlUnderTest, "transactionSettings")
+            verify(!!transactionSettings)
+            verify(transactionSettings.width <= controlUnderTest.width)
+            transactionSettings.forceActiveFocus()
+
+            keyClick(Qt.Key_Escape)
+
+            tryCompare(controlUnderTest, "internalPopupActive", false)
+            compare(controlUnderTest.opened, true)
+            compare(signalSpyRejected.count, 0)
+        }
+
         function test_fromToProps() {
             verify(!!controlUnderTest)
             controlUnderTest.tokenSymbol = "DAI"
