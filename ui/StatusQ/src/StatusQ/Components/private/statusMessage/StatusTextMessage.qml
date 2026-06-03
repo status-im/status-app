@@ -68,7 +68,9 @@ Item {
             let formattedMessage = Utils.linkifyAndXSS(root.messageDetails.messageText, root.linkAddressAndEnsName);
 
             if (root.isEdited) {
-                const index = formattedMessage.endsWith("code>") ? formattedMessage.length : (formattedMessage.endsWith(">") ? formattedMessage.length - 4 : formattedMessage.length);
+                // insert "(edited)" just before the last closing tag (e.g. </p>,
+                // </blockquote>); for code blocks and plain text, append at the end
+                const index = formattedMessage.endsWith("code>") ? formattedMessage.length : (formattedMessage.endsWith(">") ? formattedMessage.lastIndexOf("</") : formattedMessage.length);
                 const editedMessage = formattedMessage.slice(0, index)
                                     + ` <span class="isEdited">` + qsTr("(edited)") + `</span>`
                                     + formattedMessage.slice(index);
