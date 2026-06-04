@@ -1,7 +1,6 @@
-import json, json_serialization, std/strformat
+import json, json_serialization, std/strformat, strutils
 
 type RpcProviderType* {.pure.} = enum
-  EmbeddedProxy = "embedded-proxy"
   EmbeddedEthRpcProxy = "embedded-eth-rpc-proxy"
   EmbeddedDirect = "embedded-direct"
   User = "user"
@@ -24,6 +23,21 @@ type RpcProviderDto* = object
   authLogin* {.serializedFieldName("authLogin").}: string
   authPassword* {.serializedFieldName("authPassword").}: string
   authToken* {.serializedFieldName("authToken").}: string
+
+proc readValue*(reader: var JsonReader, value: var seq[RpcProviderDto])
+               {.raises: [IOError, SerializationError].} =
+  # Skip providers whose type we don't recognize (e.g. legacy "embedded-proxy")
+  reader.parseArray:
+    let node = reader.parseJsonNode()
+    let providerType = node{"type"}.getStr()
+    let known =
+      try:
+        discard parseEnum[RpcProviderType](providerType)
+        true
+      except ValueError:
+        false
+    if known:
+      value.add(Json.decode($node, RpcProviderDto, allowUnknownFields = true))
 
 proc `$`*(self: RpcProviderDto): string =
   return fmt"""RpcProviderDto(
