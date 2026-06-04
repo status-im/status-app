@@ -109,19 +109,19 @@
   <context>
     <name>AccessibilityWarningPopup</name>
     <message>
-      <source>Accessibility service active</source>
+      <source>Accessibility services active</source>
       <comment>AccessibilityWarningPopup</comment>
-      <translation>Accessibility service active</translation>
+      <translation>Accessibility services active</translation>
     </message>
     <message>
-      <source>&lt;b&gt;%1&lt;/b&gt; has accessibility access and can read content on your screen. Only reveal your recovery phrase if you trust this app.</source>
+      <source>Accessibility services on your device may access screen content:</source>
       <comment>AccessibilityWarningPopup</comment>
-      <translation>&lt;b&gt;%1&lt;/b&gt; has accessibility access and can read content on your screen. Only reveal your recovery phrase if you trust this app.</translation>
+      <translation>Accessibility services on your device may access screen content:</translation>
     </message>
     <message>
-      <source>An app with accessibility access is active and can read content on your screen. Only reveal your recovery phrase if you trust it.</source>
+      <source>Check your device &lt;a href=&apos;accessibility-settings&apos;&gt;Settings &amp;gt; Accessibility&lt;/a&gt;.</source>
       <comment>AccessibilityWarningPopup</comment>
-      <translation>An app with accessibility access is active and can read content on your screen. Only reveal your recovery phrase if you trust it.</translation>
+      <translation>Check your device &lt;a href=&apos;accessibility-settings&apos;&gt;Settings &amp;gt; Accessibility&lt;/a&gt;.</translation>
     </message>
     <message>
       <source>Cancel</source>

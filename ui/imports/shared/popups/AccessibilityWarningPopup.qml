@@ -19,7 +19,7 @@ StatusDialog {
     signal revealAccepted()
 
     width: 480
-    title: qsTr("Third-party apps can read your screen")
+    title: qsTr("Accessibility services active")
     modal: true
     closePolicy: Popup.NoAutoClose
 
@@ -31,7 +31,7 @@ StatusDialog {
             Layout.fillWidth: true
             Layout.topMargin: Theme.padding
             wrapMode: Text.WordWrap
-            text: qsTr("The following apps use accessibility services and can read your screen:")
+            text: qsTr("Accessibility services on your device may access screen content:")
         }
 
         ColumnLayout {
@@ -69,7 +69,7 @@ StatusDialog {
             font.pixelSize: Theme.additionalTextSize
             textFormat: Text.RichText
             linkColor: Theme.palette.primaryColor1
-            text: qsTr("Only reveal your recovery phrase if you trust these apps. You can disable them in <a href='accessibility-settings'>Settings &gt; Accessibility</a>.")
+            text: qsTr("Check your device <a href='accessibility-settings'>Settings &gt; Accessibility</a>.")
             onLinkActivated: (link) => SystemUtils.openAccessibilitySettings()
         }
     }
