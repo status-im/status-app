@@ -168,11 +168,7 @@ class CategoryItem():
 
     def __init__(self, obj):
         self.object = obj
-        self._category_name: typing.Optional[Image] = None
-        self._add_category_button: typing.Optional[Button] = None
-        self._more_button: typing.Optional[Button] = None
-        self._arrow_button: typing.Optional[Button] = None
-        self._arrow_icon: typing.Optional[QObject] = None
+        self.category_name: typing.Optional[str] = None
         self.init_ui()
 
     def __repr__(self):
@@ -182,22 +178,6 @@ class CategoryItem():
         for child in walk_children(self.object):
             if str(getattr(child, 'id', '')) == 'statusChatListCategoryItem':
                 self.category_name = str(child.text)
-            elif str(getattr(child, 'id', '')) == 'addButton':
-                self._add_channel_button = Button(real_name=driver.objectMap.realName(child))
-            elif str(getattr(child, 'id', '')) == 'menuButton':
-                self._more_button = Button(real_name=driver.objectMap.realName(child))
-            elif str(getattr(child, 'id', '')) == 'toggleButton':
-                self._arrow_button = Button(real_name=driver.objectMap.realName(child))
-            elif str(getattr(child, 'objectName', '')) == 'chevron-down-icon':
-                self._arrow_icon = QObject(real_name=driver.objectMap.realName(child))
-
-    @allure.step('Click arrow button')
-    def click_arrow_button(self):
-        self._arrow_button.click()
-
-    @allure.step('Get arrow button rotation value')
-    def get_arrow_icon_rotation_value(self) -> int:
-        return self._arrow_icon.object.rotation
 
 
 class CommunityLeftPanel(QObject):
@@ -278,11 +258,6 @@ class CommunityLeftPanel(QObject):
     @allure.step('Get categories')
     def categories_items(self) -> typing.List[CategoryItem]:
         return [CategoryItem(item) for item in driver.findAllObjects(self.categoryItemDropAreaItem.real_name)]
-
-    @allure.step('Get arrow button rotation value')
-    def get_arrow_icon_rotation_value(self, category_name) -> int:
-        category = self.find_category_in_list(category_name)
-        return int(category.get_arrow_icon_rotation_value())
 
     @allure.step('Get channel params')
     def get_channel_parameters(self, name) -> CommunityChannel:
@@ -412,9 +387,6 @@ class CommunityLeftPanel(QObject):
                 category = _category
                 return category
             raise LookupError(f'Category: {category_name} not found in {categories}')
-
-    def click_category(self, category_name: str):
-        driver.mouseClick(self.find_category_in_list(category_name).object)
 
     @allure.step('Open more options')
     def open_more_options(self):
