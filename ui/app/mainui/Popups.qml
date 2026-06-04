@@ -1082,7 +1082,6 @@ QtObject {
                 property string imageSource
 
                 title: qsTr("Please choose a directory")
-                modality: Qt.NonModal
                 currentFolder: StandardPaths.writableLocation(StandardPaths.PicturesLocation)
 
                 onAccepted: {
