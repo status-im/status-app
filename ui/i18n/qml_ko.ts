@@ -16117,6 +16117,18 @@ to load</source>
         <translation>여기에 채팅 키를 입력하세요</translation>
     </message>
     <message>
+        <source>This user is blocked. Unblock to send a contact request.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You already sent a contact request.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are already contacts.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Say who you are / why you want to become a contact...</source>
         <translation>당신이 누구인지, 왜 연락처가 되고 싶은지 말해주세요...</translation>
     </message>

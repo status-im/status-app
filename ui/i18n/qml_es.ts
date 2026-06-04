@@ -16167,6 +16167,18 @@ al cargar</translation>
         <translation>Ingresa la clave de chat aquí</translation>
     </message>
     <message>
+        <source>This user is blocked. Unblock to send a contact request.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You already sent a contact request.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You are already contacts.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Say who you are / why you want to become a contact...</source>
         <translation>Di quién eres / por qué quieres ser un contacto...</translation>
     </message>

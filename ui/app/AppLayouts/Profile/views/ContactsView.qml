@@ -253,6 +253,7 @@ SettingsContentBase {
 
         SendContactRequestToChatKeyModal {
             contactsStore: root.contactsStore
+            utilsStore: root.utilsStore
             onClosed: destroy()
         }
     }

@@ -19683,6 +19683,21 @@
       <translation>Enter chat key here</translation>
     </message>
     <message>
+      <source>This user is blocked. Unblock to send a contact request.</source>
+      <comment>SendContactRequestToChatKeyModal</comment>
+      <translation>This user is blocked. Unblock to send a contact request.</translation>
+    </message>
+    <message>
+      <source>You already sent a contact request.</source>
+      <comment>SendContactRequestToChatKeyModal</comment>
+      <translation>You already sent a contact request.</translation>
+    </message>
+    <message>
+      <source>You are already contacts.</source>
+      <comment>SendContactRequestToChatKeyModal</comment>
+      <translation>You are already contacts.</translation>
+    </message>
+    <message>
       <source>Say who you are / why you want to become a contact...</source>
       <comment>SendContactRequestToChatKeyModal</comment>
       <translation>Say who you are / why you want to become a contact...</translation>

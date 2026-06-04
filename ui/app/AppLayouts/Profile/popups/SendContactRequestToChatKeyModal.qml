@@ -13,13 +13,16 @@ import StatusQ.Core.Backpressure
 import StatusQ.Core.Theme
 import StatusQ.Popups.Dialog
 
+import AppLayouts.Profile.helpers
 import AppLayouts.Profile.stores
 import AppLayouts.stores as AppLayoutStores
+import shared.stores as SharedStores
 
 StatusDialog {
     id: root
 
     property AppLayoutStores.ContactsStore contactsStore
+    property SharedStores.UtilsStore utilsStore
 
     title: qsTr("Send Contact Request to chat key")
     padding: d.contentMargins
@@ -37,6 +40,21 @@ StatusDialog {
         property int minChatKeyLength: 4 // ens or chat key
         property string realChatKey: ""
         property string resolvedPubKey: ""
+        readonly property string resolvedFullPubKey: {
+            if (!d.resolvedPubKey) {
+                return ""
+            }
+
+            if (!root.utilsStore) {
+                return d.resolvedPubKey
+            }
+
+            if (root.utilsStore.isCompressedPubKey(d.resolvedPubKey)) {
+                return root.utilsStore.getDecompressedPk(d.resolvedPubKey)
+            }
+
+            return d.resolvedPubKey
+        }
         property string elidedChatKey: realChatKey.length > 32?
                                            realChatKey.substring(0, 15) + "..." + realChatKey.substring(realChatKey.length - 16) :
                                            realChatKey
@@ -45,6 +63,33 @@ StatusDialog {
         property bool showPasteButton: true
         property bool showChatKeyValidationIndicator: false
         property int showChatKeyValidationIndicatorSize: 24
+
+        readonly property var lookedUpContactModelEntryLoader: Loader {
+            active: !!d.resolvedFullPubKey
+
+            sourceComponent: ContactModelEntry {
+                publicKey: d.resolvedFullPubKey
+                contactsModel: root.contactsStore.contactsModel
+                onPopulateContactDetailsRequested: {
+                    root.contactsStore.populateContactDetails(d.resolvedFullPubKey)
+                }
+            }
+        }
+        readonly property bool lookedUpContactAvailable: d.lookedUpContactModelEntryLoader.active
+                                                       && !!d.lookedUpContactModelEntryLoader.item
+                                                       && d.lookedUpContactModelEntryLoader.item.available
+        readonly property var lookedUpContact: d.lookedUpContactAvailable
+            ? d.lookedUpContactModelEntryLoader.item.contactDetails
+            : undefined
+        readonly property bool contactRequestAlreadySent: {
+            if (!d.lookedUpContactAvailable) {
+                return false
+            }
+
+            return d.lookedUpContact.contactRequestState === Constants.ContactRequestState.Mutual
+                   || d.lookedUpContact.contactRequestState === Constants.ContactRequestState.Sent
+                   || d.lookedUpContact.isBlocked === true
+        }
 
         property var lookupContact: Backpressure.debounce(root, 400, function (value) {
             root.contactsStore.resolveENS(value)
@@ -149,6 +194,27 @@ StatusDialog {
             }
         }
 
+        StatusBaseText {
+            visible: d.contactRequestAlreadySent
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.Wrap
+            text: {
+                if (d.lookedUpContact?.isBlocked) {
+                    return qsTr("This user is blocked. Unblock to send a contact request.")
+                }
+                switch (d.lookedUpContact?.contactRequestState) {
+                    case Constants.ContactRequestState.Sent:
+                        return qsTr("You already sent a contact request.")
+                    case Constants.ContactRequestState.Mutual:
+                        return qsTr("You are already contacts.")
+                    default:
+                        return ""
+                }
+            }
+            color: Theme.palette.dangerColor1
+        }
+
         StatusInput {
             id: messageInput
             input.edit.objectName: "SendContactRequestModal_SayWhoYouAre_Input"
@@ -176,11 +242,11 @@ StatusDialog {
 
         rightButtons: ObjectModel {
             StatusButton {
-                enabled: d.validChatKey && messageInput.valid
+                enabled: d.validChatKey && messageInput.valid && !d.contactRequestAlreadySent
                 objectName: "SendContactRequestModal_Send_Button"
                 text: qsTr("Send Contact Request")
                 onClicked: {
-                    root.contactsStore.sendContactRequest(d.resolvedPubKey, messageInput.text)
+                    root.contactsStore.sendContactRequest(d.resolvedFullPubKey, messageInput.text)
                     root.close()
                 }
             }
