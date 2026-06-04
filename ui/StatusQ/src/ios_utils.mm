@@ -315,15 +315,26 @@ void presentIOSPhotoLibraryPicker(bool selectMultiple)
     });
 }
 
-void saveImageToPhotosAlbum(const QByteArray &data)
+void saveImageToPhotosAlbumAsync(const QByteArray &data, const std::function<void(bool)>& completion)
 {
     NSData *imageData = [NSData dataWithBytes:data.constData() length:data.length()];
     UIImage *image = [UIImage imageWithData:imageData];
-    if (image) {
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
-    } else {
+    if (!image) {
         NSLog(@"Failed to save image");
+        if (completion)
+            completion(false);
+        return;
     }
+
+    [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+        [PHAssetChangeRequest creationRequestForAssetFromImage:image];
+    } completionHandler:^(BOOL success, NSError *error) {
+        if (!success)
+            NSLog(@"Failed to save image: %@", error);
+
+        if (completion)
+            completion(success);
+    }];
 }
 QString resolveIOSPhotoAsset(const QUrl &assetUrl) {
     @autoreleasepool {
