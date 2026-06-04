@@ -13,6 +13,7 @@
 #include <QTimer>
 #include <QDebug>
 #include <QMetaObject>
+#include <QPointer>
 #include <mutex>
 
 #ifdef Q_OS_ANDROID
@@ -142,7 +143,7 @@ void SystemUtilsInternal::restartApplication() const
     QMetaObject::invokeMethod(QCoreApplication::instance(), &QCoreApplication::exit, Qt::QueuedConnection, EXIT_SUCCESS);
 }
 
-void save(const QByteArray& imageData, const QString& targetDir)
+bool save(const QByteArray& imageData, const QString& targetDir)
 {
     // Get current Date/Time information to use in naming of the image file
     const auto dateTimeString = QDateTime::currentDateTime().toString(
@@ -162,7 +163,7 @@ void save(const QByteArray& imageData, const QString& targetDir)
         qWarning() << "SystemUtilsInternal::downloadImageByUrl: "
                       "Failed to create target directory:"
                    << targetDir;
-        return;
+        return false;
     }
 
     // Save the image in a safe way
@@ -171,19 +172,28 @@ void save(const QByteArray& imageData, const QString& targetDir)
         qWarning() << "SystemUtilsInternal::downloadImageByUrl: "
                         "Downloading image failed while opening the save file:"
                     << targetFile;
-        return;
+        return false;
     }
 
-    if (image.write(imageData) != -1)
-        image.commit();
-    else
+    if (image.write(imageData) == -1) {
         qWarning() << "SystemUtilsInternal::downloadImageByUrl: "
                         "Downloading image failed while saving to file:"
                     << targetFile;
+        return false;
+    }
+
+    if (!image.commit()) {
+        qWarning() << "SystemUtilsInternal::downloadImageByUrl: "
+                      "Downloading image failed while committing the save file:"
+                   << targetFile;
+        return false;
+    }
+
+    return true;
 }
 
 #ifdef Q_OS_ANDROID
-static void saveToAndroidGallery(const QByteArray& imageData)
+static bool saveToAndroidGallery(const QByteArray& imageData)
 {
     QMimeDatabase mimeDb;
     const auto mimeType = mimeDb.mimeTypeForData(imageData);
@@ -204,12 +214,12 @@ static void saveToAndroidGallery(const QByteArray& imageData)
         QFile tempFile(tempPath);
         if (!tempFile.open(QIODevice::WriteOnly)) {
             qWarning() << "saveToAndroidGallery: failed to open temp file:" << tempPath;
-            return;
+            return false;
         }
         if (tempFile.write(imageData) == -1) {
             qWarning() << "saveToAndroidGallery: failed to write temp file:" << tempPath;
             QFile::remove(tempPath);
-            return;
+            return false;
         }
     } // tempFile flushed and closed here before JNI reads it
 
@@ -225,14 +235,18 @@ static void saveToAndroidGallery(const QByteArray& imageData)
     );
     QFile::remove(tempPath);
 
-    if (!ok)
+    if (!ok) {
         qWarning() << "saveToAndroidGallery: MediaStore insertion failed for" << displayName;
+        return false;
+    }
+
+    return true;
 }
 
 #endif
 
 void SystemUtilsInternal::downloadImageByUrl(
-        const QUrl& url, const QString& path) const
+        const QUrl& url, const QString& path)
 {
     static thread_local QNetworkAccessManager manager;
     manager.setAutoDeleteReplies(true);
@@ -255,23 +269,53 @@ void SystemUtilsInternal::downloadImageByUrl(
     if (targetDir.isEmpty())
         targetDir = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
 
-    QObject::connect(reply, &QNetworkReply::finished, this, [reply, targetDir] {
+    QObject::connect(reply, &QNetworkReply::finished, this, [this, reply, targetDir] {
         if(reply->error() != QNetworkReply::NoError) {
             qWarning() << "SystemUtilsInternal::downloadImageByUrl: Downloading image"
                        << reply->request().url() << "failed:" << reply->errorString();
+            emit imageSaveToGalleryFailed();
             return;
         }
 
         // Extract the image data to be able to load and save it
         const auto btArray = reply->readAll();
-        Q_ASSERT(!btArray.isEmpty());
+        if (btArray.isEmpty()) {
+            qWarning() << "SystemUtilsInternal::downloadImageByUrl: Empty image data";
+            emit imageSaveToGalleryFailed();
+            return;
+        }
+
 #ifdef Q_OS_IOS
-        saveImageToPhotosAlbum(btArray);
-#elif defined(Q_OS_ANDROID)
-        saveToAndroidGallery(btArray);
-#else
-        save(btArray, targetDir);
+        QPointer<SystemUtilsInternal> self(this);
+        saveImageToPhotosAlbumAsync(btArray, [self](bool success) {
+            if (!self)
+                return;
+
+            QMetaObject::invokeMethod(self, [self, success]() {
+                if (success)
+                    emit self->imageSavedToGallery(QStringLiteral(""));
+                else
+                    emit self->imageSaveToGalleryFailed();
+            }, Qt::QueuedConnection);
+        });
+        return;
 #endif
+
+        bool success = false;
+        QString destination;
+    #ifdef Q_OS_ANDROID
+        success = saveToAndroidGallery(btArray);
+        // Android does not provide the saved file path back, so we return an empty string and show a generic success message
+        destination = QStringLiteral("");
+#else
+        success = save(btArray, targetDir);
+        destination = targetDir;
+#endif
+
+        if (success)
+            emit imageSavedToGallery(destination);
+        else
+            emit imageSaveToGalleryFailed();
     });
 }
 
