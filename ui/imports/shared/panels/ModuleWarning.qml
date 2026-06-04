@@ -28,7 +28,7 @@ Item {
     property bool delay: true
 
     // extra margin that can be used to avoid overlapping with window buttons
-    property int extraInnerLeftMargin: Qt.platform.os === SQUtils.Utils.mac ? 60 : 0
+    property int extraInnerLeftMargin: SQUtils.Utils.isMacOS ? 60 : 0
 
     signal clicked()
     signal closeClicked()

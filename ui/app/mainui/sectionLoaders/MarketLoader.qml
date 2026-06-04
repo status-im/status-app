@@ -94,6 +94,7 @@ Loader {
 
     Connections {
         target: root.item
+        ignoreUnknownSignals: true
 
         function onRequestLaunchSwap() {
             root.popupHandler.launchSwap()

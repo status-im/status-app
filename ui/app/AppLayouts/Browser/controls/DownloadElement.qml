@@ -65,7 +65,7 @@ Rectangle {
         Component {
             id: fileImageComponent
             StatusIcon {
-                icon: "browser/file"
+                icon: "file"
                 color: downloadComplete ? StatusColors.transparent : Theme.palette.darkGrey
             }
         }

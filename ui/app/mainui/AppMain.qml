@@ -1356,8 +1356,8 @@ Item {
             Layout.fillWidth: true
 
             // apply left/right margins when we remove the window titlebar
-            Layout.leftMargin: Qt.platform.os === SQUtils.Utils.mac ? appMain.SafeArea.margins.left : 0
-            Layout.rightMargin: Qt.platform.os === SQUtils.Utils.mac ? appMain.SafeArea.margins.right : 0
+            Layout.leftMargin: SQUtils.Utils.isMacOS ? appMain.SafeArea.margins.left : 0
+            Layout.rightMargin: SQUtils.Utils.isMacOS ? appMain.SafeArea.margins.right : 0
 
             spacing: 0
 
@@ -1471,6 +1471,7 @@ Item {
                         return ""
                     }
                 }
+                isOnline: d.networkChecker.isOnline
             }
 
             ConnectionWarnings {
@@ -1522,6 +1523,7 @@ Item {
                         return ""
                     }
                 }
+                isOnline: d.networkChecker.isOnline
             }
 
             ConnectionWarnings {
@@ -1548,6 +1550,7 @@ Item {
                         return ""
                     }
                 }
+                isOnline: d.networkChecker.isOnline
             }
         }
 
