@@ -29,12 +29,13 @@ NetworkChecker::NetworkChecker(QObject *parent)
 {
     if (!QNetworkInformation::loadDefaultBackend()) {
         qWarning() << "QNetworkInformation is not supported on this platform or backend.";
+        setActive(false);
         return;
     }
 
     m_netinfo = QNetworkInformation::instance();
 
-    // initial update (optionally delayed)
+    // initial update; app becomes active, or 10s max
     QDeadlineTimer deadline(kCheckDelay);
     while (!deadline.hasExpired() || (QGuiApplication::applicationState() & Qt::ApplicationActive)) {
         init();
@@ -123,6 +124,9 @@ void NetworkChecker::updateConnectionDetails()
 
 void NetworkChecker::checkNetwork()
 {
+    if (!m_netinfo)
+        return;
+
     setActive(false);
     setChecking(true);
     setActive(true);

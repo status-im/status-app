@@ -63,6 +63,7 @@ SplitView {
                         signal networkConnectionStatusUpdate(website: string, completelyDown: bool, connectionState: int, chainIds: string, lastCheckedAtUnix: double)
                     }
                 }
+                isOnline: ctrlIsOnline.checked
                 websiteDown: ctrlWebsiteDown.currentValue
                 connectionState: ctrlConnectionState.currentValue
 
