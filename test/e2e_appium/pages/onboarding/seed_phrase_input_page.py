@@ -73,17 +73,27 @@ class SeedPhraseInputPage(BasePage):
     def click_continue(self) -> bool:
         self.logger.info("Clicking Continue button")
 
-        # btnContinue sits BELOW the seed-input column inside SeedphrasePage's
-        # StatusScrollView. With 12+ fields above it the button is offscreen
-        # and Qt does not surface offscreen elements via accessibility — so a
-        # plain xpath search returns nothing. Scroll it into view first.
-        if not self.is_element_visible(self.locators.CONTINUE_BUTTON, timeout=2):
-            self.scroll_to_element(
-                self.locators.CONTINUE_BUTTON, max_swipes=4, timeout=2,
+        # btnContinue sits at the bottom of SeedphrasePage's StatusScrollView
+        # and is clipped at the scroll boundary until scrolled to — it is in the
+        # a11y tree but not painted, so taps miss. scroll_to_element early-returns
+        # (Qt marks the clipped button "visible"), so swipe to the bottom
+        # explicitly to render it, then tap.
+        size = self.driver.get_window_size()
+        cx = int(size["width"] * 0.5)
+        for _ in range(5):
+            self.driver.swipe(
+                cx, int(size["height"] * 0.85), cx, int(size["height"] * 0.35), 400
             )
+            time.sleep(0.3)
 
-        if self.safe_click(self.locators.CONTINUE_BUTTON):
-            self.logger.info("✅ Continue button clicked successfully")
+        button = self.find_element_safe(self.locators.CONTINUE_BUTTON, timeout=5)
+        if not button:
+            self.logger.error("❌ Failed to find Continue button")
+            return False
+
+        rect = button.rect
+        if self.tap_coordinate_relative(button, rect["width"] // 2, rect["height"] // 2):
+            self.logger.info("✅ Continue button tapped")
             return True
 
         self.logger.error("❌ Failed to click Continue button")

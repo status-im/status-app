@@ -122,17 +122,10 @@ class TestOnboardingImportSeed(StepMixin):
 
         return base
 
-    # Smoke-only (not gate) until the Continue-button registration issue is
-    # resolved upstream: on Pixel 8 (and CI's Android emulator) the seed-page
-    # Continue button sits at Y=2276 of a 2400px screen; gesture-tap dispatch
-    # at that edge is non-deterministic and Status sometimes ignores the
-    # click entirely. Reproducible across two consecutive runs on the same
-    # APK; passes reliably on Pi (Samsung A36, Moto G55) which have a
-    # different viewport.
+    @pytest.mark.gate
     @pytest.mark.smoke
     @pytest.mark.onboarding
     @pytest.mark.raw_devices
-    @pytest.mark.flaky(reruns=1, reruns_delay=5)
     async def test_import_seed_phrase(self):
         """First-time seed-phrase import: onboard + verify wallet address.
 
