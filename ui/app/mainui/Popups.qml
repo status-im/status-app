@@ -99,6 +99,18 @@ QtObject {
     signal wcUriScanned(string uri)
     signal navigationEducationDialogSeenRequested()
 
+    readonly property Connections imageSaveConnections: Connections {
+        target: SystemUtils
+
+        function onImageSavedToGallery(destination) {
+            root.notifyImageSaveResult(true, destination)
+        }
+
+        function onImageSaveToGalleryFailed() {
+            root.notifyImageSaveResult(false)
+        }
+    }
+
     property var activePopupComponents: []
 
     property var sharedContactModelEntryLoader: Loader {
@@ -398,6 +410,25 @@ QtObject {
                       messageId,
                       messageStore
                   })
+    }
+
+    function notifyImageSaveResult(success, destination = "") {
+        if (success) {
+            Global.displayToastMessage(destination ? qsTr("Image saved to %1").arg(UrlUtils.displayPathLabel(destination))
+                                                   : qsTr("Image saved to system gallery"),
+                                         "",
+                                         "checkmark-circle",
+                                         false,
+                                         Constants.ephemeralNotificationType.success,
+                                         "")
+        } else {
+            Global.displayToastMessage(qsTr("Failed to save image"),
+                                         "",
+                                         "warning",
+                                         false,
+                                         Constants.ephemeralNotificationType.danger,
+                                         "")
+        }
     }
 
     function openDownloadImageDialog(imageSource) {

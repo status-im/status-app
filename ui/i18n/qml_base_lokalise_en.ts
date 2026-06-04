@@ -17468,6 +17468,11 @@
   <context>
     <name>Popups</name>
     <message>
+      <source>Image saved to system gallery</source>
+      <comment>Popups</comment>
+      <translation>Image saved to system gallery</translation>
+    </message>
+    <message>
       <source>Share addresses with %1&#39;s owner</source>
       <comment>Popups</comment>
       <translation>Share addresses with %1&#39;s owner</translation>
@@ -17476,6 +17481,16 @@
       <source>Share addresses to rejoin %1</source>
       <comment>Popups</comment>
       <translation>Share addresses to rejoin %1</translation>
+    </message>
+    <message>
+      <source>Image saved to %1</source>
+      <comment>Popups</comment>
+      <translation>Image saved to %1</translation>
+    </message>
+    <message>
+      <source>Failed to save image</source>
+      <comment>Popups</comment>
+      <translation>Failed to save image</translation>
     </message>
     <message>
       <source>%1 removed from contacts and marked as untrusted</source>

@@ -14294,12 +14294,24 @@ to load</source>
 <context>
     <name>Popups</name>
     <message>
+        <source>Image saved to system gallery</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Share addresses with %1&apos;s owner</source>
         <translation>%1의 소유자와 주소 공유</translation>
     </message>
     <message>
         <source>Share addresses to rejoin %1</source>
         <translation>%1에 다시 참여하려면 주소를 공유하세요</translation>
+    </message>
+    <message>
+        <source>Image saved to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to save image</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>

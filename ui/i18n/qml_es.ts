@@ -14350,8 +14350,20 @@ al cargar</translation>
         <translation>Compartir direcciones con el propietario de %1</translation>
     </message>
     <message>
+        <source>Image saved to %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Image saved to system gallery</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Share addresses to rejoin %1</source>
         <translation>Compartir direcciones para volver a unirse a %1</translation>
+    </message>
+    <message>
+        <source>Failed to save image</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>%1 removed from contacts and marked as untrusted</source>

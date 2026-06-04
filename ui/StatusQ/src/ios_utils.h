@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <QByteArray>
 #include <QUrl>
+#include <functional>
 
 
 using IOSShakeCallback = void (*)();
@@ -12,7 +13,7 @@ using IOSFilePickerRejectedCallback = void (*)();
 
 #ifdef Q_OS_IOS
 
-void saveImageToPhotosAlbum(const QByteArray& imageData);
+void saveImageToPhotosAlbumAsync(const QByteArray& imageData, const std::function<void(bool)>& completion);
 QString resolveIOSPhotoAsset(const QUrl &assetUrl);
 
 // Keyboard utilities
