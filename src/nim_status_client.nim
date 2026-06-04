@@ -68,6 +68,20 @@ proc determineStatusAppIconPath(): string =
 
   return "/../status-dev.png"
 
+proc configureWebEngineChromiumFlags() =
+  when main_constants.IS_MACOS or defined(windows):
+    const autofillCrashWorkaroundFlag = "--enable-features=AutofillDisableFilling"
+    let existingFlags = getEnv("QTWEBENGINE_CHROMIUM_FLAGS")
+
+    if existingFlags.contains(autofillCrashWorkaroundFlag):
+      return
+
+    var nextFlags = existingFlags.strip()
+    if nextFlags.len > 0:
+      nextFlags.add(" ")
+    nextFlags.add(autofillCrashWorkaroundFlag)
+    putEnv("QTWEBENGINE_CHROMIUM_FLAGS", nextFlags)
+
 proc prepareLogging() =
   # Outputs logs in the node tab
   for output in defaultChroniclesStream.outputs.fields():
@@ -188,6 +202,7 @@ proc mainProc() =
   let statusFoundation = newStatusFoundation()
   let uiScaleFilePath = joinPath(DATADIR, "ui-scale")
   # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
+  configureWebEngineChromiumFlags()
   initializeWebView()
   enableHDPI(uiScaleFilePath)
   tryEnableThreadedRenderer()
