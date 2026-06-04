@@ -68,18 +68,49 @@ proc determineStatusAppIconPath(): string =
 
   return "/../status-dev.png"
 
+proc addChromiumFeatureSwitch(existingFlags: string, switchName: string, features: openArray[string]): string =
+  var retained: seq[string] = @[]
+  var switchFeatures: seq[string] = @[]
+  let switchPrefix = switchName & "="
+
+  for token in existingFlags.splitWhitespace():
+    if token.startsWith(switchPrefix):
+      let encodedFeatures = token[switchPrefix.len .. ^1]
+      for feature in encodedFeatures.split(','):
+        let normalizedFeature = feature.strip()
+        if normalizedFeature.len > 0 and not switchFeatures.contains(normalizedFeature):
+          switchFeatures.add(normalizedFeature)
+    else:
+      retained.add(token)
+
+  for feature in features:
+    if feature.len > 0 and not switchFeatures.contains(feature):
+      switchFeatures.add(feature)
+
+  result = retained.join(" ")
+  if switchFeatures.len > 0:
+    if result.len > 0:
+      result.add(" ")
+    result.add(switchName)
+    result.add("=")
+    result.add(switchFeatures.join(","))
+
 proc configureWebEngineChromiumFlags() =
   when main_constants.IS_MACOS or defined(windows):
-    const autofillCrashWorkaroundFlag = "--enable-features=AutofillDisableFilling"
-    let existingFlags = getEnv("QTWEBENGINE_CHROMIUM_FLAGS")
+    var nextFlags = getEnv("QTWEBENGINE_CHROMIUM_FLAGS").strip()
 
-    if existingFlags.contains(autofillCrashWorkaroundFlag):
-      return
+    # Keep the original workaround and also reduce Autofill popup surface area.
+    nextFlags = addChromiumFeatureSwitch(
+      nextFlags,
+      "--enable-features",
+      ["AutofillDisableFilling"]
+    )
+    nextFlags = addChromiumFeatureSwitch(
+      nextFlags,
+      "--disable-features",
+      ["AutofillPopupZOrderSecuritySurface", "AutofillPopupCheckHtmlFormPopupOverlap"]
+    )
 
-    var nextFlags = existingFlags.strip()
-    if nextFlags.len > 0:
-      nextFlags.add(" ")
-    nextFlags.add(autofillCrashWorkaroundFlag)
     putEnv("QTWEBENGINE_CHROMIUM_FLAGS", nextFlags)
 
 proc prepareLogging() =
