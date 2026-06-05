@@ -4,8 +4,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Handler;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Process;
 import android.os.RemoteException;
 import android.system.ErrnoException;
@@ -15,6 +17,7 @@ import org.json.JSONObject;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.nio.charset.StandardCharsets;
 
 import app.status.mobile.StatusGoStub;
@@ -24,8 +27,13 @@ public final class StatusGoServiceClient {
     private static final String TAG = "StatusGoServiceClient";
     private static final long CONNECT_TIMEOUT_MS = 8000;
     private static final int LARGE_SIGNAL_WARN_BYTES = 256 * 1024;
+    private static final long RESTART_KILL_DELAY_MS = 250L;
+    private static final long DISCONNECT_SUPPRESSION_WINDOW_MS = 1000L;
 
     private static volatile StatusGoServiceClient sInstance;
+    private static final AtomicBoolean restartRequested = new AtomicBoolean(false);
+    private static final AtomicBoolean suppressDisconnectRestart = new AtomicBoolean(false);
+    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
     /** Fire-and-forget background thread (dies when work finishes); avoids a long-lived executor. */
     private static void runUiVisibilityAsync(Runnable r) {
@@ -53,6 +61,8 @@ public final class StatusGoServiceClient {
     private volatile boolean desiredUiVisible = false;
     // Set once UI process has explicitly reported visibility at least once.
     private volatile boolean hasUiVisibilityHint = false;
+    // Tracks whether this process ever had a live Binder connection to status-go.
+    private volatile boolean everConnected = false;
 
     private final IStatusGoSignalListener signalListener = new IStatusGoSignalListener.Stub() {
         @Override
@@ -107,6 +117,7 @@ public final class StatusGoServiceClient {
                 service = IStatusGoService.Stub.asInterface(binder);
                 bindingInProgress = false;
                 bound = true;
+                everConnected = true;
                 try {
                     service.registerSignalListener(signalListener);
                 } catch (RemoteException e) {
@@ -136,6 +147,34 @@ public final class StatusGoServiceClient {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            final boolean suppressed = suppressDisconnectRestart.getAndSet(false);
+            synchronized (lock) {
+                service = null;
+                connectedLatch = null;
+                bindingInProgress = false;
+                bound = false;
+            }
+            if (!suppressed && everConnected && hasUiVisibilityHint && desiredUiVisible) {
+                requestFrontendRestart(StatusGoStub.getContext(), "statusgo_service_disconnected");
+            }
+        }
+
+        @Override
+        public void onBindingDied(ComponentName name) {
+            final boolean suppressed = suppressDisconnectRestart.getAndSet(false);
+            synchronized (lock) {
+                service = null;
+                connectedLatch = null;
+                bindingInProgress = false;
+                bound = false;
+            }
+            if (!suppressed && everConnected && hasUiVisibilityHint && desiredUiVisible) {
+                requestFrontendRestart(StatusGoStub.getContext(), "statusgo_binding_died");
+            }
+        }
+
+        @Override
+        public void onNullBinding(ComponentName name) {
             synchronized (lock) {
                 service = null;
                 connectedLatch = null;
@@ -147,6 +186,33 @@ public final class StatusGoServiceClient {
 
     private StatusGoServiceClient() {}
 
+    private void requestFrontendRestart(Context appContext, String reason) {
+        if (appContext == null) {
+            Log.w(TAG, "requestFrontendRestart: context is null, reason=" + reason);
+            return;
+        }
+        if (!restartRequested.compareAndSet(false, true)) return;
+
+        try {
+            Intent launch = appContext.getPackageManager()
+                    .getLaunchIntentForPackage(appContext.getPackageName());
+            if (launch != null) {
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                launch.putExtra("status.recovery_reason", reason);
+                appContext.startActivity(launch);
+            } else {
+                Log.w(TAG, "requestFrontendRestart: launch intent is null, reason=" + reason);
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "requestFrontendRestart: failed to relaunch app, reason=" + reason, t);
+        }
+
+        MAIN_HANDLER.postDelayed(
+                () -> android.os.Process.killProcess(android.os.Process.myPid()),
+                RESTART_KILL_DELAY_MS
+        );
+    }
+
     private void resetConnection(Context appContext) {
         final boolean shouldUnbind;
         synchronized (lock) {
@@ -157,9 +223,16 @@ public final class StatusGoServiceClient {
         }
         try {
             if (shouldUnbind) {
+                suppressDisconnectRestart.set(true);
+                // Clear suppression even if no disconnect callback arrives for this unbind path.
+                MAIN_HANDLER.postDelayed(
+                        () -> suppressDisconnectRestart.compareAndSet(true, false),
+                        DISCONNECT_SUPPRESSION_WINDOW_MS
+                );
                 appContext.getApplicationContext().unbindService(conn);
             }
         } catch (Throwable ignored) {
+            suppressDisconnectRestart.set(false);
         } finally {
             synchronized (lock) {
                 bound = false;
@@ -256,6 +329,9 @@ public final class StatusGoServiceClient {
             s = service;
         }
         if (s == null) {
+            if (everConnected) {
+                requestFrontendRestart(app, "statusgo_service_not_connected");
+            }
             return "{\"error\":\"status-go service not connected\"}";
         }
         try {
@@ -287,6 +363,9 @@ public final class StatusGoServiceClient {
                         Log.w(TAG, "call retry failed", e2);
                     }
                 }
+            }
+            if (everConnected) {
+                requestFrontendRestart(app, "statusgo_service_call_failed");
             }
             return "{\"error\":\"status-go service call failed\"}";
         }
@@ -368,6 +447,9 @@ public final class StatusGoServiceClient {
                         s.setUiVisible(visible);
                     } catch (RemoteException e2) {
                         Log.w(TAG, "setUiVisible retry failed", e2);
+                        if (everConnected && visible) {
+                            requestFrontendRestart(app, "statusgo_set_ui_visible_failed");
+                        }
                     }
                 }
             }
