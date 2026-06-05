@@ -597,9 +597,9 @@ ifeq ($(REBUILD_UI),true)
 endif
 
 ifeq ($(host_os),darwin)
- UI_SOURCES := $(shell find -E ui -type f -iregex '.*(qmldir|qml|qrc)$$' -not -iname 'resources.qrc')
+ UI_SOURCES := $(shell find -E ui -type f -iregex '.*(qmldir|qml|qrc|js)$$' -not -iname 'resources.qrc')
 else
- UI_SOURCES := $(shell find ui -type f -regextype egrep -iregex '.*(qmldir|qml|qrc)$$' -not -iname 'resources.qrc')
+ UI_SOURCES := $(shell find ui -type f -regextype egrep -iregex '.*(qmldir|qml|qrc|js)$$' -not -iname 'resources.qrc')
 endif
 
 UI_RESOURCES := resources.rcc
