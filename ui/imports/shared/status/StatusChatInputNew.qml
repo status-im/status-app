@@ -304,15 +304,6 @@ Control {
                 emojiSuggestions.listView.decrementCurrentIndex()
                 return
             }
-
-            if (event.matches(StandardKey.Paste)) {
-                if (!ClipboardUtils.hasImage)
-                    return
-
-                const clipboardImage = ClipboardUtils.imageBase64
-                validateImagesAndShowImageArea([clipboardImage])
-                event.accepted = true
-            }
         }
     }
 
@@ -757,6 +748,8 @@ Control {
                         onAttemptToExceedHardLimit: {
                             lengthLimitTooltip.open()
                         }
+
+                        onPasteImageRequested: root.validateImagesAndShowImageArea([ClipboardUtils.imageBase64])
 
                         Shortcut {
                             enabled: messageInputField.activeFocus

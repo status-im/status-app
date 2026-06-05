@@ -70,10 +70,12 @@ StatusQ.StatusTextArea {
     // Signal emitted when user attempts to add content exceeding hard limit.
     signal attemptToExceedHardLimit
 
+    signal pasteImageRequested()
+
     textFormat: Text.RichText
     color: Theme.palette.textColor
     background: null
-    inputMethodHints: Qt.ImhMultiLine | (StatusQUtils.Utils.isMobile ? 0 : Qt.ImhNoEditMenu)
+    inputMethodHints: Qt.ImhMultiLine | (StatusQUtils.Utils.isMobile ? Qt.ImhNone : Qt.ImhNoEditMenu)
 
     EnterKey.type: Qt.EnterKeyReturn // insert newlines hint for OSK
 
@@ -689,6 +691,14 @@ StatusQ.StatusTextArea {
         }
 
         function paste(immediateCleanup = false) {
+            // pasting images supported on desktop only
+            if (!StatusQUtils.Utils.isMobile) {
+                if (ClipboardUtils.hasImage) {
+                    root.pasteImageRequested()
+                    return true
+                }
+            }
+
             if (!ClipboardUtils.hasText)
                 return false
 
@@ -808,9 +818,8 @@ StatusQ.StatusTextArea {
         cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.IBeamCursor
     }
 
-    StatusMenu {
-        id: contextMenu
-
+    // lazy load the context menu (notice no `id` allowed/used)
+    ContextMenu.menu: StatusMenu {
         hideDisabledItems: false
         // Use the platform popup on iOS to match native text editing behavior.
         popupType: StatusQUtils.Utils.isIOS ? Popup.Native : Popup.Item
@@ -833,11 +842,14 @@ StatusQ.StatusTextArea {
         }
         StatusAction {
             text: qsTr("Paste")
-            enabled: root.canPaste
+            enabled: ClipboardUtils.hasText || ClipboardUtils.hasImage
             onTriggered: d.paste(true)
         }
+        StatusMenuSeparator{}
+        StatusAction {
+            text: qsTr("Select All")
+            enabled: length > 0
+            onTriggered: selectAll()
+        }
     }
-
-    ContextMenu.menu: StatusQUtils.Utils.isAndroid ? null
-                      : contextMenu
 }
