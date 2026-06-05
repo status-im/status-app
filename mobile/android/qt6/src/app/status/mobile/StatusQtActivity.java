@@ -11,6 +11,8 @@ import android.net.Uri;
 import android.provider.Settings;
 import android.util.Log;
 import im.status.mobileui.PushNotificationHelper;
+import android.content.ActivityNotFoundException;
+import android.widget.Toast;
 
 public class StatusQtActivity extends QtActivity {
     private static final String TAG = "StatusQtActivity";
@@ -138,6 +140,19 @@ public class StatusQtActivity extends QtActivity {
             Uri uri = Uri.fromParts("package", sInstance.getPackageName(), null);
             intent.setData(uri);
             sInstance.startActivity(intent);
+        }
+    }
+
+    // Opens the system Accessibility Settings screen. Called from Qt via JNI.
+    public static void openAccessibilitySettings() {
+        if (sInstance == null) return;
+        try {
+            Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            sInstance.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            // Handle the rare case where the settings activity doesn't exist
+            Toast.makeText(sInstance, "Unable to open Accessibility Settings", Toast.LENGTH_SHORT).show();
         }
     }
 }

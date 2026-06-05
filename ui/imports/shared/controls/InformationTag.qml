@@ -54,21 +54,22 @@ Control {
         }
         StatusSmartIdenticon {
             id: smartIdenticon
-            Layout.maximumWidth: visible ? 16 : 0
-            Layout.maximumHeight: visible ? 16 : 0
+            Layout.maximumWidth: visible ? asset.bgWidth : 0
+            Layout.maximumHeight: visible ? asset.bgHeight : 0
             asset.width: visible ? 16 : 0
             asset.height: visible ? 16 : 0
-            asset.bgHeight: visible ? 16 : 0
-            asset.bgWidth: visible ? 16 : 0
+            asset.bgHeight: visible ? asset.height : 0
+            asset.bgWidth: visible ? asset.width : 0
             asset.color: Theme.palette.directColor1
             visible: !!asset.name
         }
         StatusBaseText {
             id: tagPrimaryLabel
-            Layout.maximumWidth: root.availableWidth
+            Layout.fillWidth: true
             font.pixelSize: Theme.tertiaryTextFontSize
             visible: text !== ""
             elide: Text.ElideRight
+            wrapMode: Text.Wrap
         }
         StatusBaseText {
             id: middleLabel
