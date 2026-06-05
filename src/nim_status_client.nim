@@ -12,6 +12,7 @@ import statusq_bridge
 
 import app/global/global_singleton
 import app/global/local_app_settings
+import app/global/app_lifecycle
 import app/boot/app_controller
 
 featureGuard KEYCARD_ENABLED:
@@ -87,12 +88,14 @@ proc setupRemoteSignalsHandling() =
   # it will be passed as a regular C function to statusgo_backend. This means that
   # we cannot capture any local variables here (we must rely on globals)
   var callbackStatusGo: status_go.SignalCallback = proc(p0: cstring) {.cdecl.} =
+    if isShuttingDown(): return
     if signalsManagerQObjPointer != nil:
       signal_handler(signalsManagerQObjPointer, p0, "receiveSignal")
   status_go.setSignalEventCallback(callbackStatusGo)
 
   featureGuard KEYCARD_ENABLED:
     var callbackKeycardGo: keycard_go.KeycardSignalCallback = proc(p0: cstring) {.cdecl.} =
+      if isShuttingDown(): return
       if keycardServiceV2QObjPointer != nil:
         signal_handler(keycardServiceV2QObjPointer, p0, "receiveKeycardSignalV2")
       if keycardServiceQObjPointer != nil:
