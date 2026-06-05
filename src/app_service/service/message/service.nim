@@ -922,7 +922,6 @@ QtObject:
       checkAndEmitACNotificationsFromResponse(self.events, responseObj{"activityCenterNotifications"})
     except Exception as e:
       error "error: ", procName="onMarkAllMessagesRead", errDesription = e.msg
-      self.events.emit(SIGNAL_SEARCH_MESSAGES_LOADED, MessagesArgs(chatId: ""))
 
   proc markAllMessagesRead*(self: Service, chatId: string) =
     if (chatId.len == 0):
