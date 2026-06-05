@@ -64,5 +64,10 @@ public final class StatusGoStub {
     public static void setContext(Context context) {
         sContext = context.getApplicationContext();
     }
+
+    /** Returns application context if initialized; null otherwise. */
+    public static Context getContext() {
+        return sContext;
+    }
 }
 
