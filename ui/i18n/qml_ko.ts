@@ -2,6 +2,29 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="ko_KR">
 <context>
+    <name>A11YInformationTag</name>
+    <message>
+        <source>Accessibility services on your device may access screen content. Check your device&apos;s %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings &gt; Accessibility</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accessibility services on your device may access screen content. Check your device&apos;s Accessibility settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s Accessibility settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AboutView</name>
     <message>
         <source>Check for updates</source>
@@ -2130,20 +2153,16 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>복구 문구 보기</translation>
     </message>
     <message>
-        <source>A 12-word phrase that gives full access to your funds and is the only way to recover them.</source>
-        <translation>자금을 완전히 접근할 수 있게 해 주며, 복구할 수 있는 유일한 12단어 시드 구문입니다.</translation>
+        <source>A 12-word phrase that gives full access to your funds and is the only way to recover them. Make sure nothing can see or record your screen.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Reveal recovery phrase</source>
         <translation>복구 구문 표시</translation>
     </message>
     <message>
-        <source>Never share your recovery phrase. If someone asks for it, they’re likely trying to scam you.
-
-To backup you recovery phrase, write it down and store it securely in a safe place.</source>
-        <translation>복구 구문은 절대 공유하지 마세요. 누군가 복구 구문을 요구한다면, 사기를 시도하는 가능성이 큽니다.
-
-복구 구문을 백업하려면, 종이에 적어 안전한 장소에 보관하세요.</translation>
+        <source>Never share your recovery phrase. Anyone asking for it is trying to scam you. To back up your recovery phrase, write it down and store it securely.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Confirm recovery phrase</source>

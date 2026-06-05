@@ -275,7 +275,6 @@ void SystemUtilsInternal::downloadImageByUrl(
     });
 }
 
-
 void SystemUtilsInternal::openAppSettings()
 {
 #ifdef Q_OS_ANDROID
@@ -291,6 +290,42 @@ void SystemUtilsInternal::openAppSettings()
 #else
     // Desktop - we shouldn't be here
     qWarning() << "openAppSettings not implemented for this platform";
+#endif
+}
+
+bool SystemUtilsInternal::isScreenReaderActive() const
+{
+#ifdef Q_OS_IOS
+    return false;
+#else
+    // TODO extend with OS native checks
+    return true;
+#endif
+}
+
+bool SystemUtilsInternal::hasAccessibilitySettings() const
+{
+    // NOTE: see also SystemUtilsInternal::openAccessibilitySettings() below
+#if defined(Q_OS_ANDROID) || defined(Q_OS_LINUX)
+    return true;
+#else
+    return false;
+#endif
+}
+
+void SystemUtilsInternal::openAccessibilitySettings()
+{
+    // NOTE: see also SystemUtilsInternal::hasAccessibilitySettings() above
+#ifdef Q_OS_ANDROID
+    QJniObject::callStaticMethod<void>(
+        "app/status/mobile/StatusQtActivity",
+        "openAccessibilitySettings",
+        "()V"
+        );
+#elif defined(Q_OS_LINUX)
+    QProcess::startDetached(QStringLiteral("gnome-control-center"), {QStringLiteral("universal-access")});
+#else
+    qWarning() << "SystemUtilsInternal::openAccessibilitySettings not implemented for this platform";
 #endif
 }
 

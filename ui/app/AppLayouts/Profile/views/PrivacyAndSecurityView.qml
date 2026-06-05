@@ -77,13 +77,12 @@ SettingsContentBase {
                 id: infoTag
 
                 Layout.preferredWidth: root.contentWidth
-                Layout.preferredHeight: 40
                 Layout.alignment: Qt.AlignHCenter
 
                 leftInset: Theme.padding
                 rightInset: Theme.padding
-                leftPadding: horizontalPadding + Theme.padding
-                rightPadding: horizontalPadding + Theme.padding
+                horizontalPadding: Theme.padding
+                spacing: 12
 
                 backgroundColor: Theme.palette.primaryColor3
                 bgBorderColor: Theme.palette.primaryColor2

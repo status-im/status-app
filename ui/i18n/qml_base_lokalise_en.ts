@@ -1,6 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <TS language="en" sourcelanguage="en">
   <context>
+    <name>A11YInformationTag</name>
+    <message>
+      <source>Accessibility services on your device may access screen content. Check your device&#39;s %1.</source>
+      <comment>A11YInformationTag</comment>
+      <translation>Accessibility services on your device may access screen content. Check your device&#39;s %1.</translation>
+    </message>
+    <message>
+      <source>Settings &gt; Accessibility</source>
+      <comment>A11YInformationTag</comment>
+      <translation>Settings &gt; Accessibility</translation>
+    </message>
+    <message>
+      <source>Accessibility services on your computer may access screen content. Check your operating system&#39;s %1.</source>
+      <comment>A11YInformationTag</comment>
+      <translation>Accessibility services on your computer may access screen content. Check your operating system&#39;s %1.</translation>
+    </message>
+    <message>
+      <source>Accessibility services on your device may access screen content. Check your device&#39;s Accessibility settings.</source>
+      <comment>A11YInformationTag</comment>
+      <translation>Accessibility services on your device may access screen content. Check your device&#39;s Accessibility settings.</translation>
+    </message>
+    <message>
+      <source>Accessibility services on your computer may access screen content. Check your operating system&#39;s Accessibility settings.</source>
+      <comment>A11YInformationTag</comment>
+      <translation>Accessibility services on your computer may access screen content. Check your operating system&#39;s Accessibility settings.</translation>
+    </message>
+  </context>
+  <context>
     <name>AboutView</name>
     <message>
       <source>Check for updates</source>
@@ -2626,9 +2654,9 @@
       <translation>Show recovery phrase</translation>
     </message>
     <message>
-      <source>A 12-word phrase that gives full access to your funds and is the only way to recover them.</source>
+      <source>A 12-word phrase that gives full access to your funds and is the only way to recover them. Make sure nothing can see or record your screen.</source>
       <comment>BackupSeedphraseReveal</comment>
-      <translation>A 12-word phrase that gives full access to your funds and is the only way to recover them.</translation>
+      <translation>A 12-word phrase that gives full access to your funds and is the only way to recover them. Make sure nothing can see or record your screen.</translation>
     </message>
     <message>
       <source>Reveal recovery phrase</source>
@@ -2636,9 +2664,9 @@
       <translation>Reveal recovery phrase</translation>
     </message>
     <message>
-      <source>Never share your recovery phrase. If someone asks for it, they’re likely trying to scam you.&#xA;&#xA;To backup you recovery phrase, write it down and store it securely in a safe place.</source>
+      <source>Never share your recovery phrase. Anyone asking for it is trying to scam you. To back up your recovery phrase, write it down and store it securely.</source>
       <comment>BackupSeedphraseReveal</comment>
-      <translation>Never share your recovery phrase. If someone asks for it, they’re likely trying to scam you.&#xA;&#xA;To backup you recovery phrase, write it down and store it securely in a safe place.</translation>
+      <translation>Never share your recovery phrase. Anyone asking for it is trying to scam you. To back up your recovery phrase, write it down and store it securely.</translation>
     </message>
     <message>
       <source>Confirm recovery phrase</source>

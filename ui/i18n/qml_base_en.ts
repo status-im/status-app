@@ -2,6 +2,29 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="en_US" sourcelanguage="en">
 <context>
+    <name>A11YInformationTag</name>
+    <message>
+        <source>Accessibility services on your device may access screen content. Check your device&apos;s %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings &gt; Accessibility</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accessibility services on your device may access screen content. Check your device&apos;s Accessibility settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s Accessibility settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AboutView</name>
     <message>
         <source>Check for updates</source>
@@ -2137,7 +2160,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>A 12-word phrase that gives full access to your funds and is the only way to recover them.</source>
+        <source>A 12-word phrase that gives full access to your funds and is the only way to recover them. Make sure nothing can see or record your screen.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2145,9 +2168,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Never share your recovery phrase. If someone asks for it, they’re likely trying to scam you.
-
-To backup you recovery phrase, write it down and store it securely in a safe place.</source>
+        <source>Never share your recovery phrase. Anyone asking for it is trying to scam you. To back up your recovery phrase, write it down and store it securely.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

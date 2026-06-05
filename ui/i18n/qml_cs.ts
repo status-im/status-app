@@ -2,6 +2,29 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="cs_CZ" sourcelanguage="en_US">
 <context>
+    <name>A11YInformationTag</name>
+    <message>
+        <source>Accessibility services on your device may access screen content. Check your device&apos;s %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Settings &gt; Accessibility</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accessibility services on your device may access screen content. Check your device&apos;s Accessibility settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Accessibility services on your computer may access screen content. Check your operating system&apos;s Accessibility settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AboutView</name>
     <message>
         <source>Check for updates</source>
@@ -2145,20 +2168,16 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Zobrazit obnovovací frázi</translation>
     </message>
     <message>
-        <source>A 12-word phrase that gives full access to your funds and is the only way to recover them.</source>
-        <translation>12slovná fráze, která dává plný přístup k vašim prostředkům a je jediným způsobem, jak je obnovit.</translation>
+        <source>A 12-word phrase that gives full access to your funds and is the only way to recover them. Make sure nothing can see or record your screen.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Reveal recovery phrase</source>
         <translation>Odhalit obnovovací frázi</translation>
     </message>
     <message>
-        <source>Never share your recovery phrase. If someone asks for it, they’re likely trying to scam you.
-
-To backup you recovery phrase, write it down and store it securely in a safe place.</source>
-        <translation>Nikdy nesdílejte svou obnovovací frázi. Pokud o ni někdo požádá, pravděpodobně se vás snaží podvést.
-
-Pro zálohování obnovovací fráze si ji zapište a bezpečně uložte na bezpečné místo.</translation>
+        <source>Never share your recovery phrase. Anyone asking for it is trying to scam you. To back up your recovery phrase, write it down and store it securely.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Confirm recovery phrase</source>
