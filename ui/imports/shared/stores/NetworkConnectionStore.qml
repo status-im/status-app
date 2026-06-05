@@ -80,9 +80,14 @@ QtObject {
                     chainIdsDown.push(chainId)
             }
             if(chainIdsDown.length > 0) {
-                return qsTr("Pocket Network (POKT) & Infura are currently both unavailable for %1. %1 balances are as of %2.")
-                .arg(getChainIdsJointString(chainIdsDown))
-                .arg(LocaleUtils.formatDateTime(new Date(networkConnectionModule.blockchainNetworkConnection.lastCheckedAt*1000)), Locale.ShortFormat)
+                const lastCheckedAt = networkConnectionModule.blockchainNetworkConnection.lastCheckedAt
+                if (lastCheckedAt > 0) {
+                    return qsTr("Pocket Network (POKT) & Infura are currently both unavailable for %1. %1 balances are as of %2.")
+                    .arg(getChainIdsJointString(chainIdsDown))
+                    .arg(LocaleUtils.formatDateTime(new Date(lastCheckedAt * 1000)), Locale.ShortFormat)
+                }
+                return qsTr("Requires POKT/Infura for %1, which is currently unavailable")
+                    .arg(getChainIdsJointString(chainIdsDown))
             }
         }
         return ""
@@ -102,9 +107,14 @@ QtObject {
                 chainIdsDown.push(chainId)
         }
         if(chainIdsDown.length > 0) {
-            return qsTr("Pocket Network (POKT) & Infura are currently both unavailable for %1. %1 balances are as of %2.")
-            .arg(getChainIdsJointString(chainIdsDown))
-            .arg(LocaleUtils.formatDateTime(new Date(networkConnectionModule.blockchainNetworkConnection.lastCheckedAt * 1000)), Locale.ShortFormat)
+            const lastCheckedAt = networkConnectionModule.blockchainNetworkConnection.lastCheckedAt
+            if (lastCheckedAt > 0) {
+                return qsTr("Pocket Network (POKT) & Infura are currently both unavailable for %1. %1 balances are as of %2.")
+                .arg(getChainIdsJointString(chainIdsDown))
+                .arg(LocaleUtils.formatDateTime(new Date(lastCheckedAt * 1000)), Locale.ShortFormat)
+            }
+            return qsTr("Requires POKT/Infura for %1, which is currently unavailable")
+                .arg(getChainIdsJointString(chainIdsDown))
         }
 
         return ""
