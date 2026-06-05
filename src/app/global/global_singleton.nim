@@ -8,6 +8,7 @@ import utils
 import global_events
 import loader_deactivator
 import feature_flags
+import app_lifecycle
 
 export local_account_settings
 export local_account_sensitive_settings
@@ -30,6 +31,7 @@ when defined(ios) or defined(android):
   proc c_exit(code: cint) {.importc: "_exit", header: "<unistd.h>".}
 
 proc quit*(self: ApplicationHandle) =
+  markShuttingDown()
   if not self.app.isNil:
     self.app.quit()
 
@@ -37,6 +39,7 @@ proc quit*(self: ApplicationHandle) =
     c_exit(0) # terminates the process immediately without running any static destructors or atexit handlers — no cascade possible.
 
 proc exit*(self: ApplicationHandle) =
+  markShuttingDown()
   if not self.app.isNil:
     self.app.exit()
 
