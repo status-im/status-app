@@ -16,6 +16,7 @@ QtObject {
     property string httpUserAgent: ""
 
     readonly property var scriptPaths: root.featureEnabled ? [
+        { path: Qt.resolvedUrl("../js/webengine_runtime_guard.js"), runOnSubFrames: true },
         { path: Qt.resolvedUrl("../js/qwebchannel.js"), runOnSubFrames: true },
         { path: Qt.resolvedUrl("../js/ethereum_wrapper.js"), runOnSubFrames: true },
         { path: Qt.resolvedUrl("../js/eip6963_announcer.js"), runOnSubFrames: false },
