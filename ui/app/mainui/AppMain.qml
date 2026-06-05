@@ -1441,9 +1441,13 @@ Item {
                 Layout.fillWidth: true
                 relevantForCurrentSection: d.isWalletRelatedSectionType || d.activeSectionType === Constants.appSection.browser
                 websiteDown: Constants.walletConnections.blockchains
-                withCache: networkConnectionStore.balanceCache
+                withCache: networkConnectionStore.balanceCache && lastCheckedAtUnix > 0
                 networkConnectionStore: appMain.networkConnectionStore
-                tooltipMessage: qsTr("Pocket Network (POKT) & Infura are currently both unavailable for %1. Balances for those chains are as of %2.").arg(jointChainIdString).arg(lastCheckedAt)
+                tooltipMessage: {
+                    if (withCache)
+                        return qsTr("Pocket Network (POKT) & Infura are currently both unavailable for %1. Balances for those chains are as of %2.").arg(jointChainIdString).arg(lastCheckedAt)
+                    return qsTr("POKT & Infura down for %1. %1 token balances cannot be retrieved.").arg(jointChainIdString)
+                }
                 toastText: {
                     switch(connectionState) {
                     case Constants.ConnectionStatus.Success:
