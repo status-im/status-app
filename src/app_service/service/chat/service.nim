@@ -664,12 +664,19 @@ QtObject:
     var chat = self.getChatById(chatID)
     if chat.id == "":
       return
+    let previousUnreadMessagesCount = chat.unviewedMessagesCount
+    let previousUnreadMentionsCount = chat.unviewedMentionsCount
     if markAllAsRead:
       chat.unviewedMessagesCount = 0
       chat.unviewedMentionsCount = 0
     else:
       chat.unviewedMessagesCount = max(0, chat.unviewedMessagesCount - markAsReadCount)
       chat.unviewedMentionsCount = max(0, chat.unviewedMentionsCount - markAsReadMentionsCount)
+
+    if chat.unviewedMessagesCount == previousUnreadMessagesCount and
+        chat.unviewedMentionsCount == previousUnreadMentionsCount:
+      return
+
     self.updateOrAddChat(chat)
 
   proc asyncCheckChannelPermissions*(self: Service, communityId: string, chatId: string) =
