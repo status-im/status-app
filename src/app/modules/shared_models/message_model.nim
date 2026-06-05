@@ -782,14 +782,30 @@ QtObject:
     read = getNewMessagesCount
     notify = countChanged
 
+  proc emitSeenDataChangedRange(self: Model, startIdx, endIdx: int) =
+    if startIdx < 0 or endIdx < startIdx:
+      return
+
+    let startIndex = self.createIndex(startIdx, 0, nil)
+    defer: startIndex.delete
+    let endIndex = self.createIndex(endIdx, 0, nil)
+    defer: endIndex.delete
+
+    self.dataChanged(startIndex, endIndex, @[ModelRole.Seen.int])
+
   proc markAllAsSeen*(self: Model) =
+    var rangeStart = -1
     for i in 0 ..< self.items.len:
-      let item = self.items[i]
-      if not item.seen:
-        item.seen = true
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, @[ModelRole.Seen.int])
+      if not self.items[i].seen:
+        self.items[i].seen = true
+        if rangeStart == -1:
+          rangeStart = i
+      elif rangeStart != -1:
+        self.emitSeenDataChangedRange(rangeStart, i - 1)
+        rangeStart = -1
+
+    if rangeStart != -1:
+      self.emitSeenDataChangedRange(rangeStart, self.items.len - 1)
 
   proc setMessageMarker*(self: Model, messageId: string) =
     self.firstUnseenMessageId = messageId
@@ -810,20 +826,35 @@ QtObject:
 
 
   proc markAsSeen*(self: Model, messages: seq[string]) =
+    if messages.len == 0:
+      return
+
     var messagesSet = toHashSet(messages)
+    var rangeStart = -1
 
     for i in 0 ..< self.items.len:
       let currentItemID = self.items[i].id
 
       if messagesSet.contains(currentItemID):
-        self.items[i].seen = true
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, @[ModelRole.Seen.int])
+        if not self.items[i].seen:
+          self.items[i].seen = true
+          if rangeStart == -1:
+            rangeStart = i
+        elif rangeStart != -1:
+          self.emitSeenDataChangedRange(rangeStart, i - 1)
+          rangeStart = -1
         messagesSet.excl(currentItemID)
+      elif rangeStart != -1:
+        self.emitSeenDataChangedRange(rangeStart, i - 1)
+        rangeStart = -1
 
       if messagesSet.len == 0:
+        if rangeStart != -1:
+          self.emitSeenDataChangedRange(rangeStart, i)
         return
+
+    if rangeStart != -1:
+      self.emitSeenDataChangedRange(rangeStart, self.items.len - 1)
 
   proc getFirstUnseenMentionMessageId*(self: Model): string =
     result = ""
