@@ -160,7 +160,7 @@ Item {
 
                     StatusBaseText {
                         Layout.alignment: Qt.AlignVCenter
-                        font.pixelSize: Theme.additionalTextFontSize
+                        font.pixelSize: Theme.additionalTextSize
                         text: pendingStateText
                         color: Theme.palette.baseColor1
                     }

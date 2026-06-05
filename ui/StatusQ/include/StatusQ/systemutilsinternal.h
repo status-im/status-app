@@ -21,10 +21,16 @@ public:
     Q_INVOKABLE QString qtRuntimeVersion() const;
     Q_INVOKABLE void restartApplication() const;
     Q_INVOKABLE void openAppSettings();
+
     Q_INVOKABLE void downloadImageByUrl(const QUrl& url, const QString& path) const;
     Q_INVOKABLE void synthetizeRightClick(QQuickItem* item, qreal x, qreal y, Qt::KeyboardModifiers modifiers) const;
     Q_INVOKABLE Qt::KeyboardModifiers queryKeyboardModifiers();
     Q_INVOKABLE Qt::MouseButtons mouseButtons();
+
+    // a11y helpers
+    Q_INVOKABLE bool isScreenReaderActive() const;
+    Q_INVOKABLE bool hasAccessibilitySettings() const;
+    Q_INVOKABLE void openAccessibilitySettings();
 
     // Set Android status bar icon color (true = light/white icons, false = dark/black icons)
     Q_INVOKABLE void setAndroidStatusBarIconColor(bool lightIcons);

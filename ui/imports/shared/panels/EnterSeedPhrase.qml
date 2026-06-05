@@ -8,6 +8,8 @@ import StatusQ.Core.Theme
 import StatusQ.Core.Utils
 import StatusQ.Controls
 
+import shared.controls
+
 import QtModelsToolkit
 import SortFilterProxyModel
 
@@ -181,6 +183,11 @@ Control {
     contentItem: ColumnLayout {
         spacing: d.spacing
 
+        A11YInformationTag {
+            Layout.fillWidth: true
+            Layout.bottomMargin: Theme.bigPadding
+        }
+
         StatusSeedPhraseTabBar {
             id: lengthBar
 
@@ -196,6 +203,7 @@ Control {
         GridLayout {
             id: grid
 
+            Layout.topMargin: Theme.padding
             columnSpacing: d.spacing
             rowSpacing: d.spacing
 

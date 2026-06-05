@@ -13,9 +13,6 @@ import StatusQ.Core.Theme
 import Models
 import Storybook
 
-import SortFilterProxyModel
-import QtModelsToolkit
-
 import shared
 import shared.panels
 import utils
