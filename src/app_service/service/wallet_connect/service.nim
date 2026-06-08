@@ -17,8 +17,6 @@ import app/core/signals/types
 import app/core/[main]
 import app/core/tasks/[qt, threadpool]
 
-import app/modules/shared_modules/keycard_popup/io_interface as keycard_shared_module
-
 include app_service/common/json_utils
 include app/core/tasks/common
 include async_tasks
@@ -28,7 +26,6 @@ logScope:
 
 # include async_tasks
 
-const UNIQUE_WALLET_CONNECT_MODULE_IDENTIFIER* = "WalletSection-WCModule"
 const SIGNAL_ESTIMATED_TIME_RESPONSE* = "estimatedTimeResponse"
 const SIGNAL_SUGGESTED_FEES_RESPONSE* = "suggestedFeesResponse"
 const SIGNAL_ESTIMATED_GAS_RESPONSE* = "estimatedGasResponse"
@@ -42,7 +39,7 @@ type
     topic*: string
     chainId*: int
     estimatedTime*: int
-  
+
   SuggestedFeesArgs* = ref object of Args
     topic*: string
     chainId*: int
@@ -83,27 +80,11 @@ QtObject:
     result.keycardService = keycardService
 
   proc init*(self: Service) =
-    self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED) do(e: Args):
-      let args = SharedKeycarModuleArgs(e)
-      if args.uniqueIdentifier != UNIQUE_WALLET_CONNECT_MODULE_IDENTIFIER:
-        return
-      if self.authenticationCallback == nil:
-        error "unexpected user authenticated event; no callback set"
-        return
-      defer:
-        self.authenticationCallback = nil
-      self.authenticationCallback(args.keyUid, args.password, args.pin)
+    discard
 
   # Will fail if another authentication is in progress
   proc authenticateUser*(self: Service, keyUid: string, callback: AuthenticationResponseFn): bool =
-    if self.authenticationCallback != nil:
-      return false
-    self.authenticationCallback = callback
-    let data = SharedKeycarModuleAuthenticationArgs(
-      uniqueIdentifier: UNIQUE_WALLET_CONNECT_MODULE_IDENTIFIER,
-      keyUid: keyUid)
-    self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER, data)
-    return true
+    discard
 
   proc hashMessageEIP191*(self: Service, message: string): string =
     let hashRes = hashMessageEIP191("0x" & toHex(message))
@@ -283,7 +264,7 @@ QtObject:
       )
       self.events.emit(SIGNAL_ESTIMATED_GAS_RESPONSE, args)
     except Exception as e:
-      error "failed to parse estimated gas response", msg = e.msg 
+      error "failed to parse estimated gas response", msg = e.msg
 
   proc delete*(self: Service) =
     self.QObject.delete

@@ -10,7 +10,6 @@ import app_service/service/currency/dto as currency_dto
 import app_service/service/keycard/service as keycard_service
 import app_service/service/network/network_item
 
-import app/modules/shared_modules/keycard_popup/io_interface as keycard_shared_module
 import app/modules/shared/wallet_utils
 import app/modules/shared_models/currency_amount
 
@@ -18,8 +17,6 @@ import app/core/eventemitter
 
 logScope:
   topics = "wallet-send-controller"
-
-const UNIQUE_WALLET_SECTION_SEND_MODULE_IDENTIFIER* = "WalletSection-SendModule"
 
 type
   Controller* = ref object of RootObj
@@ -74,11 +71,6 @@ proc init*(self: Controller) =
     )
 
 
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED) do(e: Args):
-    let args = SharedKeycarModuleArgs(e)
-    if args.uniqueIdentifier != UNIQUE_WALLET_SECTION_SEND_MODULE_IDENTIFIER:
-      return
-    self.delegate.onUserAuthenticated(args.password, args.pin)
 
   self.events.on(SIGNAL_SUGGESTED_ROUTES_READY) do(e:Args):
     let args = SuggestedRoutesArgs(e)
@@ -132,9 +124,7 @@ proc getTokenBalance*(self: Controller, walletAccount: string, tokenKey: string)
   return currencyAmountToItem(self.walletAccountService.getTokenBalance(walletAccount, tokenKey), self.walletAccountService.getCurrencyFormat(tokenKey))
 
 proc authenticate*(self: Controller, keyUid = "") =
-  let data = SharedKeycarModuleAuthenticationArgs(uniqueIdentifier: UNIQUE_WALLET_SECTION_SEND_MODULE_IDENTIFIER,
-    keyUid: keyUid)
-  self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER, data)
+  discard
 
 proc suggestedRoutes*(self: Controller,
     uuid: string,

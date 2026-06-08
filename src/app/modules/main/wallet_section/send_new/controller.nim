@@ -3,7 +3,6 @@ import uuids, chronicles
 
 import io_interface
 
-import app/modules/shared_modules/keycard_popup/io_interface as keycard_shared_module
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/network/service as network_service
 import app_service/service/transaction/service as transaction_service
@@ -14,8 +13,6 @@ import app/core/eventemitter
 
 logScope:
   topics = "wallet-send-controller"
-
-const UNIQUE_WALLET_SECTION_SEND_MODULE_IDENTIFIER* = "WalletSection-NewSendModule"
 
 type
   Controller* = ref object of RootObj
@@ -64,11 +61,6 @@ proc init*(self: Controller) =
     )
 
 
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED) do(e: Args):
-    let args = SharedKeycarModuleArgs(e)
-    if args.uniqueIdentifier != UNIQUE_WALLET_SECTION_SEND_MODULE_IDENTIFIER:
-      return
-    self.delegate.onUserAuthenticated(args.password, args.pin)
 
   self.events.on(SIGNAL_SUGGESTED_ROUTES_READY) do(e:Args):
     let args = SuggestedRoutesArgs(e)
@@ -83,9 +75,7 @@ proc init*(self: Controller) =
     self.delegate.transactionSendingComplete(args.sentTransaction.hash, args.status)
 
 proc authenticate*(self: Controller, keyUid = "") =
-  let data = SharedKeycarModuleAuthenticationArgs(uniqueIdentifier: UNIQUE_WALLET_SECTION_SEND_MODULE_IDENTIFIER,
-    keyUid: keyUid)
-  self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER, data)
+  discard
 
 proc suggestedRoutes*(self: Controller,
     uuid: string,

@@ -8,12 +8,9 @@ import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/devices/service as devices_service
 
 import app/modules/shared_models/[keypair_item]
-import app/modules/shared_modules/keycard_popup/io_interface as keycard_shared_module
 
 logScope:
   topics = "wallet-keycard-import-controller"
-
-const UNIQUE_WALLET_SECTION_KEYPAIR_IMPORT_MODULE_IDENTIFIER* = "WalletSection-KeypairImportModule"
 
 type
   Controller* = ref object of RootObj
@@ -49,14 +46,8 @@ proc delete*(self: Controller) =
   self.disconnectAll()
 
 proc init*(self: Controller) =
-  var handlerId = self.events.onWithUUID(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED) do(e: Args):
-    let args = SharedKeycarModuleArgs(e)
-    if args.uniqueIdentifier != UNIQUE_WALLET_SECTION_KEYPAIR_IMPORT_MODULE_IDENTIFIER:
-      return
-    self.delegate.onUserAuthenticated(args.pin, args.password, args.keyUid)
-  self.connectionIds.add(handlerId)
 
-  handlerId = self.events.onWithUUID(SIGNAL_WALLET_ACCOUNT_ADDRESS_DETAILS_FETCHED) do(e:Args):
+  var handlerId = self.events.onWithUUID(SIGNAL_WALLET_ACCOUNT_ADDRESS_DETAILS_FETCHED) do(e:Args):
     var args = DerivedAddressesArgs(e)
     if args.uniqueId != self.uniqueFetchingDetailsId:
       return
@@ -79,8 +70,7 @@ proc getSeedPhrase*(self: Controller): string =
   return self.tmpSeedPhrase
 
 proc authenticateLoggedInUser*(self: Controller) =
-  let data = SharedKeycarModuleAuthenticationArgs(uniqueIdentifier: UNIQUE_WALLET_SECTION_KEYPAIR_IMPORT_MODULE_IDENTIFIER)
-  self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER, data)
+  discard
 
 proc getKeypairByKeyUid*(self: Controller, keyUid: string): KeypairDto =
   return self.walletAccountService.getKeypairByKeyUid(keyUid)

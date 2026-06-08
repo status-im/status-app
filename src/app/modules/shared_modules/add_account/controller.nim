@@ -7,14 +7,10 @@ import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/saved_address/service as saved_address_service
 import app_service/service/keycard/service as keycard_service
 
-import ../keycard_popup/io_interface as keycard_shared_module
-
 import app/core/eventemitter
 
 logScope:
   topics = "wallet-add-account-controller"
-
-const UNIQUE_WALLET_SECTION_ADD_ACCOUNTS_MODULE_IDENTIFIER* = "WalletSection-AddAccountsModule"
 
 type
   Controller* = ref object of RootObj
@@ -62,14 +58,8 @@ proc delete*(self: Controller) =
   self.disconnectAll()
 
 proc init*(self: Controller) =
-  var handlerId = self.events.onWithUUID(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED) do(e: Args):
-    let args = SharedKeycarModuleArgs(e)
-    if args.uniqueIdentifier != UNIQUE_WALLET_SECTION_ADD_ACCOUNTS_MODULE_IDENTIFIER:
-      return
-    self.delegate.onUserAuthenticated(args.pin, args.password, args.keyUid)
-  self.connectionIds.add(handlerId)
 
-  handlerId = self.events.onWithUUID(SIGNAL_WALLET_ACCOUNT_DERIVED_ADDRESSES_FETCHED) do(e:Args):
+  var handlerId = self.events.onWithUUID(SIGNAL_WALLET_ACCOUNT_DERIVED_ADDRESSES_FETCHED) do(e:Args):
     let args = DerivedAddressesArgs(e)
     self.delegate.onDerivedAddressesFetched(args.derivedAddresses, args.error)
   self.connectionIds.add(handlerId)
@@ -147,9 +137,7 @@ proc finalizeAction*(self: Controller) =
   self.delegate.finalizeAction()
 
 proc authenticateOrigin*(self: Controller, keyUid = "") =
-  let data = SharedKeycarModuleAuthenticationArgs(uniqueIdentifier: UNIQUE_WALLET_SECTION_ADD_ACCOUNTS_MODULE_IDENTIFIER,
-    keyUid: keyUid)
-  self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER, data)
+  discard
 
 proc fetchDerivedAddresses*(self: Controller, derivedFrom: string, paths: seq[string])=
   var hashPassword = true

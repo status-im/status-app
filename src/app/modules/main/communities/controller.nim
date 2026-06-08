@@ -11,12 +11,8 @@ import app_service/service/community_tokens/service as community_tokens_service
 import app_service/service/token/service as token_service
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/keycard/service as keycard_service
-import app/modules/shared_modules/keycard_popup/io_interface as keycard_shared_module
 import app_service/service/network/network_item
 import ../../../../backend/general as status_general
-
-const UNIQUE_COMMUNITIES_MODULE_AUTH_IDENTIFIER* = "CommunitiesModule-Authentication"
-const UNIQUE_COMMUNITIES_MODULE_SIGNING_IDENTIFIER* = "CommunitiesModule-Signing"
 
 type
   Controller* = ref object of RootObj
@@ -192,11 +188,6 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_ALL_TOKEN_GROUPS_LOADED) do(e: Args):
     self.delegate.onAllTokenGroupsLoaded()
 
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED) do(e: Args):
-    let args = SharedKeycarModuleArgs(e)
-    if args.uniqueIdentifier != UNIQUE_COMMUNITIES_MODULE_AUTH_IDENTIFIER:
-      return
-    self.delegate.onUserAuthenticated(args.pin, args.password, args.keyUid)
 
   self.events.on(SIGNAL_CHECK_PERMISSIONS_TO_JOIN_FAILED) do(e: Args):
     let args = CheckPermissionsToJoinFailedArgs(e)
@@ -206,11 +197,6 @@ proc init*(self: Controller) =
     let args = CheckChannelsPermissionsErrorArgs(e)
     self.delegate.onCommunityCheckAllChannelPermissionsFailed(args.communityId, args.error)
 
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_DATA_SIGNED) do(e: Args):
-    let args = SharedKeycarModuleArgs(e)
-    if args.uniqueIdentifier != UNIQUE_COMMUNITIES_MODULE_SIGNING_IDENTIFIER:
-      return
-    self.delegate.onDataSigned(args.keyUid, args.path, args.r, args.s, args.v, args.pin)
 
 proc getCommunityTags*(self: Controller): string =
   result = self.communityService.getCommunityTags()
@@ -384,8 +370,7 @@ proc asyncEditSharedAddresses*(self: Controller, communityId: string, addressesT
   self.communityService.asyncEditSharedAddresses(communityId, addressesToShare, airdropAddress, signatures)
 
 proc authenticate*(self: Controller) =
-  let data = SharedKeycarModuleAuthenticationArgs(uniqueIdentifier: UNIQUE_COMMUNITIES_MODULE_AUTH_IDENTIFIER)
-  self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER, data)
+  discard
 
 proc getCommunityPublicKeyFromPrivateKey*(self: Controller, communityPrivateKey: string): string =
   result = self.communityService.getCommunityPublicKeyFromPrivateKey(communityPrivateKey)
@@ -454,11 +439,6 @@ proc runSigningOnKeycard*(self: Controller, keyUid: string, path: string, dataTo
     finalDataToSign = finalDataToSign[2..^1]
 
   if pin.len == 0:
-    let data = SharedKeycarModuleSigningArgs(uniqueIdentifier: UNIQUE_COMMUNITIES_MODULE_SIGNING_IDENTIFIER,
-      keyUid: keyUid,
-      path: path,
-      dataToSign: finalDataToSign)
-    self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_SIGN_DATA, data)
     return
   self.silentSigningKeyUid = keyUid
   self.silentSigningPath = path
