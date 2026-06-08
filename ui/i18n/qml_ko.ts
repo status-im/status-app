@@ -1104,8 +1104,12 @@
         <translation>언어 초기화</translation>
     </message>
     <message>
-        <source>Display language will be switched back to English. You must restart the application for changes to take effect.</source>
-        <translation>표시 언어가 영어로 다시 전환됩니다. 변경 사항을 적용하려면 앱을 재시작해야 합니다.</translation>
+        <source>Display language will be switched back to English. The app will restart if you confirm.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to %1 debug mode? The app will restart if you confirm.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Restart</source>
@@ -1134,10 +1138,6 @@
     <message>
         <source>RPC statistics</source>
         <translation>rpc 통계</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.</source>
-        <translation>%1 디버그 모드를 정말로 하시겠어요? 이 변경 사항을 적용하려면 앱을 다시 시작해야 합니다.</translation>
     </message>
     <message>
         <source>disable</source>

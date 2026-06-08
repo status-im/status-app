@@ -1110,8 +1110,12 @@
         <translation>Reset jazyka</translation>
     </message>
     <message>
-        <source>Display language will be switched back to English. You must restart the application for changes to take effect.</source>
-        <translation>Jazyk zobrazení bude přepnut zpět na angličtinu. Pro projevení změn musíte restartovat aplikaci.</translation>
+        <source>Display language will be switched back to English. The app will restart if you confirm.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to %1 debug mode? The app will restart if you confirm.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Restart</source>
@@ -1140,10 +1144,6 @@
     <message>
         <source>RPC statistics</source>
         <translation>Statistiky RPC</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.</source>
-        <translation>Opravdu chcete %1 režim ladění? Pro projevení této změny musíte restartovat aplikaci.</translation>
     </message>
     <message>
         <source>disable</source>

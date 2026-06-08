@@ -1358,9 +1358,14 @@
       <translation>Language reset</translation>
     </message>
     <message>
-      <source>Display language will be switched back to English. You must restart the application for changes to take effect.</source>
+      <source>Display language will be switched back to English. The app will restart if you confirm.</source>
       <comment>AdvancedView</comment>
-      <translation>Display language will be switched back to English. You must restart the application for changes to take effect.</translation>
+      <translation>Display language will be switched back to English. The app will restart if you confirm.</translation>
+    </message>
+    <message>
+      <source>Are you sure you want to %1 debug mode? The app will restart if you confirm.</source>
+      <comment>AdvancedView</comment>
+      <translation>Are you sure you want to %1 debug mode? The app will restart if you confirm.</translation>
     </message>
     <message>
       <source>Restart</source>
@@ -1396,11 +1401,6 @@
       <source>RPC statistics</source>
       <comment>AdvancedView</comment>
       <translation>RPC statistics</translation>
-    </message>
-    <message>
-      <source>Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.</source>
-      <comment>AdvancedView</comment>
-      <translation>Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.</translation>
     </message>
     <message>
       <source>disable</source>

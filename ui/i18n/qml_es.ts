@@ -1107,8 +1107,12 @@
         <translation>Restablecer idioma</translation>
     </message>
     <message>
-        <source>Display language will be switched back to English. You must restart the application for changes to take effect.</source>
-        <translation>El idioma de visualización volverá a inglés. Debes reiniciar la aplicación para que los cambios surtan efecto.</translation>
+        <source>Display language will be switched back to English. The app will restart if you confirm.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to %1 debug mode? The app will restart if you confirm.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Restart</source>
@@ -1137,10 +1141,6 @@
     <message>
         <source>RPC statistics</source>
         <translation>Estadísticas RPC</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.</source>
-        <translation>¿Estás seguro de que quieres %1 el modo de depuración? Necesitas reiniciar la aplicación para que este cambio surta efecto.</translation>
     </message>
     <message>
         <source>disable</source>

@@ -1107,7 +1107,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Display language will be switched back to English. You must restart the application for changes to take effect.</source>
+        <source>Display language will be switched back to English. The app will restart if you confirm.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Are you sure you want to %1 debug mode? The app will restart if you confirm.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1136,10 +1140,6 @@
     </message>
     <message>
         <source>RPC statistics</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
