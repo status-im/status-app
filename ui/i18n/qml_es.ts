@@ -16941,6 +16941,10 @@ al cargar</translation>
         <source>Paste</source>
         <translation type="unfinished">Pegar</translation>
     </message>
+    <message>
+        <source>Select All</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>StatusChatListCategoryItem</name>
