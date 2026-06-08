@@ -186,6 +186,7 @@ FocusScope {
         anchors.bottom: scrollView.bottom
         anchors.bottomMargin: d.bottomDirtyToastMargin
         anchors.horizontalCenter: parent.horizontalCenter
+        width: Math.min(implicitWidth, parent.width - 2 * Theme.padding)
 
         visible: active
         active: root.dirty
