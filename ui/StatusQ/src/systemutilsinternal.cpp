@@ -137,10 +137,26 @@ QString SystemUtilsInternal::qtRuntimeVersion() const {
 
 void SystemUtilsInternal::restartApplication() const
 {
+    restartApplication(false);
+}
+
+void SystemUtilsInternal::restartApplication(bool killBackend) const
+{
+#ifdef Q_OS_ANDROID
+    QJniObject::callStaticMethod<void>(
+        "app/status/mobile/StatusQtActivity",
+        "restartApplication",
+        "(Z)V",
+        static_cast<jboolean>(killBackend)
+    );
+    return;
+#else
+    Q_UNUSED(killBackend);
 #if QT_CONFIG(process)
     QProcess::startDetached(QCoreApplication::applicationFilePath(), {});
 #endif
     QMetaObject::invokeMethod(QCoreApplication::instance(), &QCoreApplication::exit, Qt::QueuedConnection, EXIT_SUCCESS);
+#endif
 }
 
 bool save(const QByteArray& imageData, const QString& targetDir)

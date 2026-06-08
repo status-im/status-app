@@ -175,7 +175,7 @@ StatusDialog {
                 enabled: !d.dbEncryptionInProgress
                 onClicked: {
                     if (d.passwordChanged) {
-                        SystemUtils.restartApplication();
+                        SystemUtils.restartApplication(true);
                     } else {
                         d.dbEncryptionInProgress = true
                         root.changePasswordRequested()
