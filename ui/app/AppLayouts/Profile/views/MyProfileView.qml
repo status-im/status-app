@@ -264,7 +264,10 @@ SettingsContentBase {
         id: stackLayout
 
         width: root.contentWidth
-        height: profileTabBar.currentIndex === MyProfileView.Web ? implicitHeight : root.contentHeight
+        height: (profileTabBar.currentIndex === MyProfileView.Identity
+                 || profileTabBar.currentIndex === MyProfileView.Web)
+                ? implicitHeight : root.availableHeight
+
         currentIndex: profileTabBar.currentIndex
 
         onCurrentIndexChanged: {
