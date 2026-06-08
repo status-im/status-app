@@ -5,10 +5,6 @@ import app/core/eventemitter
 import app_service/service/settings/service as settings_service
 import app_service/service/devices/service as devices_service
 
-import app/modules/shared_modules/keycard_popup/io_interface as keycard_shared_module
-
-const UNIQUE_SYNCING_LOGGED_IN_USER_AUTHENTICATION_IDENTIFIER* = "Syncing-LoggedInUser-Authentication"
-
 logScope:
   topics = "profile-section-devices-module-controller"
 
@@ -48,11 +44,6 @@ proc init*(self: Controller) =
     let args = UpdateInstallationNameArgs(e)
     self.delegate.updateInstallationName(args.installationId, args.name)
 
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED) do(e: Args):
-    let args = SharedKeycarModuleArgs(e)
-    if args.uniqueIdentifier != UNIQUE_SYNCING_LOGGED_IN_USER_AUTHENTICATION_IDENTIFIER:
-      return
-    self.delegate.onLoggedInUserAuthenticated(args.pin, args.password, args.keyUid, args.additinalPathsDetails)
 
   self.events.on(SIGNAL_LOCAL_PAIRING_STATUS_UPDATE) do(e: Args):
     let args = LocalPairingStatus(e)
@@ -84,11 +75,7 @@ proc advertise*(self: Controller) =
 #
 
 proc authenticateLoggedInUser*(self: Controller, additionalBip44Paths: seq[string] = @[]) =
-  var data = SharedKeycarModuleAuthenticationArgs(
-    uniqueIdentifier: UNIQUE_SYNCING_LOGGED_IN_USER_AUTHENTICATION_IDENTIFIER,
-    additionalBip44Paths: additionalBip44Paths
-  )
-  self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER, data)
+  discard
 
 #
 # Backend actions
