@@ -16,7 +16,6 @@ import shared
 import shared.panels
 import shared.controls
 import shared.popups
-import shared.popups.keycard
 import shared.popups.addaccount
 import shared.stores
 
