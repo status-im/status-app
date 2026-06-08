@@ -3,6 +3,8 @@ package app.status.mobile;
 import org.qtproject.qt.android.bindings.QtActivity;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.content.pm.PackageManager;
 import androidx.core.splashscreen.SplashScreen;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,6 +18,7 @@ import android.widget.Toast;
 
 public class StatusQtActivity extends QtActivity {
     private static final String TAG = "StatusQtActivity";
+    private static final long RESTART_KILL_DELAY_MS = 250L;
 
     // QtActivityBase.onDestroy() can deadlock on Android during Qt/EGL teardown;
     // if it hasn't completed within this window we force-kill the UI process.
@@ -154,5 +157,44 @@ public class StatusQtActivity extends QtActivity {
             // Handle the rare case where the settings activity doesn't exist
             Toast.makeText(sInstance, "Unable to open Accessibility Settings", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * Restarts the UI process and optionally stops the separate status-go service process.
+     *
+     * Called from Qt via JNI.
+     */
+    public static void restartApplication(boolean killBackend) {
+        final StatusQtActivity activity = sInstance;
+        final android.content.Context context = activity != null
+                ? activity
+                : StatusGoStub.getContext();
+
+        if (context == null) {
+            Log.w(TAG, "restartApplication: context is null");
+            return;
+        }
+
+        if (killBackend) {
+            StatusGoStub.stopService();
+        }
+
+        try {
+            Intent launch = context.getPackageManager()
+                    .getLaunchIntentForPackage(context.getPackageName());
+            if (launch != null) {
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                context.startActivity(launch);
+            } else {
+                Log.w(TAG, "restartApplication: launch intent is null");
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "restartApplication failed", t);
+        }
+
+        new Handler(Looper.getMainLooper()).postDelayed(
+                () -> android.os.Process.killProcess(android.os.Process.myPid()),
+                RESTART_KILL_DELAY_MS
+        );
     }
 }

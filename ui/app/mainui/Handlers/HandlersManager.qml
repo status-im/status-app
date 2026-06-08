@@ -185,7 +185,7 @@ QtObject {
 
         onToggleThirdpartyServicesEnabledRequested: {
             root.privacyStore.toggleThirdpartyServicesEnabledRequested()
-            Backpressure.debounce(root, 200, () => { SystemUtils.restartApplication() })()
+            Backpressure.debounce(root, 200, () => { SystemUtils.restartApplication(true) })()
         }
         onOpenDiscussPageRequested: Global.requestOpenLink(Constants.statusDiscussPageUrl)
         onOpenThirdpartyServicesArticleRequested: Global.requestOpenLink(Constants.statusThirdpartyServicesArticle)
