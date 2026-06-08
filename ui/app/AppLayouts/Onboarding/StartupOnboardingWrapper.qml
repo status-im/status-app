@@ -143,7 +143,7 @@ Item {
             ConvertKeycardAccountPage {
                 convertKeycardAccountState: onboardingStore.convertKeycardAccountState
                 onRestartRequested: {
-                    SystemUtils.restartApplication()
+                    SystemUtils.restartApplication(true)
                 }
                 onBackToLoginRequested: {
                     onboardingLayout.unwindToLoginScreen()
