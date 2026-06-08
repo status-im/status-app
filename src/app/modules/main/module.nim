@@ -3,8 +3,7 @@ import std/[strformat, strutils, tables, json, sequtils, marshal, times], chroni
 
 import io_interface, view, controller
 import ephemeral_notification_item, ephemeral_notification_model
-import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details]
-import app/modules/shared_modules/keycard_popup/module as keycard_shared_module
+import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details, contacts_utils]
 import app/modules/shared_modules/authentication/module as authentication_module
 import app/modules/shared_modules/signing/module as signing_module
 import app/modules/shared_modules/keycard_management/module as keycard_management_module
@@ -136,9 +135,6 @@ type
     activityCenterModule: activity_center_module.AccessInterface
     communitiesModule: communities_module.AccessInterface
     appSearchModule: app_search_module.AccessInterface
-    keycardSharedModuleForAuthenticationOrSigning: keycard_shared_module.AccessInterface
-    keycardSharedModuleKeycardSyncPurpose: keycard_shared_module.AccessInterface
-    keycardSharedModule: keycard_shared_module.AccessInterface
     networkConnectionModule: network_connection_module.AccessInterface
     sharedUrlsModule: shared_urls_module.AccessInterface
     marketModule: market_module.AccessInterface
@@ -295,12 +291,6 @@ method delete*[T](self: Module[T]) =
   self.walletSectionModule.delete
   self.browserSectionModule.delete
   self.appSearchModule.delete
-  if not self.keycardSharedModuleForAuthenticationOrSigning.isNil:
-    self.keycardSharedModuleForAuthenticationOrSigning.delete
-  if not self.keycardSharedModuleKeycardSyncPurpose.isNil:
-    self.keycardSharedModuleKeycardSyncPurpose.delete
-  if not self.keycardSharedModule.isNil:
-    self.keycardSharedModule.delete
   self.networkConnectionModule.delete
   self.sharedUrlsModule.delete
   if not self.authenticationModule.isNil:
@@ -2019,98 +2009,6 @@ method getKeycardManagementModule*[T](self: Module[T]): QVariant =
   return newQVariant()
 ################################################################################
 
-################################################################################
-## keycard shared module - authentication/sign purpose
-################################################################################
-proc isSharedKeycardModuleForAuthenticationOrSigningRunning[T](self: Module[T]): bool =
-  return not self.keycardSharedModuleForAuthenticationOrSigning.isNil
-
-method getKeycardSharedModuleForAuthenticationOrSigning*[T](self: Module[T]): QVariant =
-  if self.isSharedKeycardModuleForAuthenticationOrSigningRunning():
-    return self.keycardSharedModuleForAuthenticationOrSigning.getModuleAsVariant()
-
-proc createSharedKeycardModuleForAuthenticationOrSigning[T](self: Module[T], identifier: string) =
-  self.keycardSharedModuleForAuthenticationOrSigning = keycard_shared_module.newModule[Module[T]](self, identifier,
-    self.events, self.keycardService, self.settingsService, self.networkService, self.privacyService, self.accountsService,
-    self.walletAccountService)
-
-method onSharedKeycarModuleForAuthenticationOrSigningTerminated*[T](self: Module[T], lastStepInTheCurrentFlow: bool) =
-  if self.isSharedKeycardModuleForAuthenticationOrSigningRunning():
-    self.view.emitDestroyKeycardSharedModuleForAuthenticationOrSigning()
-    self.keycardSharedModuleForAuthenticationOrSigning.delete
-    self.keycardSharedModuleForAuthenticationOrSigning = nil
-
-method runAuthenticationOrSigningPopup*[T](self: Module[T], flow: keycard_shared_module.FlowType, keyUid: string,
-  bip44Paths: seq[string] = @[], dataToSign = "") =
-  var identifier = UNIQUE_MAIN_MODULE_AUTHENTICATE_KEYPAIR_IDENTIFIER
-  if flow == keycard_shared_module.FlowType.Sign:
-    identifier = UNIQUE_MAIN_MODULE_SIGNING_DATA_IDENTIFIER
-  self.createSharedKeycardModuleForAuthenticationOrSigning(identifier)
-  if self.keycardSharedModuleForAuthenticationOrSigning.isNil:
-    return
-  self.keycardSharedModuleForAuthenticationOrSigning.runFlow(flow, keyUid, bip44Paths, dataToSign)
-
-method onDisplayKeycardSharedModuleForAuthenticationOrSigning*[T](self: Module[T]) =
-  self.view.emitDisplayKeycardSharedModuleForAuthenticationOrSigning()
-################################################################################
-
-################################################################################
-## keycard shared module - keycard syncing purpose
-################################################################################
-method onSharedKeycarModuleKeycardSyncPurposeTerminated*[T](self: Module[T], lastStepInTheCurrentFlow: bool) =
-  if not self.keycardSharedModuleKeycardSyncPurpose.isNil:
-    self.keycardSharedModuleKeycardSyncPurpose.delete
-    self.keycardSharedModuleKeycardSyncPurpose = nil
-
-method tryKeycardSync*[T](self: Module[T], keyUid: string, pin: string) =
-  self.keycardSharedModuleKeycardSyncPurpose = keycard_shared_module.newModule[Module[T]](self, UNIQUE_MAIN_MODULE_KEYCARD_SYNC_IDENTIFIER,
-    self.events, self.keycardService, self.settingsService, self.networkService, self.privacyService, self.accountsService,
-    self.walletAccountService)
-  if self.keycardSharedModuleKeycardSyncPurpose.isNil:
-    return
-  self.keycardSharedModuleKeycardSyncPurpose.syncKeycardBasedOnAppState(keyUid, pin)
-################################################################################
-
-################################################################################
-## keycard shared module - general purpose
-################################################################################
-method getKeycardSharedModule*[T](self: Module[T]): QVariant =
-  if not self.keycardSharedModule.isNil:
-    return self.keycardSharedModule.getModuleAsVariant()
-
-method onSharedKeycarModuleFlowTerminated*[T](self: Module[T], lastStepInTheCurrentFlow: bool, nextFlow: keycard_shared_module.FlowType,
-  forceFlow: bool, nextKeyUid: string, returnToFlow: keycard_shared_module.FlowType) =
-  if not self.keycardSharedModule.isNil:
-    if nextFlow == keycard_shared_module.FlowType.General:
-      self.view.emitDestroyKeycardSharedModuleFlow()
-      self.keycardSharedModule.delete
-      self.keycardSharedModule = nil
-      return
-    self.keycardSharedModule.runFlow(nextFlow, nextKeyUid, bip44Paths = @[], txHash = "", forceFlow, returnToFlow)
-
-method onDisplayKeycardSharedModuleFlow*[T](self: Module[T]) =
-  self.view.emitDisplayKeycardSharedModuleFlow()
-
-proc runStopUsingKeycardForProfilePopup[T](self: Module[T]) =
-  if not self.keycardSharedModule.isNil:
-    info "shared keycard module is already running, cannot run stop using keycard flow"
-    return
-  self.keycardSharedModule = keycard_shared_module.newModule[Module[T]](self, UNIQUE_MAIN_MODULE_SHARED_KEYCARD_MODULE_IDENTIFIER,
-    self.events, self.keycardService, self.settingsService, self.networkService, self.privacyService, self.accountsService,
-    self.walletAccountService)
-  self.keycardSharedModule.runFlow(keycard_shared_module.FlowType.MigrateFromKeycardToApp,
-    singletonInstance.userProfile.getKeyUid(), bip44Paths = @[], txHash = "", forceFlow = true)
-
-proc runStartUsingKeycardForProfilePopup[T](self: Module[T]) =
-  if not self.keycardSharedModule.isNil:
-    info "shared keycard module is already running, cannot run start using keycard flow"
-    return
-  self.keycardSharedModule = keycard_shared_module.newModule[Module[T]](self, UNIQUE_MAIN_MODULE_SHARED_KEYCARD_MODULE_IDENTIFIER,
-    self.events, self.keycardService, self.settingsService, self.networkService, self.privacyService, self.accountsService,
-    self.walletAccountService)
-  self.keycardSharedModule.runFlow(keycard_shared_module.FlowType.MigrateFromAppToKeycard,
-    singletonInstance.userProfile.getKeyUid(), bip44Paths = @[], txHash = "", forceFlow = true)
-################################################################################
 
 method signOutAndQuit*[T](self: Module[T]) =
   info "signOutAndQuit: logging out and quitting"
@@ -2140,28 +2038,13 @@ method checkAndPerformProfileMigrationIfNeeded*[T](self: Module[T]) =
     singletonInstance.application.exit()
     return
   if not migrationNeeded:
-    if not self.keycardSharedModule.isNil:
-      let currentFlow = self.keycardSharedModule.getCurrentFlowType()
-      if currentFlow == FlowType.MigrateFromKeycardToApp or
-        currentFlow == FlowType.MigrateFromAppToKeycard:
-          self.keycardSharedModule.onCancelActionClicked()
     return
   if profileKeypair.migratedToColdWallet():
-    if not self.keycardSharedModule.isNil:
-      let currentFlow = self.keycardSharedModule.getCurrentFlowType()
-      if currentFlow == FlowType.MigrateFromKeycardToApp:
-        return
-      self.keycardSharedModule.onCancelActionClicked()
     info "run stop using keycard flow for the profile, cause profile was migrated on paired device"
-    self.runStopUsingKeycardForProfilePopup()
+    # TODO: send signal to qml to `runStopUsingKeycardForProfilePopup()`
     return
-  if not self.keycardSharedModule.isNil:
-    let currentFlow = self.keycardSharedModule.getCurrentFlowType()
-    if currentFlow == FlowType.MigrateFromAppToKeycard:
-      return
-    self.keycardSharedModule.onCancelActionClicked()
   info "run migrate to a Keycard flow for the profile, cause profile was migrated on paired device"
-  self.runStartUsingKeycardForProfilePopup()
+  # TODO: send signal to qml to `runStartUsingKeycardForProfilePopup()`
 
 
 method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
