@@ -31,11 +31,6 @@ import io_interface
 logScope:
   topics = "main-module-controller"
 
-const UNIQUE_MAIN_MODULE_AUTHENTICATE_KEYPAIR_IDENTIFIER* = "MainModule-AuthenticateKeypair"
-const UNIQUE_MAIN_MODULE_SIGNING_DATA_IDENTIFIER* = "MainModule-SigningData"
-const UNIQUE_MAIN_MODULE_KEYCARD_SYNC_IDENTIFIER* = "MainModule-KeycardSyncPurpose"
-const UNIQUE_MAIN_MODULE_SHARED_KEYCARD_MODULE_IDENTIFIER* = "MainModule-SharedKeycardModule"
-
 type
   Controller* = ref object of RootObj
     delegate: io_interface.AccessInterface
