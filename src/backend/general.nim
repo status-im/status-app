@@ -51,18 +51,6 @@ proc wakuV2Peers*(): RpcResponse[JsonNode] =
   let payload = %* []
   result = core.callPrivateRPC("peers".prefix, payload)
 
-proc dialPeer*(address: string): RpcResponse[JsonNode] =
-  let payload = %* [address]
-  result = core.callPrivateRPC("dialPeer".prefix, payload)
-
-proc dropPeerByID*(peer: string): RpcResponse[JsonNode] =
-  let payload = %* [peer]
-  result = core.callPrivateRPC("dropPeer".prefix, payload)
-
-proc removePeer*(peer: string): RpcResponse[JsonNode] =
-  let payload = %* [peer]
-  result = core.callPrivateRPC("admin_removePeer", payload)
-
 proc getPasswordStrengthScore*(password: string, userInputs: seq[string]): RpcResponse[JsonNode] =
   let params = %* {"password": password, "userInputs": userInputs}
   try:
