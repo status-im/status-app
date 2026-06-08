@@ -77,9 +77,11 @@ ColumnLayout {
         property int sortValue: SortOrderComboBox.TokenOrderAlpha
         property int sortOrder: Qt.DescendingOrder
 
-        readonly property int cellHeight: 225
-        readonly property int communityCellHeight: 242
-        readonly property int cellWidth: 176
+        readonly property bool compact: doubleFlickable.width < 600
+        readonly property int itemSpacing: compact ? Theme.halfPadding : 0
+        readonly property int cellWidth: compact ? Math.floor(doubleFlickable.width / 3) : 176
+        readonly property int cellHeight: compact ? cellWidth + 49 : 225
+        readonly property int communityCellHeight: compact ? cellWidth + 66 : 242
         readonly property int headerHeight: 56
 
         readonly property bool isCustomView: cmbTokenOrder.currentValue === SortOrderComboBox.TokenOrderCustom
@@ -490,8 +492,8 @@ ColumnLayout {
     Component {
         id: collectibleDelegate
         CollectibleView {
-            width: d.cellWidth
-            height: isCommunityCollectible ? d.communityCellHeight : d.cellHeight
+            width: d.cellWidth - d.itemSpacing
+            height: (isCommunityCollectible ? d.communityCellHeight : d.cellHeight) - d.itemSpacing
             title: model.name ?? ""
             subTitle: model.collectionName ? model.collectionName : model.collectionUid ? model.collectionUid : ""
             mediaUrl: model.mediaUrl ?? ""
