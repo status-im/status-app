@@ -5577,7 +5577,7 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Keycard가 비어 있습니다</translation>
     </message>
     <message>
         <source>Keycard is blocked</source>
@@ -7282,56 +7282,6 @@ Please add it and try again.</source>
     </message>
 </context>
 <context>
-    <name>EnterName</name>
-    <message>
-        <source>Preview</source>
-        <translation>미리보기</translation>
-    </message>
-    <message>
-        <source>Rename this Keycard</source>
-        <translation>이 Keycard 이름 변경</translation>
-    </message>
-    <message>
-        <source>Name this Keycard</source>
-        <translation>이 Keycard의 이름을 지정하세요</translation>
-    </message>
-    <message>
-        <source>Keycard name</source>
-        <translation>Keycard 이름</translation>
-    </message>
-    <message>
-        <source>What would you like this Keycard to be called?</source>
-        <translation>이 Keycard의 이름을 무엇으로 할까요?</translation>
-    </message>
-</context>
-<context>
-    <name>EnterPairingCode</name>
-    <message>
-        <source>The codes don’t match</source>
-        <translation>코드가 일치하지 않아요</translation>
-    </message>
-    <message>
-        <source>Enter a new pairing code</source>
-        <translation>새 페어링 코드 입력</translation>
-    </message>
-    <message>
-        <source>Pairing code</source>
-        <translation>페어링 코드</translation>
-    </message>
-    <message>
-        <source>Enter code</source>
-        <translation>코드 입력</translation>
-    </message>
-    <message>
-        <source>Confirm pairing code</source>
-        <translation>페어링 코드 확인</translation>
-    </message>
-    <message>
-        <source>Confirm code</source>
-        <translation>코드 확인</translation>
-    </message>
-</context>
-<context>
     <name>EnterPassword</name>
     <message>
         <source>Password</source>
@@ -7344,14 +7294,6 @@ Please add it and try again.</source>
     <message>
         <source>Password incorrect</source>
         <translation>비밀번호가 올바르지 않습니다</translation>
-    </message>
-    <message>
-        <source>Stored password doesn&apos;t match</source>
-        <translation>저장된 비밀번호가 일치하지 않습니다</translation>
-    </message>
-    <message>
-        <source>Enter your new password to proceed</source>
-        <translation>계속하려면 새 비밀번호를 입력하세요</translation>
     </message>
 </context>
 <context>
@@ -7479,10 +7421,6 @@ Please add it and try again.</source>
 <context>
     <name>EnterSeedPhrase</name>
     <message>
-        <source>Invalid recovery phrase</source>
-        <translation>잘못된 복구 구문</translation>
-    </message>
-    <message>
         <source>The phrase you’ve entered is invalid</source>
         <translation>입력한 구문이 올바르지 않습니다</translation>
     </message>
@@ -7520,14 +7458,6 @@ Please add it and try again.</source>
         <source>For your future reference. This is only visible to you.</source>
         <translation>향후 참고용. 이 내용은 본인에게만 보입니다.</translation>
     </message>
-    <message>
-        <source>The phrase you’ve entered does not match this Keycard’s recovery phrase</source>
-        <translation>입력한 문구가 이 Keycard의 복구 구문과 일치하지 않습니다</translation>
-    </message>
-    <message>
-        <source>Enter recovery phrase for %1 key pair</source>
-        <translation>%1 키 페어의 복구 구문을 입력하세요</translation>
-    </message>
 </context>
 <context>
     <name>EnterSeedPhraseState</name>
@@ -7537,7 +7467,7 @@ Please add it and try again.</source>
     </message>
     <message>
         <source>Invalid recovery phrase</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">유효하지 않은 복구 구문</translation>
     </message>
 </context>
 <context>
@@ -7561,25 +7491,6 @@ Please add it and try again.</source>
     <message>
         <source>Incorrect word</source>
         <translation>잘못된 단어</translation>
-    </message>
-</context>
-<context>
-    <name>EnterSeedPhraseWords</name>
-    <message>
-        <source>Confirm recovery phrase words</source>
-        <translation>복구 문구 단어 확인</translation>
-    </message>
-    <message>
-        <source>Word #%1</source>
-        <translation>단어 #%1</translation>
-    </message>
-    <message>
-        <source>Enter word</source>
-        <translation>단어 입력</translation>
-    </message>
-    <message>
-        <source>This word doesn’t match</source>
-        <translation>이 단어가 일치하지 않습니다</translation>
     </message>
 </context>
 <context>
@@ -8974,7 +8885,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Keycard Locked</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Keycard 잠김</translation>
     </message>
     <message numerus="yes">
         <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
@@ -9004,13 +8915,6 @@ Are you sure you want to do this?</source>
         <translation type="unfinished">
             <numerusform></numerusform>
         </translation>
-    </message>
-</context>
-<context>
-    <name>KeyPairUnknownItem</name>
-    <message>
-        <source>Active Accounts</source>
-        <translation>활성 계정</translation>
     </message>
 </context>
 <context>
@@ -9048,7 +8952,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Keycard가 비어 있습니다</translation>
     </message>
     <message>
         <source>There is no key pair on this Keycard</source>
@@ -9068,7 +8972,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Keycard locked</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Keycard 잠금됨</translation>
     </message>
     <message>
         <source>PIN entered incorrectly too many times</source>
@@ -9163,25 +9067,6 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
-    <name>KeycardConfirmation</name>
-    <message>
-        <source>Warning, this Keycard stores your main Status profile and
-accounts. A factory reset will permanently delete it.</source>
-        <translation>경고: 이 Keycard에는 당신의 주요 Status 프로필과 계정이 저장되어 있습니다.
-공장 초기화를 하면 영구적으로 삭제됩니다.</translation>
-    </message>
-    <message>
-        <source>A factory reset will delete the key on this Keycard.
-Are you sure you want to do this?</source>
-        <translation>공장 초기화를 하면 이 Keycard의 키가 삭제됩니다.
-정말 진행하시겠어요?</translation>
-    </message>
-    <message>
-        <source>I understand the key pair on this Keycard will be deleted</source>
-        <translation>이 Keycard의 키 페어가 삭제된다는 것을 이해합니다</translation>
-    </message>
-</context>
-<context>
     <name>KeycardCreatePinPage</name>
     <message>
         <source>PINs don&apos;t match</source>
@@ -9234,7 +9119,7 @@ Are you sure you want to do this?</source>
     </message>
     <message>
         <source>Keycard is empty</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Keycard가 비어 있습니다</translation>
     </message>
     <message>
         <source>Keycard is blocked</source>
@@ -9481,435 +9366,6 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
-    <name>KeycardInit</name>
-    <message>
-        <source>Plug in Keycard reader...</source>
-        <translation>Keycard 리더를 연결하세요...</translation>
-    </message>
-    <message>
-        <source>Check the card, it might be wrongly inserted</source>
-        <translation>카드를 확인하세요. 잘못 삽입되었을 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>Keycard inserted...</source>
-        <translation>Keycard가 삽입되었습니다...</translation>
-    </message>
-    <message>
-        <source>Starting...</source>
-        <translation>시작하는 중...</translation>
-    </message>
-    <message>
-        <source>Reading Keycard...</source>
-        <translation>Keycard 읽는 중...</translation>
-    </message>
-    <message>
-        <source>Migrating key pair to Keycard</source>
-        <translation>키 쌍을 Keycard로 마이그레이션</translation>
-    </message>
-    <message>
-        <source>Migrating key pair to Status</source>
-        <translation>키 쌍을 Status로 마이그레이션 중</translation>
-    </message>
-    <message>
-        <source>Creating new account...</source>
-        <translation>새 계정을 생성하는 중...</translation>
-    </message>
-    <message>
-        <source>Setting a new Keycard...</source>
-        <translation>새 Keycard 설정 중...</translation>
-    </message>
-    <message>
-        <source>Importing from Keycard...</source>
-        <translation>Keycard에서 가져오는 중...</translation>
-    </message>
-    <message>
-        <source>Renaming keycard...</source>
-        <translation>Keycard 이름 변경 중...</translation>
-    </message>
-    <message>
-        <source>Unlocking keycard...</source>
-        <translation>Keycard 잠금 해제 중...</translation>
-    </message>
-    <message>
-        <source>Updating PIN</source>
-        <translation>PIN 업데이트 중</translation>
-    </message>
-    <message>
-        <source>Setting your Keycard PUK...</source>
-        <translation>Keycard PUK 설정 중...</translation>
-    </message>
-    <message>
-        <source>Setting your pairing code...</source>
-        <translation>페어링 코드를 설정하는 중...</translation>
-    </message>
-    <message>
-        <source>Copying Keycard...</source>
-        <translation>Keycard 복사 중...</translation>
-    </message>
-    <message>
-        <source>PCSC not available</source>
-        <translation>PCSC를 사용할 수 없음</translation>
-    </message>
-    <message>
-        <source>The Smartcard reader (PCSC service), required
-for using Keycard, is not currently working.
-Ensure PCSC is installed and running and try again</source>
-        <translation>Keycard 사용에 필요한 스마트카드 리더기(PCSC 서비스)가 현재 작동하지 않습니다.
-PCSC가 설치되어 실행 중인지 확인한 후 다시 시도하세요</translation>
-    </message>
-    <message>
-        <source>This is not a Keycard</source>
-        <translation>이건 Keycard가 아닙니다</translation>
-    </message>
-    <message>
-        <source>The card inserted is not a recognised Keycard,
-please remove and try and again</source>
-        <translation>삽입된 카드는 인식된 Keycard가 아닙니다.
-카드를 제거하고 다시 시도하세요</translation>
-    </message>
-    <message>
-        <source>Unlock this Keycard</source>
-        <translation>이 Keycard의 잠금을 해제</translation>
-    </message>
-    <message>
-        <source>Please run &quot;Unlock Keycard&quot; flow directly</source>
-        <translation>&quot;Unlock Keycard&quot; 플로우를 바로 실행해 주세요</translation>
-    </message>
-    <message>
-        <source>Wrong Keycard inserted</source>
-        <translation>잘못된 Keycard가 삽입되었습니다</translation>
-    </message>
-    <message>
-        <source>Keycard inserted does not match the Keycard below</source>
-        <translation>삽입된 Keycard가 아래의 Keycard와 일치하지 않습니다</translation>
-    </message>
-    <message>
-        <source>Keycard inserted does not match the Keycard below,
-please remove and try and again</source>
-        <translation>삽입된 Keycard가 아래의 Keycard와 일치하지 않습니다.
-제거한 뒤 다시 시도하세요</translation>
-    </message>
-    <message>
-        <source>Keycard inserted does not match the Keycard you&apos;re trying to unlock</source>
-        <translation>삽입된 Keycard가 잠금 해제하려는 Keycard와 일치하지 않습니다</translation>
-    </message>
-    <message>
-        <source>This Keycard has empty metadata</source>
-        <translation>이 Keycard에는 메타데이터가 비어 있습니다</translation>
-    </message>
-    <message>
-        <source>This Keycard already stores keys
-but doesn&apos;t store any metadata,
-please remove and try and again</source>
-        <translation>이 Keycard에는 이미 키가 저장되어 있지만,
-메타데이터는 저장되어 있지 않습니다.
-카드를 제거한 뒤 다시 시도하세요.</translation>
-    </message>
-    <message>
-        <source>This Keycard already stores keys
-but doesn&apos;t store any metadata</source>
-        <translation>이 Keycard에는 이미 키가 저장되어 있지만,
-메타데이터는 저장되지 않습니다</translation>
-    </message>
-    <message>
-        <source>Keycard is empty</source>
-        <translation>Keycard가 비어 있음</translation>
-    </message>
-    <message>
-        <source>There is no key pair on this Keycard,
-please remove and try and again</source>
-        <translation>이 Keycard에는 키 쌍이 없습니다.
-카드를 제거한 뒤 다시 시도해 주세요</translation>
-    </message>
-    <message>
-        <source>There is no key pair on this Keycard</source>
-        <translation>이 Keycard에는 키 쌍이 없습니다</translation>
-    </message>
-    <message>
-        <source>This Keycard already stores keys</source>
-        <translation>이 Keycard에는 이미 키가 저장되어 있습니다</translation>
-    </message>
-    <message>
-        <source>To migrate %1 on to this Keycard, you
-will need to perform a factory reset first</source>
-        <translation>이 Keycard에 %1을(를) 마이그레이션하려면,
-먼저 공장 초기화를 수행해야 합니다</translation>
-    </message>
-    <message>
-        <source>To create a new account on to this Keycard, you
-will need to perform a factory reset first</source>
-        <translation>이 Keycard에 새 계정을 만들려면,
-먼저 공장 초기화를 수행해야 합니다</translation>
-    </message>
-    <message>
-        <source>To copy %1 on to this Keycard, you
-will need to perform a factory reset first</source>
-        <translation>이 Keycard에 %1을(를) 복사하려면,
-먼저 공장 초기화를 수행해야 합니다</translation>
-    </message>
-    <message>
-        <source>Keycard locked and already stores keys</source>
-        <translation>Keycard가 잠겼고, 이미 키를 저장하고 있습니다</translation>
-    </message>
-    <message>
-        <source>Keycard locked</source>
-        <translation>Keycard가 잠겼습니다</translation>
-    </message>
-    <message>
-        <source>The Keycard you have inserted is locked,
-you will need to factory reset it before proceeding</source>
-        <translation>삽입한 Keycard가 잠겨 있습니다.
-계속하려면 공장 초기화를 먼저 진행해야 합니다.</translation>
-    </message>
-    <message>
-        <source>You will need to unlock it before proceeding</source>
-        <translation>계속하려면 먼저 잠금을 해제하세요</translation>
-    </message>
-    <message>
-        <source>Pin entered incorrectly too many times</source>
-        <translation>PIN을 너무 여러 번 잘못 입력했습니다</translation>
-    </message>
-    <message>
-        <source>Puk entered incorrectly too many times</source>
-        <translation>PUK을 너무 여러 번 잘못 입력했습니다</translation>
-    </message>
-    <message>
-        <source>Max pairing slots reached for the entered keycard</source>
-        <translation>입력한 Keycard의 페어링 슬롯 한도에 도달했습니다</translation>
-    </message>
-    <message>
-        <source>Your Keycard is already unlocked!</source>
-        <translation>이미 Keycard가 잠금 해제되어 있어요!</translation>
-    </message>
-    <message>
-        <source>Keycard recognized</source>
-        <translation>Keycard 인식됨</translation>
-    </message>
-    <message>
-        <source>Key pair successfully migrated</source>
-        <translation>키 쌍이 성공적으로 마이그레이션되었습니다</translation>
-    </message>
-    <message>
-        <source>New account successfully created</source>
-        <translation>새 계정이 성공적으로 생성되었습니다</translation>
-    </message>
-    <message>
-        <source>Keycard is ready to use!</source>
-        <translation>Keycard 사용 준비 완료!</translation>
-    </message>
-    <message>
-        <source>Account successfully imported</source>
-        <translation>계정이 성공적으로 가져와졌습니다</translation>
-    </message>
-    <message>
-        <source>Your Keycard has been reset</source>
-        <translation>Keycard이(가) 초기화되었습니다</translation>
-    </message>
-    <message>
-        <source>Keycard successfully factory reset</source>
-        <translation>Keycard 공장 초기화 완료</translation>
-    </message>
-    <message>
-        <source>Unlock successful</source>
-        <translation>잠금 해제 완료</translation>
-    </message>
-    <message>
-        <source>Keycard successfully renamed</source>
-        <translation>Keycard 이름 변경 완료</translation>
-    </message>
-    <message>
-        <source>Keycard’s PUK successfully set</source>
-        <translation>Keycard의 PUK이 성공적으로 설정되었습니다</translation>
-    </message>
-    <message>
-        <source>Pairing code successfully set</source>
-        <translation>페어링 코드가 성공적으로 설정됨</translation>
-    </message>
-    <message>
-        <source>This Keycard is now a copy of %1</source>
-        <translation>이 Keycard는 이제 %1의 복사본입니다</translation>
-    </message>
-    <message>
-        <source>Key pair was removed from Keycard and is now stored on device.
-You no longer need this Keycard to transact with the below accounts.</source>
-        <translation>키 쌍이 Keycard에서 제거되어 이제 기기에 저장되었습니다.
-아래의 계정으로 거래하기 위해 더 이상 이 Keycard가 필요하지 않습니다.</translation>
-    </message>
-    <message>
-        <source>To complete migration close Status and sign in with your Keycard</source>
-        <translation>마이그레이션을 완료하려면 Status를 종료하고 Keycard로 로그인하세요</translation>
-    </message>
-    <message>
-        <source>To complete migration close Status and log in with your new Keycard</source>
-        <translation>마이그레이션을 완료하려면 Status를 종료하고 새 Keycard로 로그인하세요</translation>
-    </message>
-    <message>
-        <source>You can now create a new key pair on this Keycard</source>
-        <translation>이 Keycard에서 이제 새 키 쌍을 생성할 수 있습니다</translation>
-    </message>
-    <message>
-        <source>You can now use this Keycard as if it
-was a brand new empty Keycard</source>
-        <translation>이제 이 Keycard를 완전히 새것인 빈 Keycard처럼 사용할 수 있습니다</translation>
-    </message>
-    <message>
-        <source>Failed to migrate key pair</source>
-        <translation>키 쌍 마이그레이션에 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Creating new account failed</source>
-        <translation>새 계정 생성에 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Setting a Keycard failed</source>
-        <translation>Keycard 설정 실패</translation>
-    </message>
-    <message>
-        <source>Importing account failed</source>
-        <translation>계정 가져오기 실패</translation>
-    </message>
-    <message>
-        <source>Keycard renaming failed</source>
-        <translation>Keycard 이름 변경에 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Unlock a Keycard failed</source>
-        <translation>Keycard 잠금 해제 실패</translation>
-    </message>
-    <message>
-        <source>Setting Keycard’s PUK failed</source>
-        <translation>Keycard의 PUK 설정에 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Setting pairing code failed</source>
-        <translation>페어링 코드 설정에 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Copying %1 Keycard failed</source>
-        <translation>%1개의 Keycard 복사에 실패했습니다</translation>
-    </message>
-    <message>
-        <source>Accounts on this Keycard</source>
-        <translation>이 Keycard의 계정</translation>
-    </message>
-    <message>
-        <source>Adding these accounts will exceed the limit of 20.
-Remove some already added accounts to be able to import a new ones.</source>
-        <translation>이 계정들을 추가하면 최대 20개 한도를 초과합니다.
-새로운 계정을 가져오려면 이미 추가한 계정 일부를 제거하세요.</translation>
-    </message>
-    <message>
-        <source>Ready to authenticate...</source>
-        <translation>인증할 준비 완료...</translation>
-    </message>
-    <message>
-        <source>Biometric scan failed</source>
-        <translation>생체 인식 스캔 실패</translation>
-    </message>
-    <message>
-        <source>Biometrics incorrect</source>
-        <translation>생체 정보가 올바르지 않습니다</translation>
-    </message>
-    <message>
-        <source>Biometric pin invalid</source>
-        <translation>생체 PIN이 올바르지 않습니다</translation>
-    </message>
-    <message>
-        <source>The PIN length doesn&apos;t match Keycard&apos;s PIN length</source>
-        <translation>PIN 길이가 Keycard의 PIN 길이와 일치하지 않습니다</translation>
-    </message>
-    <message>
-        <source>Remove Keycard</source>
-        <translation>Keycard 제거</translation>
-    </message>
-    <message>
-        <source>Oops this is the same Keycard!</source>
-        <translation>앗, 같은 Keycard입니다!</translation>
-    </message>
-    <message>
-        <source>You need to remove this Keycard and insert
-an empty new or factory reset Keycard</source>
-        <translation>이 Keycard를 빼고,
-비어 있는 새 Keycard 또는 공장 초기화된 Keycard를 넣어야 합니다</translation>
-    </message>
-    <message>
-        <source>Copy “%1” to inserted keycard</source>
-        <translation>삽입된 Keycard에 &quot;%1&quot; 복사</translation>
-    </message>
-    <message>
-        <source>This recovery phrase has already been imported</source>
-        <translation>이 복구 구문은 이미 가져왔습니다</translation>
-    </message>
-    <message>
-        <source>This keycard has already been imported</source>
-        <translation>이 Keycard는 이미 가져왔습니다</translation>
-    </message>
-    <message>
-        <source>Your profile key pair has been
-migrated from Keycard to Status</source>
-        <translation>프로필 키 페어가
-Keycard에서 Status로 마이그레이션되었습니다</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to migrate
-this key pair to Status?</source>
-        <translation>이 키 쌍을 Status로 마이그레이션하시겠어요?
-정말 진행할까요?</translation>
-    </message>
-    <message>
-        <source>In order to continue using this profile on this device, you need to enter the key pairs recovery phrase and create a new password to log in with on this device.</source>
-        <translation>이 기기에서 이 프로필을 계속 사용하려면, 키 쌍 복구 구문을 입력하고 이 기기에서 로그인할 새 비밀번호를 만들어야 합니다.</translation>
-    </message>
-    <message>
-        <source>%1 is your default Status key pair.</source>
-        <translation>%1은(는) 기본 Status 키 쌍입니다.</translation>
-    </message>
-    <message>
-        <source> Migrating this key pair will mean you will no longer require this Keycard to login to Status or transact with the key pair’s derived accounts.</source>
-        <translation> 이 키 쌍을 마이그레이션하면, Status에 로그인하거나 키 쌍에서 파생된 계정으로 트랜잭션을 수행할 때 더 이상 이 Keycard가 필요하지 않게 됩니다.</translation>
-    </message>
-    <message>
-        <source> The key pair and accounts will be fully removed from Keycard and stored on device.</source>
-        <translation> Keycard에서 키 쌍과 계정이 완전히 제거되고, 기기에 저장됩니다.</translation>
-    </message>
-    <message>
-        <source>%1 key pair and its derived accounts will be fully removed from Keycard and stored on device.</source>
-        <translation>%1 키 쌍과 파생된 계정들이 Keycard에서 완전히 제거되고, 기기에 저장됩니다.</translation>
-    </message>
-    <message>
-        <source> This will make your key pair and derived accounts less secure as you will no longer require this Keycard to transact.</source>
-        <translation> This will make your key pair and derived accounts less secure as you will no longer require this Keycard to transact.</translation>
-    </message>
-    <message>
-        <source>Your profile key pair has been
-migrated from Status to Keycard</source>
-        <translation>당신의 프로필 키 쌍이
-Status에서 Keycard로 마이그레이션되었습니다</translation>
-    </message>
-    <message>
-        <source>In order to continue using this profile on this device, you need to login using the Keycard that this profile key pair was migrated to.</source>
-        <translation>이 기기에서 이 프로필을 계속 사용하려면, 이 프로필의 키 페어가 이전된 Keycard로 로그인해야 합니다.</translation>
-    </message>
-    <message>
-        <source>Biometrics</source>
-        <translation>생체인증</translation>
-    </message>
-    <message>
-        <source>Would you like to use Touch ID
-to login to Status?</source>
-        <translation>Touch ID로 Status에 로그인하시겠어요?
-</translation>
-    </message>
-    <message>
-        <source>Tap or insert empty Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Tap or insert Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>KeycardIntroPage</name>
     <message>
         <source>New to Keycard?</source>
@@ -9986,13 +9442,6 @@ to login to Status?</source>
     <message>
         <source>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</source>
         <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>KeycardItem</name>
-    <message>
-        <source>Keycard Locked</source>
-        <translation>Keycard 잠금됨</translation>
     </message>
 </context>
 <context>
@@ -10377,335 +9826,6 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
 </context>
 <context>
-    <name>KeycardPin</name>
-    <message>
-        <source>It is very important that you do not lose this PIN</source>
-        <translation>이 PIN을 잃어버리지 않는 것이 매우 중요합니다</translation>
-    </message>
-    <message>
-        <source>Don’t lose your PIN! If you do, you may lose
-access to your funds.</source>
-        <translation>PIN을 잃어버리지 마세요! 분실하면
-자금에 접근하지 못할 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>PINs don&apos;t match</source>
-        <translation>PIN이 일치하지 않습니다</translation>
-    </message>
-    <message>
-        <source>Enter the Keycard PIN</source>
-        <translation>Keycard PIN을 입력하세요</translation>
-    </message>
-    <message>
-        <source>Enter this Keycard’s PIN</source>
-        <translation>이 Keycard의 PIN을 입력하세요</translation>
-    </message>
-    <message>
-        <source>PIN incorrect</source>
-        <translation>PIN이 올바르지 않습니다</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n attempt(s) remaining</source>
-        <translation>
-            <numerusform>%n번 남았습니다</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Your saved PIN is out of date</source>
-        <translation>저장된 PIN이 오래되었습니다</translation>
-    </message>
-    <message>
-        <source>Enter your new PIN to proceed</source>
-        <translation>계속하려면 새 PIN을 입력하세요</translation>
-    </message>
-    <message>
-        <source>Enter new Keycard PIN</source>
-        <translation>새 Keycard PIN 입력</translation>
-    </message>
-    <message>
-        <source>Choose a Keycard PIN</source>
-        <translation>Keycard PIN 선택</translation>
-    </message>
-    <message>
-        <source>Repeat new Keycard PIN</source>
-        <translation>새 Keycard PIN을 다시 입력</translation>
-    </message>
-    <message>
-        <source>Repeat Keycard PIN</source>
-        <translation>Keycard PIN 다시 입력</translation>
-    </message>
-    <message>
-        <source>Keycard PIN set</source>
-        <translation>Keycard PIN 설정됨</translation>
-    </message>
-    <message>
-        <source>Keycard PIN verified!</source>
-        <translation>Keycard PIN 확인됨!</translation>
-    </message>
-    <message>
-        <source>PIN successfully changed</source>
-        <translation>PIN이 성공적으로 변경되었습니다</translation>
-    </message>
-    <message>
-        <source>Changing PIN failed</source>
-        <translation>PIN 변경 실패</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>KeycardPopup</name>
-    <message>
-        <source>Set up a new Keycard with an existing account</source>
-        <translation>기존 계정으로 새 Keycard 설정하기</translation>
-    </message>
-    <message>
-        <source>Create a new Keycard account with a new recovery phrase</source>
-        <translation>새 복구 구문으로 새 Keycard 계정을 생성하세요</translation>
-    </message>
-    <message>
-        <source>Import or restore a Keycard via a recovery phrase</source>
-        <translation>복구 구문으로 Keycard를 가져오거나 복원</translation>
-    </message>
-    <message>
-        <source>Migrate account from Keycard to Status</source>
-        <translation>Keycard에서 Status로 계정 이전</translation>
-    </message>
-    <message>
-        <source>Factory reset a Keycard</source>
-        <translation>Keycard을 공장 초기화</translation>
-    </message>
-    <message>
-        <source>Authenticate</source>
-        <translation>인증</translation>
-    </message>
-    <message>
-        <source>Signing</source>
-        <translation>서명</translation>
-    </message>
-    <message>
-        <source>Unlock Keycard</source>
-        <translation>Keycard 잠금 해제</translation>
-    </message>
-    <message>
-        <source>Check what’s on a Keycard</source>
-        <translation>Keycard에 무엇이 있는지 확인하세요</translation>
-    </message>
-    <message>
-        <source>Rename Keycard</source>
-        <translation>Keycard 이름 변경</translation>
-    </message>
-    <message>
-        <source>Change pin</source>
-        <translation>PIN 변경</translation>
-    </message>
-    <message>
-        <source>Create a 12-digit personal unblocking key (PUK)</source>
-        <translation>12자리 개인 해제 키(PUK) 만들기</translation>
-    </message>
-    <message>
-        <source>Create a new pairing code</source>
-        <translation>새 페어링 코드 만들기</translation>
-    </message>
-    <message>
-        <source>Create a backup copy of this Keycard</source>
-        <translation>이 Keycard의 백업 사본을 만드세요</translation>
-    </message>
-    <message>
-        <source>Enable password login on this device</source>
-        <translation>이 기기에서 비밀번호 로그인 사용</translation>
-    </message>
-    <message>
-        <source>Migrate a key pair from Keycard to Status</source>
-        <translation>Keycard에서 Status로 키 쌍 마이그레이션</translation>
-    </message>
-    <message>
-        <source>Enable Keycard login on this device</source>
-        <translation>이 기기에서 Keycard 로그인 사용</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardPopupDetails</name>
-    <message>
-        <source>Cancel</source>
-        <translation>취소</translation>
-    </message>
-    <message>
-        <source>Use password instead</source>
-        <translation>대신 비밀번호 사용</translation>
-    </message>
-    <message>
-        <source>Use biometrics</source>
-        <translation>생체인증 사용</translation>
-    </message>
-    <message>
-        <source>Use PIN</source>
-        <translation>PIN 사용</translation>
-    </message>
-    <message>
-        <source>Update PIN</source>
-        <translation>PIN 업데이트</translation>
-    </message>
-    <message>
-        <source>Unlock using PUK</source>
-        <translation>PUK로 잠금 해제</translation>
-    </message>
-    <message>
-        <source>Add another account</source>
-        <translation>다른 계정 추가</translation>
-    </message>
-    <message>
-        <source>View accounts in Wallet</source>
-        <translation>지갑에서 계정 보기</translation>
-    </message>
-    <message>
-        <source>View imported accounts in Wallet</source>
-        <translation>지갑에서 가져온 계정 보기</translation>
-    </message>
-    <message>
-        <source>I prefer to use my password</source>
-        <translation>비밀번호로 사용할게요</translation>
-    </message>
-    <message>
-        <source>Factory reset this Keycard</source>
-        <translation>이 Keycard를 공장 초기화</translation>
-    </message>
-    <message>
-        <source>I prefer to use my PIN</source>
-        <translation>PIN을 사용하겠습니다</translation>
-    </message>
-    <message>
-        <source>Retry</source>
-        <translation>다시 시도</translation>
-    </message>
-    <message>
-        <source>Input recovery phrase</source>
-        <translation>복구 문구 입력</translation>
-    </message>
-    <message>
-        <source>Yes, migrate key pair to this Keycard</source>
-        <translation>예, 키 쌍을 이 Keycard로 마이그레이션합니다</translation>
-    </message>
-    <message>
-        <source>Yes, migrate key pair to Keycard</source>
-        <translation>네, 키 쌍을 Keycard로 마이그레이션합니다</translation>
-    </message>
-    <message>
-        <source>Try entering recovery phrase again</source>
-        <translation>복구 문구를 다시 입력해 보세요</translation>
-    </message>
-    <message>
-        <source>Check what is stored on this Keycard</source>
-        <translation>이 Keycard에 무엇이 저장되어 있는지 확인하세요</translation>
-    </message>
-    <message>
-        <source>I don’t know the PIN</source>
-        <translation>PIN을 모르겠어요</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation>다음</translation>
-    </message>
-    <message>
-        <source>Unlock Keycard</source>
-        <translation>Keycard 잠금 해제</translation>
-    </message>
-    <message>
-        <source>Done</source>
-        <translation>완료</translation>
-    </message>
-    <message>
-        <source>Close app</source>
-        <translation>앱 닫기</translation>
-    </message>
-    <message>
-        <source>Restart app &amp; sign in using your new Keycard</source>
-        <translation>앱을 다시 시작하고 새 Keycard로 로그인하세요</translation>
-    </message>
-    <message>
-        <source>Finalise Keycard</source>
-        <translation>Keycard 설정 완료</translation>
-    </message>
-    <message>
-        <source>Name accounts</source>
-        <translation>계정 이름 지정</translation>
-    </message>
-    <message>
-        <source>Finalise import</source>
-        <translation>가져오기 마무리</translation>
-    </message>
-    <message>
-        <source>Next account</source>
-        <translation>다음 계정</translation>
-    </message>
-    <message>
-        <source>Authenticate</source>
-        <translation>인증</translation>
-    </message>
-    <message>
-        <source>Update password &amp; authenticate</source>
-        <translation>비밀번호 업데이트 및 인증</translation>
-    </message>
-    <message>
-        <source>Update PIN &amp; authenticate</source>
-        <translation>PIN 업데이트 및 인증</translation>
-    </message>
-    <message>
-        <source>Sign</source>
-        <translation>서명</translation>
-    </message>
-    <message>
-        <source>Unlock using recovery phrase</source>
-        <translation>복구 구문으로 잠금 해제</translation>
-    </message>
-    <message>
-        <source>Rename this Keycard</source>
-        <translation>이 Keycard 이름 변경</translation>
-    </message>
-    <message>
-        <source>Set paring code</source>
-        <translation>페어링 코드 설정</translation>
-    </message>
-    <message>
-        <source>Try inserting a different Keycard</source>
-        <translation>다른 Keycard를 넣어 보세요</translation>
-    </message>
-    <message>
-        <source>Create Password</source>
-        <translation>비밀번호 만들기</translation>
-    </message>
-    <message>
-        <source>Finalize Status Password Creation</source>
-        <translation>Status 비밀번호 생성 마무리</translation>
-    </message>
-    <message>
-        <source>Close App</source>
-        <translation>앱 닫기</translation>
-    </message>
-    <message>
-        <source>Yes, use Touch ID</source>
-        <translation>네, Touch ID 사용</translation>
-    </message>
-    <message>
-        <source>Restart App &amp; Sign In Using Your New Password</source>
-        <translation>앱을 다시 시작하고 새 비밀번호로 로그인하세요</translation>
-    </message>
-    <message>
-        <source>Try again</source>
-        <translation>다시 시도</translation>
-    </message>
-    <message>
-        <source>Restart App &amp; Sign In Using Your Keycard</source>
-        <translation>앱을 다시 시작하고 Keycard로 로그인하세요</translation>
-    </message>
-    <message>
-        <source>Retry biometrics</source>
-        <translation>생체 인증 다시 시도</translation>
-    </message>
-</context>
-<context>
     <name>KeycardProgressState</name>
     <message>
         <source>Reading...</source>
@@ -10792,35 +9912,6 @@ access to your funds.</source>
     <message>
         <source>Keycard is blocked due to five failed PUK input attempts</source>
         <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>KeycardPuk</name>
-    <message>
-        <source>The PUK doesn’t match</source>
-        <translation>PUK이 일치하지 않습니다</translation>
-    </message>
-    <message>
-        <source>Enter PUK</source>
-        <translation>PUK 입력</translation>
-    </message>
-    <message>
-        <source>The PUK is incorrect, try entering it again</source>
-        <translation>PUK가 올바르지 않습니다. 다시 입력해 보세요</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n attempt(s) remaining</source>
-        <translation>
-            <numerusform>%n회 남음</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Choose a Keycard PUK</source>
-        <translation>Keycard PUK 선택</translation>
-    </message>
-    <message>
-        <source>Repeat your Keycard PUK</source>
-        <translation>Keycard PUK을 다시 입력하세요</translation>
     </message>
 </context>
 <context>
@@ -11526,61 +10617,6 @@ to load</source>
     <message>
         <source>Get Keycard</source>
         <translation type="unfinished">Keycard 받기</translation>
-    </message>
-</context>
-<context>
-    <name>ManageAccounts</name>
-    <message>
-        <source>Remove account</source>
-        <translation>계정 제거</translation>
-    </message>
-    <message>
-        <source>Do you want to delete the %1 account?</source>
-        <translation>%1 계정을 삭제하시겠어요?</translation>
-    </message>
-    <message>
-        <source>Do you want to delete the last account?</source>
-        <translation>마지막 계정을 삭제할까요?</translation>
-    </message>
-    <message>
-        <source>Yes, delete this account</source>
-        <translation>네, 이 계정을 삭제합니다</translation>
-    </message>
-    <message>
-        <source>Balance: %1</source>
-        <translation>잔액: %1</translation>
-    </message>
-    <message>
-        <source>View on Etherscan</source>
-        <translation>Etherscan에서 보기</translation>
-    </message>
-    <message>
-        <source>What name should account %1 have?</source>
-        <translation>계정 %1의 이름을 무엇으로 할까요?</translation>
-    </message>
-    <message>
-        <source>What would you like this account to be called?</source>
-        <translation>이 계정을 뭐라고 부를까요?</translation>
-    </message>
-    <message>
-        <source>Colour</source>
-        <translation>색상</translation>
-    </message>
-    <message>
-        <source>Preview</source>
-        <translation>미리보기</translation>
-    </message>
-    <message>
-        <source>Account %1 of %2</source>
-        <translation>계정 %1 / %2</translation>
-    </message>
-    <message>
-        <source>Name account %1</source>
-        <translation>계정 이름 지정 %1</translation>
-    </message>
-    <message>
-        <source>Name accounts</source>
-        <translation>계정 이름 지정</translation>
     </message>
 </context>
 <context>
@@ -15803,14 +14839,6 @@ to load</source>
         <source>Reveal recovery phrase</source>
         <translation>복구 구문 표시</translation>
     </message>
-    <message>
-        <source>Write down your recovery phrase</source>
-        <translation>복구 구문을 적어 두세요</translation>
-    </message>
-    <message>
-        <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
-        <translation>다음 화면에 복구 구문이 표시됩니다.&lt;br/&gt;&lt;b&gt;누구든지&lt;/b&gt; 그것을 보면 당신의 자금에 접근할 수 있습니다.</translation>
-    </message>
 </context>
 <context>
     <name>SeedPhraseDisplayState</name>
@@ -15820,7 +14848,7 @@ to load</source>
     </message>
     <message>
         <source>The next screen contains your recovery phrase.&lt;br/&gt;&lt;b&gt;Anyone&lt;/b&gt; who sees it can use it to access to your funds.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">다음 화면에는 복구 구문이 표시됩니다.&lt;br/&gt;&lt;b&gt;누구든지&lt;/b&gt; 그것을 보면 당신의 자금에 접근할 수 있습니다.</translation>
     </message>
 </context>
 <context>
@@ -15866,29 +14894,6 @@ to load</source>
     <message>
         <source>Import via entering private key</source>
         <translation>개인 키 입력으로 가져오기</translation>
-    </message>
-</context>
-<context>
-    <name>SelectKeyPair</name>
-    <message>
-        <source>Select a key pair</source>
-        <translation>키 쌍 선택</translation>
-    </message>
-    <message>
-        <source>Select which key pair you’d like to move to this Keycard</source>
-        <translation>이 Keycard로 이동할 키 쌍을 선택하세요</translation>
-    </message>
-    <message>
-        <source>Profile key pair</source>
-        <translation>프로필 키 페어</translation>
-    </message>
-    <message>
-        <source>Other key pairs</source>
-        <translation>다른 키 페어</translation>
-    </message>
-    <message>
-        <source>If a paired device (like a tablet without NFC) can’t use a Keycard, unpair it before migrating your Status profile. Otherwise, Status will stop working on that device.</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
