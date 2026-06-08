@@ -222,8 +222,8 @@ Item {
         }
 
         function displayFollowingAddresses() {
-            RootStore.showSavedAddresses = false
             RootStore.showFollowingAddresses = true
+            RootStore.showSavedAddresses = false
             RootStore.selectedAddress = ""
         }
 
