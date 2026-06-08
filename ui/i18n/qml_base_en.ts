@@ -16925,6 +16925,10 @@ to load</source>
         <source>Paste</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Select All</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>StatusChatListCategoryItem</name>
