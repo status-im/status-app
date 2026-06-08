@@ -343,13 +343,14 @@ SettingsContentBase {
                 ConfirmationDialog {
                     destroyOnClose: true
                     headerSettings.title: qsTr("Language reset")
-                    confirmationText: qsTr("Display language will be switched back to English. You must restart the application for changes to take effect.")
+                    confirmationText: qsTr("Display language will be switched back to English. The app will restart if you confirm.")
                     confirmButtonLabel: qsTr("Restart")
                     onConfirmButtonClicked: SystemUtils.restartApplication()
                 }
             }
 
             StatusSettingsLineButton {
+                id: debugLineButton
                 width: parent.width
                 text: qsTr("Debug")
                 isSwitch: true
@@ -367,6 +368,8 @@ SettingsContentBase {
                     enabled: true
                     hoverEnabled: true
                     propagateComposedEvents: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: debugLineButton.clicked()
                 }
 
                 StatusToolTip {
@@ -427,16 +430,14 @@ SettingsContentBase {
                 id: confirmDialog
                 destroyOnClose: true
                 showCancelButton: true
-                confirmationText: qsTr("Are you sure you want to %1 debug mode? You need to restart the app for this change to take effect.").arg(root.advancedStore.isDebugEnabled ?
+                confirmationText: qsTr("Are you sure you want to %1 debug mode? The app will restart if you confirm.").arg(root.advancedStore.isDebugEnabled ?
                     qsTr("disable") :
                     qsTr("enable"))
                 onConfirmButtonClicked: {
                     root.advancedStore.toggleDebug()
-                    close()
+                    SystemUtils.restartApplication()
                 }
-                onCancelButtonClicked: {
-                    close()
-                }
+                onCancelButtonClicked: close()
             }
         }
 
