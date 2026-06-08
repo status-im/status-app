@@ -6,7 +6,7 @@ import StatusQ.Controls
 import StatusQ.Core.Theme
 
 import utils
-import shared.popups.keycard.helpers
+import shared.popups.keypairimport.helpers
 
 import SortFilterProxyModel
 
