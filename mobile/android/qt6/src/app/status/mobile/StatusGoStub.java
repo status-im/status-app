@@ -50,6 +50,14 @@ public final class StatusGoStub {
         StatusGoServiceClient.get().setUiVisible(sContext, visible);
     }
 
+    /**
+     * Stops the separate status-go service process.
+     */
+    public static void stopService() {
+        if (sContext == null) return;
+        StatusGoServiceClient.get().stopService(sContext);
+    }
+
     private static volatile Context sContext;
 
     /** Called by Activity. Keep application context for later native calls. */
