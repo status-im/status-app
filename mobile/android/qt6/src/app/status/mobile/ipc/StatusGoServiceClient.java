@@ -217,6 +217,26 @@ public final class StatusGoServiceClient {
         }
     }
 
+    /**
+     * Stops the status-go service process.
+     *
+     * Unbinds first so our binding can't keep the service alive, then delivers ACTION_STOP via
+     * startService. startService is dispatched by the system's ActivityManager, so it is delivered
+     * even after the UI process exits immediately afterwards (_exit(0)). The service then kills its
+     * own process (see StatusGoService.onStartCommand), guaranteeing a clean login on next launch.
+     */
+    public void stopService(Context context) {
+        final Context app = context.getApplicationContext();
+        resetConnection(app);
+        Intent i = new Intent(app, StatusGoService.class);
+        i.setAction(StatusGoService.ACTION_STOP);
+        try {
+            app.startService(i);
+        } catch (Throwable t) {
+            Log.w(TAG, "stopService failed", t);
+        }
+    }
+
     public String call(Context context, String method, String argsJson) {
         final Context app = context.getApplicationContext();
         ensureStartedAndBound(app);

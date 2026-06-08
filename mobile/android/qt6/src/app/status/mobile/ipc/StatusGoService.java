@@ -534,6 +534,8 @@ public final class StatusGoService extends Service {
             } catch (Throwable ignored) {}
             foregroundStarted = false;
             stopSelf();
+            // Mirrors the force-kill of the UI process in StatusQtActivity.onDestroy.
+            android.os.Process.killProcess(android.os.Process.myPid());
             return START_NOT_STICKY;
         }
         // Ensure we can be started from background components (e.g. FCM) without risking
