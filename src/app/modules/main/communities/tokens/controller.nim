@@ -10,9 +10,6 @@ import app_service/service/keycard/service as keycard_service
 import app_service/service/network/network_item
 import app/core/signals/types
 import app/core/eventemitter
-import app/modules/shared_modules/keycard_popup/io_interface as keycard_shared_module
-
-const UNIQUE_COMMUNITY_TOKENS_MODULE_IDENTIFIER* = "communityTokensModuleIdentifier"
 
 type
   Controller* = ref object of RootObj
@@ -50,11 +47,6 @@ proc delete*(self: Controller) =
   discard
 
 proc init*(self: Controller) =
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED) do(e: Args):
-    let args = SharedKeycarModuleArgs(e)
-    if args.uniqueIdentifier != UNIQUE_COMMUNITY_TOKENS_MODULE_IDENTIFIER:
-      return
-    self.delegate.onUserAuthenticated(args.password, args.pin)
   self.events.on(SIGNAL_OWNER_TOKEN_RECEIVED) do(e: Args):
     let args = OwnerTokenReceivedArgs(e)
     self.delegate.onOwnerTokenReceived(args.communityId, args.communityName, args.chainId, args.contractAddress)
@@ -116,9 +108,7 @@ proc computeAirdropFee*(self: Controller, uuid: string, tokensAndAmounts: seq[Co
   self.communityTokensService.computeAirdropFee(uuid, tokensAndAmounts, walletAddresses, addressFrom)
 
 proc authenticate*(self: Controller, keyUid = "") =
-  let data = SharedKeycarModuleAuthenticationArgs(uniqueIdentifier: UNIQUE_COMMUNITY_TOKENS_MODULE_IDENTIFIER,
-    keyUid: keyUid)
-  self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER, data)
+  discard
 
 proc getCommunityTokens*(self: Controller, communityId: string): seq[CommunityTokenDto] =
   return self.communityTokensService.getCommunityTokens(communityId)

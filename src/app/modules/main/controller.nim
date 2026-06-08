@@ -27,12 +27,10 @@ import app_service/service/network/network_item
 import app_service/service/community_tokens/community_collectible_owner
 
 import io_interface
-import ../shared_modules/keycard_popup/io_interface as keycard_shared_module
 
 logScope:
   topics = "main-module-controller"
 
-const UNIQUE_MAIN_MODULE_AUTHENTICATE_INTERNAL_IDENTIFIER* = "MainModule-Internal-"
 const UNIQUE_MAIN_MODULE_AUTHENTICATE_KEYPAIR_IDENTIFIER* = "MainModule-AuthenticateKeypair"
 const UNIQUE_MAIN_MODULE_SIGNING_DATA_IDENTIFIER* = "MainModule-SigningData"
 const UNIQUE_MAIN_MODULE_KEYCARD_SYNC_IDENTIFIER* = "MainModule-KeycardSyncPurpose"
@@ -56,8 +54,6 @@ type
     nodeService: node_service.Service
     communityTokensService: community_tokens_service.Service
     activeSectionId: string
-    authenticateUserFlowRequestedBy: string
-    keycardSigningFlowRequestedBy: string
     walletAccountService: wallet_account_service.Service
     tokenService: token_service.Service
     networksService: networks_service.Service
@@ -454,77 +450,6 @@ proc init*(self: Controller) =
     let args = CommunityMemberStatusUpdatedArgs(e)
     self.delegate.onMembershipStateUpdated(args.communityId, args.memberPubkey, args.state)
 
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_FLOW_TERMINATED) do(e: Args):
-    let args = SharedKeycarModuleFlowTerminatedArgs(e)
-    if args.uniqueIdentifier == UNIQUE_MAIN_MODULE_KEYCARD_SYNC_IDENTIFIER:
-      self.delegate.onSharedKeycarModuleKeycardSyncPurposeTerminated(args.lastStepInTheCurrentFlow)
-      self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_KEYCARD_SYNC_TERMINATED, Args())
-      return
-    if args.uniqueIdentifier == UNIQUE_MAIN_MODULE_SHARED_KEYCARD_MODULE_IDENTIFIER:
-      self.delegate.onSharedKeycarModuleFlowTerminated(args.lastStepInTheCurrentFlow, args.continueWithNextFlow,
-        args.forceFlow, args.continueWithKeyUid, args.returnToFlow)
-      return
-    if args.uniqueIdentifier == UNIQUE_MAIN_MODULE_SIGNING_DATA_IDENTIFIER and
-      self.keycardSigningFlowRequestedBy.len > 0:
-        self.delegate.onSharedKeycarModuleForAuthenticationOrSigningTerminated(args.lastStepInTheCurrentFlow)
-        let data = SharedKeycarModuleArgs(uniqueIdentifier: self.keycardSigningFlowRequestedBy,
-          pin: args.pin,
-          keyUid: args.keyUid,
-          keycardUid: args.keycardUid,
-          path: args.path,
-          r: args.r,
-          s: args.s,
-          v: args.v)
-        self.keycardSigningFlowRequestedBy = ""
-        self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_DATA_SIGNED, data)
-        return
-    if args.uniqueIdentifier == UNIQUE_MAIN_MODULE_AUTHENTICATE_KEYPAIR_IDENTIFIER and
-      self.authenticateUserFlowRequestedBy.len > 0:
-        var requestedBy = self.authenticateUserFlowRequestedBy
-        self.authenticateUserFlowRequestedBy = ""
-        self.delegate.onSharedKeycarModuleForAuthenticationOrSigningTerminated(args.lastStepInTheCurrentFlow)
-        let data = SharedKeycarModuleArgs(uniqueIdentifier: requestedBy,
-          password: args.password,
-          pin: args.pin,
-          keyUid: args.keyUid,
-          keycardUid: args.keycardUid,
-          additinalPathsDetails: args.additinalPathsDetails)
-        ## Whenever user provides a password/pin we need to make some global checks.
-        self.events.emit(SIGNAL_PASSWORD_PROVIDED, AuthenticationArgs(keyUid: data.keyUid, password: data.password))
-        self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED, data)
-        if requestedBy.startsWith(UNIQUE_MAIN_MODULE_AUTHENTICATE_INTERNAL_IDENTIFIER):
-          requestedBy = requestedBy.split(UNIQUE_MAIN_MODULE_AUTHENTICATE_INTERNAL_IDENTIFIER)[1]
-          self.delegate.onLoggedInUserAuthenticated(requestedBy, args.password, args.pin, args.keyUid, args.keycardUid)
-          return
-        return
-
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_DISPLAY_POPUP) do(e: Args):
-    let args = SharedKeycarModuleBaseArgs(e)
-    if args.uniqueIdentifier == UNIQUE_MAIN_MODULE_SHARED_KEYCARD_MODULE_IDENTIFIER:
-      self.delegate.onDisplayKeycardSharedModuleFlow()
-      return
-    if args.uniqueIdentifier == UNIQUE_MAIN_MODULE_SIGNING_DATA_IDENTIFIER and
-      self.keycardSigningFlowRequestedBy.len > 0:
-        self.delegate.onDisplayKeycardSharedModuleForAuthenticationOrSigning()
-        return
-    if args.uniqueIdentifier == UNIQUE_MAIN_MODULE_AUTHENTICATE_KEYPAIR_IDENTIFIER and
-      self.authenticateUserFlowRequestedBy.len > 0:
-        self.delegate.onDisplayKeycardSharedModuleForAuthenticationOrSigning()
-        return
-
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_SIGN_DATA) do(e: Args):
-    let args = SharedKeycarModuleSigningArgs(e)
-    self.keycardSigningFlowRequestedBy = args.uniqueIdentifier
-    self.delegate.runAuthenticationOrSigningPopup(keycard_shared_module.FlowType.Sign, args.keyUid, @[args.path], args.dataToSign)
-
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER) do(e: Args):
-    let args = SharedKeycarModuleAuthenticationArgs(e)
-    self.authenticateUserFlowRequestedBy = args.uniqueIdentifier
-    self.delegate.runAuthenticationOrSigningPopup(keycard_shared_module.FlowType.Authentication, args.keyUid, args.additionalBip44Paths)
-
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_TRY_KEYCARD_SYNC) do(e: Args):
-    let args = SharedKeycarModuleArgs(e)
-    self.delegate.tryKeycardSync(args.keyUid, args.pin)
 
   self.events.on(SIGNAL_PROFILE_MIGRATION_NEEDED_UPDATED) do(e: Args):
     self.delegate.checkAndPerformProfileMigrationIfNeeded()
@@ -556,9 +481,7 @@ proc init*(self: Controller) =
     self.delegate.contactUpdated(singletonInstance.userProfile.getPubKey())
 
 proc authenticateLoggedInUser*(self: Controller, requestedBy: string) =
-    let loggedInUserKeyUid = singletonInstance.userProfile.getKeyUid()
-    self.authenticateUserFlowRequestedBy = UNIQUE_MAIN_MODULE_AUTHENTICATE_INTERNAL_IDENTIFIER & requestedBy
-    self.delegate.runAuthenticationOrSigningPopup(keycard_shared_module.FlowType.Authentication, loggedInUserKeyUid, @[])
+  discard
 
 proc isConnected*(self: Controller): bool =
   return self.nodeService.isConnected()
