@@ -69,17 +69,8 @@ proc determineStatusAppIconPath(): string =
   return "/../status-dev.png"
 
 proc prepareLogging() =
-  # Outputs logs in the node tab
   for output in defaultChroniclesStream.outputs.fields():
-    when output is DynamicOutput:
-      output.writer =
-        proc (logLevel: LogLevel, msg: LogOutputStr) {.gcsafe, raises: [].} =
-          try:
-            if signalsManagerQObjPointer != nil:
-              signal_handler(signalsManagerQObjPointer, ($(%* {"type": "chronicles-log", "event": msg})).cstring, "receiveChroniclesLogEvent")
-          except:
-            logLoggingFailure(cstring(msg), getCurrentException())
-    elif output is FileOutput:
+    when output is FileOutput:
       let formattedDate = now().format("yyyyMMdd'_'HHmmss")
       let logFile = fmt"app_{formattedDate}.log"
       discard output.open(LOGDIR & logFile, fmAppend)

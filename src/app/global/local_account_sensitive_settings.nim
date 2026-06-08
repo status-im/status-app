@@ -10,8 +10,6 @@ const LSS_KEY_IS_COMMUNITY_PERMISSIONS_ENABLED* = "isExperimentalCommunityPermis
 const DEFAULT_IS_COMMUNITY_PERMISSIONS_ENABLED = false
 const LSS_KEY_IS_COMMUNITY_TOKENS_ENABLED* = "isExperimentalCommunityTokensEnabled"
 const DEFAULT_IS_COMMUNITY_TOKENS_ENABLED = false
-const LSS_KEY_NODE_MANAGEMENT_ENABLED* = "nodeManagementEnabled"
-const DEFAULT_NODE_MANAGEMENT_ENABLED = false
 const LSS_KEY_ENS_COMMUNITY_PERMISSIONS_ENABLED* = "ensCommunityPermissionsEnabled"
 const DEFAULT_COMMUNITY_PERMISSIONS_ENABLED = false
 const LSS_KEY_IS_BROWSER_ENABLED* = "isExperimentalBrowserEnabled"
@@ -197,18 +195,6 @@ QtObject:
     read = getProfileSplitView
     write = setProfileSplitView
     notify = profileSplitViewChanged
-
-  proc nodeManagementEnabledChanged*(self: LocalAccountSensitiveSettings) {.signal.}
-  proc getNodeManagementEnabled*(self: LocalAccountSensitiveSettings): bool {.slot.} =
-    getSettingsProp[bool](self, LSS_KEY_NODE_MANAGEMENT_ENABLED, newQVariant(DEFAULT_NODE_MANAGEMENT_ENABLED))
-  proc setNodeManagementEnabled*(self: LocalAccountSensitiveSettings, value: bool) {.slot.} =
-    setSettingsProp(self, LSS_KEY_NODE_MANAGEMENT_ENABLED, newQVariant(value)):
-      self.nodeManagementEnabledChanged()
-
-  QtProperty[bool] nodeManagementEnabled:
-    read = getNodeManagementEnabled
-    write = setNodeManagementEnabled
-    notify = nodeManagementEnabledChanged
 
   proc isBrowserEnabledChanged*(self: LocalAccountSensitiveSettings) {.signal.}
   proc getIsBrowserEnabled*(self: LocalAccountSensitiveSettings): bool {.slot.} =
@@ -593,7 +579,6 @@ QtObject:
       of LSS_KEY_CHAT_SPLIT_VIEW: self.chatSplitViewChanged()
       of LSS_KEY_WALLET_SPLIT_VIEW: self.walletSplitViewChanged()
       of LSS_KEY_PROFILE_SPLIT_VIEW: self.profileSplitViewChanged()
-      of LSS_KEY_NODE_MANAGEMENT_ENABLED: self.nodeManagementEnabledChanged()
       of LSS_KEY_ENS_COMMUNITY_PERMISSIONS_ENABLED: self.ensCommunityPermissionsEnabledChanged()
       of LSS_KEY_IS_BROWSER_ENABLED: self.isBrowserEnabledChanged()
       of LSS_KEY_EXPAND_USERS_LIST: self.expandUsersListChanged()

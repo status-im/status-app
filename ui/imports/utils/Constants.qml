@@ -206,13 +206,12 @@ QtObject {
         readonly property int community: 3
         readonly property int wallet: 1
         readonly property int profile: 4
-        readonly property int node: 5
-        readonly property int qrCodeScanner: 6
-        readonly property int communitiesPortal: 7
-        readonly property int loadingSection: 8
-        readonly property int swap: 9
-        readonly property int market: 10
-        readonly property int browser: 11
+        readonly property int qrCodeScanner: 5
+        readonly property int communitiesPortal: 6
+        readonly property int loadingSection: 7
+        readonly property int swap: 8
+        readonly property int market: 9
+        readonly property int browser: 10
 
         readonly property int homePage: 0
         readonly property int dApp: 999
@@ -221,13 +220,12 @@ QtObject {
     readonly property QtObject appViewStackIndex: QtObject {
         readonly property int homePage: 0
         readonly property int chat: 1
-        readonly property int community: 8 // any stack layout children with the index 8 or higher is community
+        readonly property int community: 7 // any stack layout children with the index 7 or higher is community
         readonly property int communitiesPortal: 2
         readonly property int wallet: 3
         readonly property int browser: 4
         readonly property int profile: 5
-        readonly property int node: 6
-        readonly property int market: 7
+        readonly property int market: 6
     }
 
     readonly property QtObject settingsSubsection: QtObject {

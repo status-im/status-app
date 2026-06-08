@@ -14,7 +14,6 @@ type
     Chat,
     Community,
     ProfileSettings,
-    NodeManagement,
     QrCodeScanner,
     CommunitiesPortal,
     LoadingSection,

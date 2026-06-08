@@ -188,23 +188,6 @@ SettingsContentBase {
 
             StatusSettingsLineButton {
                 width: parent.width
-                text: qsTr("Node Management")
-                isSwitch: true
-                checked: localAccountSensitiveSettings.nodeManagementEnabled
-                onToggled: {
-                    checked = Qt.binding(() => localAccountSensitiveSettings.nodeManagementEnabled)
-
-                    if (!checked) {
-                        confirmationPopup.experimentalFeature = root.advancedStore.experimentalFeatures.nodeManagement
-                        confirmationPopup.open()
-                    } else {
-                        root.advancedStore.toggleExperimentalFeature(root.advancedStore.experimentalFeatures.nodeManagement)
-                    }
-                }
-            }
-
-            StatusSettingsLineButton {
-                width: parent.width
                 text: qsTr("Archive Protocol Enabled")
                 visible: !SQUtils.Utils.isMobile
                 isSwitch: true

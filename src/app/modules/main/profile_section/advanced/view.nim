@@ -89,9 +89,6 @@ QtObject:
   proc toggleCommunitySection*(self: View) {.slot.} =
     self.delegate.toggleCommunitySection()
 
-  proc toggleNodeManagementSection*(self: View) {.slot.} =
-    self.delegate.toggleNodeManagementSection()
-
   proc toggleCommunitiesPortalSection*(self: View) {.slot.} =
     self.delegate.toggleCommunitiesPortalSection()
 

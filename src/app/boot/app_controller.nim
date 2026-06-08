@@ -403,6 +403,7 @@ proc load(self: AppController) =
   self.notificationsManager.init()
   self.profileService.init()
   self.nodeConfigurationService.init()
+  self.nodeService.init()
   self.mailserversService.init()
   self.contactsService.init()
   self.chatService.init()

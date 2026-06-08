@@ -25,7 +25,6 @@ QtObject {
         readonly property string browser: "browser"
         readonly property string communities: "communities"
         readonly property string activityCenter: "activityCenter"
-        readonly property string nodeManagement: "nodeManagement"
         readonly property string communitiesPortal: "communitiesPortal"
         readonly property string communityPermissions: "communityPermissions"
         readonly property string discordImportTool: "discordImportTool"
@@ -102,9 +101,6 @@ QtObject {
         }
         else if (feature === experimentalFeatures.activityCenter) {
             localAccountSensitiveSettings.isActivityCenterEnabled = !localAccountSensitiveSettings.isActivityCenterEnabled
-        }
-        else if (feature === experimentalFeatures.nodeManagement) {
-            advancedModule.toggleNodeManagementSection()
         }
     }
 

@@ -471,7 +471,7 @@ QtObject:
       mnemonic: mnemonic,
       walletSecretsConfig: buildWalletSecrets(),
       walletConfig: buildWalletConfig(),
-      bandwidthStatsEnabled: true,
+      bandwidthStatsEnabled: false,
       apiConfig: defaultApiConfig(),
       walletConnectProjectID: main_constants.WALLET_CONNECT_PROJECT_ID,
     )

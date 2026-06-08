@@ -21,10 +21,6 @@ const BROWSER_SECTION_ID* = "browser"
 const BROWSER_SECTION_NAME* = "Browser"
 const BROWSER_SECTION_ICON* = "browser"
 
-const NODEMANAGEMENT_SECTION_ID* = "nodeManagement"
-const NODEMANAGEMENT_SECTION_NAME* = "Node Management"
-const NODEMANAGEMENT_SECTION_ICON* = "node"
-
 const QR_SCANNER_SECTION_ID* = "qrScannerDialog"
 const QR_SCANNER_SECTION_NAME* = "QR Scanner"
 const QR_SCANNER_SECTION_ICON* = "qr-scan"

@@ -147,9 +147,6 @@ QObject {
             FilterSorter {
                 ValueFilter { roleName: "sectionType"; value: Constants.appSection.profile; inverted: true } // Settings last
             },
-            FilterSorter {
-                ValueFilter { roleName: "sectionType"; value: Constants.appSection.node; inverted: true } // Node second last
-            },
             RoleSorter { roleName: "sectionType" }
         ]
     }

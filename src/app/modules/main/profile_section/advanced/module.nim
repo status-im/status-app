@@ -120,9 +120,6 @@ method toggleCommunitySection*(self: Module) =
 method toggleCommunitiesPortalSection*(self: Module) =
   self.controller.toggleCommunitiesPortalSection()
 
-method toggleNodeManagementSection*(self: Module) =
-  self.controller.toggleNodeManagementSection()
-
 method getLogMaxBackups*(self: Module): int =
   self.controller.getLogMaxBackups()
 

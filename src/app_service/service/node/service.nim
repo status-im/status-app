@@ -1,9 +1,10 @@
-import nimqml, chronicles, strutils, json
+import nimqml, chronicles
 
 import ../settings/service as settings_service
 import ../node_configuration/service as node_configuration_service
 
 import ../../../app/core/eventemitter
+import ../../../app/core/signals/types
 import ../../../backend/node as status_node
 
 logScope:
@@ -31,28 +32,7 @@ QtObject:
         result.peers = @[]
         result.connected = false
 
-    proc init*(self: Service) =
-        discard
-
-    proc sendRPCMessageRaw*(self: Service, inputJSON: string): string =
-        return status_node.sendRPCMessageRaw(inputJSON)
-
-    proc adminPeers*(): seq[string] =
-        let response = status_node.adminPeers().result
-        for jsonPeer in response:
-            result.add(jsonPeer["enode"].getStr)
-
-    proc wakuV2Peers*(): seq[string] =
-        let response = status_node.wakuV2Peers().result
-        for (id, proto) in response.pairs:
-            if proto.len != 0:
-               result.add(id)
-
-    proc fetchPeers*(self: Service): seq[string] =
-        return wakuV2Peers()
-
-
-    proc peerSummaryChange*(self: Service, peers: seq[string]) =
+    proc peerSummaryChange(self: Service, peers: seq[string]) =
         if peers.len == 0 and self.connected:
             self.connected = false
             self.events.emit(SIGNAL_NETWORK_DISCONNECTED, Args())
@@ -63,7 +43,13 @@ QtObject:
 
         self.peers = peers
 
-    proc peerCount*(self: Service): int = self.peers.len
+    proc init*(self: Service) =
+        # Track network connectivity from peer activity reported by status-go.
+        self.events.on(SignalType.DiscoverySummary.event) do(e: Args):
+            self.peerSummaryChange(DiscoverySummarySignal(e).enodes)
+
+        self.events.on(SignalType.PeerStats.event) do(e: Args):
+            self.peerSummaryChange(PeerStatsSignal(e).peers)
 
     proc isConnected*(self: Service): bool = self.connected
 
@@ -83,4 +69,3 @@ QtObject:
 
     proc delete*(self: Service) =
        self.QObject.delete
-

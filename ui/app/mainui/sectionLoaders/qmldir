@@ -8,7 +8,6 @@ CommunityChatLoader 1.0 CommunityChatLoader.qml
 HandlersManagerLoader 1.0 HandlersManagerLoader.qml
 HomePageLoader 1.0 HomePageLoader.qml
 MarketLoader 1.0 MarketLoader.qml
-NodeLoader 1.0 NodeLoader.qml
 PopupsLoader 1.0 PopupsLoader.qml
 ProfileLoader 1.0 ProfileLoader.qml
 WalletLoader 1.0 WalletLoader.qml

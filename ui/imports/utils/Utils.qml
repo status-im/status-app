@@ -419,8 +419,6 @@ QtObject {
             return qsTr("Browser")
         case Constants.appSection.profile:
             return qsTr("Settings")
-        case Constants.appSection.node:
-            return qsTr("Node Management")
         case Constants.appSection.communitiesPortal:
             return qsTr("Discover Communities")
         case Constants.appSection.loadingSection:
@@ -1120,8 +1118,6 @@ QtObject {
             return Constants.settingsSubsection.wallet
         case Constants.appSection.browser:
             return Constants.settingsSubsection.browser
-        case Constants.appSection.node:
-            return Constants.settingsSubsection.advanced
         default:
             return Constants.settingsSubsection.profile // default
         }

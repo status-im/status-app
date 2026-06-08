@@ -26,44 +26,33 @@ QtObject:
     result.setup()
     result.events = events
 
-  # This method might be called with `ChroniclesLogs` event from `nim_status_client`.
-  # In such case we must not log anything to prevent recursive calls.
-  # I tried to make a better solution, but ended up with such workaround, check out PR for more details.
-  proc processSignal(self: SignalsManager, statusSignal: string, allowLogging: bool) =
+  proc processSignal(self: SignalsManager, statusSignal: string) =
     var jsonSignal: JsonNode
     try:
       jsonSignal = statusSignal.parseJson
     except CatchableError:
-      if allowLogging:
-        error "Invalid signal received", data = statusSignal
+      error "Invalid signal received", data = statusSignal
       return
 
-    if allowLogging:
-      trace "Raw signal data", data = $jsonSignal
+    trace "Raw signal data", data = $jsonSignal
 
     var signal:Signal
     try:
       signal = self.decode(jsonSignal)
     except CatchableError:
-      if allowLogging:
-        warn "Error decoding signal", err=getCurrentExceptionMsg()
+      warn "Error decoding signal", err=getCurrentExceptionMsg()
       return
 
     if signal.signalType == SignalType.NodeLogin and NodeSignal(signal).error != "":
-      if allowLogging:
-        error "node.login", error=NodeSignal(signal).error
+      error "node.login", error=NodeSignal(signal).error
 
     if signal.signalType == SignalType.NodeCrashed:
-      if allowLogging:
-        error "node.crashed", error=statusSignal
+      error "node.crashed", error=statusSignal
 
     self.events.emit(signal.signalType.event, signal)
 
   proc receiveSignal(self: SignalsManager, signal: string) {.slot.} =
-    self.processSignal(signal, allowLogging=true)
-
-  proc receiveChroniclesLogEvent(self: SignalsManager, signal: string) {.slot.} =
-    self.processSignal(signal, allowLogging=false)
+    self.processSignal(signal)
 
   proc decode(self: SignalsManager, jsonSignal: JsonNode): Signal =
     let signalString = jsonSignal{"type"}.getStr
@@ -100,8 +89,6 @@ QtObject:
       of SignalType.MailserverRequestExpired: MailserverRequestExpiredSignal.fromEvent(jsonSignal)
       of SignalType.CommunityFound: CommunitySignal.fromEvent(jsonSignal)
       of SignalType.CuratedCommunitiesUpdated: CuratedCommunitiesSignal.fromEvent(jsonSignal)
-      of SignalType.Stats: StatsSignal.fromEvent(jsonSignal)
-      of SignalType.ChroniclesLogs: ChroniclesLogsSignal.fromEvent(jsonSignal)
       of SignalType.HistoryRequestCompleted: HistoryRequestCompletedSignal.fromEvent(jsonSignal)
       of SignalType.HistoryRequestStarted: HistoryRequestStartedSignal.fromEvent(jsonSignal)
       of SignalType.MailserverAvailable: MailserverAvailableSignal.fromEvent(jsonSignal)

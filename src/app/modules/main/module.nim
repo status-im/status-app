@@ -25,7 +25,6 @@ import stickers/module as stickers_module
 import gifs/module as gifs_module
 import activity_center/module as activity_center_module
 import communities/module as communities_module
-import node_section/module as node_section_module
 import communities/tokens/models/token_item
 import communities/tokens/models/token_model
 import network_connection/module as network_connection_module
@@ -131,7 +130,6 @@ type
     activityCenterModule: activity_center_module.AccessInterface
     communitiesModule: communities_module.AccessInterface
     appSearchModule: app_search_module.AccessInterface
-    nodeSectionModule: node_section_module.AccessInterface
     keycardSharedModuleForAuthenticationOrSigning: keycard_shared_module.AccessInterface
     keycardSharedModuleKeycardSyncPurpose: keycard_shared_module.AccessInterface
     keycardSharedModule: keycard_shared_module.AccessInterface
@@ -274,7 +272,6 @@ proc newModule*[T](
     networkService, transactionService, tokenService, chatService, walletAccountService, keycardService)
   result.appSearchModule = app_search_module.newModule(result, events, contactsService, chatService, communityService,
   messageService)
-  result.nodeSectionModule = node_section_module.newModule(result, events, settingsService, nodeService, nodeConfigurationService)
   result.networkConnectionModule = network_connection_module.newModule(result, events, networkConnectionService)
   result.sharedUrlsModule = shared_urls_module.newModule(result, events, sharedUrlsService)
   result.marketModule = market_module.newModule(result, events, marketService)
@@ -292,7 +289,6 @@ method delete*[T](self: Module[T]) =
   self.walletSectionModule.delete
   self.browserSectionModule.delete
   self.appSearchModule.delete
-  self.nodeSectionModule.delete
   if not self.keycardSharedModuleForAuthenticationOrSigning.isNil:
     self.keycardSharedModuleForAuthenticationOrSigning.delete
   if not self.keycardSharedModuleKeycardSyncPurpose.isNil:
@@ -799,27 +795,6 @@ method load*[T](
   if activeSectionId == browserSectionItem.id:
     activeSection = browserSectionItem
 
-  # Node Management Section
-  let nodeManagementSectionItem = initSectionItem(
-    NODEMANAGEMENT_SECTION_ID,
-    SectionType.NodeManagement,
-    NODEMANAGEMENT_SECTION_NAME,
-    memberRole = MemberRole.Owner,
-    description = "",
-    introMessage = "",
-    outroMessage = "",
-    image = "",
-    icon = NODEMANAGEMENT_SECTION_ICON,
-    color = "",
-    hasNotification = false,
-    notificationsCount = 0,
-    active = false,
-    enabled = singletonInstance.localAccountSensitiveSettings.getNodeManagementEnabled(),
-  )
-  self.view.model().addItem(nodeManagementSectionItem)
-  if activeSectionId == nodeManagementSectionItem.id:
-    activeSection = nodeManagementSectionItem
-
   # QR Scanner Section
   let qrScannerSectionItem = initSectionItem(
     QR_SCANNER_SECTION_ID,
@@ -908,7 +883,6 @@ method load*[T](
   self.activityCenterModule.load()
   self.communitiesModule.load()
   self.appSearchModule.load()
-  self.nodeSectionModule.load()
   # Load wallet last as it triggers events that are listened by other modules
   self.walletSectionModule.load()
   self.networkConnectionModule.load()
@@ -1131,9 +1105,6 @@ proc checkIfModuleDidLoad [T](self: Module[T]) =
   if(not self.browserSectionModule.isLoaded()):
     return
 
-  if(not self.nodeSectionModule.isLoaded()):
-    return
-
   if(not self.profileSectionModule.isLoaded()):
     return
 
@@ -1189,9 +1160,6 @@ method browserSectionDidLoad*[T](self: Module[T]) =
   self.checkIfModuleDidLoad()
 
 method profileSectionDidLoad*[T](self: Module[T]) =
-  self.checkIfModuleDidLoad()
-
-method nodeSectionDidLoad*[T](self: Module[T]) =
   self.checkIfModuleDidLoad()
 
 method networkConnectionModuleDidLoad*[T](self: Module[T]) =
@@ -1268,10 +1236,6 @@ method toggleSection*[T](self: Module[T], sectionType: SectionType) =
     let enabled = singletonInstance.localAccountSensitiveSettings.getIsBrowserEnabled()
     self.setSectionAvailability(sectionType, not enabled)
     singletonInstance.localAccountSensitiveSettings.setIsBrowserEnabled(not enabled)
-  elif (sectionType == SectionType.NodeManagement):
-    let enabled = singletonInstance.localAccountSensitiveSettings.getNodeManagementEnabled()
-    self.setSectionAvailability(sectionType, not enabled)
-    singletonInstance.localAccountSensitiveSettings.setNodeManagementEnabled(not enabled)
 
 method setCurrentUserStatus*[T](self: Module[T], status: StatusType) =
   self.controller.setCurrentUserStatus(status)

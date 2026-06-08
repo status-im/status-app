@@ -106,9 +106,6 @@ proc toggleBrowserSection*(self: Controller) =
 proc toggleCommunitySection*(self: Controller) =
   self.events.emit(TOGGLE_SECTION, ToggleSectionArgs(sectionType: SectionType.Community))
 
-proc toggleNodeManagementSection*(self: Controller) =
-  self.events.emit(TOGGLE_SECTION, ToggleSectionArgs(sectionType: SectionType.NodeManagement))
-
 proc isCommunityHistoryArchiveSupportEnabled*(self: Controller): bool =
   self.nodeConfigurationService.isCommunityHistoryArchiveSupportEnabled()
 

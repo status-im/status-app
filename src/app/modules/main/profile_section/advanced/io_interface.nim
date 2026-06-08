@@ -81,9 +81,6 @@ method toggleBrowserSection*(self: AccessInterface) {.base.} =
 method toggleCommunitySection*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method toggleNodeManagementSection*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method getLogMaxBackups*(self: AccessInterface): int {.base.} =
   raise newException(ValueError, "No implementation available")
 

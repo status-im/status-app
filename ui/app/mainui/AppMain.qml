@@ -1880,8 +1880,6 @@ Item {
                             return Constants.appViewStackIndex.profile
                         case Constants.appSection.browser:
                             return Constants.appViewStackIndex.browser
-                        case Constants.appSection.node:
-                            return Constants.appViewStackIndex.node
                         case Constants.appSection.market:
                             return Constants.appViewStackIndex.market
                         default:
@@ -2080,11 +2078,6 @@ Item {
                         }
                     }
 
-                    NodeLoader {
-                        active: appView.currentIndex === Constants.appViewStackIndex.node
-                        leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
-                    }
-
                     MarketLoader {
                         active: appView.currentIndex === Constants.appViewStackIndex.market
 
@@ -2209,7 +2202,6 @@ Item {
                     showEnabledSectionsOnly: true
                     marketEnabled: appMain.featureFlagsStore.marketEnabled
                     browserEnabled: d.isBrowserEnabled
-                    nodeEnabled: localAccountSensitiveSettings.nodeManagementEnabled
                 }
 
                 regularItemsModel: sidebarAdaptor.regularItemsModel

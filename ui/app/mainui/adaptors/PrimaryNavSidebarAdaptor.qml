@@ -28,7 +28,6 @@ SQUtils.QObject {
 
     required property bool marketEnabled
     required property bool browserEnabled
-    required property bool nodeEnabled
 
     property bool showEnabledSectionsOnly: true
 
@@ -65,11 +64,6 @@ SQUtils.QObject {
             ValueFilter {
                 roleName: "sectionType"
                 value: Constants.appSection.communitiesPortal
-            }
-            ValueFilter {
-                roleName: "sectionType"
-                value: Constants.appSection.node
-                enabled: root.nodeEnabled
             }
             ValueFilter {
                 roleName: "sectionType"
@@ -118,8 +112,7 @@ SQUtils.QObject {
                     Constants.appSection.swap,
                     Constants.appSection.chat,
                     Constants.appSection.browser,
-                    Constants.appSection.communitiesPortal,
-                    Constants.appSection.node
+                    Constants.appSection.communitiesPortal
                 ]
             }
         ]
