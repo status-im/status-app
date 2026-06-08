@@ -45,6 +45,10 @@ Control {
     signal saveForLaterClicked
     signal resetChangesClicked
 
+    // When true the available width is too small to fit the label and the
+    // buttons in a single row, so the buttons reflow onto a second row below.
+    readonly property bool compact: root.availableWidth < d.oneRowContentWidth
+
     function notifyDirty() {
         toastAlertAnimation.running = true
         saveChangesButton.forceActiveFocus()
@@ -52,7 +56,23 @@ Control {
 
     padding: Theme.padding
 
+    // Pinned to the natural one-row width so it stays constant across the
+    // compact/non-compact reflow - this keeps callers that rely on implicitWidth
+    // stable and avoids a binding loop with width-constrained call sites.
+    implicitWidth: leftPadding + rightPadding +
+                   Math.max(d.oneRowContentWidth, additionalTextComponent.implicitWidth)
+
     opacity: active ? 1 : 0
+
+    QtObject {
+        id: d
+
+        // Intrinsic (column-independent) width needed to lay out the label and
+        // the buttons side by side. Invisible buttons contribute 0.
+        readonly property real oneRowContentWidth: changesDetectedTextItem.implicitWidth
+                                                    + buttonsRow.implicitWidth
+                                                    + topGrid.columnSpacing
+    }
 
     onActiveChanged: {
         if (!active || !flickable)
@@ -90,7 +110,7 @@ Control {
         id: backgroundRect
 
         color: Theme.palette.statusToastMessage.backgroundColor
-        radius: 8
+        radius: Theme.radius
         border.color: root.type === SettingsDirtyToastMessage.Type.Danger
                       ? Theme.palette.dangerColor2 : Theme.palette.primaryColor2
         border.width: 2
@@ -98,7 +118,7 @@ Control {
         layer.enabled: true
         layer.effect: DropShadow {
             verticalOffset: 3
-            radius: 8
+            radius: Theme.radius
             samples: 15
             fast: true
             cached: true
@@ -114,21 +134,19 @@ Control {
             duration: 600
             onFinished: backgroundRect.border.width = 2
         }
-
-        StatusMouseArea {
-            anchors.fill: parent
-            visible: root.active // This is required not to change cursorShape
-            enabled: root.active
-            hoverEnabled: true
-        }
     }
 
     contentItem: ColumnLayout {
         id: toastContent
         spacing: Theme.padding
 
-        RowLayout {
-            Layout.alignment: Qt.AlignHCenter
+        GridLayout {
+            id: topGrid
+            Layout.fillWidth: true
+
+            columns: root.compact ? 1 : 2
+            columnSpacing: Theme.halfPadding
+            rowSpacing: Theme.halfPadding
 
             StatusBaseText {
                 id: changesDetectedTextItem
@@ -139,33 +157,55 @@ Control {
                 text: root.defaultChangesDetectedText
             }
 
-            StatusButton {
-                id: cancelChangesButton
-                text: root.defaultCancelChangesText
-                enabled: !root.loading && root.active
-                visible: root.cancelButtonVisible
-                type: StatusBaseButton.Type.Danger
-                onClicked: root.resetChangesClicked()
-            }
+            RowLayout {
+                id: buttonsRow
 
-            StatusFlatButton {
-                id: saveForLaterButton
-                text: root.defaultSaveForLaterText
-                loading: root.loading
-                enabled: root.active && root.saveChangesButtonEnabled
-                visible: root.saveForLaterButtonVisible
-                onClicked: root.saveForLaterClicked()
-            }
+                // Always right-aligned and packed together. The row is sized to
+                // its content when the buttons fit, so there is no extra space
+                // between them.
+                Layout.alignment: (root.compact ? Qt.AlignCenter : Qt.AlignRight) | Qt.AlignVCenter
+                // Never exceed the toast content width, so when the buttons don't
+                // fit the row is clamped and the fillWidth buttons shrink, eliding
+                // their text instead of overflowing.
+                Layout.maximumWidth: root.availableWidth
+                Layout.fillWidth: false
 
-            StatusButton {
-                id: saveChangesButton
+                spacing: Theme.bigPadding
 
-                objectName: "settingsDirtyToastMessageSaveButton"
-                loading: root.loading
-                text: root.defaultSaveChangesText
-                interactive: root.active && root.saveChangesButtonEnabled
-                tooltip.text: root.saveChangesTooltipText
-                onClicked: root.saveChangesClicked()
+                StatusButton {
+                    id: cancelChangesButton
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: implicitWidth
+                    text: root.defaultCancelChangesText
+                    enabled: !root.loading && root.active
+                    visible: root.cancelButtonVisible
+                    type: StatusBaseButton.Type.Danger
+                    onClicked: root.resetChangesClicked()
+                }
+
+                StatusFlatButton {
+                    id: saveForLaterButton
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: implicitWidth
+                    text: root.defaultSaveForLaterText
+                    loading: root.loading
+                    enabled: root.active && root.saveChangesButtonEnabled
+                    visible: root.saveForLaterButtonVisible
+                    onClicked: root.saveForLaterClicked()
+                }
+
+                StatusButton {
+                    id: saveChangesButton
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: implicitWidth
+
+                    objectName: "settingsDirtyToastMessageSaveButton"
+                    loading: root.loading
+                    text: root.defaultSaveChangesText
+                    interactive: root.active && root.saveChangesButtonEnabled
+                    tooltip.text: root.saveChangesTooltipText
+                    onClicked: root.saveChangesClicked()
+                }
             }
         }
 
