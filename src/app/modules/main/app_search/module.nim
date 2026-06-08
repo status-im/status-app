@@ -276,7 +276,7 @@ method onSearchMessagesDone*(self: Module, messages: seq[MessageDto]) =
     # Add channels
     let communityChatItems = self.getResultItemFromChats(community.id, community.chats, SEARCH_RESULT_CHANNELS_SECTION_NAME)
     if communityChatItems.len > 0:
-      channels = channels.concat(channels, communityChatItems)
+      channels.add(communityChatItems)
 
   # Add channels in order as requested by the design
   items.add(channels)
