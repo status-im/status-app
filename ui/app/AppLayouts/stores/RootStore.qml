@@ -574,36 +574,9 @@ QtObject {
     }
     // End of Wallet related stuff
 
-    // Keycard related properties and functions that shall be moved to `KeycardStore`
-    // (and should be reviewed the usage since modules should not be directly exposed
-    property var keycardSharedModuleForAuthenticationOrSigning: null
-    property var keycardSharedModule: null
-
-    signal displayKeycardSharedModuleForAuthenticationOrSigning()
-    signal destroyKeycardSharedModuleForAuthenticationOrSigning()
-    signal displayKeycardSharedModuleFlow()
-    signal destroyKeycardSharedModuleFlow()
 
     readonly property Connections keycardRelatedMainModuleConnections: Connections {
         target: internal.mainModuleInst
-
-        function onDisplayKeycardSharedModuleForAuthenticationOrSigning() {
-            root.keycardSharedModuleForAuthenticationOrSigning = mainModule.keycardSharedModuleForAuthenticationOrSigning
-            root.displayKeycardSharedModuleForAuthenticationOrSigning()
-        }
-
-        function onDestroyKeycardSharedModuleForAuthenticationOrSigning() {
-            root.destroyKeycardSharedModuleForAuthenticationOrSigning()
-        }
-
-        function onDisplayKeycardSharedModuleFlow() {
-            root.keycardSharedModule = mainModule.keycardSharedModule
-            root.displayKeycardSharedModuleFlow()
-        }
-
-        function onDestroyKeycardSharedModuleFlow() {
-            root.destroyKeycardSharedModuleFlow()
-        }
 
         function onRequestGetCredentialFromKeychain(key: string) {
             keychain.requestGetCredential("authenticate", key)

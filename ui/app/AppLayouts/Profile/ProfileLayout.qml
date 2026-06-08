@@ -5,7 +5,6 @@ import QtQuick.Window
 
 import shared
 import shared.panels
-import shared.popups.keycard
 import shared.stores as SharedStores
 import shared.stores.send
 import utils

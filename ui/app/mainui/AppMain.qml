@@ -22,7 +22,6 @@ import shared.controls
 import shared.controls.chat.menuItems
 import shared.panels
 import shared.popups
-import shared.popups.keycard
 import shared.status
 import shared.stores as SharedStores
 import shared.popups.send as SendPopups
@@ -211,21 +210,6 @@ Item {
             popups.openProfilePopup(publicKey)
         }
 
-        function onDisplayKeycardSharedModuleForAuthenticationOrSigning() {
-            keycardPopupForAuthenticationOrSigning.active = true
-        }
-
-        function onDestroyKeycardSharedModuleForAuthenticationOrSigning() {
-            keycardPopupForAuthenticationOrSigning.active = false
-        }
-
-        function onDisplayKeycardSharedModuleFlow() {
-            keycardPopup.active = true
-        }
-
-        function onDestroyKeycardSharedModuleFlow() {
-            keycardPopup.active = false
-        }
 
         function onPlayNotificationSound() {
             notificationSound.stop()
@@ -2530,31 +2514,6 @@ Item {
         }
     }
 
-    Loader {
-        id: keycardPopupForAuthenticationOrSigning
-        active: false
-        sourceComponent: KeycardPopup {
-            myKeyUid: appMain.profileStore.keyUid
-            sharedKeycardModule: appMain.rootStore.keycardSharedModuleForAuthenticationOrSigning
-        }
-
-        onLoaded: {
-            keycardPopupForAuthenticationOrSigning.item.open()
-        }
-    }
-
-    Loader {
-        id: keycardPopup
-        active: false
-        sourceComponent: KeycardPopup {
-            myKeyUid: appMain.profileStore.keyUid
-            sharedKeycardModule: appMain.rootStore.keycardSharedModule
-        }
-
-        onLoaded: {
-            keycardPopup.item.open()
-        }
-    }
 
     Loader {
         id: addEditSavedAddress
