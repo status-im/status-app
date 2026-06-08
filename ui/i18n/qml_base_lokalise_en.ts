@@ -20901,6 +20901,11 @@
       <comment>StatusChatInputTextArea</comment>
       <translation>Paste</translation>
     </message>
+    <message>
+      <source>Select All</source>
+      <comment>StatusChatInputTextArea</comment>
+      <translation>Select All</translation>
+    </message>
   </context>
   <context>
     <name>StatusChatListCategoryItem</name>
