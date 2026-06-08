@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import Qt5Compat.GraphicalEffects
@@ -12,7 +13,7 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Controls
 
-Rectangle {
+Control {
     id: root
 
     property bool loading: false
@@ -49,25 +50,9 @@ Rectangle {
         saveChangesButton.forceActiveFocus()
     }
 
-    implicitHeight: toastContent.implicitHeight + toastContent.anchors.topMargin + toastContent.anchors.bottomMargin
-    implicitWidth: toastContent.implicitWidth + toastContent.anchors.leftMargin + toastContent.anchors.rightMargin
+    padding: Theme.padding
 
     opacity: active ? 1 : 0
-    color: Theme.palette.statusToastMessage.backgroundColor
-    radius: 8
-    border.color: type === SettingsDirtyToastMessage.Type.Danger ? Theme.palette.dangerColor2 : Theme.palette.primaryColor2
-    border.width: 2
-
-    layer.enabled: true
-    layer.effect: DropShadow {
-        verticalOffset: 3
-        radius: 8
-        samples: 15
-        fast: true
-        cached: true
-        color: root.border.color
-        spread: 0.1
-    }
 
     onActiveChanged: {
         if (!active || !flickable)
@@ -97,30 +82,49 @@ Rectangle {
         easing.type: Easing.InOutQuad
     }
 
-    NumberAnimation on border.width {
-        id: toastAlertAnimation
-        from: 0
-        to: 4
-        loops: 2
-        duration: 600
-        onFinished: root.border.width = 2
-    }
-
     Behavior on opacity {
         NumberAnimation {}
     }
 
-    StatusMouseArea {
-        anchors.fill: parent
-        visible: root.active // This is required not to change cursorShape
-        enabled: root.active
-        hoverEnabled: true
+    background: Rectangle {
+        id: backgroundRect
+
+        color: Theme.palette.statusToastMessage.backgroundColor
+        radius: 8
+        border.color: root.type === SettingsDirtyToastMessage.Type.Danger
+                      ? Theme.palette.dangerColor2 : Theme.palette.primaryColor2
+        border.width: 2
+
+        layer.enabled: true
+        layer.effect: DropShadow {
+            verticalOffset: 3
+            radius: 8
+            samples: 15
+            fast: true
+            cached: true
+            color: backgroundRect.border.color
+            spread: 0.1
+        }
+
+        NumberAnimation on border.width {
+            id: toastAlertAnimation
+            from: 0
+            to: 4
+            loops: 2
+            duration: 600
+            onFinished: backgroundRect.border.width = 2
+        }
+
+        StatusMouseArea {
+            anchors.fill: parent
+            visible: root.active // This is required not to change cursorShape
+            enabled: root.active
+            hoverEnabled: true
+        }
     }
 
-    ColumnLayout {
+    contentItem: ColumnLayout {
         id: toastContent
-        anchors.fill: parent
-        anchors.margins: Theme.padding
         spacing: Theme.padding
 
         RowLayout {
