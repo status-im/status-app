@@ -1039,10 +1039,6 @@
         <translation>Web/dApp prohlížeč</translation>
     </message>
     <message>
-        <source>Node Management</source>
-        <translation>Správa uzlů</translation>
-    </message>
-    <message>
         <source>Archive Protocol Enabled</source>
         <translation>Archivní protokol povolen</translation>
     </message>
@@ -13346,13 +13342,6 @@ selhalo</translation>
     </message>
 </context>
 <context>
-    <name>NodeLayout</name>
-    <message>
-        <source>Type json-rpc message... e.g {&quot;method&quot;: &quot;eth_accounts&quot;}</source>
-        <translation>Zadejte zprávu json-rpc... např. {&quot;method&quot;: &quot;eth_accounts&quot;}</translation>
-    </message>
-</context>
-<context>
     <name>NotificationAdaptorContactRequest</name>
     <message>
         <source>New contact request</source>
@@ -15413,25 +15402,6 @@ selhalo</translation>
     <message>
         <source>Reset</source>
         <translation>Resetovat</translation>
-    </message>
-</context>
-<context>
-    <name>RateView</name>
-    <message>
-        <source>Bandwidth</source>
-        <translation>Pásmo</translation>
-    </message>
-    <message>
-        <source>Upload</source>
-        <translation>Nahrávání</translation>
-    </message>
-    <message>
-        <source>Kb/s</source>
-        <translation>Kb/s</translation>
-    </message>
-    <message>
-        <source>Download</source>
-        <translation>Stahování</translation>
     </message>
 </context>
 <context>
@@ -19721,10 +19691,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Settings</source>
         <translation>Nastavení</translation>
-    </message>
-    <message>
-        <source>Node Management</source>
-        <translation>Správa uzlů</translation>
     </message>
     <message>
         <source>Discover Communities</source>

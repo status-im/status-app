@@ -1036,10 +1036,6 @@
         <translation>Navegador Web/dApp</translation>
     </message>
     <message>
-        <source>Node Management</source>
-        <translation>Gestión de nodos</translation>
-    </message>
-    <message>
         <source>Archive Protocol Enabled</source>
         <translation>Protocolo de archivo habilitado</translation>
     </message>
@@ -13261,13 +13257,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>NodeLayout</name>
-    <message>
-        <source>Type json-rpc message... e.g {&quot;method&quot;: &quot;eth_accounts&quot;}</source>
-        <translation>Escribe mensaje json-rpc... ej. {&quot;method&quot;: &quot;eth_accounts&quot;}</translation>
-    </message>
-</context>
-<context>
     <name>NotificationAdaptorContactRequest</name>
     <message>
         <source>New contact request</source>
@@ -15322,25 +15311,6 @@ al cargar</translation>
     <message>
         <source>Reset</source>
         <translation>Restablecer</translation>
-    </message>
-</context>
-<context>
-    <name>RateView</name>
-    <message>
-        <source>Bandwidth</source>
-        <translation>Ancho de banda</translation>
-    </message>
-    <message>
-        <source>Upload</source>
-        <translation>Subir</translation>
-    </message>
-    <message>
-        <source>Kb/s</source>
-        <translation>Kb/s</translation>
-    </message>
-    <message>
-        <source>Download</source>
-        <translation>Descargar</translation>
     </message>
 </context>
 <context>
@@ -19623,10 +19593,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Settings</source>
         <translation>Ajustes</translation>
-    </message>
-    <message>
-        <source>Node Management</source>
-        <translation>Gestión de nodos</translation>
     </message>
     <message>
         <source>Discover Communities</source>

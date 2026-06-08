@@ -1270,11 +1270,6 @@
       <translation>Web/dApp Browser</translation>
     </message>
     <message>
-      <source>Node Management</source>
-      <comment>AdvancedView</comment>
-      <translation>Node Management</translation>
-    </message>
-    <message>
       <source>Archive Protocol Enabled</source>
       <comment>AdvancedView</comment>
       <translation>Archive Protocol Enabled</translation>
@@ -16147,14 +16142,6 @@
     </message>
   </context>
   <context>
-    <name>NodeLayout</name>
-    <message>
-      <source>Type json-rpc message... e.g {&#34;method&#34;: &#34;eth_accounts&#34;}</source>
-      <comment>NodeLayout</comment>
-      <translation>Type json-rpc message... e.g {&#34;method&#34;: &#34;eth_accounts&#34;}</translation>
-    </message>
-  </context>
-  <context>
     <name>NotificationAdaptorContactRequest</name>
     <message>
       <source>New contact request</source>
@@ -18663,29 +18650,6 @@
       <source>Reset</source>
       <comment>RPCStatsModal</comment>
       <translation>Reset</translation>
-    </message>
-  </context>
-  <context>
-    <name>RateView</name>
-    <message>
-      <source>Bandwidth</source>
-      <comment>RateView</comment>
-      <translation>Bandwidth</translation>
-    </message>
-    <message>
-      <source>Upload</source>
-      <comment>RateView</comment>
-      <translation>Upload</translation>
-    </message>
-    <message>
-      <source>Kb/s</source>
-      <comment>RateView</comment>
-      <translation>Kb/s</translation>
-    </message>
-    <message>
-      <source>Download</source>
-      <comment>RateView</comment>
-      <translation>Download</translation>
     </message>
   </context>
   <context>
@@ -23842,11 +23806,6 @@
       <source>Settings</source>
       <comment>Utils</comment>
       <translation>Settings</translation>
-    </message>
-    <message>
-      <source>Node Management</source>
-      <comment>Utils</comment>
-      <translation>Node Management</translation>
     </message>
     <message>
       <source>Discover Communities</source>

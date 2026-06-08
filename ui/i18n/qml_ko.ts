@@ -1033,10 +1033,6 @@
         <translation>웹/dApp 브라우저</translation>
     </message>
     <message>
-        <source>Node Management</source>
-        <translation>Node 관리</translation>
-    </message>
-    <message>
         <source>Archive Protocol Enabled</source>
         <translation>아카이브 프로토콜 활성화됨</translation>
     </message>
@@ -13219,13 +13215,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>NodeLayout</name>
-    <message>
-        <source>Type json-rpc message... e.g {&quot;method&quot;: &quot;eth_accounts&quot;}</source>
-        <translation>Json-rpc 메시지를 입력하세요... 예: {&quot;method&quot;: &quot;eth_accounts&quot;}</translation>
-    </message>
-</context>
-<context>
     <name>NotificationAdaptorContactRequest</name>
     <message>
         <source>New contact request</source>
@@ -15274,25 +15263,6 @@ to load</source>
     <message>
         <source>Reset</source>
         <translation>초기화</translation>
-    </message>
-</context>
-<context>
-    <name>RateView</name>
-    <message>
-        <source>Bandwidth</source>
-        <translation>대역폭</translation>
-    </message>
-    <message>
-        <source>Upload</source>
-        <translation>업로드</translation>
-    </message>
-    <message>
-        <source>Kb/s</source>
-        <translation>Kb/s</translation>
-    </message>
-    <message>
-        <source>Download</source>
-        <translation>다운로드</translation>
     </message>
 </context>
 <context>
@@ -19549,10 +19519,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Settings</source>
         <translation>설정</translation>
-    </message>
-    <message>
-        <source>Node Management</source>
-        <translation>Node 관리</translation>
     </message>
     <message>
         <source>Discover Communities</source>

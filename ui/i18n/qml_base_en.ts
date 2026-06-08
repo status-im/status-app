@@ -1036,10 +1036,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Node Management</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Archive Protocol Enabled</source>
         <translation type="unfinished"></translation>
     </message>
@@ -13245,13 +13241,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>NodeLayout</name>
-    <message>
-        <source>Type json-rpc message... e.g {&quot;method&quot;: &quot;eth_accounts&quot;}</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>NotificationAdaptorContactRequest</name>
     <message>
         <source>New contact request</source>
@@ -15303,25 +15292,6 @@ to load</source>
     </message>
     <message>
         <source>Reset</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>RateView</name>
-    <message>
-        <source>Bandwidth</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Upload</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Kb/s</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Download</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -19586,10 +19556,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Node Management</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
