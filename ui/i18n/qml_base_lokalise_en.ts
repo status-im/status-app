@@ -1358,14 +1358,14 @@
       <translation>Language reset</translation>
     </message>
     <message>
-      <source>Display language will be switched back to English. The app will restart if you confirm.</source>
+      <source>Display language will be switched back to English.</source>
       <comment>AdvancedView</comment>
-      <translation>Display language will be switched back to English. The app will restart if you confirm.</translation>
+      <translation>Display language will be switched back to English.</translation>
     </message>
     <message>
-      <source>Are you sure you want to %1 debug mode? The app will restart if you confirm.</source>
+      <source>The app will restart if you confirm.</source>
       <comment>AdvancedView</comment>
-      <translation>Are you sure you want to %1 debug mode? The app will restart if you confirm.</translation>
+      <translation>The app will restart if you confirm.</translation>
     </message>
     <message>
       <source>Restart</source>
@@ -1403,14 +1403,14 @@
       <translation>RPC statistics</translation>
     </message>
     <message>
-      <source>disable</source>
+      <source>Are you sure you want to disable debug mode?</source>
       <comment>AdvancedView</comment>
-      <translation>disable</translation>
+      <translation>Are you sure you want to disable debug mode?</translation>
     </message>
     <message>
-      <source>enable</source>
+      <source>Are you sure you want to enable debug mode?</source>
       <comment>AdvancedView</comment>
-      <translation>enable</translation>
+      <translation>Are you sure you want to enable debug mode?</translation>
     </message>
     <message>
       <source>How many log files do you want to keep archived?</source>

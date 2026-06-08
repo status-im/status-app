@@ -1107,11 +1107,11 @@
         <translation>Restablecer idioma</translation>
     </message>
     <message>
-        <source>Display language will be switched back to English. The app will restart if you confirm.</source>
+        <source>Display language will be switched back to English.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Are you sure you want to %1 debug mode? The app will restart if you confirm.</source>
+        <source>The app will restart if you confirm.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1143,12 +1143,12 @@
         <translation>Estadísticas RPC</translation>
     </message>
     <message>
-        <source>disable</source>
-        <translation>deshabilitar</translation>
+        <source>Are you sure you want to disable debug mode?</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>enable</source>
-        <translation>habilitar</translation>
+        <source>Are you sure you want to enable debug mode?</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>How many log files do you want to keep archived?</source>

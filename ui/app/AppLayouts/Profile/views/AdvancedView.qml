@@ -314,10 +314,14 @@ SettingsContentBase {
                 text: qsTr("Enable translations")
                 isSwitch: true
                 checked: localAppSettings.translationsEnabled
-                onToggled: {
-                    localAppSettings.translationsEnabled = !localAppSettings.translationsEnabled
-                    if (!checked)
+                onClicked: {
+                    checked = Qt.binding(() => localAppSettings.translationsEnabled)
+
+                    if (checked) {
                         Global.openPopup(disableLanguagesPopupComponent)
+                    } else {
+                        localAppSettings.translationsEnabled = true
+                    }
                 }
             }
 
@@ -326,9 +330,13 @@ SettingsContentBase {
                 ConfirmationDialog {
                     destroyOnClose: true
                     headerSettings.title: qsTr("Language reset")
-                    confirmationText: qsTr("Display language will be switched back to English. The app will restart if you confirm.")
+                    confirmationText: qsTr("Display language will be switched back to English.") + "\n" +
+                        qsTr("The app will restart if you confirm.")
                     confirmButtonLabel: qsTr("Restart")
-                    onConfirmButtonClicked: SystemUtils.restartApplication()
+                    onConfirmButtonClicked: {
+                        localAppSettings.translationsEnabled = false
+                        SystemUtils.restartApplication()
+                    }
                 }
             }
 
@@ -413,9 +421,11 @@ SettingsContentBase {
                 id: confirmDialog
                 destroyOnClose: true
                 showCancelButton: true
-                confirmationText: qsTr("Are you sure you want to %1 debug mode? The app will restart if you confirm.").arg(root.advancedStore.isDebugEnabled ?
-                    qsTr("disable") :
-                    qsTr("enable"))
+                confirmationText: (root.advancedStore.isDebugEnabled ?
+                    qsTr("Are you sure you want to disable debug mode?") :
+                    qsTr("Are you sure you want to enable debug mode?"))
+                     + "\n" +
+                    qsTr("The app will restart if you confirm.")
                 onConfirmButtonClicked: {
                     root.advancedStore.toggleDebug()
                     SystemUtils.restartApplication()
