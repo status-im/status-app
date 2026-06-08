@@ -10,7 +10,6 @@ import app/global/global_singleton
 
 import app/modules/shared/keypairs
 import app/modules/shared_models/[keypair_model, derived_address_model]
-import app/modules/shared_modules/keycard_popup/module as keycard_shared_module
 
 import app_service/common/account_constants
 const dummyUsage = account_constants.ZERO_ADDRESS # dummy usage to prevent false-alarm warning
@@ -165,13 +164,7 @@ method loadForEditingAccount*[T](self: Module[T], address: string) =
   self.delegate.onAddAccountModuleLoaded()
 
 proc tryKeycardSync[T](self: Module[T]) =
-  if self.controller.getPin().len == 0:
-    return
-  let dataForKeycardToSync = SharedKeycarModuleArgs(
-    pin: self.controller.getPin(),
-    keyUid: self.controller.getAuthenticatedKeyUid()
-  )
-  self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_TRY_KEYCARD_SYNC, dataForKeycardToSync)
+  discard
 
 method closeAddAccountPopup*[T](self: Module[T]) =
   if not self.view.getEditMode():

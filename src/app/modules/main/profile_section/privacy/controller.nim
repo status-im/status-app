@@ -1,13 +1,9 @@
 import io_interface, chronicles
 
-import ../../../../global/global_singleton
 import ../../../../core/eventemitter
 import ../../../../../app_service/service/settings/service as settings_service
 import ../../../../../app_service/service/privacy/service as privacy_service
 import ../../../../../app_service/service/general/service as general_service
-import ../../../shared_modules/keycard_popup/io_interface as keycard_shared_module
-
-const UNIQUE_PRIVACY_SECTION_MODULE_AUTH_IDENTIFIER* = "PrivacySectionModule-Authentication"
 
 type
   Controller* = ref object of RootObj
@@ -32,11 +28,6 @@ proc delete*(self: Controller) =
   discard
 
 proc init*(self: Controller) =
-  self.events.on(SIGNAL_SHARED_KEYCARD_MODULE_USER_AUTHENTICATED) do(e: Args):
-    let args = SharedKeycarModuleArgs(e)
-    if args.uniqueIdentifier != UNIQUE_PRIVACY_SECTION_MODULE_AUTH_IDENTIFIER:
-      return
-    self.delegate.onUserAuthenticated(args.pin, args.password, args.keyUid)
 
   self.events.on(SIGNAL_MNEMONIC_REMOVED) do(e: Args):
     self.delegate.mnemonicBackedUp()
@@ -91,7 +82,4 @@ proc getPasswordStrengthScore*(self: Controller, password, userName: string): in
   return self.generalService.getPasswordStrengthScore(password, userName)
 
 proc authenticateLoggedInUser*(self: Controller) =
-  var data = SharedKeycarModuleAuthenticationArgs(uniqueIdentifier: UNIQUE_PRIVACY_SECTION_MODULE_AUTH_IDENTIFIER)
-  if singletonInstance.userProfile.getMigratedToColdWallet():
-    data.keyUid = singletonInstance.userProfile.getKeyUid()
-  self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER, data)
+  discard
