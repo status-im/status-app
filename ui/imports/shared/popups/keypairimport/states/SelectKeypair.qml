@@ -6,7 +6,7 @@ import StatusQ.Core
 import StatusQ.Components
 import StatusQ.Core.Theme
 
-import shared.popups.keycard.helpers
+import shared.popups.keypairimport.helpers
 import shared.status
 
 import utils
