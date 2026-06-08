@@ -21,7 +21,6 @@ import app/global/app_signals
 import app/core/eventemitter
 import app/core/notifications/details
 import app/modules/shared_models/section_item
-import app/modules/shared_modules/keycard_popup/module as keycard_shared_module
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -330,31 +329,6 @@ method destroyKeycardManagementModule*(self: AccessInterface) {.base.} =
 method getKeycardManagementModule*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method getKeycardSharedModuleForAuthenticationOrSigning*(self: AccessInterface): QVariant {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onDisplayKeycardSharedModuleForAuthenticationOrSigning*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onSharedKeycarModuleForAuthenticationOrSigningTerminated*(self: AccessInterface, lastStepInTheCurrentFlow: bool) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method getKeycardSharedModule*(self: AccessInterface): QVariant {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onDisplayKeycardSharedModuleFlow*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onSharedKeycarModuleFlowTerminated*(self: AccessInterface, lastStepInTheCurrentFlow: bool,
-  nextFlow: keycard_shared_module.FlowType, forceFlow: bool, nextKeyUid: string, returnToFlow: keycard_shared_module.FlowType) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method runAuthenticationOrSigningPopup*(self: AccessInterface, flow: keycard_shared_module.FlowType, keyUid: string,
-  bip44Paths: seq[string] = @[], dataToSign: string = "") {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onSharedKeycarModuleRunningKeycardFlowsPurposeTerminated*(self: AccessInterface, lastStepInTheCurrentFlow: bool) {.base.} =
-  raise newException(ValueError, "No implementation available")
 
 method checkAndPerformProfileMigrationIfNeeded*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
@@ -366,12 +340,6 @@ method activateStatusDeepLink*(self: AccessInterface, statusDeepLink: string) {.
   raise newException(ValueError, "No implementation available")
 
 method setCommunityIdToSpectate*(self: AccessInterface, commnityId: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method tryKeycardSync*(self: AccessInterface, keyUid: string, pin: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onSharedKeycarModuleKeycardSyncPurposeTerminated*(self: AccessInterface, lastStepInTheCurrentFlow: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onCommunityTokenDeploymentStored*(self: AccessInterface, communityToken: CommunityTokenDto, error: string) {.base.} =

@@ -324,40 +324,9 @@ QtObject:
     read = getKeycardManagementModule
     notify = keycardManagementModuleChanged
 
-  proc getKeycardSharedModuleForAuthenticationOrSigning(self: View): QVariant {.slot.} =
-    let module = self.delegate.getKeycardSharedModuleForAuthenticationOrSigning()
-    if not module.isNil:
-      return module
-    return newQVariant()
-  QtProperty[QVariant] keycardSharedModuleForAuthenticationOrSigning:
-    read = getKeycardSharedModuleForAuthenticationOrSigning
-
   proc activateStatusDeepLink*(self: View, statusDeepLink: string) {.slot.} =
     self.delegate.activateStatusDeepLink(statusDeepLink)
 
-  proc getKeycardSharedModule(self: View): QVariant {.slot.} =
-    let module = self.delegate.getKeycardSharedModule()
-    if not module.isNil:
-      return module
-    return newQVariant()
-  QtProperty[QVariant] keycardSharedModule:
-    read = getKeycardSharedModule
-
-  proc displayKeycardSharedModuleForAuthenticationOrSigning*(self: View) {.signal.}
-  proc emitDisplayKeycardSharedModuleForAuthenticationOrSigning*(self: View) =
-    self.displayKeycardSharedModuleForAuthenticationOrSigning()
-
-  proc destroyKeycardSharedModuleForAuthenticationOrSigning*(self: View) {.signal.}
-  proc emitDestroyKeycardSharedModuleForAuthenticationOrSigning*(self: View) =
-    self.destroyKeycardSharedModuleForAuthenticationOrSigning()
-
-  proc displayKeycardSharedModuleFlow*(self: View) {.signal.}
-  proc emitDisplayKeycardSharedModuleFlow*(self: View) =
-    self.displayKeycardSharedModuleFlow()
-
-  proc destroyKeycardSharedModuleFlow*(self: View) {.signal.}
-  proc emitDestroyKeycardSharedModuleFlow*(self: View) =
-    self.destroyKeycardSharedModuleFlow()
 
   proc windowActivated*(self: View) {.slot.} =
     self.delegate.windowActivated()
