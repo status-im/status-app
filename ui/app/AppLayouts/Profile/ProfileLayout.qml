@@ -173,6 +173,13 @@ StatusSectionLayout {
         messagingBadgeCount: root.pendingReceivedContactsCount
     }
 
+    // Subsection back history keyed by the settingsSubsection enum.
+    subsectionHistory: SQUtils.SubsectionNavigationHistory {
+        currentKey: root.settingsSubsection
+        validateFn: (key) => SQUtils.ModelUtils.indexOf(settingsEntriesModel, "subsection", parseInt(key)) >= 0
+        onNavigateRequested: (key) => root.settingsSubsection = parseInt(key)
+    }
+
     leftPanel: SettingsLeftTabView {
         id: leftPanel
         anchors.fill: parent

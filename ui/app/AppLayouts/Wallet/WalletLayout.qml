@@ -33,6 +33,14 @@ import "popups/buy"
 Item {
     id: root
 
+    // --- Back-navigation contract, forwarded to the inner StatusSectionLayout
+    // (walletSectionLayout). This Item wrapper would otherwise be a dead-end
+    // for AppMain's Link 2 on desktop. See AppMain.tryGoBack().
+    function tryGoBack() {
+        return walletSectionLayout.tryGoBack()
+    }
+    readonly property bool canGoBack: walletSectionLayout.canGoBack
+
     property WalletStores.RootStore walletRootStore
     property SharedStores.RootStore sharedRootStore
     property AppLayoutsStores.RootStore store
@@ -330,6 +338,14 @@ Item {
             if (rightPanelStackView.currentItem && !!rightPanelStackView.currentItem.resetStack) {
                 rightPanelStackView.currentItem.resetStack()
             }
+        }
+
+        // Subsection back history keyed by the selected account. Navigates via
+        // d.displayAddress (not changeSelectedAccount, which advances the panel).
+        subsectionHistory: StatusQUtils.SubsectionNavigationHistory {
+            currentKey: RootStore.selectedAddress
+            validateFn: (address) => StatusQUtils.ModelUtils.indexOf(RootStore.accounts, "address", address) >= 0
+            onNavigateRequested: (address) => d.displayAddress(address)
         }
 
         leftPanel: LeftTabView {

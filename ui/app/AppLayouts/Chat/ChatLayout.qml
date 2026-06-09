@@ -166,6 +166,26 @@ StackLayout {
         d.openCommunitySettingsSubsection(subsection, subsectionItem)
     }
 
+    // --- Back-navigation contract, forwarded to the inner ChatView
+    function tryGoBack() {
+        // On the community settings sub-page, Back returns to the chat content.
+        if (root.currentIndex === d.settingsPageIndex) {
+            root.currentIndex = 0
+            return true
+        }
+        const view = mainViewLoader.item
+        if (view && typeof view.tryGoBack === "function")
+            return view.tryGoBack()
+        return false
+    }
+
+    readonly property bool canGoBack: {
+        if (root.currentIndex === d.settingsPageIndex)
+            return true
+        const view = mainViewLoader.item
+        return !!view && view.canGoBack === true
+    }
+
     QtObject {
         id: d
 

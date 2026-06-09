@@ -164,6 +164,12 @@ Item {
 
     readonly property bool isPortraitMode: appMain.width < ThemeUtils.portraitBreakpoint.width
 
+    // Whether Back has anything to do: an open overlay, the active section's
+    // internal back, or the cross-section history. Drives the desktop Back entry
+    // points (StandardKey shortcut + mouse Back button).
+    readonly property bool canGoBackAnywhere: createChatView.opened
+            || d.sectionCanGoBack || sectionNavigationHistory.canGoBack
+
     function showEnableBiometricsFlow() {
         popupRequestsHandler.openEnableBiometricsPopup()
     }
@@ -173,13 +179,8 @@ Item {
         maxDepth: 16
     }
 
-    // Records the *previous* active section id onto the back-navigation
-    // history whenever the active section changes — unless the change was
-    // triggered by the back-handler itself (re-entrancy guard).
-    //
-    // NOTE: Consolidated single-handler form so the record-previous /
-    // write-current ordering is explicit and cannot be reordered by an
-    // intervening handler.
+    // Records the *previous* active section id whenever the active section
+    // changes, unless the change came from the back-handler (re-entrancy guard).
     Connections {
         target: appMain.rootStore
         function onActiveSectionIdChanged() {
@@ -871,13 +872,27 @@ Item {
                                                         && !d.messagingNetworkBannerDismissed
                                                         && d.networkChecker.isOnline
 
-        // True while the back-handler is navigating; suppresses recording
-        // the synthetic section change as a new history entry.
+        // True while the back-handler is navigating; suppresses recording the
+        // synthetic section change as a new history entry.
         property bool navigatingBack: false
 
-        // Tracker for the most-recently-observed activeSectionId. Used by the
-        // history recorder to push the *previous* id when activeSectionId changes.
+        // Most-recently-observed activeSectionId; the recorder pushes the
+        // *previous* id when activeSectionId changes.
         property string lastRecordedSectionId: ""
+
+        // The active section's loaded item (appView's children stay in sync with
+        // currentIndex). May be null while a section is still loading.
+        function activeSectionItem() {
+            const loader = appView.children[appView.currentIndex]
+            return loader ? loader.item : null
+        }
+
+        // True when the active section can step back internally (e.g. portrait
+        // SwipeView panels). Reactive on section switch, lazy load and canGoBack.
+        readonly property bool sectionCanGoBack: {
+            const item = d.activeSectionItem()
+            return !!item && item.canGoBack === true
+        }
 
         // strict online/offline checker, doesn't care about the wallet services
         readonly property var networkChecker: NetworkChecker {
@@ -2377,6 +2392,20 @@ Item {
                     }
                 }
             }
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.BackButton
+                enabled: appMain.canGoBackAnywhere
+                cursorShape: undefined // fall thru
+                onClicked: function(mouse) {
+                    if (mouse.button !== Qt.BackButton)
+                        return
+                    if (tryGoBack()) {
+                        mouse.accepted = true
+                    }
+                }
+            }
         }
     } // ColumnLayout
 
@@ -3055,17 +3084,9 @@ Item {
         value: appMain.Theme.palette
     }
 
-    // ----- Android system back button (Key_Back) -----
-    // The four-link chain: link 1 (popup) and link 2 (section internal back)
-    // accept the event before it reaches here. This handler implements
-    // link 3 (section history) and link 4 (Quit confirmation).
-    //
-    // NOTE: On Android the key event may not reach this handler due to
-    // focus-chain quirks — Qt's Android platform may close the window
-    // before delivering Key_Back to QML. In that case main.qml's onClosing
-    // is the catch-all, and it calls tryGoBack() (defined below) to
-    // run the same link 3 logic. Both paths are kept so behaviour is
-    // identical whether the key event reaches QML or not.
+    // Back entry point for the mobile Back key and the StandardKey.Back shortcut
+    // (Alt+←). On Android the event may not reach QML (the platform can close the
+    // window first); main.qml's onClosing is the catch-all and calls tryGoBack().
     Keys.onPressed: function(event) {
         if (event.key !== Qt.Key_Back // Back key on mobile
                 && !event.matches(StandardKey.Back)) // Back std shortcut, e.g. Alt+←
@@ -3081,9 +3102,11 @@ Item {
     }
 
     Keys.onShortcutOverride: function (event) {
+        // Browser is excluded: QtWebEngine handles StandardKey.Back natively for
+        // web-history navigation, so we let the event reach the web view.
         event.accepted = d.activeSectionType !== Constants.appSection.browser &&
                 event.matches(StandardKey.Back) &&
-                sectionNavigationHistory.canGoBack
+                appMain.canGoBackAnywhere
     }
 
     MouseArea {
@@ -3100,25 +3123,20 @@ Item {
         }
     }
 
-    // Links 2 + 3 of the back-navigation chain, callable from main.qml's
-    // onClosing as well as from the Keys.onPressed above. Returns true if
-    // the Back press was handled (either by the active section internally
-    // or by popping section history); false if everything is exhausted and
-    // the caller should fall through to link 4 (Quit confirmation).
+    // The back-navigation chain, also callable from main.qml's onClosing.
+    // Returns true if the Back press was handled, false if exhausted (caller
+    // then falls through to Quit/minimize).
     function tryGoBack() {
-        // Link 1a: AppMain-level overlay-loader components (e.g. CreateChatView).
-        // These are Loaders with an `opened` property, NOT Qt Popups — so
-        // Qt's native popup-close doesn't reach them.
+        // Link 1: AppMain overlay-loaders (e.g. CreateChatView) — Loaders with an
+        // `opened` property, not Qt Popups, so native popup-close misses them.
         if (createChatView.opened) {
             createChatView.opened = false
             return true
         }
 
-        // Link 2: ask the active section to handle Back internally first
-        // (e.g. browser navigates web history; sections with sub-panels can
-        // step them). Sections that don't expose tryGoBack() are skipped.
-        const sectionLoader = appView.children[appView.currentIndex]
-        const sectionItem = sectionLoader ? sectionLoader.item : null
+        // Link 2: let the active section handle Back internally (web history,
+        // sub-panels, subsection history). Sections without tryGoBack() are skipped.
+        const sectionItem = d.activeSectionItem()
         if (sectionItem && typeof sectionItem.tryGoBack === "function"
                 && sectionItem.tryGoBack()) {
             return true

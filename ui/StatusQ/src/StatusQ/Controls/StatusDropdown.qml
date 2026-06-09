@@ -150,6 +150,19 @@ QC.Popup {
        }
     }
 
+    // Take focus while open so the section Back shortcut (handled by AppMain)
+    // isn't delivered there; the Shortcut below closes the dropdown instead.
+    focus: true
+
+    // Close on the Back shortcut. A Shortcut (not Keys) is used because QC.Popup
+    // is not an Item, so Keys handlers on it / its background never receive the
+    // event. Mobile's Qt.Key_Back is already routed to closePolicy by Qt.
+    Shortcut {
+        sequences: [StandardKey.Back]
+        enabled: root.opened
+        onActivated: root.close()
+    }
+
     // workaround for https://bugreports.qt.io/browse/QTBUG-87804
     Binding on margins {
         id: workaroundBinding

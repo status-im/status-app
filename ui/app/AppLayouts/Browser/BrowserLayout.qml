@@ -75,19 +75,43 @@ StatusSectionLayout {
     function saveBrowserSession() {
         savedSessionContext.saveSession()
     }
-    //Back integration: step backward through web history first; only
-    // when the current tab is at the top of its history does Back fall through
-    // to AppMain's section-history pop. Wired into AppMain.tryGoBack().
+    // Overrides StatusSectionLayout.tryGoBack: web history first, then tab history.
     function tryGoBack() {
         if (!!_internal.currentWebView && _internal.currentWebView.canGoBack) {
             webViewContext.goBackCurrent()
             return true
         }
-        return false
+        return subsectionHistory.tryGoBack()
+    }
+
+    // Subsection back history: each tab keyed by the webview's stable `uid`
+    // (indices shift when tabs close).
+    subsectionHistory: SQUtils.SubsectionNavigationHistory {
+        id: tabHistory
+        currentKey: _internal.currentWebView ? _internal.currentWebView.uid : ""
+        validateFn: (uid) => {
+            for (let i = 0; i < tabs.count; i++) {
+                const wv = webViewContext.getWebView(i)
+                if (wv && wv.uid === uid)
+                    return true
+            }
+            return false
+        }
+        onNavigateRequested: (uid) => {
+            for (let i = 0; i < tabs.count; i++) {
+                const wv = webViewContext.getWebView(i)
+                if (wv && wv.uid === uid) {
+                    tabs.activateTab(i)
+                    return
+                }
+            }
+        }
     }
 
     Component.onCompleted: {
         savedSessionContext.restoreSession()
+        // Session-restore tab churn must not be treated as user navigation.
+        tabHistory.clear()
     }
 
     Component.onDestruction: {

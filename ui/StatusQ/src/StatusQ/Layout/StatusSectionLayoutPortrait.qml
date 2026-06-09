@@ -150,14 +150,13 @@ SwipeView {
     */
     signal backButtonClicked()
 
+    // Bound (not a function) so StatusSectionLayout.canGoBack stays reactive.
+    readonly property bool canGoBackInternally: root.currentIndex > 0 || !!root.backButtonName
+
     QtObject {
         id: d
         // Cache wrapper items removed from the swipe view
         property list<Item> items: []
-
-        function canGoBack() {
-            return root.currentIndex > 0 || !!root.backButtonName
-        }
 
         function handleBackAction() {
             if (!!root.backButtonName) {
@@ -170,14 +169,14 @@ SwipeView {
     }
 
     Keys.onPressed: function(e) {
-        if (e.key === Qt.Key_Back && d.canGoBack()) {
+        if (e.key === Qt.Key_Back && root.canGoBackInternally) {
             e.accepted = true
             d.handleBackAction()
         }
     }
 
     function tryGoBack() {
-        if (d.canGoBack()) {
+        if (root.canGoBackInternally) {
             d.handleBackAction()
             return true
         }
