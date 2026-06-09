@@ -317,12 +317,20 @@ void presentIOSPhotoLibraryPicker(bool selectMultiple)
 
 void saveImageToPhotosAlbumAsync(const QByteArray &data, const std::function<void(bool)>& completion)
 {
+    auto completeOnMain = [completion](bool success) {
+        if (!completion)
+            return;
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(success);
+        });
+    };
+
     NSData *imageData = [NSData dataWithBytes:data.constData() length:data.length()];
     UIImage *image = [UIImage imageWithData:imageData];
     if (!image) {
         NSLog(@"Failed to save image");
-        if (completion)
-            completion(false);
+        completeOnMain(false);
         return;
     }
 
@@ -332,8 +340,7 @@ void saveImageToPhotosAlbumAsync(const QByteArray &data, const std::function<voi
         if (!success)
             NSLog(@"Failed to save image: %@", error);
 
-        if (completion)
-            completion(success);
+        completeOnMain(success);
     }];
 }
 QString resolveIOSPhotoAsset(const QUrl &assetUrl) {
