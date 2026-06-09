@@ -15272,6 +15272,10 @@ selhalo</translation>
         <translation>Heslo</translation>
     </message>
     <message>
+        <source>Keycard</source>
+        <translation type="unfinished">Keycard</translation>
+    </message>
+    <message>
         <source>ENS usernames</source>
         <translation>ENS uživatelská jména</translation>
     </message>

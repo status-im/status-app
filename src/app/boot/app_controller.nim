@@ -212,7 +212,7 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   result.accountsService)
   result.savedAddressService = saved_address_service.newService(statusFoundation.threadpool, statusFoundation.events,
     result.networkService, result.settingsService)
-  result.followingAddressService = following_address_service.newService(statusFoundation.threadpool, statusFoundation.events, 
+  result.followingAddressService = following_address_service.newService(statusFoundation.threadpool, statusFoundation.events,
     result.networkService)
   result.devicesService = devices_service.newService(statusFoundation.events, statusFoundation.threadpool,
     result.settingsService, result.accountsService, result.walletAccountService)
@@ -371,11 +371,10 @@ proc mainDidLoad*(self: AppController) =
     self.runPostOnboardingTasks()
 
 proc start*(self: AppController) =
-  self.keycardServiceV2.init()
   self.generalService.init()
   self.accountsService.init()
   self.devicesService.init()
-  
+
   if not self.resumeLogin:
     self.onboardingModule.load()
   else:

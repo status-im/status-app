@@ -15135,6 +15135,10 @@ to load</source>
         <translation>비밀번호</translation>
     </message>
     <message>
+        <source>Keycard</source>
+        <translation type="unfinished">키카드</translation>
+    </message>
+    <message>
         <source>ENS usernames</source>
         <translation>ENS 이름</translation>
     </message>

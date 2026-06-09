@@ -15188,6 +15188,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>ENS usernames</source>
         <translation type="unfinished"></translation>
     </message>
