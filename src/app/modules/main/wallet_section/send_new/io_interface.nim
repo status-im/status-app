@@ -3,7 +3,6 @@ import tables
 import app_service/service/transaction/dto
 import app_service/service/transaction/router_transactions_dto
 import app_service/service/transaction/dtoV2
-from app_service/service/keycard/service import KeycardEvent
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -69,9 +68,6 @@ method onUserAuthenticated*(self: AccessInterface, pin: string, password: string
   raise newException(ValueError, "No implementation available")
 
 method prepareSignaturesForTransactions*(self:AccessInterface, txForSigning: RouterTransactionsForSigningDto) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onTransactionSigned*(self: AccessInterface, keycardFlowType: string, keycardEvent: KeycardEvent) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method transactionSendingComplete*(self: AccessInterface, txHash: string, status: string) {.base.} =

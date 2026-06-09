@@ -26,8 +26,6 @@ InformationTile 1.0 InformationTile.qml
 Input 1.0 Input.qml
 LinkPreviewDebugView 1.0 LinkPreviewDebugView.qml
 LoadingTokenDelegate 1.0 LoadingTokenDelegate.qml
-MockedKeycardReaderStateSelector 1.0 MockedKeycardReaderStateSelector.qml
-MockedKeycardStateSelector 1.0 MockedKeycardStateSelector.qml
 Padding 1.0 Padding.qml
 ProfilePerspectiveSelector 1.0 ProfilePerspectiveSelector.qml
 ProfileButton 1.0 ProfileButton.qml

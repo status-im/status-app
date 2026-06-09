@@ -10,7 +10,6 @@ import app_service/service/network/service as networks_service
 import app_service/service/community_tokens/service as community_tokens_service
 import app_service/service/token/service as token_service
 import app_service/service/wallet_account/service as wallet_account_service
-import app_service/service/keycard/service as keycard_service
 import app_service/service/network/network_item
 import ../../../../backend/general as status_general
 
@@ -24,12 +23,6 @@ type
     tokenService: token_service.Service
     chatService: chat_service.Service
     walletAccountService: wallet_account_service.Service
-    keycardService: keycard_service.Service
-    connectionKeycardResponse: UUID
-    ## the following are used for silent signing in case there are more then a single address for the same keypair
-    silentSigningPath: string
-    silentSigningKeyUid: string
-    silentSigningPin: string
 
 proc newController*(
     delegate: io_interface.AccessInterface,
@@ -39,8 +32,7 @@ proc newController*(
     networksService: networks_service.Service,
     tokenService: token_service.Service,
     chatService: chat_service.Service,
-    walletAccountService: wallet_account_service.Service,
-    keycardService: keycard_service.Service
+    walletAccountService: wallet_account_service.Service
     ): Controller =
   result = Controller()
   result.delegate = delegate
@@ -51,7 +43,6 @@ proc newController*(
   result.tokenService = tokenService
   result.chatService = chatService
   result.walletAccountService = walletAccountService
-  result.keycardService = keycardService
 
 proc delete*(self: Controller) =
   discard
@@ -410,40 +401,8 @@ proc getWalletAccounts*(self: Controller): seq[wallet_account_service.WalletAcco
 proc getEnabledChainIds*(self: Controller): seq[int] =
   return self.walletAccountService.getEnabledChainIds()
 
-proc disconnectKeycardReponseSignal(self: Controller) =
-  self.events.disconnect(self.connectionKeycardResponse)
-
-proc connectKeycardReponseSignal(self: Controller) =
-  self.connectionKeycardResponse = self.events.onWithUUID(SIGNAL_KEYCARD_RESPONSE) do(e: Args):
-    let args = KeycardLibArgs(e)
-    self.disconnectKeycardReponseSignal()
-    let currentFlow = self.keycardService.getCurrentFlow()
-    if currentFlow != KCSFlowType.Sign:
-      return
-    self.delegate.onDataSigned(self.silentSigningKeyUid, self.silentSigningPath, args.flowEvent.txSignature.r, args.flowEvent.txSignature.s, args.flowEvent.txSignature.v, self.silentSigningPin)
-    self.silentSigningKeyUid = ""
-    self.silentSigningPath = ""
-    self.silentSigningPin = ""
-
-proc cancelCurrentFlow*(self: Controller) =
-  self.keycardService.cancelCurrentFlow()
-
-proc runSignFlow(self: Controller, pin, path, dataToSign: string) =
-  self.cancelCurrentFlow()
-  self.connectKeycardReponseSignal()
-  self.keycardService.startSignFlow(path, dataToSign, pin)
-
 proc runSigningOnKeycard*(self: Controller, keyUid: string, path: string, dataToSign: string, pin: string) =
-  var finalDataToSign = status_general.hashMessageForSigning(dataToSign)
-  if finalDataToSign.startsWith("0x"):
-    finalDataToSign = finalDataToSign[2..^1]
-
-  if pin.len == 0:
-    return
-  self.silentSigningKeyUid = keyUid
-  self.silentSigningPath = path
-  self.silentSigningPin = pin
-  self.runSignFlow(pin, path, finalDataToSign)
+  discard
 
 proc removeCommunityChat*(self: Controller, communityId: string, channelId: string) =
   self.communityService.deleteCommunityChat(communityId, channelId)

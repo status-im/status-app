@@ -1,6 +1,5 @@
 import nimqml, tables
 import app_service/service/devices/service
-from app_service/service/keycard/service import KeyDetails
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -48,9 +47,6 @@ method advertise*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method generateConnectionStringAndRunSetupSyncingPopup*(self: AccessInterface, messageSyncingEnabled: bool) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onLoggedInUserAuthenticated*(self: AccessInterface, pin: string, password: string, keyUid: string, additinalPathsDetails: Table[string, KeyDetails]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 proc validateConnectionString*(self: AccessInterface, connectionString: string): string =

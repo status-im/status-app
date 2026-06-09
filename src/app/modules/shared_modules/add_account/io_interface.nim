@@ -2,7 +2,6 @@ import tables, nimqml
 
 import ../../../../app_service/service/accounts/dto/generated_accounts
 import ../../../../app_service/service/wallet_account/dto/derived_address_dto
-from ../../../../app_service/service/keycard/service import KeycardEvent
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -89,10 +88,6 @@ method updateDerivedAddresses*(self: AccessInterface, derivedAddresses: seq[Deri
   raise newException(ValueError, "No implementation available")
 
 method startScanningForActivity*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onDerivedAddressesFromKeycardFetched*(self: AccessInterface, keycardFlowType: string, keycardEvent: KeycardEvent,
-  paths: seq[string]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method buildNewPrivateKeyKeypairAndAddItToOrigin*(self: AccessInterface) {.base.} =

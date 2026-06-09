@@ -187,27 +187,7 @@ Window {
         id: d
         property bool appMainTriggered: false
         property bool splashDismissed: false
-        property var mockedKeycardControllerWindow
         property double lastShakeShareMs: 0
-        function runMockedKeycardControllerWindow() {
-            if (localAppSettings.displayMockedKeycardWindow()) {
-                if (!!d.mockedKeycardControllerWindow) {
-                    d.mockedKeycardControllerWindow.close()
-                }
-
-                console.info("running mocked keycard lib controller window")
-                var c = Qt.createComponent("qrc:/imports/shared/panels/MockedKeycardLibControllerWindow.qml");
-                if (c.status === Component.Ready) {
-                    d.mockedKeycardControllerWindow = c.createObject(applicationWindow, {
-                                                                         "relatedModule": mainModule
-                                                                     })
-                    if (d.mockedKeycardControllerWindow) {
-                        d.mockedKeycardControllerWindow.show()
-                        d.mockedKeycardControllerWindow.requestActivate()
-                    }
-                }
-            }
-        }
 
         readonly property bool macOSWindowed: SQUtils.Utils.isMacOS && applicationWindow.visibility !== Window.FullScreen
 
@@ -298,7 +278,6 @@ Window {
 
     function moveToAppMain() {
         d.appMainTriggered = true
-        d.runMockedKeycardControllerWindow()
     }
 
     /* When the app is closed via CMD+Q or via tray icon, it should be closed (not minimized)

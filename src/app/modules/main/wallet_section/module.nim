@@ -26,7 +26,6 @@ import app/global/global_singleton
 import app/core/eventemitter
 import app/modules/shared_modules/add_account/module as add_account_module
 import app/modules/shared_modules/keypair_import/module as keypair_import_module
-import app_service/service/keycard/service as keycard_service
 import app_service/service/token/service as token_service
 import app_service/service/collectible/service as collectible_service
 import app_service/service/currency/service as currency_service
@@ -83,7 +82,6 @@ type
     networksService: network_service.Service
     rampService: ramp_service.Service
     transactionService: transaction_service.Service
-    keycardService: keycard_service.Service
     accountsService: accounts_service.Service
     walletAccountService: wallet_account_service.Service
     savedAddressService: saved_address_service.Service
@@ -122,7 +120,6 @@ proc newModule*(
   followingAddressService: following_address_service.Service,
   networkService: network_service.Service,
   accountsService: accounts_service.Service,
-  keycardService: keycard_service.Service,
   nodeService: node_service.Service,
   networkConnectionService: network_connection_service.Service,
   devicesService: devices_service.Service,
@@ -132,7 +129,6 @@ proc newModule*(
   result = Module()
   result.delegate = delegate
   result.events = events
-  result.keycardService = keycardService
   result.accountsService = accountsService
   result.walletAccountService = walletAccountService
   result.savedAddressService = savedAddressService
@@ -149,8 +145,8 @@ proc newModule*(
   result.assetsModule = assets_module.newModule(result, events, walletAccountService, networkService, tokenService,
     currencyService)
   result.sendModule = send_module.newModule(result, events, tokenService, walletAccountService, networkService, currencyService,
-  transactionService, keycardService)
-  result.newSendModule = newSendModule.newModule(result, events, walletAccountService, networkService, transactionService, keycardService)
+  transactionService)
+  result.newSendModule = newSendModule.newModule(result, events, walletAccountService, networkService, transactionService)
   result.savedAddressesModule = saved_addresses_module.newModule(result, events, savedAddressService)
   result.followingAddressesModule = following_addresses_module.newModule(result, events, followingAddressService)
   result.buySellCryptoModule = buy_sell_crypto_module.newModule(result, events, rampService)
@@ -183,7 +179,7 @@ proc newModule*(
   result.collectibleDetailsController = collectible_detailsc.newController(int32(backend_collectibles.CollectiblesRequestID.WalletAccount), networkService, events)
   result.filter = initFilter(result.controller)
 
-  result.walletConnectService = wc_service.newService(result.events, result.threadpool, settingsService, transactionService, keycardService)
+  result.walletConnectService = wc_service.newService(result.events, result.threadpool, settingsService, transactionService)
   result.walletConnectController = wc_controller.newController(result.walletConnectService, walletAccountService, result.events)
 
   result.dappsConnectorService = connector_service.newService(result.events, result.threadpool)
@@ -469,13 +465,13 @@ method destroyAddAccountPopup*(self: Module) =
 
 method runAddAccountPopup*(self: Module, addingWatchOnlyAccount: bool) =
   self.destroyAddAccountPopup()
-  self.addAccountModule = add_account_module.newModule(self, self.events, self.keycardService, self.accountsService,
+  self.addAccountModule = add_account_module.newModule(self, self.events, self.accountsService,
     self.walletAccountService, self.savedAddressService)
   self.addAccountModule.loadForAddingAccount(addingWatchOnlyAccount)
 
 method runEditAccountPopup*(self: Module, address: string) =
   self.destroyAddAccountPopup()
-  self.addAccountModule = add_account_module.newModule(self, self.events, self.keycardService, self.accountsService,
+  self.addAccountModule = add_account_module.newModule(self, self.events, self.accountsService,
     self.walletAccountService, self.savedAddressService)
   self.addAccountModule.loadForEditingAccount(address)
 
