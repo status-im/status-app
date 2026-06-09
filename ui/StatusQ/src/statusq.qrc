@@ -216,6 +216,7 @@
         <file>StatusQ/Core/Utils/Subscription.qml</file>
         <file>StatusQ/Core/Utils/SubscriptionBroker.qml</file>
         <file>StatusQ/Core/Utils/SubscriptionBrokerCommunities.qml</file>
+        <file>StatusQ/Core/Utils/SubsectionNavigationHistory.qml</file>
         <file>StatusQ/Core/Utils/TextDocumentUtils.qml</file>
         <file>StatusQ/Core/Utils/Utils.qml</file>
         <file>StatusQ/Core/Utils/big.min.mjs</file>

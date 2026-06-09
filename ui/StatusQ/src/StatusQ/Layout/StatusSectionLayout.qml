@@ -181,11 +181,44 @@ LayoutChooser {
             portraitView.decrementCurrentIndex()
     }
 
+    /*!
+        Optional StatusQ.Core.Utils.SubsectionNavigationHistory. When set, Back
+        steps the portrait SwipeView panels first, then retraces subsection
+        navigation within the section before the section is left.
+    */
+    property var subsectionHistory: null
+
     function tryGoBack() {
-        if (portraitView.visible)
-            return portraitView.tryGoBack()
+        if (portraitView.visible && portraitView.tryGoBack()) // view tier
+            return true
+        if (root.subsectionHistory && root.subsectionHistory.tryGoBack()) { // subsection tier
+            // Advance to the central panel so the restored subsection's detail is
+            // shown (mirrors a normal item click); no-op in landscape.
+            root.goToNextPanel()
+            return true
+        }
         return false
     }
+
+    // Returning to the leaf (left) panel — via Back, the header back button or a
+    // swipe — dismisses the active subsection so it isn't retraced later.
+    Connections {
+        target: portraitView
+        enabled: !!root.subsectionHistory
+        function onCurrentIndexChanged() {
+            if (portraitView.currentIndex === 0)
+                root.subsectionHistory.dropLeaf()
+        }
+    }
+
+    /*!
+        True when Back can step the portrait SwipeView, trigger the header back
+        button, or retrace subsection history. Used by AppMain to enable the
+        desktop Back shortcut / mouse button for in-section navigation.
+    */
+    readonly property bool canGoBack:
+        (portraitView.visible && portraitView.canGoBackInternally)
+        || (!!root.subsectionHistory && root.subsectionHistory.canGoBack)
 
     readonly property int windowWidth: root.Window?.width ?? Screen.width
 

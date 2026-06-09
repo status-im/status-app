@@ -16,6 +16,7 @@ RecursiveStackView 0.1 RecursiveStackView.qml
 SearchFilter 0.1 SearchFilter.qml
 StackViewStates 0.1 StackViewStates.qml
 StatesStack 0.1 StatesStack.qml
+SubsectionNavigationHistory 0.1 SubsectionNavigationHistory.qml
 Subscription 0.1 Subscription.qml
 SubscriptionBroker 0.1 SubscriptionBroker.qml
 SubscriptionBrokerCommunities 0.1 SubscriptionBrokerCommunities.qml

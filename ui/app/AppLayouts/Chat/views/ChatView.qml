@@ -86,6 +86,16 @@ StatusSectionLayout {
 
     property int extraLeftPadding: 0
 
+    // Subsection back history keyed by the active chat/channel id.
+    subsectionHistory: SubsectionNavigationHistory {
+        currentKey: {
+            const m = root.rootStore.chatCommunitySectionModule
+            return m && m.activeItem ? m.activeItem.id : ""
+        }
+        validateFn: (id) => ModelUtils.indexOf(root.rootStore.chatCommunitySectionModule.model, "itemId", id) >= 0
+        onNavigateRequested: (key) => root.rootStore.chatCommunitySectionModule.setActiveItem(key)
+    }
+
     readonly property bool contentLocked: {
         if (!rootStore.chatCommunitySectionModule.isCommunity()) {
             return false
