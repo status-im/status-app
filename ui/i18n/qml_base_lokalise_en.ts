@@ -18520,6 +18520,11 @@
       <translation>Password</translation>
     </message>
     <message>
+      <source>Keycard</source>
+      <comment>SettingsEntriesModel</comment>
+      <translation>Keycard</translation>
+    </message>
+    <message>
       <source>ENS usernames</source>
       <comment>SettingsEntriesModel</comment>
       <translation>ENS usernames</translation>
