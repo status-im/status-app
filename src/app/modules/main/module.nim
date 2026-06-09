@@ -1687,11 +1687,12 @@ method displayEphemeralNotification*[T](
     self.events.emit(SIGNAL_PLAY_NOTIFICATION_SOUND, Args())
 
 method displayEphemeralNotification*[T](self: Module[T], title: string, subTitle: string, details: NotificationDetails) =
-  # Message toasts create high-frequency UI noise, so keep them disabled until their value is reassessed.
-  if details.notificationType == NotificationType.NewMessage or
-      details.notificationType == NotificationType.NewMessageWithPersonalMention or
-      details.notificationType == NotificationType.NewMessageWithGlobalMention:
-    return
+  when defined(ios) or defined(android):
+    # Message toasts create high-frequency UI noise on mobile, so keep them disabled there.
+    if details.notificationType == NotificationType.NewMessage or
+        details.notificationType == NotificationType.NewMessageWithPersonalMention or
+        details.notificationType == NotificationType.NewMessageWithGlobalMention:
+      return
 
   if details.notificationType == NotificationType.CommunityTokenPermissionCreated or
       details.notificationType == NotificationType.CommunityTokenPermissionUpdated or

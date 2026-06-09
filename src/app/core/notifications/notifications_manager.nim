@@ -41,6 +41,16 @@ QtObject:
   proc processNotification(self: NotificationsManager, title: string, message: string, details: NotificationDetails)
 
   proc setup(self: NotificationsManager, events: EventEmitter, settingsService: settings_service.Service)
+
+  proc highestNotifSetting(a, b: string): string =
+    ## Returns whichever of the two notification settings has the highest priority.
+    ## Priority order (highest first): SendAlerts > DeliverQuietly > TurnOff
+    if a == VALUE_NOTIF_SEND_ALERTS or b == VALUE_NOTIF_SEND_ALERTS:
+      return VALUE_NOTIF_SEND_ALERTS
+    if a == VALUE_NOTIF_DELIVER_QUIETLY or b == VALUE_NOTIF_DELIVER_QUIETLY:
+      return VALUE_NOTIF_DELIVER_QUIETLY
+    return VALUE_NOTIF_TURN_OFF
+
   proc delete*(self: NotificationsManager)
   proc newNotificationsManager*(events: EventEmitter, settingsService: settings_service.Service): NotificationsManager =
     new(result, delete)
@@ -223,27 +233,28 @@ QtObject:
 
     let appIsActive = app_isActive(singletonInstance.engine)
 
-    if details.notificationType == NotificationType.NewMessage or
+    if (details.notificationType == NotificationType.NewMessage or
         details.notificationType == NotificationType.NewMessageWithPersonalMention or
-        details.notificationType == NotificationType.NewMessageWithGlobalMention or
-        details.notificationType == NotificationType.NewContactRequest or
-        details.notificationType == NotificationType.ContactRemoved or
-        details.notificationType == NotificationType.IdentityVerificationRequest or
-        details.notificationType == NotificationType.NewsFeedMessage:
-
-      if notificationWay == VALUE_NOTIF_DELIVER_QUIETLY:
-        return
-
-      if (details.notificationType == NotificationType.NewMessage or
-          details.notificationType == NotificationType.NewMessageWithPersonalMention or
-          details.notificationType == NotificationType.NewMessageWithGlobalMention) and
-          details.sectionActive and
-          details.chatActive and appIsActive:
-        return
+        details.notificationType == NotificationType.NewMessageWithGlobalMention) and
+        details.sectionActive and
+        details.chatActive and appIsActive:
+      return
 
     if appIsActive:
       debug "Add APP notification", notificationType=details.notificationType
       self.events.emit(SIGNAL_DISPLAY_APP_NOTIFICATION, data)
+
+    if notificationWay == VALUE_NOTIF_DELIVER_QUIETLY and
+        details.notificationType in [
+          NotificationType.NewMessage,
+          NotificationType.NewMessageWithPersonalMention,
+          NotificationType.NewMessageWithGlobalMention,
+          NotificationType.NewContactRequest,
+          NotificationType.ContactRemoved,
+          NotificationType.IdentityVerificationRequest,
+          NotificationType.NewsFeedMessage
+        ]:
+      return
 
     if not appIsActive or details.notificationType == NotificationType.TestNotification:
       # Check anonymity level
@@ -297,55 +308,62 @@ QtObject:
         return
 
       let messageBelongsToCommunity = details.isCommunitySection
-      if(messageBelongsToCommunity):
+      if messageBelongsToCommunity:
         let exemptions = self.settingsService.getNotifSettingExemptions(details.sectionId)
         if(exemptions.muteAllMessages):
           return
 
-        if(details.notificationType == NotificationType.NewMessageWithPersonalMention and
-          exemptions.personalMentions != VALUE_NOTIF_TURN_OFF):
+        if details.notificationType == NotificationType.NewMessageWithPersonalMention and
+          exemptions.personalMentions != VALUE_NOTIF_TURN_OFF:
           self.notificationCheck(title, message, details, exemptions.personalMentions)
           return
 
-        if(details.notificationType == NotificationType.NewMessageWithGlobalMention and
-          exemptions.globalMentions != VALUE_NOTIF_TURN_OFF):
+        if details.notificationType == NotificationType.NewMessageWithGlobalMention and
+          exemptions.globalMentions != VALUE_NOTIF_TURN_OFF:
           self.notificationCheck(title, message, details, exemptions.globalMentions)
           return
 
-        if(details.notificationType == NotificationType.NewMessage and
-          exemptions.otherMessages != VALUE_NOTIF_TURN_OFF):
+        if details.notificationType == NotificationType.NewMessage and
+          exemptions.otherMessages != VALUE_NOTIF_TURN_OFF:
           self.notificationCheck(title, message, details, exemptions.otherMessages)
           return
 
         return
       else:
-        if(details.isOneToOne or details.isGroupChat):
+        if details.isOneToOne or details.isGroupChat:
           let exemptions = self.settingsService.getNotifSettingExemptions(details.chatId)
-          if exemptions.muteAllMessages or
-              # Don't show a notification for group messages that are NOT mentions
-              (details.isGroupChat and details.notificationType != NotificationType.NewMessageWithPersonalMention):
+          if exemptions.muteAllMessages:
+            # Chat is muted
             return
 
-        if(details.notificationType == NotificationType.NewMessageWithPersonalMention and
-          self.settingsService.getNotifSettingPersonalMentions() != VALUE_NOTIF_TURN_OFF):
+          let chatNotificationWay = if details.isOneToOne:
+              self.settingsService.getNotifSettingOneToOneChats()
+            else:
+              self.settingsService.getNotifSettingGroupChats()
+
+          if details.notificationType == NotificationType.NewMessageWithPersonalMention:
+            # A notification should be sent if either the personal mention setting or the chat-type
+            # setting allows it. Use whichever of the two is the highest priority.
+            let mentionSetting = self.settingsService.getNotifSettingPersonalMentions()
+            let effectiveSetting = highestNotifSetting(mentionSetting, chatNotificationWay)
+            if effectiveSetting != VALUE_NOTIF_TURN_OFF:
+              self.notificationCheck(title, message, details, effectiveSetting)
+          else:
+            if chatNotificationWay != VALUE_NOTIF_TURN_OFF:
+              self.notificationCheck(title, message, details, chatNotificationWay)
+          return
+
+        # Personal mentions in non-1-1/non-group-chat contexts (e.g. unnamed channels)
+        if details.notificationType == NotificationType.NewMessageWithPersonalMention and
+          self.settingsService.getNotifSettingPersonalMentions() != VALUE_NOTIF_TURN_OFF:
           self.notificationCheck(title, message, details, self.settingsService.getNotifSettingPersonalMentions())
           return
 
-        if(details.notificationType == NotificationType.NewMessageWithGlobalMention and
-          self.settingsService.getNotifSettingGlobalMentions() != VALUE_NOTIF_TURN_OFF):
+        # Global mentions in non-1-1/non-group-chat contexts
+        if details.notificationType == NotificationType.NewMessageWithGlobalMention and
+          self.settingsService.getNotifSettingGlobalMentions() != VALUE_NOTIF_TURN_OFF:
           self.notificationCheck(title, message, details, self.settingsService.getNotifSettingGlobalMentions())
           return
-
-        if(details.notificationType == NotificationType.NewMessage):
-          if(details.isOneToOne and
-            self.settingsService.getNotifSettingOneToOneChats() != VALUE_NOTIF_TURN_OFF):
-            self.notificationCheck(title, message, details, self.settingsService.getNotifSettingOneToOneChats())
-            return
-
-          if(details.isGroupChat and
-            self.settingsService.getNotifSettingGroupChats() != VALUE_NOTIF_TURN_OFF):
-            self.notificationCheck(title, message, details, self.settingsService.getNotifSettingGroupChats())
-            return
 
     # In all other cases (TestNotification, AcceptedContactRequest, ContactRemoved, JoinCommunityRequest,  MyRequestToJoinCommunityAccepted,
     # MyRequestToJoinCommunityRejected)
