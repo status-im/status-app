@@ -283,7 +283,13 @@ method onSearchMessagesDone*(self: Module, messages: seq[MessageDto]) =
 
   # Add messages
   for m in messages:
-    if (m.contentType != ContentType.Message):
+    if m.contentType notin [
+        ContentType.Message,
+        ContentType.ContactRequest,
+        ContentType.DiscordMessage,
+        ContentType.BridgeMessage,
+        ContentType.Image,
+      ]:
       continue
 
     let chatDto = self.controller.getChatDetails("", m.chatId)
