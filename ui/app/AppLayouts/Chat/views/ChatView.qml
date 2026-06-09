@@ -126,8 +126,9 @@ StatusSectionLayout {
     property bool amIChatAdmin
 
     // Navigation:
-    // Internal trigger for navigating to messaging details
+    // Internal triggers for navigating between messaging panels
     property bool navToMsgDetails: false
+    property bool navToMsgList: false
 
     // Users related signals
     signal groupMembersUpdateRequested(string membersPubKeysList)
@@ -173,6 +174,7 @@ StatusSectionLayout {
     // Navigation
     signal showUsersListRequested(bool show)
     signal navToMsgDetailsRequested(bool navigate)
+    signal navToMsgListRequested(bool navigate)
 
     Connections {
         target: root.rootStore.stickersStore.stickersModule
@@ -224,6 +226,23 @@ StatusSectionLayout {
             root.currentIndex = StatusSectionLayout.CentralPanel
             root.navToMsgDetailsRequested(false)
         }
+    }
+
+    onNavToMsgListChanged: {
+        if (root.navToMsgList) {
+            root.navigateToMessageList()
+        }
+    }
+
+    Component.onCompleted: {
+        if (root.navToMsgList) {
+            root.navigateToMessageList()
+        }
+    }
+
+    function navigateToMessageList() {
+        root.currentIndex = StatusSectionLayout.LeftPanel
+        root.navToMsgListRequested(false)
     }
 
     rightPanel: UserListPanel {

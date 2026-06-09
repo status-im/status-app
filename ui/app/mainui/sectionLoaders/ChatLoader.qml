@@ -129,6 +129,7 @@ Loader {
             usersModel:                     Qt.binding(() => d.chatRootStore.usersStore.usersModel),
             myPublicKey:                    Qt.binding(() => root.contactsStore.myPublicKey),
             navToMsgDetails:                Qt.binding(() => root.rootStore.navToMsgDetails),
+            navToMsgList:                   Qt.binding(() => root.rootStore.navToMsgList),
             leftPanelWidthOverride:         Qt.binding(() => root.leftPanelWidthOverride),
         })
     }
@@ -185,6 +186,9 @@ Loader {
         }
         function onNavToMsgDetailsRequested(navigate) {
             root.rootStore.setNavToMsgDetailsFlag(navigate)
+        }
+        function onNavToMsgListRequested(navigate) {
+            root.rootStore.setNavToMsgListFlag(navigate)
         }
     }
 
