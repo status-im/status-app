@@ -8,7 +8,7 @@ mainWallet_LeftTab = {"container": mainWindow_WalletLayout, "objectName": "walle
 
 mainWallet_Saved_Addresses_Button = { "container": mainWallet_LeftTab, "objectName": "savedAddressesBtn", "type": "StatusFlatButton", "visible": True}
 walletAccounts_StatusListView = {"container": mainWallet_LeftTab, "objectName": "walletAccountsListView", "type": "StatusListView", "visible": True}
-mainWallet_All_Accounts_Button = {"container": walletAccounts_StatusListView, "objectName": "allAccountsBtn", "type": "Button", "visible": True}
+mainWallet_All_Accounts_Button = {"container": walletAccounts_StatusListView, "objectName": "allAccountsBtn", "type": "StatusFlatButton", "visible": True}
 mainWallet_Add_Account_Button = {"container": mainWallet_LeftTab, "objectName": "addAccountButton", "type": "StatusRoundButton", "visible": True}
 walletAccount_StatusListItem = {"container": walletAccounts_StatusListView, "objectName": "walletAccountListItem", "type": "StatusListItem", "visible": True}
 mainWallet_All_Accounts_Balance = {"container": mainWallet_All_Accounts_Button, "objectName": "walletLeftListAmountValue", "type": "StatusTextWithLoadingState", "visible": True}
