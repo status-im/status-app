@@ -8,6 +8,7 @@ import shared.popups
 import StatusQ.Core
 import StatusQ.Controls
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 
 FocusScope {
     id: root
@@ -177,6 +178,29 @@ FocusScope {
                     }
                 }
             }
+        }
+    }
+
+    Connections {
+        target: scrollView.flickable
+
+        function scrollToFocusedItem() {
+            const focusedItem = root.Window.activeFocusItem
+            if (!focusedItem)
+                return
+            const contentItem = scrollView.flickable.contentItem
+            const rect = contentItem.mapFromItem(
+                focusedItem, Qt.rect(0, 0, focusedItem.width, focusedItem.height))
+            SQUtils.Utils.ensureVisible(scrollView.flickable,
+                                Qt.rect(0, rect.y, contentItem.width, rect.height))
+        }
+
+        function onContentHeightChanged() {
+            scrollToFocusedItem()
+        }
+
+        function onHeightChanged() {
+            scrollToFocusedItem()
         }
     }
 
