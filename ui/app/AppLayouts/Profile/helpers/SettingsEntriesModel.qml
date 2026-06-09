@@ -74,13 +74,12 @@ SortFilterProxyModel {
             icon: "password",
             isExperimental: false
         },
-        // TODO: enable when integrate keycard settings
-        // {
-        //     subsection: Constants.settingsSubsection.keycardNew,
-        //     text: qsTr("Keycard New"),
-        //     icon: "keycard",
-        //     isExperimental: false
-        // },
+        {
+            subsection: Constants.settingsSubsection.keycardNew,
+            text: qsTr("Keycard"),
+            icon: "keycard",
+            isExperimental: false
+        },
         {
             subsection: Constants.settingsSubsection.ensUsernames,
             text: qsTr("ENS usernames"),

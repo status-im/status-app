@@ -15203,6 +15203,10 @@ al cargar</translation>
         <translation>Contraseña</translation>
     </message>
     <message>
+        <source>Keycard</source>
+        <translation type="unfinished">Keycard</translation>
+    </message>
+    <message>
         <source>ENS usernames</source>
         <translation>Nombres de usuario ENS</translation>
     </message>
