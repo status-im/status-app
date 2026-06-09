@@ -514,16 +514,25 @@ SettingsContentBase {
                         to: 100
                         stepSize: 1
 
-                        onValueChanged: {
+                        function commitVolume() {
+                            if (d.notificationsSettings.volume === value) 
+                                return
                             d.notificationsSettings.volume = value
+                            Global.playNotificationSound()
+                        }
+
+                        onPressedChanged: {
+                            if (!pressed)
+                                commitVolume()
+                        }
+
+                        onValueChanged: {
+                            if (!pressed)
+                                commitVolume()
                         }
 
                         Component.onCompleted: {
                             value = d.notificationsSettings.volume
-                            volumeSlider.valueChanged.connect(() => {
-                                                            // play a sound preview, but not on startup
-                                                            Global.playNotificationSound()
-                                                        });
                         }
                     }
 
