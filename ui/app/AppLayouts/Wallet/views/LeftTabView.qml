@@ -339,7 +339,7 @@ Rectangle {
                     ]
                 }
 
-                header: Button {
+                header: StatusFlatButton {
                     id: header
                     verticalPadding: Theme.padding
                     horizontalPadding: Theme.padding
@@ -357,9 +357,6 @@ Rectangle {
                         implicitWidth: parent.ListView.view.width - Theme.padding * 2
                     }
 
-                    HoverHandler {
-                        cursorShape: Qt.PointingHandCursor
-                    }
                     onClicked: root.selectAllAccounts()
 
                     contentItem: ColumnLayout {
