@@ -1,7 +1,6 @@
 import nimqml, sequtils, chronicles
 
 import app_service/service/general/service as general_service
-import app_service/service/keycard/service as keycard_service
 import app_service/service/keycardV2/service as keycard_serviceV2
 import app_service/service/accounts/service as accounts_service
 import app_service/service/contacts/service as contacts_service
@@ -66,7 +65,6 @@ type
 
     # Services
     generalService: general_service.Service
-    keycardService*: keycard_service.Service
     keycardServiceV2*: keycard_serviceV2.Service
     accountsService: accounts_service.Service
     contactsService: contacts_service.Service
@@ -159,7 +157,6 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
 
   # Services
   result.generalService = general_service.newService(statusFoundation.events, statusFoundation.threadpool)
-  result.keycardService = keycard_service.newService(statusFoundation.events, statusFoundation.threadpool)
   result.keycardServiceV2 = keycard_serviceV2.newService(statusFoundation.events, statusFoundation.threadpool)
   result.nodeConfigurationService = node_configuration_service.newService(statusFoundation.events)
   result.accountsService = accounts_service.newService(statusFoundation.events, statusFoundation.threadpool)
@@ -280,7 +277,6 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
     result.tokensService,
     result.networkService,
     result.generalService,
-    result.keycardService,
     result.keycardServiceV2,
     result.networkConnectionService,
     result.sharedUrlsService,
@@ -350,7 +346,6 @@ proc delete*(self: AppController) =
   self.generalService.delete
   self.ensService.delete
   self.tokensService.delete
-  self.keycardService.delete
   self.keycardServiceV2.delete
   self.networkConnectionService.delete
   self.marketService.delete
@@ -374,10 +369,6 @@ proc onboardingDidLoad*(self: AppController) =
 proc mainDidLoad*(self: AppController) =
   if not self.onboardingModule.isNil:
     self.runPostOnboardingTasks()
-
-  # Reset keycard library state from RPC mode (used during onboarding) to flow mode (used post-login)
-  self.keycardService.resetAPI()
-  self.keycardService.init()
 
 proc start*(self: AppController) =
   self.keycardServiceV2.init()

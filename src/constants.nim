@@ -52,7 +52,8 @@ let
 
   # runtime variables
   TEST_MODE_ENABLED* = desktopConfig.testMode
-  DISPLAY_MOCKED_KEYCARD_WINDOW* = desktopConfig.displayMockedKeycardWindow
+  # TODO: revisit/implement when preparing keycard lib for testing
+  # DISPLAY_MOCKED_KEYCARD_WINDOW* = desktopConfig.displayMockedKeycardWindow
   WALLET_ENABLED* = desktopConfig.enableWallet
   TORRENT_CONFIG_PORT* = desktopConfig.defaultTorentConfigPort
   LOG_LEVEL* = desktopConfig.logLevel

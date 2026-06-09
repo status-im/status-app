@@ -391,22 +391,6 @@ QtObject:
     status: string,
     error: string) {.signal.}
 
-  ## Used in test env only, for testing keycard flows
-  proc registerMockedKeycard*(self: View, cardIndex: int, readerState: int, keycardState: int,
-  mockedKeycard: string, mockedKeycardHelper: string) {.slot.} =
-    self.delegate.registerMockedKeycard(cardIndex, readerState, keycardState, mockedKeycard, mockedKeycardHelper)
-
-  proc pluginMockedReaderAction*(self: View) {.slot.} =
-    self.delegate.pluginMockedReaderAction()
-
-  proc unplugMockedReaderAction*(self: View) {.slot.} =
-    self.delegate.unplugMockedReaderAction()
-
-  proc insertMockedKeycardAction*(self: View, cardIndex: int) {.slot.} =
-    self.delegate.insertMockedKeycardAction(cardIndex)
-
-  proc removeMockedKeycardAction*(self: View) {.slot.} =
-    self.delegate.removeMockedKeycardAction()
 
   ## Address was shown is added here because it will be used from many different parts of the app
   ## and "mainModule" is accessible from everywhere
