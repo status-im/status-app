@@ -300,10 +300,12 @@ Control {
                                 active: true
                                 sourceComponent: StatusMessageImageAlbum {
                                     objectName: "StatusMessage_imageAlbum"
+                                    readonly property int effectiveAlbumCount: Math.max(1, root.messageDetails.albumCount)
+
                                     width: messageLayout.width
                                     album: root.messageDetails.albumCount > 0 ? root.messageDetails.album : [root.messageDetails.messageContent]
-                                    albumCount: root.messageDetails.albumCount > 0 ? root.messageDetails.albumCount : 1
-                                    imageWidth: Math.min(messageLayout.width / root.messageDetails.albumCount - 9 * (root.messageDetails.albumCount - 1), 144)
+                                    albumCount: effectiveAlbumCount
+                                    imageWidth: Math.max(1, Math.min((messageLayout.width - 9 * (effectiveAlbumCount - 1)) / effectiveAlbumCount, 144))
                                     shapeType: StatusImageMessage.ShapeType.LEFT_ROUNDED
                                     onImageClicked: (image, mouse, imageSource, pos) => root.imageClicked(image, mouse, imageSource, pos)
                                 }
