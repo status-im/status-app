@@ -95,22 +95,6 @@ ListModel {
         active: false
     },
     {
-        id: "id4",
-        sectionType: Constants.appSection.node,
-        icon: "node",
-        image: "",
-        bannerImageData: "",
-        color: "mediumblue",
-        name: "Node",
-        description: "",
-        allMembers: [],
-        activeMembersCount: 0,
-        enabled: true,
-        hasNotification: false,
-        notificationsCount: 0,
-        active: false
-    },
-    {
         id: "id5",
         sectionType: Constants.appSection.communitiesPortal,
         icon: "communities",

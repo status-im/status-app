@@ -19,12 +19,10 @@ Item {
         sectionsModel: SectionsModel {}
         marketEnabled: false
         browserEnabled: false
-        nodeEnabled: false
 
         function reset() {
             marketEnabled = false
             browserEnabled = false
-            nodeEnabled = false
             showEnabledSectionsOnly = true
         }
     }
@@ -221,16 +219,6 @@ Item {
             const browserBtn = findChild(controlUnderTest, "Browser-navbar")
             verify(!!browserBtn)
             tryCompare(browserBtn, "visible", true)
-        }
-
-        function test_node_section_enabled() {
-            sidebarAdaptor.nodeEnabled = true
-
-            waitForRendering(controlUnderTest)
-
-            const nodeBtn = findChild(controlUnderTest, "Node-navbar")
-            verify(!!nodeBtn)
-            tryCompare(nodeBtn, "visible", true)
         }
 
         function test_communities_portal_button() {

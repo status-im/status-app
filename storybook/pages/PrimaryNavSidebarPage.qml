@@ -146,7 +146,6 @@ SplitView {
                 showEnabledSectionsOnly: ctrlShowEnabledSectionsOnly.checked
                 marketEnabled: ctrlMarketEnabled.checked
                 browserEnabled: ctrlBrowserEnabled.checked
-                nodeEnabled: ctrlNodeEnabled.checked
             }
 
             regularItemsModel: sidebarAdaptor.regularItemsModel
@@ -296,11 +295,6 @@ SplitView {
                     id: ctrlBrowserEnabled
                     text: "Browser enabled"
                     checked: true
-                }
-                Switch {
-                    id: ctrlNodeEnabled
-                    text: "Node mgmt enabled"
-                    checked: false
                 }
                 Switch {
                     id: ctrlThirdPartyServices
