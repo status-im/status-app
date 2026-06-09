@@ -6,7 +6,6 @@ import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/transaction/service as transaction_service
 import app_service/service/network/service as networks_service
 import app_service/service/community/service as community_service
-import app_service/service/keycard/service as keycard_service
 import app_service/service/network/network_item
 import app/core/signals/types
 import app/core/eventemitter
@@ -20,8 +19,6 @@ type
     transactionService: transaction_service.Service
     networksService: networks_service.Service
     communityService: community_service.Service
-    keycardService: keycard_service.Service
-    connectionKeycardResponse: UUID
 
 proc newCommunityTokensController*(
     delegate: community_tokens_module_interface.AccessInterface,
@@ -30,8 +27,7 @@ proc newCommunityTokensController*(
     communityTokensService: community_tokens_service.Service,
     transactionService: transaction_service.Service,
     networksService: networks_service.Service,
-    communityService: community_service.Service,
-    keycardService: keycard_service.Service
+    communityService: community_service.Service
     ): Controller =
   result = Controller()
   result.delegate = delegate
@@ -41,7 +37,6 @@ proc newCommunityTokensController*(
   result.transactionService = transactionService
   result.networksService = networksService
   result.communityService = communityService
-  result.keycardService = keycardService
 
 proc delete*(self: Controller) =
   discard
@@ -165,25 +160,5 @@ proc sendRouterTransactionsWithSignatures*(self: Controller, uuid: string, signa
 proc signMessage*(self: Controller, address: string, hashedPassword: string, hashedMessage: string): tuple[res: string, err: string] =
   return self.communityTokensService.signMessage(address, hashedPassword, hashedMessage)
 
-proc disconnectKeycardReponseSignal(self: Controller) =
-  self.events.disconnect(self.connectionKeycardResponse)
-
-proc connectKeycardReponseSignal(self: Controller) =
-  self.connectionKeycardResponse = self.events.onWithUUID(SIGNAL_KEYCARD_RESPONSE) do(e: Args):
-    let args = KeycardLibArgs(e)
-    self.disconnectKeycardReponseSignal()
-    let currentFlow = self.keycardService.getCurrentFlow()
-    if currentFlow != KCSFlowType.Sign:
-      error "trying to use keycard in other than the signing a community related transaction flow"
-      #TODO: notifify about error
-      # self.delegate.transactionWasSent(uuid = "", chainId = 0, approvalTx = false, txHash = "", error = "trying to use keycard in the other than the signing a transaction flow")
-      return
-    self.delegate.onTransactionSigned(args.flowType, args.flowEvent)
-
-proc cancelCurrentFlow*(self: Controller) =
-  self.keycardService.cancelCurrentFlow()
-
 proc runSignFlow*(self: Controller, pin, bip44Path, txHash: string) =
-  self.cancelCurrentFlow()
-  self.connectKeycardReponseSignal()
-  self.keycardService.startSignFlow(bip44Path, txHash, pin)
+  discard

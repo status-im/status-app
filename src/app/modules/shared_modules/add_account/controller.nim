@@ -5,7 +5,6 @@ import io_interface
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/saved_address/service as saved_address_service
-import app_service/service/keycard/service as keycard_service
 
 import app/core/eventemitter
 
@@ -19,27 +18,19 @@ type
     accountsService: accounts_service.Service
     walletAccountService: wallet_account_service.Service
     savedAddressService: saved_address_service.Service
-    keycardService: keycard_service.Service
     connectionIds: seq[UUID]
-    connectionKeycardResponse: UUID
     tmpAuthenticatedKeyUid: string
     tmpPin: string
     tmpPassword: string
     tmpSeedPhrase: string
-    tmpPaths: seq[string]
     tmpGeneratedAccount: GeneratedAccountDto
     uniqueFetchingDetailsId: string
-
-## Forward declaration
-proc disconnectKeycardReponseSignal(self: Controller)
-
 
 proc newController*(delegate: io_interface.AccessInterface,
   events: EventEmitter,
   accountsService: accounts_service.Service,
   walletAccountService: wallet_account_service.Service,
-  savedAddressService: saved_address_service.Service,
-  keycardService: keycard_service.Service):
+  savedAddressService: saved_address_service.Service):
   Controller =
   result = Controller()
   result.delegate = delegate
@@ -47,10 +38,8 @@ proc newController*(delegate: io_interface.AccessInterface,
   result.accountsService = accountsService
   result.walletAccountService = walletAccountService
   result.savedAddressService = savedAddressService
-  result.keycardService = keycardService
 
 proc disconnectAll*(self: Controller) =
-  self.disconnectKeycardReponseSignal()
   for id in self.connectionIds:
     self.events.disconnect(id)
 
@@ -221,23 +210,8 @@ proc buildNewPrivateKeyKeypairAndAddItToOrigin*(self: Controller) =
 proc buildNewSeedPhraseKeypairAndAddItToOrigin*(self: Controller) =
   self.delegate.buildNewSeedPhraseKeypairAndAddItToOrigin()
 
-proc disconnectKeycardReponseSignal(self: Controller) =
-  self.events.disconnect(self.connectionKeycardResponse)
-
-proc connectKeycardReponseSignal(self: Controller) =
-  self.connectionKeycardResponse = self.events.onWithUUID(SIGNAL_KEYCARD_RESPONSE) do(e: Args):
-    let args = KeycardLibArgs(e)
-    self.disconnectKeycardReponseSignal()
-    self.delegate.onDerivedAddressesFromKeycardFetched(args.flowType, args.flowEvent, self.tmpPaths)
-
-proc cancelCurrentFlow*(self: Controller) =
-  self.keycardService.cancelCurrentFlow()
-
 proc fetchAddressesFromKeycard*(self: Controller, bip44Paths: seq[string]) =
-  self.cancelCurrentFlow()
-  self.connectKeycardReponseSignal()
-  self.tmpPaths = bip44Paths
-  self.keycardService.startExportPublicFlow(bip44Paths, exportMasterAddr=true, exportPrivateAddr=false, pin=self.getPin())
+  discard
 
 proc getNumOfAddressesToGenerateForKeypair*(self: Controller, keyUid: string): int =
   return self.walletAccountService.getNumOfAddressesToGenerateForKeypair(keyUid)

@@ -18,7 +18,6 @@ import app/boot/app_controller
 featureGuard KEYCARD_ENABLED:
   import keycard_go
 
-  var keycardServiceQObjPointer: pointer
   var keycardServiceV2QObjPointer: pointer
 
 when defined(macosx) and defined(arm64):
@@ -98,8 +97,6 @@ proc setupRemoteSignalsHandling() =
       if isShuttingDown(): return
       if keycardServiceV2QObjPointer != nil:
         signal_handler(keycardServiceV2QObjPointer, p0, "receiveKeycardSignalV2")
-      if keycardServiceQObjPointer != nil:
-        signal_handler(keycardServiceQObjPointer, p0, "receiveKeycardSignal")
 
     keycard_go.setSignalEventCallback(callbackKeycardGo)
 
@@ -245,7 +242,6 @@ proc mainProc() =
     info "shutting down..."
     signalsManagerQObjPointer = nil
     featureGuard KEYCARD_ENABLED:
-      keycardServiceQObjPointer = nil
       keycardServiceV2QObjPointer = nil
     isProductionQVariant.delete()
     isExperimentalQVariant.delete()
@@ -267,7 +263,6 @@ proc mainProc() =
   signalsManagerQObjPointer = cast[pointer](statusFoundation.signalsManager.vptr)
   featureGuard KEYCARD_ENABLED:
     keycardServiceV2QObjPointer = cast[pointer](appController.keycardServiceV2.vptr)
-    keycardServiceQObjPointer = cast[pointer](appController.keycardService.vptr)
 
   setupRemoteSignalsHandling()
 

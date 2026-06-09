@@ -67,7 +67,6 @@ import app_service/service/ens/service as ens_service
 import app_service/service/community_tokens/service as community_tokens_service
 import app_service/service/network/service as network_service
 import app_service/service/general/service as general_service
-import app_service/service/keycard/service as keycard_service
 import app_service/service/keycardV2/service as keycard_serviceV2
 import app_service/service/shared_urls/service as urls_service
 import app_service/service/network_connection/service as network_connection_service
@@ -114,7 +113,6 @@ type
     chatSectionModules: OrderedTable[string, chat_section_module.AccessInterface]
     events: EventEmitter
     urlsManager: UrlsManager
-    keycardService: keycard_service.Service
     keycardServiceV2: keycard_serviceV2.Service
     settingsService: settings_service.Service
     networkService: network_service.Service
@@ -193,7 +191,6 @@ proc newModule*[T](
   communityTokensService: community_tokens_service.Service,
   networkService: network_service.Service,
   generalService: general_service.Service,
-  keycardService: keycard_service.Service,
   keycardServiceV2: keycard_serviceV2.Service,
   networkConnectionService: network_connection_service.Service,
   sharedUrlsService: urls_service.Service,
@@ -232,7 +229,6 @@ proc newModule*[T](
 
   result.events = events
   result.urlsManager = urlsManager
-  result.keycardService = keycardService
   result.keycardServiceV2 = keycardServiceV2
   result.settingsService = settingsService
   result.networkService = networkService
@@ -251,7 +247,7 @@ proc newModule*[T](
     result, events, tokenService, collectibleService, currencyService,
     rampService, transactionService, walletAccountService,
     settingsService, savedAddressService, followingAddressService, networkService, accountsService,
-    keycardService, nodeService, networkConnectionService, devicesService,
+    nodeService, networkConnectionService, devicesService,
     communityTokensService, threadpool
   )
   result.browserSectionModule = browser_section_module.newModule(
@@ -271,7 +267,7 @@ proc newModule*[T](
   result.activityCenterModule = activity_center_module.newModule(result, events, activityCenterService, contactsService,
   messageService, chatService, communityService, devicesService, generalService)
   result.communitiesModule = communities_module.newModule(result, events, communityService, communityTokensService,
-    networkService, transactionService, tokenService, chatService, walletAccountService, keycardService)
+    networkService, transactionService, tokenService, chatService, walletAccountService)
   result.appSearchModule = app_search_module.newModule(result, events, contactsService, chatService, communityService,
   messageService)
   result.networkConnectionModule = network_connection_module.newModule(result, events, networkConnectionService)
@@ -2128,22 +2124,6 @@ method communityMemberRevealedAccountsAdded*[T](self: Module[T], request: Commun
   let communityMembersAirdropAddress = {request.publicKey: airdropAddress}.toTable
   self.view.model.setMembersAirdropAddress(request.communityId, communityMembersAirdropAddress)
 
-## Used in test env only, for testing keycard flows
-method registerMockedKeycard*[T](self: Module[T], cardIndex: int, readerState: int, keycardState: int,
-  mockedKeycard: string, mockedKeycardHelper: string) =
-  self.keycardService.registerMockedKeycard(cardIndex, readerState, keycardState, mockedKeycard, mockedKeycardHelper)
-
-method pluginMockedReaderAction*[T](self: Module[T]) =
-  self.keycardService.pluginMockedReaderAction()
-
-method unplugMockedReaderAction*[T](self: Module[T]) =
-  self.keycardService.unplugMockedReaderAction()
-
-method insertMockedKeycardAction*[T](self: Module[T], cardIndex: int) =
-  self.keycardService.insertMockedKeycardAction(cardIndex)
-
-method removeMockedKeycardAction*[T](self: Module[T]) =
-  self.keycardService.removeMockedKeycardAction()
 
 method addressWasShown*[T](self: Module[T], address: string) =
   if address.len == 0:

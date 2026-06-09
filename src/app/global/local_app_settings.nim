@@ -125,9 +125,6 @@ QtObject:
   QtProperty[bool] testEnvironment:
     read = getTestEnvironment
 
-  proc displayMockedKeycardWindow*(self: LocalAppSettings): bool {.slot.} =
-    return DISPLAY_MOCKED_KEYCARD_WINDOW
-
   proc refreshTokenEnabledChanged*(self: LocalAppSettings) {.signal.}
   proc getRefreshTokenEnabled*(self: LocalAppSettings): bool {.slot.} =
     self.settings.value(LAS_KEY_REFRESH_TOKEN_ENABLED, newQVariant(false)).boolVal

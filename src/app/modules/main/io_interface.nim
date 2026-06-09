@@ -420,23 +420,6 @@ method communityMembersRevealedAccountsLoaded*(self: AccessInterface, communityI
 method communityMemberRevealedAccountsAdded*(self: AccessInterface, request: CommunityMembershipRequestDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-## Used in test env only, for testing keycard flows
-method registerMockedKeycard*(self: AccessInterface, cardIndex: int, readerState: int, keycardState: int,
-  mockedKeycard: string, mockedKeycardHelper: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method pluginMockedReaderAction*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method unplugMockedReaderAction*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method insertMockedKeycardAction*(self: AccessInterface, cardIndex: int) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method removeMockedKeycardAction*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method onCommunityTokensDetailsLoaded*(self: AccessInterface, communityId: string,
     communityTokens: seq[CommunityTokenDto], communityTokenJsonItems: JsonNode) {.base.} =
   raise newException(ValueError, "No implementation available")

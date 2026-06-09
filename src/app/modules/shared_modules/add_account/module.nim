@@ -17,7 +17,6 @@ const dummyUsage = account_constants.ZERO_ADDRESS # dummy usage to prevent false
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/saved_address/service as saved_address_service
-import app_service/service/keycard/service as keycard_service
 
 export io_interface
 
@@ -52,7 +51,6 @@ proc doAddAccount[T](self: Module[T])
 
 proc newModule*[T](delegate: T,
   events: EventEmitter,
-  keycardService: keycard_service.Service,
   accountsService: accounts_service.Service,
   walletAccountService: wallet_account_service.Service,
   savedAddressService: saved_address_service.Service):
@@ -63,7 +61,7 @@ proc newModule*[T](delegate: T,
   result.view = newView(result)
   result.viewVariant = newQVariant(result.view)
   result.controller = controller.newController(result, events, accountsService, walletAccountService,
-    savedAddressService, keycardService)
+    savedAddressService)
   result.authenticationReason = AuthenticationReason.AddingAccount
   result.fetchingAddressesIsInProgress = false
 
@@ -488,29 +486,6 @@ method onAddressesFromNotImportedMnemonicFetched*[T](self: Module[T], derivation
   if self.authenticationReason == AuthenticationReason.AddingAccount:
     self.doAddAccount()
 
-method onDerivedAddressesFromKeycardFetched*[T](self: Module[T], keycardFlowType: string, keycardEvent: KeycardEvent,
-  paths: seq[string]) =
-  let selectedOrigin = self.view.getSelectedOrigin()
-  if not selectedOrigin.getMigratedToColdWallet():
-    error "receiving addresses from a keycard refers to a keycard origin, but selected origin is not a keycard origin"
-    return
-  if paths.len != keycardEvent.generatedWalletAccounts.len:
-    error "unexpected error, keycard didn't generate all addresses we need"
-    return
-  var derivedAddresses: seq[DerivedAddressDto]
-  for i in 0 ..< paths.len:
-    # we're safe to access `generatedWalletAccounts` by index (read comment in `startExportPublicFlow`)
-    derivedAddresses.add(DerivedAddressDto(address: keycardEvent.generatedWalletAccounts[i].address,
-      publicKey: keycardEvent.generatedWalletAccounts[i].publicKey,
-      path: paths[i], hasActivity: false, alreadyCreated: false))
-
-  if selectedOrigin.getPairType() != KeyPairType.Profile.int and
-    selectedOrigin.getPairType() != KeyPairType.SeedImport.int:
-      error "received derived addresses reffer to profile or seed imported origin, but that's not the selected origin"
-      return
-  self.setDerivedAddresses(derivedAddresses)
-  if self.authenticationReason == AuthenticationReason.AddingAccount:
-    self.doAddAccount()
 
 method updateDerivedAddresses*[T](self: Module[T], derivedAddresses: seq[DerivedAddressDto], error: string, detailsLoaded: bool) =
   if not self.view.getScanningForActivityIsOngoing():
