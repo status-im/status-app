@@ -85,8 +85,9 @@ StackLayout {
     property var usersModel
 
     // Navigation:
-    // Internal trigger for navigating to messaging details
+    // Internal triggers for navigating between messaging panels
     property bool navToMsgDetails: false
+    property bool navToMsgList: false
 
     // Users related signals
     signal groupMembersUpdateRequested(string membersPubKeysList)
@@ -117,6 +118,7 @@ StackLayout {
     // Navigation
     signal showUsersListRequested(bool show)
     signal navToMsgDetailsRequested(bool navigate)
+    signal navToMsgListRequested(bool navigate)
 
     /*!
         \qmlproperty int StatusSectionLayoutLandscape::leftPanelWidthOverride
@@ -333,6 +335,7 @@ StackLayout {
 
             // Navigation:
             navToMsgDetails: root.navToMsgDetails
+            navToMsgList: root.navToMsgList
 
             // Layout
             leftPanelWidthOverride: root.leftPanelWidthOverride
@@ -402,6 +405,7 @@ StackLayout {
             onShowUsersListRequested: show => root.showUsersListRequested(show)
 
             onNavToMsgDetailsRequested: navigate => root.navToMsgDetailsRequested(navigate)
+            onNavToMsgListRequested: navigate => root.navToMsgListRequested(navigate)
         }
     }
 
