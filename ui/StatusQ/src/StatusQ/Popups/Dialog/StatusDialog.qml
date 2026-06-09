@@ -190,6 +190,14 @@ Dialog {
         id: background
     }
 
+    Connections {
+        target: background
+        ignoreUnknownSignals: true
+        function onCloseRequested() {
+            root.closeHandler()
+        }
+    }
+
     header: StatusDialogHeader {
         id: dialogHeader
         visible: root.title || root.subtitle
