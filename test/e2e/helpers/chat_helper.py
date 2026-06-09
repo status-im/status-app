@@ -7,6 +7,26 @@ import allure
 import configs
 from gui.components.community.enable_message_backup_popup import EnableMessageBackupPopup
 from gui.components.introduce_yourself_popup import IntroduceYourselfPopup
+from scripts.utils.parsers import remove_tags
+
+
+@allure.step('Get visible message texts from chat')
+def get_visible_message_texts(chat):
+    texts = []
+    for msg in chat.messages(index=None):
+        raw = str(getattr(msg.object, 'unparsedText', None) or msg.text or '')
+        text = remove_tags(raw).strip()
+        if text:
+            texts.append(text)
+    return texts
+
+
+@allure.step('Check if chat contains message text')
+def chat_contains_message_text(chat, needle: str) -> bool:
+    try:
+        return any(needle in text for text in get_visible_message_texts(chat))
+    except Exception:
+        return False
 
 
 @allure.step('Skip Enable Messages backup popup')

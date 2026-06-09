@@ -11,7 +11,7 @@ from constants.links import external_link
 import configs.testpath
 from constants import UserAccount, RandomUser
 from constants.messaging import Messaging
-from helpers.chat_helper import skip_message_backup_popup_if_visible
+from helpers.chat_helper import chat_contains_message_text, skip_message_backup_popup_if_visible
 from helpers.multiple_instances_helper import (
     authorize_user_in_aut, get_chat_key, switch_to_aut
 )
@@ -124,17 +124,8 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 chat_message = random_text_message()
                 messages_screen.group_chat.send_message_to_group_chat(chat_message)
 
-                def _message_sent(needle):
-                    try:
-                        for msg in messages_screen.chat.messages(index=None):
-                            text = str(getattr(msg.object, 'unparsedText', None) or msg.text or '')
-                            if needle in text:
-                                return True
-                    except Exception:
-                        pass
-                    return False
-
-                assert driver.waitFor(lambda: _message_sent(chat_message), timeout), \
+                assert driver.waitFor(
+                    lambda: chat_contains_message_text(messages_screen.chat, chat_message), timeout), \
                     f"Message '{chat_message}' not found in group chat messages"
 
             with step('Send local image to group chat and verify it was sent'):
@@ -177,17 +168,8 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 chat_message_2 = random_text_message()
                 messages_screen.group_chat.send_message_to_group_chat(chat_message_2)
 
-                def _message_sent_after_removal(needle):
-                    try:
-                        for msg in messages_screen.chat.messages(index=None):
-                            text = str(getattr(msg.object, 'unparsedText', None) or msg.text or '')
-                            if needle in text:
-                                return True
-                    except Exception:
-                        pass
-                    return False
-
-                assert driver.waitFor(lambda: _message_sent_after_removal(chat_message_2), timeout), \
+                assert driver.waitFor(
+                    lambda: chat_contains_message_text(messages_screen.chat, chat_message_2), timeout), \
                     f"Message '{chat_message_2}' not found in group chat messages after user removal"
 
             with step(f'User {user_two.name}, get own profile link in online identifier'):

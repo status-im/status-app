@@ -6,6 +6,7 @@ from gui.components.authenticate_popup import AuthenticatePopup
 from gui.components.settings.sync_new_device_popup import SyncNewDevicePopup
 from gui.components.settings.unpair_confirmation_popup import UnpairDeviceConfirmationPopup
 from gui.elements.button import Button
+from gui.elements.check_box import CheckBox
 from gui.elements.object import QObject
 from gui.elements.text_label import TextLabel
 from gui.objects_map import settings_names
@@ -21,6 +22,7 @@ class SyncingSettingsView(QObject):
         self.sync_new_device_instructions_header = TextLabel(settings_names.settings_Sync_New_Device_Header)
         self.sync_new_device_instructions_subtitle = TextLabel(settings_names.settings_Sync_New_Device_SubTitle)
         self.unpair_button = Button(settings_names.unpairButton)
+        self.enable_message_syncing_checkbox = CheckBox(settings_names.enableMessageSyncingCheckBox)
 
     @allure.step('Click Unpair button')
     def open_unpair_confirmation(self):
@@ -28,7 +30,9 @@ class SyncingSettingsView(QObject):
         return UnpairDeviceConfirmationPopup()
 
     @allure.step('Setup syncing')
-    def open_sync_new_device_popup(self, password: str):
+    def open_sync_new_device_popup(self, password: str, message_sync: bool = False):
+        if message_sync:
+            self.enable_message_syncing_checkbox.set(True)
         auth_popup = self.click_setup_syncing()
         auth_popup.authenticate(password)
         return SyncNewDevicePopup().wait_until_appears()
