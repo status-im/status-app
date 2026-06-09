@@ -129,10 +129,7 @@ QtObject:
     requestMap: Table[int, KeycardRequest]
 
   ## Forward declaration
-  proc initializeRPC(self: Service)
-  proc asyncStart(self: Service, storageDir: string)
   proc onAsyncResponse(self: Service, response: string) {.slot.}
-  proc startDetection*(self: Service) {.featureGuard(KEYCARD_ENABLED).}
   proc delete*(self: Service)
 
   proc newService*(events: EventEmitter, threadpool: ThreadPool): Service =
@@ -140,15 +137,6 @@ QtObject:
     result.QObject.setup
     result.events = events
     result.threadpool = threadpool
-
-  proc init*(self: Service) {.featureGuard(KEYCARD_ENABLED).} =
-    debug "KeycardServiceV2 init"
-    # Do not remove the sleep 700, this sleep prevents a crash on intel MacOS
-    # with errors like bad flushGen 12 in prepareForSweep; sweepgen 0
-    # More details: https://github.com/status-im/status-app/pull/15194
-    if status_const.IS_MACOS and status_const.IS_INTEL:
-      sleep 700
-    self.initializeRPC()
 
   proc receiveKeycardSignalV2(self: Service, signal: string) {.slot, featureGuard(KEYCARD_ENABLED).} =
     try:

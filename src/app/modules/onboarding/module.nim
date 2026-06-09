@@ -377,53 +377,7 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
     error "Error finishing Login Flow", msg = e.msg
     self.view.accountLoginError(e.msg, wrongPassword = false)
 
-proc syncAppAndKeycardState[T](self: Module[T]) =
-  var kcEvent = self.view.getKeycardEvent()
-  ## Temporary workaround to use the old keycard approach
-  ## TODO: once we switch fully to new keycard approach, we will remove this, and not only this but the entire `syncAppAndKeycardState` procedure
-  if self.tmpKeycardUid.len > 0 and self.tmpKeyUid.len > 0:
-    kcEvent = KeycardEventDto(
-      keycardInfo: KeycardInfoDto(
-        keyUID: self.tmpKeyUid,
-        instanceUID: self.tmpKeycardUid,
-      ),
-    )
-  if kcEvent.keycardInfo.keyUID == "":
-    return
-  let keypair = self.controller.getKeypairByKeyUidFromDb(kcEvent.keycardInfo.keyUID)
-  if keypair.isNil:
-    return
-  var
-    pathsToStore: seq[string]
-    addressesToStore: seq[string]
-  for acc in keypair.accounts:
-    if acc.isChat:
-      continue
-    if utils.isPathOutOfTheDefaultStatusDerivationTree(acc.path):
-      return
-    pathsToStore.add(acc.path)
-    addressesToStore.add(acc.address)
-  var kcName = kcEvent.metadata.name
-  if kcName.len == 0:
-    kcName = singletonInstance.userProfile.getName()
-  if kcName.len == 0:
-    kcName = "Status Keycard"
-
-  var kcDto = KeycardDto(keycardUid: kcEvent.keycardInfo.instanceUID,
-    keycardName: kcName,
-    keycardLocked: false,
-    accountsAddresses: addressesToStore,
-    keyUid: kcEvent.keycardInfo.keyUID)
-  self.controller.addKeycardOrAccounts(kcDto, password = "")
-  if IS_MOBILE:
-    return
-  self.controller.storeMetadata(kcName, pathsToStore)
-
 proc finishAppLoading2[T](self: Module[T]) =
-  self.syncAppAndKeycardState()
-
-  self.controller.stopKeycardService()
-
   self.delegate.finishAppLoading()
   self.delegate.appReady()
 
