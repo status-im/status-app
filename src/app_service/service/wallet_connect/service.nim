@@ -8,7 +8,6 @@ import app_service/service/settings/service as settings_service
 import app_service/common/wallet_constants
 from app_service/service/transaction/dto import PendingTransactionTypeDto
 import app_service/service/transaction/service as tr
-import app_service/service/keycard/service as keycard_service
 
 import app/global/global_singleton
 
@@ -56,9 +55,7 @@ QtObject:
     threadpool: ThreadPool
     settingsService: settings_service.Service
     transactions: tr.Service
-    keycardService: keycard_service.Service
 
-    connectionKeycardResponse: UUID
     authenticationCallback: AuthenticationResponseFn
     signCallback: SignResponseFn
 
@@ -68,7 +65,6 @@ QtObject:
     threadpool: ThreadPool,
     settingsService: settings_service.Service,
     transactions: tr.Service,
-    keycardService: keycard_service.Service,
   ): Service =
     new(result, delete)
     result.QObject.setup
@@ -77,7 +73,6 @@ QtObject:
     result.threadpool = threadpool
     result.settingsService = settings_service
     result.transactions = transactions
-    result.keycardService = keycardService
 
   proc init*(self: Service) =
     discard
@@ -206,42 +201,8 @@ QtObject:
     except Exception as e:
       error "failed to parse suggested fees response", msg = e.msg
 
-  proc disconnectKeycardReponseSignal(self: Service) =
-    self.events.disconnect(self.connectionKeycardResponse)
-
-  proc connectKeycardReponseSignal(self: Service) =
-    self.connectionKeycardResponse = self.events.onWithUUID(SIGNAL_KEYCARD_RESPONSE) do(e: Args):
-      let args = KeycardLibArgs(e)
-      self.disconnectKeycardReponseSignal()
-      if self.signCallback == nil:
-        error "unexpected user authenticated event; no callback set"
-        return
-      defer:
-        self.signCallback = nil
-      let currentFlow = self.keycardService.getCurrentFlow()
-      if currentFlow != KCSFlowType.Sign:
-        error "unexpected keycard flow type: ", currentFlow
-        self.signCallback("", "")
-        return
-      let signature = "0x" &
-        singletonInstance.utils.removeHexPrefix(args.flowEvent.txSignature.r) &
-        singletonInstance.utils.removeHexPrefix(args.flowEvent.txSignature.s) &
-        singletonInstance.utils.removeHexPrefix(args.flowEvent.txSignature.v)
-      self.signCallback(args.flowEvent.keyUid, signature)
-
-  proc cancelCurrentFlow*(self: Service) =
-      self.keycardService.cancelCurrentFlow()
-
   proc runSigningOnKeycard*(self: Service, keyUid: string, path: string, hashedMessageToSign: string, pin: string, callback: SignResponseFn): bool =
-    if pin.len == 0:
-      return false
-    if self.signCallback != nil:
-      return false
-    self.signCallback = callback
-    self.cancelCurrentFlow()
-    self.connectKeycardReponseSignal()
-    self.keycardService.startSignFlow(path, hashedMessageToSign, pin)
-    return true
+    discard
 
   proc requestGasEstimate*(self: Service, topic: string, tx: JsonNode, chainId: int) =
     let request = AsyncEstimateGasArgs(

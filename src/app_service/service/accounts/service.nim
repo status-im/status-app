@@ -7,7 +7,6 @@ import ./dto/generated_accounts as dto_generated_accounts
 import ./dto/login_request
 import ./dto/restore_account_request
 
-from ../keycard/service import KeycardEvent, KeyDetails
 from ../keycardV2/dto import KeycardExportedKeysDto, KeyDetailsV2
 from ../wallet_account/dto/keypair_dto import ColdWalletTypeStatusKeycard
 import backend/general as status_general
@@ -250,38 +249,6 @@ QtObject:
     request.createAccountRequest.keycardInstanceUID = keycardInstanceUID
 
     self.restoreAccountAndLogin(request)
-
-  # TODO remove this function when the old keycard service is removed
-  proc restoreKeycardAccountAndLogin*(self: Service,
-    keycardData: KeycardEvent,
-    displayName: string,
-    imagePath: string,
-    imageCropRectangle: ImageCropRectangle,
-    thirdpartyServicesEnabled: bool
-    ): string =
-
-    let keycard = KeycardData(
-      keyUid: keycardData.keyUid,
-      address: keycardData.masterKey.address,
-      whisperPrivateKey: keycardData.whisperKey.privateKey,
-      whisperPublicKey: keycardData.whisperKey.publicKey,
-      whisperAddress: keycardData.whisperKey.address,
-      walletPublicKey: keycardData.walletKey.publicKey,
-      walletAddress: keycardData.walletKey.address,
-      walletRootAddress: keycardData.walletRootKey.address,
-      eip1581Address: keycardData.eip1581Key.address,
-      encryptionPublicKey: keycardData.encryptionKey.publicKey,
-      walletXPub: "",
-      coldWallet: ColdWalletTypeStatusKeycard,
-    )
-
-    var request = RestoreAccountRequest(
-      keycard: keycard,
-      createAccountRequest: buildCreateAccountRequest("", displayName, imagePath, imageCropRectangle, thirdpartyServicesEnabled),
-    )
-    request.createAccountRequest.keycardInstanceUID = keycardData.instanceUid
-
-    return self.restoreAccountAndLogin(request)
 
   proc restoreKeycardAccountAndLoginV2*(self: Service,
     keyUid: string,

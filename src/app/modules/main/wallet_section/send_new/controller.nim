@@ -6,7 +6,6 @@ import io_interface
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/network/service as network_service
 import app_service/service/transaction/service as transaction_service
-import app_service/service/keycard/service as keycard_service
 import app_service/service/network/network_item
 
 import app/core/eventemitter
@@ -21,16 +20,13 @@ type
     walletAccountService: wallet_account_service.Service
     networkService: network_service.Service
     transactionService: transaction_service.Service
-    keycardService: keycard_service.Service
-    connectionKeycardResponse: UUID
 
 proc newController*(
   delegate: io_interface.AccessInterface,
   events: EventEmitter,
   walletAccountService: wallet_account_service.Service,
   networkService: network_service.Service,
-  transactionService: transaction_service.Service,
-  keycardService: keycard_service.Service
+  transactionService: transaction_service.Service
 ): Controller =
   result = Controller()
   result.delegate = delegate
@@ -38,7 +34,6 @@ proc newController*(
   result.walletAccountService = walletAccountService
   result.networkService = networkService
   result.transactionService = transactionService
-  result.keycardService = keycardService
 
 proc delete*(self: Controller) =
   discard
@@ -124,24 +119,3 @@ proc sendRouterTransactionsWithSignatures*(self: Controller, uuid: string, signa
 proc getKeypairByAccountAddress*(self: Controller, address: string): KeypairDto =
   return self.walletAccountService.getKeypairByAccountAddress(address)
 
-proc disconnectKeycardReponseSignal(self: Controller) =
-  self.events.disconnect(self.connectionKeycardResponse)
-
-proc connectKeycardReponseSignal(self: Controller) =
-  self.connectionKeycardResponse = self.events.onWithUUID(SIGNAL_KEYCARD_RESPONSE) do(e: Args):
-    let args = KeycardLibArgs(e)
-    self.disconnectKeycardReponseSignal()
-    let currentFlow = self.keycardService.getCurrentFlow()
-    if currentFlow != KCSFlowType.Sign:
-      error "trying to use keycard in the other than the signing a transaction flow"
-      self.delegate.transactionWasSent(uuid = "", chainId = 0, approvalTx = false, txHash = "", error = "trying to use keycard in the other than the signing a transaction flow")
-      return
-    self.delegate.onTransactionSigned(args.flowType, args.flowEvent)
-
-proc cancelCurrentFlow*(self: Controller) =
-  self.keycardService.cancelCurrentFlow()
-
-proc runSignFlow*(self: Controller, pin, bip44Path, txHash: string) =
-  self.cancelCurrentFlow()
-  self.connectKeycardReponseSignal()
-  self.keycardService.startSignFlow(bip44Path, txHash, pin)

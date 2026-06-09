@@ -7,7 +7,6 @@ import app_service/service/network/service as network_service
 import app_service/service/transaction/service as transaction_service
 import app_service/service/currency/service as currency_service
 import app_service/service/currency/dto as currency_dto
-import app_service/service/keycard/service as keycard_service
 import app_service/service/network/network_item
 
 import app/modules/shared/wallet_utils
@@ -26,9 +25,7 @@ type
     networkService: network_service.Service
     currencyService: currency_service.Service
     transactionService: transaction_service.Service
-    keycardService: keycard_service.Service
     tokenService: token_service.Service
-    connectionKeycardResponse: UUID
 
 proc newController*(
   delegate: io_interface.AccessInterface,
@@ -37,8 +34,7 @@ proc newController*(
   walletAccountService: wallet_account_service.Service,
   networkService: network_service.Service,
   currencyService: currency_service.Service,
-  transactionService: transaction_service.Service,
-  keycardService: keycard_service.Service
+  transactionService: transaction_service.Service
 ): Controller =
   result = Controller()
   result.delegate = delegate
@@ -48,7 +44,6 @@ proc newController*(
   result.networkService = networkService
   result.currencyService = currencyService
   result.transactionService = transactionService
-  result.keycardService = keycardService
 
 proc delete*(self: Controller) =
   discard
@@ -164,27 +159,6 @@ proc getCurrentNetworks*(self: Controller): seq[NetworkItem] =
 proc getKeypairByAccountAddress*(self: Controller, address: string): KeypairDto =
   return self.walletAccountService.getKeypairByAccountAddress(address)
 
-proc disconnectKeycardReponseSignal(self: Controller) =
-  self.events.disconnect(self.connectionKeycardResponse)
-
-proc connectKeycardReponseSignal(self: Controller) =
-  self.connectionKeycardResponse = self.events.onWithUUID(SIGNAL_KEYCARD_RESPONSE) do(e: Args):
-    let args = KeycardLibArgs(e)
-    self.disconnectKeycardReponseSignal()
-    let currentFlow = self.keycardService.getCurrentFlow()
-    if currentFlow != KCSFlowType.Sign:
-      error "trying to use keycard in the other than the signing a transaction flow"
-      self.delegate.transactionWasSent(uuid = "", chainId = 0, approvalTx = false, txHash = "", error = "trying to use keycard in the other than the signing a transaction flow")
-      return
-    self.delegate.onTransactionSigned(args.flowType, args.flowEvent)
-
-proc cancelCurrentFlow*(self: Controller) =
-  self.keycardService.cancelCurrentFlow()
-
-proc runSignFlow*(self: Controller, pin, bip44Path, txHash: string) =
-  self.cancelCurrentFlow()
-  self.connectKeycardReponseSignal()
-  self.keycardService.startSignFlow(bip44Path, txHash, pin)
 
 proc getChainsWithNoGasFromError*(self: Controller, errCode: string, errDescription: string): Table[int, string] =
   return self.walletAccountService.getChainsWithNoGasFromError(errCode, errDescription)
