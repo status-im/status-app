@@ -153,17 +153,17 @@ proc init*(self: Controller) =
 
 proc initialize*(self: Controller, pin: string) =
   let puk = keycard_serviceV2.generateRandomPUK()
-  self.keycardServiceV2.asyncInitialize(pin, puk)
+  discard
 
 proc authorize*(self: Controller, pin: string) =
-  self.keycardServiceV2.asyncAuthorize(pin)
+  discard
 
 proc loginKeycard*(self: Controller, keyUid: string, pin: string) =
-  self.keycardServiceV2.asyncLogin(keyUid, pin)
+  discard
 
 proc recoverKeycard*(self: Controller, pin: string, mnemonic: string) =
   let puk = keycard_serviceV2.generateRandomPUK()
-  self.keycardServiceV2.asyncRecover(pin, puk, mnemonic)
+  discard
 
 proc getPasswordStrengthScore*(self: Controller, password, userName: string): int =
   return self.generalService.getPasswordStrengthScore(password, userName)
@@ -177,7 +177,7 @@ proc isMnemonicDuplicate*(self: Controller, mnemonic: string): bool =
   return self.accountsService.openedAccountsContainsKeyUid(keyUID)
 
 proc loadMnemonic*(self: Controller, mnemonic: string) =
-  self.keycardServiceV2.asyncLoadMnemonic(mnemonic)
+  discard
 
 proc validateLocalPairingConnectionString*(self: Controller, connectionString: string): bool =
   let err = self.devicesService.validateConnectionString(connectionString)
@@ -234,19 +234,19 @@ proc finishPairingThroughSeedPhraseProcess*(self: Controller, installationId: st
   self.devicesService.finishPairingThroughSeedPhraseProcess(installationId)
 
 proc stopKeycardService*(self: Controller) =
-  self.keycardServiceV2.stop()
+  discard
 
 proc stopKeycardServiceAsync*(self: Controller) =
-  self.keycardServiceV2.asyncStop()
+  discard
 
 proc generateMnemonic*(self: Controller, length: int): string =
-  return self.keycardServiceV2.generateMnemonic(length)
+  discard
 
 proc exportRecoverKeysFromKeycard*(self: Controller) =
-  self.keycardServiceV2.asyncExportRecoverKeys()
+  discard
 
 proc exportLoginKeysFromKeycard*(self: Controller) =
-  self.keycardServiceV2.asyncExportLoginKeys()
+  discard
 
 proc getOpenedAccounts*(self: Controller): seq[AccountDto] =
   return self.accountsService.openedAccounts()
@@ -283,26 +283,25 @@ proc getKeypairByKeyUidFromDb*(self: Controller, keyUid: string): wallet_account
   return self.walletAccountService.getKeypairByKeyUidFromDb(keyUid)
 
 proc addKeycardOrAccounts*(self: Controller, keyPair: KeycardDto, password: string) =
-  # TODO: re-implement when integrating new keycard approach
   discard
 
 proc getMetadata*(self: Controller): keycard_serviceV2.CardMetadataDto =
-  return self.keycardServiceV2.getMetadata()
+  discard
 
 proc startKeycardFactoryReset*(self: Controller) =
-  self.keycardServiceV2.asyncFactoryReset()
+  discard
 
 proc storeMetadata*(self: Controller, name: string, paths: seq[string]) =
-  self.keycardServiceV2.storeMetadata(name, paths)
+  discard
 
 proc storeMetadataAsync*(self: Controller, name: string, paths: seq[string]) =
-  self.keycardServiceV2.asyncStoreMetadata(name, paths)
+  discard
 
 proc asyncImportLocalBackupFile*(self: Controller, filePath: string) =
-  self.generalService.asyncImportLocalBackupFile(filePath)
+  discard
 
 proc startKeycardDetection*(self: Controller) =
-  self.keycardServiceV2.startDetection()
+  discard
 
 proc createAccountFromMnemonic*(self: Controller, mnemonic: string, paths: seq[string]): GeneratedAccountDto =
   return self.accountsService.createAccountFromMnemonic(mnemonic, paths)
