@@ -107,6 +107,34 @@
     </message>
   </context>
   <context>
+    <name>AccessibilityWarningPopup</name>
+    <message>
+      <source>Accessibility services active</source>
+      <comment>AccessibilityWarningPopup</comment>
+      <translation>Accessibility services active</translation>
+    </message>
+    <message>
+      <source>Accessibility services on your device may access screen content:</source>
+      <comment>AccessibilityWarningPopup</comment>
+      <translation>Accessibility services on your device may access screen content:</translation>
+    </message>
+    <message>
+      <source>Check your device &lt;a href=&apos;accessibility-settings&apos;&gt;Settings &amp;gt; Accessibility&lt;/a&gt;.</source>
+      <comment>AccessibilityWarningPopup</comment>
+      <translation>Check your device &lt;a href=&apos;accessibility-settings&apos;&gt;Settings &amp;gt; Accessibility&lt;/a&gt;.</translation>
+    </message>
+    <message>
+      <source>Cancel</source>
+      <comment>AccessibilityWarningPopup</comment>
+      <translation>Cancel</translation>
+    </message>
+    <message>
+      <source>Reveal anyway</source>
+      <comment>AccessibilityWarningPopup</comment>
+      <translation>Reveal anyway</translation>
+    </message>
+  </context>
+  <context>
     <name>AccountAddressSelection</name>
     <message>
       <source>Scan addresses for activity</source>

@@ -13,6 +13,8 @@ import AppLayouts.Onboarding.components
 
 import utils
 
+import shared.popups
+
 OnboardingPage {
     id: root
 
@@ -113,7 +115,13 @@ OnboardingPage {
                     type: StatusBaseButton.Type.Primary
                     visible: !d.seedphraseRevealed
                     onClicked: {
-                        d.seedphraseRevealed = true
+                        const services = SystemUtils.activeThirdPartyA11yServices()
+                        if (services.length > 0) {
+                            a11yWarningPopup.serviceNames = services
+                            a11yWarningPopup.open()
+                        } else {
+                            d.seedphraseRevealed = true
+                        }
                     }
                 }
             }
@@ -138,6 +146,11 @@ OnboardingPage {
                 }
             }
         }
+    }
+
+    AccessibilityWarningPopup {
+        id: a11yWarningPopup
+        onRevealAccepted: d.seedphraseRevealed = true
     }
 
     TextMetrics {

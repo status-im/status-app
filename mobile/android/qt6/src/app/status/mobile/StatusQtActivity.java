@@ -140,4 +140,18 @@ public class StatusQtActivity extends QtActivity {
             sInstance.startActivity(intent);
         }
     }
+
+    // Opens the system Accessibility Settings screen. Called from Qt via JNI.
+    public static void openAccessibilitySettings() {
+        if (sInstance == null) return;
+        Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        sInstance.startActivity(intent);
+    }
+
+    // Returns a comma-separated list of active third-party accessibility service names,
+    // or an empty string if none. Called from Qt via JNI before seed phrase reveal.
+    public String getThirdPartyA11yServices() {
+        return AccessibilityServiceHelper.getActiveThirdPartyServices(this);
+    }
 }

@@ -294,6 +294,38 @@ void SystemUtilsInternal::openAppSettings()
 #endif
 }
 
+void SystemUtilsInternal::openAccessibilitySettings()
+{
+#ifdef Q_OS_ANDROID
+    QJniObject::callStaticMethod<void>(
+        "app/status/mobile/StatusQtActivity",
+        "openAccessibilitySettings",
+        "()V"
+    );
+#else
+    qWarning() << "openAccessibilitySettings not implemented for this platform";
+#endif
+}
+
+QString SystemUtilsInternal::activeThirdPartyA11yServices() const
+{
+#ifdef Q_OS_ANDROID
+    QJniObject activity = QJniObject::callStaticObjectMethod(
+        "org/qtproject/qt/android/QtNative",
+        "activity",
+        "()Landroid/app/Activity;"
+    );
+    if (!activity.isValid()) return QString();
+    auto result = activity.callObjectMethod(
+        "getThirdPartyA11yServices",
+        "()Ljava/lang/String;"
+    );
+    return result.isValid() ? result.toString() : QString();
+#else
+    return QString();
+#endif
+}
+
 void SystemUtilsInternal::synthetizeRightClick(QQuickItem* item, qreal x, qreal y, Qt::KeyboardModifiers modifiers) const
 {
     if (!item)

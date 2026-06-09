@@ -40,3 +40,4 @@ UnblockContactConfirmationDialog 1.0 UnblockContactConfirmationDialog.qml
 UserStatusContextMenu 1.0 UserStatusContextMenu.qml
 ThirdpartyServicesPopup 1.0 ThirdpartyServicesPopup.qml
 EnableBiometricsPopup 1.0 EnableBiometricsPopup.qml
+AccessibilityWarningPopup 1.0 AccessibilityWarningPopup.qml

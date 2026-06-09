@@ -21,6 +21,7 @@ public:
     Q_INVOKABLE QString qtRuntimeVersion() const;
     Q_INVOKABLE void restartApplication() const;
     Q_INVOKABLE void openAppSettings();
+    Q_INVOKABLE void openAccessibilitySettings();
     Q_INVOKABLE void downloadImageByUrl(const QUrl& url, const QString& path) const;
     Q_INVOKABLE void synthetizeRightClick(QQuickItem* item, qreal x, qreal y, Qt::KeyboardModifiers modifiers) const;
     Q_INVOKABLE Qt::KeyboardModifiers queryKeyboardModifiers();
@@ -53,6 +54,10 @@ public:
 
     // Cross-platform share sheet
     Q_INVOKABLE void sharePaths(const QStringList& filePaths) const;
+
+    // Returns comma-separated names of active third-party accessibility services (Android only).
+    // Empty string means none found — reveal can proceed without warning.
+    Q_INVOKABLE QString activeThirdPartyA11yServices() const;
 
     // Debug helper (used from QML to verify signal handlers fire on device)
     Q_INVOKABLE void debugLog(const QString& message) const;
