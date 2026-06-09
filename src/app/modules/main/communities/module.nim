@@ -27,7 +27,6 @@ import app_service/service/community_tokens/service as community_tokens_service
 import app_service/service/token/service as token_service
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/chat/dto/chat
-import app_service/service/keycard/service as keycard_service
 import ./tokens/module as community_tokens_module
 
 import app/modules/shared/keypairs
@@ -108,7 +107,6 @@ proc newModule*(
     tokensService: token_service.Service,
     chatService: chat_service.Service,
     walletAccountService: wallet_account_service.Service,
-    keycardService: keycard_service.Service,
     ): Module =
   result = Module()
   result.delegate = delegate
@@ -123,10 +121,9 @@ proc newModule*(
     tokensService,
     chatService,
     walletAccountService,
-    keycardService,
   )
   result.communityTokensModule = community_tokens_module.newCommunityTokensModule(result, events, walletAccountService,
-  communityTokensService, transactionService, networksService, communityService, keycardService)
+  communityTokensService, transactionService, networksService, communityService)
   result.moduleLoaded = false
   result.events = events
   result.curatedCommunitiesLoaded = false

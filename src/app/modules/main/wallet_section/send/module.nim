@@ -12,8 +12,6 @@ import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/network/service as network_service
 import app_service/service/currency/service as currency_service
 import app_service/service/transaction/service as transaction_service
-import app_service/service/keycard/service as keycard_service
-import app_service/service/keycard/constants as keycard_constants
 import app_service/service/transaction/[dto, dtoV2]
 import app/modules/shared_models/currency_amount
 import app_service/service/network/network_item as network_service_item
@@ -52,14 +50,13 @@ proc newModule*(
   walletAccountService: wallet_account_service.Service,
   networkService: network_service.Service,
   currencyService: currency_service.Service,
-  transactionService: transaction_service.Service,
-  keycardService: keycard_service.Service
+  transactionService: transaction_service.Service
 ): Module =
   result = Module()
   result.delegate = delegate
   result.events = events
   result.controller = controller.newController(result, events, tokenService, walletAccountService, networkService, currencyService,
-    transactionService, keycardService)
+    transactionService)
   result.view = newView(result)
   result.viewVariant = newQVariant(result.view)
 
@@ -266,18 +263,10 @@ proc sendSignedTransactions*(self: Module) =
     self.clearTmpData()
 
 proc signOnKeycard(self: Module) =
-  self.tmpSendTransactionDetails.txHashBeingProcessed = ""
-  for h, (r, s, v) in self.tmpSendTransactionDetails.resolvedSignatures.pairs:
-    if r.len != 0 and s.len != 0 and v.len != 0:
-      continue
-    self.tmpSendTransactionDetails.txHashBeingProcessed = h
-    var txForKcFlow = self.tmpSendTransactionDetails.txHashBeingProcessed
-    if txForKcFlow.startsWith("0x"):
-      txForKcFlow = txForKcFlow[2..^1]
-    self.controller.runSignFlow(self.tmpSendTransactionDetails.pin, self.tmpSendTransactionDetails.fromAddrPath, txForKcFlow)
-    break
-  if self.tmpSendTransactionDetails.txHashBeingProcessed.len == 0:
-    self.sendSignedTransactions()
+  error "signing a transaction on keycard is temporarily unavailable"
+  self.transactionWasSent(uuid = self.tmpSendTransactionDetails.uuid, chainId = 0, approvalTx = false, txHash = "",
+    error = "signing a transaction on keycard is temporarily unavailable")
+  self.clearTmpData()
 
 proc getRSVFromSignature(self: Module, signature: string): (string, string, string) =
   let finalSignature = singletonInstance.utils.removeHexPrefix(signature)
@@ -322,16 +311,6 @@ method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransa
     self.transactionWasSent(uuid = txForSigning.sendDetails.uuid, chainId = 0, approvalTx = false, txHash = "", error = e.msg)
     self.clearTmpData()
 
-method onTransactionSigned*(self: Module, keycardFlowType: string, keycardEvent: KeycardEvent) =
-  if keycardFlowType != keycard_constants.ResponseTypeValueKeycardFlowResult:
-    let err = "unexpected error while keycard signing transaction"
-    error "error", err=err
-    self.transactionWasSent(uuid = self.tmpSendTransactionDetails.uuid, chainId = 0, approvalTx = false, txHash = "", error = err)
-    self.clearTmpData()
-    return
-  self.tmpSendTransactionDetails.resolvedSignatures[self.tmpSendTransactionDetails.txHashBeingProcessed] = (keycardEvent.txSignature.r,
-    keycardEvent.txSignature.s, keycardEvent.txSignature.v)
-  self.signOnKeycard()
 
 method transactionWasSent*(self: Module, uuid: string, chainId: int = 0, approvalTx: bool = false, txHash: string = "", error: string = "") =
   self.tmpClearLocalDataLater = false
