@@ -32,20 +32,28 @@ QtObject {
     property bool thirdpartyServicesEnabled
 
     // TEMPORARY: Workaround to persist UI state whenever the user navigates to
-    // chat/channel detail sections from in-links (i.e. not directly via the nav bar).
+    // chat/channel lists or details from in-links (i.e. not directly via the nav bar).
     // This parameter is used to store the navigation intent so that the target component
-    // can react and move to the corresponding detail view.
+    // can react and move to the corresponding panel.
     //
     // This workaround is required due to the current Nim-based navigation architecture,
     // where UI-driven actions are intertwined in a call chain qml → nim → qml, instead of
     // being handled locally in the UI layer.
     readonly property bool navToMsgDetails: internal.forceNavToMsgDetails
+    readonly property bool navToMsgList: internal.forceNavToMsgList
     function setNavToMsgDetailsFlag(navigate) {
         internal.forceNavToMsgDetails = navigate
 
         // force actions even if the value is not changed to support deep navigation
         // within swipe view if necessary (portrait mode)
         internal.forceNavToMsgDetailsChanged()
+    }
+    function setNavToMsgListFlag(navigate) {
+        internal.forceNavToMsgList = navigate
+
+        // force actions even if the value is not changed to support deep navigation
+        // within swipe view if necessary (portrait mode)
+        internal.forceNavToMsgListChanged()
     }
 
     // Here define the needed properties that access to `Context Properties`:
@@ -55,8 +63,9 @@ QtObject {
         readonly property var mainModuleInst: mainModule
         readonly property var appSearchModuleInst: internal.mainModuleInst.appSearchModule
 
-        // TEMPORARY: Internal flag used to trigger navigation into messaging details.
+        // TEMPORARY: Internal flags used to trigger navigation into messaging lists or details.
         property bool forceNavToMsgDetails: false
+        property bool forceNavToMsgList: false
     }
 
     // Here there should be all the ContextSpecificRootStore objects creation
@@ -210,6 +219,10 @@ QtObject {
 
             function onNavigateToMessageDetails() {
                 root.setNavToMsgDetailsFlag(true)
+            }
+
+            function onNavigateToMessageList() {
+                root.setNavToMsgListFlag(true)
             }
 
             function onWcLinkActivated(url) {

@@ -2176,6 +2176,7 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
     return
   of DEEP_LINK_NAV_CHATS:
     self.setActiveSectionById(singletonInstance.userProfile.getPubKey())
+    self.view.navigateToMessageList()
     return
   else:
     info "No generic navigation target found in deep link"

@@ -468,6 +468,8 @@ QtObject:
   proc emitNavigateToMessageDetailsSignal*(self: View) =
     self.navigateToMessageDetails()
 
+  proc navigateToMessageList*(self: View) {.signal.}
+
   proc wcLinkActivated*(self: View, url: string) {.signal.}
 
   proc loadMembersForSectionId*(self: View, communityId: string) {.slot.} =
