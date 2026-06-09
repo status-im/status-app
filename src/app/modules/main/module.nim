@@ -14,6 +14,7 @@ import app/global/[global_singleton, feature_flags]
 import app/global/app_lifecycle
 import app/android/lifecycle
 import app/global/utils as utils
+import app_service/service/activity_center/dto/notification as activity_center_notification_dto
 import constants
 
 import chat_section/model as chat_model
@@ -92,10 +93,14 @@ const STATUS_EXTERNAL_DEEP_LINK_PREFIX = "https://status.app/"
 const STATUS_EXTERNAL_DEEP_LINK_PREFIX_HTTP = "http://status.app/"
 
 # Reserved, id-less navigation keywords used by generic deep links (e.g. bundled in
-# remote push notifications: `status-app://ac`, `status-app://chats`). They carry no
+# remote push notifications: `status-app://ac`, `status-app://contact-requests`,
+# `status-app://chats`). They carry no
 # chat/community id, so they map to a fixed destination rather than a specific item.
 const DEEP_LINK_NAV_ACTIVITY_CENTER = "ac"
+const DEEP_LINK_NAV_CONTACT_REQUESTS = "contact-requests"
 const DEEP_LINK_NAV_CHATS = "chats"
+const ACTIVITY_CENTER_ALL_GROUP = activity_center_notification_dto.ActivityCenterGroup.All.int
+const ACTIVITY_CENTER_CONTACT_REQUESTS_GROUP = activity_center_notification_dto.ActivityCenterGroup.ContactRequests.int
 
 type
   SpectateRequest = object
@@ -1615,7 +1620,7 @@ method displayWindowsOsNotification*[T](self: Module[T], title: string,
 method osNotificationClicked*[T](self: Module[T], details: NotificationDetails) =
   if(details.notificationType == NotificationType.NewContactRequest):
     self.controller.switchTo(details.sectionId, "", "")
-    self.view.emitOpenActivityCenterSignal()
+    self.view.openActivityCenter(ACTIVITY_CENTER_CONTACT_REQUESTS_GROUP)
   elif(details.notificationType == NotificationType.JoinCommunityRequest):
     self.controller.switchTo(details.sectionId, "", "")
     self.view.emitOpenCommunityMembershipRequestsViewSignal(details.sectionId)
@@ -2172,7 +2177,10 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
   let genericNavTarget = extractGenericNavTargetFromDeepLink(statusDeepLink)
   case genericNavTarget
   of DEEP_LINK_NAV_ACTIVITY_CENTER:
-    self.view.emitOpenActivityCenterSignal()
+    self.view.openActivityCenter(ACTIVITY_CENTER_ALL_GROUP)
+    return
+  of DEEP_LINK_NAV_CONTACT_REQUESTS:
+    self.view.openActivityCenter(ACTIVITY_CENTER_CONTACT_REQUESTS_GROUP)
     return
   of DEEP_LINK_NAV_CHATS:
     self.setActiveSectionById(singletonInstance.userProfile.getPubKey())
