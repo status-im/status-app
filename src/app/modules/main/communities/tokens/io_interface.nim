@@ -3,7 +3,6 @@ import app_service/service/transaction/router_transactions_dto
 import app_service/service/community/dto/community
 import app_service/common/types
 import app/modules/shared_models/currency_amount
-from app_service/service/keycard/service import KeycardEvent
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -87,9 +86,6 @@ method stopUpdatesForSuggestedRoute*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method prepareSignaturesForTransactions*(self:AccessInterface, txForSigning: RouterTransactionsForSigningDto) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onTransactionSigned*(self: AccessInterface, keycardFlowType: string, keycardEvent: KeycardEvent) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onTransactionSent*(self: AccessInterface, uuid: string, sendType: SendType, chainId: int, approvalTx: bool,

@@ -3,7 +3,6 @@ import app/modules/shared_models/currency_amount
 import app_service/service/transaction/dto
 import app_service/service/transaction/router_transactions_dto
 import app/modules/shared_models/collectibles_model as collectibles
-from app_service/service/keycard/service import KeycardEvent
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -71,9 +70,6 @@ method splitAndFormatAddressPrefix*(self: AccessInterface, text : string, update
   raise newException(ValueError, "No implementation available")
 
 method prepareSignaturesForTransactions*(self:AccessInterface, txForSigning: RouterTransactionsForSigningDto) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onTransactionSigned*(self: AccessInterface, keycardFlowType: string, keycardEvent: KeycardEvent) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method hasGas*(self: AccessInterface, accountAddress: string, chainId: int, nativeGasSymbol: string, requiredGas: float): bool {.base.} =

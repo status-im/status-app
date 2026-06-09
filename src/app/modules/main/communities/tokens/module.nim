@@ -7,8 +7,6 @@ import app_service/service/transaction/service as transaction_service
 import app_service/service/network/service as networks_service
 import app_service/service/community/service as community_service
 import app_service/service/accounts/utils as utl
-import app_service/service/keycard/service as keycard_service
-import app_service/service/keycard/constants as keycard_constants
 import app_service/common/types
 import app_service/common/utils
 import app_service/common/wallet_constants
@@ -66,15 +64,14 @@ proc newCommunityTokensModule*(
     communityTokensService: community_tokens_service.Service,
     transactionService: transaction_service.Service,
     networksService: networks_service.Service,
-    communityService: community_service.Service,
-    keycardService: keycard_service.Service
+    communityService: community_service.Service
   ): Module =
   result = Module()
   result.parent = parent
   result.view = newView(result)
   result.viewVariant = newQVariant(result.view)
   result.controller = controller.newCommunityTokensController(result, events, walletAccountService, communityTokensService,
-    transactionService, networksService, communityService, keycardService)
+    transactionService, networksService, communityService)
 
 ## Forward declarations
 proc buildTransactionsFromRoute(self: Module)
@@ -192,18 +189,8 @@ proc sendSignedTransactions*(self: Module) =
     self.resetTempValues()
 
 proc signOnKeycard(self: Module) =
-  self.tempTxHashBeingProcessed = ""
-  for h, (r, s, v) in self.tempResolvedSignatures.pairs:
-    if r.len != 0 and s.len != 0 and v.len != 0:
-      continue
-    self.tempTxHashBeingProcessed = h
-    var txForKcFlow = self.tempTxHashBeingProcessed
-    if txForKcFlow.startsWith("0x"):
-      txForKcFlow = txForKcFlow[2..^1]
-    self.controller.runSignFlow(self.tempPin, self.tempAddressPath, txForKcFlow)
-    break
-  if self.tempTxHashBeingProcessed.len == 0:
-    self.sendSignedTransactions()
+  error "signing a community transaction on keycard is temporarily unavailable"
+  self.resetTempValues()
 
 proc getRSVFromSignature(self: Module, signature: string): (string, string, string) =
   let finalSignature = singletonInstance.utils.removeHexPrefix(signature)
@@ -248,16 +235,6 @@ method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransa
     error "signMessageWithCallback failed: ", msg=e.msg
     #TODO: notify about error
     self.resetTempValues()
-
-method onTransactionSigned*(self: Module, keycardFlowType: string, keycardEvent: KeycardEvent) =
-  if keycardFlowType != keycard_constants.ResponseTypeValueKeycardFlowResult:
-    let err = "unexpected error while keycard signing transaction"
-    error "error", err=err
-    # TODO: notify about error
-    self.resetTempValues()
-    return
-  self.tempResolvedSignatures[self.tempTxHashBeingProcessed] = (keycardEvent.txSignature.r, keycardEvent.txSignature.s, keycardEvent.txSignature.v)
-  self.signOnKeycard()
 
 method onTransactionSent*(self: Module, uuid: string, sendType: SendType, chainId: int, approvalTx: bool, txHash: string,
   toAddress: string, error: string) =
