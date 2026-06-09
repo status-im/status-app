@@ -230,9 +230,7 @@ QtObject:
   proc emitResolvedENSSignal*(self: View, resolvedPubKey: string, resolvedAddress: string, uuid: string) =
     self.resolvedENS(resolvedPubKey, resolvedAddress, uuid)
 
-  proc openActivityCenter*(self: View) {.signal.}
-  proc emitOpenActivityCenterSignal*(self: View) =
-    self.openActivityCenter()
+  proc openActivityCenter*(self: View, group: int) {.signal.}
 
   proc openCommunityMembershipRequestsView*(self: View, sectionId: string) {.signal.}
   proc emitOpenCommunityMembershipRequestsViewSignal*(self: View, sectionId: string) =

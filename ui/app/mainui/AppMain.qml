@@ -70,7 +70,6 @@ Item {
                                    appMain.privacyStore.thirdpartyServicesEnabled: true
         onOpenUrl: (link) => Global.requestOpenLink(link)
         onOpenActivityCenter: () => {
-            appMain.activityCenterStore.setActiveNotificationGroup(ActivityCenterTypes.ActivityCenterGroup.All)
             mainLayoutItem.openACCenterPanel = true
         }
         onWcLinkActivated: (link) => {
