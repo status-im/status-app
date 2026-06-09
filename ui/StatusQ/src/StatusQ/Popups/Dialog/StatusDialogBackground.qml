@@ -4,8 +4,12 @@ import QtQuick.Controls
 import StatusQ.Core.Theme
 
 Rectangle {
+    id: root
+
     color: Theme.palette.statusModal.backgroundColor
     radius: Theme.radius
+
+    signal closeRequested()
 
     MouseArea { // eat every event behind the control
         anchors.fill: parent
@@ -14,6 +18,19 @@ Rectangle {
         onPressed: event => event.accepted = true
         onPressAndHold: event => event.accepted = true
         onWheel: wheel => wheel.accepted = true
+    }
+
+    // "Back" handler
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.BackButton
+        cursorShape: undefined // fall thru
+        onClicked: function(mouse) {
+            if (mouse.button !== Qt.BackButton)
+                return
+            mouse.accepted = true
+            root.closeRequested()
+        }
     }
 
     ContextMenu.onRequested: ;

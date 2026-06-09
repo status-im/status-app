@@ -3067,9 +3067,8 @@ Item {
     // run the same link 3 logic. Both paths are kept so behaviour is
     // identical whether the key event reaches QML or not.
     Keys.onPressed: function(event) {
-        if (event.key !== Qt.Key_Back)
-            return
-        if (!SQUtils.Utils.isMobile)
+        if (event.key !== Qt.Key_Back // Back key on mobile
+                && !event.matches(StandardKey.Back)) // Back std shortcut, e.g. Alt+←
             return
 
         if (tryGoBack()) {
@@ -3079,6 +3078,26 @@ Item {
 
         event.accepted = true
         MobileUI.backToHomeScreen()
+    }
+
+    Keys.onShortcutOverride: function (event) {
+        event.accepted = d.activeSectionType !== Constants.appSection.browser &&
+                event.matches(StandardKey.Back) &&
+                sectionNavigationHistory.canGoBack
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.BackButton
+        enabled: sectionNavigationHistory.canGoBack
+        cursorShape: undefined // fall thru
+        onClicked: function(mouse) {
+            if (mouse.button !== Qt.BackButton)
+                return
+            if (tryGoBack()) {
+                mouse.accepted = true
+            }
+        }
     }
 
     // Links 2 + 3 of the back-navigation chain, callable from main.qml's
