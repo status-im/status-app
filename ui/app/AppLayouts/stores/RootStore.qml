@@ -213,7 +213,8 @@ QtObject {
                 root.openUrl(url)
             }
 
-            function onOpenActivityCenter() {
+            function onOpenActivityCenter(group) {
+                root.activityCenterStore.setActiveNotificationGroup(group)
                 root.openActivityCenter()
             }
 
