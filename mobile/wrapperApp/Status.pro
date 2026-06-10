@@ -68,7 +68,7 @@ ios {
     QMAKE_CFLAGS += -Wno-implicit-function-declaration
 
     QMAKE_INFO_PLIST = $$OUT_PWD/Info.plist
-    QMAKE_IOS_DEPLOYMENT_TARGET=26.0
+    QMAKE_IOS_DEPLOYMENT_TARGET=17.0
 
     QMAKE_ASSET_CATALOGS += $$PWD/../ios/Images.xcassets
     QMAKE_IOS_LAUNCH_SCREEN = $$PWD/../ios/launch-image-universal.storyboard
