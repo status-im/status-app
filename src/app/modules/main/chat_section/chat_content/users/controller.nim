@@ -82,7 +82,7 @@ proc init*(self: Controller) =
       self.delegate.contactUpdated(args.contactId)
 
     self.events.on(SIGNAL_CONTACT_REMOVED) do(e: Args):
-      let args = ContactArgs(e)
+      let args = ContactRemovedArgs(e)
       self.delegate.contactUpdated(args.contactId)
 
     self.events.on(SIGNAL_CONTACT_BLOCKED) do(e: Args):

@@ -144,7 +144,7 @@ proc init*(self: Controller) =
     self.delegate.onContactAdded(args.contactId, args.fromBackup)
 
   self.events.on(SIGNAL_CONTACT_REMOVED) do(e: Args):
-    var args = ContactArgs(e)
+    var args = ContactRemovedArgs(e)
     self.delegate.onContactRejected(args.contactId)
 
   self.events.on(SIGNAL_CONTACT_BLOCKED) do(e: Args):

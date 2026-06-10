@@ -165,6 +165,10 @@ method addOrUpdateContactItem*(self: Module, publicKey: string) =
     item.isRemoved,
   )
 
+method onContactRemoved*(self: Module, publicKey: string, displayName: string, theyRemovedUs: bool) =
+  let contactDetails = self.controller.getContactDetails(publicKey)
+  self.view.contactRemoved(displayName, theyRemovedUs)
+
 method contactsStatusUpdated*(self: Module, statusUpdates: seq[StatusUpdateDto]) =
   for s in statusUpdates:
     self.view.contactsModel().setOnlineStatus(s.publicKey, toOnlineStatus(s.statusType))

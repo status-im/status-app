@@ -140,7 +140,7 @@ proc init*(self: Controller) =
         self.delegate.onMutualContactChanged()
 
     self.events.on(SIGNAL_CONTACT_REMOVED) do(e: Args):
-      var args = ContactArgs(e)
+      var args = ContactRemovedArgs(e)
       if (args.contactId == self.chatId):
         self.delegate.onMutualContactChanged()
 

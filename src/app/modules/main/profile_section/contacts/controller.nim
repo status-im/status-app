@@ -46,8 +46,9 @@ proc init*(self: Controller) =
     self.delegate.addOrUpdateContactItem(args.contactId)
 
   self.events.on(SIGNAL_CONTACT_REMOVED) do(e: Args):
-    var args = ContactArgs(e)
+    var args = ContactRemovedArgs(e)
     self.delegate.addOrUpdateContactItem(args.contactId)
+    self.delegate.onContactRemoved(args.contactId, args.displayName, args.theyRemovedUs)
 
   self.events.on(SIGNAL_CONTACT_NICKNAME_CHANGED) do(e: Args):
     var args = ContactArgs(e)

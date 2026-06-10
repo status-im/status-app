@@ -14358,10 +14358,6 @@ al cargar</translation>
         <translation>%1 eliminado de contactos y marcado como no confiable</translation>
     </message>
     <message>
-        <source>%1 removed from contacts</source>
-        <translation>%1 eliminado de contactos</translation>
-    </message>
-    <message>
         <source>%1 marked as trusted</source>
         <translation>%1 marcado como confiable</translation>
     </message>
@@ -18636,6 +18632,18 @@ This action cannot be undone.</source>
     <message>
         <source>Trust mark removed for %1</source>
         <translation>Marca de confianza eliminada para %1</translation>
+    </message>
+    <message>
+        <source>Contact removed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 removed you as a contact</source>
+        <translation type="unfinished">%1 te eliminó como contacto</translation>
+    </message>
+    <message>
+        <source>You removed %1 as a contact</source>
+        <translation type="unfinished">Eliminaste a %1 como contacto</translation>
     </message>
     <message>
         <source>Your data backed up successfully</source>

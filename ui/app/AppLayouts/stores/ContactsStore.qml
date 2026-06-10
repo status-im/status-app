@@ -23,6 +23,7 @@ QtObject {
         Component.onCompleted: {
             mainModuleInst.resolvedENS.connect(root.resolvedENS)
             contactsModuleInst.trustStatusRemoved.connect(root.trustStatusRemoved)
+            contactsModuleInst.contactRemoved.connect(root.contactRemoved)
             contactsModuleInst.contactInfoRequestFinished.connect(root.contactInfoRequestFinished)
         }
     }
@@ -72,6 +73,7 @@ QtObject {
 
     signal resolvedENS(string resolvedPubKey, string resolvedAddress, string uuid)
     signal trustStatusRemoved(string pubKey)
+    signal contactRemoved(string displayName, bool theyRemovedUs)
 
     // Sets showcasePublicKey and updates showcase models with corresponding data
     function requestContactShowcase(publicKey) {

@@ -14306,10 +14306,6 @@ to load</source>
         <translation>%1 연락처에서 제거되고 신뢰하지 않는 대상으로 표시됨</translation>
     </message>
     <message>
-        <source>%1 removed from contacts</source>
-        <translation>연락처에서 %1을(를) 제거했어요</translation>
-    </message>
-    <message>
         <source>%1 marked as trusted</source>
         <translation>%1 신뢰함으로 표시됨</translation>
     </message>
@@ -18573,6 +18569,18 @@ This action cannot be undone.</source>
     <message>
         <source>Trust mark removed for %1</source>
         <translation>%1의 신뢰 표시가 제거됨</translation>
+    </message>
+    <message>
+        <source>Contact removed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 removed you as a contact</source>
+        <translation type="unfinished">%1 님이 당신을 연락처에서 제거했어요</translation>
+    </message>
+    <message>
+        <source>You removed %1 as a contact</source>
+        <translation type="unfinished">%1님을 연락처에서 삭제했습니다</translation>
     </message>
     <message>
         <source>Your data backed up successfully</source>

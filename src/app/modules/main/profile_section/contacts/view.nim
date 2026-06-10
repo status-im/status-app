@@ -96,6 +96,8 @@ QtObject:
 
   proc trustStatusRemoved*(self: View, publicKey: string) {.signal.}
 
+  proc contactRemoved*(self: View, displayName: string, theyRemovedUs: bool) {.signal.}
+
   proc shareUserUrlWithData*(self: View, pubkey: string): string {.slot.} =
     return self.delegate.shareUserUrlWithData(pubkey)
 

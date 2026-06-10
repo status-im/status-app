@@ -14443,10 +14443,6 @@ selhalo</translation>
         <translation>%1 odstraněn z kontaktů a označen jako nedůvěryhodný</translation>
     </message>
     <message>
-        <source>%1 removed from contacts</source>
-        <translation>%1 odstraněn z kontaktů</translation>
-    </message>
-    <message>
         <source>%1 marked as trusted</source>
         <translation>%1 označen jako důvěryhodný</translation>
     </message>
@@ -18743,6 +18739,18 @@ Tuto akci nelze vzít zpět.</translation>
     <message>
         <source>Trust mark removed for %1</source>
         <translation>Značka důvěry odstraněna pro %1</translation>
+    </message>
+    <message>
+        <source>Contact removed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 removed you as a contact</source>
+        <translation type="unfinished">%1 si vás odebral z kontaktů</translation>
+    </message>
+    <message>
+        <source>You removed %1 as a contact</source>
+        <translation type="unfinished">Odebrali jste %1 z kontaktů</translation>
     </message>
     <message>
         <source>Your data backed up successfully</source>

@@ -571,8 +571,6 @@ QtObject {
                     if (markAsUntrusted) {
                         root.contactsStore.markUntrustworthy(publicKey)
                         Global.displaySuccessToastMessage(qsTr("%1 removed from contacts and marked as untrusted").arg(mainDisplayName))
-                    } else {
-                        Global.displaySuccessToastMessage(qsTr("%1 removed from contacts").arg(mainDisplayName))
                     }
                     close()
                 }

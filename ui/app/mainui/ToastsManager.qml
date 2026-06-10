@@ -242,6 +242,20 @@ QtObject {
             const displayName = SQUtils.ModelUtils.getByKey(root.contactsStore.contactsModel, "pubKey", pubKey, "preferredDisplayName")
             Global.displaySuccessToastMessage(qsTr("Trust mark removed for %1").arg(displayName))
         }
+
+        function onContactRemoved(displayName: string, theyRemovedUs: bool) {
+            if (theyRemovedUs) {
+                Global.displayToastMessage(qsTr("Contact removed"),
+                                           qsTr("%1 removed you as a contact").arg(displayName),
+                                           root.warningAssetName,
+                                           false,
+                                            Constants.ephemeralNotificationType.danger,
+                                           "")
+            } else {
+                Global.displaySuccessToastMessage(qsTr("Contact removed"),
+                                                qsTr("You removed %1 as a contact").arg(displayName))
+            }
+        }
     }
 
     readonly property Connections _devicesStoreConnections: Connections {

@@ -37,6 +37,11 @@ type
     contactId*: string
     fromBackup*: bool
 
+  ContactRemovedArgs* = ref object of Args
+    contactId*: string
+    displayName*: string
+    theyRemovedUs*: bool
+
   TrustArgs* = ref object of Args
     publicKey*: string
     trustStatus*: TrustStatus
@@ -247,6 +252,13 @@ QtObject:
               "Contact request accepted",
               fmt "{receivedContact.displayName} accepted your contact request",
               receivedContact.id)
+          # Check if we used to be mutal and the other removed us
+          if localContact.added and localContact.hasAddedUs and not receivedContact.hasAddedUs:
+            self.events.emit(SIGNAL_CONTACT_REMOVED, ContactRemovedArgs(
+              contactId: receivedContact.id,
+              displayName: receivedContact.displayName,
+              theyRemovedUs: true)
+            )
 
           let data = ContactArgs(contactId: c.id)
           self.events.emit(SIGNAL_CONTACT_UPDATED, data)
@@ -484,19 +496,27 @@ QtObject:
   # fromBackup is used to indicate that the contact was loaded from a backup
   proc updateContact(self: Service, contact: ContactsDto, fromBackup: bool = false) =
     var signal = SIGNAL_CONTACT_ADDED
+    var alreadyEmitted = false
     let publicKey = contact.id
     if self.contacts.hasKey(publicKey):
       if self.contacts[publicKey].dto.added and not self.contacts[publicKey].dto.removed and contact.added and not contact.removed:
         signal = SIGNAL_CONTACT_UPDATED
       if contact.removed and not self.contacts[publicKey].dto.removed:
-        singletonInstance.globalEvents.showContactRemoved("Contact removed", fmt "You removed {contact.displayName} as a contact", contact.id)
-        signal = SIGNAL_CONTACT_REMOVED
+        # Removed contact emits a different signal, so mark that we have already emitted for this contact
+        # to avoid emitting two signals for the same contact
+        alreadyEmitted = true
+        self.events.emit(SIGNAL_CONTACT_REMOVED, ContactRemovedArgs(
+              contactId: contact.id,
+              displayName: contact.displayName,
+              theyRemovedUs: false)
+            )
     let merged = self.preserveCachedEnrichment(contact)
     self.contacts[publicKey] = self.constructContactDetails(
       merged,
       isCurrentUser = merged.id == singletonInstance.userProfile.getPubKey()
     )
-    self.events.emit(signal, ContactArgs(contactId: publicKey, fromBackup: fromBackup))
+    if not alreadyEmitted:
+      self.events.emit(signal, ContactArgs(contactId: publicKey, fromBackup: fromBackup))
 
   proc parseContactsResponse*(self: Service, contacts: JsonNode, fromBackup: bool = false) =
     for contactJson in contacts:

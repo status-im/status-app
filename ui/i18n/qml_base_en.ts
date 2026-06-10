@@ -14337,10 +14337,6 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>%1 removed from contacts</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>%1 marked as trusted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -18617,6 +18613,18 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Trust mark removed for %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Contact removed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 removed you as a contact</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>You removed %1 as a contact</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

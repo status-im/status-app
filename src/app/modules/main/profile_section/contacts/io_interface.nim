@@ -65,6 +65,9 @@ method removeContact*(self: AccessInterface, publicKey: string) {.base.} =
 method addOrUpdateContactItem*(self: AccessInterface, publicKey: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onContactRemoved*(self: AccessInterface, publicKey: string, displayName: string, theyRemovedUs: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method contactNicknameChanged*(self: AccessInterface, publicKey: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

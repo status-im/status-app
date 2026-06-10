@@ -17483,11 +17483,6 @@
       <translation>%1 removed from contacts and marked as untrusted</translation>
     </message>
     <message>
-      <source>%1 removed from contacts</source>
-      <comment>Popups</comment>
-      <translation>%1 removed from contacts</translation>
-    </message>
-    <message>
       <source>%1 marked as trusted</source>
       <comment>Popups</comment>
       <translation>%1 marked as trusted</translation>
@@ -22673,6 +22668,21 @@
       <source>Trust mark removed for %1</source>
       <comment>ToastsManager</comment>
       <translation>Trust mark removed for %1</translation>
+    </message>
+    <message>
+      <source>Contact removed</source>
+      <comment>ToastsManager</comment>
+      <translation>Contact removed</translation>
+    </message>
+    <message>
+      <source>%1 removed you as a contact</source>
+      <comment>ToastsManager</comment>
+      <translation>%1 removed you as a contact</translation>
+    </message>
+    <message>
+      <source>You removed %1 as a contact</source>
+      <comment>ToastsManager</comment>
+      <translation>You removed %1 as a contact</translation>
     </message>
     <message>
       <source>Your data backed up successfully</source>
