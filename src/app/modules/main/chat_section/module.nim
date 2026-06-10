@@ -1197,10 +1197,17 @@ method onNewMessagesReceived*(self: Module, sectionIdMsgBelongsTo: string, chatI
 
   # Prepare notification
   var notificationType = notification_details.NotificationType.NewMessage
-  if(message.isPersonalMention(myPK)):
+  if message.isPersonalMention(myPK):
     notificationType = notification_details.NotificationType.NewMessageWithPersonalMention
-  elif(message.isGlobalMention()):
+  elif message.isGlobalMention():
     notificationType = notification_details.NotificationType.NewMessageWithGlobalMention
+  elif message.contentType in [SystemMessagePinnedMessage,
+                              SystemMessageMutualEventSent,
+                              SystemMessageMutualEventAccepted,
+                              SystemMessageMutualEventRemoved,
+                              SystemMessageGroup]:
+    # Don't show notifications for system messages
+    return
 
   var senderDisplayName: string =
     if message.contentType == ContentType.BridgeMessage:
