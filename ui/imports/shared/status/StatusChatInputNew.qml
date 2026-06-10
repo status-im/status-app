@@ -696,9 +696,6 @@ Control {
                     Layout.fillWidth: true
                     Layout.maximumHeight: 200
 
-                    Layout.topMargin: Theme.padding
-                    Layout.leftMargin: 12
-                    Layout.rightMargin: 12
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                     ScrollBar.vertical.implicitWidth: Theme.halfPadding
 
@@ -711,10 +708,28 @@ Control {
 
                         Keys.forwardTo: [keyEventsFilter]
 
-                        topPadding: 22
-                        bottomPadding: 22
-                        leftPadding: Theme.halfPadding // for the nav bar handle
-                        rightPadding: Theme.halfPadding // for the scrollbar
+                        readonly property int basePadding: Theme.padding + 10
+                        readonly property int extraHorizontalPadding: 12 // for the nav bar handle / scrollbar
+
+                        // When the text area is empty, we need to use padding because textMargin is ignored
+                        // when calculating size. When not empty, textMargin is used because paddings are
+                        // clipped by ScrollView.
+                        padding: 0
+                        leftPadding: (length ? -basePadding + Theme.halfPadding : Theme.halfPadding)
+                                     + extraHorizontalPadding
+                        rightPadding: (length ? -basePadding + Theme.halfPadding : Theme.halfPadding)
+                                      + extraHorizontalPadding
+                        topPadding: length ? 0 : basePadding
+                        bottomPadding: (length ? 0 : basePadding) - Theme.padding
+
+                        textMargin: length ? basePadding : 0
+
+                        onLineCountChanged: {
+                            const flickable = inputScrollView.contentItem
+
+                            if (height - (cursorRectangle.y + cursorRectangle.height) <= textMargin)
+                                flickable.contentY = height - flickable.height
+                        }
 
                         messageLimit: root.messageLimit
                         messageLimitHard: root.messageLimitHard
