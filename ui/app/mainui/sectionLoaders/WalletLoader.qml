@@ -88,7 +88,14 @@ Loader {
         })
     }
 
-    onActiveChanged: loadSection()
+    onActiveChanged: {
+        if (!root.active) {
+            WalletStores.RootStore.showSavedAddresses = false
+            WalletStores.RootStore.showFollowingAddresses = false
+            WalletStores.RootStore.selectedAddress = ""
+        }
+        loadSection()
+    }
     onLoaded: {
         if (root.item.resetView)
             root.item.resetView()
