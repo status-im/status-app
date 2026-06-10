@@ -3,13 +3,30 @@
 
 [![Download](https://img.shields.io/github/v/release/status-im/status-app?label=Download)](https://github.com/status-im/status-app/releases/latest)
 
+[<img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="40">](https://play.google.com/store/apps/details?id=app.status.mobile)
+[<img alt="Download on the App Store" src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" height="40">](https://apps.apple.com/us/app/status-privacy-super-app/id6754166924)
+
 </div>
 
 # Status App
 
 The [**Status App**](https://status.app/) is a privacy-first, decentralised messenger built with [Nim](https://nim-lang.org/) and [Qt/QML](https://doc.qt.io/qt-5/qmlapplications.html). It offers end-to-end encrypted messaging, community chats, and Ethereum wallet integration — all without requiring a phone number or email.
 
-![Status Desktop Screenshot](screenshot.png)
+
+<p align="center">
+  <img src="screenshots/mobile-anonymous-profiles.png" alt="mobile anonymous profiles" width="24%" />
+  <img src="screenshots/mobile-messenger.png" alt="mobile messenger" width="24%" />
+  <img src="screenshots/mobile-communities.png" alt="mobile communities" width="24%" />
+  <img src="screenshots/mobile-wallet.png" alt="mobile wallet" width="24%" />
+</p>
+<p align="center">
+  <img src="screenshots/mobile-swap.png" alt="mobile swap" width="24%" />
+  <img src="screenshots/mobile-buy.png" alt="mobile buy" width="24%" />
+  <img src="screenshots/mobile-nfts.png" alt="mobile nfts" width="24%" />
+  <img src="screenshots/mobile-market.png" alt="mobile market" width="24%" />
+</p>
+
+![Status Desktop Screenshot](screenshots/desktop-community.png)
 
 
 ## 📑 Table of Contents
@@ -22,7 +39,6 @@ The [**Status App**](https://status.app/) is a privacy-first, decentralised mess
     - [Linux](#linux)
     - [macOS](#macos)
   - [🛠️ Build from Source](#️-build-from-source)
-    - [Building Mobile](#building-mobile)
   - [🤝 Contributing](#-contributing)
   - [📚 Documentation](#-documentation)
 
@@ -30,17 +46,21 @@ The [**Status App**](https://status.app/) is a privacy-first, decentralised mess
 
 Get the latest release for your platform:
 
+- **Android**: [Play Store](https://play.google.com/store/apps/details?id=app.status.mobile)
+- **Apple**: [App Store](https://apps.apple.com/us/app/status-privacy-super-app/id6754166924)
 - **Windows**: [Download EXE](https://github.com/status-im/status-app/releases/latest)
 - **Linux**: [Download Tarball](https://github.com/status-im/status-app/releases/latest)
 - **macOS**: [Download DMG](https://github.com/status-im/status-app/releases/latest)
 
 ### Supported Versions
 
-|Windows|Linux|macOS|
+| Platform | Supported versions | Notes |
 | --- | --- | --- |
-| Intel chip (no native Windows ARM build yet) | Continuous effort to support the lowest Ubuntu LTS version. | ARM chip |
-| Windows 11 is used for testing | Actively tested on Ubuntu 22.04 | MacOS latest version |
-| | Should run on most of Linux flavours using glibc 2.31 or newer |  |
+| **Windows** | Intel chip (no native Windows ARM build yet) | Windows 11 is used for testing |
+| **Linux** | Continuous effort to support the lowest Ubuntu LTS version. | Actively tested on Ubuntu 22.04; should run on most Linux flavours using glibc 2.31 or newer |
+| **macOS** | ARM chip | MacOS latest version |
+| **Android** | 9 to 16 |  |
+| **iOS** | 17 and higher |  |
 
 ### Windows
 
@@ -72,10 +92,6 @@ To build Status from source, follow the instructions specific to your operating 
 
 - [Building Desktop](BUILDING.md)
 - [Building Mobile](/mobile/README.md)
-
-### Building Mobile
-
-To build Status Mobile from source, follow the instructions specific to your operating system. Detailed build instructions are available in the [official documentation](BUILDING.md).
 
 ## 🤝 Contributing
 
