@@ -3,7 +3,7 @@
 SDK=${SDK:-"iphonesimulator"}
 XCODE_SDK_PATH=$(xcrun --sdk "$SDK" --show-sdk-path)
 CLANG=$(xcrun --sdk "$SDK" --find clang)
-IOS_TARGET=${IOS_TARGET:-26}
+IOS_TARGET=${IOS_TARGET:-17}
 ARCH=${ARCH:-"amd64"}
 
 EXTRA_ARGS=()

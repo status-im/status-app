@@ -144,7 +144,7 @@ The build system uses several environment variables to control the build process
 
 #### iOS-specific Variables
 - `IPHONE_SDK`: iOS SDK to use (`iphoneos` or `iphonesimulator`)
-- `IOS_TARGET`: Minimum iOS version (26 for Qt6)
+- `IOS_TARGET`: Minimum iOS version (17 for Qt6)
 
 ### Qt Version Compatibility
 

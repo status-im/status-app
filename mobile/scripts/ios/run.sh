@@ -44,8 +44,8 @@ select_device() {
     echo "Invalid selection. Exiting."; exit 1;
   fi
 
-  DEVICE_ID=$(echo "$selected_line" | awk '{print $3}')
-  DEVICE_NAME=$(echo "$selected_line" | awk '{print substr($0, 1, index($0, $3)-2)}' | xargs)
+  DEVICE_ID=$(echo "$selected_line" | grep -oE '[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}')
+  DEVICE_NAME=$(echo "$selected_line" | awk -F '  +' '{print $1}' | xargs)
 }
 
 # Present the list of available simulators and let the user pick one
