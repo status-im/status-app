@@ -711,8 +711,8 @@ Control {
 
                         Keys.forwardTo: [keyEventsFilter]
 
-                        topPadding: 22
-                        bottomPadding: 22
+                        topPadding: 10
+                        bottomPadding: 10
                         leftPadding: Theme.halfPadding // for the nav bar handle
                         rightPadding: Theme.halfPadding // for the scrollbar
 
