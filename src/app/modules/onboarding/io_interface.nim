@@ -37,6 +37,9 @@ method resetKeycardProgressStates*(self: AccessInterface) {.base.} =
 method authorize*(self: AccessInterface, pin: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method loginKeycard*(self: AccessInterface, keyUid: string, pin: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getPasswordStrengthScore*(self: AccessInterface, password, userName: string): int {.base.} =
   raise newException(ValueError, "No implementation available")
 

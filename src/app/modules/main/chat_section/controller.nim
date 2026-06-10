@@ -13,7 +13,6 @@ import ../../../../app_service/service/mailservers/service as mailservers_servic
 import ../../../../app_service/service/wallet_account/service as wallet_account_service
 import ../../../../app_service/service/token/service as token_service
 import ../../../../app_service/service/community_tokens/service as community_tokens_service
-import ../../../../app_service/service/visual_identity/service as procs_from_visual_identity_service
 import ../../../../app_service/service/shared_urls/service as shared_urls_service
 import ../../../../app_service/common/types
 

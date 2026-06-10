@@ -3,7 +3,7 @@ import std/[strformat, strutils, tables, json, sequtils, marshal, times], chroni
 
 import io_interface, view, controller
 import ephemeral_notification_item, ephemeral_notification_model
-import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details, contacts_utils]
+import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details]
 import app/modules/shared_modules/keycard_popup/module as keycard_shared_module
 import app/modules/shared_modules/authentication/module as authentication_module
 import app/modules/shared_modules/signing/module as signing_module
@@ -49,7 +49,6 @@ import app_service/service/bookmarks/service as bookmark_service
 import app_service/service/dapp_permissions/service as dapp_permissions_service
 import app_service/service/profile/service as profile_service
 import app_service/service/accounts/service as accounts_service
-import app_service/service/accounts/utils as accounts_utils
 import app_service/service/settings/service as settings_service
 import app_service/service/contacts/service as contacts_service
 import app_service/service/about/service as about_service

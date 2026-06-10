@@ -1,6 +1,5 @@
 import nimqml, json, strutils
 
-import app_service/service/token/items/token
 import ./models/[sticker_list, sticker_pack_list]
 import ./io_interface, ./item
 

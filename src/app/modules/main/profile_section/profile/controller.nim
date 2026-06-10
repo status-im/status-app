@@ -7,7 +7,6 @@ import app_service/service/settings/service as settings_service
 import app_service/service/community/service as community_service
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/token/service as token_service
-import app_service/common/types
 
 import app_service/service/profile/dto/profile_showcase_preferences
 

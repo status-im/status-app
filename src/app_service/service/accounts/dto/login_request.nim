@@ -1,4 +1,4 @@
-import json, std/options
+import json
 import wallet_secretes_config
 import wallet_config
 import api_config

@@ -1,4 +1,4 @@
-import json, json_serialization, chronicles, sugar, sequtils, nimqml
+import json, json_serialization, chronicles, sugar, sequtils
 
 import ../../../app/core/eventemitter
 import ../../../app/global/global_singleton

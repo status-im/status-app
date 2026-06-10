@@ -5,13 +5,10 @@ import io_interface, states
 import view, controller
 import app/modules/shared_modules/keycard_management/module as keycard_management_module
 
-import ../../../constants as main_constants
-
 import app/global/feature_flags
 import app/global/global_singleton
 import app/core/eventemitter
 import app_service/common/utils
-import app_service/common/account_constants
 import app_service/service/general/service as general_service
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
@@ -28,6 +25,8 @@ export io_interface, states
 
 logScope:
   topics = "onboarding-module"
+
+const IS_MOBILE = defined(ios) or defined(android)
 
 type
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
@@ -420,7 +419,7 @@ proc syncAppAndKeycardState[T](self: Module[T]) =
     accountsAddresses: addressesToStore,
     keyUid: kcEvent.keycardInfo.keyUID)
   self.controller.addKeycardOrAccounts(kcDto, password = "")
-  if main_constants.IS_MOBILE:
+  if IS_MOBILE:
     return
   self.controller.storeMetadata(kcName, pathsToStore)
 
@@ -562,7 +561,7 @@ method requestDeleteBiometrics*[T](self: Module[T], account: string) =
   self.view.deleteBiometricsRequested(account)
 
 method startKeycardDetection*[T](self: Module[T]) =
-  if main_constants.IS_MOBILE:
+  if IS_MOBILE:
     self.resetKeycardProgressStates()
   self.controller.startKeycardDetection()
 
