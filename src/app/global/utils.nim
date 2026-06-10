@@ -1,4 +1,5 @@
 import nimqml
+import dotherside_ext
 import std/[strformat, strutils, httpclient, os, uri], regex, stint
 import stew/byteutils
 import ./utils/qrcodegen

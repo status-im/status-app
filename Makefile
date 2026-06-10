@@ -204,13 +204,26 @@ ifneq ($(QT_MAJOR_VERSION),6)
  $(error Detected Qt major version $(QT_MAJOR_VERSION), but version 6 is required. Please install Qt 6 and set paths accordingly.)
 endif
 
+# In-repo pkg-config wrapper: forces --define-prefix so Qt's relocatable .pc
+# files (which hard-code the build-host prefix, e.g. /Users/qt/work/install)
+# resolve ${prefix} from the .pc file's real on-disk location. The wrapper finds
+# the real pkg-config from PATH itself (skipping its own dir). Two wiring points,
+# because GNU make's $(shell ...) FUNCTION ignores a makefile-level `export PATH`
+# (it resolves commands via make's startup PATH) while recipe commands honor it:
+#  1. PKG_CONFIG var, used in the Makefile's own $(shell pkg-config ...) calls.
+#  2. export PATH, so seaqt's nim-compile-time gorge("pkg-config ...") — which
+#     runs inside the `nim` recipe — also hits the wrapper, on all platforms
+#     (native Windows resolves the sibling .pcwrap/pkg-config.cmd via PATHEXT).
+PKG_CONFIG ?= $(CURDIR)/.pcwrap/pkg-config
+export PATH := $(CURDIR)/.pcwrap:$(PATH)
+
 ifneq ($(mkspecs),win32)
  export QT_LIBDIR := $(shell $(QMAKE) -query QT_INSTALL_LIBS 2>/dev/null)
  QT_QMLDIR := $(shell $(QMAKE) -query QT_INSTALL_QML 2>/dev/null)
  QT_INSTALL_PREFIX := $(shell $(QMAKE) -query QT_INSTALL_PREFIX 2>/dev/null)
- QT_PKGCONFIG_INSTALL_PREFIX := $(shell pkg-config --variable=prefix Qt"$(QT_MAJOR_VERSION)"Core 2>/dev/null)
+ QT_PKGCONFIG_INSTALL_PREFIX := $(shell $(PKG_CONFIG) --variable=prefix Qt"$(QT_MAJOR_VERSION)"Core 2>/dev/null)
  ifeq ($(QT_INSTALL_PREFIX),$(QT_PKGCONFIG_INSTALL_PREFIX))
-  QT_PCFILEDIR := $(shell pkg-config --variable=pcfiledir Qt6Core 2>/dev/null)
+  QT_PCFILEDIR := $(shell $(PKG_CONFIG) --variable=pcfiledir Qt6Core 2>/dev/null)
  else
   QT_PCFILEDIR := $(QT_LIBDIR)/pkgconfig
  endif
@@ -225,8 +238,10 @@ ifneq ($(mkspecs),win32)
   NIM_PARAMS += --passL:"-L$(QT_LIBDIR)"
  endif
  DOTHERSIDE_LIBFILE := $(DOTHERSIDE_BUILD_PATH)/lib/libDOtherSideStatic.a
- # order matters here, due to "-Wl,-as-needed"
- NIM_PARAMS += --passL:"$(DOTHERSIDE_LIBFILE)" --passL:"$(shell PKG_CONFIG_PATH="$(QT_PCFILEDIR)" pkg-config --libs Qt"$(QT_MAJOR_VERSION)"Core Qt"$(QT_MAJOR_VERSION)"Qml Qt"$(QT_MAJOR_VERSION)"Gui Qt"$(QT_MAJOR_VERSION)"Quick Qt"$(QT_MAJOR_VERSION)"QuickControls2 Qt"$(QT_MAJOR_VERSION)"Widgets Qt"$(QT_MAJOR_VERSION)"Svg Qt"$(QT_MAJOR_VERSION)"Multimedia Qt"$(QT_MAJOR_VERSION)"WebView Qt"$(QT_MAJOR_VERSION)"WebChannel)"
+ NIM_PARAMS += --passL:"$(DOTHERSIDE_LIBFILE)" --passL:"$(shell PKG_CONFIG_PATH="$(QT_PCFILEDIR)" $(PKG_CONFIG) --libs Qt"$(QT_MAJOR_VERSION)"Core Qt"$(QT_MAJOR_VERSION)"Qml Qt"$(QT_MAJOR_VERSION)"Gui Qt"$(QT_MAJOR_VERSION)"Quick Qt"$(QT_MAJOR_VERSION)"QuickControls2 Qt"$(QT_MAJOR_VERSION)"Widgets Qt"$(QT_MAJOR_VERSION)"Svg Qt"$(QT_MAJOR_VERSION)"Multimedia Qt"$(QT_MAJOR_VERSION)"WebView Qt"$(QT_MAJOR_VERSION)"WebChannel)"
+ # seaqt locates Qt via pkg-config at nim-compile time (gorge); make sure the Qt
+ # .pc dir is searched first while preserving any pre-existing PKG_CONFIG_PATH.
+ export PKG_CONFIG_PATH := $(QT_PCFILEDIR):$(PKG_CONFIG_PATH)
 else
  NIM_EXTRA_PARAMS := --passL:"-lsetupapi -lhid"
 endif

@@ -9,6 +9,7 @@ import status_go
 import app/core/main
 import constants as main_constants
 import statusq_bridge
+import dotherside_ext
 
 import app/global/global_singleton
 import app/global/local_app_settings

@@ -1,4 +1,5 @@
 import nimqml, tables, chronicles, json, stint, strutils, sugar, sequtils, std/strformat, times
+import dotherside_ext
 
 import app/global/global_singleton
 import app/core/eventemitter

@@ -1,4 +1,5 @@
 import nimqml, strutils
+import dotherside_ext
 import app/global/global_singleton
 import app/modules/shared_models/section_model
 import app/modules/shared_models/section_item

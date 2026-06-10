@@ -1,0 +1,17 @@
+#pragma once
+// Compatibility shim for status-desktop's seaqt migration.
+//
+// The vendored nim-seaqt bindings were generated against Qt 6.4, whose
+// generated gen_qvariant.cpp does `#include <QVariantConstPointer>`. Qt removed
+// that camelCase convenience forwarding header after 6.4 (absent in 6.11), so
+// the unmodified generated code fails to compile against newer Qt. The class
+// itself still exists and is pulled in via <QVariant> (already included just
+// above that line in the generated file), so this shim only needs to satisfy
+// the include — it forwards to <QVariant> to be self-sufficient regardless of
+// include order.
+//
+// This lives outside the vendored submodule on purpose: the generated bindings
+// stay pristine. The directory is placed on the C++ include path via config.nims
+// (`-I .../seaqt_compat`). Remove once the bindings are regenerated for the
+// target Qt version (which won't emit this include at all).
+#include <QVariant>

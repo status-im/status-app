@@ -1,4 +1,5 @@
 import nimqml, sets
+import dotherside_ext
 import ./io_interface
 import ./preserved_properties
 import ./urls_model

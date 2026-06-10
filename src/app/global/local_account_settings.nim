@@ -1,4 +1,5 @@
 import nimqml, os
+import dotherside_ext
 
 import ../../constants
 

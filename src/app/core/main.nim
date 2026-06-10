@@ -1,4 +1,5 @@
 import nimqml
+import dotherside_ext
 import
   eventemitter,
   ./tasks/threadpool,

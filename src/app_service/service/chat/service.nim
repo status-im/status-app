@@ -1,4 +1,5 @@
 import nimqml, tables, json, sequtils, chronicles, os, strutils, uuids, base64
+import dotherside_ext
 import std/[times, os]
 
 import app/core/tasks/[qt, threadpool]

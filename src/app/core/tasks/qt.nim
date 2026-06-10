@@ -1,6 +1,8 @@
 import # vendor libs
   nimqml, json_serialization
 
+import dotherside_ext
+
 import # status-desktop libs
   ./common,
   app/global/app_lifecycle

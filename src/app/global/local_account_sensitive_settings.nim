@@ -1,4 +1,5 @@
 import nimqml, os, json, chronicles
+import dotherside_ext
 
 import ../../constants
 

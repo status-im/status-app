@@ -2,9 +2,6 @@
 	path = vendor/nimbus-build-system
 	url = https://github.com/status-im/nimbus-build-system.git
 	branch = master
-[submodule "vendor/nimqml"]
-	path = vendor/nimqml
-	url = https://github.com/status-im/nimqml.git
 [submodule "vendor/uuids"]
 	path = vendor/uuids
 	url = https://github.com/pragmagic/uuids.git
@@ -124,3 +121,10 @@
 [submodule "vendor/nim-intops"]
 	path = vendor/nim-intops
 	url = https://github.com/vacp2p/nim-intops.git
+[submodule "vendor/nim-seaqt"]
+	path = vendor/nim-seaqt
+	url = https://github.com/seaqt/nim-seaqt.git
+	branch = qt-6.4
+[submodule "vendor/nimqml-seaqt"]
+	path = vendor/nimqml-seaqt
+	url = https://github.com/seaqt/nimqml-seaqt.git
