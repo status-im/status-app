@@ -30,7 +30,7 @@ ifeq ($(OS), ios)
     # iOS
     #SDKs: iphonesimulator, iphoneos
     IPHONE_SDK?=iphonesimulator
-    IOS_TARGET?=26
+    IOS_TARGET?=17
 
     ifeq ($(IPHONE_SDK), iphoneos)
         ARCH=arm64
