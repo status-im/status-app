@@ -1539,14 +1539,14 @@ Item {
                 toastText: {
                     switch(connectionState) {
                     case Constants.ConnectionStatus.Success:
-                        return qsTr("CryptoCompare and CoinGecko connection successful")
+                        return qsTr("CoinGecko connection successful")
                     case Constants.ConnectionStatus.Failure: {
                         if(withCache)
-                            return qsTr("CryptoCompare and CoinGecko down. Market values are as of %1.").arg(lastCheckedAt)
-                        return qsTr("CryptoCompare and CoinGecko down. Market values cannot be retrieved.")
+                            return qsTr("CoinGecko connection down. Market values are as of %1.").arg(lastCheckedAt)
+                        return qsTr("CoinGecko connection down. Market values cannot be retrieved.")
                     }
                     case Constants.ConnectionStatus.Retrying:
-                        return qsTr("Retrying connection to CryptoCompare and CoinGecko...")
+                        return qsTr("Retrying connection to CoinGecko...")
                     case Constants.ConnectionStatus.Unknown:
                         return ""
                     default:
