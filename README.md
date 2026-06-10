@@ -128,4 +128,3 @@ We welcome contributions from the community! To get started:
 For more information, visit our [official website](https://status.app/) or explore our [GitHub organization](https://github.com/status-im).
 
 This project is tested with BrowserStack.
-
