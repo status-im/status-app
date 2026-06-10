@@ -708,7 +708,7 @@ Control {
 
                         Keys.forwardTo: [keyEventsFilter]
 
-                        readonly property int basePadding: Theme.padding + 10
+                        readonly property int basePadding: Theme.padding + 12
                         readonly property int extraHorizontalPadding: 12 // for the nav bar handle / scrollbar
 
                         // When the text area is empty, we need to use padding because textMargin is ignored
