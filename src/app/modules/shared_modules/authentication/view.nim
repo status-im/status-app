@@ -30,11 +30,11 @@ QtObject:
   proc buildKeyPairForProcessing*(self: View, keyUid: string) {.slot.} =
     discard self.delegate.buildKeyPairForProcessing(keyUid)
 
-  proc keycardAuthSuccess*(self: View, encryptionPublicKey: string) {.signal.}
+  proc keycardAuthSuccess*(self: View, encryptionPublicKey: string, chatPrivateKey: string) {.signal.}
   proc keycardAuthError*(self: View, error: string) {.signal.}
 
-  proc startKeycardAuthentication*(self: View, keyUid: string, pin: string) {.slot.} =
-    self.delegate.startKeycardAuthentication(keyUid, pin)
+  proc startKeycardAuthentication*(self: View, keyUid: string, pin: string, exportChatKey: bool) {.slot.} =
+    self.delegate.startKeycardAuthentication(keyUid, pin, exportChatKey)
 
   proc stopKeycardAuthentication*(self: View) {.slot.} =
     self.delegate.stopKeycardAuthentication()
