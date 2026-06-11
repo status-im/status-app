@@ -96,13 +96,6 @@ method setUrlUnfurlingMode*(self: Module, value: int) =
 method getPasswordStrengthScore*(self: Module, password: string): int =
   return self.controller.getPasswordStrengthScore(password, singletonInstance.userProfile.getUsername())
 
-method tryStoreToKeyChain*(self: Module) =
-  self.controller.authenticateLoggedInUser()
-
-method onUserAuthenticated*(self: Module, pin: string, password: string, keyUid: string) =
-  let credential = if pin.len > 0: pin else: password
-  self.view.requestSaveBiometrics(keyUid, credential)
-
 method onUrlUnfurlingModeUpdated*(self: Module, mode: int) =
   self.view.emitUrlUnfurlingModeUpdated(mode)
 
