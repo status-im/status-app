@@ -219,8 +219,12 @@ QtObject {
         openPopup(backupSeedModalComponent)
     }
 
-    function openAuthenticationPopup(reason, keyUid) {
-        openPopup(authenticationPopupComponent, { reason: reason, keyUid: keyUid })
+    function openAuthenticationPopup(reason, keyUid, exportChatKey) {
+        let finalKeyUid = keyUid
+        if (!finalKeyUid) {
+            finalKeyUid = root.authenticationStore.userProfileKeyUid
+        }
+        openPopup(authenticationPopupComponent, { reason: reason, keyUid: finalKeyUid, exportChatKey: exportChatKey })
     }
 
     function openSigningPopup(reason, keyUid, txHash, path, address) {
@@ -708,8 +712,8 @@ QtObject {
             AuthenticationPopup {
                 store: root.authenticationStore
                 keychain: root.keychain
-                onAuthenticationSuccess: function(reason, password, pin, keyUid) {
-                    Global.authenticationResult(reason, password, pin, keyUid)
+                onAuthenticationSuccess: function(reason, password, pin, keyUid, chatPrivateKey) {
+                    Global.authenticationResult(reason, password, pin, keyUid, chatPrivateKey)
                 }
 
                 onClosed: destroy()

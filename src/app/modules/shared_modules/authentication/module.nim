@@ -58,13 +58,15 @@ method buildKeyPairForProcessing*[T](self: Module[T], keyUid: string): KeyPairIt
     self.view.setKeyPairForProcessing(item)
   return item
 
-method startKeycardAuthentication*[T](self: Module[T], keyUid: string, pin: string) =
+method startKeycardAuthentication*[T](self: Module[T], keyUid: string, pin: string, exportChatKey: bool) =
   let
     targetKeyUid = if keyUid.len > 0: keyUid
                    else: singletonInstance.userProfile.getKeyUid()
-    paths = @[PATH_ENCRYPTION]
     exportPrivate = true
     exportMasterAddr = false
+  var paths = @[account_constants.PATH_ENCRYPTION]
+  if exportChatKey:
+    paths.add(account_constants.PATH_WHISPER)
   self.controller.startKeycardAuthentication(targetKeyUid, paths, exportPrivate, exportMasterAddr, pin)
 
 method stopKeycardAuthentication*[T](self: Module[T]) =
@@ -79,11 +81,15 @@ method onKeycardExportPublicKeysFinished*[T](self: Module[T], exportedPublicKeys
     error "exporting public keys error", error=error
     self.view.keycardAuthError(error)
     return
-  if exportedPublicKeys.keys.len != 1:
-    error "exporting public keys error", error="expected 1 key, got " & $exportedPublicKeys.keys.len
-    self.view.keycardAuthError(error)
+  if exportedPublicKeys.keys.len == 0:
+    error "exporting public keys error", error="expected at least 1 key, got 0"
+    self.view.keycardAuthError("failed to export keys from the keycard")
     return
+  # order in response is guaranteed to be the same as the order in the request (PATH_ENCRYPTION first, PATH_WHISPER second)
   let encryptionPublicKey = exportedPublicKeys.keys[0].publicKey
-  self.view.keycardAuthSuccess(encryptionPublicKey)
+  var chatPrivateKey = ""
+  if exportedPublicKeys.keys.len > 1:
+    chatPrivateKey = exportedPublicKeys.keys[1].privateKey
+  self.view.keycardAuthSuccess(encryptionPublicKey, chatPrivateKey)
 
 {.pop.}
