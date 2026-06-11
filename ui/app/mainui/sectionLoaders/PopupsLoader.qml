@@ -209,8 +209,8 @@ Loader {
         function onOpenBackUpSeedPopup() {
             root.invoke(() => root.item.openBackUpSeedPopup())
         }
-        function onOpenAuthenticationPopup(reason, keyUid) {
-            root.invoke(() => root.item.openAuthenticationPopup(reason, keyUid))
+        function onOpenAuthenticationPopup(reason, keyUid, exportChatKey) {
+            root.invoke(() => root.item.openAuthenticationPopup(reason, keyUid, exportChatKey))
         }
         function onOpenSigningPopup(reason, keyUid, txHash, path, address) {
             root.invoke(() => root.item.openSigningPopup(reason, keyUid, txHash, path, address))
