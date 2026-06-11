@@ -106,8 +106,11 @@ QtObject {
     signal openBuyCryptoModalRequested(var formDataParams)
 
     ///////////////// Global Authentication popup /////////////////
-    signal openAuthenticationPopup(string reason, string keyUid)
-    signal authenticationResult(string reason, string password, string pin, string keyUid)
+    // Note:
+    // exportChatKey - will be considered only for the keycard users (no use case so far where we need it for regular(password) users)
+    // chatPrivateKey - will be always empty, except in case of keycard users, if `exportChatKey` was set to `true`
+    signal openAuthenticationPopup(string reason, string keyUid, bool exportChatKey)
+    signal authenticationResult(string reason, string password, string pin, string keyUid, string chatPrivateKey)
     ///////////////////////////////////////////////////////////////
 
     ///////////////// Global Signing popup /////////////////////////

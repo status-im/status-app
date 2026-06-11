@@ -13,7 +13,9 @@ PopupBase {
 
     required property AuthenticationStore store
 
-    signal authenticationSuccess(string reason, string password, string pin, string keyUid)
+    property bool exportChatKey: false // makes sense to set it only for keycard users (no use case so far where we need it for regular(password) users)
+
+    signal authenticationSuccess(string reason, string password, string pin, string keyUid, string chatPrivateKey)
 
     title: qsTr("Authenticate")
 
@@ -31,14 +33,14 @@ PopupBase {
     performPasswordAction: function(password) {
         const success = root.store.verifyPassword(password)
         if (success) {
-            root.authenticationSuccess(root.reason, password, "", root.keyUid)
+            root.authenticationSuccess(root.reason, password, "", root.keyUid, "")
             root.close()
         }
         return success
     }
 
     performKeycardAction: function(keyUid, pin) {
-        root.store.startKeycardAuthentication(keyUid, pin)
+        root.store.startKeycardAuthentication(keyUid, pin, root.exportChatKey)
     }
 
     closePopupAction: function() {
@@ -48,9 +50,9 @@ PopupBase {
     Connections {
         target: root.store
 
-        function onKeycardAuthSuccess(encryptionPublicKey) {
+        function onKeycardAuthSuccess(encryptionPublicKey, chatPrivateKey) {
             root.handleKeycardSuccess()
-            root.authenticationSuccess(root.reason, encryptionPublicKey, "", root.keyUid)
+            root.authenticationSuccess(root.reason, encryptionPublicKey, "", root.keyUid, chatPrivateKey)
             root.close()
         }
 
