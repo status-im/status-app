@@ -49,6 +49,9 @@ method advertise*(self: AccessInterface) {.base.} =
 method generateConnectionStringAndRunSetupSyncingPopup*(self: AccessInterface, messageSyncingEnabled: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onUserAuthenticated*(self: AccessInterface, pin: string, password: string, keyUid: string, chatPrivateKey: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 proc validateConnectionString*(self: AccessInterface, connectionString: string): string =
   raise newException(ValueError, "No implementation available")
 
