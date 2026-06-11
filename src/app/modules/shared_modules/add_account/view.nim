@@ -335,6 +335,13 @@ QtObject:
   proc authenticateForEditingDerivationPath*(self: View) {.slot.} =
     self.delegate.authenticateForEditingDerivationPath()
 
+  proc authenticationRequested*(self: View, keyUid: string) {.signal.}
+  proc emitAuthenticationRequested*(self: View, keyUid: string) =
+    self.authenticationRequested(keyUid)
+
+  proc authenticationCompleted*(self: View, password: string, pin: string, keyUid: string) {.slot.} =
+    self.delegate.onUserAuthenticated(pin, password, keyUid)
+
   proc startScanningForActivity*(self: View) {.slot.} =
     self.delegate.startScanningForActivity()
 

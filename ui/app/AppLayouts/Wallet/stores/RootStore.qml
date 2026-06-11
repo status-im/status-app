@@ -175,17 +175,17 @@ QtObject {
             }
         }
 
-        readonly property Connections mainModuleConnections: Connections {
-            target: d.mainModuleInst
+        readonly property Connections authenticationConnections: Connections {
+            target: Global
 
-            function onLoggedInUserAuthenticated(requestedBy: string, password: string, pin: string, keyUid: string, keycardUid: string) {
-                root.loggedInUserAuthenticated(requestedBy, password, pin, keyUid, keycardUid)
+            function onAuthenticationResult(reason: string, password: string, pin: string, keyUid: string) {
+                root.loggedInUserAuthenticated(reason, password, pin, keyUid, "")
             }
         }
     }
 
     function authenticateLoggedInUser(requestedBy) {
-        d.mainModuleInst.authenticateLoggedInUser(requestedBy)
+        Global.openAuthenticationPopup(requestedBy, userProfile.keyUid, false)
     }
 
     function resetCurrentViewedHolding(type) {

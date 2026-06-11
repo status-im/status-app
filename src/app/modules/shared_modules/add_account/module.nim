@@ -256,6 +256,29 @@ proc getNumOfAddressesToGenerate[T](self: Module[T]): int =
   let selectedOrigin = self.view.getSelectedOrigin()
   return self.controller.getNumOfAddressesToGenerateForKeypair(selectedOrigin.getKeyUid())
 
+proc fetchDerivedAddressesFromColdWalletKeypair[T](self: Module[T], keyUid: string, paths: seq[string]) =
+  let keypair = self.controller.getKeypairByKeyUid(keyUid)
+  if keypair.isNil or keypair.extendedPublicKey.len == 0:
+    self.onDerivedAddressesFetched(@[], "cannot resolve the extended public key for the selected keypair")
+    return
+  var relativePaths: seq[string]
+  for p in paths:
+    if p.startsWith(PATH_WALLET_XPUB & "/"):
+      relativePaths.add(p.replace(PATH_WALLET_XPUB & "/", ""))
+  let derived = self.controller.deriveAccountsPublicInfoFromExtendedPublicKeyForPaths(keypair.extendedPublicKey, relativePaths)
+  var derivedAddresses: seq[DerivedAddressDto]
+  for p in paths:
+    let relativePath = p.replace(PATH_WALLET_XPUB & "/", "")
+    if derived.derivations.hasKey(relativePath):
+      let acc = derived.derivations[relativePath]
+      derivedAddresses.add(DerivedAddressDto(
+        address: acc.address,
+        publicKey: acc.publicKey,
+        path: p,
+        hasActivity: false,
+        alreadyCreated: false))
+  self.onDerivedAddressesFetched(derivedAddresses, "")
+
 proc fetchAddressForDerivationPath[T](self: Module[T]) =
   let derivationPath = self.view.getDerivationPath()
   let derivedAddress = self.view.getSelectedDerivedAddress()
@@ -286,7 +309,7 @@ proc fetchAddressForDerivationPath[T](self: Module[T]) =
         self.controller.fetchAddressesFromNotImportedSeedPhrase(self.controller.getSeedPhrase(), paths)
         return
       if selectedOrigin.getMigratedToColdWallet():
-        self.controller.fetchAddressesFromKeycard(paths)
+        self.fetchDerivedAddressesFromColdWalletKeypair(selectedOrigin.getKeyUid(), paths)
         return
       self.controller.fetchDerivedAddresses(selectedOrigin.getDerivedFrom(), paths)
       return
@@ -296,9 +319,11 @@ proc authenticateSelectedOrigin[T](self: Module[T], reason: AuthenticationReason
   let selectedOrigin = self.view.getSelectedOrigin()
   self.authenticationReason = reason
   if selectedOrigin.getMigratedToColdWallet():
-    self.controller.authenticateOrigin(selectedOrigin.getKeyUid())
+    self.controller.setAuthenticatedKeyUid(selectedOrigin.getKeyUid())
+    self.view.setActionAuthenticated(true)
+    self.fetchAddressForDerivationPath()
     return
-  self.controller.authenticateOrigin()
+  self.view.emitAuthenticationRequested("")
 
 method onUserAuthenticated*[T](self: Module[T], pin: string, password: string, keyUid: string) =
   if password.len == 0:

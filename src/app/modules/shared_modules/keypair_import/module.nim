@@ -234,6 +234,9 @@ method generateConnectionStringForExporting*[T](self: Module[T]) =
 method validateConnectionString*[T](self: Module[T], connectionString: string): string =
   return self.controller.validateConnectionString(connectionString)
 
+method onAuthenticationRequest*[T](self: Module[T]) =
+  self.view.emitAuthenticationRequested(singletonInstance.userProfile.getKeyUid())
+
 method onUserAuthenticated*[T](self: Module[T], pin: string, password: string, keyUid: string) =
   if password.len == 0:
     info "ki_unsuccessful authentication"

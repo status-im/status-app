@@ -35,6 +35,21 @@ BasePopupStore {
         }
     }
 
+    readonly property Connections _authRequestConnections: Connections {
+        target: root.keypairImportModule
+        function onAuthenticationRequested(keyUid: string) {
+            Global.openAuthenticationPopup(Constants.authenticationReason.importKeypair, keyUid, false)
+        }
+    }
+    readonly property Connections _authResultConnections: Connections {
+        target: Global
+        function onAuthenticationResult(reason: string, password: string, pin: string, keyUid: string) {
+            if (reason !== Constants.authenticationReason.importKeypair)
+                return
+            root.keypairImportModule.authenticationCompleted(password, pin, keyUid)
+        }
+    }
+
     changePrivateKeyPostponed: Backpressure.debounce(root, 400, function (privateKey) {
         root.keypairImportModule.changePrivateKey(privateKey)
     })
