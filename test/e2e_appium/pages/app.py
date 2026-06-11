@@ -323,6 +323,8 @@ class App(BasePage):
         _shake_app()
         time.sleep(0.6)  # let activate_app foregrounding settle
 
+        from utils.screen_identity import dismiss_backup_modal
+
         slug = nav_name.lower().replace(" ", "_")
         for attempt in range(1, len(strategies) + 1):
             if attempt > 1:
@@ -331,6 +333,13 @@ class App(BasePage):
                 time.sleep(1.0)  # longer settle on retry — the drawer
                 # state we're recovering from is already wedged
 
+            # The on-device-backup popup can appear mid-test (first Messages
+            # entry) and blocks the drawer entirely — clear it every attempt.
+            if dismiss_backup_modal(self, timeout=1):
+                self.logger.warning(
+                    "click_%s_button: dismissed backup modal on attempt %d",
+                    slug, attempt,
+                )
             self._ensure_main_nav_visible()
             # Drawer slide-in keeps animating for ~200-400ms after the
             # locator is in the AT tree; mid-animation taps land on stale
