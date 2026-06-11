@@ -282,10 +282,13 @@ Item {
 
         ChatAnchorButtonsPanel {
             anchors.bottom: parent.bottom
+            anchors.bottomMargin: Theme.padding
             anchors.right: parent.right
             anchors.rightMargin: Theme.padding
 
-            mentionsCount: d.chatDetails ? d.chatDetails.notificationCount : 0
+            // Don't show the mention anchor in 1-1 chats, because all messages count as mentions
+            mentionsCount: d.chatDetails && d.chatDetails.type !== Constants.chatType.oneToOne ?
+                        d.chatDetails.notificationCount : 0
             recentMessagesButtonVisible: {
                 chatLogView.contentY // trigger binding on contentY change
                 return chatLogView.contentHeight - (d.scrollY + chatLogView.height) > 400
