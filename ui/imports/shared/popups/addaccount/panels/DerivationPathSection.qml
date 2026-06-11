@@ -56,13 +56,14 @@ Column {
             text: qsTr("Edit")
 
             icon.name: {
+                // Cold wallet keypairs derive from the stored xpub, so no authentication is required
+                if (root.store.selectedOrigin.migratedToColdWallet) {
+                    return ""
+                }
+
                 if (root.store.selectedOrigin.keyUid === root.store.userProfileKeyUid &&
                         root.store.userProfileUsingBiometricLogin) {
                     return "touch-id"
-                }
-
-                if (root.store.selectedOrigin.migratedToColdWallet || root.store.userProfileMigratedToColdWallet) {
-                    return "keycard"
                 }
 
                 return "password"

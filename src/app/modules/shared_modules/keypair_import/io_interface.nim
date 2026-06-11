@@ -38,6 +38,9 @@ method onSecondaryActionClicked*(self: AccessInterface) {.base.} =
 method onCancelActionClicked*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onAuthenticationRequest*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onUserAuthenticated*(self: AccessInterface, pin: string, password: string, keyUid: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

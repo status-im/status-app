@@ -475,9 +475,6 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_LOGGEDIN_USER_NAME_CHANGED) do(e: Args):
     self.delegate.contactUpdated(singletonInstance.userProfile.getPubKey())
 
-proc authenticateLoggedInUser*(self: Controller, requestedBy: string) =
-  discard
-
 proc isConnected*(self: Controller): bool =
   return self.nodeService.isConnected()
 

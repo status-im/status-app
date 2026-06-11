@@ -128,6 +128,13 @@ QtObject:
   proc generateConnectionStringAndRunSetupSyncingPopup*(self: View, messageSyncingEnabled: bool) {.slot.} =
     self.delegate.generateConnectionStringAndRunSetupSyncingPopup(messageSyncingEnabled)
 
+  proc authenticationRequested*(self: View, keyUid: string) {.signal.}
+  proc emitAuthenticationRequested*(self: View, keyUid: string) =
+    self.authenticationRequested(keyUid)
+
+  proc authenticationCompleted*(self: View, password: string, pin: string, keyUid: string, chatPrivateKey: string) {.slot.} =
+    self.delegate.onUserAuthenticated(pin, password, keyUid, chatPrivateKey)
+
   proc validateConnectionString*(self: View, connectionString: string): string {.slot.} =
     return self.delegate.validateConnectionString(connectionString)
 

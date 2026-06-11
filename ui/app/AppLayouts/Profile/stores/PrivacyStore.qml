@@ -35,10 +35,6 @@ QtObject {
         return root.privacyModule.validatePassword(password)
     }
 
-    function tryStoreToKeyChain() {
-        root.privacyModule.tryStoreToKeyChain()
-    }
-
     function mnemonicWasShown() {
         root.privacyModule.mnemonicWasShown()
     }
