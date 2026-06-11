@@ -47,11 +47,19 @@ BasePopupStore {
 
     readonly property var derivationPathRegEx: /^(m\/44'\/)([0-9|'|\/](?!\/'))*$/
     property string selectedRootPath: Constants.addAccountPopup.predefinedPaths.ethereum
-    readonly property var roots: [Constants.addAccountPopup.predefinedPaths.custom,
-        Constants.addAccountPopup.predefinedPaths.ethereum,
-        Constants.addAccountPopup.predefinedPaths.ethereumLedger,
-        Constants.addAccountPopup.predefinedPaths.ethereumLedgerLive
-    ]
+    readonly property var roots: {
+        // Cold wallet key pairs derive from the stored xpub, so no Custom and Ethereum Ledger Live options
+        // TODO: once regular key pairs switch to derive from xpub, Custom and Ethereum Ledger Live options
+        // will be completely removed.
+        if (!!root.selectedOrigin && root.selectedOrigin.migratedToColdWallet) {
+            return [Constants.addAccountPopup.predefinedPaths.ethereum,
+                    Constants.addAccountPopup.predefinedPaths.ethereumLedger]
+        }
+        return [Constants.addAccountPopup.predefinedPaths.custom,
+                Constants.addAccountPopup.predefinedPaths.ethereum,
+                Constants.addAccountPopup.predefinedPaths.ethereumLedger,
+                Constants.addAccountPopup.predefinedPaths.ethereumLedgerLive]
+    }
 
     readonly property bool isWatchOnlyImport: root.selectedOrigin.pairType === Constants.addAccountPopup.keyPairType.unknown &&
                                             root.selectedOrigin.keyUid === Constants.appTranslatableConstants.addAccountLabelOptionAddWatchOnlyAcc
@@ -180,6 +188,22 @@ BasePopupStore {
 
     function authenticateForEditingDerivationPath() {
         root.addAccountModule.authenticateForEditingDerivationPath()
+    }
+
+    readonly property Connections _authRequestConnections: Connections {
+        target: root.addAccountModule
+        function onAuthenticationRequested(keyUid: string) {
+            Global.openAuthenticationPopup(Constants.authenticationReason.addAccount, keyUid, false)
+        }
+    }
+
+    readonly property Connections _authResultConnections: Connections {
+        target: Global
+        function onAuthenticationResult(reason: string, password: string, pin: string, keyUid: string) {
+            if (reason !== Constants.authenticationReason.addAccount)
+                return
+            root.addAccountModule.authenticationCompleted(password, pin, keyUid)
+        }
     }
 
     function startScanningForActivity() {

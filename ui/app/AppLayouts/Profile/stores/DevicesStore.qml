@@ -46,6 +46,8 @@ QtObject {
         readonly property var localAccountSensitiveSettingsInst: localAccountSensitiveSettings
         readonly property var globalUtilsInst: globalUtils
 
+        property bool waitingForAuthentication: false
+
         /* Migration flow from the old backup path to the new public,writable location on iOS */
         readonly property url defaultIosBackupPath: StandardPaths.writableLocation(StandardPaths.DocumentsLocation) + "/backups"
         onAppSettingsInstChanged: d.migrateBackupPathToDefaultIosPath()
@@ -107,6 +109,24 @@ QtObject {
 
     function generateConnectionStringAndRunSetupSyncingPopup(messageSyncingEnabled) {
         root.devicesModule.generateConnectionStringAndRunSetupSyncingPopup(messageSyncingEnabled)
+    }
+
+    readonly property Connections _authRequestConnections: Connections {
+        target: root.devicesModule
+        function onAuthenticationRequested(keyUid: string) {
+            d.waitingForAuthentication = true
+            Global.openAuthenticationPopup(Constants.authenticationReason.syncDevice, keyUid, true)
+        }
+    }
+    readonly property Connections _authResultConnections: Connections {
+        target: Global
+        enabled: d.waitingForAuthentication
+        function onAuthenticationResult(reason: string, password: string, pin: string, keyUid: string, chatPrivateKey: string) {
+            if (reason !== Constants.authenticationReason.syncDevice)
+                return
+            d.waitingForAuthentication = false
+            root.devicesModule.authenticationCompleted(password, pin, keyUid, chatPrivateKey)
+        }
     }
 
     function validateConnectionString(connectionString) {
