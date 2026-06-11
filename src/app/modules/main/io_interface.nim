@@ -41,12 +41,6 @@ method load*(
   {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method authenticateLoggedInUser*(self: AccessInterface, requestedBy: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onLoggedInUserAuthenticated*(self: AccessInterface, requestedBy: string, password: string, pin: string, keyUid: string,
-  keycardUid: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
 
 method getAppNetwork*(self: AccessInterface): NetworkItem {.base.} =
   raise newException(ValueError, "No implementation available")

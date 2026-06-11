@@ -70,7 +70,7 @@ proc getSeedPhrase*(self: Controller): string =
   return self.tmpSeedPhrase
 
 proc authenticateLoggedInUser*(self: Controller) =
-  discard
+  self.delegate.onAuthenticationRequest()
 
 proc getKeypairByKeyUid*(self: Controller, keyUid: string): KeypairDto =
   return self.walletAccountService.getKeypairByKeyUid(keyUid)

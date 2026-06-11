@@ -125,9 +125,6 @@ proc deleteSavedAddress*(self: Controller, address: string) =
 proc finalizeAction*(self: Controller) =
   self.delegate.finalizeAction()
 
-proc authenticateOrigin*(self: Controller, keyUid = "") =
-  discard
-
 proc fetchDerivedAddresses*(self: Controller, derivedFrom: string, paths: seq[string])=
   var hashPassword = true
   if self.getPin().len > 0:
@@ -210,8 +207,8 @@ proc buildNewPrivateKeyKeypairAndAddItToOrigin*(self: Controller) =
 proc buildNewSeedPhraseKeypairAndAddItToOrigin*(self: Controller) =
   self.delegate.buildNewSeedPhraseKeypairAndAddItToOrigin()
 
-proc fetchAddressesFromKeycard*(self: Controller, bip44Paths: seq[string]) =
-  discard
+proc deriveAccountsPublicInfoFromExtendedPublicKeyForPaths*(self: Controller, extendedPublicKey: string, paths: seq[string]): DerivedAccounts =
+  return self.accountsService.deriveAccountsPublicInfoFromExtendedPublicKeyForPaths(extendedPublicKey, paths)
 
 proc getNumOfAddressesToGenerateForKeypair*(self: Controller, keyUid: string): int =
   return self.walletAccountService.getNumOfAddressesToGenerateForKeypair(keyUid)

@@ -2255,13 +2255,6 @@ method getSectionId*[T](self: Module[T], sectionType: SectionType): string =
 method getSectionName*[T](self: Module[T], sectionId: string): string =
   return self.view.model().getItemById(sectionId).name()
 
-method authenticateLoggedInUser*[T](self: Module[T], requestedBy: string) =
-  self.controller.authenticateLoggedInUser(requestedBy)
-
-method onLoggedInUserAuthenticated*[T](self: Module[T], requestedBy: string, password: string, pin: string, keyUid: string,
-  keycardUid: string) =
-  self.view.emitLoggedInUserAuthenticated(requestedBy, password, pin, keyUid, keycardUid)
-
 method requestGetCredentialFromKeychainResult*[T](self: Module[T], success: bool, secret: string) =
   if success:
     self.events.emit(SIGNAL_KEYCHAIN_SERVICE_SUCCESS, AuthenticationArgs(password: secret))

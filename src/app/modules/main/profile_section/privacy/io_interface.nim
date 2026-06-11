@@ -65,12 +65,6 @@ method setUrlUnfurlingMode*(self: AccessInterface, value: int) {.base.} =
 method getPasswordStrengthScore*(self: AccessInterface, password: string): int {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method tryStoreToKeyChain*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onUserAuthenticated*(self: AccessInterface, pin: string, password: string, keyUid: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method onUrlUnfurlingModeUpdated*(self: AccessInterface, mode: int) {.base.} =
   raise newException(ValueError, "No implementation available")
 

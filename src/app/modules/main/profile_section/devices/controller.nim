@@ -74,9 +74,6 @@ proc advertise*(self: Controller) =
 # Pairing status
 #
 
-proc authenticateLoggedInUser*(self: Controller, additionalBip44Paths: seq[string] = @[]) =
-  discard
-
 #
 # Backend actions
 #

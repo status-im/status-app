@@ -286,6 +286,7 @@ SettingsContentBase {
                 removeKeypairPopup.name = model.keyPair.name
                 removeKeypairPopup.keyUid = model.keyPair.keyUid
                 removeKeypairPopup.accounts= model.keyPair.accounts
+                removeKeypairPopup.migratedToColdWallet = model.keyPair.migratedToColdWallet
                 removeKeypairPopup.active = true
             }
             onRunMoveKeypairToKeycardFlow: (model) => {
@@ -363,6 +364,7 @@ SettingsContentBase {
                 removeKeypairPopup.name = keyPair.name
                 removeKeypairPopup.keyUid = keyPair.keyUid
                 removeKeypairPopup.accounts= keyPair.accounts
+                removeKeypairPopup.migratedToColdWallet = keyPair.migratedToColdWallet
                 removeKeypairPopup.active = true
             }
             onRunImportMissingKeypairFlow: {
@@ -493,12 +495,18 @@ SettingsContentBase {
             property string name
             property string keyUid
             property var accounts
+            property bool migratedToColdWallet
 
             sourceComponent: RemoveKeypairPopup {
                 name: removeKeypairPopup.name
                 relatedAccounts: removeKeypairPopup.accounts
                 onClosed: removeKeypairPopup.active = false
                 onConfirmClicked: {
+                    if (removeKeypairPopup.migratedToColdWallet) {
+                        root.walletStore.deleteKeypair(removeKeypairPopup.keyUid, "")
+                        removeKeypairPopup.active = false
+                        return
+                    }
                     root.walletStore.authenticateLoggedInUser(priv.removeKeypairIdentifier)
                 }
             }
