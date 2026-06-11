@@ -21,7 +21,7 @@ method isKeypairMigratedToColdWallet*(self: AccessInterface, keyUid: string): bo
 method buildKeyPairForProcessing*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method startKeycardAuthentication*(self: AccessInterface, keyUid: string, pin: string) {.base.} =
+method startKeycardAuthentication*(self: AccessInterface, keyUid: string, pin: string, exportChatKey: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method stopKeycardAuthentication*(self: AccessInterface) {.base.} =
