@@ -5,7 +5,6 @@ import view, controller, model, item
 
 import app/global/global_singleton
 import app/core/eventemitter
-import app_service/common/account_constants
 import app_service/service/settings/service as settings_service
 import app_service/service/devices/service as devices_service
 
@@ -99,10 +98,14 @@ method updateInstallationName*(self: Module, installationId: string, name: strin
 
 method generateConnectionStringAndRunSetupSyncingPopup*(self: Module, messageSyncingEnabled: bool) =
   self.messageSyncingEnabled = messageSyncingEnabled
-  var additionalBip44Paths: seq[string]
-  if singletonInstance.userProfile.getMigratedToColdWallet():
-    additionalBip44Paths.add(account_constants.PATH_WHISPER)
-  self.controller.authenticateLoggedInUser(additionalBip44Paths)
+  self.view.emitAuthenticationRequested(singletonInstance.userProfile.getKeyUid())
+
+method onUserAuthenticated*(self: Module, pin: string, password: string, keyUid: string, chatPrivateKey: string) =
+  if password.len == 0 and pin.len == 0:
+    return
+  # For keycard users `chatPrivateKey` is mandatory and for password users it is empty.
+  let connectionString = self.controller.getConnectionStringForBootstrappingAnotherDevice(password, chatPrivateKey, self.messageSyncingEnabled)
+  self.view.openPopupWithConnectionString(connectionString)
 
 proc validateConnectionString*(self: Module, connectionString: string): string =
   return self.controller.validateConnectionString(connectionString)

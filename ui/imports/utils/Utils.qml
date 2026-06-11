@@ -351,8 +351,12 @@ QtObject {
     /* Validation section end */
 
     function colorForColorId(palette, colorId)  {
-        if (colorId < 0 || colorId >= palette.userCustomizationColors.length) {
-            console.warn("Utils.colorForColorId : colorId is out of bounds")
+        if (colorId < 0
+                || !palette
+                || !palette.userCustomizationColors
+                || palette.userCustomizationColors == undefined
+                || colorId >= palette.userCustomizationColors.length) {
+            console.warn("Utils.colorForColorId : colorId is out of bounds, default color used")
             return StatusColors.blue
         }
         return palette.userCustomizationColors[colorId]

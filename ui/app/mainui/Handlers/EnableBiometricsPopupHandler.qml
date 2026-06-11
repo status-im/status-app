@@ -31,17 +31,26 @@ QtObject {
 
             onClosed: destroy()
 
+            property bool enablingBiometrics: false
+
             onEnableBiometricsRequested: () => {
-                // Enable Biometrics flow
+                // Enable Biometrics flow: authenticate the logged-in user, then store the returned credential to the keychain
                 popup.loading = true
-                root.privacyStore.tryStoreToKeyChain()
+                popup.enablingBiometrics = true
+                Global.openAuthenticationPopup(Constants.authenticationReason.enableBiometrics, root.privacyStore.keyUid, false)
             }
 
             Connections {
-                target: root.privacyStore.privacyModule
+                target: Global
+                enabled: popup.enablingBiometrics
 
-                function onSaveBiometricsRequested(keyUid, credential) {
-                    // If Password not retrieved
+                function onAuthenticationResult(reason, password, pin, keyUid) {
+                    if (reason !== Constants.authenticationReason.enableBiometrics)
+                        return
+                    popup.enablingBiometrics = false
+
+                    const credential = pin !== "" ? pin : password
+                    // If credential not retrieved (cancelled or failed)
                     if (keyUid === "" || credential === "") {
                         popup.loading = false
                         popup.errorText = qsTr("Biometric setup failed. Try again.")

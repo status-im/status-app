@@ -59,6 +59,13 @@ QtObject:
   proc onSecondaryActionClicked*(self: View) {.slot.} =
     self.delegate.onSecondaryActionClicked()
 
+  proc authenticationRequested*(self: View, keyUid: string) {.signal.}
+  proc emitAuthenticationRequested*(self: View, keyUid: string) =
+    self.authenticationRequested(keyUid)
+
+  proc authenticationCompleted*(self: View, password: string, pin: string, keyUid: string) {.slot.} =
+    self.delegate.onUserAuthenticated(pin, password, keyUid)
+
   proc getSelectedKeypair*(self: View): KeyPairItem =
     return self.selectedKeypair
   proc getSelectedKeypairAsVariant*(self: View): QVariant {.slot.} =

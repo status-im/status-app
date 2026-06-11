@@ -84,13 +84,6 @@ QtObject:
   proc getPasswordStrengthScore*(self: View, password: string): int {.slot.} =
     return self.delegate.getPasswordStrengthScore(password)
 
-  proc tryStoreToKeyChain*(self: View) {.slot.} =
-    self.delegate.tryStoreToKeyChain()
-
-  proc saveBiometricsRequested*(self: View, keyUid: string, credential: string) {.signal.}
-  proc requestSaveBiometrics*(self: View, keyUid: string, credential: string) =
-    self.saveBiometricsRequested(keyUid, credential)
-    
   proc emitUrlUnfurlingModeUpdated*(self: View, mode: int) =
     self.urlUnfurlingModeChanged()
 
