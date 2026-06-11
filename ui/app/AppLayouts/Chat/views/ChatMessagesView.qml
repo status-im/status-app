@@ -86,9 +86,12 @@ Item {
         id: d
 
         readonly property real scrollY: chatLogView.visibleArea.yPosition * chatLogView.contentHeight
-        readonly property bool isMostRecentMessageInViewport: chatLogView.visibleArea.yPosition >= 0.999 - chatLogView.visibleArea.heightRatio
+        readonly property bool isMostRecentMessageInViewport: chatLogView.visibleArea.yPosition >= 0.99 - chatLogView.visibleArea.heightRatio
         readonly property var chatDetails: chatContentModule && chatContentModule.chatDetails || null
         readonly property bool keepUnread: messageStore.keepUnread
+
+        // Tracks whether the user was at the bottom of the chat to know if we must scroll back there when coming back
+        property bool isAtBottom: false
 
         readonly property var loadMoreMessagesIfScrollBelowThreshold: Backpressure.oneInTimeQueued(root, 100, function() {
             if(scrollY < 1000) messageStore.loadMoreMessages()
@@ -111,6 +114,14 @@ Item {
         function goToMessage(messageIndex) {
             chatLogView.currentIndex = -1
             chatLogView.currentIndex = messageIndex
+            // Reset isAtBottom since the new message may be up high
+            d.isAtBottom = d.isMostRecentMessageInViewport
+        }
+
+        function scrollToBottom() {
+            chatLogView.positionViewAtBeginning()
+            d.isAtBottom = true
+            markAllMessagesReadIfMostRecentMessageIsInViewport()
         }
 
         onIsMostRecentMessageInViewportChanged: markAllMessagesReadIfMostRecentMessageIsInViewport()
@@ -129,7 +140,7 @@ Item {
         target: root.messageStore.messageModule
 
         function onMessageSuccessfullySent() {
-            chatLogView.positionViewAtBeginning()
+            d.scrollToBottom()
         }
 
         function onSendingMessageFailed(error) {
@@ -151,6 +162,9 @@ Item {
 
         function onLoadingChanged() {
             d.markAllMessagesReadIfMostRecentMessageIsInViewport()
+            if (!messageStore.loading && d.isAtBottom) {
+                Qt.callLater(d.scrollToBottom)
+            }
         }
     }
 
@@ -159,6 +173,11 @@ Item {
 
         function onActiveChanged() {
             d.setKeepUnread(false)
+
+            if (active && d.isAtBottom) {
+                Qt.callLater(d.scrollToBottom)
+            }
+
             d.markAllMessagesReadIfMostRecentMessageIsInViewport()
             d.loadMoreMessagesIfScrollBelowThreshold()
         }
@@ -258,6 +277,10 @@ Item {
 
         onContentYChanged: d.loadMoreMessagesIfScrollBelowThreshold()
 
+        onMovementEnded: {
+            d.isAtBottom = d.isMostRecentMessageInViewport
+        }
+
         onCountChanged: {
             d.markAllMessagesReadIfMostRecentMessageIsInViewport()
 
@@ -265,6 +288,13 @@ Item {
             // load as much messages as the view requires
             if (!messageStore.loading) {
                 d.loadMoreMessagesIfScrollBelowThreshold()
+            }
+
+            // When a new item is added (new message or new-messages marker) and
+            // the user was already at the bottom, snap back so the few pixels of
+            // upward drift caused by the item insertion are immediately corrected.
+            if (d.isAtBottom) {
+                Qt.callLater(d.scrollToBottom)
             }
         }
 
@@ -294,7 +324,7 @@ Item {
                 return chatLogView.contentHeight - (d.scrollY + chatLogView.height) > 400
             }
 
-            onRecentMessagesButtonClicked: chatLogView.positionViewAtBeginning()
+            onRecentMessagesButtonClicked: d.scrollToBottom()
             onMentionsButtonClicked: {
                 let id = messageStore.firstUnseenMentionMessageId()
                 if (id !== "") {
@@ -456,19 +486,18 @@ Item {
             }
             return null
         }
-        onHeaderChanged: chatLogView.positionViewAtBeginning()
 
         property int prevHeight: height
 
         onHeightChanged: {
             const heightDiff = prevHeight - height
 
-            // Keep position at the end (positionViewAtBeginning must be used bc
-            // BottomToTop layout) on resize when it was at the end before.
+            // Keep position at the end on resize when it was at the end before.
             // Without this workaround, when the keyboard opens or window is
             // resized, the position is slightly changed and not at the end anymore.
-            if (contentHeight - (d.scrollY + height) <= heightDiff)
-                Qt.callLater(positionViewAtBeginning)
+            if (d.isAtBottom && contentHeight - (d.scrollY + height) <= heightDiff) {
+                Qt.callLater(d.scrollToBottom)
+            }
 
             prevHeight = height
         }
