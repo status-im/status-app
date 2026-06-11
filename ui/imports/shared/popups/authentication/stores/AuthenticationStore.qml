@@ -3,7 +3,7 @@ import QtQuick
 QtObject {
     id: root
 
-    signal keycardAuthSuccess(string encryptionPublicKey)
+    signal keycardAuthSuccess(string encryptionPublicKey, string chatPrivateKey)
     signal keycardAuthError(string error)
 
     readonly property bool ready: d.ready
@@ -12,14 +12,15 @@ QtObject {
 
     readonly property QtObject d: QtObject {
         property bool ready: false
+        property bool keycardAuthentication: false
         readonly property var mainModuleInst: mainModule
     }
 
     readonly property Connections authModuleConnections: Connections {
         target: d.mainModuleInst.authenticationModule ?? null
 
-        function onKeycardAuthSuccess(encryptionPublicKey) {
-            root.keycardAuthSuccess(encryptionPublicKey)
+        function onKeycardAuthSuccess(encryptionPublicKey, chatPrivateKey) {
+            root.keycardAuthSuccess(encryptionPublicKey, chatPrivateKey)
         }
 
         function onKeycardAuthError(error) {
@@ -55,9 +56,12 @@ QtObject {
             console.error("authentication module was not created")
             return
         }
-        d.mainModuleInst.authenticationModule.stopKeycardAuthentication()
+        if (d.keycardAuthentication) {
+            d.mainModuleInst.authenticationModule.stopKeycardAuthentication()
+        }
         d.mainModuleInst.destroyAuthenticationModule()
         d.ready = false
+        d.keycardAuthentication = false
     }
 
     function isKeypairMigratedToColdWallet(keyUid) {
@@ -76,12 +80,13 @@ QtObject {
         return d.mainModuleInst.authenticationModule.verifyPassword(password)
     }
 
-    function startKeycardAuthentication(keyUid, pin) {
+    function startKeycardAuthentication(keyUid, pin, exportChatKey) {
         if (!d.mainModuleInst.authenticationModule) {
             console.error("authentication module was not created")
             return
         }
-        d.mainModuleInst.authenticationModule.startKeycardAuthentication(keyUid, pin)
+        d.keycardAuthentication = true
+        d.mainModuleInst.authenticationModule.startKeycardAuthentication(keyUid, pin, exportChatKey)
     }
 
     function buildKeyPairForProcessing(keyUid) {
