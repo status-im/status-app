@@ -74,7 +74,7 @@ Item {
         readonly property string historicalDataTokenKey: {
             if (!root.tokenGroup || !root.tokenGroup.tokens)
                 return ""
-            const ethereumToken = SQUtils.ModelUtils.getByKey(root.tokenGroup.tokens, "chainId", 1)
+            const ethereumToken = SQUtils.ModelUtils.getByKey(root.tokenGroup.tokens, "chainId", Constants.chains.mainnetChainId)
             if (ethereumToken && ethereumToken.key)
                 return ethereumToken.key
             const first = SQUtils.ModelUtils.get(root.tokenGroup.tokens, 0)
