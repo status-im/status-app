@@ -446,6 +446,13 @@ QtObject {
         readonly property int stable: 2
     }
 
+    readonly property QtObject authenticationReason: QtObject {
+        readonly property string enableBiometrics: "enable-biometrics"
+        readonly property string addAccount: "add-account"
+        readonly property string importKeypair: "import-keypair"
+        readonly property string syncDevice: "sync-device"
+    }
+
     readonly property QtObject keycard: QtObject {
 
         readonly property string temporarilyUnavailable: qsTr("Temporarily unavailable, will be available in the next release.")

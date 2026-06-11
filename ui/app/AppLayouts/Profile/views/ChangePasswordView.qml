@@ -40,6 +40,8 @@ SettingsContentBase {
             reevaluateTrigger++
         }
 
+        property bool enablingBiometrics: false
+
         readonly property bool biometricsEnabled: {
             reevaluateTrigger // Reference for binding
             return keychain.hasCredential(privacyStore.keyUid) === Keychain.StatusSuccess
@@ -59,11 +61,17 @@ SettingsContentBase {
     }
 
     readonly property Item biometricsPopup: titleRowComponentLoader.item
-    readonly property Connections privacyStoreConnections: Connections {
-        target: root.privacyStore.privacyModule
+    readonly property Connections authenticationConnections: Connections {
+        target: Global
+        enabled: d.enablingBiometrics
 
-        function onSaveBiometricsRequested(keyUid, credential) {
-            // If Password not retrieved
+        function onAuthenticationResult(reason, password, pin, keyUid) {
+            if (reason !== Constants.authenticationReason.enableBiometrics)
+                return
+            d.enablingBiometrics = false
+
+            const credential = pin !== "" ? pin : password
+            // If credential not retrieved (cancelled or failed)
             if (keyUid === "" || credential === "") {
                 d.showErrorToast()
                 return
@@ -110,7 +118,8 @@ SettingsContentBase {
             onToggleBiometrics: function(checked) {
                 // Enable Biometrics flow
                 if (!checked) {
-                    root.privacyStore.tryStoreToKeyChain()
+                    d.enablingBiometrics = true
+                    Global.openAuthenticationPopup(Constants.authenticationReason.enableBiometrics, root.privacyStore.keyUid, false)
                     return
                 }
 

@@ -80,6 +80,3 @@ proc setUrlUnfurlingMode*(self: Controller, value: int) =
 
 proc getPasswordStrengthScore*(self: Controller, password, userName: string): int =
   return self.generalService.getPasswordStrengthScore(password, userName)
-
-proc authenticateLoggedInUser*(self: Controller) =
-  discard

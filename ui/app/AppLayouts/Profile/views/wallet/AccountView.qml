@@ -45,6 +45,7 @@ ColumnLayout {
         readonly property string removeAccountIdentifier: "profile-remove-account"
 
         readonly property bool watchOnlyAccount: !!root.keyPair? root.keyPair.pairType === Constants.keypair.type.watchOnly: false
+        readonly property bool coldWalletKeypair: !!root.keyPair ? root.keyPair.migratedToColdWallet : false
         readonly property bool privateKeyAccount: !!root.keyPair? root.keyPair.pairType === Constants.keypair.type.privateKeyImport: false
         readonly property bool seedImport: !!root.keyPair? root.keyPair.pairType === Constants.keypair.type.seedImport: false
     }
@@ -288,7 +289,7 @@ ColumnLayout {
             }
 
             onRemoveAccount: {
-                if (d.watchOnlyAccount) {
+                if (d.watchOnlyAccount || d.coldWalletKeypair) {
                     confirmationPopup.doDeletion("")
                     return
                 }

@@ -111,6 +111,7 @@ Rectangle {
                 removeAccountConfirmation.accountDerivationPath = account.path
                 removeAccountConfirmation.emoji = account.emoji
                 removeAccountConfirmation.colorId = account.colorId
+                removeAccountConfirmation.migratedToColdWallet = account.migratedToColdWallet
                 removeAccountConfirmation.active = true
             }
 
@@ -133,6 +134,7 @@ Rectangle {
         property string accountDerivationPath
         property string emoji
         property string colorId
+        property bool migratedToColdWallet
 
         sourceComponent: RemoveAccountConfirmationPopup {
             accountType: removeAccountConfirmation.accountType
@@ -152,7 +154,8 @@ Rectangle {
             }
 
             onRemoveAccount: {
-                if (removeAccountConfirmation.accountType === Constants.watchWalletType) {
+                if (removeAccountConfirmation.accountType === Constants.watchWalletType
+                        || removeAccountConfirmation.migratedToColdWallet) {
                     doDeletion("")
                     return
                 }
