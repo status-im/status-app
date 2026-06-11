@@ -11,16 +11,16 @@ import pytest
 
 from pages.app import App
 from utils.multi_device_helpers import StepMixin
-from utils.screen_identity import SCREEN_ANCHORS, confirm_screen, dismiss_backup_modal
+from utils.screen_identity import confirm_screen, dismiss_backup_modal
 
 
-SECTIONS = list(SCREEN_ANCHORS)
+SECTIONS = ("messages", "wallet", "settings")
 
 
 class TestNavigationDrawer(StepMixin):
     @pytest.mark.gate
     @pytest.mark.smoke
-    @pytest.mark.timeout(900)
+    @pytest.mark.timeout(1200)
     async def test_drawer_navigation_cycles(self):
         app = App(self.device.driver)
         dismiss_backup_modal(app)

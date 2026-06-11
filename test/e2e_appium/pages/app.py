@@ -262,11 +262,10 @@ class App(BasePage):
         if self.active_section() == "settings":
             self.logger.info("Already in Settings section — skipping nav")
             return True
-        from locators.settings.settings_locators import SettingsLocators
-        settings_locators = SettingsLocators()
+        from utils.screen_identity import SCREEN_ANCHORS
         return self._click_drawer_nav_with_verify(
             nav_locator=self.locators.LEFT_NAV_SETTINGS,
-            landmark_locator=settings_locators.PROFILE_MENU_ITEM,
+            landmark_locator=SCREEN_ANCHORS["settings"],
             nav_name="Settings",
         )
 

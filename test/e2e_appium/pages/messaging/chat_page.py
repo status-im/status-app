@@ -333,9 +333,13 @@ class ChatPage(BasePage):
                 self.dismiss_introduce_prompt(timeout=1)
                 self.dismiss_backup_prompt(timeout=1)
                 try:
-                    app.click_wallet_button()
+                    # Bare nav both ways: this bounce only exists to force a
+                    # chat-list rebuild, so it shouldn't pay the verified-nav
+                    # cost (activate_app + modal check + landmark wait) per
+                    # poll iteration, and arrival is re-checked below anyway.
+                    app._ensure_main_nav_visible()
+                    app._click_nav_item(app.locators.LEFT_NAV_WALLET)
                     time.sleep(1)
-                    # Force nav even if already in Messages (bypass short-circuit)
                     app._ensure_main_nav_visible()
                     app._click_nav_item(app.locators.LEFT_NAV_MESSAGES)
                 except Exception as exc:

@@ -37,12 +37,19 @@ BACKUP_MODAL_SKIP = BaseLocators.tid("backupMessageSkipStatusFlatButton")
 
 def dismiss_backup_modal(page, timeout: int = 2) -> bool:
     """Tap Skip on the on-device-backup popup if it is up. Returns True if a
-    modal was dismissed. Safe to call before or after any navigation."""
+    modal was dismissed. Safe to call before or after any navigation.
+
+    Never raises: callers use this as a guard inside nav retry loops, so a
+    failed dismissal must fall through to the caller's own retry, not abort
+    it (safe_click raises on exhaustion)."""
     if not page.is_element_visible(BACKUP_MODAL, timeout=timeout):
         return False
-    page.safe_click(BACKUP_MODAL_SKIP, timeout=5)
-    page.wait_for_invisibility(BACKUP_MODAL, timeout=5)
-    return True
+    try:
+        page.safe_click(BACKUP_MODAL_SKIP, timeout=5)
+        return page.wait_for_invisibility(BACKUP_MODAL, timeout=5)
+    except Exception as exc:
+        page.logger.warning("Backup modal present but dismissal failed: %s", exc)
+        return False
 
 
 def confirm_screen(page, expected: str, timeout: int = 15) -> bool:
