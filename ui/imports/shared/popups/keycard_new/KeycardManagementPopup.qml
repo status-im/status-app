@@ -499,11 +499,11 @@ StatusDialog {
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase) {
                 if (root.flow === Constants.keycard.flow.moveKeyPair) {
-                    Global.openAuthenticationPopup(Constants.keycard.flow.moveKeyPair, root.store.userProfileKeyUid)
+                    Global.openAuthenticationPopup(Constants.keycard.flow.moveKeyPair, root.store.userProfileKeyUid, false)
                     return
                 }
                 if (root.flow === Constants.keycard.flow.moveProfileKeyPair) {
-                    Global.openAuthenticationPopup(Constants.keycard.flow.moveProfileKeyPair, root.store.userProfileKeyUid)
+                    Global.openAuthenticationPopup(Constants.keycard.flow.moveProfileKeyPair, root.store.userProfileKeyUid, false)
                     return
                 }
                 if (root.flow === Constants.keycard.flow.stopUsingKeycard
@@ -535,7 +535,7 @@ StatusDialog {
             }
             if (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords) {
                 if (root.flow === Constants.keycard.flow.moveProfileKeyPair) {
-                    Global.openAuthenticationPopup(Constants.keycard.flow.moveProfileKeyPair, root.store.userProfileKeyUid)
+                    Global.openAuthenticationPopup(Constants.keycard.flow.moveProfileKeyPair, root.store.userProfileKeyUid, false)
                     return
                 }
                 d.seedPhraseKeyUid = root.store.getKeyUidForSeedPhrase(d.seedPhrase)
