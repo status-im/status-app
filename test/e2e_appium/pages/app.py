@@ -48,8 +48,12 @@ class App(BasePage):
         if self.active_section() == "messaging":
             self.logger.info("Already in Messages section — skipping nav")
             return True
-        self._ensure_main_nav_visible()
-        return self._click_nav_item(self.locators.LEFT_NAV_MESSAGES)
+        from utils.screen_identity import SCREEN_ANCHORS
+        return self._click_drawer_nav_with_verify(
+            nav_locator=self.locators.LEFT_NAV_MESSAGES,
+            landmark_locator=SCREEN_ANCHORS["messages"],
+            nav_name="Messages",
+        )
 
     def click_communities_button(self) -> bool:
         self.logger.info("Clicking Communities button")
@@ -61,8 +65,12 @@ class App(BasePage):
         if self.active_section() == "wallet":
             self.logger.info("Already in Wallet section — skipping nav")
             return True
-        self._ensure_main_nav_visible()
-        return self._click_nav_item(self.locators.LEFT_NAV_WALLET)
+        from utils.screen_identity import SCREEN_ANCHORS
+        return self._click_drawer_nav_with_verify(
+            nav_locator=self.locators.LEFT_NAV_WALLET,
+            landmark_locator=SCREEN_ANCHORS["wallet"],
+            nav_name="Wallet",
+        )
 
     def click_market_button(self) -> bool:
         self.logger.info("Clicking Market button")
@@ -276,9 +284,11 @@ class App(BasePage):
         failure mode. ``activate_app()`` between attempts unsticks the
         drawer's gesture handler.
         """
-        # Defensive armour for phone-portrait sessions; on the tablet gate
-        # device, attempt 1 (native) reliably wins and the rest is dormant.
-        strategies = ["native", "native", "w3c", "w3c"]
+        # W3C first: native clickGesture taps by elementId and inherits the
+        # a11y-bounds/rendered-rail mismatch on phone portrait, so it can
+        # mis-target a neighbouring item. The W3C pointer taps computed
+        # coordinates and survives it; native stays as the late fallback.
+        strategies = ["w3c", "w3c", "native", "native"]
         pkg = self.driver.capabilities.get("appPackage") or "app.status.mobile"
 
         # On a second call within ~1min of a successful first, the
@@ -339,6 +349,12 @@ class App(BasePage):
             # sometimes lags a frame behind the SwipeView transition.
             time.sleep(0.5)
             if self.is_element_visible(landmark_locator, timeout=15):
+                if attempt > 1:
+                    self.logger.warning(
+                        "click_%s_button: rescued on attempt %d (strategy=%s)"
+                        " — primary nav path failed",
+                        slug, attempt, strategy,
+                    )
                 return True
             self.logger.warning(
                 "click_%s_button: drawer closed but %s page not "
