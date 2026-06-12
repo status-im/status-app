@@ -88,7 +88,7 @@ ColumnLayout {
                 title: model.name
                 secondaryTitle: WalletUtils.addressToDisplay(Theme.palette, model.address, true, containsMouse)
                 secondaryTitleIcon: model.walletType === Constants.watchWalletType? "show" :
-                                                                                    model.keycardAccount ? "keycard" : ""
+                                                                                    model.migratedToColdWallet ? "keycard" : ""
                 hasEmoji: true
                 icon.width: 40
                 icon.height: 40

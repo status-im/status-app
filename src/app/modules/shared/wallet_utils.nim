@@ -13,7 +13,7 @@ proc currencyAmountToItem*(amount: float64, format: CurrencyFormatDto) : Currenc
     format.stripTrailingZeroes
   )
 
-proc walletAccountToWalletAccountItem*(w: WalletAccountDto, keycardAccount: bool, areTestNetworksEnabled: bool): WalletAccountItem =
+proc walletAccountToWalletAccountItem*(w: WalletAccountDto, migratedToColdWallet: bool, areTestNetworksEnabled: bool): WalletAccountItem =
   if w.isNil:
     return newWalletAccountItem()
 
@@ -26,7 +26,7 @@ proc walletAccountToWalletAccountItem*(w: WalletAccountDto, keycardAccount: bool
     w.walletType,
     w.path,
     w.keyUid,
-    keycardAccount,
+    migratedToColdWallet,
     w.position,
     w.operable,
     areTestNetworksEnabled,

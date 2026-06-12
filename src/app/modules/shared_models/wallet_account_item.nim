@@ -13,7 +13,7 @@ QtObject:
     walletType: string
     path: string
     keyUid: string
-    keycardAccount: bool
+    migratedToColdWallet: bool
     position: int
     operability: string
     areTestNetworksEnabled: bool
@@ -28,7 +28,7 @@ QtObject:
     walletType: string = "",
     path: string = "",
     keyUid: string = "",
-    keycardAccount: bool = false,
+    migratedToColdWallet: bool = false,
     position: int = 0,
     operability: string = wa_dto.AccountFullyOperable,
     areTestNetworksEnabled: bool = false,
@@ -44,7 +44,7 @@ QtObject:
     walletType: string = "",
     path: string = "",
     keyUid: string = "",
-    keycardAccount: bool = false,
+    migratedToColdWallet: bool = false,
     position: int = 0,
     operability: string = wa_dto.AccountFullyOperable,
     areTestNetworksEnabled: bool = false,
@@ -58,7 +58,7 @@ QtObject:
     result.walletType = walletType
     result.path = path
     result.keyUid = keyUid
-    result.keycardAccount = keycardAccount
+    result.migratedToColdWallet = migratedToColdWallet
     result.position = position
     result.operability = operability
     result.areTestNetworksEnabled = areTestNetworksEnabled
@@ -74,7 +74,7 @@ QtObject:
       walletType: {self.walletType},
       path: {self.path},
       keyUid: {self.keyUid},
-      keycardAccount: {self.keycardAccount},
+      migratedToColdWallet: {self.migratedToColdWallet},
       position: {self.position},
       operability: {self.operability},
       areTestNetworksEnabled: {self.areTestNetworksEnabled},
@@ -150,12 +150,12 @@ QtObject:
     read = keyUid
     notify = keyUidChanged
 
-  proc keycardAccountChanged*(self: WalletAccountItem) {.signal.}
-  proc keycardAccount*(self: WalletAccountItem): bool {.slot.} =
-    return self.keycardAccount
-  QtProperty[bool] keycardAccount:
-    read = keycardAccount
-    notify = keycardAccountChanged
+  proc migratedToColdWalletChanged*(self: WalletAccountItem) {.signal.}
+  proc migratedToColdWallet*(self: WalletAccountItem): bool {.slot.} =
+    return self.migratedToColdWallet
+  QtProperty[bool] migratedToColdWallet:
+    read = migratedToColdWallet
+    notify = migratedToColdWalletChanged
 
   proc positionChanged*(self: WalletAccountItem) {.signal.}
   proc getPosition*(self: WalletAccountItem): int {.slot.} =
@@ -201,7 +201,7 @@ QtObject:
     walletType: string = "",
     path: string = "",
     keyUid: string = "",
-    keycardAccount: bool = false,
+    migratedToColdWallet: bool = false,
     position: int = 0,
     operability: string = wa_dto.AccountFullyOperable,
     areTestNetworksEnabled: bool = false,
@@ -216,7 +216,7 @@ QtObject:
       self.walletType = walletType
       self.path = path
       self.keyUid = keyUid
-      self.keycardAccount = keycardAccount
+      self.migratedToColdWallet = migratedToColdWallet
       self.position = position
       self.operability = operability
       self.areTestNetworksEnabled = areTestNetworksEnabled

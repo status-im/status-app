@@ -17,7 +17,7 @@ type
     KeyUid,
     CreatedAt,
     Position,
-    KeycardAccount,
+    MigratedToColdWallet,
     AssetsLoading,
     IsWallet,
     HideFromTotalBalance,
@@ -64,7 +64,7 @@ QtObject:
       ModelRole.KeyUid.int: "keyUid",
       ModelRole.CreatedAt.int: "createdAt",
       ModelRole.Position.int: "position",
-      ModelRole.KeycardAccount.int: "keycardAccount",
+      ModelRole.MigratedToColdWallet.int: "migratedToColdWallet",
       ModelRole.AssetsLoading.int: "assetsLoading",
       ModelRole.IsWallet.int: "isWallet",
       ModelRole.HideFromTotalBalance.int: "hideFromTotalBalance",
@@ -173,8 +173,8 @@ QtObject:
       result = newQVariant(item.createdAt())
     of ModelRole.Position:
       result = newQVariant(item.getPosition())
-    of ModelRole.KeycardAccount:
-      result = newQVariant(item.keycardAccount())
+    of ModelRole.MigratedToColdWallet:
+      result = newQVariant(item.migratedToColdWallet())
     of ModelRole.AssetsLoading:
       result = newQVariant(item.assetsLoading())
     of ModelRole.IsWallet:

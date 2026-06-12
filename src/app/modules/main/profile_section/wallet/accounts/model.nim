@@ -13,7 +13,7 @@ type
     Emoji,
     KeyUid,
     Position,
-    KeycardAccount
+    MigratedToColdWallet
 
 QtObject:
   type
@@ -52,7 +52,7 @@ QtObject:
       ModelRole.Emoji.int: "emoji",
       ModelRole.KeyUid.int: "keyUid",
       ModelRole.Position.int: "position",
-      ModelRole.KeycardAccount.int: "keycardAccount",
+      ModelRole.MigratedToColdWallet.int: "migratedToColdWallet",
     }.toTable
 
 
@@ -99,8 +99,8 @@ QtObject:
       result = newQVariant(item.keyUid())
     of ModelRole.Position:
       result = newQVariant(item.getPosition())
-    of ModelRole.KeycardAccount:
-      result = newQVariant(item.keycardAccount())
+    of ModelRole.MigratedToColdWallet:
+      result = newQVariant(item.migratedToColdWallet())
 
   proc moveItem*(self: Model, fromRow: int, toRow: int): bool =
     if toRow < 0 or toRow > self.items.len - 1:

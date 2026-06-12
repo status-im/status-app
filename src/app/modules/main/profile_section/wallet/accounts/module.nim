@@ -116,9 +116,9 @@ method refreshWalletAccounts*(self: Module) =
   let walletAccounts = self.controller.getWalletAccounts()
 
   let items = walletAccounts.map(w => (block:
-    let keycardAccount = self.controller.isKeycardAccount(w)
+    let migratedToColdWallet = self.controller.isKeycardAccount(w)
     let areTestNetworksEnabled = self.controller.areTestNetworksEnabled()
-    walletAccountToWalletAccountItem(w, keycardAccount, areTestNetworksEnabled)
+    walletAccountToWalletAccountItem(w, migratedToColdWallet, areTestNetworksEnabled)
   ))
 
   self.view.setKeyPairModelItems(self.createKeypairItems(walletAccounts))
@@ -148,9 +148,9 @@ method load*(self: Module) =
 
   self.events.on(SIGNAL_WALLET_ACCOUNT_UPDATED) do(e:Args):
     let args = AccountArgs(e)
-    let keycardAccount = self.controller.isKeycardAccount(args.account)
+    let migratedToColdWallet = self.controller.isKeycardAccount(args.account)
     let areTestNetworksEnabled = self.controller.areTestNetworksEnabled()
-    self.view.onUpdatedAccount(walletAccountToWalletAccountItem(args.account, keycardAccount, areTestNetworksEnabled))
+    self.view.onUpdatedAccount(walletAccountToWalletAccountItem(args.account, migratedToColdWallet, areTestNetworksEnabled))
 
   self.events.on(SIGNAL_IMPORTED_KEYPAIRS) do(e:Args):
     let args = KeypairsArgs(e)

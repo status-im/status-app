@@ -266,23 +266,23 @@ Item {
             readonly property ListModel nonWatchAccounts: ListModel {
                 ListElement {
                     address: "0x1"
-                    keycardAccount: false
+                    migratedToColdWallet: false
                 }
                 ListElement {
                     address: "0x2"
                     name: "helloworld"
                     emoji: "😋"
                     color: "#2A4AF5"
-                    keycardAccount: false
+                    migratedToColdWallet: false
                 }
                 ListElement {
                     address: "0x3a"
-                    keycardAccount: false
+                    migratedToColdWallet: false
                 }
                 // Account from GroupedAccountsAssetsModel
                 ListElement {
                     address: "0x7F47C2e18a4BBf5487E6fb082eC2D9Ab0E6d7240"
-                    keycardAccount: false
+                    migratedToColdWallet: false
                 }
             }
 
@@ -1035,7 +1035,7 @@ Item {
                     name: "helloworld",
                     emoji: "😋",
                     color: "#2A4AF5",
-                    keycardAccount: false
+                    migratedToColdWallet: false
             })
             controlUnderTest.networksModel.append({
                     chainId: request.chainId,
@@ -1066,7 +1066,7 @@ Item {
                     name: "helloworld",
                     emoji: "😋",
                     color: "#2A4AF5",
-                    keycardAccount: false
+                    migratedToColdWallet: false
             })
             controlUnderTest.networksModel.append({
                     chainId: request.chainId,
