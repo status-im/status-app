@@ -92,6 +92,6 @@ proc getPasswordStrengthScore*(self: Controller, password, userName: string): in
 
 proc authenticateLoggedInUser*(self: Controller) =
   var data = SharedKeycarModuleAuthenticationArgs(uniqueIdentifier: UNIQUE_PRIVACY_SECTION_MODULE_AUTH_IDENTIFIER)
-  if singletonInstance.userProfile.getIsKeycardUser():
+  if singletonInstance.userProfile.getMigratedToColdWallet():
     data.keyUid = singletonInstance.userProfile.getKeyUid()
   self.events.emit(SIGNAL_SHARED_KEYCARD_MODULE_AUTHENTICATE_USER, data)

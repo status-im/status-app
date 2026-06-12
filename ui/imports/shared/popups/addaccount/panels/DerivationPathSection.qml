@@ -61,7 +61,7 @@ Column {
                     return "touch-id"
                 }
 
-                if (root.store.selectedOrigin.migratedToKeycard || root.store.userProfileIsKeycardUser) {
+                if (root.store.selectedOrigin.migratedToKeycard || root.store.userProfileMigratedToColdWallet) {
                     return "keycard"
                 }
 

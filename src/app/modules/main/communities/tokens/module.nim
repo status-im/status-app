@@ -232,7 +232,7 @@ method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransa
       self.signOnKeycard()
     else:
       var finalPassword = self.tempPassword
-      if not singletonInstance.userProfile.getIsKeycardUser():
+      if not singletonInstance.userProfile.getMigratedToColdWallet():
         finalPassword = hashPassword(self.tempPassword)
       for h in txForSigning.signingDetails.hashes:
         self.tempResolvedSignatures[h] = ("", "", "")

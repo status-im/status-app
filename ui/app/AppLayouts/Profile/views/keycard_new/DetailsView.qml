@@ -64,7 +64,7 @@ ColumnLayout {
 
         readonly property bool isProfileKeyPair: !!root.keyUid
                                                  && root.keyUid === root.keycardStore.userProfileKeyUid
-        readonly property bool isProfileKeyPairUsingKeycard: root.keycardStore.isKeycardUser
+        readonly property bool isProfileKeyPairUsingKeycard: root.keycardStore.migratedToColdWallet
 
         readonly property bool hasKeyPair: stateInfo.hasKeyPair
         readonly property bool onlyPinSet: stateInfo.onlyPinSet

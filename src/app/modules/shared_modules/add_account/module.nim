@@ -589,7 +589,7 @@ proc doAddAccount[T](self: Module[T]) =
     rootWalletMasterKey = selectedOrigin.getDerivedFrom()
     keyUid = selectedOrigin.getKeyUid()
     createKeystoreFile = not selectedOrigin.getMigratedToKeycard()
-    doPasswordHashing = not singletonInstance.userProfile.getIsKeycardUser()
+    doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet()
     hideFromTotalBalance = false
 
   if selectedOrigin.getPairType() == KeyPairType.Profile.int:
@@ -628,7 +628,7 @@ proc doAddAccount[T](self: Module[T]) =
     if selectedOrigin.getPairType() == KeyPairType.PrivateKeyImport.int:
       success = self.controller.addNewPrivateKeyKeypair(
         privateKey = self.controller.getGeneratedAccount().privateKey,
-        doPasswordHashing = not singletonInstance.userProfile.getIsKeycardUser(),
+        doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet(),
         keypairName = keypairName,
         accountCreationDetails = AccountCreationDetails(
             path: path,
@@ -642,7 +642,7 @@ proc doAddAccount[T](self: Module[T]) =
     elif selectedOrigin.getPairType() == KeyPairType.SeedImport.int:
       success = self.controller.addNewSeedPhraseKeypair(
         seedPhrase = self.controller.getSeedPhrase(),
-        doPasswordHashing = not singletonInstance.userProfile.getIsKeycardUser(),
+        doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet(),
         keypairName = keypairName,
         accountCreationDetails = AccountCreationDetails(
             path: path,

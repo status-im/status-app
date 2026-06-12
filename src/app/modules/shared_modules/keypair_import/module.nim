@@ -260,7 +260,7 @@ method onUserAuthenticated*[T](self: Module[T], pin: string, password: string, k
     let res = self.controller.makePrivateKeyKeypairFullyOperable(self.controller.getGeneratedAccount().keyUid,
       self.controller.getPrivateKey(),
       password,
-      doPasswordHashing = not singletonInstance.userProfile.getIsKeycardUser())
+      doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet())
     if res.len > 0:
       error "ki_unable to make a keypair operable", errDesription=res
       return
@@ -268,7 +268,7 @@ method onUserAuthenticated*[T](self: Module[T], pin: string, password: string, k
     let res = self.controller.makeSeedPhraseKeypairFullyOperable(self.controller.getGeneratedAccount().keyUid,
       self.controller.getSeedPhrase(),
       password,
-      doPasswordHashing = not singletonInstance.userProfile.getIsKeycardUser())
+      doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet())
     if res.len > 0:
       error "ki_unable to make a keypair operable", errDesription=res
       return

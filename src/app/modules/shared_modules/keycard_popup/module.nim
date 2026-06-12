@@ -555,7 +555,7 @@ proc proceedWithRunFlow[T](self: Module[T], flowToRun: FlowType, keyUid: string,
   if flowToRun == FlowType.Authentication:
     self.runningFlow = flowToRun
     if keyUid.len == 0 or keyUid == singletonInstance.userProfile.getKeyUid():
-      if singletonInstance.userProfile.getIsKeycardUser():
+      if singletonInstance.userProfile.getMigratedToColdWallet():
         self.prepareKeyPairItemForAuthentication(singletonInstance.userProfile.getKeyUid())
         self.displayKeycardFlowStartedState(flowToRun, nil)
         self.controller.runAuthenticationFlow(singletonInstance.userProfile.getKeyUid(), bip44Paths)

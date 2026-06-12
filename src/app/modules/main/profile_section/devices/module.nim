@@ -101,13 +101,13 @@ method updateInstallationName*(self: Module, installationId: string, name: strin
 method generateConnectionStringAndRunSetupSyncingPopup*(self: Module, messageSyncingEnabled: bool) =
   self.messageSyncingEnabled = messageSyncingEnabled
   var additionalBip44Paths: seq[string]
-  if singletonInstance.userProfile.getIsKeycardUser():
+  if singletonInstance.userProfile.getMigratedToColdWallet():
     additionalBip44Paths.add(account_constants.PATH_WHISPER)
   self.controller.authenticateLoggedInUser(additionalBip44Paths)
 
 method onLoggedInUserAuthenticated*(self: Module, pin: string, password: string, keyUid: string, additinalPathsDetails: Table[string, KeyDetails]) =
   var chatKey = ""
-  if singletonInstance.userProfile.getIsKeycardUser() and
+  if singletonInstance.userProfile.getMigratedToColdWallet() and
     additinalPathsDetails.contains(account_constants.PATH_WHISPER):
       chatKey = additinalPathsDetails[account_constants.PATH_WHISPER].privateKey
       if chatKey.startsWith("0x"):

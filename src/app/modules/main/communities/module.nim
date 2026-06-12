@@ -669,7 +669,7 @@ proc signRevealedAddressesForNonKeycardKeypairs(self: Module): bool =
     if keypair.migratedToKeycard():
       continue
     var finalPassword = self.joiningCommunityDetails.profilePassword
-    if not singletonInstance.userProfile.getIsKeycardUser():
+    if not singletonInstance.userProfile.getMigratedToColdWallet():
       finalPassword = common_utils.hashPassword(self.joiningCommunityDetails.profilePassword)
     signingParams.add(
       SignParamsDto(
@@ -719,7 +719,7 @@ method onUserAuthenticated*(self: Module, pin: string, password: string, keyUid:
   # for revealed profile addresses first, then using pubic encryption key to sign other non keycard key pairs.
   # If the profile is not a keycard user, we sign the request for it calling `signRevealedAddressesForNonKeycardKeypairs` function.
   if keyUid == singletonInstance.userProfile.getKeyUid() and
-    singletonInstance.userProfile.getIsKeycardUser() and
+    singletonInstance.userProfile.getMigratedToColdWallet() and
     self.anyProfileKeyPairAddressSelectedToBeRevealed():
       self.signSharedAddressesForKeypair(keyUid, pin)
       return

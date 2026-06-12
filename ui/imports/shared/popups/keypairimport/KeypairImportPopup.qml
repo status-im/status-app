@@ -193,7 +193,7 @@ StatusModal {
                     return "touch-id"
                 }
 
-                if (root.store.userProfileIsKeycardUser) {
+                if (root.store.userProfileMigratedToColdWallet) {
                     return "keycard"
                 }
 

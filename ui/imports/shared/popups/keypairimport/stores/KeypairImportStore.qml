@@ -11,7 +11,7 @@ BasePopupStore {
     isAddAccountPopup: false
     required property var keypairImportModule
 
-    property bool userProfileIsKeycardUser: userProfile.isKeycardUser
+    property bool userProfileMigratedToColdWallet: userProfile.migratedToColdWallet
     property bool userProfileUsingBiometricLogin: userProfile.usingBiometricLogin
     property bool syncViaQr: true
 

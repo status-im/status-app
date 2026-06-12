@@ -23,7 +23,7 @@ SplitView {
 
     property QtObject userProfile: QtObject {
         property bool usingBiometricLogin: false
-        property bool isKeycardUser: false
+        property bool migratedToColdWallet: false
         property string pubKey: "0x1234567890abcdef"
     }
 
@@ -589,9 +589,9 @@ SplitView {
 
             CheckBox {
                 id: keycardUserCheck
-                text: "userProfile.isKeycardUser"
-                checked: userProfile.isKeycardUser
-                onToggled: userProfile.isKeycardUser = checked
+                text: "userProfile.migratedToColdWallet"
+                checked: userProfile.migratedToColdWallet
+                onToggled: userProfile.migratedToColdWallet = checked
             }
 
             Label { text: "Portrait safe area" }

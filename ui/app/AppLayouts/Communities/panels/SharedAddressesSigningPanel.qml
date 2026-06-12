@@ -109,7 +109,7 @@ ColumnLayout {
             model: SortFilterProxyModel {
                 sourceModel: root.keypairSigningModel
                 filters: ExpressionFilter {
-                    expression: model.keyPair.keyUid === userProfile.keyUid && !userProfile.isKeycardUser
+                    expression: model.keyPair.keyUid === userProfile.keyUid && !userProfile.migratedToColdWallet
                 }
             }
             delegate: KeyPairItem {
@@ -135,7 +135,7 @@ ColumnLayout {
                                 return "touch-id"
                             }
 
-                            if (userProfile.isKeycardUser) {
+                            if (userProfile.migratedToColdWallet) {
                                 return "keycard"
                             }
 
@@ -305,7 +305,7 @@ ColumnLayout {
                         return "touch-id"
                     }
 
-                    if (userProfile.isKeycardUser) {
+                    if (userProfile.migratedToColdWallet) {
                         return "keycard"
                     }
 
@@ -356,7 +356,7 @@ ColumnLayout {
                                 return "touch-id"
                             }
 
-                            if (userProfile.isKeycardUser) {
+                            if (userProfile.migratedToColdWallet) {
                                 return "keycard"
                             }
 

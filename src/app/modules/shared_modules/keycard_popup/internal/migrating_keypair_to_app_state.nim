@@ -22,7 +22,7 @@ method executePrePrimaryStateCommand*(self: MigratingKeypairToAppState, controll
       controller.convertKeycardProfileKeypairToRegular(sp, password, newPassword)
       return
     controller.migrateNonProfileKeycardKeypairToApp(kpForProcessing.getKeyUid(), sp, password,
-      doPasswordHashing = not singletonInstance.userProfile.getIsKeycardUser())
+      doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet())
 
 method executePreTertiaryStateCommand*(self: MigratingKeypairToAppState, controller: Controller) =
   ## Tertiary action is called after each async action during migration process.

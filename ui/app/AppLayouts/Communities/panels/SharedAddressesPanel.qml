@@ -144,7 +144,7 @@ Control {
                         return "touch-id"
                     }
 
-                    if (userProfile.isKeycardUser) {
+                    if (userProfile.migratedToColdWallet) {
                         return "keycard"
                     }
 
@@ -185,7 +185,7 @@ Control {
                         return "touch-id"
                     }
 
-                    if (userProfile.isKeycardUser) {
+                    if (userProfile.migratedToColdWallet) {
                         return "keycard"
                     }
 

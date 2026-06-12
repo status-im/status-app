@@ -252,7 +252,7 @@ QtObject {
 
         if(d.userProfileInst.usingBiometricLogin)
             return Constants.LoginType.Biometrics
-        if(d.userProfileInst.isKeycardUser)
+        if(d.userProfileInst.migratedToColdWallet)
             return Constants.LoginType.Keycard
         return Constants.LoginType.Password
     }

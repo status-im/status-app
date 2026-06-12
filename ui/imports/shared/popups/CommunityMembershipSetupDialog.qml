@@ -131,7 +131,7 @@ StatusStackModal {
                     return "touch-id"
                 }
 
-                if (root.hasUserProfile && userProfile.isKeycardUser) {
+                if (root.hasUserProfile && userProfile.migratedToColdWallet) {
                     return "keycard"
                 }
 

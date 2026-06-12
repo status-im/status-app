@@ -26,7 +26,7 @@ QtObject {
     property string icon: userProfile.icon
     readonly property bool userDeclinedBackupBanner: Global.appIsReady? localAccountSensitiveSettings.userDeclinedBackupBanner : false
     readonly property string keyUid: userProfile.keyUid
-    readonly property bool isKeycardUser: userProfile.isKeycardUser
+    readonly property bool migratedToColdWallet: userProfile.migratedToColdWallet
     readonly property int currentUserStatus: userProfile.currentUserStatus
     readonly property var thumbnailImage: userProfile.thumbnailImage
     readonly property var largeImage: userProfile.largeImage

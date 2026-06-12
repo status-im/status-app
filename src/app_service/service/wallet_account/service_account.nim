@@ -477,7 +477,7 @@ proc cleanKeystoreFiles(self: Service, password: string) =
     error "for making partially operable accounts a fully operable, password must be provided"
     return
   var finalPassword = password
-  if not singletonInstance.userProfile.getIsKeycardUser():
+  if not singletonInstance.userProfile.getMigratedToColdWallet():
     finalPassword = utils.hashPassword(password)
   try:
     var response = status_go_accounts.cleanKeystoreFiles(finalPassword)
@@ -553,7 +553,7 @@ proc getRandomMnemonic*(self: Service): string =
 proc deleteAccount*(self: Service, address: string, password: string) =
   try:
     var finalPassword = password
-    if not singletonInstance.userProfile.getIsKeycardUser():
+    if not singletonInstance.userProfile.getMigratedToColdWallet():
       finalPassword = utils.hashPassword(password)
     let response = status_go_accounts.deleteAccount(address, finalPassword)
     if not response.error.isNil:
@@ -570,7 +570,7 @@ proc deleteKeypair*(self: Service, keyUid: string, password: string) =
       error "there is no known keypair", keyUid=keyUid, procName="deleteKeypair"
       return
     var finalPassword = password
-    if not singletonInstance.userProfile.getIsKeycardUser():
+    if not singletonInstance.userProfile.getMigratedToColdWallet():
       finalPassword = utils.hashPassword(password)
     let response = status_go_accounts.deleteKeypair(keyUid, finalPassword)
     if not response.error.isNil:
@@ -840,7 +840,7 @@ proc importPartiallyOperableAccounts(self: Service, keyUid: string, password: st
   ## Whenever user provides a password/pin we need to make all partially operable accounts (if any exists) a fully operable.
   if  keyUid != singletonInstance.userProfile.getKeyUid():
     return
-  self.makePartiallyOperableAccoutsFullyOperable(password, not singletonInstance.userProfile.getIsKeycardUser())
+  self.makePartiallyOperableAccoutsFullyOperable(password, not singletonInstance.userProfile.getMigratedToColdWallet())
 
 proc addressWasShown*(self: Service, address: string) =
   try:

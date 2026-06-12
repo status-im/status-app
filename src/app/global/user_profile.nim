@@ -12,7 +12,7 @@ QtObject:
     username: string
     keyUid: string
     pubKey: string
-    isKeycardUser: bool
+    migratedToColdWallet: bool
     # fields which may change during runtime
     displayName: string
     preferredName: string
@@ -33,11 +33,11 @@ QtObject:
   proc delete*(self: UserProfile) =
     self.QObject.delete
 
-  proc setFixedData*(self: UserProfile, username: string, keyUid: string, pubKey: string, isKeycardUser: bool) =
+  proc setFixedData*(self: UserProfile, username: string, keyUid: string, pubKey: string, migratedToColdWallet: bool) =
     self.username = username
     self.keyUid = keyUid
     self.pubKey = pubKey
-    self.isKeycardUser = isKeycardUser
+    self.migratedToColdWallet = migratedToColdWallet
 
   proc getKeyUid*(self: UserProfile): string {.slot.} =
     self.keyUid
@@ -55,10 +55,10 @@ QtObject:
   QtProperty[string] compressedPubKey:
     read = getCompressedPubKey
 
-  proc getIsKeycardUser*(self: UserProfile): bool {.slot.} =
-    self.isKeycardUser
-  QtProperty[bool] isKeycardUser:
-    read = getIsKeycardUser
+  proc getMigratedToColdWallet*(self: UserProfile): bool {.slot.} =
+    self.migratedToColdWallet
+  QtProperty[bool] migratedToColdWallet:
+    read = getMigratedToColdWallet
 
   proc getUsingBiometricLogin*(self: UserProfile): bool {.slot.} =
     if(not main_constants.SUPPORTS_FINGERPRINT):

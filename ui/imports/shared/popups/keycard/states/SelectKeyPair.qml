@@ -63,7 +63,7 @@ Control {
         }
 
         StatusBaseText {
-            visible: !userProfile.isKeycardUser
+            visible: !userProfile.migratedToColdWallet
             Layout.fillWidth: true
             Layout.leftMargin: Theme.padding
             Layout.alignment: Qt.AlignLeft
@@ -74,7 +74,7 @@ Control {
         }
 
         KeyPairList {
-            visible: !userProfile.isKeycardUser
+            visible: !userProfile.migratedToColdWallet
             Layout.fillWidth: true
 
             modelFilters: ExpressionFilter {
@@ -90,8 +90,8 @@ Control {
         }
 
         StatusBaseText {
-            visible: userProfile.isKeycardUser && root.sharedKeycardModule.keyPairModel.count > 0 ||
-                     !userProfile.isKeycardUser && root.sharedKeycardModule.keyPairModel.count > 1
+            visible: userProfile.migratedToColdWallet && root.sharedKeycardModule.keyPairModel.count > 0 ||
+                     !userProfile.migratedToColdWallet && root.sharedKeycardModule.keyPairModel.count > 1
             Layout.fillWidth: true
             text: qsTr("Other key pairs")
             color: Theme.palette.baseColor1
@@ -99,8 +99,8 @@ Control {
         }
 
         KeyPairList {
-            visible: userProfile.isKeycardUser && root.sharedKeycardModule.keyPairModel.count > 0 ||
-                     !userProfile.isKeycardUser && root.sharedKeycardModule.keyPairModel.count > 1
+            visible: userProfile.migratedToColdWallet && root.sharedKeycardModule.keyPairModel.count > 0 ||
+                     !userProfile.migratedToColdWallet && root.sharedKeycardModule.keyPairModel.count > 1
             Layout.fillWidth: true
 
             modelFilters: ExpressionFilter {

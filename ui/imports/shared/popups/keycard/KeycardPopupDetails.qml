@@ -1389,7 +1389,7 @@ QtObject {
                         case Constants.keycardSharedState.enterSeedPhrase:
                             if (userProfile.usingBiometricLogin)
                                 return "touch-id"
-                            if (userProfile.isKeycardUser)
+                            if (userProfile.migratedToColdWallet)
                                 return "keycard"
                             return "password"
                         }

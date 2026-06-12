@@ -7,7 +7,7 @@ QtObject {
 
     readonly property string userProfileKeyUid: userProfile.keyUid
     readonly property string userProfilePubKey: userProfile.pubKey
-    readonly property bool isKeycardUser: userProfile.isKeycardUser
+    readonly property bool migratedToColdWallet: userProfile.migratedToColdWallet
 
     readonly property var keyPairItem: root.keycardNewModule.keyPairItem
 

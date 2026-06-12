@@ -244,7 +244,7 @@ QtObject:
 
   proc getConnectionStringForBootstrappingAnotherDevice*(self: Service, password: string, chatKey: string, messageSyncingEnabled: bool): string =
     let keyUid = singletonInstance.userProfile.getKeyUid()
-    let keycardUser = singletonInstance.userProfile.getIsKeycardUser()
+    let keycardUser = singletonInstance.userProfile.getMigratedToColdWallet()
     var finalPassword = utils.hashPassword(password)
     if keycardUser:
       finalPassword = password
@@ -327,7 +327,7 @@ QtObject:
       return
 
     let loggedInUserKeyUid = singletonInstance.userProfile.getKeyUid()
-    let keycardUser = singletonInstance.userProfile.getIsKeycardUser()
+    let keycardUser = singletonInstance.userProfile.getMigratedToColdWallet()
 
     var finalPassword = utils.hashPassword(password)
     if keycardUser:
@@ -379,7 +379,7 @@ QtObject:
       return
 
     let loggedInUserKeyUid = singletonInstance.userProfile.getKeyUid()
-    let keycardUser = singletonInstance.userProfile.getIsKeycardUser()
+    let keycardUser = singletonInstance.userProfile.getMigratedToColdWallet()
 
     var finalPassword = utils.hashPassword(password)
     if keycardUser:

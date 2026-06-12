@@ -78,7 +78,7 @@ QtObject:
     return keypair.migratedToKeycard()
 
   proc preparePassword(self: Controller, password: string): string =
-    if singletonInstance.userProfile.getIsKeycardUser():
+    if singletonInstance.userProfile.getMigratedToColdWallet():
       return password
     return hashPassword(password)
 
