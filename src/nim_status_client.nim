@@ -27,6 +27,20 @@ when defined(macosx) and defined(arm64):
 when defined(windows):
     {.link: "../status.o".}
 
+when defined(ios):
+  # nim-seaqt's QGuiApplication/QCoreApplication constructors call
+  # commandLineParams() to synthesise Qt's argv. On a --app:staticlib build
+  # (iOS) Nim's std/cmdline still compiles paramStr/paramCount, which reference
+  # the runtime globals `cmdCount`/`cmdLine`. Those are normally emitted by the
+  # C main() Nim generates for executables — but a staticlib has no main(), so
+  # the symbols are undefined at the final Xcode link. Define them here (empty:
+  # an iOS app has no meaningful argv). Android (--app:lib) doesn't hit this:
+  # std/cmdline suppresses that branch for appType == "lib".
+  {.emit: """/*INCLUDESECTION*/
+int cmdCount = 0;
+char** cmdLine = 0;
+""".}
+
 when defined(USE_QML_SERVER):
   # get the host OS and localhost IP
   # the host OS is the OS that compiles the app, not the OS that runs the app
