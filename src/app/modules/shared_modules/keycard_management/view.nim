@@ -134,8 +134,8 @@ QtObject:
   proc isKnownKeyUid*(self: View, keyUid: string): bool {.slot.} =
     return self.delegate.isKnownKeyUid(keyUid)
 
-  proc isKeyPairMigratedToKeycard*(self: View, keyUid: string): bool {.slot.} =
-    return self.delegate.isKeyPairMigratedToKeycard(keyUid)
+  proc isKeypairMigratedToColdWallet*(self: View, keyUid: string): bool {.slot.} =
+    return self.delegate.isKeypairMigratedToColdWallet(keyUid)
 
   proc getKeyPairNameForKeyUid*(self: View, keyUid: string): string {.slot.} =
     return self.delegate.getKeyPairNameForKeyUid(keyUid)

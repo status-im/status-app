@@ -27,8 +27,8 @@ QtObject:
   proc signMessage*(self: View, address: string, password: string, txHash: string): string {.slot.} =
     return self.delegate.signMessage(address, password, txHash)
 
-  proc isKeypairMigratedToKeycard*(self: View, keyUid: string): bool {.slot.} =
-    return self.delegate.isKeypairMigratedToKeycard(keyUid)
+  proc isKeypairMigratedToColdWallet*(self: View, keyUid: string): bool {.slot.} =
+    return self.delegate.isKeypairMigratedToColdWallet(keyUid)
 
   proc buildKeyPairForProcessing*(self: View, keyUid: string) {.slot.} =
     discard self.delegate.buildKeyPairForProcessing(keyUid)

@@ -1695,7 +1695,7 @@ StatusDialog {
 
             validateSeedPhrase: function(phrase) {
                 const keyUid = root.store.getKeyUidForSeedPhrase(phrase)
-                if (root.store.isKnownKeyUid(keyUid) && !root.store.isKeyPairMigratedToKeycard(keyUid)) {
+                if (root.store.isKnownKeyUid(keyUid) && !root.store.isKeypairMigratedToColdWallet(keyUid)) {
                     console.error("trying to import onto a keycard a key pair that exists in the app, but not migrated to keycard (use move flow)")
                     return ""
                 }
@@ -1905,7 +1905,7 @@ StatusDialog {
 
             validateSeedPhrase: function(phrase) {
                 const keyUid = root.store.getKeyUidForSeedPhrase(phrase)
-                if (!root.store.isKnownKeyUid(keyUid) || root.store.isKeyPairMigratedToKeycard(keyUid)) {
+                if (!root.store.isKnownKeyUid(keyUid) || root.store.isKeypairMigratedToColdWallet(keyUid)) {
                     return keyUid
                 }
                 console.error("trying to import onto a keycard a profile that exists in the app or not migrated to keycard (hint: login and use move flow)")

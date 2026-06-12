@@ -60,12 +60,12 @@ QtObject {
         d.ready = false
     }
 
-    function isKeypairMigratedToKeycard(keyUid) {
+    function isKeypairMigratedToColdWallet(keyUid) {
         if (!d.mainModuleInst.authenticationModule) {
             console.error("authentication module was not created")
             return false
         }
-        return d.mainModuleInst.authenticationModule.isKeypairMigratedToKeycard(keyUid)
+        return d.mainModuleInst.authenticationModule.isKeypairMigratedToColdWallet(keyUid)
     }
 
     function verifyPassword(password) {

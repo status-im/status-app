@@ -115,12 +115,12 @@ BaseKeycardManagementStore {
         return backend.isKnownKeyUid(keyUid)
     }
 
-    function isKeyPairMigratedToKeycard(keyUid) {
+    function isKeypairMigratedToColdWallet(keyUid) {
         if (!backend) {
             console.error("keycard management module was not created")
             return false
         }
-        return backend.isKeyPairMigratedToKeycard(keyUid)
+        return backend.isKeypairMigratedToColdWallet(keyUid)
     }
 
     function getKeyPairNameForKeyUid(keyUid) {

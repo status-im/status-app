@@ -24,8 +24,8 @@ QtObject:
   proc verifyPassword*(self: View, password: string): bool {.slot.} =
     return self.delegate.verifyPassword(password)
 
-  proc isKeypairMigratedToKeycard*(self: View, keyUid: string): bool {.slot.} =
-    return self.delegate.isKeypairMigratedToKeycard(keyUid)
+  proc isKeypairMigratedToColdWallet*(self: View, keyUid: string): bool {.slot.} =
+    return self.delegate.isKeypairMigratedToColdWallet(keyUid)
 
   proc buildKeyPairForProcessing*(self: View, keyUid: string) {.slot.} =
     discard self.delegate.buildKeyPairForProcessing(keyUid)

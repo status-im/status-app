@@ -61,7 +61,7 @@ BaseKeycardManagementStore {
         return false
     }
 
-    function isKeyPairMigratedToKeycard(keyUid) {
+    function isKeypairMigratedToColdWallet(keyUid) {
         const profile = StatusQUtils.ModelUtils.getByKey(d.loginAccountsModel, "keyUid", keyUid)
         if (!!profile && profile.keycardPairing.trim().length > 0) {
             return true

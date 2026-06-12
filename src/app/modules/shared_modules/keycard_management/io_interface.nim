@@ -36,7 +36,7 @@ method getKeyUidForSeedPhrase*(self: AccessInterface, seedPhrase: string): strin
 method isKnownKeyUid*(self: AccessInterface, keyUid: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method isKeyPairMigratedToKeycard*(self: AccessInterface, keyUid: string): bool {.base.} =
+method isKeypairMigratedToColdWallet*(self: AccessInterface, keyUid: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getKeyPairNameForKeyUid*(self: AccessInterface, keyUid: string): string {.base.} =

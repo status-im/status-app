@@ -61,7 +61,7 @@ proc startKeycardSigning*(self: Controller, keyUid: string, pin: string, txHash:
 proc stopKeycardSigning*(self: Controller) =
   self.keycardServiceV2.stop()
 
-proc isKeypairMigratedToKeycard*(self: Controller, keyUid: string): bool =
+proc isKeypairMigratedToColdWallet*(self: Controller, keyUid: string): bool =
   let keypair = self.walletAccountService.getKeypairByKeyUid(keyUid)
   if keypair.isNil:
     return false

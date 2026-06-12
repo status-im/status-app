@@ -18,7 +18,7 @@ method verifyPassword*(self: AccessInterface, password: string): bool {.base.} =
 method signMessage*(self: AccessInterface, address: string, password: string, txHash: string): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method isKeypairMigratedToKeycard*(self: AccessInterface, keyUid: string): bool {.base.} =
+method isKeypairMigratedToColdWallet*(self: AccessInterface, keyUid: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method buildKeyPairForProcessing*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
