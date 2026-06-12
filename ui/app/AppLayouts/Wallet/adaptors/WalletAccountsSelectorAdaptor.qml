@@ -24,7 +24,7 @@ QObject {
     - canSend: can send from acount ,
     - position: position set by user in settings,
     - currencyBalance: total currency balance in CurrencyAmount type,
-    - migratedToKeycard: if account is migrated to keycard.
+    - migratedToColdWallet: if account is migrated to cold wallet.
     */
     required property var accounts
     /** Expected assets model structure:

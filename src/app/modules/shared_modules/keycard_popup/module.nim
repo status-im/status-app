@@ -597,7 +597,7 @@ proc proceedWithRunFlow[T](self: Module[T], flowToRun: FlowType, keyUid: string,
       error "sm_cannot resolve a keypair for signing"
       self.controller.terminateCurrentFlow(lastStepInTheCurrentFlow = false)
       return
-    if not keypair.migratedToKeycard():
+    if not keypair.migratedToColdWallet():
       error "sm_cannot sign flow is spcified only for keycard migrated keypairs"
       self.controller.terminateCurrentFlow(lastStepInTheCurrentFlow = false)
       return

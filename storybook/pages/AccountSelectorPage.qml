@@ -59,7 +59,7 @@ SplitView {
                                       symbol: "USD",
                                       displayDecimals: 2,
                                       stripTrailingZeroes: false}),
-                migratedToKeycard: true
+                migratedToColdWallet: true
             },
             {
                 name: "Hot wallet (generated)",
@@ -73,7 +73,7 @@ SplitView {
                                       symbol: "USD",
                                       displayDecimals: 2,
                                       stripTrailingZeroes: false}),
-                migratedToKeycard: false
+                migratedToColdWallet: false
             },
             {
                 name: "Family (seed)",
@@ -87,7 +87,7 @@ SplitView {
                                       symbol: "USD",
                                       displayDecimals: 2,
                                       stripTrailingZeroes: false}),
-                migratedToKeycard: false
+                migratedToColdWallet: false
             },
             {
                 name: "Tag Heuer (watch)",
@@ -102,7 +102,7 @@ SplitView {
                                       symbol: "USD",
                                       displayDecimals: 2,
                                       stripTrailingZeroes: false}),
-                migratedToKeycard: false
+                migratedToColdWallet: false
             },
             {
                 name: "Fab (key)",
@@ -117,7 +117,7 @@ SplitView {
                                       symbol: "USD",
                                       displayDecimals: 2,
                                       stripTrailingZeroes: false}),
-                migratedToKeycard: false
+                migratedToColdWallet: false
             }
         ]
 

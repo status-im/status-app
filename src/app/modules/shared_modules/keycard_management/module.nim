@@ -151,7 +151,7 @@ method isKeyPairMigratedToKeycard*[T](self: Module[T], keyUid: string): bool =
   let keypair = self.controller.getKeypairByKeyUid(keyUid)
   if keypair.isNil or keypair.removed:
     return false
-  return keypair.migratedToKeycard()
+  return keypair.migratedToColdWallet()
 
 method getKeyPairNameForKeyUid*[T](self: Module[T], keyUid: string): string =
   let keypair = self.controller.getKeypairByKeyUid(keyUid)

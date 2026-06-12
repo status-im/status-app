@@ -22,7 +22,7 @@ StatusListItem {
     required property string walletColor
     required property var currencyBalance
     required property string walletType
-    required property bool migratedToKeycard
+    required property bool migratedToColdWallet
     /*
         formattedBalance    [string] - formatted balance e.g. "1234.56B"
         balance             [string] - balance e.g. "123456000000"
@@ -72,7 +72,7 @@ StatusListItem {
                 height: !!icon ? 15 : 0
                 color: Theme.palette.directColor1
                 icon: root.walletType === Constants.watchWalletType ? "show" :
-                                    root.migratedToKeycard ? "keycard" : ""
+                                    root.migratedToColdWallet ? "keycard" : ""
             }
         },
         StatusClearButton {

@@ -13,7 +13,7 @@ ListModel {
             walletType: "",
             position: 0,
             canSend: true,
-            migratedToKeycard: false
+            migratedToColdWallet: false
         },
         {
             name: "Hot wallet (generated)",
@@ -24,7 +24,7 @@ ListModel {
             walletType: Constants.generatedWalletType,
             position: 3,
             canSend: true,
-            migratedToKeycard: false
+            migratedToColdWallet: false
         },
         {
             name: "Family (seed)",
@@ -35,7 +35,7 @@ ListModel {
             walletType: Constants.seedWalletType,
             position: 1,
             canSend: true,
-            migratedToKeycard: false
+            migratedToColdWallet: false
         },
         {
             name: "Tag Heuer (watch)",
@@ -46,7 +46,7 @@ ListModel {
             walletType: Constants.watchWalletType,
             position: 2,
             canSend: false,
-            migratedToKeycard: false
+            migratedToColdWallet: false
         },
         {
             name: "Fab (key)",
@@ -57,7 +57,7 @@ ListModel {
             walletType: Constants.keyWalletType,
             position: 4,
             canSend: true,
-            migratedToKeycard: true
+            migratedToColdWallet: true
         }
     ]
 

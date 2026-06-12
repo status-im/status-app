@@ -28,7 +28,7 @@ Item {
                     {
                         "address":"0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8884",
                         "accountBalance":null,
-                        "migratedToKeycard":false,
+                        "migratedToColdWallet":false,
                         "currencyBalance":{"amount":999,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"},
                         "assets":[
                             {"enabledNetworkBalance":{"amount":3.5,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"SOX"},"symbol":"socks"}
@@ -45,7 +45,7 @@ Item {
                     {
                         "address":"0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8882",
                         "accountBalance":null,
-                        "migratedToKeycard":false,
+                        "migratedToColdWallet":false,
                         "currencyBalance":{"amount":110.05,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"},
                         "assets":[
                             {"enabledNetworkBalance":{"amount":42,"displayDecimals":6,"stripTrailingZeroes":true,"symbol":"AAVE"},"symbol":"Aave"},
@@ -63,7 +63,7 @@ Item {
                     {
                         "address":"0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8881",
                         "accountBalance":null
-                        ,"migratedToKeycard":false,
+                        ,"migratedToColdWallet":false,
                         "currencyBalance":{"amount":10,"displayDecimals":2,"stripTrailingZeroes":false,"symbol":"USD"},
                         "assets":[
                             {"enabledNetworkBalance":{"amount":1,"displayDecimals":1,"stripTrailingZeroes":true,"symbol":"DBF"},"symbol":"deadbeef"}

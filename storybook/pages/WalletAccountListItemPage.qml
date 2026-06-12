@@ -25,7 +25,7 @@ SplitView {
                 readonly property bool stripTrailingZeroes: false
             }
             walletType: walletTypeCombo.currentText
-            migratedToKeycard: migratedToKeycardCheckBox.checked
+            migratedToColdWallet: migratedToKeycardCheckBox.checked
             accountBalance: hasAccountBalanceCheckBox.checked ? ({
                 formattedBalance: formattedAccountBalance.text,
                 balance: formattedAccountBalance.text,

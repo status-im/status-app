@@ -64,8 +64,8 @@ Control {
             sourceModel: root.keypairsModel ?? null
             filters: ExpressionFilter {
                 expression: root.profileOnly
-                            ? (model.keyPair.pairType === d.profileKeyPairTypeValue && !model.keyPair.migratedToKeycard)
-                            : (model.keyPair.pairType === d.seedKeyPairTypeValue && !model.keyPair.migratedToKeycard)
+                            ? (model.keyPair.pairType === d.profileKeyPairTypeValue && !model.keyPair.migratedToColdWallet)
+                            : (model.keyPair.pairType === d.seedKeyPairTypeValue && !model.keyPair.migratedToColdWallet)
             }
         }
 

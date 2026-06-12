@@ -666,7 +666,7 @@ proc signRevealedAddressesForNonKeycardKeypairs(self: Module): bool =
     if keypair.isNil:
       self.communityAccessFailed(self.joiningCommunityDetails.communityId, "cannot resolve keypair for address" & address)
       return false
-    if keypair.migratedToKeycard():
+    if keypair.migratedToColdWallet():
       continue
     var finalPassword = self.joiningCommunityDetails.profilePassword
     if not singletonInstance.userProfile.getMigratedToColdWallet():

@@ -48,7 +48,7 @@ SQUtils.QObject {
             optDisplayDecimals  [number] - optional number of decimals to display
             stripTrailingZeroes [bool]   - strip trailing zeroes
         walletType              [string] - wallet type e.g. Constants.watchWalletType. See `Constants` for possible values
-        migratedToKeycard       [bool]   - whether account is migrated to keycard
+        migratedToColdWallet    [bool]   - whether account is migrated to cold wallet
         accountBalance          [var]    - account balance for a specific network
             formattedBalance    [string] - formatted balance e.g. "1234.56B"
             balance             [string] - balance e.g. "123456000000"
@@ -375,7 +375,7 @@ SQUtils.QObject {
                 address: "",
                 emoji: "",
                 colorId: 0,
-                migratedToKeycard: false
+                migratedToColdWallet: false
             }
 
             readonly property var network: networkEntry.available ? networkEntry.item : {
@@ -395,7 +395,7 @@ SQUtils.QObject {
 
             parent: root.visualParent
 
-            loginType: account.migratedToKeycard ? Constants.LoginType.Keycard : root.loginType
+            loginType: account.migratedToColdWallet ? Constants.LoginType.Keycard : root.loginType
             formatBigNumber: root.formatBigNumber
 
             visible: !!request.dappUrl

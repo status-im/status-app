@@ -550,7 +550,7 @@ StatusDialog {
                     objectName: "signButton"
                     readonly property string fromTokenSymbol: !!root.swapAdaptor.fromToken ? root.swapAdaptor.fromToken.symbol ?? "" : ""
                     loadingWithText: root.swapAdaptor.approvalPending
-                    icon.name: !!d.selectedAccount && d.selectedAccount.migratedToKeycard ? Constants.authenticationIconByType[Constants.LoginType.Keycard]
+                    icon.name: !!d.selectedAccount && d.selectedAccount.migratedToColdWallet ? Constants.authenticationIconByType[Constants.LoginType.Keycard]
                                                                                   : Constants.authenticationIconByType[root.loginType]
                     text: {
                         if(root.swapAdaptor.validSwapProposalReceived) {
@@ -601,7 +601,7 @@ StatusDialog {
 
             formatBigNumber: (number, symbol, noSymbolOption) => root.swapAdaptor.currencyStore.formatBigNumber(number, symbol, noSymbolOption)
 
-            loginType: !!d.selectedAccount && d.selectedAccount.migratedToKeycard ? Constants.LoginType.Keycard : root.loginType
+            loginType: !!d.selectedAccount && d.selectedAccount.migratedToColdWallet ? Constants.LoginType.Keycard : root.loginType
             feesLoading: root.swapAdaptor.swapProposalLoading
 
             fromTokenSymbol: root.swapAdaptor.fromToken.symbol
@@ -655,7 +655,7 @@ StatusDialog {
 
             formatBigNumber: (number, symbol, noSymbolOption) => root.swapAdaptor.currencyStore.formatBigNumber(number, symbol, noSymbolOption)
 
-            loginType: !!d.selectedAccount && d.selectedAccount.migratedToKeycard ? Constants.LoginType.Keycard : root.loginType
+            loginType: !!d.selectedAccount && d.selectedAccount.migratedToColdWallet ? Constants.LoginType.Keycard : root.loginType
             feesLoading: root.swapAdaptor.swapProposalLoading
 
             fromTokenSymbol: root.swapAdaptor.fromToken.symbol

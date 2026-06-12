@@ -272,7 +272,7 @@ Item {
                 // TODO: always null not sure why
                 // const walletAccountTypeIcon = findChild(delegateUnderTest, "walletAccountTypeIcon")
                 // verify(!!walletAccountTypeIcon)
-                // compare(walletAccountTypeIcon.icon, accountToBeTested.walletType === Constants.watchWalletType ? "show" : delegateUnderTest.model.migratedToKeycard ? "keycard": "")
+                // compare(walletAccountTypeIcon.icon, accountToBeTested.walletType === Constants.watchWalletType ? "show" : delegateUnderTest.model.migratedToColdWallet ? "keycard": "")
 
                 // Hover over the item and check hovered state
                 mouseMove(delegateUnderTest, delegateUnderTest.width/2, delegateUnderTest.height/2)

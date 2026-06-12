@@ -10,7 +10,7 @@ ListModel {
                 image: "",
                 icon: "",
                 pairType: 0,
-                migratedToKeycard: false,
+                migratedToColdWallet: false,
                 accounts: accountsList
             }
         },
@@ -22,7 +22,7 @@ ListModel {
                 image: "",
                 icon: "key_pair_private_key",
                 pairType: 1,
-                migratedToKeycard: true,
+                migratedToColdWallet: true,
                 accounts: accountsList
             }
         },
@@ -34,7 +34,7 @@ ListModel {
                 image: "",
                 icon: "show",
                 pairType: 3,
-                migratedToKeycard: false,
+                migratedToColdWallet: false,
                 accounts: accountsList
             }
         }

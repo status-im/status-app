@@ -34,7 +34,7 @@ GridLayout {
 
     StatusLinkText {
         objectName: "AddAccountPopup-ResetDerivationPath"
-        enabled: !root.store.selectedOrigin.migratedToKeycard &&
+        enabled: !root.store.selectedOrigin.migratedToColdWallet &&
                  root.store.derivedAddressModel.count > 0 &&
                  root.store.addAccountModule.suggestedDerivationPath !== root.store.addAccountModule.derivationPath
         text: qsTr("Reset")
@@ -81,7 +81,7 @@ GridLayout {
             input.rightComponent: StatusIcon {
                 icon: "chevron-down"
                 color: Theme.palette.baseColor1
-                visible: !root.store.selectedOrigin.migratedToKeycard
+                visible: !root.store.selectedOrigin.migratedToColdWallet
 
                 StatusMouseArea {
                     anchors.fill: parent

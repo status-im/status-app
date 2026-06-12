@@ -57,7 +57,7 @@ proc isKeypairMigratedToKeycard*(self: Controller, keyUid: string): bool =
   let keypair = self.walletAccountService.getKeypairByKeyUid(keyUid)
   if keypair.isNil:
     return false
-  return keypair.migratedToKeycard()
+  return keypair.migratedToColdWallet()
 
 proc buildKeyPairForProcessing*(self: Controller, keyUid: string): KeyPairItem =
   let keypair = self.walletAccountService.getKeypairByKeyUid(keyUid)

@@ -294,7 +294,7 @@ proc fetchAddressForDerivationPath[T](self: Module[T]) =
       if not self.isKeyPairAlreadyAdded(selectedOrigin.getKeyUid()):
         self.controller.fetchAddressesFromNotImportedSeedPhrase(self.controller.getSeedPhrase(), paths)
         return
-      if selectedOrigin.getMigratedToKeycard():
+      if selectedOrigin.getMigratedToColdWallet():
         self.controller.fetchAddressesFromKeycard(paths)
         return
       self.controller.fetchDerivedAddresses(selectedOrigin.getDerivedFrom(), paths)
@@ -304,7 +304,7 @@ proc fetchAddressForDerivationPath[T](self: Module[T]) =
 proc authenticateSelectedOrigin[T](self: Module[T], reason: AuthenticationReason) =
   let selectedOrigin = self.view.getSelectedOrigin()
   self.authenticationReason = reason
-  if selectedOrigin.getMigratedToKeycard():
+  if selectedOrigin.getMigratedToColdWallet():
     self.controller.authenticateOrigin(selectedOrigin.getKeyUid())
     return
   self.controller.authenticateOrigin()
@@ -338,7 +338,7 @@ proc isAuthenticationNeededForSelectedOrigin[T](self: Module[T]): bool =
       return false
   if selectedOrigin.getKeyUid() == self.controller.getAuthenticatedKeyUid():
     return false
-  if not selectedOrigin.getMigratedToKeycard() and self.controller.getAuthenticatedKeyUid() == singletonInstance.userProfile.getKeyUid():
+  if not selectedOrigin.getMigratedToColdWallet() and self.controller.getAuthenticatedKeyUid() == singletonInstance.userProfile.getKeyUid():
     return false
   return true
 
@@ -498,7 +498,7 @@ method onAddressesFromNotImportedMnemonicFetched*[T](self: Module[T], derivation
 method onDerivedAddressesFromKeycardFetched*[T](self: Module[T], keycardFlowType: string, keycardEvent: KeycardEvent,
   paths: seq[string]) =
   let selectedOrigin = self.view.getSelectedOrigin()
-  if not selectedOrigin.getMigratedToKeycard():
+  if not selectedOrigin.getMigratedToColdWallet():
     error "receiving addresses from a keycard refers to a keycard origin, but selected origin is not a keycard origin"
     return
   if paths.len != keycardEvent.generatedWalletAccounts.len:
@@ -588,7 +588,7 @@ proc doAddAccount[T](self: Module[T]) =
     publicKey = selectedAddrItem.getPublicKey()
     rootWalletMasterKey = selectedOrigin.getDerivedFrom()
     keyUid = selectedOrigin.getKeyUid()
-    createKeystoreFile = not selectedOrigin.getMigratedToKeycard()
+    createKeystoreFile = not selectedOrigin.getMigratedToColdWallet()
     doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet()
     hideFromTotalBalance = false
 

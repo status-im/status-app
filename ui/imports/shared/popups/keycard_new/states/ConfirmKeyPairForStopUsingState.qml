@@ -46,7 +46,7 @@ Control {
             userProfileColor: Utils.colorForPubkey(Theme.palette, root.userProfilePubKey)
 
             keyPairKeyUid: root.keyPairItem ? root.keyPairItem.keyUid : ""
-            keyPairMigratedToKeycard: !!root.keyPairItem && root.keyPairItem.migratedToKeycard
+            keyPairMigratedToKeycard: !!root.keyPairItem && root.keyPairItem.migratedToColdWallet
             keyPairName: root.keyPairItem ? root.keyPairItem.name : ""
             keyPairIcon: root.keyPairItem ? root.keyPairItem.icon : ""
             keyPairImage: root.keyPairItem ? root.keyPairItem.image : ""

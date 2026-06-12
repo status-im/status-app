@@ -609,7 +609,7 @@ QtObject {
 
     function getKeypairLocationColor(palette, keypair) {
         return !keypair ||
-                keypair.migratedToKeycard ||
+                keypair.migratedToColdWallet ||
                 keypair.operability === Constants.keypair.operability.fullyOperable ||
                 keypair.operability === Constants.keypair.operability.partiallyOperable?
                     palette.baseColor1 :
@@ -1269,7 +1269,7 @@ QtObject {
         if (keypair.pairType === Constants.keypair.type.profile) {
             profileTitle = Utils.getElidedCompressedPk(keypair.pubKey) + Constants.settingsSection.dotSepString
         }
-        if (keypair.migratedToKeycard) {
+        if (keypair.migratedToColdWallet) {
             return profileTitle + qsTr("On Keycard")
         }
         if (keypair.operability === Constants.keypair.operability.fullyOperable ||

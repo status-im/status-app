@@ -307,7 +307,7 @@ StatusModal {
                     return "touch-id"
                 }
 
-                if (root.store.selectedOrigin.migratedToKeycard || root.store.userProfileMigratedToColdWallet) {
+                if (root.store.selectedOrigin.migratedToColdWallet || root.store.userProfileMigratedToColdWallet) {
                     return "keycard"
                 }
 

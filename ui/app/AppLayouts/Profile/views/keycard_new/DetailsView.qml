@@ -194,7 +194,7 @@ ColumnLayout {
         userProfileColor: Utils.colorForPubkey(Theme.palette, root.keycardStore.userProfilePubKey)
 
         keyPairKeyUid: root.keyUid
-        keyPairMigratedToKeycard: root.keycardStore.keyPairItem.migratedToKeycard
+        keyPairMigratedToKeycard: root.keycardStore.keyPairItem.migratedToColdWallet
         keyPairName: root.keycardStore.keyPairItem.name
         keyPairIcon: root.keycardStore.keyPairItem.icon
         keyPairImage: root.keycardStore.keyPairItem.image

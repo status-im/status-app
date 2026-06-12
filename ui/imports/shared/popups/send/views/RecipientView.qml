@@ -157,7 +157,7 @@ Loader {
             walletColor: !!modelData ? Utils.getColorForId(Theme.palette, modelData.colorId): ""
             currencyBalance: !!modelData ? modelData.currencyBalance : ""
             walletType: !!modelData ? modelData.walletType : ""
-            migratedToKeycard: !!modelData ? modelData.migratedToKeycard ?? false : false
+            migratedToColdWallet: !!modelData ? modelData.migratedToColdWallet ?? false : false
             accountBalance: !!modelData ? modelData.accountBalance : null
 
             implicitWidth: parent.width

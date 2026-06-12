@@ -62,7 +62,7 @@ QtObject:
     if keypair.isNil:
       return false
     var keyUid = singletonInstance.userProfile.getKeyUid()
-    if keypair.migratedToKeycard():
+    if keypair.migratedToColdWallet():
       keyUid = keypair.keyUid
     return self.service.authenticateUser(keyUid, proc(receivedKeyUid: string, password: string, pin: string) =
       if receivedKeyUid.len == 0 or receivedKeyUid != keyUid or password.len == 0:
@@ -75,7 +75,7 @@ QtObject:
     let keypair = self.walletAccountService.getKeypairByAccountAddress(address)
     if keypair.isNil:
       raise newException(CatchableError, "cannot resolve keypair for address: " & address)
-    return keypair.migratedToKeycard()
+    return keypair.migratedToColdWallet()
 
   proc preparePassword(self: Controller, password: string): string =
     if singletonInstance.userProfile.getMigratedToColdWallet():

@@ -209,7 +209,7 @@ ColumnLayout {
             model: SortFilterProxyModel {
                 sourceModel: root.keypairSigningModel
                 filters: ExpressionFilter {
-                    expression: model.keyPair.migratedToKeycard
+                    expression: model.keyPair.migratedToColdWallet
                 }
             }
             delegate: KeyPairItem {
@@ -327,7 +327,7 @@ ColumnLayout {
             model: SortFilterProxyModel {
                 sourceModel: root.keypairSigningModel
                 filters: ExpressionFilter {
-                    expression: !model.keyPair.migratedToKeycard && model.keyPair.keyUid !== userProfile.keyUid
+                    expression: !model.keyPair.migratedToColdWallet && model.keyPair.keyUid !== userProfile.keyUid
                 }
             }
             delegate: KeyPairItem {

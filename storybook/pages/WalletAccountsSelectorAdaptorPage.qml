@@ -31,7 +31,7 @@ Item {
                                       symbol: "USD",
                                       displayDecimals: 2,
                                       stripTrailingZeroes: false}),
-                migratedToKeycard: true
+                migratedToColdWallet: true
             },
             {
                 name: "Hot wallet (generated)",
@@ -45,7 +45,7 @@ Item {
                                       symbol: "USD",
                                       displayDecimals: 2,
                                       stripTrailingZeroes: false}),
-                migratedToKeycard: false
+                migratedToColdWallet: false
             },
             {
                 name: "Family (seed)",
@@ -59,7 +59,7 @@ Item {
                                       symbol: "USD",
                                       displayDecimals: 2,
                                       stripTrailingZeroes: false}),
-                migratedToKeycard: false
+                migratedToColdWallet: false
             },
             {
                 name: "Tag Heuer (watch)",
@@ -74,7 +74,7 @@ Item {
                                       symbol: "USD",
                                       displayDecimals: 2,
                                       stripTrailingZeroes: false}),
-                migratedToKeycard: false
+                migratedToColdWallet: false
             },
             {
                 name: "Fab (key)",
@@ -89,7 +89,7 @@ Item {
                                       symbol: "USD",
                                       displayDecimals: 2,
                                       stripTrailingZeroes: false}),
-                migratedToKeycard: false
+                migratedToColdWallet: false
             }
         ]
 

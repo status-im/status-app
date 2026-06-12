@@ -58,7 +58,7 @@ method allNonProfileKeyPairsMigratedToKeycard*(self: Module): bool =
     if not keypair.isNil and
       keypair.keypairType != KeypairTypeProfile and
       not keypair.removed and
-      not keypair.migratedToKeycard():
+      not keypair.migratedToColdWallet():
         return false
   return true
 
