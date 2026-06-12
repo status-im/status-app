@@ -18628,11 +18628,11 @@ This action cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Your data backed up successfully</source>
+        <source>Backup failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Backup failed, please try again</source>
+        <source>Check Settings &gt; Backups to see the details and try again</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

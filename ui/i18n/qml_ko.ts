@@ -18583,12 +18583,12 @@ This action cannot be undone.</source>
         <translation type="unfinished">%1님을 연락처에서 삭제했습니다</translation>
     </message>
     <message>
-        <source>Your data backed up successfully</source>
-        <translation>데이터가 성공적으로 백업되었습니다</translation>
+        <source>Backup failed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Backup failed, please try again</source>
-        <translation>백업 실패, 다시 시도하세요</translation>
+        <source>Check Settings &gt; Backups to see the details and try again</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Your data backup restored successfully</source>

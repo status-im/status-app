@@ -18646,12 +18646,12 @@ This action cannot be undone.</source>
         <translation type="unfinished">Eliminaste a %1 como contacto</translation>
     </message>
     <message>
-        <source>Your data backed up successfully</source>
-        <translation>Tus datos se respaldaron exitosamente</translation>
+        <source>Backup failed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Backup failed, please try again</source>
-        <translation>Error en el backup, por favor intenta de nuevo</translation>
+        <source>Check Settings &gt; Backups to see the details and try again</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Your data backup restored successfully</source>

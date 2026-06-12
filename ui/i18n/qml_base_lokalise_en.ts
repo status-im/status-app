@@ -22685,14 +22685,14 @@
       <translation>You removed %1 as a contact</translation>
     </message>
     <message>
-      <source>Your data backed up successfully</source>
+      <source>Backup failed</source>
       <comment>ToastsManager</comment>
-      <translation>Your data backed up successfully</translation>
+      <translation>Backup failed</translation>
     </message>
     <message>
-      <source>Backup failed, please try again</source>
+      <source>Check Settings &gt; Backups to see the details and try again</source>
       <comment>ToastsManager</comment>
-      <translation>Backup failed, please try again</translation>
+      <translation>Check Settings &gt; Backups to see the details and try again</translation>
     </message>
     <message>
       <source>Your data backup restored successfully</source>

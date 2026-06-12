@@ -263,14 +263,15 @@ QtObject {
 
         function onLocalBackupExportCompleted(success: bool) {
             if (success) {
-                Global.displaySuccessToastMessage(qsTr("Your data backed up successfully"))
+                // If there is success, we don't need to draw the user attention to it, only if it's a failure
+                return
             } else {
-                Global.displayToastMessage(qsTr("Backup failed, please try again"),
-                                       "",
+                Global.displayToastMessage(qsTr("Backup failed"),
+                                       qsTr("Check Settings > Backups to see the details and try again"),
                                        root.warningAssetName,
                                        false,
                                         Constants.ephemeralNotificationType.danger,
-                                       "")
+                                       "#%1/%2".arg(Constants.appSection.profile).arg(Constants.settingsSubsection.backupSettings))
             }
         }
         function onLocalBackupImportCompleted(success: bool) {

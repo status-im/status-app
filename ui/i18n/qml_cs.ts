@@ -18753,12 +18753,12 @@ Tuto akci nelze vzít zpět.</translation>
         <translation type="unfinished">Odebrali jste %1 z kontaktů</translation>
     </message>
     <message>
-        <source>Your data backed up successfully</source>
-        <translation>Vaše data byla úspěšně zálohována</translation>
+        <source>Backup failed</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Backup failed, please try again</source>
-        <translation>Zálohování selhalo, zkuste to prosím znovu</translation>
+        <source>Check Settings &gt; Backups to see the details and try again</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Your data backup restored successfully</source>
