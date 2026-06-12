@@ -72,7 +72,7 @@ Column {
             return total
         }
 
-        readonly property int allNonProfileKeypairsMigratedToAKeycard: {
+        readonly property int allNonProfileKeypairsMigratedToAColdWallet: {
             d.propertyReevaluation
             for (var i = 0; i < keypairsRepeater.count; i++) {
                 let item = keypairsRepeater.itemAt(i)
@@ -188,7 +188,7 @@ Column {
     // TODO uncomment when mobile has implemented the QR code import
     // Rectangle {
     //     visible: root.walletStore.walletModule.hasPairedDevices &&
-    //              !d.allNonProfileKeypairsMigratedToAKeycard
+    //              !d.allNonProfileKeypairsMigratedToAColdWallet
     //     height: 102
     //     width: parent.width
     //     color: StatusColors.transparent

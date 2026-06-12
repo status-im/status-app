@@ -84,7 +84,7 @@ ColumnLayout {
                               && root.keycardStore.keycardPairingExists(root.keycardUid)
             d.isKnownKeyPair = d.hasKeyPair
                                && root.keycardStore.isKnownKeyUid(root.keyUid)
-            d.allNonProfileKeyPairsMigrated = root.keycardStore.allNonProfileKeyPairsMigratedToKeycard()
+            d.allNonProfileKeyPairsMigrated = root.keycardStore.allNonProfileKeyPairsMigratedToColdWallet()
 
             root.keycardStore.resolveKeyPairItemForKeyUid(root.keyUid)
         }

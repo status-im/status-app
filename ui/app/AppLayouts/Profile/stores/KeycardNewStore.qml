@@ -27,8 +27,8 @@ QtObject {
         root.keycardNewModule.resolveKeyPairItemForKeyUid(keyUid)
     }
 
-    function allNonProfileKeyPairsMigratedToKeycard() {
-        return root.keycardNewModule.allNonProfileKeyPairsMigratedToKeycard()
+    function allNonProfileKeyPairsMigratedToColdWallet() {
+        return root.keycardNewModule.allNonProfileKeyPairsMigratedToColdWallet()
     }
 
     function remainingKeypairCapacity() {
