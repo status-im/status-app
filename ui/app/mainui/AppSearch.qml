@@ -1,27 +1,36 @@
 import QtQuick
-import QtQuick.Controls
 
 import StatusQ.Core
 import StatusQ.Core.Backpressure
 import StatusQ.Popups
 
-import shared.stores
-import utils
-
-import AppLayouts.stores
-
 Item {
     id: root
 
-    property AppSearchStore store
-    property UtilsStore utilsStore
+    required property var locationMenuModel
+    required property var resultModel
+    required property bool searchInProgress
+    required property var setSearchLocationFn
+    required property var prepareLocationMenuModelFn
+    required property var getSearchLocationObjectFn
+    required property var isChatKeyFn
+    required property var openProfilePopupFn
 
-    readonly property var searchMessages: Backpressure.debounce(searchPopup, 400, function (value) {
-        root.store.searchMessages(value)
+    readonly property var searchMessagesDebounced: Backpressure.debounce(searchPopup, 400, function () {
+        if (searchPopup.searchText === "")
+            return
+
+        root.searchMessages(searchPopup.searchText)
     })
     property alias opened: searchPopup.opened
 
     signal closed()
+    signal searchMessages(string searchTerm)
+    signal resultItemClicked(string itemId)
+
+    function clearSearchResults() {
+        root.searchMessages("")
+    }
 
     function openSearchPopup(){
         searchPopup.open()
@@ -32,7 +41,7 @@ Item {
     }
 
     Connections {
-        target: root.store.locationMenuModel
+        target: root.locationMenuModel
         function onModelAboutToBeReset() {
              while (searchPopupMenu.takeItem(searchPopupMenu.numDefaultItems)) {
                 // Delete the item right after the default items
@@ -41,30 +50,23 @@ Item {
         }
     }
 
-    Connections {
-        target: root.store.appSearchModule
-        function onAppSearchCompleted() {
-            searchPopup.loading = false
-        } 
-    }
-
     StatusSearchLocationMenu {
         id: searchPopupMenu
         
-        locationModel: root.store.locationMenuModel
+        locationModel: root.locationMenuModel
 
-        onItemClicked: {
-            root.store.setSearchLocation(firstLevelItemValue, secondLevelItemValue)
+        onItemClicked: (firstLevelItemValue, secondLevelItemValue) => {
+            root.setSearchLocationFn(firstLevelItemValue, secondLevelItemValue)
             searchPopup.forceActiveFocus()
             if(searchPopup.searchText !== "")
-                searchMessages(searchPopup.searchText)
+                root.searchMessagesDebounced()
         }
 
         onResetSearchSelection: {
             searchPopup.resetSearchSelection()
         }
 
-        onSetSearchSelection: {
+        onSetSearchSelection: (text, secondaryText, imageSource, isIdenticon, iconName, iconColor, isUserIcon, colorId) => {
             searchPopup.setSearchSelection(text,
                                             secondaryText,
                                             imageSource,
@@ -82,14 +84,16 @@ Item {
         noResultsLabel: qsTr("No results")
         defaultSearchLocationText: qsTr("Anywhere")
         searchOptionsPopupMenu: searchPopupMenu
-        searchResults: root.store.resultModel
+        searchResults: root.resultModel
+        loading: root.searchInProgress
         formatTimestampFn: function (ts) {
             return LocaleUtils.formatDateTime(parseInt(ts, 10), Locale.ShortFormat)
         }
         onSearchTextChanged: {
             if (searchPopup.searchText !== "") {
-                searchPopup.loading = true
-                searchMessages(searchPopup.searchText);
+                root.searchMessagesDebounced()
+            } else {
+                root.clearSearchResults()
             }
         }
         onAboutToHide: {
@@ -99,18 +103,19 @@ Item {
         }
         onClosed: {
             searchPopupMenu.dismiss();
+            root.clearSearchResults();
             root.closed();
         }
         onResetSearchLocationClicked: {
             searchPopup.resetSearchSelection();
-            root.store.setSearchLocation("", "")
-            searchMessages(searchPopup.searchText)
+            root.setSearchLocationFn("", "")
+            root.searchMessagesDebounced()
         }
         onOpened: {
             searchPopup.resetSearchSelection();
-            root.store.prepareLocationMenuModel()
+            root.prepareLocationMenuModelFn()
 
-            const jsonObj = root.store.getSearchLocationObject()
+            const jsonObj = root.getSearchLocationObjectFn()
 
             if (!jsonObj) {
                 return
@@ -119,7 +124,7 @@ Item {
             let obj = JSON.parse(jsonObj)
             if (obj.location === "" || (obj.location !== "" && !obj.subLocation)) {
                 if(obj.subLocation === "") {
-                    root.store.setSearchLocation("", "")
+                    root.setSearchLocationFn("", "")
                 } else {
                     searchPopup.setSearchSelection(obj.subLocation.text,
                                                    "",
@@ -128,7 +133,7 @@ Item {
                                                    obj.subLocation.iconName,
                                                    obj.subLocation.identiconColor)
 
-                    root.store.setSearchLocation("", obj.subLocation.value)
+                    root.setSearchLocationFn("", obj.subLocation.value)
                 }
             } else {
                 if (obj.location.title === "Chat" && !!obj.subLocation) {
@@ -141,7 +146,7 @@ Item {
                                                    obj.subLocation.isUserIcon,
                                                    obj.subLocation.colorId)
 
-                    root.store.setSearchLocation(obj.location.value, obj.subLocation.value)
+                    root.setSearchLocationFn(obj.location.value, obj.subLocation.value)
                 } else {
                     searchPopup.setSearchSelection(obj.location.title,
                                                    obj.subLocation.text,
@@ -150,17 +155,19 @@ Item {
                                                    obj.location.iconName,
                                                    obj.location.identiconColor)
 
-                    root.store.setSearchLocation(obj.location.value, obj.subLocation.value)
+                    root.setSearchLocationFn(obj.location.value, obj.subLocation.value)
                 }
             }
         }
-        onResultItemClicked: {
+        onResultItemClicked: (itemId) => {
             searchPopup.close()
-            root.store.resultItemClicked(itemId)
+            root.resultItemClicked(itemId)
         }
         acceptsTitleClick: function (titleId) {
-            return root.utilsStore.isChatKey(titleId)
+            return root.isChatKeyFn(titleId)
         }
-        onResultItemTitleClicked: Global.openProfilePopup(titleId, searchPopup)
+        onResultItemTitleClicked: (titleId) => {
+            root.openProfilePopupFn(titleId, searchPopup)
+        }
     }
 }

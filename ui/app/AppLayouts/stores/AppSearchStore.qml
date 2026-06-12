@@ -7,10 +7,19 @@ QtObject {
 
     property var locationMenuModel: root.appSearchModule.locationMenuModel
     property var resultModel: root.appSearchModule.resultModel
+    property bool searchInProgress: false
+
+    readonly property Connections appSearchModuleConnections: Connections {
+        target: root.appSearchModule
+        function onAppSearchCompleted() {
+            root.searchInProgress = false
+        }
+    }
 
     function searchMessages(searchTerm) {
         if(!root.appSearchModule)
             return
+        root.searchInProgress = searchTerm !== ""
         root.appSearchModule.searchMessages(searchTerm)
     }
 

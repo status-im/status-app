@@ -86,6 +86,7 @@ Item {
     readonly property AppStores.AccountSettingsStore accountSettingsStore: rootStore.accountSettingsStore
     readonly property AppStores.ContactsStore contactsStore: rootStore.contactsStore
     readonly property AppStores.ActivityCenterStore activityCenterStore: rootStore.activityCenterStore
+    readonly property AppStores.AppSearchStore appSearchStore: rootStore.appSearchStore
 
     // Settings (just references from `rootStore`)
     readonly property ProfileStores.AboutStore aboutStore: rootStore.profileSectionStore.aboutStore
@@ -1305,8 +1306,30 @@ Item {
         }
 
         sourceComponent: AppSearch {
-            store: appMain.rootStore.appSearchStore
-            utilsStore: appMain.utilsStore
+            locationMenuModel: appMain.appSearchStore.locationMenuModel
+            resultModel: appMain.appSearchStore.resultModel
+            searchInProgress: appMain.appSearchStore.searchInProgress
+            setSearchLocationFn: function(location, subLocation) {
+                appMain.appSearchStore.setSearchLocation(location, subLocation)
+            }
+            prepareLocationMenuModelFn: function() {
+                appMain.appSearchStore.prepareLocationMenuModel()
+            }
+            getSearchLocationObjectFn: function() {
+                return appMain.appSearchStore.getSearchLocationObject()
+            }
+            isChatKeyFn: function(value) {
+                return appMain.utilsStore.isChatKey(value)
+            }
+            openProfilePopupFn: function(publicKey, parentPopup) {
+                Global.openProfilePopup(publicKey, parentPopup)
+            }
+            onSearchMessages: (searchTerm) => {
+                appMain.appSearchStore.searchMessages(searchTerm)
+            }
+            onResultItemClicked: (itemId) => {
+                appMain.appSearchStore.resultItemClicked(itemId)
+            }
             onClosed: appSearch.active = false
         }
     }
