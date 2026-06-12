@@ -171,6 +171,7 @@ endif
 deps: | check-qt-dir deps-common status-go-deps bottles
 
 update: | check-qt-dir update-common
+	+ "$(MAKE)" --no-print-directory prl-to-pc
 
 QML_DEBUG ?= false
 QML_DEBUG_PORT ?= 49152
@@ -221,7 +222,7 @@ export PATH := $(CURDIR)/.pcwrap:$(PATH)
 PRL_TO_PC ?= $(CURDIR)/vendor/prl-to-pc/prl_to_pc
 $(PRL_TO_PC): vendor/prl-to-pc/src/prl_to_pc.nim
 	echo -e $(BUILD_MSG) "prl-to-pc"
-	cd vendor/prl-to-pc && nim c --skipParentCfg:on -d:release --hints:off --path:$(CURDIR)/vendor/nim-regex/src --path:$(CURDIR)/vendor/nim-unicodedb/src -o:prl_to_pc src/prl_to_pc.nim $(HANDLE_OUTPUT)
+	cd vendor/prl-to-pc && $(ENV_SCRIPT) nim c --skipParentCfg:on -d:release --hints:off --path:$(CURDIR)/vendor/nim-regex/src --path:$(CURDIR)/vendor/nim-unicodedb/src -o:prl_to_pc src/prl_to_pc.nim $(HANDLE_OUTPUT)
 
 prl-to-pc: $(PRL_TO_PC)
 
@@ -1051,14 +1052,11 @@ mobile-profile-mode-check:
 	fi
 	@echo $(MOBILE_PROFILE_DESIRED) > $(MOBILE_PROFILE_SENTINEL)
 
-# prl-to-pc is built here (in the host environment, before `make -C mobile` sets
-# the cross-compile NDK/clang PATH) so the host CLI isn't accidentally built with
-# the Android/iOS toolchain.
-mobile-run: deps-common mobile-profile-mode-check prl-to-pc
+mobile-run: prl-to-pc deps-common mobile-profile-mode-check
 	echo -e "\033[92mRunning:\033[39m mobile app"
 	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug
 
-mobile-profile: deps-common mobile-profile-mode-check prl-to-pc
+mobile-profile: prl-to-pc deps-common mobile-profile-mode-check
 ifeq ($(mkspecs),ios)
 	@echo "TODO: iOS profiling is not implemented yet"; exit 1
 else
@@ -1070,7 +1068,7 @@ else
 endif
 
 mobile-build: USE_SYSTEM_NIM=1
-mobile-build: | deps-common prl-to-pc
+mobile-build: prl-to-pc | deps-common
 	echo -e "\033[92mBuilding:\033[39m mobile app ($(or $(PACKAGE_TYPE),default))"
 ifeq ($(PACKAGE_TYPE),aab)
 	$(MAKE) -C mobile aab

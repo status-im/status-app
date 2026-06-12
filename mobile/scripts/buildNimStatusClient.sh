@@ -58,11 +58,9 @@ cd "$STATUS_DESKTOP"
 #     directly, so NO arch rewrite; cflags use -F/-I framework Headers. The nim
 #     build is --app:staticlib (no link), so framework *linking* is the Xcode
 #     app project's job; only the framework cflags matter here.
-# prl-to-pc is vendored as a submodule at vendor/prl-to-pc (override with
-# $PRL_TO_PC_DIR for a local checkout).
+# prl-to-pc is built from the vendor/prl-to-pc submodule by `make update` (host env).
 if [[ "$OS" == "android" || "$OS" == "ios" ]]; then
-    PRL_TO_PC_DIR="${PRL_TO_PC_DIR:-$STATUS_DESKTOP/vendor/prl-to-pc}"
-    PRL_TO_PC_BIN="$PRL_TO_PC_DIR/prl_to_pc"
+    PRL_TO_PC_BIN="${PRL_TO_PC_BIN:-$STATUS_DESKTOP/vendor/prl-to-pc/prl_to_pc}"
     if [[ "$OS" == "android" ]]; then
         PC_TAG="$ANDROID_ABI"; PC_MARKER="Qt6Core_${ANDROID_ABI}.pc"
     else
@@ -71,10 +69,8 @@ if [[ "$OS" == "android" || "$OS" == "ios" ]]; then
     QT_PC_DIR="$STATUS_DESKTOP/mobile/build/qt-pkgconfig/$PC_TAG"
 
     if [[ ! -x "$PRL_TO_PC_BIN" ]]; then
-        echo "Building prl-to-pc at $PRL_TO_PC_DIR"
-        ( cd "$PRL_TO_PC_DIR" && nim c --skipParentCfg:on -d:release --hints:off \
-            --path:"$STATUS_DESKTOP/vendor/nim-regex/src" --path:"$STATUS_DESKTOP/vendor/nim-unicodedb/src" \
-            -o:prl_to_pc src/prl_to_pc.nim )
+        echo "ERROR: prl-to-pc not found at $PRL_TO_PC_BIN — run 'make update' first." >&2
+        exit 1
     fi
     # Generate once per kit (keyed on the Core .pc existing).
     if [[ ! -f "$QT_PC_DIR/$PC_MARKER" ]]; then
