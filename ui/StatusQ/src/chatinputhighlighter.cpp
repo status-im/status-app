@@ -1,418 +1,225 @@
 #include "StatusQ/chatinputhighlighter.h"
 
+#include "StatusQ/markdownparser.h"
+
 #include <QColor>
 #include <QFontDatabase>
-#include <QRegularExpression>
 #include <QTextCharFormat>
 #include <QVariantMap>
 #include <QVector>
 
-#include <utility>
-
 namespace {
 
-static const unsigned int kBold          = 1u << 0;
-static const unsigned int kItalic        = 1u << 1;
-static const unsigned int kStrikeThrough = 1u << 2;
-static const unsigned int kDelimiter     = 1u << 3;
-static const unsigned int kCode          = 1u << 4; // single-backtick: monospace + background
-static const unsigned int kCodeFence     = 1u << 5; // triple-backtick content: monospace, no background
-static const unsigned int kLink          = 1u << 6; // URL: blue foreground, combines with emphasis bits
-static const unsigned int kQuote         = 1u << 7; // block-quote line: dark-blue foreground
+// Final render bits stamped per character and consumed by buildFormat().
+constexpr unsigned int kBold          = 1u << 0;
+constexpr unsigned int kItalic        = 1u << 1;
+constexpr unsigned int kStrikeThrough = 1u << 2;
+constexpr unsigned int kDelimiter     = 1u << 3; // emphasis/fence markers: dark gray
+constexpr unsigned int kCode          = 1u << 4; // single-backtick: monospace + background
+constexpr unsigned int kCodeFence     = 1u << 5; // triple-backtick content: monospace
+constexpr unsigned int kLink          = 1u << 6; // URL: blue foreground
+constexpr unsigned int kQuote         = 1u << 7; // block-quote line: dark blue
 
-struct Delimiter {
-    qsizetype pos;
-    qsizetype remaining;
-    QChar ch;
-    bool canOpen;
-    bool canClose;
-};
+using Markdown::Node;
+using Markdown::NodeKind;
 
-struct CodeSpan {
-    qsizetype openerStart;   // start of opening backtick run
-    qsizetype contentStart;  // end of opening backtick run = content start
-    qsizetype contentEnd;    // start of closing backtick run = content end
-    qsizetype closerEnd;     // end of closing backtick run
-};
-
-struct EmphSpan {
-    qsizetype    start;        // content start (= opener delimiter end)
-    qsizetype    end;          // content end   (= closer delimiter start)
-    unsigned int formatBits;
-    qsizetype    openerStart;  // start of consumed opener delimiter chars
-    qsizetype    closerEnd;    // end   of consumed closer delimiter chars
-};
-
-struct LinkSpan {
-    QString   url;
-    qsizetype start;   // start of match in the scanned text
-    qsizetype end;     // end of match (exclusive)
-};
-
-struct QuoteGroup {
-    qsizetype start;   // absolute position of '>' on first line
-    qsizetype end;     // exclusive end (past last char of last quote line, incl. trailing \n)
-};
-
-using Ranges = QVector<QPair<qsizetype,qsizetype>>;
-
-const QRegularExpression& kLinkRegex()
+Markdown::Options optionsFor(bool multiline, bool unclosedFence)
 {
-    static const QRegularExpression re(
-        QStringLiteral(R"(\bhttps?://[a-zA-Z0-9](?:[a-zA-Z0-9\-.]*[a-zA-Z0-9])?(?:/[^\s<>()\[\]{}'"]*)?(?<![.,;:!?*~]))"),
-        QRegularExpression::CaseInsensitiveOption
-    );
-    return re;
+    Markdown::Options o;
+    o.multilineEmphasis = multiline;
+    o.formatUnclosedCodeFence = unclosedFence;
+    o.detectLinks = true;
+    return o;
 }
 
-QVector<LinkSpan> scanLinks(const QString& text,
-                            const Ranges& excludeRanges = {})
+// Content range of a container node = the span between its opener/closer
+// delimiter children (or the full node range when a delimiter is absent).
+QPair<qsizetype, qsizetype> contentRange(const Node& node)
 {
-    QVector<LinkSpan> result;
-    auto it = kLinkRegex().globalMatch(text);
-    while (it.hasNext()) {
-        const auto m = it.next();
-        const qsizetype s = m.capturedStart(), e = m.capturedEnd();
-        bool excluded = false;
-        for (const auto& r : excludeRanges)
-            if (s < r.second && e > r.first) { excluded = true; break; }
-        if (!excluded)
-            result.append({m.captured(), s, e});
+    qsizetype s = node.start;
+    qsizetype e = node.end;
+    if (!node.children.isEmpty() && node.children.first().kind == NodeKind::Delimiter)
+        s = node.children.first().end;
+    if (!node.children.isEmpty() && node.children.last().kind == NodeKind::Delimiter)
+        e = node.children.last().start;
+    return {s, e};
+}
+
+// ── AST → per-character render bits ─────────────────────────────────────────────
+
+void stamp(QVector<unsigned int>& flags, qsizetype s, qsizetype e, unsigned int bits)
+{
+    const qsizetype lo = qMax(qsizetype(0), s);
+    const qsizetype hi = qMin(qsizetype(flags.size()), e);
+    for (qsizetype k = lo; k < hi; ++k)
+        flags[k] = bits;
+}
+
+void flatten(const Node& node, unsigned int acc, QVector<unsigned int>& flags)
+{
+    switch (node.kind) {
+    case NodeKind::Document:
+    case NodeKind::Paragraph:
+        for (const Node& c : node.children)
+            flatten(c, acc, flags);
+        break;
+    case NodeKind::QuoteBlock:
+        stamp(flags, node.start, node.end, kQuote);
+        for (const Node& c : node.children)
+            flatten(c, acc | kQuote, flags);
+        break;
+    case NodeKind::Strong:
+        for (const Node& c : node.children)
+            flatten(c, acc | kBold, flags);
+        break;
+    case NodeKind::Emphasis:
+        for (const Node& c : node.children)
+            flatten(c, acc | kItalic, flags);
+        break;
+    case NodeKind::Strikethrough:
+        for (const Node& c : node.children)
+            flatten(c, acc | kStrikeThrough, flags);
+        break;
+    case NodeKind::Link:
+        for (const Node& c : node.children)
+            flatten(c, acc | kLink, flags);
+        break;
+    case NodeKind::CodeSpan:
+        // monospace + background over markers and content alike
+        stamp(flags, node.start, node.end, kCode);
+        break;
+    case NodeKind::CodeBlock:
+        for (const Node& c : node.children)
+            stamp(flags, c.start, c.end,
+                  c.kind == NodeKind::Delimiter ? kDelimiter : kCodeFence);
+        break;
+    case NodeKind::Text:
+        stamp(flags, node.start, node.end, acc);
+        break;
+    case NodeKind::Delimiter:
+        stamp(flags, node.start, node.end, kDelimiter);
+        break;
     }
-    return result;
 }
 
-Ranges linkRangesOf(const QVector<LinkSpan>& links)
+// Re-stamps every quote group's "> " prefixes back to kQuote, so an outer
+// emphasis span that straddles a prefix doesn't render it gray/bold.
+void reProtectQuotePrefixes(const QString& text, const Node& node,
+                            QVector<unsigned int>& flags)
 {
-    Ranges result;
-    for (const auto& l : links)
-        result.append({l.start, l.end});
-    return result;
-}
-
-bool isUnicodeWhitespace(QChar c)
-{
-    return c.isSpace();
-}
-
-bool isUnicodePunctuation(QChar c)
-{
-    return c.isPunct() || c.isSymbol();
-}
-
-bool isLeftFlanking(const QString& text, qsizetype pos, qsizetype len)
-{
-    QChar charAfter  = (pos + len < text.length()) ? text[pos + len] : QChar(' ');
-    QChar charBefore = (pos > 0)                   ? text[pos - 1]   : QChar(' ');
-
-    if (!isUnicodePunctuation(charAfter))
-        return true;
-    return isUnicodeWhitespace(charBefore) || isUnicodePunctuation(charBefore);
-}
-
-bool isRightFlanking(const QString& text, qsizetype pos, qsizetype len)
-{
-    QChar charAfter  = (pos + len < text.length()) ? text[pos + len] : QChar(' ');
-    QChar charBefore = (pos > 0)                   ? text[pos - 1]   : QChar(' ');
-
-    if (!isUnicodePunctuation(charBefore))
-        return true;
-    return isUnicodeWhitespace(charAfter) || isUnicodePunctuation(charAfter);
-}
-
-QVector<Delimiter> scanDelimiters(const QString& text,
-                                   const Ranges& codeRanges = {})
-{
-    QVector<Delimiter> delimiters;
-    qsizetype i = 0;
-    const qsizetype n = text.length();
-    while (i < n) {
-        // Skip characters inside code spans — they cannot be emphasis delimiters
-        for (const auto& r : codeRanges)
-            if (i >= r.first && i < r.second) { i = r.second; break; }
-        if (i >= n) break;
-
-        QChar c = text[i];
-
-        if (c == QLatin1Char('*')) {
-            qsizetype start = i;
-            while (i < n && text[i] == QLatin1Char('*'))
-                ++i;
-            qsizetype len = i - start;
-            bool canOpen  = isLeftFlanking(text, start, len);
-            bool canClose = isRightFlanking(text, start, len);
-            delimiters.append({start, len, c, canOpen, canClose});
-        } else if (c == QLatin1Char('~')) {
-            qsizetype start = i;
-            while (i < n && text[i] == QLatin1Char('~'))
-                ++i;
-            qsizetype len = i - start;
-            if (len == 2) {
-                bool canOpen  = isLeftFlanking(text, start, len);
-                bool canClose = isRightFlanking(text, start, len);
-                delimiters.append({start, 2, c, canOpen, canClose});
-            }
-            // otherwise skip (no strikethrough for ~ or ~~~+)
-        } else {
-            ++i;
+    if (node.kind == NodeKind::QuoteBlock) {
+        qsizetype i = node.start;
+        while (i < node.end) {
+            stamp(flags, i, i + 2, kQuote);
+            while (i < node.end && text[i] != QLatin1Char('\n')) ++i;
+            if (i < node.end) ++i;
         }
     }
-    return delimiters;
+    for (const Node& c : node.children)
+        reProtectQuotePrefixes(text, c, flags);
 }
 
-QVector<EmphSpan> processEmphasis(QVector<Delimiter> delimiters)
+void collectLinks(const Node& node, QVector<ChatInputLinksModel::LinkItem>& out)
 {
-    QVector<EmphSpan> spans;
+    if (node.kind == NodeKind::Link)
+        out.append({static_cast<int>(node.start),
+                    static_cast<int>(node.end - node.start), node.destination});
+    for (const Node& c : node.children)
+        collectLinks(c, out);
+}
 
-    // openers_bottom[ch_index][remMod3][canOpenAsInt]
-    // ch_index: 0 = '*', 1 = '~'
-    qsizetype openers_bottom[2][3][2];
-    for (int a = 0; a < 2; ++a)
-        for (int b = 0; b < 3; ++b)
-            for (int c2 = 0; c2 < 2; ++c2)
-                openers_bottom[a][b][c2] = -1;
+// ── AST queries backing the Q_INVOKABLE test API ────────────────────────────────
 
-    auto chIndex = [](QChar ch) { return ch == QLatin1Char('*') ? 0 : 1; };
+void collectFormats(const Node& node, QVariantList& out)
+{
+    if (node.kind == NodeKind::Strong || node.kind == NodeKind::Emphasis
+            || node.kind == NodeKind::Strikethrough) {
+        const auto cr = contentRange(node);
+        QVariantMap m;
+        m[QStringLiteral("start")]         = cr.first;
+        m[QStringLiteral("end")]           = cr.second;
+        m[QStringLiteral("bold")]          = node.kind == NodeKind::Strong;
+        m[QStringLiteral("italic")]        = node.kind == NodeKind::Emphasis;
+        m[QStringLiteral("strikethrough")] = node.kind == NodeKind::Strikethrough;
+        out.append(m);
+    }
+    for (const Node& c : node.children)
+        collectFormats(c, out);
+}
 
-    qsizetype current = 0;
-    while (current < delimiters.size()) {
-        Delimiter& closer = delimiters[current];
-        if (!closer.canClose) {
-            ++current;
-            continue;
-        }
-
-        int ci = chIndex(closer.ch);
-        qsizetype bottom = openers_bottom[ci][closer.remaining % 3][closer.canOpen ? 1 : 0];
-
-        qsizetype found = -1;
-        for (qsizetype j = current - 1; j > bottom; --j) {
-            const Delimiter& o = delimiters[j];
-            if (!o.canOpen || o.ch != closer.ch)
+void collectDelimiters(const Node& node, QVariantList& out)
+{
+    const bool emphasisOrCode =
+            node.kind == NodeKind::Strong || node.kind == NodeKind::Emphasis
+            || node.kind == NodeKind::Strikethrough || node.kind == NodeKind::CodeSpan
+            || node.kind == NodeKind::CodeBlock;
+    if (emphasisOrCode) {
+        for (const Node& c : node.children) {
+            if (c.kind != NodeKind::Delimiter)
                 continue;
-            // Rules 9/10: if either can both open and close, (sum % 3 != 0)
-            // unless both are multiples of 3
-            if (o.canClose || closer.canOpen) {
-                qsizetype sumMod3 = (o.remaining + closer.remaining) % 3;
-                if (sumMod3 == 0 && (o.remaining % 3 != 0 || closer.remaining % 3 != 0))
-                    continue;
-            }
-            found = j;
-            break;
-        }
-
-        if (found == -1) {
-            openers_bottom[ci][closer.remaining % 3][closer.canOpen ? 1 : 0] = current - 1;
-            if (!closer.canOpen)
-                delimiters.removeAt(current);
-            else
-                ++current;
-            continue;
-        }
-
-        Delimiter& opener = delimiters[found];
-
-        qsizetype useCount;
-        if (opener.ch == QLatin1Char('~'))
-            useCount = 2;
-        else
-            useCount = (opener.remaining >= 2 && closer.remaining >= 2) ? 2 : 1;
-
-        unsigned int bits;
-        if (opener.ch == QLatin1Char('~'))
-            bits = kStrikeThrough;
-        else if (useCount == 2)
-            bits = kBold;
-        else
-            bits = kItalic;
-
-        qsizetype contentStart     = opener.pos + opener.remaining;
-        qsizetype contentEnd       = closer.pos;
-        qsizetype openerDelimStart = contentStart - useCount;
-        qsizetype closerDelimEnd   = contentEnd   + useCount;
-        spans.append({contentStart, contentEnd, bits, openerDelimStart, closerDelimEnd});
-
-        // Remove delimiters strictly between opener and closer.
-        // After removal, closer shifts to found+1 (= current - count), which is
-        // exactly what the unconditional assignment below sets.
-        qsizetype removeFrom = found + 1;
-        qsizetype removeTo   = current - 1;
-        if (removeFrom <= removeTo)
-            delimiters.erase(delimiters.begin() + removeFrom,
-                             delimiters.begin() + removeTo + 1);
-        // current now points at closer
-        current = found + 1;
-
-        // Consume from opener (rightmost chars → pos stays, remaining decreases)
-        opener.remaining -= useCount;
-        if (opener.remaining == 0) {
-            delimiters.removeAt(found);
-            --current;
-        }
-
-        // Consume from closer (leftmost chars → pos advances)
-        // After possible opener removal, closer is at current
-        Delimiter& closerRef = delimiters[current];
-        closerRef.pos       += useCount;
-        closerRef.remaining -= useCount;
-        if (closerRef.remaining == 0)
-            delimiters.removeAt(current);
-        // if remaining > 0, stay at current to try matching again
-    }
-
-    return spans;
-}
-
-QVector<CodeSpan> scanCodeSpans(const QString& text)
-{
-    QVector<CodeSpan> result;
-    qsizetype i = 0;
-    const qsizetype len = text.length();
-
-    while (i < len) {
-        if (text[i] != QLatin1Char('`')) { ++i; continue; }
-
-        qsizetype openerStart = i;
-        while (i < len && text[i] == QLatin1Char('`')) ++i;
-        qsizetype openerLen    = i - openerStart;
-        qsizetype contentStart = i;
-
-        qsizetype j = i;
-        bool found = false;
-        while (j < len) {
-            if (text[j] != QLatin1Char('`')) { ++j; continue; }
-            qsizetype closerStart = j;
-            while (j < len && text[j] == QLatin1Char('`')) ++j;
-            qsizetype closerLen = j - closerStart;
-            if (closerLen == openerLen) {
-                result.append({openerStart, contentStart, closerStart, j});
-                i = j;
-                found = true;
-                break;
-            }
-        }
-        (void)found;
-    }
-    return result;
-}
-
-// Returns the start of the first triple-backtick run that has no matching closer,
-// or -1 if all ``` openers are paired.
-qsizetype findOpenCodeFence(const QString& text)
-{
-    qsizetype i = 0;
-    const qsizetype len = text.length();
-    while (i < len) {
-        if (text[i] != QLatin1Char('`')) { ++i; continue; }
-        const qsizetype runStart = i;
-        while (i < len && text[i] == QLatin1Char('`')) ++i;
-        if (i - runStart != 3) continue;
-        // Search forward for a matching closer
-        qsizetype j = i;
-        bool found = false;
-        while (j < len) {
-            if (text[j] != QLatin1Char('`')) { ++j; continue; }
-            const qsizetype cs = j;
-            while (j < len && text[j] == QLatin1Char('`')) ++j;
-            if (j - cs == 3) { found = true; i = j; break; } // i=j: skip past closer
-        }
-        if (!found) return runStart;
-    }
-    return -1;
-}
-
-// Returns [openerStart, closerEnd) ranges for all code spans in text.
-Ranges codeRangesOf(const QString& text)
-{
-    Ranges result;
-    const auto codeSpans = scanCodeSpans(text);
-    for (const CodeSpan& c : codeSpans)
-        result.append({c.openerStart, c.closerEnd});
-    return result;
-}
-
-// Filters code spans to those whose opening backtick run has exactly `backtickLen` characters.
-QVector<CodeSpan> codeSpansByLen(const QVector<CodeSpan>& spans, qsizetype backtickLen)
-{
-    QVector<CodeSpan> result;
-    for (const CodeSpan& c : spans)
-        if (c.contentStart - c.openerStart == backtickLen)
-            result.append(c);
-    return result;
-}
-
-// Converts absolute code ranges to line-relative coordinates,
-// including only those that intersect [lineStart, lineStart+lineLen).
-Ranges lineRelativeRanges(
-    const Ranges& absRanges, qsizetype lineStart, qsizetype lineLen)
-{
-    Ranges result;
-    for (const auto& r : absRanges)
-        if (r.first < lineStart + lineLen && r.second > lineStart)
-            result.append({qMax(qsizetype(0), r.first - lineStart),
-                           qMin(lineLen, r.second - lineStart)});
-    return result;
-}
-
-bool anyOverlap(const Ranges& ranges, qsizetype start, qsizetype end)
-{
-    for (const auto& r : ranges)
-        if (start < r.second && end > r.first) return true;
-    return false;
-}
-
-// Finds maximal runs of consecutive lines starting with "> ".
-// A line is excluded from being a quote line only when it is INSIDE an already-open
-// fence (fence started on a previous line). A line that OPENS a fence mid-way still
-// counts as a quote line — the quote covers the content before the ```.
-QVector<QuoteGroup> scanQuoteGroups(const QString& text, const Ranges& fenceRanges)
-{
-    QVector<QuoteGroup> groups;
-    qsizetype i = 0;
-    const qsizetype n = text.length();
-    qsizetype groupStart = -1;
-
-    while (i < n) {
-        const qsizetype lineStart = i;
-        while (i < n && text[i] != QLatin1Char('\n')) ++i;
-        const qsizetype lineEnd = i;   // exclusive, does not include '\n'
-        if (i < n) ++i;               // skip '\n'
-
-        bool inFence = false;
-        for (const auto& r : fenceRanges)
-            if (r.first < lineStart && r.second > lineStart) { inFence = true; break; }
-
-        const bool isQuote = !inFence
-                          && lineEnd - lineStart >= 2
-                          && text[lineStart] == QLatin1Char('>')
-                          && text[lineStart + 1] == QLatin1Char(' ');
-
-        if (isQuote) {
-            if (groupStart < 0) groupStart = lineStart;
-        } else {
-            if (groupStart >= 0) {
-                groups.append({groupStart, lineStart});
-                groupStart = -1;
-            }
+            QVariantMap m;
+            m[QStringLiteral("start")] = c.start;
+            m[QStringLiteral("end")]   = c.end;
+            out.append(m);
         }
     }
-    if (groupStart >= 0)
-        groups.append({groupStart, n});
-
-    return groups;
+    for (const Node& c : node.children)
+        collectDelimiters(c, out);
 }
 
-// Returns the absolute "> " prefix ranges (2 chars each) for every line in a quote group.
-Ranges quoteGroupPrefixRanges(const QString& text, const QuoteGroup& g)
+void collectCodeSpans(const Node& node, QVariantList& out)
 {
-    Ranges result;
-    qsizetype i = g.start;
-    while (i < g.end) {
-        result.append({i, i + 2});                               // the "> " prefix
-        while (i < g.end && text[i] != QLatin1Char('\n')) ++i;
-        if (i < g.end) ++i;                                     // skip '\n'
+    if (node.kind == NodeKind::CodeSpan || node.kind == NodeKind::CodeBlock) {
+        const auto cr = contentRange(node);
+        QVariantMap m;
+        m[QStringLiteral("start")] = cr.first;
+        m[QStringLiteral("end")]   = cr.second;
+        out.append(m);
     }
-    return result;
+    for (const Node& c : node.children)
+        collectCodeSpans(c, out);
+}
+
+void collectLinkInfo(const Node& node, QVariantList& out)
+{
+    if (node.kind == NodeKind::Link) {
+        QVariantMap m;
+        m[QStringLiteral("text")]   = node.destination;
+        m[QStringLiteral("start")]  = node.start;
+        m[QStringLiteral("length")] = node.end - node.start;
+        out.append(m);
+    }
+    for (const Node& c : node.children)
+        collectLinkInfo(c, out);
+}
+
+void collectQuoteBlocks(const Node& node, QVariantList& out)
+{
+    if (node.kind == NodeKind::QuoteBlock) {
+        QVariantMap m;
+        m[QStringLiteral("start")] = node.start;
+        m[QStringLiteral("end")]   = node.end;
+        out.append(m);
+    }
+    for (const Node& c : node.children)
+        collectQuoteBlocks(c, out);
+}
+
+unsigned int emphasisBitsAt(const Node& node, qsizetype pos)
+{
+    unsigned int bits = 0u;
+    if (node.kind == NodeKind::Strong || node.kind == NodeKind::Emphasis
+            || node.kind == NodeKind::Strikethrough) {
+        const auto cr = contentRange(node);
+        if (pos >= cr.first && pos < cr.second) {
+            if (node.kind == NodeKind::Strong)        bits |= kBold;
+            else if (node.kind == NodeKind::Emphasis) bits |= kItalic;
+            else                                      bits |= kStrikeThrough;
+        }
+    }
+    for (const Node& c : node.children)
+        bits |= emphasisBitsAt(c, pos);
+    return bits;
 }
 
 } // namespace
@@ -546,7 +353,7 @@ void ChatInputHighlighter::setFormatUnclosedCodeFence(bool enabled)
 bool ChatInputHighlighter::inUnclosedCodeFence(int position) const
 {
     if (!document()) return false;
-    const qsizetype unclosedStart = findOpenCodeFence(document()->toPlainText());
+    const qsizetype unclosedStart = Markdown::findUnclosedCodeFence(document()->toPlainText());
     return unclosedStart >= 0 && static_cast<qsizetype>(position) >= unclosedStart;
 }
 
@@ -578,284 +385,45 @@ QTextCharFormat ChatInputHighlighter::buildFormat(unsigned int bits) const
 QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
 {
     QVariantList result;
-
-    // Pre-compute all code spans once; derive triple-backtick ranges for inCode checks.
-    const QVector<CodeSpan> allCodeSpans = scanCodeSpans(text);
-    Ranges tripleAbsRanges;
-    for (const CodeSpan& c : allCodeSpans)
-        if (c.contentStart - c.openerStart == 3)
-            tripleAbsRanges.append({c.openerStart, c.closerEnd});
-    if (m_formatUnclosedCodeFence) {
-        const qsizetype u = findOpenCodeFence(text);
-        if (u >= 0) tripleAbsRanges.append({u, text.length()});
-    }
-
-    // ── Quote groups (always processed, regardless of multilineEmphasis) ────
-    const QVector<QuoteGroup> quoteGroups = scanQuoteGroups(text, tripleAbsRanges);
-    Ranges quoteAbsRanges;
-    for (const QuoteGroup& g : quoteGroups) {
-        quoteAbsRanges.append({g.start, g.end});
-
-        const QString groupText = text.mid(g.start, g.end - g.start);
-        const qsizetype offset  = g.start;
-
-        Ranges groupExclude = quoteGroupPrefixRanges(text, g);
-        for (auto& r : groupExclude) { r.first -= offset; r.second -= offset; }
-
-        const auto groupCodeSpans = scanCodeSpans(groupText);
-        for (const CodeSpan& c : groupCodeSpans)
-            groupExclude.append({c.openerStart, c.closerEnd});
-
-        for (const auto& r : linkRangesOf(scanLinks(groupText, groupExclude)))
-            groupExclude.append(r);
-
-        auto appendSpan = [&](const EmphSpan& s, qsizetype lineOffset) {
-            QVariantMap m;
-            m[QStringLiteral("start")]         = s.start + lineOffset + offset;
-            m[QStringLiteral("end")]           = s.end   + lineOffset + offset;
-            m[QStringLiteral("bold")]          = bool(s.formatBits & kBold);
-            m[QStringLiteral("italic")]        = bool(s.formatBits & kItalic);
-            m[QStringLiteral("strikethrough")] = bool(s.formatBits & kStrikeThrough);
-            result.append(m);
-        };
-
-        if (m_multilineEmphasis) {
-            for (const EmphSpan& s : processEmphasis(scanDelimiters(groupText, groupExclude)))
-                appendSpan(s, 0);
-        } else {
-            const qsizetype groupLen = groupText.length();
-            qsizetype lineStart = 0;
-            for (qsizetype i = 0; i <= groupLen; ++i) {
-                if (i == groupLen || groupText[i] == QLatin1Char('\n')) {
-                    const QString line = groupText.mid(lineStart, i - lineStart);
-                    const auto lineExclude = lineRelativeRanges(groupExclude, lineStart, line.length());
-                    for (const EmphSpan& s : processEmphasis(scanDelimiters(line, lineExclude)))
-                        appendSpan(s, lineStart);
-                    lineStart = i + 1;
-                }
-            }
-        }
-    }
-
-    if (!m_multilineEmphasis) {
-        qsizetype lineStart = 0;
-        for (qsizetype i = 0; i <= text.length(); ++i) {
-            if (i == text.length() || text[i] == QLatin1Char('\n')) {
-                const QString line    = text.mid(lineStart, i - lineStart);
-                const qsizetype lineLen = line.length();
-                // Skip quote lines (already processed above)
-                if (anyOverlap(quoteAbsRanges, lineStart, lineStart + lineLen)) {
-                    lineStart = i + 1;
-                    continue;
-                }
-                // Line-relative code ranges for delimiter scanning — compute spans once
-                const QVector<CodeSpan> lineCodeSpans = scanCodeSpans(line);
-                Ranges lineRanges;
-                // Absolute code ranges for the inCode safety-net filter
-                Ranges absCodeRanges = tripleAbsRanges;
-                for (const CodeSpan& c : lineCodeSpans) {
-                    lineRanges.append({c.openerStart, c.closerEnd});
-                    absCodeRanges.append({c.openerStart + lineStart, c.closerEnd + lineStart});
-                }
-                const auto relRanges = lineRelativeRanges(tripleAbsRanges, lineStart, lineLen);
-                for (const auto& r : relRanges)
-                    lineRanges.append(r);
-                // Exclude link ranges so URL characters don't trigger emphasis
-                const auto linkRanges = linkRangesOf(scanLinks(line, lineRanges));
-                for (const auto& r : linkRanges)
-                    lineRanges.append(r);
-
-                const auto emphSpans = processEmphasis(scanDelimiters(line, lineRanges));
-                for (const EmphSpan& s : emphSpans) {
-                    const qsizetype absStart = s.start + lineStart;
-                    const qsizetype absEnd   = s.end   + lineStart;
-                    if (anyOverlap(absCodeRanges, absStart, absEnd)) continue;
-                    QVariantMap m;
-                    m[QStringLiteral("start")]         = absStart;
-                    m[QStringLiteral("end")]           = absEnd;
-                    m[QStringLiteral("bold")]          = bool(s.formatBits & kBold);
-                    m[QStringLiteral("italic")]        = bool(s.formatBits & kItalic);
-                    m[QStringLiteral("strikethrough")] = bool(s.formatBits & kStrikeThrough);
-                    result.append(m);
-                }
-                lineStart = i + 1;
-            }
-        }
-        return result;
-    }
-
-    // Multiline: all code ranges derived from the already-computed spans
-    Ranges allRanges;
-    for (const CodeSpan& c : allCodeSpans)
-        allRanges.append({c.openerStart, c.closerEnd});
-    if (m_formatUnclosedCodeFence) {
-        const qsizetype u = findOpenCodeFence(text);
-        if (u >= 0) allRanges.append({u, text.length()});
-    }
-    // Exclude quote and link ranges so they don't participate in outer emphasis
-    Ranges allExcluded = allRanges;
-    for (const auto& r : quoteAbsRanges)
-        allExcluded.append(r);
-    const auto allLinkRanges = linkRangesOf(scanLinks(text, allExcluded));
-    for (const auto& r : allLinkRanges)
-        allExcluded.append(r);
-    const auto allEmphSpans = processEmphasis(scanDelimiters(text, allExcluded));
-    for (const EmphSpan& s : allEmphSpans) {
-        if (anyOverlap(allRanges, s.start, s.end)) continue;
-        QVariantMap m;
-        m[QStringLiteral("start")]         = s.start;
-        m[QStringLiteral("end")]           = s.end;
-        m[QStringLiteral("bold")]          = bool(s.formatBits & kBold);
-        m[QStringLiteral("italic")]        = bool(s.formatBits & kItalic);
-        m[QStringLiteral("strikethrough")] = bool(s.formatBits & kStrikeThrough);
-        result.append(m);
-    }
+    const Node doc = Markdown::parse(
+        text, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+    collectFormats(doc, result);
     return result;
 }
 
 QVariantList ChatInputHighlighter::parseDelimiters(const QString& text) const
 {
     QVariantList result;
+    const Node doc = Markdown::parse(
+        text, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+    collectDelimiters(doc, result);
+    return result;
+}
 
-    auto addCodeDelims = [&](const QVector<CodeSpan>& spans, qsizetype offset) {
-        for (const CodeSpan& c : spans) {
-            QVariantMap op;
-            op[QStringLiteral("start")] = c.openerStart  + offset;
-            op[QStringLiteral("end")]   = c.contentStart + offset;
-            result.append(op);
-            QVariantMap cl;
-            cl[QStringLiteral("start")] = c.contentEnd + offset;
-            cl[QStringLiteral("end")]   = c.closerEnd  + offset;
-            result.append(cl);
-        }
-    };
-
-    if (!m_multilineEmphasis) {
-        qsizetype lineStart = 0;
-        for (qsizetype i = 0; i <= text.length(); ++i) {
-            if (i == text.length() || text[i] == QLatin1Char('\n')) {
-                const QString line         = text.mid(lineStart, i - lineStart);
-                const QVector<CodeSpan> lineCodeSpans = scanCodeSpans(line);
-                Ranges lineRanges;
-                for (const CodeSpan& c : lineCodeSpans)
-                    lineRanges.append({c.openerStart, c.closerEnd});
-                const auto lineEmphSpans = processEmphasis(scanDelimiters(line, lineRanges));
-                for (const EmphSpan& s : lineEmphSpans) {
-                    QVariantMap op;
-                    op[QStringLiteral("start")] = s.openerStart + lineStart;
-                    op[QStringLiteral("end")]   = s.start       + lineStart;
-                    result.append(op);
-                    QVariantMap cl;
-                    cl[QStringLiteral("start")] = s.end       + lineStart;
-                    cl[QStringLiteral("end")]   = s.closerEnd + lineStart;
-                    result.append(cl);
-                }
-                addCodeDelims(codeSpansByLen(lineCodeSpans, 1), lineStart);
-                lineStart = i + 1;
-            }
-        }
-        // Triple-backtick: always full-text
-        addCodeDelims(codeSpansByLen(scanCodeSpans(text), 3), 0);
-    } else {
-        const Ranges allRanges = codeRangesOf(text);
-        const auto emphSpans = processEmphasis(scanDelimiters(text, allRanges));
-        for (const EmphSpan& s : emphSpans) {
-            QVariantMap op;
-            op[QStringLiteral("start")] = s.openerStart;
-            op[QStringLiteral("end")]   = s.start;
-            result.append(op);
-            QVariantMap cl;
-            cl[QStringLiteral("start")] = s.end;
-            cl[QStringLiteral("end")]   = s.closerEnd;
-            result.append(cl);
-        }
-        const auto allCodeSpans = scanCodeSpans(text);
-        for (const CodeSpan& c : allCodeSpans) {
-            QVariantMap op;
-            op[QStringLiteral("start")] = c.openerStart;
-            op[QStringLiteral("end")]   = c.contentStart;
-            result.append(op);
-            QVariantMap cl;
-            cl[QStringLiteral("start")] = c.contentEnd;
-            cl[QStringLiteral("end")]   = c.closerEnd;
-            result.append(cl);
-        }
-    }
+QVariantList ChatInputHighlighter::parseCodeSpans(const QString& text) const
+{
+    QVariantList result;
+    const Node doc = Markdown::parse(
+        text, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+    collectCodeSpans(doc, result);
     return result;
 }
 
 QVariantList ChatInputHighlighter::parseLinks(const QString& text) const
 {
     QVariantList result;
-
-    // Pre-compute triple-backtick ranges (always full-text)
-    const QVector<CodeSpan> allCodeSpans = scanCodeSpans(text);
-    Ranges tripleAbsRanges;
-    for (const CodeSpan& c : allCodeSpans)
-        if (c.contentStart - c.openerStart == 3)
-            tripleAbsRanges.append({c.openerStart, c.closerEnd});
-
-    if (!m_multilineEmphasis) {
-        qsizetype lineStart = 0;
-        for (qsizetype i = 0; i <= text.length(); ++i) {
-            if (i == text.length() || text[i] == QLatin1Char('\n')) {
-                const QString line      = text.mid(lineStart, i - lineStart);
-                const qsizetype lineLen = line.length();
-                Ranges lineRanges = codeRangesOf(line);
-                const auto relRanges = lineRelativeRanges(tripleAbsRanges, lineStart, lineLen);
-                for (const auto& r : relRanges)
-                    lineRanges.append(r);
-
-                const auto lineLinks = scanLinks(line, lineRanges);
-                for (const LinkSpan& l : lineLinks) {
-                    QVariantMap m;
-                    m[QStringLiteral("text")]   = l.url;
-                    m[QStringLiteral("start")]  = l.start + lineStart;
-                    m[QStringLiteral("length")] = l.end - l.start;
-                    result.append(m);
-                }
-                lineStart = i + 1;
-            }
-        }
-        return result;
-    }
-
-    // Multiline: exclude all code spans
-    Ranges allRanges;
-    for (const CodeSpan& c : allCodeSpans)
-        allRanges.append({c.openerStart, c.closerEnd});
-    const auto textLinks = scanLinks(text, allRanges);
-    for (const LinkSpan& l : textLinks) {
-        QVariantMap m;
-        m[QStringLiteral("text")]   = l.url;
-        m[QStringLiteral("start")]  = l.start;
-        m[QStringLiteral("length")] = l.end - l.start;
-        result.append(m);
-    }
+    const Node doc = Markdown::parse(
+        text, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+    collectLinkInfo(doc, result);
     return result;
 }
 
 QVariantList ChatInputHighlighter::parseQuoteBlocks(const QString& text) const
 {
     QVariantList result;
-
-    const QVector<CodeSpan> allCodeSpans = scanCodeSpans(text);
-    Ranges tripleAbsRanges;
-    for (const CodeSpan& c : allCodeSpans)
-        if (c.contentStart - c.openerStart == 3)
-            tripleAbsRanges.append({c.openerStart, c.closerEnd});
-    if (m_formatUnclosedCodeFence) {
-        const qsizetype u = findOpenCodeFence(text);
-        if (u >= 0) tripleAbsRanges.append({u, text.length()});
-    }
-
-    const QVector<QuoteGroup> groups = scanQuoteGroups(text, tripleAbsRanges);
-    for (const QuoteGroup& g : groups) {
-        QVariantMap m;
-        m[QStringLiteral("start")] = g.start;
-        m[QStringLiteral("end")]   = g.end;
-        result.append(m);
-    }
+    const Node doc = Markdown::parse(
+        text, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+    collectQuoteBlocks(doc, result);
     return result;
 }
 
@@ -868,242 +436,16 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
 
     if (fullText != m_cachedText) {
         m_cachedText = fullText;
-        const qsizetype docLen = fullText.length();
-        m_flags.assign(docLen, 0u);
+        m_flags.assign(fullText.length(), 0u);
 
-        auto applyCodeSpans = [&](const QVector<CodeSpan>& codeSpans,
-                                  qsizetype len, qsizetype offset) {
-            for (const CodeSpan& c : codeSpans) {
-                const bool         isSingle   = (c.contentStart - c.openerStart == 1);
-                const unsigned int contentFlag = isSingle ? kCode : kCodeFence;
-                const unsigned int delimFlag   = isSingle ? kCode : kDelimiter;
-                const qsizetype start = qMax(qsizetype(0), c.contentStart) + offset;
-                const qsizetype end   = qMin(len, c.contentEnd)  + offset;
-                for (qsizetype k = start; k < end; ++k)
-                    m_flags[k] = contentFlag;
-                const qsizetype opStart = qMax(qsizetype(0), c.openerStart)    + offset;
-                const qsizetype opEnd   = qMin(len, c.contentStart) + offset;
-                for (qsizetype k = opStart; k < opEnd; ++k)
-                    m_flags[k] = delimFlag;
-                const qsizetype clStart = qMax(qsizetype(0), c.contentEnd)  + offset;
-                const qsizetype clEnd   = qMin(len, c.closerEnd) + offset;
-                for (qsizetype k = clStart; k < clEnd; ++k)
-                    m_flags[k] = delimFlag;
-            }
-        };
+        const Node doc = Markdown::parse(
+            fullText, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
 
-        // Pre-compute all code spans once; partition into triple/single for reuse.
-        const QVector<CodeSpan> fullCodeSpans = scanCodeSpans(fullText);
-        QVector<CodeSpan>                        tripleFences, singleSpans;
-        Ranges      fullCodeRanges, tripleAbsRanges;
-        for (const CodeSpan& c : fullCodeSpans) {
-            fullCodeRanges.append({c.openerStart, c.closerEnd});
-            const qsizetype blen = c.contentStart - c.openerStart;
-            if (blen == 3) {
-                tripleFences.append(c);
-                tripleAbsRanges.append({c.openerStart, c.closerEnd});
-            } else if (blen == 1) {
-                singleSpans.append(c);
-            }
-        }
-
-        // ── Unclosed code fence ───────────────────────────────────────────────
-        const qsizetype unclosedStart = findOpenCodeFence(fullText);
-        if (m_formatUnclosedCodeFence && unclosedStart >= 0) {
-            tripleFences.append({unclosedStart, unclosedStart + 3, docLen, docLen});
-            fullCodeRanges.append({unclosedStart, docLen});
-            tripleAbsRanges.append({unclosedStart, docLen});
-        }
+        flatten(doc, 0u, m_flags);
+        reProtectQuotePrefixes(fullText, doc, m_flags);
 
         QVector<ChatInputLinksModel::LinkItem> modelItems;
-
-        // ── Quote groups ──────────────────────────────────────────────────────
-        const QVector<QuoteGroup> quoteGroups = scanQuoteGroups(fullText, fullCodeRanges);
-        Ranges quoteAbsRanges;
-        for (const QuoteGroup& g : quoteGroups) {
-            // Stamp kQuote on every character in the group
-            for (qsizetype k = g.start; k < g.end; ++k)
-                m_flags[k] = kQuote;
-            quoteAbsRanges.append({g.start, g.end});
-
-            const QString groupText = fullText.mid(g.start, g.end - g.start);
-            const qsizetype offset  = g.start;
-
-            // Excluded ranges within this group (group-relative):
-            // - the "> " prefixes on each line
-            // - single-backtick code spans
-            Ranges groupExclude = quoteGroupPrefixRanges(fullText, g);
-            for (auto& r : groupExclude) { r.first -= offset; r.second -= offset; }
-
-            const auto groupCodeSpans = scanCodeSpans(groupText);
-            QVector<CodeSpan> groupSingleSpans;
-            for (const CodeSpan& c : groupCodeSpans) {
-                groupExclude.append({c.openerStart, c.closerEnd});
-                if (c.contentStart - c.openerStart == 1)
-                    groupSingleSpans.append(c);
-            }
-            // kCode overwrites kQuote for inline code spans (monospace, no dark-blue)
-            applyCodeSpans(groupSingleSpans, g.end - g.start, offset);
-
-            // Exclude link ranges so URL characters don't trigger emphasis
-            const auto groupLinks = scanLinks(groupText, groupExclude);
-            for (const auto& r : linkRangesOf(groupLinks))
-                groupExclude.append(r);
-
-            // Emphasis scoped to this group, respecting multilineEmphasis flag
-            auto applyGroupSpan = [&](const EmphSpan& s, qsizetype lineOff) {
-                const qsizetype groupLen = g.end - g.start;
-                const qsizetype s0 = qMax(qsizetype(0), s.start + lineOff) + offset;
-                const qsizetype s1 = qMin(groupLen, s.end + lineOff) + offset;
-                for (qsizetype k = s0; k < s1; ++k)
-                    m_flags[k] |= s.formatBits;
-                for (qsizetype k = s.openerStart + lineOff + offset; k < s.start + lineOff + offset; ++k)
-                    m_flags[k] = kDelimiter;
-                for (qsizetype k = s.end + lineOff + offset; k < s.closerEnd + lineOff + offset; ++k)
-                    m_flags[k] = kDelimiter;
-            };
-            if (m_multilineEmphasis) {
-                for (const EmphSpan& s : processEmphasis(scanDelimiters(groupText, groupExclude)))
-                    applyGroupSpan(s, 0);
-            } else {
-                const qsizetype groupLen = g.end - g.start;
-                qsizetype lineStart = 0;
-                for (qsizetype i = 0; i <= groupLen; ++i) {
-                    if (i == groupLen || groupText[i] == QLatin1Char('\n')) {
-                        const QString line = groupText.mid(lineStart, i - lineStart);
-                        const auto lineExclude = lineRelativeRanges(groupExclude, lineStart, line.length());
-                        for (const EmphSpan& s : processEmphasis(scanDelimiters(line, lineExclude)))
-                            applyGroupSpan(s, lineStart);
-                        lineStart = i + 1;
-                    }
-                }
-            }
-            for (const auto& l : groupLinks) {
-                for (qsizetype k = l.start + offset; k < l.end + offset; ++k)
-                    m_flags[k] |= kLink;
-                modelItems.append({static_cast<int>(l.start + offset),
-                                   static_cast<int>(l.end - l.start), l.url});
-            }
-        }
-
-        if (m_multilineEmphasis) {
-            // Scan links first (excluding code and quote ranges)
-            Ranges fullExclude = fullCodeRanges;
-            for (const auto& r : quoteAbsRanges)
-                fullExclude.append(r);
-            const QVector<LinkSpan> fullLinks = scanLinks(fullText, fullExclude);
-
-            Ranges allExcluded = fullCodeRanges;
-            for (const auto& r : quoteAbsRanges)
-                allExcluded.append(r);
-            const auto fullLinkRanges = linkRangesOf(fullLinks);
-            for (const auto& r : fullLinkRanges)
-                allExcluded.append(r);
-
-            const QVector<EmphSpan> spans = processEmphasis(
-                scanDelimiters(fullText, allExcluded));
-            // Pass 1: content bits
-            for (const EmphSpan& s : spans) {
-                for (qsizetype i = qMax(qsizetype(0), s.start); i < qMin(docLen, s.end); ++i)
-                    m_flags[i] |= s.formatBits;
-            }
-            // Pass 2: delimiter bits (overwrite — ensures delimiter chars are ONLY blue)
-            for (const EmphSpan& s : spans) {
-                for (qsizetype i = qMax(qsizetype(0), s.openerStart); i < qMin(docLen, s.start); ++i)
-                    m_flags[i] = kDelimiter;
-                for (qsizetype i = qMax(qsizetype(0), s.end); i < qMin(docLen, s.closerEnd); ++i)
-                    m_flags[i] = kDelimiter;
-            }
-            // Pass 3: triple-backtick fences (always full-document)
-            applyCodeSpans(tripleFences, docLen, 0);
-            // Pass 4: single-backtick spans
-            applyCodeSpans(singleSpans, docLen, 0);
-            // Pass 5: link bits (OR in — allows combining with emphasis)
-            for (const auto& l : fullLinks) {
-                for (qsizetype k = l.start; k < l.end; ++k)
-                    m_flags[k] |= kLink;
-                modelItems.append({static_cast<int>(l.start),
-                                   static_cast<int>(l.end - l.start), l.url});
-            }
-        } else {
-            qsizetype lineStart = 0;
-            for (qsizetype i = 0; i <= docLen; ++i) {
-                if (i == docLen || fullText[i] == QLatin1Char('\n')) {
-                    const QString line        = fullText.mid(lineStart, i - lineStart);
-                    const qsizetype lineLen   = line.length();
-                    // Skip quote lines — handled in the quote-group pass above
-                    if (anyOverlap(quoteAbsRanges, lineStart, lineStart + lineLen)) {
-                        lineStart = i + 1;
-                        continue;
-                    }
-                    // Scan line code spans once; reuse for both delimiter filtering and pass 3.
-                    const QVector<CodeSpan> lineCodeSpans = scanCodeSpans(line);
-                    Ranges lineRanges;
-                    QVector<CodeSpan> lineSingleSpans;
-                    for (const CodeSpan& c : lineCodeSpans) {
-                        lineRanges.append({c.openerStart, c.closerEnd});
-                        if (c.contentStart - c.openerStart == 1)
-                            lineSingleSpans.append(c);
-                    }
-                    const auto tripleRelRanges = lineRelativeRanges(tripleAbsRanges, lineStart, lineLen);
-                    for (const auto& r : tripleRelRanges)
-                        lineRanges.append(r);
-
-                    // Scan links before delimiter recognition so URL characters are excluded
-                    const QVector<LinkSpan> lineLinks = scanLinks(line, lineRanges);
-                    Ranges lineExcluded = lineRanges;
-                    const auto lineLinkRanges = linkRangesOf(lineLinks);
-                    for (const auto& r : lineLinkRanges)
-                        lineExcluded.append(r);
-
-                    const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(line, lineExcluded));
-                    // Pass 1: content bits
-                    for (const EmphSpan& s : spans) {
-                        const qsizetype start = qMax(qsizetype(0), s.start) + lineStart;
-                        const qsizetype end   = qMin(lineLen, s.end) + lineStart;
-                        for (qsizetype k = start; k < end; ++k)
-                            m_flags[k] |= s.formatBits;
-                    }
-                    // Pass 2: delimiter bits (overwrite)
-                    for (const EmphSpan& s : spans) {
-                        const qsizetype opStart = qMax(qsizetype(0), s.openerStart) + lineStart;
-                        const qsizetype opEnd   = qMin(lineLen, s.start) + lineStart;
-                        for (qsizetype k = opStart; k < opEnd; ++k)
-                            m_flags[k] = kDelimiter;
-                        const qsizetype clStart = qMax(qsizetype(0), s.end) + lineStart;
-                        const qsizetype clEnd   = qMin(lineLen, s.closerEnd) + lineStart;
-                        for (qsizetype k = clStart; k < clEnd; ++k)
-                            m_flags[k] = kDelimiter;
-                    }
-                    // Pass 3: single-backtick spans (per-line, reuse already-scanned spans)
-                    applyCodeSpans(lineSingleSpans, lineLen, lineStart);
-                    // Pass 4 (per-line): link bits
-                    for (const auto& l : lineLinks) {
-                        for (qsizetype k = l.start + lineStart; k < l.end + lineStart; ++k)
-                            m_flags[k] |= kLink;
-                        modelItems.append({static_cast<int>(l.start + lineStart),
-                                           static_cast<int>(l.end - l.start), l.url});
-                    }
-
-                    lineStart = i + 1;
-                }
-            }
-            // Pass 4 (global): triple-backtick fences (full-document, already computed above)
-            applyCodeSpans(tripleFences, docLen, 0);
-        }
-
-        // ── Re-protect "> " prefixes ─────────────────────────────────────────
-        // Outer bold/italic spans that straddle a quote group OR their
-        // formatBits into every covered position, including the "> " prefix.
-        // Overwrite those positions back to kQuote-only so the prefix is
-        // always rendered as plain dark-blue with no emphasis styling.
-        for (const QuoteGroup& g : quoteGroups) {
-            const Ranges prefixRanges = quoteGroupPrefixRanges(fullText, g);
-            for (const auto& r : prefixRanges)
-                for (qsizetype k = r.first; k < r.second; ++k)
-                    m_flags[k] = kQuote;
-        }
-
+        collectLinks(doc, modelItems);
         m_linksModel->setLinks(modelItems);
     }
 
@@ -1144,29 +486,9 @@ QVariantMap ChatInputHighlighter::emphasisAtInsertion(int position) const
 
     fullText.insert(position, QLatin1Char('a'));
 
-    unsigned int bits = 0u;
-    if (m_multilineEmphasis) {
-        const Ranges ranges = codeRangesOf(fullText);
-        const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(fullText, ranges));
-        for (const EmphSpan& s : spans)
-            if (static_cast<qsizetype>(position) >= s.start &&
-                static_cast<qsizetype>(position) < s.end)
-                bits |= s.formatBits;
-    } else {
-        qsizetype lineStart = position;
-        while (lineStart > 0 && fullText[lineStart - 1] != QLatin1Char('\n'))
-            --lineStart;
-        qsizetype lineEnd = position + 1; // +1 for the inserted 'a'
-        while (lineEnd < fullText.length() && fullText[lineEnd] != QLatin1Char('\n'))
-            ++lineEnd;
-        const QString line = fullText.mid(lineStart, lineEnd - lineStart);
-        const qsizetype posInLine = position - lineStart;
-        const Ranges lineRanges = codeRangesOf(line);
-        const QVector<EmphSpan> spans = processEmphasis(scanDelimiters(line, lineRanges));
-        for (const EmphSpan& s : spans)
-            if (posInLine >= s.start && posInLine < s.end)
-                bits |= s.formatBits;
-    }
+    const Node doc = Markdown::parse(
+        fullText, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+    const unsigned int bits = emphasisBitsAt(doc, position);
 
     return {
         {QStringLiteral("bold"),          bool(bits & kBold)},
@@ -1184,53 +506,4 @@ QVariantMap ChatInputHighlighter::emphasisAt(int position) const
         {QStringLiteral("italic"),        bool(bits & kItalic)},
         {QStringLiteral("strikethrough"), bool(bits & kStrikeThrough)},
     };
-}
-
-QVariantList ChatInputHighlighter::parseCodeSpans(const QString& text) const
-{
-    QVariantList result;
-
-    // Pre-compute all code spans once; reuse for both triple and (in multiline mode) single spans.
-    const QVector<CodeSpan> allCodeSpans = scanCodeSpans(text);
-
-    // Triple-backtick fences: always full-document
-    QVector<CodeSpan> tripleFencesForParse = codeSpansByLen(allCodeSpans, 3);
-    if (m_formatUnclosedCodeFence) {
-        const qsizetype u = findOpenCodeFence(text);
-        if (u >= 0)
-            tripleFencesForParse.append({u, u + 3, text.length(), text.length()});
-    }
-    for (const CodeSpan& c : std::as_const(tripleFencesForParse)) {
-        QVariantMap m;
-        m[QStringLiteral("start")] = c.contentStart;
-        m[QStringLiteral("end")]   = c.contentEnd;
-        result.append(m);
-    }
-
-    // Single-backtick: per-line or full-text depending on multilineEmphasis
-    if (!m_multilineEmphasis) {
-        qsizetype lineStart = 0;
-        for (qsizetype i = 0; i <= text.length(); ++i) {
-            if (i == text.length() || text[i] == QLatin1Char('\n')) {
-                const QString line = text.mid(lineStart, i - lineStart);
-                const auto singleLineSpans = codeSpansByLen(scanCodeSpans(line), 1);
-                for (const CodeSpan& c : singleLineSpans) {
-                    QVariantMap m;
-                    m[QStringLiteral("start")] = c.contentStart + lineStart;
-                    m[QStringLiteral("end")]   = c.contentEnd   + lineStart;
-                    result.append(m);
-                }
-                lineStart = i + 1;
-            }
-        }
-    } else {
-        const auto singleSpans = codeSpansByLen(allCodeSpans, 1);
-        for (const CodeSpan& c : singleSpans) {
-            QVariantMap m;
-            m[QStringLiteral("start")] = c.contentStart;
-            m[QStringLiteral("end")]   = c.contentEnd;
-            result.append(m);
-        }
-    }
-    return result;
 }

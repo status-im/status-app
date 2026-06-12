@@ -39,3 +39,11 @@ target_link_libraries(StatusQQmlTests PRIVATE Qt::QuickTest Qt::Qml Qt::Quick
 add_test(NAME StatusQQmlTests WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND StatusQQmlTests -input "${CMAKE_CURRENT_SOURCE_DIR}"
 )
+
+###########
+# C++ Tests
+###########
+
+add_executable(MarkdownParserTest src/tst_markdownparser.cpp)
+target_link_libraries(MarkdownParserTest PRIVATE Qt::Test StatusQ)
+add_test(NAME MarkdownParserTest COMMAND MarkdownParserTest)

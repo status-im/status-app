@@ -1,0 +1,73 @@
+#include "StatusQ/markdownast.h"
+
+namespace {
+
+QString kindName(Markdown::NodeKind kind)
+{
+    using K = Markdown::NodeKind;
+    switch (kind) {
+    case K::Document:      return QStringLiteral("Document");
+    case K::Paragraph:     return QStringLiteral("Paragraph");
+    case K::QuoteBlock:    return QStringLiteral("QuoteBlock");
+    case K::CodeBlock:     return QStringLiteral("CodeBlock");
+    case K::Strong:        return QStringLiteral("Strong");
+    case K::Emphasis:      return QStringLiteral("Emphasis");
+    case K::Strikethrough: return QStringLiteral("Strikethrough");
+    case K::CodeSpan:      return QStringLiteral("CodeSpan");
+    case K::Link:          return QStringLiteral("Link");
+    case K::Text:          return QStringLiteral("Text");
+    case K::Delimiter:     return QStringLiteral("Delimiter");
+    }
+    return QStringLiteral("Unknown");
+}
+
+// Escapes a literal so a node fits on a single, readable line.
+QString escapeLiteral(const QString& s)
+{
+    QString out;
+    out.reserve(s.size() + 2);
+    for (const QChar c : s) {
+        if (c == QLatin1Char('\\'))      out += QStringLiteral("\\\\");
+        else if (c == QLatin1Char('\n')) out += QStringLiteral("\\n");
+        else if (c == QLatin1Char('\t')) out += QStringLiteral("\\t");
+        else if (c == QLatin1Char('"'))  out += QStringLiteral("\\\"");
+        else                             out += c;
+    }
+    return out;
+}
+
+void dumpNode(const Markdown::Node& node, int depth, bool withRanges, QString& out)
+{
+    using K = Markdown::NodeKind;
+
+    out += QString(depth * 2, QLatin1Char(' '));
+    out += kindName(node.kind);
+
+    if (withRanges)
+        out += QStringLiteral(" [%1,%2)").arg(node.start).arg(node.end);
+
+    if (node.kind == K::Text || node.kind == K::Delimiter)
+        out += QStringLiteral(" \"%1\"").arg(escapeLiteral(node.literal));
+    else if (node.kind == K::Link)
+        out += QStringLiteral(" \"%1\"").arg(escapeLiteral(node.destination));
+
+    out += QLatin1Char('\n');
+
+    for (const auto& child : node.children)
+        dumpNode(child, depth + 1, withRanges, out);
+}
+
+} // namespace
+
+namespace Markdown {
+
+QString dump(const Node& node, bool withRanges)
+{
+    QString out;
+    dumpNode(node, 0, withRanges, out);
+    if (out.endsWith(QLatin1Char('\n')))
+        out.chop(1);
+    return out;
+}
+
+} // namespace Markdown
