@@ -33,7 +33,11 @@ elif hostOS == "windows":
   --app:gui
   --tlsEmulation:off
   --debugger:native # passes "-g" to the C compiler
-  switch("passL", "-Wl,-as-needed")
+  # `-Wl,-as-needed` is a GNU-ld flag. The main client is built with clang-cl
+  # (MSVC ABI) so it can link the MSVC-built Qt; lld-link doesn't understand it.
+  # Keep it only for the gcc/mingw builds (e.g. the standalone Windows launcher).
+  when defined(gcc):
+    switch("passL", "-Wl,-as-needed")
 elif hostOS == "linux":
   echo "Building for Linux"
   --dynlibOverrideAll # don't use dlopen()
@@ -60,6 +64,15 @@ switch("define", "chronicles_log_level=trace")
 # header Qt removed after 6.4 (absent in 6.11+). seaqt_compat/ provides a shim of
 # that name so the *generated code stays pristine* and still compiles on newer Qt.
 switch("passC", "-I" & thisDir() & "/seaqt_compat")
+
+when defined(ios):
+  # Qt 6.11's qyieldcpu.h (pulled in by qglobal.h, i.e. every Qt header) calls the
+  # ARM `__yield` intrinsic guarded by `#if __has_builtin(__yield)`. Xcode's clang
+  # has the builtin and lowers it to a YIELD instruction (no link symbol), but
+  # still pedantically diagnoses it as an implicit declaration — now an error by
+  # default. Downgrade so the seaqt C++ glue compiles. (Android's NDK clang takes a
+  # different branch and is unaffected.)
+  switch("passC", "-Wno-error=implicit-function-declaration")
 
 switch("passC", "-fno-omit-frame-pointer")
 switch("passL", "-fno-omit-frame-pointer")

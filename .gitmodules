@@ -128,3 +128,6 @@
 [submodule "vendor/nimqml-seaqt"]
 	path = vendor/nimqml-seaqt
 	url = https://github.com/seaqt/nimqml-seaqt.git
+[submodule "vendor/prl-to-pc"]
+	path = vendor/prl-to-pc
+	url = https://github.com/alexjba/prl-to-pc.git

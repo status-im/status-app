@@ -152,8 +152,6 @@ proc initializeWebView*() =
 proc tryEnableThreadedRenderer*() =
   dos_qguiapplication_try_enable_threaded_renderer()
 
-proc installEventFilter*(application: QGuiApplication, event: StatusEvent) =
-  dos_qguiapplication_installEventFilter(event.vptr)
 
 # nimqml-seaqt wraps `quit` but not `exit`/`icon`. DOtherSide's impls act on the
 # global qApp (== the seaqt-created application), so they are safe here.
@@ -164,25 +162,29 @@ proc icon*(application: QGuiApplication, filename: string) =
   dos_qguiapplication_icon(filename.cstring)
 
 # QNetworkAccessManagerFactory (custom disk-cache factory)
-proc delete*(self: QNetworkAccessManagerFactory) =
-  self.vptr = nil
+proc delete*(self: QNetworkAccessManagerFactory)
 
 proc newQNetworkAccessManagerFactory*(tmpPath: string): QNetworkAccessManagerFactory =
   new(result, delete)
   result.vptr = dos_qqmlnetworkaccessmanagerfactory_create(tmpPath.cstring)
+
+proc delete*(self: QNetworkAccessManagerFactory) =
+  self.vptr = nil
 
 proc setNetworkAccessManagerFactory*(self: QQmlApplicationEngine,
     factory: QNetworkAccessManagerFactory) =
   dos_qqmlapplicationengine_setNetworkAccessManagerFactory(self.vptr, factory.vptr)
 
 # OSNotification
-proc delete*(self: StatusOSNotification) =
-  dos_osnotification_delete(self.vptr)
-  self.vptr = nil
+proc delete*(self: StatusOSNotification)
 
 proc newStatusOSNotification*(): StatusOSNotification =
   new(result, delete)
   result.vptr = dos_osnotification_create()
+
+proc delete*(self: StatusOSNotification) =
+  dos_osnotification_delete(self.vptr)
+  self.vptr = nil
 
 proc showNotification*(self: StatusOSNotification, title: string, message: string,
     identifier: string) =
@@ -193,6 +195,12 @@ proc showIconBadgeNotification*(self: StatusOSNotification, notificationsCount: 
   dos_osnotification_show_badge_notification(self.vptr, notificationsCount)
 
 # UrlSchemeEvent (deep links)
+proc delete*(self: StatusEvent)
+
+proc newStatusUrlSchemeEventObject*(): StatusEvent =
+  new(result, delete)
+  result.vptr = dos_event_create_urlSchemeEvent()
+
 proc delete*(self: StatusEvent) =
   dos_event_delete(self.vptr)
   self.vptr = nil
@@ -200,33 +208,36 @@ proc delete*(self: StatusEvent) =
 proc setInstance*(self: StatusEvent) =
   dos_event_set_urlSchemeEvent_instance(self.vptr)
 
-proc newStatusUrlSchemeEventObject*(): StatusEvent =
-  new(result, delete)
-  result.vptr = dos_event_create_urlSchemeEvent()
+proc installEventFilter*(application: QGuiApplication, event: StatusEvent) =
+  dos_qguiapplication_installEventFilter(event.vptr)
 
 # SingleInstance
+proc delete*(self: SingleInstance)
+
+proc newSingleInstance*(uniqueName: string, eventStr: string): SingleInstance =
+  new(result, delete)
+  result.vptr = dos_singleinstance_create(uniqueName.cstring, eventStr.cstring)
+
 proc delete*(self: SingleInstance) =
   if self.vptr.isNil:
     return
   dos_singleinstance_delete(self.vptr)
   self.vptr = nil
 
-proc newSingleInstance*(uniqueName: string, eventStr: string): SingleInstance =
-  new(result, delete)
-  result.vptr = dos_singleinstance_create(uniqueName.cstring, eventStr.cstring)
-
 proc secondInstance*(self: SingleInstance): bool =
   not dos_singleinstance_isfirst(self.vptr)
 
 # QSettings
-proc delete*(self: QSettings) =
-  dos_qsettings_delete(self.vptr)
-  self.vptr = nil
+proc delete*(self: QSettings)
 
 proc newQSettings*(fileName: string,
     format: QSettingsFormat = QSettingsFormat.NativeFormat): QSettings =
   new(result, delete)
   result.vptr = dos_qsettings_create(fileName.cstring, format.int)
+
+proc delete*(self: QSettings) =
+  dos_qsettings_delete(self.vptr)
+  self.vptr = nil
 
 proc value*(self: QSettings, key: string, defaultValue: QVariant = newQVariant()): QVariant =
   newQVariantTakingPtr(dos_qsettings_value(self.vptr, key.cstring, defaultValue.vptr))
@@ -244,13 +255,15 @@ proc endGroup*(self: QSettings) =
   dos_qsettings_end_group(self.vptr)
 
 # QTimer
-proc delete*(self: QTimer) =
-  dos_qtimer_delete(self.vptr)
-  self.vptr = nil
+proc delete*(self: QTimer)
 
 proc newQTimer*(): QTimer =
   new(result, delete)
   result.vptr = dos_qtimer_create()
+
+proc delete*(self: QTimer) =
+  dos_qtimer_delete(self.vptr)
+  self.vptr = nil
 
 proc setInterval*(self: QTimer, interval: int) =
   dos_qtimer_set_interval(self.vptr, interval)

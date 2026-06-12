@@ -37,4 +37,27 @@ real=$(PATH=$clean_path command -v pkg-config 2>/dev/null) \
   || real=$(PATH=$clean_path command -v pkgconf 2>/dev/null) \
   || { echo "pkg-config wrapper: no real pkg-config/pkgconf found on PATH" >&2; exit 127; }
 
+# Multi-arch (Android) kits name their .pc files with an ABI suffix
+# (Qt6Core_arm64-v8a.pc), but seaqt's compile-time gorge() queries the bare
+# module name (Qt6Core). When PKG_CONFIG_ARCH is set, append it to any
+# Qt<version>… package-name argument so the query resolves. Flags and
+# already-suffixed names are left untouched. Unset (desktop) → no rewriting.
+if [ -n "$PKG_CONFIG_ARCH" ]; then
+  count=$#
+  while [ "$count" -gt 0 ]; do
+    a=$1
+    shift
+    case $a in
+      Qt[0-9]*)
+        case $a in
+          *_"$PKG_CONFIG_ARCH") ;;                 # already suffixed
+          *) a=${a}_${PKG_CONFIG_ARCH} ;;
+        esac
+        ;;
+    esac
+    set -- "$@" "$a"
+    count=$((count - 1))
+  done
+fi
+
 exec "$real" --define-prefix "$@"

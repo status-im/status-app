@@ -45,6 +45,50 @@ fi
 echo "Building status-client for $ARCH using compiler: $CC"
 
 cd "$STATUS_DESKTOP"
+
+# --- seaqt Qt pkg-config wiring (Android + iOS) ----------------------------
+# seaqt discovers Qt at nim-compile time via gorge("pkg-config Qt6Core").
+# Neither mobile Qt kit ships .pc files (only .prl), so we generate them from
+# the kit's .prl via prl-to-pc, put the in-repo .pcwrap on PATH (it forces
+# --define-prefix and, when PKG_CONFIG_ARCH is set, rewrites bare module names
+# to the arch-suffixed package names), and point PKG_CONFIG_PATH at the output.
+#   - Android: libs are arch-suffixed (libQt6Core_arm64-v8a.so) → .pc named
+#     Qt6Core_<abi>.pc, so we set PKG_CONFIG_ARCH for the wrapper rewrite.
+#   - iOS: modules are frameworks (QtCore.framework) → .pc named Qt6Core.pc
+#     directly, so NO arch rewrite; cflags use -F/-I framework Headers. The nim
+#     build is --app:staticlib (no link), so framework *linking* is the Xcode
+#     app project's job; only the framework cflags matter here.
+# prl-to-pc is vendored as a submodule at vendor/prl-to-pc (override with
+# $PRL_TO_PC_DIR for a local checkout).
+if [[ "$OS" == "android" || "$OS" == "ios" ]]; then
+    PRL_TO_PC_DIR="${PRL_TO_PC_DIR:-$STATUS_DESKTOP/vendor/prl-to-pc}"
+    PRL_TO_PC_BIN="$PRL_TO_PC_DIR/prl_to_pc"
+    if [[ "$OS" == "android" ]]; then
+        PC_TAG="$ANDROID_ABI"; PC_MARKER="Qt6Core_${ANDROID_ABI}.pc"
+    else
+        PC_TAG="ios"; PC_MARKER="Qt6Core.pc"
+    fi
+    QT_PC_DIR="$STATUS_DESKTOP/mobile/build/qt-pkgconfig/$PC_TAG"
+
+    if [[ ! -x "$PRL_TO_PC_BIN" ]]; then
+        echo "Building prl-to-pc at $PRL_TO_PC_DIR"
+        ( cd "$PRL_TO_PC_DIR" && nim c --skipParentCfg:on -d:release --hints:off \
+            --path:"$STATUS_DESKTOP/vendor/nim-regex/src" --path:"$STATUS_DESKTOP/vendor/nim-unicodedb/src" \
+            -o:prl_to_pc src/prl_to_pc.nim )
+    fi
+    # Generate once per kit (keyed on the Core .pc existing).
+    if [[ ! -f "$QT_PC_DIR/$PC_MARKER" ]]; then
+        echo "Generating Qt .pc files for $PC_TAG from $QT_DIR"
+        mkdir -p "$QT_PC_DIR"
+        "$PRL_TO_PC_BIN" "$QT_DIR/lib" "$QT_PC_DIR" "$QT_DIR" "$QT_DIR/bin"
+    fi
+
+    [[ "$OS" == "android" ]] && export PKG_CONFIG_ARCH="$ANDROID_ABI"
+    export PKG_CONFIG_PATH="$QT_PC_DIR${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+    export PATH="$STATUS_DESKTOP/.pcwrap:$PATH"
+fi
+# ---------------------------------------------------------------------------
+
 # build nim compiler with host env
 
 # setting compile time feature flags
