@@ -19,7 +19,7 @@ Rectangle {
     required property string userProfileColor
 
     required property string keyPairKeyUid
-    required property bool keyPairMigratedToKeycard
+    required property bool keyPairMigratedToColdWallet
     required property string keyPairName
     required property string keyPairIcon
     required property string keyPairImage
@@ -56,7 +56,7 @@ Rectangle {
             color: StatusColors.transparent
             title: root.keyPairName
             visible: !!root.keyPairName
-            titleTextIcon: root.keyPairMigratedToKeycard? "keycard": ""
+            titleTextIcon: root.keyPairMigratedToColdWallet? "keycard": ""
             subTitle: root.keyPairLocation
             statusListItemSubTitle.textFormat: Qt.RichText
             statusListItemSubTitle.color: root.keyPairLocationColor

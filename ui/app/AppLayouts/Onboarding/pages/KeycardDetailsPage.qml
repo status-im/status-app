@@ -172,7 +172,7 @@ OnboardingPage {
                                       : ""
 
                     keyPairKeyUid: root.keyUid
-                    keyPairMigratedToKeycard: true
+                    keyPairMigratedToColdWallet: true
                     keyPairName: stateInfo.matchedProfile
                                  ? stateInfo.matchedProfile.username
                                  : ""
