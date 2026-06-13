@@ -50,6 +50,7 @@ SettingsContentBase {
         StatusListItem {
             id: allowNewContactRequest
 
+            objectName: "MessagingView_ReceiveFromNonContacts_StatusListItem"
             Layout.fillWidth: true
             implicitHeight: 64
 
@@ -58,6 +59,7 @@ SettingsContentBase {
             components: [
                 StatusSwitch {
                     id: switch3
+                    objectName: "MessagingView_ReceiveFromNonContacts_Switch"
                     checked: !root.messagingSettingsStore.messagesFromContactsOnly
                     onCheckedChanged: {
                         // messagesFromContactsOnly needs to be accessed from the module (view),
