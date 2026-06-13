@@ -283,6 +283,7 @@ Control {
                         ChatIcon {
                             id: emojiButton
 
+                            objectName: "statusChatInputEmojiButton"
                             icon.name: "chat/smile"
                         }
 

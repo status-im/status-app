@@ -7,6 +7,7 @@ import StatusQ.Core.Theme
 
 StatusBaseText {
     id: root
+    objectName: "messageTimestamp"
     property double timestamp: 0
     property bool showFullTimestamp
 
@@ -14,6 +15,8 @@ StatusBaseText {
     font.pixelSize: Theme.asideTextFontSize
     visible: !!text
     text: d.formattedLabel
+    Accessible.role: Accessible.StaticText
+    Accessible.name: d.formattedLabel
 
     QtObject {
         id: d

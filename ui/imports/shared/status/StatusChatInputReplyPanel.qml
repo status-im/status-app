@@ -10,6 +10,8 @@ import StatusQ.Core.Theme
 Control {
     id: root
 
+    objectName: "statusChatInputReplyArea"
+
     property string nameText
     property string messageText
     property string extraContentText

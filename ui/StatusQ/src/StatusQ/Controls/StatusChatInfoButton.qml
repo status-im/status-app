@@ -124,6 +124,8 @@ Button {
                     Layout.maximumWidth: Math.ceil(implicitWidth)
                     objectName: "statusChatInfoButtonNameText"
                     text: root.title
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: root.title
                     color: root.muted ? Theme.palette.directColor5 : Theme.palette.directColor1
                     font.weight: Font.Medium
                 }

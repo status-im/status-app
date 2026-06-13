@@ -103,6 +103,7 @@ RowLayout {
 
         StatusFlatRoundButton {
             id: membersButton
+            objectName: "membersButton"
             visible: {
                 if(!chatContentModule)
                     return false

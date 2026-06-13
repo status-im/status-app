@@ -232,6 +232,8 @@ StatusDropdown {
 
                 StatusEmoji {
                     objectName: "statusEmoji_" + model.shortname.replace(/:/g, "")
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: model.emoji
                     anchors.centerIn: parent
                     width: d.imageWidth
                     height: d.imageWidth
