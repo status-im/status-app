@@ -13,6 +13,8 @@ import utils
 StatusSelect {
     id: root
 
+    objectName: "AddAccountPopup-OriginSelector"
+
     property string userProfilePublicKey
     property var originModel
     property var selectedOrigin
