@@ -53,7 +53,7 @@ Row {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 hoverEnabled: true
-                onClicked: imageClicked(chatImage)
+                onClicked: imageArea.imageClicked(chatImage)
             }
 
             RoundButton {

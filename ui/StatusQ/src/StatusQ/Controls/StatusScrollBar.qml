@@ -52,7 +52,6 @@ T.ScrollBar {
         opacity: enabled && (root.hovered || root.active || (root.policy === T.ScrollBar.AlwaysOn)) ? 1.0 : 0.0
         radius: Math.min(width, height) / 2
 
-        Behavior on opacity { NumberAnimation { duration: 100 } }
+        Behavior on opacity { NumberAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
     }
 }
-

@@ -28,7 +28,7 @@ QtObject {
     signal openDownloadModalRequested(bool available, string version, string url)
     signal openChangeProfilePicPopup(var cb)
     signal openBackUpSeedPopup()
-    signal openImagePopup(var image, string url, bool plain)
+    signal openImagePopup(var image, string url)
     signal openVideoPopup(string url)
     signal openProfilePopupRequested(string publicKey, var parentPopup, var cb)
     signal openMarkAsIDVerifiedPopup(string publicKey, var cb)

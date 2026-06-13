@@ -9,7 +9,6 @@ StatusMenu {
 
     property url url
     property string imageSource
-    property string domain
     property bool isGif: root.imageSource.toLowerCase().endsWith(".gif")
     property bool isVideo: root.imageSource.toLowerCase().endsWith(".mp4")
 

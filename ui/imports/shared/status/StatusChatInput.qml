@@ -784,7 +784,7 @@ Rectangle {
                         root.fileUrlsAndSources = urls
                         validateImages(root.fileUrlsAndSources)
                     }
-                    onImageClicked: (chatImage) => Global.openImagePopup(chatImage, "", false)
+                    onImageClicked: (chatImage) => Global.openImagePopup(chatImage, "")
                     onLinkReload: (link) => root.linkPreviewReloaded(link)
                     onLinkClicked: (link) => Global.requestOpenLink(link)
                     onEnableLinkPreview: () => root.enableLinkPreview()

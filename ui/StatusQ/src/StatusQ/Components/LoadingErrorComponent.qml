@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -29,19 +30,19 @@ Control {
     id: root
 
     /*!
-        \qmlproperty bool LoadingComponent::radius
+        \qmlproperty int LoadingErrorComponent::radius
         This property lets user set custom radius
     */
     property int radius: 4
 
     /*!
-        \qmlproperty string LoadingComponent::text
+        \qmlproperty string LoadingErrorComponent::text
         This property lets user set error message
     */
     property string text: qsTr("Failed\nto load")
 
     /*!
-        \qmlproperty string LoadingComponent::icon
+        \qmlproperty string LoadingErrorComponent::icon
         This property lets user set error icon
     */
     property alias icon: errorIcon.icon
@@ -63,10 +64,14 @@ Control {
                 color: Theme.palette.directColor7
             }
             StatusBaseText {
+                width: root.availableWidth
                 anchors.horizontalCenter: parent.horizontalCenter
                 horizontalAlignment: Qt.AlignHCenter
                 color: Theme.palette.directColor6
                 text: root.text
+                maximumLineCount: 3
+                wrapMode: Text.Wrap
+                elide: Text.ElideRight
             }
         }
     }

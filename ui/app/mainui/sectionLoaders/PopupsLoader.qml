@@ -182,8 +182,8 @@ Loader {
         function onOpenDownloadModalRequested(available, version, url) {
             root.invoke(() => root.item.openDownloadModal(available, version, url))
         }
-        function onOpenImagePopup(image, url, plain) {
-            root.invoke(() => root.item.openImagePopup(image, url, plain))
+        function onOpenImagePopup(image, url) {
+            root.invoke(() => root.item.openImagePopup(image, url))
         }
         function onOpenVideoPopup(url) {
             root.invoke(() => root.item.openVideoPopup(url))

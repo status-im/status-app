@@ -43,5 +43,7 @@ AnimatedImage {
     */
     readonly property bool isError: status === AnimatedImage.Error
 
+    readonly property bool isEmpty: status === AnimatedImage.Null
+
     fillMode: AnimatedImage.PreserveAspectFit
 }

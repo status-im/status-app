@@ -15812,6 +15812,21 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StatusImageModal</name>
+    <message>
+        <source>Failed to load %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>empty image</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">닫기</translation>
+    </message>
+</context>
+<context>
     <name>StatusImageSelector</name>
     <message>
         <source>Supported image formats (%1)</source>

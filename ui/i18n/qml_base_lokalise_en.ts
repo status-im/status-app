@@ -19340,6 +19340,24 @@
     </message>
   </context>
   <context>
+    <name>StatusImageModal</name>
+    <message>
+      <source>Failed to load %1</source>
+      <comment>StatusImageModal</comment>
+      <translation>Failed to load %1</translation>
+    </message>
+    <message>
+      <source>empty image</source>
+      <comment>StatusImageModal</comment>
+      <translation>empty image</translation>
+    </message>
+    <message>
+      <source>Close</source>
+      <comment>StatusImageModal</comment>
+      <translation>Close</translation>
+    </message>
+  </context>
+  <context>
     <name>StatusImageSelector</name>
     <message>
       <source>Supported image formats (%1)</source>

@@ -364,7 +364,7 @@ Item {
             manualMaxDimension: 240
             interactive: !isError && !isEmpty
             enabled: interactive
-            onImageClicked: (image, plain) => Global.openImagePopup(image, "", plain)
+            onImageClicked: (image, plain) => Global.openImagePopup(image, "")
             onVideoClicked: (url) => Global.openVideoPopup(url)
             onOpenImageContextMenu: (url, isGif, x, y) => imageContextMenu.createObject(this, { imageSource: url, isGif: isGif, isVideo: false }).popup(x, y)
             onOpenVideoContextMenu: (url, x, y) => imageContextMenu.createObject(this, { imageSource: url, url: url, isVideo: true, isGif: false }).popup(x, y)

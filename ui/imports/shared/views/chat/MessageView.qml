@@ -504,7 +504,7 @@ Loader {
             case Qt.LeftButton:
             case Qt.NoButton: // touch event
                 d.preventVirtualKeyboardOpening()
-                Global.openImagePopup(image, url, false)
+                Global.openImagePopup(image, url)
                 break;
             case Qt.RightButton:
                 d.preventVirtualKeyboardOpening()

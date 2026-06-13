@@ -170,12 +170,12 @@ QtObject {
         openPopup(downloadPageComponent, popupProperties)
     }
 
-    function openImagePopup(image, url, plain) {
-        openPopup(imagePopupComponent, {image: image, url: url, plain: plain})
+    function openImagePopup(image, url) {
+        openPopup(imagePopupComponent, {image, url})
     }
 
     function openVideoPopup(url) {
-        openPopup(videoPopupComponent, { url: url })
+        openPopup(videoPopupComponent, { url })
     }
 
     function openProfilePopup(publicKey: string, parentPopup, cb) {
