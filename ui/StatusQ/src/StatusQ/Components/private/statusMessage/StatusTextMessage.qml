@@ -94,6 +94,13 @@ Item {
                                              chatTextLoader.hoveredLink, !!root.disabledTooltipText)
         }
 
+        // Plain message body for accessibility. The rendered text is RichText
+        // (HTML), which Qt's Android a11y backend does not surface, so the body
+        // is otherwise invisible to screen readers and e2e. Expose the unstyled
+        // text via Accessible.name on the text element instead.
+        readonly property string plainText:
+            Utils.stripHtmlTags(root.messageDetails.messageText)
+
         function showDisabledTooltipForAddressEnsName(link) {
             return link.startsWith('//send-via-personal-chat//') && !!root.disabledTooltipText
         }
@@ -136,6 +143,8 @@ Item {
         StatusBaseText {
             objectName: "StatusTextMessage_chatText"
             text: d.text
+            Accessible.role: Accessible.StaticText
+            Accessible.name: d.plainText
             color: root.isReply ? Theme.palette.baseColor1 : Theme.palette.directColor1
             font.pixelSize: root.isReply ? Theme.secondaryTextFontSize : Theme.primaryTextFontSize
             textFormat: Text.RichText
@@ -155,6 +164,8 @@ Item {
         id: chatTextDesktopComp
         StatusTextArea {
             objectName: "StatusTextMessage_chatText"
+            Accessible.role: Accessible.StaticText
+            Accessible.name: d.plainText
             background: null
             leftPadding: 0
             rightPadding: 0
