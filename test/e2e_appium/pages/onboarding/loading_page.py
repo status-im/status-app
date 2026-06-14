@@ -16,6 +16,7 @@ from selenium.common.exceptions import (
 from ..base_page import BasePage
 from locators.onboarding.loading_screen_locators import LoadingScreenLocators
 from locators.wallet.accounts_locators import WalletAccountsLocators
+from utils.gestures import Gestures
 
 
 class SplashScreen(BasePage):
@@ -45,15 +46,28 @@ class SplashScreen(BasePage):
             )
             return False
         except WebDriverException as e:
+            # Qt's a11y tree is empty until the first input after the splash, so
+            # a stale error here means loading is completing, not a dead session.
+            # Wake the tree with a tap, then re-confirm the splash is gone.
             self.logger.warning(
                 f"WebDriver error during loading wait: {type(e).__name__}: {e}"
             )
             try:
-                _ = self.driver.current_url
-            except (WebDriverException, InvalidSessionIdException, NoSuchWindowException):
-                self.logger.error("WebDriver session appears to be dead")
+                Gestures(self.driver).activation_tap()
+            except Exception as tap_exc:
+                self.logger.warning("activation tap after stale event failed: %s", tap_exc)
+            try:
+                WebDriverWait(self.driver, 30).until(
+                    EC.invisibility_of_element_located(self.locators.SPLASH_SCREEN_PARTIAL)
+                )
+                self.logger.info("Loading completed (a11y tree woken by tap; splash gone)")
+                return True
+            except (NoSuchWindowException, InvalidSessionIdException):
+                self.logger.error("WebDriver session genuinely ended during loading wait")
                 return False
-            return False
+            except WebDriverException:
+                self.logger.warning("Splash still present after activation tap; loading not confirmed")
+                return False
         except TimeoutException:
             self.logger.warning(
                 f"Loading did not complete within {timeout} seconds; checking wallet state"

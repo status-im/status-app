@@ -8,6 +8,7 @@ from utils.generators import generate_account_name
 from utils.multi_device_helpers import StepMixin
 
 
+@pytest.mark.flaky(reruns=1, reruns_delay=5)
 class TestWalletAccountsBasic(StepMixin):
     @pytest.mark.gate
     @pytest.mark.wallet

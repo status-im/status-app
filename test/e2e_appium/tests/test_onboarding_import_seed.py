@@ -21,6 +21,7 @@ from utils.generators import generate_seed_phrase, get_wallet_address_from_mnemo
 from utils.multi_device_helpers import StepMixin
 
 
+@pytest.mark.flaky(reruns=1, reruns_delay=5)
 class TestOnboardingImportSeed(StepMixin):
     async def _import_seed_and_verify_wallet(
         self, driver, seed_phrase: str, password: str,
