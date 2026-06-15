@@ -3,7 +3,7 @@ import QtQuick
 QtObject {
     id: root
 
-    signal keycardSignSuccess(string r, string s, int v)
+    signal keycardSignSuccess(string signature)
     signal keycardSignError(string error)
 
     readonly property bool ready: d.ready
@@ -18,8 +18,8 @@ QtObject {
     readonly property Connections signingModuleConnections: Connections {
         target: d.mainModuleInst.signingModule ?? null
 
-        function onKeycardSignSuccess(r, s, v) {
-            root.keycardSignSuccess(r, s, v)
+        function onKeycardSignSuccess(signature) {
+            root.keycardSignSuccess(signature)
         }
 
         function onKeycardSignError(error) {
