@@ -28,6 +28,7 @@ Loader {
 
     required property HandlersManagerLoader popupHandler
 
+    property bool isPortraitMode: false
     property real leftPanelWidthOverride: 0
 
     asynchronous: false
@@ -100,6 +101,7 @@ Loader {
             connectorController:        Qt.binding(() => WalletStores.RootStore.dappsConnectorController),
             isDebugEnabled:             Qt.binding(() => root.advancedStore.isDebugEnabled),
             transactionStore:           Qt.binding(() => root.transactionStore),
+            invertedLayout:             Qt.binding(() => root.isPortraitMode),
             leftPanelWidthOverride:     Qt.binding(() => root.leftPanelWidthOverride),
             "anchors.fill":             root,
         })
