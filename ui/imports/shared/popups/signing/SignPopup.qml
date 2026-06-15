@@ -59,9 +59,8 @@ PopupBase {
     Connections {
         target: root.store
 
-        function onKeycardSignSuccess(r, s, v) {
+        function onKeycardSignSuccess(signature) {
             root.handleKeycardSuccess()
-            const signature = r + s + v.toString(16).padStart(2, '0')
             root.signingSuccess(root.reason, signature, root.keyUid)
             root.close()
         }
