@@ -2,6 +2,7 @@
 
 In this folder, you can find the roadmap files for the Status App.
 
+- [Second half of 2026 (H2)](2026-H2.md)
 - [First half of 2026 (H1)](2026-H1.md)
 - [Second half of 2025 (H2)](2025-H2.md) 
 
