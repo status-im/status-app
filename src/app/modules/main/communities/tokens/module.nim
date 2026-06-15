@@ -192,15 +192,6 @@ proc signOnKeycard(self: Module) =
   error "signing a community transaction on keycard is temporarily unavailable"
   self.resetTempValues()
 
-proc getRSVFromSignature(self: Module, signature: string): (string, string, string) =
-  let finalSignature = singletonInstance.utils.removeHexPrefix(signature)
-  if finalSignature.len != SIGNATURE_LEN:
-    return ("", "", "")
-  let r = finalSignature[0..63]
-  let s = finalSignature[64..127]
-  let v = finalSignature[128..129]
-  return (r, s, v)
-
 method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransactionsForSigningDto) =
   var res = ""
   try:
@@ -229,7 +220,7 @@ method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransa
         (signature, err) = self.controller.signMessage(txForSigning.signingDetails.address, finalPassword, h)
         if err.len > 0:
           raise newException(CatchableError, "signing transaction failed: " & err)
-        self.tempResolvedSignatures[h] = self.getRSVFromSignature(signature)
+        self.tempResolvedSignatures[h] = utils.getRSVFromSignature(signature)
       self.sendSignedTransactions()
   except Exception as e:
     error "signMessageWithCallback failed: ", msg=e.msg
