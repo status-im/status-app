@@ -2017,6 +2017,7 @@ Item {
                         popupHandler: popupRequestsHandler
 
                         leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
+                        isPortraitMode: appMain.isPortraitMode
                     }
 
                     ProfileLoader {
