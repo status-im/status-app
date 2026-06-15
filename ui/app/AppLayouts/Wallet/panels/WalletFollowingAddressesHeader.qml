@@ -132,6 +132,8 @@ Control {
             asset.mirror: true
 
             tooltip.text: qsTr("Last refreshed %1").arg(root.lastReloadedTime)
+            tooltip.orientation: StatusToolTip.Orientation.Bottom
+            tooltip.y: height + Theme.padding
 
             loading: root.loading
             interactive: !loading && !throttleTimer.running
