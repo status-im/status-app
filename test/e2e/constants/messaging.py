@@ -4,6 +4,7 @@ from enum import Enum
 class Messaging(Enum):
     WELCOME_GROUP_MESSAGE = "Welcome to the beginning of the "
     CONTACT_REQUEST_SENT = 'Contact Request Sent'
+    CONTACT_REQUEST_ALREADY_SENT = 'You already sent a contact request.'
     NO_FRIENDS_ITEM = "You don’t have any contacts yet. Invite your friends to start chatting."
     NEW_CONTACT_REQUEST = 'New Contact Request'
     MESSAGE_NOTE_IDENTITY_REQUEST = 'Ask a question only they can answer'

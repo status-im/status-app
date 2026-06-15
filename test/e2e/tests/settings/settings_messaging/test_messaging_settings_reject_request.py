@@ -62,14 +62,15 @@ def test_messaging_settings_rejecting_request(multiple_instances):
             assert str(contacts_settings.no_friends_item_text) == Messaging.NO_FRIENDS_ITEM.value
             assert contacts_settings.invite_friends_button.is_visible
 
-        with step(f'User {user_one.name}, send contact request to {user_two.name} again via messaging settings'):
+        with step(f'User {user_one.name}, verify that resending contact request to {user_two.name} is blocked in messaging settings'):
             aut_one.attach()
             main_window.prepare()
             settings = main_window.left_panel.open_settings()
             messaging_settings = settings.left_panel.open_messaging_settings()
             contacts_settings = messaging_settings.open_contacts_settings()
             contact_request_popup = contacts_settings.open_contact_request_form()
-            contact_request_popup.send(chat_key, f'Hello again {user_two.name}')
+            contact_request_popup.verify_resend_blocked(chat_key, f'Hello again {user_two.name}')
+            contact_request_popup.close()
 
         with step(f'Verify that pending requests tab is not active for {user_two.name}'):
             aut_two.attach()
