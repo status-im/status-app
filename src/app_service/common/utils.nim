@@ -171,3 +171,28 @@ proc communityKeyToTokenKey*(communityTokenKey: string): string =
     raise newException(ValueError, "unsupported community token format")
 
   return createTokenKey(parts[0].parseInt(), parts[1])
+
+proc removeHexPrefix*(value: string): string =
+  if value.startsWith("0x"):
+    return value[2..^1]
+  return value
+
+proc getRSVFromSignature*(signature: string): (string, string, string) =
+  let finalSignature = removeHexPrefix(signature)
+  if finalSignature.len != wallet_constants.SIGNATURE_LEN:
+    return ("", "", "")
+  let
+    r = finalSignature[0 ..< wallet_constants.SIGNATURE_R_LEN]
+    vStartIndex = wallet_constants.SIGNATURE_R_LEN + wallet_constants.SIGNATURE_S_LEN
+    s = finalSignature[wallet_constants.SIGNATURE_R_LEN ..< vStartIndex]
+    vRaw = finalSignature[vStartIndex ..< vStartIndex + wallet_constants.SIGNATURE_V_LEN]
+  # Normalize V to the recovery id (00/01), since signatures coming from the signing bus are in yellow-paper form (1b/1c i.e. 27/28),
+  # but the consumers of this proc (router transaction signing for send/swap and community tokens) expect the recovery id.
+  var v = vRaw
+  try:
+    let vInt = parseHexInt(vRaw)
+    let recoveryId = if vInt >= 27: vInt - 27 else: vInt
+    v = toLowerAscii(toHex(recoveryId, wallet_constants.SIGNATURE_V_LEN))
+  except ValueError:
+    discard
+  return (r, s, v)

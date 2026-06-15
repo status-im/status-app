@@ -7,6 +7,7 @@ import chronicles
 
 # Services as instances shouldn't be used in this class, just some general/global procs
 import ../../app_service/common/conversion
+import ../../app_service/common/utils as common_utils
 import ../../app_service/service/visual_identity/service as procs_from_visual_identity_service
 import ../../backend/accounts as status_accounts
 import ../../constants
@@ -185,9 +186,7 @@ QtObject:
     changeCommunityKeyCompression(publicKey)
 
   proc removeHexPrefix*(self: Utils, value: string): string =
-    if value.startsWith("0x"):
-      return value[2..^1]
-    return value
+    return common_utils.removeHexPrefix(value)
 
   proc isValidURL*(self: Utils, url: string): bool {.slot.} =
     var client = newHttpClient()
