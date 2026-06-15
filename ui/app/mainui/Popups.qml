@@ -727,13 +727,21 @@ QtObject {
         Component {
             id: signingPopupComponent
             SignPopup {
+                id: signPopup
+                property bool succeeded: false
                 store: root.signingStore
                 keychain: root.keychain
                 onSigningSuccess: function(reason, signature, keyUid) {
+                    signPopup.succeeded = true
                     Global.signingResult(reason, signature, keyUid)
                 }
 
-                onClosed: destroy()
+                onClosed: {
+                    if (!signPopup.succeeded) {
+                        Global.signingResult(signPopup.reason, "", signPopup.keyUid)
+                    }
+                    destroy()
+                }
             }
         },
 
