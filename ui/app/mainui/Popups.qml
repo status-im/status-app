@@ -228,7 +228,11 @@ QtObject {
     }
 
     function openSigningPopup(reason, keyUid, txHash, path, address) {
-        openPopup(signingPopupComponent, { reason: reason, keyUid: keyUid, txHash: txHash, path: path, address: address })
+        let finalKeyUid = keyUid
+        if (!finalKeyUid) {
+            finalKeyUid = root.signingStore.userProfileKeyUid
+        }
+        openPopup(signingPopupComponent, { reason: reason, keyUid: finalKeyUid, txHash: txHash, path: path, address: address })
     }
 
     function openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson) {
