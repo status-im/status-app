@@ -115,7 +115,7 @@ QtObject {
 
     ///////////////// Global Signing popup /////////////////////////
     signal openSigningPopup(string reason, string keyUid, string txHash, string path, string address)
-    signal signingResult(string reason, string signature, string keyUid)
+    signal signingResult(string reason, string signature, string keyUid) // in case of canceling the flow, or any error, signature param is empty
     ///////////////////////////////////////////////////////////////
 
     ///////////////// Global Keycard Management popup //////////////
