@@ -38,7 +38,11 @@ QtObject {
 
     readonly property size minimumDesktopSize: Qt.size(360, 680)
     readonly property size defaultDesktopSize: Qt.size(1200, 680)
-    readonly property size portraitBreakpoint: Qt.size(640, 480) // good ol' VGA
+
+    // Threshold width increased from original 640 to keep foldable phones in portrait
+    // mode when unfolded. To be changed later along with layout improvements dedicated
+    // to foldable phones.
+    readonly property size portraitBreakpoint: Qt.size(752, 480) // good ol' VGA
     readonly property real disabledOpacity: 0.3
     readonly property real pressedOpacity: 0.7
 
