@@ -33,7 +33,7 @@ QtObject:
   proc buildKeyPairForProcessing*(self: View, keyUid: string) {.slot.} =
     discard self.delegate.buildKeyPairForProcessing(keyUid)
 
-  proc keycardSignSuccess*(self: View, r: string, s: string, v: int) {.signal.}
+  proc keycardSignSuccess*(self: View, signature: string) {.signal.}
   proc keycardSignError*(self: View, error: string) {.signal.}
 
   proc startKeycardSigning*(self: View, keyUid: string, pin: string, txHash: string, path: string) {.slot.} =
