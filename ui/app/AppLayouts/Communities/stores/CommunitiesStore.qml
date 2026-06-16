@@ -49,6 +49,21 @@ QtObject {
 
     signal communityInfoRequestCompleted(string communityId, string errorMsg)
 
+    readonly property Connections _signingRequestConnections: Connections {
+        target: root.communitiesModuleInst
+        function onSigningRequested(keyUid, txHash, path, address) {
+            Global.openSigningPopup(Constants.signingReason.communitiesSignSharedAddresses, keyUid, txHash, path, address)
+        }
+    }
+
+    readonly property Connections _signingResultConnections: Connections {
+        target: Global
+        function onSigningResult(reason, signature, keyUid, path, address) {
+            if (reason !== Constants.signingReason.communitiesSignSharedAddresses)
+                return
+            root.communitiesModuleInst.onSigningResult(signature, address)
+        }
+    }
 
     function createCommunity(args = {
                                 name: "",

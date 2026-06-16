@@ -1795,22 +1795,6 @@ QtObject:
         error: e.msg
       ))
 
-  proc signCommunityRequests*(self: Service, communityId: string, signParams: seq[SignParamsDto]): seq[string] =
-    try:
-      var data = %* []
-      for param in signParams:
-        data.add(param.toJson())
-      let response = status_go.signData(data)
-      if not response.error.isNil:
-        raise newException(RpcException, response.error.message)
-      result = map(response.result.getElems(), x => x.getStr())
-    except Exception as e:
-      error "Error while signing joining community request", msg = e.msg
-      self.events.emit(SIGNAL_COMMUNITY_MY_REQUEST_FAILED, CommunityRequestFailedArgs(
-        communityId: communityId,
-        error: e.msg
-      ))
-
   proc asyncRequestToJoinCommunity*(self: Service, communityId: string, ensName: string, addressesToShare: seq[string],
     airdropAddress: string, signatures: seq[string]) =
     try:

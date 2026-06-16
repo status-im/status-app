@@ -213,10 +213,7 @@ method shareCommunityChannelUrlWithChatKey*(self: AccessInterface, communityId: 
 method shareCommunityChannelUrlWithData*(self: AccessInterface, communityId: string, chatId: string): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onUserAuthenticated*(self: AccessInterface, pin: string, password: string, keyUid: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onDataSigned*(self: AccessInterface, keyUid: string, path: string, r: string, s: string, v: string, pin: string) {.base.} =
+method onSigningResult*(self: AccessInterface, signature: string, address: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method prepareKeypairsForSigning*(self: AccessInterface, communityId: string, ensName: string, addresses: string,
@@ -226,7 +223,7 @@ method prepareKeypairsForSigning*(self: AccessInterface, communityId: string, en
 method signProfileKeypairAndAllNonKeycardKeypairs*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method signSharedAddressesForKeypair*(self: AccessInterface, keyUid: string, pin: string) {.base.} =
+method signSharedAddressesForKeypair*(self: AccessInterface, keyUid: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method joinCommunityOrEditSharedAddresses*(self: AccessInterface) {.base.} =
