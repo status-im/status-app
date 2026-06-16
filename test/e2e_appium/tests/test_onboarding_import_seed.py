@@ -145,17 +145,6 @@ class TestOnboardingImportSeed(StepMixin):
     @pytest.mark.smoke
     @pytest.mark.onboarding
     @pytest.mark.raw_devices
-    @pytest.mark.xfail(
-        reason=(
-            "Re-import path: StatusDropdown opened by loginUserSelector is "
-            "not surfaced via UIA2 accessibility tree on Android (Qt popup "
-            "lives in a separate Surface). The 'Create profile' delegate "
-            "cannot be located even though it is visually open. Tracked "
-            "separately — first-time import is covered by "
-            "test_import_seed_phrase."
-        ),
-        strict=False,
-    )
     async def test_import_and_reimport_seed(self):
         driver = self.device.driver
         seed_phrase = generate_seed_phrase()
@@ -171,24 +160,24 @@ class TestOnboardingImportSeed(StepMixin):
         async with self.step(self.device, "Open user selector"):
             rel = ReturningLoginLocators()
 
-            def nudge_user_selector() -> bool:
-                try:
-                    Gestures(driver).activation_tap()
-                    return True
-                except Exception:
-                    return False
-
-            opened = False
+            # Wake the a11y tree once (empty until first input). Don't centre-tap
+            # again: the dropdown is bottom-anchored, so it lands outside and
+            # dismisses it. Confirm "open" by the delegate, not the selector tap.
+            Gestures(driver).activation_tap()
             selector_locators = [rel.LOGIN_USER_SELECTOR_FULL_ID, rel.LOGIN_USER_SELECTOR]
 
+            opened = False
             for _ in range(5):
-                nudge_user_selector()
+                # Already open? Don't tap again — tapping the selector toggles it shut.
+                if base.find_element_safe(rel.CREATE_PROFILE_DROPDOWN_ITEM, timeout=3):
+                    opened = True
+                    break
                 for locator in selector_locators:
                     el = base.find_element_safe(locator, timeout=3)
                     if el and base.gestures.element_tap(el):
-                        opened = True
                         break
-                if opened:
+                if base.find_element_safe(rel.CREATE_PROFILE_DROPDOWN_ITEM, timeout=3):
+                    opened = True
                     break
             assert opened, "Returning login user selector did not open"
 
