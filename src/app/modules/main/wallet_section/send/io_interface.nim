@@ -45,16 +45,10 @@ method suggestedRoutesReady*(self: AccessInterface, uuid: string, suggestedRoute
 method authenticateAndTransfer*(self: AccessInterface, fromAddr: string, uuid: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onUserAuthenticated*(self: AccessInterface, password: string, pin: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method transactionWasSent*(self: AccessInterface, uuid: string, chainId: int = 0, approvalTx: bool = false, txHash: string = "", error: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method viewDidLoad*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method authenticateUser*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method setSelectedReceiveAccountIndex*(self: AccessInterface, index: int) {.base.} =
@@ -70,6 +64,9 @@ method splitAndFormatAddressPrefix*(self: AccessInterface, text : string, update
   raise newException(ValueError, "No implementation available")
 
 method prepareSignaturesForTransactions*(self:AccessInterface, txForSigning: RouterTransactionsForSigningDto) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onSigningResult*(self: AccessInterface, signature: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method hasGas*(self: AccessInterface, accountAddress: string, chainId: int, nativeGasSymbol: string, requiredGas: float): bool {.base.} =
