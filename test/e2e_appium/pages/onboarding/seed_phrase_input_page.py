@@ -48,10 +48,23 @@ class SeedPhraseInputPage(BasePage):
             time.sleep(0.3)  # let the field-count repeater settle
 
             self.logger.info("Entering seed phrase across %d fields", length)
+            size = self.driver.get_window_size()
+            cx = int(size["width"] * 0.5)
             for idx, word in enumerate(words, start=1):
                 field_locator = self.locators.get_seed_word_input_field(idx)
-                if not self.ensure_element_visible(field_locator):
-                    self.logger.warning("Field %d not visible; trying anyway", idx)
+                # The raised keyboard can push the next field off-screen; Qt then
+                # drops it from the a11y tree entirely. Hide keyboard + swipe it back.
+                if not self.find_element_safe(field_locator, timeout=2):
+                    try:
+                        self.hide_keyboard()
+                    except Exception:
+                        pass
+                    for _ in range(4):
+                        if self.find_element_safe(field_locator, timeout=1):
+                            break
+                        self.driver.swipe(cx, int(size["height"] * 0.8),
+                                          cx, int(size["height"] * 0.5), 400)
+                        time.sleep(0.3)
                 if not self.qt_safe_input(field_locator, word, verify=False):
                     self.logger.error("Failed to enter word %d", idx)
                     return False
