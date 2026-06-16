@@ -1,5 +1,5 @@
 import nimqml
-import tables, json, sequtils, sugar, stint, strutils, chronicles
+import tables, json, stint, strutils, chronicles
 
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/community_tokens/service as community_tokens_service
@@ -9,7 +9,6 @@ import app_service/service/community/service as community_service
 import app_service/service/accounts/utils as utl
 import app_service/common/types
 import app_service/common/utils
-import app_service/common/wallet_constants
 import app/core/eventemitter
 import app/global/global_singleton
 import app/modules/shared_models/currency_amount
@@ -19,6 +18,14 @@ import ./io_interface, ./view , ./controller
 export io_interface
 
 const DEFAULT_COMMUNITY_TOKENS_DECIMALS = 18 # determined by the community creation contract
+
+const
+  TxErrorFailedToStart = "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-START"
+  TxErrorNoAccount = "COMMUNITY-TOKEN-TX-ERROR-NO-ACCOUNT"
+  TxErrorFailedToPrepare = "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-PREPARE"
+  TxErrorFailedToSend = "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-SEND"
+  TxErrorSigningIncomplete = "COMMUNITY-TOKEN-TX-ERROR-SIGNING-INCOMPLETE"
+  TxErrorFailedToPrepareSigning = "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-PREPARE-SIGNING"
 
 type
   ContractAction {.pure.} = enum
@@ -37,8 +44,6 @@ type
     view: View
     viewVariant: QVariant
     tempUuid: string
-    tempPin: string
-    tempPassword: string
     tempTokenAndAmountList: seq[CommunityTokenAndAmount]
     tempWalletAndAmountList: seq[WalletAndAmount]
     tempAddressPath: string
@@ -56,6 +61,7 @@ type
     tempOwnerTokenCommunity: CommunityDto
     tempResolvedSignatures: TransactionsSignatures
     tempTxHashBeingProcessed: string
+    tempSigningKeyUid: string
 
 proc newCommunityTokensModule*(
     parent: parent_interface.AccessInterface,
@@ -83,8 +89,6 @@ method delete*(self: Module) =
 
 method resetTempValues(self:Module) =
   self.tempUuid = ""
-  self.tempPin = ""
-  self.tempPassword = ""
   self.tempAddressPath = ""
   self.tempAddressFrom = ""
   self.tempCommunityId = ""
@@ -101,6 +105,7 @@ method resetTempValues(self:Module) =
   self.tempOwnerTokenCommunity = CommunityDto()
   self.tempResolvedSignatures.clear()
   self.tempTxHashBeingProcessed = ""
+  self.tempSigningKeyUid = ""
 
 method load*(self: Module) =
   singletonInstance.engine.setRootContextProperty("communityTokensModule", self.viewVariant)
@@ -137,40 +142,23 @@ method authenticateAndTransfer*(self: Module) =
 
   if self.tempUuid.len == 0:
     error "No uuid to authenticate and transfer"
-    #TODO: notify about error
+    self.view.emitTransactionError(TxErrorFailedToStart)
+    self.resetTempValues()
     return
 
   if self.tempAddressFrom.len == 0:
     error "No address to send from"
-    #TODO: notify about error
+    self.view.emitTransactionError(TxErrorNoAccount)
+    self.resetTempValues()
     return
 
-  let kp = self.controller.getKeypairByAccountAddress(self.tempAddressFrom)
-  if not kp.isNil and kp.migratedToColdWallet():
-    let accounts = kp.accounts.filter(acc => cmpIgnoreCase(acc.address, self.tempAddressFrom) == 0)
-    if accounts.len != 1:
-      error "cannot resolve selected account to send from among known keypair accounts"
-      #TODO: notify about error
-      return
-    self.controller.authenticate(kp.keyUid)
-  else:
-    self.controller.authenticate()
-
-method onUserAuthenticated*(self: Module, password: string, pin: string) =
-  if password.len == 0:
-    error "No password provided from authentication"
-    #TODO: notify about error
-    self.resetTempValues()
-  else:
-    self.tempPin = pin
-    self.tempPassword = password
-    self.buildTransactionsFromRoute()
+  self.buildTransactionsFromRoute()
 
 proc buildTransactionsFromRoute(self: Module) =
   let err = self.controller.buildTransactionsFromRoute(self.tempUuid)
   if err.len > 0:
     error "Error building transactions from route", err = err
-    #TODO: notify about error
+    self.view.emitTransactionError(TxErrorFailedToPrepare)
     self.resetTempValues()
 
 proc sendSignedTransactions*(self: Module) =
@@ -185,15 +173,31 @@ proc sendSignedTransactions*(self: Module) =
       raise newException(CatchableError, "sending transaction failed: " & err)
   except Exception as e:
     error "sendSignedTransactions failed: ", msg=e.msg
-    #TODO: notify about error
+    self.view.emitTransactionError(TxErrorFailedToSend)
     self.resetTempValues()
 
-proc signOnKeycard(self: Module) =
-  error "signing a community transaction on keycard is temporarily unavailable"
-  self.resetTempValues()
+proc requestNextSignature(self: Module) =
+  for h, (r, s, v) in self.tempResolvedSignatures.pairs:
+    if r.len != 0 and s.len != 0 and v.len != 0:
+      continue
+    self.tempTxHashBeingProcessed = h
+    self.view.emitSigningRequested(self.tempSigningKeyUid, h, self.tempAddressPath, self.tempAddressFrom)
+    return
+  self.tempTxHashBeingProcessed = ""
+  self.sendSignedTransactions()
+
+method onSigningResult*(self: Module, signature: string) =
+  if signature.len == 0:
+    error "empty signature received while signing community token transaction"
+    self.view.emitTransactionError(TxErrorSigningIncomplete)
+    self.resetTempValues()
+    return
+  if self.tempTxHashBeingProcessed.len == 0:
+    return
+  self.tempResolvedSignatures[self.tempTxHashBeingProcessed] = utils.getRSVFromSignature(signature)
+  self.requestNextSignature()
 
 method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransactionsForSigningDto) =
-  var res = ""
   try:
     if txForSigning.sendDetails.uuid != self.tempUuid:
       raise newException(CatchableError, "preparing signatures for transactions are not matching the initial request")
@@ -202,36 +206,22 @@ method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransa
     if txForSigning.signingDetails.keyUid == "" or txForSigning.signingDetails.address == "" or txForSigning.signingDetails.addressPath == "":
       raise newException(CatchableError, "preparing signatures for transactions failed")
 
-    if txForSigning.signingDetails.signOnKeycard:
-      self.tempAddressFrom = txForSigning.signingDetails.address
-      self.tempAddressPath = txForSigning.signingDetails.addressPath
-      for h in txForSigning.signingDetails.hashes:
-        self.tempResolvedSignatures[h] = ("", "", "")
-      self.signOnKeycard()
-    else:
-      var finalPassword = self.tempPassword
-      if not singletonInstance.userProfile.getMigratedToColdWallet():
-        finalPassword = hashPassword(self.tempPassword)
-      for h in txForSigning.signingDetails.hashes:
-        self.tempResolvedSignatures[h] = ("", "", "")
-        var
-          signature = ""
-          err: string
-        (signature, err) = self.controller.signMessage(txForSigning.signingDetails.address, finalPassword, h)
-        if err.len > 0:
-          raise newException(CatchableError, "signing transaction failed: " & err)
-        self.tempResolvedSignatures[h] = utils.getRSVFromSignature(signature)
-      self.sendSignedTransactions()
+    self.tempSigningKeyUid = txForSigning.signingDetails.keyUid
+    self.tempAddressFrom = txForSigning.signingDetails.address
+    self.tempAddressPath = txForSigning.signingDetails.addressPath
+    for h in txForSigning.signingDetails.hashes:
+      self.tempResolvedSignatures[h] = ("", "", "")
+    self.requestNextSignature()
   except Exception as e:
-    error "signMessageWithCallback failed: ", msg=e.msg
-    #TODO: notify about error
+    error "prepareSignaturesForTransactions failed: ", msg=e.msg
+    self.view.emitTransactionError(TxErrorFailedToPrepareSigning)
     self.resetTempValues()
 
 method onTransactionSent*(self: Module, uuid: string, sendType: SendType, chainId: int, approvalTx: bool, txHash: string,
   toAddress: string, error: string) =
   if error.len > 0:
     error "Error sending transaction", error = error
-    #TODO: notify about error
+    self.view.emitTransactionError(TxErrorFailedToSend)
     self.resetTempValues()
     return
   if self.tempContractAction == ContractAction.Deploy:

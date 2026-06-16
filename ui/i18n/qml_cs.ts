@@ -3769,6 +3769,13 @@ formát souboru</translation>
     </message>
 </context>
 <context>
+    <name>CommunityTokensStore</name>
+    <message>
+        <source>Transaction failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ConfirmAddingNewMasterKey</name>
     <message>
         <source>Secure Your Assets and Funds</source>
@@ -18609,6 +18616,30 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Add watched address</source>
         <translation>Přidat sledovanou adresu</translation>
+    </message>
+    <message>
+        <source>Failed to start the transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No account selected to send the transaction from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to prepare the transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to send the transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction signing was not completed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to prepare the transaction for signing</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>acc</source>
