@@ -1,9 +1,12 @@
 import pytest
 from allure import step
 
+import configs
 import constants
+import driver
 from driver.aut import AUT
 from gui.components.back_up_your_seed_phrase_banner import BackUpSeedPhraseBanner
+from gui.components.toast_message import ToastMessage
 
 from gui.main_window import MainWindow
 
@@ -45,6 +48,10 @@ def test_back_up_recovery_phrase_sign_out(
     with step('Verify notification after removing seed phrase'):
         messages = main_screen.wait_for_toast_notifications()
         assert f'Recovery phrase permanently removed from Status application storage' in messages, f'Messages: {messages}'
+        assert driver.waitFor(
+            lambda: not ToastMessage().is_visible,
+            configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
+        ), 'Toast notification is still visible'
 
     with step('Go to settings screen from dock and check back up seed phrase banner is not shown there'):
         settings = main_screen.left_panel.open_settings()
