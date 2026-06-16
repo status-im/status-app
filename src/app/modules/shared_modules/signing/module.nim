@@ -80,6 +80,9 @@ method signMessage*[T](self: Module[T], address: string, password: string, txHas
 method isKeypairMigratedToColdWallet*[T](self: Module[T], keyUid: string): bool =
   return self.controller.isKeypairMigratedToColdWallet(keyUid)
 
+method getAccountNameByAddress*[T](self: Module[T], address: string): string =
+  return self.controller.getAccountNameByAddress(address)
+
 method buildKeyPairForProcessing*[T](self: Module[T], keyUid: string): KeyPairItem =
   let item = self.controller.buildKeyPairForProcessing(keyUid)
   if not item.isNil:
