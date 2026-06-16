@@ -146,6 +146,18 @@ unclosed fence here (no closing triple-tick)
 
             Row {
                 spacing: 16
+                Text { text: "cursor: " + textArea.cursorPosition }
+                Text {
+                    readonly property bool hasSelection:
+                        textArea.selectionStart !== textArea.selectionEnd
+                    text: hasSelection
+                          ? "selection: [" + textArea.selectionStart + ", " + textArea.selectionEnd + ")"
+                          : "selection: none"
+                }
+            }
+
+            Row {
+                spacing: 16
                 Text { text: "emphasis at:\t"}
                 Text { text: "bold: "          + emph.bold }
                 Text { text: "italic: "        + emph.italic }
