@@ -170,6 +170,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/keychain.h
         include/StatusQ/markdownast.h
         include/StatusQ/markdownparser.h
+        include/StatusQ/markdownutils.h
         include/StatusQ/osnotification.h
         include/StatusQ/urlschemeevent.h
         include/StatusQ/NativeSwipeHandlerItem.h
@@ -211,6 +212,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/localnetworkpermission_backend.h
         src/markdownast.cpp
         src/markdownparser.cpp
+        src/markdownutils.cpp
         src/networkchecker.cpp
         src/oneoffilter.cpp
         src/permissionutilsinternal.cpp

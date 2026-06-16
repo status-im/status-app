@@ -9,6 +9,7 @@
 #include "StatusQ/imageencoderutils.h"
 #include "StatusQ/keychain.h"
 #include "StatusQ/localnetworkpermission.h"
+#include "StatusQ/markdownutils.h"
 #include "StatusQ/networkchecker.h"
 #include "StatusQ/oneoffilter.h"
 #include "StatusQ/permissionutilsinternal.h"
@@ -95,6 +96,9 @@ void registerStatusQTypes() {
     });
     qmlRegisterSingletonType<UrlUtils>("StatusQ", 0, 1, "UrlUtils", [](QQmlEngine* engine, QJSEngine*) {
         return new UrlUtils(engine);
+    });
+    qmlRegisterSingletonType<MarkdownUtils>("StatusQ", 0, 1, "MarkdownUtils", [](QQmlEngine*, QJSEngine*) {
+        return new MarkdownUtils;
     });
     qmlRegisterSingletonType<ShareUtils>("StatusQ", 0, 1, "ShareUtils", [](QQmlEngine*, QJSEngine*) {
         return new ShareUtils;

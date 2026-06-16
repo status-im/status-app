@@ -20,16 +20,17 @@ Item {
         anchors.fill: parent
         anchors.margins: 12
 
-        Rectangle {
+        SplitView {
+            orientation: Qt.Vertical
+
             Layout.fillWidth: true
             Layout.fillHeight: true
-
-            color: "transparent"
 
             ScrollView {
                 id: scrollView
 
-                anchors.fill: parent
+                SplitView.fillHeight: true
+                SplitView.minimumHeight: 120
 
                 contentWidth: availableWidth
 
@@ -85,6 +86,37 @@ unclosed fence here (no closing triple-tick)
 `
                 }
             }
+
+            ColumnLayout {
+                SplitView.preferredHeight: 260
+                SplitView.minimumHeight: 80
+
+                spacing: 4
+
+                Text {
+                    Layout.fillWidth: true
+                    font.bold: true
+                    text: "AST dump:"
+                }
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    contentWidth: availableWidth
+
+                    TextArea {
+                        readOnly: true
+                        wrapMode: TextEdit.NoWrap
+                        font.family: "Monospace"
+                        font.pixelSize: 13
+                        text: MarkdownUtils.dumpAst(textArea.text,
+                                                    highlighter.multilineEmphasis,
+                                                    highlighter.formatUnclosedCodeFence,
+                                                    rangesSwitch.checked)
+                    }
+                }
+            }
         }
 
         ColumnLayout {
@@ -101,6 +133,12 @@ unclosed fence here (no closing triple-tick)
                 text: "Format unclosed code fence"
                 checked: highlighter.formatUnclosedCodeFence
                 onToggled: highlighter.formatUnclosedCodeFence = checked
+            }
+            Switch {
+                id: rangesSwitch
+
+                text: "AST ranges"
+                checked: true
             }
             Row {
                 spacing: 16
