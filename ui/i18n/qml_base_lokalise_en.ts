@@ -3723,6 +3723,16 @@
   <context>
     <name>ChatMessagesView</name>
     <message>
+      <source>Couldn&#39;t add reaction</source>
+      <comment>ChatMessagesView</comment>
+      <translation>Couldn&#39;t add reaction</translation>
+    </message>
+    <message>
+      <source>Couldn&#39;t remove reaction</source>
+      <comment>ChatMessagesView</comment>
+      <translation>Couldn&#39;t remove reaction</translation>
+    </message>
+    <message>
       <source>Send Contact Request</source>
       <comment>ChatMessagesView</comment>
       <translation>Send Contact Request</translation>

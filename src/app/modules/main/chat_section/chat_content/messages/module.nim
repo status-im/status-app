@@ -325,19 +325,42 @@ method toggleReaction*(self: Module, messageId: string, emoji: string) =
     return
 
   let myPublicKey = singletonInstance.userProfile.getPubKey()
+  let myName = singletonInstance.userProfile.getName()
   if item.shouldAddReaction(emoji, myPublicKey):
+    self.view.model().addReaction(messageId, emoji, didIReactWithThisEmoji = true, myPublicKey, myName, $genUUID())
     self.controller.addReaction(messageId, emoji)
   else:
     let reactionId = item.getReactionId(emoji, myPublicKey)
+    self.view.model().removeReaction(messageId, emoji, reactionId, didIRemoveThisReaction = true)
     self.controller.removeReaction(messageId, emoji, reactionId)
 
 method onReactionAdded*(self: Module, messageId: string, emoji: string, reactionId: string) =
   let myPublicKey = singletonInstance.userProfile.getPubKey()
+  if self.view.model().updateReactionId(messageId, emoji, myPublicKey, reactionId):
+    return
+
   let myName = singletonInstance.userProfile.getName()
   self.view.model().addReaction(messageId, emoji, didIReactWithThisEmoji = true, myPublicKey, myName, reactionId)
 
 method onReactionRemoved*(self: Module, messageId: string, emoji: string, reactionId: string) =
   self.view.model().removeReaction(messageId, emoji, reactionId, didIRemoveThisReaction = true)
+
+method onReactionActionFailed*(self: Module, messageId: string, emoji: string, reactionId: string,
+  addAction: bool, error: string) =
+  let myPublicKey = singletonInstance.userProfile.getPubKey()
+
+  if addAction:
+    let item = self.view.model().getItemWithMessageId(messageId)
+    if not item.isNil:
+      let optimisticReactionId = item.getReactionId(emoji, myPublicKey)
+      if optimisticReactionId != "":
+        self.view.model().removeReaction(messageId, emoji, optimisticReactionId, didIRemoveThisReaction = true)
+  else:
+    if reactionId != "":
+      let myName = singletonInstance.userProfile.getName()
+      self.view.model().addReaction(messageId, emoji, didIReactWithThisEmoji = true, myPublicKey, myName, reactionId)
+
+  self.view.emitReactionActionFailedSignal(addAction, error)
 
 method toggleReactionFromOthers*(self: Module, messageId: string, emoji: string, reactionId: string,
   reactionFrom: string) =

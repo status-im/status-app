@@ -509,6 +509,9 @@ proc shouldAddReaction*(self: Item, emoji: string, userPublicKey: string): bool 
 proc getReactionId*(self: Item, emoji: string, userPublicKey: string): string =
   return self.reactionsModel.getReactionId(emoji, userPublicKey)
 
+proc updateReactionId*(self: Item, emoji: string, userPublicKey: string, reactionId: string): bool =
+  return self.reactionsModel.updateReactionId(emoji, userPublicKey, reactionId)
+
 proc addReaction*(self: Item, emoji: string, didIReactWithThisEmoji: bool, userPublicKey: string,
   userDisplayName: string, reactionId: string) =
   self.reactionsModel.addReaction(emoji, didIReactWithThisEmoji, userPublicKey, userDisplayName, reactionId)

@@ -55,25 +55,25 @@ proc delete*(self: Controller) =
 proc init*(self: Controller) =
   self.events.on(SIGNAL_MESSAGES_LOADED) do(e:Args):
     let args = MessagesLoadedArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.newMessagesLoaded(args.messages, args.reactions)
 
   self.events.on(SIGNAL_NEW_MESSAGE_RECEIVED) do(e: Args):
     var args = MessagesArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.messagesAdded(args.messages)
 
   self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
     let args = MessageSendingSuccess(e)
-    if(self.chatId != args.chat.id):
+    if self.chatId != args.chat.id:
       return
     self.delegate.onSendingMessageSuccess(args.message)
 
   self.events.on(SIGNAL_SENDING_FAILED) do(e:Args):
     let args = MessageSendingFailure(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.onSendingMessageError(args.error)
 
@@ -87,51 +87,57 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_MESSAGE_DELIVERED) do(e:Args):
     let args = MessageDeliveredArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.onMessageDelivered(args.messageId)
 
   self.events.on(SIGNAL_MESSAGE_PINNED) do(e:Args):
     let args = MessagePinUnpinArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.onPinMessage(args.messageId, args.actionInitiatedBy)
 
   self.events.on(SIGNAL_MESSAGE_UNPINNED) do(e:Args):
     let args = MessagePinUnpinArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.onUnpinMessage(args.messageId)
 
   self.events.on(SIGNAL_MESSAGE_MARKED_AS_UNREAD) do(e:Args):
     let args = MessageMarkMessageAsUnreadArgs(e)
-    if (self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.onMarkMessageAsUnread(args.messageId)
 
   self.events.on(SIGNAL_MESSAGE_REACTION_ADDED) do(e:Args):
     let args = MessageAddRemoveReactionArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.onReactionAdded(args.messageId, args.emoji, args.reactionId)
 
   self.events.on(SIGNAL_MESSAGE_REACTION_REMOVED) do(e:Args):
     let args = MessageAddRemoveReactionArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.onReactionRemoved(args.messageId, args.emoji, args.reactionId)
 
+  self.events.on(SIGNAL_MESSAGE_REACTION_ACTION_FAILED) do(e:Args):
+    let args = MessageReactionActionFailedArgs(e)
+    if self.chatId != args.chatId:
+      return
+    self.delegate.onReactionActionFailed(args.messageId, args.emoji, args.reactionId, args.addAction, args.error)
+
   self.events.on(SIGNAL_MESSAGE_REACTION_FROM_OTHERS) do(e:Args):
     let args = MessageAddRemoveReactionArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.toggleReactionFromOthers(args.messageId, args.emoji, args.reactionId, args.reactionFrom)
 
   self.events.on(SIGNAL_MESSAGES_MARKED_AS_READ) do(e: Args):
     let args = MessagesMarkedAsReadArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
-    if(args.allMessagesMarked):
+    if args.allMessagesMarked:
       self.delegate.markAllMessagesRead()
     else:
       self.delegate.markMessagesAsRead(args.messagesIds)
@@ -176,7 +182,7 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_MESSAGE_REMOVED) do(e: Args):
     let args = MessageRemovedArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.onMessageRemoved(args.messageId, args.deletedBy)
 
@@ -187,25 +193,25 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_MESSAGE_EDITED) do(e: Args):
     let args = MessageEditedArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.onMessageEdited(args.message)
 
   self.events.on(SIGNAL_CHAT_HISTORY_CLEARED) do (e: Args):
     var args = ChatArgs(e)
-    if(self.chatId != args.chatId):
+    if self.chatId != args.chatId:
       return
     self.delegate.onHistoryCleared()
 
   self.events.on(SIGNAL_CHAT_MEMBER_UPDATED) do(e: Args):
     let args = ChatMemberUpdatedArgs(e)
-    if (args.chatId != self.chatId):
+    if args.chatId != self.chatId:
       return
     self.delegate.onChatMemberUpdated(args.id, args.role, args.joined)
 
   self.events.on(SIGNAL_MAILSERVER_SYNCED) do(e: Args):
     let args = MailserverSyncedArgs(e)
-    if (args.chatId != self.chatId):
+    if args.chatId != self.chatId:
       return
     self.delegate.onMailserverSynced(args.syncedFrom)
 
@@ -216,7 +222,7 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_FIRST_UNSEEN_MESSAGE_LOADED) do(e: Args):
     let args = FirstUnseenMessageLoadedArgs(e)
-    if (args.chatId != self.chatId):
+    if args.chatId != self.chatId:
       return
     self.delegate.onFirstUnseenMessageLoaded(args.messageId)
 
@@ -256,10 +262,10 @@ proc loadMoreMessages*(self: Controller): bool =
   return self.messageService.asyncLoadMoreMessagesForChat(self.chatId, limit)
 
 proc addReaction*(self: Controller, messageId: string, emoji: string) =
-  self.messageService.addReaction(self.chatId, messageId, emoji)
+  self.messageService.addReactionAsync(self.chatId, messageId, emoji)
 
 proc removeReaction*(self: Controller, messageId: string, emoji: string, reactionId: string) =
-  self.messageService.removeReaction(reactionId, self.chatId, messageId, emoji)
+  self.messageService.removeReactionAsync(reactionId, self.chatId, messageId, emoji)
 
 proc pinUnpinMessage*(self: Controller, messageId: string, pin: bool) =
   self.messageService.pinUnpinMessage(self.chatId, messageId, pin)

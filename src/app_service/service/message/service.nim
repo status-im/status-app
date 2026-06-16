@@ -50,6 +50,7 @@ const SIGNAL_SEARCH_MESSAGES_LOADED* = "searchMessagesLoaded"
 const SIGNAL_MESSAGES_MARKED_AS_READ* = "messagesMarkedAsRead"
 const SIGNAL_MESSAGE_REACTION_ADDED* = "messageReactionAdded"
 const SIGNAL_MESSAGE_REACTION_REMOVED* = "messageReactionRemoved"
+const SIGNAL_MESSAGE_REACTION_ACTION_FAILED* = "messageReactionActionFailed"
 const SIGNAL_MESSAGE_REACTION_FROM_OTHERS* = "messageReactionFromOthers"
 const SIGNAL_MESSAGE_REMOVED* = "messageRemoved"
 const SIGNAL_MESSAGES_DELETED* = "messagesDeleted"
@@ -115,6 +116,14 @@ type
     emoji*: string
     reactionId*: string
     reactionFrom*: string
+
+  MessageReactionActionFailedArgs* = ref object of Args
+    chatId*: string
+    messageId*: string
+    emoji*: string
+    reactionId*: string
+    addAction*: bool
+    error*: string
 
   MessageRemovedArgs* =  ref object of Args
     chatId*: string
@@ -693,17 +702,24 @@ QtObject:
     except Exception as e:
       error "error: ", procName="onAsyncLoadCommunityMemberAllMessages", errName = e.name, errDesription = e.msg
 
-  proc addReaction*(self: Service, chatId: string, messageId: string, emoji: string) =
+  proc onAsyncAddReaction*(self: Service, response: string) {.slot.} =
+    var chatId, messageId, emoji: string
     try:
-      let response = status_go.addReaction(chatId, messageId, emoji)
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        raise newException(CatchableError, "add reaction response is not a json object")
 
-      let errorString = response.result{"error"}.getStr()
+      discard responseObj.getProp("chatId", chatId)
+      discard responseObj.getProp("messageId", messageId)
+      discard responseObj.getProp("emoji", emoji)
+
+      let errorString = responseObj{"error"}.getStr()
       if errorString != "":
         raise newException(CatchableError, errorString)
 
       var reactionsArr: JsonNode
       var reactions: seq[ReactionDto]
-      if response.result.getProp("emojiReactions", reactionsArr):
+      if responseObj.getProp("emojiReactions", reactionsArr):
         reactions = map(reactionsArr.getElems(), proc(x: JsonNode): ReactionDto = x.toReactionDto())
 
       var reactionId: string
@@ -715,13 +731,45 @@ QtObject:
       self.events.emit(SIGNAL_MESSAGE_REACTION_ADDED, data)
 
     except Exception as e:
-      error "error: ", procName="addReaction", errName = e.name, errDesription = e.msg
+      error "error: ", procName="onAsyncAddReaction", errName = e.name, errDesription = e.msg
+      let data = MessageReactionActionFailedArgs(
+        chatId: chatId,
+        messageId: messageId,
+        emoji: emoji,
+        addAction: true,
+        error: e.msg
+      )
+      self.events.emit(SIGNAL_MESSAGE_REACTION_ACTION_FAILED, data)
 
-  proc removeReaction*(self: Service, reactionId: string, chatId: string, messageId: string, emoji: string) =
+  proc addReactionAsync*(self: Service, chatId: string, messageId: string, emoji: string) =
+    if chatId.len == 0 or messageId.len == 0 or emoji.len == 0:
+      error "empty chat id, message id or emoji", procName="addReactionAsync"
+      return
+
+    let arg = AsyncAddReactionTaskArg(
+      tptr: asyncAddReactionTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncAddReaction",
+      chatId: chatId,
+      messageId: messageId,
+      emoji: emoji
+    )
+
+    self.threadpool.start(arg)
+
+  proc onAsyncRemoveReaction*(self: Service, response: string) {.slot.} =
+    var reactionId, chatId, messageId, emoji: string
     try:
-      let response = status_go.removeReaction(reactionId)
+      let responseObj = response.parseJson
+      if responseObj.kind != JObject:
+        raise newException(CatchableError, "remove reaction response is not a json object")
 
-      let errorString = response.result{"error"}.getStr()
+      discard responseObj.getProp("reactionId", reactionId)
+      discard responseObj.getProp("chatId", chatId)
+      discard responseObj.getProp("messageId", messageId)
+      discard responseObj.getProp("emoji", emoji)
+
+      let errorString = responseObj{"error"}.getStr()
       if errorString != "":
         raise newException(CatchableError, errorString)
 
@@ -730,7 +778,33 @@ QtObject:
       self.events.emit(SIGNAL_MESSAGE_REACTION_REMOVED, data)
 
     except Exception as e:
-      error "error: ", procName="removeReaction", errName = e.name, errDesription = e.msg
+      error "error: ", procName="onAsyncRemoveReaction", errName = e.name, errDesription = e.msg
+      let data = MessageReactionActionFailedArgs(
+        chatId: chatId,
+        messageId: messageId,
+        emoji: emoji,
+        reactionId: reactionId,
+        addAction: false,
+        error: e.msg
+      )
+      self.events.emit(SIGNAL_MESSAGE_REACTION_ACTION_FAILED, data)
+
+  proc removeReactionAsync*(self: Service, reactionId: string, chatId: string, messageId: string, emoji: string) =
+    if reactionId.len == 0 or chatId.len == 0 or messageId.len == 0 or emoji.len == 0:
+      error "empty reaction id, chat id, message id or emoji", procName="removeReactionAsync"
+      return
+
+    let arg = AsyncRemoveReactionTaskArg(
+      tptr: asyncRemoveReactionTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onAsyncRemoveReaction",
+      reactionId: reactionId,
+      chatId: chatId,
+      messageId: messageId,
+      emoji: emoji
+    )
+
+    self.threadpool.start(arg)
 
   proc pinUnpinMessage*(self: Service, chatId: string, messageId: string, pin: bool) =
     try:

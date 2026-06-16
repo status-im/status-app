@@ -148,6 +148,16 @@ Item {
             sendingMsgFailedPopup.open()
         }
 
+        function onReactionActionFailed(addAction, error) {
+            Global.displayToastMessage(
+                        addAction ? qsTr("Couldn't add reaction") : qsTr("Couldn't remove reaction"),
+                        error,
+                        "warning",
+                        false,
+                        Constants.ephemeralNotificationType.danger,
+                        "")
+        }
+
         function onScrollToMessage(messageIndex) {
             d.goToMessage(messageIndex)
         }

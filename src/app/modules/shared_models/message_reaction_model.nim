@@ -81,6 +81,16 @@ QtObject:
       return ""
     return self.items[ind].getReactionId(userPublicKey)
 
+  # This function is used when we optimistically have added a reaction and we received the real reactionID asyncly
+  # Returns false if it was not updated. Then we can add the reaction with the normal path
+  proc updateReactionId*(self: MessageReactionModel, emoji: string, userPublicKey: string, reactionId: string): bool =
+    let ind = self.getIndexOfTheItemWithEmoji(emoji)
+    if ind == -1:
+      return false
+
+    # Just return the result. No need to fire dataChnaged signal, because the reactionId is not used in QML side.
+    return self.items[ind].updateReactionId(userPublicKey, reactionId)
+
   proc addReaction*(self: MessageReactionModel, emoji: string, didIReactWithThisEmoji: bool, userPublicKey: string,
     userDisplayName: string, reactionId: string) =
     if self.reactionItemWithEmojiExists(emoji):

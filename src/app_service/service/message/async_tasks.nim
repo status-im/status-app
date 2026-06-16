@@ -148,6 +148,91 @@ proc asyncFetchReactionsForMessageTask(argEncoded: string) {.gcsafe, nimcall.} =
 
 
 #################################################
+# Async add reaction
+#################################################
+type
+  AsyncAddReactionTaskArg = ref object of QObjectTaskArg
+    chatId: string
+    messageId: string
+    emoji: string
+
+proc asyncAddReactionTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncAddReactionTaskArg](argEncoded)
+
+  try:
+    var responseJson = %*{
+      "chatId": arg.chatId,
+      "messageId": arg.messageId,
+      "emoji": arg.emoji,
+      "error": "",
+    }
+
+    let response = status_go.addReaction(arg.chatId, arg.messageId, arg.emoji)
+    if not response.error.isNil:
+      raise newException(CatchableError, response.error.message)
+
+    let errorString = response.result{"error"}.getStr()
+    if errorString != "":
+      raise newException(CatchableError, errorString)
+
+    var reactionsArr: JsonNode
+    if response.result.getProp("emojiReactions", reactionsArr):
+      responseJson["emojiReactions"] = reactionsArr
+
+    arg.finish(responseJson)
+
+  except Exception as e:
+    arg.finish(%* {
+      "chatId": arg.chatId,
+      "messageId": arg.messageId,
+      "emoji": arg.emoji,
+      "error": e.msg,
+    })
+
+
+#################################################
+# Async remove reaction
+#################################################
+type
+  AsyncRemoveReactionTaskArg = ref object of QObjectTaskArg
+    reactionId: string
+    chatId: string
+    messageId: string
+    emoji: string
+
+proc asyncRemoveReactionTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncRemoveReactionTaskArg](argEncoded)
+
+  try:
+    var responseJson = %*{
+      "reactionId": arg.reactionId,
+      "chatId": arg.chatId,
+      "messageId": arg.messageId,
+      "emoji": arg.emoji,
+      "error": "",
+    }
+
+    let response = status_go.removeReaction(arg.reactionId)
+    if not response.error.isNil:
+      raise newException(CatchableError, response.error.message)
+
+    let errorString = response.result{"error"}.getStr()
+    if errorString != "":
+      raise newException(CatchableError, errorString)
+
+    arg.finish(responseJson)
+
+  except Exception as e:
+    arg.finish(%* {
+      "reactionId": arg.reactionId,
+      "chatId": arg.chatId,
+      "messageId": arg.messageId,
+      "emoji": arg.emoji,
+      "error": e.msg,
+    })
+
+
+#################################################
 # Async search messages
 #################################################
 

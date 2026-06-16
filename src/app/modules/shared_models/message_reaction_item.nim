@@ -56,6 +56,15 @@ proc getReactionId*(self: MessageReactionItem, userPublicKey: string): string =
       return r.reactionId
   return ""
 
+proc updateReactionId*(self: var MessageReactionItem, userPublicKey: string, reactionId: string): bool =
+  for i in 0..<self.reactions.len:
+    if self.reactions[i].publicKey == userPublicKey:
+      if self.reactions[i].reactionId == reactionId:
+        return false
+      self.reactions[i].reactionId = reactionId
+      return true
+  return false
+
 proc addReaction*(self: var MessageReactionItem, didIReactWithThisEmoji: bool, userPublicKey: string,
   userDisplayName: string, reactionId: string) =
   if(didIReactWithThisEmoji):

@@ -577,6 +577,13 @@ QtObject:
 
     self.items[ind].addReaction(emoji, didIReactWithThisEmoji, userPublicKey, userDisplayName, reactionId)
 
+  proc updateReactionId*(self: Model, messageId: string, emoji: string, userPublicKey: string, reactionId: string): bool =
+    let ind = self.findIndexForMessageId(messageId)
+    if ind == -1:
+      return false
+
+    return self.items[ind].updateReactionId(emoji, userPublicKey, reactionId)
+
   proc removeReaction*(self: Model, messageId: string, emoji: string, reactionId: string, didIRemoveThisReaction: bool) =
     let ind = self.findIndexForMessageId(messageId)
     if(ind == -1):

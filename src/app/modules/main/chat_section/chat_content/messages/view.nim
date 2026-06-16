@@ -107,6 +107,11 @@ QtObject:
   proc emitSendingMessageErrorSignal*(self: View, error: string) =
     self.sendingMessageFailed(error)
 
+  proc reactionActionFailed*(self: View, addAction: bool, error: string) {.signal.}
+
+  proc emitReactionActionFailedSignal*(self: View, addAction: bool, error: string) =
+    self.reactionActionFailed(addAction, error)
+
   proc deleteMessage*(self: View, messageId: string) {.slot.} =
     self.delegate.deleteMessage(messageId)
 

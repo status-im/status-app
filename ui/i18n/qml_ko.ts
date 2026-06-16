@@ -3032,6 +3032,14 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>ChatMessagesView</name>
     <message>
+        <source>Couldn&apos;t add reaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t remove reaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Send Contact Request</source>
         <translation>연락처 요청 보내기</translation>
     </message>
