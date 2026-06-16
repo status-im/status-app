@@ -1,4 +1,3 @@
-import std/strutils, uuids
 import ./io_interface
 
 import app/core/signals/types
@@ -360,8 +359,8 @@ proc asyncEditSharedAddresses*(self: Controller, communityId: string, addressesT
   airdropAddress: string, signatures: seq[string]) =
   self.communityService.asyncEditSharedAddresses(communityId, addressesToShare, airdropAddress, signatures)
 
-proc authenticate*(self: Controller) =
-  discard
+proc hashMessageForSigning*(self: Controller, message: string): string =
+  return status_general.hashMessageForSigning(message)
 
 proc getCommunityPublicKeyFromPrivateKey*(self: Controller, communityPrivateKey: string): string =
   result = self.communityService.getCommunityPublicKeyFromPrivateKey(communityPrivateKey)
@@ -383,12 +382,6 @@ proc generateEditCommunityRequestsForSigning*(self: Controller, memberPubKey: st
   addressesToReveal: seq[string]): seq[SignParamsDto] =
   return self.communityService.generateEditCommunityRequestsForSigning(memberPubKey, communityId, addressesToReveal)
 
-proc signCommunityRequests*(self: Controller, communityId: string, signParams: seq[SignParamsDto]): seq[string] =
-  return self.communityService.signCommunityRequests(communityId, signParams)
-
-proc getKeypairByAccountAddress*(self: Controller, address: string): KeypairDto =
-  return self.walletAccountService.getKeypairByAccountAddress(address)
-
 proc getKeypairByKeyUid*(self: Controller, keyUid: string): KeypairDto =
   return self.walletAccountService.getKeypairByKeyUid(keyUid)
 
@@ -400,9 +393,6 @@ proc getWalletAccounts*(self: Controller): seq[wallet_account_service.WalletAcco
 
 proc getEnabledChainIds*(self: Controller): seq[int] =
   return self.walletAccountService.getEnabledChainIds()
-
-proc runSigningOnKeycard*(self: Controller, keyUid: string, path: string, dataToSign: string, pin: string) =
-  discard
 
 proc removeCommunityChat*(self: Controller, communityId: string, channelId: string) =
   self.communityService.deleteCommunityChat(communityId, channelId)
