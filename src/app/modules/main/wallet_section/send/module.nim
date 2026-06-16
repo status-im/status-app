@@ -269,10 +269,10 @@ proc signOnKeycard(self: Module) =
   self.clearTmpData()
 
 method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransactionsForSigningDto) =
+  if txForSigning.sendDetails.uuid != self.tmpSendTransactionDetails.uuid:
+    return
   var res = ""
   try:
-    if txForSigning.sendDetails.uuid != self.tmpSendTransactionDetails.uuid:
-      raise newException(CatchableError, "preparing signatures for transactions are not matching the initial request")
     if txForSigning.signingDetails.hashes.len == 0:
       raise newException(CatchableError, "no transaction hashes to be signed")
     if txForSigning.signingDetails.keyUid == "" or txForSigning.signingDetails.address == "" or txForSigning.signingDetails.addressPath == "":
