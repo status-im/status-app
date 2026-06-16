@@ -21,6 +21,9 @@ method signMessage*(self: AccessInterface, address: string, password: string, tx
 method isKeypairMigratedToColdWallet*(self: AccessInterface, keyUid: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method getAccountNameByAddress*(self: AccessInterface, address: string): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method buildKeyPairForProcessing*(self: AccessInterface, keyUid: string): KeyPairItem {.base.} =
   raise newException(ValueError, "No implementation available")
 
