@@ -10,9 +10,8 @@ function get_gh_pkgs_token() {
 }
 
 function get_bottle_json() {
-    BOTTLE_INFO=$(brew info --json=v1 "${1}")
-    {
-        echo "${BOTTLE_INFO}" | jq ".[0].bottle.stable.files[\"${2}\"]"
+    { curl --fail-with-body -sSL "https://formulae.brew.sh/api/formula/${1}.json" \
+        | jq ".bottle.stable.files[\"${2}\"]";
     } || echo -e "Failed to get bottle files from:\n${BOTTLE_INFO}"
 }
 
