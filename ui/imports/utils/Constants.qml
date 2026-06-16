@@ -457,6 +457,7 @@ QtObject {
         readonly property string communityTokens: "community-tokens"
         readonly property string communitiesSignSharedAddresses: "communities-sign-shared-addresses"
         readonly property string walletSend: "wallet-send"
+        readonly property string swap: "swap"
     }
 
     readonly property QtObject keycard: QtObject {
