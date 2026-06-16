@@ -67,6 +67,12 @@ proc isKeypairMigratedToColdWallet*(self: Controller, keyUid: string): bool =
     return false
   return keypair.migratedToColdWallet()
 
+proc getAccountNameByAddress*(self: Controller, address: string): string =
+  let account = self.walletAccountService.getAccountByAddress(address)
+  if account.isNil:
+    return ""
+  return account.name
+
 proc buildKeyPairForProcessing*(self: Controller, keyUid: string): KeyPairItem =
   let keypair = self.walletAccountService.getKeypairByKeyUid(keyUid)
   if keypair.isNil:

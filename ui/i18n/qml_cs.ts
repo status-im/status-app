@@ -15654,6 +15654,10 @@ selhalo</translation>
 <context>
     <name>SignPopup</name>
     <message>
+        <source>Sign community request with %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Sign Transaction</source>
         <translation type="unfinished"></translation>
     </message>
