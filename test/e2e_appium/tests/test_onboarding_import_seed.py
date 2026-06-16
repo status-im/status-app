@@ -129,11 +129,9 @@ class TestOnboardingImportSeed(StepMixin):
     async def test_import_seed_phrase(self):
         """First-time seed-phrase import: onboard + verify wallet address.
 
-        Split from the original ``test_import_and_reimport_seed`` so the
-        happy-path import is its own gate signal. The duplicate-rejection
-        flow exercised by the original test exposes a separate Qt popup
-        accessibility issue (StatusDropdown not surfaced via UIA2 on
-        Android) and is tracked by the xfailed re-import test below.
+        Split from ``test_import_and_reimport_seed`` so the happy-path import
+        is its own gate signal; the duplicate-rejection flow is covered by that
+        re-import test below.
         """
         driver = self.device.driver
         seed_phrase = generate_seed_phrase()
