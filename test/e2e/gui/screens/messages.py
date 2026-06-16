@@ -187,6 +187,22 @@ class Message:
                     self.text = str(getattr(chat_text, 'text', ''))
                     break
 
+    def has_community_invite(self) -> bool:
+        if 'status.app/c/' in str(self.text or ''):
+            return True
+        if str(getattr(self.object, 'communityId', '') or ''):
+            return True
+        try:
+            for child in walk_children(self.object):
+                if str(getattr(child, 'communityId', '') or ''):
+                    return True
+                object_name = str(getattr(child, 'objectName', ''))
+                if object_name in ('linkPreviewTitle', 'communityName', 'communityDescription'):
+                    return True
+        except (RuntimeError, AttributeError, LookupError):
+            pass
+        return False
+
     @allure.step('Open community invitation')
     def open_community_invitation(self, attempts: int = 4):
         driver.waitFor(lambda: self.delegate_button.is_visible, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
@@ -349,6 +365,30 @@ class ChatView(QObject):
     def click_community_invite(self, community: str, index: int) -> 'CommunityScreen':
         message = self.search_for_invitation(community, index)
         return message.open_community_invitation()
+
+    def _find_community_invitation_message(self, index: typing.Optional[int] = 0) -> typing.Optional[Message]:
+        for _message in self.messages(index):
+            if _message.has_community_invite():
+                return _message
+        return None
+
+    def _find_community_invitation_message_from_newest(self, start_index: int = 0) -> typing.Optional[Message]:
+        for message_index in range(start_index, start_index + 20):
+            message = self._find_community_invitation_message(message_index)
+            if message:
+                return message
+        return None
+
+    @allure.step('Open community invitation without relying on preview name')
+    def click_community_invite_message(self, index: int = 0) -> CommunityScreen:
+        started_at = time.monotonic()
+        while time.monotonic() - started_at < configs.timeouts.MESSAGING_TIMEOUT_SEC:
+            message = self._find_community_invitation_message(index)
+            if message is None:
+                message = self._find_community_invitation_message_from_newest(0)
+            if message:
+                return message.open_community_invitation()
+        raise LookupError('Community invitation was not found')
 
     @allure.step('Open banned community invitation')
     def open_banned_community(self, community, index) -> 'BannedCommunityScreen':

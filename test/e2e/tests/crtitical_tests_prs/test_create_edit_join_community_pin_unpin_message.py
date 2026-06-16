@@ -113,12 +113,19 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
             messages_view = main_screen.left_panel.open_messages_screen()
             chat = messages_view.left_panel.click_chat_by_name(user_two.name)
             skip_message_backup_popup_if_visible()
-            chat.click_community_invite(new_name, 0)
+            community_screen = chat.click_community_invite_message(0)
+            assert driver.waitFor(
+                lambda: community_screen.left_panel.name == new_name,
+                configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
+            ), f'Community header should show updated name {new_name!r}'
 
         with step(f'User {user_one.name}, verify welcome community popup'):
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
             assert new_name in welcome_popup.title
-            assert new_introduction == welcome_popup.intro
+            assert driver.waitFor(
+                lambda: welcome_popup.intro == new_introduction,
+                configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
+            ), f'Welcome popup should show updated intro {new_introduction!r}'
             welcome_popup.join().authenticate(user_one.password)
             assert driver.waitFor(lambda: not community_screen.left_panel.is_join_community_visible,
                                   configs.timeouts.APP_LOAD_TIMEOUT_MSEC), 'Join community button not hidden'
