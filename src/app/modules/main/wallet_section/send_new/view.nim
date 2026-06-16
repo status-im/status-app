@@ -81,6 +81,13 @@ QtObject:
   proc authenticateAndTransfer*(self: View, uuid: string, fromAddr: string) {.slot.} =
     self.delegate.authenticateAndTransfer(uuid, fromAddr)
 
+  proc signingRequested*(self: View, keyUid: string, txHash: string, path: string, address: string) {.signal.}
+  proc emitSigningRequested*(self: View, keyUid: string, txHash: string, path: string, address: string) =
+    self.signingRequested(keyUid, txHash, path, address)
+
+  proc onSigningResult*(self: View, signature: string) {.slot.} =
+    self.delegate.onSigningResult(signature)
+
   proc suggestedRoutesReady(self: View, uuid: string, pathModel: QVariant, errCode: string, errDescription: string) {.signal.}
   proc sendSuggestedRoutesReadySignal*(self: View, uuid: string, errCode: string, errDescription: string) =
     self.suggestedRoutesReady(uuid, newQVariant(self.pathModel), errCode, errDescription)
