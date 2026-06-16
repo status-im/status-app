@@ -4583,6 +4583,14 @@
     </message>
   </context>
   <context>
+    <name>CommunityTokensStore</name>
+    <message>
+      <source>Transaction failed</source>
+      <comment>CommunityTokensStore</comment>
+      <translation>Transaction failed</translation>
+    </message>
+  </context>
+  <context>
     <name>ConfirmAddingNewMasterKey</name>
     <message>
       <source>Secure Your Assets and Funds</source>
@@ -22532,6 +22540,36 @@
       <source>Add watched address</source>
       <comment>Utils</comment>
       <translation>Add watched address</translation>
+    </message>
+    <message>
+      <source>Failed to start the transaction</source>
+      <comment>Utils</comment>
+      <translation>Failed to start the transaction</translation>
+    </message>
+    <message>
+      <source>No account selected to send the transaction from</source>
+      <comment>Utils</comment>
+      <translation>No account selected to send the transaction from</translation>
+    </message>
+    <message>
+      <source>Failed to prepare the transaction</source>
+      <comment>Utils</comment>
+      <translation>Failed to prepare the transaction</translation>
+    </message>
+    <message>
+      <source>Failed to send the transaction</source>
+      <comment>Utils</comment>
+      <translation>Failed to send the transaction</translation>
+    </message>
+    <message>
+      <source>Transaction signing was not completed</source>
+      <comment>Utils</comment>
+      <translation>Transaction signing was not completed</translation>
+    </message>
+    <message>
+      <source>Failed to prepare the transaction for signing</source>
+      <comment>Utils</comment>
+      <translation>Failed to prepare the transaction for signing</translation>
     </message>
     <message>
       <source>acc</source>

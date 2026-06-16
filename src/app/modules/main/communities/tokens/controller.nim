@@ -1,4 +1,3 @@
-import uuids, chronicles
 import ./io_interface as community_tokens_module_interface
 
 import app_service/service/community_tokens/service as community_tokens_service
@@ -102,9 +101,6 @@ proc refreshCommunityToken*(self: Controller, chainId: int, address: string) =
 proc computeAirdropFee*(self: Controller, uuid: string, tokensAndAmounts: seq[CommunityTokenAndAmount], walletAddresses: seq[string], addressFrom: string) =
   self.communityTokensService.computeAirdropFee(uuid, tokensAndAmounts, walletAddresses, addressFrom)
 
-proc authenticate*(self: Controller, keyUid = "") =
-  discard
-
 proc getCommunityTokens*(self: Controller, communityId: string): seq[CommunityTokenDto] =
   return self.communityTokensService.getCommunityTokens(communityId)
 
@@ -159,6 +155,3 @@ proc sendRouterTransactionsWithSignatures*(self: Controller, uuid: string, signa
 
 proc signMessage*(self: Controller, address: string, hashedPassword: string, hashedMessage: string): tuple[res: string, err: string] =
   return self.communityTokensService.signMessage(address, hashedPassword, hashedMessage)
-
-proc runSignFlow*(self: Controller, pin, bip44Path, txHash: string) =
-  discard
