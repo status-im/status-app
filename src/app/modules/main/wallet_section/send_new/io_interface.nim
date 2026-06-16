@@ -38,9 +38,6 @@ method resetData*(self: AccessInterface) {.base.} =
 method authenticateAndTransfer*(self: AccessInterface, fromAddr: string, uuid: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onUserAuthenticated*(self: AccessInterface, password: string, pin: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method suggestedRoutesReady*(self: AccessInterface, uuid: string, routes: seq[TransactionPathDtoV2], errCode: string, errDescription: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -61,13 +58,10 @@ method transactionWasSent*(self: AccessInterface, uuid: string, chainId: int = 0
 method viewDidLoad*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method authenticateUser*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onUserAuthenticated*(self: AccessInterface, pin: string, password: string, keyUid: string) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method prepareSignaturesForTransactions*(self:AccessInterface, txForSigning: RouterTransactionsForSigningDto) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onSigningResult*(self: AccessInterface, signature: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method transactionSendingComplete*(self: AccessInterface, txHash: string, status: string) {.base.} =
