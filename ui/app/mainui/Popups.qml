@@ -1434,6 +1434,10 @@ QtObject {
                     totalFeeText: finalisePopup.isFeeLoading ? "" : finalisePopup.feeText
                     errorText: finalisePopup.feeErrorText
                     accountName: finalisePopup.ownerTokenDetails.accountName
+                    migratedToColdWallet: !!SQUtils.ModelUtils.getByKey(root.rootStore.walletAccountsModel,
+                                                                        "address",
+                                                                        finalisePopup.selectedAccountAddress,
+                                                                        "migratedToColdWallet")
 
                     model: QtObject {
                         readonly property string title: finalisePopup.feeLabel

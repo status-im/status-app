@@ -464,6 +464,18 @@ QtObject {
             return qsTr("Add new master key")
         case Constants.appTranslatableConstants.addAccountLabelOptionAddWatchOnlyAcc:
             return qsTr("Add watched address")
+        case Constants.appTranslatableConstants.communityTokenTxErrorFailedToStart:
+            return qsTr("Failed to start the transaction")
+        case Constants.appTranslatableConstants.communityTokenTxErrorNoAccount:
+            return qsTr("No account selected to send the transaction from")
+        case Constants.appTranslatableConstants.communityTokenTxErrorFailedToPrepare:
+            return qsTr("Failed to prepare the transaction")
+        case Constants.appTranslatableConstants.communityTokenTxErrorFailedToSend:
+            return qsTr("Failed to send the transaction")
+        case Constants.appTranslatableConstants.communityTokenTxErrorSigningIncomplete:
+            return qsTr("Transaction signing was not completed")
+        case Constants.appTranslatableConstants.communityTokenTxErrorFailedToPrepareSigning:
+            return qsTr("Failed to prepare the transaction for signing")
         }
 
         // special handling because on an index attached to the constant

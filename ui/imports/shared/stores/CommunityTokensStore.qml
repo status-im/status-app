@@ -114,6 +114,24 @@ QtObject {
         function onOwnershipNodeLost(communityId, communityName) {
             root.ownershipLost(communityId, communityName)
         }
+
+        function onSigningRequested(keyUid, txHash, path, address) {
+            Global.openSigningPopup(Constants.signingReason.communityTokens, keyUid, txHash, path, address)
+        }
+
+        function onTransactionError(error) {
+            Global.displayToastMessage(qsTr("Transaction failed"), Utils.appTranslation(error), "", false, Constants.ephemeralNotificationType.danger, "")
+        }
+    }
+
+    readonly property Connections signingResultConnections: Connections {
+        target: Global
+
+        function onSigningResult(reason, signature, keyUid, path, address) {
+            if (reason !== Constants.signingReason.communityTokens)
+                return
+            communityTokensModuleInst.onSigningResult(signature)
+        }
     }
 
     function stopUpdatesForSuggestedRoute() {

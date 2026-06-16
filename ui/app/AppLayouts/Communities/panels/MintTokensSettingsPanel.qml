@@ -321,6 +321,10 @@ StackView {
                                       "" : editOwnerTokenView.feeText
                     errorText: editOwnerTokenView.feeErrorText
                     accountName: editOwnerTokenView.ownerToken.accountName
+                    migratedToColdWallet: !!SQUtils.ModelUtils.getByKey(root.accounts,
+                                                                        "address",
+                                                                        editOwnerTokenView.ownerToken.accountAddress,
+                                                                        "migratedToColdWallet")
 
                     model: QtObject {
                         readonly property string title: editOwnerTokenView.feeLabel
@@ -542,6 +546,11 @@ StackView {
                                preview.token.name)
                     totalFeeText: preview.isFeeLoading ? "" : preview.feeText
                     accountName: preview.token.accountName
+                    migratedToColdWallet: !!SQUtils.ModelUtils.getByKey(
+                                              root.accounts,
+                                              "address",
+                                              preview.token.accountAddress,
+                                              "migratedToColdWallet")
 
                     model: QtObject {
                         readonly property string title: preview.feeLabel
@@ -748,6 +757,10 @@ StackView {
                     errorText: tokenMasterActionPopup.feeErrorText
 
                     accountName: tokenMasterActionPopup.selectedAccountName
+                    migratedToColdWallet: !!SQUtils.ModelUtils.getByKey(root.accounts,
+                                                                        "address",
+                                                                        tokenMasterActionPopup.selectedAccount,
+                                                                        "migratedToColdWallet")
 
                     model: QtObject {
                         readonly property string title: tokenMasterActionPopup.feeLabel
@@ -1000,6 +1013,10 @@ StackView {
                        : qsTr("Sign transaction - Burn %1 tokens").arg(tokenName)
 
                 accountName: footer.token.accountName
+                migratedToColdWallet: !!SQUtils.ModelUtils.getByKey(root.accounts,
+                                                                    "address",
+                                                                    footer.accountAddress,
+                                                                    "migratedToColdWallet")
 
                 totalFeeText: isRemotelyDestructTransaction
                               ? remotelyDestructPopup.feeText
