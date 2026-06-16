@@ -330,7 +330,14 @@ QtObject:
     self.delegate.signProfileKeypairAndAllNonKeycardKeypairs()
 
   proc signSharedAddressesForKeypair*(self: View, keyUid: string) {.slot.} =
-    self.delegate.signSharedAddressesForKeypair(keyUid, pin = "")
+    self.delegate.signSharedAddressesForKeypair(keyUid)
+
+  proc signingRequested*(self: View, keyUid: string, txHash: string, path: string, address: string) {.signal.}
+  proc emitSigningRequested*(self: View, keyUid: string, txHash: string, path: string, address: string) =
+    self.signingRequested(keyUid, txHash, path, address)
+
+  proc onSigningResult*(self: View, signature: string, address: string) {.slot.} =
+    self.delegate.onSigningResult(signature, address)
 
   proc joinCommunityOrEditSharedAddresses*(self: View) {.slot.} =
     self.delegate.joinCommunityOrEditSharedAddresses()
