@@ -1,5 +1,5 @@
 import tables
-import uuids, chronicles
+import chronicles
 
 import io_interface
 
@@ -68,9 +68,6 @@ proc init*(self: Controller) =
   self.events.on(SIGNAL_TRANSACTION_STATUS_CHANGED) do(e:Args):
     let args = TransactionArgs(e)
     self.delegate.transactionSendingComplete(args.sentTransaction.hash, args.status)
-
-proc authenticate*(self: Controller, keyUid = "") =
-  discard
 
 proc suggestedRoutes*(self: Controller,
     uuid: string,

@@ -1,5 +1,7 @@
 import QtQuick
 
+import utils
+
 QtObject {
     id: root
 
@@ -37,6 +39,22 @@ QtObject {
 
     function getEstimatedTime(chainId, gasPrice, baseFeeInWei, priorityFeeInWei) {
         return _walletSectionSendInst.getEstimatedTime(chainId, gasPrice, baseFeeInWei, priorityFeeInWei)
+    }
+
+    readonly property Connections _signingRequestConnections: Connections {
+        target: root._walletSectionSendInst
+        function onSigningRequested(keyUid, txHash, path, address) {
+            Global.openSigningPopup(Constants.signingReason.walletSend, keyUid, txHash, path, address)
+        }
+    }
+
+    readonly property Connections _signingResultConnections: Connections {
+        target: Global
+        function onSigningResult(reason, signature, keyUid, path, address) {
+            if (reason !== Constants.signingReason.walletSend)
+                return
+            root._walletSectionSendInst.onSigningResult(signature)
+        }
     }
 
     Component.onCompleted: {
