@@ -453,6 +453,10 @@ QtObject {
         readonly property string syncDevice: "sync-device"
     }
 
+    readonly property QtObject signingReason: QtObject {
+        readonly property string communityTokens: "community-tokens"
+    }
+
     readonly property QtObject keycard: QtObject {
 
         readonly property string temporarilyUnavailable: qsTr("Temporarily unavailable, will be available in the next release.")
@@ -1327,6 +1331,13 @@ QtObject {
         readonly property string addAccountLabelOptionAddNewMasterKey: "LABEL-OPTION-ADD-NEW-MASTER-KEY"
         readonly property string addAccountLabelOptionAddWatchOnlyAcc: "LABEL-OPTION-ADD-WATCH-ONLY-ACC"
         readonly property string keycardAccountNameOfUnknownWalletAccount: "KEYCARD-ACCOUNT-NAME-OF-UNKNOWN-WALLET-ACCOUNT"
+
+        readonly property string communityTokenTxErrorFailedToStart: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-START"
+        readonly property string communityTokenTxErrorNoAccount: "COMMUNITY-TOKEN-TX-ERROR-NO-ACCOUNT"
+        readonly property string communityTokenTxErrorFailedToPrepare: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-PREPARE"
+        readonly property string communityTokenTxErrorFailedToSend: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-SEND"
+        readonly property string communityTokenTxErrorSigningIncomplete: "COMMUNITY-TOKEN-TX-ERROR-SIGNING-INCOMPLETE"
+        readonly property string communityTokenTxErrorFailedToPrepareSigning: "COMMUNITY-TOKEN-TX-ERROR-FAILED-TO-PREPARE-SIGNING"
     }
 
     enum CommunitySettingsSections {

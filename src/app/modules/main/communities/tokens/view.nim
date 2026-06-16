@@ -21,6 +21,17 @@ QtObject:
   proc authenticateAndTransfer*(self: View) {.slot.} =
     self.communityTokensModule.authenticateAndTransfer()
 
+  proc signingRequested*(self: View, keyUid: string, txHash: string, path: string, address: string) {.signal.}
+  proc emitSigningRequested*(self: View, keyUid: string, txHash: string, path: string, address: string) =
+    self.signingRequested(keyUid, txHash, path, address)
+
+  proc onSigningResult*(self: View, signature: string) {.slot.} =
+    self.communityTokensModule.onSigningResult(signature)
+
+  proc transactionError*(self: View, error: string) {.signal.}
+  proc emitTransactionError*(self: View, error: string) =
+    self.transactionError(error)
+
   proc computeDeployCollectiblesFee*(self: View, uuid: string, communityId: string, fromAddress: string, name: string,
     symbol: string, description: string, supply: string, infiniteSupply: bool, transferable: bool, selfDestruct: bool,
     chainId: int, imageCropInfoJson: string) {.slot.} =
