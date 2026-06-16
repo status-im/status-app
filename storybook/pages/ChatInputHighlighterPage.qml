@@ -51,7 +51,7 @@ Both bold and italics goes here: ***bold italic***
 And **bold** and *italic* together in a single line.
 
 **multi-
-line bold here, works only in multi-line emphasis mode**
+line bold here**
 
 **Code:**
 
@@ -111,7 +111,6 @@ unclosed fence here (no closing triple-tick)
                         font.family: "Monospace"
                         font.pixelSize: 13
                         text: MarkdownUtils.dumpAst(textArea.text,
-                                                    highlighter.multilineEmphasis,
                                                     highlighter.formatUnclosedCodeFence,
                                                     rangesSwitch.checked)
                     }
@@ -122,12 +121,6 @@ unclosed fence here (no closing triple-tick)
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: false
-
-            Switch {
-                text: "Multi-line emphasis"
-                checked: highlighter.multilineEmphasis
-                onToggled: highlighter.multilineEmphasis = checked
-            }
 
             Switch {
                 text: "Format unclosed code fence"

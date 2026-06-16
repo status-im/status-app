@@ -7,11 +7,10 @@ MarkdownUtils::MarkdownUtils(QObject* parent)
 {
 }
 
-QString MarkdownUtils::dumpAst(const QString& text, bool multilineEmphasis,
-                               bool formatUnclosedCodeFence, bool withRanges) const
+QString MarkdownUtils::dumpAst(const QString& text, bool formatUnclosedCodeFence,
+                               bool withRanges) const
 {
     Markdown::Options opts;
-    opts.multilineEmphasis = multilineEmphasis;
     opts.formatUnclosedCodeFence = formatUnclosedCodeFence;
     return Markdown::dump(Markdown::parse(text, opts), withRanges);
 }

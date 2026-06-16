@@ -145,22 +145,9 @@ Document [0,5)
                  QString::fromUtf8(expected).trimmed());
     }
 
-    void multilineDisabled_noCrossLineBold()
+    void crossLineBold()
     {
-        // Newline is escaped in the dumped literal.
-        auto expected = R"(
-Document [0,7)
-  Paragraph [0,7)
-    Text [0,7) "**a\nb**"
-)";
-        QCOMPARE(d("**a\nb**"),
-                 QString::fromUtf8(expected).trimmed());
-    }
-
-    void multilineEnabled_crossLineBold()
-    {
-        Options ml;
-        ml.multilineEmphasis = true;
+        // Emphasis always spans lines; the newline is escaped in the dumped literal.
         auto expected = R"(
 Document [0,7)
   Paragraph [0,7)
@@ -169,7 +156,7 @@ Document [0,7)
       Text [2,5) "a\nb"
       Delimiter [5,7) "**"
 )";
-        QCOMPARE(d("**a\nb**", ml),
+        QCOMPARE(d("**a\nb**"),
                  QString::fromUtf8(expected).trimmed());
     }
 

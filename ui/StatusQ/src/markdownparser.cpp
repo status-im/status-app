@@ -283,18 +283,6 @@ qsizetype findOpenCodeFence(const QString& text)
     return -1;
 }
 
-// Converts absolute ranges to line-relative coordinates, including only those
-// that intersect [lineStart, lineStart+lineLen).
-Ranges lineRelativeRanges(const Ranges& absRanges, qsizetype lineStart, qsizetype lineLen)
-{
-    Ranges result;
-    for (const auto& r : absRanges)
-        if (r.first < lineStart + lineLen && r.second > lineStart)
-            result.append({qMax(qsizetype(0), r.first - lineStart),
-                           qMin(lineLen, r.second - lineStart)});
-    return result;
-}
-
 // Finds maximal runs of consecutive lines starting with "> ".
 QVector<QuoteGroup> scanQuoteGroups(const QString& text, const Ranges& fenceRanges)
 {
@@ -460,9 +448,10 @@ QVector<Node> buildInline(const QString& full, qsizetype rs, qsizetype re,
 // Computes the inline containers (emphasis, single-backtick code spans, links)
 // for a region [rs, re), in absolute coordinates. `prefixExcludes` are absolute
 // ranges (e.g. quote "> " prefixes) excluded from emphasis/link scanning.
+// Emphasis/code/links may span multiple lines within the region.
 QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype re,
                                     const Ranges& prefixExcludes,
-                                    bool multiline, bool detectLinks)
+                                    bool detectLinks)
 {
     const QString region = full.mid(rs, re - rs);
     QVector<Container> conts;
@@ -491,52 +480,23 @@ QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype
     for (const auto& r : prefixExcludes)
         prefixRegion.append({r.first - rs, r.second - rs});
 
-    if (multiline) {
-        const QVector<CodeSpan> code = scanCodeSpans(region);
-        Ranges codeRanges;
-        for (const CodeSpan& c : code)
-            codeRanges.append({c.openerStart, c.closerEnd});
+    const QVector<CodeSpan> code = scanCodeSpans(region);
+    Ranges codeRanges;
+    for (const CodeSpan& c : code)
+        codeRanges.append({c.openerStart, c.closerEnd});
 
-        Ranges exclude = codeRanges;
-        exclude += prefixRegion;
-        const QVector<LinkSpan> links = detectLinks ? scanLinks(region, exclude)
-                                                    : QVector<LinkSpan>{};
-        Ranges emphExclude = exclude;
-        emphExclude += linkRangesOf(links);
-        const QVector<EmphSpan> emph = processEmphasis(scanDelimiters(region, emphExclude));
+    Ranges exclude = codeRanges;
+    exclude += prefixRegion;
+    const QVector<LinkSpan> links = detectLinks ? scanLinks(region, exclude)
+                                                : QVector<LinkSpan>{};
+    Ranges emphExclude = exclude;
+    emphExclude += linkRangesOf(links);
+    const QVector<EmphSpan> emph = processEmphasis(scanDelimiters(region, emphExclude));
 
-        addCode(code, rs);
-        addLinks(links, rs);
-        addEmph(emph, rs);
-    } else {
-        const qsizetype regionLen = region.length();
-        qsizetype lineStart = 0;
-        for (qsizetype i = 0; i <= regionLen; ++i) {
-            if (i == regionLen || region[i] == QLatin1Char('\n')) {
-                const QString line = region.mid(lineStart, i - lineStart);
-                const qsizetype lineLen = line.length();
+    addCode(code, rs);
+    addLinks(links, rs);
+    addEmph(emph, rs);
 
-                const QVector<CodeSpan> code = scanCodeSpans(line);
-                Ranges codeRanges;
-                for (const CodeSpan& c : code)
-                    codeRanges.append({c.openerStart, c.closerEnd});
-
-                Ranges exclude = codeRanges;
-                exclude += lineRelativeRanges(prefixRegion, lineStart, lineLen);
-                const QVector<LinkSpan> links = detectLinks ? scanLinks(line, exclude)
-                                                            : QVector<LinkSpan>{};
-                Ranges emphExclude = exclude;
-                emphExclude += linkRangesOf(links);
-                const QVector<EmphSpan> emph = processEmphasis(scanDelimiters(line, emphExclude));
-
-                addCode(code, rs + lineStart);
-                addLinks(links, rs + lineStart);
-                addEmph(emph, rs + lineStart);
-
-                lineStart = i + 1;
-            }
-        }
-    }
     return conts;
 }
 
@@ -547,8 +507,7 @@ Node makeCodeBlock(const QString& full, qsizetype oS, qsizetype cS,
     return materialize(full, c, {});
 }
 
-Node makeQuoteBlock(const QString& full, const QuoteGroup& g,
-                    bool multiline, bool detectLinks)
+Node makeQuoteBlock(const QString& full, const QuoteGroup& g, bool detectLinks)
 {
     Node n;
     n.kind = NodeKind::QuoteBlock;
@@ -557,7 +516,7 @@ Node makeQuoteBlock(const QString& full, const QuoteGroup& g,
 
     const Ranges prefixes = quoteGroupPrefixRanges(full, g);
     QVector<Container> conts = inlineContainers(full, g.start, g.end, prefixes,
-                                                multiline, detectLinks);
+                                                detectLinks);
     // "> " prefixes are first-class Delimiter nodes.
     for (const auto& p : prefixes)
         conts.append({NodeKind::Delimiter, p.first, p.second, p.first, p.second, {}});
@@ -566,14 +525,13 @@ Node makeQuoteBlock(const QString& full, const QuoteGroup& g,
     return n;
 }
 
-Node makeParagraph(const QString& full, qsizetype s, qsizetype e,
-                   bool multiline, bool detectLinks)
+Node makeParagraph(const QString& full, qsizetype s, qsizetype e, bool detectLinks)
 {
     Node n;
     n.kind = NodeKind::Paragraph;
     n.start = s;
     n.end = e;
-    QVector<Container> conts = inlineContainers(full, s, e, {}, multiline, detectLinks);
+    QVector<Container> conts = inlineContainers(full, s, e, {}, detectLinks);
     n.children = buildInline(full, s, e, conts);
     return n;
 }
@@ -633,19 +591,16 @@ Node parse(const QString& text, const Options& options)
     qsizetype pos = 0;
     for (const Block& b : blocks) {
         if (b.s > pos)
-            doc.children.append(makeParagraph(text, pos, b.s,
-                                              options.multilineEmphasis, options.detectLinks));
+            doc.children.append(makeParagraph(text, pos, b.s, options.detectLinks));
         if (b.type == 0)
             doc.children.append(makeCodeBlock(text, b.fence.openerStart, b.fence.contentStart,
                                               b.fence.contentEnd, b.fence.closerEnd));
         else
-            doc.children.append(makeQuoteBlock(text, b.grp,
-                                               options.multilineEmphasis, options.detectLinks));
+            doc.children.append(makeQuoteBlock(text, b.grp, options.detectLinks));
         pos = b.e;
     }
     if (pos < text.length())
-        doc.children.append(makeParagraph(text, pos, text.length(),
-                                          options.multilineEmphasis, options.detectLinks));
+        doc.children.append(makeParagraph(text, pos, text.length(), options.detectLinks));
 
     return doc;
 }

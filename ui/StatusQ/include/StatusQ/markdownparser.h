@@ -7,10 +7,6 @@
 namespace Markdown {
 
 struct Options {
-    // When true, emphasis (bold/italic/strikethrough) may span multiple lines.
-    // When false (default), emphasis is recognized per-line.
-    bool multilineEmphasis = false;
-
     // When true, an unclosed ``` fence formats everything after it as a code
     // block (and suppresses emphasis there).
     bool formatUnclosedCodeFence = false;
@@ -19,9 +15,9 @@ struct Options {
     bool detectLinks = true;
 };
 
-// Parses `text` into a Document-rooted AST according to the simplified,
-// line-oriented markdown dialect used by the chat input. Pure function, no Qt
-// GUI dependencies.
+// Parses `text` into a Document-rooted AST according to the simplified markdown
+// dialect used by the chat input. Emphasis, code spans and links may span
+// multiple lines. Pure function, no Qt GUI dependencies.
 Node parse(const QString& text, const Options& options = {});
 
 // Returns the start position of the first unclosed ``` triple-backtick run, or

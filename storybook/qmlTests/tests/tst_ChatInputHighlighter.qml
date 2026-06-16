@@ -7,7 +7,6 @@ TestCase {
     name: "ChatInputHighlighter"
 
     property ChatInputHighlighter highlighter: ChatInputHighlighter {}
-    property ChatInputHighlighter highlighterMultiLine: ChatInputHighlighter { multilineEmphasis: true }
     property ChatInputHighlighter highlighterOpenFence: ChatInputHighlighter { formatUnclosedCodeFence: true }
 
     // Returns the one span whose [start, end) exactly covers contentSubstring
@@ -23,7 +22,7 @@ TestCase {
     }
 
     function spanForMultiLine(text, contentSubstring) {
-        const spans = highlighterMultiLine.parseFormats(text)
+        const spans = highlighter.parseFormats(text)
         const idx   = text.indexOf(contentSubstring)
         for (let i = 0; i < spans.length; i++) {
             if (spans[i].start === idx && spans[i].end === idx + contentSubstring.length)
@@ -218,21 +217,7 @@ TestCase {
         verify(ispan !== null && ispan.italic, "italic span must still match")
     }
 
-    // ── multilineEmphasis: false (default) — cross-line spans must not form ──
-
-    function test_multilineDisabled_noCrossLineBold() {
-        compare(highlighter.parseFormats("**bold\ncontent**").length, 0)
-    }
-
-    function test_multilineDisabled_noCrossLineItalic() {
-        compare(highlighter.parseFormats("*first\nsecond*").length, 0)
-    }
-
-    function test_multilineDisabled_noCrossLineStrikethrough() {
-        compare(highlighter.parseFormats("~~line one\nline two~~").length, 0)
-    }
-
-    function test_multilineDisabled_singleLineSpansStillWork() {
+    function test_singleLineSpansStillWork() {
         const text  = "**bold**\n*italic*"
         const bspan = spanFor(text, "bold")
         const ispan = spanFor(text, "italic")
@@ -423,32 +408,16 @@ TestCase {
         compare(highlighter.parseCodeSpans("``foo`").length, 0)
     }
 
-    // ── multiline code (multilineEmphasis: true) ───────────────────────────────
+    // ── multiline code ──────────────────────────────────────────────────────────
 
     function test_multiline_inlineCode() {
-        const spans = highlighterMultiLine.parseCodeSpans("`first\nsecond`")
+        const spans = highlighter.parseCodeSpans("`first\nsecond`")
         compare(spans.length, 1)
         compare(spans[0].start, 1)
         compare(spans[0].end,   13)
     }
 
     function test_multiline_tripleBacktick() {
-        const spans = highlighterMultiLine.parseCodeSpans("```first\nsecond```")
-        compare(spans.length, 1)
-        compare(spans[0].start, 3)
-        compare(spans[0].end,   15)
-    }
-
-    // ── multilineEmphasis: false — single-backtick does not cross lines ─────────
-
-    function test_multilineDisabled_inlineCodeDoesNotCrossLines() {
-        compare(highlighter.parseCodeSpans("`first\nsecond`").length, 0)
-    }
-
-    // ── triple-backtick is always multiline, even with multilineEmphasis: false ─
-
-    function test_tripleBacktick_alwaysMultiline() {
-        // highlighter has multilineEmphasis: false, but ``` fences still cross lines
         const spans = highlighter.parseCodeSpans("```first\nsecond```")
         compare(spans.length, 1)
         compare(spans[0].start, 3)
@@ -651,17 +620,11 @@ TestCase {
     }
 
     function test_quote_crossLineEmphasisWithinGroup() {
-        // Consecutive quote lines form one group; bold can span them when
-        // multilineEmphasis is true
+        // Consecutive quote lines form one group; bold spans them
         const text = "> **bold\n> content**"
         const s = spanForMultiLine(text, "bold\n> content")
         verify(s !== null, "bold should span lines within the same quote group")
         verify(s.bold)
-    }
-
-    function test_quote_noEmphasisCrossLineWithinGroup_multilineDisabled() {
-        // When multilineEmphasis is false, bold must not span quote lines
-        compare(highlighter.parseFormats("> **bold\n> content**").length, 0)
     }
 
     function test_quote_noEmphasisAcrossGroupBoundary() {

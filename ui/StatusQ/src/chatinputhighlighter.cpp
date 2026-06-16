@@ -23,10 +23,9 @@ constexpr unsigned int kQuote         = 1u << 7; // block-quote line: dark blue
 using Markdown::Node;
 using Markdown::NodeKind;
 
-Markdown::Options optionsFor(bool multiline, bool unclosedFence)
+Markdown::Options optionsFor(bool unclosedFence)
 {
     Markdown::Options o;
-    o.multilineEmphasis = multiline;
     o.formatUnclosedCodeFence = unclosedFence;
     o.detectLinks = true;
     return o;
@@ -306,21 +305,6 @@ void ChatInputHighlighter::setQuickTextDocument(QQuickTextDocument* doc)
     emit quickTextDocumentChanged();
 }
 
-bool ChatInputHighlighter::multilineEmphasis() const
-{
-    return m_multilineEmphasis;
-}
-
-void ChatInputHighlighter::setMultilineEmphasis(bool enabled)
-{
-    if (m_multilineEmphasis == enabled)
-        return;
-    m_multilineEmphasis = enabled;
-    m_cachedText.clear();
-    rehighlight();
-    emit multilineEmphasisChanged();
-}
-
 QColor ChatInputHighlighter::codeBackground() const
 {
     return m_codeBackground;
@@ -386,7 +370,7 @@ QVariantList ChatInputHighlighter::parseFormats(const QString& text) const
 {
     QVariantList result;
     const Node doc = Markdown::parse(
-        text, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+        text, optionsFor(m_formatUnclosedCodeFence));
     collectFormats(doc, result);
     return result;
 }
@@ -395,7 +379,7 @@ QVariantList ChatInputHighlighter::parseDelimiters(const QString& text) const
 {
     QVariantList result;
     const Node doc = Markdown::parse(
-        text, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+        text, optionsFor(m_formatUnclosedCodeFence));
     collectDelimiters(doc, result);
     return result;
 }
@@ -404,7 +388,7 @@ QVariantList ChatInputHighlighter::parseCodeSpans(const QString& text) const
 {
     QVariantList result;
     const Node doc = Markdown::parse(
-        text, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+        text, optionsFor(m_formatUnclosedCodeFence));
     collectCodeSpans(doc, result);
     return result;
 }
@@ -413,7 +397,7 @@ QVariantList ChatInputHighlighter::parseLinks(const QString& text) const
 {
     QVariantList result;
     const Node doc = Markdown::parse(
-        text, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+        text, optionsFor(m_formatUnclosedCodeFence));
     collectLinkInfo(doc, result);
     return result;
 }
@@ -422,7 +406,7 @@ QVariantList ChatInputHighlighter::parseQuoteBlocks(const QString& text) const
 {
     QVariantList result;
     const Node doc = Markdown::parse(
-        text, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+        text, optionsFor(m_formatUnclosedCodeFence));
     collectQuoteBlocks(doc, result);
     return result;
 }
@@ -439,7 +423,7 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
         m_flags.assign(fullText.length(), 0u);
 
         const Node doc = Markdown::parse(
-            fullText, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+            fullText, optionsFor(m_formatUnclosedCodeFence));
 
         flatten(doc, 0u, m_flags);
         reProtectQuotePrefixes(fullText, doc, m_flags);
@@ -487,7 +471,7 @@ QVariantMap ChatInputHighlighter::emphasisAtInsertion(int position) const
     fullText.insert(position, QLatin1Char('a'));
 
     const Node doc = Markdown::parse(
-        fullText, optionsFor(m_multilineEmphasis, m_formatUnclosedCodeFence));
+        fullText, optionsFor(m_formatUnclosedCodeFence));
     const unsigned int bits = emphasisBitsAt(doc, position);
 
     return {

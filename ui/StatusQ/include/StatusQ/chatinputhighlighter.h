@@ -32,9 +32,6 @@ class ChatInputHighlighter : public QSyntaxHighlighter
     Q_PROPERTY(QQuickTextDocument* quickTextDocument
                READ quickTextDocument WRITE setQuickTextDocument
                NOTIFY quickTextDocumentChanged)
-    Q_PROPERTY(bool multilineEmphasis
-               READ multilineEmphasis WRITE setMultilineEmphasis
-               NOTIFY multilineEmphasisChanged)
     Q_PROPERTY(QColor codeBackground
                READ codeBackground WRITE setCodeBackground
                NOTIFY codeBackgroundChanged)
@@ -48,9 +45,6 @@ public:
 
     QQuickTextDocument* quickTextDocument() const;
     void setQuickTextDocument(QQuickTextDocument*);
-
-    bool multilineEmphasis() const;
-    void setMultilineEmphasis(bool enabled);
 
     QColor codeBackground() const;
     void setCodeBackground(QColor color);
@@ -87,7 +81,6 @@ public:
 
 signals:
     void quickTextDocumentChanged();
-    void multilineEmphasisChanged();
     void codeBackgroundChanged();
     void formatUnclosedCodeFenceChanged();
 
@@ -100,7 +93,6 @@ private:
     QQuickTextDocument* m_quickTextDocument{nullptr};
     QVector<unsigned int> m_flags; // per-document-character emphasis bits
     QString m_cachedText; // last full document text parsed into m_flags
-    bool m_multilineEmphasis{false};
     QColor m_codeBackground{Qt::transparent};
     bool m_formatUnclosedCodeFence{false};
     ChatInputLinksModel* m_linksModel{nullptr};
