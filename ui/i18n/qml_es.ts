@@ -3755,6 +3755,13 @@ no compatible</translation>
     </message>
 </context>
 <context>
+    <name>CommunityTokensStore</name>
+    <message>
+        <source>Transaction failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ConfirmAddingNewMasterKey</name>
     <message>
         <source>Secure Your Assets and Funds</source>
@@ -18535,6 +18542,30 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Add watched address</source>
         <translation>Agregar dirección observada</translation>
+    </message>
+    <message>
+        <source>Failed to start the transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No account selected to send the transaction from</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to prepare the transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to send the transaction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transaction signing was not completed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Failed to prepare the transaction for signing</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Arbiscan</source>

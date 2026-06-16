@@ -649,6 +649,7 @@ StatusScrollView {
             onClicked: {
                 feesPopup.accountAddress = feesBox.accountsSelector.currentAccountAddress
                 feesPopup.accountName = feesBox.accountsSelector.currentAccount.name ?? ""
+                feesPopup.migratedToColdWallet = feesBox.accountsSelector.currentAccount.migratedToColdWallet ?? false
                 feesPopup.open()
             }
         }
