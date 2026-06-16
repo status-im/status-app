@@ -76,6 +76,14 @@ QtObject {
         return d.mainModuleInst.signingModule.verifyPassword(password)
     }
 
+    function getAccountNameByAddress(address) {
+        if (!d.mainModuleInst.signingModule) {
+            console.error("signing module was not created")
+            return ""
+        }
+        return d.mainModuleInst.signingModule.getAccountNameByAddress(address)
+    }
+
     function signMessage(address, password, txHash) {
         if (!d.mainModuleInst.signingModule) {
             console.error("signing module was not created")
