@@ -50,13 +50,6 @@ proc generateEditCommunityRequestsForSigning*(
   let payload = %*[memberPubKey, communityId, addressesToReveal]
   result = callPrivateRPC("generateEditCommunityRequestsForSigning".prefix, payload)
 
-## `signParams` represents a json array of SignParamsDto.
-proc signData*(signParams: JsonNode): RpcResponse[JsonNode] =
-  if signParams.kind != JArray:
-    raise newException(Exception, "signParams must be an array")
-  let payload = %*[signParams]
-  result = callPrivateRPC("signData".prefix, payload)
-
 proc requestToJoinCommunity*(
     communityId: string,
     ensName: string,
