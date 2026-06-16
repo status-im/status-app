@@ -17,11 +17,18 @@ PopupBase {
 
     required property SigningStore store
 
-    signal signingSuccess(string reason, string signature, string keyUid)
+    signal signingSuccess(string signature)
 
     purpose: PopupBase.Purpose.Signing
 
-    title: qsTr("Sign Transaction")
+    title: {
+        if (root.store.ready && root.reason === Constants.signingReason.communitiesSignSharedAddresses) {
+            const accName = root.store.getAccountNameByAddress(root.address)
+            return qsTr("Sign community request with %1").arg(accName)
+        }
+
+        return qsTr("Sign Transaction")
+    }
 
     btnActionName: qsTr("Sign")
     btnPasswordActionAndUpdateName: qsTr("Update password & sign")
@@ -43,7 +50,7 @@ PopupBase {
         if (signature === "")
             return false
 
-        root.signingSuccess(root.reason, signature, root.keyUid)
+        root.signingSuccess(signature)
         root.close()
         return true
     }
@@ -61,7 +68,7 @@ PopupBase {
 
         function onKeycardSignSuccess(signature) {
             root.handleKeycardSuccess()
-            root.signingSuccess(root.reason, signature, root.keyUid)
+            root.signingSuccess(signature)
             root.close()
         }
 

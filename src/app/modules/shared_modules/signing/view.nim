@@ -30,6 +30,9 @@ QtObject:
   proc isKeypairMigratedToColdWallet*(self: View, keyUid: string): bool {.slot.} =
     return self.delegate.isKeypairMigratedToColdWallet(keyUid)
 
+  proc getAccountNameByAddress*(self: View, address: string): string {.slot.} =
+    return self.delegate.getAccountNameByAddress(address)
+
   proc buildKeyPairForProcessing*(self: View, keyUid: string) {.slot.} =
     discard self.delegate.buildKeyPairForProcessing(keyUid)
 
