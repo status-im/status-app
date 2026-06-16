@@ -3,6 +3,8 @@ import QtQuick
 import StatusQ
 import StatusQ.Core.Utils
 
+import utils
+
 QtObject {
     id: root
 
@@ -28,6 +30,18 @@ QtObject {
         }
         function onTransactionSendingComplete(txHash, success) {
             root.transactionSendingComplete(txHash, success)
+        }
+        function onSigningRequested(keyUid, txHash, path, address) {
+            Global.openSigningPopup(Constants.signingReason.swap, keyUid, txHash, path, address)
+        }
+    }
+
+    readonly property Connections _signingResultConnections: Connections {
+        target: Global
+        function onSigningResult(reason, signature, keyUid, path, address) {
+            if (reason !== Constants.signingReason.swap)
+                return
+            root.walletSectionSendInst.onSigningResult(signature)
         }
     }
 

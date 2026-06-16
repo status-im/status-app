@@ -154,6 +154,13 @@ QtObject:
   proc authenticateAndTransfer*(self: View, uuid: string) {.slot.} =
     self.delegate.authenticateAndTransfer(self.selectedSenderAccountAddress, uuid)
 
+  proc signingRequested*(self: View, keyUid: string, txHash: string, path: string, address: string) {.signal.}
+  proc emitSigningRequested*(self: View, keyUid: string, txHash: string, path: string, address: string) =
+    self.signingRequested(keyUid, txHash, path, address)
+
+  proc onSigningResult*(self: View, signature: string) {.slot.} =
+    self.delegate.onSigningResult(signature)
+
   proc reevaluateSwap*(self: View, uuid: string, chainId: int, isApprovalTx: bool) {.slot.} =
     self.delegate.reevaluateSwap(uuid, chainId, isApprovalTx)
 
