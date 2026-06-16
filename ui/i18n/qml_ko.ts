@@ -11394,8 +11394,8 @@ to load</source>
         <translation>인터넷 연결이 끊겼습니다. 데이터를 가져올 수 없습니다.</translation>
     </message>
     <message>
-        <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both curently unavailable</source>
-        <translation>토큰 잔액은 Pocket Network (POKT)와 Infura에서 가져오는데, 현재 두 서비스 모두 이용할 수 없습니다</translation>
+        <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both currently unavailable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Market values are fetched from CoinGecko which is currently unavailable</source>

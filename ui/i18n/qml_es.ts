@@ -11449,8 +11449,8 @@ al cargar</translation>
         <translation>Se perdió la conexión a internet. No se pudieron recuperar los datos.</translation>
     </message>
     <message>
-        <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both curently unavailable</source>
-        <translation>Los balances de tokens se obtienen de Pocket Network (POKT) e Infura, ambos no están disponibles actualmente</translation>
+        <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both currently unavailable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Market values are fetched from CoinGecko which is currently unavailable</source>

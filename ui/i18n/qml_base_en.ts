@@ -11436,7 +11436,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both curently unavailable</source>
+        <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both currently unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

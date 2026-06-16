@@ -48,7 +48,7 @@ QtObject {
     readonly property string notOnlineWithNoCacheText: qsTr("Internet connection lost. Data could not be retrieved.")
 
     readonly property bool noBlockchainConnectionAndNoCache: networkConnectionModule.blockchainNetworkConnection.completelyDown && !balanceCache
-    readonly property string noBlockchainConnectionAndNoCacheText: qsTr("Token balances are fetched from Pocket Network (POKT) and Infura which are both curently unavailable")
+    readonly property string noBlockchainConnectionAndNoCacheText: qsTr("Token balances are fetched from Pocket Network (POKT) and Infura which are both currently unavailable")
 
     readonly property bool noMarketConnectionAndNoCache: networkConnectionModule.marketValuesNetworkConnection.completelyDown && !marketValuesCache
     readonly property string noMarketConnectionAndNoCacheText: qsTr("Market values are fetched from CoinGecko which is currently unavailable")

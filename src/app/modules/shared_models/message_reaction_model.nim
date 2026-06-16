@@ -88,7 +88,7 @@ QtObject:
     if ind == -1:
       return false
 
-    # Just return the result. No need to fire dataChnaged signal, because the reactionId is not used in QML side.
+    # Just return the result. No need to fire dataChanged signal, because the reactionId is not used in QML side.
     return self.items[ind].updateReactionId(userPublicKey, reactionId)
 
   proc addReaction*(self: MessageReactionModel, emoji: string, didIReactWithThisEmoji: bool, userPublicKey: string,

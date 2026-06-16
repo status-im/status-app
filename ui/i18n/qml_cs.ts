@@ -11505,8 +11505,8 @@ selhalo</translation>
         <translation>Připojení k internetu ztraceno. Data nelze načíst.</translation>
     </message>
     <message>
-        <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both curently unavailable</source>
-        <translation>Zůstatky tokenů jsou načítány z Pocket Network (POKT) a Infura, které jsou momentálně nedostupné</translation>
+        <source>Token balances are fetched from Pocket Network (POKT) and Infura which are both currently unavailable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Market values are fetched from CoinGecko which is currently unavailable</source>

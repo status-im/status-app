@@ -743,7 +743,12 @@ QtObject:
 
   proc addReactionAsync*(self: Service, chatId: string, messageId: string, emoji: string) =
     if chatId.len == 0 or messageId.len == 0 or emoji.len == 0:
-      error "empty chat id, message id or emoji", procName="addReactionAsync"
+      let err = "empty chat id, message id or emoji"
+      error "error adding a reaction", err, procName="addReactionAsync"
+      self.events.emit(
+        SIGNAL_MESSAGE_REACTION_ACTION_FAILED,
+        MessageReactionActionFailedArgs(chatId: chatId, messageId: messageId, emoji: emoji, addAction: true, error: err)
+      )
       return
 
     let arg = AsyncAddReactionTaskArg(
@@ -791,7 +796,19 @@ QtObject:
 
   proc removeReactionAsync*(self: Service, reactionId: string, chatId: string, messageId: string, emoji: string) =
     if reactionId.len == 0 or chatId.len == 0 or messageId.len == 0 or emoji.len == 0:
-      error "empty reaction id, chat id, message id or emoji", procName="removeReactionAsync"
+      let err = "empty reaction id, chat id, message id or emoji"
+      error "error removing a reaction", err, procName="removeReactionAsync"
+      self.events.emit(
+        SIGNAL_MESSAGE_REACTION_ACTION_FAILED,
+        MessageReactionActionFailedArgs(
+          chatId: chatId,
+          messageId: messageId,
+          emoji: emoji,
+          reactionId: reactionId,
+          addAction: false,
+          error: err
+        )
+      )
       return
 
     let arg = AsyncRemoveReactionTaskArg(
