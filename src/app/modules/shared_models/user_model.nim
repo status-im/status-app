@@ -1,11 +1,10 @@
-import app/modules/shared_models/model_utils
 import nimqml, tables, std/strformat, sequtils, sugar
-import user_item
 
-import ../../../app_service/common/types
-import ../../../app_service/service/contacts/dto/[contacts, contact_details]
+import app_service/common/types
+import app_service/service/contacts/dto/[contacts, contact_details]
 import contacts_utils
 import model_utils
+import user_item
 
 type
   ModelRole {.pure.} = enum

@@ -496,26 +496,25 @@ QtObject:
   # fromBackup is used to indicate that the contact was loaded from a backup
   proc updateContact(self: Service, contact: ContactsDto, fromBackup: bool = false) =
     var signal = SIGNAL_CONTACT_ADDED
-    var alreadyEmitted = false
     let publicKey = contact.id
     if self.contacts.hasKey(publicKey):
       if self.contacts[publicKey].dto.added and not self.contacts[publicKey].dto.removed and contact.added and not contact.removed:
         signal = SIGNAL_CONTACT_UPDATED
       if contact.removed and not self.contacts[publicKey].dto.removed:
-        # Removed contact emits a different signal, so mark that we have already emitted for this contact
-        # to avoid emitting two signals for the same contact
-        alreadyEmitted = true
-        self.events.emit(SIGNAL_CONTACT_REMOVED, ContactRemovedArgs(
-              contactId: contact.id,
-              displayName: contact.displayName,
-              theyRemovedUs: false)
-            )
+        signal = SIGNAL_CONTACT_REMOVED
+
     let merged = self.preserveCachedEnrichment(contact)
     self.contacts[publicKey] = self.constructContactDetails(
       merged,
       isCurrentUser = merged.id == singletonInstance.userProfile.getPubKey()
     )
-    if not alreadyEmitted:
+    if signal == SIGNAL_CONTACT_REMOVED:
+      self.events.emit(SIGNAL_CONTACT_REMOVED, ContactRemovedArgs(
+          contactId: contact.id,
+          displayName: contact.displayName,
+          theyRemovedUs: false)
+      )
+    else:
       self.events.emit(signal, ContactArgs(contactId: publicKey, fromBackup: fromBackup))
 
   proc parseContactsResponse*(self: Service, contacts: JsonNode, fromBackup: bool = false) =
