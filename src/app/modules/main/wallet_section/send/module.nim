@@ -3,10 +3,8 @@ import tables, nimqml, sequtils, sugar, stint, strutils, chronicles
 import ./io_interface, ./view, ./controller, ./network_route_item, ./transaction_routes, ./suggested_route_item, ./suggested_route_model, ./gas_estimate_item, ./gas_fees_item, ./network_route_model
 import ../io_interface as delegate_interface
 import app/global/global_singleton
-import app/global/utils
 import app/core/eventemitter
 import app_service/common/utils
-import app_service/common/wallet_constants
 import app_service/service/token/service as token_service
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/network/service as network_service
@@ -25,10 +23,10 @@ const authenticationCanceled* = "authenticationCanceled"
 
 # Shouldn't be public ever, use only within this module.
 type TmpSendTransactionDetails = object
-  fromAddrPath: string
   uuid: string
-  pin: string
-  password: string
+  keyUid: string
+  fromAddr: string
+  fromAddrPath: string
   txHashBeingProcessed: string
   resolvedSignatures: TransactionsSignatures
 
@@ -67,12 +65,10 @@ method delete*(self: Module) =
   self.view.delete
   self.controller.delete
 
-proc clearTmpData(self: Module, keepPinPass = false) =
-  if keepPinPass:
+proc clearTmpData(self: Module, keepUuid = false) =
+  if keepUuid:
     self.tmpSendTransactionDetails = TmpSendTransactionDetails(
-      uuid: self.tmpSendTransactionDetails.uuid,
-      pin: self.tmpSendTransactionDetails.pin,
-      password: self.tmpSendTransactionDetails.password
+      uuid: self.tmpSendTransactionDetails.uuid
     )
     return
   self.tmpSendTransactionDetails = TmpSendTransactionDetails()
@@ -220,32 +216,10 @@ proc buildTransactionsFromRoute(self: Module) =
 
 method authenticateAndTransfer*(self: Module, fromAddr: string, uuid: string) =
   self.tmpSendTransactionDetails.uuid = uuid
+  self.tmpSendTransactionDetails.fromAddr = fromAddr
   self.tmpSendTransactionDetails.resolvedSignatures.clear()
   self.tmpClearLocalDataLater = true # means there are still some tx to be sent
-
-  let authenticate = self.tmpSendTransactionDetails.password == "" and self.tmpSendTransactionDetails.pin == ""
-  if not authenticate:
-    self.buildTransactionsFromRoute()
-    return
-
-  let kp = self.controller.getKeypairByAccountAddress(fromAddr)
-  if not kp.isNil and kp.migratedToColdWallet():
-    let accounts = kp.accounts.filter(acc => cmpIgnoreCase(acc.address, fromAddr) == 0)
-    if accounts.len != 1:
-      error "cannot resolve selected account to send from among known keypair accounts"
-      return
-    self.controller.authenticate(kp.keyUid)
-  else:
-    self.controller.authenticate()
-
-method onUserAuthenticated*(self: Module, password: string, pin: string) =
-  if password.len == 0:
-    self.transactionWasSent(uuid = self.tmpSendTransactionDetails.uuid, chainId = 0, approvalTx = false, txHash = "", error = authenticationCanceled)
-    self.clearTmpData()
-  else:
-    self.tmpSendTransactionDetails.pin = pin
-    self.tmpSendTransactionDetails.password = password
-    self.buildTransactionsFromRoute()
+  self.buildTransactionsFromRoute()
 
 proc sendSignedTransactions*(self: Module) =
   try:
@@ -262,43 +236,45 @@ proc sendSignedTransactions*(self: Module) =
     self.transactionWasSent(uuid = self.tmpSendTransactionDetails.uuid, chainId = 0, approvalTx = false, txHash = "", error = e.msg)
     self.clearTmpData()
 
-proc signOnKeycard(self: Module) =
-  error "signing a transaction on keycard is temporarily unavailable"
-  self.transactionWasSent(uuid = self.tmpSendTransactionDetails.uuid, chainId = 0, approvalTx = false, txHash = "",
-    error = "signing a transaction on keycard is temporarily unavailable")
-  self.clearTmpData()
+proc requestNextSignature(self: Module) =
+  for h, (r, s, v) in self.tmpSendTransactionDetails.resolvedSignatures.pairs:
+    if r.len != 0 and s.len != 0 and v.len != 0:
+      continue
+    self.tmpSendTransactionDetails.txHashBeingProcessed = h
+    self.view.emitSigningRequested(self.tmpSendTransactionDetails.keyUid, h,
+      self.tmpSendTransactionDetails.fromAddrPath, self.tmpSendTransactionDetails.fromAddr)
+    return
+  self.tmpSendTransactionDetails.txHashBeingProcessed = ""
+  self.sendSignedTransactions()
+
+method onSigningResult*(self: Module, signature: string) =
+  if signature.len == 0:
+    # signing was cancelled or failed
+    self.transactionWasSent(uuid = self.tmpSendTransactionDetails.uuid, chainId = 0, approvalTx = false, txHash = "", error = authenticationCanceled)
+    self.clearTmpData()
+    return
+  if self.tmpSendTransactionDetails.txHashBeingProcessed.len == 0:
+    return
+  self.tmpSendTransactionDetails.resolvedSignatures[self.tmpSendTransactionDetails.txHashBeingProcessed] = utils.getRSVFromSignature(signature)
+  self.requestNextSignature()
 
 method prepareSignaturesForTransactions*(self:Module, txForSigning: RouterTransactionsForSigningDto) =
   if txForSigning.sendDetails.uuid != self.tmpSendTransactionDetails.uuid:
     return
-  var res = ""
   try:
     if txForSigning.signingDetails.hashes.len == 0:
       raise newException(CatchableError, "no transaction hashes to be signed")
     if txForSigning.signingDetails.keyUid == "" or txForSigning.signingDetails.address == "" or txForSigning.signingDetails.addressPath == "":
       raise newException(CatchableError, "preparing signatures for transactions failed")
 
-    if txForSigning.signingDetails.signOnKeycard:
-      self.tmpSendTransactionDetails.fromAddrPath = txForSigning.signingDetails.addressPath
-      for h in txForSigning.signingDetails.hashes:
-        self.tmpSendTransactionDetails.resolvedSignatures[h] = ("", "", "")
-      self.signOnKeycard()
-    else:
-      var finalPassword = self.tmpSendTransactionDetails.password
-      if not singletonInstance.userProfile.getMigratedToColdWallet():
-        finalPassword = hashPassword(self.tmpSendTransactionDetails.password)
-      for h in txForSigning.signingDetails.hashes:
-        self.tmpSendTransactionDetails.resolvedSignatures[h] = ("", "", "")
-        var
-          signature = ""
-          err: string
-        (signature, err) = self.controller.signMessage(txForSigning.signingDetails.address, finalPassword, h)
-        if err.len > 0:
-          raise newException(CatchableError, "signing transaction failed: " & err)
-        self.tmpSendTransactionDetails.resolvedSignatures[h] = utils.getRSVFromSignature(signature)
-      self.sendSignedTransactions()
+    self.tmpSendTransactionDetails.keyUid = txForSigning.signingDetails.keyUid
+    self.tmpSendTransactionDetails.fromAddr = txForSigning.signingDetails.address
+    self.tmpSendTransactionDetails.fromAddrPath = txForSigning.signingDetails.addressPath
+    for h in txForSigning.signingDetails.hashes:
+      self.tmpSendTransactionDetails.resolvedSignatures[h] = ("", "", "")
+    self.requestNextSignature()
   except Exception as e:
-    error "signMessageWithCallback failed: ", msg=e.msg
+    error "prepareSignaturesForTransactions failed: ", msg=e.msg
     self.transactionWasSent(uuid = txForSigning.sendDetails.uuid, chainId = 0, approvalTx = false, txHash = "", error = e.msg)
     self.clearTmpData()
 
@@ -370,7 +346,10 @@ method suggestedRoutes*(self: Module,
 
 method resetData*(self: Module) =
   self.controller.stopSuggestedRoutesAsyncCalculation()
-  self.clearTmpData(keepPinPass = self.tmpClearLocalDataLater)
+  # Don't clear tmp data here (may be needed for swap (approve+swap)) the data will be cleared when the signing completes, is cancelled, or error occurs.
+  if self.tmpSendTransactionDetails.txHashBeingProcessed.len > 0:
+    return
+  self.clearTmpData(keepUuid = self.tmpClearLocalDataLater)
 
 method filterChanged*(self: Module, addresses: seq[string], chainIds: seq[int], isDirty: bool) =
   if not isDirty or addresses.len == 0:
