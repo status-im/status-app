@@ -18980,6 +18980,11 @@
   <context>
     <name>SignPopup</name>
     <message>
+      <source>Sign community request with %1</source>
+      <comment>SignPopup</comment>
+      <translation>Sign community request with %1</translation>
+    </message>
+    <message>
       <source>Sign Transaction</source>
       <comment>SignPopup</comment>
       <translation>Sign Transaction</translation>
