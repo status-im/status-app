@@ -35,7 +35,7 @@ method computeDeployTokenOwnerFee*(self: AccessInterface, uuid: string, communit
 method authenticateAndTransfer*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onUserAuthenticated*(self: AccessInterface, password: string, pin: string) {.base.} =
+method onSigningResult*(self: AccessInterface, signature: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method resetTempValues*(self: AccessInterface) {.base.} =
