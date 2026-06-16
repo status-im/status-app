@@ -1,5 +1,5 @@
 import tables
-import uuids, chronicles
+import chronicles
 import io_interface
 import app_service/service/token/service as token_service
 import app_service/service/wallet_account/service as wallet_account_service
@@ -117,9 +117,6 @@ proc getWalletAccountByIndex*(self: Controller, accountIndex: int): WalletAccoun
 
 proc getTokenBalance*(self: Controller, walletAccount: string, tokenKey: string): CurrencyAmount =
   return currencyAmountToItem(self.walletAccountService.getTokenBalance(walletAccount, tokenKey), self.walletAccountService.getCurrencyFormat(tokenKey))
-
-proc authenticate*(self: Controller, keyUid = "") =
-  discard
 
 proc suggestedRoutes*(self: Controller,
     uuid: string,
