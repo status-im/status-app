@@ -18,7 +18,6 @@ import app/global/global_singleton
 import app/global/app_signals
 import app/core/eventemitter
 import app_service/common/types
-import app_service/common/utils as common_utils
 import app_service/service/community/service as community_service
 import app_service/service/chat/service as chat_service
 import app_service/service/network/service as networks_service
@@ -62,8 +61,6 @@ type
     communityIdForRevealedAccounts: string
     ensName: string
     addressesToShare: OrderedTable[string, AddressToShareDetails] ## [address, AddressToShareDetails]
-    profilePassword: string
-    profilePin: string
     action: Action
 
 proc clear(self: var JoiningCommunityDetails) =
@@ -654,92 +651,52 @@ method shareCommunityChannelUrlWithChatKey*(self: Module, communityId: string, c
 method shareCommunityChannelUrlWithData*(self: Module, communityId: string, chatId: string): string =
   return self.controller.shareCommunityChannelUrlWithData(communityId, chatId)
 
-proc signRevealedAddressesForNonKeycardKeypairs(self: Module): bool =
-  var signingParams: seq[SignParamsDto]
-  for address, details in self.joiningCommunityDetails.addressesToShare.pairs:
-    if details.signature.len > 0:
-      continue
-    let keypair = self.controller.getKeypairByAccountAddress(address)
-    if keypair.isNil:
-      self.communityAccessFailed(self.joiningCommunityDetails.communityId, "cannot resolve keypair for address" & address)
-      return false
-    if keypair.migratedToColdWallet():
-      continue
-    var finalPassword = self.joiningCommunityDetails.profilePassword
-    if not singletonInstance.userProfile.getMigratedToColdWallet():
-      finalPassword = common_utils.hashPassword(self.joiningCommunityDetails.profilePassword)
-    signingParams.add(
-      SignParamsDto(
-        address: address,
-        data: details.messageToBeSigned,
-        password: finalPassword,
-      )
-    )
-  if signingParams.len == 0:
-    return true
-  # signatures are returned in the same order as signingParams
-  let signatures = self.controller.signCommunityRequests(self.joiningCommunityDetails.communityId, signingParams)
-  if signatures.len != signingParams.len:
-    return false
-  for i in 0 ..< len(signingParams):
-    self.joiningCommunityDetails.addressesToShare[signingParams[i].address].signature = signatures[i]
-    self.view.keypairsSigningModel().setOwnershipVerified(self.joiningCommunityDetails.addressesToShare[signingParams[i].address].keyUid, true)
-  return true
+proc isColdWalletKeypair(self: Module, keyUid: string): bool =
+  let keypair = self.controller.getKeypairByKeyUid(keyUid)
+  return (not keypair.isNil) and keypair.migratedToColdWallet()
 
-proc signRevealedAddressesForNonKeycardKeypairsAndEmitSignal(self: Module) =
-  let wereAllSigned = self.joiningCommunityDetails.allSigned()
-  if not self.signRevealedAddressesForNonKeycardKeypairs():
-    return
-  if not wereAllSigned and self.joiningCommunityDetails.allSigned():
+proc emitSignAllSignedIfDone(self: Module) =
+  if self.joiningCommunityDetails.allSigned():
     self.view.sendAllSharedAddressesSignedSignal()
 
-proc anyProfileKeyPairAddressSelectedToBeRevealed(self: Module): bool =
-  let profileKeypair = self.controller.getKeypairByKeyUid(singletonInstance.userProfile.getKeyUid())
-  if profileKeypair.isNil:
-    error "profile keypair not found"
-    return false
-  for acc in profileKeypair.accounts:
-    for addrToReveal in self.joiningCommunityDetails.addressesToShare.keys:
-      if cmpIgnoreCase(addrToReveal, acc.address) == 0:
-        return true
-  return false
+proc requestSignature(self: Module, address: string) =
+  let details = self.joiningCommunityDetails.addressesToShare[address]
+  let txHash = self.controller.hashMessageForSigning(details.messageToBeSigned)
+  self.view.emitSigningRequested(details.keyUid, txHash, details.path, details.address)
 
-method onUserAuthenticated*(self: Module, pin: string, password: string, keyUid: string) =
-  if password == "" and pin == "":
-    info "unsuccesful authentication"
-    return
-
-  self.joiningCommunityDetails.profilePassword = password
-  self.joiningCommunityDetails.profilePin = pin
-
-  # If any profile keypair address selected to be revealed and if the profile is a keycard user, we need to sign the request
-  # for revealed profile addresses first, then using pubic encryption key to sign other non keycard key pairs.
-  # If the profile is not a keycard user, we sign the request for it calling `signRevealedAddressesForNonKeycardKeypairs` function.
-  if keyUid == singletonInstance.userProfile.getKeyUid() and
-    singletonInstance.userProfile.getMigratedToColdWallet() and
-    self.anyProfileKeyPairAddressSelectedToBeRevealed():
-      self.signSharedAddressesForKeypair(keyUid, pin)
-      return
-  self.signRevealedAddressesForNonKeycardKeypairsAndEmitSignal()
-
-method onDataSigned*(self: Module, keyUid: string, path: string, r: string, s: string, v: string, pin: string) =
-  if keyUid.len == 0 or path.len == 0 or r.len == 0 or s.len == 0 or v.len == 0 or pin.len == 0:
-    # being here is not an error
-    return
-
-  let vFixed = toLower(uint8(parseUint(v) + 27).toHex())
-
+proc requestNextSignatureForKeypair(self: Module, keyUid: string) =
   for address, details in self.joiningCommunityDetails.addressesToShare.pairs:
-    if details.keyUid != keyUid or details.path != path:
-      continue
-    self.joiningCommunityDetails.addressesToShare[address].signature = "0x" & r & s & vFixed
-    break
-  self.signSharedAddressesForKeypair(keyUid, pin)
+    if details.signature.len == 0 and details.keyUid == keyUid:
+      self.requestSignature(address)
+      return
+  self.emitSignAllSignedIfDone()
 
-  # Only if the signed request is for the profile revealed addresses, we need to try to sign other revealed addresses
-  # for non profile key pairs. If they are already signed or moved to keycard we skip them (handled in signRevealedAddressesForNonKeycardKeypairsAndEmitSignal)
-  if keyUid == singletonInstance.userProfile.getKeyUid():
-    self.signRevealedAddressesForNonKeycardKeypairsAndEmitSignal()
+proc requestNextNonColdWalletSignature(self: Module) =
+  for address, details in self.joiningCommunityDetails.addressesToShare.pairs:
+    if details.signature.len == 0 and not self.isColdWalletKeypair(details.keyUid):
+      self.requestSignature(address)
+      return
+  self.emitSignAllSignedIfDone()
+
+method onSigningResult*(self: Module, signature: string, address: string) =
+  if not self.joiningCommunityDetails.addressesToShare.hasKey(address):
+    return
+  if signature.len == 0:
+    self.communityAccessFailed(self.joiningCommunityDetails.communityId, "signing was cancelled or failed")
+    return
+  self.joiningCommunityDetails.addressesToShare[address].signature = signature
+  let keyUid = self.joiningCommunityDetails.addressesToShare[address].keyUid
+  var allForKeypairSigned = true
+  for _, details in self.joiningCommunityDetails.addressesToShare.pairs:
+    if details.keyUid == keyUid and details.signature.len == 0:
+      allForKeypairSigned = false
+      break
+  if allForKeypairSigned:
+    self.view.keypairsSigningModel().setOwnershipVerified(keyUid, true)
+  if self.isColdWalletKeypair(keyUid):
+    self.requestNextSignatureForKeypair(keyUid)
+  else:
+    self.requestNextNonColdWalletSignature()
 
 method prepareKeypairsForSigning*(self: Module, communityId, ensName: string, addresses: string,
   airdropAddress: string, editMode: bool) =
@@ -793,25 +750,10 @@ method prepareKeypairsForSigning*(self: Module, communityId, ensName: string, ad
     self.joiningCommunityDetails.addressesToShare[param.address] = details
 
 method signProfileKeypairAndAllNonKeycardKeypairs*(self: Module) =
-  self.controller.authenticate()
+  self.requestNextNonColdWalletSignature()
 
-# if pin is provided we're signing on a keycard silently
-method signSharedAddressesForKeypair*(self: Module, keyUid: string, pin: string) =
-  let keypair = self.controller.getKeypairByKeyUid(keyUid)
-  if keypair.isNil:
-    self.communityAccessFailed(self.joiningCommunityDetails.communityId, "cannot resolve keypair for keyUid " & keyUid)
-    return
-  for acc in keypair.accounts:
-    for address, details in self.joiningCommunityDetails.addressesToShare.pairs:
-      if cmpIgnoreCase(address, acc.address) != 0:
-        continue
-      if details.signature.len > 0:
-        continue
-      self.controller.runSigningOnKeycard(keyUid, details.path, details.messageToBeSigned, pin)
-      return
-  self.view.keypairsSigningModel().setOwnershipVerified(keyUid, true)
-  if self.joiningCommunityDetails.allSigned():
-    self.view.sendAllSharedAddressesSignedSignal()
+method signSharedAddressesForKeypair*(self: Module, keyUid: string) =
+  self.requestNextSignatureForKeypair(keyUid)
 
 method joinCommunityOrEditSharedAddresses*(self: Module) =
   if not self.joiningCommunityDetails.allSigned():
