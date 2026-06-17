@@ -38,8 +38,8 @@ settings_StatusFlatButton = {"type": "StatusFlatButton", "unnamed": 1, "visible"
 
 # Messaging View
 mainWindow_MessagingView = {"container": statusDesktop_mainWindow, "type": "MessagingView", "unnamed": 1, "visible": True}
-allowNewContactRequestsSection = {"container": statusDesktop_mainWindow, "id": "allowNewContactRequest", "type": "StatusListItem", "unnamed": 1, "visible": True}
-allowNewContactRequestsSectionToggle = {"checkable": True, "container": allowNewContactRequestsSection, "id": "switch3", "type": "StatusSwitch", "unnamed": 1, "visible": True}
+allowNewContactRequestsSection = {"container": statusDesktop_mainWindow, "objectName": "MessagingView_ReceiveFromNonContacts_StatusListItem", "type": "StatusListItem", "visible": True}
+allowNewContactRequestsSectionToggle = {"checkable": True, "container": allowNewContactRequestsSection, "objectName": "MessagingView_ReceiveFromNonContacts_Switch", "type": "StatusSwitch", "visible": True}
 contactsListItem_btn_StatusContactRequestsIndicatorListItem = {"container": statusDesktop_mainWindow, "objectName": "MessagingView_ContactsListItem_btn", "type": "StatusContactRequestsIndicatorListItem"}
 settingsContentBase_ScrollView = {"container": statusDesktop_mainWindow, "objectName": "settingsContentBaseScrollView", "type": "StatusScrollView", "visible": True}
 always_ask_radioButton_StatusRadioButton = {"container": settingsContentBase_ScrollView, "objectName": "MessagingView_AlwaysAsk_RadioButton", "type": "SettingsRadioButton", "visible": True}
