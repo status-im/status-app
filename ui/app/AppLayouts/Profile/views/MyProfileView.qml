@@ -309,6 +309,9 @@ SettingsContentBase {
                 displayName.input.edit.readOnly: isEnsName
                 displayName.text: profileStore.displayName
                 displayName.placeholderText: profileStore.compressedPubKey
+                // Set to Always even if there are no validators
+                // otherwise valid is false and it blocks the user if they want to change something else
+                displayName.validationMode: StatusInput.ValidationMode.Always
                 displayName.validators: []
                 bio.text: profileStore.bio
 
