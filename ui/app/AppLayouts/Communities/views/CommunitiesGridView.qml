@@ -102,6 +102,12 @@ StatusScrollView {
         StatusCommunityCard {
             id: card
 
+            objectName: "communityCard-" + model.name
+            // the card root is a plain Rectangle, which Qt does not place in the
+            // accessibility tree; a role is required for objectName/name to surface
+            Accessible.role: Accessible.Button
+            Accessible.name: model.name
+
             readonly property string tags: model.tags
             readonly property var permissionsList: model.permissionsModel
             readonly property bool isTokenGatedCommunity: PermissionsHelpers.isTokenGatedCommunity(permissionsList)
