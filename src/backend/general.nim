@@ -47,10 +47,6 @@ proc adminPeers*(): RpcResponse[JsonNode] =
   let payload = %* []
   result = core.callPrivateRPC("admin_peers", payload)
 
-proc wakuV2Peers*(): RpcResponse[JsonNode] =
-  let payload = %* []
-  result = core.callPrivateRPC("peers".prefix, payload)
-
 proc getPasswordStrengthScore*(password: string, userInputs: seq[string]): RpcResponse[JsonNode] =
   let params = %* {"password": password, "userInputs": userInputs}
   try:
