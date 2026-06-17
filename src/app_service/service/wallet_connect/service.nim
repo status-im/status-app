@@ -30,10 +30,6 @@ const SIGNAL_SUGGESTED_FEES_RESPONSE* = "suggestedFeesResponse"
 const SIGNAL_ESTIMATED_GAS_RESPONSE* = "estimatedGasResponse"
 
 type
-  AuthenticationResponseFn* = proc(keyUid: string, password: string, pin: string)
-  SignResponseFn* = proc(keyUid: string, signature: string)
-
-type
   EstimatedTimeArgs* = ref object of Args
     topic*: string
     chainId*: int
@@ -56,9 +52,6 @@ QtObject:
     settingsService: settings_service.Service
     transactions: tr.Service
 
-    authenticationCallback: AuthenticationResponseFn
-    signCallback: SignResponseFn
-
   proc delete*(self: Service)
   proc newService*(
     events: EventEmitter,
@@ -77,19 +70,12 @@ QtObject:
   proc init*(self: Service) =
     discard
 
-  # Will fail if another authentication is in progress
-  proc authenticateUser*(self: Service, keyUid: string, callback: AuthenticationResponseFn): bool =
-    discard
-
   proc hashMessageEIP191*(self: Service, message: string): string =
     let hashRes = hashMessageEIP191("0x" & toHex(message))
     if not hashRes.error.isNil:
       error "hashMessageEIP191 failed: ", msg=hashRes.error.message
       return ""
     return hashRes.result.getStr()
-
-  proc signMessage*(self: Service, address: string, hashedPassword: string, hashedMessage: string): tuple[res: string, err: string] =
-    return self.transactions.signMessage(address, hashedPassword, hashedMessage)
 
   proc buildTransaction*(self: Service, chainId: int, txJson: string): tuple[txToSign: string, txData: JsonNode] =
     var buildTxResponse: JsonNode
@@ -200,9 +186,6 @@ QtObject:
       self.events.emit(SIGNAL_SUGGESTED_FEES_RESPONSE, args)
     except Exception as e:
       error "failed to parse suggested fees response", msg = e.msg
-
-  proc runSigningOnKeycard*(self: Service, keyUid: string, path: string, hashedMessageToSign: string, pin: string, callback: SignResponseFn): bool =
-    discard
 
   proc requestGasEstimate*(self: Service, topic: string, tx: JsonNode, chainId: int) =
     let request = AsyncEstimateGasArgs(

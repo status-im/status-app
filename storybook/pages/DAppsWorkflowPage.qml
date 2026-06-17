@@ -339,42 +339,6 @@ Item {
         }
     }
 
-    StatusDialog {
-        id: authMockDialog
-        title: "Authenticate user"
-        visible: false
-
-        property string topic: ""
-        property string id: ""
-
-        ColumnLayout {
-            RowLayout {
-                StatusBaseText { text: "Topic" }
-                StatusBaseText { text: authMockDialog.topic }
-                StatusBaseText { text: "ID" }
-                StatusBaseText { text: authMockDialog.id }
-            }
-        }
-        footer: StatusDialogFooter {
-            rightButtons: ObjectModel {
-                StatusButton {
-                    text: qsTr("Reject")
-                    onClicked: {
-                        dappModule.store.userAuthenticationFailed(authMockDialog.topic, authMockDialog.id)
-                        authMockDialog.close()
-                    }
-                }
-                StatusButton {
-                    text: qsTr("Authenticate")
-                    onClicked: {
-                        dappModule.store.userAuthenticated(authMockDialog.topic, authMockDialog.id, "0x1234567890", "123")
-                        authMockDialog.close()
-                    }
-                }
-            }
-        }
-    }
-
     QtObject {
         id: mockConnectorController
         function pairWalletConnect(uri) { return true }
@@ -423,48 +387,42 @@ Item {
             }
         }
         store: SharedStores.DAppsStore {
-            controller: QtObject {}
-            signal userAuthenticated(string topic, string id, string password, string pin)
-            signal userAuthenticationFailed(string topic, string id)
+            controller: QtObject {
+                signal signingRequested(string reason, string keyUid, string hash, string path, string address)
+                function onSigningResult(reason, signature) {}
+            }
             signal signingResult(string topic, string id, string data)
             // Fees and gas
             signal estimatedTimeResponse(string topic, int timeCategory, bool success)
             signal suggestedFeesResponse(string topic, var suggestedFeesJsonObj, bool success)
             signal estimatedGasResponse(string topic, string gasEstimate, bool success)
 
-            function authenticateUser(topic, id, address) {
-                authMockDialog.topic = topic
-                authMockDialog.id = id
-                authMockDialog.open()
-                return true
+            // hardcoded for https://react-app.walletconnect.com/
+            function signMessageUnsafe(topic, id, address, message) {
+                console.info(`calling mocked DAppsStore.signMessageUnsafe(${topic}, ${id}, ${address}, ${message})`)
+                signingResult(topic, id, "0xc8f39cb4cffa5c4659e0ccc7c417cc61d0cfc9e59de310368ac734065164f5515bfbaf4550d409896f7e2210b82a1cf65edcd77f696b4d3d24477fb81a90af8a1c")
             }
 
             // hardcoded for https://react-app.walletconnect.com/
-            function signMessageUnsafe(topic, id, address, password, message) {
-                console.info(`calling mocked DAppsStore.signMessageUnsafe(${topic}, ${id}, ${address}, ${password}, ${message})`)
-                return "0xc8f39cb4cffa5c4659e0ccc7c417cc61d0cfc9e59de310368ac734065164f5515bfbaf4550d409896f7e2210b82a1cf65edcd77f696b4d3d24477fb81a90af8a1c"
-            }
-
-            // hardcoded for https://react-app.walletconnect.com/
-            function signMessage(topic, id, address, password, message) {
-                console.info(`calling mocked DAppsStore.signMessage(${topic}, ${id}, ${address}, ${password}, ${message})`)
+            function signMessage(topic, id, address, message) {
+                console.info(`calling mocked DAppsStore.signMessage(${topic}, ${id}, ${address}, ${message})`)
                 signingResult(topic, id, "0xca49ddfba1279d246f1c22b2002fbd1a51faf27956264b476f26505ad729cc3a17958d30e11aff33b2420e20a4647076d3a98fa6c12ed142aa75dee7063a5dc601")
             }
 
             // hardcoded for https://react-app.walletconnect.com/
-            function safeSignTypedData(topic, id, address, password, typedDataJson, chainId, legacy) {
-                console.info(`calling mocked DAppsStore.safeSignTypedData(${topic}, ${id}, ${address}, ${password}, ${typedDataJson}, ${chainId}, ${legacy})`)
+            function safeSignTypedData(topic, id, address, typedDataJson, chainId, legacy) {
+                console.info(`calling mocked DAppsStore.safeSignTypedData(${topic}, ${id}, ${address}, ${typedDataJson}, ${chainId}, ${legacy})`)
                 signingResult(topic, id, "0xf8ceb3468319cc215523b67c24c4504b3addd9bf8de31c278038d7478c9b6de554f7d8a516cd5d6a066b7d48b81f03d9d6bb7d5d754513c08325674ebcc7efbc1b")
             }
 
             // hardcoded for https://react-app.walletconnect.com/
-            function signTransaction(topic, id, address, chainId, password, tx) {
-                console.info(`calling mocked DAppsStore.signTransaction(${topic}, ${id}, ${address}, ${chainId}, ${password}, ${tx})`)
+            function signTransaction(topic, id, address, chainId, tx) {
+                console.info(`calling mocked DAppsStore.signTransaction(${topic}, ${id}, ${address}, ${chainId}, ${tx})`)
                 signingResult(topic, id, "0xf8672a8402fb7acf82520894e2d622c817878da5143bbe06866ca8e35273ba8a80808401546d71a04fc89c2f007c3b27d0fcff07d3e69c29f940967fab4caf525f9af72dadb48befa00c5312a3cb6f50328889ad361a0c88bb9d1b1a4fc510f6783b287930b4e187b5")
             }
 
-            function sendTransaction(topic, id, address, chainId, password, tx) {
-                console.info(`calling mocked DAppsStore.sendTransaction(${topic}, ${id}, ${address}, ${chainId}, ${password}, ${tx})`)
+            function sendTransaction(topic, id, address, chainId, tx) {
+                console.info(`calling mocked DAppsStore.sendTransaction(${topic}, ${id}, ${address}, ${chainId}, ${tx})`)
                 signingResult(topic, id, "0xf8672a8402fb7acf82520894e2d622c817878da5143bbe068")
             }
 
