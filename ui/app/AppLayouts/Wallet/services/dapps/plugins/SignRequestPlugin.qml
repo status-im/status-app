@@ -131,15 +131,11 @@ SQUtils.QObject {
                 root.rejected(request.topic, request.requestId, hasError)
             }
 
-            onAuthFailed: () => {
-                root.rejected(request.topic, request.requestId, true /*hasError*/)
-            }
-
-            onExecute: (password, pin) => {
+            onExecute: () => {
                 root.store.signingResult.connect(request.signedHandler)
                 let executed = false
                 try {
-                    executed = d.executeSessionRequest(request, password, pin, request.feesInfo)
+                    executed = d.executeSessionRequest(request, request.feesInfo)
                 } catch (e) {
                     console.error("Error executing session request", e)
                 }
@@ -327,14 +323,9 @@ SQUtils.QObject {
             return BigOps.div(accountFundsWei, BigOps.fromNumber(1, 18))
         }
 
-        function executeSessionRequest(request, password, pin, payload) {
+        function executeSessionRequest(request, payload) {
             if (!SessionRequest.getSupportedMethods().includes(request.method)) {
                 console.error("Unsupported method to execute: ", request.method)
-                return false
-            }
-
-            if (password === "") {
-                console.error("No password provided to sign message")
                 return false
             }
 
@@ -342,16 +333,12 @@ SQUtils.QObject {
                 root.store.signMessageUnsafe(request.topic,
                                         request.requestId,
                                         request.accountAddress,
-                                        SessionRequest.methods.personalSign.getMessageFromData(request.data),
-                                        password,
-                                        pin)
+                                        SessionRequest.methods.personalSign.getMessageFromData(request.data))
             } else if (request.method === SessionRequest.methods.personalSign.name) {
                 root.store.signMessage(request.topic,
                                   request.requestId,
                                   request.accountAddress,
-                                  SessionRequest.methods.personalSign.getMessageFromData(request.data),
-                                  password,
-                                  pin)
+                                  SessionRequest.methods.personalSign.getMessageFromData(request.data))
             } else if (request.method === SessionRequest.methods.signTypedData_v4.name ||
                        request.method === SessionRequest.methods.signTypedData.name)
             {
@@ -361,9 +348,7 @@ SQUtils.QObject {
                                         request.accountAddress,
                                         SessionRequest.methods.signTypedData.getMessageFromData(request.data),
                                         request.chainId,
-                                        legacy,
-                                        password,
-                                        pin)
+                                        legacy)
             } else if (SessionRequest.isTransactionMethod(request.method)) {
                 const txObj = prepareTxForStatusGo(SessionRequest.getTxObject(request.method, request.data), payload)
                 if (request.method === SessionRequest.methods.signTransaction.name) {
@@ -371,18 +356,14 @@ SQUtils.QObject {
                                           request.requestId,
                                           request.accountAddress,
                                           request.chainId,
-                                          txObj,
-                                          password,
-                                          pin)
+                                          txObj)
                 } else if (request.method === SessionRequest.methods.sendTransaction.name) {
                     root.store.sendTransaction(
                                 request.topic,
                                 request.requestId,
                                 request.accountAddress,
                                 request.chainId,
-                                txObj,
-                                password,
-                                pin)
+                                txObj)
                 }
             }
 

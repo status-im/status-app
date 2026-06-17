@@ -55,20 +55,16 @@ Item {
                 }
             }
             store: DAppsStore {
-                controller: QtObject {}
+                controller: QtObject {
+                    signal signingRequested(string reason, string keyUid, string hash, string path, string address)
+                    function onSigningResult(reason, signature) {}
+                }
                 id: dappsStoreMock
-                signal userAuthenticated(string topic, string id, string password, string pin)
-                signal userAuthenticationFailed(string topic, string id)
                 signal signingResult(string topic, string id, string data)
 
-                property var authenticateUserCalls: []
-                function authenticateUser(topic, id, address) {
-                    authenticateUserCalls.push({topic, id, address})
-                }
-
                 property var signMessageCalls: []
-                function signMessage(topic, id, address, data, password, pin) {
-                    signMessageCalls.push({topic, id, address, data, password, pin})
+                function signMessage(topic, id, address, data) {
+                    signMessageCalls.push({topic, id, address, data})
                 }
             }
             accountsModel:  ListModel {
@@ -174,7 +170,7 @@ Item {
             componentUnderTest.connectionApproved(request.id, { eip155: { key, chains, accounts, methods }})
             compare(componentUnderTest.registerSignRequestSpy.count, 1)
             const requestObj = componentUnderTest.registerSignRequestSpy.signalArguments[0][0]
-            requestObj.execute("pass", "pin")
+            requestObj.execute()
             componentUnderTest.store.signingResult(request.topic, request.id, "data")
             tryCompare(componentUnderTest.siweSuccessfulSpy, "count", 1)
         }

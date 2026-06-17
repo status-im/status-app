@@ -41,11 +41,12 @@ Item {
                 }
             }
             store: DAppsStore {
-                controller: QtObject {}
+                controller: QtObject {
+                    signal signingRequested(string reason, string keyUid, string hash, string path, string address)
+                    function onSigningResult(reason, signature) {}
+                }
                 id: dappsStore
 
-                signal userAuthenticated(string topic, string id, string password, string pin, string payload)
-                signal userAuthenticationFailed(string topic, string id)
                 signal signingResult(string topic, string id, string data)
 
                 signal estimatedTimeResponse(string topic, int timeCategory, bool success)
@@ -78,34 +79,29 @@ Item {
                     return mockedSuggestedFees
                 }
 
-                property var authenticateUserCalls: []
-                function authenticateUser(topic, id, address) {
-                    authenticateUserCalls.push({topic, id, address})
-                }
-
                 property var signMessageCalls: []
-                function signMessage(topic, id, address, message, password, pin) {
-                    signMessageCalls.push({topic, id, address, password, pin})
+                function signMessage(topic, id, address, message) {
+                    signMessageCalls.push({topic, id, address, message})
                 }
 
                 property var signMessageUnsafeCalls: []
-                function signMessageUnsafe(topic, id, address, data, password, pin) {
-                    signMessageUnsafeCalls.push({topic, id, address, data, password, pin})
+                function signMessageUnsafe(topic, id, address, data) {
+                    signMessageUnsafeCalls.push({topic, id, address, data})
                 }
 
                 property var safeSignTypedDataCalls: []
-                function safeSignTypedData(topic, id, address, message, chainId, legacy, password, pin) {
-                    safeSignTypedDataCalls.push({topic, id, address, message, chainId, legacy, password, pin})
+                function safeSignTypedData(topic, id, address, message, chainId, legacy) {
+                    safeSignTypedDataCalls.push({topic, id, address, message, chainId, legacy})
                 }
 
                 property var signTransactionCalls: []
-                function signTransaction(topic, id, address, chainId, txObj, password, pin) {
-                    signTransactionCalls.push({topic, id, address, chainId, txObj, password, pin})
+                function signTransaction(topic, id, address, chainId, txObj) {
+                    signTransactionCalls.push({topic, id, address, chainId, txObj})
                 }
 
                 property var sendTransactionCalls: []
-                function sendTransaction(topic, id, address, chainID, txObj, password, pin) {
-                    sendTransactionCalls.push({topic, id, address, chainID, txObj, password, pin})
+                function sendTransaction(topic, id, address, chainID, txObj) {
+                    sendTransactionCalls.push({topic, id, address, chainID, txObj})
                 }
             }
             dappsModel: ListModel {
@@ -158,7 +154,7 @@ Item {
             componentUnderTest.sdk.sessionRequestEvent(signEvent)
             // Execute the request
             const request = componentUnderTest.requests.get(0)
-            request.requestItem.execute("passowrd", "pin")
+            request.requestItem.execute()
 
             componentUnderTest.store.signingResult(signEvent.topic, signEvent.id, "result")
             compare(componentUnderTest.sdk.acceptSessionRequestCalls.length, 1, "Accept session request should be called")
@@ -242,19 +238,6 @@ Item {
             compare(componentUnderTest.signCompletedSpy.count, 0, "Sign completed signal should not be emitted")
         }
 
-        function test_authFailed() {
-            const signEvent = {"id":1730896495619543,"params":{"chainId":"eip155:1","request":{"method":"eth_signTypedData_v4","params":["0x123","{\"domain\":{\"chainId\":\"1\",\"name\":\"Ether Mail\",\"verifyingContract\":\"0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC\",\"version\":\"1\"},\"message\":{\"contents\":\"Hello, Bob!\",\"from\":{\"name\":\"Cow\",\"wallets\":[\"0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826\",\"0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF\"]},\"to\":[{\"name\":\"Bob\",\"wallets\":[\"0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB\",\"0xB0BdaBea57B0BDABeA57b0bdABEA57b0BDabEa57\",\"0xB0B0b0b0b0b0B000000000000000000000000000\"]}],\"attachment\":\"0x\"},\"primaryType\":\"Mail\",\"types\":{\"EIP712Domain\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"version\",\"type\":\"string\"},{\"name\":\"chainId\",\"type\":\"uint256\"},{\"name\":\"verifyingContract\",\"type\":\"address\"}],\"Group\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"members\",\"type\":\"Person[]\"}],\"Mail\":[{\"name\":\"from\",\"type\":\"Person\"},{\"name\":\"to\",\"type\":\"Person[]\"},{\"name\":\"contents\",\"type\":\"string\"},{\"name\":\"attachment\",\"type\":\"bytes\"}],\"Person\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"wallets\",\"type\":\"address[]\"}]}}"]}},"topic":"43a74a4c6c71e3ab67ef80283dc43f392445642c8dce3dabe63f89ab83cfcfc3","verifyContext":{"verified":{"origin":"https://metamask.github.io/test-dapp/","validation":"UNKNOWN","verifyUrl":"https://verify.walletconnect.org"}}}
-            populateDAppData(signEvent.topic)
-            componentUnderTest.sdk.sessionRequestEvent(signEvent)
-            // Execute the request
-            const request = componentUnderTest.requests.get(0)
-
-            request.requestItem.authFailed()
-            compare(componentUnderTest.sdk.rejectSessionRequestCalls.length, 1, "Reject session request should be called")
-            compare(componentUnderTest.rejectedSpy.count, 1, "Rejected signal should be emitted")
-            compare(componentUnderTest.signCompletedSpy.count, 0, "Sign completed signal should not be emitted")
-        }
-
         function test_signMessageFails() {
             const signEvent = {"id":1730896495619543,"params":{"chainId":"eip155:1","request":{"method":"eth_signTypedData_v4","params":["0x123","{\"domain\":{\"chainId\":\"1\",\"name\":\"Ether Mail\",\"verifyingContract\":\"0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC\",\"version\":\"1\"},\"message\":{\"contents\":\"Hello, Bob!\",\"from\":{\"name\":\"Cow\",\"wallets\":[\"0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826\",\"0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF\"]},\"to\":[{\"name\":\"Bob\",\"wallets\":[\"0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB\",\"0xB0BdaBea57B0BDABeA57b0bdABEA57b0BDabEa57\",\"0xB0B0b0b0b0b0B000000000000000000000000000\"]}],\"attachment\":\"0x\"},\"primaryType\":\"Mail\",\"types\":{\"EIP712Domain\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"version\",\"type\":\"string\"},{\"name\":\"chainId\",\"type\":\"uint256\"},{\"name\":\"verifyingContract\",\"type\":\"address\"}],\"Group\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"members\",\"type\":\"Person[]\"}],\"Mail\":[{\"name\":\"from\",\"type\":\"Person\"},{\"name\":\"to\",\"type\":\"Person[]\"},{\"name\":\"contents\",\"type\":\"string\"},{\"name\":\"attachment\",\"type\":\"bytes\"}],\"Person\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"wallets\",\"type\":\"address[]\"}]}}"]}},"topic":"43a74a4c6c71e3ab67ef80283dc43f392445642c8dce3dabe63f89ab83cfcfc3","verifyContext":{"verified":{"origin":"https://metamask.github.io/test-dapp/","validation":"UNKNOWN","verifyUrl":"https://verify.walletconnect.org"}}}
             
@@ -262,7 +245,7 @@ Item {
             componentUnderTest.sdk.sessionRequestEvent(signEvent)
             // Execute the request
             const request = componentUnderTest.requests.get(0)
-            request.requestItem.execute("passowrd", "pin")
+            request.requestItem.execute()
 
             componentUnderTest.store.signingResult(signEvent.topic, signEvent.id, "")
             compare(componentUnderTest.sdk.rejectSessionRequestCalls.length, 1, "Reject session request should be called")
