@@ -59,20 +59,16 @@ Item {
                 }
             }
             store: DAppsStore {
-                controller: QtObject {}
+                controller: QtObject {
+                    signal signingRequested(string reason, string keyUid, string hash, string path, string address)
+                    function onSigningResult(reason, signature) {}
+                }
                 id: dappsStoreMock
-                signal userAuthenticated(string topic, string id, string password, string pin)
-                signal userAuthenticationFailed(string topic, string id)
                 signal signingResult(string topic, string id, string data)
 
-                property var authenticateUserCalls: []
-                function authenticateUser(topic, id, address) {
-                    authenticateUserCalls.push({topic, id, address})
-                }
-
                 property var signMessageCalls: []
-                function signMessage(topic, id, address, data, password, pin) {
-                    signMessageCalls.push({topic, id, address, data, password, pin})
+                function signMessage(topic, id, address, data) {
+                    signMessageCalls.push({topic, id, address, data})
                 }
             }
             request: buildSiweRequestMessage()
@@ -221,7 +217,7 @@ Item {
 
             const request = componentUnderTest.registerSignRequestSpy.signalArguments[0][0]
             verify(!!request)
-            request.execute("password", "pin")
+            request.execute()
             compare(componentUnderTest.store.signMessageCalls.length, 1)
             componentUnderTest.store.signingResult(requestEvent.topic, requestEvent.id, "signedData")
 
@@ -374,7 +370,6 @@ Item {
             componentUnderTest.sdk.formatAuthMessageResult(key, formattedMessage(), "")
             const request = componentUnderTest.registerSignRequestSpy.signalArguments[0][0]
             request.reject(false)
-            componentUnderTest.store.userAuthenticationFailed(requestEvent.topic, requestEvent.id)
             compare(componentUnderTest.finishedSpy.count, 1)
         }
 
@@ -461,7 +456,7 @@ Item {
             compare(componentUnderTest.registerSignRequestSpy.count, 1)
 
             const request = componentUnderTest.registerSignRequestSpy.signalArguments[0][0]
-            request.execute("password", "pin")
+            request.execute()
 
             // wrong key
             componentUnderTest.store.signingResult(requestEvent.topic, requestEvent.id + 1, "signedData")

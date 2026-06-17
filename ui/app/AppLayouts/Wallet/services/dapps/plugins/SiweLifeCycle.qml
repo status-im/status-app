@@ -228,26 +228,10 @@ SQUtils.QObject {
             }
         }
 
-        onAuthFailed: () => {
-            try {
-                sdk.rejectSessionAuthenticate(request.requestId, true)
-                const appDomain = SQUtils.StringUtils.extractDomainFromLink(request.dappUrl)
-                const methodStr = SessionRequest.methodToUserString(request.method)
-                if (!methodStr) {
-                    return
-                }
-
-                root.finished(qsTr("Failed to authenticate %1 from %2").arg(methodStr).arg(appDomain))
-            } catch (e) {
-                console.warn("Error in SiweLifeCycle::onAuthFailed", e)
-                root.finished(e)
-            }
-        }
-
-        onExecute: (password, pin) => {
+        onExecute: () => {
             try {
                 root.store.signingResult.connect(request.signedHandler)
-                root.store.signMessage(request.topic, request.requestId, request.accountAddress, request.preparedData, password, pin)
+                root.store.signMessage(request.topic, request.requestId, request.accountAddress, request.preparedData)
             } catch (e) {
                 console.warn("Error in SiweLifeCycle::onExecute", e)
                 root.finished(e)

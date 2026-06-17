@@ -1,5 +1,5 @@
 import nimqml
-import chronicles, json
+import chronicles, json, tables
 
 import app/core/eventemitter
 import app/global/global_singleton
@@ -12,8 +12,22 @@ import helpers
 logScope:
   topics = "wallet-connect-controller"
 
+# Keep it in sync with Constants.signingReason.walletConnect in ui/imports/utils/Constants.qml
+const WC_SIGNING_REASON_PREFIX* = "wallet-connect"
+
 type
-  SigningCallbackFn* = proc(topic: string, id: string, keyUid: string, address: string, signature: string)
+  WcSignKind = enum
+    wskMessage      # personal_sign / eth_sign / typed data -> return the canonical signature as-is
+    wskSignTx       # eth_signTransaction -> build the raw transaction
+    wskSendTx       # eth_sendTransaction -> sign and send the transaction
+
+  PendingWcSign = object
+    topic: string
+    id: string
+    address: string
+    chainId: int
+    kind: WcSignKind
+    txData: JsonNode
 
 QtObject:
   type
@@ -21,6 +35,7 @@ QtObject:
       service: wallet_connect_service.Service
       walletAccountService: wallet_account_service.Service
       events: EventEmitter
+      pendingSignRequests: Table[string, PendingWcSign]
 
   proc delete*(self: Controller)
   proc newController*(
@@ -38,6 +53,8 @@ QtObject:
   proc estimatedTimeResponse*(self: Controller, topic: string, estimatedTime: int) {.signal.}
   proc suggestedFeesResponse*(self: Controller, topic: string, suggestedFeesJson: string) {.signal.}
   proc estimatedGasResponse*(self: Controller, topic: string, gasEstimate: string) {.signal.}
+  proc signingRequested*(self: Controller, reason: string, keyUid: string, hash: string, path: string, address: string) {.signal.}
+  proc signingResultReceived*(self: Controller, topic: string, id: string, data: string) {.signal.}
 
   proc init*(self: Controller) =
     self.events.on(SIGNAL_ESTIMATED_TIME_RESPONSE) do(e: Args):
@@ -52,135 +69,105 @@ QtObject:
       let args = EstimatedGasArgs(e)
       self.estimatedGasResponse(args.topic, args.estimatedGas)
 
-  ## signals emitted by this controller
-  proc userAuthenticationResult*(self: Controller, topic: string, id: string, error: bool, password: string, pin: string, payload: string) {.signal.}
-  proc signingResultReceived*(self: Controller, topic: string, id: string, data: string) {.signal.}
-
-  # Beware, it will fail if an authentication is already in progress
-  proc authenticateUser*(self: Controller, topic: string, id: string, address: string, payload: string): bool {.slot.} =
+  proc resolveSigningParams(self: Controller, address: string): tuple[keyUid: string, path: string, ok: bool] =
+    let acc = self.walletAccountService.getAccountByAddress(address)
+    if acc.isNil:
+      return ("", "", false)
     let keypair = self.walletAccountService.getKeypairByAccountAddress(address)
     if keypair.isNil:
-      return false
+      return ("", "", false)
     var keyUid = singletonInstance.userProfile.getKeyUid()
     if keypair.migratedToColdWallet():
       keyUid = keypair.keyUid
-    return self.service.authenticateUser(keyUid, proc(receivedKeyUid: string, password: string, pin: string) =
-      if receivedKeyUid.len == 0 or receivedKeyUid != keyUid or password.len == 0:
-        self.userAuthenticationResult(topic, id, false, "", "", "")
-        return
-      self.userAuthenticationResult(topic, id, true, password, pin, payload)
-    )
+    return (keyUid, acc.path, true)
 
-  proc signOnKeycard(self: Controller, address: string): bool =
-    let keypair = self.walletAccountService.getKeypairByAccountAddress(address)
-    if keypair.isNil:
-      raise newException(CatchableError, "cannot resolve keypair for address: " & address)
-    return keypair.migratedToColdWallet()
+  proc requestSignature(self: Controller, topic, id, address: string, chainId: int, kind: WcSignKind, hash: string, txData: JsonNode = nil) =
+    if hash.len == 0:
+      error "wallet connect: empty hash to sign", topic=topic, id=id
+      self.signingResultReceived(topic, id, "")
+      return
+    let (keyUid, path, ok) = self.resolveSigningParams(address)
+    if not ok:
+      error "wallet connect: cannot resolve signing params", address=address
+      self.signingResultReceived(topic, id, "")
+      return
+    let reason = WC_SIGNING_REASON_PREFIX & "-" & id
+    self.pendingSignRequests[reason] = PendingWcSign(topic: topic, id: id, address: address, chainId: chainId, kind: kind, txData: txData)
+    self.signingRequested(reason, keyUid, hash, path, address)
 
-  proc preparePassword(self: Controller, password: string): string =
-    if singletonInstance.userProfile.getMigratedToColdWallet():
-      return password
-    return hashPassword(password)
-
-  proc signMessageWithCallback(self: Controller, topic: string, id: string, address: string, message: string, password: string,
-    pin: string, callback: SigningCallbackFn) =
-    var res = ""
+  proc onSigningResult*(self: Controller, reason: string, signature: string) {.slot.} =
+    if not self.pendingSignRequests.hasKey(reason):
+      return
+    let req = self.pendingSignRequests[reason]
+    self.pendingSignRequests.del(reason)
+    var data = ""
     try:
-      if message.len == 0:
-        raise newException(CatchableError, "message is empty")
-      if self.signOnKeycard(address):
-        let acc = self.walletAccountService.getAccountByAddress(address)
-        if acc.isNil:
-          raise newException(CatchableError, "cannot resolve account for address: " & address)
-        if not self.service.runSigningOnKeycard(
-          acc.keyUid,
-          acc.path,
-          singletonInstance.utils.removeHexPrefix(message),
-          pin,
-          proc(keyUid: string, signature: string) =
-            if keyUid.len == 0 or keyUid != acc.keyUid or signature.len == 0:
-              raise newException(CatchableError, "keycard signing failed")
-            callback(topic, id, keyUid, address, signature)
-          ):
-            raise newException(CatchableError, "runSigningOnKeycard failed")
-        debug "signMessageWithCallback: signing on keycard started successfully"
-        return
-      let finalPassword = self.preparePassword(password)
-      var err: string
-      (res, err) = self.service.signMessage(address, finalPassword, message)
-      if err.len > 0:
-        raise newException(CatchableError, "signMessage failed: " & err)
+      if signature.len == 0:
+        raise newException(CatchableError, "signing cancelled or failed")
+      case req.kind
+      of wskMessage:
+        # personal_sign / typed data expect the canonical (yellow-paper, 1b/1c) signature
+        data = signature
+      of wskSignTx, wskSendTx:
+        # transaction signing expects r+s+v with v as the recovery id (00/01)
+        let (r, s, v) = getRSVFromSignature(signature)
+        if r.len == 0 or s.len == 0 or v.len == 0:
+          raise newException(CatchableError, "invalid signature")
+        let recidSignature = r & s & v
+        if req.kind == wskSignTx:
+          data = self.service.buildRawTransaction(req.chainId, $req.txData, recidSignature)
+        else:
+          data = self.service.sendTransactionWithSignature(req.chainId, $req.txData, recidSignature)
     except Exception as e:
-      error "signMessageWithCallback failed: ", msg=e.msg
-    callback(topic, id, "", address, res)
+      error "wallet connect: onSigningResult failed", msg=e.msg
+      data = ""
+    self.signingResultReceived(req.topic, req.id, data)
 
-  proc signMessage*(self: Controller, topic: string, id: string, address: string, message: string, password: string, pin: string) {.slot.} =
-    var res = ""
+  proc signMessage*(self: Controller, topic: string, id: string, address: string, message: string) {.slot.} =
     try:
       if message.len == 0:
         raise newException(CatchableError, "message is empty")
       let hashedMessage = self.service.hashMessageEIP191(message)
       if hashedMessage.len == 0:
         raise newException(CatchableError, "hashMessageEIP191 failed")
-      self.signMessageWithCallback(topic, id, address, hashedMessage, password, pin,
-        proc (topic: string, id: string, keyUid: string, address: string, signature: string) =
-          self.signingResultReceived(topic, id, signature)
-      )
+      self.requestSignature(topic, id, address, 0, wskMessage, hashedMessage)
     except Exception as e:
       error "signMessage failed: ", msg=e.msg
-      self.signingResultReceived(topic, id, res)
+      self.signingResultReceived(topic, id, "")
 
-  proc signMessageUnsafe*(self: Controller, topic: string, id: string, address: string, message: string, password: string, pin: string) {.slot.} =
-    self.signMessage(topic, id, address, message, password, pin)
+  proc signMessageUnsafe*(self: Controller, topic: string, id: string, address: string, message: string) {.slot.} =
+    self.signMessage(topic, id, address, message)
 
-  proc safeSignTypedData*(self: Controller, topic: string, id: string, address: string, typedDataJson: string, chainId: int, legacy: bool,
-    password: string, pin: string): string {.slot.} =
-    var res = ""
+  proc safeSignTypedData*(self: Controller, topic: string, id: string, address: string, typedDataJson: string, chainId: int, legacy: bool) {.slot.} =
     try:
-      var dataToSign = ""
-      if legacy:
-        dataToSign = self.service.hashTypedData(typedDataJson)
-      else:
-        dataToSign = self.service.hashTypedDataV4(typedDataJson)
+      let dataToSign = if legacy: self.service.hashTypedData(typedDataJson)
+                       else: self.service.hashTypedDataV4(typedDataJson)
       if dataToSign.len == 0:
         raise newException(CatchableError, "hashTypedData failed")
-      self.signMessageWithCallback(topic, id, address, dataToSign, password, pin,
-        proc (topic: string, id: string, keyUid: string, address: string, signature: string) =
-          self.signingResultReceived(topic, id, signature)
-      )
+      self.requestSignature(topic, id, address, chainId, wskMessage, dataToSign)
     except Exception as e:
       error "safeSignTypedData failed: ", msg=e.msg
-      self.signingResultReceived(topic, id, res)
+      self.signingResultReceived(topic, id, "")
 
-  proc signTransaction*(self: Controller, topic: string, id: string, address: string, chainId: int, txJson: string, password: string, pin: string) {.slot.} =
-    var res = ""
+  proc signTransaction*(self: Controller, topic: string, id: string, address: string, chainId: int, txJson: string) {.slot.} =
     try:
       let (txHash, txData) = self.service.buildTransaction(chainId, txJson)
       if txHash.len == 0 or txData.isNil:
         raise newException(CatchableError, "building transaction failed")
-      self.signMessageWithCallback(topic, id, address, txHash, password, pin,
-        proc (topic: string, id: string, keyUid: string, address: string, signature: string) =
-          let rawTx = self.service.buildRawTransaction(chainId, $txData, signature)
-          self.signingResultReceived(topic, id, rawTx)
-      )
+      self.requestSignature(topic, id, address, chainId, wskSignTx, txHash, txData)
     except Exception as e:
       error "signTransaction failed: ", msg=e.msg
-      self.signingResultReceived(topic, id, res)
+      self.signingResultReceived(topic, id, "")
 
-  proc sendTransaction*(self: Controller, topic: string, id: string, address: string, chainId: int, txJson: string, password: string, pin: string) {.slot.} =
-    var res = ""
+  proc sendTransaction*(self: Controller, topic: string, id: string, address: string, chainId: int, txJson: string) {.slot.} =
     try:
       let (txHash, txData) = self.service.buildTransaction(chainId, txJson)
       if txHash.len == 0 or txData.isNil:
         raise newException(CatchableError, "building transaction failed")
-      self.signMessageWithCallback(topic, id, address, txHash, password, pin,
-        proc (topic: string, id: string, keyUid: string, address: string, signature: string) =
-          let signedTxHash = self.service.sendTransactionWithSignature(chainId, $txData, signature)
-          self.signingResultReceived(topic, id, signedTxHash)
-      )
+      self.requestSignature(topic, id, address, chainId, wskSendTx, txHash, txData)
     except Exception as e:
       error "sendTransaction failed: ", msg=e.msg
-      self.signingResultReceived(topic, id, res)
+      self.signingResultReceived(topic, id, "")
 
   proc requestEstimatedTime(self: Controller, topic: string, chainId: int, maxFeePerGasHex: string) {.slot.} =
     self.service.getEstimatedTime(topic, chainId, maxFeePerGasHex)
