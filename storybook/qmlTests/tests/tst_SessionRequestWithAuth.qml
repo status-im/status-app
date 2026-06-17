@@ -19,7 +19,7 @@ Item {
             id: sessionRequest
             readonly property SignalSpy executeSpy: SignalSpy { target: sessionRequest; signalName: "execute" }
             readonly property SignalSpy rejectedSpy: SignalSpy { target: sessionRequest; signalName: "rejected" }
-            readonly property SignalSpy authFailedSpy: SignalSpy { target: sessionRequest; signalName: "authFailed" }
+            readonly property SignalSpy acceptedSpy: SignalSpy { target: sessionRequest; signalName: "accepted" }
 
             // SessionRequestResolved required properties
             // Not of interest for this test
@@ -36,13 +36,9 @@ Item {
             dappIcon: "dappIcon"
             dappName: "dappName"
             store: DAppsStore {
-                controller: QtObject {}
-                signal userAuthenticated(string topic, string id, string password, string pin)
-                signal userAuthenticationFailed(string topic, string id)
-
-                property var authenticateUserCalls: []
-                function authenticateUser(topic, id, address) {
-                    authenticateUserCalls.push({topic, id, address})
+                controller: QtObject {
+                    signal signingRequested(string reason, string keyUid, string hash, string path, string address)
+                    function onSigningResult(reason, signature) {}
                 }
             }
         }
@@ -60,33 +56,11 @@ Item {
             componentUnderTest = createTemporaryObject(sessionRequestComponent, root)
         }
 
-        function test_acceptAndAuthenticated() {
+        function test_acceptEmitsExecute() {
             componentUnderTest.accept()
-            compare(componentUnderTest.executeSpy.count, 0)
-            compare(componentUnderTest.rejectedSpy.count, 0)
-            compare(componentUnderTest.authFailedSpy.count, 0)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 1)
-
-            componentUnderTest.store.userAuthenticated("topic", "id", "password", "pin")
-            
             compare(componentUnderTest.executeSpy.count, 1)
+            compare(componentUnderTest.acceptedSpy.count, 1)
             compare(componentUnderTest.rejectedSpy.count, 0)
-            compare(componentUnderTest.authFailedSpy.count, 0)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 1)
-        }
-
-        function test_AcceptAndAuthFails() {
-            componentUnderTest.accept()
-            compare(componentUnderTest.executeSpy.count, 0)
-            compare(componentUnderTest.rejectedSpy.count, 0)
-            compare(componentUnderTest.authFailedSpy.count, 0)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 1)
-
-            componentUnderTest.store.userAuthenticationFailed("topic", "id")
-            
-            compare(componentUnderTest.executeSpy.count, 0)
-            compare(componentUnderTest.authFailedSpy.count, 1)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 1)
         }
 
         function test_AcceptRequestExpired() {
@@ -94,49 +68,14 @@ Item {
             componentUnderTest.expirationTimestamp = Date.now() / 1000 - 1
             componentUnderTest.accept()
             compare(componentUnderTest.executeSpy.count, 0)
+            compare(componentUnderTest.acceptedSpy.count, 0)
             compare(componentUnderTest.rejectedSpy.count, 1)
-            compare(componentUnderTest.authFailedSpy.count, 0)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 0)
-        }
-
-        function test_AcceptAndReject() {
-            componentUnderTest.accept()
-            compare(componentUnderTest.executeSpy.count, 0)
-            compare(componentUnderTest.rejectedSpy.count, 0)
-            compare(componentUnderTest.authFailedSpy.count, 0)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 1)
-
-            componentUnderTest.reject(false)
-            
-            compare(componentUnderTest.executeSpy.count, 0)
-            compare(componentUnderTest.rejectedSpy.count, 1)
-            compare(componentUnderTest.authFailedSpy.count, 0)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 1)
-        }
-
-        function test_AcceptAndExpiresAfterAuth() {
-            ignoreWarning("Error: request expired")
-            componentUnderTest.accept()
-            compare(componentUnderTest.executeSpy.count, 0)
-            compare(componentUnderTest.rejectedSpy.count, 0)
-            compare(componentUnderTest.authFailedSpy.count, 0)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 1)
-
-            componentUnderTest.expirationTimestamp = Date.now() / 1000 - 1
-            componentUnderTest.store.userAuthenticated("topic", "id", "password", "pin")
-            
-            compare(componentUnderTest.executeSpy.count, 0)
-            compare(componentUnderTest.rejectedSpy.count, 1)
-            compare(componentUnderTest.authFailedSpy.count, 0)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 1)
         }
 
         function test_Reject() {
             componentUnderTest.reject(false)
             compare(componentUnderTest.executeSpy.count, 0)
             compare(componentUnderTest.rejectedSpy.count, 1)
-            compare(componentUnderTest.authFailedSpy.count, 0)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 0)
         }
 
         function test_RejectExpiredRequest() {
@@ -144,8 +83,6 @@ Item {
             componentUnderTest.reject(false)
             compare(componentUnderTest.executeSpy.count, 0)
             compare(componentUnderTest.rejectedSpy.count, 1)
-            compare(componentUnderTest.authFailedSpy.count, 0)
-            compare(componentUnderTest.store.authenticateUserCalls.length, 0)
         }
     }
 }
