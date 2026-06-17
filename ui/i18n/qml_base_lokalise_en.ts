@@ -19099,14 +19099,6 @@
     </message>
   </context>
   <context>
-    <name>SiweLifeCycle</name>
-    <message>
-      <source>Failed to authenticate %1 from %2</source>
-      <comment>SiweLifeCycle</comment>
-      <translation>Failed to authenticate %1 from %2</translation>
-    </message>
-  </context>
-  <context>
     <name>SlippageSelector</name>
     <message>
       <source>Custom</source>

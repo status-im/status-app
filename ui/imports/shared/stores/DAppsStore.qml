@@ -2,12 +2,12 @@ import QtQuick
 
 import StatusQ.Core.Utils
 
+import utils
+
 QObject {
     id: root
 
     required property var controller
-    signal userAuthenticated(string topic, string id, string password, string pin, string payload)
-    signal userAuthenticationFailed(string topic, string id)
 
     signal signingResult(string topic, string id, string data)
 
@@ -15,23 +15,32 @@ QObject {
     signal suggestedFeesResponse(string topic, var suggestedFeesJsonObj, bool success)
     signal estimatedGasResponse(string topic, string gasEstimate, bool success)
 
-    function authenticateUser(topic, id, address, payload) {
-        let ok = controller.authenticateUser(topic, id, address, payload)
-        if(!ok) {
-            root.userAuthenticationFailed()
+    readonly property Connections _signingRequestConnections: Connections {
+        target: root.controller
+        function onSigningRequested(reason, keyUid, hash, path, address) {
+            Global.openSigningPopup(reason, keyUid, hash, path, address)
         }
     }
 
-    function signMessageUnsafe(topic, id, address, message, password, pin = "") {
-        controller.signMessageUnsafe(topic, id, address, message, password, pin)
+    readonly property Connections _signingResultConnections: Connections {
+        target: Global
+        function onSigningResult(reason, signature, keyUid, path, address) {
+            if (!reason.startsWith(Constants.signingReason.walletConnect))
+                return
+            root.controller.onSigningResult(reason, signature)
+        }
     }
 
-    function signMessage(topic, id, address, message, password, pin = "") {
-        controller.signMessage(topic, id, address, message, password, pin)
+    function signMessageUnsafe(topic, id, address, message) {
+        controller.signMessageUnsafe(topic, id, address, message)
     }
 
-    function safeSignTypedData(topic, id, address, typedDataJson, chainId, legacy, password, pin = "") {
-        controller.safeSignTypedData(topic, id, address, typedDataJson, chainId, legacy, password, pin)
+    function signMessage(topic, id, address, message) {
+        controller.signMessage(topic, id, address, message)
+    }
+
+    function safeSignTypedData(topic, id, address, typedDataJson, chainId, legacy) {
+        controller.safeSignTypedData(topic, id, address, typedDataJson, chainId, legacy)
     }
 
     // Remove leading zeros from hex number as expected by status-go
@@ -89,14 +98,14 @@ QObject {
         }
     }
 
-    function signTransaction(topic, id, address, chainId, password, txObj) {
+    function signTransaction(topic, id, address, chainId, txObj) {
         let tx = prepareTxForStatusGo(txObj)
-        controller.signTransaction(topic, id, address, chainId, JSON.stringify(tx), password, pin)
+        controller.signTransaction(topic, id, address, chainId, JSON.stringify(tx))
     }
 
-    function sendTransaction(topic, id, address, chainId, txObj, password, pin = "") {
+    function sendTransaction(topic, id, address, chainId, txObj) {
         let tx = prepareTxForStatusGo(txObj)
-        controller.sendTransaction(topic, id, address, chainId, JSON.stringify(tx), password, pin)
+        controller.sendTransaction(topic, id, address, chainId, JSON.stringify(tx))
     }
 
     function hexToDec(hex) {
@@ -111,14 +120,6 @@ QObject {
     // Handle async response from controller
     Connections {
         target: controller
-
-        function onUserAuthenticationResult(topic, id, success, password, pin, payload) {
-            if (success) {
-                root.userAuthenticated(topic, id, password, pin, payload)
-            } else {
-                root.userAuthenticationFailed(topic, id)
-            }
-        }
 
         function onSigningResultReceived(topic, id, data) {
             root.signingResult(topic, id, data)

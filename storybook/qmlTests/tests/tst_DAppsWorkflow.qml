@@ -153,9 +153,10 @@ Item {
         id: dappsStoreComponent
 
         DAppsStore {
-            controller: QtObject {}
-            signal userAuthenticated(string topic, string id, string password, string pin)
-            signal userAuthenticationFailed(string topic, string id)
+            controller: QtObject {
+                signal signingRequested(string reason, string keyUid, string hash, string path, string address)
+                function onSigningResult(reason, signature) {}
+            }
             signal signingResult(string topic, string id, string data)
 
             signal estimatedTimeResponse(string topic, int timeCategory, bool success)
@@ -163,18 +164,13 @@ Item {
             signal estimatedGasResponse(string topic, string gasEstimate, bool success)
 
 
-            property var authenticateUserCalls: []
-            function authenticateUser(topic, id, address) {
-                authenticateUserCalls.push({topic, id, address})
-            }
-
             property var signMessageCalls: []
-            function signMessage(topic, id, address, password, message) {
-                signMessageCalls.push({topic, id, address, password, message})
+            function signMessage(topic, id, address, message) {
+                signMessageCalls.push({topic, id, address, message})
             }
             property var safeSignTypedDataCalls: []
-            function safeSignTypedData(topic, id, address, password, message, chainId, legacy) {
-                safeSignTypedDataCalls.push({topic, id, address, password, message, chainId, legacy})
+            function safeSignTypedData(topic, id, address, message, chainId, legacy) {
+                safeSignTypedDataCalls.push({topic, id, address, message, chainId, legacy})
             }
 
             function requestEstimatedTime(topic, chainId, maxFeePerGas) {
@@ -348,12 +344,10 @@ Item {
             handler.wcSdk.sessionRequestEvent(td.request.event)
             let request = handler.requestsModel.findById(td.request.requestId)
             request.accept()
-            compare(handler.store.authenticateUserCalls.length, 1, "expected a call to store.authenticateUser")
 
             let store = handler.store
-            store.userAuthenticated(td.topic, td.request.requestId, "hello world", "")
             compare(store.signMessageCalls.length, 1, "expected a call to store.signMessage")
-            compare(store.signMessageCalls[0].message, td.request.data)
+            compare(store.signMessageCalls[0].id, td.request.requestId)
         }
 
         function test_onSessionRequestEventDifferentCaseForAddress() {
@@ -576,7 +570,6 @@ Item {
 
             ignoreWarning("Error: request expired")
             request.accept()
-            handler.store.userAuthenticated(topic, session.id, "1234", "", message)
             verify(sdk.rejectSessionRequestCalls.length === 1, "expected a call to sdk.rejectSessionRequest")
             sdk.sessionRequestUserAnswerResult(topic, session.id, false, "")
         }
@@ -602,7 +595,6 @@ Item {
 
             ignoreWarning("Error: request expired")
             handler.requestsModel.findRequest(topic, session.id).accept()
-            handler.store.userAuthenticationFailed(topic, session.id)
             verify(sdk.rejectSessionRequestCalls.length === 1, "expected a call to sdk.rejectSessionRequest")
         }
 
@@ -627,7 +619,6 @@ Item {
 
             ignoreWarning("Error: request expired")
             handler.requestsModel.findRequest(topic, session.id).accept()
-            handler.store.userAuthenticationFailed(topic, session.id)
             verify(sdk.rejectSessionRequestCalls.length === 1, "expected a call to sdk.rejectSessionRequest")
         }
     }

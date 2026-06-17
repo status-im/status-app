@@ -15753,13 +15753,6 @@ selhalo</translation>
     </message>
 </context>
 <context>
-    <name>SiweLifeCycle</name>
-    <message>
-        <source>Failed to authenticate %1 from %2</source>
-        <translation>Nepodařilo se ověřit %1 z %2</translation>
-    </message>
-</context>
-<context>
     <name>SlippageSelector</name>
     <message>
         <source>Custom</source>

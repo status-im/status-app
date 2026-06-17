@@ -15680,13 +15680,6 @@ al cargar</translation>
     </message>
 </context>
 <context>
-    <name>SiweLifeCycle</name>
-    <message>
-        <source>Failed to authenticate %1 from %2</source>
-        <translation>Error al autenticar %1 desde %2</translation>
-    </message>
-</context>
-<context>
     <name>SlippageSelector</name>
     <message>
         <source>Custom</source>

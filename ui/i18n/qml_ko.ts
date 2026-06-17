@@ -15608,13 +15608,6 @@ to load</source>
     </message>
 </context>
 <context>
-    <name>SiweLifeCycle</name>
-    <message>
-        <source>Failed to authenticate %1 from %2</source>
-        <translation>%2에서 %1 인증에 실패했습니다</translation>
-    </message>
-</context>
-<context>
     <name>SlippageSelector</name>
     <message>
         <source>Custom</source>
