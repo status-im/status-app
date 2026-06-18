@@ -61,9 +61,12 @@ Column {
                     return ""
                 }
 
-                if (root.store.selectedOrigin.keyUid === root.store.userProfileKeyUid &&
-                        root.store.userProfileUsingBiometricLogin) {
+                if (root.store.userProfileUsingBiometricLogin) {
                     return "touch-id"
+                }
+
+                if (root.store.userProfileMigratedToColdWallet) {
+                    return "keycard"
                 }
 
                 return "password"

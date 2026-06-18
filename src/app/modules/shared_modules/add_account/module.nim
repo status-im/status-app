@@ -311,7 +311,8 @@ proc fetchAddressForDerivationPath[T](self: Module[T]) =
       if selectedOrigin.getMigratedToColdWallet():
         self.fetchDerivedAddressesFromColdWalletKeypair(selectedOrigin.getKeyUid(), paths)
         return
-      self.controller.fetchDerivedAddresses(selectedOrigin.getDerivedFrom(), paths)
+      let doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet()
+      self.controller.fetchDerivedAddresses(selectedOrigin.getDerivedFrom(), paths, doPasswordHashing)
       return
   error "derivation is not supported for other than profile and seed imported keypairs for origin"
 
@@ -329,7 +330,6 @@ method onUserAuthenticated*[T](self: Module[T], pin: string, password: string, k
   if password.len == 0:
     info "unsuccessful authentication"
     return
-  self.controller.setPin(pin)
   self.controller.setPassword(password)
   self.controller.setAuthenticatedKeyUid(keyUid)
   if self.authenticationReason == AuthenticationReason.AddingAccount:
@@ -354,7 +354,9 @@ proc isAuthenticationNeededForSelectedOrigin[T](self: Module[T]): bool =
       return false
   if selectedOrigin.getKeyUid() == self.controller.getAuthenticatedKeyUid():
     return false
-  if not selectedOrigin.getMigratedToColdWallet() and self.controller.getAuthenticatedKeyUid() == singletonInstance.userProfile.getKeyUid():
+  if not selectedOrigin.getMigratedToColdWallet() and
+    self.controller.getAuthenticatedKeyUid() == singletonInstance.userProfile.getKeyUid() and
+    self.controller.getPassword().len > 0: # need this condition because cold wallet migrated profile does derive from xpub, without password
     return false
   return true
 
@@ -394,7 +396,6 @@ proc setItemForSelectedOrigin[T](self: Module[T], item: KeyPairItem) =
 
   if self.isAuthenticationNeededForSelectedOrigin():
     self.controller.setAuthenticatedKeyUid("")
-    self.controller.setPin("")
     self.controller.setPassword("")
     self.view.setActionAuthenticated(false)
   else:
