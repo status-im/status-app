@@ -4,6 +4,7 @@ import web3/eth_api_types
 import backend/backend as backend
 
 import app_service/common/utils as common_utils
+import app_service/common/wallet_constants as common_wallet_constants
 import app_service/service/general/debouncer as debouncer_service
 import app_service/service/network/service as network_service
 import app_service/service/settings/service as settings_service
@@ -64,6 +65,7 @@ QtObject:
     hasMarketDetailsCache: bool
     hasPriceValuesCache: bool
     tokenListUpdatedAt: int64
+    refreshTokensRequestId: int
 
   # Forward declaration
   proc getCurrency*(self: Service): string

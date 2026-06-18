@@ -65,15 +65,16 @@ proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.} 
     error "prefetchParaswapSupportRetrieved", err = ex.msg
 
 proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], allTokenDtos: seq[TokenDtoSafe], tokenPrefsNode: JsonNode) =
-  # Parse tokens of interest
-  self.tokensOfInterestByKey.clear()
-  self.groupsOfInterestByKey.clear()
   let tokens = tokenDtos.map(t => createTokenItem(t))
 
-  for token in tokens:
-    self.tokensOfInterestByKey[token.key] = token
-
-  self.addNewTokensToGroupsOfInterest(tokens)
+  if tokens.len > 0 or self.groupsOfInterestByKey.len == 0:
+    self.tokensOfInterestByKey.clear()
+    self.groupsOfInterestByKey.clear()
+    for token in tokens:
+      self.tokensOfInterestByKey[token.key] = token
+    self.addNewTokensToGroupsOfInterest(tokens)
+  else:
+    debug "ignoring empty tokens-of-interest refresh; keeping existing token groups cache"
 
   # Keep tokenPreferencesJson as the backend array string for QML; fill table from decoded DTOs.
   self.tokenPreferencesJson = "[]"
@@ -88,10 +89,13 @@ proc applyRefreshTokensData(self: Service, tokenDtos: seq[TokenDtoSafe], allToke
         visible: dto.visible,
         communityId: dto.communityId)
 
-  self.allTokensByGroupKey.clear()
-  for dto in allTokenDtos:
-    let item = createTokenItem(dto)
-    self.allTokensByGroupKey.mgetOrPut(item.groupKey, @[]).add(item)
+  if allTokenDtos.len > 0 or self.allTokensByGroupKey.len == 0:
+    self.allTokensByGroupKey.clear()
+    for dto in allTokenDtos:
+      let item = createTokenItem(dto)
+      self.allTokensByGroupKey.mgetOrPut(item.groupKey, @[]).add(item)
+  else:
+    debug "ignoring empty all-tokens refresh; keeping existing all tokens cache"
   self.rebuildMarketData()
   self.fetchTokensDetails() # TODO: if the only place where we can see these details is account's details page, we should fetch this on demand, no need to have local cache
   # notify modules
@@ -103,6 +107,10 @@ proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.} =
     let env = Json.decode(response, RefreshTokensResponse, allowUnknownFields = true)
     if env.error.len > 0:
       error "async refresh tokens failed", errDescription = env.error
+      return
+    if env.requestId != self.refreshTokensRequestId:
+      debug "ignoring stale async refresh tokens response",
+        requestId = env.requestId, latestRequestId = self.refreshTokensRequestId
       return
     self.applyRefreshTokensData(env.tokensOfInterest, env.allTokens, env.tokenPreferences)
   except Exception as e:
@@ -121,10 +129,12 @@ proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.} =
     error "error processing async fetch all token lists", msg = e.msg
 
 proc asyncRefreshTokens(self: Service) =
+  inc self.refreshTokensRequestId
   let arg = AsyncRefreshTokensTaskArg(
     tptr: asyncRefreshTokensTask,
     vptr: cast[uint](self.vptr),
     slot: "onAsyncRefreshTokensDone",
+    requestId: self.refreshTokensRequestId,
   )
   self.threadpool.start(arg)
 
@@ -329,12 +339,41 @@ proc getTokenByKeyOrGroupKeyFromAllTokens*(self: Service, key: string): TokenIte
     return matchedTokens[0]
   return nil
 
+proc findTokenByGroupKeyAndChainIdInTable(
+    tokensByGroupKey: Table[string, seq[TokenItem]],
+    groupKey: string,
+    chainId: int,
+): TokenItem =
+  if not tokensByGroupKey.hasKey(groupKey):
+    return nil
+  for token in tokensByGroupKey[groupKey]:
+    if token.chainId == chainId:
+      return token
+  return nil
+
 proc getTokenByGroupKeyAndChainId*(self: Service, groupKey: string, chainId: int): TokenItem =
   let tokens = self.getTokensByGroupKey(groupKey)
   if tokens.len > 0:
     for token in tokens:
       if token.chainId == chainId:
         return token
+
+  var token = findTokenByGroupKeyAndChainIdInTable(self.allTokensByGroupKey, groupKey, chainId)
+  if not token.isNil:
+    return token
+
+  for cachedToken in self.tokensOfInterestByKey.values:
+    if cachedToken.groupKey == groupKey and cachedToken.chainId == chainId:
+      return cachedToken
+
+  if groupKey == common_wallet_constants.ETH_GROUP_KEY or
+     groupKey == common_wallet_constants.BNB_GROUP_KEY:
+    return createNativeTokenItem(chainId)
+
+  if groupKey == common_wallet_constants.STATUS_GROUP_KEY or
+     groupKey == common_wallet_constants.STATUS_TEST_TOKEN_GROUP_KEY:
+    return createStatusTokenItem(chainId)
+
   return nil
 
 ## Checks if the chain is supported for swap via Paraswap
