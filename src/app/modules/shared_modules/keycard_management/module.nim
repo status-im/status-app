@@ -2,6 +2,7 @@ import nimqml, sugar, strutils, sequtils, chronicles, json, marshal, json_serial
 
 import io_interface
 import view, controller
+import app/global/global_singleton
 import app/core/eventemitter
 import app/modules/shared/keypairs
 
@@ -52,6 +53,7 @@ type
     tmpKeycardUid: string
     tmpKeypairName: string
     tmpXpub: string
+    masterAddress: string
     tmpAccountsData: seq[AccountData]
     tmpSeedPhrase: string
     tmpMetadataAccountsJson: string
@@ -254,7 +256,7 @@ method startImportingKeyPair*[T](self: Module[T], pin: string, seedPhrase: strin
 
 method startMigratingNonProfileKeypairToKeycard*[T](self: Module[T], password: string, pin: string, seedPhrase: string) =
   self.tmpFlowType = FlowType.MigratingNonProfileKeypairToKeycard
-  self.tmpPassword = utils.hashPassword(password)
+  self.tmpPassword = password
   let keyUid = self.controller.getKeyUidForSeedPhrase(seedPhrase)
   let metadataName = self.getKeyPairNameForKeyUid(keyUid)
   let metadataAccounts = self.getKeyPairAccountPathsJsonForKeyUid(keyUid)
@@ -268,7 +270,7 @@ method getMnemonic*[T](self: Module[T]): string =
 
 method startMigratingProfileKeypairToKeycard*[T](self: Module[T], password: string, pin: string, seedPhrase: string) =
   self.tmpFlowType = FlowType.MigratingProfileKeypairToKeycard
-  self.tmpPassword = password # don't hash it here, cause it's hashed in the service (TODO: change that and use hashPassword instead, from this line)
+  self.tmpPassword = password
   self.tmpSeedPhrase = seedPhrase
   let keyUid = self.controller.getKeyUidForSeedPhrase(seedPhrase)
   let metadataName = self.getKeyPairNameForKeyUid(keyUid)
@@ -303,21 +305,7 @@ proc addNewKeycardKeypair*[T](self: Module[T]): string =
       emoji: account.emoji,
     ))
   return self.controller.addNewColdWalletStoredKeypair(self.tmpKeyUid, self.tmpKeypairName, self.tmpXpub,
-    wallet_account_service.ColdWalletTypeStatusKeycard, walletAccounts)
-
-## #########################################################
-## TODO: remove the part below once we remove the keycard management on the status-go side
-## For now, we just add a new keycard and don't care (listen for signal) about the result of that operation
-proc saveKeypairToKeycard[T](self: Module[T]) =
-  let keyPair = KeycardDto(
-    keycardUid: self.view.getKeycardUid(),
-    keyUid: self.tmpKeyUid,
-    keycardName: self.tmpKeypairName,
-    keycardLocked: false,
-    accountsAddresses: self.tmpAccountsData.map(a => a.address),
-  )
-  self.controller.addKeycardOrAccounts(keyPair, self.tmpPassword) # this call is removing local keystore files, we will need a new function for this, once we remove the keycard management on the status-go side
-## #########################################################
+    wallet_account_service.ColdWalletTypeStatusKeycard, self.masterAddress, walletAccounts)
 
 method generateMnemonic*[T](self: Module[T]): string =
   return self.controller.generateMnemonic()
@@ -343,8 +331,9 @@ method startStopUsingKeycardForKeyPair*[T](self: Module[T], keyUid, seedPhrase, 
   self.tmpFlowType = FlowType.StoppingKeycardForKeyPair
   self.tmpKeyUid = keyUid
   self.tmpSeedPhrase = seedPhrase
-  self.tmpPassword = newPassword # it is hashed in the service
-  self.controller.startStopUsingKeycardForKeyPair(keyUid, seedPhrase, newPassword)
+  self.tmpPassword = newPassword
+  let doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet()
+  self.controller.startStopUsingKeycardForKeyPair(keyUid, seedPhrase, newPassword, doPasswordHashing)
 
 method onStopUsingKeycardForKeyPairFinished*[T](self: Module[T], keyUid: string, success: bool) =
   if self.tmpFlowType != FlowType.StoppingKeycardForKeyPair:
@@ -353,6 +342,14 @@ method onStopUsingKeycardForKeyPairFinished*[T](self: Module[T], keyUid: string,
     self.emitError("failed to stop using Keycard for key pair")
     return
   self.view.stopUsingKeycardForKeyPairSuccess()
+
+method onNonProfileKeypairMigratedToColdWalletFinished*[T](self: Module[T], keyUid: string, success: bool) =
+  if self.tmpFlowType != FlowType.MigratingNonProfileKeypairToKeycard:
+    return
+  if not success or keyUid != self.tmpKeyUid:
+    self.emitError("failed to migrate key pair to keycard")
+    return
+  self.view.keycardMoveKeyPairSuccess()
 
 method startChangeKeycardPIN*[T](self: Module[T], currentPin, newPin: string) =
   self.tmpFlowType = FlowType.ChangingKeycardPIN
@@ -431,13 +428,6 @@ method onKeycardRecoverFinished*[T](self: Module[T], error: string) =
   if error.len > 0:
     self.emitError("keycard recover error: " & error)
     return
-  ## #########################################################
-  ## TODO: remove the part below once we remove the keycard management on the status-go side
-  ## For now, we just update the keycard uid in the db and don't care (listen for signal) about the result of that operation
-  let newKeycardUid = self.view.getKeycardUid()
-  if self.tmpKeycardUid.len > 0 and newKeycardUid.len > 0 and self.tmpKeycardUid != newKeycardUid:
-    self.controller.updateKeycardUid(self.tmpKeycardUid, newKeycardUid)
-  ## #########################################################
   self.view.keycardUnblockSuccess()
 
 method startAsyncLogin*[T](self: Module[T], keyUid, pin: string, generateXPub: bool) =
@@ -484,7 +474,7 @@ method onKeycardAsyncLoginFinished*[T](self: Module[T], exportedKeys: KeycardExp
 method startStopUsingKeycardForProfileKeyPair*[T](self: Module[T], seedPhrase, newPassword: string) =
   self.tmpFlowType = FlowType.StoppingKeycardForProfileKeyPair
   self.tmpSeedPhrase = seedPhrase
-  self.tmpPassword = newPassword # don't hash it here, cause it's hashed in the service
+  self.tmpPassword = newPassword
   let acc = self.controller.createAccountFromMnemonic(seedPhrase, includeEncryption = true)
   let currentPassword = acc.derivedAccounts.encryption.publicKey
   if currentPassword.len == 0:
@@ -499,9 +489,9 @@ method startAddingKeyPairToStatusFromKeycard*[T](self: Module[T], pin: string, k
   self.tmpKeyUid = keyUid
   self.tmpKeypairName = metadataName
   self.tmpMetadataAccountsJson = metadataAccounts
-  self.controller.startExportExtendedPublicKey(self.tmpKeyUid, PATH_WALLET_XPUB, pin)
+  self.controller.startExportExtendedPublicKey(self.tmpKeyUid, PATH_WALLET_XPUB, exportMasterAddr = true, pin)
 
-method onKeycardExportExtendedPublicKeyFinished*[T](self: Module[T], xpub: string, error: string) =
+method onKeycardExportExtendedPublicKeyFinished*[T](self: Module[T], xpub: string, masterAddress: string, error: string) =
   if self.tmpFlowType != FlowType.AddingKeyPairFromKeycard:
     return
   if error.len > 0:
@@ -517,6 +507,7 @@ method onKeycardExportExtendedPublicKeyFinished*[T](self: Module[T], xpub: strin
     return
 
   self.tmpXpub = xpub
+  self.masterAddress = masterAddress
 
   if not self.prepareAccountsData(self.tmpXpub, self.tmpMetadataAccountsJson):
     self.emitError("failed to prepare accounts data")
@@ -529,10 +520,9 @@ method onKeycardExportExtendedPublicKeyFinished*[T](self: Module[T], xpub: strin
     self.emitError("failed to add new keycard stored keypair: " & err)
     return
 
-  self.saveKeypairToKeycard()
   self.view.keycardAddKeyPairSuccess()
 
-method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], error: string) =
+method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], exportedKeys: KeycardExportedKeysDto, error: string) =
   if error.len > 0:
     self.emitError("keycard load key pair error: " & error)
     return
@@ -541,20 +531,18 @@ method onKeycardLoadSeedPhraseFinished*[T](self: Module[T], error: string) =
 
   if self.tmpFlowType == FlowType.ImportingKeyPair:
     if not self.isKnownKeyUid(self.tmpKeyUid):
+      self.masterAddress = exportedKeys.masterKey.address
       let err = self.addNewKeycardKeypair()
       if err.len > 0:
         self.emitError("failed to add new keycard stored keypair: " & err)
         return
-      self.saveKeypairToKeycard() # this is just to add keycard to db and remove keystore files
     elif not self.isKeypairMigratedToColdWallet(self.tmpKeyUid):
       self.emitError("key pair is not migrated to keycard, cannot be imported to keycard, keyUid: " & self.tmpKeyUid)
       return
     self.view.keycardImportKeyPairSuccess()
   elif self.tmpFlowType == FlowType.MigratingNonProfileKeypairToKeycard:
-    # TODO: updating xpub explicitly (via updateKeypairXPub) is removed, cause once the key pair is added the xpub is always the same
-    # regardless if the key pair is migrated to a cold wallet device or not, just need to ensure that every (old - already added) key pair has xpub set
-    self.saveKeypairToKeycard() # this is just to add keycard to db and remove keystore files
-    self.view.keycardMoveKeyPairSuccess()
+    let doPasswordHashing = not singletonInstance.userProfile.getMigratedToColdWallet()
+    self.controller.migrateNonProfileKeypairToColdWallet(self.tmpKeyUid, self.tmpPassword, wallet_account_service.ColdWalletTypeStatusKeycard, doPasswordHashing)
   elif self.tmpFlowType == FlowType.MigratingProfileKeypairToKeycard:
     let acc = self.controller.createAccountFromMnemonic(self.tmpSeedPhrase, includeEncryption = true)
     let newPassword = acc.derivedAccounts.encryption.publicKey

@@ -10632,6 +10632,19 @@
     </message>
   </context>
   <context>
+    <name>InsertEmptyKeycardState</name>
+    <message>
+      <source>Insert an empty Keycard</source>
+      <comment>InsertEmptyKeycardState</comment>
+      <translation>Insert an empty Keycard</translation>
+    </message>
+    <message>
+      <source>Insert an empty Keycard you want to migrate your key pair to.</source>
+      <comment>InsertEmptyKeycardState</comment>
+      <translation>Insert an empty Keycard you want to migrate your key pair to.</translation>
+    </message>
+  </context>
+  <context>
     <name>IntroMessageInput</name>
     <message>
       <source>Dialog for new members</source>
@@ -12111,6 +12124,16 @@
       <source>It&#39;s a different Keycard</source>
       <comment>KeycardProgressState</comment>
       <translation>It&#39;s a different Keycard</translation>
+    </message>
+    <message>
+      <source>Keycard is not empty</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Keycard is not empty</translation>
+    </message>
+    <message>
+      <source>Try again with an empty keycard</source>
+      <comment>KeycardProgressState</comment>
+      <translation>Try again with an empty keycard</translation>
     </message>
     <message>
       <source>The card is not a Keycard, try again with Keycard</source>
@@ -18113,6 +18136,11 @@
       <source>Profile key pair</source>
       <comment>SelectKeyPairState</comment>
       <translation>Profile key pair</translation>
+    </message>
+    <message>
+      <source>Key pair</source>
+      <comment>SelectKeyPairState</comment>
+      <translation>Key pair</translation>
     </message>
     <message>
       <source>I understand that moving this key pair will require using Keycard to log in and sign</source>

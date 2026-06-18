@@ -61,8 +61,8 @@ proc init*(self: Controller) =
   self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_LOAD_FINISHED) do(e: Args):
-    let args = KeycardErrorArg(e)
-    self.delegate.onKeycardLoadSeedPhraseFinished(args.error)
+    let args = KeycardLoginArgs(e)
+    self.delegate.onKeycardLoadSeedPhraseFinished(args.exportedKeys, args.error)
   self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SIGNAL_CONVERTING_PROFILE_KEYPAIR) do(e: Args):
@@ -72,12 +72,18 @@ proc init*(self: Controller) =
 
   handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_EXTENDED_PUBLIC_KEYS_FINISHED) do(e: Args):
     let args = KeycardExportedExtendedPublicKeyArgs(e)
-    self.delegate.onKeycardExportExtendedPublicKeyFinished(args.exportedExtendedPublicKey.xpub, args.error)
+    self.delegate.onKeycardExportExtendedPublicKeyFinished(args.exportResult.extendedPublicKey.xpub,
+      args.exportResult.masterKeyAddress, args.error)
   self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SIGNAL_ALL_KEYCARDS_DELETED) do(e: Args):
     let args = KeycardArgs(e)
     self.delegate.onStopUsingKeycardForKeyPairFinished(args.keycard.keyUid, args.success)
+  self.connectionIds.add(handlerId)
+
+  handlerId = self.events.onWithUUID(SIGNAL_NEW_KEYCARD_SET) do(e: Args):
+    let args = KeycardArgs(e)
+    self.delegate.onNonProfileKeypairMigratedToColdWalletFinished(args.keycard.keyUid, args.success)
   self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_CHANGE_PIN_FINISHED) do(e: Args):
@@ -120,8 +126,8 @@ proc startLoadSeedPhrase*(self: Controller, pin: string, puk: string, seedPhrase
     metadataPaths: seq[string]) =
   self.keycardServiceV2.asyncLoadSeedPhrase(pin, puk, seedPhrase, metadataName, metadataPaths)
 
-proc startExportExtendedPublicKey*(self: Controller, keyUid: string, path: string, pin: string) =
-  self.keycardServiceV2.asyncExportExtendedPublicKey(keyUid, path, pin)
+proc startExportExtendedPublicKey*(self: Controller, keyUid: string, path: string, exportMasterAddr: bool, pin: string) =
+  self.keycardServiceV2.asyncExportExtendedPublicKey(keyUid, path, exportMasterAddr, pin)
 
 proc stopKeycardAction*(self: Controller) =
   self.keycardServiceV2.asyncStop()
@@ -139,15 +145,10 @@ proc getKeypairByKeyUid*(self: Controller, keyUid: string): KeypairDto =
     return
   return self.walletAccountService.getKeypairByKeyUid(keyUid)
 
-proc addNewColdWalletStoredKeypair*(self: Controller, keyUid, keypairName, xpub, coldWallet: string, accounts: seq[wallet_account_service.WalletAccountDto]): string =
+proc addNewColdWalletStoredKeypair*(self: Controller, keyUid, keypairName, xpub, coldWallet, masterAddress: string, accounts: seq[wallet_account_service.WalletAccountDto]): string =
   if not serviceApplicable(self.walletAccountService):
     return
-  return self.walletAccountService.addNewColdWalletStoredKeypair(keyUid, keypairName, xpub, coldWallet,
-    rootWalletMasterKey = "", accounts)
-
-proc addKeycardOrAccounts*(self: Controller, keyPair: KeycardDto, password: string) =
-  # TODO: re-implement when integrating new keycard approach
-  discard
+  return self.walletAccountService.addNewColdWalletStoredKeypair(keyUid, keypairName, xpub, coldWallet, masterAddress, accounts)
 
 proc deriveAccountsPublicInfoFromExtendedPublicKeyForPaths*(self: Controller, extendedPublicKey: string, paths: seq[string]): DerivedAccounts =
   if not serviceApplicable(self.accountsService):
@@ -197,10 +198,15 @@ proc convertKeycardProfileKeypairToRegular*(self: Controller, mnemonic, currentP
 proc setStoreToKeychainValueNotNow*(self: Controller) =
   singletonInstance.localAccountSettings.setStoreToKeychainValue(LS_VALUE_NOT_NOW)
 
-proc startStopUsingKeycardForKeyPair*(self: Controller, keyUid, seedPhrase, newPassword: string) =
+proc startStopUsingKeycardForKeyPair*(self: Controller, keyUid, seedPhrase, newPassword: string, doPasswordHashing: bool) =
   if not serviceApplicable(self.walletAccountService):
     return
-  self.walletAccountService.migrateNonProfileColdWalletKeypairToAppAsync(keyUid, seedPhrase, newPassword, doPasswordHashing = true)
+  self.walletAccountService.migrateNonProfileColdWalletKeypairToAppAsync(keyUid, seedPhrase, newPassword, doPasswordHashing)
+
+proc migrateNonProfileKeypairToColdWallet*(self: Controller, keyUid, password, coldWallet: string, doPasswordHashing: bool) =
+  if not serviceApplicable(self.walletAccountService):
+    return
+  self.walletAccountService.migrateNonProfileKeypairToColdWalletAsync(keyUid, password, coldWallet, doPasswordHashing)
 
 proc startChangeKeycardPIN*(self: Controller, keyUid, currentPin, newPin, keycardUid: string) =
   self.keycardServiceV2.asyncChangeKeycardPIN(keyUid, currentPin, newPin, keycardUid)
@@ -219,10 +225,6 @@ proc startRecover*(self: Controller, pin, puk, mnemonic, metadataName: string, m
 
 proc startAsyncLogin*(self: Controller, keyUid, pin, xPubPath: string) =
   self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath)
-
-proc updateKeycardUid*(self: Controller, oldKeycardUid, newKeycardUid: string) =
-  # TODO: re-implement when integrating new keycard approach
-  discard
 
 proc remainingKeypairCapacity*(self: Controller): int =
   if not serviceApplicable(self.walletAccountService):

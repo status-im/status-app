@@ -9,6 +9,7 @@ BaseKeycardManagementStore {
 
     readonly property string userProfileKeyUid: userProfile.keyUid
     readonly property string userProfilePubKey: userProfile.pubKey
+    readonly property bool isProfileMigratedToColdWallet: userProfile.migratedToColdWallet
 
     readonly property var keypairsModel: backend ? backend.keyPairModel : null
     readonly property var keyPairItem: backend ? backend.keyPairItem : null
