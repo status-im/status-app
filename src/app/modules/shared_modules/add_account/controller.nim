@@ -20,7 +20,6 @@ type
     savedAddressService: saved_address_service.Service
     connectionIds: seq[UUID]
     tmpAuthenticatedKeyUid: string
-    tmpPin: string
     tmpPassword: string
     tmpSeedPhrase: string
     tmpGeneratedAccount: GeneratedAccountDto
@@ -86,12 +85,6 @@ proc setAuthenticatedKeyUid*(self: Controller, value: string) =
 proc getAuthenticatedKeyUid*(self: Controller): string =
   return self.tmpAuthenticatedKeyUid
 
-proc setPin*(self: Controller, value: string) =
-  self.tmpPin = value
-
-proc getPin*(self: Controller): string =
-  return self.tmpPin
-
 proc setPassword*(self: Controller, value: string) =
   self.tmpPassword = value
 
@@ -125,11 +118,8 @@ proc deleteSavedAddress*(self: Controller, address: string) =
 proc finalizeAction*(self: Controller) =
   self.delegate.finalizeAction()
 
-proc fetchDerivedAddresses*(self: Controller, derivedFrom: string, paths: seq[string])=
-  var hashPassword = true
-  if self.getPin().len > 0:
-    hashPassword = false
-  self.walletAccountService.fetchDerivedAddresses(self.getPassword(), derivedFrom, paths, hashPassword)
+proc fetchDerivedAddresses*(self: Controller, derivedFrom: string, paths: seq[string], doPasswordHashing: bool)=
+  self.walletAccountService.fetchDerivedAddresses(self.getPassword(), derivedFrom, paths, doPasswordHashing)
 
 proc getRandomMnemonic*(self: Controller): string =
   return self.walletAccountService.getRandomMnemonic()
