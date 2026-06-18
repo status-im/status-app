@@ -15,6 +15,7 @@ type
     error*: string
 
   RefreshTokensResponse* = object
+    requestId*: int
     tokensOfInterest*: seq[TokenDtoSafe]
     tokenPreferences*: JsonNode
     allTokens*: seq[TokenDtoSafe]
@@ -42,11 +43,12 @@ type
 
 type
   AsyncRefreshTokensTaskArg = ref object of QObjectTaskArg
-    discard
+    requestId: int
 
 proc asyncRefreshTokensTask*(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncRefreshTokensTaskArg](argEncoded)
   var output = %*{
+    "requestId": arg.requestId,
     "tokensOfInterest": newJArray(),
     "tokenPreferences": newJArray(),
     "allTokens": newJArray(),
