@@ -115,10 +115,6 @@ Before you attempt to build nim-status-client you'll need a few environment vari
 export QTDIR="/c/Qt/$QtVersion/msvc2022_64"
 export Qt5_DIR="/c/Qt/$QtVersion/msvc2022_64"
 
-(VCINSTALLDIR is no longer needed: the build uses clang --target=*-windows-msvc,
-which locates the MSVC toolchain + Windows SDK itself via vswhere. The Makefile
-even strips LIB/INCLUDE/LIBPATH/VCINSTALLDIR so a stale value can't break the link.)
-
 You might also have to include the following paths in your `$PATH:
 
 export PATH=`"$env:USERPROFILE/go/bin:`$PATH`"
