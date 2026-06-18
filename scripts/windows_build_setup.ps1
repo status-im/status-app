@@ -70,7 +70,7 @@ function Install-Dependencies {
 function Install-MSYS2-Packages {
     Write-Host "Installing MSYS2 MinGW64 packages..."
     $msys2Bash = "C:\ProgramData\scoop\apps\msys2\current\usr\bin\bash.exe"
-    $packages = "mingw-w64-x86_64-rust mingw-w64-x86_64-postgresql"
+    $packages = "mingw-w64-x86_64-rust mingw-w64-x86_64-postgresql mingw-w64-x86_64-pkgconf"
     & $msys2Bash -lc "pacman -S --noconfirm --needed $packages"
 }
 
@@ -114,7 +114,10 @@ Before you attempt to build nim-status-client you'll need a few environment vari
 
 export QTDIR="/c/Qt/$QtVersion/msvc2022_64"
 export Qt5_DIR="/c/Qt/$QtVersion/msvc2022_64"
-export VCINSTALLDIR="/c/BuildTools/VC"
+
+(VCINSTALLDIR is no longer needed: the build uses clang --target=*-windows-msvc,
+which locates the MSVC toolchain + Windows SDK itself via vswhere. The Makefile
+even strips LIB/INCLUDE/LIBPATH/VCINSTALLDIR so a stale value can't break the link.)
 
 You might also have to include the following paths in your `$PATH:
 

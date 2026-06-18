@@ -28,8 +28,11 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	compile-translations \
 	deps \
 	nim_status_client \
+	seaqt-test \
 	nim_windows_launcher \
 	prl-to-pc \
+	generate-pkgconfig-files \
+	pkgconfig-wrapper \
 	pkg \
 	pkg-linux \
 	pkg-macos \
@@ -107,6 +110,9 @@ ifeq ($(mkspecs),)
 	$(error Cannot find your Qt installation. Please make sure to export correct Qt installation binaries path to PATH env)
 endif
 
+# Link libm by default; the win32 branch below clears it (MSVC has no libm).
+NIM_MATH_LIB := --passL:"-lm"
+
 ifeq ($(mkspecs),macx)
  CFLAGS := -mmacosx-version-min=14.0
  export CFLAGS
@@ -124,8 +130,18 @@ else ifeq ($(mkspecs),win32)
  PKG_TARGET := pkg-windows
  QRCODEGEN_MAKE_PARAMS := CC=gcc
  RUN_TARGET := run-windows
- VCINSTALLDIR ?= C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\
- export VCINSTALLDIR
+ # No libm on Windows/MSVC — math lives in the CRT, and lld-link has no `m.lib`.
+ NIM_MATH_LIB :=
+ # clang (--target=*-windows-msvc) locates the MSVC toolchain + Windows SDK itself
+ # via vswhere, finding the CRT libs/headers with no vcvars setup. But its env probe
+ # takes PRECEDENCE over that auto-detection: a LIB/INCLUDE/LIBPATH/VCINSTALLDIR
+ # inherited from the shell overrides it with stale paths and breaks the link
+ # ("could not open 'msvcrt.lib'") — even a valid VCINSTALLDIR misfires. Strip them
+ # so clang always self-detects.
+ unexport LIB
+ unexport INCLUDE
+ unexport LIBPATH
+ unexport VCINSTALLDIR
 else
  LIB_EXT := so
  PKG_TARGET := pkg-linux
@@ -206,18 +222,12 @@ ifneq ($(QT_MAJOR_VERSION),6)
  $(error Detected Qt major version $(QT_MAJOR_VERSION), but version 6 is required. Please install Qt 6 and set paths accordingly.)
 endif
 
-# In-repo pkg-config wrapper: forces --define-prefix so Qt's relocatable .pc
-# files (which hard-code the build-host prefix, e.g. /Users/qt/work/install)
-# resolve ${prefix} from the .pc file's real on-disk location. The wrapper finds
-# the real pkg-config from PATH itself (skipping its own dir). Two wiring points,
-# because GNU make's $(shell ...) FUNCTION ignores a makefile-level `export PATH`
-# (it resolves commands via make's startup PATH) while recipe commands honor it:
-#  1. PKG_CONFIG var, used in the Makefile's own $(shell pkg-config ...) calls.
-#  2. export PATH, so seaqt's nim-compile-time gorge("pkg-config ...") — which
-#     runs inside the `nim` recipe — also hits the wrapper, on all platforms
-#     (native Windows resolves the sibling .pcwrap/pkg-config.cmd via PATHEXT).
+# Using the pkg-config wrapper
 PKG_CONFIG ?= $(CURDIR)/.pcwrap/pkg-config
 export PATH := $(CURDIR)/.pcwrap:$(PATH)
+# Tell the wrapper the real Qt prefix for Qt* packages (all platforms). This is the
+# qmake-authoritative prefix; the wrapper injects --define-variable=prefix=<this>.
+export PKG_CONFIG_PREFIX_OVERRIDE := Qt*=$(QT_INSTALL_PREFIX)
 
 PRL_TO_PC ?= $(CURDIR)/vendor/prl-to-pc/prl_to_pc
 $(PRL_TO_PC): vendor/prl-to-pc/src/prl_to_pc.nim
@@ -225,6 +235,28 @@ $(PRL_TO_PC): vendor/prl-to-pc/src/prl_to_pc.nim
 	cd vendor/prl-to-pc && $(ENV_SCRIPT) nim c --skipParentCfg:on -d:release --hints:off --path:$(CURDIR)/vendor/nim-regex/src --path:$(CURDIR)/vendor/nim-unicodedb/src -o:prl_to_pc src/prl_to_pc.nim $(HANDLE_OUTPUT)
 
 prl-to-pc: $(PRL_TO_PC)
+
+# The unified pkg-config wrapper, built by prl-to-pc's `nimble build` (a nimble
+# TASK run via nim — nimbus-build-system's nimble runs .nimble tasks, not real
+# nimble) and installed first on PATH at .pcwrap/. Order-only prereq of the client.
+ifeq ($(mkspecs),win32)
+ PC_WRAP_EXE := .exe
+else
+ PC_WRAP_EXE :=
+endif
+PKGCONFIG_WRAPPER := $(CURDIR)/.pcwrap/pkg-config$(PC_WRAP_EXE)
+$(PKGCONFIG_WRAPPER): vendor/prl-to-pc/src/pkgconfig_wrapper.nim
+	echo -e $(BUILD_MSG) "pkg-config wrapper"
+	cd vendor/prl-to-pc && $(ENV_SCRIPT) nimble build $(HANDLE_OUTPUT)
+	cp -f "$(CURDIR)/vendor/prl-to-pc/pkg-config$(PC_WRAP_EXE)" "$(PKGCONFIG_WRAPPER)"
+
+pkgconfig-wrapper: $(PKGCONFIG_WRAPPER)
+
+# Pre-generate Qt pkg-config (.pc) files into the prl-to-pc repo
+# Qt's .pc files are either broken or not available at all
+generate-pkgconfig-files: $(PRL_TO_PC)
+	echo -e $(BUILD_MSG) "Qt .pc files (prl-to-pc generate)"
+	"$(PRL_TO_PC)" generate "$(shell $(QMAKE) -query QT_INSTALL_LIBS)" "$(CURDIR)/vendor/prl-to-pc" $(HANDLE_OUTPUT)
 
 ifneq ($(mkspecs),win32)
  export QT_LIBDIR := $(shell $(QMAKE) -query QT_INSTALL_LIBS 2>/dev/null)
@@ -252,13 +284,44 @@ ifneq ($(mkspecs),win32)
  # .pc dir is searched first while preserving any pre-existing PKG_CONFIG_PATH.
  export PKG_CONFIG_PATH := $(QT_PCFILEDIR):$(PKG_CONFIG_PATH)
 else
- NIM_EXTRA_PARAMS := --passL:"-lsetupapi -lhid"
+ WIN_SYS_LIBS := --passL:"-luser32"
+ NIM_EXTRA_PARAMS := $(WIN_SYS_LIBS)
+ QT_KIT := $(notdir $(QT_INSTALL_PREFIX))
+ QT_VER := $(notdir $(patsubst %/,%,$(dir $(QT_INSTALL_PREFIX))))
+ QT_PCFILEDIR := $(CURDIR)/vendor/prl-to-pc/$(QT_VER)/$(QT_KIT)/lib/pkgconfig
+ ifeq (,$(wildcard $(QT_PCFILEDIR)/Qt6Core.pc))
+  $(error No Qt .pc files at "$(QT_PCFILEDIR)". Run 'make generate-pkgconfig-files' to produce them.)
+ endif
+ ifeq ($(strip $(PKG_CONFIG_PATH)),)
+  export PKG_CONFIG_PATH := $(QT_PCFILEDIR)
+ else
+  export PKG_CONFIG_PATH := $(QT_PCFILEDIR);$(PKG_CONFIG_PATH)
+ endif
 endif
 
 ifeq ($(mkspecs),win32)
  COMMON_CMAKE_CONFIG_PARAMS += -A x64
  NIM_PARAMS += -d:sslVersion=3-x64
- NIM_PARAMS += --cc:clang_cl
+ # Use the clang backend (NOT clang_cl): nim defines `clang` for --cc:clang, which
+ # the vendored libs (nimcrypto, nim-stew, nim-stint, secp256k1, …) gate their
+ # compiler intrinsics on; --cc:clang_cl defines only `clang_cl`, which none accept.
+ # Real clang speaks nim's gcc-style driver and, with an MSVC target, emits/links
+ # MSVC-ABI objects against Qt's msvc2022_64 build + the MSVC CRT.
+ NIM_PARAMS += --cc:clang
+ # Absolute path so clang resolves regardless of the PATH nim hands each sub-process.
+ # (Under `nim c`, .cpp files also use clang.exe/clang.linkerexe; the .cpp.* knobs
+ # are consulted only by `nim cpp`, so they aren't needed.)
+ REAL_CLANG := $(shell command -v clang 2>/dev/null)
+ NIM_PARAMS += --clang.exe:"$(REAL_CLANG)" --clang.linkerexe:"$(REAL_CLANG)"
+ # MSVC-targeting flags nim's stock clang config omits. Via passC/passL because they
+ # APPEND (nim's own -w/-flto survive) and reach every TU, incl. seaqt's {.compile.}'d
+ # .cpp glue — unlike clang.options.always (replaces) or passC-only (misses the link):
+ #   --target             : emit/link MSVC-ABI objects (Qt msvc2022_64 + MSVC CRT)
+ #   -fms-runtime-lib=dll : DYNAMIC CRT (clang defaults static) to match Qt/DOtherSide/Go DLLs (/MD)
+ #   -fuse-ld=lld         : LLD finalizes clang LTO (link.exe can't read bitcode)
+ # C++17 isn't forced — nim already passes -std=gnu++17 for .cpp.
+ NIM_PARAMS += --passC:"--target=x86_64-pc-windows-msvc -fms-runtime-lib=dll"
+ NIM_PARAMS += --passL:"--target=x86_64-pc-windows-msvc -fuse-ld=lld -fms-runtime-lib=dll"
 endif
 
 ifeq ($(mkspecs),macx)
@@ -476,7 +539,14 @@ ifneq ($(mkspecs),win32)
 else
  DOTHERSIDE_LIBFILE := $(DOTHERSIDE_BUILD_PATH)/lib/$(COMMON_CMAKE_BUILD_TYPE)/DOtherSide.dll
  DOTHERSIDE_CMAKE_CONFIG_PARAMS += -DENABLE_DYNAMIC_LIBS=ON -DENABLE_STATIC_LIBS=OFF
- NIM_PARAMS += -L:$(DOTHERSIDE_LIBFILE)
+ ifeq ($(mkspecs),win32)
+  # The MSVC linker (lld-link) links against the import library, not the .dll
+  # itself (passing the .dll gives "bad file type"). cmake emits DOtherSide.lib
+  # next to the .dll; DOTHERSIDE_LIBFILE stays the .dll for packaging/runtime.
+  NIM_PARAMS += -L:$(DOTHERSIDE_BUILD_PATH)/lib/$(COMMON_CMAKE_BUILD_TYPE)/DOtherSide.lib
+ else
+  NIM_PARAMS += -L:$(DOTHERSIDE_LIBFILE)
+ endif
 endif
 
 DOTHERSIDE_SOURCE_PATH := vendor/DOtherSide
@@ -587,6 +657,58 @@ status-keycard-qt-clean:
 	echo -e "\033[92mCleaning:\033[39m status-keycard-qt"
 	rm -rf $(STATUS_KEYCARD_QT_BUILD_DIR)
 
+##
+##	Keycard library selection
+##
+
+# Set the keycard library and paths based on USE_STATUS_KEYCARD_QT
+ifeq ($(USE_STATUS_KEYCARD_QT),1)
+  KEYCARD_LIB := $(STATUSKEYCARD_QT_LIB)
+  KEYCARD_LIBDIR := $(STATUSKEYCARD_QT_LIBDIR)
+  # Set the feature flag to use the keycard qt library
+  export FLAG_USE_KEYCARD_QT := 1
+
+else
+  KEYCARD_LIB := $(STATUSKEYCARDGO)
+  KEYCARD_LIBDIR := $(STATUSKEYCARDGO_LIBDIR)
+endif
+
+KEYCARD_DYLIB_NAME := $(notdir $(KEYCARD_LIB))
+KEYCARD_LINKNAME := $(patsubst lib%,%,$(basename $(KEYCARD_DYLIB_NAME)))
+
+ifeq ($(mkspecs),win32)
+ # MSVC import libraries for the c-shared DLLs. The client links with clang/lld-
+ # link (MSVC ABI, to use Qt's msvc build), and lld-link — unlike mingw's ld —
+ # cannot link a .dll directly; it needs an import library. status-go/keycard
+ # (Go) and nim-sds ship only .dll + .h, so synthesize the import libs from each
+ # header via scripts/gen-import-lib.sh. They're named to match the -l flags in
+ # the client link (status/<keycard>/sds.lib) and dropped into the dirs already
+ # on -L. (The Qt keycard variant is a CMake shared lib that already emits its
+ # own import lib, so only the Go keycard needs this.)
+ STATUSGO_IMPLIB := $(STATUSGO_LIBDIR)/status.lib
+ NIMSDS_IMPLIB := $(NIMSDS_LIBDIR)/sds.lib
+ WIN_IMPORT_LIBS := $(STATUSGO_IMPLIB) $(NIMSDS_IMPLIB)
+
+ $(STATUSGO_IMPLIB): $(STATUSGO)
+	echo -e $(BUILD_MSG) "import lib: $(notdir $(STATUSGO_IMPLIB))"
+	bash scripts/gen-import-lib.sh "$(STATUSGO_LIBDIR)/libstatus.h" "$(notdir $(STATUSGO))" "$(STATUSGO_IMPLIB)" $(HANDLE_OUTPUT)
+
+ $(NIMSDS_IMPLIB): $(NIMSDS_LIBFILE)
+	echo -e $(BUILD_MSG) "import lib: $(notdir $(NIMSDS_IMPLIB))"
+	bash scripts/gen-import-lib.sh "$(NIM_SDS_SOURCE_DIR)/library/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
+
+ # KEYCARD_LIBDIR (= STATUSKEYCARDGO_LIBDIR) is defined wrapped in quotes; strip
+ # them so we can form clean paths and re-quote ourselves.
+ KEYCARD_LIBDIR_UQ := $(subst ",,$(KEYCARD_LIBDIR))
+ KEYCARD_IMPLIB := $(KEYCARD_LIBDIR_UQ)/$(KEYCARD_LINKNAME).lib
+ WIN_IMPORT_LIBS += $(KEYCARD_IMPLIB)
+ $(KEYCARD_IMPLIB): $(KEYCARD_LIB)
+ echo -e $(BUILD_MSG) "import lib: $(notdir $(KEYCARD_IMPLIB))"
+ bash scripts/gen-import-lib.sh "$(KEYCARD_LIBDIR_UQ)/libkeycard.h" "$(KEYCARD_DYLIB_NAME)" "$(KEYCARD_IMPLIB)" $(HANDLE_OUTPUT)
+
+ import-libs: $(WIN_IMPORT_LIBS)
+endif
+
 QRCODEGEN := vendor/QR-Code-generator/c/libqrcodegen.a
 
 $(QRCODEGEN): | deps
@@ -677,8 +799,15 @@ compile_windows_resources:
 
 ifeq ($(mkspecs),win32)
  NIM_STATUS_CLIENT := bin/nim_status_client.exe
+ # Build the pkg-config wrapper and the clang wrapper (rules + vars defined above)
+ # before compiling the nim client, so seaqt's compile-time gorge("pkg-config Qt6Core")
+ # resolves. The Qt .pc files are consumed in place from the vendored prl-to-pc set
+ # — no build step. Order-only: their mtimes shouldn't force a relink.
+ $(NIM_STATUS_CLIENT): | $(PKGCONFIG_WRAPPER) $(WIN_IMPORT_LIBS)
 else
  NIM_STATUS_CLIENT := bin/nim_status_client
+ # The pkg-config wrapper must exist before seaqt's compile-time gorge runs.
+ $(NIM_STATUS_CLIENT): | $(PKGCONFIG_WRAPPER)
 endif
 
 # Writing the QMAKE variable to a file to compare its value from the previous
@@ -708,7 +837,8 @@ $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
 $(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
-		--mm:refc \
+		--mm:orc \
+		-d:useMalloc \
 		--passL:"-L$(STATUSGO_LIBDIR)" \
 		--passL:"-lstatus" \
 		--passL:"-L$(STATUSQ_LIB_PATH)" \
@@ -717,7 +847,7 @@ $(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSG
 		--passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" \
 		--passL:"-l$(STATUSKEYCARD_QT_LINKNAME)" \
 		--passL:"$(QRCODEGEN)" \
-		--passL:"-lm" \
+		$(NIM_MATH_LIB) \
 		--parallelBuild:0 \
 		$(NIM_EXTRA_PARAMS) src/nim_status_client.nim
 ifeq ($(mkspecs),macx)
@@ -1052,11 +1182,11 @@ mobile-profile-mode-check:
 	fi
 	@echo $(MOBILE_PROFILE_DESIRED) > $(MOBILE_PROFILE_SENTINEL)
 
-mobile-run: prl-to-pc deps-common mobile-profile-mode-check
+mobile-run: prl-to-pc pkgconfig-wrapper deps-common mobile-profile-mode-check
 	echo -e "\033[92mRunning:\033[39m mobile app"
 	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug
 
-mobile-profile: prl-to-pc deps-common mobile-profile-mode-check
+mobile-profile: prl-to-pc pkgconfig-wrapper deps-common mobile-profile-mode-check
 ifeq ($(mkspecs),ios)
 	@echo "TODO: iOS profiling is not implemented yet"; exit 1
 else
@@ -1068,7 +1198,7 @@ else
 endif
 
 mobile-build: USE_SYSTEM_NIM=1
-mobile-build: prl-to-pc | deps-common
+mobile-build: prl-to-pc pkgconfig-wrapper | deps-common
 	echo -e "\033[92mBuilding:\033[39m mobile app ($(or $(PACKAGE_TYPE),default))"
 ifeq ($(PACKAGE_TYPE),aab)
 	$(MAKE) -C mobile aab

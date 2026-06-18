@@ -134,8 +134,11 @@ QtObject {
     function getChainIdsJointString(chainIdsDown) {
         let jointChainIdString = ""
         for (const chain of chainIdsDown) {
+            const chainId = parseInt(chain)
+            if (isNaN(chainId)) // e.g. "".split(";") === [""] for the no-chains (market) case
+                continue
             jointChainIdString = (!!jointChainIdString) ? jointChainIdString + " & " : jointChainIdString
-            jointChainIdString += ModelUtils.getByKey(root.networksStore.allNetworks, "chainId", parseInt(chain), "chainName")
+            jointChainIdString += ModelUtils.getByKey(root.networksStore.allNetworks, "chainId", chainId, "chainName")
         }
         return jointChainIdString
     }

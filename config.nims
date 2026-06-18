@@ -32,7 +32,9 @@ elif hostOS == "windows":
   echo "Building for Windows"
   --app:gui
   --tlsEmulation:off
-  --debugger:native # passes "-g" to the C compiler
+  when defined(debug):
+    --debugger:native
+    switch("passL", "-g")
   # `-Wl,-as-needed` is a GNU-ld flag. The main client is built with clang-cl
   # (MSVC ABI) so it can link the MSVC-built Qt; lld-link doesn't understand it.
   # Keep it only for the gcc/mingw builds (e.g. the standalone Windows launcher).

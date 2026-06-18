@@ -61,6 +61,8 @@ QtObject {
     }
 
     function indexOf(model, role, key) {
+        if (key === null || key === undefined || (typeof key === "number" && isNaN(key)))
+            return -1
         return QtMT.ModelQuery.indexOf(model, role, key)
     }
 
@@ -69,6 +71,8 @@ QtObject {
     }
 
     function contains(model, roleName, value, mode = Qt.CaseSensitive) {
+        if (value === null || value === undefined || (typeof value === "number" && isNaN(value)))
+            return false
         return QtMT.ModelQuery.contains(model, roleName, value, mode)
     }
 
