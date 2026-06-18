@@ -65,6 +65,7 @@ function Install-Dependencies {
     Scoop-Install 'status/openssl-lts'   '3.0.19'
     Scoop-Install 'status/inno-setup'    '6.7.0'
     Scoop-Install 'status/msys2'         '2025-12-13'
+    Scoop-Install 'status/llvm'          '22.1.8'
 }
 
 function Install-MSYS2-Packages {
