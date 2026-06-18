@@ -14,6 +14,7 @@ Control {
 
     required property string keycardState
     required property bool keycardInternalError
+    required property bool keycardNotEmptyError
     required property bool wrongKeycard
     required property bool wrongKeycardProfile
     required property bool wrongPin
@@ -188,6 +189,7 @@ Control {
                 when: !root.failure
                       && !root.keycardInteractionCompleted
                       && !root.keycardInternalError
+                      && !root.keycardNotEmptyError
                       && !root.wrongKeycard
                       && !root.wrongKeycardProfile
                       && (root.keycardState === Constants.keycard.state.connectingCard
@@ -368,6 +370,25 @@ Control {
                 PropertyChanges {
                     target: message
                     text: qsTr("Keycard is blocked due to three failed PIN input attempts")
+                    color: Theme.palette.dangerColor1
+                }
+            },
+            State {
+                name: "keycard-not-empty-error"
+                when: root.failure
+                      && root.keycardNotEmptyError
+                PropertyChanges {
+                    target: image
+                    source: Assets.png("keycard/wrong_card/something-went-wrong")
+                }
+                PropertyChanges {
+                    target: title
+                    text: qsTr("Keycard is not empty")
+                    color: Theme.palette.dangerColor1
+                }
+                PropertyChanges {
+                    target: message
+                    text: qsTr("Try again with an empty keycard")
                     color: Theme.palette.dangerColor1
                 }
             },

@@ -97,6 +97,7 @@ StatusDialog {
         DisplaySeedPhrase,
         ConfirmSeedPhraseWords,
         SelectKeyPair,
+        InsertEmptyKeycard,
         ConfirmKeyPair,
         CreatePassword,
         ConfirmPassword,
@@ -218,6 +219,8 @@ StatusDialog {
                 return root.flow === Constants.keycard.flow.moveProfileKeyPair
                     ? selectProfileKeyPairComponent
                     : selectKeyPairComponent
+            case KeycardManagementPopup.FlowStep.InsertEmptyKeycard:
+                return insertEmptyKeycardComponent
             case KeycardManagementPopup.FlowStep.ConfirmKeyPair:
                 return confirmKeyPairForStopUsingComponent
             case KeycardManagementPopup.FlowStep.CreatePassword:
@@ -299,7 +302,7 @@ StatusDialog {
             Backpressure.setTimeout(this, 500, () => {
                                         root.store.startStopUsingKeycardForKeyPair(root.keyUid,
                                                                                    d.seedPhrase,
-                                                                                   d.newStatusPassword)
+                                                                                   d.authenticationPassword)
                                     })
         }
 
@@ -381,6 +384,10 @@ StatusDialog {
         }
 
         function nextStep() {
+            if (d.currentStep === KeycardManagementPopup.FlowStep.InsertEmptyKeycard) {
+                d.startMigratingNonProfileKeypairToKeycard()
+                return
+            }
             if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
                 d.currentStep = d.keycardHasOnlyPinSet
                     ? KeycardManagementPopup.FlowStep.EnterPin
@@ -506,8 +513,11 @@ StatusDialog {
                     Global.openAuthenticationPopup(Constants.keycard.flow.moveProfileKeyPair, root.store.userProfileKeyUid, false)
                     return
                 }
-                if (root.flow === Constants.keycard.flow.stopUsingKeycard
-                        || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
+                if (root.flow === Constants.keycard.flow.stopUsingKeycard) {
+                    Global.openAuthenticationPopup(Constants.keycard.flow.stopUsingKeycard, root.store.userProfileKeyUid, false)
+                    return
+                }
+                if (root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
                         || root.flow === Constants.keycard.flow.startUsingProfileWithoutKeycard) {
                     d.currentStep = KeycardManagementPopup.FlowStep.CreatePassword
                     return
@@ -898,6 +908,7 @@ StatusDialog {
         target: Global
         enabled: root.flow === Constants.keycard.flow.moveKeyPair
                  || root.flow === Constants.keycard.flow.moveProfileKeyPair
+                 || root.flow === Constants.keycard.flow.stopUsingKeycard
 
         function onAuthenticationResult(reason, password, pin, keyUid) {
             if (!password) {
@@ -908,10 +919,16 @@ StatusDialog {
 
             switch(reason) {
             case Constants.keycard.flow.moveKeyPair:
-                d.startMigratingNonProfileKeypairToKeycard()
+                if (root.store.isProfileMigratedToColdWallet)
+                    d.currentStep = KeycardManagementPopup.FlowStep.InsertEmptyKeycard
+                else
+                    d.startMigratingNonProfileKeypairToKeycard()
                 break
             case Constants.keycard.flow.moveProfileKeyPair:
                 d.startMigratingProfileKeypairToKeycard()
+                break
+            case Constants.keycard.flow.stopUsingKeycard:
+                d.startStopUsingKeycardForKeyPair()
                 break
             default:
                 console.warn("unknown authentication reason received in keycard popup", reason)
@@ -1149,7 +1166,8 @@ StatusDialog {
                              || (root.flow === Constants.keycard.flow.moveKeyPair
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair
                                      || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
-                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase))
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase
+                                     || d.currentStep === KeycardManagementPopup.FlowStep.InsertEmptyKeycard))
                              || (root.flow === Constants.keycard.flow.moveProfileKeyPair
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair
                                      || d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
@@ -1194,7 +1212,8 @@ StatusDialog {
                                  && (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin
                                      || d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase)))
                 enabled: visible
-                         && ((d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
+                         && ((d.currentStep === KeycardManagementPopup.FlowStep.InsertEmptyKeycard)
+                             || (d.currentStep === KeycardManagementPopup.FlowStep.RepeatPin && d.pinMismatch)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.EnterSeedPhrase && contentLoader.item.seedPhraseValid)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.DisplaySeedPhrase && contentLoader.item.seedPhraseRevealed)
                              || (d.currentStep === KeycardManagementPopup.FlowStep.ConfirmSeedPhraseWords && contentLoader.item.allEntriesValid)
@@ -1237,6 +1256,10 @@ StatusDialog {
                     return qsTr("Next")
                 }
                 onClicked: {
+                    if (d.currentStep === KeycardManagementPopup.FlowStep.InsertEmptyKeycard) {
+                        d.nextStep()
+                        return
+                    }
                     if (d.currentStep === KeycardManagementPopup.FlowStep.SelectKeyPair) {
                         d.moveKeyPairSelectedKeyUid = contentLoader.item.selectedKeyUid
                         d.moveKeyPairSelectedKeyPairName = contentLoader.item.selectedKeyPairName
@@ -1267,6 +1290,7 @@ StatusDialog {
                                 || root.flow === Constants.keycard.flow.moveProfileKeyPair
                                 || root.flow === Constants.keycard.flow.unblockWithRecoveryPhrase
                                 || root.flow === Constants.keycard.flow.onboardingImportSeedPhrase
+                                || root.flow === Constants.keycard.flow.stopUsingKeycard
                                 || root.flow === Constants.keycard.flow.stopUsingKeycardForProfile
                                 || root.flow === Constants.keycard.flow.startUsingProfileWithoutKeycard) {
                             d.nextStep()
@@ -1376,6 +1400,7 @@ StatusDialog {
         id: keycardProgressComponent
         KeycardProgressState {
             keycardInternalError: keycardErrors.internalError
+            keycardNotEmptyError: keycardErrors.notEmptyKeycardError
             wrongKeycard: keycardErrors.wrongKeycardError
             wrongKeycardProfile: keycardErrors.wrongKeycardProfileError
             wrongPin: keycardErrors.wrongPinError1
@@ -1759,12 +1784,18 @@ StatusDialog {
     }
 
     Component {
+        id: insertEmptyKeycardComponent
+        InsertEmptyKeycardState {}
+    }
+
+    Component {
         id: selectKeyPairComponent
         SelectKeyPairState {
             userProfilePublicKey: root.store.userProfilePubKey
 
             keypairsModel: root.store.keypairsModel
-            initialSelectedKeyUid: d.moveKeyPairSelectedKeyUid
+            fixedKeyUid: root.keyUid
+            initialSelectedKeyUid: root.keyUid.length > 0 ? root.keyUid : d.moveKeyPairSelectedKeyUid
             initialUnderstandChecked: d.moveKeyPairUnderstandChecked
         }
     }

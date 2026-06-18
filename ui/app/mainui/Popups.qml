@@ -254,7 +254,7 @@ QtObject {
                 break
             case Constants.keycard.flow.moveProfileKeyPair:
                 if (finalKeyUid !== root.keycardManagementStore.userProfileKeyUid) {
-                    finalFlow = Constants.keycard.flow.stopUsingKeycard
+                    finalFlow = Constants.keycard.flow.moveKeyPair
                 }
                 break
             case Constants.keycard.flow.stopUsingKeycardForProfile:

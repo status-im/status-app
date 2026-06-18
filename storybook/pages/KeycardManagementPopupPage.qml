@@ -87,6 +87,7 @@ SplitView {
         property var keyPairItem: keyPairItemMock
         property string userProfileKeyUid: root.userProfile.keyUid
         property string userProfilePubKey: root.userProfile.pubKey
+        property bool isProfileMigratedToColdWallet: root.userProfile.migratedToColdWallet
 
         readonly property string _mnemonic: "abandon ability able about above absent absorb abstract absurd abuse access accident"
 

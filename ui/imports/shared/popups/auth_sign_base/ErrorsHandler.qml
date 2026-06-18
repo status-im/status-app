@@ -9,6 +9,7 @@ QtObject {
 
     readonly property QtObject errKeyword: QtObject {
         readonly property string internalError: "Keycard info not found"
+        readonly property string notEmptyKeycardError: "Card is not empty"
         readonly property string wrongKeycardProfile: "profile does not match"
         readonly property string wrongKeycard: "Keycard instance UID does not match"
         readonly property string wrongPin1: "Wrong PIN"
@@ -25,6 +26,7 @@ QtObject {
     }
 
     readonly property bool internalError: root.errorText.toLowerCase().indexOf(errKeyword.internalError.toLowerCase()) > -1
+    readonly property bool notEmptyKeycardError: root.errorText.toLowerCase().indexOf(errKeyword.notEmptyKeycardError.toLowerCase()) > -1
     readonly property bool wrongKeycardProfileError: root.errorText.toLowerCase().indexOf(errKeyword.wrongKeycardProfile.toLowerCase()) > -1
     readonly property bool wrongKeycardError: root.errorText.toLowerCase().indexOf(errKeyword.wrongKeycard.toLowerCase()) > -1
     readonly property bool wrongPinError1: root.errorText.toLowerCase().indexOf(errKeyword.wrongPin1.toLowerCase()) > -1

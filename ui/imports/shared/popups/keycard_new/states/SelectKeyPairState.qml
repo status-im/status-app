@@ -21,8 +21,11 @@ Control {
     required property string userProfilePublicKey
 
     property bool profileOnly: false
+    property string fixedKeyUid: ""
     property string initialSelectedKeyUid: ""
     property bool initialUnderstandChecked: false
+
+    readonly property bool singleKeyPairMode: root.profileOnly || root.fixedKeyUid.length > 0
 
     property string selectedKeyUid: initialSelectedKeyUid
     property string selectedKeyPairName: ""
@@ -45,13 +48,16 @@ Control {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            visible: root.profileOnly
+            visible: root.singleKeyPairMode
         }
 
         StatusBaseText {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            text: root.profileOnly ? qsTr("Profile key pair") : qsTr("Select key pair")
+            text: root.profileOnly ? qsTr("Profile key pair")
+                                   : root.fixedKeyUid.length > 0
+                                     ? qsTr("Key pair")
+                                     : qsTr("Select key pair")
             color: Theme.palette.baseColor1
         }
 
@@ -64,16 +70,18 @@ Control {
             sourceModel: root.keypairsModel ?? null
             filters: ExpressionFilter {
                 expression: root.profileOnly
-                            ? (model.keyPair.pairType === d.profileKeyPairTypeValue && !model.keyPair.migratedToColdWallet)
-                            : (model.keyPair.pairType === d.seedKeyPairTypeValue && !model.keyPair.migratedToColdWallet)
+                            ? model.keyPair.pairType === d.profileKeyPairTypeValue && !model.keyPair.migratedToColdWallet
+                            : root.fixedKeyUid.length > 0
+                              ? model.keyPair.keyUid === root.fixedKeyUid && !model.keyPair.migratedToColdWallet
+                              : model.keyPair.pairType === d.seedKeyPairTypeValue && !model.keyPair.migratedToColdWallet
             }
         }
 
         ListView {
             id: keypairsList
             Layout.fillWidth: true
-            Layout.fillHeight: !root.profileOnly
-            Layout.preferredHeight: root.profileOnly ? contentHeight : -1
+            Layout.fillHeight: !root.singleKeyPairMode
+            Layout.preferredHeight: root.singleKeyPairMode ? contentHeight : -1
             clip: true
             spacing: Theme.halfPadding
             model: filteredModel
@@ -88,7 +96,7 @@ Control {
 
                 userProfilePublicKey: root.userProfilePublicKey
 
-                usedAsSelectOption: !root.profileOnly
+                usedAsSelectOption: !root.singleKeyPairMode
                 buttonGroup: keyPairsButtonGroup
                 checked: model.keyPair.keyUid === root.initialSelectedKeyUid
 
@@ -109,7 +117,7 @@ Control {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            visible: root.profileOnly
+            visible: root.singleKeyPairMode
         }
 
         Item {
