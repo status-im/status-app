@@ -290,11 +290,19 @@ SettingsContentBase {
                 removeKeypairPopup.active = true
             }
             onRunMoveKeypairToKeycardFlow: (model) => {
-                console.log("TODO: add when integrate new keycard approach")
-            }
+                                               Global.openKeycardManagementPopup(Constants.keycard.flow.moveKeyPair,
+                                                                                 model.keyPair.keyUid,
+                                                                                 "",
+                                                                                 "",
+                                                                                 "[]")
+                                           }
             onRunStopUsingKeycardFlow: (model) => {
-                console.log("TODO: add when integrate new keycard approach")
-            }
+                                           Global.openKeycardManagementPopup(Constants.keycard.flow.stopUsingKeycard,
+                                                                             model.keyPair.keyUid,
+                                                                             "",
+                                                                             "",
+                                                                             "[]")
+                                       }
             onGoToManageTokensView: priv.navigateToDetails(root.manageTokensViewIndex)
             onGoToSavedAddressesView: priv.navigateToDetails(root.savedAddressesViewIndex)
         }
@@ -371,10 +379,18 @@ SettingsContentBase {
                 root.walletStore.runKeypairImportPopup(keyPair.keyUid, Constants.keypairImportPopup.mode.selectImportMethod)
             }
             onRunMoveKeypairToKeycardFlow: {
-                console.log("TODO: add when integrate new keycard approach")
+                Global.openKeycardManagementPopup(Constants.keycard.flow.moveKeyPair,
+                                                  keyPair.keyUid,
+                                                  "",
+                                                  "",
+                                                  "[]")
             }
             onRunStopUsingKeycardFlow: {
-                console.log("TODO: add when integrate new keycard approach")
+                Global.openKeycardManagementPopup(Constants.keycard.flow.stopUsingKeycard,
+                                                  keyPair.keyUid,
+                                                  "",
+                                                  "",
+                                                  "[]")
             }
             onUpdateWatchAccountHiddenFromTotalBalance: (address, hideFromTotalBalance) => {
                 root.walletStore.updateWatchAccountHiddenFromTotalBalance(address, hideFromTotalBalance)
