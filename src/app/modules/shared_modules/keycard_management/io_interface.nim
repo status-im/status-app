@@ -57,10 +57,10 @@ method startAddingKeyPairToStatusFromKeycard*(self: AccessInterface, pin: string
     metadataName: string, metadataAccounts: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onKeycardExportExtendedPublicKeyFinished*(self: AccessInterface, xpub: string, error: string) {.base.} =
+method onKeycardExportExtendedPublicKeyFinished*(self: AccessInterface, xpub: string, rootWalletMasterKey: string, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onKeycardLoadSeedPhraseFinished*(self: AccessInterface, error: string) {.base.} =
+method onKeycardLoadSeedPhraseFinished*(self: AccessInterface, exportedKeys: KeycardExportedKeysDto, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method generateMnemonic*(self: AccessInterface): string {.base.} =
@@ -86,6 +86,9 @@ method startStopUsingKeycardForKeyPair*(self: AccessInterface, keyUid, seedPhras
   raise newException(ValueError, "No implementation available")
 
 method onStopUsingKeycardForKeyPairFinished*(self: AccessInterface, keyUid: string, success: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onNonProfileKeypairMigratedToColdWalletFinished*(self: AccessInterface, keyUid: string, success: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method startStopUsingKeycardForProfileKeyPair*(self: AccessInterface, seedPhrase, newPassword: string) {.base.} =

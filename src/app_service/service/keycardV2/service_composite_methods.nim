@@ -91,10 +91,11 @@ proc asyncExportPublicKey*(self: Service, keyUid: string, paths: seq[string], ex
     self.events.emit(SIGNAL_KEYCARD_EXPORT_PUBLIC_KEYS_FINISHED, data)
   )
 
-proc asyncExportExtendedPublicKey*(self: Service, keyUid: string, path: string, pin: string) {.featureGuard(KEYCARD_ENABLED).} =
+proc asyncExportExtendedPublicKey*(self: Service, keyUid: string, path: string, exportMasterAddr: bool, pin: string) {.featureGuard(KEYCARD_ENABLED).} =
   let params = %*{
     "keyUid": keyUid,
     "path": path,
+    "exportMasterAddr": exportMasterAddr,
     "pin": pin,
     "storageFilePath": status_const.KEYCARDPAIRINGDATAFILE,
     "logEnabled": status_const.KEYCARD_LOGS_ENABLED,
@@ -110,7 +111,7 @@ proc asyncExportExtendedPublicKey*(self: Service, keyUid: string, path: string, 
         if errorObj.hasKey("message"):
           raise newException(CatchableError, "exporting extended public keys keycard response error: " & errorObj["message"].getStr())
         raise newException(CatchableError, "exporting extended public keys keycard response unknown error")
-      data.exportedExtendedPublicKey = responseObj["result"].toKeycardExportedExtendedPublicKeyDto()
+      data.exportResult = responseObj["result"].toKeycardExportExtendedPublicKeyResultDto()
     except Exception as e:
       error "exporting extended public keys error", err=e.msg
       data.error = e.msg
@@ -308,7 +309,7 @@ proc asyncLoadSeedPhrase*(self: Service, pin: string, puk: string, seedPhrase: s
     "logFilePath": status_const.KEYCARD_LOG_FILE_PATH,
   }
   self.asyncCallRPC(KeycardAction.Load, params, proc (responseObj: JsonNode, err: string) =
-    var data = KeycardErrorArg()
+    var data = KeycardLoginArgs()
     try:
       if err.len > 0:
         raise newException(CatchableError, "load key pair parsing response error: " & err)
@@ -317,6 +318,10 @@ proc asyncLoadSeedPhrase*(self: Service, pin: string, puk: string, seedPhrase: s
         if errorObj.hasKey("message"):
           raise newException(CatchableError, "load key pair response error: " & errorObj["message"].getStr())
         raise newException(CatchableError, "load key pair response unknown error")
+      let resultObj = responseObj["result"]
+      if not resultObj.hasKey("keys"):
+        raise newException(CatchableError, "recover action keycard response missing keys")
+      data.exportedKeys = resultObj["keys"].toKeycardExportedKeysDto()
     except Exception as e:
       error "load key pair error", err=e.msg
       data.error = e.msg

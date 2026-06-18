@@ -8751,6 +8751,17 @@ Opravdu to chcete udělat?</translation>
     </message>
 </context>
 <context>
+    <name>InsertEmptyKeycardState</name>
+    <message>
+        <source>Insert an empty Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Insert an empty Keycard you want to migrate your key pair to.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>IntroMessageInput</name>
     <message>
         <source>Dialog for new members</source>
@@ -9967,6 +9978,14 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>It&apos;s a different Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard is not empty</source>
+        <translation type="unfinished">Keycard není prázdná</translation>
+    </message>
+    <message>
+        <source>Try again with an empty keycard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -14936,6 +14955,10 @@ selhalo</translation>
     <message>
         <source>Profile key pair</source>
         <translation type="unfinished">Pár klíčů profilu</translation>
+    </message>
+    <message>
+        <source>Key pair</source>
+        <translation type="unfinished">Pár klíčů</translation>
     </message>
     <message>
         <source>I understand that moving this key pair will require using Keycard to log in and sign</source>

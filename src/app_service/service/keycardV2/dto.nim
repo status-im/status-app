@@ -82,6 +82,10 @@ type KeycardExportedExtendedPublicKeyDto* = object
   chainCode*: string
   xpub*: string
 
+type KeycardExportExtendedPublicKeyResultDto* = object
+  extendedPublicKey*: KeycardExportedExtendedPublicKeyDto
+  masterKeyAddress*: string
+
 type KeycardExportedKeysDto* = object
   eip1581Key*: KeyDetailsV2
   encryptionKey*: KeyDetailsV2
@@ -203,6 +207,13 @@ proc toKeycardExportedExtendedPublicKeyDto*(jsonObj: JsonNode): KeycardExportedE
   discard jsonObj.getProp("publicKey", result.publicKey)
   discard jsonObj.getProp("chainCode", result.chainCode)
   discard jsonObj.getProp("xpub", result.xpub)
+
+proc toKeycardExportExtendedPublicKeyResultDto*(jsonObj: JsonNode): KeycardExportExtendedPublicKeyResultDto =
+  result = KeycardExportExtendedPublicKeyResultDto()
+  var obj: JsonNode
+  if jsonObj.getProp("extendedPublicKey", obj):
+    result.extendedPublicKey = toKeycardExportedExtendedPublicKeyDto(obj)
+  discard jsonObj.getProp("masterKeyAddress", result.masterKeyAddress)
 
 proc toKeycardExportedKeysDto*(jsonObj: JsonNode): KeycardExportedKeysDto =
   result = KeycardExportedKeysDto()

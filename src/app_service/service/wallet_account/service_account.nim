@@ -26,6 +26,8 @@ proc replaceKeypair(self: Service, keypair: KeypairDto) =
   localKp.lastUsedDerivationIndex = keypair.lastUsedDerivationIndex
   localKp.syncedFrom = keypair.syncedFrom
   localKp.removed = keypair.removed
+  localKp.extendedPublicKey = keypair.extendedPublicKey
+  localKp.coldWalletType = keypair.coldWalletType
   for locAcc in localKp.accounts:
     for acc in keypair.accounts:
       if cmpIgnoreCase(locAcc.address, acc.address) != 0:
@@ -418,11 +420,10 @@ proc addNewSeedPhraseKeypair*(self: Service, seedPhrase, password: string, doPas
     error "error: ", procName="addNewSeedPhraseKeypair", errName=e.name, errDesription=e.msg
     return e.msg
 
-proc addNewColdWalletStoredKeypair*(self: Service, keyUid, keypairName, walletXPub, coldWallet, rootWalletMasterKey: string,
+proc addNewColdWalletStoredKeypair*(self: Service, keyUid, keypairName, walletXPub, coldWallet, masterAddress: string,
   accounts: seq[WalletAccountDto]): string =
   try:
-    var response = status_go_accounts.addKeypairStoredToColdWallet(keyUid, rootWalletMasterKey, keypairName, walletXPub,
-      coldWallet, accounts)
+    var response = status_go_accounts.addKeypairStoredToColdWallet(keyUid, masterAddress, keypairName, walletXPub, coldWallet, accounts)
     if not response.error.isNil:
       error "status-go error adding keypair", procName="addNewColdWalletStoredKeypair", errCode=response.error.code, errDesription=response.error.message
       return response.error.message
@@ -497,6 +498,12 @@ proc onNonProfileColdWalletKeypairMigratedToApp*(self: Service, response: string
     let kp = self.getKeypairByKeyUid(data.keycard.keyUid)
     if kp.isNil:
       data.success = false
+    elif data.success:
+      let dbKp = self.getKeypairByKeyUidFromDb(data.keycard.keyUid)
+      if dbKp.isNil:
+        data.success = false
+      else:
+        self.replaceKeypair(dbKp)
   except Exception as e:
     error "error handling migrated cold-wallet keypair response", errDesription=e.msg
   self.events.emit(SIGNAL_ALL_KEYCARDS_DELETED, data)
@@ -524,6 +531,12 @@ proc onNonProfileKeypairMigratedToColdWallet*(self: Service, response: string) {
     let responseObj = response.parseJson
     discard responseObj.getProp("success", data.success)
     discard responseObj.getProp("keyUid", data.keycard.keyUid)
+    if data.success:
+      let dbKp = self.getKeypairByKeyUidFromDb(data.keycard.keyUid)
+      if dbKp.isNil:
+        data.success = false
+      else:
+        self.replaceKeypair(dbKp)
   except Exception as e:
     error "error handling cold-wallet flip response", errDesription=e.msg
   self.events.emit(SIGNAL_NEW_KEYCARD_SET, data)

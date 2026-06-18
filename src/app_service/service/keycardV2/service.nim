@@ -102,7 +102,7 @@ type
     exportedPublicKeys*: KeycardExportedPublicKeysDto
 
   KeycardExportedExtendedPublicKeyArgs* = ref object of KeycardErrorArg
-    exportedExtendedPublicKey*: KeycardExportedExtendedPublicKeyDto
+    exportResult*: KeycardExportExtendedPublicKeyResultDto
 
   KeycardGetKeycardMetadataArgs* = ref object of KeycardErrorArg
     metadata*: CardMetadataDto
