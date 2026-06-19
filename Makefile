@@ -995,7 +995,7 @@ $(STATUS_CLIENT_EXE): compile_windows_resources nim_status_client nim_windows_la
 	cp "$(shell which libcrypto-3-x64.dll)" $(OUTPUT)/bin/
 	cp "$(shell which libssl-3-x64.dll)"    $(OUTPUT)/bin/
 	echo -e $(BUILD_MSG) "deployable folder"
-	windeployqt --compiler-runtime --qmldir ui --release \
+	VCINSTALLDIR="$(VCINSTALLDIR)" windeployqt --compiler-runtime --qmldir ui --release \
 		tmp/windows/dist/Status/bin/DOtherSide.dll
 	mv tmp/windows/dist/Status/bin/vc_redist.x64.exe tmp/windows/dist/Status/vendor/
 	cp status.iss $(OUTPUT)/status.iss

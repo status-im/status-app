@@ -115,6 +115,7 @@ Before you attempt to build nim-status-client you'll need a few environment vari
 
 export QTDIR="/c/Qt/$QtVersion/msvc2022_64"
 export Qt5_DIR="/c/Qt/$QtVersion/msvc2022_64"
+export VCINSTALLDIR="/c/BuildTools/VC"
 
 You might also have to include the following paths in your `$PATH:
 
