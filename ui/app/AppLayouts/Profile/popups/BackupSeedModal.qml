@@ -21,7 +21,6 @@ StatusDialog {
     padding: Theme.halfPadding
     implicitWidth: 480
     implicitHeight: 700
-    fillHeightOnBottomSheet: true
 
     footer: StatusDialogFooter {
         leftButtons: ObjectModel {
