@@ -19,7 +19,6 @@ from gui.screens.settings_ens_usernames import ENSRegisteredView
 @pytest.mark.case(704597)
 @pytest.mark.transaction
 @pytest.mark.parametrize('ens_name', [pytest.param(random_ens_string())])
-@pytest.mark.skip(reason='https://github.com/status-im/status-app/issues/20352')
 def test_ens_name_purchase(main_window, user_account, ens_name):
     user_account = ReturningUser(
         seed_phrase=WALLET_SEED,

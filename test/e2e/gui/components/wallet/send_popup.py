@@ -110,6 +110,33 @@ class SendPopup(QObject):
         self.send_modal_review_send_button.click()
         return SignSendModalPopup().wait_until_appears()
 
+    @allure.step('Wait until route estimation completes and Review Send is enabled')
+    def wait_for_review_send_ready(
+            self,
+            timeout_msec: int = configs.timeouts.ROUTES_TIMEOUT_MSEC,
+    ):
+        self.send_modal_sign_txn_fees.wait_until_appears(timeout_msec=timeout_msec)
+
+        send_modal_footer = {
+            'container': names.statusDesktop_mainWindow_overlay,
+            'objectName': 'sendModalFooter',
+            'visible': True,
+        }
+
+        def review_send_ready():
+            try:
+                footer = driver.findObject(send_modal_footer)
+                if getattr(footer, 'error', False):
+                    return False
+            except Exception:
+                pass
+            return self.send_modal_review_send_button.object.enabled
+
+        assert driver.waitFor(review_send_ready, timeout_msec), (
+            'Review Send is not enabled (insufficient funds, fees loading, or router error)'
+        )
+        return self
+
     @allure.step('Send {2} {3} to {1}')
     def sign_and_send(self, address: str, amount: str, asset: str):
         token_selector = self.open_token_selector()
@@ -133,10 +160,7 @@ class SendPopup(QObject):
             assert address in self.ens_address_text_input.text
             self.select_from_suggestions_if_shown(address)
 
-        assert self.send_modal_sign_txn_fees.wait_until_appears(timeout_msec=configs.timeouts.FEES_TIMEOUT_MSEC), \
-            f'Fees panel is not displayed within 10s'
-        assert self.send_modal_review_send_button.wait_until_appears(timeout_msec=configs.timeouts.FEES_TIMEOUT_MSEC), \
-            f'Fees are not displayed within 10s'
+        self.wait_for_review_send_ready()
 
         self.open_sign_send_modal().sign_send_modal_reject_button.click()
         sign_send_modal = self.open_sign_send_modal()

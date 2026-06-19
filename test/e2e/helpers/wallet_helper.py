@@ -1,11 +1,46 @@
 from allure_commons._allure import step
 
+import configs
+import driver
 from configs import WALLET_SEED
 from constants import ReturningUser
 from constants.wallet import WalletNetworkSettings
 from gui.components.authenticate_popup import AuthenticatePopup
 from helpers.onboarding_helper import open_create_profile_view, import_seed_and_log_in
 from helpers.settings_helper import enable_testnet_mode
+
+
+@step('Wait for wallet balances to finish loading')
+def wait_for_wallet_balances_loaded(
+        wallet_left_panel,
+        timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+):
+    balance = wallet_left_panel.all_accounts_balance
+    balance.wait_until_appears(timeout_msec)
+
+    assert driver.waitFor(
+        lambda: not getattr(balance.object, 'loading', False) and bool(balance.text.strip()),
+        timeout_msec,
+    ), f'Wallet total balance is still loading, got: {balance.text!r}'
+
+
+@step('Wait for account assets to finish loading')
+def wait_for_account_assets_loaded(
+        wallet_account_view,
+        timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
+):
+    wallet_account_view.open_assets_tab()
+    asset_item = wallet_account_view._asset_item  # pylint: disable=protected-access
+
+    def assets_loaded():
+        items = driver.findAllObjects(asset_item.real_name)
+        if not items:
+            return False
+        return not any(getattr(item, 'balanceLoading', False) for item in items)
+
+    assert driver.waitFor(assets_loaded, timeout_msec), (
+        'Account assets are still loading'
+    )
 
 
 def authenticate_with_password(user_account):
@@ -16,9 +51,9 @@ def authenticate_with_password(user_account):
 
 def open_send_modal_for_account(main_window, account_name):
     wallet = main_window.left_panel.open_wallet()
-    assert wallet.left_panel.all_accounts_balance.wait_until_appears().is_visible, \
-        f"Total balance is not visible"
+    wait_for_wallet_balances_loaded(wallet.left_panel)
     wallet_account = wallet.left_panel.select_account(account_name)
+    wait_for_account_assets_loaded(wallet_account)
     send_popup = wallet_account.open_send_popup()
     return send_popup
 
