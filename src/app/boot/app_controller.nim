@@ -391,6 +391,7 @@ proc start*(self: AppController) =
   else:
     self.initializeQmlContext()
     self.finishAppLoading()
+    self.appReady()
 
 proc load(self: AppController) =
   self.settingsService.init()
