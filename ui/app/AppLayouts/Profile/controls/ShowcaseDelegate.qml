@@ -65,6 +65,7 @@ StatusDraggableListItem {
             Layout.maximumWidth: root.width *.4
         },
         StatusButton {
+            objectName: "showcaseVisibilityButton"
             interactive: root.contextMenuEnabled
             tooltip.text: root.tooltipTextWhenContextMenuDisabled
             icon.name: ProfileUtils.visibilityIcon(root.showcaseVisibility)
@@ -102,6 +103,7 @@ StatusDraggableListItem {
                 id: menuLoader
                 active: false
                 sourceComponent: StatusMenu {
+                    objectName: "showcaseVisibilityMenu"
                     onClosed: menuLoader.active = false
                     StatusMenuHeadline { text: qsTr("Show to") }
 
