@@ -360,6 +360,7 @@ method computeDeployCollectiblesFee*(self: Module, uuid: string, communityId: st
 
   let croppedImage = imageCropInfoJson.parseJson
   let base65Image = singletonInstance.utils.fromPathUri(croppedImage["imagePath"].getStr)
+  self.tempDeploymentParams.croppedImageJson = imageCropInfoJson
   self.tempDeploymentParams.base64image = base65Image
 
   self.tempDeploymentParams.communityId = communityId
@@ -416,6 +417,7 @@ method computeDeployAssetsFee*(self: Module, uuid: string, communityId: string, 
 
   let croppedImage = imageCropInfoJson.parseJson
   let base65Image = singletonInstance.utils.fromPathUri(croppedImage["imagePath"].getStr)
+  self.tempDeploymentParams.croppedImageJson = imageCropInfoJson
   self.tempDeploymentParams.base64image = base65Image
 
   self.tempDeploymentParams.communityId = communityId
