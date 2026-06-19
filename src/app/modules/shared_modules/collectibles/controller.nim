@@ -53,6 +53,39 @@ QtObject:
   proc setup(self: Controller)
   proc delete*(self: Controller)
   proc setupEventHandlers(self: Controller)
+
+  proc doLoadMore(self: Controller) =
+    if self.model.getIsFetching():
+      return
+
+    self.model.setIsFetching(true)
+    self.model.setIsError(false)
+
+    var offset = 0
+    if not self.fetchFromStart:
+      if self.loadType.isPaginated():
+        offset = self.model.getCount()
+      else:
+        offset = self.tempItems.len
+    self.fetchFromStart = false
+    try:
+      let response = backend_collectibles.getOwnedCollectiblesAsync(self.requestId, self.chainIds, self.addresses, self.filter, offset, FETCH_BATCH_COUNT_DEFAULT, self.dataType, self.fetchCriteria)
+      if response.error != nil:
+        self.model.setIsFetching(false)
+        self.model.setIsError(true)
+        self.fetchFromStart = true
+        error "error fetching collectibles entries: ", error = response.error
+    except Exception as e:
+      error "error fetching collectibles entries: ", error = e.msg
+      self.model.setIsFetching(false)
+      self.model.setIsError(true)
+      self.fetchFromStart = true
+
+  proc onModelLoadMoreItems(self: Controller) {.slot.} =
+    if self.loadType.isAutoLoad():
+      return
+    self.doLoadMore()
+
   proc newController*(
     requestId: int32,
     networkService: network_service.Service,
@@ -84,7 +117,7 @@ QtObject:
 
     result.setupEventHandlers()
 
-    signalConnect(result.model, "loadMoreItems()", result, "onModelLoadMoreItems()")
+    discard QObject.connect(result.model, loadMoreItems, result, onModelLoadMoreItems, ConnectionType.AutoConnection)
 
   proc getModel*(self: Controller): Model =
     return self.model
@@ -158,38 +191,6 @@ QtObject:
 
     self.checkModelState()
 
-  proc loadMoreItems(self: Controller) =
-    if self.model.getIsFetching():
-      return
-
-    self.model.setIsFetching(true)
-    self.model.setIsError(false)
-
-    var offset = 0
-    if not self.fetchFromStart:
-      if self.loadType.isPaginated():
-        offset = self.model.getCount()
-      else:
-        offset = self.tempItems.len
-    self.fetchFromStart = false
-    try:
-      let response = backend_collectibles.getOwnedCollectiblesAsync(self.requestId, self.chainIds, self.addresses, self.filter, offset, FETCH_BATCH_COUNT_DEFAULT, self.dataType, self.fetchCriteria)
-      if response.error != nil:
-        self.model.setIsFetching(false)
-        self.model.setIsError(true)
-        self.fetchFromStart = true
-        error "error fetching collectibles entries: ", error = response.error
-    except Exception as e:
-      error "error fetching collectibles entries: ", error = e.msg
-      self.model.setIsFetching(false)
-      self.model.setIsError(true)
-      self.fetchFromStart = true
-
-  proc onModelLoadMoreItems(self: Controller) {.slot.} =
-    if self.loadType.isAutoLoad():
-      return
-    self.loadMoreItems()
-
   proc getExtraData(self: Controller, chainID: int): ExtraData =
     let network = self.networkService.getNetworkByChainId(chainID)
     if not network.isNil:
@@ -232,7 +233,7 @@ QtObject:
       self.setOwnershipStatus(res.ownershipStatus)
 
       if self.loadType.isAutoLoad() and res.hasMore:
-        self.loadMoreItems()
+        self.doLoadMore()
       
     except Exception as e:
       error "Error converting activity entries: ", error = e.msg
@@ -261,7 +262,7 @@ QtObject:
     self.model.setItems(@[], 0, true)
     self.fetchFromStart = true
     if self.loadType.isAutoLoad():
-      self.loadMoreItems() 
+      self.doLoadMore() 
 
   proc setupEventHandlers(self: Controller) =
     self.eventsHandler.onOwnedCollectiblesFilteringDone(proc (jsonObj: JsonNode) =
