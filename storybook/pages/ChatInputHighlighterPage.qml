@@ -37,6 +37,8 @@ Item {
                 StatusTextArea {
                     id: textArea
 
+                    background: null
+
                     wrapMode: TextEdit.Wrap
                     font.pixelSize: 15
                     text:
@@ -84,6 +86,50 @@ Link in code (not highlighted): \`https://status.im\`
 unclosed fence here (no closing triple-tick)
 **bold suppressed when format unclosed code fence flag on**
 `
+
+                    TextMetrics {
+                        id: gtMetrics
+                        font: textArea.font
+                        text: ">"
+                    }
+
+                    // Quote-block vertical bar; positions come from the markdown parser.
+                    Repeater {
+                        model: {
+                            highlighter.formatUnclosedCodeFence // re-eval on toggle
+                            return highlighter.parseQuoteBlocks(textArea.text)
+                        }
+
+                        delegate: Rectangle {
+                            required property var modelData
+
+                            readonly property int startPosition: modelData.start
+                            readonly property int lastLinePosition:
+                                Math.max(modelData.start, modelData.end - 1)
+
+                            readonly property rect _startRect: {
+                                textArea.contentHeight; textArea.width // recompute on layout
+                                return textArea.positionToRectangle(startPosition)
+                            }
+                            readonly property rect _lastRect: {
+                                textArea.contentHeight; textArea.width
+                                return textArea.positionToRectangle(lastLinePosition)
+                            }
+
+                            x: _startRect.x
+                            y: _startRect.y
+                            width: gtMetrics.advanceWidth
+                            height: _lastRect.y + _lastRect.height - _startRect.y
+                            color: "white"
+
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.leftMargin: 3
+                                anchors.rightMargin: 3
+                                color: "#4A90D9"
+                            }
+                        }
+                    }
                 }
             }
 
