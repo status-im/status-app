@@ -1,14 +1,17 @@
 import allure
+import time
+import typing
 
 import configs.timeouts
 import driver
-from driver.objects_access import walk_children
+from driver.objects_access import find_notification_button_on_card, walk_children
 from gui.components.settings.build_your_showcase_popup import BuildShowcasePopup
 from gui.components.settings.profile_showcase_visibility_menu import ProfileShowcaseVisibilityMenu
+from gui.components.changes_detected_popup import ChangesDetectedToastMessage
 from gui.components.social_links_popup import SocialLinksPopup
 from gui.elements.button import Button
 from gui.elements.object import QObject
-from gui.elements.scroll import Scroll
+from gui.elements.scroll import Scroll, effective_vertical_viewport_margin, row_vertically_usable_in_scroll_viewport
 from gui.elements.text_edit import TextEdit
 from gui.elements.text_label import TextLabel
 from gui.objects_map import settings_names, names
@@ -27,7 +30,6 @@ class ProfileSettingsView(QObject):
         self.web_tab_button = Button(settings_names.profileTabBar_Web_StatusTabButton)
         self.communities_tab_button = Button(settings_names.communitiesTabButton)
         self.profile_showcase_delegate = QObject(settings_names.showcaseDelegate)
-        self.community_showcase_delegate_action_button = Button(settings_names.delegateActionButton)
         self._identity_tab_button = Button(settings_names.profileTabBar_Identity_StatusTabButton)
 
     @property
@@ -140,17 +142,80 @@ class ProfileSettingsView(QObject):
             f'{community_name!r} not found for showcaseVisibility={visibility}. Found: {titles}'
         )
 
+    def _find_showcase_delegate(self, community_name: str):
+        for delegate in driver.findAllObjects(self.profile_showcase_delegate.real_name):
+            if str(getattr(delegate, 'title', '')) == community_name:
+                return delegate
+        return None
+
+    def _prepare_showcase_delegate(self, community_name: str, timeout_sec: int = 5):
+        """Scroll only when the row is off-screen or there is no room below for the popup menu."""
+        scroll_obj = self._scroll_view.object
+        sx = max(1, int(scroll_obj.width / 2))
+        sy = max(1, int(scroll_obj.height / 2))
+        menu_popup_height = 120
+        started_at = time.monotonic()
+
+        while time.monotonic() - started_at < timeout_sec:
+            delegate = self._find_showcase_delegate(community_name)
+            if delegate is None:
+                raise LookupError(f'Community delegate not found: {community_name!r}')
+
+            srect = driver.object.globalBounds(scroll_obj)
+            drect = driver.object.globalBounds(delegate)
+            in_viewport = row_vertically_usable_in_scroll_viewport(srect, drect)
+            room_below = (srect.y + srect.height) - (drect.y + drect.height)
+            if in_viewport and room_below >= menu_popup_height:
+                return delegate
+
+            cy = drect.y + drect.height / 2
+            margin = effective_vertical_viewport_margin(srect.height)
+            if not in_viewport:
+                if cy < srect.y + margin:
+                    driver.mouse.scroll(scroll_obj, sx, sy, 0, 30, 1, 0.1)
+                else:
+                    driver.mouse.scroll(scroll_obj, sx, sy, 0, -30, 1, 0.1)
+            else:
+                driver.mouse.scroll(scroll_obj, sx, sy, 0, -30, 1, 0.1)
+            time.sleep(0.1)
+
+        raise LookupError(f'Community delegate not ready for menu: {community_name!r}')
+
     @allure.step('Open showcase visibility menu for community')
     def open_showcase_visibility_menu(self, community_name):
         self.communities_tab_button.click()
         self.showcase_popup_close_if_present()
 
-        for delegate in driver.findAllObjects(self.profile_showcase_delegate.real_name):
-            if str(getattr(delegate, 'title', '')) == community_name:
-                d_bounds = driver.object.globalBounds(delegate)
-                for btn in driver.findAllObjects(self.community_showcase_delegate_action_button.real_name):
-                    b_bounds = driver.object.globalBounds(btn)
-                    if d_bounds.y <= b_bounds.y and b_bounds.y + b_bounds.height <= d_bounds.y + d_bounds.height:
-                        driver.mouseClick(btn)
-                        return ProfileShowcaseVisibilityMenu().wait_until_appears()
-        raise LookupError(f'Visibility button not found for: {community_name!r}')
+        delegate = self._prepare_showcase_delegate(community_name)
+        time.sleep(0.2)
+
+        visibility_button = find_notification_button_on_card(delegate, 'showcaseVisibilityButton')
+        if visibility_button is None:
+            raise LookupError(f'Visibility button not found for: {community_name!r}')
+
+        last_error: typing.Optional[BaseException] = None
+        for attempt in range(3):
+            driver.mouseClick(visibility_button)
+            time.sleep(0.2)
+            try:
+                return ProfileShowcaseVisibilityMenu().wait_until_appears(
+                    timeout_msec=configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+            except TimeoutError as err:
+                last_error = err
+                if attempt < 2:
+                    time.sleep(0.3)
+        raise TimeoutError(
+            f'Showcase visibility menu did not open for {community_name!r} after 3 clicks'
+        ) from last_error
+
+    @allure.step('Set showcase visibility to {visibility} and save')
+    def set_showcase_visibility_and_save(self, community_name, visibility):
+        menu = self.open_showcase_visibility_menu(community_name=community_name)
+        menu.select_visibility_option(visibility)
+        self.save_showcase_changes()
+
+    @allure.step('Save profile showcase changes')
+    def save_showcase_changes(self):
+        toast = ChangesDetectedToastMessage()
+        toast.save_button.wait_until_appears()
+        toast.save_changes()

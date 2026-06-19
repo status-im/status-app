@@ -76,9 +76,8 @@ def test_join_leave_profile_showcase_community(multiple_instances):
                 community_name=community.name, visibility=ShowcaseVisibility.NO_ONE)
 
         with step('Invitee: set community visibility to Everyone'):
-            visibility_menu = profile_settings.open_showcase_visibility_menu(community_name=community.name)
-            visibility_menu.select_visibility_option(ShowcaseVisibility.EVERYONE)
-            profile_settings.save_changes_button.click()
+            profile_settings.set_showcase_visibility_and_save(
+                community_name=community.name, visibility=ShowcaseVisibility.EVERYONE)
 
         with step('Invitee: community is in showcase'):
             profile_settings.verify_community_visibility_state(

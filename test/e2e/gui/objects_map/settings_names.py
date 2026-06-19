@@ -1,5 +1,5 @@
 from objectmaphelper import *
-from gui.objects_map.names import statusDesktop_mainWindow, statusDesktop_mainWindow_overlay
+from gui.objects_map.names import statusDesktop_mainWindow, statusDesktop_mainWindow_overlay, contextMenu_PopupItem
 
 mainWindow_ProfileLayout = {"container": statusDesktop_mainWindow, "objectName": "profileStatusSectionLayout", "type": "ProfileLayout", "visible": True}
 mainWindow_StatusSectionLayout_ContentItem = {"container": mainWindow_ProfileLayout, "objectName": "StatusSectionLayout", "type": "ContentItem", "visible": True}
@@ -168,10 +168,10 @@ showcaseDelegate = {"checkable": False, "container": mainWindow_settingsContentB
 delegateActionButton = {"checkable": False, "container": mainWindow_settingsContentBaseScrollView_StatusScrollView, "type": "StatusButton", "unnamed": 1, "visible": True}
 profileTabBar_Identity_StatusTabButton = {"checkable": True, "container": mainWindow_profileTabBar_StatusTabBar, "objectName": "identityTabButton", "type": "StatusTabButton", "visible": True}
 
-# profile showcase visibility actions
-profileShowcaseNoOne = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "visibilityAction_0", "type": "ShowcaseVisibilityAction", "visible": True}
-profileShowcaseContacts = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "visibilityAction_2", "type": "ShowcaseVisibilityAction", "visible": True}
-profileShowcaseEveryone = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "visibilityAction_3", "type": "ShowcaseVisibilityAction", "visible": True}
+# profile showcase visibility menu and actions (Squish exposes StatusMenu as objectName "StatusMenu")
+profileShowcaseNoOne = {"container": contextMenu_PopupItem, "enabled": True, "objectName": "visibilityAction_0", "type": "StatusMenuItem", "visible": True}
+profileShowcaseContacts = {"container": contextMenu_PopupItem, "enabled": True, "objectName": "visibilityAction_2", "type": "StatusMenuItem", "visible": True}
+profileShowcaseEveryone = {"container": contextMenu_PopupItem, "enabled": True, "objectName": "visibilityAction_3", "type": "StatusMenuItem", "visible": True}
 
 # Password view
 mainWindow_PasswordView = {"container": statusDesktop_mainWindow, "type": "ChangePasswordView", "unnamed": 1, "visible": True}
