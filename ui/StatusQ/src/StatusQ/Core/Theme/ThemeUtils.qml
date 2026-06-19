@@ -42,7 +42,12 @@ QtObject {
     // Threshold width increased from original 640 to keep foldable phones in portrait
     // mode when unfolded. To be changed later along with layout improvements dedicated
     // to foldable phones.
-    readonly property size portraitBreakpoint: Qt.size(752, 480) // good ol' VGA
+    // Moreover the threshold is set higher for portrait orientation to keep portrait layout on foldable
+    // phones but keep landscape mode on mobile phones in a horizontal position.
+    readonly property size portraitBreakpoint: Qt.size(
+                                                   (Screen.orientation  === Qt.PortraitOrientation
+                                                    || Screen.orientation  === Qt.InvertedPortraitOrientation)
+                                                   ? 900 : 752, 480)
     readonly property real disabledOpacity: 0.3
     readonly property real pressedOpacity: 0.7
 
