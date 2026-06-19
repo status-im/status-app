@@ -166,24 +166,10 @@ Item {
                 width: 40
                 height: 40
 
-                readonly property real rotationRadius: root.roundedImage ? parent.width/2 : imageCropEditor.radius
-
-                transform: [
-                    Translate {
-                        x: -addButton.width/2 - d.buttonsInsideOffset
-                        y: -addButton.height/2 + d.buttonsInsideOffset
-                    },
-                    Rotation { angle: -addRotationTransform.angle },
-                    Rotation {
-                        id: addRotationTransform
-                        angle: 135
-                        origin.x: addButton.rotationRadius
-                    },
-                    Translate {
-                        x: root.roundedImage ? 0 : addButton.parent.width - 2 * addButton.rotationRadius
-                        y: addButton.rotationRadius
-                    }
-                ]
+                parent: root
+                visible: imageCropEditor.visible
+                x: imageCropEditor.x + imageCropEditor.width - width/2 - d.buttonsInsideOffset
+                y: imageCropEditor.y - height/2 + d.buttonsInsideOffset
 
                 type: StatusRoundButton.Type.Secondary
 
