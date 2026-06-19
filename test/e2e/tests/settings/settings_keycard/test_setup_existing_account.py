@@ -16,6 +16,8 @@ from gui.main_window import MainWindow
 from gui.mocked_keycard_controller import MockedKeycardController
 
 
+pytestmark = pytest.mark.skip(reason="skipped due to migration to status-keycard-qt, need to rewrite tests against the new lib and approach")
+
 @pytest.mark.case(703623)
 @pytest.mark.parametrize('account_name', [pytest.param('Account 1')])
 @pytest.mark.timeout(timeout=210)

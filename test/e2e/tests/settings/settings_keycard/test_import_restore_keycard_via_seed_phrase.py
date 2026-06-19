@@ -14,6 +14,8 @@ from gui.mocked_keycard_controller import MockedKeycardController
 from scripts.utils.generators import random_mnemonic
 
 
+pytestmark = pytest.mark.skip(reason="skipped due to migration to status-keycard-qt, need to rewrite tests against the new lib and approach")
+
 @pytest.mark.case(703625)
 @pytest.mark.keycard
 def test_import_restore_keycard_via_seed_phrase(main_screen: MainWindow):

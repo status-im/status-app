@@ -11,7 +11,6 @@ class AuthenticatePopup(QObject):
 
     def __init__(self):
         super().__init__(names.authenticatePopup)
-        self._authenticate_popup_content = QObject(names.keycardSharedPopupContent_KeycardPopupContent)
         self._password_text_edit = TextEdit(names.authenticate_keycardPasswordInput)
         self._authenticate_button = Button(names.authenticate_StatusButton)
         self._primary_button = Button(names.sharedPopup_Primary_Button)

@@ -11,6 +11,8 @@ import "stores"
 PopupBase {
     id: root
 
+    objectName: "authenticationPopup"
+
     required property AuthenticationStore store
 
     property bool exportChatKey: false // makes sense to set it only for keycard users (no use case so far where we need it for regular(password) users)
