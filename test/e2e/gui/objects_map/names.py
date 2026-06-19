@@ -607,17 +607,15 @@ unpairButton =  {"container": statusDesktop_mainWindow_overlay, "id": "confirmBu
 educationPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "NavigationEducationDialog", "type": "PopupItem", "visible": True}
 educationPopupCloseButton = {"container": educationPopup, "objectName": "headerActionsCloseButton", "type": "StatusFlatRoundButton", "visible": True}
 
-# Authenticate Popup
-authenticatePopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "KeycardPopup", "type": "PopupItem",
-                     "visible": True}
-keycardSharedPopupContent_KeycardPopupContent = {"container": statusDesktop_mainWindow_overlay,
-                                                 "objectName": "KeycardSharedPopupContent",
-                                                 "type": "KeycardPopupContent", "visible": True}
-# EnterPassword.qml: StatusPasswordInput objectName keycardPasswordInput (not inner PlaceholderText)
+# Authenticate Popup — AuthenticationPopup (PopupBase / StatusDialog)
+authenticatePopup = {"container": statusDesktop_mainWindow_overlay, "type": "AuthenticationPopup", "visible": True}
+# auth_sign_base/states/EnterPassword.qml: StatusPasswordInput objectName authenticationPasswordInput
 authenticate_keycardPasswordInput = {"container": statusDesktop_mainWindow_overlay,
-                                    "objectName": "keycardPasswordInput", "type": "StatusPasswordInput", "visible": True}
-authenticate_StatusButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "PrimaryButton",
-                             "type": "StatusButton", "visible": True}
+                                    "objectName": "authenticationPasswordInput", "type": "StatusPasswordInput",
+                                    "visible": True}
+# auth_sign_base/PopupBase.qml footer submit button
+authenticate_StatusButton = {"container": statusDesktop_mainWindow_overlay,
+                             "objectName": "keycardPopupBaseSubmitButton", "type": "StatusButton", "visible": True}
 headerCloseButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow_overlay,
                                            "objectName": "headerCloseButton", "type": "StatusFlatRoundButton",
                                            "visible": True}
@@ -627,7 +625,8 @@ sharedPopup_Popup_Content = {"container": statusDesktop_mainWindow, "objectName"
                              "type": "Item"}
 sharedPopup_Password_Input = {"container": sharedPopup_Popup_Content, "objectName": "keycardPasswordInput",
                               "type": "TextField"}
-sharedPopup_Primary_Button = {"container": statusDesktop_mainWindow, "objectName": "PrimaryButton",
+sharedPopup_Primary_Button = {"container": statusDesktop_mainWindow_overlay,
+                              "objectName": "keycardPopupBaseSubmitButton",
                               "type": "StatusButton", "visible": True, "enabled": True}
 
 # Wallet Account Popup
