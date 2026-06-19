@@ -67,6 +67,7 @@ pipeline {
 
   environment {
     PLATFORM = "macos/${getArch()}"
+    QT_ARCH = "${getArch() == 'aarch64' ? 'arm64' : 'x86_64'}"
     /* Improve make performance */
     MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
     QMAKE = "/Users/admin/${QT_VERSION}/macos/bin/qmake"

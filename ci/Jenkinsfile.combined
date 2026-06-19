@@ -136,6 +136,11 @@ pipeline {
             'MacOS/aarch64', jenkins.Build('status-app/systems/macos/aarch64/package')
           )
         } } }
+        stage('MacOS/x86_64') { steps { script {
+          macos_x86_64 = getArtifacts(
+            'MacOS/x86_64', jenkins.Build('status-app/systems/macos/x86_64/package')
+          )
+        } } }
         stage('iOS/aarch64') { steps { script {
           ios_aarch64 = getArtifacts(
             'iOS/aarch64', jenkins.Build('status-app/systems/ios/aarch64/package')
