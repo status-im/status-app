@@ -1666,6 +1666,22 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Importación de la comunidad &apos;%1&apos; cancelada</translation>
     </message>
     <message>
+        <source>CoinGecko connection successful</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CoinGecko connection down. Market values are as of %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CoinGecko connection down. Market values cannot be retrieved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retrying connection to CoinGecko...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Invite People</source>
         <translation>Invitar personas</translation>
     </message>
@@ -1819,22 +1835,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
     <message>
         <source>Retrying connection to collectibles providers...</source>
         <translation>Reintentando conexión a proveedores de coleccionables...</translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko connection successful</source>
-        <translation>Conexión a CryptoCompare y CoinGecko exitosa</translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko down. Market values are as of %1.</source>
-        <translation>CryptoCompare y CoinGecko caídos. Los valores de mercado son del %1.</translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko down. Market values cannot be retrieved.</source>
-        <translation>CryptoCompare y CoinGecko caídos. No se pueden obtener los valores de mercado.</translation>
-    </message>
-    <message>
-        <source>Retrying connection to CryptoCompare and CoinGecko...</source>
-        <translation>Reintentando conexión a CryptoCompare y CoinGecko...</translation>
     </message>
     <message>
         <source>%1 was removed from your trusted sites.</source>
@@ -12988,12 +12988,12 @@ al cargar</translation>
         <translation>Los balances de tokens se obtienen de Pocket Network (POKT) e Infura, ambos no están disponibles actualmente</translation>
     </message>
     <message>
-        <source>Market values are fetched from CryptoCompare and CoinGecko which are both currently unavailable</source>
-        <translation>Los valores de mercado se obtienen de CryptoCompare y CoinGecko, ambos no están disponibles actualmente</translation>
+        <source>Market values are fetched from CoinGecko which is currently unavailable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Market values and token balances use CryptoCompare/CoinGecko and POKT/Infura which are all currently unavailable.</source>
-        <translation>Los valores de mercado y los balances de tokens usan CryptoCompare/CoinGecko y POKT/Infura, todos no están disponibles actualmente.</translation>
+        <source>Market values and token balances use CoinGecko and POKT/Infura which are all currently unavailable.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Requires POKT/Infura for %1, which is currently unavailable</source>

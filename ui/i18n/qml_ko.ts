@@ -1655,6 +1655,22 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>커뮤니티 &apos;%1&apos; 가져오기가 취소되었습니다</translation>
     </message>
     <message>
+        <source>CoinGecko connection successful</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CoinGecko connection down. Market values are as of %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CoinGecko connection down. Market values cannot be retrieved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retrying connection to CoinGecko...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Invite People</source>
         <translation>사람들 초대하기</translation>
     </message>
@@ -1807,22 +1823,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     <message>
         <source>Retrying connection to collectibles providers...</source>
         <translation>수집품 제공자에 다시 연결하는 중...</translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko connection successful</source>
-        <translation>Cryptocompare 및 Coingecko 연결 성공</translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko down. Market values are as of %1.</source>
-        <translation>Cryptocompare와 Coingecko가 다운되었습니다. 시장 가치는 %1 기준입니다.</translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko down. Market values cannot be retrieved.</source>
-        <translation>Cryptocompare와 Coingecko에 장애가 발생했습니다. 시장 가치를 가져올 수 없습니다.</translation>
-    </message>
-    <message>
-        <source>Retrying connection to CryptoCompare and CoinGecko...</source>
-        <translation>Cryptocompare 및 Coingecko에 다시 연결 시도 중...</translation>
     </message>
     <message>
         <source>Where do you want to go?</source>
@@ -12948,12 +12948,12 @@ to load</source>
         <translation>토큰 잔액은 Pocket Network (POKT)와 Infura에서 가져오는데, 현재 두 서비스 모두 이용할 수 없습니다</translation>
     </message>
     <message>
-        <source>Market values are fetched from CryptoCompare and CoinGecko which are both currently unavailable</source>
-        <translation>시장 가치는 현재 둘 다 이용할 수 없는 CryptoCompare와 CoinGecko에서 가져옵니다</translation>
+        <source>Market values are fetched from CoinGecko which is currently unavailable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Market values and token balances use CryptoCompare/CoinGecko and POKT/Infura which are all currently unavailable.</source>
-        <translation>시장 가치와 토큰 잔액은 Cryptocompare/Coingecko 및 POKT/Infura를 사용하며, 현재 모두 이용할 수 없습니다.</translation>
+        <source>Market values and token balances use CoinGecko and POKT/Infura which are all currently unavailable.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Requires POKT/Infura for %1, which is currently unavailable</source>

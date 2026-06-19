@@ -2045,6 +2045,26 @@
       <translation>Import community &#39;%1&#39; was canceled</translation>
     </message>
     <message>
+      <source>CoinGecko connection successful</source>
+      <comment>AppMain</comment>
+      <translation>CoinGecko connection successful</translation>
+    </message>
+    <message>
+      <source>CoinGecko connection down. Market values are as of %1.</source>
+      <comment>AppMain</comment>
+      <translation>CoinGecko connection down. Market values are as of %1.</translation>
+    </message>
+    <message>
+      <source>CoinGecko connection down. Market values cannot be retrieved.</source>
+      <comment>AppMain</comment>
+      <translation>CoinGecko connection down. Market values cannot be retrieved.</translation>
+    </message>
+    <message>
+      <source>Retrying connection to CoinGecko...</source>
+      <comment>AppMain</comment>
+      <translation>Retrying connection to CoinGecko...</translation>
+    </message>
+    <message>
       <source>Invite People</source>
       <comment>AppMain</comment>
       <translation>Invite People</translation>
@@ -2236,26 +2256,6 @@
       <source>Retrying connection to collectibles providers...</source>
       <comment>AppMain</comment>
       <translation>Retrying connection to collectibles providers...</translation>
-    </message>
-    <message>
-      <source>CryptoCompare and CoinGecko connection successful</source>
-      <comment>AppMain</comment>
-      <translation>CryptoCompare and CoinGecko connection successful</translation>
-    </message>
-    <message>
-      <source>CryptoCompare and CoinGecko down. Market values are as of %1.</source>
-      <comment>AppMain</comment>
-      <translation>CryptoCompare and CoinGecko down. Market values are as of %1.</translation>
-    </message>
-    <message>
-      <source>CryptoCompare and CoinGecko down. Market values cannot be retrieved.</source>
-      <comment>AppMain</comment>
-      <translation>CryptoCompare and CoinGecko down. Market values cannot be retrieved.</translation>
-    </message>
-    <message>
-      <source>Retrying connection to CryptoCompare and CoinGecko...</source>
-      <comment>AppMain</comment>
-      <translation>Retrying connection to CryptoCompare and CoinGecko...</translation>
     </message>
     <message>
       <source>%1 was removed from your trusted sites.</source>
@@ -15822,14 +15822,14 @@
       <translation>Token balances are fetched from Pocket Network (POKT) and Infura which are both curently unavailable</translation>
     </message>
     <message>
-      <source>Market values are fetched from CryptoCompare and CoinGecko which are both currently unavailable</source>
+      <source>Market values are fetched from CoinGecko which is currently unavailable</source>
       <comment>NetworkConnectionStore</comment>
-      <translation>Market values are fetched from CryptoCompare and CoinGecko which are both currently unavailable</translation>
+      <translation>Market values are fetched from CoinGecko which is currently unavailable</translation>
     </message>
     <message>
-      <source>Market values and token balances use CryptoCompare/CoinGecko and POKT/Infura which are all currently unavailable.</source>
+      <source>Market values and token balances use CoinGecko and POKT/Infura which are all currently unavailable.</source>
       <comment>NetworkConnectionStore</comment>
-      <translation>Market values and token balances use CryptoCompare/CoinGecko and POKT/Infura which are all currently unavailable.</translation>
+      <translation>Market values and token balances use CoinGecko and POKT/Infura which are all currently unavailable.</translation>
     </message>
     <message>
       <source>Requires POKT/Infura for %1, which is currently unavailable</source>

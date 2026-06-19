@@ -1672,6 +1672,22 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Import komunity &apos;%1&apos; byl zrušen</translation>
     </message>
     <message>
+        <source>CoinGecko connection successful</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CoinGecko connection down. Market values are as of %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CoinGecko connection down. Market values cannot be retrieved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retrying connection to CoinGecko...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Invite People</source>
         <translation>Pozvat lidi</translation>
     </message>
@@ -1826,22 +1842,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
     <message>
         <source>Retrying connection to collectibles providers...</source>
         <translation>Opakování připojení k poskytovatelům sběratelských předmětů...</translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko connection successful</source>
-        <translation>Připojení k CryptoCompare a CoinGecko úspěšné</translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko down. Market values are as of %1.</source>
-        <translation>CryptoCompare a CoinGecko mimo provoz. Tržní hodnoty jsou k %1.</translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko down. Market values cannot be retrieved.</source>
-        <translation>CryptoCompare a CoinGecko mimo provoz. Tržní hodnoty nelze načíst.</translation>
-    </message>
-    <message>
-        <source>Retrying connection to CryptoCompare and CoinGecko...</source>
-        <translation>Opakování připojení k CryptoCompare a CoinGecko...</translation>
     </message>
     <message>
         <source>%1 was removed from your trusted sites.</source>
@@ -13071,12 +13071,12 @@ selhalo</translation>
         <translation>Zůstatky tokenů jsou načítány z Pocket Network (POKT) a Infura, které jsou momentálně nedostupné</translation>
     </message>
     <message>
-        <source>Market values are fetched from CryptoCompare and CoinGecko which are both currently unavailable</source>
-        <translation>Tržní hodnoty jsou načítány z CryptoCompare a CoinGecko, které jsou momentálně nedostupné</translation>
+        <source>Market values are fetched from CoinGecko which is currently unavailable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Market values and token balances use CryptoCompare/CoinGecko and POKT/Infura which are all currently unavailable.</source>
-        <translation>Tržní hodnoty a zůstatky tokenů využívají CryptoCompare/CoinGecko a POKT/Infura, které jsou momentálně nedostupné.</translation>
+        <source>Market values and token balances use CoinGecko and POKT/Infura which are all currently unavailable.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Requires POKT/Infura for %1, which is currently unavailable</source>

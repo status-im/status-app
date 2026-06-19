@@ -72,14 +72,12 @@ pipeline {
 
     stage('Check Translations') {
       steps {
-        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-          script {
-            checkTranslations()
-          }
+        script {
+          checkTranslations()
         }
       }
     }
- 
+
     stage('QML Lint') {
       steps {
         sh 'make qml-lint'
