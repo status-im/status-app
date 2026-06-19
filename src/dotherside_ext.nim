@@ -35,7 +35,7 @@ type
     IniFormat
 
   # Custom QObjects (real QObjects created by DOtherSide; adopted as nimqml-seaqt
-  # QObject subtypes so `newQVariant`/`signalConnect` work on them).
+  # QObject subtypes so `newQVariant` works on them).
   SingleInstance* = ref object of QObject
   StatusEvent* = ref object of QObject
   StatusOSNotification* = ref object of QObject
@@ -51,8 +51,6 @@ type
 proc dos_chararray_delete(str: cstring) {.cdecl, dynlib: dynLibName, importc.}
 
 proc dos_signal(vptr: pointer, signal: cstring, slot: cstring) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qobject_connect_static(sender: pointer, senderFunc: cstring, receiver: pointer,
-  receiverFunc: cstring, connectionType: cint): pointer {.cdecl, dynlib: dynLibName, importc.}
 
 proc dos_plain_text(htmlString: cstring): cstring {.cdecl, dynlib: dynLibName, importc.}
 proc dos_escape_html(input: cstring): cstring {.cdecl, dynlib: dynLibName, importc.}
@@ -130,11 +128,6 @@ proc app_isActive*(engine: QQmlApplicationEngine): bool =
 
 proc app_makeItActive*(engine: QQmlApplicationEngine) =
   dos_app_make_it_active(engine.vptr)
-
-proc signalConnect*(sender: QObject, signal: string, receiver: QObject, slot: string,
-    signalType: int = 0) =
-  discard dos_qobject_connect_static(sender.vptr, ("2" & signal).cstring, receiver.vptr,
-    ("1" & slot).cstring, signalType.cint)
 
 # QGuiApplication extras
 proc installSelfSignedCertificate*(certificate: string) =

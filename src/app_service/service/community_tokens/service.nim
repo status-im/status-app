@@ -293,7 +293,8 @@ QtObject:
 
     result.tokenHoldersTimer = newQTimer()
     result.tokenHoldersTimer.setSingleShot(true)
-    signalConnect(result.tokenHoldersTimer, "timeout()", result, "onTokenHoldersTimeout()", 2)
+    discard QObject.connect(result.tokenHoldersTimer, SIGNAL("timeout()"),
+      result, SLOT("onTokenHoldersTimeout()"), ConnectionType.QueuedConnection)
 
   # cache functions
   proc updateCommunityTokenCache(self: Service, chainId: int, address: string, tokenToUpdate: CommunityTokenDto) =

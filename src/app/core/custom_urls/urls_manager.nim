@@ -19,10 +19,10 @@ QtObject:
   proc setup(self: UrlsManager, urlSchemeEvent: StatusEvent,
       singleInstance: SingleInstance) =
     self.QObject.setup
-    signalConnect(urlSchemeEvent, "urlActivated(QString)", self,
-      "onUrlActivated(QString)", 2)
-    signalConnect(singleInstance, "eventReceived(QString)", self,
-      "onUrlActivated(QString)", 2)
+    discard QObject.connect(urlSchemeEvent, SIGNAL("urlActivated(QString)"),
+      self, SLOT("onUrlActivated(QString)"), ConnectionType.QueuedConnection)
+    discard QObject.connect(singleInstance, SIGNAL("eventReceived(QString)"),
+      self, SLOT("onUrlActivated(QString)"), ConnectionType.QueuedConnection)
 
   proc delete*(self: UrlsManager) =
     self.QObject.delete

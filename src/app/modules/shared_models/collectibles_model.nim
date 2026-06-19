@@ -112,7 +112,7 @@ QtObject:
   method canFetchMore*(self: Model, parent: QModelIndex): bool =
     return self.hasMore
 
-  proc loadMoreItems(self: Model) {.signal.}
+  proc loadMoreItems*(self: Model) {.signal.}
 
   proc loadMore*(self: Model) {.slot.} =
     self.loadMoreItems()

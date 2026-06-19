@@ -37,6 +37,25 @@ QtObject:
       disablePopup: bool # unables user to interact with the popup (action buttons are disabled as well as close popup button)
 
   proc delete*(self: View)
+
+  proc onBackActionClicked*(self: View) {.slot.} =
+    self.delegate.onBackActionClicked()
+
+  proc onCancelActionClicked*(self: View) {.slot.} =
+    self.delegate.onCancelActionClicked()
+
+  proc onPrimaryActionClicked*(self: View) {.slot.} =
+    self.delegate.onPrimaryActionClicked()
+
+  proc onSecondaryActionClicked*(self: View) {.slot.} =
+    self.delegate.onSecondaryActionClicked()
+
+  proc onTertiaryActionClicked*(self: View) {.slot.} =
+    self.delegate.onTertiaryActionClicked()
+
+  proc onQuaternaryActionClicked*(self: View) {.slot.} =
+    self.delegate.onQuaternaryActionClicked()
+
   proc newView*(delegate: io_interface.AccessInterface): View =
     new(result, delete)
     result.QObject.setup
@@ -60,12 +79,12 @@ QtObject:
     result.editMode = false
     result.disablePopup = false
 
-    signalConnect(result.currentState, "backActionClicked()", result, "onBackActionClicked()", 2)
-    signalConnect(result.currentState, "cancelActionClicked()", result, "onCancelActionClicked()", 2)
-    signalConnect(result.currentState, "primaryActionClicked()", result, "onPrimaryActionClicked()", 2)
-    signalConnect(result.currentState, "secondaryActionClicked()", result, "onSecondaryActionClicked()", 2)
-    signalConnect(result.currentState, "tertiaryActionClicked()", result, "onTertiaryActionClicked()", 2)
-    signalConnect(result.currentState, "quaternaryActionClicked()", result, "onQuaternaryActionClicked()", 2)
+    discard QObject.connect(result.currentState, backActionClicked, result, onBackActionClicked, ConnectionType.QueuedConnection)
+    discard QObject.connect(result.currentState, cancelActionClicked, result, onCancelActionClicked, ConnectionType.QueuedConnection)
+    discard QObject.connect(result.currentState, primaryActionClicked, result, onPrimaryActionClicked, ConnectionType.QueuedConnection)
+    discard QObject.connect(result.currentState, secondaryActionClicked, result, onSecondaryActionClicked, ConnectionType.QueuedConnection)
+    discard QObject.connect(result.currentState, tertiaryActionClicked, result, onTertiaryActionClicked, ConnectionType.QueuedConnection)
+    discard QObject.connect(result.currentState, quaternaryActionClicked, result, onQuaternaryActionClicked, ConnectionType.QueuedConnection)
 
   proc currentStateObj*(self: View): State =
     return self.currentState.getStateObj()
@@ -99,24 +118,6 @@ QtObject:
 
   proc getSeedPhrase*(self: View): string {.slot.} =
     return self.delegate.getSeedPhrase()
-
-  proc onBackActionClicked*(self: View) {.slot.} =
-    self.delegate.onBackActionClicked()
-
-  proc onCancelActionClicked*(self: View) {.slot.} =
-    self.delegate.onCancelActionClicked()
-
-  proc onPrimaryActionClicked*(self: View) {.slot.} =
-    self.delegate.onPrimaryActionClicked()
-
-  proc onSecondaryActionClicked*(self: View) {.slot.} =
-    self.delegate.onSecondaryActionClicked()
-
-  proc onTertiaryActionClicked*(self: View) {.slot.} =
-    self.delegate.onTertiaryActionClicked()
-
-  proc onQuaternaryActionClicked*(self: View) {.slot.} =
-    self.delegate.onQuaternaryActionClicked()
 
   proc originModelChanged*(self: View) {.signal.}
   proc getOriginModel*(self: View): QVariant {.slot.} =
