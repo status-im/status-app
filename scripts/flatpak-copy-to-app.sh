@@ -13,7 +13,7 @@ set -eo pipefail
 PREFIX="/app"
 
 # Qt location, handed in via qt.env (QT_DIR=... make flatpak; see bundle-flatpak.sh).
-# Default kept in sync with ci/Dockerfile's QT_VERSION.
+# Default kept in sync with ci/Dockerfile.x86_64's QT_VERSION.
 [[ -f qt.env ]] && source qt.env
 QT_SRC="${QT_DIR:-/opt/qt/6.11.0/gcc_64}"
 # Host /usr reachable via --filesystem=host-os:ro (mounts under /run/host).

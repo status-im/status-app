@@ -29,6 +29,11 @@ pipeline {
       description: 'Docker image tag for the Linux image'
     )
     string(
+      name: 'DOCKER_TAG_LINUX_ARM64',
+      defaultValue: '1.0.9-qt6.11.0-arm64',
+      description: 'Docker image tag for the Linux aarch64 image'
+    )
+    string(
       name: 'DOCKER_REGISTRY',
       description: 'Docker registry ',
       defaultValue: params.DOCKER_REGISTRY ?: 'harbor.status.im',
@@ -79,6 +84,8 @@ pipeline {
     DOCKER_IMAGE = 'status-im/status-desktop-build'
     ANDROID_BUILD_DIR = "${WORKSPACE}/mobile/docker"
     LINUX_BUILD_DIR = "${WORKSPACE}/ci"
+    /* Required for `docker build --platform=...` (aarch64 image built via QEMU). */
+    DOCKER_BUILDKIT = '1'
   }
 
   stages {
@@ -89,6 +96,7 @@ pipeline {
           dir("${LINUX_BUILD_DIR}") {
             image = docker.build(
               "${params.DOCKER_REGISTRY}/${DOCKER_IMAGE}:${params.DOCKER_TAG_LINUX}",
+              "-f Dockerfile.x86_64 " +
               "--build-arg QT_VERSION=${params.QT_VERSION} " +
               "--build-arg LINUXDEPLOYQT_VERSION=${params.LINUXDEPLOYQT_VERSION} " +
               "--build-arg PCSCLITE_VERSION=${params.PCSCLITE_VERSION} " +
@@ -115,6 +123,53 @@ pipeline {
         script {
           withDockerRegistry([credentialsId: 'harbor-status-im-status-desktop-build-robot', url: "https://${params.DOCKER_REGISTRY}"]) {
             image.push(params.DOCKER_TAG_LINUX)
+          }
+        }
+      }
+    }
+
+    stage('Setup QEMU for ARM64 emulation') {
+      steps {
+        sh 'docker run --privileged --rm tonistiigi/binfmt --install arm64'
+        sh 'echo "===== binfmt / qemu registration =====" && docker run --privileged --rm tonistiigi/binfmt'
+      }
+    }
+
+    stage('Build Docker Image for Linux ARM64') {
+      steps {
+        script {
+          dir("${LINUX_BUILD_DIR}") {
+            image = docker.build(
+              "${params.DOCKER_REGISTRY}/${DOCKER_IMAGE}:${params.DOCKER_TAG_LINUX_ARM64}",
+              "--platform=linux/arm64 " +
+              "--progress=plain " +
+              "-f Dockerfile.aarch64 " +
+              "--build-arg QT_VERSION=${params.QT_VERSION} " +
+              "--build-arg LINUXDEPLOYQT_VERSION=${params.LINUXDEPLOYQT_VERSION} " +
+              "--build-arg PCSCLITE_VERSION=${params.PCSCLITE_VERSION} " +
+              "."
+            )
+          }
+        }
+      }
+    }
+
+    stage('Test Image for Linux ARM64') {
+      steps {
+        script {
+          image.inside('--platform=linux/arm64 --entrypoint=""') {
+            sh "qmake --version"
+            sh "ls -la /opt/qt/${params.QT_VERSION}/"
+          }
+        }
+      }
+    }
+
+    stage('Push Linux ARM64 image to Docker registry') {
+      steps {
+        script {
+          withDockerRegistry([credentialsId: 'harbor-status-im-status-desktop-build-robot', url: "https://${params.DOCKER_REGISTRY}"]) {
+            image.push(params.DOCKER_TAG_LINUX_ARM64)
           }
         }
       }

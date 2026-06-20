@@ -12,9 +12,9 @@ pipeline {
     /* Image with Ubuntu 22.04 and QT ${QT_VERSION} */
     docker {
       label 'linuxcontainer'
-      image "harbor.status.im/status-im/status-desktop-build:1.0.7-qt${QT_VERSION}"
-      /* allows jenkins use cat and mounts '/dev/fuse' for linuxdeployqt */
-      args '--entrypoint="" ' +
+      image "harbor.status.im/status-im/status-desktop-build:1.0.9-qt${QT_VERSION}${getImageArchSuffix()}"
+      args "--platform=linux/${getDockerPlatform()} " +
+           '--entrypoint="" ' +
            '--cap-add=SYS_ADMIN ' +
            '--security-opt=apparmor:unconfined ' +
            '--device=/dev/fuse ' +
@@ -147,7 +147,7 @@ pipeline {
     }
 
     stage('E2E') {
-      when { expression { utils.isPRBuild() } }
+      when { expression { utils.isPRBuild() && getArch() == 'x86_64' } }
       steps { script {
         build(
           job: 'status-app/e2e/prs',
@@ -175,5 +175,14 @@ def getArch() {
   for (def arch in ['x86_64', 'aarch64']) {
     if (tokens.contains(arch)) { return arch }
   }
+}
+
+/* Map the job-path arch to the Docker --platform value. */
+def getDockerPlatform() {
+  return getArch() == 'aarch64' ? 'arm64' : 'amd64'
+}
+
+def getImageArchSuffix() {
+  return getArch() == 'aarch64' ? '-arm64' : ''
 }
 
