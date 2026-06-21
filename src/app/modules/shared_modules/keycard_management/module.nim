@@ -436,7 +436,7 @@ method startAsyncLogin*[T](self: Module[T], keyUid, pin: string, generateXPub: b
   var xPubPath = ""
   if generateXPub:
     xPubPath = PATH_WALLET_XPUB
-  self.controller.startAsyncLogin(keyUid, pin, xPubPath)
+  self.controller.startAsyncLogin(keyUid, pin, xPubPath, extendedResponse = true) # extendedResponse is true to get the full recover keys set (master address, walletRootAddress, eip1581Address...)
 
 method onKeycardAsyncLoginFinished*[T](self: Module[T], exportedKeys: KeycardExportedKeysDto, error: string) =
   if self.tmpFlowType != FlowType.AsyncLogin:

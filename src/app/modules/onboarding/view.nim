@@ -12,10 +12,6 @@ QtObject:
       delegate: io_interface.AccessInterface
       keycardEvent: KeycardEventDto
       syncState: LocalPairingState
-      addKeyPairState: ProgressState
-      pinSettingState: ProgressState
-      authorizationState: AuthorizationState
-      restoreKeysExportState: ProgressState
       loginAccountsModel: login_acc_model.Model
       loginAccountsModelVariant: QVariant
       convertKeycardAccountState: ProgressState
@@ -51,50 +47,10 @@ QtObject:
     self.syncState = syncState
     self.syncStateChanged()
 
-  proc pinSettingStateChanged*(self: View) {.signal.}
-  proc getPinSettingState*(self: View): int {.slot.} =
-    return self.pinSettingState.int
-  QtProperty[int] pinSettingState:
-    read = getPinSettingState
-    notify = pinSettingStateChanged
-  proc setPinSettingState*(self: View, pinSettingState: ProgressState) =
-    if self.pinSettingState == pinSettingState:
-      return
-    self.pinSettingState = pinSettingState
-    self.pinSettingStateChanged()
-
-  proc authorizationStateChanged*(self: View) {.signal.}
-  proc getAuthorizationState*(self: View): int {.slot.} =
-    return self.authorizationState.int
-  QtProperty[int] authorizationState:
-    read = getAuthorizationState
-    notify = authorizationStateChanged
-  proc setAuthorizationState*(self: View, authorizationState: AuthorizationState) =
-    if self.authorizationState == authorizationState:
-      return
-    self.authorizationState = authorizationState
-    self.authorizationStateChanged()
-
-  proc restoreKeysExportStateChanged*(self: View) {.signal.}
-  proc getRestoreKeysExportState*(self: View): int {.slot.} =
-    return self.restoreKeysExportState.int
-  QtProperty[int] restoreKeysExportState:
-    read = getRestoreKeysExportState
-    notify = restoreKeysExportStateChanged
-  proc setRestoreKeysExportState*(self: View, restoreKeysExportState: ProgressState) =
-    if self.restoreKeysExportState == restoreKeysExportState:
-      return
-    self.restoreKeysExportState = restoreKeysExportState
-    self.restoreKeysExportStateChanged()
-
   proc keycardEventChanged*(self: View) {.signal.}
-
   proc setKeycardEvent*(self: View, keycardEvent: KeycardEventDto) =
     self.keycardEvent = keycardEvent
     self.keycardEventChanged()
-
-  proc getKeycardEvent*(self: View): KeycardEventDto =
-    return self.keycardEvent
 
   proc getKeycardState(self: View): int {.slot.} =
     return self.keycardEvent.state.int
@@ -157,18 +113,6 @@ QtObject:
     read = getKeycardCardMetadataWalletAccountsJson
     notify = keycardEventChanged
 
-  proc addKeyPairStateChanged*(self: View) {.signal.}
-  proc getAddKeyPairState(self: View): int {.slot.} =
-    return self.addKeyPairState.int
-  QtProperty[int] addKeyPairState:
-    read = getAddKeyPairState
-    notify = addKeyPairStateChanged
-  proc setAddKeyPairState*(self: View, addKeyPairState: ProgressState) =
-    if self.addKeyPairState == addKeyPairState:
-      return
-    self.addKeyPairState = addKeyPairState
-    self.addKeyPairStateChanged()
-
   proc getLoginAccountsModel(self: View): QVariant {.slot.} =
     return self.loginAccountsModelVariant
   proc setLoginAccountsModelItems*(self: View, accounts: seq[login_acc_item.Item]) =
@@ -203,18 +147,6 @@ QtObject:
 
   ### slots ###
 
-  proc setPin(self: View, pin: string) {.slot.} =
-    self.delegate.initialize(pin)
-
-  proc resetKeycardProgressStates(self: View) {.slot.} =
-    self.delegate.resetKeycardProgressStates()
-
-  proc authorize(self: View, pin: string) {.slot.} =
-    self.delegate.authorize(pin)
-
-  proc loadMnemonic(self: View, mnemonic: string) {.slot.} =
-    self.delegate.loadMnemonic(mnemonic)
-
   proc getPasswordStrengthScore(self: View, password: string, userName: string): int {.slot.} =
     return self.delegate.getPasswordStrengthScore(password, userName)
 
@@ -224,32 +156,17 @@ QtObject:
   proc isMnemonicDuplicate(self: View, mnemonic: string): bool {.slot.} =
     return self.delegate.isMnemonicDuplicate(mnemonic)
 
-  proc generateMnemonic(self: View): string {.slot.} =
-    return self.delegate.generateMnemonic()
-
   proc validateLocalPairingConnectionString(self: View, connectionString: string): bool {.slot.} =
     return self.delegate.validateLocalPairingConnectionString(connectionString)
 
   proc inputConnectionStringForBootstrapping(self: View, connectionString: string) {.slot.} =
     self.delegate.inputConnectionStringForBootstrapping(connectionString)
 
-  proc exportRecoverKeys(self: View) {.slot.} =
-    self.delegate.exportRecoverKeys()
-
   proc finishOnboardingFlow(self: View, flowInt: int, dataJson: string): string {.slot.} =
     return self.delegate.finishOnboardingFlow(flowInt, dataJson)
 
   proc loginRequested(self: View, keyUid: string, loginFlow: int, dataJson: string) {.slot.} =
     self.delegate.loginRequested(keyUid, loginFlow, dataJson)
-
-  proc recoverKeycardRequested(self: View, pin: string, mnemonic: string) {.slot.} =
-    self.delegate.recoverKeycard(pin, mnemonic)
-
-  proc startKeycardFactoryReset(self: View) {.slot.} =
-    self.delegate.startKeycardFactoryReset()
-
-  proc startKeycardDetection(self: View) {.slot.} =
-    self.delegate.startKeycardDetection()
 
   proc prepareKeycardModule(self: View) {.slot.} =
     self.delegate.prepareKeycardModule()

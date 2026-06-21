@@ -55,7 +55,6 @@ Page {
     //    "data:var": contains "password" or "pin"
     signal loginRequested(string keyUid, int method, var data)
     signal profileSelected(string keyUid)
-    signal keycardRequested()
 
     function restartFlow() {
         unload()
@@ -131,21 +130,6 @@ Page {
 
             root.finished(flow, data)
         }
-
-        function loadMnemonic() {
-            root.onboardingStore.loadMnemonic(d.seedphrase)
-        }
-
-        function authorize(pin) {
-            if (!pin && !d.keycardPin) {
-                console.warn("OnboardingLayout: authorize pin not provided")
-                return
-            }
-            if (!pin) {
-                pin = d.keycardPin
-            }
-            root.onboardingStore.authorize(pin)
-        }
     }
 
     background: Rectangle {
@@ -165,11 +149,7 @@ Page {
         keycardState: root.onboardingStore.keycardState
         keycardUID: root.onboardingStore.keycardUID
         keycardKeyUID: root.onboardingStore.keycardKeyUID
-        pinSettingState: root.onboardingStore.pinSettingState
-        authorizationState: root.onboardingStore.authorizationState
-        restoreKeysExportState: root.onboardingStore.restoreKeysExportState
         syncState: root.onboardingStore.syncState
-        addKeyPairState: root.onboardingStore.addKeyPairState
 
         displayKeycardPromoBanner: !d.settings.keycardPromoShown
 
@@ -178,7 +158,6 @@ Page {
         lastSelectedProfileKeyUid: root.lastSelectedProfileKeyUid
         networkChecksEnabled: root.networkChecksEnabled
 
-        generateMnemonic: root.onboardingStore.generateMnemonic
         isBiometricsLogin: (account) => root.keychain.hasCredential(account) === Keychain.StatusSuccess
         passwordStrengthScoreFunction: root.onboardingStore.getPasswordStrengthScore
         isSeedPhraseValid: root.onboardingStore.validMnemonic
@@ -197,15 +176,6 @@ Page {
         onLoginRequested: (keyUid, method, data) => root.loginRequested(keyUid, method, data)
         onProfileSelected: (keyUid) => root.profileSelected(keyUid)
 
-        onSetPinRequested: (pin) => {
-            d.keycardPin = pin
-            root.onboardingStore.setPin(pin)
-        }
-
-        onLoadMnemonicRequested: d.loadMnemonic()
-        onRecoverKeycardRequested: (pin, seedphrase) => root.onboardingStore.recoverKeycardRequested(pin, seedphrase)
-        onAuthorizationRequested: (pin) => d.authorize(pin)
-        onPerformKeycardFactoryResetRequested: root.onboardingStore.startKeycardFactoryReset()
         onSyncProceedWithConnectionString: (connectionString) =>
             root.onboardingStore.inputConnectionStringForBootstrapping(connectionString)
         onSeedphraseSubmitted: (seedphrase) => d.seedphrase = seedphrase
@@ -213,27 +183,22 @@ Page {
         onSetPasswordRequested: (password) => d.password = password
         onEnableBiometricsRequested: (enabled) => d.enableBiometrics = enabled
         onLinkActivated: (link) => Qt.openUrlExternally(link)
-        onExportKeysRequested: root.onboardingStore.exportRecoverKeys()
         onImportLocalBackupRequested: (importFilePath) => d.backupImportFileUrl = importFilePath
         onOnboardingKeycardFlowCompletedWithData: (flow, dataJson) => {
-            try {
-                const payload = JSON.parse(dataJson)
-                d.keycardPayload = payload
-                if (flow === Constants.keycard.flow.startUsingProfileWithoutKeycard) {
-                    d.keyUid = payload.keyUid ?? ""
-                    d.seedphrase = payload.seedPhrase ?? ""
-                    d.password = payload.password ?? ""
-                }
-            } catch (e) {
-                console.warn("OnboardingLayout: failed to parse keycard popup payload:", e.message)
-                d.keycardPayload = null
-            }
-        }
+                                                      try {
+                                                          const payload = JSON.parse(dataJson)
+                                                          d.keycardPayload = payload
+                                                          if (flow === Constants.keycard.flow.startUsingProfileWithoutKeycard) {
+                                                              d.keyUid = payload.keyUid ?? ""
+                                                              d.seedphrase = payload.seedPhrase ?? ""
+                                                              d.password = payload.password ?? ""
+                                                          }
+                                                      } catch (e) {
+                                                          console.warn("OnboardingLayout: failed to parse keycard popup payload:", e.message)
+                                                          d.keycardPayload = null
+                                                      }
+                                                  }
         onFinished: (flow) => d.finishFlow(flow)
-        onKeycardRequested: {
-            root.onboardingStore.startKeycardDetection()
-            root.keycardRequested()
-        }
 
         onBiometricsRequested: (profileId) => {
             const isKeycardProfile = SQUtils.ModelUtils.getByKey(
@@ -335,5 +300,7 @@ Page {
         }
     }
 
-    Component.onCompleted: restartFlow()
+    Component.onCompleted: {
+        restartFlow()
+    }
 }

@@ -94,8 +94,6 @@ SplitView {
 
         onOnboardingCreateProfileFlowRequested: logs.logEvent("onOnboardingCreateProfileFlowRequested")
         onOnboardingLoginFlowRequested: logs.logEvent("onOnboardingLoginFlowRequested")
-        onUnblockWithSeedphraseRequested: logs.logEvent("onUnblockWithSeedphraseRequested")
-        onUnblockWithPukRequested: logs.logEvent("onUnblockWithPukRequested")
         onLostKeycardFlowRequested: logs.logEvent("onLostKeycardFlowRequested")
     }
 

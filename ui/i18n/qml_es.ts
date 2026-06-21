@@ -4813,33 +4813,6 @@ Envía una solicitud de contacto a la persona con la que quieres chatear, podrá
     </message>
 </context>
 <context>
-    <name>CreateKeycardProfilePage</name>
-    <message>
-        <source>Create profile on empty Keycard</source>
-        <translation>Crear perfil en Keycard vacío</translation>
-    </message>
-    <message>
-        <source>You will require your Keycard to log in to Status and sign transactions</source>
-        <translation>Necesitarás tu Keycard para iniciar sesión en Status y firmar transacciones</translation>
-    </message>
-    <message>
-        <source>Use a new recovery phrase</source>
-        <translation>Usar una nueva frase de recuperación</translation>
-    </message>
-    <message>
-        <source>To create your Keycard-stored profile </source>
-        <translation>Para crear tu perfil almacenado en Keycard </translation>
-    </message>
-    <message>
-        <source>Let&apos;s go!</source>
-        <translation>¡Vamos!</translation>
-    </message>
-    <message>
-        <source>Use an existing recovery phrase</source>
-        <translation>Usar una frase de recuperación existente</translation>
-    </message>
-</context>
-<context>
     <name>CreatePasswordPage</name>
     <message>
         <source>Create profile password</source>
@@ -4940,11 +4913,11 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
         <translation>Si ya tienes una billetera Ethereum</translation>
     </message>
     <message>
-        <source>Use an empty Keycard</source>
-        <translation type="unfinished"></translation>
+        <source>Use Keycard</source>
+        <translation type="unfinished">Usar Keycard</translation>
     </message>
     <message>
-        <source>Store your new profile keys on Keycard</source>
+        <source>Reveal what you have on Keycard first</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -8975,25 +8948,6 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
-    <name>KeycardAddKeyPairPage</name>
-    <message>
-        <source>Creating key pair on Keycard</source>
-        <translation>Creando par de claves en Keycard</translation>
-    </message>
-    <message>
-        <source>Key pair added to Keycard</source>
-        <translation>Par de claves agregado a Keycard</translation>
-    </message>
-    <message>
-        <source>You will now require this Keycard to log into Status and transact with accounts derived from this key pair</source>
-        <translation>Ahora necesitarás este Keycard para iniciar sesión en Status y transaccionar con cuentas derivadas de este par de claves</translation>
-    </message>
-    <message>
-        <source>A key pair is your shareable public address and a secret private key that controls your wallet. Your key pair is being generated on your Keycard — keep it plugged in until the process completes.</source>
-        <translation>Un par de claves es tu dirección pública compartible y una clave privada secreta que controla tu billetera. Tu par de claves se está generando en tu Keycard — manténlo conectado hasta que el proceso se complete.</translation>
-    </message>
-</context>
-<context>
     <name>KeycardAuth</name>
     <message>
         <source>Plug in Keycard reader...</source>
@@ -9124,51 +9078,6 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
-    <name>KeycardCreatePinPage</name>
-    <message>
-        <source>PINs don&apos;t match</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Create new Keycard PIN</source>
-        <translation>Crear nuevo PIN de Keycard</translation>
-    </message>
-    <message>
-        <source>Repeat Keycard PIN</source>
-        <translation>Repite el PIN de Keycard</translation>
-    </message>
-    <message>
-        <source>Setting Keycard PIN</source>
-        <translation>Configurando PIN de Keycard</translation>
-    </message>
-    <message>
-        <source>PIN set</source>
-        <translation>PIN configurado</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardCreateProfileFlow</name>
-    <message>
-        <source>Create profile on empty Keycard using a recovery phrase</source>
-        <translation>Crear perfil en Keycard vacío usando una frase de recuperación</translation>
-    </message>
-    <message>
-        <source>Invalid recovery phrase</source>
-        <translation>Frase de recuperación inválida</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardCreateReplacementFlow</name>
-    <message>
-        <source>Enter recovery phrase of lost Keycard</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Invalid recovery phrase</source>
-        <translation>Frase de recuperación inválida</translation>
-    </message>
-</context>
-<context>
     <name>KeycardDetailsPage</name>
     <message>
         <source>No free pairing slots</source>
@@ -9276,258 +9185,7 @@ Are you sure you want to do this?</source>
     </message>
 </context>
 <context>
-    <name>KeycardEmptyPage</name>
-    <message>
-        <source>Keycard is empty</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>There is no profile key pair on this Keycard</source>
-        <translation>No hay par de claves de perfil en esta Keycard</translation>
-    </message>
-    <message>
-        <source>Create new profile on this Keycard</source>
-        <translation>Crear nuevo perfil en este Keycard</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardEnterPinPage</name>
-    <message>
-        <source>PIN incorrect</source>
-        <translation>PIN incorrecto</translation>
-    </message>
-    <message>
-        <source>Authorizing</source>
-        <translation>Autorizando</translation>
-    </message>
-    <message>
-        <source>PIN correct</source>
-        <translation>PIN correcto</translation>
-    </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n attempt(s) remaining</source>
-        <translation>
-            <numerusform>Queda %n intento</numerusform>
-            <numerusform>Quedan %n intentos</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Unblock using PUK</source>
-        <translation>Desbloquear usando PUK</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>KeycardEnterPukPage</name>
-    <message numerus="yes">
-        <source>%n attempt(s) remaining</source>
-        <translation>
-            <numerusform>Queda %n intento</numerusform>
-            <numerusform>Quedan %n intentos</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Factory reset Keycard</source>
-        <translation>Restablecer Keycard de fábrica</translation>
-    </message>
-    <message>
-        <source>Keycard locked</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>PUK incorrect</source>
-        <translation>PUK incorrecto</translation>
-    </message>
-    <message>
-        <source>PUK correct</source>
-        <translation>PUK correcto</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PUK</source>
-        <translation>Ingresa el PUK de Keycard</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardErrorPage</name>
-    <message>
-        <source>Communication with Keycard lost</source>
-        <translation>Comunicación con Keycard perdida</translation>
-    </message>
-    <message>
-        <source>There seems to be an issue communicating with your Keycard. Reinsert the card or reader and try again.</source>
-        <translation>Parece que hay un problema al comunicarse con tu Keycard. Vuelve a insertar la tarjeta o el lector e intenta de nuevo.</translation>
-    </message>
-    <message>
-        <source>Try again</source>
-        <translation>Inténtalo de nuevo</translation>
-    </message>
-    <message>
-        <source>Factory reset Keycard</source>
-        <translation>Restablecer Keycard de fábrica</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardFactoryResetFlow</name>
-    <message>
-        <source>Factory reset Keycard</source>
-        <translation>Restablecer Keycard de fábrica</translation>
-    </message>
-    <message>
-        <source>All data including the stored key pair and derived accounts will be removed from the Keycard</source>
-        <translation>Todos los datos, incluido el par de claves almacenado y las cuentas derivadas, serán eliminados del Keycard</translation>
-    </message>
-    <message>
-        <source>I understand the key pair will be deleted</source>
-        <translation>Entiendo que el par de claves será eliminado</translation>
-    </message>
-    <message>
-        <source>Factory reset this Keycard</source>
-        <translation>Restablecer este Keycard de fábrica</translation>
-    </message>
-    <message>
-        <source>Reseting Keycard</source>
-        <translation>Restableciendo Keycard</translation>
-    </message>
-    <message>
-        <source>Keycard successfully factory reset</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>You can now use this Keycard like it&apos;s a brand-new, empty Keycard</source>
-        <translation>Ahora puedes usar esta Keycard como si fuera una Keycard nuevoa y vacía</translation>
-    </message>
-    <message>
-        <source>Do not remove your Keycard or reader</source>
-        <translation>No retires tu Keycard o lector</translation>
-    </message>
-    <message>
-        <source>Please wait while the Keycard is being reset</source>
-        <translation>Por favor espera mientras se restablece el Keycard</translation>
-    </message>
-    <message>
-        <source>Back to Login screen</source>
-        <translation>Volver a la pantalla de inicio de sesión</translation>
-    </message>
-    <message>
-        <source>Log in or Create profile</source>
-        <translation>Iniciar sesión o Crear perfil</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardIntroPage</name>
-    <message>
-        <source>New to Keycard?</source>
-        <translation>¿Nuevo en Keycard?</translation>
-    </message>
-    <message>
-        <source>Store and trade your crypto with a simple, secure and slim hardware wallet.</source>
-        <translation>Almacena y comercia tu cripto con una billetera de hardware simple, segura y delgada.</translation>
-    </message>
-    <message>
-        <source>keycard.tech</source>
-        <translation>keycard.tech</translation>
-    </message>
-    <message>
-        <source>Unblock using PUK</source>
-        <translation>Desbloquear usando PUK</translation>
-    </message>
-    <message>
-        <source>Factory reset Keycard</source>
-        <translation>Restablecer Keycard de fábrica</translation>
-    </message>
-    <message>
-        <source>Plug in your Keycard reader</source>
-        <translation>Conecta tu lector de Keycard</translation>
-    </message>
-    <message>
-        <source>Get help via %1 🔗</source>
-        <translation>Obtén ayuda a través de %1 🔗</translation>
-    </message>
-    <message>
-        <source>Reading Keycard...</source>
-        <translation>Leyendo Keycard...</translation>
-    </message>
-    <message>
-        <source>Oops this isn’t a Keycard</source>
-        <translation>Ups, esto no es una Keycard</translation>
-    </message>
-    <message>
-        <source>Smartcard reader service unavailable</source>
-        <translation>Servicio de lector de tarjetas inteligentes no disponible</translation>
-    </message>
-    <message>
-        <source>The Smartcard reader service (PCSC service), required for using Keycard, is not currently working. Ensure PCSC is installed and running and try again.</source>
-        <translation>El servicio de lector de tarjetas inteligentes (servicio PCSC), requerido para usar Keycard, no está funcionando actualmente. Asegúrate de que PCSC esté instalado y en ejecución e intenta de nuevo.</translation>
-    </message>
-    <message>
-        <source>All pairing slots occupied</source>
-        <translation>Todas las ranuras de emparejamiento están ocupadas</translation>
-    </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Tap or insert your Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Remove card and use a Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Factory reset this Keycard or use a different one</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The Keycard you have used is blocked, you will need to unblock it or use a different one</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>KeycardLostPage</name>
-    <message>
-        <source>Lost Keycard</source>
-        <translation type="unfinished">Keycard perdida</translation>
-    </message>
-    <message>
-        <source>Sorry you&apos;ve lost your Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Create replacement Keycard using the same recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Start using this profile without Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Order a new Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>KeycardLostPageNew</name>
     <message>
         <source>Lost Keycard</source>
         <translation type="unfinished">Keycard perdida</translation>
@@ -9863,25 +9521,6 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <message>
         <source>It is now ready to use.</source>
         <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>KeycardNotEmptyPage</name>
-    <message>
-        <source>Keycard is not empty</source>
-        <translation>La Keycard no está vacía</translation>
-    </message>
-    <message>
-        <source>You can’t use it to store new keys right now</source>
-        <translation>No puedes usarlo para almacenar nuevas claves en este momento</translation>
-    </message>
-    <message>
-        <source>Log in with this Keycard</source>
-        <translation>Iniciar sesión con este Keycard</translation>
-    </message>
-    <message>
-        <source>Factory reset Keycard</source>
-        <translation>Restablecer Keycard de fábrica</translation>
     </message>
 </context>
 <context>
@@ -10352,31 +9991,19 @@ al cargar</translation>
 <context>
     <name>LoginKeycardBox</name>
     <message>
-        <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Plug in Keycard reader...</source>
         <translation type="unfinished">Conecta el lector de Keycard...</translation>
+    </message>
+    <message>
+        <source>Tap or insert your Keycard...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
         <translation type="unfinished">Leyendo Keycard...</translation>
     </message>
     <message>
-        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Wrong Keycard for this profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10388,69 +10015,15 @@ al cargar</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message numerus="yes">
-        <source>PIN incorrect. %n attempt(s) remaining.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Login failed. %1</source>
-        <translation type="unfinished">Error al iniciar sesión. %1</translation>
-    </message>
-    <message>
-        <source>Show details.</source>
-        <translation type="unfinished">Mostrar detalles.</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Tap or insert your Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>LoginKeycardBoxNew</name>
-    <message>
         <source>Unblock</source>
         <translation type="unfinished">Desbloquear</translation>
-    </message>
-    <message>
-        <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Conecta el lector de Keycard...</translation>
-    </message>
-    <message>
-        <source>Insert your Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reading Keycard...</source>
-        <translation type="unfinished">Leyendo Keycard...</translation>
     </message>
     <message>
         <source>This isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Wrong Keycard for this profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Max pairing slots reached.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Keycard blocked</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -11962,11 +11535,7 @@ al cargar</translation>
         <translation type="unfinished">Si tienes Status en otro dispositivo</translation>
     </message>
     <message>
-        <source>Log in with Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If your profile keys are stored on a Keycard</source>
+        <source>Reveal what you have on Keycard first</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12020,6 +11589,10 @@ al cargar</translation>
     <message>
         <source>Checking access...</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use Keycard</source>
+        <translation type="unfinished">Usar Keycard</translation>
     </message>
     <message>
         <source>Enable local network access to sync devices</source>
@@ -18269,36 +17842,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Unblock</source>
         <translation>Desbloquear</translation>
-    </message>
-</context>
-<context>
-    <name>UnblockWithPukFlow</name>
-    <message>
-        <source>Unblock successful</source>
-        <translation>Desbloqueo exitoso</translation>
-    </message>
-    <message>
-        <source>Your Keycard is already unblocked!</source>
-        <translation>¡Tu Keycard ya está desbloqueado!</translation>
-    </message>
-    <message>
-        <source>Continue</source>
-        <translation>Continuar</translation>
-    </message>
-</context>
-<context>
-    <name>UnblockWithSeedphraseFlow</name>
-    <message>
-        <source>Unblock Keycard using the recovery phrase</source>
-        <translation>Desbloquear Keycard usando la frase de recuperación</translation>
-    </message>
-    <message>
-        <source>Unblock Keycard</source>
-        <translation>Desbloquear Keycard</translation>
-    </message>
-    <message>
-        <source>Invalid recovery phrase</source>
-        <translation>Frase de recuperación inválida</translation>
     </message>
 </context>
 <context>

@@ -36,10 +36,6 @@ OnboardingStackView {
     required property int keycardState
     required property string keycardUID
     required property string keycardKeyUID
-    required property int pinSettingState
-    required property int authorizationState
-    required property int restoreKeysExportState
-    required property int addKeyPairState
     required property int syncState
     required property int remainingPinAttempts
     required property int remainingPukAttempts
@@ -57,7 +53,6 @@ OnboardingStackView {
     property string lastSelectedProfileKeyUid
 
     // functions
-    required property var generateMnemonic
     required property var isBiometricsLogin // (string account) => bool
     required property var passwordStrengthScoreFunction
     required property var isSeedPhraseValid
@@ -70,17 +65,11 @@ OnboardingStackView {
     signal biometricsRequested(string profileId)
     signal dismissBiometricsRequested
     signal loginRequested(string keyUid, int method, var data)
-    signal recoverKeycardRequested(string pin, string seedphrase)
-    signal setPinRequested(string pin)
     signal enableBiometricsRequested(bool enable)
     signal syncProceedWithConnectionString(string connectionString)
     signal seedphraseSubmitted(string seedphrase)
     signal keyUidSubmitted(string keyUid)
     signal setPasswordRequested(string password)
-    signal exportKeysRequested
-    signal loadMnemonicRequested
-    signal authorizationRequested(string pin)
-    signal performKeycardFactoryResetRequested
     signal importLocalBackupRequested(url importFilePath)
     signal deleteMultiaccountRequested(string keyUid)
 
@@ -88,7 +77,6 @@ OnboardingStackView {
     signal linkActivated(string link)
 
     signal finished(int flow)
-    signal keycardRequested()
 
     signal onboardingKeycardFlowCompletedWithData(string flow, string dataJson)
 
@@ -140,20 +128,6 @@ OnboardingStackView {
             termsOfUsePopup.createObject(root).open()
         }
 
-        function handleKeycardProgressFailedState(state) {
-            if (state === Onboarding.ProgressState.Failed)
-                handleKeycardFailedState()
-        }
-
-        function handleKeycardAuthorizationErrorState(state) {
-            if (state === Onboarding.AuthorizationState.Error)
-                handleKeycardFailedState()
-        }
-
-        function handleKeycardFailedState() {
-            root.replace(root.get(1), errorPage)
-        }
-
         function openThirdpartyServicesPopup() {
             thirdpartyServicesPopup.createObject(root).open()
         }
@@ -166,39 +140,6 @@ OnboardingStackView {
             deleteMultiaccountConfirmationDialog.createObject(root, { keyUid, username }).open()
         }
     }
-
-    Connections {
-        enabled: root.depth > 1 && !(root.currentItem instanceof KeycardErrorPage)
-
-        function onPinSettingStateChanged() {
-            d.handleKeycardProgressFailedState(pinSettingState)
-        }
-
-        function onAuthorizationStateChanged() {
-            d.handleKeycardAuthorizationErrorState(authorizationState)
-        }
-
-        function onRestoreKeysExportStateChanged() {
-            d.handleKeycardProgressFailedState(restoreKeysExportState)
-        }
-
-        function onAddKeyPairStateChanged() {
-            d.handleKeycardProgressFailedState(addKeyPairState)
-        }
-    }
-
-    Component {
-        id: errorPage
-
-        KeycardErrorPage {
-            readonly property bool backAvailableHint: false
-
-            onTryAgainRequested: root.pop()
-            onFactoryResetRequested: root.push(keycardFactoryResetFlow)
-        }
-    }
-
-
 
     Component {
         id: welcomePage
@@ -257,8 +198,6 @@ OnboardingStackView {
             }
             onOnboardingManageProfilesFlowRequested: d.openManageProfilesPopup()
 
-            onUnblockWithSeedphraseRequested: root.push(unblockWithSeedphraseFlowComponent)
-            onUnblockWithPukRequested: root.push(unblockWithPukFlowComponent)
             onUnblockKeycardRequested: {
                 const stateStr = root.keycardState === Onboarding.KeycardState.BlockedPIN
                                  ? Constants.keycard.state.blockedPIN
@@ -274,9 +213,6 @@ OnboardingStackView {
                     cardMetadataName: root.keycardCardMetadataName,
                     cardMetadataWalletAccountsJson: root.keycardCardMetadataWalletAccountsJson
                 })
-            }
-            onKeycardRequested: {
-                root.keycardRequested()
             }
 
             onVisibleChanged: {
@@ -301,15 +237,16 @@ OnboardingStackView {
         CreateProfilePage {
             isKeycardEnabled: root.isKeycardEnabled
 
-            onCreateProfileWithPasswordRequested: root.push(createNewProfileFlow)
+            onCreateProfileWithPasswordRequested: {
+                root.push(createNewProfileFlow)
+            }
             onCreateProfileWithSeedphraseRequested: {
                 d.flow = Onboarding.OnboardingFlow.CreateProfileWithSeedphrase
                 root.push(useRecoveryPhraseFlow,
                           { type: UseRecoveryPhraseFlow.Type.NewProfile })
             }
             onCreateProfileWithEmptyKeycardRequested: {
-                root.keycardRequested()
-                root.push(keycardCreateProfileFlow)
+                root.openKeycardPopup(Constants.keycard.flow.readKeycard, "", "", "", "[]")
             }
         }
     }
@@ -324,8 +261,7 @@ OnboardingStackView {
 
             onLoginWithSyncingRequested: root.push(logInBySyncingFlow)
             onLoginWithKeycardRequested: {
-                root.keycardRequested()
-                root.push(loginWithKeycardFlow)
+                root.openKeycardPopup(Constants.keycard.flow.readKeycard, "", "", "", "[]")
             }
 
             onLoginWithSeedphraseRequested: {
@@ -340,24 +276,6 @@ OnboardingStackView {
         id: keycardLostPage
 
         KeycardLostPage {
-            onCreateReplacementKeycardRequested: {
-                d.flow = Onboarding.OnboardingFlow.LoginWithRestoredKeycard
-                root.push(keycardCreateReplacementFlow)
-            }
-
-            onUseProfileWithoutKeycardRequested: {
-                d.flow = Onboarding.OnboardingFlow.LoginWithLostKeycardSeedphrase
-                root.push(useRecoveryPhraseFlow,
-                          { type: UseRecoveryPhraseFlow.Type.KeycardRecovery })
-            }
-        }
-    }
-
-    /* TODO: uncomment when integrating new onboarding
-    Component {
-        id: keycardLostPage
-
-        KeycardLostPageNew {
 
             onReadSpareKeycardRequested: {
                 const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""
@@ -370,7 +288,6 @@ OnboardingStackView {
             }
         }
     }
-    */
 
     Component {
         id: createNewProfileFlow
@@ -399,36 +316,7 @@ OnboardingStackView {
 
             onImportLocalBackupRequested: (importFilePath) => root.importLocalBackupRequested(importFilePath)
 
-            onFinished: d.pushOrSkipBiometricsPage()
-        }
-    }
-
-    Component {
-        id: keycardCreateProfileFlow
-
-        KeycardCreateProfileFlow {
-            keycardState: root.keycardState
-            pinSettingState: root.pinSettingState
-            authorizationState: root.authorizationState
-            addKeyPairState: root.addKeyPairState
-            generateMnemonic: root.generateMnemonic
-            displayKeycardPromoBanner: root.displayKeycardPromoBanner
-            isSeedPhraseValid: root.isSeedPhraseValid
-
-            keycardPinInfoPageDelay: root.keycardPinInfoPageDelay
-
-            onKeycardFactoryResetRequested: root.push(keycardFactoryResetFlow)
-            onLoadMnemonicRequested: root.loadMnemonicRequested()
-            onSetPinRequested: (pin) => root.setPinRequested(pin)
-            onLoginWithKeycardRequested: root.push(loginWithKeycardFlow)
-            onAuthorizationRequested: root.authorizationRequested("") // Pin was saved locally already
-            onSeedphraseSubmitted: (seedphrase) => root.seedphraseSubmitted(seedphrase)
-
-            onFinished: (withNewSeedphrase) => {
-                d.flow = withNewSeedphrase
-                            ? Onboarding.OnboardingFlow.CreateProfileWithKeycardNewSeedphrase
-                            : Onboarding.OnboardingFlow.CreateProfileWithKeycardExistingSeedphrase
-
+            onFinished: {
                 d.pushOrSkipBiometricsPage()
             }
         }
@@ -455,146 +343,6 @@ OnboardingStackView {
                 d.flow = Onboarding.OnboardingFlow.LoginWithSyncing
                 d.pushOrSkipBiometricsPage()
             }
-        }
-    }
-
-    Component {
-        id: loginWithKeycardFlow
-
-        LoginWithKeycardFlow {
-            keycardState: root.keycardState
-            authorizationState: root.authorizationState
-            restoreKeysExportState: root.restoreKeysExportState
-            remainingPinAttempts: root.remainingPinAttempts
-            remainingPukAttempts: root.remainingPukAttempts
-            displayKeycardPromoBanner: root.displayKeycardPromoBanner
-            onAuthorizationRequested: (pin) => root.authorizationRequested(pin)
-
-            keycardPinInfoPageDelay: root.keycardPinInfoPageDelay
-
-            onCreateProfileWithEmptyKeycardRequested: root.push(keycardCreateProfileFlow)
-            onExportKeysRequested: root.exportKeysRequested()
-            onKeycardFactoryResetRequested: root.push(keycardFactoryResetFlow)
-            onUnblockWithSeedphraseRequested: root.push(unblockWithSeedphraseFlowComponent)
-            onUnblockWithPukRequested: root.push(unblockWithPukFlowComponent)
-
-            onImportLocalBackupRequested: (importFilePath) => root.importLocalBackupRequested(importFilePath)
-
-            onFinished: {
-                d.flow = Onboarding.OnboardingFlow.LoginWithKeycard
-                d.pushOrSkipBiometricsPage()
-            }
-        }
-    }
-
-    Component {
-        id: unblockWithSeedphraseFlowComponent
-
-        UnblockWithSeedphraseFlow {
-            id: unblockWithSeedphraseFlow
-
-            property string seedphrase
-
-            isSeedPhraseValid: root.isSeedPhraseValid
-            pinSettingState: root.pinSettingState
-            keycardPinInfoPageDelay: root.keycardPinInfoPageDelay
-
-            onSeedphraseSubmitted: (seedphrase) => {
-                                       unblockWithSeedphraseFlow.seedphrase = seedphrase
-                                   }
-
-            onSetPinRequested: (newPin) => {
-                                   if (root.loginScreen) {
-                                       root.recoverKeycardRequested(newPin, unblockWithSeedphraseFlow.seedphrase)
-                                   }
-                               }
-
-            onFinished: {
-                if (root.loginScreen) {
-                } else {
-                    d.flow = Onboarding.OnboardingFlow.LoginWithKeycard
-                    d.pushOrSkipBiometricsPage()
-                }
-            }
-        }
-    }
-
-    Component {
-        id: unblockWithPukFlowComponent
-
-        UnblockWithPukFlow {
-            id: unblockWithPukFlow
-
-            property string puk
-            property string pin
-
-            keycardState: root.keycardState
-            pinSettingState: root.pinSettingState
-            tryToSetPukFunction: {
-                unblockWithPukFlow.puk = puk
-            }
-            remainingAttempts: root.remainingPukAttempts
-            keycardPinInfoPageDelay: root.keycardPinInfoPageDelay
-
-            onSetPinRequested: (newPin) => {
-                pin = newPin
-                root.setPinRequested(newPin)
-            }
-            onKeycardFactoryResetRequested: root.push(keycardFactoryResetFlow)
-
-            onFinished: (success) => {
-                if (!success)
-                   return
-                if (root.loginScreen) {
-                    root.loginRequested(root.loginScreen.selectedProfileKeyId,
-                                        Onboarding.LoginMethod.Keycard, { pin })
-                } else {
-                    d.flow = Onboarding.OnboardingFlow.LoginWithKeycard
-                    d.pushOrSkipBiometricsPage()
-                }
-            }
-        }
-    }
-
-    Component {
-        id: keycardCreateReplacementFlow
-
-        KeycardCreateReplacementFlow {
-            keycardState: root.keycardState
-            pinSettingState: root.pinSettingState
-            authorizationState: root.authorizationState
-            addKeyPairState: root.addKeyPairState
-
-            displayKeycardPromoBanner: root.displayKeycardPromoBanner
-            isSeedPhraseValid: root.isSeedPhraseValid
-
-            keycardPinInfoPageDelay: root.keycardPinInfoPageDelay
-
-            onKeycardFactoryResetRequested: root.push(keycardFactoryResetFlow,
-                                                      { fromLoginScreen: true })
-            onSetPinRequested: (pin) => root.setPinRequested(pin)
-            onLoginWithKeycardRequested: root.push(loginWithKeycardFlow)
-            onAuthorizationRequested: root.authorizationRequested("") // Pin was saved locally already
-            onLoadMnemonicRequested: root.loadMnemonicRequested()
-
-            onCreateProfileWithoutKeycardRequested: {
-                root.push(createProfilePage)
-            }
-
-            onSeedphraseSubmitted: (seedphrase) => root.seedphraseSubmitted(seedphrase)
-
-            onFinished: d.pushOrSkipBiometricsPage()
-        }
-    }
-
-    Component {
-        id: keycardFactoryResetFlow
-
-        KeycardFactoryResetFlow {
-            keycardState: root.keycardState
-
-            onPerformKeycardFactoryResetRequested: root.performKeycardFactoryResetRequested()
-            onFinished: root.pop(null)
         }
     }
 

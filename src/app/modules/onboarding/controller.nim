@@ -4,7 +4,6 @@ import uuids
 import app/core/eventemitter
 import app/core/signals/types
 import app/global/app_signals
-import app/global/feature_flags
 import app_service/service/general/service as general_service
 import app_service/service/accounts/service as accounts_service
 import app_service/service/accounts/dto/image_crop_rectangle
@@ -74,45 +73,7 @@ proc init*(self: Controller) =
     self.delegate.onKeycardStateUpdated(args.keycardEvent)
   self.connectionIds.add(handlerId)
 
-  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_SET_PIN_FAILURE) do(e: Args):
-    let args = KeycardErrorArg(e)
-    self.delegate.onKeycardSetPinFailure(args.error)
-  self.connectionIds.add(handlerId)
-
-  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_AUTHORIZE_FINISHED) do(e: Args):
-    let args = KeycardAuthorizeEvent(e)
-    self.delegate.onKeycardAuthorizeFinished(args.error, args.authorized)
-  self.connectionIds.add(handlerId)
-
-  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_LOAD_MNEMONIC_FAILURE) do(e: Args):
-    let args = KeycardErrorArg(e)
-    self.delegate.onKeycardLoadMnemonicFailure(args.error)
-  self.connectionIds.add(handlerId)
-
-  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_LOAD_MNEMONIC_SUCCESS) do(e: Args):
-    let args = KeycardKeyUIDArg(e)
-    self.delegate.onKeycardLoadMnemonicSuccess(args.keyUID)
-  self.connectionIds.add(handlerId)
-
-  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_RESTORE_KEYS_FAILURE) do(e: Args):
-    let args = KeycardErrorArg(e)
-    self.delegate.onKeycardExportRestoreKeysFailure(args.error)
-  self.connectionIds.add(handlerId)
-
-  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_EXPORT_RESTORE_KEYS_SUCCESS) do(e: Args):
-    let args = KeycardExportedKeysArg(e)
-    self.delegate.onKeycardExportRestoreKeysSuccess(args.exportedKeys)
-  self.connectionIds.add(handlerId)
-
   handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_LOGIN_FINISHED) do(e: Args):
-    let args = KeycardLoginArgs(e)
-    if args.error.len > 0:
-      self.delegate.onKeycardExportLoginKeysFailure(args.error)
-    else:
-      self.delegate.onKeycardExportLoginKeysSuccess(args.exportedKeys)
-  self.connectionIds.add(handlerId)
-
-  handlerId = self.events.onWithUUID(SIGNAL_KEYCARD_RECOVER_FINISHED) do(e: Args):
     let args = KeycardLoginArgs(e)
     if args.error.len > 0:
       self.delegate.onKeycardExportLoginKeysFailure(args.error)
@@ -151,19 +112,8 @@ proc init*(self: Controller) =
     self.delegate.onMessengerStarted(args.error)
   self.connectionIds.add(handlerId)
 
-proc initialize*(self: Controller, pin: string) =
-  let puk = keycard_serviceV2.generateRandomPUK()
-  discard
-
-proc authorize*(self: Controller, pin: string) =
-  discard
-
 proc loginKeycard*(self: Controller, keyUid: string, pin: string) =
-  discard
-
-proc recoverKeycard*(self: Controller, pin: string, mnemonic: string) =
-  let puk = keycard_serviceV2.generateRandomPUK()
-  discard
+  self.keycardServiceV2.asyncLogin(keyUid, pin)
 
 proc getPasswordStrengthScore*(self: Controller, password, userName: string): int =
   return self.generalService.getPasswordStrengthScore(password, userName)
@@ -175,9 +125,6 @@ proc validMnemonic*(self: Controller, mnemonic: string): bool =
 proc isMnemonicDuplicate*(self: Controller, mnemonic: string): bool =
   let (keyUID, err) = self.accountsService.validateMnemonic(mnemonic)
   return self.accountsService.openedAccountsContainsKeyUid(keyUID)
-
-proc loadMnemonic*(self: Controller, mnemonic: string) =
-  discard
 
 proc validateLocalPairingConnectionString*(self: Controller, connectionString: string): bool =
   let err = self.devicesService.validateConnectionString(connectionString)
@@ -233,21 +180,6 @@ proc loginLocalPairingAccount*(self: Controller, account: AccountDto, password, 
 proc finishPairingThroughSeedPhraseProcess*(self: Controller, installationId: string) =
   self.devicesService.finishPairingThroughSeedPhraseProcess(installationId)
 
-proc stopKeycardService*(self: Controller) =
-  discard
-
-proc stopKeycardServiceAsync*(self: Controller) =
-  discard
-
-proc generateMnemonic*(self: Controller, length: int): string =
-  discard
-
-proc exportRecoverKeysFromKeycard*(self: Controller) =
-  discard
-
-proc exportLoginKeysFromKeycard*(self: Controller) =
-  discard
-
 proc getOpenedAccounts*(self: Controller): seq[AccountDto] =
   return self.accountsService.openedAccounts()
 
@@ -282,26 +214,8 @@ proc login*(
 proc getKeypairByKeyUidFromDb*(self: Controller, keyUid: string): wallet_account_service.KeypairDto =
   return self.walletAccountService.getKeypairByKeyUidFromDb(keyUid)
 
-proc addKeycardOrAccounts*(self: Controller, keyPair: KeycardDto, password: string) =
-  discard
-
-proc getMetadata*(self: Controller): keycard_serviceV2.CardMetadataDto =
-  discard
-
-proc startKeycardFactoryReset*(self: Controller) =
-  discard
-
-proc storeMetadata*(self: Controller, name: string, paths: seq[string]) =
-  discard
-
-proc storeMetadataAsync*(self: Controller, name: string, paths: seq[string]) =
-  discard
-
 proc asyncImportLocalBackupFile*(self: Controller, filePath: string) =
-  discard
-
-proc startKeycardDetection*(self: Controller) =
-  discard
+  self.generalService.asyncImportLocalBackupFile(filePath)
 
 proc createAccountFromMnemonic*(self: Controller, mnemonic: string, paths: seq[string]): GeneratedAccountDto =
   return self.accountsService.createAccountFromMnemonic(mnemonic, paths)

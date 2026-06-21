@@ -97,19 +97,25 @@ OnboardingPage {
                         icon.source: Assets.png("onboarding/create_profile_seed")
                         onClicked: root.createProfileWithSeedphraseRequested()
                     }
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.leftMargin: -buttonFrame.padding
-                        Layout.rightMargin: -buttonFrame.padding
-                        Layout.preferredHeight: 1
-                        color: Theme.palette.statusMenu.separatorColor
-                        visible: root.isKeycardEnabled
-                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: Theme.palette.statusMenu.separatorColor
+                visible: root.isKeycardEnabled
+            }
+
+            OnboardingButtonFrame {
+                Layout.fillWidth: true
+                contentItem: ColumnLayout {
+                    spacing: 0
                     ListItemButton {
                         objectName: "btnCreateWithEmptyKeycard"
                         Layout.fillWidth: true
-                        text: qsTr("Use an empty Keycard")
-                        subTitle: qsTr("Store your new profile keys on Keycard")
+                        text: qsTr("Use Keycard")
+                        subTitle: qsTr("Reveal what you have on Keycard first")
                         icon.source: Assets.png("onboarding/create_profile_keycard")
                         onClicked: root.createProfileWithEmptyKeycardRequested()
                         visible: root.isKeycardEnabled

@@ -1,13 +1,7 @@
 CreateNewProfileFlow 1.0 CreateNewProfileFlow.qml
-KeycardCreateProfileFlow 1.0 KeycardCreateProfileFlow.qml
-KeycardCreateReplacementFlow 1.0 KeycardCreateReplacementFlow.qml
-KeycardFactoryResetFlow 1.0 KeycardFactoryResetFlow.qml
-LoginWithKeycardFlow 1.0 LoginWithKeycardFlow.qml
 LoginBySyncingFlow 1.0 LoginBySyncingFlow.qml
 OnboardingFlow 1.0 OnboardingFlow.qml
 OnboardingLayout 1.0 OnboardingLayout.qml
 OnboardingStackView 1.0 OnboardingStackView.qml
-UnblockWithPukFlow 1.0 UnblockWithPukFlow.qml
-UnblockWithSeedphraseFlow 1.0 UnblockWithSeedphraseFlow.qml
 UseRecoveryPhraseFlow 1.0 UseRecoveryPhraseFlow.qml
 StartupOnboardingWrapper 1.0 StartupOnboardingWrapper.qml

@@ -363,26 +363,6 @@
     </message>
 </context>
 <context>
-    <name>KeycardEnterPinPage</name>
-    <message numerus="yes">
-        <source>%n attempt(s) remaining</source>
-        <translation>
-            <numerusform>%n attempt remaining</numerusform>
-            <numerusform>%n attempts remaining</numerusform>
-        </translation>
-    </message>
-</context>
-<context>
-    <name>KeycardEnterPukPage</name>
-    <message numerus="yes">
-        <source>%n attempt(s) remaining</source>
-        <translation>
-            <numerusform>%n attempt remaining</numerusform>
-            <numerusform>%n attempts remaining</numerusform>
-        </translation>
-    </message>
-</context>
-<context>
     <name>KeycardProgressState</name>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
@@ -448,16 +428,6 @@
 </context>
 <context>
     <name>LoginKeycardBox</name>
-    <message numerus="yes">
-        <source>PIN incorrect. %n attempt(s) remaining.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
-</context>
-<context>
-    <name>LoginKeycardBoxNew</name>
     <message numerus="yes">
         <source>PIN incorrect. %n attempt(s) remaining.</source>
         <translation type="unfinished">

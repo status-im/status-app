@@ -31,8 +31,7 @@ Control {
 
     signal detailedErrorPopupRequested()
 
-    signal unblockWithSeedphraseRequested()
-    signal unblockWithPukRequested()
+    signal unblockRequested()
 
     signal loginRequested(string pin)
 
@@ -69,67 +68,18 @@ Control {
     contentItem: ColumnLayout {
         spacing: 12
         LoginTouchIdIndicator {
+            id: touchIdIcon
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: Theme.halfPadding
-            id: touchIdIcon
             visible: false
             success: root.biometricsSuccessful
             error: root.biometricsFailed
             onClicked: root.biometricsRequested()
         }
-        StatusBaseText {
-            Layout.fillWidth: true
-            id: infoText
-            horizontalAlignment: Qt.AlignHCenter
-            elide: Text.ElideRight
-            color: Theme.palette.baseColor1
-            wrapMode: Text.Wrap
-            linkColor: hoveredLink ? Theme.palette.hoverColor(color) : color
-            visible: text !== ""
-            HoverHandler {
-                cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
-            }
-            onLinkActivated: root.detailedErrorPopupRequested()
-        }
 
-        Column {
-            id: lockedButtons
-            Layout.fillWidth: true
-            spacing: 12
-            visible: false
-            MaybeOutlineButton {
-                objectName: "btnUnblockWithPUK"
-                width: parent.width
-                visible: root.keycardState === Onboarding.KeycardState.BlockedPIN && root.keycardRemainingPukAttempts > 0
-                text: qsTr("Unblock with PUK")
-                onClicked: root.unblockWithPukRequested()
-
-                /////////////////////////////////////////////////////////////////////////////////
-                // # Remove this once we implement unlock via PUK
-                /////////////////////////////////////////////////////////////////////////////////
-                enabled: false
-                MouseArea {
-                    id: unlockWithPukArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                }
-                StatusToolTip {
-                    text: Constants.keycard.temporarilyUnavailable
-                    visible: unlockWithPukArea.containsMouse
-                }
-                /////////////////////////////////////////////////////////////////////////////////
-            }
-            MaybeOutlineButton {
-                objectName: "btnUnblockWithSeedphrase"
-                width: parent.width
-                visible: root.keycardState === Onboarding.KeycardState.BlockedPIN || root.keycardState === Onboarding.KeycardState.BlockedPUK
-                text: qsTr("Unblock with recovery phrase")
-                onClicked: root.unblockWithSeedphraseRequested()
-            }
-        }
         StatusPinInput {
-            Layout.alignment: Qt.AlignHCenter
             id: pinInputField
+            Layout.alignment: Qt.AlignHCenter
             objectName: "pinInput"
             validator: StatusIntValidator { bottom: 0; top: 999999 }
             visible: false
@@ -157,6 +107,30 @@ Control {
                     }
                 })
             }
+        }
+
+        StatusBaseText {
+            id: infoText
+            Layout.fillWidth: true
+            horizontalAlignment: Qt.AlignHCenter
+            elide: Text.ElideRight
+            color: Theme.palette.baseColor1
+            wrapMode: Text.Wrap
+            linkColor: hoveredLink ? Theme.palette.hoverColor(color) : color
+            visible: text !== ""
+            HoverHandler {
+                cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
+            }
+            onLinkActivated: root.detailedErrorPopupRequested()
+        }
+
+        MaybeOutlineButton {
+            id: unblockButton
+            objectName: "btnUnblock"
+            Layout.fillWidth: true
+            visible: false
+            text: qsTr("Unblock")
+            onClicked: root.unblockRequested()
         }
     }
 
@@ -204,7 +178,7 @@ Control {
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
-                text: qsTr("Oops this isn't a Keycard.<br>Try using a Keycard instead.")
+                text: qsTr("This isn't a Keycard.<br>Remove card and insert a Keycard.")
             }
         },
         State {
@@ -220,12 +194,12 @@ Control {
         State {
             name: "genericError"
             when: (root.keycardState === Onboarding.KeycardState.NoPCSCService ||
-                  root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached ) && !SQUtils.Utils.isMobile// TODO add a generic/fallback keycard error here too
+                  root.keycardState === Onboarding.KeycardState.MaxPairingSlotsReached ) && !SQUtils.Utils.isMobile
             extend: "notEmpty"
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
-                text: qsTr("Issue detecting Keycard.<br>Remove and re-insert reader and Keycard, check no other security keys are plugged in.")
+                text: qsTr("Issue detecting Keycard.<br>Re-scan Keycard.")
             }
         },
         State {
@@ -248,7 +222,7 @@ Control {
                 text: qsTr("Keycard blocked")
             }
             PropertyChanges {
-                target: lockedButtons
+                target: unblockButton
                 visible: true
             }
             PropertyChanges {
@@ -264,7 +238,7 @@ Control {
             PropertyChanges {
                 target: infoText
                 color: Theme.palette.dangerColor1
-                text: qsTr("The scanned Keycard is empty.<br>Use the correct Keycard for this profile.")
+                text: qsTr("The scanned Keycard is empty.<br>Scan the correct Keycard for this profile.")
             }
         },
         State {
@@ -291,7 +265,7 @@ Control {
         State {
             name: "notEmpty"
             // Mobile UnknownReaderState just means the keycard was never tapped, so we show the PIN input
-            when: (root.keycardState === Onboarding.KeycardState.UnknownReaderState && SQUtils.Utils.isMobile) || (root.keycardState === Onboarding.KeycardState.NotEmpty) && !d.wrongPin
+            when: (root.keycardState === Onboarding.KeycardState.UnknownReaderState) || (root.keycardState === Onboarding.KeycardState.NotEmpty) && !d.wrongPin
             PropertyChanges {
                 target: infoText
                 text: qsTr("Enter Keycard PIN")

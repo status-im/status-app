@@ -29,9 +29,6 @@ QtObject {
     readonly property int keycardState: d.onboardingModuleInst.keycardState // cf. enum Onboarding.KeycardState
     readonly property string keycardUID: d.onboardingModuleInst.keycardUID
     readonly property string keycardKeyUID: d.onboardingModuleInst.keycardKeyUID
-    readonly property int pinSettingState: d.onboardingModuleInst.pinSettingState // cf. enum Onboarding.ProgressState
-    readonly property int authorizationState: d.onboardingModuleInst.authorizationState // cf. enum Onboarding.AuthorizationState
-    readonly property int restoreKeysExportState: d.onboardingModuleInst.restoreKeysExportState // cf. enum Onboarding.AuthorizationState
     readonly property int convertKeycardAccountState: d.onboardingModuleInst.convertKeycardAccountState // cf. enum Onboarding.ProgressState
     readonly property int keycardRemainingPinAttempts: d.onboardingModuleInst.keycardRemainingPinAttempts
     readonly property int keycardRemainingPukAttempts: d.onboardingModuleInst.keycardRemainingPukAttempts
@@ -40,45 +37,12 @@ QtObject {
     readonly property string keycardCardMetadataName: d.onboardingModuleInst.keycardCardMetadataName
     readonly property string keycardCardMetadataWalletAccountsJson: d.onboardingModuleInst.keycardCardMetadataWalletAccountsJson
 
-    function resetKeycardProgressStates() {
-        d.onboardingModuleInst.resetKeycardProgressStates()
-    }
-
-    function startKeycardDetection() {
-        d.onboardingModuleInst.startKeycardDetection()
-    }
-
     function finishOnboardingFlow(flow: int, data: Object) { // -> string
         return d.onboardingModuleInst.finishOnboardingFlow(flow, JSON.stringify(data))
     }
 
     function loginRequested(keyUid: string, method: int, data: Object) { // -> void
         d.onboardingModuleInst.loginRequested(keyUid, method, JSON.stringify(data))
-    }
-
-    function recoverKeycardRequested(pin: string, mnemonic: string) {
-        d.onboardingModuleInst.recoverKeycardRequested(pin, mnemonic)
-    }
-
-    function setPin(pin: string) {
-        d.onboardingModuleInst.setPin(pin)
-    }
-
-
-    function authorize(pin: string) {
-        d.onboardingModuleInst.authorize(pin)
-    }
-
-    readonly property int addKeyPairState: d.onboardingModuleInst.addKeyPairState // cf. enum Onboarding.ProgressState
-    function loadMnemonic(mnemonic: string) {
-        d.onboardingModuleInst.loadMnemonic(mnemonic)
-    }
-    function exportRecoverKeys() {
-        d.onboardingModuleInst.exportRecoverKeys()
-    }
-
-    function startKeycardFactoryReset() {
-        d.onboardingModuleInst.startKeycardFactoryReset()
     }
 
     function deleteMultiaccountRequested(keyUid: string) {
@@ -102,9 +66,6 @@ QtObject {
     }
     function isMnemonicDuplicate(mnemonic: string) : bool {
         return d.onboardingModuleInst.isMnemonicDuplicate(mnemonic)
-    }
-    function generateMnemonic() { // -> string as per BIP-39 (space-separated list of words)
-        return d.onboardingModuleInst.generateMnemonic()
     }
 
     // sync
