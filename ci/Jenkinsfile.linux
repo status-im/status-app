@@ -111,6 +111,39 @@ pipeline {
         sh 'git submodule update --init --recursive'
       }
     }
+    stage('Verify QEMU emulation') {
+      when { expression { getArch() == 'aarch64' } }
+      steps {
+        sh '''
+          set -e
+          echo "=== Verifying aarch64 emulation (QEMU/binfmt) on $(hostname) ==="
+          echo "container arch: $(uname -m)"
+          echo "kernel:         $(uname -sr)"
+          # The qemu that runs these arm64 binaries lives on the host kernel (binfmt_misc);
+          echo "--- QEMU (host-provided) ---"
+          if command -v qemu-aarch64-static >/dev/null 2>&1; then
+            qemu-aarch64-static --version | head -1
+          elif command -v qemu-aarch64 >/dev/null 2>&1; then
+            qemu-aarch64 --version | head -1
+          elif mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc 2>/dev/null && [ -r /proc/sys/fs/binfmt_misc/qemu-aarch64 ]; then
+            echo "binfmt interpreter: $(awk '/^interpreter/{print $2}' /proc/sys/fs/binfmt_misc/qemu-aarch64) (version string not exposed to the guest)"
+          else
+            echo "(qemu version not visible from inside the emulated container; it is host-side, pinned via the tonistiigi/binfmt tag installed by the infra-ci role)"
+          fi
+          for tool in "qmake --version" "nim --version" "go version"; do
+            echo "--- $tool ---"
+            if ! $tool; then
+              echo "ERROR: '$tool' crashed under QEMU emulation."
+              echo "This linuxcontainer host's QEMU/binfmt is likely outdated. A modern"
+              echo "qemu must be registered on the host (infra-ci jenkins-slave-container"
+              echo "role / 'tonistiigi/binfmt --install arm64')."
+              exit 1
+            fi
+          done
+          echo "=== QEMU emulation OK ==="
+        '''
+      }
+    }
     stage('Deps') {
       steps {
         sh 'make update'
