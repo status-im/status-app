@@ -26,9 +26,6 @@ Item {
     QtObject {
         id: mockDriver
         property int keycardState // enum Onboarding.KeycardState
-        property int pinSettingState // enum Onboarding.ProgressState
-        property int authorizationState // enum Onboarding.AuthorizationState
-        property int restoreKeysExportState // enum Onboarding.ProgressState
         property bool biometricsAvailable
         property string existingPin
 
@@ -68,30 +65,9 @@ Item {
                 readonly property int keycardState: mockDriver.keycardState // enum Onboarding.KeycardState
                 readonly property string keycardUID: "kc_uid_4"
                 readonly property string keycardKeyUID: "uid_4"
-                readonly property int pinSettingState: mockDriver.pinSettingState // enum Onboarding.ProgressState
-                readonly property int authorizationState: mockDriver.authorizationState // enum Onboarding.AuthorizationState
-                readonly property int restoreKeysExportState: mockDriver.restoreKeysExportState // enum Onboarding.ProgressState
                 property int keycardRemainingPinAttempts: Constants.onboarding.defaultPinAttempts
                 property int keycardRemainingPukAttempts: Constants.onboarding.defaultPukAttempts
                 property var loginAccountsModel: emptyModel
-
-                function setPin(pin: string) {
-                    const valid = pin === mockDriver.existingPin
-                    if (!valid)
-                        keycardRemainingPinAttempts--
-                }
-
-                function authorize(pin: string) {
-                    authorizeCalled(pin)
-                }
-                function loadMnemonic(mnemonic: string) {
-                    loadMnemonicCalled(mnemonic)
-                }
-                function exportRecoverKeys() {
-                    exportRecoverKeysCalled()
-                }
-
-                readonly property int addKeyPairState: Onboarding.ProgressState.InProgress // enum Onboarding.ProgressState
 
                 // password
                 function getPasswordStrengthScore(password: string) {
@@ -111,14 +87,6 @@ Item {
                     return false
                 }
 
-                function generateMnemonic() { // -> string
-                    return mockDriver.mnemonic
-                }
-
-                function startKeycardDetection() {
-                    startKeycardDetectionCalled()
-                }
-
                 readonly property int syncState: Onboarding.ProgressState.InProgress // enum Onboarding.ProgressState
                 function validateLocalPairingConnectionString(connectionString: string) {
                     return !Number.isNaN(parseInt(connectionString))
@@ -127,11 +95,6 @@ Item {
 
                 // password signals
                 signal accountLoginError(string error, bool wrongPassword)
-
-                signal authorizeCalled(string pin)
-                signal loadMnemonicCalled(string mnemonic)
-                signal exportRecoverKeysCalled
-                signal startKeycardDetectionCalled
             }
 
             onLoginRequested: (keyUid, method, data) => {
@@ -174,12 +137,6 @@ Item {
         signalName: "loginRequested"
     }
 
-    SignalSpy {
-        id: keycardRequestedSpy
-        target: controlUnderTest
-        signalName: "keycardRequested"
-    }
-
     property OnboardingLayout controlUnderTest: null
 
     StatusTestCase {
@@ -208,15 +165,11 @@ Item {
 
         function cleanup() {
             mockDriver.keycardState = -1
-            mockDriver.pinSettingState = Onboarding.ProgressState.Idle
-            mockDriver.authorizationState = Onboarding.AuthorizationState.Idle
-            mockDriver.restoreKeysExportState = Onboarding.ProgressState.Idle
             mockDriver.biometricsAvailable = false
             mockDriver.existingPin = ""
             dynamicSpy.cleanup()
             finishedSpy.clear()
             loginSpy.clear()
-            keycardRequestedSpy.clear()
         }
 
         function getCurrentPage(stack, pageClass) {
@@ -421,226 +374,6 @@ Item {
             compare(resultData.seedphrase, mockDriver.mnemonic)
         }
 
-        // FLOW: Create Profile -> Use an empty Keycard -> Use a new recovery phrase (create profile with keycard + new seedphrase)
-        function test_flow_createProfile_withKeycardAndNewSeedphrase(data) {
-            verify(!!controlUnderTest)
-            mockDriver.biometricsAvailable = data.biometrics
-
-            const stack = controlUnderTest.stack
-            verify(!!stack)
-
-            // PAGE 1: Welcome
-            let page = getCurrentPage(stack, WelcomePage)
-            waitForRendering(page)
-
-            const btnCreateProfile = findChild(controlUnderTest, "btnCreateProfile")
-            verify(!!btnCreateProfile)
-            mouseClick(btnCreateProfile)
-
-            // PAGE 2: Create profile
-            page = getCurrentPage(stack, CreateProfilePage)
-            const btnCreateWithEmptyKeycard = findChild(controlUnderTest, "btnCreateWithEmptyKeycard")
-            verify(!!btnCreateWithEmptyKeycard)
-            mouseClick(btnCreateWithEmptyKeycard)
-
-            // PAGE 3: Keycard intro
-            page = getCurrentPage(stack, KeycardIntroPage)
-            dynamicSpy.setup(page, "emptyKeycardDetected")
-            mockDriver.keycardState = Onboarding.KeycardState.Empty // SIMULATION // TODO test other states here as well
-            tryCompare(dynamicSpy, "count", 1)
-            tryCompare(page, "state", "empty")
-
-            // PAGE 4: Create profile on empty Keycard -> Use a new recovery phrase
-            page = getCurrentPage(stack, CreateKeycardProfilePage)
-            const btnCreateWithEmptySeedphrase = findChild(page, "btnCreateWithEmptySeedphrase")
-            verify(!!btnCreateWithEmptySeedphrase)
-            mouseClick(btnCreateWithEmptySeedphrase)
-
-            // PAGE 5: Create new Keycard PIN
-            const newPin = "123321"
-            page = getCurrentPage(stack, KeycardCreatePinDelayedPage)
-            dynamicSpy.setup(page, "setPinRequested")
-            keyClickSequence(newPin + newPin) // set and repeat
-            tryCompare(dynamicSpy, "count", 1)
-            compare(dynamicSpy.signalArguments[0][0], newPin)
-            mockDriver.pinSettingState = Onboarding.ProgressState.Success
-            mockDriver.authorizationState = Onboarding.AuthorizationState.Authorized
-
-            // PAGE 6: Backup your recovery phrase (intro)
-            dynamicSpy.setup(stack, "topLevelItemChanged")
-            tryCompare(dynamicSpy, "count", 1)
-            page = getCurrentPage(stack, BackupSeedphraseIntro)
-            const btnBackupSeedphrase = findChild(page, "btnBackupSeedphrase")
-            verify(!!btnBackupSeedphrase)
-            mouseClick(btnBackupSeedphrase)
-
-            // PAGE 7: Backup your recovery phrase (seedphrase reveal) - step 1
-            page = getCurrentPage(stack, BackupSeedphraseReveal)
-            const seedGrid = findChild(page, "seedGrid")
-            verify(!!seedGrid)
-            tryCompare(seedGrid.layer, "enabled", true)
-            const btnConfirm = findChild(page, "btnConfirm")
-            verify(!!btnConfirm)
-            compare(btnConfirm.enabled, false)
-            const btnReveal = findChild(page, "btnReveal")
-            verify(!!btnReveal)
-            mouseClick(btnReveal)
-            tryCompare(seedGrid.layer, "enabled", false)
-            compare(btnConfirm.enabled, true)
-            mouseClick(btnConfirm)
-
-            // PAGE 8: Backup your recovery phrase (seedphrase verification) - step 2
-            page = getCurrentPage(stack, BackupSeedphraseVerify)
-            let btnContinue = findChild(page, "btnContinue")
-            verify(!!btnContinue)
-            compare(btnContinue.enabled, false)
-            const mnemonicWords = page.verificationWordsMap.map((entry) => entry.seedWord)
-            const mnemonicIndexes = page.verificationWordsMap.map((entry) => entry.seedWordNumber - 1)
-            var mnemonicWordIndex = 0;
-            for (const index of mnemonicIndexes) {
-                const seedInput = findChild(page, "seedInput_%1".arg(index))
-                verify(!!seedInput)
-                mouseClick(seedInput)
-                keyClickSequence(mnemonicWords[mnemonicWordIndex])
-                keyClick(Qt.Key_Tab)
-                mnemonicWordIndex++;
-            }
-
-            compare(btnContinue.enabled, true)
-            mouseClick(btnContinue)
-
-            // PAGE 9: Backup your recovery phrase (outro) - step 3
-            page = getCurrentPage(stack, BackupSeedphraseOutro)
-            btnContinue = findChild(page, "btnContinue")
-            verify(!!btnContinue)
-            compare(btnContinue.enabled, false)
-            const cbAck = findChild(page, "cbAck")
-            verify(!!cbAck)
-            compare(cbAck.checked, false)
-            mouseClick(cbAck)
-            compare(cbAck.checked, true)
-            compare(btnContinue.enabled, true)
-            mouseClick(btnContinue)
-
-            // PAGE 10: Adding key pair to Keycard
-            page = getCurrentPage(stack, KeycardAddKeyPairDelayedPage)
-            tryCompare(page, "addKeyPairState", Onboarding.ProgressState.InProgress)
-            page.addKeyPairState = Onboarding.ProgressState.Success // SIMULATION
-
-            // PAGE 11: Enable Biometrics
-            if (data.biometrics) {
-                dynamicSpy.setup(stack, "topLevelItemChanged")
-                tryCompare(dynamicSpy, "count", 1)
-
-                page = getCurrentPage(stack, EnableBiometricsPage)
-
-                const enableBioButton = findChild(controlUnderTest, data.bioEnabled ? "btnEnableBiometrics" : "btnDontEnableBiometrics")
-                dynamicSpy.setup(page, "enableBiometricsRequested")
-                mouseClick(enableBioButton)
-                tryCompare(dynamicSpy, "count", 1)
-                compare(dynamicSpy.signalArguments[0][0], data.bioEnabled)
-            }
-
-            // FINISH
-            tryCompare(finishedSpy, "count", 1)
-            compare(finishedSpy.signalArguments[0][0], Onboarding.OnboardingFlow.CreateProfileWithKeycardNewSeedphrase)
-            const resultData = finishedSpy.signalArguments[0][1]
-            verify(!!resultData)
-            compare(resultData.password, "")
-            compare(resultData.enableBiometrics, data.biometrics && data.bioEnabled)
-            compare(resultData.keycardPin, newPin)
-            compare(resultData.seedphrase, mockDriver.mnemonic)
-        }
-
-        // FLOW: Create Profile -> Use an empty Keycard -> Use an existing recovery phrase (create profile with keycard + existing seedphrase)
-        function test_flow_createProfile_withKeycardAndExistingSeedphrase(data) {
-            verify(!!controlUnderTest)
-            mockDriver.biometricsAvailable = data.biometrics
-
-            const stack = controlUnderTest.stack
-            verify(!!stack)
-
-            // PAGE 1: Welcome
-            let page = getCurrentPage(stack, WelcomePage)
-            waitForRendering(page)
-
-            const btnCreateProfile = findChild(controlUnderTest, "btnCreateProfile")
-            verify(!!btnCreateProfile)
-            mouseClick(btnCreateProfile)
-
-            // PAGE 2: Create profile
-            page = getCurrentPage(stack, CreateProfilePage)
-            const btnCreateWithEmptyKeycard = findChild(controlUnderTest, "btnCreateWithEmptyKeycard")
-            verify(!!btnCreateWithEmptyKeycard)
-            mouseClick(btnCreateWithEmptyKeycard)
-
-            // PAGE 3: Keycard intro
-            page = getCurrentPage(stack, KeycardIntroPage)
-            dynamicSpy.setup(page, "emptyKeycardDetected")
-            mockDriver.keycardState = Onboarding.KeycardState.Empty // SIMULATION // TODO test other states here as well
-            tryCompare(dynamicSpy, "count", 1)
-            tryCompare(page, "state", "empty")
-
-            // PAGE 4: Create profile on empty Keycard -> Use an existing recovery phrase
-            page = getCurrentPage(stack, CreateKeycardProfilePage)
-            const btnCreateWithExistingSeedphrase = findChild(page, "btnCreateWithExistingSeedphrase")
-            verify(!!btnCreateWithExistingSeedphrase)
-            mouseClick(btnCreateWithExistingSeedphrase)
-
-            // PAGE 5: Create profile on empty Keycard using a recovery phrase
-            page = getCurrentPage(stack, SeedphrasePage)
-            const btnContinue = findChild(page, "btnContinue")
-            verify(!!btnContinue)
-            compare(btnContinue.enabled, false)
-            const firstInput = findChild(page, "enterSeedPhraseInputField1")
-            verify(!!firstInput)
-            tryCompare(firstInput, "activeFocus", true)
-            ClipboardUtils.setText(mockDriver.mnemonic)
-            keySequence(StandardKey.Paste)
-            compare(btnContinue.enabled, true)
-            mouseClick(btnContinue)
-
-            // PAGE 6: Create new Keycard PIN
-            const newPin = "123321"
-            page = getCurrentPage(stack, KeycardCreatePinDelayedPage)
-            dynamicSpy.setup(page, "setPinRequested")
-            keyClickSequence(newPin + newPin) // set and repeat
-            compare(dynamicSpy.signalArguments[0][0], newPin)
-            mockDriver.pinSettingState = Onboarding.ProgressState.Success
-            mockDriver.authorizationState = Onboarding.AuthorizationState.Authorized
-
-            // PAGE 7: Adding key pair to Keycard
-            dynamicSpy.setup(stack, "topLevelItemChanged")
-            tryCompare(dynamicSpy, "count", 1)
-            page = getCurrentPage(stack, KeycardAddKeyPairDelayedPage)
-            tryCompare(page, "addKeyPairState", Onboarding.ProgressState.InProgress)
-            page.addKeyPairState = Onboarding.ProgressState.Success // SIMULATION
-
-            // PAGE 8: Enable Biometrics
-            if (mockDriver.biometricsAvailable) {
-                dynamicSpy.setup(stack, "topLevelItemChanged")
-                tryCompare(dynamicSpy, "count", 1)
-
-                page = getCurrentPage(stack, EnableBiometricsPage)
-
-                const enableBioButton = findChild(controlUnderTest, data.bioEnabled ? "btnEnableBiometrics" : "btnDontEnableBiometrics")
-                dynamicSpy.setup(page, "enableBiometricsRequested")
-                mouseClick(enableBioButton)
-                tryCompare(dynamicSpy, "count", 1)
-                compare(dynamicSpy.signalArguments[0][0], data.bioEnabled)
-            }
-
-            // FINISH
-            tryCompare(finishedSpy, "count", 1)
-            compare(finishedSpy.signalArguments[0][0], Onboarding.OnboardingFlow.CreateProfileWithKeycardExistingSeedphrase)
-            const resultData = finishedSpy.signalArguments[0][1]
-            verify(!!resultData)
-            compare(resultData.password, "")
-            compare(resultData.enableBiometrics, data.biometrics && data.bioEnabled)
-            compare(resultData.keycardPin, newPin)
-            compare(resultData.seedphrase, mockDriver.mnemonic)
-        }
-
         // FLOW: Log in -> Log in with recovery phrase
         function test_flow_login_withSeedphrase(data) {
             verify(!!controlUnderTest)
@@ -809,71 +542,6 @@ Item {
             compare(resultData.password, "")
             compare(resultData.keycardPin, "")
             compare(resultData.seedphrase, "")
-        }
-
-        // FLOW: Log in -> Log in with Keycard
-        function test_flow_login_withKeycard(data) {
-            verify(!!controlUnderTest)
-            mockDriver.biometricsAvailable = data.biometrics
-            mockDriver.existingPin = "123456"
-
-            const stack = controlUnderTest.stack
-            verify(!!stack)
-
-            // PAGE 1: Welcome
-            let page = getCurrentPage(stack, WelcomePage)
-            waitForRendering(page)
-
-            const btnLogin = findChild(controlUnderTest, "btnLogin")
-            verify(!!btnLogin)
-            mouseClick(btnLogin)
-
-            // PAGE 2: Log in -> Login with Keycard
-            page = getCurrentPage(stack, NewAccountLoginPage)
-            const btnWithKeycard = findChild(page, "btnWithKeycard")
-            verify(!!btnWithKeycard)
-            mouseClick(btnWithKeycard)
-
-            // PAGE 3: Keycard intro
-            page = getCurrentPage(stack, KeycardIntroPage)
-            dynamicSpy.setup(page, "notEmptyKeycardDetected")
-            mockDriver.keycardState = Onboarding.KeycardState.NotEmpty // SIMULATION // TODO test other states here as well
-            tryCompare(dynamicSpy, "count", 1)
-            tryCompare(page, "state", "notEmpty")
-
-            // PAGE 4: Enter Keycard PIN
-            page = getCurrentPage(stack, KeycardEnterPinPage)
-            dynamicSpy.setup(controlUnderTest.onboardingStore, "authorizeCalled")
-            keyClickSequence(mockDriver.existingPin)
-            tryCompare(dynamicSpy, "count", 1)
-            compare(dynamicSpy.signalArguments[0][0], mockDriver.existingPin)
-
-            dynamicSpy.setup(controlUnderTest.onboardingStore, "exportRecoverKeysCalled")
-            mockDriver.authorizationState = Onboarding.AuthorizationState.Authorized
-            tryCompare(dynamicSpy, "count", 1)
-
-            // PAGE 5: Extracting keys from Keycard
-            page = getCurrentPage(stack, KeycardIntroPage)
-            tryCompare(page, "keycardState", Onboarding.KeycardState.ReadingKeycard)
-            mockDriver.restoreKeysExportState = Onboarding.ProgressState.Success
-
-            // PAGE 6: Local import
-            waitForRendering(page)
-            page = getCurrentPage(stack, ImportLocalBackupPage)
-
-            const btnSkipImport = findChild(controlUnderTest, "btnSkipImport")
-            verify(!!btnSkipImport)
-            mouseClick(btnSkipImport)
-
-            // FINISH
-            tryCompare(finishedSpy, "count", 1)
-            compare(finishedSpy.signalArguments[0][0], Onboarding.OnboardingFlow.LoginWithKeycard)
-            const resultData = finishedSpy.signalArguments[0][1]
-            verify(!!resultData)
-            compare(resultData.password, "")
-            compare(resultData.keycardPin, "")
-            compare(resultData.seedphrase, "")
-            compare(resultData.backupImportFileUrl, "")
         }
 
         // LOGIN SCREEN
@@ -1208,133 +876,6 @@ Item {
             compare(resultData.keyUid, keyUid)
         }
 
-        function test_loginScreenLostKeycardCreateReplacementFlow_data() {
-            return [{ tag: "lost keycard: create replacement keycard" }] // dummy to skip global data, and run just once
-        }
-
-        function test_loginScreenLostKeycardCreateReplacementFlow() {
-            skip("Lost keycard flow buttons are temporarily unavailable")
-            verify(!!controlUnderTest)
-            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
-            controlUnderTest.restartFlow()
-
-            // PAGE 1: Login screen
-            const stack = controlUnderTest.stack
-            verify(!!stack)
-
-            let page = getCurrentPage(stack, LoginScreen)
-            const keyUid = "uid_4"
-
-            const userSelector = findChild(page, "loginUserSelector")
-            verify(!!userSelector)
-            userSelector.setSelection(keyUid)
-            tryCompare(userSelector, "selectedProfileKeyId", keyUid)
-            tryCompare(userSelector, "keycardCreatedAccount", true)
-
-            const lostKeycardButon = findChild(page, "lostKeycardButon")
-            verify(!!lostKeycardButon)
-            mouseClick(lostKeycardButon)
-
-            // PAGE 2: Keycard lost page
-            page = getCurrentPage(stack, KeycardLostPage)
-
-            const createReplacementButton = findChild(page, "createReplacementButton")
-            verify(!!createReplacementButton)
-            mouseClick(createReplacementButton)
-
-            // PAGE 3: Keycard intro
-            page = getCurrentPage(stack, KeycardIntroPage)
-            dynamicSpy.setup(page, "emptyKeycardDetected")
-            mockDriver.keycardState = Onboarding.KeycardState.Empty // SIMULATION // TODO test other states here as well
-            tryCompare(dynamicSpy, "count", 1)
-            tryCompare(page, "state", "empty")
-
-            // PAGE 4: Seedphrase
-            page = getCurrentPage(stack, SeedphrasePage)
-            let btnContinue = findChild(page, "btnContinue")
-            verify(!!btnContinue)
-            compare(btnContinue.enabled, false)
-
-            const firstInput = findChild(page, "enterSeedPhraseInputField1")
-            verify(!!firstInput)
-            tryCompare(firstInput, "activeFocus", true)
-            ClipboardUtils.setText(mockDriver.mnemonic)
-            keySequence(StandardKey.Paste)
-            compare(btnContinue.enabled, true)
-            mouseClick(btnContinue)
-
-            // PAGE 5: Create new Keycard PIN
-            const newPin = "123321"
-            page = getCurrentPage(stack, KeycardCreatePinDelayedPage)
-            dynamicSpy.setup(page, "setPinRequested")
-            keyClickSequence(newPin + newPin) // set and repeat
-            tryCompare(dynamicSpy, "count", 1)
-            compare(dynamicSpy.signalArguments[0][0], newPin)
-            mockDriver.pinSettingState = Onboarding.ProgressState.Success
-            mockDriver.authorizationState = Onboarding.AuthorizationState.Authorized
-
-            // PAGE 6: Adding key pair to Keycard
-            dynamicSpy.setup(stack, "topLevelItemChanged")
-            tryCompare(dynamicSpy, "count", 1)
-            page = getCurrentPage(stack, KeycardAddKeyPairDelayedPage)
-            tryCompare(page, "addKeyPairState", Onboarding.ProgressState.InProgress)
-            page.addKeyPairState = Onboarding.ProgressState.Success // SIMULATION
-
-            // FINISH
-            tryCompare(finishedSpy, "count", 1)
-            compare(finishedSpy.signalArguments[0][0], Onboarding.OnboardingFlow.LoginWithRestoredKeycard)
-            const resultData = finishedSpy.signalArguments[0][1]
-            verify(!!resultData)
-            compare(resultData.enableBiometrics, false)
-            compare(resultData.keycardPin, newPin)
-            compare(resultData.seedphrase, mockDriver.mnemonic)
-        }
-
-        function test_loginScreen_unblockFlows_data() {
-            return [
-              { tag: "Unblock with PUK", keyUid: "uid_4", btnName: "btnUnblockWithPUK", landingPage: KeycardEnterPukPage },
-              { tag: "Unblock with recovery phrase", keyUid: "uid_4", btnName: "btnUnblockWithSeedphrase", landingPage: SeedphrasePage },
-            ]
-        }
-
-        function test_loginScreen_unblockFlows(data) {
-            if (data.tag === "Unblock with PUK")
-                skip("Unblock with PUK is temporarily unavailable")
-
-            verify(!!controlUnderTest)
-            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
-            controlUnderTest.restartFlow()
-            mockDriver.keycardState = Onboarding.KeycardState.BlockedPIN
-
-            const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
-
-            const loginUserSelector = findChild(page, "loginUserSelector")
-            verify(!!loginUserSelector)
-            loginUserSelector.setSelection(data.keyUid)
-
-            tryCompare(page, "selectedProfileKeyId", data.keyUid)
-            tryCompare(page, "selectedProfileIsKeycard", true)
-
-            const keycardBox = findChild(page, "keycardBox")
-            verify(!!keycardBox)
-            tryCompare(keycardBox, "visible", true)
-            tryCompare(keycardBox, "state", "blocked")
-
-            waitForRendering(page)
-
-            const button = findChild(keycardBox, data.btnName)
-            verify(!!button)
-            tryCompare(button, "visible", true)
-            mouseClick(button)
-
-            tryVerify(() => {
-                const currentPage = controlUnderTest.stack.topLevelItem
-                return !!currentPage && currentPage instanceof data.landingPage
-            })
-
-            // TODO extend the check with trying to complete the flows
-        }
-
         function test_privacyModeFeatureEnabled_showsThirdPartyServices() {
             verify(!!controlUnderTest)
 
@@ -1356,137 +897,6 @@ Item {
             tryCompare(thirdPartyServices, "visible", true)
         }
 
-        // TEST: Keycard requested signal emission tests
-        function test_keycardRequested_createProfileWithKeycard_data() {
-            return [{ tag: "create profile with keycard" }] // dummy to skip global data
-        }
-
-        function test_keycardRequested_createProfileWithKeycard() {
-            verify(!!controlUnderTest)
-
-            const stack = controlUnderTest.stack
-            verify(!!stack)
-
-            // PAGE 1: Welcome
-            let page = getCurrentPage(stack, WelcomePage)
-            waitForRendering(page)
-
-            const btnCreateProfile = findChild(controlUnderTest, "btnCreateProfile")
-            verify(!!btnCreateProfile)
-            mouseClick(btnCreateProfile)
-
-            // PAGE 2: Create profile
-            page = getCurrentPage(stack, CreateProfilePage)
-            const btnCreateWithEmptyKeycard = findChild(controlUnderTest, "btnCreateWithEmptyKeycard")
-            verify(!!btnCreateWithEmptyKeycard)
-
-            // Verify keycardRequested signal is NOT yet emitted
-            compare(keycardRequestedSpy.count, 0)
-
-            // Click the button to create with keycard
-            mouseClick(btnCreateWithEmptyKeycard)
-
-            // Verify keycardRequested signal WAS emitted
-            tryCompare(keycardRequestedSpy, "count", 1)
-        }
-
-        function test_keycardRequested_loginWithKeycard_data() {
-            return [{ tag: "login with keycard" }] // dummy to skip global data
-        }
-
-        function test_keycardRequested_loginWithKeycard() {
-            verify(!!controlUnderTest)
-
-            const stack = controlUnderTest.stack
-            verify(!!stack)
-
-            // PAGE 1: Welcome
-            let page = getCurrentPage(stack, WelcomePage)
-            waitForRendering(page)
-
-            const btnLogin = findChild(controlUnderTest, "btnLogin")
-            verify(!!btnLogin)
-            mouseClick(btnLogin)
-
-            // PAGE 2: Log in
-            page = getCurrentPage(stack, NewAccountLoginPage)
-            const btnWithKeycard = findChild(page, "btnWithKeycard")
-            verify(!!btnWithKeycard)
-
-            // Verify keycardRequested signal is NOT yet emitted
-            compare(keycardRequestedSpy.count, 0)
-
-            // Click the button to login with keycard
-            mouseClick(btnWithKeycard)
-
-            // Verify keycardRequested signal WAS emitted
-            tryCompare(keycardRequestedSpy, "count", 1)
-        }
-
-        function test_keycardRequested_selectKeycardProfileOnLoginScreen_data() {
-            return [{ tag: "select keycard profile" }] // dummy to skip global data
-        }
-
-        function test_keycardRequested_selectKeycardProfileOnLoginScreen() {
-            verify(!!controlUnderTest)
-            controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
-            controlUnderTest.restartFlow()
-
-            const page = getCurrentPage(controlUnderTest.stack, LoginScreen)
-
-            const userSelector = findChild(page, "loginUserSelector")
-            verify(!!userSelector)
-
-            // Initially select a password-based profile (uid_1)
-            userSelector.setSelection("uid_1")
-            tryCompare(userSelector, "selectedProfileKeyId", "uid_1")
-            tryCompare(userSelector, "keycardCreatedAccount", false)
-
-            // Clear any signals emitted during initial setup (LoginScreen may auto-select a profile)
-            keycardRequestedSpy.clear()
-
-            // Verify keycardRequested signal is NOT emitted for password profile (after clearing)
-            compare(keycardRequestedSpy.count, 0)
-
-            // Now select a keycard profile (uid_4)
-            userSelector.setSelection("uid_4")
-            tryCompare(userSelector, "selectedProfileKeyId", "uid_4")
-            tryCompare(userSelector, "keycardCreatedAccount", true)
-
-            // Verify keycardRequested signal WAS emitted when switching to keycard profile
-            tryCompare(keycardRequestedSpy, "count", 0)
-        }
-
-        function test_keycardRequested_notEmittedForPasswordFlow_data() {
-            return [{ tag: "password flow" }] // dummy to skip global data
-        }
-
-        function test_keycardRequested_notEmittedForPasswordFlow() {
-            verify(!!controlUnderTest)
-
-            const stack = controlUnderTest.stack
-            verify(!!stack)
-
-            // PAGE 1: Welcome
-            let page = getCurrentPage(stack, WelcomePage)
-            waitForRendering(page)
-
-            const btnCreateProfile = findChild(controlUnderTest, "btnCreateProfile")
-            verify(!!btnCreateProfile)
-            mouseClick(btnCreateProfile)
-
-            // PAGE 2: Create profile
-            page = getCurrentPage(stack, CreateProfilePage)
-            const btnCreateWithPassword = findChild(controlUnderTest, "btnCreateWithPassword")
-            verify(!!btnCreateWithPassword)
-            mouseClick(btnCreateWithPassword)
-
-            // PAGE 3: Create password
-            page = getCurrentPage(stack, CreatePasswordPage)
-
-            // Verify keycardRequested signal was NOT emitted throughout the password flow
-            compare(keycardRequestedSpy.count, 0)
-        }
 
         function test_loginScreen_deleteProfile_data() {
             return [{ tag: "delete profile" }] // dummy to skip global data, and run just once

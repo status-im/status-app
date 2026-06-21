@@ -7,7 +7,6 @@ import backend/response_type
 import ./dto, rpc
 
 featureGuard KEYCARD_ENABLED:
-  import keycard_go
   import constants as status_const
 
 export dto
@@ -25,14 +24,6 @@ const KeycardLibCallsInterval = 500 # 0.5 seconds
 
 const SIGNAL_KEYCARD_STATE_UPDATED* = "keycardStateUpdated"
 const SIGNAL_KEYCARD_CHANNEL_STATE_UPDATED* = "keycardChannelStateUpdated"
-const SIGNAL_KEYCARD_SET_PIN_FAILURE* = "keycardSetPinFailure"
-const SIGNAL_KEYCARD_AUTHORIZE_FINISHED* = "keycardAuthorizeFinished"
-const SIGNAL_KEYCARD_LOAD_MNEMONIC_FAILURE* = "keycardLoadMnemonicFailure"
-const SIGNAL_KEYCARD_LOAD_MNEMONIC_SUCCESS* = "keycardLoadMnemonicSuccess"
-const SIGNAL_KEYCARD_EXPORT_RESTORE_KEYS_FAILURE* = "keycardExportRestoreKeysFailure"
-const SIGNAL_KEYCARD_EXPORT_RESTORE_KEYS_SUCCESS* = "keycardExportRestoreKeysSuccess"
-const SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_FAILURE* = "keycardExportLoginKeysFailure"
-const SIGNAL_KEYCARD_EXPORT_LOGIN_KEYS_SUCCESS* = "keycardExportLoginKeysSuccess"
 
 ## Signals for keycard composite actions
 const SIGNAL_KEYCARD_LOGIN_FINISHED* = "keycardLoginFinished"

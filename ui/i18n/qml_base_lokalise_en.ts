@@ -5862,39 +5862,6 @@
     </message>
   </context>
   <context>
-    <name>CreateKeycardProfilePage</name>
-    <message>
-      <source>Create profile on empty Keycard</source>
-      <comment>CreateKeycardProfilePage</comment>
-      <translation>Create profile on empty Keycard</translation>
-    </message>
-    <message>
-      <source>You will require your Keycard to log in to Status and sign transactions</source>
-      <comment>CreateKeycardProfilePage</comment>
-      <translation>You will require your Keycard to log in to Status and sign transactions</translation>
-    </message>
-    <message>
-      <source>Use a new recovery phrase</source>
-      <comment>CreateKeycardProfilePage</comment>
-      <translation>Use a new recovery phrase</translation>
-    </message>
-    <message>
-      <source>To create your Keycard-stored profile </source>
-      <comment>CreateKeycardProfilePage</comment>
-      <translation>To create your Keycard-stored profile</translation>
-    </message>
-    <message>
-      <source>Let&#39;s go!</source>
-      <comment>CreateKeycardProfilePage</comment>
-      <translation>Let&#39;s go!</translation>
-    </message>
-    <message>
-      <source>Use an existing recovery phrase</source>
-      <comment>CreateKeycardProfilePage</comment>
-      <translation>Use an existing recovery phrase</translation>
-    </message>
-  </context>
-  <context>
     <name>CreatePasswordPage</name>
     <message>
       <source>Create profile password</source>
@@ -6008,14 +5975,14 @@
       <translation>If you already have an Ethereum wallet</translation>
     </message>
     <message>
-      <source>Use an empty Keycard</source>
+      <source>Use Keycard</source>
       <comment>CreateProfilePage</comment>
-      <translation>Use an empty Keycard</translation>
+      <translation>Use Keycard</translation>
     </message>
     <message>
-      <source>Store your new profile keys on Keycard</source>
+      <source>Reveal what you have on Keycard first</source>
       <comment>CreateProfilePage</comment>
-      <translation>Store your new profile keys on Keycard</translation>
+      <translation>Reveal what you have on Keycard first</translation>
     </message>
   </context>
   <context>
@@ -10937,29 +10904,6 @@
     </message>
   </context>
   <context>
-    <name>KeycardAddKeyPairPage</name>
-    <message>
-      <source>Creating key pair on Keycard</source>
-      <comment>KeycardAddKeyPairPage</comment>
-      <translation>Creating key pair on Keycard</translation>
-    </message>
-    <message>
-      <source>Key pair added to Keycard</source>
-      <comment>KeycardAddKeyPairPage</comment>
-      <translation>Key pair added to Keycard</translation>
-    </message>
-    <message>
-      <source>You will now require this Keycard to log into Status and transact with accounts derived from this key pair</source>
-      <comment>KeycardAddKeyPairPage</comment>
-      <translation>You will now require this Keycard to log into Status and transact with accounts derived from this key pair</translation>
-    </message>
-    <message>
-      <source>A key pair is your shareable public address and a secret private key that controls your wallet. Your key pair is being generated on your Keycard — keep it plugged in until the process completes.</source>
-      <comment>KeycardAddKeyPairPage</comment>
-      <translation>A key pair is your shareable public address and a secret private key that controls your wallet. Your key pair is being generated on your Keycard — keep it plugged in until the process completes.</translation>
-    </message>
-  </context>
-  <context>
     <name>KeycardAuth</name>
     <message>
       <source>Plug in Keycard reader...</source>
@@ -11121,60 +11065,6 @@
     </message>
   </context>
   <context>
-    <name>KeycardCreatePinPage</name>
-    <message>
-      <source>PINs don&#39;t match</source>
-      <comment>KeycardCreatePinPage</comment>
-      <translation>PINs don&#39;t match</translation>
-    </message>
-    <message>
-      <source>Create new Keycard PIN</source>
-      <comment>KeycardCreatePinPage</comment>
-      <translation>Create new Keycard PIN</translation>
-    </message>
-    <message>
-      <source>Repeat Keycard PIN</source>
-      <comment>KeycardCreatePinPage</comment>
-      <translation>Repeat Keycard PIN</translation>
-    </message>
-    <message>
-      <source>Setting Keycard PIN</source>
-      <comment>KeycardCreatePinPage</comment>
-      <translation>Setting Keycard PIN</translation>
-    </message>
-    <message>
-      <source>PIN set</source>
-      <comment>KeycardCreatePinPage</comment>
-      <translation>PIN set</translation>
-    </message>
-  </context>
-  <context>
-    <name>KeycardCreateProfileFlow</name>
-    <message>
-      <source>Create profile on empty Keycard using a recovery phrase</source>
-      <comment>KeycardCreateProfileFlow</comment>
-      <translation>Create profile on empty Keycard using a recovery phrase</translation>
-    </message>
-    <message>
-      <source>Invalid recovery phrase</source>
-      <comment>KeycardCreateProfileFlow</comment>
-      <translation>Invalid recovery phrase</translation>
-    </message>
-  </context>
-  <context>
-    <name>KeycardCreateReplacementFlow</name>
-    <message>
-      <source>Enter recovery phrase of lost Keycard</source>
-      <comment>KeycardCreateReplacementFlow</comment>
-      <translation>Enter recovery phrase of lost Keycard</translation>
-    </message>
-    <message>
-      <source>Invalid recovery phrase</source>
-      <comment>KeycardCreateReplacementFlow</comment>
-      <translation>Invalid recovery phrase</translation>
-    </message>
-  </context>
-  <context>
     <name>KeycardDetailsPage</name>
     <message>
       <source>No free pairing slots</source>
@@ -11308,285 +11198,6 @@
     </message>
   </context>
   <context>
-    <name>KeycardEmptyPage</name>
-    <message>
-      <source>Keycard is empty</source>
-      <comment>KeycardEmptyPage</comment>
-      <translation>Keycard is empty</translation>
-    </message>
-    <message>
-      <source>There is no profile key pair on this Keycard</source>
-      <comment>KeycardEmptyPage</comment>
-      <translation>There is no profile key pair on this Keycard</translation>
-    </message>
-    <message>
-      <source>Create new profile on this Keycard</source>
-      <comment>KeycardEmptyPage</comment>
-      <translation>Create new profile on this Keycard</translation>
-    </message>
-  </context>
-  <context>
-    <name>KeycardEnterPinPage</name>
-    <message>
-      <source>PIN incorrect</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>PIN incorrect</translation>
-    </message>
-    <message>
-      <source>Authorizing</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>Authorizing</translation>
-    </message>
-    <message>
-      <source>PIN correct</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>PIN correct</translation>
-    </message>
-    <message>
-      <source>Keycard blocked</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>Keycard blocked</translation>
-    </message>
-    <message numerus="yes">
-      <source>%n attempt(s) remaining</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>
-        <numerusform>%n attempt remaining</numerusform>
-        <numerusform>%n attempts remaining</numerusform>
-      </translation>
-    </message>
-    <message>
-      <source>Unblock using PUK</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>Unblock using PUK</translation>
-    </message>
-    <message>
-      <source>Enter Keycard PIN</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>Enter Keycard PIN</translation>
-    </message>
-    <message>
-      <source>Unblock with recovery phrase</source>
-      <comment>KeycardEnterPinPage</comment>
-      <translation>Unblock with recovery phrase</translation>
-    </message>
-  </context>
-  <context>
-    <name>KeycardEnterPukPage</name>
-    <message numerus="yes">
-      <source>%n attempt(s) remaining</source>
-      <comment>KeycardEnterPukPage</comment>
-      <translation>
-        <numerusform>%n attempt remaining</numerusform>
-        <numerusform>%n attempts remaining</numerusform>
-      </translation>
-    </message>
-    <message>
-      <source>Factory reset Keycard</source>
-      <comment>KeycardEnterPukPage</comment>
-      <translation>Factory reset Keycard</translation>
-    </message>
-    <message>
-      <source>Keycard locked</source>
-      <comment>KeycardEnterPukPage</comment>
-      <translation>Keycard locked</translation>
-    </message>
-    <message>
-      <source>PUK incorrect</source>
-      <comment>KeycardEnterPukPage</comment>
-      <translation>PUK incorrect</translation>
-    </message>
-    <message>
-      <source>PUK correct</source>
-      <comment>KeycardEnterPukPage</comment>
-      <translation>PUK correct</translation>
-    </message>
-    <message>
-      <source>Enter Keycard PUK</source>
-      <comment>KeycardEnterPukPage</comment>
-      <translation>Enter Keycard PUK</translation>
-    </message>
-  </context>
-  <context>
-    <name>KeycardErrorPage</name>
-    <message>
-      <source>Communication with Keycard lost</source>
-      <comment>KeycardErrorPage</comment>
-      <translation>Communication with Keycard lost</translation>
-    </message>
-    <message>
-      <source>There seems to be an issue communicating with your Keycard. Reinsert the card or reader and try again.</source>
-      <comment>KeycardErrorPage</comment>
-      <translation>There seems to be an issue communicating with your Keycard. Reinsert the card or reader and try again.</translation>
-    </message>
-    <message>
-      <source>Try again</source>
-      <comment>KeycardErrorPage</comment>
-      <translation>Try again</translation>
-    </message>
-    <message>
-      <source>Factory reset Keycard</source>
-      <comment>KeycardErrorPage</comment>
-      <translation>Factory reset Keycard</translation>
-    </message>
-  </context>
-  <context>
-    <name>KeycardFactoryResetFlow</name>
-    <message>
-      <source>Factory reset Keycard</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>Factory reset Keycard</translation>
-    </message>
-    <message>
-      <source>All data including the stored key pair and derived accounts will be removed from the Keycard</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>All data including the stored key pair and derived accounts will be removed from the Keycard</translation>
-    </message>
-    <message>
-      <source>I understand the key pair will be deleted</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>I understand the key pair will be deleted</translation>
-    </message>
-    <message>
-      <source>Factory reset this Keycard</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>Factory reset this Keycard</translation>
-    </message>
-    <message>
-      <source>Reseting Keycard</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>Reseting Keycard</translation>
-    </message>
-    <message>
-      <source>Keycard successfully factory reset</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>Keycard successfully factory reset</translation>
-    </message>
-    <message>
-      <source>You can now use this Keycard like it&#39;s a brand-new, empty Keycard</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>You can now use this Keycard like it&#39;s a brand-new, empty Keycard</translation>
-    </message>
-    <message>
-      <source>Do not remove your Keycard or reader</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>Do not remove your Keycard or reader</translation>
-    </message>
-    <message>
-      <source>Please wait while the Keycard is being reset</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>Please wait while the Keycard is being reset</translation>
-    </message>
-    <message>
-      <source>Back to Login screen</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>Back to Login screen</translation>
-    </message>
-    <message>
-      <source>Log in or Create profile</source>
-      <comment>KeycardFactoryResetFlow</comment>
-      <translation>Log in or Create profile</translation>
-    </message>
-  </context>
-  <context>
-    <name>KeycardIntroPage</name>
-    <message>
-      <source>New to Keycard?</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>New to Keycard?</translation>
-    </message>
-    <message>
-      <source>Store and trade your crypto with a simple, secure and slim hardware wallet.</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Store and trade your crypto with a simple, secure and slim hardware wallet.</translation>
-    </message>
-    <message>
-      <source>keycard.tech</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>keycard.tech</translation>
-    </message>
-    <message>
-      <source>Unblock using PUK</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Unblock using PUK</translation>
-    </message>
-    <message>
-      <source>Factory reset Keycard</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Factory reset Keycard</translation>
-    </message>
-    <message>
-      <source>Plug in your Keycard reader</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Plug in your Keycard reader</translation>
-    </message>
-    <message>
-      <source>Get help via %1 🔗</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Get help via %1 🔗</translation>
-    </message>
-    <message>
-      <source>Reading Keycard...</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Reading Keycard...</translation>
-    </message>
-    <message>
-      <source>Oops this isn’t a Keycard</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Oops this isn’t a Keycard</translation>
-    </message>
-    <message>
-      <source>Smartcard reader service unavailable</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Smartcard reader service unavailable</translation>
-    </message>
-    <message>
-      <source>The Smartcard reader service (PCSC service), required for using Keycard, is not currently working. Ensure PCSC is installed and running and try again.</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>The Smartcard reader service (PCSC service), required for using Keycard, is not currently working. Ensure PCSC is installed and running and try again.</translation>
-    </message>
-    <message>
-      <source>All pairing slots occupied</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>All pairing slots occupied</translation>
-    </message>
-    <message>
-      <source>Keycard blocked</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Keycard blocked</translation>
-    </message>
-    <message>
-      <source>Unblock with recovery phrase</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Unblock with recovery phrase</translation>
-    </message>
-    <message>
-      <source>Tap or insert your Keycard</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Tap or insert your Keycard</translation>
-    </message>
-    <message>
-      <source>Remove card and use a Keycard</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Remove card and use a Keycard</translation>
-    </message>
-    <message>
-      <source>Factory reset this Keycard or use a different one</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>Factory reset this Keycard or use a different one</translation>
-    </message>
-    <message>
-      <source>The Keycard you have used is blocked, you will need to unblock it or use a different one</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>The Keycard you have used is blocked, you will need to unblock it or use a different one</translation>
-    </message>
-    <message>
-      <source>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</source>
-      <comment>KeycardIntroPage</comment>
-      <translation>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</translation>
-    </message>
-  </context>
-  <context>
     <name>KeycardLostPage</name>
     <message>
       <source>Lost Keycard</source>
@@ -11594,71 +11205,43 @@
       <translation>Lost Keycard</translation>
     </message>
     <message>
-      <source>Sorry you&#39;ve lost your Keycard</source>
-      <comment>KeycardLostPage</comment>
-      <translation>Sorry you&#39;ve lost your Keycard</translation>
-    </message>
-    <message>
-      <source>Create replacement Keycard using the same recovery phrase</source>
-      <comment>KeycardLostPage</comment>
-      <translation>Create replacement Keycard using the same recovery phrase</translation>
-    </message>
-    <message>
-      <source>Start using this profile without Keycard</source>
-      <comment>KeycardLostPage</comment>
-      <translation>Start using this profile without Keycard</translation>
-    </message>
-    <message>
-      <source>Order a new Keycard</source>
-      <comment>KeycardLostPage</comment>
-      <translation>Order a new Keycard</translation>
-    </message>
-  </context>
-  <context>
-    <name>KeycardLostPageNew</name>
-    <message>
-      <source>Lost Keycard</source>
-      <comment>KeycardLostPageNew</comment>
-      <translation>Lost Keycard</translation>
-    </message>
-    <message>
       <source>If you don&#39;t have any other spare Keycard</source>
-      <comment>KeycardLostPageNew</comment>
+      <comment>KeycardLostPage</comment>
       <translation>If you don&#39;t have any other spare Keycard</translation>
     </message>
     <message>
       <source>Buy new</source>
-      <comment>KeycardLostPageNew</comment>
+      <comment>KeycardLostPage</comment>
       <translation>Buy new</translation>
     </message>
     <message>
       <source>Go to Keycard.tech and order Keycard</source>
-      <comment>KeycardLostPageNew</comment>
+      <comment>KeycardLostPage</comment>
       <translation>Go to Keycard.tech and order Keycard</translation>
     </message>
     <message>
       <source>If you have a spare Keycard</source>
-      <comment>KeycardLostPageNew</comment>
+      <comment>KeycardLostPage</comment>
       <translation>If you have a spare Keycard</translation>
     </message>
     <message>
       <source>Read your spare Keycard</source>
-      <comment>KeycardLostPageNew</comment>
+      <comment>KeycardLostPage</comment>
       <translation>Read your spare Keycard</translation>
     </message>
     <message>
       <source>You may need to factory reset it first and then import key pair</source>
-      <comment>KeycardLostPageNew</comment>
+      <comment>KeycardLostPage</comment>
       <translation>You may need to factory reset it first and then import key pair</translation>
     </message>
     <message>
       <source>Start using profile without Keycard</source>
-      <comment>KeycardLostPageNew</comment>
+      <comment>KeycardLostPage</comment>
       <translation>Start using profile without Keycard</translation>
     </message>
     <message>
       <source>Enter recovery phrase for your profile and login to status.</source>
-      <comment>KeycardLostPageNew</comment>
+      <comment>KeycardLostPage</comment>
       <translation>Enter recovery phrase for your profile and login to status.</translation>
     </message>
   </context>
@@ -12033,29 +11616,6 @@
       <source>It is now ready to use.</source>
       <comment>KeycardManagementPopup</comment>
       <translation>It is now ready to use.</translation>
-    </message>
-  </context>
-  <context>
-    <name>KeycardNotEmptyPage</name>
-    <message>
-      <source>Keycard is not empty</source>
-      <comment>KeycardNotEmptyPage</comment>
-      <translation>Keycard is not empty</translation>
-    </message>
-    <message>
-      <source>You can’t use it to store new keys right now</source>
-      <comment>KeycardNotEmptyPage</comment>
-      <translation>You can’t use it to store new keys right now</translation>
-    </message>
-    <message>
-      <source>Log in with this Keycard</source>
-      <comment>KeycardNotEmptyPage</comment>
-      <translation>Log in with this Keycard</translation>
-    </message>
-    <message>
-      <source>Factory reset Keycard</source>
-      <comment>KeycardNotEmptyPage</comment>
-      <translation>Factory reset Keycard</translation>
     </message>
   </context>
   <context>
@@ -12613,139 +12173,58 @@
   <context>
     <name>LoginKeycardBox</name>
     <message>
-      <source>Unblock with PUK</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Unblock with PUK</translation>
-    </message>
-    <message>
-      <source>Unblock with recovery phrase</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Unblock with recovery phrase</translation>
-    </message>
-    <message>
       <source>Plug in Keycard reader...</source>
       <comment>LoginKeycardBox</comment>
       <translation>Plug in Keycard reader...</translation>
-    </message>
-    <message>
-      <source>Reading Keycard...</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Reading Keycard...</translation>
-    </message>
-    <message>
-      <source>Oops this isn&#39;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Oops this isn&#39;t a Keycard.&lt;br&gt;Try using a Keycard instead.</translation>
-    </message>
-    <message>
-      <source>Wrong Keycard for this profile</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Wrong Keycard for this profile</translation>
-    </message>
-    <message>
-      <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</translation>
-    </message>
-    <message>
-      <source>Max pairing slots reached.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Max pairing slots reached.</translation>
-    </message>
-    <message>
-      <source>Keycard blocked</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Keycard blocked</translation>
-    </message>
-    <message>
-      <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</translation>
-    </message>
-    <message numerus="yes">
-      <source>PIN incorrect. %n attempt(s) remaining.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>
-        <numerusform></numerusform>
-        <numerusform></numerusform>
-      </translation>
-    </message>
-    <message>
-      <source>Login failed. %1</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Login failed. %1</translation>
-    </message>
-    <message>
-      <source>Show details.</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Show details.</translation>
-    </message>
-    <message>
-      <source>Enter Keycard PIN</source>
-      <comment>LoginKeycardBox</comment>
-      <translation>Enter Keycard PIN</translation>
     </message>
     <message>
       <source>Tap or insert your Keycard...</source>
       <comment>LoginKeycardBox</comment>
       <translation>Tap or insert your Keycard...</translation>
     </message>
-  </context>
-  <context>
-    <name>LoginKeycardBoxNew</name>
-    <message>
-      <source>Unblock</source>
-      <comment>LoginKeycardBoxNew</comment>
-      <translation>Unblock</translation>
-    </message>
-    <message>
-      <source>Plug in Keycard reader...</source>
-      <comment>LoginKeycardBoxNew</comment>
-      <translation>Plug in Keycard reader...</translation>
-    </message>
-    <message>
-      <source>Insert your Keycard...</source>
-      <comment>LoginKeycardBoxNew</comment>
-      <translation>Insert your Keycard...</translation>
-    </message>
     <message>
       <source>Reading Keycard...</source>
-      <comment>LoginKeycardBoxNew</comment>
+      <comment>LoginKeycardBox</comment>
       <translation>Reading Keycard...</translation>
     </message>
     <message>
-      <source>This isn&#39;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
-      <comment>LoginKeycardBoxNew</comment>
-      <translation>This isn&#39;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</translation>
-    </message>
-    <message>
       <source>Wrong Keycard for this profile</source>
-      <comment>LoginKeycardBoxNew</comment>
+      <comment>LoginKeycardBox</comment>
       <translation>Wrong Keycard for this profile</translation>
     </message>
     <message>
-      <source>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</source>
-      <comment>LoginKeycardBoxNew</comment>
-      <translation>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</translation>
-    </message>
-    <message>
       <source>Max pairing slots reached.</source>
-      <comment>LoginKeycardBoxNew</comment>
+      <comment>LoginKeycardBox</comment>
       <translation>Max pairing slots reached.</translation>
     </message>
     <message>
       <source>Keycard blocked</source>
-      <comment>LoginKeycardBoxNew</comment>
+      <comment>LoginKeycardBox</comment>
       <translation>Keycard blocked</translation>
     </message>
     <message>
+      <source>Unblock</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Unblock</translation>
+    </message>
+    <message>
+      <source>This isn&#39;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>This isn&#39;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</translation>
+    </message>
+    <message>
+      <source>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</source>
+      <comment>LoginKeycardBox</comment>
+      <translation>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</translation>
+    </message>
+    <message>
       <source>The scanned Keycard is empty.&lt;br&gt;Scan the correct Keycard for this profile.</source>
-      <comment>LoginKeycardBoxNew</comment>
+      <comment>LoginKeycardBox</comment>
       <translation>The scanned Keycard is empty.&lt;br&gt;Scan the correct Keycard for this profile.</translation>
     </message>
     <message numerus="yes">
       <source>PIN incorrect. %n attempt(s) remaining.</source>
-      <comment>LoginKeycardBoxNew</comment>
+      <comment>LoginKeycardBox</comment>
       <translation>
         <numerusform></numerusform>
         <numerusform></numerusform>
@@ -12753,17 +12232,17 @@
     </message>
     <message>
       <source>Login failed. %1</source>
-      <comment>LoginKeycardBoxNew</comment>
+      <comment>LoginKeycardBox</comment>
       <translation>Login failed. %1</translation>
     </message>
     <message>
       <source>Show details.</source>
-      <comment>LoginKeycardBoxNew</comment>
+      <comment>LoginKeycardBox</comment>
       <translation>Show details.</translation>
     </message>
     <message>
       <source>Enter Keycard PIN</source>
-      <comment>LoginKeycardBoxNew</comment>
+      <comment>LoginKeycardBox</comment>
       <translation>Enter Keycard PIN</translation>
     </message>
   </context>
@@ -14577,14 +14056,9 @@
       <translation>If you have Status on another device</translation>
     </message>
     <message>
-      <source>Log in with Keycard</source>
+      <source>Reveal what you have on Keycard first</source>
       <comment>NewAccountLoginPage</comment>
-      <translation>Log in with Keycard</translation>
-    </message>
-    <message>
-      <source>If your profile keys are stored on a Keycard</source>
-      <comment>NewAccountLoginPage</comment>
-      <translation>If your profile keys are stored on a Keycard</translation>
+      <translation>Reveal what you have on Keycard first</translation>
     </message>
     <message>
       <source>Cancel</source>
@@ -14650,6 +14124,11 @@
       <source>Checking access...</source>
       <comment>NewAccountLoginPage</comment>
       <translation>Checking access...</translation>
+    </message>
+    <message>
+      <source>Use Keycard</source>
+      <comment>NewAccountLoginPage</comment>
+      <translation>Use Keycard</translation>
     </message>
     <message>
       <source>Enable local network access to sync devices</source>
@@ -22214,42 +21693,6 @@
       <source>Unblock</source>
       <comment>UnblockContactConfirmationDialog</comment>
       <translation>Unblock</translation>
-    </message>
-  </context>
-  <context>
-    <name>UnblockWithPukFlow</name>
-    <message>
-      <source>Unblock successful</source>
-      <comment>UnblockWithPukFlow</comment>
-      <translation>Unblock successful</translation>
-    </message>
-    <message>
-      <source>Your Keycard is already unblocked!</source>
-      <comment>UnblockWithPukFlow</comment>
-      <translation>Your Keycard is already unblocked!</translation>
-    </message>
-    <message>
-      <source>Continue</source>
-      <comment>UnblockWithPukFlow</comment>
-      <translation>Continue</translation>
-    </message>
-  </context>
-  <context>
-    <name>UnblockWithSeedphraseFlow</name>
-    <message>
-      <source>Unblock Keycard using the recovery phrase</source>
-      <comment>UnblockWithSeedphraseFlow</comment>
-      <translation>Unblock Keycard using the recovery phrase</translation>
-    </message>
-    <message>
-      <source>Unblock Keycard</source>
-      <comment>UnblockWithSeedphraseFlow</comment>
-      <translation>Unblock Keycard</translation>
-    </message>
-    <message>
-      <source>Invalid recovery phrase</source>
-      <comment>UnblockWithSeedphraseFlow</comment>
-      <translation>Invalid recovery phrase</translation>
     </message>
   </context>
   <context>

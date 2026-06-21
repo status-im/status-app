@@ -223,8 +223,8 @@ proc startUnblockKeycardUsingPuk*(self: Controller, keyUid, puk, newPin, keycard
 proc startRecover*(self: Controller, pin, puk, mnemonic, metadataName: string, metadataPaths: seq[string], keycardUid: string) =
   self.keycardServiceV2.asyncRecover(pin, puk, mnemonic, metadataName, metadataPaths, keycardUid)
 
-proc startAsyncLogin*(self: Controller, keyUid, pin, xPubPath: string) =
-  self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath)
+proc startAsyncLogin*(self: Controller, keyUid, pin, xPubPath: string, extendedResponse: bool = false) =
+  self.keycardServiceV2.asyncLogin(keyUid, pin, xPubPath, extendedResponse)
 
 proc remainingKeypairCapacity*(self: Controller): int =
   if not serviceApplicable(self.walletAccountService):

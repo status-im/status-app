@@ -34,16 +34,11 @@ SplitView {
 
         readonly property string mnemonic: "apple banana cat country catalog catch category cattle dog elephant fish cat"
         readonly property string pin: "111111"
-        readonly property string puk: "111111111111"
         readonly property string password: "somepassword"
     }
 
     function restart() {
         store.keycardState = Onboarding.KeycardState.NoPCSCService
-        store.addKeyPairState = Onboarding.ProgressState.Idle
-        store.pinSettingState = Onboarding.ProgressState.Idle
-        store.authorizationState = Onboarding.AuthorizationState.Idle
-        store.restoreKeysExportState = Onboarding.ProgressState.Idle
         store.convertKeycardAccountState = Onboarding.ProgressState.Idle
         store.syncState = Onboarding.ProgressState.Idle
         store.keycardRemainingPinAttempts = Constants.onboarding.defaultPinAttempts
@@ -91,72 +86,12 @@ SplitView {
             property int keycardState: Onboarding.KeycardState.NoPCSCService
             readonly property string keycardUID: "uid_4"
             readonly property string keycardKeyUID: "uid_4"
-            property int addKeyPairState: Onboarding.ProgressState.Idle
-            property int pinSettingState: Onboarding.ProgressState.Idle
-            property int authorizationState: Onboarding.AuthorizationState.Idle
-            property int restoreKeysExportState: Onboarding.ProgressState.Idle
             property int convertKeycardAccountState: Onboarding.ProgressState.Idle
             property int syncState: Onboarding.ProgressState.Idle
             readonly property var loginAccountsModel: ctrlLoginScreen.checked ? loginAccountsModel : emptyModel
 
             property int keycardRemainingPinAttempts: Constants.onboarding.defaultPinAttempts
             property int keycardRemainingPukAttempts: Constants.onboarding.defaultPukAttempts
-
-            function setPin(pin: string) {
-                logs.logEvent("OnboardingStore.setPin", ["pin"], arguments)
-
-                pinSettingState = Onboarding.ProgressState.InProgress
-
-                ctrlLoginResult.result = "🯄"
-                const valid = pin === mockDriver.pin
-                if (!valid)
-                    keycardRemainingPinAttempts--
-                if (keycardRemainingPinAttempts <= 0) { // SIMULATION: "block" the keycard
-                    keycardState = Onboarding.KeycardState.BlockedPIN
-                    keycardRemainingPinAttempts = 0
-                }
-            }
-
-            function setPuk(puk: string): bool {
-                logs.logEvent("OnboardingStore.setPuk", ["puk"], arguments)
-                const valid = puk === mockDriver.puk
-                if (!valid)
-                    keycardRemainingPukAttempts--
-                if (keycardRemainingPukAttempts <= 0) { // SIMULATION: "block" the keycard
-                    keycardState = Onboarding.KeycardState.BlockedPUK
-                    keycardRemainingPukAttempts = 0
-                }
-                return valid
-            }
-
-            function authorize(pin: string) {
-                logs.logEvent("OnboardingStore.authorize", ["pin"], arguments)
-                if (pin === mockDriver.pin)
-                    authorizationState = Onboarding.AuthorizationState.Authorized
-                else
-                    authorizationState = Onboarding.AuthorizationState.WrongPin
-            }
-
-            function loadMnemonic(mnemonic: string) {
-                logs.logEvent("OnboardingStore.loadMnemonic", ["mnemonic"], arguments)
-            }
-
-            function exportRecoverKeys() {
-                logs.logEvent("OnboardingStore.exportRecoverKeys")
-            }
-
-            function startKeycardDetection() {
-                logs.logEvent("OnboardingStore.startKeycardDetection")
-            }
-
-            function startKeycardFactoryReset() {
-                logs.logEvent("OnboardingStore.startKeycardFactoryReset")
-                console.warn("!!! SIMULATION: KEYCARD FACTORY RESET")
-                keycardState = Onboarding.KeycardState.FactoryResetting // SIMULATION: factory reset
-                Backpressure.debounce(root, 2000, () => {
-                    keycardState = Onboarding.KeycardState.Empty
-                })()
-            }
 
             // password
             function getPasswordStrengthScore(password: string): int {
@@ -173,11 +108,6 @@ SplitView {
             function isMnemonicDuplicate(mnemonic: string): bool {
                 logs.logEvent("OnboardingStore.isMnemonicDuplicate", ["mnemonic"], arguments)
                 return false
-            }
-
-            function generateMnemonic(): string {
-                logs.logEvent("OnboardingStore.generateMnemonic()")
-                return mockDriver.mnemonic
             }
 
             function validateLocalPairingConnectionString(connectionString: string): bool {
@@ -310,18 +240,6 @@ SplitView {
             text: "Copy valid PIN (\"%1\")".arg(mockDriver.pin)
             focusPolicy: Qt.NoFocus
             onClicked: ClipboardUtils.setText(mockDriver.pin)
-        }
-
-        Button {
-            anchors.bottom: parent.bottom
-            anchors.right: parent.right
-            anchors.margins: 10
-
-            visible: onboarding.currentPage.toString().startsWith("UnblockWithPukFlow") && onboarding.focusedObjectName === "pinInputTextInput"
-
-            text: "Copy valid PUK (\"%1\")".arg(mockDriver.puk)
-            focusPolicy: Qt.NoFocus
-            onClicked: ClipboardUtils.setText(mockDriver.puk)
         }
 
         Button {
@@ -560,34 +478,6 @@ SplitView {
 
             RowLayout {
                 Label {
-                    text: "Add key pair state:"
-                }
-
-                Flow {
-                    spacing: 2
-
-                    ButtonGroup {
-                        id: addKeypairStateButtonGroup
-                    }
-
-                    Repeater {
-                        model: Onboarding.getModelFromEnum("ProgressState")
-
-                        RoundButton {
-                            text: modelData.name
-                            checkable: true
-                            checked: store.addKeyPairState === modelData.value
-
-                            ButtonGroup.group: addKeypairStateButtonGroup
-
-                            onClicked: store.addKeyPairState = modelData.value
-                        }
-                    }
-                }
-
-                ToolSeparator {}
-
-                Label {
                     text: "Sync state:"
                 }
 
@@ -609,90 +499,6 @@ SplitView {
                             ButtonGroup.group: syncStateButtonGroup
 
                             onClicked: store.syncState = modelData.value
-                        }
-                    }
-                }
-
-                ToolSeparator {}
-
-                Label {
-                    text: "PIN Setting state:"
-                }
-
-                Flow {
-                    spacing: 2
-
-                    ButtonGroup {
-                        id: pinSettingStateButtonGroup
-                    }
-
-                    Repeater {
-                        model: Onboarding.getModelFromEnum("ProgressState")
-
-                        RoundButton {
-                            text: modelData.name
-                            checkable: true
-                            checked: store.pinSettingState === modelData.value
-
-                            ButtonGroup.group: pinSettingStateButtonGroup
-
-                            onClicked: store.pinSettingState = modelData.value
-                        }
-                    }
-                }
-            }
-
-            RowLayout {
-                Label {
-                    text: "Authorization state:"
-                }
-
-                Flow {
-                    spacing: 2
-
-                    ButtonGroup {
-                        id: authorizationStateButtonGroup
-                    }
-
-                    Repeater {
-                        model: Onboarding.getModelFromEnum("AuthorizationState")
-
-                        RoundButton {
-                            text: modelData.name
-                            checkable: true
-                            checked: store.authorizationState === modelData.value
-
-                            ButtonGroup.group: authorizationStateButtonGroup
-
-                            onClicked: store.authorizationState = modelData.value
-                        }
-                    }
-                }
-
-                ToolSeparator {}
-
-                Label {
-                    text: "Restore Keys Export state:"
-                }
-
-                Flow {
-                    spacing: 2
-
-                    ButtonGroup {
-                        id: restoreKeysExportStateButtonGroup
-                    }
-
-                    Repeater {
-                        model: Onboarding.getModelFromEnum("ProgressState")
-
-                        RoundButton {
-                            text: modelData.name
-                            checkable: true
-                            checked: store.restoreKeysExportState === modelData.value
-
-                            ButtonGroup.group: restoreKeysExportStateButtonGroup
-
-                            onClicked: store.restoreKeysExportState = modelData.value
                         }
                     }
                 }

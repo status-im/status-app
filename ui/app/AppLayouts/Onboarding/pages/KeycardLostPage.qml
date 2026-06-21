@@ -1,80 +1,126 @@
 import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
-import StatusQ.Controls
+import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Components
+import StatusQ.Controls
 
-import AppLayouts.Onboarding.controls
+import shared.status
 
 import utils
 
-KeycardBasePage {
+OnboardingPage {
     id: root
 
-    signal createReplacementKeycardRequested()
-    signal useProfileWithoutKeycardRequested()
+    signal readSpareKeycardRequested()
+    signal stopUsingKeycardForProfileRequested()
+
+    readonly property bool isPortrait: root.width < root.height && root.width <= root.implicitWidth
 
     title: qsTr("Lost Keycard")
-    subtitle: qsTr("Sorry you've lost your Keycard")
-    image.source: Assets.png("keycard/wrong_card/empty")
 
-    buttons: [
-        StatusButton {
-            objectName: "createReplacementButton"
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(implicitWidth, parent.width - 2*Theme.bigPadding)
-            text: qsTr("Create replacement Keycard using the same recovery phrase")
-            onClicked: root.createReplacementKeycardRequested()
+    contentItem: GridLayout {
+        rows: root.isPortrait ? 2 : 1
+        columns: root.isPortrait ? 1 : 2
+        uniformCellWidths: !root.isPortrait
 
-            /////////////////////////////////////////////////////////////////////////////////
-            // # Remove this once we implement unlock via PUK
-            /////////////////////////////////////////////////////////////////////////////////
-            enabled: false
-            MouseArea {
-                id: createReplacementArea
-                anchors.fill: parent
-                hoverEnabled: true
-            }
-            StatusToolTip {
-                text: Constants.keycard.temporarilyUnavailable
-                visible: createReplacementArea.containsMouse
-            }
-            /////////////////////////////////////////////////////////////////////////////////
-        },
-        StatusButton {
-            objectName: "startUsingWithoutKeycardButton"
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: qsTr("Start using this profile without Keycard")
-            onClicked: root.useProfileWithoutKeycardRequested()
+        rowSpacing: Theme.bigPadding
+        columnSpacing: Theme.bigPadding
 
-            /////////////////////////////////////////////////////////////////////////////////
-            // # Remove this once we implement unlock via PUK
-            /////////////////////////////////////////////////////////////////////////////////
-            enabled: false
-            MouseArea {
-                id: startWithoutKeycardArea
-                anchors.fill: parent
-                hoverEnabled: true
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredWidth: 280
+            Layout.preferredHeight: 280
+            Layout.minimumWidth: 100
+            Layout.minimumHeight: 100
+
+            StatusImage {
+                anchors.centerIn: parent
+                width: Math.min(parent.width, parent.height)
+                height: width
+                fillMode: Image.PreserveAspectFit
+                source: Assets.png("keycard/keycards")
+                mipmap: true
             }
-            StatusToolTip {
-                text: Constants.keycard.temporarilyUnavailable
-                visible: startWithoutKeycardArea.containsMouse
-            }
-            /////////////////////////////////////////////////////////////////////////////////
         }
-    ]
 
-    StatusButton {
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottomMargin: 28
+        StatusScrollView {
+            id: contentScrollView
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.alignment: Qt.AlignTop
+            contentWidth: availableWidth
 
-        isOutline: true
+            ColumnLayout {
+                width: contentScrollView.availableWidth
+                spacing: Theme.padding
 
-        size: StatusBaseButton.Size.Small
-        text: qsTr("Order a new Keycard")
-        icon.name: "external-link"
-        icon.width: 24
-        icon.height: 24
-        onClicked: requestOpenLink("https://keycard.tech/")
+                StatusBaseText {
+                    Layout.fillWidth: true
+                    text: qsTr("Lost Keycard")
+                    font.pixelSize: Theme.fontSize(22)
+                    font.bold: true
+                    wrapMode: Text.WordWrap
+                }
+
+                StatusSectionHeadline {
+                    Layout.fillWidth: true
+                    Layout.topMargin: Theme.padding
+                    text: qsTr("If you don't have any other spare Keycard")
+                }
+
+                StatusListItem {
+                    Layout.fillWidth: true
+                    title: qsTr("Buy new")
+                    subTitle: qsTr("Go to Keycard.tech and order Keycard")
+                    components: [
+                        StatusIcon {
+                            icon: "external-link"
+                            color: Theme.palette.baseColor1
+                        }
+                    ]
+                    onClicked: {
+                        root.requestOpenLink(Constants.keycard.general.purchasePage)
+                    }
+                }
+
+                StatusSectionHeadline {
+                    Layout.fillWidth: true
+                    Layout.topMargin: Theme.padding
+                    text: qsTr("If you have a spare Keycard")
+                }
+
+                StatusListItem {
+                    Layout.fillWidth: true
+                    title: qsTr("Read your spare Keycard")
+                    subTitle: qsTr("You may need to factory reset it first and then import key pair")
+                    components: [
+                        StatusIcon {
+                            icon: "next"
+                            color: Theme.palette.baseColor1
+                        }
+                    ]
+                    onClicked: {
+                        root.readSpareKeycardRequested()
+                    }
+                }
+
+                StatusListItem {
+                    Layout.fillWidth: true
+                    title: qsTr("Start using profile without Keycard")
+                    subTitle: qsTr("Enter recovery phrase for your profile and login to status.")
+                    components: [
+                        StatusIcon {
+                            icon: "next"
+                            color: Theme.palette.baseColor1
+                        }
+                    ]
+                    onClicked: root.stopUsingKeycardForProfileRequested()
+                }
+            }
+        }
     }
 }

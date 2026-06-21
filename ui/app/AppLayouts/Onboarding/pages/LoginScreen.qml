@@ -93,11 +93,8 @@ OnboardingPage {
     // "internal" onboarding signals, starting other flows
     signal onboardingCreateProfileFlowRequested()
     signal onboardingLoginFlowRequested()
-    signal unblockWithSeedphraseRequested()
-    signal unblockWithPukRequested()
     signal unblockKeycardRequested(string keyUid)
     signal lostKeycardFlowRequested()
-    signal keycardRequested()
     signal onboardingManageProfilesFlowRequested()
 
     QtObject {
@@ -275,31 +272,6 @@ OnboardingPage {
             }
 
             LoginKeycardBox {
-                Layout.fillWidth: true
-                id: keycardBox
-                objectName: "keycardBox"
-                visible: d.currentProfileIsKeycard
-                isBiometricsLogin: root.isBiometricsLogin
-                biometricsSuccessful: d.biometricsSuccessful
-                biometricsFailed: d.biometricsFailed
-                keycardState: root.keycardState
-                isWrongKeycard: d.isWrongKeycard
-                keycardRemainingPinAttempts: root.keycardRemainingPinAttempts
-                keycardRemainingPukAttempts: root.keycardRemainingPukAttempts
-                onUnblockWithSeedphraseRequested: root.unblockWithSeedphraseRequested()
-                onUnblockWithPukRequested: root.unblockWithPukRequested()
-                onPinEditedManually: {
-                    // reset state when typing the PIN manually; not to break the bindings inside the component
-                    loginError = ""
-                    d.resetBiometricsResult()
-                }
-                onDetailedErrorPopupRequested: detailedErrorPopupComp.createObject(root, {detailedError: loginError}).open()
-                onBiometricsRequested: root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
-                onLoginRequested: (pin) => d.doKeycardLogin(pin)
-            }
-
-            /* TODO: uncomment when integrating new onboarding
-            LoginKeycardBoxNew {
                 id: keycardBox
                 Layout.fillWidth: true
                 objectName: "keycardBox"
@@ -321,7 +293,6 @@ OnboardingPage {
                 onBiometricsRequested: root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
                 onLoginRequested: (pin) => d.doKeycardLogin(pin)
             }
-            */
 
             Item { Layout.fillHeight: true }
 

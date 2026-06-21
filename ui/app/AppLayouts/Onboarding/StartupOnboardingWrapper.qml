@@ -111,9 +111,6 @@ Item {
                 return
             }
             root.profileSelected(keyUid)
-            if (SQUtils.Utils.isMobile) {
-                onboardingStore.resetKeycardProgressStates()
-            }
         }
 
         onLoginRequested: function (keyUid, method, data) {

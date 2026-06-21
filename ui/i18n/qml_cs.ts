@@ -4831,33 +4831,6 @@ Pošlete žádost o kontakt osobě, se kterou chcete chatovat, a budete s ní mo
     </message>
 </context>
 <context>
-    <name>CreateKeycardProfilePage</name>
-    <message>
-        <source>Create profile on empty Keycard</source>
-        <translation>Vytvořit profil na prázdné Keycard</translation>
-    </message>
-    <message>
-        <source>You will require your Keycard to log in to Status and sign transactions</source>
-        <translation>Budete potřebovat svou Keycard pro přihlášení do Statusu a podepisování transakcí</translation>
-    </message>
-    <message>
-        <source>Use a new recovery phrase</source>
-        <translation>Použít novou obnovovací frázi</translation>
-    </message>
-    <message>
-        <source>To create your Keycard-stored profile </source>
-        <translation>Pro vytvoření profilu uloženého na Keycard </translation>
-    </message>
-    <message>
-        <source>Let&apos;s go!</source>
-        <translation>Jdeme na to!</translation>
-    </message>
-    <message>
-        <source>Use an existing recovery phrase</source>
-        <translation>Použít existující obnovovací frázi</translation>
-    </message>
-</context>
-<context>
     <name>CreatePasswordPage</name>
     <message>
         <source>Create profile password</source>
@@ -4958,11 +4931,11 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation>Pokud již máte Ethereum peněženku</translation>
     </message>
     <message>
-        <source>Use an empty Keycard</source>
-        <translation type="unfinished"></translation>
+        <source>Use Keycard</source>
+        <translation type="unfinished">Použít Keycard</translation>
     </message>
     <message>
-        <source>Store your new profile keys on Keycard</source>
+        <source>Reveal what you have on Keycard first</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -9015,25 +8988,6 @@ Opravdu to chcete udělat?</translation>
     </message>
 </context>
 <context>
-    <name>KeycardAddKeyPairPage</name>
-    <message>
-        <source>Creating key pair on Keycard</source>
-        <translation>Vytváření páru klíčů na Keycard</translation>
-    </message>
-    <message>
-        <source>Key pair added to Keycard</source>
-        <translation>Pár klíčů přidán na Keycard</translation>
-    </message>
-    <message>
-        <source>You will now require this Keycard to log into Status and transact with accounts derived from this key pair</source>
-        <translation>Nyní budete potřebovat tuto Keycard pro přihlášení do Statusu a provádění transakcí s účty odvozenými z tohoto páru klíčů</translation>
-    </message>
-    <message>
-        <source>A key pair is your shareable public address and a secret private key that controls your wallet. Your key pair is being generated on your Keycard — keep it plugged in until the process completes.</source>
-        <translation>Pár klíčů je vaše sdílitelná veřejná adresa a tajný soukromý klíč, který ovládá vaši peněženku. Váš pár klíčů se generuje na vaší Keycard – nechte ji připojenou, dokud proces neskončí.</translation>
-    </message>
-</context>
-<context>
     <name>KeycardAuth</name>
     <message>
         <source>Plug in Keycard reader...</source>
@@ -9164,51 +9118,6 @@ Opravdu to chcete udělat?</translation>
     </message>
 </context>
 <context>
-    <name>KeycardCreatePinPage</name>
-    <message>
-        <source>PINs don&apos;t match</source>
-        <translation>PINy se neshodují</translation>
-    </message>
-    <message>
-        <source>Create new Keycard PIN</source>
-        <translation>Vytvořit nový PIN Keycard</translation>
-    </message>
-    <message>
-        <source>Repeat Keycard PIN</source>
-        <translation>Zopakovat PIN Keycard</translation>
-    </message>
-    <message>
-        <source>Setting Keycard PIN</source>
-        <translation>Nastavování PINu Keycard</translation>
-    </message>
-    <message>
-        <source>PIN set</source>
-        <translation>PIN nastaven</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardCreateProfileFlow</name>
-    <message>
-        <source>Create profile on empty Keycard using a recovery phrase</source>
-        <translation>Vytvořit profil na prázdné Keycard pomocí obnovovací fráze</translation>
-    </message>
-    <message>
-        <source>Invalid recovery phrase</source>
-        <translation>Neplatná obnovovací fráze</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardCreateReplacementFlow</name>
-    <message>
-        <source>Enter recovery phrase of lost Keycard</source>
-        <translation>Zadejte obnovovací frázi ztracené Keycard</translation>
-    </message>
-    <message>
-        <source>Invalid recovery phrase</source>
-        <translation>Neplatná obnovovací fráze</translation>
-    </message>
-</context>
-<context>
     <name>KeycardDetailsPage</name>
     <message>
         <source>No free pairing slots</source>
@@ -9316,260 +9225,7 @@ Opravdu to chcete udělat?</translation>
     </message>
 </context>
 <context>
-    <name>KeycardEmptyPage</name>
-    <message>
-        <source>Keycard is empty</source>
-        <translation>Keycard je prázdná</translation>
-    </message>
-    <message>
-        <source>There is no profile key pair on this Keycard</source>
-        <translation>Na této Keycard není žádný pár klíčů profilu</translation>
-    </message>
-    <message>
-        <source>Create new profile on this Keycard</source>
-        <translation>Vytvořit nový profil na této Keycard</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardEnterPinPage</name>
-    <message>
-        <source>PIN incorrect</source>
-        <translation>Nesprávný PIN</translation>
-    </message>
-    <message>
-        <source>Authorizing</source>
-        <translation>Autorizace</translation>
-    </message>
-    <message>
-        <source>PIN correct</source>
-        <translation>PIN správný</translation>
-    </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation type="unfinished">Keycard zablokována</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n attempt(s) remaining</source>
-        <translation>
-            <numerusform>Zbývá %n pokus</numerusform>
-            <numerusform>Zbývají %n pokusy</numerusform>
-            <numerusform>Zbývá %n pokusů</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Unblock using PUK</source>
-        <translation>Odblokovat pomocí PUK</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>KeycardEnterPukPage</name>
-    <message numerus="yes">
-        <source>%n attempt(s) remaining</source>
-        <translation>
-            <numerusform>Zbývá %n pokus</numerusform>
-            <numerusform>Zbývají %n pokusy</numerusform>
-            <numerusform>Zbývá %n pokusů</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Factory reset Keycard</source>
-        <translation>Tovární nastavení Keycard</translation>
-    </message>
-    <message>
-        <source>Keycard locked</source>
-        <translation>Keycard uzamčena</translation>
-    </message>
-    <message>
-        <source>PUK incorrect</source>
-        <translation>Nesprávný PUK</translation>
-    </message>
-    <message>
-        <source>PUK correct</source>
-        <translation>Správný PUK</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PUK</source>
-        <translation>Zadejte PUK Keycard</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardErrorPage</name>
-    <message>
-        <source>Communication with Keycard lost</source>
-        <translation>Komunikace s Keycard ztracena</translation>
-    </message>
-    <message>
-        <source>There seems to be an issue communicating with your Keycard. Reinsert the card or reader and try again.</source>
-        <translation>Zdá se, že došlo k problému při komunikaci s vaší Keycard. Znovu vložte kartu nebo čtečku a zkuste to znovu.</translation>
-    </message>
-    <message>
-        <source>Try again</source>
-        <translation>Zkusit znovu</translation>
-    </message>
-    <message>
-        <source>Factory reset Keycard</source>
-        <translation>Tovární nastavení Keycard</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardFactoryResetFlow</name>
-    <message>
-        <source>Factory reset Keycard</source>
-        <translation>Tovární nastavení Keycard</translation>
-    </message>
-    <message>
-        <source>All data including the stored key pair and derived accounts will be removed from the Keycard</source>
-        <translation>Všechna data včetně uloženého páru klíčů a odvozených účtů budou z Keycard odstraněna</translation>
-    </message>
-    <message>
-        <source>I understand the key pair will be deleted</source>
-        <translation>Rozumím, že pár klíčů bude smazán</translation>
-    </message>
-    <message>
-        <source>Factory reset this Keycard</source>
-        <translation>Tovární nastavení této Keycard</translation>
-    </message>
-    <message>
-        <source>Reseting Keycard</source>
-        <translation>Resetování Keycard</translation>
-    </message>
-    <message>
-        <source>Keycard successfully factory reset</source>
-        <translation>Tovární nastavení Keycard úspěšně dokončeno</translation>
-    </message>
-    <message>
-        <source>You can now use this Keycard like it&apos;s a brand-new, empty Keycard</source>
-        <translation>Nyní můžete tuto Keycard používat, jako by byla zcela nová a prázdná</translation>
-    </message>
-    <message>
-        <source>Do not remove your Keycard or reader</source>
-        <translation>Nevyjímejte Keycard ani čtečku</translation>
-    </message>
-    <message>
-        <source>Please wait while the Keycard is being reset</source>
-        <translation>Čekejte prosím, než se Keycard resetuje</translation>
-    </message>
-    <message>
-        <source>Back to Login screen</source>
-        <translation>Zpět na přihlašovací obrazovku</translation>
-    </message>
-    <message>
-        <source>Log in or Create profile</source>
-        <translation>Přihlásit se nebo Vytvořit profil</translation>
-    </message>
-</context>
-<context>
-    <name>KeycardIntroPage</name>
-    <message>
-        <source>New to Keycard?</source>
-        <translation>Začínáte s Keycard?</translation>
-    </message>
-    <message>
-        <source>Store and trade your crypto with a simple, secure and slim hardware wallet.</source>
-        <translation>Ukládejte a obchodujte své krypto s jednoduchou, bezpečnou a tenkou hardwarovou peněženkou.</translation>
-    </message>
-    <message>
-        <source>keycard.tech</source>
-        <translation>keycard.tech</translation>
-    </message>
-    <message>
-        <source>Unblock using PUK</source>
-        <translation>Odblokovat pomocí PUK</translation>
-    </message>
-    <message>
-        <source>Factory reset Keycard</source>
-        <translation>Tovární nastavení Keycard</translation>
-    </message>
-    <message>
-        <source>Plug in your Keycard reader</source>
-        <translation>Připojte čtečku Keycard</translation>
-    </message>
-    <message>
-        <source>Get help via %1 🔗</source>
-        <translation>Získat pomoc přes %1 🔗</translation>
-    </message>
-    <message>
-        <source>Reading Keycard...</source>
-        <translation>Načítání Keycard...</translation>
-    </message>
-    <message>
-        <source>Oops this isn’t a Keycard</source>
-        <translation>Jejda, toto není Keycard</translation>
-    </message>
-    <message>
-        <source>Smartcard reader service unavailable</source>
-        <translation>Služba čtečky čipových karet nedostupná</translation>
-    </message>
-    <message>
-        <source>The Smartcard reader service (PCSC service), required for using Keycard, is not currently working. Ensure PCSC is installed and running and try again.</source>
-        <translation>Služba čtečky čipových karet (PCSC), vyžadovaná pro použití Keycard, momentálně nefunguje. Ujistěte se, že je PCSC nainstalováno a spuštěno, a zkuste to znovu.</translation>
-    </message>
-    <message>
-        <source>All pairing slots occupied</source>
-        <translation>Všechny párovací sloty obsazeny</translation>
-    </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation>Keycard zablokována</translation>
-    </message>
-    <message>
-        <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Tap or insert your Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Remove card and use a Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Factory reset this Keycard or use a different one</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The Keycard you have used is blocked, you will need to unblock it or use a different one</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The Keycard you have used is blocked, you will need to unblock it, factory reset or use a different one</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>KeycardLostPage</name>
-    <message>
-        <source>Lost Keycard</source>
-        <translation type="unfinished">Ztracená Keycard</translation>
-    </message>
-    <message>
-        <source>Sorry you&apos;ve lost your Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Create replacement Keycard using the same recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Start using this profile without Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Order a new Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>KeycardLostPageNew</name>
     <message>
         <source>Lost Keycard</source>
         <translation type="unfinished">Ztracená Keycard</translation>
@@ -9905,25 +9561,6 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <message>
         <source>It is now ready to use.</source>
         <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>KeycardNotEmptyPage</name>
-    <message>
-        <source>Keycard is not empty</source>
-        <translation>Keycard není prázdná</translation>
-    </message>
-    <message>
-        <source>You can’t use it to store new keys right now</source>
-        <translation>Momentálně ji nemůžete použít k uložení nových klíčů</translation>
-    </message>
-    <message>
-        <source>Log in with this Keycard</source>
-        <translation>Přihlásit se pomocí této Keycard</translation>
-    </message>
-    <message>
-        <source>Factory reset Keycard</source>
-        <translation>Tovární nastavení Keycard</translation>
     </message>
 </context>
 <context>
@@ -10402,31 +10039,19 @@ selhalo</translation>
 <context>
     <name>LoginKeycardBox</name>
     <message>
-        <source>Unblock with PUK</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unblock with recovery phrase</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Plug in Keycard reader...</source>
         <translation type="unfinished">Připojte čtečku Keycard...</translation>
+    </message>
+    <message>
+        <source>Tap or insert your Keycard...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Reading Keycard...</source>
         <translation type="unfinished">Načítání Keycard...</translation>
     </message>
     <message>
-        <source>Oops this isn&apos;t a Keycard.&lt;br&gt;Try using a Keycard instead.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Wrong Keycard for this profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Issue detecting Keycard.&lt;br&gt;Remove and re-insert reader and Keycard, check no other security keys are plugged in.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -10438,71 +10063,16 @@ selhalo</translation>
         <translation type="unfinished">Keycard zablokována</translation>
     </message>
     <message>
-        <source>The scanned Keycard is empty.&lt;br&gt;Use the correct Keycard for this profile.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message numerus="yes">
-        <source>PIN incorrect. %n attempt(s) remaining.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Login failed. %1</source>
-        <translation type="unfinished">Přihlášení selhalo. %1</translation>
-    </message>
-    <message>
-        <source>Show details.</source>
-        <translation type="unfinished">Zobrazit podrobnosti.</translation>
-    </message>
-    <message>
-        <source>Enter Keycard PIN</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Tap or insert your Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>LoginKeycardBoxNew</name>
-    <message>
         <source>Unblock</source>
         <translation type="unfinished">Odblokovat</translation>
-    </message>
-    <message>
-        <source>Plug in Keycard reader...</source>
-        <translation type="unfinished">Připojte čtečku Keycard...</translation>
-    </message>
-    <message>
-        <source>Insert your Keycard...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reading Keycard...</source>
-        <translation type="unfinished">Načítání Keycard...</translation>
     </message>
     <message>
         <source>This isn&apos;t a Keycard.&lt;br&gt;Remove card and insert a Keycard.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Wrong Keycard for this profile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Issue detecting Keycard.&lt;br&gt;Re-scan Keycard.</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Max pairing slots reached.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Keycard blocked</source>
-        <translation type="unfinished">Keycard zablokována</translation>
     </message>
     <message>
         <source>The scanned Keycard is empty.&lt;br&gt;Scan the correct Keycard for this profile.</source>
@@ -12021,11 +11591,7 @@ selhalo</translation>
         <translation type="unfinished">Pokud máte Status na jiném zařízení</translation>
     </message>
     <message>
-        <source>Log in with Keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>If your profile keys are stored on a Keycard</source>
+        <source>Reveal what you have on Keycard first</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12079,6 +11645,10 @@ selhalo</translation>
     <message>
         <source>Checking access...</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use Keycard</source>
+        <translation type="unfinished">Použít Keycard</translation>
     </message>
     <message>
         <source>Enable local network access to sync devices</source>
@@ -18343,36 +17913,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Unblock</source>
         <translation>Odblokovat</translation>
-    </message>
-</context>
-<context>
-    <name>UnblockWithPukFlow</name>
-    <message>
-        <source>Unblock successful</source>
-        <translation>Odblokování úspěšné</translation>
-    </message>
-    <message>
-        <source>Your Keycard is already unblocked!</source>
-        <translation>Vaše Keycard je již odblokována!</translation>
-    </message>
-    <message>
-        <source>Continue</source>
-        <translation>Pokračovat</translation>
-    </message>
-</context>
-<context>
-    <name>UnblockWithSeedphraseFlow</name>
-    <message>
-        <source>Unblock Keycard using the recovery phrase</source>
-        <translation>Odblokovat Keycard pomocí obnovovací fráze</translation>
-    </message>
-    <message>
-        <source>Unblock Keycard</source>
-        <translation>Odblokovat Keycard</translation>
-    </message>
-    <message>
-        <source>Invalid recovery phrase</source>
-        <translation>Neplatná obnovovací fráze</translation>
     </message>
 </context>
 <context>

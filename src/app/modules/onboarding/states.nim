@@ -28,10 +28,3 @@ type ProgressState* {.pure.} = enum
   InProgress,
   Success,
   Failed,
-
-type AuthorizationState* {.pure.} = enum
-  Idle
-  InProgress
-  Authorized
-  WrongPIN
-  Error
