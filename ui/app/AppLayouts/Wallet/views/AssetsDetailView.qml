@@ -165,7 +165,7 @@ Item {
         id: scrollView
         anchors.top: tokenDetailsHeader.bottom
         anchors.bottom: parent.bottom
-        anchors.topMargin: 47
+        anchors.topMargin: Theme.padding
 
         width: parent.width
         contentWidth: availableWidth
