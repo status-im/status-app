@@ -3733,6 +3733,11 @@
       <translation>Couldn&#39;t remove reaction</translation>
     </message>
     <message>
+      <source>Please try again later</source>
+      <comment>ChatMessagesView</comment>
+      <translation>Please try again later</translation>
+    </message>
+    <message>
       <source>Send Contact Request</source>
       <comment>ChatMessagesView</comment>
       <translation>Send Contact Request</translation>

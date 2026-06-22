@@ -151,7 +151,7 @@ Item {
         function onReactionActionFailed(addAction, error) {
             Global.displayToastMessage(
                         addAction ? qsTr("Couldn't add reaction") : qsTr("Couldn't remove reaction"),
-                        error,
+                        qsTr("Please try again later"),
                         "warning",
                         false,
                         Constants.ephemeralNotificationType.danger,
