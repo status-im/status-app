@@ -2537,11 +2537,18 @@ Item {
         }
 
         sourceComponent: WalletPopups.AddEditSavedAddressPopup {
-            store: WalletStores.RootStore
             sharedRootStore: appMain.sharedRootStore
             contactsModel: appMain.contactsStore.contactsModel
+            isChecksumValidForAddress: (address) => WalletStores.RootStore.isChecksumValidForAddress(address)
+            getWalletAccount: (address) => WalletStores.RootStore.getWalletAccount(address)
+            getSavedAddress: (address) => WalletStores.RootStore.getSavedAddress(address)
+            remainingCapacityForSavedAddresses: () => WalletStores.RootStore.remainingCapacityForSavedAddresses()
+            savedAddressNameExists: (name) => WalletStores.RootStore.savedAddressNameExists(name)
 
             onPopulateContactDetails: (publicKey) => appMain.contactsStore.populateContactDetails(publicKey)
+            onCreateOrUpdateSavedAddressRequested: (name, address, ens, colorId) => {
+                WalletStores.RootStore.createOrUpdateSavedAddress(name, address, ens, colorId)
+            }
             onClosed: {
                 addEditSavedAddress.close()
             }

@@ -11,17 +11,21 @@ import StatusQ.Popups.Dialog
 
 import utils
 import shared.stores as SharedStores
-import AppLayouts.Wallet.stores as WalletStores
 import AppLayouts.Profile.helpers
 
 StatusDialog {
     id: root
 
-    required property WalletStores.RootStore store
     required property SharedStores.RootStore sharedRootStore
+    required property var isChecksumValidForAddress
+    required property var getWalletAccount
+    required property var getSavedAddress
+    required property var remainingCapacityForSavedAddresses
+    required property var savedAddressNameExists
     property var contactsModel
 
     signal populateContactDetails(string publicKey)
+    signal createOrUpdateSavedAddressRequested(string name, string address, string ens, string colorId)
 
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
@@ -94,7 +98,7 @@ StatusDialog {
 
         property bool incorrectChecksum: {
             if (d.addressInputIsAddress) {
-                return !root.store.isChecksumValidForAddress(d.address)
+                return !root.isChecksumValidForAddress(d.address)
             }
             return false
         }
@@ -145,7 +149,7 @@ StatusDialog {
         }
 
         function checkIfAddressIsAlreadyAddedToWallet(address) {
-            let account = root.store.getWalletAccount(address)
+            let account = root.getWalletAccount(address)
             d.cardsModel.clear()
             d.addressAlreadyAddedToWalletError = !!account.name
             if (!d.addressAlreadyAddedToWalletError) {
@@ -162,7 +166,7 @@ StatusDialog {
         }
 
         function checkIfAddressIsAlreadyAddedToSavedAddresses(address) {
-            let savedAddress = root.store.getSavedAddress(address)
+            let savedAddress = root.getSavedAddress(address)
             d.cardsModel.clear()
             d.addressAlreadyAddedToSavedAddressesError = !!savedAddress.address
             if (!d.addressAlreadyAddedToSavedAddressesError) {
@@ -271,12 +275,12 @@ StatusDialog {
                     || event !== undefined && event.key !== Qt.Key_Return && event.key !== Qt.Key_Enter)
                 return
 
-            if (!d.editMode && root.store.remainingCapacityForSavedAddresses() === 0) {
+            if (!d.editMode && root.remainingCapacityForSavedAddresses() === 0) {
                 Global.openLimitReachedPopup(Constants.LimitWarning.SavedAddresses)
                 return
             }
 
-            root.store.createOrUpdateSavedAddress(d.normalizedName, d.address, d.ens, d.colorId)
+            root.createOrUpdateSavedAddressRequested(d.normalizedName, d.address, d.ens, d.colorId)
             root.close()
         }
 
@@ -416,7 +420,7 @@ StatusDialog {
                         name: "check-saved-address-existence"
                         validate: (value) => {
                                       const normalizedValue = value.trim()
-                                      return !root.store.savedAddressNameExists(normalizedValue)
+                                      return !root.savedAddressNameExists(normalizedValue)
                                       || d.editMode && d.storedName == normalizedValue
                                   }
                         errorMessage: qsTr("Name already in use")
