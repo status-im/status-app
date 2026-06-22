@@ -194,7 +194,7 @@ QtObject:
       slot: "estimatedGasResponse",
       topic: topic,
       chainId: chainId,
-      txJson: $tx
+      txJson: tx
     )
     self.threadpool.start(request)
 

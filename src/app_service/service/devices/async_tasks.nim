@@ -7,7 +7,7 @@ type
 type
   AsyncInputConnectionStringArg = ref object of QObjectTaskArg
     connectionString: string
-    configJSON: string
+    configJSON: JsonNode
 
 proc asyncLoadDevicesTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncLoadDevicesTaskArg](argEncoded)
@@ -26,7 +26,7 @@ proc asyncLoadDevicesTask(argEncoded: string) {.gcsafe, nimcall.} =
 proc asyncInputConnectionStringTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncInputConnectionStringArg](argEncoded)
   try:
-    let response = status_go.inputConnectionStringForBootstrapping(arg.connectionString, arg.configJSON.replace("\\", "\\\\"))
+    let response = status_go.inputConnectionStringForBootstrapping(arg.connectionString, $arg.configJSON)
     arg.finish(response)
   except Exception as e:
     arg.finish(%* {
@@ -36,7 +36,7 @@ proc asyncInputConnectionStringTask(argEncoded: string) {.gcsafe, nimcall.} =
 proc asyncInputConnectionStringForImportingKeystoreTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncInputConnectionStringArg](argEncoded)
   try:
-    let response = status_go.inputConnectionStringForImportingKeypairsKeystores(arg.connectionString, arg.configJSON)
+    let response = status_go.inputConnectionStringForImportingKeypairsKeystores(arg.connectionString, $arg.configJSON)
     arg.finish(response)
   except Exception as e:
     arg.finish(%* {

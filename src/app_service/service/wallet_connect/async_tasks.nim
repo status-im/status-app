@@ -14,7 +14,7 @@ type
   AsyncEstimateGasArgs = ref object of QObjectTaskArg
     topic: string
     chainId: int
-    txJson: string
+    txJson: JsonNode
 
 proc asyncGetEstimatedTimeTask(argsEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncGetEstimatedTimeArgs](argsEncoded)
@@ -74,7 +74,7 @@ proc asyncEstimateGasTask(argsEncoded: string) {.gcsafe, nimcall.} =
         "estimatedGas": "",
     }
     try:
-        let tx = parseJson(arg.txJson)
+        let tx = arg.txJson
         let transaction = %*{
             "from": tx["from"].getStr,
             "to": tx["to"].getStr

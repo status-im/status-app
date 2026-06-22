@@ -278,7 +278,7 @@ QtObject:
       vptr: cast[uint](self.vptr),
       slot: "inputConnectionStringForBootstrappingFinished",
       connectionString: connectionString,
-      configJSON: $configJSON
+      configJSON: configJSON
     )
     self.threadpool.start(arg)
 
@@ -401,7 +401,7 @@ QtObject:
       vptr: cast[uint](self.vptr),
       slot: "inputConnectionStringForImportingKeystoreFinished",
       connectionString: connectionString,
-      configJSON: $configJSON
+      configJSON: configJSON
     )
     self.threadpool.start(arg)
 
