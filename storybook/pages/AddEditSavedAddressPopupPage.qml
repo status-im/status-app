@@ -2,17 +2,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import StatusQ.Core.Utils
-import SortFilterProxyModel
-
 import Storybook
-import Models
-import AppLayouts.stores
 import AppLayouts.Wallet.popups
-import AppLayouts.Wallet.stores as WalletStores
 
 import utils
-import shared.stores as SharedStores
 
 SplitView {
     orientation: Qt.Horizontal
@@ -24,6 +17,48 @@ SplitView {
 
         SplitView.fillWidth: true
         SplitView.fillHeight: true
+
+        QtObject {
+            id: mockStore
+
+            function isChecksumValidForAddress(address) {
+                return true
+            }
+
+            function getWalletAccount(address) {
+                if (address.toLowerCase() === "0x1234567890123456789012345678901234567892") {
+                    return {
+                        name: "Wallet account",
+                        mixedcaseAddress: address,
+                        emoji: ":)",
+                        colorId: "blue"
+                    }
+                }
+
+                return {}
+            }
+
+            function getSavedAddress(address) {
+                if (address.toLowerCase() === "0x1234567890123456789012345678901234567893") {
+                    return {
+                        address: address,
+                        ens: "",
+                        name: "Existing saved address",
+                        colorId: "magenta"
+                    }
+                }
+
+                return {}
+            }
+
+            function remainingCapacityForSavedAddresses() {
+                return 10
+            }
+
+            function savedAddressNameExists(name) {
+                return name.toLowerCase() === "taken"
+            }
+        }
 
         Button {
             id: reopenButton
@@ -47,8 +82,11 @@ SplitView {
                 modal: false
                 closePolicy: Popup.NoAutoClose               
 
-                store: WalletStores.RootStore
-                sharedRootStore: SharedStores.RootStore {}
+                isChecksumValidForAddress: mockStore.isChecksumValidForAddress
+                getWalletAccount: mockStore.getWalletAccount
+                getSavedAddress: mockStore.getSavedAddress
+                remainingCapacityForSavedAddresses: mockStore.remainingCapacityForSavedAddresses
+                savedAddressNameExists: mockStore.savedAddressNameExists
 
                 // Emulate resolving ENS by simple validation
                 QtObject {
@@ -64,6 +102,14 @@ SplitView {
                     }
 
                     signal resolvedENS(string pubkey, string address, string uuid)
+                }
+
+                onFetchProfileShowcaseAccountsByAddressRequested: {
+                    profileShowcaseAccountsByAddressFetched("[]")
+                }
+
+                onCreateOrUpdateSavedAddressRequested: (name, address, ens, colorId) => {
+                    logs.logEvent("createOrUpdateSavedAddressRequested: name=%1 address=%2 ens=%3 colorId=%4".arg(name).arg(address).arg(ens).arg(colorId))
                 }
 
                 Component.onCompleted: initWithParams({edit: ctrlIsEdit.checked,

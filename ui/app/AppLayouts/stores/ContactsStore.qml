@@ -10,6 +10,7 @@ QtObject {
     id: root
 
     signal contactInfoRequestFinished(string publicKey, bool ok)
+    signal profileShowcaseAccountsByAddressFetched(string accounts)
 
     readonly property QtObject _d: QtObject {
         id: d
@@ -25,6 +26,9 @@ QtObject {
             contactsModuleInst.trustStatusRemoved.connect(root.trustStatusRemoved)
             contactsModuleInst.contactRemoved.connect(root.contactRemoved)
             contactsModuleInst.contactInfoRequestFinished.connect(root.contactInfoRequestFinished)
+            contactsModuleInst.profileShowcaseAccountsByAddressFetched.connect((accounts) => {
+                root.profileShowcaseAccountsByAddressFetched(accounts)
+            })
         }
     }
 
@@ -166,5 +170,9 @@ QtObject {
 
     function populateContactDetails(publicKey) {
         return d.contactsModuleInst.populateContactDetails(publicKey)
+    }
+
+    function fetchProfileShowcaseAccountsByAddress(address) {
+        d.contactsModuleInst.fetchProfileShowcaseAccountsByAddress(address)
     }
 }

@@ -2537,7 +2537,6 @@ Item {
         }
 
         sourceComponent: WalletPopups.AddEditSavedAddressPopup {
-            sharedRootStore: appMain.sharedRootStore
             contactsModel: appMain.contactsStore.contactsModel
             isChecksumValidForAddress: (address) => WalletStores.RootStore.isChecksumValidForAddress(address)
             getWalletAccount: (address) => WalletStores.RootStore.getWalletAccount(address)
@@ -2546,12 +2545,27 @@ Item {
             savedAddressNameExists: (name) => WalletStores.RootStore.savedAddressNameExists(name)
 
             onPopulateContactDetails: (publicKey) => appMain.contactsStore.populateContactDetails(publicKey)
+            onFetchProfileShowcaseAccountsByAddressRequested: (address) => {
+                appMain.contactsStore.fetchProfileShowcaseAccountsByAddress(address)
+            }
             onCreateOrUpdateSavedAddressRequested: (name, address, ens, colorId) => {
                 WalletStores.RootStore.createOrUpdateSavedAddress(name, address, ens, colorId)
             }
             onClosed: {
                 addEditSavedAddress.close()
             }
+        }
+    }
+
+    Connections {
+        target: appMain.contactsStore
+
+        function onProfileShowcaseAccountsByAddressFetched(accounts: string) {
+            if (!addEditSavedAddress.active || !addEditSavedAddress.item) {
+                return
+            }
+
+            addEditSavedAddress.item.profileShowcaseAccountsByAddressFetched(accounts)
         }
     }
 

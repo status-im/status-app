@@ -10,13 +10,11 @@ import StatusQ.Core.Theme
 import StatusQ.Popups.Dialog
 
 import utils
-import shared.stores as SharedStores
 import AppLayouts.Profile.helpers
 
 StatusDialog {
     id: root
 
-    required property SharedStores.RootStore sharedRootStore
     required property var isChecksumValidForAddress
     required property var getWalletAccount
     required property var getSavedAddress
@@ -25,6 +23,7 @@ StatusDialog {
     property var contactsModel
 
     signal populateContactDetails(string publicKey)
+    signal fetchProfileShowcaseAccountsByAddressRequested(string address)
     signal createOrUpdateSavedAddressRequested(string name, string address, string ens, string colorId)
 
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
@@ -63,6 +62,35 @@ StatusDialog {
             addressInput.setPlainText("%1".arg(d.address == Constants.zeroAddress? "" : d.address))
 
         nameInput.input.edit.forceActiveFocus()
+    }
+
+    function profileShowcaseAccountsByAddressFetched(accounts) {
+        d.cardsModel.clear()
+        d.checkingContactsAddressInProgress = false
+        try {
+            let accountsJson = JSON.parse(accounts)
+            d.contactsWithSameAddress = accountsJson.length
+            addressInput.errorMessageCmp.visible = d.contactsWithSameAddress > 0
+            addressInput.errorMessageCmp.color = root.Theme.palette.warningColor1
+            addressInput.errorMessageCmp.text = ""
+            if (d.contactsWithSameAddress === 1)
+                addressInput.errorMessageCmp.text = qsTr("This address belongs to a contact")
+            if (d.contactsWithSameAddress > 1)
+                addressInput.errorMessageCmp.text = qsTr("This address belongs to the following contacts")
+
+            d.contactsToProcess = accountsJson.map(account => account.contactId)
+            for (let i = 0; i < accountsJson.length; ++i) {
+                const contactEntry = d.getContactModelEntry(accountsJson[i].contactId)
+                if (!contactEntry.available) {
+                    // Waiting for contact details to be populated
+                    continue
+                }
+                d.processContactDetails(contactEntry.contactDetails)
+            }
+        }
+        catch (e) {
+            console.warn("error parsing fetched accounts for contact: ", e.message)
+        }
     }
 
     enum CardType {
@@ -189,8 +217,6 @@ StatusDialog {
             mainModule.resolveENS(name, d.uuid)
         });
 
-        property var contactsModuleInst: root.sharedRootStore.profileSectionModuleInst.contactsModule
-
         /// Ensures that the \c root.address is not reset when the initial text is set
         property bool initialized: false
 
@@ -225,7 +251,7 @@ StatusDialog {
 
                 d.checkingContactsAddressInProgress = true
                 d.contactsWithSameAddress = 0
-                d.contactsModuleInst.fetchProfileShowcaseAccountsByAddress(d.address)
+                root.fetchProfileShowcaseAccountsByAddressRequested(d.address)
                 return
             }
 
@@ -327,38 +353,6 @@ StatusDialog {
                 d.checkForAddressInputOwningErrorsWarnings()
             }
             catch (e) {
-            }
-        }
-    }
-
-    Connections {
-        target: d.contactsModuleInst
-        function onProfileShowcaseAccountsByAddressFetched(accounts: string) {
-            d.cardsModel.clear()
-            d.checkingContactsAddressInProgress = false
-            try {
-                let accountsJson = JSON.parse(accounts)
-                d.contactsWithSameAddress = accountsJson.length
-                addressInput.errorMessageCmp.visible = d.contactsWithSameAddress > 0
-                addressInput.errorMessageCmp.color = root.Theme.palette.warningColor1
-                addressInput.errorMessageCmp.text = ""
-                if (d.contactsWithSameAddress === 1)
-                    addressInput.errorMessageCmp.text = qsTr("This address belongs to a contact")
-                if (d.contactsWithSameAddress > 1)
-                    addressInput.errorMessageCmp.text = qsTr("This address belongs to the following contacts")
-
-                d.contactsToProcess = accountsJson.map(account => account.contactId)
-                for (let i = 0; i < accountsJson.length; ++i) {
-                    const contactEntry = d.getContactModelEntry(accountsJson[i].contactId)
-                    if (!contactEntry.available) {
-                        // Waiting for contact details to be populated
-                        continue
-                    }
-                    d.processContactDetails(contactEntry.contactDetails)
-                }
-            }
-            catch (e) {
-                console.warn("error parsing fetched accounts for contact: ", e.message)
             }
         }
     }
