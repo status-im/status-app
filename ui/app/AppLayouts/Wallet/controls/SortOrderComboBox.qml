@@ -116,6 +116,8 @@ ComboBox {
                 text: qsTr("Sort by")
             }
             StatusListView {
+                objectName: "sortOrderListView"
+
                 Layout.fillWidth: true
                 implicitWidth: contentWidth
                 implicitHeight: contentHeight
@@ -153,6 +155,7 @@ ComboBox {
                 visible: showUpDownArrows
                 spacing: 4
                 StatusFlatRoundButton {
+                    objectName: "sortArrowUp"
                     radius: 6
                     width: 24
                     height: 24
@@ -170,6 +173,7 @@ ComboBox {
                     }
                 }
                 StatusFlatRoundButton {
+                    objectName: "sortArrowDown"
                     radius: 6
                     width: 24
                     height: 24
