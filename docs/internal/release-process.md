@@ -67,6 +67,14 @@ This guide is meant to explain the flow and rules of the release process, i.e. t
     2.  It also lowers the amount of effort needed by devs, as no one needs to cherry-pick
 
 
+## After the release process
+
+1. A release is considered done once the builds are published to the stores and on Github, plus the release branch is fully rebased on top of master.
+2. A new tag **must** be created on the master branch's latest commit with the new version and the `-dev` suffix. eg: `2.39.0-dev` if `2.38.0` was just published.
+3. The Status community's control node **should** be updated to the latest version.
+4. The Status-Discord bridge **should** be updated to the latest version.
+5. Blog posts and News Feed articles **should** be posted.
+
 ## Frequently asked questions
 
 ### When is a release ready to be cut?
