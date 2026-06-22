@@ -3,6 +3,7 @@
 #include <QAbstractListModel>
 #include <QColor>
 #include <QQmlParserStatus>
+#include <QSet>
 #include <QQuickTextDocument>
 #include <QSyntaxHighlighter>
 #include <QTextCharFormat>
@@ -89,6 +90,11 @@ protected:
 
 private:
     QTextCharFormat buildFormat(unsigned int bits) const;
+
+    // Applies a hanging indent to quote-line blocks so wrapped lines align with
+    // the quote content; resets non-quote blocks. `quoteLineStarts` holds the
+    // document positions of each quote line's block start.
+    void applyQuoteBlockFormats(const QSet<int>& quoteLineStarts);
 
     QQuickTextDocument* m_quickTextDocument{nullptr};
     QVector<unsigned int> m_flags; // per-document-character emphasis bits

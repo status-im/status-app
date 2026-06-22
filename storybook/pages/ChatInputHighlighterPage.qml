@@ -130,6 +130,38 @@ unclosed fence here (no closing triple-tick)
                             }
                         }
                     }
+
+                    Keys.onPressed: (event) => {
+                        // It's necessary to handle undo/redo in a loop in order
+                        // handle formatting changes of code blocks, detected as
+                        // steps not changing actual text content (like indentation
+                        // of quote blocks).
+                        if (event.matches(StandardKey.Undo)) {
+                            let text = ""
+                            event.accepted = true
+
+                            do {
+                                if (!canUndo)
+                                    return
+
+                                text = textArea.text
+                                undo()
+                            } while (text === textArea.text)
+
+                        } else if (event.matches(StandardKey.Redo)) {
+                            let text = ""
+                            event.accepted = true
+
+                            do {
+                                if (!canRedo)
+                                    return
+
+                                text = textArea.text
+                                redo()
+
+                            } while (text === textArea.text)
+                        }
+                    }
                 }
             }
 

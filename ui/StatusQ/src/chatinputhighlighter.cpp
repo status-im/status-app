@@ -4,7 +4,11 @@
 
 #include <QColor>
 #include <QFontDatabase>
+#include <QFontMetricsF>
+#include <QTextBlock>
+#include <QTextBlockFormat>
 #include <QTextCharFormat>
+#include <QTextCursor>
 #include <QVariantMap>
 #include <QVector>
 
@@ -125,6 +129,26 @@ void collectLinks(const Node& node, QVector<ChatInputLinksModel::LinkItem>& out)
                     static_cast<int>(node.end - node.start), node.destination});
     for (const Node& c : node.children)
         collectLinks(c, out);
+}
+
+// Document positions of each quote line's block start (plain-text offsets ==
+// document positions). Used to apply per-block hanging indents.
+QSet<int> collectQuoteLineStarts(const Node& node, const QString& text)
+{
+    QSet<int> out;
+    if (node.kind == NodeKind::QuoteBlock) {
+        qsizetype p = node.start;
+        while (p < node.end) {
+            out.insert(static_cast<int>(p));
+            const qsizetype nl = text.indexOf(QLatin1Char('\n'), p);
+            if (nl < 0 || nl >= node.end)
+                break;
+            p = nl + 1;
+        }
+    }
+    for (const Node& c : node.children)
+        out.unite(collectQuoteLineStarts(c, text));
+    return out;
 }
 
 // ── AST queries backing the Q_INVOKABLE test API ────────────────────────────────
@@ -431,6 +455,8 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
         QVector<ChatInputLinksModel::LinkItem> modelItems;
         collectLinks(doc, modelItems);
         m_linksModel->setLinks(modelItems);
+
+        applyQuoteBlockFormats(collectQuoteLineStarts(doc, fullText));
     }
 
     const int       blockStart = currentBlock().position();
@@ -451,6 +477,38 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
             setFormat(static_cast<int>(i), static_cast<int>(j - i), buildFormat(f));
         i = j;
     }
+}
+
+void ChatInputHighlighter::applyQuoteBlockFormats(const QSet<int>& quoteLineStarts)
+{
+    QTextDocument* doc = document();
+    if (!doc || doc->isRedoAvailable())
+        return;
+
+    const qreal prefixWidth =
+        QFontMetricsF(doc->defaultFont()).horizontalAdvance(QStringLiteral("> "));
+
+    // Merged into the user's edit so undo/redo treats it as one step; safe to run
+    // synchronously here — highlightBlock executes inside QSyntaxHighlighter's
+    // inReformatBlocks guard, so the format-only change won't re-enter highlighting.
+    QTextCursor cursor(doc);
+    cursor.joinPreviousEditBlock();
+    for (QTextBlock b = doc->begin(); b != doc->end(); b = b.next()) {
+        const bool  isQuote = quoteLineStarts.contains(b.position());
+        const qreal left    = isQuote ?  prefixWidth : 0.0;
+        const qreal indent  = isQuote ? -prefixWidth : 0.0;
+        const QTextBlockFormat bf = b.blockFormat();
+
+        if (bf.leftMargin() == left && bf.textIndent() == indent)
+            continue; // already correct — avoids needless edits
+
+        QTextBlockFormat fmt;
+        fmt.setLeftMargin(left);
+        fmt.setTextIndent(indent);
+        cursor.setPosition(b.position());
+        cursor.mergeBlockFormat(fmt);
+    }
+    cursor.endEditBlock();
 }
 
 QVariantMap ChatInputHighlighter::emphasisAtInsertion(int position) const
