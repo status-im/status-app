@@ -112,11 +112,13 @@ unclosed fence here (no closing triple-tick)
 
                             readonly property rect _startRect: {
                                 textArea.contentHeight; textArea.width // recompute on layout
-                                return textArea.positionToRectangle(startPosition)
+
+                                // clamp: positions may briefly outrun a just-shrunk document
+                                return textArea.positionToRectangle(Math.min(startPosition, textArea.length))
                             }
                             readonly property rect _lastRect: {
                                 textArea.contentHeight; textArea.width
-                                return textArea.positionToRectangle(lastLinePosition)
+                                return textArea.positionToRectangle(Math.min(lastLinePosition, textArea.length))
                             }
 
                             x: _startRect.x
