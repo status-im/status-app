@@ -73,6 +73,7 @@ StatusDialog {
         property bool editMode: false
         property bool addAddress: false
         property alias name: nameInput.text
+        readonly property string normalizedName: d.name.trim()
         property string address: Constants.zeroAddress // Setting as zero address since we don't have the address yet
         property string ens: ""
         property string colorId: ""
@@ -87,7 +88,7 @@ StatusDialog {
                                          !d.addressAlreadyAddedToWalletError &&
                                          !d.addressAlreadyAddedToSavedAddressesError
         readonly property bool valid: d.addressInputValid && nameInput.valid
-        readonly property bool dirty: nameInput.input.dirty && (!d.editMode || d.storedName !== d.name)
+        readonly property bool dirty: nameInput.input.dirty && (!d.editMode || d.storedName !== d.normalizedName)
                                       || !d.editMode
                                       || d.colorId.toUpperCase() !== d.storedColorId.toUpperCase()
 
@@ -275,7 +276,7 @@ StatusDialog {
                 return
             }
 
-            root.store.createOrUpdateSavedAddress(d.name, d.address, d.ens, d.colorId)
+            root.store.createOrUpdateSavedAddress(d.normalizedName, d.address, d.ens, d.colorId)
             root.close()
         }
 
@@ -383,8 +384,11 @@ StatusDialog {
                 placeholderText: qsTr("Address name")
                 label: qsTr("Name")
                 validators: [
-                    StatusMinLengthValidator {
-                        minLength: 1
+                    StatusValidator {
+                        name: "check-name-not-empty"
+                        validate: (value) => {
+                                      return value.trim().length > 0
+                                  }
                         errorMessage: qsTr("Please name your saved address")
                     },
                     StatusValidator {
@@ -392,16 +396,17 @@ StatusDialog {
 
                         name: "check-for-no-emojis"
                         validate: (value) => {
-                                      if (!value) {
+                                      const normalizedValue = value.trim()
+                                      if (!normalizedValue) {
                                           return true
                                       }
 
-                                      isEmoji = Constants.regularExpressions.emoji.test(value)
+                                      isEmoji = Constants.regularExpressions.emoji.test(normalizedValue)
                                       if (isEmoji){
                                           return false
                                       }
 
-                                      return Constants.regularExpressions.alphanumericalExpanded1.test(value)
+                                      return Constants.regularExpressions.alphanumericalExpanded1.test(normalizedValue)
                                   }
                         errorMessage: isEmoji?
                                           Constants.errorMessages.emojRegExp
@@ -410,8 +415,9 @@ StatusDialog {
                     StatusValidator {
                         name: "check-saved-address-existence"
                         validate: (value) => {
-                                      return !root.store.savedAddressNameExists(value)
-                                      || d.editMode && d.storedName == value
+                                      const normalizedValue = value.trim()
+                                      return !root.store.savedAddressNameExists(normalizedValue)
+                                      || d.editMode && d.storedName == normalizedValue
                                   }
                         errorMessage: qsTr("Name already in use")
                     }
