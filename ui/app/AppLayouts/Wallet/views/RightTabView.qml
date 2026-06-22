@@ -296,6 +296,7 @@ RightTabBaseView {
                 id: mainViewLoader
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.topMargin: Theme.padding
                 sourceComponent: d.walletViewsMap[walletTabBar.currentIndex]
 
                 Component {
