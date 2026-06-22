@@ -127,9 +127,12 @@ Item {
         currencyStore: appMain.currencyStore
     }
     property CommunitiesStore communitiesStore: CommunitiesStore {}
-    readonly property WalletStores.TokensStore tokensStore: WalletStores.RootStore.tokensStore
-    readonly property WalletStores.WalletAssetsStore walletAssetsStore: WalletStores.RootStore.walletAssetsStore
-    readonly property WalletStores.CollectiblesStore walletCollectiblesStore: WalletStores.RootStore.collectiblesStore
+    // Main wallet root store. It is currently a singleton, but should be refactored to be an instance
+    // created only by AppStores.RootStore rootStore. Until then, access it through this single property.
+    readonly property WalletStores.RootStore walletRootStore: WalletStores.RootStore
+    readonly property WalletStores.TokensStore tokensStore: appMain.walletRootStore.tokensStore
+    readonly property WalletStores.WalletAssetsStore walletAssetsStore: appMain.walletRootStore.walletAssetsStore
+    readonly property WalletStores.CollectiblesStore walletCollectiblesStore: appMain.walletRootStore.collectiblesStore
     readonly property SharedStores.CurrenciesStore currencyStore: SharedStores.CurrenciesStore {}
     readonly property TransactionStore transactionStore: TransactionStore {
         walletAssetStore: appMain.walletAssetsStore
@@ -995,7 +998,7 @@ Item {
         currencyStore: appMain.currencyStore
         networksStore: appMain.networksStore
         networkConnectionStore: appMain.networkConnectionStore
-        walletRootStore: WalletStores.RootStore
+        walletRootStore: appMain.walletRootStore
         walletAssetsStore: appMain.walletAssetsStore
         transactionStore: appMain.transactionStore
         walletCollectiblesStore: appMain.walletCollectiblesStore
@@ -2538,18 +2541,18 @@ Item {
 
         sourceComponent: WalletPopups.AddEditSavedAddressPopup {
             contactsModel: appMain.contactsStore.contactsModel
-            isChecksumValidForAddress: (address) => WalletStores.RootStore.isChecksumValidForAddress(address)
-            getWalletAccount: (address) => WalletStores.RootStore.getWalletAccount(address)
-            getSavedAddress: (address) => WalletStores.RootStore.getSavedAddress(address)
-            remainingCapacityForSavedAddresses: () => WalletStores.RootStore.remainingCapacityForSavedAddresses()
-            savedAddressNameExists: (name) => WalletStores.RootStore.savedAddressNameExists(name)
+            isChecksumValidForAddress: (address) => appMain.walletRootStore.isChecksumValidForAddress(address)
+            getWalletAccount: (address) => appMain.walletRootStore.getWalletAccount(address)
+            getSavedAddress: (address) => appMain.walletRootStore.getSavedAddress(address)
+            remainingCapacityForSavedAddresses: () => appMain.walletRootStore.remainingCapacityForSavedAddresses()
+            savedAddressNameExists: (name) => appMain.walletRootStore.savedAddressNameExists(name)
 
             onPopulateContactDetails: (publicKey) => appMain.contactsStore.populateContactDetails(publicKey)
             onFetchProfileShowcaseAccountsByAddressRequested: (address) => {
                 appMain.contactsStore.fetchProfileShowcaseAccountsByAddress(address)
             }
             onCreateOrUpdateSavedAddressRequested: (name, address, ens, colorId) => {
-                WalletStores.RootStore.createOrUpdateSavedAddress(name, address, ens, colorId)
+                appMain.walletRootStore.createOrUpdateSavedAddress(name, address, ens, colorId)
             }
             onClosed: {
                 addEditSavedAddress.close()
@@ -2570,12 +2573,12 @@ Item {
     }
 
     Connections {
-        target: WalletStores.RootStore
+        target: appMain.walletRootStore
 
         function onSavedAddressAddedOrUpdated(added: bool, name: string, address: string, errorMsg: string) {
             console.warn("[saved-address] onSavedAddressAddedOrUpdated added=", added, "name=", name, "address=", address, "errorMsg=", errorMsg)
-            WalletStores.RootStore.addingSavedAddress = false
-            WalletStores.RootStore.lastCreatedSavedAddress = { address: address, error: errorMsg }
+            appMain.walletRootStore.addingSavedAddress = false
+            appMain.walletRootStore.lastCreatedSavedAddress = { address: address, error: errorMsg }
 
             if (!!errorMsg) {
                 let mode = qsTr("adding")
@@ -2638,18 +2641,18 @@ Item {
             }
 
             onRemoveSavedAddress: {
-                WalletStores.RootStore.deleteSavedAddress(address)
+                appMain.walletRootStore.deleteSavedAddress(address)
                 close()
             }
         }
     }
 
     Connections {
-        target: WalletStores.RootStore
+        target: appMain.walletRootStore
 
         function onSavedAddressDeleted(name: string, address: string, errorMsg: string) {
             console.warn("[saved-address] onSavedAddressDeleted name=", name, "address=", address, "errorMsg=", errorMsg)
-            WalletStores.RootStore.deletingSavedAddress = false
+            appMain.walletRootStore.deletingSavedAddress = false
 
             if (!!errorMsg) {
 
@@ -2728,7 +2731,7 @@ Item {
                 if (showQR.showSingleAccount || showQR.showForSavedAddress) {
                     return null
                 }
-                return WalletStores.RootStore.accounts
+                return appMain.walletRootStore.accounts
             }
 
             selectedAccount: {
@@ -2776,7 +2779,7 @@ Item {
         sourceComponent: WalletPopups.SavedAddressActivityPopup {
             networkConnectionStore: appMain.networkConnectionStore
             networksStore: appMain.networksStore
-            walletRootStore: WalletStores.RootStore
+            walletRootStore: appMain.walletRootStore
 
             onSendToAddressRequested: {
                 Global.sendToRecipientRequested(address)
@@ -2819,9 +2822,9 @@ Item {
                 enabled: dAppsService.isServiceOnline
                 visualParent: appMain
                 loginType: appMain.rootStore.getLoginType()
-                selectedAccountAddress: WalletStores.RootStore.selectedAddress
+                selectedAccountAddress: appMain.walletRootStore.selectedAddress
                 dAppsModel: dAppsService.dappsModel
-                accountsModel: WalletStores.RootStore.nonWatchAccounts
+                accountsModel: appMain.walletRootStore.nonWatchAccounts
                 networksModel: appMain.networksStore.activeNetworks
                 sessionRequestsModel: dAppsService.sessionRequestsModel
                 walletConnectEnabled: featureFlagsStore.dappsEnabled
@@ -2868,7 +2871,7 @@ Item {
                 sourceComponent: DAppsModule {
                     currenciesStore: appMain.currencyStore
                     groupedAccountAssetsModel: appMain.walletAssetsStore.groupedAccountAssetsModel
-                    accountsModel: WalletStores.RootStore.nonWatchAccounts
+                    accountsModel: appMain.walletRootStore.nonWatchAccounts
                     networksModel: SortFilterProxyModel {
                         sourceModel: appMain.networksStore.activeNetworks
                         proxyRoles: [
@@ -2880,27 +2883,27 @@ Item {
                         ]
                     }
                     wcSdk: ConnectorWCSDK {
-                        enabled: featureFlagsStore.dappsEnabled && WalletStores.RootStore.walletSectionInst.walletReady
-                        connectorController: WalletStores.RootStore.dappsConnectorController
+                        enabled: featureFlagsStore.dappsEnabled && appMain.walletRootStore.walletSectionInst.walletReady
+                        connectorController: appMain.walletRootStore.dappsConnectorController
                         networksModel: appMain.networksStore.activeNetworks
-                        accountsModel: WalletStores.RootStore.nonWatchAccounts
+                        accountsModel: appMain.walletRootStore.nonWatchAccounts
                     }
                     bcSdk: DappsConnectorSDK {
-                        enabled: featureFlagsStore.dappsEnabled && WalletStores.RootStore.walletSectionInst.walletReady
+                        enabled: featureFlagsStore.dappsEnabled && appMain.walletRootStore.walletSectionInst.walletReady
                         excludeClientIds: ["walletconnect"]
                         store: SharedStores.BrowserConnectStore {
-                            controller: WalletStores.RootStore.dappsConnectorController
+                            controller: appMain.walletRootStore.dappsConnectorController
                         }
                         networksModel: appMain.networksStore.activeNetworks
-                        accountsModel: WalletStores.RootStore.nonWatchAccounts
+                        accountsModel: appMain.walletRootStore.nonWatchAccounts
                     }
                     store: SharedStores.DAppsStore {
-                        controller: WalletStores.RootStore.walletConnectController
+                        controller: appMain.walletRootStore.walletConnectController
                     }
                 }
             }
-            selectedAddress: WalletStores.RootStore.selectedAddress
-            accountsModel: WalletStores.RootStore.nonWatchAccounts
+            selectedAddress: appMain.walletRootStore.selectedAddress
+            accountsModel: appMain.walletRootStore.nonWatchAccounts
             connectorFeatureEnabled: featureFlagsStore.connectorEnabled
             walletConnectFeatureEnabled: featureFlagsStore.dappsEnabled
 
@@ -2939,15 +2942,15 @@ Item {
                 return
 
             const isAddress = SQUtils.ModelUtils.contains(
-                              WalletStores.RootStore.accounts, "address",
+                              appMain.walletRootStore.accounts, "address",
                               text, Qt.CaseInsensitive)
             if (isAddress)
-                WalletStores.RootStore.addressWasShown(text)
+                appMain.walletRootStore.addressWasShown(text)
         }
     }
 
     Binding {
-        target: WalletStores.RootStore
+        target: appMain.walletRootStore
         property: "palette"
         value: appMain.Theme.palette
     }
