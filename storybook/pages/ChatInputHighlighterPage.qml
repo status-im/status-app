@@ -96,6 +96,9 @@ unclosed fence here (no closing triple-tick)
                     // Quote-block vertical bar; positions come from the markdown parser.
                     Repeater {
                         model: {
+                            if (!quoteBarSwitch.checked)
+                                return null
+
                             highlighter.formatUnclosedCodeFence // re-eval on toggle
                             return highlighter.parseQuoteBlocks(textArea.text)
                         }
@@ -132,10 +135,9 @@ unclosed fence here (no closing triple-tick)
                     }
 
                     Keys.onPressed: (event) => {
-                        // It's necessary to handle undo/redo in a loop in order
-                        // handle formatting changes of code blocks, detected as
-                        // steps not changing actual text content (like indentation
-                        // of quote blocks).
+                        // It's necessary to handle undo/redo in a loop in order to
+                        // handle formatting changes of text blocks, detected as changes
+                        // not changing the actual text (like indentation of quote blocks).
                         if (event.matches(StandardKey.Undo)) {
                             let text = ""
                             event.accepted = true
@@ -210,6 +212,12 @@ unclosed fence here (no closing triple-tick)
 
                 text: "AST ranges"
                 checked: true
+            }
+            Switch {
+               id: quoteBarSwitch
+
+               text: "Quote block vertical line"
+               checked: true
             }
             Row {
                 spacing: 16
