@@ -319,6 +319,16 @@ QVector<QuoteGroup> scanQuoteGroups(const QString& text, const Ranges& fenceRang
     return groups;
 }
 
+// True when the line containing `pos` starts with "> " (a quote line). Used to
+// tell a standalone fence from one that opens inside a quote.
+bool onQuoteLine(const QString& text, qsizetype pos)
+{
+    qsizetype ls = pos;
+    while (ls > 0 && text[ls - 1] != QLatin1Char('\n')) --ls;
+    return ls + 1 < text.length()
+        && text[ls] == QLatin1Char('>') && text[ls + 1] == QLatin1Char(' ');
+}
+
 // Returns the absolute "> " prefix ranges (2 chars each) for every line in a group.
 Ranges quoteGroupPrefixRanges(const QString& text, const QuoteGroup& g)
 {
@@ -383,16 +393,12 @@ Node materialize(const QString& full, const Container& c, const QVector<Containe
         return n;
     }
 
-    if (c.kind == NodeKind::CodeSpan || c.kind == NodeKind::CodeBlock) {
-        if (c.cS > c.oS)
-            n.children.append(leaf(NodeKind::Delimiter, full, c.oS, c.cS));
-        n.children.append(leaf(NodeKind::Text, full, c.cS, c.cE));
-        if (c.oE > c.cE)
-            n.children.append(leaf(NodeKind::Delimiter, full, c.cE, c.oE));
-        return n;
-    }
-
-    // Emphasis (Strong / Emphasis / Strikethrough)
+    // Emphasis (Strong / Emphasis / Strikethrough) and code (CodeSpan / CodeBlock):
+    // opener/closer delimiters around content, with any contained containers nested.
+    // For code, the content is not re-parsed for emphasis (inlineContainers excludes
+    // code ranges from delimiter scanning), so `inner` holds only "> " prefixes —
+    // letting a quoted code block keep its prefixes as Delimiter children. For
+    // top-level code (empty conts) this yields a single Text child, as before.
     if (c.cS > c.oS)
         n.children.append(leaf(NodeKind::Delimiter, full, c.oS, c.cS));
 
@@ -457,11 +463,16 @@ QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype
     QVector<Container> conts;
 
     auto addCode = [&](const QVector<CodeSpan>& spans, qsizetype off) {
-        for (const CodeSpan& c : spans)
-            if (c.contentStart - c.openerStart == 1) // single-backtick only
-                conts.append({NodeKind::CodeSpan,
-                              c.openerStart + off, c.closerEnd + off,
-                              c.contentStart + off, c.contentEnd + off, {}});
+        for (const CodeSpan& c : spans) {
+            const qsizetype blen = c.contentStart - c.openerStart;
+            // single-backtick → inline CodeSpan; triple-backtick → CodeBlock
+            // (the latter only occurs here in the quote path). Other lengths ignored.
+            if (blen != 1 && blen != 3)
+                continue;
+            conts.append({blen == 1 ? NodeKind::CodeSpan : NodeKind::CodeBlock,
+                          c.openerStart + off, c.closerEnd + off,
+                          c.contentStart + off, c.contentEnd + off, {}});
+        }
     };
     auto addLinks = [&](const QVector<LinkSpan>& links, qsizetype off) {
         for (const LinkSpan& l : links)
@@ -548,20 +559,24 @@ Node parse(const QString& text, const Options& options)
     doc.end = text.length();
 
     // Triple-backtick fences (always recognized) and an optional unclosed fence.
+    // Only "standalone" fences (those NOT opening on a quote line) fragment quote
+    // detection; a fence that opens on a "> " line is part of the quote and is
+    // emitted as a nested CodeBlock inside it.
     const QVector<CodeSpan> allCodeSpans = scanCodeSpans(text);
     QVector<CodeSpan> tripleFences;
-    Ranges tripleAbsRanges;
+    Ranges standaloneFenceRanges;
     for (const CodeSpan& c : allCodeSpans)
         if (c.contentStart - c.openerStart == 3) {
             tripleFences.append(c);
-            tripleAbsRanges.append({c.openerStart, c.closerEnd});
+            if (!onQuoteLine(text, c.openerStart))
+                standaloneFenceRanges.append({c.openerStart, c.closerEnd});
         }
     const qsizetype unclosed = options.formatUnclosedCodeFence ? findOpenCodeFence(text) : -1;
-    if (unclosed >= 0)
-        tripleAbsRanges.append({unclosed, text.length()});
+    if (unclosed >= 0 && !onQuoteLine(text, unclosed))
+        standaloneFenceRanges.append({unclosed, text.length()});
 
-    // Quote groups (quote detection excludes lines inside an open fence).
-    const QVector<QuoteGroup> quoteGroups = scanQuoteGroups(text, tripleAbsRanges);
+    // Quote groups (quote detection excludes lines inside a standalone fence).
+    const QVector<QuoteGroup> quoteGroups = scanQuoteGroups(text, standaloneFenceRanges);
     Ranges quoteAbsRanges;
     for (const QuoteGroup& g : quoteGroups)
         quoteAbsRanges.append({g.start, g.end});

@@ -646,4 +646,23 @@ TestCase {
         verify(bspan !== null && bspan.bold,   "bold outside quote must still apply")
         verify(ispan !== null && ispan.italic, "italic inside quote must still apply")
     }
+
+    function test_quote_codeBlockInside() {
+        // A fenced code block inside a quote stays one quote group spanning all
+        // lines, with the fence recognized as a code block (its content reported
+        // by parseCodeSpans) and no emphasis leaking out.
+        const text = "> ```\n> A\n> ```"
+
+        const groups = highlighter.parseQuoteBlocks(text)
+        compare(groups.length, 1)
+        compare(groups[0].start, 0)
+        compare(groups[0].end, text.length)
+
+        const spans = highlighter.parseCodeSpans(text)
+        compare(spans.length, 1)
+        compare(spans[0].start, 5)   // content starts right after the opening ```
+        compare(spans[0].end, 12)    // content ends right before the closing ```
+
+        compare(highlighter.parseFormats(text).length, 0)
+    }
 }

@@ -134,6 +134,45 @@ Document [0,15)
                  QString::fromUtf8(expected).trimmed());
     }
 
+    void quotedEmphasis()
+    {
+        // A multi-line emphasis inside a quote nests the "> " prefixes as delimiters.
+        auto expected = R"(
+Document [0,11)
+  QuoteBlock [0,11)
+    Delimiter [0,2) "> "
+    Emphasis [2,11)
+      Delimiter [2,3) "*"
+      Text [3,4) "\n"
+      Delimiter [4,6) "> "
+      Text [6,8) "A\n"
+      Delimiter [8,10) "> "
+      Delimiter [10,11) "*"
+)";
+        QCOMPARE(d("> *\n> A\n> *"),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
+    void quotedCodeBlock()
+    {
+        // A fenced code block inside a quote: QuoteBlock containing a CodeBlock,
+        // with the "> " prefixes nested as delimiters (same shape as quotedEmphasis).
+        auto expected = R"(
+Document [0,15)
+  QuoteBlock [0,15)
+    Delimiter [0,2) "> "
+    CodeBlock [2,15)
+      Delimiter [2,5) "```"
+      Text [5,6) "\n"
+      Delimiter [6,8) "> "
+      Text [8,10) "A\n"
+      Delimiter [10,12) "> "
+      Delimiter [12,15) "```"
+)";
+        QCOMPARE(d("> ```\n> A\n> ```"),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
     void plainText()
     {
         auto expected = R"(
