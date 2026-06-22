@@ -735,7 +735,7 @@ else
 APPIMAGE_TOOL := tmp/linux/tools/appimagetool
 endif
 
-_APPIMAGE_TOOL := appimagetool-x86_64.AppImage
+_APPIMAGE_TOOL := appimagetool-$(shell uname -m).AppImage
 $(APPIMAGE_TOOL):
 ifndef IN_NIX_SHELL
 	echo -e "\033[92mFetching:\033[39m appimagetool"
@@ -751,6 +751,11 @@ STATUS_CLIENT_TARBALL ?= pkg/Status.tar.gz
 STATUS_CLIENT_TARBALL_FULL ?= $(shell realpath $(STATUS_CLIENT_TARBALL))
 
 ifeq ($(mkspecs),linux)
+ ifeq ($(shell uname -m),aarch64)
+  LINUX_LD_INTERP := /lib/ld-linux-aarch64.so.1
+ else
+  LINUX_LD_INTERP := /lib64/ld-linux-x86-64.so.2
+ endif
  export FCITX5_QT := vendor/fcitx5-qt/build/qt$(QT_MAJOR_VERSION)/platforminputcontext/libfcitx5platforminputcontextplugin.so
  FCITX5_QT_CMAKE_PARAMS := -DCMAKE_BUILD_TYPE=Release -DBUILD_ONLY_PLUGIN=ON -DENABLE_QT4=OFF
  FCITX5_QT_CMAKE_PARAMS += -DENABLE_QT5=OFF -DENABLE_QT6=ON
@@ -799,7 +804,7 @@ $(STATUS_CLIENT_APPIMAGE): nim_status_client $(APPIMAGE_TOOL) nim-status.desktop
 
 # Fix rpath and interpreter for AppImage
 ifdef IN_NIX_SHELL
-	patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 $(STATUS_CLIENT_APPIMAGE)
+	patchelf --set-interpreter $(LINUX_LD_INTERP) $(STATUS_CLIENT_APPIMAGE)
 	patchelf --remove-rpath $(STATUS_CLIENT_APPIMAGE)
 endif
 

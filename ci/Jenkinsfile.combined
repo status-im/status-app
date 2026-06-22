@@ -75,6 +75,11 @@ pipeline {
             }
           }
         }
+        stage('Linux/aarch64') { steps { script {
+          linux_aarch64 = getArtifacts(
+            'Linux/aarch64', jenkins.Build('status-app/systems/linux/aarch64/package')
+          )
+        } } }
         stage('Windows/x86_64 and E2E') {
           stages {
             stage('Windows/x86_64') {

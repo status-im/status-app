@@ -12,9 +12,9 @@ pipeline {
     /* Image with Ubuntu 22.04 and QT ${QT_VERSION} */
     docker {
       label 'linuxcontainer'
-      image "harbor.status.im/status-im/status-desktop-build:1.0.7-qt${QT_VERSION}"
-      /* allows jenkins use cat and mounts '/dev/fuse' for linuxdeployqt */
-      args '--entrypoint="" ' +
+      image "harbor.status.im/status-im/status-desktop-build:1.0.9-qt${QT_VERSION}${getImageArchSuffix()}"
+      args "--platform=linux/${getDockerPlatform()} " +
+           '--entrypoint="" ' +
            '--cap-add=SYS_ADMIN ' +
            '--security-opt=apparmor:unconfined ' +
            '--device=/dev/fuse ' +
@@ -111,6 +111,39 @@ pipeline {
         sh 'git submodule update --init --recursive'
       }
     }
+    stage('Verify QEMU emulation') {
+      when { expression { getArch() == 'aarch64' } }
+      steps {
+        sh '''
+          set -e
+          echo "=== Verifying aarch64 emulation (QEMU/binfmt) on $(hostname) ==="
+          echo "container arch: $(uname -m)"
+          echo "kernel:         $(uname -sr)"
+          # The qemu that runs these arm64 binaries lives on the host kernel (binfmt_misc);
+          echo "--- QEMU (host-provided) ---"
+          if command -v qemu-aarch64-static >/dev/null 2>&1; then
+            qemu-aarch64-static --version | head -1
+          elif command -v qemu-aarch64 >/dev/null 2>&1; then
+            qemu-aarch64 --version | head -1
+          elif mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc 2>/dev/null && [ -r /proc/sys/fs/binfmt_misc/qemu-aarch64 ]; then
+            echo "binfmt interpreter: $(awk '/^interpreter/{print $2}' /proc/sys/fs/binfmt_misc/qemu-aarch64) (version string not exposed to the guest)"
+          else
+            echo "(qemu version not visible from inside the emulated container; it is host-side, pinned via the tonistiigi/binfmt tag installed by the infra-ci role)"
+          fi
+          for tool in "qmake --version" "nim --version" "go version"; do
+            echo "--- $tool ---"
+            if ! $tool; then
+              echo "ERROR: '$tool' crashed under QEMU emulation."
+              echo "This linuxcontainer host's QEMU/binfmt is likely outdated. A modern"
+              echo "qemu must be registered on the host (infra-ci jenkins-slave-container"
+              echo "role / 'tonistiigi/binfmt --install arm64')."
+              exit 1
+            fi
+          done
+          echo "=== QEMU emulation OK ==="
+        '''
+      }
+    }
     stage('Deps') {
       steps {
         sh 'make update'
@@ -147,7 +180,7 @@ pipeline {
     }
 
     stage('E2E') {
-      when { expression { utils.isPRBuild() } }
+      when { expression { utils.isPRBuild() && getArch() == 'x86_64' } }
       steps { script {
         build(
           job: 'status-app/e2e/prs',
@@ -175,5 +208,14 @@ def getArch() {
   for (def arch in ['x86_64', 'aarch64']) {
     if (tokens.contains(arch)) { return arch }
   }
+}
+
+/* Map the job-path arch to the Docker --platform value. */
+def getDockerPlatform() {
+  return getArch() == 'aarch64' ? 'arm64' : 'amd64'
+}
+
+def getImageArchSuffix() {
+  return getArch() == 'aarch64' ? '-arm64' : ''
 }
 
