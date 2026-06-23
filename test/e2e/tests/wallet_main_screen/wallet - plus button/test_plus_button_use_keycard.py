@@ -13,7 +13,7 @@ def test_use_keycard_when_adding_account(main_screen: MainWindow):
         account_popup = wallet.left_panel.open_add_account_popup()
         account_popup.continue_in_keycard_settings()
 
-    with (step('Verify that keycard settings view opened and all keycard settings available')):
+    with step('Verify that keycard settings view opened and main keycard screen is displayed'):
         keycard_view = KeycardSettingsView()
         keycard_view.check_keycard_screen_loaded()
         keycard_view.all_keycard_options_available()

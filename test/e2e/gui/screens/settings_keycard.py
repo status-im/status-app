@@ -1,11 +1,11 @@
 import allure
 
 import configs.timeouts
-import driver
 from gui.components.settings.keycard_popup import KeycardPopup
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.scroll import Scroll
+from gui.elements.text_label import TextLabel
 from gui.objects_map import settings_names
 
 
@@ -20,10 +20,13 @@ class KeycardSettingsView(QObject):
         self._import_from_keycard_button = Button(settings_names.importFromKeycard_StatusListItem)
         self._check_whats_on_keycard_button = Button(settings_names.checkWhatsNewKeycard_StatusListItem)
         self._factory_reset_keycard_button = Button(settings_names.factoryResetKeycard_StatusListItem)
+        self._get_keycard_button = Button(settings_names.get_keycard_StatusButton)
+        self._read_keycard_button = Button(settings_names.read_keycard_StatusButton)
+        self._main_view_description = TextLabel(settings_names.keycard_main_view_description_StatusBaseText)
 
     @allure.step('Wait until appears {0}')
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        self._create_new_keycard_account_button.wait_until_appears(timeout_msec)
+        self._get_keycard_button.wait_until_appears(timeout_msec)
         return self
 
     @allure.step('Check that keycard screen displayed')
@@ -59,17 +62,9 @@ class KeycardSettingsView(QObject):
         self._factory_reset_keycard_button.click()
         return KeycardPopup().wait_until_appears()
 
-    @allure.step('Check that all keycard options displayed')
+    @allure.step('Check that main keycard screen elements are displayed')
     def all_keycard_options_available(self):
-        assert self._setup_keycard_with_existing_account_button.is_visible, f'Setup keycard with existing account not visible'
-        assert self._create_new_keycard_account_button.is_visible, f'Create new keycard button not visible'
-        assert self._import_restore_via_seed_phrase_button.is_visible, f'Import and restore via seed phrase button not visible'
-        self._scroll.vertical_scroll_down(self._import_from_keycard_button)
-        assert driver.waitFor(lambda: self._import_from_keycard_button.is_visible,
-                              configs.timeouts.UI_LOAD_TIMEOUT_MSEC), f'Import keycard button not visible'
-        self._scroll.vertical_scroll_down(self._check_whats_on_keycard_button)
-        assert driver.waitFor(lambda: self._check_whats_on_keycard_button.is_visible,
-                              configs.timeouts.UI_LOAD_TIMEOUT_MSEC), f'Check whats new keycard button not visible'
-        self._scroll.vertical_scroll_down(self._factory_reset_keycard_button)
-        assert driver.waitFor(lambda: self._factory_reset_keycard_button.is_visible,
-                              configs.timeouts.UI_LOAD_TIMEOUT_MSEC), f'Factory reset keycard button not visible'
+        assert self._get_keycard_button.is_visible, 'Get Keycard button not visible'
+        assert self._read_keycard_button.is_visible, 'Read Keycard button not visible'
+        assert self._main_view_description.is_visible, 'Keycard main view description not visible'
+        assert self._main_view_description.text == 'Secure your funds. Keep your profile safe.'
