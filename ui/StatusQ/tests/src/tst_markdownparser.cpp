@@ -253,11 +253,97 @@ Document [0,7)
         uf.formatUnclosedCodeFence = true;
         auto expected = R"(
 Document [0,7)
-  CodeBlock [0,7)
-    Delimiter [0,3) "```"
-    Text [3,7) "code"
+  Paragraph [0,7)
+    CodeBlock [0,7)
+      Delimiter [0,3) "```"
+      Text [3,7) "code"
 )";
         QCOMPARE(d("```code", uf),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
+    void quoteScopedFence_off()
+    {
+        // A fence opened in a quote and one opened outside are two separate
+        // unclosed fences — with the flag off, neither becomes a code block.
+        auto expected = R"(
+Document [0,17)
+  Paragraph [0,17)
+    QuoteBlock [0,10)
+      Delimiter [0,2) "> "
+      Text [2,6) "```\n"
+      Delimiter [6,8) "> "
+      Text [8,10) "A\n"
+    Text [10,17) "B\n```\nC"
+)";
+        QCOMPARE(d("> ```\n> A\nB\n```\nC"),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
+    void quoteScopedFence_on()
+    {
+        // With the flag on, the quote's unclosed fence covers A (bounded by the
+        // quote) and the top-level unclosed fence covers C; B stays plain.
+        Options uf;
+        uf.formatUnclosedCodeFence = true;
+        auto expected = R"(
+Document [0,17)
+  Paragraph [0,17)
+    QuoteBlock [0,10)
+      Delimiter [0,2) "> "
+      CodeBlock [2,10)
+        Delimiter [2,5) "```"
+        Text [5,6) "\n"
+        Delimiter [6,8) "> "
+        Text [8,10) "A\n"
+    Text [10,12) "B\n"
+    CodeBlock [12,17)
+      Delimiter [12,15) "```"
+      Text [15,17) "\nC"
+)";
+        QCOMPARE(d("> ```\n> A\nB\n```\nC", uf),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
+    void quoteAfterUnclosedFence_off()
+    {
+        // An unclosed standalone fence is plain text with the flag off, so it must
+        // not swallow the following quote line.
+        auto input = R"(
+```
+> A
+)";
+
+        auto expected = R"(
+Document [0,7)
+  Paragraph [0,7)
+    Text [0,4) "```\n"
+    QuoteBlock [4,7)
+      Delimiter [4,6) "> "
+      Text [6,7) "A"
+)";
+        QCOMPARE(d(QString(input).trimmed()),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
+    void quoteAfterUnclosedFence_on()
+    {
+        // With the flag on, the unclosed fence consumes the rest, so "> A" is code.
+        Options uf;
+        uf.formatUnclosedCodeFence = true;
+        auto input = R"(
+```
+> A
+)";
+
+        auto expected = R"(
+Document [0,7)
+  Paragraph [0,7)
+    CodeBlock [0,7)
+      Delimiter [0,3) "```"
+      Text [3,7) "\n> A"
+)";
+        QCOMPARE(d(QString(input).trimmed(), uf),
                  QString::fromUtf8(expected).trimmed());
     }
 

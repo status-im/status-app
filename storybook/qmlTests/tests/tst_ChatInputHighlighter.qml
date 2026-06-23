@@ -699,6 +699,37 @@ TestCase {
                "closing ** delimiter missing")
     }
 
+    function test_quote_unclosedFenceDoesNotEatQuote() {
+        // An unclosed standalone ``` must not swallow the following quote line when
+        // unclosed fences aren't formatted; with the flag on it becomes a code block.
+        const text = "```\n> A"
+
+        compare(highlighter.parseQuoteBlocks(text).length, 1)
+        compare(highlighter.parseCodeSpans(text).length, 0)
+
+        compare(highlighterOpenFence.parseQuoteBlocks(text).length, 0)
+        compare(highlighterOpenFence.parseCodeSpans(text).length, 1)
+    }
+
+    function test_quote_scopedFence() {
+        // A fence opened inside a quote and one opened outside are separate
+        // unclosed fences — they must not pair across the quote boundary.
+        const text = "> ```\n> A\nB\n```\nC"
+
+        // Flag off: neither fence closes → no code blocks.
+        compare(highlighter.parseCodeSpans(text).length, 0)
+
+        // Flag on: quote fence covers A (bounded by the quote), top-level fence
+        // covers C; B (between them) is in no code block.
+        const spans = highlighterOpenFence.parseCodeSpans(text)
+        compare(spans.length, 2)
+        function covers(span, pos) { return span.start <= pos && span.end > pos }
+        const a = text.indexOf("A"), b = text.indexOf("B"), c = text.indexOf("C")
+        verify(spans.some(s => covers(s, a)), "A must be in a code block")
+        verify(spans.some(s => covers(s, c)), "C must be in a code block")
+        verify(!spans.some(s => covers(s, b)), "B must not be in a code block")
+    }
+
     function test_quote_codeBlockInside() {
         // A fenced code block inside a quote stays one quote group spanning all
         // lines, with the fence recognized as a code block (its content reported
