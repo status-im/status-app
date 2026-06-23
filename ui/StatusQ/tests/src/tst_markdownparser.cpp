@@ -110,6 +110,16 @@ Document [0,8)
     {
         // Bold spans across a fenced code block at the top level, same as inside a
         // quote: A and C are bold, B is code, the ** are delimiters.
+        auto input = R"(
+**
+A
+```
+B
+```
+C
+**
+)";
+
         auto expected = R"(
 Document [0,19)
   Paragraph [0,19)
@@ -123,7 +133,7 @@ Document [0,19)
       Text [14,17) "\nC\n"
       Delimiter [17,19) "**"
 )";
-        QCOMPARE(d("**\nA\n```\nB\n```\nC\n**"),
+        QCOMPARE(d(QString(input).trimmed()),
                  QString::fromUtf8(expected).trimmed());
     }
 
@@ -164,6 +174,12 @@ Document [0,15)
     void quotedEmphasis()
     {
         // A multi-line emphasis inside a quote nests the "> " prefixes as delimiters.
+        auto input = R"(
+> *
+> A
+> *
+)";
+
         auto expected = R"(
 Document [0,11)
   Paragraph [0,11)
@@ -177,7 +193,7 @@ Document [0,11)
         Delimiter [8,10) "> "
         Delimiter [10,11) "*"
 )";
-        QCOMPARE(d("> *\n> A\n> *"),
+        QCOMPARE(d(QString(input).trimmed()),
                  QString::fromUtf8(expected).trimmed());
     }
 
@@ -185,6 +201,12 @@ Document [0,11)
     {
         // A fenced code block inside a quote: QuoteBlock containing a CodeBlock,
         // with the "> " prefixes nested as delimiters (same shape as quotedEmphasis).
+        auto input = R"(
+> ```
+> A
+> ```
+)";
+
         auto expected = R"(
 Document [0,15)
   Paragraph [0,15)
@@ -198,7 +220,7 @@ Document [0,15)
         Delimiter [10,12) "> "
         Delimiter [12,15) "```"
 )";
-        QCOMPARE(d("> ```\n> A\n> ```"),
+        QCOMPARE(d(QString(input).trimmed()),
                  QString::fromUtf8(expected).trimmed());
     }
 
@@ -206,6 +228,13 @@ Document [0,15)
     {
         // Bold spans across a quote block at the top level: A is bold and the
         // QuoteBlock nests inside the Strong (symmetric to emphasisAcrossCodeBlock).
+        auto input = R"(
+**
+A
+> B
+**
+)";
+
         auto expected = R"(
 Document [0,11)
   Paragraph [0,11)
@@ -217,7 +246,7 @@ Document [0,11)
         Text [7,9) "B\n"
       Delimiter [9,11) "**"
 )";
-        QCOMPARE(d("**\nA\n> B\n**"),
+        QCOMPARE(d(QString(input).trimmed()),
                  QString::fromUtf8(expected).trimmed());
     }
 
@@ -235,6 +264,11 @@ Document [0,5)
     void crossLineBold()
     {
         // Emphasis always spans lines; the newline is escaped in the dumped literal.
+        auto input = R"(
+**a
+b**
+)";
+
         auto expected = R"(
 Document [0,7)
   Paragraph [0,7)
@@ -243,7 +277,7 @@ Document [0,7)
       Text [2,5) "a\nb"
       Delimiter [5,7) "**"
 )";
-        QCOMPARE(d("**a\nb**"),
+        QCOMPARE(d(QString(input).trimmed()),
                  QString::fromUtf8(expected).trimmed());
     }
 
@@ -266,6 +300,14 @@ Document [0,7)
     {
         // A fence opened in a quote and one opened outside are two separate
         // unclosed fences — with the flag off, neither becomes a code block.
+        auto input = R"(
+> ```
+> A
+B
+```
+C
+)";
+
         auto expected = R"(
 Document [0,17)
   Paragraph [0,17)
@@ -276,7 +318,7 @@ Document [0,17)
       Text [8,10) "A\n"
     Text [10,17) "B\n```\nC"
 )";
-        QCOMPARE(d("> ```\n> A\nB\n```\nC"),
+        QCOMPARE(d(QString(input).trimmed()),
                  QString::fromUtf8(expected).trimmed());
     }
 
@@ -286,6 +328,14 @@ Document [0,17)
         // quote) and the top-level unclosed fence covers C; B stays plain.
         Options uf;
         uf.formatUnclosedCodeFence = true;
+        auto input = R"(
+> ```
+> A
+B
+```
+C
+)";
+
         auto expected = R"(
 Document [0,17)
   Paragraph [0,17)
@@ -301,7 +351,7 @@ Document [0,17)
       Delimiter [12,15) "```"
       Text [15,17) "\nC"
 )";
-        QCOMPARE(d("> ```\n> A\nB\n```\nC", uf),
+        QCOMPARE(d(QString(input).trimmed(), uf),
                  QString::fromUtf8(expected).trimmed());
     }
 
