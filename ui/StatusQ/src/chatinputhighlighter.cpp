@@ -24,6 +24,9 @@ constexpr unsigned int kCodeFence     = 1u << 5; // triple-backtick content: mon
 constexpr unsigned int kLink          = 1u << 6; // URL: blue foreground
 constexpr unsigned int kQuote         = 1u << 7; // block-quote line: dark blue
 
+// Emphasis bits that an outer span propagates into nested code/quote content.
+constexpr unsigned int kEmphasisMask  = kBold | kItalic | kStrikeThrough;
+
 using Markdown::Node;
 using Markdown::NodeKind;
 
@@ -88,13 +91,16 @@ void flatten(const Node& node, unsigned int acc, QVector<unsigned int>& flags)
             flatten(c, acc | kLink, flags);
         break;
     case NodeKind::CodeSpan:
-        // monospace + background over markers and content alike
-        stamp(flags, node.start, node.end, kCode);
+        // monospace + background over markers and content alike; inherit any
+        // outer emphasis so nested code is also bold/italic/struck through.
+        stamp(flags, node.start, node.end, kCode | (acc & kEmphasisMask));
         break;
     case NodeKind::CodeBlock:
         for (const Node& c : node.children)
             stamp(flags, c.start, c.end,
-                  c.kind == NodeKind::Delimiter ? kDelimiter : kCodeFence);
+                  c.kind == NodeKind::Delimiter
+                      ? kDelimiter
+                      : kCodeFence | (acc & kEmphasisMask));
         break;
     case NodeKind::Text:
         stamp(flags, node.start, node.end, acc);
@@ -374,14 +380,12 @@ QTextCharFormat ChatInputHighlighter::buildFormat(unsigned int bits) const
     }
     if (bits & kCodeFence) {
         fmt.setFontFamilies(QFontDatabase::systemFont(QFontDatabase::FixedFont).families());
-        return fmt;
-    }
-    if (bits & kCode) {
+    } else if (bits & kCode) {
         fmt.setFontFamilies(QFontDatabase::systemFont(QFontDatabase::FixedFont).families());
         if (m_codeBackground.alpha() > 0)
             fmt.setBackground(m_codeBackground);
-        return fmt;
     }
+    // Emphasis applies on top of code formatting (nested code inherits it).
     if (bits & kBold)          fmt.setFontWeight(QFont::Bold);
     if (bits & kItalic)        fmt.setFontItalic(true);
     if (bits & kStrikeThrough) fmt.setFontStrikeOut(true);
