@@ -38,7 +38,10 @@ SplitView {
             subtitle: ctrlSubTitle.text
             backgroundColor: !!ctrlBgColor.text ? ctrlBgColor.text : Theme.palette.statusModal.backgroundColor
 
-            padding: ctrlPadding.text
+            Binding on padding {
+                value: parseInt(ctrlPadding.text)
+                when: !!ctrlPadding.text
+            }
 
             contentItem: ColumnLayout {
                 spacing: 16
@@ -192,7 +195,7 @@ SplitView {
                 TextField {
                     Layout.fillWidth: true
                     id: ctrlPadding
-                    text: "32"
+                    text: ""
                 }
             }
 

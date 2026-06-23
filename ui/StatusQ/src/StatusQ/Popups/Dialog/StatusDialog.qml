@@ -65,6 +65,8 @@ Dialog {
     */
     property alias showHeaderDivider: dialogHeader.showDivider
 
+    padding: Theme.defaultPadding // keep in sync with StatusDialogHeader/Footer
+
     QtObject {
         id: d
 
@@ -206,7 +208,8 @@ Dialog {
                                                | Dialog.SaveAll | Dialog.Retry | Dialog.Ignore
         readonly property int yesRoleFlags: Dialog.Yes | Dialog.YesToAll
 
-        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
+        padding: root.padding
+        bottomPadding: root.padding + root.parent.SafeArea.margins.bottom
         visible: rightButtons
                  && root.standardButtons & (rejectRoleFlags | noRoleFlags | acceptRoleFlags
                                             | yesRoleFlags | Dialog.ApplyRole)
