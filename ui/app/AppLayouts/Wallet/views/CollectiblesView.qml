@@ -344,6 +344,7 @@ ColumnLayout {
 
             SortOrderComboBox {
                 id: cmbTokenOrder
+                objectName: "cmbTokenOrder"
                 hasCustomOrderDefined: root.customOrderAvailable
                 Binding on currentIndex {
                     value: {
@@ -430,6 +431,7 @@ ColumnLayout {
 
         flickable1: CustomGridView {
             id: communityCollectiblesView
+            objectName: "communityCollectiblesView"
 
             header: d.hasCommunityCollectibles ? communityHeaderComponent : null
             width: doubleFlickable.width
@@ -458,6 +460,7 @@ ColumnLayout {
 
         flickable2: CustomGridView {
             id: regularCollectiblesView
+            objectName: "regularCollectiblesView"
 
             header: !d.hasRegularCollectibles || d.onlyRegularCollectiblesType ? null : regularHeaderComponent
             width: doubleFlickable.width
