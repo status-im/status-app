@@ -11,7 +11,7 @@ ARG PCSCLITE_VERSION="2.2.3"
 ARG NIM_VERSION="2.2.4"
 
 # QT Installation Image --------------------------------------------------------
-FROM ubuntu:22.04 AS qt-install
+FROM ubuntu:24.04 AS qt-install
 
 ARG QT_VERSION QT_MODULES
 
@@ -28,7 +28,7 @@ RUN python3 -m pip install setuptools \
  && python3 -m aqt install-qt linux_arm64 desktop ${QT_VERSION} linux_gcc_arm64 -m ${QT_MODULES} -O /opt/qt --timeout 3000
 
 # PCSC Lite Build Image --------------------------------------------------------
-FROM ubuntu:22.04 AS pcsc-build
+FROM ubuntu:24.04 AS pcsc-build
 
 ARG PCSCLITE_VERSION
 
@@ -51,7 +51,7 @@ RUN cd builddir && ninja
 RUN cp builddir/pcsclite.h src/PCSC
 
 # Build Image ------------------------------------------------------------------
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 ARG QT_VERSION LINUXDEPLOYQT_VERSION PCSCLITE_VERSION NIM_VERSION
 
