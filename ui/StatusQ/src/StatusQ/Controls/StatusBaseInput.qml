@@ -160,12 +160,12 @@ Item {
         \qmlproperty real StatusBaseInput::leftPadding
         This property sets the left padding.
     */
-    property real leftPadding: leftComponentLoader.status === Loader.Ready && leftComponentLoader.item ? 6 : 16
+    property real leftPadding: leftComponentLoader.status === Loader.Ready && leftComponentLoader.item ? 6 : Theme.halfPadding
     /*!
         \qmlproperty real StatusBaseInput::rightPadding
         This property sets the right padding.
     */
-    property real rightPadding: rightComponentLoader.status === Loader.Ready && rightComponentLoader.item ? 6 : 16
+    property real rightPadding: rightComponentLoader.status === Loader.Ready && rightComponentLoader.item ? 6 : Theme.halfPadding
     /*!
         \qmlproperty real StatusBaseInput::topPadding
         This property sets the top padding.
@@ -333,7 +333,7 @@ Item {
             }
             RowLayout {
                 id: contentLayout
-                spacing: 8
+                spacing: Theme.halfPadding
                 anchors {
                     fill: parent
                     leftMargin: root.leftPadding
@@ -498,7 +498,7 @@ Item {
         id: clearButton
 
         StatusClearButton {
-            visible: edit.length != 0 && root.clearable && !root.multiline
+            visible: edit.length !== 0 && root.clearable && !root.multiline
                      && edit.activeFocus
             onClicked: {
                 edit.clear()
