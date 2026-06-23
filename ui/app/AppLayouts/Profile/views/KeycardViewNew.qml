@@ -15,6 +15,8 @@ import "./keycard_new"
 SettingsContentBase {
     id: root
 
+    objectName: "settings_KeycardView"
+
     required property ProfileStores.KeycardNewStore keycardNewStore
 
     property bool areTestNetworksEnabled: false
@@ -24,6 +26,7 @@ SettingsContentBase {
     signal backButtonNameRequested(string name)
 
     titleRowComponentLoader.sourceComponent: StatusButton {
+        objectName: "settings_Keycard_ReadKeycardButton"
         text: qsTr("Read Keycard")
         visible: stackLayout.currentIndex === d.mainViewIndex
         onClicked: {
