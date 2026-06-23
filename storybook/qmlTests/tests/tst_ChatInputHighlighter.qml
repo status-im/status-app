@@ -408,6 +408,36 @@ TestCase {
         compare(highlighter.parseCodeSpans("``foo`").length, 0)
     }
 
+    // ── emphasis spans across a code block (top level, like inside a quote) ──────
+
+    function test_codeBlock_emphasisSpansAcross() {
+        const text = "**\nA\n```\nB\n```\nC\n**"
+
+        // A single bold span covers A and C (the content between the ** markers),
+        // while B (inside the fence) is not bold.
+        const spans = highlighter.parseFormats(text)
+        let boldSpan = null
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) boldSpan = spans[i]
+        verify(boldSpan !== null, "expected a bold span across the code block")
+        verify(boldSpan.start <= text.indexOf("A") && boldSpan.end > text.indexOf("A"),
+               "A must be bold")
+        verify(boldSpan.start <= text.indexOf("C") && boldSpan.end > text.indexOf("C"),
+               "C must be bold")
+
+        // B is inside the fenced code block (rendered as code, not bold).
+        const codeSpans = highlighter.parseCodeSpans(text)
+        let bInCode = false
+        for (let i = 0; i < codeSpans.length; i++)
+            if (codeSpans[i].start <= text.indexOf("B") && codeSpans[i].end > text.indexOf("B"))
+                bInCode = true
+        verify(bInCode, "B must be inside a code block")
+
+        // Both ** runs are delimiters at [0,2) and [17,19).
+        verify(delimFor(text, "**", 0)  !== null, "opening ** delimiter missing")
+        verify(delimFor(text, "**", 17) !== null, "closing ** delimiter missing")
+    }
+
     // ── multiline code ──────────────────────────────────────────────────────────
 
     function test_multiline_inlineCode() {

@@ -558,19 +558,17 @@ Node parse(const QString& text, const Options& options)
     doc.start = 0;
     doc.end = text.length();
 
-    // Triple-backtick fences (always recognized) and an optional unclosed fence.
-    // Only "standalone" fences (those NOT opening on a quote line) fragment quote
-    // detection; a fence that opens on a "> " line is part of the quote and is
-    // emitted as a nested CodeBlock inside it.
+    // Closed triple-backtick fences are NOT top-level blocks; they are handled
+    // inline by inlineContainers (emitted as nested CodeBlock containers) so that
+    // emphasis can span across them — identically at the top level and inside
+    // quotes. Only "standalone" fences (those NOT opening on a "> " line) are
+    // tracked here, so scanQuoteGroups keeps their "> " content lines from being
+    // mistaken for quotes.
     const QVector<CodeSpan> allCodeSpans = scanCodeSpans(text);
-    QVector<CodeSpan> tripleFences;
     Ranges standaloneFenceRanges;
     for (const CodeSpan& c : allCodeSpans)
-        if (c.contentStart - c.openerStart == 3) {
-            tripleFences.append(c);
-            if (!onQuoteLine(text, c.openerStart))
-                standaloneFenceRanges.append({c.openerStart, c.closerEnd});
-        }
+        if (c.contentStart - c.openerStart == 3 && !onQuoteLine(text, c.openerStart))
+            standaloneFenceRanges.append({c.openerStart, c.closerEnd});
     const qsizetype unclosed = options.formatUnclosedCodeFence ? findOpenCodeFence(text) : -1;
     if (unclosed >= 0 && !onQuoteLine(text, unclosed))
         standaloneFenceRanges.append({unclosed, text.length()});
@@ -587,13 +585,11 @@ Node parse(const QString& text, const Options& options)
         return false;
     };
 
-    // Collect top-level block intervals: code fences (not inside a quote) and
-    // quote groups, in document order.
+    // Collect top-level block intervals: the optional unclosed fence (which
+    // consumes the rest of the document) and quote groups, in document order.
+    // Closed fences are handled inline by inlineContainers, not here.
     struct Block { qsizetype s, e; int type; CodeSpan fence; QuoteGroup grp; };
     QVector<Block> blocks;
-    for (const CodeSpan& c : tripleFences)
-        if (!insideQuote(c.openerStart))
-            blocks.append({c.openerStart, c.closerEnd, 0, c, {}});
     if (unclosed >= 0 && !insideQuote(unclosed))
         blocks.append({unclosed, text.length(), 0,
                        {unclosed, unclosed + 3, text.length(), text.length()}, {}});

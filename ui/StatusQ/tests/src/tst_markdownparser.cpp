@@ -92,14 +92,38 @@ Document [0,4)
 
     void codeFence()
     {
+        // A code block is part of the paragraph's inline run (so emphasis can span
+        // across it), hence wrapped in a Paragraph.
         auto expected = R"(
 Document [0,8)
-  CodeBlock [0,8)
-    Delimiter [0,3) "```"
-    Text [3,5) "hi"
-    Delimiter [5,8) "```"
+  Paragraph [0,8)
+    CodeBlock [0,8)
+      Delimiter [0,3) "```"
+      Text [3,5) "hi"
+      Delimiter [5,8) "```"
 )";
         QCOMPARE(d("```hi```"),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
+    void emphasisAcrossCodeBlock()
+    {
+        // Bold spans across a fenced code block at the top level, same as inside a
+        // quote: A and C are bold, B is code, the ** are delimiters.
+        auto expected = R"(
+Document [0,19)
+  Paragraph [0,19)
+    Strong [0,19)
+      Delimiter [0,2) "**"
+      Text [2,5) "\nA\n"
+      CodeBlock [5,14)
+        Delimiter [5,8) "```"
+        Text [8,11) "\nB\n"
+        Delimiter [11,14) "```"
+      Text [14,17) "\nC\n"
+      Delimiter [17,19) "**"
+)";
+        QCOMPARE(d("**\nA\n```\nB\n```\nC\n**"),
                  QString::fromUtf8(expected).trimmed());
     }
 
