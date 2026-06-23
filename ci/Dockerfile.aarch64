@@ -16,16 +16,16 @@ FROM ubuntu:24.04 AS qt-install
 ARG QT_VERSION QT_MODULES
 
 RUN apt update && apt full-upgrade -y \
- && apt install -y --no-install-recommends sudo python3 python3-pip python3-dev build-essential \
+ && apt install -y --no-install-recommends sudo python3 python3-pip python3-venv python3-dev build-essential \
  && apt-get -qq clean
 
 RUN chmod -R 777 /opt
 
 # Install QT (arm64 host: linux_arm64 / linux_gcc_arm64)
-RUN python3 -m pip install setuptools \
- && python3 -m pip install -U pip \
- && python3 -m pip install aqtinstall \
- && python3 -m aqt install-qt linux_arm64 desktop ${QT_VERSION} linux_gcc_arm64 -m ${QT_MODULES} -O /opt/qt --timeout 3000
+# Ubuntu 24.04 enforces PEP 668; install aqtinstall in an isolated venv instead of system-wide.
+RUN python3 -m venv /opt/aqt-venv \
+ && /opt/aqt-venv/bin/pip install -U pip setuptools aqtinstall \
+ && /opt/aqt-venv/bin/python -m aqt install-qt linux_arm64 desktop ${QT_VERSION} linux_gcc_arm64 -m ${QT_MODULES} -O /opt/qt --timeout 3000
 
 # PCSC Lite Build Image --------------------------------------------------------
 FROM ubuntu:24.04 AS pcsc-build
