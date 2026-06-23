@@ -677,6 +677,28 @@ TestCase {
         verify(ispan !== null && ispan.italic, "italic inside quote must still apply")
     }
 
+    function test_quote_emphasisSpansAcross() {
+        // Bold spans across a quote block at the top level: A is bold, the quote
+        // is its own group, and both ** are delimiters (symmetric to the code case).
+        const text = "**\nA\n> B\n**"
+
+        const spans = highlighter.parseFormats(text)
+        let boldSpan = null
+        for (let i = 0; i < spans.length; i++)
+            if (spans[i].bold) boldSpan = spans[i]
+        verify(boldSpan !== null, "expected a bold span across the quote block")
+        verify(boldSpan.start <= text.indexOf("A") && boldSpan.end > text.indexOf("A"),
+               "A must be bold")
+
+        const groups = highlighter.parseQuoteBlocks(text)
+        compare(groups.length, 1)
+        compare(groups[0].start, text.indexOf("> B"))
+
+        verify(delimFor(text, "**", 0) !== null, "opening ** delimiter missing")
+        verify(delimFor(text, "**", text.lastIndexOf("**")) !== null,
+               "closing ** delimiter missing")
+    }
+
     function test_quote_codeBlockInside() {
         // A fenced code block inside a quote stays one quote group spanning all
         // lines, with the fence recognized as a code block (its content reported

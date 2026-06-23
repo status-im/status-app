@@ -144,15 +144,18 @@ Document [0,21)
 
     void quoteBlock()
     {
+        // Quote blocks are part of the paragraph's inline run, hence wrapped in a
+        // Paragraph (so emphasis can span across them).
         auto expected = R"(
 Document [0,15)
-  QuoteBlock [0,15)
-    Delimiter [0,2) "> "
-    Strong [2,10)
-      Delimiter [2,4) "**"
-      Text [4,8) "bold"
-      Delimiter [8,10) "**"
-    Text [10,15) " text"
+  Paragraph [0,15)
+    QuoteBlock [0,15)
+      Delimiter [0,2) "> "
+      Strong [2,10)
+        Delimiter [2,4) "**"
+        Text [4,8) "bold"
+        Delimiter [8,10) "**"
+      Text [10,15) " text"
 )";
         QCOMPARE(d("> **bold** text"),
                  QString::fromUtf8(expected).trimmed());
@@ -163,15 +166,16 @@ Document [0,15)
         // A multi-line emphasis inside a quote nests the "> " prefixes as delimiters.
         auto expected = R"(
 Document [0,11)
-  QuoteBlock [0,11)
-    Delimiter [0,2) "> "
-    Emphasis [2,11)
-      Delimiter [2,3) "*"
-      Text [3,4) "\n"
-      Delimiter [4,6) "> "
-      Text [6,8) "A\n"
-      Delimiter [8,10) "> "
-      Delimiter [10,11) "*"
+  Paragraph [0,11)
+    QuoteBlock [0,11)
+      Delimiter [0,2) "> "
+      Emphasis [2,11)
+        Delimiter [2,3) "*"
+        Text [3,4) "\n"
+        Delimiter [4,6) "> "
+        Text [6,8) "A\n"
+        Delimiter [8,10) "> "
+        Delimiter [10,11) "*"
 )";
         QCOMPARE(d("> *\n> A\n> *"),
                  QString::fromUtf8(expected).trimmed());
@@ -183,17 +187,37 @@ Document [0,11)
         // with the "> " prefixes nested as delimiters (same shape as quotedEmphasis).
         auto expected = R"(
 Document [0,15)
-  QuoteBlock [0,15)
-    Delimiter [0,2) "> "
-    CodeBlock [2,15)
-      Delimiter [2,5) "```"
-      Text [5,6) "\n"
-      Delimiter [6,8) "> "
-      Text [8,10) "A\n"
-      Delimiter [10,12) "> "
-      Delimiter [12,15) "```"
+  Paragraph [0,15)
+    QuoteBlock [0,15)
+      Delimiter [0,2) "> "
+      CodeBlock [2,15)
+        Delimiter [2,5) "```"
+        Text [5,6) "\n"
+        Delimiter [6,8) "> "
+        Text [8,10) "A\n"
+        Delimiter [10,12) "> "
+        Delimiter [12,15) "```"
 )";
         QCOMPARE(d("> ```\n> A\n> ```"),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
+    void emphasisAcrossQuoteBlock()
+    {
+        // Bold spans across a quote block at the top level: A is bold and the
+        // QuoteBlock nests inside the Strong (symmetric to emphasisAcrossCodeBlock).
+        auto expected = R"(
+Document [0,11)
+  Paragraph [0,11)
+    Strong [0,11)
+      Delimiter [0,2) "**"
+      Text [2,5) "\nA\n"
+      QuoteBlock [5,9)
+        Delimiter [5,7) "> "
+        Text [7,9) "B\n"
+      Delimiter [9,11) "**"
+)";
+        QCOMPARE(d("**\nA\n> B\n**"),
                  QString::fromUtf8(expected).trimmed());
     }
 

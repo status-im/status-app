@@ -353,6 +353,7 @@ struct Container {
     qsizetype oS, oE;     // outer  [oS, oE)
     qsizetype cS, cE;     // content [cS, cE)
     QString destination;  // Link only
+    QVector<Node> built;  // QuoteBlock only: pre-built children
 };
 
 NodeKind kindFromBits(unsigned int bits)
@@ -361,6 +362,10 @@ NodeKind kindFromBits(unsigned int bits)
     if (bits & kBold)          return NodeKind::Strong;
     return NodeKind::Emphasis;
 }
+
+// Forward declaration — inlineContainers builds nested quote blocks eagerly,
+// and makeQuoteBlock in turn calls inlineContainers (with quote detection off).
+Node makeQuoteBlock(const QString& full, const QuoteGroup& g, bool detectLinks);
 
 Node leaf(NodeKind kind, const QString& full, qsizetype s, qsizetype e)
 {
@@ -381,6 +386,11 @@ Node materialize(const QString& full, const Container& c, const QVector<Containe
     n.kind = c.kind;
     n.start = c.oS;
     n.end = c.oE;
+
+    if (c.kind == NodeKind::QuoteBlock) {
+        n.children = c.built; // children built eagerly when the container was emitted
+        return n;
+    }
 
     if (c.kind == NodeKind::Delimiter) {
         n.literal = full.mid(c.oS, c.oE - c.oS);
@@ -451,13 +461,16 @@ QVector<Node> buildInline(const QString& full, qsizetype rs, qsizetype re,
     return out;
 }
 
-// Computes the inline containers (emphasis, single-backtick code spans, links)
-// for a region [rs, re), in absolute coordinates. `prefixExcludes` are absolute
-// ranges (e.g. quote "> " prefixes) excluded from emphasis/link scanning.
-// Emphasis/code/links may span multiple lines within the region.
+// Computes the inline containers (emphasis, code spans/blocks, quote blocks,
+// links) for a region [rs, re), in absolute coordinates. `prefixExcludes` are
+// absolute ranges (e.g. quote "> " prefixes) excluded from emphasis/link scanning.
+// When `detectQuotes` is true, quote groups in the region become nested QuoteBlock
+// containers (built eagerly) and are excluded from emphasis — so emphasis spans
+// across them. It is false while parsing a quote's own content (no nested quotes).
+// Emphasis/code/quotes/links may span multiple lines within the region.
 QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype re,
                                     const Ranges& prefixExcludes,
-                                    bool detectLinks)
+                                    bool detectLinks, bool detectQuotes)
 {
     const QString region = full.mid(rs, re - rs);
     QVector<Container> conts;
@@ -496,8 +509,25 @@ QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype
     for (const CodeSpan& c : code)
         codeRanges.append({c.openerStart, c.closerEnd});
 
+    // Quote groups (region-relative). A standalone fence (one not opening on a
+    // "> " line) keeps its "> " content lines from being treated as quotes.
+    Ranges quoteRanges;
+    if (detectQuotes) {
+        Ranges standaloneInRegion;
+        for (const CodeSpan& c : code)
+            if (c.contentStart - c.openerStart == 3 && !onQuoteLine(region, c.openerStart))
+                standaloneInRegion.append({c.openerStart, c.closerEnd});
+        for (const QuoteGroup& g : scanQuoteGroups(region, standaloneInRegion)) {
+            Node qb = makeQuoteBlock(full, {rs + g.start, rs + g.end}, detectLinks);
+            conts.append({NodeKind::QuoteBlock, rs + g.start, rs + g.end,
+                          rs + g.start, rs + g.end, {}, qb.children});
+            quoteRanges.append({g.start, g.end});
+        }
+    }
+
     Ranges exclude = codeRanges;
     exclude += prefixRegion;
+    exclude += quoteRanges;
     const QVector<LinkSpan> links = detectLinks ? scanLinks(region, exclude)
                                                 : QVector<LinkSpan>{};
     Ranges emphExclude = exclude;
@@ -526,8 +556,9 @@ Node makeQuoteBlock(const QString& full, const QuoteGroup& g, bool detectLinks)
     n.end = g.end;
 
     const Ranges prefixes = quoteGroupPrefixRanges(full, g);
+    // detectQuotes=false: a quote's own content is not re-scanned for nested quotes.
     QVector<Container> conts = inlineContainers(full, g.start, g.end, prefixes,
-                                                detectLinks);
+                                                detectLinks, /*detectQuotes=*/false);
     // "> " prefixes are first-class Delimiter nodes.
     for (const auto& p : prefixes)
         conts.append({NodeKind::Delimiter, p.first, p.second, p.first, p.second, {}});
@@ -542,7 +573,8 @@ Node makeParagraph(const QString& full, qsizetype s, qsizetype e, bool detectLin
     n.kind = NodeKind::Paragraph;
     n.start = s;
     n.end = e;
-    QVector<Container> conts = inlineContainers(full, s, e, {}, detectLinks);
+    QVector<Container> conts = inlineContainers(full, s, e, {}, detectLinks,
+                                                /*detectQuotes=*/true);
     n.children = buildInline(full, s, e, conts);
     return n;
 }
@@ -558,57 +590,24 @@ Node parse(const QString& text, const Options& options)
     doc.start = 0;
     doc.end = text.length();
 
-    // Closed triple-backtick fences are NOT top-level blocks; they are handled
-    // inline by inlineContainers (emitted as nested CodeBlock containers) so that
-    // emphasis can span across them — identically at the top level and inside
-    // quotes. Only "standalone" fences (those NOT opening on a "> " line) are
-    // tracked here, so scanQuoteGroups keeps their "> " content lines from being
-    // mistaken for quotes.
-    const QVector<CodeSpan> allCodeSpans = scanCodeSpans(text);
-    Ranges standaloneFenceRanges;
-    for (const CodeSpan& c : allCodeSpans)
-        if (c.contentStart - c.openerStart == 3 && !onQuoteLine(text, c.openerStart))
-            standaloneFenceRanges.append({c.openerStart, c.closerEnd});
+    // Closed code fences and quote groups are NOT top-level blocks; they are
+    // handled inline by inlineContainers (emitted as nested CodeBlock/QuoteBlock
+    // containers) so that emphasis can span across them. The only top-level block
+    // is the optional unclosed fence, which consumes the rest of the document
+    // (suppressing emphasis after it); a fence opening on a "> " line is left to
+    // the quote region instead.
     const qsizetype unclosed = options.formatUnclosedCodeFence ? findOpenCodeFence(text) : -1;
-    if (unclosed >= 0 && !onQuoteLine(text, unclosed))
-        standaloneFenceRanges.append({unclosed, text.length()});
+    const bool unclosedTopLevel = unclosed >= 0 && !onQuoteLine(text, unclosed);
 
-    // Quote groups (quote detection excludes lines inside a standalone fence).
-    const QVector<QuoteGroup> quoteGroups = scanQuoteGroups(text, standaloneFenceRanges);
-    Ranges quoteAbsRanges;
-    for (const QuoteGroup& g : quoteGroups)
-        quoteAbsRanges.append({g.start, g.end});
-
-    auto insideQuote = [&](qsizetype pos) {
-        for (const auto& r : quoteAbsRanges)
-            if (pos >= r.first && pos < r.second) return true;
-        return false;
-    };
-
-    // Collect top-level block intervals: the optional unclosed fence (which
-    // consumes the rest of the document) and quote groups, in document order.
-    // Closed fences are handled inline by inlineContainers, not here.
-    struct Block { qsizetype s, e; int type; CodeSpan fence; QuoteGroup grp; };
-    QVector<Block> blocks;
-    if (unclosed >= 0 && !insideQuote(unclosed))
-        blocks.append({unclosed, text.length(), 0,
-                       {unclosed, unclosed + 3, text.length(), text.length()}, {}});
-    for (const QuoteGroup& g : quoteGroups)
-        blocks.append({g.start, g.end, 1, {}, g});
-    std::sort(blocks.begin(), blocks.end(),
-              [](const Block& a, const Block& b) { return a.s < b.s; });
-
-    // Walk the document, emitting Paragraph nodes for the gaps between blocks.
+    // Walk the document, emitting a Paragraph for the body before the unclosed
+    // fence (if any) and a CodeBlock for the fence itself.
     qsizetype pos = 0;
-    for (const Block& b : blocks) {
-        if (b.s > pos)
-            doc.children.append(makeParagraph(text, pos, b.s, options.detectLinks));
-        if (b.type == 0)
-            doc.children.append(makeCodeBlock(text, b.fence.openerStart, b.fence.contentStart,
-                                              b.fence.contentEnd, b.fence.closerEnd));
-        else
-            doc.children.append(makeQuoteBlock(text, b.grp, options.detectLinks));
-        pos = b.e;
+    if (unclosedTopLevel) {
+        if (unclosed > 0)
+            doc.children.append(makeParagraph(text, 0, unclosed, options.detectLinks));
+        doc.children.append(makeCodeBlock(text, unclosed, unclosed + 3,
+                                          text.length(), text.length()));
+        pos = text.length();
     }
     if (pos < text.length())
         doc.children.append(makeParagraph(text, pos, text.length(), options.detectLinks));
