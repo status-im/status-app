@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Universal
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -97,7 +98,7 @@ Button {
                 spacing: 2
 
                 StatusIcon {
-                    visible: root.type !== StatusChatInfoButton.Type.OneToOneChat && !forceHideTypeIcon && icon
+                    visible: root.type !== StatusChatInfoButton.Type.OneToOneChat && !root.forceHideTypeIcon && icon
                     Layout.preferredWidth: 14
                     Layout.preferredHeight: 14
                     color: root.muted ? Theme.palette.baseColor1 : Theme.palette.directColor1

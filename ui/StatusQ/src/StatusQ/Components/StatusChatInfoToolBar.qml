@@ -86,7 +86,7 @@ Item {
             }
         ]
 
-        onClicked: {
+        onClicked: function (mouse) {
             statusChatInfoToolBar.addButtonClicked(mouse)
             statusMenuButton.state = "pressed"
             popupMenuSlot.item.popup(statusMenuButton.width-popupMenuSlot.item.width, statusMenuButton.height + 4)
