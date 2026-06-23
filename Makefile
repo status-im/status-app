@@ -104,7 +104,7 @@ endif
 host_os:=$(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 ifeq ($(mkspecs),)
-	$(error Cannot find your Qt installation. Please make sure to export correct Qt installation binaries path to PATH env)
+$(error Cannot find your Qt installation. Please make sure to export correct Qt installation binaries path to PATH env)
 endif
 
 ifeq ($(mkspecs),macx)
