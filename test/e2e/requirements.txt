@@ -5,7 +5,7 @@ opencv-python-headless==4.8.0.74
 numpy~=1.25.1
 pytesseract==0.3.10
 atomacos==3.3.0; platform_system == "Darwin"
-allure-pytest==2.13.2
+allure-pytest==2.15.3
 pyperclip==1.8.2
 pytest-rerunfailures==13.0
 pytest-ignore-flaky==2.1.0
