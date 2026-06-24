@@ -261,6 +261,25 @@ Document [0,5)
                  QString::fromUtf8(expected).trimmed());
     }
 
+    void mention()
+    {
+        // An embedded object (U+FFFC) becomes a one-char Mention leaf, opaque to
+        // markdown — emphasis spans across it.
+        const QString fffc(QChar(QChar::ObjectReplacementCharacter));
+        auto expected = R"(
+Document [0,7)
+  Paragraph [0,7)
+    Strong [0,7)
+      Delimiter [0,2) "**"
+      Text [2,3) "x"
+      Mention [3,4)
+      Text [4,5) "y"
+      Delimiter [5,7) "**"
+)";
+        QCOMPARE(d("**x" + fffc + "y**"),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
     void crossLineBold()
     {
         // Emphasis always spans lines; the newline is escaped in the dumped literal.

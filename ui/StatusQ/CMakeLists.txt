@@ -171,6 +171,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/markdownast.h
         include/StatusQ/markdownparser.h
         include/StatusQ/markdownutils.h
+        include/StatusQ/mentiontextobject.h
         include/StatusQ/osnotification.h
         include/StatusQ/urlschemeevent.h
         include/StatusQ/NativeSwipeHandlerItem.h
@@ -213,6 +214,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/markdownast.cpp
         src/markdownparser.cpp
         src/markdownutils.cpp
+        src/mentiontextobject.cpp
         src/networkchecker.cpp
         src/oneoffilter.cpp
         src/permissionutilsinternal.cpp

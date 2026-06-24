@@ -27,6 +27,22 @@ private:
     QVector<LinkItem> m_links;
 };
 
+class ChatInputMentionsModel : public QAbstractListModel {
+    Q_OBJECT
+public:
+    struct MentionItem { int position; QString name; QString pubKey; };
+    enum Roles { PositionRole = Qt::UserRole + 1, NameRole, PubKeyRole };
+
+    explicit ChatInputMentionsModel(QObject* parent = nullptr);
+    int rowCount(const QModelIndex& parent = {}) const override;
+    QVariant data(const QModelIndex& index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
+    void setMentions(const QVector<MentionItem>& mentions);
+
+private:
+    QVector<MentionItem> m_mentions;
+};
+
 class ChatInputHighlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
@@ -40,6 +56,7 @@ class ChatInputHighlighter : public QSyntaxHighlighter
                READ formatUnclosedCodeFence WRITE setFormatUnclosedCodeFence
                NOTIFY formatUnclosedCodeFenceChanged)
     Q_PROPERTY(QAbstractListModel* linksModel READ linksModel CONSTANT)
+    Q_PROPERTY(QAbstractListModel* mentionsModel READ mentionsModel CONSTANT)
 
 public:
     explicit ChatInputHighlighter(QObject* parent = nullptr);
@@ -54,6 +71,11 @@ public:
     void setFormatUnclosedCodeFence(bool enabled);
 
     QAbstractListModel* linksModel() const;
+    QAbstractListModel* mentionsModel() const;
+
+    // Inserts a mention (an embedded object) carrying `name`/`pubKey` at `position`.
+    Q_INVOKABLE void insertMention(int position, const QString& name,
+                                   const QString& pubKey);
 
     // Returns [{start, end, bold, italic, strikethrough}, ...] — for unit tests
     Q_INVOKABLE QVariantList parseFormats(const QString& text) const;
@@ -96,10 +118,16 @@ private:
     // document positions of each quote line's block start.
     void applyQuoteBlockFormats(const QSet<int>& quoteLineStarts);
 
+    // Replaces mention objects that fall inside a code span/block with their plain
+    // name text. Runs queued (it edits the document), re-deriving from the AST.
+    void demoteMentionsInCode();
+
     QQuickTextDocument* m_quickTextDocument{nullptr};
     QVector<unsigned int> m_flags; // per-document-character emphasis bits
     QString m_cachedText; // last full document text parsed into m_flags
     QColor m_codeBackground{Qt::transparent};
     bool m_formatUnclosedCodeFence{false};
     ChatInputLinksModel* m_linksModel{nullptr};
+    ChatInputMentionsModel* m_mentionsModel{nullptr};
+    int m_mentionCounter{0};
 };

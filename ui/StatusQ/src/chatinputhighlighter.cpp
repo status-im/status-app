@@ -1,7 +1,9 @@
 #include "StatusQ/chatinputhighlighter.h"
 
 #include "StatusQ/markdownparser.h"
+#include "StatusQ/mentiontextobject.h"
 
+#include <QAbstractTextDocumentLayout>
 #include <QColor>
 #include <QFontDatabase>
 #include <QFontMetricsF>
@@ -108,7 +110,46 @@ void flatten(const Node& node, unsigned int acc, QVector<unsigned int>& flags)
     case NodeKind::Delimiter:
         stamp(flags, node.start, node.end, kDelimiter);
         break;
+    case NodeKind::Mention:
+        // The object char is never given a char format (the pill is a QML overlay);
+        // the per-block setFormat loop additionally skips its position.
+        break;
     }
+}
+
+// Collects document positions of mentions (Mention leaves) that fall inside a code
+// span/block; those should be demoted to plain text.
+void collectMentionsInCode(const Node& node, bool inCode, QVector<int>& out)
+{
+    const bool childInCode = inCode
+            || node.kind == NodeKind::CodeSpan
+            || node.kind == NodeKind::CodeBlock;
+    if (node.kind == NodeKind::Mention && inCode)
+        out.append(static_cast<int>(node.start));
+    for (const Node& c : node.children)
+        collectMentionsInCode(c, childInCode, out);
+}
+
+// Scans the document's fragments for mention objects and refreshes the model
+// (one row per mention position, carrying name/pubKey from the char format).
+void refreshMentions(QTextDocument* doc, ChatInputMentionsModel* model)
+{
+    QVector<ChatInputMentionsModel::MentionItem> items;
+    for (QTextBlock b = doc->begin(); b != doc->end(); b = b.next()) {
+        for (auto it = b.begin(); !it.atEnd(); ++it) {
+            const QTextFragment frag = it.fragment();
+            if (!frag.isValid())
+                continue;
+            const QTextCharFormat fmt = frag.charFormat();
+            if (fmt.objectType() != MentionTextObject::MentionType)
+                continue;
+            const QString name   = fmt.property(MentionTextObject::NameProperty).toString();
+            const QString pubKey = fmt.property(MentionTextObject::PubKeyProperty).toString();
+            for (int k = 0; k < frag.length(); ++k)
+                items.append({static_cast<int>(frag.position()) + k, name, pubKey});
+        }
+    }
+    model->setMentions(items);
 }
 
 // Re-stamps every quote group's "> " prefixes back to kQuote, so an outer
@@ -296,17 +337,84 @@ void ChatInputLinksModel::setLinks(const QVector<LinkItem>& links)
     endResetModel();
 }
 
+// ── ChatInputMentionsModel ────────────────────────────────────────────────────
+
+ChatInputMentionsModel::ChatInputMentionsModel(QObject* parent)
+    : QAbstractListModel(parent)
+{
+}
+
+int ChatInputMentionsModel::rowCount(const QModelIndex& parent) const
+{
+    if (parent.isValid())
+        return 0;
+    return static_cast<int>(m_mentions.size());
+}
+
+QVariant ChatInputMentionsModel::data(const QModelIndex& index, int role) const
+{
+    if (!index.isValid() || index.row() < 0 || index.row() >= static_cast<int>(m_mentions.size()))
+        return {};
+    const MentionItem& item = m_mentions[index.row()];
+    switch (role) {
+    case PositionRole: return item.position;
+    case NameRole:     return item.name;
+    case PubKeyRole:   return item.pubKey;
+    }
+    return {};
+}
+
+QHash<int, QByteArray> ChatInputMentionsModel::roleNames() const
+{
+    return {
+        {PositionRole, "position"},
+        {NameRole,     "name"},
+        {PubKeyRole,   "pubKey"},
+    };
+}
+
+void ChatInputMentionsModel::setMentions(const QVector<MentionItem>& mentions)
+{
+    beginResetModel();
+    m_mentions = mentions;
+    endResetModel();
+}
+
 // ── ChatInputHighlighter ──────────────────────────────────────────────────────
 
 ChatInputHighlighter::ChatInputHighlighter(QObject* parent)
     : QSyntaxHighlighter(parent)
     , m_linksModel(new ChatInputLinksModel(this))
+    , m_mentionsModel(new ChatInputMentionsModel(this))
 {
 }
 
 QAbstractListModel* ChatInputHighlighter::linksModel() const
 {
     return m_linksModel;
+}
+
+QAbstractListModel* ChatInputHighlighter::mentionsModel() const
+{
+    return m_mentionsModel;
+}
+
+void ChatInputHighlighter::insertMention(int position, const QString& name,
+                                         const QString& pubKey)
+{
+    if (!document())
+        return;
+
+    QTextCharFormat fmt;
+    fmt.setObjectType(MentionTextObject::MentionType);
+    fmt.setProperty(MentionTextObject::NameProperty, name);
+    fmt.setProperty(MentionTextObject::PubKeyProperty, pubKey);
+    fmt.setProperty(MentionTextObject::UniqueIdProperty, ++m_mentionCounter);
+    fmt.setVerticalAlignment(QTextCharFormat::AlignBottom);
+
+    QTextCursor cursor(document());
+    cursor.setPosition(qBound(0, position, document()->characterCount() - 1));
+    cursor.insertText(QString(QChar::ObjectReplacementCharacter), fmt);
 }
 
 QQuickTextDocument* ChatInputHighlighter::quickTextDocument() const
@@ -322,8 +430,13 @@ void ChatInputHighlighter::setQuickTextDocument(QQuickTextDocument* doc)
         disconnect(m_quickTextDocument->textDocument(), nullptr, this, nullptr);
     m_quickTextDocument = doc;
     if (doc) {
-        setDocument(doc->textDocument());
-        connect(doc->textDocument(), &QTextDocument::contentsChange,
+        QTextDocument* textDoc = doc->textDocument();
+        setDocument(textDoc);
+        // Reserve layout space for mention objects (the pill itself is drawn by a
+        // QML overlay); the handler is owned by this highlighter.
+        textDoc->documentLayout()->registerHandler(
+            MentionTextObject::MentionType, new MentionTextObject(this));
+        connect(textDoc, &QTextDocument::contentsChange,
                 this, [this](int, int charsRemoved, int charsAdded) {
                     if (charsRemoved > 0 || charsAdded > 0)
                         QMetaObject::invokeMethod(this, "rehighlight",
@@ -460,23 +573,37 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
         collectLinks(doc, modelItems);
         m_linksModel->setLinks(modelItems);
 
+        refreshMentions(document(), m_mentionsModel);
+
         applyQuoteBlockFormats(collectQuoteLineStarts(doc, fullText));
+
+        // A mention that ended up inside a code span/block is demoted to plain text.
+        // Done out-of-band (it mutates the document) to avoid editing mid-highlight.
+        QVector<int> mentionsInCode;
+        collectMentionsInCode(doc, false, mentionsInCode);
+        if (!mentionsInCode.isEmpty())
+            QMetaObject::invokeMethod(this, [this] { demoteMentionsInCode(); },
+                                      Qt::QueuedConnection);
     }
 
     const int       blockStart = currentBlock().position();
     const qsizetype blockLen   = text.length();
 
+    // Effective render bits for a block-relative index; object-replacement chars
+    // (mentions) are never formatted — the pill is a QML overlay.
+    auto flagAt = [&](qsizetype k) -> unsigned int {
+        if (k >= blockLen || text[k] == QChar::ObjectReplacementCharacter)
+            return 0u;
+        const qsizetype docPos = blockStart + k;
+        return (docPos < m_flags.size()) ? m_flags[docPos] : 0u;
+    };
+
     qsizetype i = 0;
     while (i < blockLen) {
-        const qsizetype    docPos = blockStart + i;
-        const unsigned int f = (docPos < m_flags.size()) ? m_flags[docPos] : 0u;
+        const unsigned int f = flagAt(i);
         qsizetype j = i + 1;
-        while (j < blockLen) {
-            const unsigned int nf = ((blockStart + j) < m_flags.size())
-                                    ? m_flags[blockStart + j] : 0u;
-            if (nf != f) break;
+        while (j < blockLen && flagAt(j) == f)
             ++j;
-        }
         if (f)
             setFormat(static_cast<int>(i), static_cast<int>(j - i), buildFormat(f));
         i = j;
@@ -511,6 +638,33 @@ void ChatInputHighlighter::applyQuoteBlockFormats(const QSet<int>& quoteLineStar
         fmt.setTextIndent(indent);
         cursor.setPosition(b.position());
         cursor.mergeBlockFormat(fmt);
+    }
+    cursor.endEditBlock();
+}
+
+void ChatInputHighlighter::demoteMentionsInCode()
+{
+    QTextDocument* doc = document();
+    if (!doc || doc->isRedoAvailable())
+        return;
+
+    const QString fullText = doc->toPlainText();
+    const Node doc_ = Markdown::parse(fullText, optionsFor(m_formatUnclosedCodeFence));
+    QVector<int> positions;
+    collectMentionsInCode(doc_, false, positions);
+    if (positions.isEmpty())
+        return;
+
+    QTextCursor cursor(doc);
+    cursor.joinPreviousEditBlock();
+    // Reverse order so earlier positions stay valid as text is replaced.
+    for (int idx = positions.size() - 1; idx >= 0; --idx) {
+        QTextCursor mc(doc);
+        mc.setPosition(positions[idx]);
+        mc.setPosition(positions[idx] + 1, QTextCursor::KeepAnchor);
+        const QString name =
+            mc.charFormat().property(MentionTextObject::NameProperty).toString();
+        mc.insertText(name);
     }
     cursor.endEditBlock();
 }

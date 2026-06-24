@@ -30,6 +30,8 @@ enum class NodeKind {
     // Leaves
     Text,           // literal content
     Delimiter,      // formatting characters (**, *, ~~, `, ```, "> ", fence info)
+    Mention,        // embedded object (ObjectReplacementCharacter); metadata lives
+                    // in the document char format, not in the AST
 };
 
 struct Node {

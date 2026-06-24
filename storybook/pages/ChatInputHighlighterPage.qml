@@ -16,6 +16,21 @@ Item {
     readonly property var emph: highlighter.emphasisAt(textArea.cursorPosition)
     readonly property var vemph: highlighter.emphasisAtInsertion(textArea.cursorPosition)
 
+    function randomName() {
+        const n = 1 + Math.floor(Math.random() * 5)
+        let s = "@"
+        for (let i = 0; i < n; ++i)
+            s += String.fromCharCode(65 + Math.floor(Math.random() * 26))
+        return s
+    }
+    function randomPubKey() {
+        const chars = "0123456789abcdef"
+        let s = "0x"
+        for (let i = 0; i < 8; ++i)
+            s += chars[Math.floor(Math.random() * chars.length)]
+        return s
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 12
@@ -136,6 +151,46 @@ unclosed fence here (no closing triple-tick)
                         }
                     }
 
+                    // Mention pills, rendered on top of the embedded objects.
+                    Repeater {
+                        model: highlighter.mentionsModel
+
+                        delegate: Rectangle {
+                            required property int position
+                            required property string name
+                            required property string pubKey
+
+                            readonly property rect _r: {
+                                textArea.contentHeight; textArea.width // recompute on layout
+                                return textArea.positionToRectangle(Math.min(position, textArea.length))
+                            }
+                            readonly property real mentionWidth:
+                                textArea.positionToRectangle(Math.min(position + 1, textArea.length)).x - _r.x
+
+                            x: _r.x
+                            y: _r.y + 1
+                            // Math.min so a mention occupying the whole line doesn't overflow
+                            width: Math.min(mentionWidth, parent.width - x)
+                            height: _r.height - 2
+                            radius: 3//height / 4
+                            color: "#DD5B8DEF"
+
+                            Text {
+                                anchors.fill: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                text: parent.name
+                                color: "white"
+                                elide: Text.ElideRight
+                                font.pixelSize: textArea.font.pixelSize - 2
+                            }
+
+                            ToolTip.visible: hover.hovered
+                            ToolTip.text: "pub key: " + pubKey
+                            HoverHandler { id: hover }
+                        }
+                    }
+
                     Keys.onPressed: (event) => {
                         // It's necessary to handle undo/redo in a loop in order to
                         // handle formatting changes of text blocks, detected as changes
@@ -220,6 +275,14 @@ unclosed fence here (no closing triple-tick)
 
                text: "Quote block vertical line"
                checked: true
+            }
+            Button {
+                text: "Add random mention"
+                onClicked: {
+                    const pos = textArea.cursorPosition
+                    highlighter.insertMention(pos, root.randomName(), root.randomPubKey())
+                    textArea.insert(textArea.cursorPosition, " ")
+                }
             }
             Row {
                 spacing: 16

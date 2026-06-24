@@ -17,6 +17,7 @@ QString kindName(Markdown::NodeKind kind)
     case K::Link:          return QStringLiteral("Link");
     case K::Text:          return QStringLiteral("Text");
     case K::Delimiter:     return QStringLiteral("Delimiter");
+    case K::Mention:       return QStringLiteral("Mention");
     }
     return QStringLiteral("Unknown");
 }

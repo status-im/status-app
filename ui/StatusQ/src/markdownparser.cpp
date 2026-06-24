@@ -415,6 +415,30 @@ Node leaf(NodeKind kind, const QString& full, qsizetype s, qsizetype e)
     return n;
 }
 
+// Appends plain content over [s, e) as Text leaves, splitting out each embedded
+// ObjectReplacementCharacter (U+FFFC) as a one-char Mention leaf. Mentions are
+// opaque to markdown — their metadata lives in the document char format.
+void appendInline(QVector<Node>& out, const QString& full, qsizetype s, qsizetype e)
+{
+    qsizetype i = s;
+    while (i < e) {
+        if (full[i] == QChar::ObjectReplacementCharacter) {
+            Node m;
+            m.kind = NodeKind::Mention;
+            m.start = i;
+            m.end = i + 1;
+            out.append(m);
+            ++i;
+        } else {
+            qsizetype j = i;
+            while (j < e && full[j] != QChar::ObjectReplacementCharacter)
+                ++j;
+            out.append(leaf(NodeKind::Text, full, i, j));
+            i = j;
+        }
+    }
+}
+
 QVector<Node> buildInline(const QString& full, qsizetype rs, qsizetype re,
                           const QVector<Container>& conts);
 
@@ -490,12 +514,12 @@ QVector<Node> buildInline(const QString& full, qsizetype rs, qsizetype re,
     for (int idx : top) {
         const Container& c = conts[idx];
         if (c.oS > pos)
-            out.append(leaf(NodeKind::Text, full, pos, c.oS));
+            appendInline(out, full, pos, c.oS);
         out.append(materialize(full, c, conts));
         pos = c.oE;
     }
     if (pos < re)
-        out.append(leaf(NodeKind::Text, full, pos, re));
+        appendInline(out, full, pos, re);
     return out;
 }
 
