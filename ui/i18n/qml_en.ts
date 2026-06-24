@@ -114,16 +114,6 @@
     </message>
 </context>
 <context>
-    <name>CommunityMembershipSetupDialog</name>
-    <message numerus="yes">
-        <source>Share %n address(s) to join</source>
-        <translation>
-            <numerusform>Share %n address to join</numerusform>
-            <numerusform>Share %n addresses to join</numerusform>
-        </translation>
-    </message>
-</context>
-<context>
     <name>CommunitySettingsView</name>
     <message numerus="yes">
         <source>%n member(s)</source>
@@ -617,10 +607,10 @@
         </translation>
     </message>
     <message numerus="yes">
-        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</source>
-        <translation>
-            <numerusform>To share %n address with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</numerusform>
-            <numerusform>To share %n addresses with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</numerusform>
+        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
 </context>

@@ -3655,14 +3655,6 @@ formát souboru</translation>
         <source>Share all addresses to join</source>
         <translation>Sdílet všechny adresy pro připojení</translation>
     </message>
-    <message numerus="yes">
-        <source>Share %n address(s) to join</source>
-        <translation>
-            <numerusform>Sdílet %n adresu pro připojení</numerusform>
-            <numerusform>Sdílet %n adresy pro připojení</numerusform>
-            <numerusform>Sdílet %n adres pro připojení</numerusform>
-        </translation>
-    </message>
     <message>
         <source>Select addresses to share</source>
         <translation>Vybrat adresy ke sdílení</translation>
@@ -15179,12 +15171,20 @@ selhalo</translation>
             <numerusform>Sdílet %n adres pro připojení</numerusform>
         </translation>
     </message>
+    <message>
+        <source>Sign</source>
+        <translation type="unfinished">Podepsat</translation>
+    </message>
+    <message>
+        <source>Signed</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
-        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</source>
-        <translation>
-            <numerusform>Pro sdílení %n adresy s &lt;b&gt;%1&lt;/b&gt; ověřte přidružené páry klíčů...</numerusform>
-            <numerusform>Pro sdílení %n adres s &lt;b&gt;%1&lt;/b&gt; ověřte přidružené páry klíčů...</numerusform>
-            <numerusform>Pro sdílení %n adres s &lt;b&gt;%1&lt;/b&gt; ověřte přidružené páry klíčů...</numerusform>
+        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
     <message>
@@ -15192,24 +15192,8 @@ selhalo</translation>
         <translation>Uloženo na zařízení</translation>
     </message>
     <message>
-        <source>Authenticate</source>
-        <translation>Ověřit</translation>
-    </message>
-    <message>
-        <source>Authenticated</source>
-        <translation>Ověřeno</translation>
-    </message>
-    <message>
         <source>Stored on keycard</source>
         <translation>Uloženo na keycard</translation>
-    </message>
-    <message>
-        <source>Authenticate via “%1” key pair</source>
-        <translation>Ověřit pomocí páru klíčů „%1“</translation>
-    </message>
-    <message>
-        <source>The following key pairs will be authenticated via “%1” key pair</source>
-        <translation>Následující páry klíčů budou ověřeny pomocí páru klíčů „%1“</translation>
     </message>
 </context>
 <context>

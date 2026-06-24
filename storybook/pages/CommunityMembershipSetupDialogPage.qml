@@ -72,7 +72,6 @@ SplitView {
                 onPrepareForSigning: logs.logEvent("CommunityMembershipSetupDialog::onPrepareForSigning", ["airdropAddress", "sharedAddresses"], arguments)
                 onJoinCommunity: logs.logEvent("CommunityMembershipSetupDialog::onJoinCommunity")
                 onEditRevealedAddresses: logs.logEvent("CommunityMembershipSetupDialog::editRevealedAddresses")
-                onSignProfileKeypairAndAllNonKeycardKeypairs: logs.logEvent("CommunityMembershipSetupDialog::onSignProfileKeypairAndAllNonKeycardKeypairs")
                 onSignSharedAddressesForKeypair: logs.logEvent("CommunityMembershipSetupDialog::onSignSharedAddressesForKeypair", ["keyUid"], arguments)
                 onSharedAddressesUpdated: logs.logEvent("CommunityMembershipSetupDialog::onSharedAddressesUpdated", ["sharedAddresses"], arguments)
                 getCurrencyAmount: function (balance, symbol) {

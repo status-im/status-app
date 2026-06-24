@@ -57,10 +57,6 @@ StatusQUtils.QObject {
         d.communitiesModuleInst.checkPermissions(communityId, JSON.stringify(sharedAddresses))
     }
 
-    function signProfileKeypairAndAllNonKeycardKeypairs() {
-        d.communitiesModuleInst.signProfileKeypairAndAllNonKeycardKeypairs()
-    }
-
     function signSharedAddressesForKeypair(keyUid) {
         d.communitiesModuleInst.signSharedAddressesForKeypair(keyUid)
     }

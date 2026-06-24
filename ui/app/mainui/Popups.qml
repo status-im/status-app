@@ -1010,8 +1010,6 @@ QtObject {
                 walletAccountsModel: root.rootStore.walletAccountsModel
                 walletCollectiblesModel: WalletStores.RootStore.collectiblesStore.allCollectiblesModel
 
-                canProfileProveOwnershipOfProvidedAddressesFn: WalletStores.RootStore.canProfileProveOwnershipOfProvidedAddresses
-
                 walletAssetsModel: walletAssetsStore.groupedAccountAssetsModel
                 permissionsModel: {
                     if(communityAccessStore) {
@@ -1031,12 +1029,6 @@ QtObject {
                     if(communityAccessStore) {
                         communityAccessStore.prepareKeypairsForSigning(dialogRoot.communityId, dialogRoot.name, sharedAddresses, airdropAddress, false)
                         dialogRoot.keypairSigningModel = root.rootStore.communitiesModuleInst.keypairsSigningModel
-                    }
-                }
-
-                onSignProfileKeypairAndAllNonKeycardKeypairs: {
-                    if(communityAccessStore) {
-                        communityAccessStore.signProfileKeypairAndAllNonKeycardKeypairs()
                     }
                 }
 
@@ -1083,19 +1075,6 @@ QtObject {
                     }
 
                     function onAllSharedAddressesSigned() {
-
-                        if (dialogRoot.profileProvesOwnershipOfSelectedAddresses) {
-                            dialogRoot.joinCommunity()
-                            dialogRoot.close()
-                            return
-                        }
-
-                        if (dialogRoot.allAddressesToRevealBelongToSingleNonProfileKeypair) {
-                            dialogRoot.joinCommunity()
-                            dialogRoot.close()
-                            return
-                        }
-
                         if (!!dialogRoot.replaceItem) {
                             dialogRoot.replaceLoader.item.allSigned()
                         }
@@ -1272,8 +1251,6 @@ QtObject {
 
                 introMessage: chatStore.sectionDetails.introMessage
 
-                canProfileProveOwnershipOfProvidedAddressesFn: WalletStores.RootStore.canProfileProveOwnershipOfProvidedAddresses
-
                 walletAccountsModel: root.rootStore.walletAccountsModel
 
                 walletAssetsModel: walletAssetsStore.groupedAccountAssetsModel
@@ -1306,12 +1283,6 @@ QtObject {
                     }
                 }
 
-                onSignProfileKeypairAndAllNonKeycardKeypairs: {
-                    if(communityAccessStore) {
-                        communityAccessStore.signProfileKeypairAndAllNonKeycardKeypairs()
-                    }
-                }
-
                 onSignSharedAddressesForKeypair: {
                     if(communityAccessStore) {
                         communityAccessStore.signSharedAddressesForKeypair(keyUid)
@@ -1330,18 +1301,6 @@ QtObject {
                     target: editSharedAddressesPopup.communityAccessStore
 
                     function onAllSharedAddressesSigned() {
-                        if (editSharedAddressesPopup.profileProvesOwnershipOfSelectedAddresses) {
-                            editSharedAddressesPopup.editRevealedAddresses()
-                            editSharedAddressesPopup.close()
-                            return
-                        }
-
-                        if (editSharedAddressesPopup.allAddressesToRevealBelongToSingleNonProfileKeypair) {
-                            editSharedAddressesPopup.editRevealedAddresses()
-                            editSharedAddressesPopup.close()
-                            return
-                        }
-
                         if (!!editSharedAddressesPopup.replaceItem) {
                             editSharedAddressesPopup.replaceLoader.item.allSigned()
                         }

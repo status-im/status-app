@@ -4448,14 +4448,6 @@
       <comment>CommunityMembershipSetupDialog</comment>
       <translation>Share all addresses to join</translation>
     </message>
-    <message numerus="yes">
-      <source>Share %n address(s) to join</source>
-      <comment>CommunityMembershipSetupDialog</comment>
-      <translation>
-        <numerusform>Share %n address to join</numerusform>
-        <numerusform>Share %n addresses to join</numerusform>
-      </translation>
-    </message>
     <message>
       <source>Select addresses to share</source>
       <comment>CommunityMembershipSetupDialog</comment>
@@ -18409,12 +18401,22 @@
         <numerusform>Share %n addresses to join</numerusform>
       </translation>
     </message>
+    <message>
+      <source>Sign</source>
+      <comment>SharedAddressesSigningPanel</comment>
+      <translation>Sign</translation>
+    </message>
+    <message>
+      <source>Signed</source>
+      <comment>SharedAddressesSigningPanel</comment>
+      <translation>Signed</translation>
+    </message>
     <message numerus="yes">
-      <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</source>
+      <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</source>
       <comment>SharedAddressesSigningPanel</comment>
       <translation>
-        <numerusform>To share %n address with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</numerusform>
-        <numerusform>To share %n addresses with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</numerusform>
+        <numerusform></numerusform>
+        <numerusform></numerusform>
       </translation>
     </message>
     <message>
@@ -18423,29 +18425,9 @@
       <translation>Stored on device</translation>
     </message>
     <message>
-      <source>Authenticate</source>
-      <comment>SharedAddressesSigningPanel</comment>
-      <translation>Authenticate</translation>
-    </message>
-    <message>
-      <source>Authenticated</source>
-      <comment>SharedAddressesSigningPanel</comment>
-      <translation>Authenticated</translation>
-    </message>
-    <message>
       <source>Stored on keycard</source>
       <comment>SharedAddressesSigningPanel</comment>
       <translation>Stored on keycard</translation>
-    </message>
-    <message>
-      <source>Authenticate via “%1” key pair</source>
-      <comment>SharedAddressesSigningPanel</comment>
-      <translation>Authenticate via “%1” key pair</translation>
-    </message>
-    <message>
-      <source>The following key pairs will be authenticated via “%1” key pair</source>
-      <comment>SharedAddressesSigningPanel</comment>
-      <translation>The following key pairs will be authenticated via “%1” key pair</translation>
     </message>
   </context>
   <context>

@@ -220,9 +220,6 @@ method prepareKeypairsForSigning*(self: AccessInterface, communityId: string, en
   airdropAddress: string, editMode: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method signProfileKeypairAndAllNonKeycardKeypairs*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method signSharedAddressesForKeypair*(self: AccessInterface, keyUid: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

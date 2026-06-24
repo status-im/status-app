@@ -3643,13 +3643,6 @@ no compatible</translation>
         <source>Share all addresses to join</source>
         <translation>Compartir todas las direcciones para unirse</translation>
     </message>
-    <message numerus="yes">
-        <source>Share %n address(s) to join</source>
-        <translation>
-            <numerusform>Compartir %n dirección para unirse</numerusform>
-            <numerusform>Compartir %n direcciones para unirse</numerusform>
-        </translation>
-    </message>
     <message>
         <source>Select addresses to share</source>
         <translation>Seleccionar direcciones para compartir</translation>
@@ -15111,11 +15104,19 @@ al cargar</translation>
             <numerusform>Compartir %n direcciones para unirse</numerusform>
         </translation>
     </message>
+    <message>
+        <source>Sign</source>
+        <translation type="unfinished">Firmar</translation>
+    </message>
+    <message>
+        <source>Signed</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
-        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</source>
-        <translation>
-            <numerusform>Para compartir %n dirección con &lt;b&gt;%1&lt;/b&gt;, autentica el par de claves asociado...</numerusform>
-            <numerusform>Para compartir %n direcciones con &lt;b&gt;%1&lt;/b&gt;, autentica los pares de claves asociados...</numerusform>
+        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
         </translation>
     </message>
     <message>
@@ -15123,24 +15124,8 @@ al cargar</translation>
         <translation>Almacenado en el dispositivo</translation>
     </message>
     <message>
-        <source>Authenticate</source>
-        <translation>Autenticar</translation>
-    </message>
-    <message>
-        <source>Authenticated</source>
-        <translation>Autenticado</translation>
-    </message>
-    <message>
         <source>Stored on keycard</source>
         <translation>Almacenado en Keycard</translation>
-    </message>
-    <message>
-        <source>Authenticate via “%1” key pair</source>
-        <translation>Autenticar mediante el par de claves &quot;%1&quot;</translation>
-    </message>
-    <message>
-        <source>The following key pairs will be authenticated via “%1” key pair</source>
-        <translation>Los siguientes pares de claves serán autenticados mediante el par de claves &quot;%1&quot;</translation>
     </message>
 </context>
 <context>

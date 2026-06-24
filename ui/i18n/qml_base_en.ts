@@ -3640,13 +3640,6 @@ file format</source>
         <source>Share all addresses to join</source>
         <translation type="unfinished"></translation>
     </message>
-    <message numerus="yes">
-        <source>Share %n address(s) to join</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
     <message>
         <source>Select addresses to share</source>
         <translation type="unfinished"></translation>
@@ -15096,8 +15089,16 @@ to load</source>
             <numerusform></numerusform>
         </translation>
     </message>
+    <message>
+        <source>Sign</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signed</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
-        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</source>
+        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</source>
         <translation type="unfinished">
             <numerusform></numerusform>
             <numerusform></numerusform>
@@ -15108,23 +15109,7 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Authenticate</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Authenticated</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Stored on keycard</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Authenticate via “%1” key pair</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>The following key pairs will be authenticated via “%1” key pair</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

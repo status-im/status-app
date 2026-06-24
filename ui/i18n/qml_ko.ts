@@ -3630,12 +3630,6 @@ file format</source>
         <source>Share all addresses to join</source>
         <translation>참여하려면 모든 주소를 공유하세요</translation>
     </message>
-    <message numerus="yes">
-        <source>Share %n address(s) to join</source>
-        <translation>
-            <numerusform>참여하려면 주소 %n개를 공유</numerusform>
-        </translation>
-    </message>
     <message>
         <source>Select addresses to share</source>
         <translation>공유할 주소 선택</translation>
@@ -15044,10 +15038,18 @@ to load</source>
             <numerusform>참여하려면 주소 %n개를 공유하세요</numerusform>
         </translation>
     </message>
+    <message>
+        <source>Sign</source>
+        <translation type="unfinished">서명</translation>
+    </message>
+    <message>
+        <source>Signed</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
-        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, authenticate the associated key pairs...</source>
-        <translation>
-            <numerusform>&lt;b&gt;%1&lt;/b&gt;와(과) %n개의 주소를 공유하려면, 연결된 키 쌍을 인증하세요...</numerusform>
+        <source>To share %n address(s) with &lt;b&gt;%1&lt;/b&gt;, sign with the associated key pairs...</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
         </translation>
     </message>
     <message>
@@ -15055,24 +15057,8 @@ to load</source>
         <translation>기기에 저장됨</translation>
     </message>
     <message>
-        <source>Authenticate</source>
-        <translation>인증</translation>
-    </message>
-    <message>
-        <source>Authenticated</source>
-        <translation>인증됨</translation>
-    </message>
-    <message>
         <source>Stored on keycard</source>
         <translation>Keycard에 저장됨</translation>
-    </message>
-    <message>
-        <source>Authenticate via “%1” key pair</source>
-        <translation>“%1” 키 쌍으로 인증</translation>
-    </message>
-    <message>
-        <source>The following key pairs will be authenticated via “%1” key pair</source>
-        <translation>다음 키 쌍은 “%1” 키 쌍을 통해 인증됩니다</translation>
     </message>
 </context>
 <context>

@@ -651,10 +651,6 @@ method shareCommunityChannelUrlWithChatKey*(self: Module, communityId: string, c
 method shareCommunityChannelUrlWithData*(self: Module, communityId: string, chatId: string): string =
   return self.controller.shareCommunityChannelUrlWithData(communityId, chatId)
 
-proc isColdWalletKeypair(self: Module, keyUid: string): bool =
-  let keypair = self.controller.getKeypairByKeyUid(keyUid)
-  return (not keypair.isNil) and keypair.migratedToColdWallet()
-
 proc emitSignAllSignedIfDone(self: Module) =
   if self.joiningCommunityDetails.allSigned():
     self.view.sendAllSharedAddressesSignedSignal()
@@ -671,18 +667,11 @@ proc requestNextSignatureForKeypair(self: Module, keyUid: string) =
       return
   self.emitSignAllSignedIfDone()
 
-proc requestNextNonColdWalletSignature(self: Module) =
-  for address, details in self.joiningCommunityDetails.addressesToShare.pairs:
-    if details.signature.len == 0 and not self.isColdWalletKeypair(details.keyUid):
-      self.requestSignature(address)
-      return
-  self.emitSignAllSignedIfDone()
-
 method onSigningResult*(self: Module, signature: string, address: string) =
   if not self.joiningCommunityDetails.addressesToShare.hasKey(address):
     return
   if signature.len == 0:
-    self.communityAccessFailed(self.joiningCommunityDetails.communityId, "signing was cancelled or failed")
+    warn "community shared addresses signing returned an empty signature", address
     return
   self.joiningCommunityDetails.addressesToShare[address].signature = signature
   let keyUid = self.joiningCommunityDetails.addressesToShare[address].keyUid
@@ -693,10 +682,7 @@ method onSigningResult*(self: Module, signature: string, address: string) =
       break
   if allForKeypairSigned:
     self.view.keypairsSigningModel().setOwnershipVerified(keyUid, true)
-  if self.isColdWalletKeypair(keyUid):
-    self.requestNextSignatureForKeypair(keyUid)
-  else:
-    self.requestNextNonColdWalletSignature()
+  self.requestNextSignatureForKeypair(keyUid)
 
 method prepareKeypairsForSigning*(self: Module, communityId, ensName: string, addresses: string,
   airdropAddress: string, editMode: bool) =
@@ -738,6 +724,8 @@ method prepareKeypairsForSigning*(self: Module, communityId, ensName: string, ad
           return (it.getKeyUid(), acc.getPath())
     return ("", "")
 
+  self.joiningCommunityDetails.addressesToShare.clear()
+
   for param in signingParams:
     let (keyUid, path) = findKeyUidAndPathForAddress(keypairsForSigning, param.address)
     let details = AddressToShareDetails(
@@ -748,9 +736,6 @@ method prepareKeypairsForSigning*(self: Module, communityId, ensName: string, ad
       messageToBeSigned: param.data
     )
     self.joiningCommunityDetails.addressesToShare[param.address] = details
-
-method signProfileKeypairAndAllNonKeycardKeypairs*(self: Module) =
-  self.requestNextNonColdWalletSignature()
 
 method signSharedAddressesForKeypair*(self: Module, keyUid: string) =
   self.requestNextSignatureForKeypair(keyUid)

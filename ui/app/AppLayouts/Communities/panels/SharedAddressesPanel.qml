@@ -28,8 +28,6 @@ Control {
     required property var selectedSharedAddressesMap // Map[address, [keyUid, selected, isAirdrop]
     property var currentSharedAddressesMap // Map[address, [keyUid, selected, isAirdrop]
     required property int totalNumOfAddressesForSharing
-    required property bool profileProvesOwnershipOfSelectedAddresses
-    required property bool allAddressesToRevealBelongToSingleNonProfileKeypair
     required property int /*PermissionTypes.Type*/ eligibleToJoinAs
 
     property bool requirementsCheckPending
@@ -136,27 +134,6 @@ Control {
                 return qsTr("Reveal %n address(s)", "", d.selectedSharedAddressesCount)
             }
 
-            icon.name: {
-                if (!d.lostCommunityPermission
-                        && !d.lostChannelPermissions
-                        && root.profileProvesOwnershipOfSelectedAddresses) {
-                    if (userProfile.usingBiometricLogin) {
-                        return "touch-id"
-                    }
-
-                    if (userProfile.migratedToColdWallet) {
-                        return "keycard"
-                    }
-
-                    return "password"
-                }
-                if (root.allAddressesToRevealBelongToSingleNonProfileKeypair) {
-                    return "keycard"
-                }
-
-                return ""
-            }
-
             onClicked: {
                 root.shareSelectedAddressesClicked()
             }
@@ -177,25 +154,6 @@ Control {
                     return qsTr("Share all addresses to join")
                 }
                 return qsTr("Share %n address(s) to join", "", d.selectedSharedAddressesCount)
-            }
-
-            icon.name: {
-                if (root.profileProvesOwnershipOfSelectedAddresses) {
-                    if (userProfile.usingBiometricLogin) {
-                        return "touch-id"
-                    }
-
-                    if (userProfile.migratedToColdWallet) {
-                        return "keycard"
-                    }
-
-                    return "password"
-                }
-                if (root.allAddressesToRevealBelongToSingleNonProfileKeypair) {
-                    return "keycard"
-                }
-
-                return ""
             }
 
             onClicked: {

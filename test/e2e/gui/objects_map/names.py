@@ -382,7 +382,12 @@ join_StatusButton = {"container": statusDesktop_mainWindow_overlay, "type": "Sta
 welcome_authenticate_StatusButton = {"container": statusDesktop_mainWindow_overlay, "type": "StatusButton",
                                      "unnamed": 1, "visible": True}
 share_your_addresses_to_join_StatusButton = {"container": statusDesktop_mainWindow_overlay, "type": "StatusButton",
-                                             "unnamed": 1, "visible": True}
+                                             "objectName": "membershipShareAllAddressesButton", "visible": True}
+sign_keypair_StatusButton = {"container": statusDesktop_mainWindow_overlay, "type": "StatusButton",
+                             "objectName": "signKeyPairButton", "visible": True}
+submit_shared_addresses_to_join_StatusButton = {"container": statusDesktop_mainWindow_overlay, "type": "StatusButton",
+                                                "objectName": "membershipSubmitSharedAddressesButton", "visible": True,
+                                                "enabled": True}
 
 # Pinned messages
 pinnedMessagesPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "PinnedMessagesPopup",

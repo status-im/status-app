@@ -326,9 +326,6 @@ QtObject:
   proc prepareTokenModelForCommunityChat(self: View, communityId: string, chatId: string) {.slot.} =
     self.delegate.prepareTokenModelForCommunityChat(communityId, chatId)
 
-  proc signProfileKeypairAndAllNonKeycardKeypairs*(self: View) {.slot.} =
-    self.delegate.signProfileKeypairAndAllNonKeycardKeypairs()
-
   proc signSharedAddressesForKeypair*(self: View, keyUid: string) {.slot.} =
     self.delegate.signSharedAddressesForKeypair(keyUid)
 

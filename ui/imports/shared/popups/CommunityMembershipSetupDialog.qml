@@ -54,27 +54,9 @@ StatusStackModal {
 
     property var getCurrencyAmount: function (balance, key){}
 
-    property var canProfileProveOwnershipOfProvidedAddressesFn: function(addresses) { return false }
-    readonly property bool hasUserProfile: typeof userProfile !== "undefined" && !!userProfile
-
-    readonly property bool profileProvesOwnershipOfSelectedAddresses: {
-        d.selectedSharedAddressesMap // needed for binding
-        const obj = d.getSelectedAddresses()
-        return root.canProfileProveOwnershipOfProvidedAddressesFn(obj.addresses)
-    }
-
-    readonly property bool allAddressesToRevealBelongToSingleNonProfileKeypair: {
-        const keyUids = new Set()
-        for (const [key, value] of d.selectedSharedAddressesMap) {
-            keyUids.add(value.keyUid)
-        }
-        return keyUids.size === 1 && (!root.hasUserProfile || !keyUids.has(userProfile.keyUid))
-    }
-
     signal prepareForSigning(string airdropAddress, var sharedAddresses)
     signal joinCommunity()
     signal editRevealedAddresses()
-    signal signProfileKeypairAndAllNonKeycardKeypairs()
     signal signSharedAddressesForKeypair(string keyUid)
     signal cancelMembershipRequest()
     signal sharedAddressesUpdated(var sharedAddresses)
@@ -88,6 +70,7 @@ StatusStackModal {
     rightButtons: [d.shareButton, finishButton]
 
     finishButton: StatusButton {
+        objectName: "membershipShareAllAddressesButton"
         interactive: {
             if (root.isInvitationPending || d.accessType !== Constants.communityChatOnRequestAccess)
                 return true
@@ -110,39 +93,10 @@ StatusStackModal {
 
             return ""
         }
-        text: {
-            if (root.isInvitationPending) {
-                return qsTr("Cancel Membership Request")
-            }
-            if (d.selectedSharedAddressesCount === d.totalNumOfAddressesForSharing) {
-                return qsTr("Share all addresses to join")
-            }
-            return qsTr("Share %n address(s) to join", "", d.selectedSharedAddressesCount)
-        }
+        text: root.isInvitationPending ? qsTr("Cancel Membership Request")
+                                       : qsTr("Share all addresses to join")
         type: root.isInvitationPending ? StatusBaseButton.Type.Danger
                                        : StatusBaseButton.Type.Normal
-
-        icon.name: {
-            if (root.isInvitationPending)
-                return ""
-
-            if (root.profileProvesOwnershipOfSelectedAddresses) {
-                if (root.hasUserProfile && userProfile.usingBiometricLogin) {
-                    return "touch-id"
-                }
-
-                if (root.hasUserProfile && userProfile.migratedToColdWallet) {
-                    return "keycard"
-                }
-
-                return "password"
-            }
-            if (root.allAddressesToRevealBelongToSingleNonProfileKeypair) {
-                return "keycard"
-            }
-
-            return ""
-        }
 
         onClicked: {
             if (root.isInvitationPending) {
@@ -151,6 +105,7 @@ StatusStackModal {
                 return
             }
 
+            d.reEvaluateModels()
             d.proceedToSigningOrSubmitRequest(d.communityIntroUid)
         }
     }
@@ -211,37 +166,25 @@ StatusStackModal {
         function proceedToSigningOrSubmitRequest(uidOfComponentThisFunctionIsCalledFrom) {
             const selected = d.getSelectedAddresses()
             root.prepareForSigning(selected.airdropAddress, selected.addresses)
-            if (root.profileProvesOwnershipOfSelectedAddresses) {
-                root.signProfileKeypairAndAllNonKeycardKeypairs()
-                return
-            }
-            if (root.allAddressesToRevealBelongToSingleNonProfileKeypair) {
-                if (d.selectedSharedAddressesMap.size === 0) {
-                    console.error("selected shared addresses must not be empty")
-                    return
-                }
-                const keyUid = d.selectedSharedAddressesMap.values().next().value.keyUid
-                root.signSharedAddressesForKeypair(keyUid)
-                return
-            }
 
             d.backActionGoesTo = uidOfComponentThisFunctionIsCalledFrom
             root.replace(sharedAddressesSigningPanelComponent)
         }
 
-        // This function deletes/adds it the address from/to the map.
+        // This function deletes/adds the address from/to the map.
         function toggleAddressSelection(keyUid, address) {
-            const tmpMap = d.selectedSharedAddressesMap
+            const tmpMap = new Map(d.selectedSharedAddressesMap)
 
             const lAddress = address.toLowerCase()
             const obj = tmpMap.get(lAddress)
             if (!!obj) {
                 if (tmpMap.size === 1) {
                     console.error("cannot remove the last selected address")
+                    return
                 }
                 tmpMap.delete(lAddress)
                 if (obj.isAirdrop) {
-                    d.selectAirdropAddressForTheFirstSelectedAddress()
+                    d.selectAirdropAddressForTheFirstSelectedAddress(tmpMap)
                 }
             } else {
                 tmpMap.set(lAddress, {keyUid: keyUid, selected: true, isAirdrop: false})
@@ -250,24 +193,19 @@ StatusStackModal {
             d.selectedSharedAddressesMap = tmpMap
         }
 
-        // This function selects new airdrop address, invalidating old airdrop address selection.
-        function selectAirdropAddressForTheFirstSelectedAddress() {
-            const tmpMap = d.selectedSharedAddressesMap
-
-            // clear previous airdrop address
+        // This function selects a new airdrop address, invalidating the old airdrop selection.
+        function selectAirdropAddressForTheFirstSelectedAddress(tmpMap) {
             for (const [key, value] of tmpMap) {
                 if (!value.isAirdrop) {
-                    d.selectedSharedAddressesMap.set(key, {keyUid: value.keyUid, selected: value.selected, isAirdrop: true})
+                    tmpMap.set(key, {keyUid: value.keyUid, selected: value.selected, isAirdrop: true})
                     break
                 }
             }
-
-            d.selectedSharedAddressesMap = tmpMap
         }
 
         // This function selects new airdrop address, invalidating old airdrop address selection.
         function selectAirdropAddress(address) {
-            const tmpMap = d.selectedSharedAddressesMap
+            const tmpMap = new Map(d.selectedSharedAddressesMap)
 
             // clear previous airdrop address
             for (const [key, value] of tmpMap) {
@@ -284,8 +222,7 @@ StatusStackModal {
                 console.error("cannot set airdrop address for unselected address")
                 return
             }
-            obj.isAirdrop = true
-            tmpMap.set(lAddress, obj)
+            tmpMap.set(lAddress, {keyUid: obj.keyUid, selected: obj.selected, isAirdrop: true})
 
             d.selectedSharedAddressesMap = tmpMap
         }
@@ -373,9 +310,6 @@ StatusStackModal {
             totalNumOfAddressesForSharing: d.totalNumOfAddressesForSharing
             eligibleToJoinAs: d.eligibleToJoinAs
 
-            profileProvesOwnershipOfSelectedAddresses: root.profileProvesOwnershipOfSelectedAddresses
-            allAddressesToRevealBelongToSingleNonProfileKeypair: root.allAddressesToRevealBelongToSingleNonProfileKeypair
-
             walletAssetsModel: root.walletAssetsModel
             walletCollectiblesModel: root.walletCollectiblesModel
 
@@ -418,10 +352,6 @@ StatusStackModal {
 
             communityName: root.communityName
             keypairSigningModel: root.keypairSigningModel
-
-            onSignProfileKeypairAndAllNonKeycardKeypairs: {
-                root.signProfileKeypairAndAllNonKeycardKeypairs()
-            }
 
             onSignSharedAddressesForKeypair: {
                 root.signSharedAddressesForKeypair(keyUid)
