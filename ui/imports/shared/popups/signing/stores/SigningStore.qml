@@ -9,6 +9,7 @@ QtObject {
     readonly property bool ready: d.ready
     readonly property string userProfileKeyUid: userProfile.keyUid
     readonly property string userProfilePubKey: userProfile.pubKey
+    readonly property bool userProfileMigratedToColdWallet: userProfile.migratedToColdWallet
 
     readonly property QtObject d: QtObject {
         property bool ready: false

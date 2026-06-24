@@ -31,8 +31,16 @@ StatusDialog {
     required property int remainingPinAttempts
     required property string userProfileKeyUid
     required property string userProfilePublicKey
+    required property bool userProfileMigratedToColdWallet
     required property bool isKeycardKeyPair
     property var keyPairForProcessing: null
+
+    // a logic about key pair being used for authentication/signing as well as the location of signing (keycard/keystore file) is determined by these readonly props here
+    readonly property bool useKeycard: root.isKeycardKeyPair
+                                       || root.userProfileMigratedToColdWallet
+    readonly property string useKeyUid: root.isKeycardKeyPair?
+                                            root.keyUid
+                                          : root.userProfileKeyUid
 
     // buttons
     required property string btnActionName
@@ -64,7 +72,7 @@ StatusDialog {
                     return biometricsComponent
                 }
 
-                if (!root.isKeycardKeyPair) {
+                if (!root.useKeycard) {
                     return enterPasswordComponent
                 }
 
@@ -119,8 +127,8 @@ StatusDialog {
                 text: d.credentialMismatchAfterBiometrics && d.usingBiometrics
                       ? root.btnPasswordActionAndUpdateName
                       : root.btnActionName
-                visible: !root.isKeycardKeyPair && !d.biometricsInProgress
-                enabled: !root.isKeycardKeyPair
+                visible: !root.useKeycard && !d.biometricsInProgress
+                enabled: !root.useKeycard
                          && !!contentLoader.item
                          && contentLoader.item.passwordValid
                          && !d.verifying
@@ -133,9 +141,9 @@ StatusDialog {
             StatusButton {
                 objectName: "keycardPopupBaseUpdatePinSubmitButton"
                 text: root.btnPinActionAndUpdateName
-                visible: root.isKeycardKeyPair && !d.biometricsInProgress && !d.verifying
+                visible: root.useKeycard && !d.biometricsInProgress && !d.verifying
                            && d.credentialMismatchAfterBiometrics && d.usingBiometrics
-                enabled: root.isKeycardKeyPair
+                enabled: root.useKeycard
                          && !!contentLoader.item
                          && contentLoader.item.pinValid
                          && !d.verifying
@@ -163,7 +171,7 @@ StatusDialog {
             d.showToast(status)
             d.credentialCameFromBiometrics = true
 
-            if (root.isKeycardKeyPair) {
+            if (root.useKeycard) {
                 d.biometricsInProgress = false
                 d.performKeycardActionInternal(secret)
                 return
@@ -180,8 +188,8 @@ StatusDialog {
         id: d
 
         readonly property bool usingBiometrics: root.keychain.available
-                                                && root.keyUid === root.userProfileKeyUid
-                                                && keychain.hasCredential(root.keyUid) === Keychain.StatusSuccess
+                                                && root.useKeyUid === root.userProfileKeyUid
+                                                && keychain.hasCredential(root.useKeyUid) === Keychain.StatusSuccess
 
         property bool biometricsInProgress: false
         property bool credentialMismatchAfterBiometrics: false
@@ -196,7 +204,7 @@ StatusDialog {
                 return
             }
 
-            const status = root.keychain.updateCredential(root.keyUid, credential)
+            const status = root.keychain.updateCredential(root.useKeyUid, credential)
             if (status !== Keychain.StatusSuccess) {
                 Global.displayToastMessage(qsTr("Failed to update stored credentials"), "", "warning", false, Constants.ephemeralNotificationType.danger, "")
             }
@@ -231,7 +239,7 @@ StatusDialog {
             d.error = ""
             d.credentialCameFromBiometrics = false
             d.credentialMismatchAfterBiometrics = false
-            root.keychain.requestGetCredential("authenticate", root.keyUid)
+            root.keychain.requestGetCredential("authenticate", root.useKeyUid)
         }
 
         function performPasswordActionInternal() {
@@ -266,7 +274,7 @@ StatusDialog {
             d.verifying = true
             d.error = ""
             d.lastPin = pin
-            root.performKeycardAction(root.keyUid, pin)
+            root.performKeycardAction(root.useKeyUid, pin)
         }
 
         // Called by the concrete popup when keycard action succeeds
@@ -364,7 +372,7 @@ StatusDialog {
     Component {
         id: biometricsComponent
         Biometrics {
-            isKeycardKeyPair: root.isKeycardKeyPair
+            isKeycardKeyPair: root.useKeycard
             signingPurpose: root.purpose === PopupBase.Purpose.Signing
         }
     }

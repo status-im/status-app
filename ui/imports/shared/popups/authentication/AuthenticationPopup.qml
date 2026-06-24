@@ -27,6 +27,7 @@ PopupBase {
     remainingPinAttempts: root.store.remainingPinAttempts
     userProfileKeyUid: root.store.userProfileKeyUid
     userProfilePublicKey: root.store.userProfilePubKey
+    userProfileMigratedToColdWallet: root.store.userProfileMigratedToColdWallet
     isKeycardKeyPair: root.store.ready && root.store.isKeypairMigratedToColdWallet(root.keyUid)
     keyPairForProcessing: root.store.keyPairForProcessing
 
