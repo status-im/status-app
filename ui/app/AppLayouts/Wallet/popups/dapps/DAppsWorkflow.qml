@@ -31,8 +31,6 @@ SQUtils.QObject {
     required property Item visualParent
     // Whether the dapps can interract with the wallet
     required property bool enabled
-    // Values mapped to Constants.LoginType
-    required property int loginType
     /*
         Accounts model
 
@@ -375,6 +373,7 @@ SQUtils.QObject {
                 address: "",
                 emoji: "",
                 colorId: 0,
+                keyUid: "",
                 migratedToColdWallet: false
             }
 
@@ -395,7 +394,8 @@ SQUtils.QObject {
 
             parent: root.visualParent
 
-            loginType: account.migratedToColdWallet ? Constants.LoginType.Keycard : root.loginType
+            keyUid: account.keyUid
+            migratedToColdWallet: account.migratedToColdWallet
             formatBigNumber: root.formatBigNumber
 
             visible: !!request.dappUrl

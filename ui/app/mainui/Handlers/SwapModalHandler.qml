@@ -98,7 +98,6 @@ QtObject {
                 }
             }
             swapInputParamsForm: d.swapInputParams
-            loginType: root.rootStore.getLoginType()
             onClosed: {
                 destroy()
                 swapInputParamsForm.resetFormData()

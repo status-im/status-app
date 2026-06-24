@@ -189,15 +189,7 @@ StatusModal {
                     return ""
                 }
 
-                if (root.store.userProfileUsingBiometricLogin) {
-                    return "touch-id"
-                }
-
-                if (root.store.userProfileMigratedToColdWallet) {
-                    return "keycard"
-                }
-
-                return "password"
+                return Utils.resolveAuthSignIcon("", false, Constants.AuthSignPurpose.General)
             }
 
             onClicked: {

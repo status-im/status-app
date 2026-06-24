@@ -30,7 +30,6 @@ QtObject {
     required property WalletStores.TransactionStoreNew transactionStoreNew
     required property SharedStores.NetworksStore networksStore
     required property SharedStores.NetworkConnectionStore networkConnectionStore
-    property var fnGetLoginType: function() {}
 
     /** for ens flows **/
     required property string myPublicKey
@@ -998,7 +997,8 @@ QtObject {
                         return WalletUtils.formatEstimatedTime(0)
                     }
 
-                    loginType: root.fnGetLoginType()
+                    keyUid: signSendAdaptor.selectedAccount.keyUid
+                    migratedToColdWallet: signSendAdaptor.selectedAccount.migratedToColdWallet
 
                     isCollectible: simpleSendModal.sendType === Constants.SendType.ERC1155Transfer ||
                                    simpleSendModal.sendType === Constants.SendType.ERC721Transfer

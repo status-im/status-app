@@ -81,7 +81,6 @@ Item {
         SwapModal {
             swapInputParamsForm: root.swapFormData
             swapAdaptor: root.swapAdaptor
-            loginType: Constants.LoginType.Password
             buyEnabled: true
         }
     }

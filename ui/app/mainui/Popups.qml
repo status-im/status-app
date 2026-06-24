@@ -1397,6 +1397,10 @@ QtObject {
                                                                         "address",
                                                                         finalisePopup.selectedAccountAddress,
                                                                         "migratedToColdWallet")
+                    keyUid: SQUtils.ModelUtils.getByKey(root.rootStore.walletAccountsModel,
+                                                        "address",
+                                                        finalisePopup.selectedAccountAddress,
+                                                        "keyUid") ?? ""
 
                     model: QtObject {
                         readonly property string title: finalisePopup.feeLabel

@@ -32,7 +32,6 @@ StatusDialog {
     parameters to the modal when being launched from elsewhere */
     required property SwapInputParamsForm swapInputParamsForm
     required property SwapModalAdaptor swapAdaptor
-    required property int loginType
 
     /** input property to indicate if buy action is enabled **/
     property bool buyEnabled
@@ -550,8 +549,9 @@ StatusDialog {
                     objectName: "signButton"
                     readonly property string fromTokenSymbol: !!root.swapAdaptor.fromToken ? root.swapAdaptor.fromToken.symbol ?? "" : ""
                     loadingWithText: root.swapAdaptor.approvalPending
-                    icon.name: !!d.selectedAccount && d.selectedAccount.migratedToColdWallet ? Constants.authenticationIconByType[Constants.LoginType.Keycard]
-                                                                                  : Constants.authenticationIconByType[root.loginType]
+                    icon.name: Utils.resolveAuthSignIcon(!!d.selectedAccount ? d.selectedAccount.keyUid : "",
+                                                         !!d.selectedAccount && d.selectedAccount.migratedToColdWallet,
+                                                         Constants.AuthSignPurpose.General)
                     text: {
                         if(root.swapAdaptor.validSwapProposalReceived) {
                             if(root.swapAdaptor.swapOutputData.approvalNeeded) {
@@ -601,7 +601,8 @@ StatusDialog {
 
             formatBigNumber: (number, symbol, noSymbolOption) => root.swapAdaptor.currencyStore.formatBigNumber(number, symbol, noSymbolOption)
 
-            loginType: !!d.selectedAccount && d.selectedAccount.migratedToColdWallet ? Constants.LoginType.Keycard : root.loginType
+            keyUid: !!d.selectedAccount ? d.selectedAccount.keyUid : ""
+            migratedToColdWallet: !!d.selectedAccount && d.selectedAccount.migratedToColdWallet
             feesLoading: root.swapAdaptor.swapProposalLoading
 
             fromTokenSymbol: root.swapAdaptor.fromToken.symbol
@@ -655,7 +656,8 @@ StatusDialog {
 
             formatBigNumber: (number, symbol, noSymbolOption) => root.swapAdaptor.currencyStore.formatBigNumber(number, symbol, noSymbolOption)
 
-            loginType: !!d.selectedAccount && d.selectedAccount.migratedToColdWallet ? Constants.LoginType.Keycard : root.loginType
+            keyUid: !!d.selectedAccount ? d.selectedAccount.keyUid : ""
+            migratedToColdWallet: !!d.selectedAccount && d.selectedAccount.migratedToColdWallet
             feesLoading: root.swapAdaptor.swapProposalLoading
 
             fromTokenSymbol: root.swapAdaptor.fromToken.symbol

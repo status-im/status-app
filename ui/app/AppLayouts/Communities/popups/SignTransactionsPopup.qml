@@ -24,6 +24,7 @@ StatusDialog {
     property alias totalFeeText: footer.totalFeeText
     property alias accountName: footer.accountName
 
+    property string keyUid: ""
     property bool migratedToColdWallet: false
 
     signal signTransactionClicked()
@@ -62,7 +63,7 @@ StatusDialog {
             StatusButton {
                 objectName: "signTransactionButton"
                 enabled: root.errorText === "" && !root.isFeeLoading
-                icon.name: root.migratedToColdWallet ? "keycard" : "password"
+                icon.name: Utils.resolveAuthSignIcon(root.keyUid, root.migratedToColdWallet, Constants.AuthSignPurpose.General)
                 text: qsTr("Sign transaction")
                 onClicked: {
                     root.signTransactionClicked()

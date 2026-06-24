@@ -79,15 +79,9 @@ ColumnLayout {
                     objectName: "signKeyPairButton"
                     text: qsTr("Sign")
                     visible: !model.keyPair.ownershipVerified
-                    icon.name: {
-                        if (userProfile.keyUid !== kpDelegate.keyPairKeyUid && kpDelegate.migratedToColdWallet)
-                            return "keycard"
-                        if (userProfile.usingBiometricLogin)
-                            return "touch-id"
-                        if (userProfile.migratedToColdWallet)
-                            return "keycard"
-                        return "password"
-                    }
+                    icon.name: Utils.resolveAuthSignIcon(kpDelegate.keyPairKeyUid,
+                                                         kpDelegate.migratedToColdWallet,
+                                                         Constants.AuthSignPurpose.General)
 
                     onClicked: {
                         root.signSharedAddressesForKeypair(model.keyPair.keyUid)

@@ -1140,17 +1140,11 @@ QtObject {
         readonly property string failed: "Failed"
     }
 
-    enum LoginType {
-        Password,
-        Biometrics,
-        Keycard
+    enum AuthSignPurpose {
+        General,
+        AddAccount,
+        AddAccountCustomPath
     }
-    // Needs to match the enum above
-    readonly property var authenticationIconByType: [
-        "password",
-        "touch-id",
-        "keycard",
-    ]
 
     enum ComputeFeeErrorCode {
         Success,

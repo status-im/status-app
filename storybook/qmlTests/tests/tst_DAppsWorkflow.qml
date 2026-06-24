@@ -887,7 +887,6 @@ Item {
     Component {
         id: componentUnderTest
         DAppsWorkflow {
-            loginType: Constants.LoginType.Password
             visualParent: root
             enabled: true
             dAppsModel: ListModel {}

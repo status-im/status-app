@@ -14,8 +14,6 @@ BasePopupStore {
 
     property string userProfilePublicKey: userProfile.pubKey
     property string userProfileKeyUid: userProfile.keyUid
-    property bool userProfileMigratedToColdWallet: userProfile.migratedToColdWallet
-    property bool userProfileUsingBiometricLogin: userProfile.usingBiometricLogin
 
     // Module Properties
     property var currentState: root.addAccountModule.currentState

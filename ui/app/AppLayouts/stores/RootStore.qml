@@ -258,18 +258,6 @@ QtObject {
     signal showToastPairingFallbackCompleted()
     // End of Settings related stuff
 
-    // Onboarding related properties and functions that shall be moved to `OnboardingRootStore`
-    readonly property int loginType: getLoginType()
-    function getLoginType() {
-        if(!d.userProfileInst)
-            return Constants.LoginType.Password
-
-        if(d.userProfileInst.usingBiometricLogin)
-            return Constants.LoginType.Biometrics
-        if(d.userProfileInst.migratedToColdWallet)
-            return Constants.LoginType.Keycard
-        return Constants.LoginType.Password
-    }
     // End of Onboarding related stuff
 
     // Chat related properties and functions that shall be moved to `ChatRootStore`

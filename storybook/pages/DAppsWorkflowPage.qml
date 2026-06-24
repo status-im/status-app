@@ -85,7 +85,6 @@ Item {
                     enabled: dappsService.isServiceOnline
 
                     readonly property var wcService: dappsService
-                    loginType: Constants.LoginType.Biometrics
                     selectedAccountAddress: ""
 
                     dAppsModel: wcService.dappsModel

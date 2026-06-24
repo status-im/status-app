@@ -226,7 +226,8 @@ SplitView {
                     collectibleFallbackImageUrl:!!collectibleComboBox.currentCollectible ?
                                                     collectibleComboBox.currentCollectible.imageUrl : ""
 
-                    loginType: ctrlLoginType.currentIndex
+                    keyUid: ""
+                    migratedToColdWallet: ctrlLoginType.currentText === "Keycard"
 
                     feesLoading: ctrlLoading.checked
 
@@ -343,7 +344,15 @@ SplitView {
             ComboBox {
                 Layout.fillWidth: true
                 id: ctrlLoginType
-                model: Constants.authenticationIconByType
+                model: ["Password", "Biometrics", "Keycard"]
+            }
+            // The auth/sign icon is resolved from userProfile via Utils.resolveAuthSignIcon,
+            // so drive the mock profile's biometric flag from the selector above.
+            Binding {
+                target: userProfile
+                property: "usingBiometricLogin"
+                value: ctrlLoginType.currentText === "Biometrics"
+                restoreMode: Binding.RestoreBindingOrValue
             }
 
             TextField {

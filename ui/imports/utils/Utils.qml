@@ -1148,6 +1148,41 @@ QtObject {
     property var sharedUrlsModuleInst: typeof  sharedUrlsModule !== "undefined" ? sharedUrlsModule : null
     property var globalUtilsInst: typeof globalUtils !== "undefined" ? globalUtils : null
     property var communitiesModuleInst: typeof communitiesModule !== "undefined" ? communitiesModule : null
+    property var userProfileInst: typeof userProfile !== "undefined" ? userProfile : null
+
+    // Returns icon for the passed keyUid and migratedToColdWallet params of the key pair being processed and authSignPurpose
+    function resolveAuthSignIcon(keyUid, migratedToColdWallet, authSignPurpose) {
+        const profile = userProfileInst
+
+        if (!profile) {
+            console.error("profile is not set yet")
+            return ""
+        }
+
+        // Cold wallet keypairs derive from the stored xpub, so no authentication is required
+        if (authSignPurpose === Constants.AuthSignPurpose.AddAccount ||
+                authSignPurpose === Constants.AuthSignPurpose.AddAccountCustomPath) {
+            if (migratedToColdWallet) {
+                return ""
+            }
+        }
+
+        let useKeyUid = keyUid?? profile.keyUid
+
+        if (useKeyUid !== profile.keyUid && migratedToColdWallet) {
+            return "keycard"
+        }
+
+        if (profile.usingBiometricLogin) {
+            return "touch-id"
+        }
+
+        if (profile.migratedToColdWallet) {
+            return "keycard"
+        }
+
+        return "password"
+    }
 
     function isChatKey(value) {
         return (startsWith0x(value) && isHex(value) && value.length === 132) || globalUtilsInst.isCompressedPubKey(value)

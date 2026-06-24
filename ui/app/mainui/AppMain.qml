@@ -2821,7 +2821,6 @@ Item {
 
                 enabled: dAppsService.isServiceOnline
                 visualParent: appMain
-                loginType: appMain.rootStore.getLoginType()
                 selectedAccountAddress: appMain.walletRootStore.selectedAddress
                 dAppsModel: dAppsService.dappsModel
                 accountsModel: appMain.walletRootStore.nonWatchAccounts

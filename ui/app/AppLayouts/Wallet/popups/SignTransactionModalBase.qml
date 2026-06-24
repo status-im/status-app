@@ -23,7 +23,8 @@ import utils
 StatusDialog {
     id: root
 
-    required property int loginType // RootStore.loginType -> Constants.LoginType enum
+    required property string keyUid
+    required property bool migratedToColdWallet
 
     /**
       Format a currency amount, represented as a float `number` as a string, e.g. "1.234",
@@ -69,7 +70,7 @@ StatusDialog {
                 id: signButton
                 interactive: !root.feesLoading && root.signButtonEnabled
                 visible: !root.hasExpiryDate || !countdownPill.isExpired
-                icon.name: Constants.authenticationIconByType[root.loginType]
+                icon.name: Utils.resolveAuthSignIcon(root.keyUid, root.migratedToColdWallet, Constants.AuthSignPurpose.General)
                 disabledColor: Theme.palette.directColor8
                 text: root.signButtonText
                 onClicked: root.accept() // close and emit accepted() signal

@@ -344,7 +344,6 @@ QtObject {
 
     property bool isDebugEnabled: advancedModule ? advancedModule.isDebugEnabled : false
 
-    readonly property int loginType: getLoginType()
 
     property string name: d.userProfileInst.name
 
@@ -568,16 +567,6 @@ QtObject {
         return profileSectionModule.ensUsernamesModule.getEtherscanTxLink()
     }
 
-    function getLoginType() {
-        if(!d.userProfileInst)
-            return Constants.LoginType.Password
-
-        if(d.userProfileInst.usingBiometricLogin)
-            return Constants.LoginType.Biometrics
-        if(d.userProfileInst.migratedToColdWallet)
-            return Constants.LoginType.Keycard
-        return Constants.LoginType.Password
-    }
 
     readonly property Connections communitiesModuleConnections: Connections {
       target: communitiesModuleInst

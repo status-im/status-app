@@ -30,7 +30,8 @@ SplitView {
         DAppSignRequestModal {
             id: dappSignRequestModal
 
-            loginType: loginType.currentValue
+            keyUid: ""
+            migratedToColdWallet: loginTypeCombo.currentText === "Keycard"
             formatBigNumber: (number, symbol, noSymbolOption) => parseFloat(number).toLocaleString(Qt.locale(), 'f', 2)
                              + (noSymbolOption ? "" : " " + (symbol || Qt.locale().currencySymbol(Locale.CurrencyIsoCode)))
 
@@ -121,11 +122,17 @@ Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Fusce nibh. Etiam quis
             }
             ComboBox {
                 Layout.fillWidth: true
-                id: loginType
-                model: [{name: "Password", value: Constants.LoginType.Password}, {name: "Biometrics", value: Constants.LoginType.Biometrics}, {name: "Keycard", value: Constants.LoginType.Keycard}]
-                textRole: "name"
-                valueRole: "value"
+                id: loginTypeCombo
+                model: ["Password", "Biometrics", "Keycard"]
                 currentIndex: 0
+            }
+            // The auth/sign icon is resolved from userProfile via Utils.resolveAuthSignIcon,
+            // so drive the mock profile's biometric flag from the selector above.
+            Binding {
+                target: userProfile
+                property: "usingBiometricLogin"
+                value: loginTypeCombo.currentText === "Biometrics"
+                restoreMode: Binding.RestoreBindingOrValue
             }
             ComboBox {
                 Layout.fillWidth: true

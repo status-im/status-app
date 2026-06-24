@@ -55,22 +55,10 @@ Column {
             visible: !root.store.addAccountModule.actionAuthenticated
             text: qsTr("Edit")
 
-            icon.name: {
-                // Cold wallet keypairs derive from the stored xpub, so no authentication is required
-                if (root.store.selectedOrigin.migratedToColdWallet) {
-                    return ""
-                }
-
-                if (root.store.userProfileUsingBiometricLogin) {
-                    return "touch-id"
-                }
-
-                if (root.store.userProfileMigratedToColdWallet) {
-                    return "keycard"
-                }
-
-                return "password"
-            }
+            icon.name: Utils.resolveAuthSignIcon(root.store.selectedOrigin.keyUid,
+                                                 root.store.selectedOrigin.migratedToColdWallet,
+                                                 Constants.AuthSignPurpose.AddAccountCustomPath
+                                                 )
 
             onClicked: {
                 root.store.authenticateForEditingDerivationPath()

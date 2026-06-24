@@ -176,7 +176,6 @@ SplitView {
                 destroyOnClose: true
                 swapInputParamsForm: adaptor.swapFormData
                 swapAdaptor: adaptor
-                loginType: Constants.LoginType.Password
                 Binding {
                     target: swapInputParamsForm
                     property: "fromTokensKey"

@@ -74,7 +74,7 @@ StackView {
     // Models:
     property var tokensModel
     property var membersModel
-    property var accounts // Expected roles: address, name, color, emoji, walletType
+    property var accounts // Expected roles: address, name, color, emoji, walletType, keyUid, migratedToColdWallet
     required property var referenceTokenGroupsModel
 
     signal mintCollectible(var collectibleItem)
@@ -325,6 +325,10 @@ StackView {
                                                                         "address",
                                                                         editOwnerTokenView.ownerToken.accountAddress,
                                                                         "migratedToColdWallet")
+                    keyUid: SQUtils.ModelUtils.getByKey(root.accounts,
+                                                        "address",
+                                                        editOwnerTokenView.ownerToken.accountAddress,
+                                                        "keyUid") ?? ""
 
                     model: QtObject {
                         readonly property string title: editOwnerTokenView.feeLabel
@@ -551,6 +555,11 @@ StackView {
                                               "address",
                                               preview.token.accountAddress,
                                               "migratedToColdWallet")
+                    keyUid: SQUtils.ModelUtils.getByKey(
+                                root.accounts,
+                                "address",
+                                preview.token.accountAddress,
+                                "keyUid") ?? ""
 
                     model: QtObject {
                         readonly property string title: preview.feeLabel
@@ -761,6 +770,10 @@ StackView {
                                                                         "address",
                                                                         tokenMasterActionPopup.selectedAccount,
                                                                         "migratedToColdWallet")
+                    keyUid: SQUtils.ModelUtils.getByKey(root.accounts,
+                                                        "address",
+                                                        tokenMasterActionPopup.selectedAccount,
+                                                        "keyUid") ?? ""
 
                     model: QtObject {
                         readonly property string title: tokenMasterActionPopup.feeLabel
@@ -1017,6 +1030,10 @@ StackView {
                                                                     "address",
                                                                     footer.accountAddress,
                                                                     "migratedToColdWallet")
+                keyUid: SQUtils.ModelUtils.getByKey(root.accounts,
+                                                    "address",
+                                                    footer.accountAddress,
+                                                    "keyUid") ?? ""
 
                 totalFeeText: isRemotelyDestructTransaction
                               ? remotelyDestructPopup.feeText

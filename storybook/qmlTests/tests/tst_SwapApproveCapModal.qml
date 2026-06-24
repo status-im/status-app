@@ -44,7 +44,8 @@ Item {
             cryptoFees: "0.001 ETH"
             estimatedTime: Constants.TransactionEstimatedTime.Unknown
 
-            loginType: Constants.LoginType.Password
+            keyUid: ""
+            migratedToColdWallet: false
         }
     }
 
@@ -76,6 +77,9 @@ Item {
 
             signalSpyAccepted.clear()
             signalSpyRejected.clear()
+
+            // Reset the shared userProfile mock so icon tests start from a known state
+            userProfile.usingBiometricLogin = false
         }
 
         function test_basicGeometry() {
@@ -201,23 +205,21 @@ Item {
 
         function test_loginType_data() {
             return [
-                { tag: "password", loginType: Constants.LoginType.Password, iconName: "password" },
-                { tag: "touchId", loginType: Constants.LoginType.Biometrics, iconName: "touch-id" },
-                { tag: "keycard", loginType: Constants.LoginType.Keycard, iconName: "keycard" }
+                { tag: "password", biometric: false, migrated: false, iconName: "password" },
+                { tag: "touchId", biometric: true, migrated: false, iconName: "touch-id" },
+                { tag: "keycard", biometric: false, migrated: true, iconName: "keycard" }
             ]
         }
 
         function test_loginType(data) {
-            const loginType = data.loginType
-            const iconName = data.iconName
-
             verify(!!controlUnderTest)
 
-            controlUnderTest.loginType = loginType
+            userProfile.usingBiometricLogin = data.biometric
+            controlUnderTest.migratedToColdWallet = data.migrated
 
             const signButton = findChild(controlUnderTest.footer, "signButton")
             verify(!!signButton)
-            compare(signButton.icon.name, iconName)
+            compare(signButton.icon.name, data.iconName)
         }
 
         function test_loading() {
