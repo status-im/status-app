@@ -10,6 +10,7 @@ import driver
 from configs.timeouts import APP_LOAD_TIMEOUT_MSEC
 from constants import UserAccount, CommunityData
 from gui.components.activity_center import ActivityCenter
+from gui.components.changes_detected_popup import ChangesDetectedToastMessage
 from gui.components.education_popup import EducationPopup
 from gui.objects_map.names import continue_StatusButton
 from gui.screens.market import MarketScreen
@@ -239,7 +240,7 @@ class MainWindow(Window):
         settings_screen = left_panel.open_settings()
         profile = settings_screen.left_panel.open_profile_settings()
         profile.set_name(user_account.name)
-        profile.save_changes_button.click()
+        ChangesDetectedToastMessage().save_changes()
         return self
 
     @allure.step('Log in returning user')
