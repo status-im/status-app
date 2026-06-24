@@ -75,6 +75,7 @@ pipeline {
     PLATFORM = "linux/${getArch()}"
     /* Improve make performance */
     MAKEFLAGS = "-j${utils.getProcCount()} V=${params.VERBOSE}"
+    QUICK_AND_DIRTY_COMPILER = "${getArch() == 'aarch64' ? '1' : '0'}"
     /* Avoid weird bugs caused by stale cache. */
     QML_DISABLE_DISK_CACHE = "true"
     /* nim-sds source directory */
