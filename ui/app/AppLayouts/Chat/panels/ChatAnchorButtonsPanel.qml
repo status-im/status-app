@@ -34,7 +34,7 @@ Item {
 
     component AnchorButton: StatusButton {
         Layout.preferredHeight: 38
-        radius: 100
+        radius: height
         spacing: 2
 
         icon.width: Theme.primaryTextFontSize + 5

@@ -66,5 +66,5 @@ SplitView {
 }
 
 // category: Panels
-
+// status: good
 // https://www.figma.com/file/Mr3rqxxgKJ2zMQ06UAKiWL/%F0%9F%92%AC-Chat%E2%8E%9CDesktop?node-id=14632-460085&t=SGTU2JeRA8ifbv2E-0

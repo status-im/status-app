@@ -329,6 +329,7 @@ Item {
             // Don't show the mention anchor in 1-1 chats, because all messages count as mentions
             mentionsCount: d.chatDetails && d.chatDetails.type !== Constants.chatType.oneToOne ?
                         d.chatDetails.notificationCount : 0
+            recentMessagesCount: root.messageStore.newMessagesCount
             recentMessagesButtonVisible: {
                 chatLogView.contentY // trigger binding on contentY change
                 return chatLogView.contentHeight - (d.scrollY + chatLogView.height) > 400
