@@ -85,7 +85,7 @@ Rectangle {
             Layout.alignment: Qt.AlignLeft
             Layout.topMargin: !keypairInfo.visible? Theme.xlPadding : 0
             visible: !root.isKnownKeyPair
-            text: qsTr("Active Account(s)", "", Math.max(0, root.keyPairAccounts? root.keyPairAccounts.length : 0))
+            text: qsTr("Active Accounts")
             color: Theme.palette.baseColor1
             wrapMode: Text.WordWrap
         }

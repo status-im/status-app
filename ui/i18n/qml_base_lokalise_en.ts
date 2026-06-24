@@ -4966,8 +4966,8 @@
       <source>Key pair must be at least %n character(s)</source>
       <comment>Constants</comment>
       <translation>
-        <numerusform></numerusform>
-        <numerusform></numerusform>
+        <numerusform>Key pair must be at least %n character</numerusform>
+        <numerusform>Key pair must be at least %n characters</numerusform>
       </translation>
     </message>
     <message>
@@ -10909,13 +10909,10 @@
         <numerusform>Contains %n accounts with Keycard incompatible derivation paths</numerusform>
       </translation>
     </message>
-    <message numerus="yes">
-      <source>Active Account(s)</source>
+    <message>
+      <source>Active Accounts</source>
       <comment>KeyPairItem</comment>
-      <translation>
-        <numerusform></numerusform>
-        <numerusform></numerusform>
-      </translation>
+      <translation>Active Accounts</translation>
     </message>
   </context>
   <context>
@@ -12241,8 +12238,8 @@
       <source>PIN incorrect. %n attempt(s) remaining.</source>
       <comment>LoginKeycardBox</comment>
       <translation>
-        <numerusform></numerusform>
-        <numerusform></numerusform>
+        <numerusform>PIN incorrect. %n attempt remaining.</numerusform>
+        <numerusform>PIN incorrect. %n attempts remaining.</numerusform>
       </translation>
     </message>
     <message>
@@ -14168,18 +14165,18 @@
   </context>
   <context>
     <name>NewMessagesMarker</name>
+    <message>
+      <source>UNREAD</source>
+      <comment>unread message(s)</comment>
+      <translation>UNREAD</translation>
+    </message>
     <message numerus="yes">
-      <source>%n missed message(s) since %1</source>
+      <source>%n unread message(s) since %1</source>
       <comment>NewMessagesMarker</comment>
       <translation>
-        <numerusform>%n missed message since %1</numerusform>
-        <numerusform>%n missed message since %1</numerusform>
+        <numerusform>%n unread message since %1</numerusform>
+        <numerusform>%n unread messages since %1</numerusform>
       </translation>
-    </message>
-    <message>
-      <source>NEW</source>
-      <comment>new message(s)</comment>
-      <translation>NEW</translation>
     </message>
   </context>
   <context>
@@ -18943,8 +18940,8 @@
       <source>%n Image(s)</source>
       <comment>StatusChatInputNew</comment>
       <translation>
-        <numerusform></numerusform>
-        <numerusform></numerusform>
+        <numerusform>%n Image</numerusform>
+        <numerusform>%n Images</numerusform>
       </translation>
     </message>
     <message>
@@ -18962,13 +18959,10 @@
       <comment>StatusChatInputNew</comment>
       <translation>Please reduce the message length</translation>
     </message>
-    <message numerus="yes">
-      <source>Maximum message character count is %n</source>
+    <message>
+      <source>Maximum message character count is %1</source>
       <comment>StatusChatInputNew</comment>
-      <translation>
-        <numerusform>Maximum message character count is %n</numerusform>
-        <numerusform>Maximum message character count is %n</numerusform>
-      </translation>
+      <translation>Maximum message character count is %1</translation>
     </message>
     <message>
       <source>Multiple payment requests</source>

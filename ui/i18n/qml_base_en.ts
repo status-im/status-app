@@ -8939,12 +8939,9 @@ Are you sure you want to do this?</source>
             <numerusform></numerusform>
         </translation>
     </message>
-    <message numerus="yes">
-        <source>Active Account(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
+    <message>
+        <source>Active Accounts</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11612,17 +11609,17 @@ to load</source>
 </context>
 <context>
     <name>NewMessagesMarker</name>
+    <message>
+        <source>UNREAD</source>
+        <comment>unread message(s)</comment>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
-        <source>%n missed message(s) since %1</source>
+        <source>%n unread message(s) since %1</source>
         <translation type="unfinished">
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
-    </message>
-    <message>
-        <source>NEW</source>
-        <comment>new message(s)</comment>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -15558,12 +15555,9 @@ to load</source>
         <source>Please reduce the message length</source>
         <translation type="unfinished"></translation>
     </message>
-    <message numerus="yes">
-        <source>Maximum message character count is %n</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
+    <message>
+        <source>Maximum message character count is %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Multiple payment requests</source>

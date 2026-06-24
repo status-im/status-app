@@ -56,7 +56,7 @@ Item {
         StatusBaseText {
             id: newLabel
             anchors.centerIn: parent
-            text: qsTr("NEW", "new message(s)")
+            text: qsTr("UNREAD", "unread message(s)")
             color: Theme.palette.indirectColor1
             font.weight: Font.DemiBold
             font.pixelSize: Theme.fontSize(11)
@@ -73,8 +73,7 @@ Item {
         anchors.leftMargin: d.horizontalPadding + d.minimumLineWidth + d.internalPadding
         anchors.rightMargin: d.minimumLineWidth + d.internalPadding
 
-        text: qsTr("%n missed message(s) since %1", "", count).arg(
-                  LocaleUtils.formatDate(timestamp))
+        text: qsTr("%n unread message(s) since %1", "", root.count).arg(LocaleUtils.formatDate(root.timestamp))
         color: Theme.palette.primaryColor1
         font.weight: Font.Bold
         font.pixelSize: Theme.additionalTextSize

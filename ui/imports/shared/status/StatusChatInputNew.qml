@@ -624,7 +624,7 @@ Control {
             StatusQ.StatusToolTip {
                 id: lengthLimitTooltip
                 text: messageInputField.length >= root.messageLimitHard ? qsTr("Please reduce the message length")
-                      : qsTr("Maximum message character count is %n", "", root.messageLimit)
+                      : qsTr("Maximum message character count is %1").arg(root.messageLimit)
                 orientation: StatusQ.StatusToolTip.Orientation.Top
                 timeout: 3000 // show for 3 seconds
             }

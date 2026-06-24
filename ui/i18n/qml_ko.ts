@@ -8913,11 +8913,9 @@ Are you sure you want to do this?</source>
             <numerusform>Keycard와 호환되지 않는 파생 경로가 있는 계정 %n개 포함</numerusform>
         </translation>
     </message>
-    <message numerus="yes">
-        <source>Active Account(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-        </translation>
+    <message>
+        <source>Active Accounts</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11570,16 +11568,16 @@ to load</source>
 </context>
 <context>
     <name>NewMessagesMarker</name>
-    <message numerus="yes">
-        <source>%n missed message(s) since %1</source>
-        <translation>
-            <numerusform>%n개의 놓친 메시지, %1 이후</numerusform>
-        </translation>
-    </message>
     <message>
-        <source>NEW</source>
-        <comment>new message(s)</comment>
-        <translation>새로 만들기</translation>
+        <source>UNREAD</source>
+        <comment>unread message(s)</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n unread message(s) since %1</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -15500,11 +15498,9 @@ to load</source>
         <source>Please reduce the message length</source>
         <translation type="unfinished">메시지 길이를 줄여 주세요</translation>
     </message>
-    <message numerus="yes">
-        <source>Maximum message character count is %n</source>
-        <translation type="unfinished">
-            <numerusform>최대 메시지 글자 수는 %n자입니다</numerusform>
-        </translation>
+    <message>
+        <source>Maximum message character count is %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Multiple payment requests</source>

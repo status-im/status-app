@@ -8990,13 +8990,9 @@ Opravdu to chcete udělat?</translation>
             <numerusform>Obsahuje %n účtů s nekompatibilními odvozovacími cestami Keycard</numerusform>
         </translation>
     </message>
-    <message numerus="yes">
-        <source>Active Account(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
+    <message>
+        <source>Active Accounts</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -11681,18 +11677,18 @@ selhalo</translation>
 </context>
 <context>
     <name>NewMessagesMarker</name>
-    <message numerus="yes">
-        <source>%n missed message(s) since %1</source>
-        <translation>
-            <numerusform>%n zmeškaná zpráva od %1</numerusform>
-            <numerusform>%n zmeškané zprávy od %1</numerusform>
-            <numerusform>%n zmeškaných zpráv od %1</numerusform>
-        </translation>
-    </message>
     <message>
-        <source>NEW</source>
-        <comment>new message(s)</comment>
-        <translation>NOVÉ</translation>
+        <source>UNREAD</source>
+        <comment>unread message(s)</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n unread message(s) since %1</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -15647,13 +15643,9 @@ selhalo</translation>
         <source>Please reduce the message length</source>
         <translation type="unfinished">Prosím zkraťte délku zprávy</translation>
     </message>
-    <message numerus="yes">
-        <source>Maximum message character count is %n</source>
-        <translation type="unfinished">
-            <numerusform>Maximální počet znaků je %n</numerusform>
-            <numerusform>Maximální počet znaků je %n</numerusform>
-            <numerusform>Maximální počet znaků je %n</numerusform>
-        </translation>
+    <message>
+        <source>Maximum message character count is %1</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Multiple payment requests</source>

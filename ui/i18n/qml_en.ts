@@ -137,9 +137,9 @@
     <name>Constants</name>
     <message numerus="yes">
         <source>Key pair must be at least %n character(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Key pair must be at least %n character</numerusform>
+            <numerusform>Key pair must be at least %n characters</numerusform>
         </translation>
     </message>
 </context>
@@ -235,7 +235,7 @@
     <name>EnterPin</name>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n attempt remaining</numerusform>
             <numerusform>%n attempts remaining</numerusform>
         </translation>
@@ -245,7 +245,7 @@
     <name>EnterPinState</name>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n attempt remaining</numerusform>
             <numerusform>%n attempts remaining</numerusform>
         </translation>
@@ -339,7 +339,7 @@
     <name>KeyPairCompactItem</name>
     <message numerus="yes">
         <source>Contains %n account(s) with Keycard incompatible derivation paths</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>Contains %n account with Keycard incompatible derivation paths</numerusform>
             <numerusform>Contains %n accounts with Keycard incompatible derivation paths</numerusform>
         </translation>
@@ -354,19 +354,12 @@
             <numerusform>Contains %n accounts with Keycard incompatible derivation paths</numerusform>
         </translation>
     </message>
-    <message numerus="yes">
-        <source>Active Account(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
 </context>
 <context>
     <name>KeycardProgressState</name>
     <message numerus="yes">
         <source>%n attempt(s) remaining</source>
-        <translation type="unfinished">
+        <translation>
             <numerusform>%n attempt remaining</numerusform>
             <numerusform>%n attempts remaining</numerusform>
         </translation>
@@ -430,9 +423,9 @@
     <name>LoginKeycardBox</name>
     <message numerus="yes">
         <source>PIN incorrect. %n attempt(s) remaining.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>PIN incorrect. %n attempt remaining.</numerusform>
+            <numerusform>PIN incorrect. %n attempts remaining.</numerusform>
         </translation>
     </message>
 </context>
@@ -506,10 +499,10 @@
 <context>
     <name>NewMessagesMarker</name>
     <message numerus="yes">
-        <source>%n missed message(s) since %1</source>
+        <source>%n unread message(s) since %1</source>
         <translation>
-            <numerusform>%n missed message since %1</numerusform>
-            <numerusform>%n missed message since %1</numerusform>
+            <numerusform>%n unread message since %1</numerusform>
+            <numerusform>%n unread messages since %1</numerusform>
         </translation>
     </message>
 </context>
@@ -665,16 +658,9 @@
     <name>StatusChatInputNew</name>
     <message numerus="yes">
         <source>%n Image(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>Maximum message character count is %n</source>
-        <translation type="unfinished">
-            <numerusform>Maximum message character count is %n</numerusform>
-            <numerusform>Maximum message character count is %n</numerusform>
+        <translation>
+            <numerusform>%n Image</numerusform>
+            <numerusform>%n Images</numerusform>
         </translation>
     </message>
 </context>
