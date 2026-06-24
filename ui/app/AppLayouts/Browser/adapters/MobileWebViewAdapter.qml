@@ -5,8 +5,6 @@ import StatusQ.CustomWebView 1.0
 AbstractWebView {
     id: root
 
-    readonly property bool offTheRecord: false
-
     property alias url: backend.url
     readonly property alias loading: backend.loading
     readonly property alias title: backend.title
@@ -26,7 +24,7 @@ AbstractWebView {
     supportsZoom: true
     supportsDevTools: false
     supportsFindInPage: backend.findSupported
-    supportsIncognito: false
+    supportsIncognito: true
     supportsHistory: true
     hasNativeFindPanel: backend.hasNativeFindPanel
 
@@ -37,6 +35,10 @@ AbstractWebView {
         freeze: root.freeze
         userScripts: root.profileParams.scripts
         webChannel: root.webChannel
+
+        offTheRecord: root.profileParams.offTheRecord
+        storageName: "Profile_" + root.profileParams.userId
+        // TODO(mobile): profileParams.userAgent is not applied — no native backend API.
     }
 
     Connections {
