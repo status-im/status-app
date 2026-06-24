@@ -131,8 +131,8 @@ Loader {
         visible: false
         anchors.bottom: root.bottom
         anchors.right: root.right
-        anchors.rightMargin: -border.width
-        anchors.bottomMargin: -border.width
+        anchors.rightMargin: Math.ceil(-border.width)
+        anchors.bottomMargin: Math.ceil(-border.width)
         border.width: 3
         height: 15
         width: 15

@@ -95,7 +95,6 @@ ContactListItemDelegate {
         },
         StatusBaseText {
             text: root.contactText
-            anchors.verticalCenter: parent.verticalCenter
             color: Theme.palette.baseColor1
         },
         StatusFlatRoundButton {

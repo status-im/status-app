@@ -49,8 +49,8 @@ Loader {
         loading: root.loading
 
         badge.visible: root.onlineStatus !== -1 && !root.isBridgedAccount
-        badge.width: root.imageWidth/4
-        badge.height: root.imageWidth/4
+        badge.width: root.imageWidth/3
+        badge.height: root.imageWidth/3
         badge.border.width: 0.05 * root.imageWidth
         badge.border.color: Theme.palette.statusBadge.foregroundColor
         badge.color: {
@@ -58,8 +58,6 @@ Loader {
                 return Theme.palette.successColor1
             return Theme.palette.baseColor1
         }
-        badge.anchors.rightMargin: badge.border.width/2
-        badge.anchors.bottomMargin: badge.border.width/2
 
         bridgeBadge.visible: root.isBridgedAccount
         bridgeBadge.image.source: Assets.svg("discord-bridge")
