@@ -132,7 +132,7 @@ Control {
 
                 anchors.centerIn: parent
 
-                icon: "chat/up"
+                icon: "send"
                 color: Theme.palette.baseColor3
             }
 
