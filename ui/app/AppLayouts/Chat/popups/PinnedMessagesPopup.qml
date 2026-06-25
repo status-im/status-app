@@ -160,7 +160,7 @@ StatusDialog {
                                        case Qt.RightButton:
                                            Global.openMenu(pinnedPopupMessageContextMenuComponent, this, {
                                                                messageId: messageItem.messageId,
-                                                           })
+                                                           }, Qt.point(mouse.x, mouse.y))
                                            break
                                        case Qt.LeftButton:
                                            if (!!root.messageToPin) {
@@ -186,7 +186,7 @@ StatusDialog {
                     visible: root.isPinActionAvaliable && !root.messageToPin && (hovered || mouseArea.containsMouse)
                     icon.name: "unpin"
                     tooltip.text: qsTr("Unpin")
-                    color: hovered ? Theme.palette.primaryColor2 : Theme.palette.indirectColor1
+                    color: hovered ? Theme.palette.primaryColor2 : Theme.palette.indirectColor4
                     onClicked: {
                         root.messageStore.unpinMessage(model.id)
                     }
