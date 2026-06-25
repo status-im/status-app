@@ -23,7 +23,6 @@ SplitView {
             SplitView.fillHeight: true
             contentWidth: parent.width - 150
 
-            languageSelectionEnabled: ctrlLanguageSelectionEnabled.checked
             availableLanguages: ["de", "cs", "en", "en_CA", "ko", "ar", "fr", "fr_CA", "pt_BR", "pt", "uk", "ja", "el"]
             currentLanguage: "en"
 
@@ -80,12 +79,6 @@ SplitView {
             SplitView.preferredHeight: 200
 
             logsView.logText: logs.logText
-
-            Switch {
-                id: ctrlLanguageSelectionEnabled
-                text: "Language selection enabled"
-                checked: true
-            }
         }
     }
 }

@@ -310,37 +310,6 @@ SettingsContentBase {
             }
 
             StatusSettingsLineButton {
-                width: parent.width
-                text: qsTr("Enable translations")
-                isSwitch: true
-                checked: localAppSettings.translationsEnabled
-                onClicked: {
-                    checked = Qt.binding(() => localAppSettings.translationsEnabled)
-
-                    if (checked) {
-                        Global.openPopup(disableLanguagesPopupComponent)
-                    } else {
-                        localAppSettings.translationsEnabled = true
-                    }
-                }
-            }
-
-            Component {
-                id: disableLanguagesPopupComponent
-                ConfirmationDialog {
-                    destroyOnClose: true
-                    headerSettings.title: qsTr("Language reset")
-                    confirmationText: qsTr("Display language will be switched back to English.") + "\n" +
-                        qsTr("The app will restart if you confirm.")
-                    confirmButtonLabel: qsTr("Restart")
-                    onConfirmButtonClicked: {
-                        localAppSettings.translationsEnabled = false
-                        SystemUtils.restartApplication()
-                    }
-                }
-            }
-
-            StatusSettingsLineButton {
                 id: debugLineButton
                 width: parent.width
                 text: qsTr("Debug")

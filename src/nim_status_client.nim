@@ -204,11 +204,6 @@ proc mainProc() =
   let app = newQGuiApplication()
   singletonInstance.setApplication(app)
 
-  # force default language ("en") if not "Settings/Advanced/Enable translations"
-  if not singletonInstance.localAppSettings.getTranslationsEnabled():
-    if singletonInstance.localAppSettings.getLanguage() != DEFAULT_LAS_KEY_LANGUAGE:
-      singletonInstance.localAppSettings.setLanguage(DEFAULT_LAS_KEY_LANGUAGE)
-
   let singleInstance = newSingleInstance(($keccak256.digest(DATADIR))[0..31], openUri)
   let urlSchemeEvent = newStatusUrlSchemeEventObject()
   urlSchemeEvent.setInstance()

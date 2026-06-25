@@ -19,7 +19,6 @@ SettingsContentBase {
     required property var availableLanguages
     // language currently selected for translations, e.g. "cs"
     required property string currentLanguage
-    property bool languageSelectionEnabled
 
     required property string currentCurrency
     required property var currenciesModel
@@ -66,19 +65,10 @@ SettingsContentBase {
                 Layout.preferredWidth: currencyPicker.width
                 id: languagePicker
                 objectName: "languageViewLanguageSelector"
-                enabled: root.languageSelectionEnabled
                 currentLanguage: root.currentLanguage
                 languageCodes: root.availableLanguages
                 onLanguageSelected: (languageCode) =>
                                     languageConfirmationDialog.createObject(root, {oldCode: root.currentLanguage, newCode: languageCode}).open()
-
-                StatusToolTip {
-                    y: parent.height + Theme.padding
-                    margins: 0
-                    visible: !root.languageSelectionEnabled && languagePicker.hovered
-                    orientation: StatusToolTip.Orientation.Bottom
-                    text: qsTr("Translations coming soon")
-                }
             }
         }
 

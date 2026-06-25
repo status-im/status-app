@@ -14,8 +14,6 @@ const DEFAULT_SCROLL_VELOCITY = 0 # unset
 const DEFAULT_SCROLL_DECELERATION = 0 # unset
 const LAS_KEY_CUSTOM_MOUSE_SCROLLING_ENABLED = "global/custom_mouse_scroll_enabled"
 const DEFAULT_CUSTOM_MOUSE_SCROLLING_ENABLED = false
-const LAS_KEY_TRANSLATIONS_ENABLED = "global/translations_enabled"
-const DEFAULT_LAS_KEY_TRANSLATIONS_ENABLED = true
 const LAS_KEY_REFRESH_TOKEN_ENABLED = "global/refresh_token_enabled"
 const LS_KEY_SEEN_NETWORK_CHAINS = "global/seenNetworkChains"
 const DEFAULT_SEEN_NETWORK_CHAINS = "[]"
@@ -138,20 +136,6 @@ QtObject:
     write = setRefreshTokenEnabled
     notify = refreshTokenEnabledChanged
 
-  proc translationsEnabledChanged*(self: LocalAppSettings) {.signal.}
-  proc getTranslationsEnabled*(self: LocalAppSettings): bool {.slot.} =
-    self.settings.value(LAS_KEY_TRANSLATIONS_ENABLED, newQVariant(DEFAULT_LAS_KEY_TRANSLATIONS_ENABLED)).boolVal
-  proc setTranslationsEnabled*(self: LocalAppSettings, value: bool) {.slot.} =
-    if value == self.getTranslationsEnabled:
-      return
-    self.settings.setValue(LAS_KEY_TRANSLATIONS_ENABLED, newQVariant(value))
-    self.translationsEnabledChanged()
-
-  QtProperty[bool] translationsEnabled:
-    read = getTranslationsEnabled
-    write = setTranslationsEnabled
-    notify = translationsEnabledChanged
-
   proc removeKey*(self: LocalAppSettings, key: string) =
     if(self.settings.isNil):
       return
@@ -165,7 +149,6 @@ QtObject:
       of LAS_KEY_SCROLL_VELOCITY: self.scrollVelocityChanged()
       of LAS_KEY_SCROLL_DECELERATION: self.scrollDecelerationChanged()
       of LAS_KEY_CUSTOM_MOUSE_SCROLLING_ENABLED: self.isCustomMouseScrollingEnabledChanged()
-      of LAS_KEY_TRANSLATIONS_ENABLED: self.translationsEnabledChanged()
 
   proc getWalletConnectProjectID*(self: LocalAppSettings): string {.slot.} =
     return constants.WALLET_CONNECT_PROJECT_ID

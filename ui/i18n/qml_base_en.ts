@@ -1099,23 +1099,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enable translations</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Language reset</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Display language will be switched back to English.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The app will restart if you confirm.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Restart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -9707,10 +9691,6 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
     <message>
         <source>Language</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Translations coming soon</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

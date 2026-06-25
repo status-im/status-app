@@ -1096,24 +1096,8 @@
         <translation>개발자 기능</translation>
     </message>
     <message>
-        <source>Enable translations</source>
-        <translation>번역 사용</translation>
-    </message>
-    <message>
-        <source>Language reset</source>
-        <translation>언어 초기화</translation>
-    </message>
-    <message>
-        <source>Display language will be switched back to English.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>The app will restart if you confirm.</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Restart</source>
-        <translation>다시 시작</translation>
     </message>
     <message>
         <source>Debug</source>
@@ -9682,10 +9666,6 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     <message>
         <source>Language</source>
         <translation>언어</translation>
-    </message>
-    <message>
-        <source>Translations coming soon</source>
-        <translation>번역은 곧 제공됩니다</translation>
     </message>
     <message>
         <source>We need your help to translate Status, so that together we can bring privacy and free speech to the people everywhere, including those who need it most.</source>
