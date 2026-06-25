@@ -149,6 +149,36 @@ StatusTextArea {
             return
         }
 
+        // A deletion can move a mention into code (and trigger a demotion) only when it
+        // removes a backtick or a mention. In that case perform it ourselves as a raw,
+        // joinable edit so the reactive demotion folds into the same undo command (same
+        // idea as handleTripleBacktick). Plain Backspace/Delete only; word-delete
+        // (Ctrl/Alt) and unrelated deletions fall through to native handling.
+        if ((event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete)
+                && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier))) {
+            let from = -1, to = -1
+            if (root.selectionStart !== root.selectionEnd) {
+                from = root.selectionStart
+                to = root.selectionEnd
+            } else if (event.key === Qt.Key_Backspace && root.cursorPosition > 0) {
+                from = root.cursorPosition - 1
+                to = root.cursorPosition
+            } else if (event.key === Qt.Key_Delete && root.cursorPosition < root.length) {
+                from = root.cursorPosition
+                to = root.cursorPosition + 1
+            }
+
+            if (from >= 0) {
+                const removed = root.getText(from, to)
+                const objectChar = String.fromCharCode(0xFFFC)
+                if (removed.indexOf("`") >= 0 || removed.indexOf(objectChar) >= 0) {
+                    event.accepted = true
+                    TextDocumentUtils.deleteRange(root.textDocument, from, to)
+                    return
+                }
+            }
+        }
+
         // It's necessary to handle undo/redo in a loop in order to
         // handle formatting changes of text blocks, detected as changes
         // not changing the actual text (like indentation of quote blocks).

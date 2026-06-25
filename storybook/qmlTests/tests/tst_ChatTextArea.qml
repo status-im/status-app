@@ -182,6 +182,44 @@ Item {
             compare(mentionsRepeater.itemAt(0).pubKey, "0xabc")
         }
 
+        // Deleting a backtick can re-pair fences so a previously-outside mention ends
+        // up inside code. Initial (single line, spaces around the mention):
+        //   ```A``` <mention> ```
+        // The first ``` pairs with the second (code block "A"); the trailing ``` is
+        // unmatched, so the mention is NOT in code. Removing the first backtick leaves
+        //   ``A``` <mention> ```
+        // now the two remaining ``` runs pair, wrapping " <mention> " in a code block,
+        // so the mention demotes.
+        //
+        // Deleting the first backtick is performed by ChatTextArea as a raw, joinable
+        // edit, so the reactive demotion folds into the same undo command — a single
+        // undo restores both the deleted backtick and the mention.
+        function test_deleteBacktick_repairsFenceDemotesMention_undoRestores() {
+            const M = String.fromCharCode(0xFFFC)
+            const initial = "```A``` " + M + " ```"
+
+            control.text = "```A``` "
+            control.insertMention(control.length, "@alice", "0xabc")
+            control.insert(control.length, " ```")            // -> ```A``` M ```
+            compare(control.text, initial)
+            tryCompare(mentionsRepeater, "count", 1)           // outside code -> still a mention
+
+            control.forceActiveFocus()
+            control.cursorPosition = 1
+            keyClick(Qt.Key_Backspace)                         // delete the first backtick
+
+            // Re-paired fences put the mention inside code -> demoted to plain text.
+            tryCompare(control, "text", "``A``` " + "@alice" + " ```")
+            tryCompare(mentionsRepeater, "count", 0)
+
+            // A single undo restores both the deleted backtick and the mention.
+            keyClick(Qt.Key_Z, Qt.ControlModifier)
+            compare(control.text, initial)
+            tryCompare(mentionsRepeater, "count", 1)
+            compare(mentionsRepeater.itemAt(0).name, "@alice")
+            compare(mentionsRepeater.itemAt(0).pubKey, "0xabc")
+        }
+
         // ── quoteBarVisible ─────────────────────────────────────────────────────
 
         function test_quoteBarVisible_defaultsTrueAndSettable() {

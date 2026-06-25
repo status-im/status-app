@@ -57,3 +57,28 @@ void TextDocumentUtilsInternal::handleTripleBacktick(QQuickTextDocument* quickDo
     cursor.insertText(QStringLiteral("```"));
     cursor.endEditBlock();
 }
+
+void TextDocumentUtilsInternal::deleteRange(QQuickTextDocument* quickDoc, int start, int end)
+{
+    if (!quickDoc)
+        return;
+
+    QTextDocument* doc = quickDoc->textDocument();
+    if (!doc)
+        return;
+
+    const int last = doc->characterCount() - 1; // last is the trailing block separator
+    start = qBound(0, start, last);
+    end   = qBound(0, end, last);
+    if (start >= end)
+        return;
+
+    // Fresh edit block (raw cursor edit) so a reactive demotion can join into it and
+    // the deletion + demotion undo as a single step.
+    QTextCursor cursor(doc);
+    cursor.setPosition(start);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+    cursor.beginEditBlock();
+    cursor.removeSelectedText();
+    cursor.endEditBlock();
+}

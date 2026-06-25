@@ -25,4 +25,11 @@ public:
     // in and the whole change undoes as one unit. No-op if "``" doesn't precede
     // `position`. The caller is expected to gate this on the actual keystroke.
     Q_INVOKABLE void handleTripleBacktick(QQuickTextDocument* document, int position);
+
+    // Removes the characters in [start, end) as a single raw-cursor edit block.
+    // Doing the deletion ourselves (instead of letting the text control delete the
+    // character) produces a joinable undo command, so reactive edits triggered by it
+    // (e.g. demoting a mention that falls inside code) fold in and the whole change
+    // undoes as one unit. No-op if the range is empty or invalid.
+    Q_INVOKABLE void deleteRange(QQuickTextDocument* document, int start, int end);
 };
