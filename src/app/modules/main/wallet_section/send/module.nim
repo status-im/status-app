@@ -72,10 +72,17 @@ method delete*(self: Module) =
 
 proc clearTmpData(self: Module, keepPinPass = false) =
   if keepPinPass:
+    # Read the fields into locals before reassigning: building the new object directly from
+    # self.tmpSendTransactionDetails.* while assigning back to self.tmpSendTransactionDetails
+    # hits an ARC/ORC sink-move that zeroes the source first, silently dropping the "kept" values.
+    let
+      uuid = self.tmpSendTransactionDetails.uuid
+      pin = self.tmpSendTransactionDetails.pin
+      password = self.tmpSendTransactionDetails.password
     self.tmpSendTransactionDetails = TmpSendTransactionDetails(
-      uuid: self.tmpSendTransactionDetails.uuid,
-      pin: self.tmpSendTransactionDetails.pin,
-      password: self.tmpSendTransactionDetails.password
+      uuid: uuid,
+      pin: pin,
+      password: password
     )
     return
   self.tmpSendTransactionDetails = TmpSendTransactionDetails()

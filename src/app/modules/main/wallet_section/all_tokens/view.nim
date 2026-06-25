@@ -274,6 +274,9 @@ QtObject:
   proc isChainSupportedForSwapViaParaswap*(self: View, chainId: int): bool {.slot.} =
     return self.delegate.isChainSupportedForSwapViaParaswap(chainId)
 
+  proc isChainSupportedForSwapViaLiFi*(self: View, chainId: int): bool {.slot.} =
+    return self.delegate.isChainSupportedForSwapViaLiFi(chainId)
+
   proc delete*(self: View) =
     self.QObject.delete
 

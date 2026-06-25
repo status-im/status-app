@@ -153,6 +153,9 @@ proc getMandatoryTokenGroupKeys*(self: Controller): seq[string] =
 proc isChainSupportedForSwapViaParaswap*(self: Controller, chainId: int): bool =
   return self.tokenService.isChainSupportedForSwapViaParaswap(chainId)
 
+proc isChainSupportedForSwapViaLiFi*(self: Controller, chainId: int): bool =
+  return self.tokenService.isChainSupportedForSwapViaLiFi(chainId)
+
 proc loadTokenLists*(self: Controller) =
   self.tokenService.asyncFetchAllTokenLists()
 

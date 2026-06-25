@@ -10269,16 +10269,6 @@
   <context>
     <name>HandlersManager</name>
     <message>
-      <source>Info</source>
-      <comment>HandlersManager</comment>
-      <translation>Info</translation>
-    </message>
-    <message>
-      <source>Swap is not available in the testnet mode.</source>
-      <comment>HandlersManager</comment>
-      <translation>Swap is not available in the testnet mode.</translation>
-    </message>
-    <message>
       <source>Push notifications enabled</source>
       <comment>HandlersManager</comment>
       <translation>Push notifications enabled</translation>
