@@ -670,7 +670,6 @@ log-update-translations:
 update-translations: | log-update-translations
 	cmake -S $(TS_SOURCE_DIR) -B $(TS_BUILD_DIR) -Wno-dev $(TS_CMAKE_PARAMS) $(HANDLE_OUTPUT)
 	cmake --build $(TS_BUILD_DIR) --target update_application_translations $(HANDLE_OUTPUT)
-	+ cd scripts/translationScripts && go run fixup-base-ts-for-lokalise.go $(HANDLE_OUTPUT)
 
 log-compile-translations:
 	echo -e "\033[92mCompiling:\033[39m translations"
