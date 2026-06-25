@@ -90,14 +90,23 @@ StatusDialog {
 
         readonly property string nativeTokenSymbol: Utils.getNativeTokenSymbol(root.swapInputParamsForm.selectedNetworkChainId)
 
+        readonly property bool swapViaLiFi: root.swapAdaptor.swapOutputData.txProviderName === Constants.swap.lifiProcessorName
+        readonly property string serviceProviderName: d.swapViaLiFi ? Constants.swap.lifiName : Constants.swap.paraswapName
+        readonly property string serviceProviderUrl: d.swapViaLiFi ? Constants.swap.lifiUrl : Constants.swap.paraswapUrl
+        readonly property string serviceProviderTandCUrl: d.swapViaLiFi ? Constants.swap.lifiTermsAndConditionUrl : Constants.swap.paraswapTermsAndConditionUrl
+        readonly property string serviceProviderHostname: d.swapViaLiFi ? Constants.swap.lifiHostname : Constants.swap.paraswapHostname
+        readonly property string serviceProviderIconName: d.swapViaLiFi ? Constants.swap.lifiIcon : Constants.swap.paraswapIcon
+
         function rebuildGroupsForChain(chainId) {
             if (chainId <= 0) {
                 return
             }
 
-            const chainAvailableForSwapViaParaswap = root.swapAdaptor.walletAssetsStore.walletTokensStore.isChainSupportedForSwapViaParaswap(chainId)
-            if (!chainAvailableForSwapViaParaswap) {
-                console.warn("swap via paraswap not supported for chain", chainId)
+            const walletTokensStore = root.swapAdaptor.walletAssetsStore.walletTokensStore
+            const chainAvailableForSwap = walletTokensStore.isChainSupportedForSwapViaParaswap(chainId)
+                                       || walletTokensStore.isChainSupportedForSwapViaLiFi(chainId)
+            if (!chainAvailableForSwap) {
+                console.warn("swap not supported for chain", chainId)
                 const networkName = Utils.getNetworkName(chainId)
                 Global.openInfoPopup(qsTr("Info"), qsTr("Swaps on %1 are coming soon.").arg(networkName))
 
@@ -633,12 +642,12 @@ StatusDialog {
 
             estimatedTime: root.swapAdaptor.swapOutputData.estimatedTime
 
-            serviceProviderName: Constants.swap.paraswapName
-            serviceProviderURL: Constants.swap.paraswapUrl // TODO https://github.com/status-im/status-app/issues/15329
-            serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl // TODO https://github.com/status-im/status-app/issues/15329
-            serviceProviderIcon: Assets.png("swap/%1".arg(Constants.swap.paraswapIcon)) // FIXME svg
+            serviceProviderName: d.serviceProviderName
+            serviceProviderURL: d.serviceProviderUrl // TODO https://github.com/status-im/status-app/issues/15329
+            serviceProviderTandCUrl: d.serviceProviderTandCUrl // TODO https://github.com/status-im/status-app/issues/15329
+            serviceProviderIcon: Assets.png("swap/%1".arg(d.serviceProviderIconName)) // FIXME svg
             serviceProviderContractAddress: root.swapAdaptor.swapOutputData.approvalContractAddress
-            serviceProviderHostname: Constants.swap.paraswapHostname
+            serviceProviderHostname: d.serviceProviderHostname
 
             onAccepted: {
                 root.swapAdaptor.sendApproveTx()
@@ -703,9 +712,9 @@ StatusDialog {
 
             slippage: root.swapInputParamsForm.selectedSlippage
 
-            serviceProviderName: Constants.swap.paraswapName
-            serviceProviderURL: Constants.swap.paraswapUrl // TODO https://github.com/status-im/status-app/issues/15329
-            serviceProviderTandCUrl: Constants.swap.paraswapTermsAndConditionUrl // TODO https://github.com/status-im/status-app/issues/15329
+            serviceProviderName: d.serviceProviderName
+            serviceProviderURL: d.serviceProviderUrl // TODO https://github.com/status-im/status-app/issues/15329
+            serviceProviderTandCUrl: d.serviceProviderTandCUrl // TODO https://github.com/status-im/status-app/issues/15329
 
             onAccepted: {
                 root.swapAdaptor.sendSwapTx()

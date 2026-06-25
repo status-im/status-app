@@ -29,6 +29,19 @@ proc isChainSupportedForSwapViaParaswap(chainId: int): bool =
     let errDesription = e.msg
     error "error: ", errDesription
 
+proc isChainSupportedForSwapViaLiFi(chainId: int): bool =
+  try:
+    var response: JsonNode
+    var err = status_go_tokens.isChainSupportedForSwapViaLiFi(response, chainId)
+    if err.len > 0:
+      raise newException(CatchableError, "failed" & err)
+    if response.isNil or response.kind != JsonNodeKind.JBool:
+      raise newException(CatchableError, "unexpected response")
+    result = response.getBool()
+  except Exception as e:
+    let errDesription = e.msg
+    error "error: ", errDesription
+
 proc getAllTokenLists(): seq[TokenListItem] =
   try:
     var response: JsonNode

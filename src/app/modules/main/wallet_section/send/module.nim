@@ -68,8 +68,12 @@ method delete*(self: Module) =
 
 proc clearTmpData(self: Module, keepUuid = false) =
   if keepUuid:
+    # Read the field into a local before reassigning: building the new object directly from
+    # self.tmpSendTransactionDetails.uuid while assigning back to self.tmpSendTransactionDetails
+    # hits an ARC/ORC sink-move that zeroes the source first, silently dropping the "kept" value.
+    let uuid = self.tmpSendTransactionDetails.uuid
     self.tmpSendTransactionDetails = TmpSendTransactionDetails(
-      uuid: self.tmpSendTransactionDetails.uuid
+      uuid: uuid
     )
     return
   self.tmpSendTransactionDetails = TmpSendTransactionDetails()

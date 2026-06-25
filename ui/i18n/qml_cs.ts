@@ -8278,14 +8278,6 @@ Opravdu to chcete udělat?</translation>
 <context>
     <name>HandlersManager</name>
     <message>
-        <source>Info</source>
-        <translation>Info</translation>
-    </message>
-    <message>
-        <source>Swap is not available in the testnet mode.</source>
-        <translation>Směna není k dispozici v režimu testnet.</translation>
-    </message>
-    <message>
         <source>Push notifications enabled</source>
         <translation type="unfinished"></translation>
     </message>

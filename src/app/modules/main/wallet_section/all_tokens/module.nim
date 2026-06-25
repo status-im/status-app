@@ -201,6 +201,9 @@ method getMandatoryTokenGroupKeys*(self: Module): seq[string] =
 method isChainSupportedForSwapViaParaswap*(self: Module, chainId: int): bool =
   return self.controller.isChainSupportedForSwapViaParaswap(chainId)
 
+method isChainSupportedForSwapViaLiFi*(self: Module, chainId: int): bool =
+  return self.controller.isChainSupportedForSwapViaLiFi(chainId)
+
 method loadTokenLists*(self: Module) =
   self.view.setTokenListsLoading(true)
   self.controller.loadTokenLists()

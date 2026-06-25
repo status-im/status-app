@@ -138,5 +138,8 @@ method getMandatoryTokenGroupKeys*(self: AccessInterface): seq[string] {.base.} 
 method isChainSupportedForSwapViaParaswap*(self: AccessInterface, chainId: int): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method isChainSupportedForSwapViaLiFi*(self: AccessInterface, chainId: int): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method loadTokenLists*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")

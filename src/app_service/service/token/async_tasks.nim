@@ -286,3 +286,31 @@ proc prefetchParaswapSupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
       "chainId": arg.chainId,
       "error": e.msg,
     })
+
+type
+  PrefetchLiFiSupportTaskArg = ref object of QObjectTaskArg
+    chainId: int
+
+proc prefetchLiFiSupportTask*(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[PrefetchLiFiSupportTaskArg](argEncoded)
+  if arg.chainId <= 0:
+    arg.finish(%*{"chainId": 0, "error": "invalid chainId"})
+    return
+  try:
+    var response: JsonNode
+    var err = status_go_tokens.isChainSupportedForSwapViaLiFi(response, arg.chainId)
+    if err.len > 0:
+      raise newException(CatchableError, "failed" & err)
+    if response.isNil or response.kind != JsonNodeKind.JBool:
+      raise newException(CatchableError, "unexpected response")
+    arg.finish(%*{
+      "chainId": arg.chainId,
+      "supported": response.getBool(),
+      "error": "",
+    })
+  except Exception as e:
+    error "prefetch lifi chain support failed", chainId = arg.chainId, err = e.msg
+    arg.finish(%*{
+      "chainId": arg.chainId,
+      "error": e.msg,
+    })

@@ -512,7 +512,7 @@ proc sendNotification[T](self: Module[T], status: string, sendDetails: SendDetai
     if txType == SendType.Bridge:
       txToName = "Hop" # no translations, currently we hardcode providers here, when we add more, this info should come from the status-go side.
     elif txType == SendType.Swap:
-      txToName = "Velora" # no translations, currently we hardcode providers here, when we add more, this info should come from the status-go side.
+      txToName = "LI.FI"
     else:
       accDto = self.walletAccountService.getAccountByAddress(txTo)
       if not accDto.isNil:

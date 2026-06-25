@@ -42,6 +42,7 @@ QtObject:
 
     # local storage, fulfilled by need, empty at the start
     chainsSupportedForSwapViaParaswap: Table[int, bool] # [chainId, bool]
+    chainsSupportedForSwapViaLiFi: Table[int, bool] # [chainId, bool]
     # local storage
     tokensOfInterestByKey: Table[string, TokenItem] # [tokenKey, TokenItem]
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]
