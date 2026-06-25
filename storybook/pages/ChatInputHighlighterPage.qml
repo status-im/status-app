@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import StatusQ
 import StatusQ.Controls
+import StatusQ.Internal
 
 Item {
     id: root
@@ -192,6 +193,20 @@ unclosed fence here (no closing triple-tick)
                     }
 
                     Keys.onPressed: (event) => {
+                        // Intercept the 3rd backtick typed right after "``" and perform
+                        // the "``" -> "```" replacement ourselves, as a single joinable
+                        // edit block (see TextDocumentUtils.handleTripleBacktick).
+                        if (event.key === Qt.Key_QuoteLeft
+                                && textArea.selectionStart === textArea.selectionEnd
+                                && textArea.cursorPosition >= 2
+                                && textArea.getText(textArea.cursorPosition - 2,
+                                                    textArea.cursorPosition) === "``") {
+                            event.accepted = true
+                            TextDocumentUtils.handleTripleBacktick(textArea.textDocument,
+                                                                   textArea.cursorPosition)
+                            return
+                        }
+
                         // It's necessary to handle undo/redo in a loop in order to
                         // handle formatting changes of text blocks, detected as changes
                         // not changing the actual text (like indentation of quote blocks).

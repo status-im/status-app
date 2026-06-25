@@ -2,6 +2,7 @@
 
 #include <QQuickTextDocument>
 #include <QTextBlock>
+#include <QTextCursor>
 #include <QTextDocument>
 #include <QTextFormat>
 #include <QVariantMap>
@@ -32,4 +33,27 @@ QVariantList TextDocumentUtilsInternal::blockquoteRanges(QQuickTextDocument* qui
     }
 
     return result;
+}
+
+void TextDocumentUtilsInternal::handleTripleBacktick(QQuickTextDocument* quickDoc, int position)
+{
+    if (!quickDoc || position < 2)
+        return;
+
+    QTextDocument* doc = quickDoc->textDocument();
+    if (!doc)
+        return;
+
+    QTextCursor cursor(doc);
+    cursor.setPosition(position - 2);
+    cursor.setPosition(position, QTextCursor::KeepAnchor);
+    if (cursor.selectedText() != QLatin1String("``"))
+        return;
+
+    // Fresh edit block (not joinPreviousEditBlock): the replacement is its own
+    // command so a synchronous reactive edit can join into it.
+    cursor.beginEditBlock();
+    cursor.removeSelectedText();
+    cursor.insertText(QStringLiteral("```"));
+    cursor.endEditBlock();
 }
