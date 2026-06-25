@@ -2,20 +2,14 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import StatusQ
-import StatusQ.Controls
-import StatusQ.Internal
+
+import shared.status
 
 Item {
     id: root
 
-    ChatInputHighlighter {
-        id: highlighter
-        quickTextDocument: textArea.textDocument
-        codeBackground: "#e8e8e8"
-    }
-
-    readonly property var emph: highlighter.emphasisAt(textArea.cursorPosition)
-    readonly property var vemph: highlighter.emphasisAtInsertion(textArea.cursorPosition)
+    readonly property var emph: textArea.emphasisAt(textArea.cursorPosition)
+    readonly property var vemph: textArea.emphasisAtInsertion(textArea.cursorPosition)
 
     function randomName() {
         const n = 1 + Math.floor(Math.random() * 5)
@@ -50,13 +44,15 @@ Item {
 
                 contentWidth: availableWidth
 
-                StatusTextArea {
+                ChatTextArea {
                     id: textArea
 
                     background: null
 
-                    wrapMode: TextEdit.Wrap
                     font.pixelSize: 15
+                    codeBackground: "#e8e8e8"
+                    quoteBarVisible: quoteBarSwitch.checked
+
                     text:
 `Some **bold** text there!
 Some *italic* text text there!
@@ -102,140 +98,6 @@ Link in code (not highlighted): \`https://status.im\`
 unclosed fence here (no closing triple-tick)
 **bold suppressed when format unclosed code fence flag on**
 `
-
-                    TextMetrics {
-                        id: gtMetrics
-                        font: textArea.font
-                        text: ">"
-                    }
-
-                    // Quote-block vertical bar; positions come from the markdown parser.
-                    Repeater {
-                        model: {
-                            if (!quoteBarSwitch.checked)
-                                return null
-
-                            highlighter.formatUnclosedCodeFence // re-eval on toggle
-                            return highlighter.parseQuoteBlocks(textArea.text)
-                        }
-
-                        delegate: Rectangle {
-                            required property var modelData
-
-                            readonly property int startPosition: modelData.start
-                            readonly property int lastLinePosition:
-                                Math.max(modelData.start, modelData.end - 1)
-
-                            readonly property rect _startRect: {
-                                textArea.contentHeight; textArea.width // recompute on layout
-
-                                // clamp: positions may briefly outrun a just-shrunk document
-                                return textArea.positionToRectangle(Math.min(startPosition, textArea.length))
-                            }
-                            readonly property rect _lastRect: {
-                                textArea.contentHeight; textArea.width
-                                return textArea.positionToRectangle(Math.min(lastLinePosition, textArea.length))
-                            }
-
-                            x: _startRect.x
-                            y: _startRect.y
-                            width: gtMetrics.advanceWidth
-                            height: _lastRect.y + _lastRect.height - _startRect.y
-                            color: "white"
-
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.leftMargin: 3
-                                anchors.rightMargin: 3
-                                color: "#4A90D9"
-                            }
-                        }
-                    }
-
-                    // Mention pills, rendered on top of the embedded objects.
-                    Repeater {
-                        model: highlighter.mentionsModel
-
-                        delegate: Rectangle {
-                            required property int position
-                            required property string name
-                            required property string pubKey
-
-                            readonly property rect _r: {
-                                textArea.contentHeight; textArea.width // recompute on layout
-                                return textArea.positionToRectangle(Math.min(position, textArea.length))
-                            }
-                            readonly property real mentionWidth:
-                                textArea.positionToRectangle(Math.min(position + 1, textArea.length)).x - _r.x
-
-                            x: _r.x
-                            y: _r.y + 1
-                            // Math.min so a mention occupying the whole line doesn't overflow
-                            width: Math.min(mentionWidth, parent.width - x)
-                            height: _r.height - 2
-                            radius: 3//height / 4
-                            color: "#DD5B8DEF"
-
-                            Text {
-                                anchors.fill: parent
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                                text: parent.name
-                                color: "white"
-                                elide: Text.ElideRight
-                                font.pixelSize: textArea.font.pixelSize - 2
-                            }
-
-                            ToolTip.visible: hover.hovered
-                            ToolTip.text: "pub key: " + pubKey
-                            HoverHandler { id: hover }
-                        }
-                    }
-
-                    Keys.onPressed: (event) => {
-                        // Intercept the 3rd backtick typed right after "``" and perform
-                        // the "``" -> "```" replacement ourselves, as a single joinable
-                        // edit block (see TextDocumentUtils.handleTripleBacktick).
-                        if (event.key === Qt.Key_QuoteLeft
-                                && textArea.selectionStart === textArea.selectionEnd
-                                && textArea.cursorPosition >= 2
-                                && textArea.getText(textArea.cursorPosition - 2,
-                                                    textArea.cursorPosition) === "``") {
-                            event.accepted = true
-                            TextDocumentUtils.handleTripleBacktick(textArea.textDocument,
-                                                                   textArea.cursorPosition)
-                            return
-                        }
-
-                        // It's necessary to handle undo/redo in a loop in order to
-                        // handle formatting changes of text blocks, detected as changes
-                        // not changing the actual text (like indentation of quote blocks).
-                        if (event.matches(StandardKey.Undo)) {
-                            let text = ""
-                            event.accepted = true
-
-                            do {
-                                if (!canUndo)
-                                    return
-
-                                text = textArea.text
-                                undo()
-                            } while (text === textArea.text)
-
-                        } else if (event.matches(StandardKey.Redo)) {
-                            let text = ""
-                            event.accepted = true
-
-                            do {
-                                if (!canRedo)
-                                    return
-
-                                text = textArea.text
-                                redo()
-
-                            } while (text === textArea.text)
-                        }
-                    }
                 }
             }
 
@@ -263,7 +125,7 @@ unclosed fence here (no closing triple-tick)
                         font.family: "Monospace"
                         font.pixelSize: 13
                         text: MarkdownUtils.dumpAst(textArea.text,
-                                                    highlighter.formatUnclosedCodeFence,
+                                                    textArea.formatUnclosedCodeFence,
                                                     rangesSwitch.checked)
                     }
                 }
@@ -276,8 +138,8 @@ unclosed fence here (no closing triple-tick)
 
             Switch {
                 text: "Format unclosed code fence"
-                checked: highlighter.formatUnclosedCodeFence
-                onToggled: highlighter.formatUnclosedCodeFence = checked
+                checked: textArea.formatUnclosedCodeFence
+                onToggled: textArea.formatUnclosedCodeFence = checked
             }
             Switch {
                 id: rangesSwitch
@@ -295,7 +157,7 @@ unclosed fence here (no closing triple-tick)
                 text: "Add random mention"
                 onClicked: {
                     const pos = textArea.cursorPosition
-                    highlighter.insertMention(pos, root.randomName(), root.randomPubKey())
+                    textArea.insertMention(pos, root.randomName(), root.randomPubKey())
                     textArea.insert(textArea.cursorPosition, " ")
                 }
             }
@@ -305,7 +167,7 @@ unclosed fence here (no closing triple-tick)
                 Text {
                     text: {
                         textArea.text
-                        return highlighter.inUnclosedCodeFence(textArea.cursorPosition) ? "true" : "false"
+                        return textArea.inUnclosedCodeFence(textArea.cursorPosition) ? "true" : "false"
                     }
                 }
             }
@@ -374,7 +236,7 @@ unclosed fence here (no closing triple-tick)
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            model: highlighter.linksModel
+            model: textArea.linksModel
 
             delegate: Text {
                 width: ListView.view.width
