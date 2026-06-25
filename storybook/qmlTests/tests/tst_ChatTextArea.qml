@@ -237,6 +237,40 @@ Item {
             compare(control.text, "AAA")
         }
 
+        // The highlighter enlarges emojis to fill the line height (they render smaller
+        // than text otherwise), without making the line taller.
+        function test_emoji_enlargedWithoutGrowingLine() {
+            control.text = "AAA"
+            control.forceActiveFocus()
+            const plainLineH = control.positionToRectangle(0).height
+
+            control.text = "A\u{1F60E}A" // A 😎 A; the emoji is a surrogate pair (positions 1..3)
+            function emojiAdvance() {
+                return control.positionToRectangle(3).x - control.positionToRectangle(1).x
+            }
+
+            // The (async) highlight grows the emoji's advance to ~the line height.
+            tryVerify(() => emojiAdvance() >= plainLineH * 0.9)
+
+            // ...but the line itself stays the same height.
+            compare(control.positionToRectangle(0).height, plainLineH)
+        }
+
+        // With enlargeEmojis off, the emoji keeps its base size (not grown to the line).
+        function test_emoji_enlargingCanBeDisabled() {
+            control.enlargeEmojis = false
+
+            control.text = "AAA"
+            control.forceActiveFocus()
+            const plainLineH = control.positionToRectangle(0).height
+
+            control.text = "A\u{1F60E}A"
+            const emojiAdvance = control.positionToRectangle(3).x - control.positionToRectangle(1).x
+
+            // not enlarged -> advance stays clearly below the line height
+            verify(emojiAdvance < plainLineH * 0.9)
+        }
+
         // ── quoteBarVisible ─────────────────────────────────────────────────────
 
         function test_quoteBarVisible_defaultsTrueAndSettable() {

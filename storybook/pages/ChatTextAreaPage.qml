@@ -153,6 +153,11 @@ unclosed fence here (no closing triple-tick)
                text: "Quote block vertical line"
                checked: true
             }
+            Switch {
+                text: "Enlarge emojis"
+                checked: textArea.enlargeEmojis
+                onToggled: textArea.enlargeEmojis = checked
+            }
             Button {
                 text: "Add random mention"
                 onClicked: {

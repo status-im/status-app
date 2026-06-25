@@ -55,6 +55,9 @@ class ChatInputHighlighter : public QSyntaxHighlighter
     Q_PROPERTY(bool formatUnclosedCodeFence
                READ formatUnclosedCodeFence WRITE setFormatUnclosedCodeFence
                NOTIFY formatUnclosedCodeFenceChanged)
+    Q_PROPERTY(bool enlargeEmojis
+               READ enlargeEmojis WRITE setEnlargeEmojis
+               NOTIFY enlargeEmojisChanged)
     Q_PROPERTY(QAbstractListModel* linksModel READ linksModel CONSTANT)
     Q_PROPERTY(QAbstractListModel* mentionsModel READ mentionsModel CONSTANT)
 
@@ -69,6 +72,9 @@ public:
 
     bool formatUnclosedCodeFence() const;
     void setFormatUnclosedCodeFence(bool enabled);
+
+    bool enlargeEmojis() const;
+    void setEnlargeEmojis(bool enabled);
 
     QAbstractListModel* linksModel() const;
     QAbstractListModel* mentionsModel() const;
@@ -106,6 +112,7 @@ signals:
     void quickTextDocumentChanged();
     void codeBackgroundChanged();
     void formatUnclosedCodeFenceChanged();
+    void enlargeEmojisChanged();
 
 protected:
     void highlightBlock(const QString& text) override;
@@ -127,6 +134,7 @@ private:
     QString m_cachedText; // last full document text parsed into m_flags
     QColor m_codeBackground{Qt::transparent};
     bool m_formatUnclosedCodeFence{false};
+    bool m_enlargeEmojis{true};
     ChatInputLinksModel* m_linksModel{nullptr};
     ChatInputMentionsModel* m_mentionsModel{nullptr};
     int m_mentionCounter{0};

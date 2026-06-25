@@ -117,6 +117,25 @@ void flatten(const Node& node, unsigned int acc, QVector<unsigned int>& flags)
     }
 }
 
+// Quick, range-based emoji detector (not a full Unicode emoji property test). Covers the
+// common emoji blocks plus the joiners/modifiers that are part of an emoji grapheme
+// cluster (ZWJ, variation selectors, regional indicators, keycap combiners) so a whole
+// emoji sequence is enlarged as one unit.
+bool isEmojiCodePoint(char32_t cp)
+{
+    return (cp >= 0x1F300 && cp <= 0x1FAFF)   // emoticons / pictographs / transport / supplemental / extended-A
+        || (cp >= 0x1F000 && cp <= 0x1F0FF)   // mahjong, dominoes, playing cards
+        || (cp >= 0x2600  && cp <= 0x27BF)    // misc symbols + dingbats
+        || (cp >= 0x1F1E6 && cp <= 0x1F1FF)   // regional indicator letters (flags)
+        || (cp == 0x231A) || (cp == 0x231B)   // ⌚ ⌛
+        || (cp >= 0x23E9  && cp <= 0x23FA)    // media / timer symbols
+        || (cp == 0x24C2)                     // Ⓜ
+        || (cp >= 0x2B00  && cp <= 0x2BFF)    // stars / arrows (⭐ …)
+        || (cp >= 0x20D0  && cp <= 0x20FF)    // combining enclosing marks (keycaps)
+        || (cp >= 0xFE00  && cp <= 0xFE0F)    // variation selectors
+        || (cp == 0x200D);                    // zero-width joiner
+}
+
 // Collects document positions of mentions (Mention leaves) that fall inside a code
 // span/block; those should be demoted to plain text.
 void collectMentionsInCode(const Node& node, bool inCode, QVector<int>& out)
@@ -477,6 +496,20 @@ void ChatInputHighlighter::setFormatUnclosedCodeFence(bool enabled)
     emit formatUnclosedCodeFenceChanged();
 }
 
+bool ChatInputHighlighter::enlargeEmojis() const
+{
+    return m_enlargeEmojis;
+}
+
+void ChatInputHighlighter::setEnlargeEmojis(bool enabled)
+{
+    if (m_enlargeEmojis == enabled) return;
+    m_enlargeEmojis = enabled;
+    m_cachedText.clear();
+    rehighlight();
+    emit enlargeEmojisChanged();
+}
+
 bool ChatInputHighlighter::inUnclosedCodeFence(int position) const
 {
     if (!document()) return false;
@@ -607,6 +640,43 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
         if (f)
             setFormat(static_cast<int>(i), static_cast<int>(j - i), buildFormat(f));
         i = j;
+    }
+
+    // Enlarge emojis to fill the line. They render smaller than the line height, so we
+    // bump their font size to the line height — the line already has slack over the font
+    // size, so this fills the line without making it taller. (See isEmojiCodePoint.)
+    if (m_enlargeEmojis) {
+        const QFont base = document()->defaultFont();
+        const qreal lineHeight = QFontMetricsF(base).height();
+        QTextCharFormat emojiFormat; // size-only, so it merges with any existing format
+        if (base.pixelSize() > 0)
+            emojiFormat.setProperty(QTextFormat::FontPixelSize, qRound(lineHeight));
+        else
+            emojiFormat.setProperty(QTextFormat::FontPointSize, base.pointSizeF() * 1.2);
+
+        auto codePointAt = [&](qsizetype k, qsizetype& units) -> char32_t {
+            const QChar c = text[k];
+            if (c.isHighSurrogate() && k + 1 < blockLen && text[k + 1].isLowSurrogate()) {
+                units = 2;
+                return QChar::surrogateToUcs4(c, text[k + 1]);
+            }
+            units = 1;
+            return c.unicode();
+        };
+
+        qsizetype k = 0;
+        while (k < blockLen) {
+            qsizetype units = 1;
+            if (isEmojiCodePoint(codePointAt(k, units))) {
+                const qsizetype start = k;
+                k += units;
+                while (k < blockLen && isEmojiCodePoint(codePointAt(k, units)))
+                    k += units;
+                setFormat(static_cast<int>(start), static_cast<int>(k - start), emojiFormat);
+            } else {
+                k += units;
+            }
+        }
     }
 }
 
