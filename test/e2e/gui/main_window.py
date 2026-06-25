@@ -153,17 +153,21 @@ class MainLeftPanel(QObject):
     @allure.step('Open community portal')
     def open_communities_portal(self, attempts: int = 3) -> CommunitiesPortal:
         last_exception = None
-        for _ in range(1, attempts + 1):
-            LOG.info(f'Attempt # {_} top open Community portal')
+        for attempt in range(1, attempts + 1):
+            LOG.info('Attempt #%s to open Community portal', attempt)
             self.communities_portal_button.click()
             skip_intro_if_visible()
             skip_message_backup_popup_if_visible()
             try:
-                portal = CommunitiesPortal().wait_until_appears()
+                portal = CommunitiesPortal()
+                portal.wait_until_appears(
+                    timeout_msec=configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+                    check_interval=0.1,
+                )
                 return portal
             except Exception as e:
                 last_exception = e
-                LOG.info(f'Failed to open Communities portal with {e}')
+                LOG.info('Failed to open Communities portal with %s', e)
                 time.sleep(0.1)
         raise Exception(f"Failed to open Communities Portal after {attempts} attempts with {last_exception}")
 
@@ -206,8 +210,41 @@ class MainLeftPanel(QObject):
         skip_message_backup_popup_if_visible()
         skip_intro_if_visible()
         community = CommunityScreen()
-        community.left_panel.wait_until_appears(configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
+        community.wait_for_content_loaded(configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
         return community
+
+    @allure.step('Click community and record load time until community content is loaded')
+    def open_community_and_record_load_time(
+        self, name: str, timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC
+    ):
+        start_time = time.time()
+        driver.mouseClick(self._get_community(name))
+        skip_message_backup_popup_if_visible()
+        skip_intro_if_visible()
+        community = CommunityScreen()
+        check_interval = 0.1
+        timeout_sec = timeout_msec / 1000
+
+        while time.time() - start_time < timeout_sec:
+            try:
+                if community.is_content_loaded():
+                    LOG.info('CommunityScreen content: is loaded')
+                    break
+            except Exception as e:
+                LOG.debug("Exception during content load check: %s", e)
+            time.sleep(check_interval)
+        else:
+            load_time = time.time() - start_time
+            LOG.error(
+                'Community content is not loaded within %d ms (waited %.3f seconds)',
+                timeout_msec,
+                load_time,
+            )
+            raise TimeoutError(f'Community content is not loaded within {timeout_msec} ms')
+
+        load_time = time.time() - start_time
+        LOG.info('Community %s loaded in %.3f seconds', name, load_time)
+        return community, load_time
 
     @allure.step('Get community logo')
     def get_community_logo(self, name: str) -> Image:

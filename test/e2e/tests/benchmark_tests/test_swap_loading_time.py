@@ -40,7 +40,6 @@ def test_swap_loading_time(main_screen, user_data, user_account, tmp_path):
             load_times.append(load_time)
             line = f"[{i + 1}/5] Swap modal load time: {load_time:.3f} seconds"
             report_lines.append(line)
-            print(line)
             LOG.info(line)
 
         with step(f'Iteration {i + 1}: Close Swap modal'):
@@ -48,7 +47,6 @@ def test_swap_loading_time(main_screen, user_data, user_account, tmp_path):
 
     average_time = sum(load_times) / len(load_times) if load_times else 0.0
     average_line = f"Average swap modal load time over {len(load_times)} runs: {average_time:.3f} seconds"
-    print(average_line)
     LOG.info(average_line)
 
     # Write timings to a text file and attach to Allure

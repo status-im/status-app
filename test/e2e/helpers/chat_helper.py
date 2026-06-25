@@ -34,7 +34,7 @@ def skip_message_backup_popup_if_visible(attempts = 4):
     message_back_up_popup = EnableMessageBackupPopup()
     if not message_back_up_popup.is_visible:
         try:
-            message_back_up_popup.wait_until_appears(timeout_msec=configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+            message_back_up_popup.wait_until_appears(timeout_msec=1000)
         except (TimeoutError, Exception):
             return
 

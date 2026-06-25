@@ -100,7 +100,6 @@ def test_wallet_assets_loading_time(
             firstaccount_times.append(t1)
             line = f"[{i + 1}/5] {first_account_name} assets load time: {t1:.3f} seconds"
             report_lines.append(line)
-            print(line)
             LOG.info(line)
 
         with step(f"Iteration {i + 1}: Open {second_account_name} and record assets load time"):
@@ -108,7 +107,6 @@ def test_wallet_assets_loading_time(
             secondaccount_times.append(t2)
             line = f"[{i + 1}/5] {second_account_name} assets load time: {t2:.3f} seconds"
             report_lines.append(line)
-            print(line)
             LOG.info(line)
 
     avg_first = sum(firstaccount_times) / len(firstaccount_times) if firstaccount_times else 0.0
@@ -117,7 +115,6 @@ def test_wallet_assets_loading_time(
     report_lines.append(f"Average {first_account_name} assets load time over 5 runs: {avg_first:.3f} seconds")
     report_lines.append(f"Average {second_account_name} assets load time over 5 runs: {avg_second:.3f} seconds")
     report_text = "\n".join(report_lines)
-    print(report_text)
     LOG.info(report_text)
 
     report_file = tmp_path / "wallet_assets_load_times.txt"

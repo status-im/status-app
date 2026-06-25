@@ -1,3 +1,4 @@
+import logging
 import time
 import typing
 
@@ -26,6 +27,8 @@ from gui.screens.community_settings import CommunitySettingsScreen
 from scripts.tools.image import Image
 from scripts.utils.parsers import remove_tags
 
+LOG = logging.getLogger(__name__)
+
 
 class CommunityScreen(QObject):
 
@@ -35,6 +38,38 @@ class CommunityScreen(QObject):
         self.tool_bar = CommunityToolBar()
         self.chat = ChatView()
         self.right_panel = MembersListPanel()
+
+    def is_content_loaded(self) -> bool:
+        """True when the channel list and active channel UI are ready."""
+        try:
+            if not self.left_panel._general_channel_item.is_visible:
+                return False
+            if not self.tool_bar._channel_name.is_visible:
+                return False
+            if not str(self.tool_bar.channel_name).strip():
+                return False
+            if not self.chat._channel_name_label.is_visible:
+                return False
+            return bool(str(self.chat.channel_name).strip())
+        except Exception:
+            return False
+
+    @allure.step('Wait until community content is loaded')
+    def wait_for_content_loaded(
+        self,
+        timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+        check_interval: float = 0.1,
+    ):
+        timeout_sec = timeout_msec / 1000
+        start_time = time.time()
+
+        while time.time() - start_time < timeout_sec:
+            if self.is_content_loaded():
+                LOG.info('%s: community content is loaded', self)
+                return self
+            time.sleep(check_interval)
+
+        raise TimeoutError(f'Community content is not loaded within {timeout_msec} ms')
 
     @allure.step('Create channel')
     def create_channel(self, name: str, description: str, emoji: str = None):
