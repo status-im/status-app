@@ -220,6 +220,23 @@ Item {
             compare(mentionsRepeater.itemAt(0).pubKey, "0xabc")
         }
 
+        // Plain deletions (no backtick/mention in the removed range) fall through to
+        // native handling, so consecutive backspaces keep Qt's undo coalescing: three
+        // backspaces deleting "AAA" undo as a single step.
+        function test_backspacePlainText_singleUndoRestores() {
+            control.text = "AAA"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Backspace)
+            keyClick(Qt.Key_Backspace)
+            keyClick(Qt.Key_Backspace)
+            compare(control.text, "")
+
+            keyClick(Qt.Key_Z, Qt.ControlModifier) // single undo
+            compare(control.text, "AAA")
+        }
+
         // ── quoteBarVisible ─────────────────────────────────────────────────────
 
         function test_quoteBarVisible_defaultsTrueAndSettable() {
