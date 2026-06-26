@@ -21,6 +21,7 @@ Item {
     property alias cellHeight: webView.cellHeight
 
     signal copyToClipboard(string text)
+    signal closeRequested()
 
 
     StatusBaseText {
@@ -77,6 +78,7 @@ Item {
 
                     onClicked: {
                         Global.requestOpenLink(model.url)
+                        root.closeRequested()
                     }
                 }
             }

@@ -190,6 +190,7 @@ Control {
             socialLinksModel: socialLinksProxyModel
 
             onCopyToClipboard: text => root.copyToClipboard(text)
+            onCloseRequested: root.closeRequested()
         }
     }
 
