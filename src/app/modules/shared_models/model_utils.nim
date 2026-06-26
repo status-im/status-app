@@ -51,3 +51,32 @@ macro updateRolePreserveOnEmpty*(propertyName: untyped, roleName: untyped): unty
     if `propertyName`.len > 0 and self.items[ind].`propertyName` != `propertyName`:
       self.items[ind].`propertyName` = `propertyName`
       roles.add(ModelRole.`roleName`.int)
+
+# Wrap one or more updateRole calls and notify the row at `ind` if any roles changed.
+# Example usage:
+#   updateRolesAndNotify:
+#     updateRole(name, Name)
+#     updateRole(icon, Icon)
+template updateRolesAndNotify*(body: untyped) {.dirty.} =
+  var roles: seq[int] = @[]
+
+  body
+
+  if roles.len == 0:
+    return
+
+  let modelIndex = self.createIndex(ind, 0, nil)
+  defer: modelIndex.delete
+  self.dataChanged(modelIndex, modelIndex, roles)
+
+# Like updateRolesAndNotify, but first resolves `ind` from a model-specific lookup expression.
+# Example usage:
+#   updateItemRolesAndNotify self.findIndexById(id):
+#     updateRole(name, Name)
+template updateItemRolesAndNotify*(findIndex: untyped, body: untyped) {.dirty.} =
+  let ind = findIndex
+  if ind == -1:
+    return
+
+  updateRolesAndNotify:
+    body

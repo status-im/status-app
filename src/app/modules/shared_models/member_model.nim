@@ -1,4 +1,3 @@
-import app/modules/shared_models/model_utils
 import nimqml, tables, std/strformat, sequtils, sugar
 # TODO: use generics to remove duplication between user_model and member_model
 
@@ -267,46 +266,24 @@ QtObject:
     return self.findIndexForMember(id) != -1
 
   proc setName*(self: Model, pubKey: string, displayName: string, ensName: string, localNickname: string) =
-    let ind = self.findIndexForMember(pubKey)
-    if ind == -1:
-      return
+    updateItemRolesAndNotify self.findIndexForMember(pubKey):
+      let preferredDisplayNameChanged =
+        resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
+        resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
 
-    var roles: seq[int] = @[]
+      let usesDefaultName = resolveUsesDefaultName(localNickname, ensName, displayName)
 
-    let preferredDisplayNameChanged =
-      resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
-      resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
+      updateRole(displayName, DisplayName)
+      updateRole(ensName, EnsName)
+      updateRole(localNickname, LocalNickname)
+      updateRole(usesDefaultName, UsesDefaultName)
 
-    let usesDefaultName = resolveUsesDefaultName(localNickname, ensName, displayName)
-
-    updateRole(displayName, DisplayName)
-    updateRole(ensName, EnsName)
-    updateRole(localNickname, LocalNickname)
-    updateRole(usesDefaultName, UsesDefaultName)
-
-    if roles.len == 0:
-      return
-
-    if preferredDisplayNameChanged:
-      roles.add(ModelRole.PreferredDisplayName.int)
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, roles)
+      if preferredDisplayNameChanged:
+        roles.add(ModelRole.PreferredDisplayName.int)
 
   proc setIcon*(self: Model, pubKey: string, icon: string) =
-    let ind = self.findIndexForMember(pubKey)
-    if ind == -1:
-      return
-
-    if self.items[ind].icon == icon:
-      return
-
-    self.items[ind].icon = icon
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.Icon.int])
+    updateItemRolesAndNotify self.findIndexForMember(pubKey):
+      updateRole(icon, Icon)
 
   proc updateItem*(
       self: Model,
