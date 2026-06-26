@@ -1,81 +1,69 @@
-import logging
-import os
-
 import pytest
-import allure
-from allure_commons.types import AttachmentType
 from allure_commons._allure import step
 
 import configs
 from configs import get_platform
 import constants
+from driver.aut import AUT
+from scripts.utils.benchmark_report import (
+    CommunityOpenSamples,
+    attach_community_scenario_reports,
+    enable_benchmark_mode,
+    monitored_call,
+)
 
-LOG = logging.getLogger(__name__)
+COMMUNITY_NAME = 'Status'
+SECOND_OPEN_ITERATIONS = 5
+
+COMMUNITY_BENCHMARK_PARAMS = pytest.mark.parametrize(
+    'user_data, user_account',
+    [pytest.param(
+        configs.testpath.TEST_USER_DATA / 'status_community_member',
+        constants.user.status_community_member,
+    )],
+)
 
 
-@pytest.mark.parametrize('user_data, user_account', [
-    pytest.param(configs.testpath.TEST_USER_DATA / 'status_community_member', constants.user.status_community_member),
-])
+def _record_monitored_community_open(aut: AUT, main_screen, samples: CommunityOpenSamples) -> None:
+    load_time, stats = monitored_call(
+        aut.pid,
+        lambda: main_screen.left_panel.open_community_and_record_load_time(COMMUNITY_NAME),
+    )
+    samples.record(load_time, stats)
+
+
+@COMMUNITY_BENCHMARK_PARAMS
 @pytest.mark.skipif(get_platform() != 'Windows', reason="Windows only test")
 @pytest.mark.benchmark
-def test_status_community_first_open_loading_time(main_screen, user_data, user_account, tmp_path):
-    os.environ['STATUS_RUNTIME_TEST_MODE'] = 'True'  # to omit banners
+def test_status_community_first_open_loading_time(
+    aut: AUT, main_screen, user_data, user_account, tmp_path,
+):
+    enable_benchmark_mode()
+    samples = CommunityOpenSamples()
 
     with step('Open Status community after login and record first open load time'):
-        _, load_time = main_screen.left_panel.open_community_and_record_load_time('Status')
+        _record_monitored_community_open(aut, main_screen, samples)
 
-    report_lines = []
-    line = f"[1/1] Status community first open load time: {load_time:.3f} seconds"
-    report_lines.append(line)
-    LOG.info(line)
-
-    average_line = f"Average Status community first open load time over 1 runs: {load_time:.3f} seconds"
-    LOG.info(average_line)
-
-    report_lines.append(average_line)
-    report_text = "\n".join(report_lines)
-    report_file = tmp_path / "status_community_first_open_load_times.txt"
-    report_file.write_text(report_text, encoding="utf-8")
-
-    with step('Attach Status community first open load times to Allure'):
-        allure.attach(report_text, name='Status community first open load times (text)', attachment_type=AttachmentType.TEXT)
-        allure.attach.file(str(report_file), name='Status community first open load times (file)', attachment_type=AttachmentType.TEXT)
+    attach_community_scenario_reports(tmp_path, 'first open', samples)
 
 
-@pytest.mark.parametrize('user_data, user_account', [
-    pytest.param(configs.testpath.TEST_USER_DATA / 'status_community_member', constants.user.status_community_member),
-])
+@COMMUNITY_BENCHMARK_PARAMS
 @pytest.mark.skipif(get_platform() != 'Windows', reason="Windows only test")
 @pytest.mark.benchmark
-def test_status_community_second_open_loading_time(main_screen, user_data, user_account, tmp_path):
-    os.environ['STATUS_RUNTIME_TEST_MODE'] = 'True'  # to omit banners
+def test_status_community_second_open_loading_time(
+    aut: AUT, main_screen, user_data, user_account, tmp_path,
+):
+    enable_benchmark_mode()
+    samples = CommunityOpenSamples()
 
     with step('Open Status community after login'):
-        main_screen.left_panel.open_community('Status')
+        main_screen.left_panel.open_community(COMMUNITY_NAME)
 
-    load_times = []
-    report_lines = []
-
-    for i in range(5):
-        with step(f'Iteration {i + 1}: Open Communities portal'):
+    for iteration in range(1, SECOND_OPEN_ITERATIONS + 1):
+        with step(f'Iteration {iteration}: Open Communities portal'):
             main_screen.left_panel.open_communities_portal()
 
-        with step(f'Iteration {i + 1}: Open Status community again and record load time'):
-            _, load_time = main_screen.left_panel.open_community_and_record_load_time('Status')
-            load_times.append(load_time)
-            line = f"[{i + 1}/5] Status community second open load time: {load_time:.3f} seconds"
-            report_lines.append(line)
-            LOG.info(line)
+        with step(f'Iteration {iteration}: Open Status community again and record load time'):
+            _record_monitored_community_open(aut, main_screen, samples)
 
-    average_time = sum(load_times) / len(load_times) if load_times else 0.0
-    average_line = f"Average Status community second open load time over {len(load_times)} runs: {average_time:.3f} seconds"
-    LOG.info(average_line)
-
-    report_lines.append(average_line)
-    report_text = "\n".join(report_lines)
-    report_file = tmp_path / "status_community_second_open_load_times.txt"
-    report_file.write_text(report_text, encoding="utf-8")
-
-    with step('Attach Status community second open load times to Allure'):
-        allure.attach(report_text, name='Status community second open load times (text)', attachment_type=AttachmentType.TEXT)
-        allure.attach.file(str(report_file), name='Status community second open load times (file)', attachment_type=AttachmentType.TEXT)
+    attach_community_scenario_reports(tmp_path, 'second open', samples)
