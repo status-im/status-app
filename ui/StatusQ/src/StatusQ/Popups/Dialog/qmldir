@@ -1,6 +1,10 @@
 module StatusQ.Popups.Dialog
 
 StatusDialog 0.1 StatusDialog.qml
+StatusAdaptiveDialog 0.1 StatusAdaptiveDialog.qml
+StatusAdaptiveDialogContentHost 0.1 StatusAdaptiveDialogContentHost.qml
+StatusAdaptiveDialogFooter 0.1 StatusAdaptiveDialogFooter.qml
+StatusAdaptiveDialogHeader 0.1 StatusAdaptiveDialogHeader.qml
 StatusDialogBackground 0.1 StatusDialogBackground.qml
 StatusDialogDivider 0.1 StatusDialogDivider.qml
 StatusDialogFooter 0.1 StatusDialogFooter.qml

@@ -234,6 +234,10 @@
         <file>StatusQ/Platform/StatusMacNotification.qml</file>
         <file>StatusQ/Platform/qmldir</file>
         <file>StatusQ/Popups/Dialog/StatusDialog.qml</file>
+        <file>StatusQ/Popups/Dialog/StatusAdaptiveDialog.qml</file>
+        <file>StatusQ/Popups/Dialog/StatusAdaptiveDialogContentHost.qml</file>
+        <file>StatusQ/Popups/Dialog/StatusAdaptiveDialogFooter.qml</file>
+        <file>StatusQ/Popups/Dialog/StatusAdaptiveDialogHeader.qml</file>
         <file>StatusQ/Popups/Dialog/StatusDialogBackground.qml</file>
         <file>StatusQ/Popups/Dialog/StatusDialogDivider.qml</file>
         <file>StatusQ/Popups/Dialog/StatusDialogFooter.qml</file>
