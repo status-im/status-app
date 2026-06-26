@@ -3,7 +3,7 @@ import std/[strformat, strutils, tables, json, sequtils, marshal, times], chroni
 
 import io_interface, view, controller
 import ephemeral_notification_item, ephemeral_notification_model
-import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details, contacts_utils]
+import app/modules/shared_models/[user_item, member_item, member_model, section_item, section_model, section_details]
 import app/modules/shared_modules/authentication/module as authentication_module
 import app/modules/shared_modules/signing/module as signing_module
 import app/modules/shared_modules/keycard_management/module as keycard_management_module

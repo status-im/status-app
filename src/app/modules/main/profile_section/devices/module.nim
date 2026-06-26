@@ -1,4 +1,4 @@
-import nimqml, tables, strutils, chronicles
+import nimqml, chronicles
 import io_interface
 import ../io_interface as delegate_interface
 import view, controller, model, item

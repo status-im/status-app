@@ -6,7 +6,7 @@ import app/core/eventemitter
 import app/modules/shared_models/keypair_item
 
 import app/global/global_singleton
-from app_service/common/account_constants import PATH_ENCRYPTION
+from app_service/common/account_constants import PATH_ENCRYPTION, PATH_WHISPER
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
 import app_service/service/keycardV2/service as keycard_serviceV2
@@ -64,9 +64,9 @@ method startKeycardAuthentication*[T](self: Module[T], keyUid: string, pin: stri
                    else: singletonInstance.userProfile.getKeyUid()
     exportPrivate = true
     exportMasterAddr = false
-  var paths = @[account_constants.PATH_ENCRYPTION]
+  var paths = @[PATH_ENCRYPTION]
   if exportChatKey:
-    paths.add(account_constants.PATH_WHISPER)
+    paths.add(PATH_WHISPER)
   self.controller.startKeycardAuthentication(targetKeyUid, paths, exportPrivate, exportMasterAddr, pin)
 
 method stopKeycardAuthentication*[T](self: Module[T]) =

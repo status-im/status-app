@@ -1,4 +1,4 @@
-import nimqml, tables
+import nimqml
 import app_service/service/devices/service
 
 type

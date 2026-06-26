@@ -6,8 +6,6 @@ import app/global/global_singleton
 import app/core/eventemitter
 import app/modules/shared/keypairs
 
-import app_service/common/account_constants
-import app_service/common/utils
 import app_service/service/keycardV2/service as keycard_serviceV2
 import app_service/service/accounts/service as accounts_service
 import app_service/service/wallet_account/service as wallet_account_service
@@ -18,6 +16,7 @@ export io_interface
 logScope:
   topics = "keycard-management-module"
 
+import app_service/common/account_constants
 type AccountData = object
   name: string
   colorId: string

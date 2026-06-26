@@ -1,4 +1,4 @@
-import chronicles, stint, strutils
+import chronicles, stint
 import app/global/global_singleton
 import app/global/app_signals
 import app/core/signals/types as signal_types
