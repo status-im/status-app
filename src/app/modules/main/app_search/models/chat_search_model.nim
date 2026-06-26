@@ -1,7 +1,6 @@
 import app/modules/shared_models/model_utils
 import nimqml, tables
 import chat_search_item
-import ../../../shared_models/model_utils
 import ../io_interface
 
 type
@@ -122,10 +121,10 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(name, Name)
-    updateRole(color, Color)
-    updateRole(icon, Icon)
-    updateRole(emoji, Emoji)
+    updateRole(name)
+    updateRole(color)
+    updateRole(icon)
+    updateRole(emoji)
 
     if roles.len == 0:
       return
@@ -141,7 +140,7 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(sectionName, SectionName)
+    updateRole(sectionName)
 
     if roles.len == 0:
       return
@@ -157,7 +156,7 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(lastMessageText, LastMessageText)
+    updateRole(lastMessageText)
 
     if roles.len == 0:
       return

@@ -410,10 +410,10 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(canView, CanView)
-    updateRole(canPost, CanPost)
-    updateRole(canPostReactions, CanPostReactions)
-    updateRole(viewersCanPostReactions, ViewersCanPostReactions)
+    updateRole(canView)
+    updateRole(canPost)
+    updateRole(canPostReactions)
+    updateRole(viewersCanPostReactions)
 
     if roles.len == 0:
       return
@@ -457,10 +457,10 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(name, Name)
-    updateRole(icon, Icon)
-    updateRole(trustStatus, TrustStatus)
-    updateRole(usesDefaultName, UsesDefaultName)
+    updateRole(name)
+    updateRole(icon)
+    updateRole(trustStatus)
+    updateRole(usesDefaultName)
 
     if roles.len == 0:
       return
@@ -476,13 +476,13 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(name, Name)
-    updateRole(description, Description)
-    updateRole(emoji, Emoji)
-    updateRole(color, Color)
+    updateRole(name)
+    updateRole(description)
+    updateRole(emoji)
+    updateRole(color)
     if self.items[ind].hideIfPermissionsNotMet != hideIfPermissionsNotMet:
       roles.add(ModelRole.ShouldBeHiddenBecausePermissionsAreNotMet.int)
-    updateRole(hideIfPermissionsNotMet, HideIfPermissionsNotMet)
+    updateRole(hideIfPermissionsNotMet)
 
     if roles.len == 0:
       return
@@ -500,9 +500,9 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(name, Name)
-    updateRole(color, Color)
-    updateRole(icon, Icon)
+    updateRole(name)
+    updateRole(color)
+    updateRole(icon)
 
     if roles.len == 0:
       return
@@ -523,8 +523,8 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(name, Name)
-    updateRole(categoryPosition, CategoryPosition)
+    updateRole(name)
+    updateRole(categoryPosition)
 
     if roles.len == 0:
       return
@@ -603,7 +603,7 @@ QtObject:
     
     var roles: seq[int] = @[]
 
-    updateRole(name, Name)
+    updateRole(name)
 
     if roles.len == 0:
       return
@@ -629,7 +629,7 @@ QtObject:
       return
 
     var roles: seq[int] = @[]
-    updateRole(onlineStatus, OnlineStatus)
+    updateRole(onlineStatus)
     if roles.len == 0:
       return
 
@@ -645,8 +645,8 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(hasUnreadMessages, HasUnreadMessages)
-    updateRole(notificationsCount, NotificationsCount)
+    updateRole(hasUnreadMessages)
+    updateRole(notificationsCount)
 
     if roles.len == 0:
       return
@@ -662,8 +662,8 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(lastMessageText, LastMessageText)
-    updateRole(lastMessageTimestamp, LastMessageTimestamp)
+    updateRole(lastMessageText)
+    updateRole(lastMessageTimestamp)
 
     if roles.len == 0:
       return

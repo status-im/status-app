@@ -273,17 +273,17 @@ QtObject:
 
       let usesDefaultName = resolveUsesDefaultName(localNickname, ensName, displayName)
 
-      updateRole(displayName, DisplayName)
-      updateRole(ensName, EnsName)
-      updateRole(localNickname, LocalNickname)
-      updateRole(usesDefaultName, UsesDefaultName)
+      updateRole(displayName)
+      updateRole(ensName)
+      updateRole(localNickname)
+      updateRole(usesDefaultName)
 
       if preferredDisplayNameChanged:
         roles.add(ModelRole.PreferredDisplayName.int)
 
   proc setIcon*(self: Model, pubKey: string, icon: string) =
     updateItemRolesAndNotify self.findIndexForMember(pubKey):
-      updateRole(icon, Icon)
+      updateRole(icon)
 
   proc updateItem*(
       self: Model,
@@ -316,28 +316,28 @@ QtObject:
     let trustStatusChanged = trustStatus != self.items[ind].trustStatus
     let usesDefaultName = resolveUsesDefaultName(localNickname, ensName, displayName)
 
-    updateRole(displayName, DisplayName)
-    updateRole(usesDefaultName, UsesDefaultName)
-    updateRole(ensName, EnsName)
-    updateRole(localNickname, LocalNickname)
-    updateRole(isEnsVerified, IsEnsVerified)
+    updateRole(displayName)
+    updateRole(usesDefaultName)
+    updateRole(ensName)
+    updateRole(localNickname)
+    updateRole(isEnsVerified)
     # `alias` is deterministic from the pubkey — preserve any previously
     # resolved value when the incoming alias is empty (typical for
     # `getContactDetails` placeholders that haven't been enriched yet).
     updateRolePreserveOnEmpty(alias, Alias)
-    updateRole(icon, Icon)
-    updateRole(isContact, IsContact)
-    updateRole(memberRole, MemberRole)
-    updateRole(joined, Joined)
-    updateRole(trustStatus, TrustStatus)
-    updateRole(isBlocked, IsBlocked)
-    updateRole(contactRequest, ContactRequest)
+    updateRole(icon)
+    updateRole(isContact)
+    updateRole(memberRole)
+    updateRole(joined)
+    updateRole(trustStatus)
+    updateRole(isBlocked)
+    updateRole(contactRequest)
 
     var updatedMembershipRequestState = membershipRequestState
     if updatedMembershipRequestState == MembershipRequestState.None:
       updatedMembershipRequestState = self.items[ind].membershipRequestState
 
-    updateRoleWithValue(membershipRequestState, MembershipRequestState, updatedMembershipRequestState)
+    updateRoleWithValue(membershipRequestState, updatedMembershipRequestState)
 
     if preferredDisplayNameChanged:
       roles.add(ModelRole.PreferredDisplayName.int)

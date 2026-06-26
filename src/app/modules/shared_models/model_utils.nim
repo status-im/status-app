@@ -24,34 +24,38 @@ template guardModelSetDataRole*[T](role: int, _: typedesc[T]) =
   if role < ord(low(T)) or role > ord(high(T)):
     return false
 
+proc roleNameFromProperty(propertyName: NimNode): NimNode =
+  let propertyNameStr = $propertyName
+  ident(propertyNameStr[0].toUpperAscii() & propertyNameStr[1 .. ^1])
+
 # Macro that simplifies checking and updating values in a model
 # IMPORTANT:
   # The model's items need to be in a `seq` called `items`
   # A `seq[int]` named `roles` needs to exist
   # The index of the item being checked must be named `ind`
-macro updateRole*(propertyName: untyped, roleName: untyped): untyped =
+macro updateRole*(propertyName: untyped): untyped =
+  let roleName = roleNameFromProperty(propertyName)
   quote do:
     if self.items[ind].`propertyName` != `propertyName`:
       self.items[ind].`propertyName` = `propertyName`
       roles.add(ModelRole.`roleName`.int)
 
 # Same thing as updateRole where you have a value to set that is not the same **exact** name as the propertyName
-# Eg: updateRoleWithValue(name, Name, item.name)
-macro updateRoleWithValue*(propertyName: untyped, roleName: untyped, value: untyped): untyped =
+# Eg: updateRoleWithValue(name, item.name)
+macro updateRoleWithValue*(propertyName: untyped, value: untyped): untyped =
+  let roleName = roleNameFromProperty(propertyName)
   quote do:
     if self.items[ind].`propertyName` != `value`:
       self.items[ind].`propertyName` = `value`
       roles.add(ModelRole.`roleName`.int)
 
-# Expands a list of item fields into updateRoleWithValue(field, FieldRole, item.field).
+# Expands a list of item fields into updateRoleWithValue(field, item.field).
 # Example usage: updateRolesFromItem(item, name, memberRole, icon)
 macro updateRolesFromItem*(item: untyped, propertyNames: varargs[untyped]): untyped =
   result = newStmtList()
   for propertyName in propertyNames:
-    let propertyNameStr = $propertyName
-    let roleName = ident(propertyNameStr[0].toUpperAscii() & propertyNameStr[1 .. ^1])
     result.add quote do:
-      updateRoleWithValue(`propertyName`, `roleName`, `item`.`propertyName`)
+      updateRoleWithValue(`propertyName`, `item`.`propertyName`)
 
 # Like updateRole but skip the assignment when the incoming string value is
 # empty AND the existing value is non-empty. Use for fields that are
@@ -65,8 +69,8 @@ macro updateRolePreserveOnEmpty*(propertyName: untyped, roleName: untyped): unty
 # Wrap one or more updateRole calls and notify the row at `ind` if any roles changed.
 # Example usage:
 #   updateRolesAndNotify:
-#     updateRole(name, Name)
-#     updateRole(icon, Icon)
+#     updateRole(name)
+#     updateRole(icon)
 template updateRolesAndNotify*(body: untyped) {.dirty.} =
   var roles: seq[int] = @[]
 
@@ -82,7 +86,7 @@ template updateRolesAndNotify*(body: untyped) {.dirty.} =
 # Like updateRolesAndNotify, but first resolves `ind` from a model-specific lookup expression.
 # Example usage:
 #   updateItemRolesAndNotify self.findIndexById(id):
-#     updateRole(name, Name)
+#     updateRole(name)
 template updateItemRolesAndNotify*(findIndex: untyped, body: untyped) {.dirty.} =
   let ind = findIndex
   if ind == -1:

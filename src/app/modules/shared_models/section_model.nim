@@ -41,7 +41,7 @@ type
     PinMessageAllMembersEnabled
     Encrypted
     CommunityTokensModel
-    AmIBanned
+    IsBanned
     IsPendingOwnershipRequest
     ActiveMembersCount
     MembersLoaded
@@ -119,7 +119,7 @@ QtObject:
       ModelRole.PinMessageAllMembersEnabled.int:"pinMessageAllMembersEnabled",
       ModelRole.Encrypted.int:"encrypted",
       ModelRole.CommunityTokensModel.int:"communityTokens",
-      ModelRole.AmIBanned.int:"amIBanned",
+      ModelRole.IsBanned.int:"amIBanned",
       ModelRole.IsPendingOwnershipRequest.int:"isPendingOwnershipRequest",
       ModelRole.ActiveMembersCount.int:"activeMembersCount",
       ModelRole.MembersLoaded.int:"membersLoaded",
@@ -197,7 +197,7 @@ QtObject:
       result = newQVariant(item.encrypted)
     of ModelRole.CommunityTokensModel:
       result = newQVariant(item.communityTokens)
-    of ModelRole.AmIBanned:
+    of ModelRole.IsBanned:
       result = newQVariant(item.isBanned)
     of ModelRole.IsPendingOwnershipRequest:
       result = newQVariant(item.isPendingOwnershipRequest)
@@ -459,8 +459,8 @@ QtObject:
       if self.items[ind].id == id:
         var roles: seq[int] = @[]
 
-        updateRole(hasNotification, HasNotification)
-        updateRole(notificationsCount, NotificationsCount)
+        updateRole(hasNotification)
+        updateRole(notificationsCount)
 
         if roles.len == 0:
           return
@@ -583,7 +583,7 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(isBanned, AmIBanned)
+    updateRole(isBanned)
 
     if roles.len == 0:
       return

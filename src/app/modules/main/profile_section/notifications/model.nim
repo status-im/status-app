@@ -125,10 +125,10 @@ QtObject:
     
     var roles: seq[int] = @[]
 
-    updateRole(muteAllMessages, MuteAllMessages)
-    updateRole(personalMentions, PersonalMentions)
-    updateRole(globalMentions, GlobalMentions)
-    updateRole(otherMessages, OtherMessages)
+    updateRole(muteAllMessages)
+    updateRole(personalMentions)
+    updateRole(globalMentions)
+    updateRole(otherMessages)
 
     if roles.len == 0:
       return
@@ -157,9 +157,9 @@ QtObject:
 
     var roles: seq[int] = @[]
 
-    updateRole(name, Name)
-    updateRole(image, Image)
-    updateRole(color, Color)
+    updateRole(name)
+    updateRole(image)
+    updateRole(color)
 
     if roles.len == 0:
       return

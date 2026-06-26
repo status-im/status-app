@@ -276,9 +276,9 @@ QtObject:
       resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
       resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
 
-    updateRole(displayName, DisplayName)
-    updateRole(ensName, EnsName)
-    updateRole(localNickname, LocalNickname)
+    updateRole(displayName)
+    updateRole(ensName)
+    updateRole(localNickname)
 
     if preferredDisplayNameChanged:
       roles.add(ModelRole.PreferredDisplayName.int)
@@ -337,25 +337,25 @@ QtObject:
 
     let trustStatusChanged = trustStatus != self.items[ind].trustStatus
 
-    updateRole(displayName, DisplayName)
-    updateRole(ensName, EnsName)
-    updateRole(localNickname, LocalNickname)
+    updateRole(displayName)
+    updateRole(ensName)
+    updateRole(localNickname)
     # `alias` is deterministic from the pubkey — preserve if set
     updateRolePreserveOnEmpty(alias, Alias)
-    updateRole(icon, Icon)
-    updateRole(trustStatus, TrustStatus)
-    updateRole(onlineStatus, OnlineStatus)
-    updateRole(isContact, IsContact)
-    updateRole(isBlocked, IsBlocked)
-    updateRole(contactRequest, ContactRequest)
-    updateRole(lastUpdated, LastUpdated)
-    updateRole(lastUpdatedLocally, LastUpdatedLocally)
-    updateRole(bio, Bio)
-    updateRole(thumbnailImage, ThumbnailImage)
-    updateRole(largeImage, LargeImage)
-    updateRole(isContactRequestReceived, IsContactRequestReceived)
-    updateRole(isContactRequestSent, IsContactRequestSent)
-    updateRole(isRemoved, IsRemoved)
+    updateRole(icon)
+    updateRole(trustStatus)
+    updateRole(onlineStatus)
+    updateRole(isContact)
+    updateRole(isBlocked)
+    updateRole(contactRequest)
+    updateRole(lastUpdated)
+    updateRole(lastUpdatedLocally)
+    updateRole(bio)
+    updateRole(thumbnailImage)
+    updateRole(largeImage)
+    updateRole(isContactRequestReceived)
+    updateRole(isContactRequestSent)
+    updateRole(isRemoved)
 
     if preferredDisplayNameChanged:
       roles.add(ModelRole.PreferredDisplayName.int)
