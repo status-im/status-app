@@ -1,4 +1,3 @@
-import app/modules/shared_models/model_utils
 import nimqml, tables, strutils, std/strformat
 
 import json
@@ -287,51 +286,41 @@ QtObject:
     self.dataChanged(dataIndex, dataIndex, @[ModelRole.Muted.int])
 
   proc editItem*(self: SectionModel, item: SectionItem) =
-    let ind = self.getItemIndex(item.id)
-    if ind == -1:
-      return
-    
-    var roles: seq[int] = @[]
+    updateItemRolesAndNotify self.getItemIndex(item.id):
+      updateRolesFromItem(item,
+        name,
+        memberRole,
+        isControlNode,
+        description,
+        introMessage,
+        outroMessage,
+        image,
+        bannerImageData,
+        icon,
+        color,
+        tags,
+        hasNotification,
+        notificationsCount,
+        active,
+        enabled,
+        joined,
+        spectated,
+        isMember,
+        canJoin,
+        canManageUsers,
+        canRequestAccess,
+        access,
+        ensOnly,
+        muted,
+        historyArchiveSupportEnabled,
+        pinMessageAllMembersEnabled,
+        encrypted,
+        isPendingOwnershipRequest,
+        activeMembersCount,
+        joinedMembersCount,
+      )
 
-    updateRoleWithValue(name, Name, item.name)
-    updateRoleWithValue(memberRole, MemberRole, item.memberRole)
-    updateRoleWithValue(isControlNode, IsControlNode, item.isControlNode)
-    updateRoleWithValue(description, Description, item.description)
-    updateRoleWithValue(introMessage, IntroMessage, item.introMessage)
-    updateRoleWithValue(outroMessage, OutroMessage, item.outroMessage)
-    updateRoleWithValue(image, Image, item.image)
-    updateRoleWithValue(bannerImageData, BannerImageData, item.bannerImageData)
-    updateRoleWithValue(icon, Icon, item.icon)
-    updateRoleWithValue(color, Color, item.color)
-    updateRoleWithValue(tags, Tags, item.tags)
-    updateRoleWithValue(hasNotification, HasNotification, item.hasNotification)
-    updateRoleWithValue(notificationsCount, NotificationsCount, item.notificationsCount)
-    updateRoleWithValue(active, Active, item.active)
-    updateRoleWithValue(enabled, Enabled, item.enabled)
-    updateRoleWithValue(joined, Joined, item.joined)
-    updateRoleWithValue(spectated, Spectated, item.spectated)
-    updateRoleWithValue(isMember, IsMember, item.isMember)
-    updateRoleWithValue(canJoin, CanJoin, item.canJoin)
-    updateRoleWithValue(canManageUsers, CanManageUsers, item.canManageUsers)
-    updateRoleWithValue(canRequestAccess, CanRequestAccess, item.canRequestAccess)
-    updateRoleWithValue(access, Access, item.access)
-    updateRoleWithValue(ensOnly, EnsOnly, item.ensOnly)
-    updateRoleWithValue(muted, Muted, item.muted)
-    updateRoleWithValue(historyArchiveSupportEnabled, HistoryArchiveSupportEnabled, item.historyArchiveSupportEnabled)
-    updateRoleWithValue(pinMessageAllMembersEnabled, PinMessageAllMembersEnabled, item.pinMessageAllMembersEnabled)
-    updateRoleWithValue(encrypted, Encrypted, item.encrypted)
-    updateRoleWithValue(isPendingOwnershipRequest, IsPendingOwnershipRequest, item.isPendingOwnershipRequest)
-    updateRoleWithValue(activeMembersCount, ActiveMembersCount, item.activeMembersCount)
-    updateRoleWithValue(joinedMembersCount, JoinedMembersCount, item.joinedMembersCount)
-
-    self.items[ind].members.updateToTheseItems(item.members.getItems())
-
-    if roles.len == 0:
-      return
-
-    let dataIndex = self.createIndex(ind, 0, nil)
-    defer: dataIndex.delete
-    self.dataChanged(dataIndex, dataIndex, roles)
+      self.items[ind].members.updateToTheseItems(item.members.getItems())
 
   proc updateMemberItemInSections*(
       self: SectionModel,
