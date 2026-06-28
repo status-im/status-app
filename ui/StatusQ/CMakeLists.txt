@@ -169,6 +169,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/imageencoderutils.h
         include/StatusQ/keychain.h
         include/StatusQ/markdownast.h
+        include/StatusQ/markdownhtml.h
         include/StatusQ/markdownparser.h
         include/StatusQ/markdownutils.h
         include/StatusQ/mentiontextobject.h
@@ -212,6 +213,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/localnetworkpermission.cpp
         src/localnetworkpermission_backend.h
         src/markdownast.cpp
+        src/markdownhtml.cpp
         src/markdownparser.cpp
         src/markdownutils.cpp
         src/mentiontextobject.cpp

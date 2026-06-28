@@ -2,9 +2,12 @@
 
 #include <QObject>
 #include <QString>
+#include <QVariantList>
+
+class QQuickTextDocument;
 
 // Stateless QML singleton exposing the Markdown parser's debug/inspection
-// helpers (the textual AST dump) to QML.
+// helpers (the textual AST dump) and the static AST→HTML renderer to QML.
 class MarkdownUtils : public QObject
 {
     Q_OBJECT
@@ -16,4 +19,9 @@ public:
     Q_INVOKABLE QString dumpAst(const QString& text,
                                 bool formatUnclosedCodeFence = false,
                                 bool withRanges = true) const;
+
+    // Splits the document into decorated blocks (text / code / quote, with quotes
+    // carrying nested blocks) for rendering one Label per block. See Markdown::toBlocks.
+    Q_INVOKABLE QVariantList toBlocks(QQuickTextDocument* document,
+                                      bool formatUnclosedCodeFence = false) const;
 };

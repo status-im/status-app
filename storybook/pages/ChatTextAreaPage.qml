@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import StatusQ
+import StatusQ.Core.Theme
 
 import shared.status
 
@@ -36,30 +37,57 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            ScrollView {
-                id: scrollView
-
+            // Input (left) and static HTML render (right), side by side, 50% each.
+            RowLayout {
                 SplitView.fillHeight: true
-                SplitView.minimumHeight: 120
+                SplitView.minimumHeight: 160
 
-                contentWidth: availableWidth
+                spacing: 12
 
-                ChatTextArea {
-                    id: textArea
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 1
 
-                    background: null
+                    spacing: 4
 
-                    font.pixelSize: 15
-                    codeBackground: "#e8e8e8"
-                    quoteBarVisible: quoteBarSwitch.checked
+                    Text {
+                        Layout.fillWidth: true
+                        font.bold: true
+                        text: "Input:"
+                    }
 
-                    text:
+                    ScrollView {
+                        id: scrollView
+
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        contentWidth: availableWidth
+
+                        ChatTextArea {
+                            id: textArea
+
+                            background: null
+
+                            font.pixelSize: 15
+                            codeBackground: "#e8e8e8"
+                            quoteBarVisible: quoteBarSwitch.checked
+
+                            text:
 `Some **bold** text there!
 Some *italic* text text there!
 
 Some in-line emoji: 😎🤪🎃
 
 This is ~~strikethrough~~ text.
+
+Quote with nested code:
+> A quote block here
+> second quoted line
+> \`\`\`
+> code nested in the quote
+> \`\`\`
 
 Both bold and italics goes here: ***bold italic***
 And **bold** and *italic* together in a single line.
@@ -98,11 +126,178 @@ Link in code (not highlighted): \`https://status.im\`
 unclosed fence here (no closing triple-tick)
 **bold suppressed when format unclosed code fence flag on**
 `
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 1
+
+                    spacing: 4
+
+                    Text {
+                        Layout.fillWidth: true
+                        font.bold: true
+                        text: "Static HTML render:"
+                    }
+
+                    ScrollView {
+                        id: htmlScroll
+
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+
+                        contentWidth: availableWidth
+
+                        padding: 10
+
+                        // One Label per block, so quote/code blocks can be decorated.
+                        Column {
+                            id: blocksColumn
+
+                            width: htmlScroll.availableWidth
+                            spacing: 8
+
+                            Repeater {
+                                model: {
+                                    textArea.text // re-build on every edit
+                                    return MarkdownUtils.toBlocks(textArea.textDocument,
+                                                                  textArea.formatUnclosedCodeFence)
+                                }
+
+                                // Visibility-based (no Loader) to avoid Loader height binding
+                                // loops; each delegate sizes to its visible child's content.
+                                delegate: Item {
+                                    id: blk
+
+                                    required property var modelData
+                                    readonly property var block: modelData
+
+                                    width: blocksColumn.width
+                                    implicitHeight: block.type === "quote" ? quoteRow.implicitHeight
+                                                  : block.type === "code"  ? codeBox.implicitHeight
+                                                                           : textLabel.implicitHeight
+                                    height: implicitHeight
+
+                                    Label {
+                                        id: textLabel
+                                        visible: blk.block.type === "text"
+                                        width: parent.width
+                                        wrapMode: Text.Wrap
+                                        textFormat: Text.RichText
+                                        font.family: Fonts.baseFont.family
+                                        font.pixelSize: textArea.font.pixelSize
+                                        text: visible ? blk.block.html : ""
+                                    }
+
+                                    Rectangle {
+                                        id: codeBox
+                                        visible: blk.block.type === "code"
+                                        width: codeLabel.width + 16
+                                        implicitHeight: codeLabel.implicitHeight + 16
+                                        radius: 6
+                                        border.width: 1
+                                        border.color: "#cccccc"
+                                        color: "#e8e8e8"
+                                    }
+
+                                    Label {
+                                        id: codeLabel
+                                        x: 8; y: 8
+                                        width: Math.min(implicitWidth, parent.width - 16)
+                                        wrapMode: Text.Wrap
+                                        textFormat: Text.PlainText
+                                        font.family: Fonts.codeFont.family
+                                        font.pixelSize: textArea.font.pixelSize
+                                        font.bold: !!blk.block.bold
+                                        font.italic: !!blk.block.italic
+                                        font.strikeout: !!blk.block.strikethrough
+                                        text: codeBox.visible ? blk.block.code : ""
+                                    }
+
+                                    Row {
+                                        id: quoteRow
+                                        visible: blk.block.type === "quote"
+                                        width: parent.width
+                                        spacing: 8
+
+                                        Rectangle {
+                                            width: 3
+                                            height: quoteCol.height
+                                            color: "#4A90D9"
+
+                                            bottomLeftRadius: 3
+                                            topLeftRadius: 3
+                                        }
+                                        Column {
+                                            id: quoteCol
+                                            width: parent.width - 11 // bar (3) + spacing (8)
+                                            spacing: 8
+
+                                            Repeater {
+                                                model: quoteRow.visible ? blk.block.blocks : []
+
+                                                delegate: Item {
+                                                    id: sub
+
+                                                    required property var modelData
+                                                    readonly property var block: modelData
+
+                                                    width: quoteCol.width
+                                                    implicitHeight: block.type === "code"
+                                                                    ? subCode.implicitHeight
+                                                                    : subText.implicitHeight
+                                                    height: implicitHeight
+
+                                                    Label {
+                                                        id: subText
+                                                        visible: sub.block.type !== "code"
+                                                        width: parent.width
+                                                        wrapMode: Text.Wrap
+                                                        textFormat: Text.RichText
+                                                        font.family: Fonts.baseFont.family
+                                                        font.pixelSize: textArea.font.pixelSize
+                                                        text: visible ? sub.block.html : ""
+                                                    }
+                                                    Rectangle {
+                                                        id: subCode
+                                                        visible: sub.block.type === "code"
+                                                        width: subCodeLabel.width + 16
+                                                        implicitHeight: subCodeLabel.implicitHeight + 16
+                                                        radius: 6
+                                                        border.width: 1
+                                                        border.color: "#cccccc"
+                                                        color: "#e8e8e8"
+                                                    }
+
+                                                    Label {
+                                                        id: subCodeLabel
+                                                        x: 8; y: 8
+                                                        width: Math.min(implicitWidth, parent.width - 16)
+                                                        wrapMode: Text.Wrap
+                                                        textFormat: Text.PlainText
+                                                        font.family: Fonts.codeFont.family
+                                                        font.pixelSize: textArea.font.pixelSize
+                                                        font.bold: !!sub.block.bold
+                                                        font.italic: !!sub.block.italic
+                                                        font.strikeout: !!sub.block.strikethrough
+                                                        text: subCode.visible ? sub.block.code : ""
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
             ColumnLayout {
-                SplitView.preferredHeight: 260
+                SplitView.preferredHeight: 200
                 SplitView.minimumHeight: 80
 
                 spacing: 4
@@ -122,11 +317,82 @@ unclosed fence here (no closing triple-tick)
                     TextArea {
                         readOnly: true
                         wrapMode: TextEdit.NoWrap
-                        font.family: "Monospace"
+                        font.family: Fonts.codeFont.family
                         font.pixelSize: 13
                         text: MarkdownUtils.dumpAst(textArea.text,
                                                     textArea.formatUnclosedCodeFence,
                                                     rangesSwitch.checked)
+                    }
+                }
+            }
+
+            ColumnLayout {
+                SplitView.preferredHeight: 160
+                SplitView.minimumHeight: 80
+
+                spacing: 4
+
+                Text {
+                    Layout.fillWidth: true
+                    font.bold: true
+                    text: "detected links:"
+                }
+
+                ListView {
+                    id: linksListView
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    clip: true
+                    model: textArea.linksModel
+
+                    delegate: Text {
+                        width: ListView.view.width
+                        text: model.text + " @ " + model.start + " +" + model.length
+
+                        elide: Text.ElideMiddle
+
+                        MouseArea {
+                            id: linkMouseArea
+
+                            hoverEnabled: true
+
+                            anchors.fill: parent
+                        }
+
+                        Rectangle {
+                            parent: textArea
+
+                            z: -1
+
+                            visible: linkMouseArea.containsMouse
+
+                            readonly property rect position: {
+                                textArea.text
+                                textArea.contentWidth
+
+                                const start = textArea.positionToRectangle(model.start)
+                                const end = textArea.positionToRectangle(model.start + model.length)
+
+                                const rect = Qt.rect(
+                                    start.x,
+                                    start.y,
+                                    end.x - start.x,
+                                    start.height
+                                )
+
+                                return rect
+                            }
+
+                            x: position.x
+                            y: position.y
+                            width: position.width
+                            height: position.height
+
+                            border.color: "darkblue"
+                            color: "lightblue"
+                        }
                     }
                 }
             }
@@ -203,92 +469,6 @@ unclosed fence here (no closing triple-tick)
                 Text { text: "bold: "          + vemph.bold }
                 Text { text: "italic: "        + vemph.italic }
                 Text { text: "strikethrough: " + vemph.strikethrough }
-            }
-        }
-    }
-
-    Rectangle {
-        anchors.fill: linksColumn
-        border.color: "lightblue"
-
-        MouseArea {
-            anchors.fill: parent
-        }
-    }
-
-    ColumnLayout {
-        id: linksColumn
-
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.margins: 12
-        anchors.rightMargin: scrollView.ScrollBar.vertical.width + 12
-
-        width: 300
-        height: 400
-
-        Text {
-            Layout.fillWidth: true
-            font.bold: true
-            text: "detected links:"
-        }
-
-        ListView {
-            id: linksListView
-
-            Layout.leftMargin: 5
-
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-
-            model: textArea.linksModel
-
-            delegate: Text {
-                width: ListView.view.width
-                text: model.text + " @ " + model.start + " +" + model.length
-
-                elide: Text.ElideMiddle
-
-                MouseArea {
-                    id: linkMouseArea
-
-                    hoverEnabled: true
-
-                    anchors.fill: parent
-                }
-
-                Rectangle {
-                    parent: textArea
-
-                    z: -1
-
-                    visible: linkMouseArea.containsMouse
-
-                    readonly property rect position: {
-                        textArea.text
-                        textArea.contentWidth
-
-                        const start = textArea.positionToRectangle(model.start)
-                        const end = textArea.positionToRectangle(model.start + model.length)
-
-                        const rect = Qt.rect(
-                            start.x,
-                            start.y,
-                            end.x - start.x,
-                            start.height
-                        )
-
-                        return rect
-                    }
-
-                    x: position.x
-                    y: position.y
-                    width: position.width
-                    height: position.height
-
-                    border.color: "darkblue"
-                    color: "lightblue"
-                }
             }
         }
     }
