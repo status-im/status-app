@@ -134,6 +134,8 @@ unsigned emphasisBitFor(NodeKind kind)
 
 QString wrapEmphasis(const QString& html, unsigned bits)
 {
+    if (html.isEmpty())
+        return html; // keep empty lines empty (no <b></b> wrapper)
     QString out = html;
     if (bits & kStrike) out = QStringLiteral("<s>%1</s>").arg(out);
     if (bits & kItalic) out = QStringLiteral("<i>%1</i>").arg(out);
@@ -152,60 +154,114 @@ bool containsBlock(const Node& node)
     return false;
 }
 
-// Splits a list of sibling nodes into decorated blocks (text / code / quote). Recurses
-// into quote blocks (so nested code becomes its own sub-block) and into emphasis nodes
-// that wrap a block (so the block is split out while the surrounding text and the
-// block's content keep the outer formatting, carried via `emph`).
-QVariantList segment(const QVector<Node>& children,
-                     const QHash<int, QPair<QString, QString>>& mentions,
-                     unsigned emph)
+// Line-oriented segmentation: one source line → one output line. Delimiters render empty
+// but still count as a line; code/quote blocks divide the content into separate blocks.
+// Every empty input line is preserved, except the single newline that terminates a code
+// block's own line (the parser leaves it outside the block) — that one is absorbed.
+struct BlockAcc {
+    QVariantList blocks;            // emitted blocks
+    QStringList  lines;             // finalized text lines pending as a text block
+    QString      cur;              // html of the line currently being built
+    bool         curStarted = false; // line has seen a delimiter/content (a real line)
+    bool         afterCode  = false; // last emitted block was code (absorb its line end)
+};
+
+void flushTextBlock(BlockAcc& a)
 {
-    QVariantList blocks;
-    QVector<Node> textRun;
+    if (a.lines.isEmpty())
+        return;
+    a.blocks.append(QVariantMap{{QStringLiteral("type"), QStringLiteral("text")},
+                                {QStringLiteral("html"), a.lines.join(QStringLiteral("<br/>"))}});
+    a.lines.clear();
+}
 
-    auto flushText = [&] {
-        if (textRun.isEmpty())
-            return;
-        QString html;
-        for (const Node& n : textRun)
-            html += renderNode(n, mentions);
-        textRun.clear();
+void finalizeLine(BlockAcc& a, unsigned emph)
+{
+    // The single newline ending a code block's own line is absorbed (no empty line).
+    if (a.afterCode && a.cur.isEmpty()) {
+        a.afterCode = false;
+        a.curStarted = false;
+        return;
+    }
+    a.lines.append(wrapEmphasis(a.cur, emph));
+    a.cur.clear();
+    a.curStarted = false;
+    a.afterCode = false;
+}
 
-        QString probe = html;
-        probe.remove(QStringLiteral("<br/>"));
-        if (probe.trimmed().isEmpty())
-            return; // drop whitespace-only runs (e.g. blank lines around blocks)
+void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
+          const QHash<int, QPair<QString, QString>>& mentions)
+{
+    for (const Node& c : nodes) {
+        switch (c.kind) {
+        case NodeKind::Text: {
+            const QStringList parts = c.literal.split(QLatin1Char('\n'));
+            for (int i = 0; i < parts.size(); ++i) {
+                if (i > 0)
+                    finalizeLine(a, emph); // a newline ends the current line
+                if (!parts[i].isEmpty()) {
+                    a.cur += escape(parts[i]);
+                    a.curStarted = true;
+                }
+            }
+            break;
+        }
+        case NodeKind::Delimiter:
+            a.curStarted = true; // marks a real (possibly empty) line; renders nothing
+            break;
 
-        blocks.append(QVariantMap{{QStringLiteral("type"), QStringLiteral("text")},
-                                  {QStringLiteral("html"), wrapEmphasis(html, emph)}});
-    };
-
-    for (const Node& c : children) {
-        if (c.kind == NodeKind::CodeBlock) {
-            flushText();
+        case NodeKind::CodeBlock: {
+            if (!a.cur.isEmpty())
+                finalizeLine(a, emph); // content before the block is its own line
+            flushTextBlock(a);
             QString code = collectRawText(c);
             while (code.startsWith(QLatin1Char('\n'))) code.remove(0, 1);
             while (code.endsWith(QLatin1Char('\n')))   code.chop(1);
-            blocks.append(QVariantMap{{QStringLiteral("type"), QStringLiteral("code")},
-                                      {QStringLiteral("code"), code},
-                                      {QStringLiteral("bold"), bool(emph & kBold)},
-                                      {QStringLiteral("italic"), bool(emph & kItalic)},
-                                      {QStringLiteral("strikethrough"), bool(emph & kStrike)}});
-        } else if (c.kind == NodeKind::QuoteBlock) {
-            flushText();
-            blocks.append(QVariantMap{{QStringLiteral("type"), QStringLiteral("quote")},
-                                      {QStringLiteral("blocks"), segment(c.children, mentions, emph)}});
-        } else if (emphasisBitFor(c.kind) && containsBlock(c)) {
-            // Emphasis wrapping a block: descend so the block is split out, keeping the
-            // outer + this emphasis on the pieces.
-            flushText();
-            blocks += segment(c.children, mentions, emph | emphasisBitFor(c.kind));
-        } else {
-            textRun.append(c); // inline (incl. emphasis without a block)
+            a.blocks.append(QVariantMap{{QStringLiteral("type"), QStringLiteral("code")},
+                                        {QStringLiteral("code"), code},
+                                        {QStringLiteral("bold"), bool(emph & kBold)},
+                                        {QStringLiteral("italic"), bool(emph & kItalic)},
+                                        {QStringLiteral("strikethrough"), bool(emph & kStrike)}});
+            a.cur.clear();
+            a.curStarted = false;
+            a.afterCode = true;
+            break;
+        }
+        case NodeKind::QuoteBlock: {
+            if (!a.cur.isEmpty())
+                finalizeLine(a, emph);
+            flushTextBlock(a);
+            BlockAcc inner;
+            walk(c.children, emph, inner, mentions);
+            if (inner.curStarted)
+                finalizeLine(inner, emph);
+            flushTextBlock(inner);
+            a.blocks.append(QVariantMap{{QStringLiteral("type"), QStringLiteral("quote")},
+                                        {QStringLiteral("blocks"), inner.blocks}});
+            a.cur.clear();
+            a.curStarted = false;
+            a.afterCode = false;
+            break;
+        }
+        case NodeKind::Strong:
+        case NodeKind::Emphasis:
+        case NodeKind::Strikethrough:
+            if (containsBlock(c)) {
+                // Walk inline (shared accumulator) so a line straddling the emphasis
+                // boundary assembles correctly, carrying the emphasis on the pieces.
+                walk(c.children, emph | emphasisBitFor(c.kind), a, mentions);
+            } else {
+                a.cur += renderNode(c, mentions); // inline emphasis (no block)
+                a.curStarted = true;
+            }
+            break;
+
+        default: // CodeSpan, Link, Mention — inline leaves
+            a.cur += renderNode(c, mentions);
+            a.curStarted = true;
+            break;
         }
     }
-    flushText();
-    return blocks;
 }
 
 } // namespace
@@ -220,12 +276,18 @@ QString toHtml(const Node& root, const QHash<int, QPair<QString, QString>>& ment
 QVariantList toBlocks(const Node& root,
                       const QHash<int, QPair<QString, QString>>& mentions)
 {
-    // The document is Document > Paragraph > content; segment the paragraph's children.
+    // The document is Document > Paragraph > content; walk the paragraph's children.
     const QVector<Node>* content = &root.children;
     if (root.kind == NodeKind::Document && root.children.size() == 1
             && root.children.first().kind == NodeKind::Paragraph)
         content = &root.children.first().children;
-    return segment(*content, mentions, 0);
+
+    BlockAcc a;
+    walk(*content, 0, a, mentions);
+    if (a.curStarted)
+        finalizeLine(a, 0); // a trailing real line (incl. an empty delimiter/quoted line)
+    flushTextBlock(a);
+    return a.blocks;
 }
 
 } // namespace Markdown

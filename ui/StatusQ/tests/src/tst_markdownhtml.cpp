@@ -130,19 +130,146 @@ private slots:
         QVERIFY(b[2].toMap()["html"].toString().contains("<b>"));
     }
 
-    // A quote block wrapped in bold is split out; its inner text keeps the bold.
+    // A quote block wrapped in bold is split out; its inner text keeps the bold. The
+    // bold delimiters sit on their own lines (** ... **), so those empty lines are kept.
     void blocks_quoteInsideStrong()
     {
         const QString input = QString("**\nA\n> B\n**").trimmed();
         const QVariantList b = blocks(input);
-        QCOMPARE(b.size(), 2);
+        QCOMPARE(b.size(), 3);
         QCOMPARE(b[0].toMap()["type"].toString(), "text");
-        QVERIFY(b[0].toMap()["html"].toString().contains("<b>"));
+        QVERIFY(b[0].toMap()["html"].toString().contains("<b>")); // empty line + bold A
         QCOMPARE(b[1].toMap()["type"].toString(), "quote");
         const QVariantList inner = b[1].toMap()["blocks"].toList();
         QCOMPARE(inner.size(), 1);
-        QCOMPARE(inner[0].toMap()["type"].toString(), "text");
         QVERIFY(inner[0].toMap()["html"].toString().contains("<b>"));
+        QCOMPARE(b[2].toMap()["type"].toString(), "text"); // trailing empty ** line
+        QCOMPARE(b[2].toMap()["html"].toString(), "");
+    }
+
+    // A quote line's trailing newline must not render as an empty extra line.
+    void blocks_quoteTrailingNewlineTrimmed()
+    {
+        const QVariantList b = blocks("> A\nB");
+        QCOMPARE(b.size(), 2);
+        QCOMPARE(b[0].toMap()["type"].toString(), "quote");
+        const QVariantList inner = b[0].toMap()["blocks"].toList();
+        QCOMPARE(inner.size(), 1);
+        QCOMPARE(inner[0].toMap()["type"].toString(), "text");
+        QCOMPARE(inner[0].toMap()["html"].toString(), "A"); // no trailing <br/>
+        QCOMPARE(b[1].toMap()["type"].toString(), "text");
+        QCOMPARE(b[1].toMap()["html"].toString(), "B");
+    }
+
+    // Newlines inside a block are preserved (only the trailing one is trimmed).
+    void blocks_internalNewlinePreserved()
+    {
+        const QVariantList b = blocks("A\nB");
+        QCOMPARE(b.size(), 1);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(), "A<br/>B");
+    }
+
+    // A blank line between a quote and following text is kept (leading <br/> preserved).
+    void blocks_blankLineBetweenQuoteAndText()
+    {
+        const QVariantList b = blocks("> A\n\nB");
+        QCOMPARE(b.size(), 2);
+        QCOMPARE(b[0].toMap()["type"].toString(), "quote");
+        const QVariantList inner = b[0].toMap()["blocks"].toList();
+        QCOMPARE(inner.size(), 1);
+        QCOMPARE(inner[0].toMap()["html"].toString(), "A");
+        QCOMPARE(b[1].toMap()["type"].toString(), "text");
+        QCOMPARE(b[1].toMap()["html"].toString(), "<br/>B");
+    }
+
+    // A blank line between text and a following quote is kept (one trailing <br/>: the
+    // line terminator is dropped, the blank line stays).
+    void blocks_blankLineBetweenTextAndQuote()
+    {
+        const QVariantList b = blocks("A\n\n> B");
+        QCOMPARE(b.size(), 2);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(), "A<br/>");
+        QCOMPARE(b[1].toMap()["type"].toString(), "quote");
+        const QVariantList inner = b[1].toMap()["blocks"].toList();
+        QCOMPARE(inner.size(), 1);
+        QCOMPARE(inner[0].toMap()["html"].toString(), "B");
+    }
+
+    // A quote containing text, an inline code block, then an empty quote line keeps
+    // exactly ONE empty line after the code: the code's line terminator is consumed, and
+    // the empty quote line renders as a single empty line (html ""), not two.
+    void blocks_quoteCodeThenEmptyLine()
+    {
+        const QVariantList b = blocks("> A\n> ```B```\n> \nC");
+        QCOMPARE(b.size(), 2);
+        QCOMPARE(b[0].toMap()["type"].toString(), "quote");
+        const QVariantList inner = b[0].toMap()["blocks"].toList();
+        QCOMPARE(inner.size(), 3);
+        QCOMPARE(inner[0].toMap()["type"].toString(), "text");
+        QCOMPARE(inner[0].toMap()["html"].toString(), "A");
+        QCOMPARE(inner[1].toMap()["type"].toString(), "code");
+        QCOMPARE(inner[1].toMap()["code"].toString(), "B");
+        QCOMPARE(inner[2].toMap()["type"].toString(), "text");
+        QCOMPARE(inner[2].toMap()["html"].toString(), ""); // one empty line, not two
+        QCOMPARE(b[1].toMap()["type"].toString(), "text");
+        QCOMPARE(b[1].toMap()["html"].toString(), "C");
+    }
+
+    // Code starting mid-text goes onto its own line as a separate block.
+    void blocks_codeStartsMidText()
+    {
+        const QVariantList b = blocks("A ```B```");
+        QCOMPARE(b.size(), 2);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(), "A ");
+        QCOMPARE(b[1].toMap()["type"].toString(), "code");
+        QCOMPARE(b[1].toMap()["code"].toString(), "B");
+    }
+
+    // Delimiter-only lines (the ** lines) around a quote are empty lines, kept on both
+    // sides of the quote block.
+    void blocks_delimiterOnlyLinesAroundQuote()
+    {
+        const QVariantList b = blocks("A\n**\n> B\n**\nC");
+        QCOMPARE(b.size(), 3);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(), "A<br/>");   // A + empty line before quote
+        QCOMPARE(b[1].toMap()["type"].toString(), "quote");
+        QCOMPARE(b[1].toMap()["blocks"].toList()[0].toMap()["html"].toString(), "<b>B</b>");
+        QCOMPARE(b[2].toMap()["type"].toString(), "text");
+        QCOMPARE(b[2].toMap()["html"].toString(), "<br/>C");   // empty line after quote + C
+    }
+
+    // Bold wrapping an inline code block: no empty source line -> no empty lines.
+    void blocks_boldWrappedInlineCode()
+    {
+        const QVariantList b = blocks("A\n**```B```**\nC");
+        QCOMPARE(b.size(), 3);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(), "A");
+        QCOMPARE(b[1].toMap()["type"].toString(), "code");
+        QCOMPARE(b[1].toMap()["code"].toString(), "B");
+        QCOMPARE(b[1].toMap()["bold"].toBool(), true);
+        QCOMPARE(b[2].toMap()["type"].toString(), "text");
+        QCOMPARE(b[2].toMap()["html"].toString(), "C");
+    }
+
+    // A trailing empty quoted line after a fenced code block is kept inside the quote.
+    void blocks_quoteFencedCodeThenEmptyLine()
+    {
+        const QVariantList b = blocks("> A\n> ```\n> B\n> ```\n> ");
+        QCOMPARE(b.size(), 1);
+        QCOMPARE(b[0].toMap()["type"].toString(), "quote");
+        const QVariantList inner = b[0].toMap()["blocks"].toList();
+        QCOMPARE(inner.size(), 3);
+        QCOMPARE(inner[0].toMap()["type"].toString(), "text");
+        QCOMPARE(inner[0].toMap()["html"].toString(), "A");
+        QCOMPARE(inner[1].toMap()["type"].toString(), "code");
+        QCOMPARE(inner[1].toMap()["code"].toString(), "B");
+        QCOMPARE(inner[2].toMap()["type"].toString(), "text");
+        QCOMPARE(inner[2].toMap()["html"].toString(), ""); // the empty quoted line
     }
 
     // A code block nested in a quote becomes its own sub-block inside the quote.
