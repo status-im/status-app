@@ -12,7 +12,10 @@ QtObject {
     signal formValuesChanged()
 
     property string selectedAccountAddress: ""
-    property int selectedNetworkChainId: -1
+    property int selectedNetworkChainId: -1 // source (pay) chain
+    // destination (receive) chain, independent of the source. Defaulted once to the source
+    // (plain swap); a different value makes it a swap+bridge.
+    property int toNetworkChainId: -1
     property string fromGroupKey: root.defaultFromGroupKey
     property string fromTokenAmount: ""
     property string toGroupKey: root.defaultToGroupKey
@@ -20,14 +23,20 @@ QtObject {
     property double selectedSlippage: 0.5
 
     // default to token key
-    property string defaultToGroupKey: root.getDefaultToGroupKey(root.selectedNetworkChainId)
+    property string defaultToGroupKey: root.getDefaultToGroupKey(root.toNetworkChainId)
     // default from group key
     property string defaultFromGroupKey: root.getDefaultFromGroupKey(root.selectedNetworkChainId)
     // 15 seconds
     property int autoRefreshTime: 15000
 
     onSelectedAccountAddressChanged: root.formValuesChanged()
-    onSelectedNetworkChainIdChanged: root.formValuesChanged()
+    onSelectedNetworkChainIdChanged: {
+        // one-time default to the source chain; the selectors are independent after that
+        if (root.toNetworkChainId === -1)
+            root.toNetworkChainId = root.selectedNetworkChainId
+        root.formValuesChanged()
+    }
+    onToNetworkChainIdChanged: root.formValuesChanged()
     onFromGroupKeyChanged: root.formValuesChanged()
     onFromTokenAmountChanged: root.formValuesChanged()
     onToGroupKeyChanged: root.formValuesChanged()
@@ -37,6 +46,7 @@ QtObject {
     function resetFormData() {
         root.selectedAccountAddress = ""
         root.selectedNetworkChainId = -1
+        root.toNetworkChainId = -1
         root.selectedSlippage = 0.5
         root.resetFromTokenValues()
         root.resetToTokenValues()
@@ -53,7 +63,7 @@ QtObject {
     }
 
     function resetToTokenValues(keepDefault = true) {
-        root.defaultToGroupKey = root.getDefaultToGroupKey(root.selectedNetworkChainId)
+        root.defaultToGroupKey = root.getDefaultToGroupKey(root.toNetworkChainId)
         if(keepDefault) {
             root.toGroupKey = root.defaultToGroupKey
         } else {
@@ -66,6 +76,7 @@ QtObject {
         let bigIntNumber = SQUtils.AmountsArithmetic.fromString(root.fromTokenAmount)
         return !!root.selectedAccountAddress &&
                 root.selectedNetworkChainId !== -1 &&
+                root.toNetworkChainId !== -1 &&
                 !!root.fromGroupKey && !!root.toGroupKey &&
                 (!!root.fromTokenAmount && !isNaN(bigIntNumber) && bigIntNumber.gt(0)) &&
                 root.selectedSlippage > 0

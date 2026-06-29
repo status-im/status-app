@@ -28,6 +28,10 @@ QtObject {
         if (d.isValidParameter(params.selectedNetworkChainId)) {
             d.swapInputParams.selectedNetworkChainId = params.selectedNetworkChainId
         }
+        // optional pre-filled destination chain (defaults to the source chain)
+        if (d.isValidParameter(params.toNetworkChainId)) {
+            d.swapInputParams.toNetworkChainId = params.toNetworkChainId
+        }
         if (d.isValidParameter(params.defaultFromGroupKey)) {
             d.swapInputParams.defaultFromGroupKey = params.defaultFromGroupKey
         }

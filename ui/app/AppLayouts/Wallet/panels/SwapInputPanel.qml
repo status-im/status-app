@@ -61,6 +61,10 @@ Control {
     property bool tokenSelectorLoading
     property bool interactive: true
 
+    // shows a network selector next to the asset selector to change this side's chain
+    property bool showNetworkSelector: false
+    signal networkSelected(int chainId)
+
     function reevaluateSelectedId() {
         // Ensure calculation after all bindings are evaluated
         Qt.callLater(d.reevaluateSelectedId)
@@ -308,6 +312,25 @@ Control {
             }
         }
         ColumnLayout {
+
+            NetworkFilter {
+                id: networkSelector
+                objectName: "networkFilter"
+
+                Layout.alignment: Qt.AlignRight
+                visible: root.showNetworkSelector
+
+                multiSelection: false
+                showSelectionIndicator: false
+                showTitle: false
+                flatNetworks: root.flatNetworksModel
+                // bound so an unset (-1) chain stays unset (no auto-select); guard below emits only on a real pick
+                selection: [root.selectedNetworkChainId]
+                onSelectionChanged: {
+                    if (selection.length > 0 && selection[0] !== root.selectedNetworkChainId)
+                        root.networkSelected(selection[0])
+                }
+            }
 
             Item { Layout.fillHeight: true }
 

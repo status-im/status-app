@@ -10,6 +10,7 @@ const SIGNAL_TOKENS_MARKET_VALUES_UPDATED* = "tokensMarketValuesUpdated"
 const SIGNAL_TOKEN_PREFERENCES_UPDATED* = "tokenPreferencesUpdated"
 const SIGNAL_TOKEN_LISTS_LOADED* = "tokenListsLoaded"
 const SIGNAL_GROUPS_FOR_CHAIN_LOADED* = "groupsForChainLoaded"
+const SIGNAL_GROUPS_FOR_CHAIN_TO_LOADED* = "groupsForChainToLoaded"
 const SIGNAL_ALL_TOKEN_GROUPS_LOADED* = "allTokenGroupsLoaded"
 
 #################################################

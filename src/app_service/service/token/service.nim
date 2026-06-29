@@ -48,12 +48,14 @@ QtObject:
     groupsOfInterestByKey: Table[string, TokenGroupItem] # [tokenGroupKey, TokenGroupItem]
     groupsOfInterest: seq[TokenGroupItem] # refers to groups for tokens of interest
     allTokensByGroupKey: Table[string, seq[TokenItem]] # rebuilt in applyRefreshTokensData for getTokenByKeyOrGroupKeyFromAllTokens
-    groupsForChain: seq[TokenGroupItem] # refers to groups for a specific chain
+    groupsForChain: seq[TokenGroupItem] # groups for the source (pay) chain
+    groupsForChainTo: seq[TokenGroupItem] # groups for the destination (receive) chain (swap+bridge)
     allTokenGroupsForActiveNetworks: seq[TokenGroupItem] # all token groups, fetched on demand
     allTokenGroupsLoading: bool
     allTokenLists: seq[TokenListItem] # fetched on demand, not at startup
     tokenListsLoading: bool
     groupsForChainLoading: bool
+    groupsForChainToLoading: bool
     tokenDetailsTable: Table[string, TokenDetailsItem] # [tokenKey, TokenDetailsItem]
     tokenMarketValuesTable: Table[string, TokenMarketValuesItem] # [tokenKey, TokenMarketValuesItem]
     tokenPriceTable: Table[string, float64] # [tokenKey, price]
@@ -81,6 +83,7 @@ QtObject:
   proc onAsyncRefreshTokensDone(self: Service, response: string) {.slot.}
   proc onAsyncFetchAllTokenListsDone(self: Service, response: string) {.slot.}
   proc onAsyncBuildGroupsForChainDone(self: Service, response: string) {.slot.}
+  proc onAsyncBuildGroupsForChainToDone(self: Service, response: string) {.slot.}
   proc onAsyncFetchAllTokenGroupsDone(self: Service, response: string) {.slot.}
   proc prefetchParaswapSupportRetrieved(self: Service, response: string) {.slot.}
 
