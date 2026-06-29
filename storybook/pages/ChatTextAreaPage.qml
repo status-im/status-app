@@ -189,7 +189,9 @@ unclosed fence here (no closing triple-tick)
                                         textFormat: Text.RichText
                                         font.family: Fonts.baseFont.family
                                         font.pixelSize: textArea.font.pixelSize
-                                        text: visible ? blk.block.html : ""
+                                        // pre-wrap so extra/leading spaces are preserved
+                                        text: visible ? "<span style=\"white-space:pre-wrap\">"
+                                                        + blk.block.html + "</span>" : ""
                                     }
 
                                     Rectangle {
@@ -259,7 +261,9 @@ unclosed fence here (no closing triple-tick)
                                                         textFormat: Text.RichText
                                                         font.family: Fonts.baseFont.family
                                                         font.pixelSize: textArea.font.pixelSize
-                                                        text: visible ? sub.block.html : ""
+                                                        // pre-wrap preserves extra/leading spaces
+                                                        text: visible ? "<span style=\"white-space:pre-wrap\">"
+                                                                        + sub.block.html + "</span>" : ""
                                                     }
                                                     Rectangle {
                                                         id: subCode

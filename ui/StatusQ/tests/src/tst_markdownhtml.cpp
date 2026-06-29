@@ -298,6 +298,17 @@ private slots:
         QCOMPARE(b[2].toMap()["html"].toString(), "<b> more</b>");
     }
 
+    // Extra/leading spaces are kept verbatim in the html (the view renders them via
+    // white-space:pre-wrap).
+    void blocks_extraSpacesPreserved()
+    {
+        QCOMPARE(blocks(" A")[0].toMap()["html"].toString(), " A");      // leading space
+        QCOMPARE(blocks("A  B")[0].toMap()["html"].toString(), "A  B");  // double space
+        const QVariantList q = blocks(">  A");                           // extra space in quote
+        QCOMPARE(q[0].toMap()["type"].toString(), "quote");
+        QCOMPARE(q[0].toMap()["blocks"].toList()[0].toMap()["html"].toString(), " A");
+    }
+
     // A code block nested in a quote becomes its own sub-block inside the quote.
     void blocks_quoteWithNestedCode()
     {
