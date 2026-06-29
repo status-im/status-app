@@ -175,7 +175,7 @@ void flushTextBlock(BlockAcc& a)
     a.lines.clear();
 }
 
-void finalizeLine(BlockAcc& a, unsigned emph)
+void finalizeLine(BlockAcc& a)
 {
     // The single newline ending a code block's own line is absorbed (no empty line).
     if (a.afterCode && a.cur.isEmpty()) {
@@ -183,7 +183,8 @@ void finalizeLine(BlockAcc& a, unsigned emph)
         a.curStarted = false;
         return;
     }
-    a.lines.append(wrapEmphasis(a.cur, emph));
+    // Emphasis is already applied per inline piece (see walk), so append `cur` as-is.
+    a.lines.append(a.cur);
     a.cur.clear();
     a.curStarted = false;
     a.afterCode = false;
@@ -198,9 +199,11 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
             const QStringList parts = c.literal.split(QLatin1Char('\n'));
             for (int i = 0; i < parts.size(); ++i) {
                 if (i > 0)
-                    finalizeLine(a, emph); // a newline ends the current line
+                    finalizeLine(a); // a newline ends the current line
                 if (!parts[i].isEmpty()) {
-                    a.cur += escape(parts[i]);
+                    // Wrap each piece in the active emphasis so content before/after an
+                    // emphasis-with-block keeps the outer emphasis (not the inner one).
+                    a.cur += wrapEmphasis(escape(parts[i]), emph);
                     a.curStarted = true;
                 }
             }
@@ -212,7 +215,7 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
 
         case NodeKind::CodeBlock: {
             if (!a.cur.isEmpty())
-                finalizeLine(a, emph); // content before the block is its own line
+                finalizeLine(a); // content before the block is its own line
             flushTextBlock(a);
             QString code = collectRawText(c);
             while (code.startsWith(QLatin1Char('\n'))) code.remove(0, 1);
@@ -229,12 +232,12 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
         }
         case NodeKind::QuoteBlock: {
             if (!a.cur.isEmpty())
-                finalizeLine(a, emph);
+                finalizeLine(a);
             flushTextBlock(a);
             BlockAcc inner;
             walk(c.children, emph, inner, mentions);
             if (inner.curStarted)
-                finalizeLine(inner, emph);
+                finalizeLine(inner);
             flushTextBlock(inner);
             a.blocks.append(QVariantMap{{QStringLiteral("type"), QStringLiteral("quote")},
                                         {QStringLiteral("blocks"), inner.blocks}});
@@ -251,13 +254,14 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
                 // boundary assembles correctly, carrying the emphasis on the pieces.
                 walk(c.children, emph | emphasisBitFor(c.kind), a, mentions);
             } else {
-                a.cur += renderNode(c, mentions); // inline emphasis (no block)
+                // inline emphasis (no block) — wrap in any active outer emphasis too
+                a.cur += wrapEmphasis(renderNode(c, mentions), emph);
                 a.curStarted = true;
             }
             break;
 
         default: // CodeSpan, Link, Mention — inline leaves
-            a.cur += renderNode(c, mentions);
+            a.cur += wrapEmphasis(renderNode(c, mentions), emph);
             a.curStarted = true;
             break;
         }
@@ -285,7 +289,7 @@ QVariantList toBlocks(const Node& root,
     BlockAcc a;
     walk(*content, 0, a, mentions);
     if (a.curStarted)
-        finalizeLine(a, 0); // a trailing real line (incl. an empty delimiter/quoted line)
+        finalizeLine(a); // a trailing real line (incl. an empty delimiter/quoted line)
     flushTextBlock(a);
     return a.blocks;
 }

@@ -272,6 +272,32 @@ private slots:
         QCOMPARE(inner[2].toMap()["html"].toString(), ""); // the empty quoted line
     }
 
+    // Text before a bold-wrapped code block stays unbolded (the bold scopes only its own
+    // content; the code block carries the bold itself).
+    void blocks_textBeforeBoldCodeNotBold()
+    {
+        const QVariantList b = blocks("A **```B```**");
+        QCOMPARE(b.size(), 2);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(), "A "); // not bold
+        QVERIFY(!b[0].toMap()["html"].toString().contains("<b>"));
+        QCOMPARE(b[1].toMap()["type"].toString(), "code");
+        QCOMPARE(b[1].toMap()["code"].toString(), "B");
+        QCOMPARE(b[1].toMap()["bold"].toBool(), true);
+    }
+
+    // A single line mixing un-emphasised and bold text around a bold code block.
+    void blocks_mixedEmphasisLine()
+    {
+        const QVariantList b = blocks("A **bold ```C``` more**");
+        QCOMPARE(b.size(), 3);
+        QCOMPARE(b[0].toMap()["html"].toString(), "A <b>bold </b>");
+        QCOMPARE(b[1].toMap()["type"].toString(), "code");
+        QCOMPARE(b[1].toMap()["code"].toString(), "C");
+        QCOMPARE(b[1].toMap()["bold"].toBool(), true);
+        QCOMPARE(b[2].toMap()["html"].toString(), "<b> more</b>");
+    }
+
     // A code block nested in a quote becomes its own sub-block inside the quote.
     void blocks_quoteWithNestedCode()
     {
