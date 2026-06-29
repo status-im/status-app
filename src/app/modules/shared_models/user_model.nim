@@ -266,30 +266,18 @@ QtObject:
 
   proc setName*(self: Model, pubKey: string, displayName: string,
       ensName: string, localNickname: string) =
-    let ind = self.findIndexByPubKey(pubKey)
-    if(ind == -1):
-      return
+    updateItemRolesAndNotify self.findIndexByPubKey(pubKey):
+      let preferredDisplayNameChanged =
+        resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
+        resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
 
-    var roles: seq[int] = @[]
+      updateRole(displayName)
+      updateRole(ensName)
+      updateRole(localNickname)
 
-    let preferredDisplayNameChanged =
-      resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
-      resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
-
-    updateRole(displayName)
-    updateRole(ensName)
-    updateRole(localNickname)
-
-    if preferredDisplayNameChanged:
-      roles.add(ModelRole.PreferredDisplayName.int)
-      roles.add(ModelRole.UsesDefaultName.int)
-
-    if roles.len == 0:
-      return
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, roles)
+      if preferredDisplayNameChanged:
+        roles.add(ModelRole.PreferredDisplayName.int)
+        roles.add(ModelRole.UsesDefaultName.int)
 
   proc setIcon*(self: Model, pubKey: string, icon: string) =
     let ind = self.findIndexByPubKey(pubKey)
@@ -325,52 +313,40 @@ QtObject:
       isContactRequestSent: bool,
       isRemoved: bool,
     ) =
-    let ind = self.findIndexByPubKey(pubKey)
-    if ind == -1:
-      return
+    updateItemRolesAndNotify self.findIndexByPubKey(pubKey):
+      let preferredDisplayNameChanged =
+        resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
+        resolvePreferredDisplayName(localNickname, ensName, displayName, alias)
 
-    var roles: seq[int] = @[]
+      let trustStatusChanged = trustStatus != self.items[ind].trustStatus
 
-    let preferredDisplayNameChanged =
-      resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
-      resolvePreferredDisplayName(localNickname, ensName, displayName, alias)
+      updateRole(displayName)
+      updateRole(ensName)
+      updateRole(localNickname)
+      # `alias` is deterministic from the pubkey — preserve if set
+      updateRolePreserveOnEmpty(alias, Alias)
+      updateRole(icon)
+      updateRole(trustStatus)
+      updateRole(onlineStatus)
+      updateRole(isContact)
+      updateRole(isBlocked)
+      updateRole(contactRequest)
+      updateRole(lastUpdated)
+      updateRole(lastUpdatedLocally)
+      updateRole(bio)
+      updateRole(thumbnailImage)
+      updateRole(largeImage)
+      updateRole(isContactRequestReceived)
+      updateRole(isContactRequestSent)
+      updateRole(isRemoved)
 
-    let trustStatusChanged = trustStatus != self.items[ind].trustStatus
+      if preferredDisplayNameChanged:
+        roles.add(ModelRole.PreferredDisplayName.int)
+        roles.add(ModelRole.UsesDefaultName.int)
 
-    updateRole(displayName)
-    updateRole(ensName)
-    updateRole(localNickname)
-    # `alias` is deterministic from the pubkey — preserve if set
-    updateRolePreserveOnEmpty(alias, Alias)
-    updateRole(icon)
-    updateRole(trustStatus)
-    updateRole(onlineStatus)
-    updateRole(isContact)
-    updateRole(isBlocked)
-    updateRole(contactRequest)
-    updateRole(lastUpdated)
-    updateRole(lastUpdatedLocally)
-    updateRole(bio)
-    updateRole(thumbnailImage)
-    updateRole(largeImage)
-    updateRole(isContactRequestReceived)
-    updateRole(isContactRequestSent)
-    updateRole(isRemoved)
-
-    if preferredDisplayNameChanged:
-      roles.add(ModelRole.PreferredDisplayName.int)
-      roles.add(ModelRole.UsesDefaultName.int)
-
-    if trustStatusChanged:
-      roles.add(ModelRole.IsUntrustworthy.int)
-      roles.add(ModelRole.IsVerified.int)
-
-    if roles.len == 0:
-      return
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, roles)
+      if trustStatusChanged:
+        roles.add(ModelRole.IsUntrustworthy.int)
+        roles.add(ModelRole.IsVerified.int)
 
   proc updateItem*(
       self: Model,

@@ -303,58 +303,49 @@ QtObject:
       contactRequest: ContactRequest,
       callDataChanged: bool = true,
     ): seq[int] =
-    let ind = self.findIndexForMember(pubKey)
-    if ind == -1:
-      return
+    updateItemRolesAndNotify self.findIndexForMember(pubKey):
+      let preferredDisplayNameChanged =
+        resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
+        resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
 
-    var roles: seq[int] = @[]
+      let trustStatusChanged = trustStatus != self.items[ind].trustStatus
+      let usesDefaultName = resolveUsesDefaultName(localNickname, ensName, displayName)
 
-    let preferredDisplayNameChanged =
-      resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
-      resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
+      updateRole(displayName)
+      updateRole(usesDefaultName)
+      updateRole(ensName)
+      updateRole(localNickname)
+      updateRole(isEnsVerified)
+      # `alias` is deterministic from the pubkey — preserve any previously
+      # resolved value when the incoming alias is empty (typical for
+      # `getContactDetails` placeholders that haven't been enriched yet).
+      updateRolePreserveOnEmpty(alias, Alias)
+      updateRole(icon)
+      updateRole(isContact)
+      updateRole(memberRole)
+      updateRole(joined)
+      updateRole(trustStatus)
+      updateRole(isBlocked)
+      updateRole(contactRequest)
 
-    let trustStatusChanged = trustStatus != self.items[ind].trustStatus
-    let usesDefaultName = resolveUsesDefaultName(localNickname, ensName, displayName)
+      var updatedMembershipRequestState = membershipRequestState
+      if updatedMembershipRequestState == MembershipRequestState.None:
+        updatedMembershipRequestState = self.items[ind].membershipRequestState
 
-    updateRole(displayName)
-    updateRole(usesDefaultName)
-    updateRole(ensName)
-    updateRole(localNickname)
-    updateRole(isEnsVerified)
-    # `alias` is deterministic from the pubkey — preserve any previously
-    # resolved value when the incoming alias is empty (typical for
-    # `getContactDetails` placeholders that haven't been enriched yet).
-    updateRolePreserveOnEmpty(alias, Alias)
-    updateRole(icon)
-    updateRole(isContact)
-    updateRole(memberRole)
-    updateRole(joined)
-    updateRole(trustStatus)
-    updateRole(isBlocked)
-    updateRole(contactRequest)
+      updateRoleWithValue(membershipRequestState, updatedMembershipRequestState)
 
-    var updatedMembershipRequestState = membershipRequestState
-    if updatedMembershipRequestState == MembershipRequestState.None:
-      updatedMembershipRequestState = self.items[ind].membershipRequestState
+      if preferredDisplayNameChanged:
+        roles.add(ModelRole.PreferredDisplayName.int)
 
-    updateRoleWithValue(membershipRequestState, updatedMembershipRequestState)
+      if trustStatusChanged:
+        roles.add(ModelRole.IsUntrustworthy.int)
+        roles.add(ModelRole.IsVerified.int)
 
-    if preferredDisplayNameChanged:
-      roles.add(ModelRole.PreferredDisplayName.int)
-
-    if trustStatusChanged:
-      roles.add(ModelRole.IsUntrustworthy.int)
-      roles.add(ModelRole.IsVerified.int)
-
-    if roles.len == 0:
-      return
-
-    if callDataChanged:
-      let index = self.createIndex(ind, 0, nil)
-      defer: index.delete
-      self.dataChanged(index, index, roles)
-
-    return roles
+      if roles.len > 0:
+        if callDataChanged:
+          result = roles
+        else:
+          return roles
 
   proc updateItems*(self: Model, items: seq[MemberItem]) =
     var startIndex = -1

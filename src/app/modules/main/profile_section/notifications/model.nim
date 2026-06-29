@@ -119,25 +119,13 @@ QtObject:
 
   proc updateExemptions*(self: Model, id: string, muteAllMessages = false, personalMentions = VALUE_NOTIF_SEND_ALERTS, 
     globalMentions = VALUE_NOTIF_SEND_ALERTS, otherMessages = VALUE_NOTIF_TURN_OFF) =
-    let ind = self.findIndexForItemId(id)
-    if ind == -1:
-      return
-    
-    var roles: seq[int] = @[]
-
-    updateRole(muteAllMessages)
-    updateRole(personalMentions)
-    updateRole(globalMentions)
-    updateRole(otherMessages)
-
-    if roles.len == 0:
-      return
-
-    roles.add(ModelRole.Customized.int)
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, roles)
+    updateItemRolesAndNotify self.findIndexForItemId(id):
+      updateRole(muteAllMessages)
+      updateRole(personalMentions)
+      updateRole(globalMentions)
+      updateRole(otherMessages)
+      if roles.len > 0:
+        roles.add(ModelRole.Customized.int)
 
   proc updateName*(self: Model, id: string, name: string) =
     let ind = self.findIndexForItemId(id)
@@ -151,22 +139,10 @@ QtObject:
     self.dataChanged(index, index, @[ModelRole.Name.int])
 
   proc updateItem*(self: Model, id, name, image, color: string) =
-    let ind = self.findIndexForItemId(id)
-    if ind == -1:
-      return
-
-    var roles: seq[int] = @[]
-
-    updateRole(name)
-    updateRole(image)
-    updateRole(color)
-
-    if roles.len == 0:
-      return
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, roles)
+    updateItemRolesAndNotify self.findIndexForItemId(id):
+      updateRole(name)
+      updateRole(image)
+      updateRole(color)
 
   proc delete*(self: Model) =
     self.QAbstractListModel.delete

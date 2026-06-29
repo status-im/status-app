@@ -455,21 +455,15 @@ QtObject:
         return
 
   proc updateNotifications*(self: SectionModel, id: string, hasNotification: bool, notificationsCount: int) =
-    for ind in 0 ..< self.items.len:
-      if self.items[ind].id == id:
-        var roles: seq[int] = @[]
+    let ind = self.getItemIndex(id)
+    if ind == -1:
+      return
 
-        updateRole(hasNotification)
-        updateRole(notificationsCount)
+    updateRolesAndNotify:
+      updateRole(hasNotification)
+      updateRole(notificationsCount)
 
-        if roles.len == 0:
-          return
-
-        let index = self.createIndex(ind, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, roles)
-        self.notificationsCountChanged()
-        return
+    self.notificationsCountChanged()
 
   proc isThereASectionWithUnreadMessages*(self: SectionModel): bool =
     for item in self.items:
@@ -577,17 +571,5 @@ QtObject:
     self.items[i].members.removeItemById(memberId)
 
   proc setIsBanned*(self: SectionModel, communityId: string, isBanned: bool) =
-    let ind = self.getItemIndex(communityId)
-    if ind == -1:
-      return
-
-    var roles: seq[int] = @[]
-
-    updateRole(isBanned)
-
-    if roles.len == 0:
-      return
-
-    let dataIndex = self.createIndex(ind, 0, nil)
-    defer: dataIndex.delete
-    self.dataChanged(dataIndex, dataIndex, roles)
+    updateItemRolesAndNotify self.getItemIndex(communityId):
+      updateRole(isBanned)

@@ -115,55 +115,19 @@ QtObject:
         result = newQVariant(item.lastMessageText)
 
   proc updateChatItem*(self:Model, chatId, name, color, icon, emoji: string) =
-    let ind = self.getItemIndexById(chatId)
-    if ind == -1:
-      return
-
-    var roles: seq[int] = @[]
-
-    updateRole(name)
-    updateRole(color)
-    updateRole(icon)
-    updateRole(emoji)
-
-    if roles.len == 0:
-      return
-
-    let modelIndex = self.createIndex(ind, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, roles)
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(name)
+      updateRole(color)
+      updateRole(icon)
+      updateRole(emoji)
 
   proc updateSectionNameOnChatItem*(self:Model, chatId, sectionName: string) =
-    let ind = self.getItemIndexById(chatId)
-    if ind == -1:
-      return
-
-    var roles: seq[int] = @[]
-
-    updateRole(sectionName)
-
-    if roles.len == 0:
-      return
-
-    let modelIndex = self.createIndex(ind, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, roles)
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(sectionName)
 
   proc updateLastMessageTextOnChatItem*(self:Model, chatId, lastMessageText: string) =
-    let ind = self.getItemIndexById(chatId)
-    if ind == -1:
-      return
-
-    var roles: seq[int] = @[]
-
-    updateRole(lastMessageText)
-
-    if roles.len == 0:
-      return
-
-    let modelIndex = self.createIndex(ind, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, roles)
+    updateItemRolesAndNotify self.getItemIndexById(chatId):
+      updateRole(lastMessageText)
 
   proc updateSectionNameOnChats*(self:Model, sectionId, sectionName: string) =
     for item in self.items:
