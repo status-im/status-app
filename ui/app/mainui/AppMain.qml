@@ -2330,19 +2330,6 @@ Item {
                 }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.BackButton
-                enabled: appMain.canGoBackAnywhere
-                cursorShape: undefined // fall thru
-                onClicked: function(mouse) {
-                    if (mouse.button !== Qt.BackButton)
-                        return
-                    if (tryGoBack()) {
-                        mouse.accepted = true
-                    }
-                }
-            }
         }
     } // ColumnLayout
 
@@ -3049,14 +3036,12 @@ Item {
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.BackButton
-        enabled: sectionNavigationHistory.canGoBack
+        enabled: appMain.canGoBackAnywhere
         cursorShape: undefined // fall thru
         onClicked: function(mouse) {
             if (mouse.button !== Qt.BackButton)
                 return
-            if (tryGoBack()) {
-                mouse.accepted = true
-            }
+            tryGoBack()
         }
     }
 
