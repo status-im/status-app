@@ -600,25 +600,6 @@ status-keycard-qt-clean:
 	echo -e "\033[92mCleaning:\033[39m status-keycard-qt"
 	rm -rf $(STATUS_KEYCARD_QT_BUILD_DIR)
 
-##
-##	Keycard library selection
-##
-
-# Set the keycard library and paths based on USE_STATUS_KEYCARD_QT
-ifeq ($(USE_STATUS_KEYCARD_QT),1)
-  KEYCARD_LIB := $(STATUSKEYCARD_QT_LIB)
-  KEYCARD_LIBDIR := $(STATUSKEYCARD_QT_LIBDIR)
-  # Set the feature flag to use the keycard qt library
-  export FLAG_USE_KEYCARD_QT := 1
-
-else
-  KEYCARD_LIB := $(STATUSKEYCARDGO)
-  KEYCARD_LIBDIR := $(STATUSKEYCARDGO_LIBDIR)
-endif
-
-KEYCARD_DYLIB_NAME := $(notdir $(KEYCARD_LIB))
-KEYCARD_LINKNAME := $(patsubst lib%,%,$(basename $(KEYCARD_DYLIB_NAME)))
-
 ifeq ($(mkspecs),win32)
  # MSVC import libraries for the c-shared DLLs. The client links with clang/lld-
  # link (MSVC ABI, to use Qt's msvc build), and lld-link — unlike mingw's ld —
@@ -639,15 +620,6 @@ ifeq ($(mkspecs),win32)
  $(NIMSDS_IMPLIB): $(NIMSDS_LIBFILE)
 	echo -e $(BUILD_MSG) "import lib: $(notdir $(NIMSDS_IMPLIB))"
 	bash scripts/gen-import-lib.sh "$(NIM_SDS_SOURCE_DIR)/library/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
-
- # KEYCARD_LIBDIR (= STATUSKEYCARDGO_LIBDIR) is defined wrapped in quotes; strip
- # them so we can form clean paths and re-quote ourselves.
- KEYCARD_LIBDIR_UQ := $(subst ",,$(KEYCARD_LIBDIR))
- KEYCARD_IMPLIB := $(KEYCARD_LIBDIR_UQ)/$(KEYCARD_LINKNAME).lib
- WIN_IMPORT_LIBS += $(KEYCARD_IMPLIB)
- $(KEYCARD_IMPLIB): $(KEYCARD_LIB)
- echo -e $(BUILD_MSG) "import lib: $(notdir $(KEYCARD_IMPLIB))"
- bash scripts/gen-import-lib.sh "$(KEYCARD_LIBDIR_UQ)/libkeycard.h" "$(KEYCARD_DYLIB_NAME)" "$(KEYCARD_IMPLIB)" $(HANDLE_OUTPUT)
 
  import-libs: $(WIN_IMPORT_LIBS)
 endif
@@ -781,7 +753,7 @@ $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
 ifneq ($(mkspecs),win32)
 $(NIM_STATUS_CLIENT): NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
-$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(KEYCARD_LIB) $(QRCODEGEN) rcc deps
+$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
 		--mm:orc \
