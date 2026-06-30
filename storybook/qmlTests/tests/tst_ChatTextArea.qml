@@ -327,5 +327,66 @@ Item {
 
             tryCompare(control, "cursorPosition", 2)
         }
+
+        // Delete at the end of a non-empty line before a quote joins the lines, dropping
+        // the whole "\n> " (separator + prefix) so the content merges cleanly.
+        function test_quoteDeleteJoinsNonEmptyLine() {
+            control.text = "A\n> B"
+            control.forceActiveFocus()
+            control.cursorPosition = 1 // end of "A"
+
+            keyClick(Qt.Key_Delete)
+
+            compare(control.text, "AB")
+        }
+
+        // Delete at the end of an empty line before a quote removes only the paragraph
+        // separator (not the "> "); the caret snap then lands at the quote content start.
+        function test_quoteDeleteFromEmptyLine() {
+            control.text = "\n> B"
+            control.forceActiveFocus()
+            control.cursorPosition = 0 // the empty first line
+
+            keyClick(Qt.Key_Delete)
+
+            compare(control.text, "> B")
+            tryCompare(control, "cursorPosition", 2) // snapped past "> "
+        }
+
+        // Right arrow crossing into a quote line skips the "> " prefix in a single press
+        // (native moves into the prefix, the caret snap forwards it to the content start).
+        function test_quoteRightArrowSkipsPrefix() {
+            control.text = "> A\n> B"
+            control.forceActiveFocus()
+            control.cursorPosition = 3 // end of the first quote line
+
+            keyClick(Qt.Key_Right)
+
+            tryCompare(control, "cursorPosition", 6) // content start of line 2, past "> "
+        }
+
+        // Left arrow at a quote line's content start jumps to the end of the previous
+        // line rather than stepping into the "> " prefix.
+        function test_quoteLeftArrowJumpsToPrevLine() {
+            control.text = "> A\n> B"
+            control.forceActiveFocus()
+            control.cursorPosition = 6 // content start of line 2
+
+            keyClick(Qt.Key_Left)
+
+            compare(control.cursorPosition, 3) // end of line 1
+        }
+
+        // A "> " inside a code block is not a real quote line, so Enter does not start a
+        // continuation — it falls through to a plain newline.
+        function test_quoteNoContinuationInCodeBlock() {
+            control.text = "```\n> A\n```"
+            control.forceActiveFocus()
+            control.cursorPosition = control.text.indexOf("A") + 1 // end of the "> A" line
+
+            keyClick(Qt.Key_Return)
+
+            compare(control.text, "```\n> A\n\n```") // plain newline, no new "> "
+        }
     }
 }
