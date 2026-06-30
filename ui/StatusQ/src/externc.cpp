@@ -7,6 +7,7 @@
 #include <QNetworkDiskCache>
 
 #include <StatusQ/typesregistration.h>
+#include <StatusQ/osnotification.h>
 #include <MobileUI>
 
 #ifdef STATUSQ_HAS_QTWEBENGINE
@@ -75,6 +76,27 @@ Q_DECL_EXPORT void statusq_initializeWebEngine() {
 #ifdef STATUSQ_HAS_QTWEBENGINE
     QtWebEngineQuick::initialize();
 #endif
+}
+
+Q_DECL_EXPORT void* statusq_osnotification_create() {
+    return new Status::OSNotification();
+}
+
+Q_DECL_EXPORT void statusq_osnotification_show_notification(void* obj, const char* title,
+                                                            const char* message, const char* identifier) {
+    if (auto* n = static_cast<Status::OSNotification*>(obj))
+        n->showNotification(QString::fromUtf8(title), QString::fromUtf8(message),
+                            QString::fromUtf8(identifier));
+}
+
+Q_DECL_EXPORT void statusq_osnotification_show_badge_notification(void* obj, int notificationsCount) {
+    if (auto* n = static_cast<Status::OSNotification*>(obj))
+        n->showIconBadgeNotification(notificationsCount);
+}
+
+Q_DECL_EXPORT void statusq_osnotification_delete(void* obj) {
+    if (auto* q = static_cast<QObject*>(obj))
+        q->deleteLater();
 }
 
 } // extern "C"

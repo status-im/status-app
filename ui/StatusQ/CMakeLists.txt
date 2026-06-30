@@ -167,6 +167,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/genericvalidator.h
         include/StatusQ/imageencoderutils.h
         include/StatusQ/keychain.h
+        include/StatusQ/osnotification.h
         include/StatusQ/NativeSwipeHandlerItem.h
         include/StatusQ/NativeIndicatorItem.h
         include/StatusQ/localnetworkpermission.h
@@ -199,6 +200,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/genericvalidator.cpp
         src/imageencoderutils.cpp
         src/keychain.cpp
+        src/osnotification.cpp
         src/localnetworkpermission.cpp
         src/localnetworkpermission_backend.h
         src/networkchecker.cpp
@@ -251,11 +253,13 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication})
     find_library(WebKit WebKit)
     find_library(QuartzCore QuartzCore)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${QuartzCore})
+    find_library(UserNotifications UserNotifications)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${AppKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${QuartzCore} ${UserNotifications})
     qt_import_plugins(${PROJECT_NAME} INCLUDE Qt6::QDarwinCameraPermissionPlugin)
     target_sources(StatusQ PRIVATE
         src/shareutils_other.cpp
         src/keychain_apple.mm
+        src/osnotification_apple.mm
         src/StatusQ/Controls/NativeSwipeHandlerItem_macos.mm
         src/StatusQ/Controls/NativeIndicatorItem_macos.mm
     )
@@ -293,6 +297,11 @@ else ()
         src/keychain_other.cpp
     )
 endif ()
+
+# Shell_NotifyIcon (OSNotification Windows leg) requires shell32 and user32.
+if(WIN32)
+    target_link_libraries(StatusQ PRIVATE shell32 user32)
+endif()
 
 include(FetchContent)
 set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)

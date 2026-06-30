@@ -7,3 +7,8 @@ proc statusq_registerQmlTypes*() {.cdecl, importc.}
 proc statusq_installMessageHandler*(cb: StatusQMessageHandler) {.cdecl, importc.}
 proc statusq_setupNetworkAccessManagerFactory*(engine: pointer, tmpPath: cstring) {.cdecl, importc.}
 proc statusq_initializeWebEngine*() {.cdecl, importc.}
+
+proc statusq_osnotification_create*(): pointer {.cdecl, importc.}
+proc statusq_osnotification_show_notification*(obj: pointer, title: cstring, message: cstring, identifier: cstring) {.cdecl, importc.}
+proc statusq_osnotification_show_badge_notification*(obj: pointer, notificationsCount: cint) {.cdecl, importc.}
+proc statusq_osnotification_delete*(obj: pointer) {.cdecl, importc.}

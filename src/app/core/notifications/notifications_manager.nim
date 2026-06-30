@@ -1,5 +1,5 @@
 import nimqml, json, chronicles
-import dotherside_ext
+import ../notifications/os_notification
 
 import ../../global/app_signals
 import ../../global/global_singleton

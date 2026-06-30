@@ -30,7 +30,6 @@ type
   # Custom QObjects (real QObjects created by DOtherSide; adopted as nimqml-seaqt
   # QObject subtypes so `newQVariant` works on them).
   StatusEvent* = ref object of QObject
-  StatusOSNotification* = ref object of QObject
 
 # --- DOtherSide C API (only what status still uses) --------------------------
 # QObject pointers are passed as raw `pointer` (a real C++ `QObject*`).
@@ -38,11 +37,6 @@ type
 proc dos_signal(vptr: pointer, signal: cstring, slot: cstring) {.cdecl, dynlib: dynLibName, importc.}
 
 proc dos_qguiapplication_installEventFilter(filter: pointer) {.cdecl, dynlib: dynLibName, importc.}
-
-proc dos_osnotification_create(): pointer {.cdecl, dynlib: dynLibName, importc.}
-proc dos_osnotification_show_notification(vptr: pointer, title, message, identifier: cstring) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_osnotification_show_badge_notification(vptr: pointer, notificationsCount: int) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_osnotification_delete(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
 
 proc dos_event_create_urlSchemeEvent(): pointer {.cdecl, dynlib: dynLibName, importc.}
 proc dos_event_delete(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
@@ -53,25 +47,6 @@ proc dos_event_set_urlSchemeEvent_instance(vptr: pointer) {.cdecl, dynlib: dynLi
 proc signal_handler*(receiver: pointer, signal: cstring, slot: cstring) =
   if not receiver.isNil:
     dos_signal(receiver, signal, slot)
-
-# OSNotification
-proc delete*(self: StatusOSNotification)
-
-proc newStatusOSNotification*(): StatusOSNotification =
-  new(result, delete)
-  result.vptr = dos_osnotification_create()
-
-proc delete*(self: StatusOSNotification) =
-  dos_osnotification_delete(self.vptr)
-  self.vptr = nil
-
-proc showNotification*(self: StatusOSNotification, title: string, message: string,
-    identifier: string) =
-  dos_osnotification_show_notification(self.vptr, title.cstring, message.cstring,
-    identifier.cstring)
-
-proc showIconBadgeNotification*(self: StatusOSNotification, notificationsCount: int) =
-  dos_osnotification_show_badge_notification(self.vptr, notificationsCount)
 
 # UrlSchemeEvent (deep links)
 proc delete*(self: StatusEvent)
