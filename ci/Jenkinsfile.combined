@@ -62,10 +62,16 @@ pipeline {
             stage('Linux E2E') {
               steps {
                 script {
+                  linux_e2e_pkg = build(
+                    job: 'status-app/systems/linux/x86_64/package',
+                    parameters: jenkins.mapToParams([
+                      USE_SIMULATED_KEYCARD: true,
+                    ]),
+                  )
                   linux_e2e = build(
                     job: 'status-app/systems/linux/x86_64/tests-e2e',
                     parameters: jenkins.mapToParams([
-                      BUILD_SOURCE:       linux_x86_64.fullProjectName,
+                      BUILD_SOURCE:       linux_e2e_pkg.fullProjectName,
                       TESTRAIL_RUN_NAME:  utils.pkgFilename(),
                       TEST_SCOPE_FLAG:    utils.isReleaseBuild() ? '-m=critical' : '',
                       GIT_REF:            env.BRANCH_NAME,
@@ -96,10 +102,16 @@ pipeline {
               steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                   script {
+                    windows_e2e_pkg = build(
+                      job: 'status-app/systems/windows/x86_64/package',
+                      parameters: jenkins.mapToParams([
+                        USE_SIMULATED_KEYCARD: true,
+                      ]),
+                    )
                     windows_e2e = build(
                       job: 'status-app/systems/windows/x86_64/tests-e2e',
                       parameters: jenkins.mapToParams([
-                        BUILD_SOURCE:       windows_x86_64.fullProjectName,
+                        BUILD_SOURCE:       windows_e2e_pkg.fullProjectName,
                         TESTRAIL_RUN_NAME:  utils.pkgFilename(),
                         TEST_SCOPE_FLAG:    utils.isReleaseBuild() ? '-m=critical' : '',
                         GIT_REF:            env.BRANCH_NAME,

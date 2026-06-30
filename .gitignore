@@ -32,6 +32,8 @@ nim_status_client.log
 .flatpak-builder
 /ui/StatusQ/sandbox/android/.gradle/
 .qmake_previous
+# Used to track the simulated keycard mode changes via the USE_SIMULATED_KEYCARD build flag
+.use_simulated_keycard_previous
 *.qm
 
 # Squish test ================================================================

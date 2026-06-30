@@ -11744,6 +11744,144 @@
     </message>
   </context>
   <context>
+    <name>KeycardSimulatorController</name>
+    <message>
+      <source>Keycard Simulator Controller</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Keycard Simulator Controller</translation>
+    </message>
+    <message>
+      <source>Use applet tag 4.0 (SecureChannel V2)</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Use applet tag 4.0 (SecureChannel V2)</translation>
+    </message>
+    <message>
+      <source>Applet version</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Applet version</translation>
+    </message>
+    <message>
+      <source>Tag 4.0 needs keycard-qt SecureChannel V2 support — not driveable by the app yet and refers to status-keycard after #72e9574 commit.</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Tag 4.0 needs keycard-qt SecureChannel V2 support — not driveable by the app yet and refers to status-keycard after #72e9574 commit.</translation>
+    </message>
+    <message>
+      <source>Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.</translation>
+    </message>
+    <message>
+      <source>1. Simulator</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>1. Simulator</translation>
+    </message>
+    <message>
+      <source>Restart Keycard Simulator</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Restart Keycard Simulator</translation>
+    </message>
+    <message>
+      <source>Start Keycard Simulator</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Start Keycard Simulator</translation>
+    </message>
+    <message>
+      <source>2. Create keycard</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>2. Create keycard</translation>
+    </message>
+    <message>
+      <source>Card id:</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Card id:</translation>
+    </message>
+    <message>
+      <source>Create Empty Keycard</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Create Empty Keycard</translation>
+    </message>
+    <message>
+      <source>— or create one with a seed —</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>— or create one with a seed —</translation>
+    </message>
+    <message>
+      <source>Seed phrase (mandatory)</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Seed phrase (mandatory)</translation>
+    </message>
+    <message>
+      <source>PIN:</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>PIN:</translation>
+    </message>
+    <message>
+      <source>PUK:</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>PUK:</translation>
+    </message>
+    <message>
+      <source>Keycard name (optional)</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Keycard name (optional)</translation>
+    </message>
+    <message>
+      <source>Paths, comma-separated (optional)</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Paths, comma-separated (optional)</translation>
+    </message>
+    <message>
+      <source>Create Keycard</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Create Keycard</translation>
+    </message>
+    <message>
+      <source>3. Select keycard (does not insert it)</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>3. Select keycard (does not insert it)</translation>
+    </message>
+    <message>
+      <source>&lt;no keycard selected&gt;</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>&lt;no keycard selected&gt;</translation>
+    </message>
+    <message>
+      <source>4. Reader &amp; card</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>4. Reader &amp; card</translation>
+    </message>
+    <message>
+      <source>Insert keycard</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Insert keycard</translation>
+    </message>
+    <message>
+      <source>Inserts the selected keycard</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Inserts the selected keycard</translation>
+    </message>
+    <message>
+      <source>Remove keycard</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Remove keycard</translation>
+    </message>
+    <message>
+      <source>Removes the selected keycard</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Removes the selected keycard</translation>
+    </message>
+    <message>
+      <source>Plug reader</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Plug reader</translation>
+    </message>
+    <message>
+      <source>Unplug reader</source>
+      <comment>KeycardSimulatorController</comment>
+      <translation>Unplug reader</translation>
+    </message>
+  </context>
+  <context>
     <name>KeycardViewNew</name>
     <message>
       <source>Read Keycard</source>

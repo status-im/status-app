@@ -45,8 +45,8 @@ pipeline {
       defaultValue: ''
     )
     booleanParam(
-      name: 'USE_MOCKED_KEYCARD_LIB',
-      description: 'Decides whether the mocked status-keycard-go library is built.',
+      name: 'USE_SIMULATED_KEYCARD',
+      description: 'Build with the simulated (jcardsim) keycard backend (used by keycard e2e tests).',
       defaultValue: false
     )
   }
@@ -95,7 +95,7 @@ pipeline {
     RELEASE =                "${params.RELEASE}"
     INCLUDE_DEBUG_SYMBOLS =  "${params.INCLUDE_DEBUG_SYMBOLS}"
     VERBOSE =                "${params.VERBOSE}"
-    USE_MOCKED_KEYCARD_LIB = "${params.USE_MOCKED_KEYCARD_LIB}"
+    USE_SIMULATED_KEYCARD = "${params.USE_SIMULATED_KEYCARD}"
     /* FIXME: figure out why NIMFLAGS are not respected */
     XDG_CACHE_HOME = "${env.WORKSPACE_TMP}"
     /* Ensure nimcache is not shared between builds. */

@@ -58,6 +58,7 @@ Window {
     readonly property bool appThemeDark: Theme.style === Theme.Style.Dark
     readonly property KeycardStateStore keycardStateStore: KeycardStateStore {}
     readonly property bool portraitLayout: height > width
+    readonly property bool userLoggedIn: loader.item !== null
     property bool biometricFlowPending: false
 
     // Use native Android keyboard tracking via WindowInsets API
@@ -210,6 +211,24 @@ Window {
         property int lastNonMinVisibility
 
         property bool showSkippedBiometricFlow: false
+
+        property var keycardSimulatorWindow
+        function createKeycardSimulatorController() {
+            if (d.keycardSimulatorWindow)
+                return
+            if (!localAppSettings || !localAppSettings.useSimulatedKeycard)
+                return
+            if (typeof keycardTestController === "undefined" || !keycardTestController)
+                return
+            const c = Qt.createComponent("qrc:/imports/shared/panels/KeycardSimulatorController.qml")
+            if (c.status === Component.Ready) {
+                d.keycardSimulatorWindow = c.createObject(applicationWindow, { "controller": keycardTestController, "mainWindow": applicationWindow })
+                if (d.keycardSimulatorWindow)
+                    d.keycardSimulatorWindow.show()
+            } else {
+                console.warn("KeycardSimulatorController failed to load:", c.errorString())
+            }
+        }
     }
 
     Binding {
@@ -414,6 +433,8 @@ Window {
         }
 
         restoreAppState()
+
+        d.createKeycardSimulatorController()
 
         Global.openShakeToSharePopupRequested.connect(openShakeToSharePopup)
 
