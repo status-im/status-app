@@ -137,6 +137,70 @@ Document [0,19)
                  QString::fromUtf8(expected).trimmed());
     }
 
+    // A "**" run abutting a code span's backtick still closes/opens, so emphasis hugs the
+    // code span: **`A`**B**C** is two sibling Strongs with plain "B" between (not nested).
+    void boldSiblingsAroundCodeSpan()
+    {
+        auto expected = R"(
+Document [0,14)
+  Paragraph [0,14)
+    Strong [0,7)
+      Delimiter [0,2) "**"
+      CodeSpan [2,5)
+        Delimiter [2,3) "`"
+        Text [3,4) "A"
+        Delimiter [4,5) "`"
+      Delimiter [5,7) "**"
+    Text [7,9) "B\n"
+    Strong [9,14)
+      Delimiter [9,11) "**"
+      Text [11,12) "C"
+      Delimiter [12,14) "**"
+)";
+        QCOMPARE(d("**`A`**B\n**C**"),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
+    // A "**" run abutting a "~~" run still closes, so bold hugs the strikethrough:
+    // **~~A~~**B is Strong > Strikethrough(A), with plain "B" after.
+    void boldHugsStrikethrough()
+    {
+        auto expected = R"(
+Document [0,10)
+  Paragraph [0,10)
+    Strong [0,9)
+      Delimiter [0,2) "**"
+      Strikethrough [2,7)
+        Delimiter [2,4) "~~"
+        Text [4,5) "A"
+        Delimiter [5,7) "~~"
+      Delimiter [7,9) "**"
+    Text [9,10) "B"
+)";
+        QCOMPARE(d("**~~A~~**B"),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
+    // An opening "**" run followed by a code fence still opens (preceded by text "B"):
+    // B**```A```** is plain "B" then Strong > CodeBlock.
+    void boldHugsCodeBlockAfterText()
+    {
+        auto expected = R"(
+Document [0,12)
+  Paragraph [0,12)
+    Text [0,1) "B"
+    Strong [1,12)
+      Delimiter [1,3) "**"
+      CodeBlock [3,10)
+        Delimiter [3,6) "```"
+        Text [6,7) "A"
+        Delimiter [7,10) "```"
+      Delimiter [10,12) "**"
+)";
+        QCOMPARE(d("B**```A```**"),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
     void link()
     {
         // moc mis-parses "//" inside a raw string literal as a comment, so the

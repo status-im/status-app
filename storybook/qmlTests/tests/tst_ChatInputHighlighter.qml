@@ -349,6 +349,24 @@ TestCase {
         compare(boldSpan.end,   text.indexOf("bold") + 4)
     }
 
+    function test_emphasis_hugsAdjacentInlineMarkup() {
+        // "**~~A~~**B": a "**" run abutting the "~~" still closes, so bold hugs the
+        // strikethrough — A is bold, B is plain text.
+        const text  = "**~~A~~**B"
+        const spans = highlighter.parseFormats(text)
+        let boldA = false
+        let boldB = false
+        for (let i = 0; i < spans.length; i++) {
+            if (!spans[i].bold) continue
+            for (let p = spans[i].start; p < spans[i].end; p++) {
+                if (text[p] === 'A') boldA = true
+                if (text[p] === 'B') boldB = true
+            }
+        }
+        verify(boldA,  "A should be bold")
+        verify(!boldB, "B must not be bold")
+    }
+
     function test_inlineCode_basic() {
         // "`hello`": content = [1, 6)
         const spans = highlighter.parseCodeSpans("`hello`")

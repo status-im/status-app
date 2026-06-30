@@ -89,22 +89,37 @@ Ranges linkRangesOf(const QVector<LinkSpan>& links)
 bool isUnicodeWhitespace(QChar c) { return c.isSpace(); }
 bool isUnicodePunctuation(QChar c) { return c.isPunct() || c.isSymbol(); }
 
+// Inline-markup delimiter characters (emphasis *, strikethrough ~, code `). For emphasis
+// flanking these count as word-like, not punctuation, so an emphasis run can hug an adjacent
+// inline element instead of being blocked by its delimiter — e.g. **~~A~~**B, **`A`**B and
+// B**```A```** all keep the outer bold.
+bool isInlineMarkupChar(QChar c)
+{
+    return c == QLatin1Char('*') || c == QLatin1Char('~') || c == QLatin1Char('`');
+}
+
+// Punctuation for flanking purposes (inline-markup delimiters excluded — see above).
+bool isFlankingPunctuation(QChar c)
+{
+    return !isInlineMarkupChar(c) && isUnicodePunctuation(c);
+}
+
 bool isLeftFlanking(const QString& text, qsizetype pos, qsizetype len)
 {
     QChar charAfter  = (pos + len < text.length()) ? text[pos + len] : QChar(' ');
     QChar charBefore = (pos > 0)                   ? text[pos - 1]   : QChar(' ');
-    if (!isUnicodePunctuation(charAfter))
+    if (!isFlankingPunctuation(charAfter))
         return true;
-    return isUnicodeWhitespace(charBefore) || isUnicodePunctuation(charBefore);
+    return isUnicodeWhitespace(charBefore) || isFlankingPunctuation(charBefore);
 }
 
 bool isRightFlanking(const QString& text, qsizetype pos, qsizetype len)
 {
     QChar charAfter  = (pos + len < text.length()) ? text[pos + len] : QChar(' ');
     QChar charBefore = (pos > 0)                   ? text[pos - 1]   : QChar(' ');
-    if (!isUnicodePunctuation(charBefore))
+    if (!isFlankingPunctuation(charBefore))
         return true;
-    return isUnicodeWhitespace(charAfter) || isUnicodePunctuation(charAfter);
+    return isUnicodeWhitespace(charAfter) || isFlankingPunctuation(charAfter);
 }
 
 QVector<Delimiter> scanDelimiters(const QString& text, const Ranges& codeRanges = {})
