@@ -40,6 +40,16 @@ StatusTextArea {
 
     wrapMode: TextEdit.Wrap
 
+    // Keep the caret out of the "> " quote prefix so it feels atomic. Self-terminating:
+    // re-firing with an already-snapped position is a no-op.
+    onCursorPositionChanged: {
+        if (root.selectionStart === root.selectionEnd) {
+            const snapped = highlighter.snapToQuoteContent(root.cursorPosition)
+            if (snapped !== root.cursorPosition)
+                root.cursorPosition = snapped
+        }
+    }
+
     ChatInputHighlighter {
         id: highlighter
         quickTextDocument: root.textDocument
@@ -147,6 +157,55 @@ StatusTextArea {
             event.accepted = true
             TextDocumentUtils.handleTripleBacktick(root.textDocument,
                                                    root.cursorPosition)
+            return
+        }
+
+        // Quote-block continuation and atomic "> " editing. These mirror the
+        // ChatInputMentions UX: Enter inside a quote starts a new "> " line (two
+        // Enters on an empty quote line exit), a single Backspace at the start of
+        // quote content removes the whole "> " prefix, Delete at a line end before a
+        // quote joins the lines, and Left at content-start jumps to the previous line.
+        const noShift = !(event.modifiers & Qt.ShiftModifier)
+        const noSelection = root.selectionStart === root.selectionEnd
+
+        if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                && noShift && highlighter.isInQuoteBlock(root.cursorPosition)) {
+            event.accepted = true
+            const prevPos = highlighter.endOfPreviousBlock(root.cursorPosition)
+            if (prevPos !== root.cursorPosition
+                    && highlighter.isEmptyQuoteBlock(root.cursorPosition)
+                    && highlighter.isEmptyQuoteBlock(prevPos)) {
+                // Two consecutive empty quote lines — drop them to exit the quote.
+                // prevPos sits at offset 2 of the previous empty line, so prevPos - 2
+                // is that line's start.
+                root.remove(prevPos - 2, root.cursorPosition)
+            } else {
+                root.insert(root.cursorPosition, "\n> ")
+            }
+            return
+        }
+
+        if (event.key === Qt.Key_Backspace && noSelection
+                && highlighter.isQuoteContentStart(root.cursorPosition)) {
+            event.accepted = true
+            root.remove(root.cursorPosition - 2, root.cursorPosition)
+            return
+        }
+
+        if (event.key === Qt.Key_Delete && noSelection
+                && highlighter.isLineEndBeforeQuoteBlock(root.cursorPosition)) {
+            // Empty line: remove only the paragraph separator (the caret snap lands
+            // it after "> "). Non-empty line: also drop the "> " so content joins.
+            const count = highlighter.isBlockEmpty(root.cursorPosition) ? 1 : 3
+            event.accepted = true
+            root.remove(root.cursorPosition, root.cursorPosition + count)
+            return
+        }
+
+        if (event.key === Qt.Key_Left && noShift
+                && highlighter.isQuoteContentStart(root.cursorPosition)) {
+            event.accepted = true
+            root.cursorPosition = highlighter.endOfPreviousBlock(root.cursorPosition)
             return
         }
 

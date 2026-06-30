@@ -278,5 +278,54 @@ Item {
             control.quoteBarVisible = false
             compare(control.quoteBarVisible, false)
         }
+
+        // ── quote continuation / atomic "> " editing ───────────────────────────
+
+        // Enter inside a quote line starts a new "> " continuation line.
+        function test_quoteEnterContinues() {
+            control.text = "> A"
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Return)
+
+            compare(control.text, "> A\n> ")
+            compare(control.cursorPosition, control.length)
+        }
+
+        // Enter on an empty quote line whose previous line is also an empty quote
+        // line drops both, exiting the quote.
+        function test_quoteDoubleEnterExits() {
+            control.text = "> A\n> \n> "
+            control.forceActiveFocus()
+            control.cursorPosition = control.length
+
+            keyClick(Qt.Key_Return)
+
+            // The two trailing empty quote lines are gone; only "> A" remains quoted.
+            verify(!control.text.endsWith("> "))
+            compare(control.text, "> A\n")
+        }
+
+        // A single Backspace at the start of quote content removes the whole "> "
+        // prefix (not the space then the ">" separately).
+        function test_quoteBackspaceRemovesPrefix() {
+            control.text = "> A"
+            control.forceActiveFocus()
+            control.cursorPosition = 2 // content start, right after "> "
+
+            keyClick(Qt.Key_Backspace)
+
+            compare(control.text, "A")
+        }
+
+        // The caret cannot sit inside the "> " prefix; it snaps to the content start.
+        function test_quoteCaretSnap() {
+            control.text = "> A"
+            control.forceActiveFocus()
+            control.cursorPosition = 1 // inside the "> " prefix
+
+            tryCompare(control, "cursorPosition", 2)
+        }
     }
 }

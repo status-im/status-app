@@ -108,6 +108,16 @@ public:
     // at `position` would receive (re-parses the block with a dummy char inserted)
     Q_INVOKABLE QVariantMap emphasisAtInsertion(int position) const;
 
+    // Quote-editing queries (for the "> " continuation / deletion UX). All operate on
+    // the live document and a fence-aware set of quote-line block starts.
+    Q_INVOKABLE bool isInQuoteBlock(int position) const;        // block at pos is a quote line
+    Q_INVOKABLE bool isQuoteContentStart(int position) const;   // pos == "> " end of a quote line
+    Q_INVOKABLE bool isEmptyQuoteBlock(int position) const;     // quote line whose text is "> "
+    Q_INVOKABLE bool isLineEndBeforeQuoteBlock(int position) const; // line end, next block is quote
+    Q_INVOKABLE bool isBlockEmpty(int position) const;          // block at pos has empty text
+    Q_INVOKABLE int  endOfPreviousBlock(int position) const;    // last position of the previous block
+    Q_INVOKABLE int  snapToQuoteContent(int position) const;    // move pos out of the "> " prefix
+
 signals:
     void quickTextDocumentChanged();
     void codeBackgroundChanged();
@@ -128,6 +138,9 @@ private:
     // Replaces mention objects that fall inside a code span/block with their plain
     // name text. Runs queued (it edits the document), re-deriving from the AST.
     void demoteMentionsInCode();
+
+    // Fence-aware set of quote-line block-start positions for the current document.
+    QSet<int> quoteLineStarts() const;
 
     QQuickTextDocument* m_quickTextDocument{nullptr};
     QVector<unsigned int> m_flags; // per-document-character emphasis bits

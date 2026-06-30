@@ -585,6 +585,90 @@ QVariantList ChatInputHighlighter::parseQuoteBlocks(const QString& text) const
     return result;
 }
 
+QSet<int> ChatInputHighlighter::quoteLineStarts() const
+{
+    if (!document())
+        return {};
+    const QString text = document()->toPlainText();
+    return collectQuoteLineStarts(
+        Markdown::parse(text, optionsFor(m_formatUnclosedCodeFence)), text);
+}
+
+bool ChatInputHighlighter::isInQuoteBlock(int position) const
+{
+    if (!document())
+        return false;
+    const QTextBlock block = document()->findBlock(position);
+    return block.isValid()
+            && quoteLineStarts().contains(static_cast<int>(block.position()));
+}
+
+bool ChatInputHighlighter::isQuoteContentStart(int position) const
+{
+    if (!document())
+        return false;
+    const QTextBlock block = document()->findBlock(position);
+    return block.isValid()
+            && quoteLineStarts().contains(static_cast<int>(block.position()))
+            && position == block.position() + 2;
+}
+
+bool ChatInputHighlighter::isEmptyQuoteBlock(int position) const
+{
+    if (!document())
+        return false;
+    const QTextBlock block = document()->findBlock(position);
+    return block.isValid()
+            && quoteLineStarts().contains(static_cast<int>(block.position()))
+            && block.text() == QStringLiteral("> ");
+}
+
+bool ChatInputHighlighter::isLineEndBeforeQuoteBlock(int position) const
+{
+    if (!document())
+        return false;
+    const QTextBlock block = document()->findBlock(position);
+    if (!block.isValid() || position != block.position() + block.length() - 1)
+        return false;
+    const QTextBlock next = block.next();
+    return next.isValid()
+            && quoteLineStarts().contains(static_cast<int>(next.position()));
+}
+
+bool ChatInputHighlighter::isBlockEmpty(int position) const
+{
+    if (!document())
+        return false;
+    const QTextBlock block = document()->findBlock(position);
+    return block.isValid() && block.text().isEmpty();
+}
+
+int ChatInputHighlighter::endOfPreviousBlock(int position) const
+{
+    if (!document())
+        return position;
+    const QTextBlock block = document()->findBlock(position);
+    if (!block.isValid())
+        return position;
+    const QTextBlock prev = block.previous();
+    if (!prev.isValid())
+        return position;
+    return static_cast<int>(prev.position() + prev.length() - 1);
+}
+
+int ChatInputHighlighter::snapToQuoteContent(int position) const
+{
+    if (!document())
+        return position;
+    const QTextBlock block = document()->findBlock(position);
+    if (!block.isValid()
+            || !quoteLineStarts().contains(static_cast<int>(block.position())))
+        return position;
+    if (position - block.position() < 2)
+        return static_cast<int>(block.position() + 2);
+    return position;
+}
+
 void ChatInputHighlighter::highlightBlock(const QString& text)
 {
     if (!document())
