@@ -98,8 +98,12 @@ Item {
         // (HTML), which Qt's Android a11y backend does not surface, so the body
         // is otherwise invisible to screen readers and e2e. Expose the unstyled
         // text via Accessible.name on the text element instead.
-        readonly property string plainText:
-            Utils.stripHtmlTags(root.messageDetails.messageText)
+        readonly property string plainText: {
+            const base = Utils.stripHtmlTags(root.messageDetails.messageText)
+            // The "(edited)" indicator is only a visual HTML span in the rendered
+            // text; append it here so it reaches Accessible.name too.
+            return root.isEdited ? base + " " + qsTr("(edited)") : base
+        }
 
         function showDisabledTooltipForAddressEnsName(link) {
             return link.startsWith('//send-via-personal-chat//') && !!root.disabledTooltipText
