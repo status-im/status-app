@@ -294,12 +294,6 @@ type StatusDesktopConfig = object
     desc: "Sets Waku fleets config file path"
     name: "WAKU_FLEETS_CONFIG"
     abbr: "waku-fleets-config" .}: string
-  # TODO: revisit/implement when preparing keycard lib for testing
-  # displayMockedKeycardWindow* {.
-  #   defaultValue: false
-  #   desc: "Determines if the app should use mocked keycard"
-  #   name: "USE_MOCKED_KEYCARD"
-  #   abbr: "use-mocked-keycard" .}: bool
   httpApiEnabled* {.
     defaultValue: CONNECTOR_ENABLED
     desc: "Enable HTTP RPC API"

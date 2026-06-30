@@ -1,7 +1,11 @@
+# Keep a separate nimcache per USE_SIMULATED_KEYCARD mode. That flag toggles -d:useSimulatedKeycard,
+# which adds/removes the KeycardTest* imports from libstatus-keycard-qt; sharing one cache let stale
+# (simulated) codegen leak into a non-simulated build -> dyld "Symbol not found: _KeycardTestCreateCard".
+let kcSuffix = when defined(useSimulatedKeycard): "-simkeycard" else: ""
 if defined(release):
-  switch("nimcache", "nimcache/release/$projectName")
+  switch("nimcache", "nimcache/release" & kcSuffix & "/$projectName")
 else:
-  switch("nimcache", "nimcache/debug/$projectName")
+  switch("nimcache", "nimcache/debug" & kcSuffix & "/$projectName")
 
 --threads:on
 --opt:speed # -O3

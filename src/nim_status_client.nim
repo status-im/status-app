@@ -24,6 +24,10 @@ featureGuard KEYCARD_ENABLED:
 when defined(macosx) and defined(arm64):
   import posix
 
+when defined(useSimulatedKeycard):
+  import app_service/service/keycardV2/test_controller
+  var keycardTestControllerInstance: KeycardTestController
+
 when defined(windows):
     {.link: "../status.o".}
 
@@ -109,7 +113,12 @@ proc setupRemoteSignalsHandling() =
 
   featureGuard KEYCARD_ENABLED:
     var callbackKeycardGo: keycard_go.KeycardSignalCallback = proc(p0: cstring) {.cdecl.} =
-      if isShuttingDown(): return
+      if isShuttingDown():
+        return
+      when defined(useSimulatedKeycard):
+        if test_controller.shouldIgnoreKeycardLibSignals():
+          return
+
       if keycardServiceV2QObjPointer != nil:
         signal_handler(keycardServiceV2QObjPointer, p0, "receiveKeycardSignalV2")
 
@@ -243,6 +252,10 @@ proc mainProc() =
 
   # Ensure we have the featureFlags instance available from the start
   singletonInstance.engine.setRootContextProperty("featureFlagsRootContextProperty", newQVariant(singletonInstance.featureFlags()))
+
+  when defined(useSimulatedKeycard):
+    keycardTestControllerInstance = newKeycardTestController()
+    singletonInstance.engine.setRootContextProperty("keycardTestController", newQVariant(keycardTestControllerInstance))
 
   statusq_registerQmlTypes()
 

@@ -124,6 +124,12 @@ QtObject:
   QtProperty[bool] testEnvironment:
     read = getTestEnvironment
 
+  proc getUseSimulatedKeycard*(self: LocalAppSettings): bool {.slot.} =
+    return defined(useSimulatedKeycard)
+
+  QtProperty[bool] useSimulatedKeycard:
+    read = getUseSimulatedKeycard
+
   proc refreshTokenEnabledChanged*(self: LocalAppSettings) {.signal.}
   proc getRefreshTokenEnabled*(self: LocalAppSettings): bool {.slot.} =
     self.settings.value(LAS_KEY_REFRESH_TOKEN_ENABLED, newQVariant(false)).boolVal

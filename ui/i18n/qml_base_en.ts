@@ -9596,6 +9596,117 @@ corruption, loss of your Status profile and the inability to restart Status.</so
     </message>
 </context>
 <context>
+    <name>KeycardSimulatorController</name>
+    <message>
+        <source>Keycard Simulator Controller</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Applet version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Use applet tag 4.0 (SecureChannel V2)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tag 4.0 needs keycard-qt SecureChannel V2 support — not driveable by the app yet and refers to status-keycard after #72e9574 commit.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Default: tag 3.2 (classic password pairing), matches the current keycard-qt and refers to status-keycard #72e9574 commit.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>1. Simulator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Keycard Simulator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start Keycard Simulator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>2. Create keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Card id:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Empty Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>— or create one with a seed —</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Seed phrase (mandatory)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PIN:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PUK:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Keycard name (optional)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Paths, comma-separated (optional)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Create Keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>3. Select keycard (does not insert it)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;no keycard selected&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>4. Reader &amp; card</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Insert keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Inserts the selected keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Remove keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Removes the selected keycard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Plug reader</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unplug reader</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>KeycardViewNew</name>
     <message>
         <source>Read Keycard</source>

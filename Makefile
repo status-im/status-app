@@ -571,13 +571,19 @@ else
 STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_SOURCE_DIR)/build/linux
 endif
 
+ifeq ($(USE_SIMULATED_KEYCARD),true)
+STATUS_KEYCARD_QT_BUILD_DIR := $(STATUS_KEYCARD_QT_BUILD_DIR)-simulated-keycard
+STATUS_KEYCARD_QT_CMAKE_PARAMS += -DUSE_SIMULATED_KEYCARD=ON
+NIM_PARAMS += -d:useSimulatedKeycard
+endif
+
 STATUSKEYCARD_QT_LIB_PREFIX := lib
 STATUSKEYCARD_QT_LIB_SUBDIR :=
 ifeq ($(mkspecs),win32)
 STATUSKEYCARD_QT_LIB_PREFIX :=
 STATUSKEYCARD_QT_LIB_SUBDIR := /$(COMMON_CMAKE_BUILD_TYPE)
 endif
-export STATUSKEYCARD_QT_LIBDIR := $(STATUS_KEYCARD_QT_BUILD_DIR)$(STATUSKEYCARD_QT_LIB_SUBDIR)
+export STATUSKEYCARD_QT_LIBDIR := $(abspath $(STATUS_KEYCARD_QT_BUILD_DIR)$(STATUSKEYCARD_QT_LIB_SUBDIR))
 export STATUSKEYCARD_QT_LIB := $(STATUSKEYCARD_QT_LIBDIR)/$(STATUSKEYCARD_QT_LIB_PREFIX)status-keycard-qt.$(LIB_EXT)
 STATUSKEYCARD_QT_DYLIB_NAME := $(notdir $(STATUSKEYCARD_QT_LIB))
 STATUSKEYCARD_QT_LINKNAME := $(patsubst lib%,%,$(basename $(STATUSKEYCARD_QT_DYLIB_NAME)))
@@ -739,6 +745,16 @@ update-qmake-previous:
 # Add a dependency on update-qmake-previous if QMAKE has changed
 ifeq ($(QMAKE_CHANGED),yes)
 $(NIM_STATUS_CLIENT): update-qmake-previous
+endif
+
+# Force a rebuild of nim_status_client when USE_SIMULATED_KEYCARD is toggled.
+SIMKC_MODE := $(if $(filter true,$(USE_SIMULATED_KEYCARD)),on,off)
+SIMKC_PREVIOUS := .use_simulated_keycard_previous
+SIMKC_CHANGED := $(shell [ -f $(SIMKC_PREVIOUS) ] && [ "$$(cat $(SIMKC_PREVIOUS))" = "$(SIMKC_MODE)" ] && echo "no" || echo "yes")
+update-use-simulated-keycard-previous:
+	@echo $(SIMKC_MODE) > $(SIMKC_PREVIOUS)
+ifeq ($(SIMKC_CHANGED),yes)
+$(NIM_STATUS_CLIENT): update-use-simulated-keycard-previous
 endif
 
 STATUSQ_LIB_PATH := $(STATUSQ_INSTALL_PATH)/StatusQ
