@@ -93,9 +93,14 @@ void flatten(const Node& node, unsigned int acc, QVector<unsigned int>& flags)
             flatten(c, acc | kLink, flags);
         break;
     case NodeKind::CodeSpan:
-        // monospace + background over markers and content alike; inherit any
-        // outer emphasis so nested code is also bold/italic/struck through.
-        stamp(flags, node.start, node.end, kCode | (acc & kEmphasisMask));
+        // Markers and content are monospace + background (kCode). The content inherits
+        // any outer emphasis (nested code can be bold/italic/struck through); the
+        // backtick markers keep only their own kCode style — no inherited emphasis.
+        for (const Node& c : node.children)
+            stamp(flags, c.start, c.end,
+                  c.kind == NodeKind::Delimiter
+                      ? kCode
+                      : kCode | (acc & kEmphasisMask));
         break;
     case NodeKind::CodeBlock:
         for (const Node& c : node.children)

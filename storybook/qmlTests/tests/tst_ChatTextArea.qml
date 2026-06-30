@@ -377,6 +377,19 @@ Item {
             compare(control.cursorPosition, 3) // end of line 1
         }
 
+        // Outer strikethrough must not bleed onto a code span's backtick markers (they keep
+        // their own kCode style). "~~`A`~~": ~~ at 0-1, ` at 2, A at 3, ` at 4, ~~ at 5-6.
+        function test_codeSpanDelimitersNoStrikethroughBleed() {
+            control.text = "~~`A`~~"
+            control.forceActiveFocus()
+
+            // Wait until the (async) highlight has struck the code content "A"...
+            tryVerify(() => control.emphasisAt(3).strikethrough)
+            // ...the backtick markers must NOT be struck.
+            verify(!control.emphasisAt(2).strikethrough, "opening backtick must not be struck")
+            verify(!control.emphasisAt(4).strikethrough, "closing backtick must not be struck")
+        }
+
         // A "> " inside a code block is not a real quote line, so Enter does not start a
         // continuation — it falls through to a plain newline.
         function test_quoteNoContinuationInCodeBlock() {
