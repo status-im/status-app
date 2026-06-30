@@ -23,10 +23,10 @@ QtObject {
         }
     }
 
-    function _getProfilePrototype(storageName, offTheRecord) {
-        const storageNameProp = offTheRecord
-            ? ""
-            : `storageName: "${storageName.replace(/"/g, '\\"')}"`
+    function _getProfilePrototype(storageName, offTheRecord, key) {
+        const storageNameProp = storageName
+            ? `storageName: "${storageName.replace(/"/g, '\\"')}"`
+            : ""
         const persistentCookiesPolicy = offTheRecord
             ? "persistentCookiesPolicy: WebEngineProfile.NoPersistentCookies"
             : ""
@@ -37,19 +37,18 @@ QtObject {
                 ${storageNameProp}
                 ${persistentCookiesPolicy}
             }
-        `, root, "ProfilePrototype_" + storageName)
+        `, root, "ProfilePrototype_" + key)
     }
 
-    function getOrCreateStorageProfile(userId, offTheRecord) {
-        const key = root._key(userId, offTheRecord)
+    function getOrCreateStorageProfile(profileParams) {
+        const key = root._key(profileParams.userId, profileParams.offTheRecord)
         let p = root.profiles[key]
 
         if (!p) {
-            const storageName = offTheRecord
-                ? ("IncognitoProfile_" + userId)
-                : ("Profile_" + userId)
-
-            const prototype = root._getProfilePrototype(storageName, offTheRecord)
+            const prototype = root._getProfilePrototype(
+                profileParams.storageName,
+                profileParams.offTheRecord,
+                key)
             p = prototype.instance()
             root.profiles[key] = p
         }
@@ -58,7 +57,7 @@ QtObject {
     }
 
     function getProfile(profileParams) {
-        return getOrCreateStorageProfile(profileParams.userId, profileParams.offTheRecord)
+        return getOrCreateStorageProfile(profileParams)
     }
 
     function scriptListForParams(profileParams) {

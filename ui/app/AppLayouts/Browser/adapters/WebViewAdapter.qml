@@ -12,9 +12,7 @@ AbstractWebView {
     required property var profileManager
 
     property var profile: root.profileParams
-        ? root.profileManager.getOrCreateStorageProfile(
-              root.profileParams.userId,
-              root.profileParams.offTheRecord)
+        ? root.profileManager.getOrCreateStorageProfile(root.profileParams)
         : null
 
     // Expose internal WebEngineView properties

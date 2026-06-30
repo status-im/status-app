@@ -7,4 +7,6 @@ QtObject {
     required property string userAgent
     required property var scripts
     required property bool offTheRecord
+
+    readonly property string storageName: offTheRecord ? "" : "Profile_" + userId
 }

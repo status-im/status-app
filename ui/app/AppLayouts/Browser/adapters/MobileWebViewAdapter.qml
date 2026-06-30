@@ -37,7 +37,7 @@ AbstractWebView {
         webChannel: root.webChannel
 
         offTheRecord: root.profileParams.offTheRecord
-        storageName: "Profile_" + root.profileParams.userId
+        storageName: root.profileParams.storageName
         // TODO(mobile): profileParams.userAgent is not applied — no native backend API.
     }
 
