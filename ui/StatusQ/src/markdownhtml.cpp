@@ -47,6 +47,13 @@ QString collectCodeText(const Node& node)
 QString renderChildren(const Node& node,
                        const QHash<int, QPair<QString, QString>>& mentions);
 
+// Inline code markup; `content` is already escaped.
+QString codeSpanHtml(const QString& content)
+{
+    return QStringLiteral("<code style=\"background-color:#e8e8e8;\">%1</code>")
+            .arg(content);
+}
+
 QString renderNode(const Node& node,
                    const QHash<int, QPair<QString, QString>>& mentions)
 {
@@ -65,8 +72,7 @@ QString renderNode(const Node& node,
         return QStringLiteral("<s>%1</s>").arg(renderChildren(node, mentions));
 
     case NodeKind::CodeSpan:
-        return QStringLiteral("<code style=\"background-color:#e8e8e8;\">%1</code>")
-                .arg(collectCodeText(node));
+        return codeSpanHtml(collectCodeText(node));
     case NodeKind::CodeBlock:
         // Block element ⇒ its own paragraph (starts on a new line).
         return QStringLiteral("<pre>%1</pre>").arg(collectCodeText(node));
@@ -150,6 +156,19 @@ bool containsBlock(const Node& node)
         return true;
     for (const Node& c : node.children)
         if (containsBlock(c))
+            return true;
+    return false;
+}
+
+// True when the subtree contains a code span somewhere. A code span may span newlines,
+// so an emphasis wrapping one must be walked (not rendered as a single node) to keep the
+// per-line code handling — otherwise its background bleeds across the line breaks.
+bool containsCodeSpan(const Node& node)
+{
+    if (node.kind == NodeKind::CodeSpan)
+        return true;
+    for (const Node& c : node.children)
+        if (containsCodeSpan(c))
             return true;
     return false;
 }
@@ -249,9 +268,11 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
         case NodeKind::Strong:
         case NodeKind::Emphasis:
         case NodeKind::Strikethrough:
-            if (containsBlock(c)) {
+            if (containsBlock(c) || containsCodeSpan(c)) {
                 // Walk inline (shared accumulator) so a line straddling the emphasis
                 // boundary assembles correctly, carrying the emphasis on the pieces.
+                // Walking also routes a nested code span through the per-line CodeSpan
+                // case, keeping its background line-local.
                 walk(c.children, emph | emphasisBitFor(c.kind), a, mentions);
             } else {
                 // inline emphasis (no block) — wrap in any active outer emphasis too
@@ -260,7 +281,22 @@ void walk(const QVector<Node>& nodes, unsigned emph, BlockAcc& a,
             }
             break;
 
-        default: // CodeSpan, Link, Mention — inline leaves
+        case NodeKind::CodeSpan: {
+            // A code span may span newlines; emit one <code> per line so the
+            // background wraps only the content on each line, not the line breaks
+            // or blank lines around it (empty segments stay empty — no background).
+            const QStringList parts = collectCodeText(c).split(QLatin1Char('\n'));
+            for (int i = 0; i < parts.size(); ++i) {
+                if (i > 0)
+                    finalizeLine(a); // a newline ends the current line
+                if (!parts[i].isEmpty())
+                    a.cur += wrapEmphasis(codeSpanHtml(parts[i]), emph);
+                a.curStarted = true;
+            }
+            break;
+        }
+
+        default: // Link, Mention — inline leaves
             a.cur += wrapEmphasis(renderNode(c, mentions), emph);
             a.curStarted = true;
             break;

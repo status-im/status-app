@@ -217,6 +217,38 @@ private slots:
         QCOMPARE(b[1].toMap()["html"].toString(), "C");
     }
 
+    // A code span spanning newlines emits one <code> per line so the background wraps only
+    // the content, not the blank lines around it (here: only "A" is backgrounded).
+    void blocks_multilineCodeSpanPerLine()
+    {
+        const QVariantList b = blocks("`\nA\n`\nB");
+        QCOMPARE(b.size(), 1);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(),
+                 "<br/><code style=\"background-color:#e8e8e8;\">A</code><br/><br/>B");
+    }
+
+    // A multi-line code span wrapped in emphasis is still split per line (the emphasis is
+    // walked, not rendered whole), so the background stays around "A" only.
+    void blocks_multilineCodeSpanInEmphasis()
+    {
+        const QVariantList b = blocks("*`\nA\n`*\nB");
+        QCOMPARE(b.size(), 1);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(),
+                 "<br/><i><code style=\"background-color:#e8e8e8;\">A</code></i><br/><br/>B");
+    }
+
+    // A single-line inline code span still emits exactly one <code> (regression guard).
+    void blocks_inlineCodeSpanSingleLine()
+    {
+        const QVariantList b = blocks("x `c` y");
+        QCOMPARE(b.size(), 1);
+        QCOMPARE(b[0].toMap()["type"].toString(), "text");
+        QCOMPARE(b[0].toMap()["html"].toString(),
+                 "x <code style=\"background-color:#e8e8e8;\">c</code> y");
+    }
+
     // Code starting mid-text goes onto its own line as a separate block.
     void blocks_codeStartsMidText()
     {
