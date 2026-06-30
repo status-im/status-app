@@ -1,6 +1,8 @@
 import nimqml
 import dotherside_ext
 import std/[strformat, strutils, httpclient, os, uri], regex, stint
+import ../../app_service/common/utils as common_utils
+import ./html_utils
 import stew/byteutils
 import ./utils/qrcodegen
 import std/json
@@ -150,10 +152,10 @@ QtObject:
     result = "data:image/svg+xml;utf8," & self.generateQRCodeSVG(text, 2)
 
   proc plainText*(self: Utils, text: string): string {.slot.} =
-    result = plain_text(text)
+    result = html_utils.plain_text(text)
 
   proc escapeHtml*(self: Utils, text: string): string {.slot.} =
-    result = escape_html(text)
+    result = common_utils.escape_html(text)
 
   proc getEmojiHashAsJson*(self: Utils, publicKey: string): string {.slot.} =
     var pk = publicKey

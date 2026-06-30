@@ -1,5 +1,6 @@
 import nimqml, sets
 import dotherside_ext
+import app/global/html_utils
 import ./io_interface
 import ./preserved_properties
 import ./urls_model
@@ -91,7 +92,7 @@ QtObject:
     self.delegate.setText(text, true)
 
   proc getPlainText*(self: View): string {.slot.} =
-    return plain_text(self.preservedProperties.getText())
+    return html_utils.plain_text(self.preservedProperties.getText())
 
   proc updateLinkPreviewsFromCache*(self: View, urls: seq[string]) =
     let linkPreviews = self.delegate.linkPreviewsFromCache(urls)

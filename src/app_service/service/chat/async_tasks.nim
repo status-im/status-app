@@ -120,7 +120,7 @@ const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
 
     for imagePathOrSource in images.mitems:
       if utils.isBase64DataUrl(imagePathOrSource):
-        let imagePath = save_byte_image_to_file(imagePathOrSource)
+        let imagePath = common_utils.save_byte_image_to_file(imagePathOrSource)
         if imagePath != "":
           imagePaths.add(imagePath)
       else:

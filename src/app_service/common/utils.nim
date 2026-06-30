@@ -1,5 +1,8 @@
-import std/[json, os, sugar, strutils]
+import std/[json, os, sugar, strutils, base64]
 import tables, stint, regex, times, chronicles
+import seaqt/qimage
+import seaqt/qstandardpaths
+import seaqt/quuid
 
 import nimcrypto
 import account_constants, wallet_constants
@@ -196,3 +199,52 @@ proc getRSVFromSignature*(signature: string): (string, string, string) =
   except ValueError:
     discard
   return (r, s, v)
+
+proc escape_html*(s: string): string =
+  ## Equivalent of Qt's QString::toHtmlEscaped. Replaces & first to avoid
+  ## double-escaping, then <, > and ".
+  result = newStringOfCap(s.len)
+  for c in s:
+    case c
+    of '&': result.add("&amp;")
+    of '<': result.add("&lt;")
+    of '>': result.add("&gt;")
+    of '"': result.add("&quot;")
+    else: result.add(c)
+
+proc save_byte_image_to_file*(imagePathOrData: string): string =
+  ## Accepts either a data URI (data:image/<fmt>;base64,<data>) or a file path.
+  ## Loads into a QImage and saves to ~/Pictures (falling back to tempPath).
+  ## Returns the saved file path, or "" on failure.
+  var format = "jpg"
+  var img = QImage.create()
+  var loadOk = false
+
+  var m: RegexMatch2
+  if match(imagePathOrData, re2"^data:image/([^;]+);base64,(.*)$", m):
+    format = imagePathOrData[m.captures[0]]
+    let b64data = imagePathOrData[m.captures[1]]
+    let decoded = cast[seq[byte]](decode(b64data))
+    loadOk = img.loadFromData(decoded)
+  else:
+    loadOk = img.load(imagePathOrData)
+
+  if not loadOk:
+    warn "save_byte_image_to_file: failed to load image", path = imagePathOrData
+    return ""
+
+  var destDirPath = QStandardPaths.writableLocation(
+    cint(QStandardPathsStandardLocationEnum.PicturesLocation))
+  if not dirExists(destDirPath):
+    try:
+      createDir(destDirPath)
+    except:
+      destDirPath = getEnv("TMPDIR", "/tmp")
+
+  let uuid = QUuid.createUuid().toString(cint(QUuidStringFormatEnum.WithoutBraces))
+  let newFilePath = destDirPath & "/" & uuid & "." & format
+  if img.save(newFilePath, format.cstring):
+    return newFilePath
+
+  warn "save_byte_image_to_file: failed to save image", destPath = newFilePath
+  return ""

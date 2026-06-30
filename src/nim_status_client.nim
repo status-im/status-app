@@ -11,6 +11,11 @@ import constants as main_constants
 import statusq_bridge
 import dotherside_ext
 
+import seaqt/QtGui/gen_qguiapplication
+import seaqt/qsslconfiguration
+import seaqt/qsslcertificate
+import seaqt/QtCore/gen_qnamespace
+
 import app/global/global_singleton
 import app/global/local_app_settings
 import app/global/app_lifecycle
@@ -86,6 +91,9 @@ proc determineStatusAppIconPath(): string =
     return "/../status.png"
 
   return "/../status-dev.png"
+
+# QtWebView FFI failed to compile (header <QtWebView/QtWebView> not found in this build env).
+# Falls back to DOtherSide's dos_qtwebview_initialize which is still linked.
 
 proc prepareLogging() =
   for output in defaultChroniclesStream.outputs.fields():
@@ -203,12 +211,28 @@ proc mainProc() =
   let statusFoundation = newStatusFoundation()
   let uiScaleFilePath = joinPath(DATADIR, "ui-scale")
   # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
-  initializeWebView()
-  enableHDPI(uiScaleFilePath)
-  tryEnableThreadedRenderer()
+  initializeWebView() # falls back to dos_qtwebview_initialize (QtWebView FFI header not found)
+  # Enable HDPI PassThrough rounding policy (replaces dos_qguiapplication_enable_hdpi)
+  gen_qguiapplication.QGuiApplication.setHighDpiScaleFactorRoundingPolicy(
+    cint(HighDpiScaleFactorRoundingPolicyEnum.PassThrough))
+  # Enable threaded renderer (replaces dos_qguiapplication_try_enable_threaded_renderer)
+  putEnv("QSG_RENDER_LOOP", "threaded")
 
+  # Install self-signed certificate (replaces dos_add_self_signed_certificate)
   let imageCert = imageServerTLSCert()
-  installSelfSignedCertificate(imageCert)
+  block:
+    var defaultConfig = QSslConfiguration.defaultConfiguration()
+    var certList = defaultConfig.caCertificates()
+    # fromData with no format arg defaults to QSsl::Pem (same as the original dos_add_self_signed_certificate)
+    var newCerts = QSslCertificate.fromData(
+      imageCert.toOpenArrayByte(0, imageCert.len - 1))
+    for c in newCerts.mitems:
+      certList.add(move(c))
+    var sysCerts = QSslConfiguration.systemCaCertificates()
+    for c in sysCerts.mitems:
+      certList.add(move(c))
+    defaultConfig.setCaCertificates(certList)
+    QSslConfiguration.setDefaultConfiguration(defaultConfig)
 
   let app = newQGuiApplication()
   singletonInstance.setApplication(app)

@@ -1,5 +1,6 @@
 import nimqml, tables, json, sequtils, strutils, stint, chronicles
 import dotherside_ext
+import app/global/html_utils
 
 import ./io_interface, ./network_route_model, ./network_route_item, ./suggested_route_item, ./transaction_routes
 import app_service/service/network/service as network_service
@@ -237,7 +238,7 @@ QtObject:
     return self.delegate.splitAndFormatAddressPrefix(text, updateInStore)
 
   proc getAddressFromFormattedString(self: View, text : string): string {.slot.} =
-    var splitWords = plainText(text).split(':')
+    var splitWords = html_utils.plain_text(text).split(':')
     for i in countdown(splitWords.len-1, 0):
       if splitWords[i].startsWith("0x"):
         return splitWords[i]

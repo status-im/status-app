@@ -30,43 +30,24 @@ type
   DosMessageHandler* = proc(messageType: cint, message: cstring, category: cstring,
     file: cstring, function: cstring, line: cint) {.cdecl.}
 
-  QSettingsFormat* {.pure.} = enum
-    NativeFormat = 0
-    IniFormat
-
   # Custom QObjects (real QObjects created by DOtherSide; adopted as nimqml-seaqt
   # QObject subtypes so `newQVariant` works on them).
   SingleInstance* = ref object of QObject
   StatusEvent* = ref object of QObject
   StatusOSNotification* = ref object of QObject
 
-  # Qt classes nimqml-seaqt does not provide.
-  QSettings* = ref object of QObject
-  QTimer* = ref object of QObject
   QNetworkAccessManagerFactory* = ref object of RootObj
     vptr: pointer
 
 # --- DOtherSide C API (only what status still uses) --------------------------
 # QObject pointers are passed as raw `pointer` (a real C++ `QObject*`).
-proc dos_chararray_delete(str: cstring) {.cdecl, dynlib: dynLibName, importc.}
 
 proc dos_signal(vptr: pointer, signal: cstring, slot: cstring) {.cdecl, dynlib: dynLibName, importc.}
 
-proc dos_plain_text(htmlString: cstring): cstring {.cdecl, dynlib: dynLibName, importc.}
-proc dos_escape_html(input: cstring): cstring {.cdecl, dynlib: dynLibName, importc.}
-proc dos_save_byte_image_to_file(imagePath: cstring): cstring {.cdecl, dynlib: dynLibName, importc.}
-
-proc dos_app_is_active(engine: pointer): bool {.cdecl, dynlib: dynLibName, importc.}
-proc dos_app_make_it_active(engine: pointer) {.cdecl, dynlib: dynLibName, importc.}
-
-proc dos_add_self_signed_certificate(content: cstring) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_installMessageHandler(handler: DosMessageHandler) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qguiapplication_enable_hdpi(uiScaleFilePath: cstring) {.cdecl, dynlib: dynLibName, importc.}
 proc dos_qtwebview_initialize() {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qguiapplication_try_enable_threaded_renderer() {.cdecl, dynlib: dynLibName, importc.}
+
+proc dos_installMessageHandler(handler: DosMessageHandler) {.cdecl, dynlib: dynLibName, importc.}
 proc dos_qguiapplication_installEventFilter(filter: pointer) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qguiapplication_exit() {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qguiapplication_icon(filename: cstring) {.cdecl, dynlib: dynLibName, importc.}
 
 proc dos_qqmlnetworkaccessmanagerfactory_create(tmpPath: cstring): pointer {.cdecl, dynlib: dynLibName, importc.}
 proc dos_qqmlapplicationengine_setNetworkAccessManagerFactory(engine: pointer, factory: pointer) {.cdecl, dynlib: dynLibName, importc.}
@@ -84,75 +65,18 @@ proc dos_singleinstance_create(uniqueName: cstring, eventStr: cstring): pointer 
 proc dos_singleinstance_isfirst(vptr: pointer): bool {.cdecl, dynlib: dynLibName, importc.}
 proc dos_singleinstance_delete(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
 
-proc dos_qsettings_create(fileName: cstring, format: int): pointer {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qsettings_value(vptr: pointer, key: cstring, defaultValue: pointer): pointer {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qsettings_set_value(vptr: pointer, key: cstring, value: pointer) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qsettings_remove(vptr: pointer, key: cstring) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qsettings_delete(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qsettings_begin_group(vptr: pointer, group: cstring) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qsettings_end_group(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
-
-proc dos_qtimer_create(): pointer {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qtimer_delete(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qtimer_set_interval(vptr: pointer, interval: int) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qtimer_interval(vptr: pointer): int {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qtimer_start(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qtimer_stop(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qtimer_set_single_shot(vptr: pointer, singleShot: bool) {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qtimer_is_single_shot(vptr: pointer): bool {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qtimer_is_active(vptr: pointer): bool {.cdecl, dynlib: dynLibName, importc.}
-
 # --- High-level API (ported verbatim from the old nimqml fork) ---------------
 
 proc signal_handler*(receiver: pointer, signal: cstring, slot: cstring) =
   if not receiver.isNil:
     dos_signal(receiver, signal, slot)
 
-proc plain_text*(htmlString: string): string =
-  let s = dos_plain_text(htmlString.cstring)
-  defer: dos_chararray_delete(s)
-  result = $s
-
-proc escape_html*(input: string): string =
-  let s = dos_escape_html(input.cstring)
-  defer: dos_chararray_delete(s)
-  result = $s
-
-proc save_byte_image_to_file*(imagePath: string): string =
-  let s = dos_save_byte_image_to_file(imagePath.cstring)
-  defer: dos_chararray_delete(s)
-  result = $s
-
-proc app_isActive*(engine: QQmlApplicationEngine): bool =
-  dos_app_is_active(engine.vptr)
-
-proc app_makeItActive*(engine: QQmlApplicationEngine) =
-  dos_app_make_it_active(engine.vptr)
-
-# QGuiApplication extras
-proc installSelfSignedCertificate*(certificate: string) =
-  dos_add_self_signed_certificate(certificate.cstring)
+proc initializeWebView*() =
+  ## QtWebView FFI fallback: header <QtWebView/QtWebView> not found in build env.
+  dos_qtwebview_initialize()
 
 proc installMessageHandler*(handler: DosMessageHandler) =
   dos_installMessageHandler(handler)
-
-proc enableHDPI*(uiScaleFilePath: string) =
-  dos_qguiapplication_enable_hdpi(uiScaleFilePath.cstring)
-
-proc initializeWebView*() =
-  dos_qtwebview_initialize()
-
-proc tryEnableThreadedRenderer*() =
-  dos_qguiapplication_try_enable_threaded_renderer()
-
-
-# nimqml-seaqt wraps `quit` but not `exit`/`icon`. DOtherSide's impls act on the
-# global qApp (== the seaqt-created application), so they are safe here.
-proc exit*(self: QGuiApplication) =
-  dos_qguiapplication_exit()
-
-proc icon*(application: QGuiApplication, filename: string) =
-  dos_qguiapplication_icon(filename.cstring)
 
 # QNetworkAccessManagerFactory (custom disk-cache factory)
 proc delete*(self: QNetworkAccessManagerFactory)
@@ -220,61 +144,3 @@ proc delete*(self: SingleInstance) =
 proc secondInstance*(self: SingleInstance): bool =
   not dos_singleinstance_isfirst(self.vptr)
 
-# QSettings
-proc delete*(self: QSettings)
-
-proc newQSettings*(fileName: string,
-    format: QSettingsFormat = QSettingsFormat.NativeFormat): QSettings =
-  new(result, delete)
-  result.vptr = dos_qsettings_create(fileName.cstring, format.int)
-
-proc delete*(self: QSettings) =
-  dos_qsettings_delete(self.vptr)
-  self.vptr = nil
-
-proc value*(self: QSettings, key: string, defaultValue: QVariant = newQVariant()): QVariant =
-  newQVariantTakingPtr(dos_qsettings_value(self.vptr, key.cstring, defaultValue.vptr))
-
-proc setValue*(self: QSettings, key: string, value: QVariant) =
-  dos_qsettings_set_value(self.vptr, key.cstring, value.vptr)
-
-proc remove*(self: QSettings, key: string) =
-  dos_qsettings_remove(self.vptr, key.cstring)
-
-proc beginGroup*(self: QSettings, group: string) =
-  dos_qsettings_begin_group(self.vptr, group.cstring)
-
-proc endGroup*(self: QSettings) =
-  dos_qsettings_end_group(self.vptr)
-
-# QTimer
-proc delete*(self: QTimer)
-
-proc newQTimer*(): QTimer =
-  new(result, delete)
-  result.vptr = dos_qtimer_create()
-
-proc delete*(self: QTimer) =
-  dos_qtimer_delete(self.vptr)
-  self.vptr = nil
-
-proc setInterval*(self: QTimer, interval: int) =
-  dos_qtimer_set_interval(self.vptr, interval)
-
-proc interval*(self: QTimer): int =
-  dos_qtimer_interval(self.vptr)
-
-proc start*(self: QTimer) =
-  dos_qtimer_start(self.vptr)
-
-proc stop*(self: QTimer) =
-  dos_qtimer_stop(self.vptr)
-
-proc setSingleShot*(self: QTimer, singleShot: bool) =
-  dos_qtimer_set_single_shot(self.vptr, singleShot)
-
-proc isSingleShot*(self: QTimer): bool =
-  dos_qtimer_is_single_shot(self.vptr)
-
-proc isActive*(self: QTimer): bool =
-  dos_qtimer_is_active(self.vptr)

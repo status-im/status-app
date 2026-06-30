@@ -3,6 +3,7 @@ import dotherside_ext
 
 import ../../global/app_signals
 import ../../global/global_singleton
+import ../../global/app_window
 import ../eventemitter
 import ../../../app_service/service/settings/service as settings_service
 import details
@@ -72,7 +73,7 @@ QtObject:
     debug "OS notification clicked", identifier=identifier
 
     # Make the app the top most window.
-    app_makeItActive(singletonInstance.engine)
+    app_window.app_makeItActive(singletonInstance.engine)
 
     let details = toNotificationDetails(parseJson(identifier))
     if(details.isEmpty()):
@@ -224,7 +225,7 @@ QtObject:
     # An exemption from the diagrams, at least for now, is that we don't need to implement the "Badge Check" block here,
     # cause that's already handled in appropriate modules.
 
-    let appIsActive = app_isActive(singletonInstance.engine)
+    let appIsActive = app_window.app_isActive(singletonInstance.engine)
 
     if (details.notificationType == NotificationType.NewMessage or
         details.notificationType == NotificationType.NewMessageWithPersonalMention or

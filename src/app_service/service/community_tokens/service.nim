@@ -1,5 +1,7 @@
 import nimqml, tables, chronicles, json, stint, strutils, sugar, sequtils, std/strformat, times
 import dotherside_ext
+from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop,
+    setInterval, isActive
 
 import app/global/global_singleton
 import app/core/eventemitter
@@ -247,7 +249,7 @@ QtObject:
 
       # keep times when token holders list for contracts were updated
       tokenHoldersLastUpdateMap: Table[ContractTuple, int64]
-      # timer which fetches token holders
+      # timer which fetches token holders (seaqt QTimer, auto-destroyed via =destroy)
       tokenHoldersTimer: QTimer
       # token for which token holders are fetched
       tokenHoldersToken: CommunityTokenDto
@@ -261,9 +263,11 @@ QtObject:
   proc findContractByUniqueId*(self: Service, contractUniqueKey: string): CommunityTokenDto
   proc restartTokenHoldersTimer(self: Service, chainId: int, contractAddress: string)
   proc refreshTokenHolders(self: Service, token: CommunityTokenDto)
+  proc onTokenHoldersTimeout(self: Service)
 
   proc delete*(self: Service) =
-      delete(self.tokenHoldersTimer)
+      if not self.tokenHoldersTimer.h.isNil:
+        self.tokenHoldersTimer.stop()
       self.QObject.delete
 
   proc newService*(
@@ -291,10 +295,14 @@ QtObject:
     result.communityService = communityService
     result.currencyService = currencyService
 
-    result.tokenHoldersTimer = newQTimer()
+    result.tokenHoldersTimer = QTimer.create()
     result.tokenHoldersTimer.setSingleShot(true)
-    discard QObject.connect(result.tokenHoldersTimer, SIGNAL("timeout()"),
-      result, SLOT("onTokenHoldersTimeout()"), ConnectionType.QueuedConnection)
+    let svc = result
+    result.tokenHoldersTimer.onTimeout(proc() {.closure, raises: [].} =
+      try:
+        svc.onTokenHoldersTimeout()
+      except Exception as e:
+        error "onTokenHoldersTimeout raised", msg = e.msg)
 
   # cache functions
   proc updateCommunityTokenCache(self: Service, chainId: int, address: string, tokenToUpdate: CommunityTokenDto) =
@@ -1196,7 +1204,7 @@ QtObject:
       if nextTimerShotInSeconds < 0:
         nextTimerShotInSeconds = 0
 
-    self.tokenHoldersTimer.setInterval(int(nextTimerShotInSeconds * 1000))
+    self.tokenHoldersTimer.setInterval(cint(nextTimerShotInSeconds * 1000))
     self.tokenHoldersTimer.start()
 
   # executed when Token page with holders is opened
@@ -1215,7 +1223,7 @@ QtObject:
     self.tokenHoldersManagementStarted = false
     self.tokenHoldersTimer.stop()
 
-  proc onTokenHoldersTimeout(self: Service) {.slot.} =
+  proc onTokenHoldersTimeout(self: Service) =
     # update last fetch time
     let tokenTupleKey = (chainId: self.tokenHoldersToken.chainId, address: self.tokenHoldersToken.address)
     let nowInSeconds = now().toTime().toUnix()
