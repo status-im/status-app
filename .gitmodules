@@ -130,4 +130,4 @@
 	url = https://github.com/seaqt/nimqml-seaqt.git
 [submodule "vendor/prl-to-pc"]
 	path = vendor/prl-to-pc
-	url = https://github.com/alexjba/prl-to-pc.git
+	url = https://github.com/status-im/prl-to-pc.git
