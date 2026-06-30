@@ -29,7 +29,7 @@ class WalletAccountsLocators(BaseLocators):
         "//*[contains(@resource-id,'keycardPasswordInput')]"
     )
     KEYCARD_AUTHENTICATE_BUTTON = BaseLocators.xpath(
-        "//android.widget.Button[contains(@resource-id,'keycardPopupBaseSubmitButton')]"
+        "//*[contains(@resource-id,'keycardPopupBaseSubmitButton')]"
     )
     KEYCARD_CANCEL_BUTTON = BaseLocators.content_desc_exact("Cancel")
     REMOVE_ACCOUNT_MODAL = BaseLocators.xpath(

@@ -125,7 +125,7 @@ class ChatLocators(BaseLocators):
         a different element type than ``EditText``.
         """
         escaped = content.replace('"', '\\"')
-        return BaseLocators.xpath(f"//*[contains(@content-desc,\"{escaped}\")]")
+        return BaseLocators.xpath(f"//*[contains(@resource-id,'chatMessageViewDelegate')]//*[contains(@content-desc,\"{escaped}\")]")
 
     # Reply preview bar shown above the chat input when replying.
     # QML: StatusChatInputReplyArea (objectName "statusChatInputReplyArea")

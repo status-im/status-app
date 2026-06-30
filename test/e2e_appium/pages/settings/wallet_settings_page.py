@@ -151,14 +151,16 @@ class WalletSettingsPage(BasePage):
             return False
         
         # Account rows are StatusListItems nested in a scrollview; the first tap
-        # can drop mid-settle. Retry until we leave the list (no silent pass).
+        # can drop mid-settle. Retry until the details view actually opens.
+        from pages.wallet.account_details_page import AccountDetailsPage
+        details = AccountDetailsPage(self.driver)
         for attempt in range(3):
             time.sleep(0.4)
             try:
                 self.safe_click(locator, timeout=timeout, max_attempts=1)
             except Exception as e:
                 self.logger.debug(f"select_account tap attempt {attempt + 1}: {e}")
-            if not self.is_loaded(timeout=3):
+            if details.is_loaded(timeout=3):
                 return True
             self.logger.debug(f"Account '{name}' tap did not open details (attempt {attempt + 1})")
         self.logger.error(f"Account '{name}' selected but details view did not open")
