@@ -51,7 +51,7 @@ QtObject {
     readonly property string noBlockchainConnectionAndNoCacheText: qsTr("Token balances are fetched from Pocket Network (POKT) and Infura which are both curently unavailable")
 
     readonly property bool noMarketConnectionAndNoCache: networkConnectionModule.marketValuesNetworkConnection.completelyDown && !marketValuesCache
-    readonly property string noMarketConnectionAndNoCacheText: qsTr("Market values are fetched from CoinGecko which are both currently unavailable")
+    readonly property string noMarketConnectionAndNoCacheText: qsTr("Market values are fetched from CoinGecko which is currently unavailable")
 
     readonly property bool noBlockchainAndMarketConnectionAndNoCache: noBlockchainConnectionAndNoCache && noMarketConnectionAndNoCache
     readonly property string noBlockchainAndMarketConnectionAndNoCacheText: qsTr("Market values and token balances use CoinGecko and POKT/Infura which are all currently unavailable.")

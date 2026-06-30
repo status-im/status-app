@@ -1669,6 +1669,22 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>CoinGecko connection successful</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CoinGecko connection down. Market values are as of %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CoinGecko connection down. Market values cannot be retrieved.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retrying connection to CoinGecko...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Invite People</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1821,22 +1837,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
     <message>
         <source>Retrying connection to collectibles providers...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko connection successful</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko down. Market values are as of %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>CryptoCompare and CoinGecko down. Market values cannot be retrieved.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Retrying connection to CryptoCompare and CoinGecko...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12730,11 +12730,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Market values are fetched from CryptoCompare and CoinGecko which are both currently unavailable</source>
+        <source>Market values are fetched from CoinGecko which is currently unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Market values and token balances use CryptoCompare/CoinGecko and POKT/Infura which are all currently unavailable.</source>
+        <source>Market values and token balances use CoinGecko and POKT/Infura which are all currently unavailable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
