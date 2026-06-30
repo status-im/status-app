@@ -27,29 +27,17 @@ const dynLibName =
   else: "libDOtherSide.so.0.(9|8)"
 
 type
-  DosMessageHandler* = proc(messageType: cint, message: cstring, category: cstring,
-    file: cstring, function: cstring, line: cint) {.cdecl.}
-
   # Custom QObjects (real QObjects created by DOtherSide; adopted as nimqml-seaqt
   # QObject subtypes so `newQVariant` works on them).
   StatusEvent* = ref object of QObject
   StatusOSNotification* = ref object of QObject
-
-  QNetworkAccessManagerFactory* = ref object of RootObj
-    vptr: pointer
 
 # --- DOtherSide C API (only what status still uses) --------------------------
 # QObject pointers are passed as raw `pointer` (a real C++ `QObject*`).
 
 proc dos_signal(vptr: pointer, signal: cstring, slot: cstring) {.cdecl, dynlib: dynLibName, importc.}
 
-proc dos_qtwebview_initialize() {.cdecl, dynlib: dynLibName, importc.}
-
-proc dos_installMessageHandler(handler: DosMessageHandler) {.cdecl, dynlib: dynLibName, importc.}
 proc dos_qguiapplication_installEventFilter(filter: pointer) {.cdecl, dynlib: dynLibName, importc.}
-
-proc dos_qqmlnetworkaccessmanagerfactory_create(tmpPath: cstring): pointer {.cdecl, dynlib: dynLibName, importc.}
-proc dos_qqmlapplicationengine_setNetworkAccessManagerFactory(engine: pointer, factory: pointer) {.cdecl, dynlib: dynLibName, importc.}
 
 proc dos_osnotification_create(): pointer {.cdecl, dynlib: dynLibName, importc.}
 proc dos_osnotification_show_notification(vptr: pointer, title, message, identifier: cstring) {.cdecl, dynlib: dynLibName, importc.}
@@ -65,27 +53,6 @@ proc dos_event_set_urlSchemeEvent_instance(vptr: pointer) {.cdecl, dynlib: dynLi
 proc signal_handler*(receiver: pointer, signal: cstring, slot: cstring) =
   if not receiver.isNil:
     dos_signal(receiver, signal, slot)
-
-proc initializeWebView*() =
-  ## QtWebView FFI fallback: header <QtWebView/QtWebView> not found in build env.
-  dos_qtwebview_initialize()
-
-proc installMessageHandler*(handler: DosMessageHandler) =
-  dos_installMessageHandler(handler)
-
-# QNetworkAccessManagerFactory (custom disk-cache factory)
-proc delete*(self: QNetworkAccessManagerFactory)
-
-proc newQNetworkAccessManagerFactory*(tmpPath: string): QNetworkAccessManagerFactory =
-  new(result, delete)
-  result.vptr = dos_qqmlnetworkaccessmanagerfactory_create(tmpPath.cstring)
-
-proc delete*(self: QNetworkAccessManagerFactory) =
-  self.vptr = nil
-
-proc setNetworkAccessManagerFactory*(self: QQmlApplicationEngine,
-    factory: QNetworkAccessManagerFactory) =
-  dos_qqmlapplicationengine_setNetworkAccessManagerFactory(self.vptr, factory.vptr)
 
 # OSNotification
 proc delete*(self: StatusOSNotification)

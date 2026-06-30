@@ -33,7 +33,7 @@ endif()
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
-        Core CorePrivate Qml Gui Quick QuickControls2 WebChannel Svg REQUIRED)
+        Core CorePrivate Qml Gui Quick QuickControls2 WebChannel Svg Network REQUIRED)
 
 # --- QML test hooks flag and TestConfig generation ---
 option(STATUSQ_TESTMODE "Enable QML test hooks (TestConfig.testMode)" OFF)
@@ -372,11 +372,20 @@ target_link_libraries(StatusQ PRIVATE
         Qt::QuickControls2
         Qt::WebChannel
         Qt::Svg
+        Qt::Network
         SortFilterProxyModel
         QtModelsToolkit
         MobileUI
         SCodes
         )
+
+if(NOT (IOS OR ANDROID))
+    find_package(Qt${QT_VERSION_MAJOR} COMPONENTS WebEngineQuick QUIET)
+    if(TARGET Qt::WebEngineQuick)
+        target_link_libraries(StatusQ PRIVATE Qt::WebEngineQuick)
+        target_compile_definitions(StatusQ PRIVATE STATUSQ_HAS_QTWEBENGINE=1)
+    endif()
+endif()
 
 if(TARGET SCodes)
     set_target_properties(SCodes PROPERTIES

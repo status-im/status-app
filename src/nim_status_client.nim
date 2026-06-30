@@ -93,9 +93,6 @@ proc determineStatusAppIconPath(): string =
 
   return "/../status-dev.png"
 
-# QtWebView FFI failed to compile (header <QtWebView/QtWebView> not found in this build env).
-# Falls back to DOtherSide's dos_qtwebview_initialize which is still linked.
-
 proc prepareLogging() =
   for output in defaultChroniclesStream.outputs.fields():
     when output is FileOutput:
@@ -212,7 +209,7 @@ proc mainProc() =
   let statusFoundation = newStatusFoundation()
   let uiScaleFilePath = joinPath(DATADIR, "ui-scale")
   # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
-  initializeWebView() # falls back to dos_qtwebview_initialize (QtWebView FFI header not found)
+  statusq_initializeWebEngine()
   # Enable HDPI PassThrough rounding policy (replaces dos_qguiapplication_enable_hdpi)
   gen_qguiapplication.QGuiApplication.setHighDpiScaleFactorRoundingPolicy(
     cint(HighDpiScaleFactorRoundingPolicyEnum.PassThrough))
@@ -245,7 +242,6 @@ proc mainProc() =
   statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri)
 
   let appController = newAppController(statusFoundation)
-  let networkAccessFactory = newQNetworkAccessManagerFactory(TMPDIR & "netcache")
 
   let isProductionQVariant = newQVariant(if defined(production): true else: false)
   let isExperimentalQVariant = newQVariant(isExperimental)
@@ -257,7 +253,7 @@ proc mainProc() =
     app.icon(app.applicationDirPath & statusAppIconPath)
 
   prepareLogging()
-  installMessageHandler(logHandlerCallback)
+  statusq_installMessageHandler(logHandlerCallback)
 
   when defined(USE_QML_SERVER):
     echo "Setting remote import path: ", remoteImportPath
@@ -267,7 +263,7 @@ proc mainProc() =
     singletonInstance.engine.addImportPath("qrc:/./imports")
     singletonInstance.engine.addImportPath("qrc:/./app");
 
-  singletonInstance.engine.setNetworkAccessManagerFactory(networkAccessFactory)
+  statusq_setupNetworkAccessManagerFactory(singletonInstance.engine.vptr, (TMPDIR & "netcache").cstring)
   singletonInstance.engine.setRootContextProperty("uiScaleFilePath", newQVariant(uiScaleFilePath))
   singletonInstance.engine.setRootContextProperty("singleInstance", newQVariant(singleInstance))
   singletonInstance.engine.setRootContextProperty("isExperimental", isExperimentalQVariant)
@@ -294,7 +290,6 @@ proc mainProc() =
     isProductionQVariant.delete()
     isExperimentalQVariant.delete()
     signalsManagerQVariant.delete()
-    networkAccessFactory.delete()
     appController.delete()
     statusFoundation.delete()
     singleInstance.delete()
