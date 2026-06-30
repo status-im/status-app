@@ -1,7 +1,7 @@
 import # vendor libs
   nimqml, json_serialization
 
-import dotherside_ext
+import app/core/signal_handler
 
 import # status-desktop libs
   ./common,

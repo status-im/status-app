@@ -1,4 +1,5 @@
 #include <QtGlobal>
+#include <QObject>
 #include <QString>
 #include <QByteArray>
 #include <QQmlApplicationEngine>
@@ -97,6 +98,11 @@ Q_DECL_EXPORT void statusq_osnotification_show_badge_notification(void* obj, int
 Q_DECL_EXPORT void statusq_osnotification_delete(void* obj) {
     if (auto* q = static_cast<QObject*>(obj))
         q->deleteLater();
+}
+
+Q_DECL_EXPORT void statusq_invoke_method_queued(void* obj, const char* method, const char* arg) {
+    QMetaObject::invokeMethod(static_cast<QObject*>(obj), method, Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromUtf8(arg)));
 }
 
 } // extern "C"

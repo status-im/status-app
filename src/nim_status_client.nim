@@ -10,6 +10,7 @@ import app/core/main
 import constants as main_constants
 import statusq_bridge
 import dotherside_ext
+import app/core/signal_handler
 import app/global/single_instance
 
 import seaqt/QtGui/gen_qguiapplication

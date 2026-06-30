@@ -34,8 +34,6 @@ type
 # --- DOtherSide C API (only what status still uses) --------------------------
 # QObject pointers are passed as raw `pointer` (a real C++ `QObject*`).
 
-proc dos_signal(vptr: pointer, signal: cstring, slot: cstring) {.cdecl, dynlib: dynLibName, importc.}
-
 proc dos_qguiapplication_installEventFilter(filter: pointer) {.cdecl, dynlib: dynLibName, importc.}
 
 proc dos_event_create_urlSchemeEvent(): pointer {.cdecl, dynlib: dynLibName, importc.}
@@ -43,10 +41,6 @@ proc dos_event_delete(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
 proc dos_event_set_urlSchemeEvent_instance(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
 
 # --- High-level API (ported verbatim from the old nimqml fork) ---------------
-
-proc signal_handler*(receiver: pointer, signal: cstring, slot: cstring) =
-  if not receiver.isNil:
-    dos_signal(receiver, signal, slot)
 
 # UrlSchemeEvent (deep links)
 proc delete*(self: StatusEvent)
