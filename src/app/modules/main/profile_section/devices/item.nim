@@ -17,6 +17,18 @@ proc installation*(self: Item): InstallationDto =
 proc `installation=`*(self: Item, installation: InstallationDto) =
   self.installation = installation
 
+proc identity*(self: Item): string =
+  self.installation.identity
+
+proc `identity=`*(self: Item, value: string) =
+  self.installation.identity = value
+
+proc version*(self: Item): int =
+  self.installation.version
+
+proc `version=`*(self: Item, value: int) =
+  self.installation.version = value
+
 proc name*(self: Item): string =
   self.installation.metadata.name
 
@@ -28,6 +40,24 @@ proc enabled*(self: Item): bool =
 
 proc `enabled=`*(self: Item, value: bool) =
   self.installation.enabled = value
+
+proc timestamp*(self: Item): int64 =
+  self.installation.timestamp
+
+proc `timestamp=`*(self: Item, value: int64) =
+  self.installation.timestamp = value
+
+proc deviceType*(self: Item): string =
+  self.installation.metadata.deviceType
+
+proc `deviceType=`*(self: Item, value: string) =
+  self.installation.metadata.deviceType = value
+
+proc fcmToken*(self: Item): string =
+  self.installation.metadata.fcmToken
+
+proc `fcmToken=`*(self: Item, value: string) =
+  self.installation.metadata.fcmToken = value
 
 proc isCurrentDevice*(self: Item): bool =
   self.isCurrentDevice

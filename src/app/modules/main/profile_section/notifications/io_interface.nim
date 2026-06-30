@@ -45,5 +45,8 @@ method addChat*(self: AccessInterface, chatDto: ChatDto) {.base.} =
 method addChat*(self: AccessInterface, itemId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method editChat*(self: AccessInterface, itemId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method setName*(self: AccessInterface, itemId: string, name: string) {.base.} =
   raise newException(ValueError, "No implementation available")

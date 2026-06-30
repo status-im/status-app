@@ -111,19 +111,22 @@ QtObject:
     self.endRemoveRows()
 
   proc updateStickerPackInList*(self: StickerPackList, packId: string, installed: bool, pending: bool) =
-    let idx = self.findIndexById(packId)
-    if idx == -1:
+    let ind = self.findIndexById(packId)
+    if ind == -1:
       return
-    let index = self.createIndex(idx, 0, nil)
-    defer: index.delete
-    self.packs.apply(proc(it: var StickerPackView) =
-      if it.pack.id == packId:
-        it.installed = installed
-        if installed:
-          it.bought = true
-        it.pending = pending)
-    self.dataChanged(index, index, @[StickerPackRoles.Installed.int, StickerPackRoles.Bought.int,
-      StickerPackRoles.Pending.int])
+
+    updateRolesAndNotify:
+      if self.packs[ind].installed != installed:
+        self.packs[ind].installed = installed
+        roles.add(StickerPackRoles.Installed.int)
+
+      if installed and not self.packs[ind].bought:
+        self.packs[ind].bought = true
+        roles.add(StickerPackRoles.Bought.int)
+
+      if self.packs[ind].pending != pending:
+        self.packs[ind].pending = pending
+        roles.add(StickerPackRoles.Pending.int)
 
   # We cannot return QVariant from the proc which has arguments.
   # First findStickersById has to be called, then getFoundStickers

@@ -267,28 +267,19 @@ QtObject:
   proc setName*(self: Model, pubKey: string, displayName: string,
       ensName: string, localNickname: string) =
     updateItemRolesAndNotify self.findIndexByPubKey(pubKey):
-      let preferredDisplayNameChanged =
-        resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
-        resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
+      let previousPreferredDisplayName = resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias)
+      let currentPreferredDisplayName = resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
 
       updateRole(displayName)
       updateRole(ensName)
       updateRole(localNickname)
 
-      if preferredDisplayNameChanged:
-        roles.add(ModelRole.PreferredDisplayName.int)
-        roles.add(ModelRole.UsesDefaultName.int)
+      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.PreferredDisplayName.int): discard
+      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.UsesDefaultName.int): discard
 
   proc setIcon*(self: Model, pubKey: string, icon: string) =
-    let ind = self.findIndexByPubKey(pubKey)
-    if(ind == -1):
-      return
-
-    self.items[ind].icon = icon
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.Icon.int])
+    updateItemRolesAndNotify self.findIndexByPubKey(pubKey):
+      updateRole(icon)
 
   proc updateItem*(
       self: Model,
@@ -314,11 +305,9 @@ QtObject:
       isRemoved: bool,
     ) =
     updateItemRolesAndNotify self.findIndexByPubKey(pubKey):
-      let preferredDisplayNameChanged =
-        resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
-        resolvePreferredDisplayName(localNickname, ensName, displayName, alias)
-
-      let trustStatusChanged = trustStatus != self.items[ind].trustStatus
+      let previousPreferredDisplayName = resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias)
+      let currentPreferredDisplayName = resolvePreferredDisplayName(localNickname, ensName, displayName, alias)
+      let previousTrustStatus = self.items[ind].trustStatus
 
       updateRole(displayName)
       updateRole(ensName)
@@ -340,13 +329,10 @@ QtObject:
       updateRole(isContactRequestSent)
       updateRole(isRemoved)
 
-      if preferredDisplayNameChanged:
-        roles.add(ModelRole.PreferredDisplayName.int)
-        roles.add(ModelRole.UsesDefaultName.int)
-
-      if trustStatusChanged:
-        roles.add(ModelRole.IsUntrustworthy.int)
-        roles.add(ModelRole.IsVerified.int)
+      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.PreferredDisplayName.int): discard
+      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.UsesDefaultName.int): discard
+      addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsUntrustworthy.int): discard
+      addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsVerified.int): discard
 
   proc updateItem*(
       self: Model,
@@ -387,35 +373,18 @@ QtObject:
     )
 
   proc updateTrustStatus*(self: Model, pubKey: string, trustStatus: TrustStatus) =
-    let ind = self.findIndexByPubKey(pubKey)
-    if ind == -1:
-      return
+    updateItemRolesAndNotify self.findIndexByPubKey(pubKey):
+      let previousTrustStatus = self.items[ind].trustStatus
 
-    if self.items[ind].trustStatus == trustStatus:
-      return
+      updateRole(trustStatus)
 
-    self.items[ind].trustStatus = trustStatus
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.TrustStatus.int, ModelRole.IsUntrustworthy.int, ModelRole.IsVerified.int])
+      addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsUntrustworthy.int): discard
+      addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsVerified.int): discard
 
   proc setOnlineStatus*(self: Model, pubKey: string, onlineStatus: OnlineStatus) =
-    let ind = self.findIndexByPubKey(pubKey)
-    if ind == -1:
-      return
+    updateItemRolesAndNotify self.findIndexByPubKey(pubKey):
+      updateRole(onlineStatus)
 
-    if self.items[ind].onlineStatus == onlineStatus:
-      return
-
-    self.items[ind].onlineStatus = onlineStatus
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.OnlineStatus.int])
-
-
-# TODO: rename me to removeItemByPubkey
   proc removeItemById*(self: Model, pubKey: string) =
     let ind = self.findIndexByPubKey(pubKey)
     if(ind == -1):
@@ -423,7 +392,6 @@ QtObject:
 
     self.removeItemWithIndex(ind)
 
-# TODO: rename me to getItemsAsPubkeys
   proc getItemIds*(self: Model): seq[string] =
     return self.items.map(i => i.pubKey)
 

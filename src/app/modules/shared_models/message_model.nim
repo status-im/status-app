@@ -355,10 +355,19 @@ QtObject:
     of ModelRole.CompressedKey:
       result = newQVariant(item.compressedKey)
 
-  proc updateItemAtIndex(self: Model, index: int) =
-    let ind = self.createIndex(index, 0, nil)
-    defer: ind.delete
-    self.dataChanged(ind, ind)
+  proc updateAdjacentMessageRolesAtIndex(self: Model, row: int) =
+    if row < 0 or row >= self.items.len:
+      return
+
+    notifyRangeRolesChanged(row, row, @[
+      ModelRole.PrevMsgTimestamp.int,
+      ModelRole.PrevMsgIndex.int,
+      ModelRole.PrevMsgSenderId.int,
+      ModelRole.PrevMsgContentType.int,
+      ModelRole.PrevMsgDeleted.int,
+      ModelRole.NextMsgIndex.int,
+      ModelRole.NextMsgTimestamp.int,
+    ])
 
   proc findIndexForMessageId*(self: Model, messageId: string): int =
     result = -1
@@ -389,6 +398,17 @@ QtObject:
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
 
+    proc updateQuotedItem(ind: int, targetQuotedMessageFrom, targetQuotedMessageAuthorDisplayName,
+        targetQuotedMessageAuthorAvatar, targetQuotedMessageParsedText, targetQuotedMessageText: string,
+        targetQuotedMessageContentType: ContentType) =
+      updateRolesAndNotify:
+        updateRoleWithValue(quotedMessageFrom, targetQuotedMessageFrom)
+        updateRoleWithValue(quotedMessageAuthorDisplayName, targetQuotedMessageAuthorDisplayName)
+        updateRoleWithValue(quotedMessageAuthorAvatar, targetQuotedMessageAuthorAvatar, QuotedMessageAuthorThumbnailImage)
+        updateRoleWithValue(quotedMessageParsedText, targetQuotedMessageParsedText)
+        updateRoleWithValue(quotedMessageText, targetQuotedMessageText)
+        updateRoleWithValue(quotedMessageContentType, targetQuotedMessageContentType)
+
     # Update replied to messages if there are
     # We update replies before adding, since we do not need to update the new items, they should already be up to date
     for i in 0 ..< self.items.len:
@@ -397,32 +417,16 @@ QtObject:
         continue
       for newItem in items:
         if oldItem.responseToMessageWithId == newItem.id:
-          oldItem.quotedMessageFrom = newItem.senderId
-          oldItem.quotedMessageAuthorDisplayName = newItem.senderDisplayName
-          oldItem.quotedMessageAuthorAvatar = newItem.senderIcon
-          oldItem.quotedMessageParsedText = newItem.messageText
-          oldItem.quotedMessageText = newItem.unparsedText
-          oldItem.quotedMessageContentType = newItem.contentType
-          let index = self.createIndex(i, 0, nil)
-          defer: index.delete
-          self.dataChanged(index, index, @[
-            ModelRole.QuotedMessageFrom.int,
-            ModelRole.QuotedMessageAuthorDisplayName.int,
-            ModelRole.QuotedMessageAuthorThumbnailImage.int,
-            ModelRole.QuotedMessageText.int,
-            ModelRole.QuotedMessageParsedText.int,
-            ModelRole.QuotedMessageContentType.int,
-          ])
+          updateQuotedItem(i, newItem.senderId, newItem.senderDisplayName, newItem.senderIcon,
+            newItem.messageText, newItem.unparsedText, newItem.contentType)
 
 
     self.beginInsertRows(parentModelIndex, position, position + items.len - 1)
     self.items.insert(items, position)
     self.endInsertRows()
 
-    if position > 0:
-      self.updateItemAtIndex(position - 1)
-    if position + items.len - 1 < self.items.len:
-      self.updateItemAtIndex(position + items.len)
+    self.updateAdjacentMessageRolesAtIndex(position - 1)
+    self.updateAdjacentMessageRolesAtIndex(position + items.len)
     self.countChanged()
 
   proc filterExistingItems(self: Model, items: seq[Item]): seq[Item] =
@@ -462,19 +466,12 @@ QtObject:
 
   # Replied message was deleted
   proc updateMessagesWhenQuotedMessageDeleted(self: Model, messageId: string) =
-    for i in 0 ..< self.items.len:
-      if(self.items[i].responseToMessageWithId == messageId):
-        let ind = self.createIndex(i, 0, nil)
-        defer: ind.delete
-        var item = self.items[i]
-        item.quotedMessageText = ""
-        item.quotedMessageParsedText = ""
-        item.quotedMessageDeleted = true
-        self.dataChanged(ind, ind, @[
-          ModelRole.QuotedMessageText.int,
-          ModelRole.QuotedMessageParsedText.int,
-          ModelRole.QuotedMessageDeleted.int,
-        ])
+    for ind in 0 ..< self.items.len:
+      if(self.items[ind].responseToMessageWithId == messageId):
+        updateRolesAndNotify:
+          updateRoleWithValue(quotedMessageText, "")
+          updateRoleWithValue(quotedMessageParsedText, "")
+          updateRoleWithValue(quotedMessageDeleted, true)
 
   proc removeItem*(self: Model, messageId: string) =
     let ind = self.findIndexForMessageId(messageId)
@@ -490,36 +487,28 @@ QtObject:
 
     self.resetNewMessagesMarker()
 
-    if ind > 0 and ind < self.items.len:
-      self.updateItemAtIndex(ind - 1)
-    if ind + 1 < self.items.len:
-      self.updateItemAtIndex(ind + 1)
+    self.updateAdjacentMessageRolesAtIndex(ind - 1)
+    self.updateAdjacentMessageRolesAtIndex(ind + 1)
 
     self.countChanged()
     self.updateMessagesWhenQuotedMessageDeleted(messageId)
 
   proc messageRemoved*(self: Model, messageId: string, deletedBy: string, deletedByContactDetails: ContactDetails) =
-    let i = self.findIndexForMessageId(messageId)
-    if(i == -1):
+    let ind = self.findIndexForMessageId(messageId)
+    if(ind == -1):
       return
 
-    let ind = self.createIndex(i, 0, nil)
-    defer: ind.delete
-
-    var item = self.items[i]
-    item.messageText = ""
-    item.unparsedText = ""
-    item.deleted = true
-    item.deletedBy = deletedBy
-    item.deletedByContactDetails = deletedByContactDetails
-    self.dataChanged(ind, ind, @[
-      ModelRole.MessageText.int,
-      ModelRole.UnparsedText.int,
-      ModelRole.Deleted.int,
-      ModelRole.DeletedBy.int,
-      ModelRole.DeletedByContactDisplayName.int,
-      ModelRole.DeletedByContactIcon.int,
-    ])
+    let targetDeletedBy = deletedBy
+    let targetDeletedByContactDetails = deletedByContactDetails
+    updateRolesAndNotify:
+      updateRoleWithValue(messageText, "")
+      updateRoleWithValue(unparsedText, "")
+      updateRoleWithValue(deleted, true)
+      updateRoleWithValue(deletedBy, targetDeletedBy)
+      if self.items[ind].deletedByContactDetails != targetDeletedByContactDetails:
+        self.items[ind].deletedByContactDetails = targetDeletedByContactDetails
+        roles.add(ModelRole.DeletedByContactDisplayName.int)
+        roles.add(ModelRole.DeletedByContactIcon.int)
 
     self.updateMessagesWhenQuotedMessageDeleted(messageId)
 
@@ -538,15 +527,10 @@ QtObject:
     return self.items[ind]
 
   proc setOutgoingStatus(self: Model, messageId: string, status: string) =
-    let ind = self.findIndexForMessageId(messageId)
-    if(ind == -1):
-      return
-    if self.items[ind].outgoingStatus == PARSED_TEXT_OUTGOING_STATUS_DELIVERED:
-      return
-    self.items[ind].outgoingStatus = status
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.OutgoingStatus.int])
+    updateItemRolesAndNotify self.findIndexForMessageId(messageId):
+      if self.items[ind].outgoingStatus == PARSED_TEXT_OUTGOING_STATUS_DELIVERED:
+        return
+      updateRoleWithValue(outgoingStatus, status)
 
   proc itemSending*(self: Model, messageId: string) =
     self.setOutgoingStatus(messageId, PARSED_TEXT_OUTGOING_STATUS_SENDING)
@@ -561,13 +545,22 @@ QtObject:
     self.setOutgoingStatus(messageId, PARSED_TEXT_OUTGOING_STATUS_EXPIRED)
 
   proc itemFailedResending*(self: Model, messageId: string, error: string) =
-    let ind = self.findIndexForMessageId(messageId)
-    if(ind == -1):
-      return
-    self.items[ind].resendError = error
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.ResendError.int])
+    updateItemRolesAndNotify self.findIndexForMessageId(messageId):
+      updateRoleWithValue(resendError, error)
+
+  proc updateChatIdentifier*(self: Model, item: Item): bool =
+    var itemFound = false
+
+    proc updateExistingItem() =
+      updateItemRolesAndNotify self.findIndexForMessageId(item.id):
+        itemFound = true
+        updateRoleWithValue(senderDisplayName, item.senderDisplayName)
+        updateRoleWithValue(senderIcon, item.senderIcon)
+        updateRoleWithValue(senderIsAdded, item.senderIsAdded)
+        updateRoleWithValue(senderUsesDefaultName, item.senderUsesDefaultName, UsesDefaultName)
+
+    updateExistingItem()
+    return itemFound
 
   proc addReaction*(self: Model, messageId: string, emoji: string, didIReactWithThisEmoji: bool,
     userPublicKey: string, userDisplayName: string, reactionId: string) =
@@ -591,24 +584,13 @@ QtObject:
 
     self.items[ind].removeReaction(emoji, reactionId, didIRemoveThisReaction)
 
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.Reactions.int])
-
   proc pinUnpinMessage*(self: Model, messageId: string, pinned: bool, pinnedBy: string) =
-    let ind = self.findIndexForMessageId(messageId)
-    if ind == -1:
-      return
-
-    if self.items[ind].pinned == pinned:
-      return
-
-    self.items[ind].pinned = pinned
-    self.items[ind].pinnedBy = pinnedBy
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.Pinned.int, ModelRole.PinnedBy.int])
+    let targetPinnedBy = pinnedBy
+    updateItemRolesAndNotify self.findIndexForMessageId(messageId):
+      if self.items[ind].pinned == pinned:
+        return
+      updateRole(pinned)
+      updateRoleWithValue(pinnedBy, targetPinnedBy)
 
   proc getMessageByIdAsJson*(self: Model, messageId: string): JsonNode =
     for it in self.items:
@@ -626,55 +608,68 @@ QtObject:
 
   iterator modelContactUpdateIterator*(self: Model, contactId: string): Item =
     for i in 0 ..< self.items.len:
+      let senderMatches = self.items[i].senderId == contactId
+      let oldSenderDisplayName = self.items[i].senderDisplayName
+      let oldSenderOptionalName = self.items[i].senderOptionalName
+      let oldSenderUsesDefaultName = self.items[i].senderUsesDefaultName
+      let oldSenderIcon = self.items[i].senderIcon
+      let oldSenderIsAdded = self.items[i].senderIsAdded
+      let oldSenderTrustStatus = self.items[i].senderTrustStatus
+      let oldSenderEnsVerified = self.items[i].senderEnsVerified
+
+      let pinnedByMatches = self.items[i].pinnedBy == contactId
+      let oldPinnedBy = self.items[i].pinnedBy
+
+      let messageContainsContactMention = self.items[i].messageContainsMentions and self.items[i].mentionedUsersPks.anyIt(it == contactId)
+      let oldMessageText = self.items[i].messageText
+      let oldUnparsedText = self.items[i].unparsedText
+      let oldMessageContainsMentions = self.items[i].messageContainsMentions
+
+      let quotedAuthorMatches = self.items[i].quotedMessageAuthorDetails.dto.id == contactId
+      let oldQuotedMessageAuthorName = self.items[i].quotedMessageAuthorDetails.dto.name
+      let oldQuotedMessageAuthorDisplayName = self.items[i].quotedMessageAuthorDisplayName
+      let oldQuotedMessageAuthorAvatar = self.items[i].quotedMessageAuthorAvatar
+      let oldQuotedMessageAuthorEnsVerified = self.items[i].quotedMessageAuthorDetails.dto.ensVerified
+      let oldQuotedMessageAuthorIsContact = self.items[i].quotedMessageAuthorDetails.dto.isContact()
+
       yield self.items[i]
 
-      var roles: seq[int]
-      if(self.items[i].senderId == contactId):
-        roles = @[ModelRole.SenderDisplayName.int,
-          ModelRole.SenderOptionalName.int,
-          ModelRole.UsesDefaultName.int,
-          ModelRole.SenderIcon.int,
-          ModelRole.SenderIsAdded.int,
-          ModelRole.SenderTrustStatus.int,
-          ModelRole.SenderEnsVerified.int]
-      if(self.items[i].pinnedBy == contactId):
-        roles.add(ModelRole.PinnedBy.int)
-      if(self.items[i].messageContainsMentions):
-        roles.add(@[ModelRole.MessageText.int, ModelRole.UnparsedText.int, ModelRole.MessageContainsMentions.int])
+      var changedRoles: seq[int] = @[]
 
-      if (self.items[i].quotedMessageFrom == contactId):
-        roles.add(@[ModelRole.QuotedMessageAuthorName.int,
-          ModelRole.QuotedMessageAuthorDisplayName.int,
-          ModelRole.QuotedMessageAuthorThumbnailImage.int,
-          ModelRole.QuotedMessageAuthorEnsVerified.int,
-          ModelRole.QuotedMessageAuthorIsContact.int])
+      if senderMatches:
+        addChangedRole(changedRoles, oldSenderDisplayName, self.items[i].senderDisplayName, ModelRole.SenderDisplayName.int): discard
+        addChangedRole(changedRoles, oldSenderOptionalName, self.items[i].senderOptionalName, ModelRole.SenderOptionalName.int): discard
+        addChangedRole(changedRoles, oldSenderUsesDefaultName, self.items[i].senderUsesDefaultName, ModelRole.UsesDefaultName.int): discard
+        addChangedRole(changedRoles, oldSenderIcon, self.items[i].senderIcon, ModelRole.SenderIcon.int): discard
+        addChangedRole(changedRoles, oldSenderIsAdded, self.items[i].senderIsAdded, ModelRole.SenderIsAdded.int): discard
+        addChangedRole(changedRoles, oldSenderTrustStatus, self.items[i].senderTrustStatus, ModelRole.SenderTrustStatus.int): discard
+        addChangedRole(changedRoles, oldSenderEnsVerified, self.items[i].senderEnsVerified, ModelRole.SenderEnsVerified.int): discard
 
-      if(roles.len > 0):
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, roles)
+      if pinnedByMatches:
+        addChangedRole(changedRoles, oldPinnedBy, self.items[i].pinnedBy, ModelRole.PinnedBy.int): discard
+
+      if messageContainsContactMention:
+        addChangedRole(changedRoles, oldMessageText, self.items[i].messageText, ModelRole.MessageText.int): discard
+        addChangedRole(changedRoles, oldUnparsedText, self.items[i].unparsedText, ModelRole.UnparsedText.int): discard
+        addChangedRole(changedRoles, oldMessageContainsMentions, self.items[i].messageContainsMentions, ModelRole.MessageContainsMentions.int): discard
+
+      if quotedAuthorMatches:
+        addChangedRole(changedRoles, oldQuotedMessageAuthorName, self.items[i].quotedMessageAuthorDetails.dto.name, ModelRole.QuotedMessageAuthorName.int): discard
+        addChangedRole(changedRoles, oldQuotedMessageAuthorDisplayName, self.items[i].quotedMessageAuthorDisplayName, ModelRole.QuotedMessageAuthorDisplayName.int): discard
+        addChangedRole(changedRoles, oldQuotedMessageAuthorAvatar, self.items[i].quotedMessageAuthorAvatar, ModelRole.QuotedMessageAuthorThumbnailImage.int): discard
+        addChangedRole(changedRoles, oldQuotedMessageAuthorEnsVerified, self.items[i].quotedMessageAuthorDetails.dto.ensVerified, ModelRole.QuotedMessageAuthorEnsVerified.int): discard
+        addChangedRole(changedRoles, oldQuotedMessageAuthorIsContact, self.items[i].quotedMessageAuthorDetails.dto.isContact(), ModelRole.QuotedMessageAuthorIsContact.int): discard
+
+      if(changedRoles.len > 0):
+        notifyRangeRolesChanged(i, i, changedRoles)
 
   proc setEditModeOn*(self: Model, messageId: string)  =
-    let ind = self.findIndexForMessageId(messageId)
-    if(ind == -1):
-      return
-
-    self.items[ind].editMode = true
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.EditMode.int])
+    updateItemRolesAndNotify self.findIndexForMessageId(messageId):
+      updateRoleWithValue(editMode, true)
 
   proc setEditModeOff*(self: Model, messageId: string)  =
-    let ind = self.findIndexForMessageId(messageId)
-    if(ind == -1):
-      return
-
-    self.items[ind].editMode = false
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.EditMode.int])
+    updateItemRolesAndNotify self.findIndexForMessageId(messageId):
+      updateRoleWithValue(editMode, false)
 
   proc updateEditedMsg*(
       self: Model,
@@ -689,54 +684,37 @@ QtObject:
       mentionedUsersPks: seq[string]
       ) =
     let ind = self.findIndexForMessageId(messageId)
-    if(ind == -1):
+    if ind == -1:
       return
 
-    self.items[ind].messageText = updatedMsg
-    self.items[ind].mentioned = mentioned
-    self.items[ind].messageContainsMentions = messageContainsMentions
-    self.items[ind].isEdited = true
-    self.items[ind].links = links
-    self.items[ind].mentionedUsersPks = mentionedUsersPks
-    self.items[ind].parsedText = updatedParsedText
+    updateRolesAndNotify:
+      updateRoleWithValue(messageText, updatedMsg)
+      updateRoleWithValue(unparsedText, updatedRawMsg)
+      updateRoleWithValue(mentioned, mentioned)
+      updateRoleWithValue(messageContainsMentions, messageContainsMentions)
+      updateRoleWithValue(isEdited, true)
+      updateRoleWithValue(links, links)
+      updateRoleWithValue(mentionedUsersPks, mentionedUsersPks)
 
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[
-      ModelRole.MessageText.int,
-      ModelRole.UnparsedText.int,
-      ModelRole.Mentioned.int,
-      ModelRole.MessageContainsMentions.int,
-      ModelRole.IsEdited.int,
-      ModelRole.Links.int,
-      ModelRole.MentionedUsersPks.int
-      ])
+      if self.items[ind].parsedText != updatedParsedText:
+        self.items[ind].parsedText = updatedParsedText
 
     # Update replied to messages if there are
-    for i in 0 ..< self.items.len:
-      if(self.items[i].responseToMessageWithId == messageId):
-        self.items[i].quotedMessageParsedText = updatedMsg
-        self.items[i].quotedMessageText = updatedRawMsg
-        self.items[i].quotedMessageContentType = contentType
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, @[
-          ModelRole.QuotedMessageText.int,
-          ModelRole.QuotedMessageParsedText.int,
-          ModelRole.QuotedMessageContentType.int,
-        ])
+    let targetQuotedMessageParsedText = updatedMsg
+    let targetQuotedMessageText = updatedRawMsg
+    let targetQuotedMessageContentType = contentType
+    for ind in 0 ..< self.items.len:
+      if self.items[ind].responseToMessageWithId == messageId:
+        updateRolesAndNotify:
+          updateRoleWithValue(quotedMessageParsedText, targetQuotedMessageParsedText)
+          updateRoleWithValue(quotedMessageText, targetQuotedMessageText)
+          updateRoleWithValue(quotedMessageContentType, targetQuotedMessageContentType)
 
   proc clear*(self: Model) =
     self.beginResetModel()
     self.items = @[]
     self.endResetModel()
     self.countChanged()
-
-  proc refreshItemWithId*(self: Model, messageId: string) =
-    let ind = self.findIndexForMessageId(messageId)
-    if(ind == -1):
-      return
-    self.updateItemAtIndex(ind)
 
   proc setFirstUnseenMessageId*(self: Model, messageId: string) =
     self.firstUnseenMessageId = messageId
@@ -793,12 +771,7 @@ QtObject:
     if startIdx < 0 or endIdx < startIdx:
       return
 
-    let startIndex = self.createIndex(startIdx, 0, nil)
-    defer: startIndex.delete
-    let endIndex = self.createIndex(endIdx, 0, nil)
-    defer: endIndex.delete
-
-    self.dataChanged(startIndex, endIndex, @[ModelRole.Seen.int])
+    notifyRangeRolesChanged(startIdx, endIdx, @[ModelRole.Seen.int])
 
   proc markAllAsSeen*(self: Model) =
     var rangeStart = -1
@@ -821,14 +794,12 @@ QtObject:
   proc markMessageAsUnread*(self: Model, messageId: string) =
     self.setMessageMarker(messageId)
 
-    for i in 0 ..< self.items.len:
-      let item = self.items[i]
+    for ind in 0 ..< self.items.len:
+      let item = self.items[ind]
 
       if item.id == messageId and item.seen:
-        item.seen = false
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, @[ModelRole.Seen.int])
+        updateRolesAndNotify:
+          updateRoleWithValue(seen, false)
         break
 
 
@@ -870,8 +841,8 @@ QtObject:
         return self.items[i].id
 
   proc updateAlbumIfExists*(self: Model, albumId: string, messageImage: string, messageId: string): bool =
-    for i in 0 ..< self.items.len:
-      let item = self.items[i]
+    for ind in 0 ..< self.items.len:
+      let item = self.items[ind]
       if item.albumId == albumId:
         # Check if message already in album
         for j in 0 ..< item.albumMessageIds.len:
@@ -881,12 +852,12 @@ QtObject:
         var albumMessagesIds = item.albumMessageIds
         albumMessagesIds.add(messageId)
         albumImages.add(messageImage)
-        item.albumMessageImages = albumImages
-        item.albumMessageIds = albumMessagesIds
-
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, @[ModelRole.AlbumMessageImages.int])
+        let targetAlbumMessageImages = albumImages
+        let targetAlbumMessageIds = albumMessagesIds
+        updateRolesAndNotify:
+          updateRoleWithValue(albumMessageImages, targetAlbumMessageImages)
+          if self.items[ind].albumMessageIds != targetAlbumMessageIds:
+            self.items[ind].albumMessageIds = targetAlbumMessageIds
         return true
     return false
 

@@ -430,20 +430,12 @@ QtObject:
   proc tokensMarketValuesAboutToUpdate*(self: TokenGroupsModel) =
     let tokenGroupsListLength = self.rowCount()
     if tokenGroupsListLength > 0:
-      let index = self.createIndex(0, 0, nil)
-      let lastindex = self.createIndex(tokenGroupsListLength-1, 0, nil)
-      defer: index.delete
-      defer: lastindex.delete
-      self.dataChanged(index, lastindex, @[ModelRole.MarketDetailsLoading.int])
+      notifyRangeRolesChanged(0, tokenGroupsListLength - 1, @[ModelRole.MarketDetailsLoading.int])
 
   proc tokensDetailsUpdated*(self: TokenGroupsModel) =
     let tokenGroupsListLength = self.rowCount()
     if tokenGroupsListLength > 0:
-      let index = self.createIndex(0, 0, nil)
-      let lastindex = self.createIndex(tokenGroupsListLength-1, 0, nil)
-      defer: index.delete
-      defer: lastindex.delete
-      self.dataChanged(index, lastindex, @[ModelRole.Description.int, ModelRole.WebsiteUrl.int, ModelRole.DetailsLoading.int])
+      notifyRangeRolesChanged(0, tokenGroupsListLength - 1, @[ModelRole.Description.int, ModelRole.WebsiteUrl.int, ModelRole.DetailsLoading.int])
 
   proc currencyFormatsUpdated*(self: TokenGroupsModel) =
     if ModelMode.NoMarketDetails in self.modelModes:
@@ -455,11 +447,7 @@ QtObject:
   proc tokenPreferencesUpdated*(self: TokenGroupsModel) =
     let tokenGroupsListLength = self.rowCount()
     if tokenGroupsListLength > 0:
-      let index = self.createIndex(0, 0, nil)
-      let lastindex = self.createIndex(tokenGroupsListLength-1, 0, nil)
-      defer: index.delete
-      defer: lastindex.delete
-      self.dataChanged(index, lastindex, @[ModelRole.Visible.int, ModelRole.Position.int])
+      notifyRangeRolesChanged(0, tokenGroupsListLength - 1, @[ModelRole.Visible.int, ModelRole.Position.int])
 
   proc marketDetailsItemForKey*(self: TokenGroupsModel, groupKey: string): MarketDetailsItem =
     ## Test/inspection accessor: the MarketDetailsItem instance held for a group

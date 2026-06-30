@@ -301,15 +301,50 @@ QtObject:
   proc itemsDataUpdated*(self: Model) {.signal.}
   proc updateItemsData*(self: Model, updates: seq[backend_collectibles.Collectible]) =
     var anyUpdated = false
+
+    proc updateEntry(ind: int, update: backend_collectibles.Collectible): bool =
+      let entry = self.items[ind]
+      let name = entry.getName()
+      let imageUrl = entry.getImageURL()
+      let mediaUrl = entry.getMediaURL()
+      let mediaType = entry.getMediaType()
+      let backgroundColor = entry.getBackgroundColor()
+      let collectionName = entry.getCollectionName()
+      let collectionSlug = entry.getCollectionSlug()
+      let collectionImageUrl = entry.getCollectionImageURL()
+      let communityId = entry.getCommunityId()
+      let communityPrivilegesLevel = entry.getCommunityPrivilegesLevel()
+      let tokenType = entry.getTokenType()
+      let soulbound = entry.getSoulbound()
+
+      if not entry.updateDataIfSameID(update):
+        return false
+
+      var changedRoles: seq[int] = @[]
+      addChangedRole(changedRoles, name, entry.getName(), CollectibleRole.Name.int): discard
+      addChangedRole(changedRoles, imageUrl, entry.getImageURL(), CollectibleRole.ImageUrl.int): discard
+      addChangedRole(changedRoles, mediaUrl, entry.getMediaURL(), CollectibleRole.MediaUrl.int): discard
+      addChangedRole(changedRoles, mediaType, entry.getMediaType(), CollectibleRole.MediaType.int): discard
+      addChangedRole(changedRoles, backgroundColor, entry.getBackgroundColor(), CollectibleRole.BackgroundColor.int): discard
+      addChangedRole(changedRoles, collectionName, entry.getCollectionName(), CollectibleRole.CollectionName.int): discard
+      addChangedRole(changedRoles, collectionSlug, entry.getCollectionSlug(), CollectibleRole.CollectionSlug.int): discard
+      addChangedRole(changedRoles, collectionImageUrl, entry.getCollectionImageURL(), CollectibleRole.CollectionImageUrl.int): discard
+      addChangedRole(changedRoles, communityId, entry.getCommunityId(), CollectibleRole.CommunityId.int): discard
+      addChangedRole(changedRoles, communityPrivilegesLevel, entry.getCommunityPrivilegesLevel(), CollectibleRole.CommunityPrivilegesLevel.int): discard
+      addChangedRole(changedRoles, tokenType, entry.getTokenType(), CollectibleRole.TokenType.int): discard
+      addChangedRole(changedRoles, soulbound, entry.getSoulbound(), CollectibleRole.Soulbound.int): discard
+
+      if changedRoles.len > 0:
+        notifyRangeRolesChanged(ind, ind, changedRoles)
+        return true
+      return false
+
     for i in countdown(self.items.high, 0):
-      let entry = self.items[i]
       for j in countdown(updates.high, 0):
         let update = updates[j]
-        if entry.updateDataIfSameID(update):
-          let index = self.createIndex(i, 0, nil)
-          defer: index.delete
-          self.dataChanged(index, index)
-          anyUpdated = true
+        if self.items[i].getID() == update.id:
+          if updateEntry(i, update):
+            anyUpdated = true
           break
     if anyUpdated:
       self.itemsDataUpdated()

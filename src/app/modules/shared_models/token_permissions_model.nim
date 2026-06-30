@@ -135,27 +135,16 @@ QtObject:
   proc tokenCriteriaUpdated(self: TokenPermissionsModel) {.signal.}
 
   proc updateItem*(self: TokenPermissionsModel, permissionId: string, item: TokenPermissionItem) =
-    let idx = self.findIndexById(permissionId)
-    if(idx == -1):
-      return
+    updateItemRolesAndNotify self.findIndexById(permissionId):
+      updateRoleWithValue(`type`, item.`type`)
+      self.items[ind].tokenCriteria.setItems(item.tokenCriteria.getItems())
+      roles.add(ModelRole.TokenCriteria.int)
+      self.items[ind].chatList.setItems(item.chatList.getItems())
+      roles.add(ModelRole.ChatList.int)
+      updateRoleWithValue(isPrivate, item.isPrivate)
+      updateRoleWithValue(tokenCriteriaMet, item.tokenCriteriaMet)
+      updateRoleWithValue(state, item.state)
 
-    self.items[idx].`type` = item.`type`
-    self.items[idx].tokenCriteria.setItems(item.tokenCriteria.getItems())
-    self.items[idx].chatList.setItems(item.chatList.getItems())
-    self.items[idx].isPrivate = item.isPrivate
-    self.items[idx].tokenCriteriaMet = item.tokenCriteriaMet
-    self.items[idx].state = item.state
-
-    let index = self.createIndex(idx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[
-      ModelRole.Type.int,
-      ModelRole.TokenCriteria.int,
-      ModelRole.ChatList.int,
-      ModelRole.IsPrivate.int,
-      ModelRole.TokenCriteriaMet.int,
-      ModelRole.State.int
-    ])
     self.tokenCriteriaUpdated()
 
   proc setup(self: TokenPermissionsModel) =

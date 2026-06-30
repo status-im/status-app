@@ -90,6 +90,14 @@ proc init*(self: Controller) =
     var args = ChatRenameArgs(e)
     self.delegate.setName(args.id, args.newName)
 
+  self.events.on(SIGNAL_GROUP_CHAT_DETAILS_UPDATED) do(e: Args):
+    var args = ChatUpdateDetailsArgs(e)
+    self.delegate.editChat(args.id)
+
+  self.events.on(SIGNAL_CONTACT_UPDATED) do(e: Args):
+    let args = ContactArgs(e)
+    self.delegate.editChat(args.contactId)
+
   self.events.on(SIGNAL_CHAT_SWITCH_TO_OR_CREATE_1_1_CHAT) do(e:Args):
     let args = ChatExtArgs(e)
     self.delegate.addChat(args.chatId)

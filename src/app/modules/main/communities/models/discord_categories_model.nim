@@ -90,27 +90,17 @@ QtObject:
     self.countChanged()
 
   proc unselectItem*(self: DiscordCategoriesModel, id: string) =
-    let idx = self.findIndexById(id)
-    if idx > -1:
-      let index = self.createIndex(idx, 0, nil)
-      defer: index.delete
-      self.items[idx].selected = false
-      self.dataChanged(index, index, @[ModelRole.Selected.int])
+    updateItemRolesAndNotify self.findIndexById(id):
+      updateRoleWithValue(selected, false)
 
   proc selectItem*(self: DiscordCategoriesModel, id: string) =
-    let idx = self.findIndexById(id)
-    if idx > -1:
-      let index = self.createIndex(idx, 0, nil)
-      defer: index.delete
-      self.items[idx].selected = true
-      self.dataChanged(index, index, @[ModelRole.Selected.int])
+    updateItemRolesAndNotify self.findIndexById(id):
+      updateRoleWithValue(selected, true)
 
   proc selectOneItem*(self: DiscordCategoriesModel, id: string) =
-    for i in 0 ..< self.items.len:
-      let index = self.createIndex(i, 0, nil)
-      defer: index.delete
-      self.items[i].selected = self.items[i].getId() == id
-      self.dataChanged(index, index, @[ModelRole.Selected.int])
+    for ind in 0 ..< self.items.len:
+      updateRolesAndNotify:
+        updateRoleWithValue(selected, self.items[ind].getId() == id)
 
   proc setup(self: DiscordCategoriesModel) =
     self.QAbstractListModel.setup

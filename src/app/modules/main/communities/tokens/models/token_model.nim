@@ -55,68 +55,35 @@ QtObject:
     return -1
 
   proc updateDeployState*(self: TokenModel, chainId: int, contractAddress: string, deployState: DeployState) =
-    let itemIdx = self.getItemIndex(chainId, contractAddress)
-    if itemIdx == -1 or self.items[itemIdx].tokenDto.deployState == deployState:
-      return
-
-    self.items[itemIdx].tokenDto.deployState = deployState
-    let index = self.createIndex(itemIdx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.DeployState.int])
+    updateItemRolesAndNotify self.getItemIndex(chainId, contractAddress):
+      updateRole(deployState)
 
   proc updateAddress*(self: TokenModel, chainId: int, oldContractAddress: string, newContractAddress: string) =
-    let itemIdx = self.getItemIndex(chainId, oldContractAddress)
-    if itemIdx == -1 or self.items[itemIdx].tokenDto.address == newContractAddress:
-      return
-
-    self.items[itemIdx].tokenDto.address = newContractAddress
-    let index = self.createIndex(itemIdx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.TokenAddress.int])
+    updateItemRolesAndNotify self.getItemIndex(chainId, oldContractAddress):
+      updateRoleWithValue(tokenAddress, newContractAddress)
 
   proc updateBurnState*(self: TokenModel, chainId: int, contractAddress: string, burnState: ContractTransactionStatus) =
-    let itemIdx = self.getItemIndex(chainId, contractAddress)
-    if itemIdx == -1 or self.items[itemIdx].burnState == burnState:
-      return
-  
-    self.items[itemIdx].burnState = burnState
-    let index = self.createIndex(itemIdx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.BurnState.int])
+    updateItemRolesAndNotify self.getItemIndex(chainId, contractAddress):
+      updateRole(burnState)
 
   proc updateRemoteDestructedAddresses*(self: TokenModel, chainId: int, contractAddress: string, remoteDestructedAddresses: seq[string]) =
-    let itemIdx = self.getItemIndex(chainId, contractAddress)
-    if itemIdx == -1 or self.items[itemIdx].remoteDestructedAddresses == remoteDestructedAddresses:
-      return
-
-    self.items[itemIdx].remoteDestructedAddresses = remoteDestructedAddresses
-    let index = self.createIndex(itemIdx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.RemotelyDestructState.int])
-    self.items[itemIdx].tokenOwnersModel.updateRemoteDestructState(remoteDestructedAddresses)
-    self.dataChanged(index, index, @[ModelRole.TokenOwnersModel.int])
+    updateItemRolesAndNotify self.getItemIndex(chainId, contractAddress):
+      addChangedRole(roles, self.items[ind].remoteDestructedAddresses, remoteDestructedAddresses, ModelRole.RemotelyDestructState.int):
+        self.items[ind].remoteDestructedAddresses = remoteDestructedAddresses
+        self.items[ind].tokenOwnersModel.updateRemoteDestructState(remoteDestructedAddresses)
+        roles.add(ModelRole.TokenOwnersModel.int)
 
   proc updateSupply*(self: TokenModel, chainId: int, contractAddress: string, supply: Uint256, destructedAmount: Uint256) =
-    let itemIdx = self.getItemIndex(chainId, contractAddress)
-    if itemIdx == -1:
-      return
-
-    if self.items[itemIdx].tokenDto.supply != supply or self.items[itemIdx].destructedAmount != destructedAmount:
-      self.items[itemIdx].tokenDto.supply = supply
-      self.items[itemIdx].destructedAmount = destructedAmount
-      let index = self.createIndex(itemIdx, 0, nil)
-      defer: index.delete
-      self.dataChanged(index, index, @[ModelRole.Supply.int])
+    updateItemRolesAndNotify self.getItemIndex(chainId, contractAddress):
+      let previousSupply = self.items[ind].tokenDto.supply - self.items[ind].destructedAmount
+      let currentSupply = supply - destructedAmount
+      self.items[ind].tokenDto.supply = supply
+      self.items[ind].destructedAmount = destructedAmount
+      addChangedRole(roles, previousSupply, currentSupply, ModelRole.Supply.int): discard
 
   proc updateRemainingSupply*(self: TokenModel, chainId: int, contractAddress: string, remainingSupply: Uint256) =
-    let itemIdx = self.getItemIndex(chainId, contractAddress)
-    if itemIdx == -1 or self.items[itemIdx].remainingSupply == remainingSupply:
-      return
-
-    self.items[itemIdx].remainingSupply = remainingSupply
-    let index = self.createIndex(itemIdx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.RemainingSupply.int])
+    updateItemRolesAndNotify self.getItemIndex(chainId, contractAddress):
+      updateRole(remainingSupply)
 
   proc hasTokenHolders*(self: TokenModel, chainId: int, contractAddress: string): bool =
     let itemIdx = self.getItemIndex(chainId, contractAddress)
@@ -125,36 +92,26 @@ QtObject:
     return self.items[itemIdx].tokenOwnersModel.count > 0
 
   proc setCommunityTokenOwners*(self: TokenModel, chainId: int, contractAddress: string, owners: seq[CommunityCollectibleOwner], isOwner: bool) =
-    let itemIdx = self.getItemIndex(chainId, contractAddress)
-    if itemIdx == -1:
-      return
-
-    self.items[itemIdx].tokenHoldersLoading = false
-    let isMyOwnerToken = isOwner and self.items[itemIdx].tokenDto.privilegesLevel == PrivilegesLevel.Owner
-    self.items[itemIdx].tokenOwnersModel.setItems(owners.map(proc(owner: CommunityCollectibleOwner): TokenOwnersItem =
-      var contactId = owner.contactId
-      var name = owner.name
-      if isMyOwnerToken:
-        # This is the Owner token and we are the Owner. We can hardcode the pubkey
-        # The DB doesn't store our own address in the RevealedAddresses list so we patch it here
-        contactId = singletonInstance.userProfile.getPubKey()
-        name = singletonInstance.userProfile.getName()
-      # TODO: provide number of messages here
-      result = initTokenOwnersItem(contactId, name, owner.imageSource, 0, owner.collectibleOwner, self.items[itemIdx].remoteDestructedAddresses)
-    ))
-    let index = self.createIndex(itemIdx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.TokenOwnersModel.int, ModelRole.TokenHoldersLoading.int])
+    updateItemRolesAndNotify self.getItemIndex(chainId, contractAddress):
+      let isMyOwnerToken = isOwner and self.items[ind].tokenDto.privilegesLevel == PrivilegesLevel.Owner
+      let tokenOwners = owners.map(proc(owner: CommunityCollectibleOwner): TokenOwnersItem =
+        var contactId = owner.contactId
+        var name = owner.name
+        if isMyOwnerToken:
+          # This is the Owner token and we are the Owner. We can hardcode the pubkey
+          # The DB doesn't store our own address in the RevealedAddresses list so we patch it here
+          contactId = singletonInstance.userProfile.getPubKey()
+          name = singletonInstance.userProfile.getName()
+        # TODO: provide number of messages here
+        result = initTokenOwnersItem(contactId, name, owner.imageSource, 0, owner.collectibleOwner, self.items[ind].remoteDestructedAddresses)
+      )
+      self.items[ind].tokenOwnersModel.setItems(tokenOwners)
+      roles.add(ModelRole.TokenOwnersModel.int)
+      updateRoleWithValue(tokenHoldersLoading, false)
 
   proc setCommunityTokenHoldersLoading*(self: TokenModel, chainId: int, contractAddress: string, value: bool) =
-    let itemIdx = self.getItemIndex(chainId, contractAddress)
-    if itemIdx == -1 or self.items[itemIdx].tokenHoldersLoading == value:
-      return
-
-    self.items[itemIdx].tokenHoldersLoading = value
-    let index = self.createIndex(itemIdx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.TokenHoldersLoading.int])
+    updateItemRolesAndNotify self.getItemIndex(chainId, contractAddress):
+      updateRoleWithValue(tokenHoldersLoading, value)
 
   proc countChanged(self: TokenModel) {.signal.}
 

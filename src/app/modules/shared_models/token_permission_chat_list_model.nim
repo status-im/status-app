@@ -45,6 +45,12 @@ QtObject:
       of ModelRole.ChannelName:
         result = newQVariant(item.getChannelName())
 
+  proc findIndexByKey(self: TokenPermissionChatListModel, key: string): int =
+    for i in 0 ..< self.items.len:
+      if self.items[i].getKey() == key:
+        return i
+    return -1
+
   proc addItem*(self: TokenPermissionChatListModel, item: TokenPermissionChatListItem) =
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
@@ -63,13 +69,8 @@ QtObject:
     return self.items
 
   proc renameChatById*(self: TokenPermissionChatListModel, chatId: string, newName: string) =
-    for i in 0 ..< self.items.len:
-      if self.items[i].getKey() == chatId:
-        self.items[i] = initTokenPermissionChatListItem(chatId, newName)
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, @[ModelRole.ChannelName.int])
-        return
+    updateItemRolesAndNotify self.findIndexByKey(chatId):
+      updateRoleWithValue(channelName, newName)
 
   proc setup(self: TokenPermissionChatListModel) =
     self.QAbstractListModel.setup

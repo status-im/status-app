@@ -81,6 +81,19 @@ QtObject:
       return ""
     return self.items[ind].getReactionId(userPublicKey)
 
+  proc notifyChangedReactionRoles(self: MessageReactionModel, ind: int, previousDidIReactWithThisEmoji: bool,
+    previousNumberOfReactions: int, previousJsonArrayOfUsersReactedWithThisEmoji: string) =
+    var changedRoles: seq[int] = @[]
+    addChangedRole(changedRoles, previousDidIReactWithThisEmoji, self.items[ind].didIReactWithThisEmoji,
+      ModelRole.DidIReactWithThisEmoji.int): discard
+    addChangedRole(changedRoles, previousNumberOfReactions, self.items[ind].numberOfReactions,
+      ModelRole.NumberOfReactions.int): discard
+    addChangedRole(changedRoles, previousJsonArrayOfUsersReactedWithThisEmoji, $self.items[ind].jsonArrayOfUsersReactedWithThisEmoji,
+      ModelRole.JsonArrayOfUsersReactedWithThisEmoji.int): discard
+
+    if changedRoles.len > 0:
+      notifyRangeRolesChanged(ind, ind, changedRoles)
+
   # This function is used when we optimistically have added a reaction and we received the real reactionID asyncly
   # Returns false if it was not updated. Then we can add the reaction with the normal path
   proc updateReactionId*(self: MessageReactionModel, emoji: string, userPublicKey: string, reactionId: string): bool =
@@ -97,10 +110,11 @@ QtObject:
       let ind = self.getIndexOfTheItemWithEmoji(emoji)
       if ind == -1:
         return
+      let previousDidIReactWithThisEmoji = self.items[ind].didIReactWithThisEmoji
+      let previousNumberOfReactions = self.items[ind].numberOfReactions
+      let previousJsonArrayOfUsersReactedWithThisEmoji = $self.items[ind].jsonArrayOfUsersReactedWithThisEmoji
       self.items[ind].addReaction(didIReactWithThisEmoji, userPublicKey, userDisplayName, reactionId)
-      let index = self.createIndex(ind, 0, nil)
-      defer: index.delete
-      self.dataChanged(index, index)
+      self.notifyChangedReactionRoles(ind, previousDidIReactWithThisEmoji, previousNumberOfReactions, previousJsonArrayOfUsersReactedWithThisEmoji)
     else:
       let parentModelIndex = newQModelIndex()
       defer: parentModelIndex.delete
@@ -116,6 +130,9 @@ QtObject:
     let ind = self.getIndexOfTheItemWithEmoji(emoji)
     if(ind == -1):
       return
+    let previousDidIReactWithThisEmoji = self.items[ind].didIReactWithThisEmoji
+    let previousNumberOfReactions = self.items[ind].numberOfReactions
+    let previousJsonArrayOfUsersReactedWithThisEmoji = $self.items[ind].jsonArrayOfUsersReactedWithThisEmoji
     self.items[ind].removeReaction(reactionId, didIRemoveThisReaction)
 
     if(self.items[ind].numberOfReactions() == 0):
@@ -127,9 +144,7 @@ QtObject:
       self.items.delete(ind)
       self.endRemoveRows()
     else:
-      let index = self.createIndex(ind, 0, nil)
-      defer: index.delete
-      self.dataChanged(index, index)
+      self.notifyChangedReactionRoles(ind, previousDidIReactWithThisEmoji, previousNumberOfReactions, previousJsonArrayOfUsersReactedWithThisEmoji)
 
   proc delete(self: MessageReactionModel) =
     self.QAbstractListModel.delete

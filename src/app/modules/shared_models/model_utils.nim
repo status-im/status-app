@@ -49,6 +49,14 @@ macro updateRoleWithValue*(propertyName: untyped, value: untyped): untyped =
       self.items[ind].`propertyName` = `value`
       roles.add(ModelRole.`roleName`.int)
 
+# Same as updateRoleWithValue, but for properties whose model role has a different name.
+# Eg: updateRoleWithValue(messageItem, item.messageItem, Message)
+macro updateRoleWithValue*(propertyName: untyped, value: untyped, roleName: untyped): untyped =
+  quote do:
+    if self.items[ind].`propertyName` != `value`:
+      self.items[ind].`propertyName` = `value`
+      roles.add(ModelRole.`roleName`.int)
+
 # Expands a list of item fields into updateRoleWithValue(field, item.field).
 # Example usage: updateRolesFromItem(item, name, memberRole, icon)
 macro updateRolesFromItem*(item: untyped, propertyNames: varargs[untyped]): untyped =
@@ -66,6 +74,17 @@ macro updateRolePreserveOnEmpty*(propertyName: untyped, roleName: untyped): unty
       self.items[ind].`propertyName` = `propertyName`
       roles.add(ModelRole.`roleName`.int)
 
+# Add a role to an existing roles list only when a computed value changed.
+# Useful when the model does not own the field being changed, or when the
+# setter lives outside of updateRole/updateRoleWithValue.
+# Example usage:
+#   addChangedRole(changedRoles, oldName, item.name(), ModelRole.Name.int):
+#     item.nameChanged()
+template addChangedRole*(roles: untyped, previousValue: untyped, currentValue: untyped, role: untyped, body: untyped) {.dirty.} =
+  if previousValue != currentValue:
+    roles.add(role)
+    body
+
 # Wrap one or more updateRole calls and notify the row at `ind` if any roles changed.
 # Example usage:
 #   updateRolesAndNotify:
@@ -76,12 +95,26 @@ template updateRolesAndNotify*(body: untyped) {.dirty.} =
 
   body
 
-  if roles.len == 0:
-    return
+  if roles.len > 0:
+    let modelIndex = self.createIndex(ind, 0, nil)
+    defer: modelIndex.delete
+    self.dataChanged(modelIndex, modelIndex, roles)
 
-  let modelIndex = self.createIndex(ind, 0, nil)
-  defer: modelIndex.delete
-  self.dataChanged(modelIndex, modelIndex, roles)
+# Same as updateRolesAndNotify, but also writes whether any roles changed.
+# Example usage:
+#   var rolesChanged = false
+#   updateRolesAndNotify rolesChanged:
+#     updateRole(name)
+template updateRolesAndNotify*(rolesChanged: untyped, body: untyped) {.dirty.} =
+  var roles: seq[int] = @[]
+
+  body
+
+  rolesChanged = roles.len > 0
+  if rolesChanged:
+    let modelIndex = self.createIndex(ind, 0, nil)
+    defer: modelIndex.delete
+    self.dataChanged(modelIndex, modelIndex, roles)
 
 # Like updateRolesAndNotify, but first resolves `ind` from a model-specific lookup expression.
 # Example usage:
@@ -94,3 +127,15 @@ template updateItemRolesAndNotify*(findIndex: untyped, body: untyped) {.dirty.} 
 
   updateRolesAndNotify:
     body
+
+# Notify a contiguous model row range when roles are computed outside of item
+# storage and cannot use updateRole/updateRoleWithValue.
+# Example usage:
+#   notifyRangeRolesChanged(0, self.rowCount() - 1, @[ModelRole.Visible.int])
+template notifyRangeRolesChanged*(firstRow: int, lastRow: int, changedRoles: untyped) {.dirty.} =
+  let firstIndex = self.createIndex(firstRow, 0, nil)
+  let lastIndex = self.createIndex(lastRow, 0, nil)
+  defer:
+    firstIndex.delete
+    lastIndex.delete
+  self.dataChanged(firstIndex, lastIndex, changedRoles)

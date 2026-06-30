@@ -140,19 +140,19 @@ QtObject:
     self.countChanged()
 
   proc addItem*(self: CuratedCommunityModel, item: CuratedCommunityItem) =
-    let idx = self.findIndexById(item.getId())
-    if idx > -1:
-      let index = self.createIndex(idx, 0, nil)
-      defer: index.delete
-      self.items[idx] = item
-      self.dataChanged(index, index)
-    else:
-      let parentModelIndex = newQModelIndex()
-      defer: parentModelIndex.delete
-      self.beginInsertRows(parentModelIndex, self.items.len, self.items.len)
-      self.items.add(item)
-      self.endInsertRows()
-      self.countChanged()
+    let ind = self.findIndexById(item.getId())
+    if ind != -1:
+      updateRolesAndNotify:
+        updateRolesFromItem(item, id, available, name, description, icon, banner, featured, members, activeMembers, color, tags, amIBanned, joined, encrypted)
+        updateRoleWithValue(permissionModel, item.permissionModel, Permissions)
+      return
+
+    let parentModelIndex = newQModelIndex()
+    defer: parentModelIndex.delete
+    self.beginInsertRows(parentModelIndex, self.items.len, self.items.len)
+    self.items.add(item)
+    self.endInsertRows()
+    self.countChanged()
 
   proc setPermissionItems*(self: CuratedCommunityModel, itemId: string, items: seq[TokenPermissionItem]) =
     let idx = self.findIndexById(itemId)

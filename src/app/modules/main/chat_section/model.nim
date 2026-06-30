@@ -1,9 +1,8 @@
-import app/modules/shared_models/model_utils
 import nimqml, tables, std/strformat, json, sequtils, system
 import ../../../../app_service/common/types
 import ../../../../app_service/service/chat/dto/chat
 import item
-import ../../shared_models/model_utils
+import app/modules/shared_models/model_utils
 
 type
   ModelRole {.pure.} = enum
@@ -271,14 +270,10 @@ QtObject:
     self.countChanged()
 
   proc changeCategoryOpened*(self: Model, categoryId: string, opened: bool) {.slot.} =
-    for i in 0 ..< self.items.len:
-      if self.items[i].categoryId == categoryId:
-        if self.items[i].categoryOpened == opened:
-          return
-        self.items[i].categoryOpened = opened
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, @[ModelRole.CategoryOpened.int])
+    for ind in 0 ..< self.items.len:
+      if self.items[ind].categoryId == categoryId:
+        updateRolesAndNotify:
+          updateRoleWithValue(categoryOpened, opened)
 
   # This function only refreshes ShouldBeHiddenBecausePermissionsAreNotMet.
   # Then itemShouldBeHiddenBecauseNotPermitted() is used in data() to determined whether category is hidden or not.
@@ -290,9 +285,7 @@ QtObject:
       return
     if not self.items[index].isCategory:
       return
-    let modelIndex = self.createIndex(index, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, @[ModelRole.ShouldBeHiddenBecausePermissionsAreNotMet.int])
+    notifyRangeRolesChanged(index, index, @[ModelRole.ShouldBeHiddenBecausePermissionsAreNotMet.int])
 
   proc removeItemByIndex(self: Model, idx: int) =
     if idx == -1:
@@ -330,29 +323,17 @@ QtObject:
         return it
 
   proc setCategoryHasUnreadMessages*(self: Model, categoryId: string, unread: bool) =
-    let index = self.getItemIdxById(categoryId)
-    if index == -1:
-      return
-    if self.items[index].hasUnreadMessages == unread:
-      return
-    self.items[index].hasUnreadMessages = unread
-    let modelIndex = self.createIndex(index, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, @[ModelRole.HasUnreadMessages.int])
+    updateItemRolesAndNotify self.getItemIdxById(categoryId):
+      updateRoleWithValue(hasUnreadMessages, unread)
 
   proc setActiveItem*(self: Model, id: string) =
-    for i in 0 ..< self.items.len:
-      let isChannelToSetActive = (self.items[i].id == id)
-      if self.items[i].active != isChannelToSetActive:
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        # Set active channel to true and others to false
-        self.items[i].active = isChannelToSetActive
-        if (isChannelToSetActive):
-          self.items[i].loaderActive = true
-          self.dataChanged(index, index, @[ModelRole.Active.int, ModelRole.LoaderActive.int])
-        else:
-          self.dataChanged(index, index, @[ModelRole.Active.int])
+    for ind in 0 ..< self.items.len:
+      let isChannelToSetActive = (self.items[ind].id == id)
+      if self.items[ind].active != isChannelToSetActive:
+        updateRolesAndNotify:
+          updateRoleWithValue(active, isChannelToSetActive)
+          if isChannelToSetActive:
+            updateRoleWithValue(loaderActive, true)
 
   proc activeItem*(self: Model): ChatItem =
     for i in 0 ..< self.items.len:
@@ -360,30 +341,12 @@ QtObject:
         return self.items[i]
 
   proc setItemLocked*(self: Model, id: string, locked: bool) =
-    let index = self.getItemIdxById(id)
-    if index == -1:
-      return
-
-    if (self.items[index].locked == locked):
-      return
-
-    self.items[index].locked = locked
-    let modelIndex = self.createIndex(index, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, @[ModelRole.Locked.int])
+    updateItemRolesAndNotify self.getItemIdxById(id):
+      updateRole(locked)
 
   proc setItemPermissionsRequired*(self: Model, id: string, value: bool) =
-    let index = self.getItemIdxById(id)
-    if index == -1:
-      return
-
-    if (self.items[index].requiresPermissions == value):
-      return
-
-    self.items[index].requiresPermissions = value
-    let modelIndex = self.createIndex(index, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, @[ModelRole.RequiresPermissions.int])
+    updateItemRolesAndNotify self.getItemIdxById(id):
+      updateRoleWithValue(requiresPermissions, value)
 
   proc getItemPermissionsRequired*(self: Model, id: string): bool =
     let index = self.getItemIdxById(id)
@@ -393,15 +356,8 @@ QtObject:
     return self.items[index].requiresPermissions
 
   proc changeMutedOnItemById*(self: Model, id: string, muted: bool) =
-    let index = self.getItemIdxById(id)
-    if index == -1:
-      return
-    if(self.items[index].muted == muted):
-      return
-    self.items[index].muted = muted
-    let modelIndex = self.createIndex(index, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, @[ModelRole.Muted.int])
+    updateItemRolesAndNotify self.getItemIdxById(id):
+      updateRole(muted)
 
   proc changeCanPostValues*(self: Model, id: string, canPost, canView, canPostReactions, viewersCanPostReactions: bool): seq[int] =
     updateItemRolesAndNotify self.getItemIdxById(id):
@@ -415,12 +371,10 @@ QtObject:
         result = roles # return roles so that we can use it in tests
 
   proc changeMutedOnItemByCategoryId*(self: Model, categoryId: string, muted: bool) =
-    for i in 0 ..< self.items.len:
-      if self.items[i].categoryId == categoryId and self.items[i].muted != muted:
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.items[i].muted = muted
-        self.dataChanged(index, index, @[ModelRole.Muted.int])
+    for ind in 0 ..< self.items.len:
+      if self.items[ind].categoryId == categoryId and self.items[ind].muted != muted:
+        updateRolesAndNotify:
+          updateRole(muted)
 
   proc allChannelsAreHiddenBecauseNotPermitted*(self: Model): bool =
     for i in 0 ..< self.items.len:
@@ -429,15 +383,8 @@ QtObject:
     return true
 
   proc changeBlockedOnItemById*(self: Model, id: string, blocked: bool) =
-    let index = self.getItemIdxById(id)
-    if index == -1:
-      return
-    if(self.items[index].blocked == blocked):
-      return
-    self.items[index].blocked = blocked
-    let modelIndex = self.createIndex(index, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, @[ModelRole.Blocked.int])
+    updateItemRolesAndNotify self.getItemIdxById(id):
+      updateRole(blocked)
 
   proc updateUserItemDetailsById*(self: Model, id, name: string, usesDefaultName: bool, icon: string, trustStatus: TrustStatus) =
     updateItemRolesAndNotify self.getItemIdxById(id):
@@ -451,7 +398,8 @@ QtObject:
     if ind == -1:
       return
 
-    updateRolesAndNotify:
+    var rolesChanged = false
+    updateRolesAndNotify rolesChanged:
       updateRole(name)
       updateRole(description)
       updateRole(emoji)
@@ -462,7 +410,8 @@ QtObject:
       if roles.len > 0:
         result = roles # return roles so that we can use it in tests
 
-    self.updateHiddenFlagForCategory(self.items[ind].categoryId)
+    if rolesChanged:
+      self.updateHiddenFlagForCategory(self.items[ind].categoryId)
 
   proc updateNameColorIconOnGroupItemById*(self: Model, id, name, color, icon: string) =
     updateItemRolesAndNotify self.getItemIdxById(id):
@@ -474,11 +423,11 @@ QtObject:
       self: Model,
       categoryId,
       name: string,
-      categoryPosition: int,
+      newCategoryPosition: int,
     ) =
     updateItemRolesAndNotify self.getItemIdxById(categoryId):
       updateRole(name)
-      updateRole(categoryPosition)
+      updateRoleWithValue(categoryPosition, newCategoryPosition)
 
   proc updateItemsWithCategoryDetailsById*(
       self: Model,
@@ -486,8 +435,8 @@ QtObject:
       categoryId: string,
       newCategoryPosition: int,
     ) =
-    for i in 0 ..< self.items.len:
-      var item = self.items[i]
+    for ind in 0 ..< self.items.len:
+      let item = self.items[ind]
       if item.`type` == CATEGORY_TYPE:
         continue
       var nowHasCategory = false
@@ -497,20 +446,16 @@ QtObject:
           continue
         found = true
         nowHasCategory = chat.categoryId == categoryId
-        item.position = chat.position
-        item.categoryId = chat.categoryId
-        item.categoryPosition = if nowHasCategory: newCategoryPosition else: -1
-        let modelIndex = self.createIndex(i, 0, nil)
-        defer: modelIndex.delete
-        var roleChanges = @[
-          ModelRole.Position.int,
-          ModelRole.CategoryId.int,
-          ModelRole.CategoryPosition.int,
-        ]
-        if not nowHasCategory:
-          item.categoryOpened = true
-          roleChanges.add(ModelRole.CategoryOpened.int)
-        self.dataChanged(modelIndex, modelIndex, roleChanges)
+        let targetPosition = chat.position
+        let targetCategoryId = chat.categoryId
+        let targetCategoryPosition = if nowHasCategory: newCategoryPosition else: -1
+        let targetCategoryOpened = not nowHasCategory
+        updateRolesAndNotify:
+          updateRoleWithValue(position, targetPosition)
+          updateRoleWithValue(categoryId, targetCategoryId)
+          updateRoleWithValue(categoryPosition, targetCategoryPosition)
+          if targetCategoryOpened:
+            updateRoleWithValue(categoryOpened, true)
         break
 
   proc removeCategory*(
@@ -520,8 +465,8 @@ QtObject:
     ) =
     self.removeItemById(categoryId)
 
-    for i in 0 ..< self.items.len:
-      var item = self.items[i]
+    for ind in 0 ..< self.items.len:
+      let item = self.items[ind]
       if item.categoryId != categoryId:
         continue
 
@@ -529,18 +474,12 @@ QtObject:
         if chat.id != item.id:
           continue
 
-        item.position = chat.position
-        item.categoryId = ""
-        item.categoryPosition = -1
-        item.categoryOpened = true
-        let modelIndex = self.createIndex(i, 0, nil)
-        defer: modelIndex.delete
-        self.dataChanged(modelIndex, modelIndex, @[
-          ModelRole.Position.int,
-          ModelRole.CategoryId.int,
-          ModelRole.CategoryPosition.int,
-          ModelRole.CategoryOpened.int,
-        ])
+        let targetPosition = chat.position
+        updateRolesAndNotify:
+          updateRoleWithValue(position, targetPosition)
+          updateRoleWithValue(categoryId, "")
+          updateRoleWithValue(categoryPosition, -1)
+          updateRoleWithValue(categoryOpened, true)
         break
 
   proc renameCategory*(self: Model, categoryId, name: string) =
@@ -548,15 +487,10 @@ QtObject:
       updateRole(name)
 
   proc renameItemById*(self: Model, id, name: string) =
-    let index = self.getItemIdxById(id)
-    if index == -1:
-      return
-    if(self.items[index].name == name):
-      return
-    self.items[index].name = name
-    let modelIndex = self.createIndex(index, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, @[ModelRole.Name.int, ModelRole.UsesDefaultName.int])
+    updateItemRolesAndNotify self.getItemIdxById(id):
+      updateRole(name)
+      if roles.len > 0:
+        roles.add(ModelRole.UsesDefaultName.int)
 
   proc updateItemOnlineStatusById*(self: Model, id: string, onlineStatus: OnlineStatus) =
     updateItemRolesAndNotify self.getItemIdxById(id):
@@ -578,47 +512,40 @@ QtObject:
       updatedChats: seq[ChatDto],
     ) =
     for updatedChat in updatedChats:
-      let index = self.getItemIdxById(updatedChat.id)
-      if index == -1:
+      let ind = self.getItemIdxById(updatedChat.id)
+      if ind == -1:
         continue
 
-      var roles = @[ModelRole.Position.int]
-      if(self.items[index].categoryId != updatedChat.categoryId):
+      let categoryChanged = self.items[ind].categoryId != updatedChat.categoryId
+      var targetCategoryPosition = self.items[ind].categoryPosition
+      if categoryChanged:
         if updatedChat.categoryId == "":
-          # Moved out of a category
-          self.items[index].categoryId = updatedChat.categoryId
-          self.items[index].categoryPosition = -1
+          targetCategoryPosition = -1
         else:
           let category = self.getItemById(updatedChat.categoryId)
           if category.id == "":
             continue
-          self.items[index].categoryId = category.id
-          self.items[index].categoryPosition = category.categoryPosition
-        roles = roles.concat(@[
-          ModelRole.CategoryId.int,
-          ModelRole.CategoryPosition.int,
-        ])
+          targetCategoryPosition = category.categoryPosition
 
-      self.items[index].position = updatedChat.position
-      let modelIndex = self.createIndex(index, 0, nil)
-      defer: modelIndex.delete
-      self.dataChanged(modelIndex, modelIndex, roles)
+      let targetPosition = updatedChat.position
+      let targetCategoryId = updatedChat.categoryId
+      updateRolesAndNotify:
+        updateRoleWithValue(position, targetPosition)
+        if categoryChanged:
+          updateRoleWithValue(categoryId, targetCategoryId)
+          updateRoleWithValue(categoryPosition, targetCategoryPosition)
 
   proc reorderCategoryById*(
       self: Model,
       categoryId: string,
       position: int,
     ) =
-    for i in 0 ..< self.items.len:
-      var item = self.items[i]
+    for ind in 0 ..< self.items.len:
+      let item = self.items[ind]
       if item.categoryId != categoryId:
         continue
-      if item.categoryPosition == position:
-        continue
-      item.categoryPosition = position
-      let modelIndex = self.createIndex(i, 0, nil)
-      defer: modelIndex.delete
-      self.dataChanged(modelIndex, modelIndex, @[ModelRole.CategoryPosition.int])
+      updateRolesAndNotify:
+        updateRoleWithValue(categoryPosition, position)
 
   proc clearItems*(self: Model) =
     self.beginResetModel()
@@ -633,37 +560,17 @@ QtObject:
     return self.items[index].toJsonNode()
 
   proc disableChatLoader*(self: Model, chatId: string) =
-    let index = self.getItemIdxById(chatId)
-    if index == -1:
-      return
-
-    self.items[index].loaderActive = false
-    self.items[index].active = false
-    let modelIndex = self.createIndex(index, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, @[ModelRole.Active.int, ModelRole.LoaderActive.int])
+    updateItemRolesAndNotify self.getItemIdxById(chatId):
+      updateRoleWithValue(loaderActive, false)
+      updateRoleWithValue(active, false)
 
   proc updateMissingEncryptionKey*(self: Model, id: string, missingEncryptionKey: bool) =
-    let index = self.getItemIdxById(id)
-    if index == -1:
-      return
-
-    if self.items[index].missingEncryptionKey != missingEncryptionKey:
-      self.items[index].missingEncryptionKey = missingEncryptionKey
-      let modelIndex = self.createIndex(index, 0, nil)
-      defer: modelIndex.delete
-      self.dataChanged(modelIndex, modelIndex, @[ModelRole.MissingEncryptionKey.int])
+    updateItemRolesAndNotify self.getItemIdxById(id):
+      updateRole(missingEncryptionKey)
 
   proc updatePermissionsCheckOngoing*(self: Model, id: string, permissionsCheckOngoing: bool) =
-    let index = self.getItemIdxById(id)
-    if index == -1:
-      return
-
-    if self.items[index].permissionsCheckOngoing != permissionsCheckOngoing:
-      self.items[index].permissionsCheckOngoing = permissionsCheckOngoing
-      let modelIndex = self.createIndex(index, 0, nil)
-      defer: modelIndex.delete
-      self.dataChanged(modelIndex, modelIndex, @[ModelRole.PermissionsCheckOngoing.int])
+    updateItemRolesAndNotify self.getItemIdxById(id):
+      updateRole(permissionsCheckOngoing)
 
   proc delete*(self: Model) =
     self.QAbstractListModel.delete

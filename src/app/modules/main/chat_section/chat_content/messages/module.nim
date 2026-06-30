@@ -428,6 +428,10 @@ method getNumberOfPinnedMessages*(self: Module): int =
 
 method updateContactDetails*(self: Module, contactId: string) =
   let updatedContact = self.controller.getContactDetails(contactId)
+  let chatDto = self.controller.getChatDetails()
+
+  if chatDto.chatType == ChatType.OneToOne and chatDto.id == contactId:
+    self.updateChatIdentifier()
 
   for item in self.view.model().modelContactUpdateIterator(contactId):
     if item.senderId == contactId:
@@ -508,10 +512,9 @@ method onHistoryCleared*(self: Module) =
 method updateChatIdentifier*(self: Module) =
   let chatDto = self.controller.getChatDetails()
   self.setChatDetails(chatDto)
-  # Delete the old ChatIdentifier message first
-  self.view.model().removeItem(CHAT_IDENTIFIER_MESSAGE_ID)
-  # Add new loaded messages
-  self.view.model().insertItemBasedOnClock(self.createChatIdentifierItem())
+  let item = self.createChatIdentifierItem()
+  if not self.view.model().updateChatIdentifier(item):
+    self.view.model().insertItemBasedOnClock(item)
 
 method updateChatFetchMoreMessages*(self: Module) =
   self.view.model().removeItem(FETCH_MORE_MESSAGES_MESSAGE_ID)
@@ -569,7 +572,7 @@ method onChatMemberUpdated*(self: Module, publicKey: string, memberRole: MemberR
   if(publicKey != myPublicKey):
     return
 
-  self.view.model().refreshItemWithId(CHAT_IDENTIFIER_MESSAGE_ID)
+  self.updateChatIdentifier()
 
 method onMailserverSynced*(self: Module, syncedFrom: int64) =
   let chatDto = self.controller.getChatDetails()

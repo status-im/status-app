@@ -63,17 +63,13 @@ QtObject:
     self.countChanged()
 
   proc onUpdatedAccount*(self: Model, account: WalletAccountItem) =
-    var i = 0
-    for item in self.items.mitems:
-      if account.address == item.address:
-        item.name = account.name
-        item.colorId = account.colorId
-        item.emoji = account.emoji
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, @[ModelRole.Name.int, ModelRole.ColorId.int, ModelRole.Emoji.int])
+    for ind in 0 ..< self.items.len:
+      if account.address == self.items[ind].address:
+        updateRolesAndNotify:
+          updateRoleWithValue(name, account.name)
+          updateRoleWithValue(colorId, account.colorId)
+          updateRoleWithValue(emoji, account.emoji)
         break
-      i.inc
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
     guardModelData(index, self.items.len, role, ModelRole)

@@ -1,3 +1,4 @@
+import app/modules/shared_models/model_utils
 import nimqml, json, std/strformat, sequtils, strutils, stint, strutils
 import options
 
@@ -233,6 +234,12 @@ QtObject:
     read = getCollectionImageURL
     notify = collectionImageURLChanged
 
+  proc getTraitsKey(self: CollectiblesEntry): string =
+    if not self.hasCollectibleData() or isNone(self.getCollectibleData().traits):
+      return ""
+    for trait in self.getCollectibleData().traits.get():
+      result &= $trait
+
   proc traitsChanged*(self: CollectiblesEntry) {.signal.}
   proc getTraits*(self: CollectiblesEntry): QVariant {.slot.} =
     return newQVariant(self.traits)
@@ -372,26 +379,64 @@ QtObject:
   proc updateDataIfSameID*(self: CollectiblesEntry, update: backend.Collectible): bool =
     if self.id != update.id:
       return false
-    
-    self.setData(update)
 
-    # Notify changes for all properties
-    self.nameChanged()
-    self.imageUrlChanged()
-    self.mediaUrlChanged()
-    self.mediaTypeChanged()
-    self.backgroundColorChanged()
-    self.descriptionChanged()
-    self.collectionSlugChanged()
-    self.collectionNameChanged()
-    self.collectionImageUrlChanged()
-    self.traitsChanged()
-    # Ownership doesn't change with updated data
-    self.communityIdChanged()
-    self.communityNameChanged()
-    self.communityColorChanged()
-    self.communityPrivilegesLevelChanged()
-    self.communityImageChanged()
+    let name = self.getName()
+    let imageUrl = self.getImageURL()
+    let mediaUrl = self.getMediaURL()
+    let mediaType = self.getMediaType()
+    let backgroundColor = self.getBackgroundColor()
+    let description = self.getDescription()
+    let collectionSlug = self.getCollectionSlug()
+    let collectionName = self.getCollectionName()
+    let collectionImageUrl = self.getCollectionImageURL()
+    let traits = self.getTraitsKey()
+    let communityId = self.getCommunityId()
+    let communityName = self.getCommunityName()
+    let communityColor = self.getCommunityColor()
+    let communityPrivilegesLevel = self.getCommunityPrivilegesLevel()
+    let communityImage = self.getCommunityImage()
+    let tokenType = self.getTokenType()
+    let soulbound = self.getSoulbound()
+
+    self.setData(update)
+    self.tokenType = contractTypeToTokenType(update.contractType.get(ContractType.ContractTypeUnknown))
+
+    var changedProperties: seq[string] = @[]
+    addChangedRole(changedProperties, name, self.getName(), "name"):
+      self.nameChanged()
+    addChangedRole(changedProperties, imageUrl, self.getImageURL(), "imageUrl"):
+      self.imageUrlChanged()
+    addChangedRole(changedProperties, mediaUrl, self.getMediaURL(), "mediaUrl"):
+      self.mediaUrlChanged()
+    addChangedRole(changedProperties, mediaType, self.getMediaType(), "mediaType"):
+      self.mediaTypeChanged()
+    addChangedRole(changedProperties, backgroundColor, self.getBackgroundColor(), "backgroundColor"):
+      self.backgroundColorChanged()
+    addChangedRole(changedProperties, description, self.getDescription(), "description"):
+      self.descriptionChanged()
+    addChangedRole(changedProperties, collectionSlug, self.getCollectionSlug(), "collectionSlug"):
+      self.collectionSlugChanged()
+    addChangedRole(changedProperties, collectionName, self.getCollectionName(), "collectionName"):
+      self.collectionNameChanged()
+    addChangedRole(changedProperties, collectionImageUrl, self.getCollectionImageURL(), "collectionImageUrl"):
+      self.collectionImageUrlChanged()
+    addChangedRole(changedProperties, traits, self.getTraitsKey(), "traits"):
+      self.traitsChanged()
+    addChangedRole(changedProperties, communityId, self.getCommunityId(), "communityId"):
+      self.communityIdChanged()
+    addChangedRole(changedProperties, communityName, self.getCommunityName(), "communityName"):
+      self.communityNameChanged()
+    addChangedRole(changedProperties, communityColor, self.getCommunityColor(), "communityColor"):
+      self.communityColorChanged()
+    addChangedRole(changedProperties, communityPrivilegesLevel, self.getCommunityPrivilegesLevel(), "communityPrivilegesLevel"):
+      self.communityPrivilegesLevelChanged()
+    addChangedRole(changedProperties, communityImage, self.getCommunityImage(), "communityImage"):
+      self.communityImageChanged()
+    addChangedRole(changedProperties, tokenType, self.getTokenType(), "tokenType"):
+      self.tokenTypeChanged()
+    addChangedRole(changedProperties, soulbound, self.getSoulbound(), "soulbound"):
+      self.soulboundChanged()
+
     return true
 
   proc contractTypeToTokenType(contractType : ContractType): TokenType =
@@ -430,12 +475,17 @@ QtObject:
     if not self.hasCollectionData():
       return
 
+    let website = self.getWebsite()
+    let twitterHandle = self.getTwitterHandle()
+
     self.getCollectionData().socials.website = update.socials.website
     self.getCollectionData().socials.twitterHandle = update.socials.twitterHandle
 
-    # Notify changes for all properties
-    self.twitterHandleChanged()
-    self.websiteChanged()
+    var changedRoles: seq[string] = @[]
+    addChangedRole(changedRoles, twitterHandle, self.getTwitterHandle(), "twitterHandle"):
+      self.twitterHandleChanged()
+    addChangedRole(changedRoles, website, self.getWebsite(), "website"):
+      self.websiteChanged()
 
   proc setup(self: CollectiblesEntry) =
     self.QObject.setup

@@ -61,3 +61,15 @@ proc `$`*(self: TokenItem): string =
     remoteDestructedAddresses: {self.remoteDestructedAddresses}
     ]"""
 
+proc tokenAddress*(self: TokenItem): string =
+  self.tokenDto.address
+
+proc `tokenAddress=`*(self: var TokenItem, value: string) =
+  self.tokenDto.address = value
+
+proc deployState*(self: TokenItem): DeployState =
+  self.tokenDto.deployState
+
+proc `deployState=`*(self: var TokenItem, value: DeployState) =
+  self.tokenDto.deployState = value
+

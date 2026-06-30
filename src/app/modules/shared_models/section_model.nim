@@ -274,17 +274,8 @@ QtObject:
     self.countChanged()
 
   proc setMuted*(self: SectionModel, id: string, muted: bool) = 
-    let index = self.getItemIndex(id)
-    if index == -1:
-      return
-
-    if self.items[index].muted == muted:
-      return
-
-    self.items[index].muted = muted 
-    let dataIndex = self.createIndex(index, 0, nil)
-    defer: dataIndex.delete
-    self.dataChanged(dataIndex, dataIndex, @[ModelRole.Muted.int])
+    updateItemRolesAndNotify self.getItemIndex(id):
+      updateRole(muted)
 
   proc editItem*(self: SectionModel, item: SectionItem) =
     updateItemRolesAndNotify self.getItemIndex(item.id):
@@ -378,32 +369,26 @@ QtObject:
     return not item.isEmpty() and item.enabled()
 
   proc setActiveSection*(self: SectionModel, id: string) =
-    for i in 0 ..< self.items.len:
-      if self.items[i].active:
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.items[i].active = false
-        self.dataChanged(index, index, @[ModelRole.Active.int])
+    for ind in 0 ..< self.items.len:
+      if self.items[ind].active:
+        let active = false
+        updateRolesAndNotify:
+          updateRole(active)
 
-      if self.items[i].id == id:
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.items[i].active = true
-
-        self.dataChanged(index, index, @[ModelRole.Active.int])
+      if self.items[ind].id == id:
+        let active = true
+        updateRolesAndNotify:
+          updateRole(active)
 
   proc sectionVisibilityUpdated*(self: SectionModel) {.signal.}
 
   proc enableDisableSection(self: SectionModel, sectionType: SectionType, value: bool) =
     if sectionType != SectionType.Community:
-      for i in 0 ..< self.items.len:
-        if self.items[i].sectionType == sectionType:
-          if self.items[i].enabled == value:
-            continue
-          let index = self.createIndex(i, 0, nil)
-          defer: index.delete
-          self.items[i].enabled = value
-          self.dataChanged(index, index, @[ModelRole.Enabled.int])
+      for ind in 0 ..< self.items.len:
+        if self.items[ind].sectionType == sectionType:
+          let enabled = value
+          updateRolesAndNotify:
+            updateRole(enabled)
     else:
       var topInd = -1
       var bottomInd = -1
@@ -415,11 +400,8 @@ QtObject:
 
           bottomInd = i
 
-      let topIndex = self.createIndex(topInd, 0, nil)
-      let bottomIndex = self.createIndex(bottomInd, 0, nil)
-      defer: topIndex.delete
-      defer: bottomIndex.delete
-      self.dataChanged(topIndex, bottomIndex, @[ModelRole.Enabled.int])
+      if topInd != -1:
+        notifyRangeRolesChanged(topInd, bottomInd, @[ModelRole.Enabled.int])
 
     # This signal is emitted to update buttons visibility in the left navigation bar,
     # `dataChanged` signal doesn't do the job because of `DelegateModel` used in `StatusAppNavBar` component
@@ -441,17 +423,8 @@ QtObject:
         result += item.notificationsCount
 
   proc updateIsPendingOwnershipRequest*(self: SectionModel, id: string, isPending: bool) =
-    for i in 0 ..< self.items.len:
-      if self.items[i].id == id:
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-
-        if self.items[i].isPendingOwnershipRequest == isPending:
-          return
-
-        self.items[i].setIsPendingOwnershipRequest(isPending)
-        self.dataChanged(index, index, @[ModelRole.IsPendingOwnershipRequest.int])
-        return
+    updateItemRolesAndNotify self.getItemIndex(id):
+      updateRoleWithValue(isPendingOwnershipRequest, isPending)
 
   proc updateNotifications*(self: SectionModel, id: string, hasNotification: bool, notificationsCount: int) =
     let ind = self.getItemIndex(id)
@@ -473,8 +446,6 @@ QtObject:
   proc appendCommunityToken*(self: SectionModel, id: string, item: TokenItem) =
     for i in 0 ..< self.items.len:
       if(self.items[i].id == id):
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
         self.items[i].appendCommunityToken(item)
         return
 
@@ -533,27 +504,13 @@ QtObject:
     self.items[index].communityTokens.setItems(communityTokensItems)
 
   proc setMembersItems*(self: SectionModel, id: string, communityMembersItems: seq[MemberItem]) =
-    let index = self.getItemIndex(id)
-    if index == -1:
-      return
-
-    self.items[index].members.setItems(communityMembersItems)
-    self.items[index].membersLoaded = true
-
-    let dataIndex = self.createIndex(index, 0, nil)
-    defer: dataIndex.delete
-    self.dataChanged(dataIndex, dataIndex, @[ModelRole.MembersLoaded.int])
+    updateItemRolesAndNotify self.getItemIndex(id):
+      self.items[ind].members.setItems(communityMembersItems)
+      updateRoleWithValue(membersLoaded, true)
 
   proc setTokensLoading*(self: SectionModel, id: string, value: bool) =
-    let index = self.getItemIndex(id)
-    if index == -1 or self.items[index].tokensLoading == value:
-      return
-
-    self.items[index].tokensLoading = value
-
-    let dataIndex = self.createIndex(index, 0, nil)
-    defer: dataIndex.delete
-    self.dataChanged(dataIndex, dataIndex, @[ModelRole.TokensLoading.int])
+    updateItemRolesAndNotify self.getItemIndex(id):
+      updateRoleWithValue(tokensLoading, value)
 
   proc addMember*(self: SectionModel, communityId: string, memberItem: MemberItem) =
     let i = self.getItemIndex(communityId)

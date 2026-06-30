@@ -92,15 +92,8 @@ QtObject:
     self.countChanged()
 
   proc updatePendingStatus*(self: Model, chainId: int, ensUsername: string, pendingStatus: bool) =
-    let ind = self.findIndex(chainId, ensUsername)
-    if(ind == -1):
-      return
-
-    self.items[ind].isPending = pendingStatus
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.IsPending.int])
+    updateItemRolesAndNotify self.findIndex(chainId, ensUsername):
+      updateRoleWithValue(isPending, pendingStatus)
 
   proc delete(self: Model) =
     self.QAbstractListModel.delete

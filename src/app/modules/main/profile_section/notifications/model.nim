@@ -1,9 +1,8 @@
-import app/modules/shared_models/model_utils
 import nimqml, tables
 import item
+import app/modules/shared_models/model_utils
 
-import ../../../../../app_service/service/settings/dto/settings
-import ../../../shared_models/model_utils
+import app_service/service/settings/dto/settings
 
 type
   ModelRole {.pure.} = enum
@@ -120,23 +119,16 @@ QtObject:
   proc updateExemptions*(self: Model, id: string, muteAllMessages = false, personalMentions = VALUE_NOTIF_SEND_ALERTS, 
     globalMentions = VALUE_NOTIF_SEND_ALERTS, otherMessages = VALUE_NOTIF_TURN_OFF) =
     updateItemRolesAndNotify self.findIndexForItemId(id):
+      let previousCustomized = self.items[ind].customized
       updateRole(muteAllMessages)
       updateRole(personalMentions)
       updateRole(globalMentions)
       updateRole(otherMessages)
-      if roles.len > 0:
-        roles.add(ModelRole.Customized.int)
+      addChangedRole(roles, previousCustomized, self.items[ind].customized, ModelRole.Customized.int): discard
 
   proc updateName*(self: Model, id: string, name: string) =
-    let ind = self.findIndexForItemId(id)
-    if ind == -1 or self.items[ind].name == name:
-      return
-
-    self.items[ind].name = name
-
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.Name.int])
+    updateItemRolesAndNotify self.findIndexForItemId(id):
+      updateRole(name)
 
   proc updateItem*(self: Model, id, name, image, color: string) =
     updateItemRolesAndNotify self.findIndexForItemId(id):

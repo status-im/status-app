@@ -26,15 +26,6 @@ QtObject:
       [{i}]:({$self.items[i]})
       """
 
-  proc modelChanged(self: Model) {.signal.}
-
-  proc getCount(self: Model): int {.slot.} =
-    self.items.len
-
-  QtProperty[int] count:
-    read = getCount
-    notify = countChanged
-
   method rowCount(self: Model, index: QModelIndex = nil): int =
     return self.items.len
 
@@ -54,31 +45,30 @@ QtObject:
 
     case enumRole:
     of ModelRole.Name:
-      result = newQVariant(item.getName())
+      result = newQVariant(item.name)
     of ModelRole.Url:
-      result = newQVariant(item.getUrl())
+      result = newQVariant(item.url)
     of ModelRole.ImageUrl:
-      result = newQVariant(item.getImageUrl())
+      result = newQVariant(item.imageUrl)
 
   proc addItem*(self: Model, item: Item) =
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
 
     for i in self.items:
-      if i.getUrl() == item.getUrl():
+      if i.url == item.url:
         return
 
     self.beginInsertRows(parentModelIndex, self.items.len, self.items.len)
     self.items.add(item)
     self.endInsertRows()
-    self.modelChanged()
 
   proc getBookmarkIndexByUrl*(self: Model, url: string): int {.slot.} =
     var index = -1
     var i = -1
     for item in self.items:
       i += 1
-      if item.getUrl() == url:
+      if item.url == url:
         index = i
         break
     return index
@@ -93,22 +83,13 @@ QtObject:
     self.beginRemoveRows(parentModelIndex, index, index)
     self.items.delete(index)
     self.endRemoveRows()
-    self.modelChanged()
 
 
   proc updateItemByUrl*(self: Model, oldUrl: string, item: Item) =
-    var index = self.getBookmarkIndexByUrl(oldUrl)
-    if index == -1:
-      return
-
-    let topLeft = self.createIndex(index, index, nil)
-    let bottomRight = self.createIndex(index, index, nil)
-    defer: topLeft.delete
-    defer: bottomRight.delete
-
-    self.items[index] = item
-    self.dataChanged(topLeft, bottomRight)
-    self.modelChanged()
+    updateItemRolesAndNotify self.getBookmarkIndexByUrl(oldUrl):
+      updateRoleWithValue(name, item.name)
+      updateRoleWithValue(url, item.url)
+      updateRoleWithValue(imageUrl, item.imageUrl)
 
   proc delete(self: Model) =
     self.items = @[]

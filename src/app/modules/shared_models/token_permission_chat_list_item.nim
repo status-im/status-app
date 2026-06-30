@@ -24,3 +24,9 @@ proc getKey*(self: TokenPermissionChatListItem): string =
 proc getChannelName*(self: TokenPermissionChatListItem): string =
   return self.channelName
 
+proc channelName*(self: TokenPermissionChatListItem): string =
+  return self.channelName
+
+proc `channelName=`*(self: var TokenPermissionChatListItem, value: string) =
+  self.channelName = value
+

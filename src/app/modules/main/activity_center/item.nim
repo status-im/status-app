@@ -109,41 +109,80 @@ proc `$`*(self: Item): string =
 proc id*(self: Item): string =
   return self.id
 
+proc `id=`*(self: Item, value: string) =
+  self.id = value
+
 proc name*(self: Item): string =
   return self.name
+
+proc `name=`*(self: Item, value: string) =
+  self.name = value
 
 proc newsTitle*(self: Item): string =
   return self.newsTitle
 
+proc `newsTitle=`*(self: Item, value: string) =
+  self.newsTitle = value
+
 proc newsDescription*(self: Item): string =
   return self.newsDescription
+
+proc `newsDescription=`*(self: Item, value: string) =
+  self.newsDescription = value
 
 proc newsContent*(self: Item): string =
   return self.newsContent
 
+proc `newsContent=`*(self: Item, value: string) =
+  self.newsContent = value
+
 proc newsImageUrl*(self: Item): string =
   return self.newsImageUrl
+
+proc `newsImageUrl=`*(self: Item, value: string) =
+  self.newsImageUrl = value
 
 proc newsLink*(self: Item): string =
   return self.newsLink
 
+proc `newsLink=`*(self: Item, value: string) =
+  self.newsLink = value
+
 proc newsLinkLabel*(self: Item): string =
   return self.newsLinkLabel
+
+proc `newsLinkLabel=`*(self: Item, value: string) =
+  self.newsLinkLabel = value
 
 proc author*(self: Item): string =
   return self.author
 
+proc `author=`*(self: Item, value: string) =
+  self.author = value
+
 proc installationId*(self: Item): string =
   return self.installationId
+
+proc `installationId=`*(self: Item, value: string) =
+  self.installationId = value
 
 proc chatId*(self: Item): string =
   return self.chatId
 
+proc `chatId=`*(self: Item, value: string) =
+  self.chatId = value
+
 proc chatType*(self: Item): ChatType =
   return self.chatType
 
+proc `chatType=`*(self: Item, value: ChatType) =
+  self.chatType = value
+
 proc communityId*(self: Item): string =
   return self.communityId
+
+proc `communityId=`*(self: Item, value: string) =
+  self.communityId = value
 
 proc membershipStatus*(self: Item): ActivityCenterMembershipStatus =
   return self.membershipStatus
@@ -154,11 +193,20 @@ proc `membershipStatus=`*(self: Item, value: ActivityCenterMembershipStatus) =
 proc sectionId*(self: Item): string =
   return self.sectionId
 
+proc `sectionId=`*(self: Item, value: string) =
+  self.sectionId = value
+
 proc notificationType*(self: Item): ActivityCenterNotificationType =
   return self.notificationType
 
+proc `notificationType=`*(self: Item, value: ActivityCenterNotificationType) =
+  self.notificationType = value
+
 proc timestamp*(self: Item): int64 =
   return self.timestamp
+
+proc `timestamp=`*(self: Item, value: int64) =
+  self.timestamp = value
 
 proc read*(self: Item): bool =
   return self.read
@@ -181,8 +229,17 @@ proc `accepted=`*(self: Item, value: bool) =
 proc messageItem*(self: Item): MessageItem =
   return self.messageItem
 
+proc `messageItem=`*(self: Item, value: MessageItem) =
+  self.messageItem = value
+
 proc repliedMessageItem*(self: Item): MessageItem =
   return self.repliedMessageItem
 
+proc `repliedMessageItem=`*(self: Item, value: MessageItem) =
+  self.repliedMessageItem = value
+
 proc tokenDataItem*(self: Item): TokenDataItem =
   return self.tokenDataItem
+
+proc `tokenDataItem=`*(self: Item, value: TokenDataItem) =
+  self.tokenDataItem = value

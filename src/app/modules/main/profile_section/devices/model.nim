@@ -116,48 +116,24 @@ QtObject:
     return self.findIndexByInstallationId(installationId) != -1
 
   proc updateItem*(self: Model, installation: InstallationDto) =
-    var i = self.findIndexByInstallationId(installation.id)
-    if(i == -1):
-      return
+    updateItemRolesAndNotify self.findIndexByInstallationId(installation.id):
+      updateRoleWithValue(identity, installation.identity)
+      updateRoleWithValue(version, installation.version)
+      updateRoleWithValue(enabled, installation.enabled)
+      updateRoleWithValue(timestamp, installation.timestamp)
+      updateRoleWithValue(name, installation.metadata.name)
+      updateRoleWithValue(deviceType, installation.metadata.deviceType)
+      updateRoleWithValue(fcmToken, installation.metadata.fcmToken)
 
-    let index = self.createIndex(i, 0, nil)
-    defer: index.delete
-
-    self.items[i].installation = installation
-    self.dataChanged(index, index, @[
-      ModelRole.Identity.int,
-      ModelRole.Version.int,
-      ModelRole.Enabled.int,
-      ModelRole.Timestamp.int,
-      ModelRole.Name.int,
-      ModelRole.DeviceType.int,
-      ModelRole.FcmToken.int,
-    ])
     self.updatePairedCount()
 
   proc updateItemName*(self: Model, installationId: string, name: string) =
-    var i = self.findIndexByInstallationId(installationId)
-    if i == -1 or self.items[i].installation.metadata.name == name:
-      return
-
-    self.items[i].installation.metadata.name = name
-
-    let index = self.createIndex(i, 0, nil)
-    defer: index.delete
-
-    self.dataChanged(index, index, @[ModelRole.Name.int])
+    updateItemRolesAndNotify self.findIndexByInstallationId(installationId):
+      updateRoleWithValue(name, name)
 
   proc updateItemEnabled*(self: Model, installationId: string, enabled: bool) =
-    var i = self.findIndexByInstallationId(installationId)
-    if i == -1 or self.items[i].installation.enabled == enabled:
-      return
-
-    self.items[i].installation.enabled = enabled
-
-    let index = self.createIndex(i, 0, nil)
-    defer: index.delete
-
-    self.dataChanged(index, index, @[ModelRole.Enabled.int])
+    updateItemRolesAndNotify self.findIndexByInstallationId(installationId):
+      updateRoleWithValue(enabled, enabled)
 
   proc getIsDeviceSetup*(self: Model, installationId: string): bool =
     return anyIt(self.items, it.installation.id == installationId and it.name != "")

@@ -4,7 +4,7 @@ import ./item
 import ../../../../app_service/service/activity_center/dto/notification
 
 type
-  NotifRoles {.pure.} = enum
+  ModelRole {.pure.} = enum
     Id = UserRole + 1
     ChatId
     CommunityId
@@ -33,165 +33,136 @@ type
 QtObject:
   type
     Model* = ref object of QAbstractListModel
-      activityCenterNotifications*: seq[Item]
+      items*: seq[Item]
 
   proc setup(self: Model)
   proc delete(self: Model)
   proc newModel*(): Model =
     new(result, delete)
-    result.activityCenterNotifications = @[]
+    result.items = @[]
     result.setup()
 
   proc getUnreadNotificationsForChat*(self: Model, chatId: string): seq[string] =
     result =  @[]
-    for notification in self.activityCenterNotifications:
+    for notification in self.items:
       if (notification.chatId == chatId and not notification.read):
         result.add(notification.id)
 
   proc markAllAsRead*(self: Model) =
-    for activityCenterNotification in self.activityCenterNotifications:
+    for activityCenterNotification in self.items:
       activityCenterNotification.read = true
 
-    let topLeft = self.createIndex(0, 0, nil)
-    let bottomRight = self.createIndex(self.activityCenterNotifications.len - 1, 0, nil)
-    defer: topLeft.delete
-    defer: bottomRight.delete
-    self.dataChanged(topLeft, bottomRight, @[NotifRoles.Read.int])
+    if self.items.len > 0:
+      notifyRangeRolesChanged(0, self.items.len - 1, @[ModelRole.Read.int])
 
-  method rowCount*(self: Model, index: QModelIndex = nil): int = self.activityCenterNotifications.len
+  method rowCount*(self: Model, index: QModelIndex = nil): int = self.items.len
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
-    guardModelData(index, self.activityCenterNotifications.len, role, NotifRoles)
+    guardModelData(index, self.items.len, role, ModelRole)
 
-    let activityNotificationItem = self.activityCenterNotifications[index.row]
-    let notificationItemRole = role.NotifRoles
+    let activityNotificationItem = self.items[index.row]
+    let notificationItemRole = role.ModelRole
     case notificationItemRole:
-      of NotifRoles.Id: result = newQVariant(activityNotificationItem.id)
-      of NotifRoles.ChatId: result = newQVariant(activityNotificationItem.chatId)
-      of NotifRoles.CommunityId: result = newQVariant(activityNotificationItem.communityId)
-      of NotifRoles.MembershipStatus: result = newQVariant(activityNotificationItem.membershipStatus.int)
-      of NotifRoles.SectionId: result = newQVariant(activityNotificationItem.sectionId)
-      of NotifRoles.Name: result = newQVariant(activityNotificationItem.name)
-      of NotifRoles.NewsTitle: result = newQVariant(activityNotificationItem.newsTitle)
-      of NotifRoles.NewsDescription: result = newQVariant(activityNotificationItem.newsDescription)
-      of NotifRoles.NewsContent: result = newQVariant(activityNotificationItem.newsContent)
-      of NotifRoles.NewsImageUrl: result = newQVariant(activityNotificationItem.newsImageUrl)
-      of NotifRoles.NewsLink: result = newQVariant(activityNotificationItem.newsLink)
-      of NotifRoles.NewsLinkLabel: result = newQVariant(activityNotificationItem.newsLinkLabel)
-      of NotifRoles.Author: result = newQVariant(activityNotificationItem.author)
-      of NotifRoles.NotificationType: result = newQVariant(activityNotificationItem.notificationType.int)
-      of NotifRoles.Message: result = if not activityNotificationItem.messageItem.isNil:
+      of ModelRole.Id: result = newQVariant(activityNotificationItem.id)
+      of ModelRole.ChatId: result = newQVariant(activityNotificationItem.chatId)
+      of ModelRole.CommunityId: result = newQVariant(activityNotificationItem.communityId)
+      of ModelRole.MembershipStatus: result = newQVariant(activityNotificationItem.membershipStatus.int)
+      of ModelRole.SectionId: result = newQVariant(activityNotificationItem.sectionId)
+      of ModelRole.Name: result = newQVariant(activityNotificationItem.name)
+      of ModelRole.NewsTitle: result = newQVariant(activityNotificationItem.newsTitle)
+      of ModelRole.NewsDescription: result = newQVariant(activityNotificationItem.newsDescription)
+      of ModelRole.NewsContent: result = newQVariant(activityNotificationItem.newsContent)
+      of ModelRole.NewsImageUrl: result = newQVariant(activityNotificationItem.newsImageUrl)
+      of ModelRole.NewsLink: result = newQVariant(activityNotificationItem.newsLink)
+      of ModelRole.NewsLinkLabel: result = newQVariant(activityNotificationItem.newsLinkLabel)
+      of ModelRole.Author: result = newQVariant(activityNotificationItem.author)
+      of ModelRole.NotificationType: result = newQVariant(activityNotificationItem.notificationType.int)
+      of ModelRole.Message: result = if not activityNotificationItem.messageItem.isNil:
                                         newQVariant(activityNotificationItem.messageItem)
                                       else:
                                         newQVariant()
-      of NotifRoles.Timestamp: result = newQVariant(activityNotificationItem.timestamp)
-      of NotifRoles.PreviousTimestamp: result = newQVariant(if index.row > 0:
-                                                              self.activityCenterNotifications[index.row - 1].timestamp
+      of ModelRole.Timestamp: result = newQVariant(activityNotificationItem.timestamp)
+      of ModelRole.PreviousTimestamp: result = newQVariant(if index.row > 0:
+                                                              self.items[index.row - 1].timestamp
                                                             else:
                                                               0)
-      of NotifRoles.Read: result = newQVariant(activityNotificationItem.read.bool)
-      of NotifRoles.Dismissed: result = newQVariant(activityNotificationItem.dismissed.bool)
-      of NotifRoles.Accepted: result = newQVariant(activityNotificationItem.accepted.bool)
-      of NotifRoles.RepliedMessage: result = if not activityNotificationItem.repliedMessageItem.isNil:
+      of ModelRole.Read: result = newQVariant(activityNotificationItem.read.bool)
+      of ModelRole.Dismissed: result = newQVariant(activityNotificationItem.dismissed.bool)
+      of ModelRole.Accepted: result = newQVariant(activityNotificationItem.accepted.bool)
+      of ModelRole.RepliedMessage: result = if not activityNotificationItem.repliedMessageItem.isNil:
                                         newQVariant(activityNotificationItem.repliedMessageItem)
                                       else:
                                         newQVariant()
-      of NotifRoles.ChatType: result = newQVariant(activityNotificationItem.chatType.int)
-      of NotifRoles.TokenData: result = newQVariant(activityNotificationItem.tokenDataItem)
-      of NotifRoles.InstallationId: result = newQVariant(activityNotificationItem.installationId)
+      of ModelRole.ChatType: result = newQVariant(activityNotificationItem.chatType.int)
+      of ModelRole.TokenData: result = newQVariant(activityNotificationItem.tokenDataItem)
+      of ModelRole.InstallationId: result = newQVariant(activityNotificationItem.installationId)
 
   method roleNames(self: Model): Table[int, string] =
     {
-      NotifRoles.Id.int:"id",
-      NotifRoles.ChatId.int:"chatId",
-      NotifRoles.CommunityId.int:"communityId",
-      NotifRoles.MembershipStatus.int: "membershipStatus",
-      NotifRoles.SectionId.int: "sectionId",
-      NotifRoles.Name.int: "name",
-      NotifRoles.NewsTitle.int: "newsTitle",
-      NotifRoles.NewsDescription.int: "newsDescription",
-      NotifRoles.NewsContent.int: "newsContent",
-      NotifRoles.NewsImageUrl.int: "newsImageUrl",
-      NotifRoles.NewsLink.int: "newsLink",
-      NotifRoles.NewsLinkLabel.int: "newsLinkLabel",
-      NotifRoles.Author.int: "author",
-      NotifRoles.NotificationType.int: "notificationType",
-      NotifRoles.Message.int: "message",
-      NotifRoles.Timestamp.int: "timestamp",
-      NotifRoles.PreviousTimestamp.int: "previousTimestamp",
-      NotifRoles.Read.int: "read",
-      NotifRoles.Dismissed.int: "dismissed",
-      NotifRoles.Accepted.int: "accepted",
-      NotifRoles.RepliedMessage.int: "repliedMessage",
-      NotifRoles.ChatType.int: "chatType",
-      NotifRoles.TokenData.int: "tokenData",
-      NotifRoles.InstallationId.int: "installationId",
+      ModelRole.Id.int:"id",
+      ModelRole.ChatId.int:"chatId",
+      ModelRole.CommunityId.int:"communityId",
+      ModelRole.MembershipStatus.int: "membershipStatus",
+      ModelRole.SectionId.int: "sectionId",
+      ModelRole.Name.int: "name",
+      ModelRole.NewsTitle.int: "newsTitle",
+      ModelRole.NewsDescription.int: "newsDescription",
+      ModelRole.NewsContent.int: "newsContent",
+      ModelRole.NewsImageUrl.int: "newsImageUrl",
+      ModelRole.NewsLink.int: "newsLink",
+      ModelRole.NewsLinkLabel.int: "newsLinkLabel",
+      ModelRole.Author.int: "author",
+      ModelRole.NotificationType.int: "notificationType",
+      ModelRole.Message.int: "message",
+      ModelRole.Timestamp.int: "timestamp",
+      ModelRole.PreviousTimestamp.int: "previousTimestamp",
+      ModelRole.Read.int: "read",
+      ModelRole.Dismissed.int: "dismissed",
+      ModelRole.Accepted.int: "accepted",
+      ModelRole.RepliedMessage.int: "repliedMessage",
+      ModelRole.ChatType.int: "chatType",
+      ModelRole.TokenData.int: "tokenData",
+      ModelRole.InstallationId.int: "installationId",
     }.toTable
 
   proc findNotificationIndex(self: Model, notificationId: string): int {.slot.} =
     if notificationId.len == 0:
       return -1
-    for i in 0 ..< self.activityCenterNotifications.len:
-      if self.activityCenterNotifications[i].id == notificationId:
+    for i in 0 ..< self.items.len:
+      if self.items[i].id == notificationId:
         return i
     return -1
 
   proc markActivityCenterNotificationUnread*(self: Model, notificationId: string) =
-    let i = self.findNotificationIndex(notificationId)
-    if i == -1:
-      return
-
-    self.activityCenterNotifications[i].read = false
-    let index = self.createIndex(i, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[NotifRoles.Read.int])
+    updateItemRolesAndNotify self.findNotificationIndex(notificationId):
+      updateRoleWithValue(read, false)
 
   proc markActivityCenterNotificationRead*(self: Model, notificationId: string) =
-    let i = self.findNotificationIndex(notificationId)
-    if i == -1:
-      return
-
-    self.activityCenterNotifications[i].read = true
-    let index = self.createIndex(i, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[NotifRoles.Read.int])
+    updateItemRolesAndNotify self.findNotificationIndex(notificationId):
+      updateRoleWithValue(read, true)
 
   proc activityCenterNotificationAccepted*(self: Model, notificationId: string) =
-    let i = self.findNotificationIndex(notificationId)
-    if i == -1:
-      return
-
-    self.activityCenterNotifications[i].read = true
-    self.activityCenterNotifications[i].accepted = true
-    let index = self.createIndex(i, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[NotifRoles.Accepted.int, NotifRoles.Read.int])
+    updateItemRolesAndNotify self.findNotificationIndex(notificationId):
+      updateRoleWithValue(accepted, true)
+      updateRoleWithValue(read, true)
 
   proc activityCenterNotificationDismissed*(self: Model, notificationId: string) =
-    let i = self.findNotificationIndex(notificationId)
-    if i == -1:
-      return
-
-    self.activityCenterNotifications[i].read = true
-    self.activityCenterNotifications[i].dismissed = true
-    let index = self.createIndex(i, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[NotifRoles.Dismissed.int, NotifRoles.Read.int])
+    updateItemRolesAndNotify self.findNotificationIndex(notificationId):
+      updateRoleWithValue(dismissed, true)
+      updateRoleWithValue(read, true)
 
   proc updateCommunityMembershipStatus*(self: Model, communityId: string, memberPubkey: string, status: ActivityCenterMembershipStatus) =
-    for i, notification in self.activityCenterNotifications:
+    for ind, notification in self.items:
       if notification.notificationType == ActivityCenterNotificationType.CommunityMembershipRequest and
           notification.communityId == communityId and
           (notification.author == memberPubkey or notification.chatId == memberPubkey):
-        notification.membershipStatus = status
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index, @[NotifRoles.MembershipStatus.int])
+        updateRolesAndNotify:
+          updateRoleWithValue(membershipStatus, status)
 
   proc removeNotifications*(self: Model, ids: seq[string]) =
     var i = 0
     var indexesToDelete: seq[int] = @[]
-    for activityCenterNotification in self.activityCenterNotifications:
+    for activityCenterNotification in self.items:
       for id in ids:
         if (activityCenterNotification.id == id):
           indexesToDelete.add(i)
@@ -204,18 +175,18 @@ QtObject:
       let modelIndex = newQModelIndex()
       defer: modelIndex.delete
       self.beginRemoveRows(modelIndex, indexUpdated, indexUpdated)
-      self.activityCenterNotifications.delete(indexUpdated)
+      self.items.delete(indexUpdated)
       self.endRemoveRows()
       i = i + 1
 
   proc setNewData*(self: Model, activityCenterNotifications: seq[Item]) =
     self.beginResetModel()
-    self.activityCenterNotifications = activityCenterNotifications
+    self.items = activityCenterNotifications
     self.endResetModel()
 
   proc updateActivityCenterNotification*(self: Model, ind: int, newNotification: Item) =
-    if self.activityCenterNotifications[ind].notificationType == ActivityCenterNotificationType.CommunityMembershipRequest and
-        self.activityCenterNotifications[ind].membershipStatus in [
+    if self.items[ind].notificationType == ActivityCenterNotificationType.CommunityMembershipRequest and
+        self.items[ind].membershipStatus in [
           ActivityCenterMembershipStatus.Accepted,
           ActivityCenterMembershipStatus.Declined,
         ] and
@@ -223,15 +194,20 @@ QtObject:
           ActivityCenterMembershipStatus.Accepted,
           ActivityCenterMembershipStatus.Declined,
         ]:
-      newNotification.membershipStatus = self.activityCenterNotifications[ind].membershipStatus
+      newNotification.membershipStatus = self.items[ind].membershipStatus
 
-    self.activityCenterNotifications[ind] = newNotification
-    let index = self.createIndex(ind, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index)
+    updateRolesAndNotify:
+      updateRolesFromItem(newNotification,
+        id, chatId, communityId, membershipStatus, sectionId, name, newsTitle,
+        newsDescription, newsContent, newsImageUrl, newsLink, newsLinkLabel,
+        author, notificationType, timestamp, read, dismissed, accepted, chatType,
+        installationId)
+      updateRoleWithValue(messageItem, newNotification.messageItem, Message)
+      updateRoleWithValue(repliedMessageItem, newNotification.repliedMessageItem, RepliedMessage)
+      updateRoleWithValue(tokenDataItem, newNotification.tokenDataItem, TokenData)
 
   proc upsertActivityCenterNotification*(self: Model, newNotification: Item) =
-    for i, notification in self.activityCenterNotifications:
+    for i, notification in self.items:
       if newNotification.id == notification.id:
         self.updateActivityCenterNotification(i, newNotification)
         return
@@ -239,24 +215,22 @@ QtObject:
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
 
-    var indexToInsert = self.activityCenterNotifications.len
-    for i, notification in self.activityCenterNotifications:
+    var indexToInsert = self.items.len
+    for i, notification in self.items:
       if newNotification.timestamp > notification.timestamp:
         indexToInsert = i
         break
 
     self.beginInsertRows(parentModelIndex, indexToInsert, indexToInsert)
-    self.activityCenterNotifications.insert(newNotification, indexToInsert)
+    self.items.insert(newNotification, indexToInsert)
     self.endInsertRows()
 
     let indexToUpdate = indexToInsert - 2
-    if indexToUpdate >= 0 and indexToUpdate < self.activityCenterNotifications.len:
-      let index = self.createIndex(indexToUpdate, 0, nil)
-      defer: index.delete
-      self.dataChanged(index, index, @[NotifRoles.PreviousTimestamp.int])
+    if indexToUpdate >= 0 and indexToUpdate < self.items.len:
+      notifyRangeRolesChanged(indexToUpdate, indexToUpdate, @[ModelRole.PreviousTimestamp.int])
 
   proc upsertActivityCenterNotifications*(self: Model, activityCenterNotifications: seq[Item]) =
-    if self.activityCenterNotifications.len == 0:
+    if self.items.len == 0:
       self.setNewData(activityCenterNotifications)
     else:
       for activityCenterNotification in activityCenterNotifications:

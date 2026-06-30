@@ -182,6 +182,30 @@ QtObject:
         return i
     return -1
 
+  proc previewDataRoles(self: Model): seq[int] =
+    return @[
+      ModelRole.Unfurled.int,
+      ModelRole.Empty.int,
+      ModelRole.PreviewType.int,
+      ModelRole.StandardPreview.int,
+      ModelRole.StandardPreviewThumbnail.int,
+      ModelRole.StatusContactPreview.int,
+      ModelRole.StatusContactPreviewThumbnail.int,
+      ModelRole.StatusCommunityPreview.int,
+      ModelRole.StatusCommunityPreviewIcon.int,
+      ModelRole.StatusCommunityPreviewBanner.int,
+      ModelRole.StatusCommunityChannelPreview.int,
+      ModelRole.StatusCommunityChannelCommunityPreview.int,
+      ModelRole.StatusCommunityChannelCommunityPreviewIcon.int,
+      ModelRole.StatusCommunityChannelCommunityPreviewBanner.int,
+    ]
+
+  proc immutablePreviewDataRoles(self: Model): seq[int] =
+    return @[
+      ModelRole.Unfurled.int,
+      ModelRole.Immutable.int,
+    ]
+
   proc moveRow(self: Model, fromRow: int, to: int) =
     if fromRow == to:
       return
@@ -207,9 +231,7 @@ QtObject:
         continue
       item.unfurled = true
       item.linkPreview = linkPreviews[item.linkPreview.url]
-      let modelIndex = self.createIndex(row, 0, nil)
-      defer: modelIndex.delete
-      self.dataChanged(modelIndex, modelIndex)
+      notifyRangeRolesChanged(row, row, self.previewDataRoles())
 
   proc setUrls*(self: Model, urls: seq[string]) =
     var itemsToInsert: seq[Item]
@@ -259,20 +281,14 @@ QtObject:
       return
 
     self.items[index].markAsImmutable()
-
-    let modelIndex = self.createIndex(index, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex)
+    notifyRangeRolesChanged(index, index, self.immutablePreviewDataRoles())
 
   proc removeAllPreviewData*(self: Model) {.slot.} =
     for i in 0 ..< self.items.len:
       self.items[i].markAsImmutable()
-  
-    let indexStart = self.createIndex(0, 0, nil)
-    let indexEnd = self.createIndex(self.items.len, 0, nil)
-    defer: indexStart.delete
-    defer: indexEnd.delete
-    self.dataChanged(indexStart, indexEnd)
+
+    if self.items.len > 0:
+      notifyRangeRolesChanged(0, self.items.len - 1, self.immutablePreviewDataRoles())
       
   proc getLinkPreviewType*(self: Model, url: string): int {.slot.} =
     let index = self.findUrlIndex(url)
@@ -305,25 +321,18 @@ QtObject:
       if communityId != "":
         result[communityId] = item.linkPreview.url
 
-  proc setItemLoadingLocalData(self: Model, row: int, item: Item, value: bool) = 
-    if item.loadingLocalData == value:
-      return
-    item.loadingLocalData = value
-    let modelIndex = self.createIndex(row, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, @[ModelRole.LoadingLocalData.int])
+  proc setItemLoadingLocalData(self: Model, row: int, value: bool) =
+    let ind = row
+    updateRolesAndNotify:
+      updateRoleWithValue(loadingLocalData, value)
 
-  proc setItemIsLocalData(self: Model, row: int, item: Item) = 
+  proc setItemIsLocalData(self: Model, row: int, item: Item) =
     if item.isLocalData:
       return
-    var roles = @[ModelRole.IsLocalData.int]
-    item.isLocalData = true
-    if item.loadingLocalData:
-      item.loadingLocalData = false
-      roles.add(ModelRole.LoadingLocalData.int)
-    let modelIndex = self.createIndex(row, 0, nil)
-    defer: modelIndex.delete
-    self.dataChanged(modelIndex, modelIndex, roles)
+    let ind = row
+    updateRolesAndNotify:
+      updateRoleWithValue(isLocalData, true)
+      updateRoleWithValue(loadingLocalData, false)
 
   proc setContactInfo*(self: Model, contactDetails: ContactDetails) =
     for row, item in self.items:
@@ -338,12 +347,12 @@ QtObject:
   proc onContactDataRequested*(self: Model, contactId: string) =
     for row, item in self.items:
       if item.linkPreview.getContactId() == contactId:
-        self.setItemLoadingLocalData(row, item, true)
+        self.setItemLoadingLocalData(row, true)
 
   proc onCommunityInfoRequested*(self: Model, communityId: string) =
     for row, item in self.items:
       if item.linkPreview.getCommunityId() == communityId:
-        self.setItemLoadingLocalData(row, item, true)
+        self.setItemLoadingLocalData(row, true)
 
   proc delete*(self: Model) = 
     self.QAbstractListModel.delete

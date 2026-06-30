@@ -150,5 +150,27 @@ method addChat*(self: Module, itemId: string) =
     return
   self.addChat(chatDto)
 
+method editChat*(self: Module, itemId: string) =
+  let chatDto = self.controller.getChatDetails(itemId)
+  if chatDto.chatType == ChatType.OneToOne:
+    let contactDetails = self.controller.getContactDetails(itemId)
+    self.view.exemptionsModel().updateItem(
+      itemId,
+      contactDetails.dto.displayName,
+      contactDetails.icon,
+      chatDto.color,
+    )
+    return
+
+  if chatDto.chatType != ChatType.PrivateGroupChat:
+    return
+
+  self.view.exemptionsModel().updateItem(
+    itemId,
+    chatDto.name,
+    chatDto.icon,
+    chatDto.color,
+  )
+
 method setName*(self: Module, itemId: string, name: string) =
   self.view.exemptionsModel().updateName(itemId, name)

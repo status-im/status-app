@@ -18,11 +18,20 @@ proc `$`*(self: Item): string =
     imageUrl: {self.imageUrl}
     ]"""
 
-proc getName*(self: Item): string =
+proc name*(self: Item): string =
   return self.name
 
-proc getUrl*(self: Item): string =
+proc `name=`*(self: var Item, value: string) =
+  self.name = value
+
+proc url*(self: Item): string =
   return self.url
 
-proc getImageUrl*(self: Item): string =
+proc `url=`*(self: var Item, value: string) =
+  self.url = value
+
+proc imageUrl*(self: Item): string =
   return self.imageUrl
+
+proc `imageUrl=`*(self: var Item, value: string) =
+  self.imageUrl = value

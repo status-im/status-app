@@ -77,18 +77,6 @@ QtObject:
     result = result & "\canSend: " & $self.canSend
     result = result & ")"
 
-  proc currencyBalance*(self: Item): CurrencyAmount =
-    return self.currencyBalance
-
-  proc assetsLoading*(self: Item): bool =
-    return self.assetsLoading
-
-  proc createdAt*(self: Item): int =
-    return self.createdAt
-
-  proc isWallet*(self: Item): bool =
-    return self.isWallet
-
   proc currencyBalanceChanged*(self: Item) {.signal.}
   proc getCurrencyBalanceAsQVariant*(self: Item): QVariant {.slot.} =
     return newQVariant(self.currencyBalance)
@@ -96,8 +84,36 @@ QtObject:
     read = getCurrencyBalanceAsQVariant
     notify = currencyBalanceChanged
 
+  proc currencyBalance*(self: Item): CurrencyAmount =
+    return self.currencyBalance
+
+  proc `currencyBalance=`*(self: Item, value: CurrencyAmount) =
+    self.currencyBalance = value
+    self.currencyBalanceChanged()
+
+  proc assetsLoading*(self: Item): bool =
+    return self.assetsLoading
+
+  proc `assetsLoading=`*(self: Item, value: bool) =
+    self.assetsLoading = value
+
+  proc createdAt*(self: Item): int =
+    return self.createdAt
+
+  proc `createdAt=`*(self: Item, value: int) =
+    self.createdAt = value
+
+  proc isWallet*(self: Item): bool =
+    return self.isWallet
+
+  proc `isWallet=`*(self: Item, value: bool) =
+    self.isWallet = value
+
   proc canSend*(self: Item): bool =
     return self.canSend
+
+  proc `canSend=`*(self: Item, value: bool) =
+    self.canSend = value
 
   proc setAssetsLoading*(self: Item, value: bool) =
     self.assetsLoading = value

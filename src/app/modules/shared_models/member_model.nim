@@ -267,10 +267,8 @@ QtObject:
 
   proc setName*(self: Model, pubKey: string, displayName: string, ensName: string, localNickname: string) =
     updateItemRolesAndNotify self.findIndexForMember(pubKey):
-      let preferredDisplayNameChanged =
-        resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
-        resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
-
+      let previousPreferredDisplayName = resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias)
+      let currentPreferredDisplayName = resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
       let usesDefaultName = resolveUsesDefaultName(localNickname, ensName, displayName)
 
       updateRole(displayName)
@@ -278,8 +276,7 @@ QtObject:
       updateRole(localNickname)
       updateRole(usesDefaultName)
 
-      if preferredDisplayNameChanged:
-        roles.add(ModelRole.PreferredDisplayName.int)
+      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.PreferredDisplayName.int): discard
 
   proc setIcon*(self: Model, pubKey: string, icon: string) =
     updateItemRolesAndNotify self.findIndexForMember(pubKey):
@@ -304,11 +301,9 @@ QtObject:
       callDataChanged: bool = true,
     ): seq[int] =
     updateItemRolesAndNotify self.findIndexForMember(pubKey):
-      let preferredDisplayNameChanged =
-        resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias) !=
-        resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
-
-      let trustStatusChanged = trustStatus != self.items[ind].trustStatus
+      let previousPreferredDisplayName = resolvePreferredDisplayName(self.items[ind].localNickname, self.items[ind].ensName, self.items[ind].displayName, self.items[ind].alias)
+      let currentPreferredDisplayName = resolvePreferredDisplayName(localNickname, ensName, displayName, self.items[ind].alias)
+      let previousTrustStatus = self.items[ind].trustStatus
       let usesDefaultName = resolveUsesDefaultName(localNickname, ensName, displayName)
 
       updateRole(displayName)
@@ -334,12 +329,9 @@ QtObject:
 
       updateRoleWithValue(membershipRequestState, updatedMembershipRequestState)
 
-      if preferredDisplayNameChanged:
-        roles.add(ModelRole.PreferredDisplayName.int)
-
-      if trustStatusChanged:
-        roles.add(ModelRole.IsUntrustworthy.int)
-        roles.add(ModelRole.IsVerified.int)
+      addChangedRole(roles, previousPreferredDisplayName, currentPreferredDisplayName, ModelRole.PreferredDisplayName.int): discard
+      addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsUntrustworthy.int): discard
+      addChangedRole(roles, previousTrustStatus, trustStatus, ModelRole.IsVerified.int): discard
 
       if roles.len > 0:
         if callDataChanged:
@@ -382,11 +374,7 @@ QtObject:
     if allRoles.len == 0:
       return
 
-    let startModelIndex = self.createIndex(startIndex, 0, nil)
-    let endModelIndex = self.createIndex(endIndex, 0, nil)
-    defer: startModelIndex.delete
-    defer: endModelIndex.delete
-    self.dataChanged(startModelIndex, endModelIndex, allRoles)
+    notifyRangeRolesChanged(startIndex, endIndex, allRoles)
 
 
   proc updateToTheseItems*(self: Model, items: seq[MemberItem]) =
@@ -462,34 +450,12 @@ QtObject:
     )
 
   proc setOnlineStatus*(self: Model, pubKey: string, onlineStatus: OnlineStatus) =
-    let idx = self.findIndexForMember(pubKey)
-    if idx == -1:
-      return
-
-    if self.items[idx].onlineStatus == onlineStatus:
-      return
-
-    self.items[idx].onlineStatus = onlineStatus
-    let index = self.createIndex(idx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[
-      ModelRole.OnlineStatus.int
-    ])
+    updateItemRolesAndNotify self.findIndexForMember(pubKey):
+      updateRole(onlineStatus)
 
   proc setAirdropAddress*(self: Model, pubKey: string, airdropAddress: string) =
-    let idx = self.findIndexForMember(pubKey)
-    if idx == -1:
-      return
-
-    if self.items[idx].airdropAddress == airdropAddress:
-      return
-
-    self.items[idx].airdropAddress = airdropAddress
-    let index = self.createIndex(idx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[
-      ModelRole.AirdropAddress.int
-    ])
+    updateItemRolesAndNotify self.findIndexForMember(pubKey):
+      updateRole(airdropAddress)
 
   proc getAirdropAddressForMember*(self: Model, pubKey: string): string =
     let idx = self.findIndexForMember(pubKey)
@@ -503,49 +469,16 @@ QtObject:
     return self.items.map(i => i.pubKey)
 
   proc updateLoadingState*(self: Model, memberKey: string, requestToJoinLoading: bool) =
-    let idx = self.findIndexForMember(memberKey)
-    if idx == -1:
-      return
-
-    if self.items[idx].requestToJoinLoading == requestToJoinLoading:
-      return
-
-    self.items[idx].requestToJoinLoading = requestToJoinLoading
-    let index = self.createIndex(idx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[
-      ModelRole.RequestToJoinLoading.int
-    ])
+    updateItemRolesAndNotify self.findIndexForMember(memberKey):
+      updateRole(requestToJoinLoading)
 
   proc updateDeclineLoadingState*(self: Model, memberKey: string, declineRequestToJoinLoading: bool) =
-    let idx = self.findIndexForMember(memberKey)
-    if idx == -1:
-      return
-
-    if self.items[idx].declineRequestToJoinLoading == declineRequestToJoinLoading:
-      return
-
-    self.items[idx].declineRequestToJoinLoading = declineRequestToJoinLoading
-    let index = self.createIndex(idx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[
-      ModelRole.DeclineRequestToJoinLoading.int
-    ])
+    updateItemRolesAndNotify self.findIndexForMember(memberKey):
+      updateRole(declineRequestToJoinLoading)
 
   proc updateMembershipStatus*(self: Model, memberKey: string, membershipRequestState: MembershipRequestState) {.inline.} =
-    let idx = self.findIndexForMember(memberKey)
-    if idx == -1:
-      return
-
-    if self.items[idx].membershipRequestState == membershipRequestState:
-      return
-
-    self.items[idx].membershipRequestState = membershipRequestState
-    let index = self.createIndex(idx, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[
-      ModelRole.MembershipRequestState.int
-    ])
+    updateItemRolesAndNotify self.findIndexForMember(memberKey):
+      updateRole(membershipRequestState)
 
   proc getNewMembers*(self: Model, pubkeys: seq[string]): seq[string] =
     for pubkey in pubkeys:

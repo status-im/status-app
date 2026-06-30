@@ -47,22 +47,64 @@ proc initDiscordImportTaskItem*(
       result.errors.addItem(initDiscordImportErrorItem(`type`, error.code, error.message))
 
 proc getType*(self: DiscordImportTaskItem): string =
-  return self.type
+  return self.`type`
+
+proc `type`*(self: DiscordImportTaskItem): string =
+  return self.`type`
+
+proc `type=`*(self: var DiscordImportTaskItem, value: string) =
+  self.`type` = value
 
 proc getProgress*(self: DiscordImportTaskItem): float =
   return self.progress
 
+proc progress*(self: DiscordImportTaskItem): float =
+  return self.progress
+
+proc `progress=`*(self: var DiscordImportTaskItem, value: float) =
+  self.progress = value
+
 proc getState*(self: DiscordImportTaskItem): string =
   return self.state
+
+proc state*(self: DiscordImportTaskItem): string =
+  return self.state
+
+proc `state=`*(self: var DiscordImportTaskItem, value: string) =
+  self.state = value
 
 proc getErrors*(self: DiscordImportTaskItem): DiscordImportErrorsModel =
   return self.errors
 
+proc errors*(self: DiscordImportTaskItem): DiscordImportErrorsModel =
+  return self.errors
+
+proc `errors=`*(self: var DiscordImportTaskItem, value: DiscordImportErrorsModel) =
+  self.errors = value
+
 proc getStopped*(self: DiscordImportTaskItem): bool =
   return self.stopped
+
+proc stopped*(self: DiscordImportTaskItem): bool =
+  return self.stopped
+
+proc `stopped=`*(self: var DiscordImportTaskItem, value: bool) =
+  self.stopped = value
 
 proc getErrorsCount*(self: DiscordImportTaskItem): int =
   return self.errorsCount
 
+proc errorsCount*(self: DiscordImportTaskItem): int =
+  return self.errorsCount
+
+proc `errorsCount=`*(self: var DiscordImportTaskItem, value: int) =
+  self.errorsCount = value
+
 proc getWarningsCount*(self: DiscordImportTaskItem): int =
   return self.warningsCount
+
+proc warningsCount*(self: DiscordImportTaskItem): int =
+  return self.warningsCount
+
+proc `warningsCount=`*(self: var DiscordImportTaskItem, value: int) =
+  self.warningsCount = value

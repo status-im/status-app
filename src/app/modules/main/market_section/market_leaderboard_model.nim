@@ -82,8 +82,6 @@ QtObject:
 
   proc pageUpdated*(self: MarketLeaderboardModel, updates: seq[LeaderboardTokenUpdated]) =
     for update in updates:
-      let modelIndex = self.createIndex(update.index, 0, nil)
-      defer: modelIndex.delete
       var changedRoles: seq[int] = @[]
       for field in update.changedFields:
         let roleOpt = self.getRoleFromName(field)
@@ -91,7 +89,7 @@ QtObject:
           changedRoles.add(roleOpt.get())
 
       if changedRoles.len > 0:
-        self.dataChanged(modelIndex, modelIndex, changedRoles)
+        notifyRangeRolesChanged(update.index, update.index, changedRoles)
 
   proc setup(self: MarketLeaderboardModel) =
     self.QAbstractListModel.setup

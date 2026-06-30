@@ -1,5 +1,5 @@
 import app/modules/shared_models/model_utils
-import nimqml, tables, strutils, std/strformat, std/sequtils, chronicles
+import nimqml, tables, strutils, std/strformat, std/sequtils
 
 import ./item
 import ../../../shared_models/currency_amount
@@ -99,6 +99,32 @@ QtObject:
     return self.findAccountIndex(account.address())
 
   proc setItems*(self: Model, items: seq[Item]) =
+    proc updateExistingItem(account: Item): bool =
+      var itemFound = false
+
+      proc updateRoles() =
+        updateItemRolesAndNotify self.findAccountIndex(account):
+          itemFound = true
+          updateRoleWithValue(name, account.name())
+          updateRoleWithValue(address, account.address())
+          updateRoleWithValue(mixedcaseAddress, account.mixedcaseAddress())
+          updateRoleWithValue(path, account.path())
+          updateRoleWithValue(colorId, account.colorId())
+          updateRoleWithValue(walletType, account.walletType())
+          updateRoleWithValue(currencyBalance, account.currencyBalance())
+          updateRoleWithValue(emoji, account.emoji())
+          updateRoleWithValue(keyUid, account.keyUid())
+          updateRoleWithValue(createdAt, account.createdAt())
+          updateRoleWithValue(position, account.position())
+          updateRoleWithValue(migratedToColdWallet, account.migratedToColdWallet())
+          updateRoleWithValue(assetsLoading, account.assetsLoading())
+          updateRoleWithValue(isWallet, account.isWallet())
+          updateRoleWithValue(hideFromTotalBalance, account.hideFromTotalBalance())
+          updateRoleWithValue(canSend, account.canSend())
+
+      updateRoles()
+      return itemFound
+
     var indexesToRemove: seq[int]
 
     #remove
@@ -112,14 +138,8 @@ QtObject:
 
     # Update or insert
     for i in 0 ..< items.len:
-      var account = items[i]
-      let index = self.findAccountIndex(account)
-      if index >= 0:
-        let qIndex = self.createIndex(i, 0, nil)
-        defer: qIndex.delete
-
-        self.items[index] = account
-        self.dataChanged(qIndex, qIndex)
+      let account = items[i]
+      if updateExistingItem(account):
         continue
       self.insertItem(account, i)
       
@@ -129,14 +149,34 @@ QtObject:
       self.itemChanged(item.address())
 
   proc updateItems*(self: Model, items: seq[Item]) =
+    proc updateExistingItem(account: Item): bool =
+      var itemUpdated = false
+
+      proc updateRoles() =
+        updateItemRolesAndNotify self.findAccountIndex(account):
+          itemUpdated = true
+          updateRoleWithValue(name, account.name())
+          updateRoleWithValue(address, account.address())
+          updateRoleWithValue(mixedcaseAddress, account.mixedcaseAddress())
+          updateRoleWithValue(path, account.path())
+          updateRoleWithValue(colorId, account.colorId())
+          updateRoleWithValue(walletType, account.walletType())
+          updateRoleWithValue(currencyBalance, account.currencyBalance())
+          updateRoleWithValue(emoji, account.emoji())
+          updateRoleWithValue(keyUid, account.keyUid())
+          updateRoleWithValue(createdAt, account.createdAt())
+          updateRoleWithValue(position, account.position())
+          updateRoleWithValue(migratedToColdWallet, account.migratedToColdWallet())
+          updateRoleWithValue(assetsLoading, account.assetsLoading())
+          updateRoleWithValue(isWallet, account.isWallet())
+          updateRoleWithValue(hideFromTotalBalance, account.hideFromTotalBalance())
+          updateRoleWithValue(canSend, account.canSend())
+
+      updateRoles()
+      return itemUpdated
+
     for account in items:
-      let i = self.findAccountIndex(account)
-      if i >= 0:
-        self.items[i] = account
-        let index = self.createIndex(i, 0, nil)
-        defer: index.delete
-        self.dataChanged(index, index)
-      else:
+      if not updateExistingItem(account):
         self.insertItem(account, self.getCount())
         self.countChanged()
 
@@ -185,37 +225,18 @@ QtObject:
       result = newQVariant(item.canSend())
 
   proc updateBalance*(self: Model, address: string, balance: CurrencyAmount, assetsLoading: bool) =
-    let i = self.findAccountIndex(address)
-    if i < 0:
-      error "Trying to update invalid account"
-      return
-    self.items[i].setBalance(balance)
-    self.items[i].setAssetsLoading(assetsLoading)
-    let index = self.createIndex(i, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.CurrencyBalance.int, ModelRole.AssetsLoading.int])
+    updateItemRolesAndNotify self.findAccountIndex(address):
+      updateRoleWithValue(currencyBalance, balance)
+      updateRoleWithValue(assetsLoading, assetsLoading)
 
   proc updateAccountHiddenFromTotalBalance*(self: Model, address: string, hideFromTotalBalance: bool) =
-    let i = self.findAccountIndex(address)
-    if i < 0:
-      return
-    self.items[i].setHideFromTotalBalance(hideFromTotalBalance)
-    let index = self.createIndex(i, 0, nil)
-    defer: index.delete
-    self.dataChanged(index, index, @[ModelRole.HideFromTotalBalance.int])
+    updateItemRolesAndNotify self.findAccountIndex(address):
+      updateRole(hideFromTotalBalance)
 
   proc updateAccountsPositions*(self: Model, values: Table[string, int]) =
     for address, position in values:
-      let i = self.findAccountIndex(address)
-      if i < 0:
-        continue
-      self.items[i].setPosition(position)
-    let firstIndex = self.createIndex(0, 0, nil)
-    let lastIndex = self.createIndex(self.rowCount() - 1, 0, nil)
-    defer: 
-      firstIndex.delete
-      lastIndex.delete
-    self.dataChanged(firstIndex, lastIndex, @[ModelRole.Position.int])
+      updateItemRolesAndNotify self.findAccountIndex(address):
+        updateRole(position)
 
   proc deleteAccount*(self: Model, address: string) =
     let i = self.findAccountIndex(address)

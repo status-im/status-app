@@ -43,19 +43,19 @@ QtObject:
     let enumRole = role.ModelRole
     case enumRole:
       of ModelRole.Type:
-        result = newQVariant(item.getType())
+        result = newQVariant(item.`type`)
       of ModelRole.Progress:
-        result = newQVariant(item.getProgress())
+        result = newQVariant(item.progress)
       of ModelRole.State:
-        result = newQVariant(item.getState())
+        result = newQVariant(item.state)
       of ModelRole.Errors:
-        result = newQVariant(item.getErrors())
+        result = newQVariant(item.errors)
       of ModelRole.Stopped:
-        result = newQVariant(item.getStopped())
+        result = newQVariant(item.stopped)
       of ModelRole.ErrorsCount:
-        result = newQVariant(item.getErrorsCount())
+        result = newQVariant(item.errorsCount)
       of ModelRole.WarningsCount:
-        result = newQVariant(item.getWarningsCount())
+        result = newQVariant(item.warningsCount)
 
   method rowCount(self: DiscordImportTasksModel, index: QModelIndex = nil): int =
     return self.items.len
@@ -85,34 +85,25 @@ QtObject:
     return -1
 
   proc updateItem*(self: DiscordImportTasksModel, item: DiscordImportTaskProgress) =
-    let idx = self.findIndexByType(item.`type`)
-    if idx > -1:
-      let index = self.createIndex(idx, 0, nil)
-      defer: index.delete
-      let errorsAndWarningsCount = self.items[idx].warningsCount + self.items[idx].errorsCount
-      self.items[idx].progress = item.progress
-      self.items[idx].state = item.state
-      self.items[idx].stopped = item.stopped
-      self.items[idx].errorsCount = item.errorsCount
-      self.items[idx].warningsCount = item.warningsCount
+    updateItemRolesAndNotify self.findIndexByType(item.`type`):
+      updateRoleWithValue(progress, item.progress)
+      updateRoleWithValue(state, item.state)
+      updateRoleWithValue(stopped, item.stopped)
+      updateRoleWithValue(errorsCount, item.errorsCount)
+      updateRoleWithValue(warningsCount, item.warningsCount)
 
-      let errorItemsCount = self.items[idx].errors.items.len
+      let errorItemsCount = self.items[ind].errors.items.len
+      var errorsChanged = false
 
       # We only show the first 3 warnings + any error per task,
       # then we add another "#n more issues" item in the UI
       for i, error in item.errors:
         if (errorItemsCount + i < taskItem.MAX_VISIBLE_ERROR_ITEMS) or error.code > ord(DiscordImportErrorCode.Warning):
           let errorItem = initDiscordImportErrorItem(item.`type`, error.code, error.message)
-          self.items[idx].errors.addItem(errorItem)
+          self.items[ind].errors.addItem(errorItem)
+          errorsChanged = true
 
-      self.dataChanged(index, index, @[
-        ModelRole.Progress.int,
-        ModelRole.State.int,
-        ModelRole.Errors.int,
-        ModelRole.Stopped.int,
-        ModelRole.ErrorsCount.int,
-        ModelRole.WarningsCount.int
-      ])
+      addChangedRole(roles, false, errorsChanged, ModelRole.Errors.int): discard
 
 
   proc clearItems*(self: DiscordImportTasksModel) =

@@ -55,40 +55,48 @@ proc getChainId*(self: NetworkRouteItem): int =
 proc getLayer*(self: NetworkRouteItem): int =
   return self.layer
 
-proc getIsRouteEnabled*(self: NetworkRouteItem): bool =
+proc isRouteEnabled*(self: NetworkRouteItem): bool =
   return self.isRouteEnabled
 proc `isRouteEnabled=`*(self: NetworkRouteItem, value: bool) {.inline.} =
   self.isRouteEnabled = value
 
-proc getIsRoutePreferred*(self: NetworkRouteItem): bool =
+proc isRoutePreferred*(self: NetworkRouteItem): bool =
   return self.isRoutePreferred
 proc `isRoutePreferred=`*(self: NetworkRouteItem, value: bool) {.inline.} =
   self.isRoutePreferred = value
 
-proc getHasGas*(self: NetworkRouteItem): bool =
+proc hasGas*(self: NetworkRouteItem): bool =
   return self.hasGas
 proc `hasGas=`*(self: NetworkRouteItem, value: bool) {.inline.} =
   self.hasGas = value
 
 proc getTokenBalance*(self: NetworkRouteItem): CurrencyAmount =
   return self.tokenBalance
+proc tokenBalance*(self: NetworkRouteItem): CurrencyAmount =
+  return self.tokenBalance
 proc `tokenBalance=`*(self: NetworkRouteItem, value: CurrencyAmount) {.inline.} =
   self.tokenBalance = value
 
-proc getAmountIn*(self: NetworkRouteItem): string =
+proc amountIn*(self: NetworkRouteItem): string =
   return self.amountIn
 proc `amountIn=`*(self: NetworkRouteItem, value: string) {.inline.} =
   self.amountIn = value
 
-proc getAmountOut*(self: NetworkRouteItem): string =
+proc amountOut*(self: NetworkRouteItem): string =
   return self.amountOut
 proc `amountOut=`*(self: NetworkRouteItem, value: string) {.inline.} =
   self.amountOut = value
 
-proc getToNetworks*(self: NetworkRouteItem): string =
+proc toNetworks*(self: NetworkRouteItem): string =
   return self.toNetworks.join(":")
 proc `toNetworks=`*(self: NetworkRouteItem, value: int) {.inline.} =
   self.toNetworks.add(value)
+proc `toNetworks=`*(self: NetworkRouteItem, value: string) {.inline.} =
+  self.toNetworks = @[]
+  if value.len == 0:
+    return
+  for chainId in value.split(':'):
+    self.toNetworks.add(parseInt(chainId))
 proc resetToNetworks*(self: NetworkRouteItem) =
    self.toNetworks = @[]
 

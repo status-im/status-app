@@ -94,9 +94,9 @@ QtObject:
   proc addressChanged*(self: WalletAccountItem) {.signal.}
   proc address*(self: WalletAccountItem): string {.slot.} =
     return self.address
-#  proc setAddress*(self: WalletAccountItem, value: string) {.slot.} =
-#    self.address = value
-#    self.addressChanged()
+  proc `address=`*(self: WalletAccountItem, value: string) {.inline.} =
+    self.address = value
+    self.addressChanged()
   QtProperty[string] address:
     read = address
     notify = addressChanged
@@ -104,6 +104,9 @@ QtObject:
   proc mixedcaseAddressChanged*(self: WalletAccountItem) {.signal.}
   proc mixedcaseAddress*(self: WalletAccountItem): string {.slot.} =
     return self.mixedcaseAddress
+  proc `mixedcaseAddress=`*(self: WalletAccountItem, value: string) {.inline.} =
+    self.mixedcaseAddress = value
+    self.mixedcaseAddressChanged()
 
   QtProperty[string] mixedcaseAddress:
     read = mixedcaseAddress
@@ -132,6 +135,9 @@ QtObject:
   proc walletTypeChanged*(self: WalletAccountItem) {.signal.}
   proc walletType*(self: WalletAccountItem): string {.slot.} =
     return self.walletType
+  proc `walletType=`*(self: WalletAccountItem, value: string) {.inline.} =
+    self.walletType = value
+    self.walletTypeChanged()
   QtProperty[string] walletType:
     read = walletType
     notify = walletTypeChanged
@@ -139,6 +145,9 @@ QtObject:
   proc pathChanged*(self: WalletAccountItem) {.signal.}
   proc path*(self: WalletAccountItem): string {.slot.} =
     return self.path
+  proc `path=`*(self: WalletAccountItem, value: string) {.inline.} =
+    self.path = value
+    self.pathChanged()
   QtProperty[string] path:
     read = path
     notify = pathChanged
@@ -146,6 +155,9 @@ QtObject:
   proc keyUidChanged*(self: WalletAccountItem) {.signal.}
   proc keyUid*(self: WalletAccountItem): string {.slot.} =
     return self.keyUid
+  proc `keyUid=`*(self: WalletAccountItem, value: string) {.inline.} =
+    self.keyUid = value
+    self.keyUidChanged()
   QtProperty[string] keyUid:
     read = keyUid
     notify = keyUidChanged
@@ -153,11 +165,19 @@ QtObject:
   proc migratedToColdWalletChanged*(self: WalletAccountItem) {.signal.}
   proc migratedToColdWallet*(self: WalletAccountItem): bool {.slot.} =
     return self.migratedToColdWallet
+  proc `migratedToColdWallet=`*(self: WalletAccountItem, value: bool) {.inline.} =
+    self.migratedToColdWallet = value
+    self.migratedToColdWalletChanged()
   QtProperty[bool] migratedToColdWallet:
     read = migratedToColdWallet
     notify = migratedToColdWalletChanged
 
   proc positionChanged*(self: WalletAccountItem) {.signal.}
+  proc position*(self: WalletAccountItem): int {.slot.} =
+    return self.position
+  proc `position=`*(self: WalletAccountItem, value: int) {.inline.} =
+    self.position = value
+    self.positionChanged()
   proc getPosition*(self: WalletAccountItem): int {.slot.} =
     return self.position
   proc setPosition*(self: WalletAccountItem, value: int) {.slot.} =
