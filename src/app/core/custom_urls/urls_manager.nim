@@ -1,5 +1,5 @@
 import nimqml, strutils, chronicles
-import dotherside_ext
+import ./url_scheme_event
 import app/global/single_instance
 import ../eventemitter
 
@@ -17,7 +17,7 @@ QtObject:
     protocolUriOnStart: string
     appReady: bool
 
-  proc setup(self: UrlsManager, urlSchemeEvent: StatusEvent,
+  proc setup(self: UrlsManager, urlSchemeEvent: UrlSchemeEvent,
       singleInstance: SingleInstance) =
     self.QObject.setup
     discard QObject.connect(urlSchemeEvent, SIGNAL("urlActivated(QString)"),
@@ -28,7 +28,7 @@ QtObject:
   proc delete*(self: UrlsManager) =
     self.QObject.delete
 
-  proc newUrlsManager*(events: EventEmitter, urlSchemeEvent: StatusEvent,
+  proc newUrlsManager*(events: EventEmitter, urlSchemeEvent: UrlSchemeEvent,
       singleInstance: SingleInstance, protocolUriOnStart: string): UrlsManager =
     new(result)
     result.setup(urlSchemeEvent, singleInstance)

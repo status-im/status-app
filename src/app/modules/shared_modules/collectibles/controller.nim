@@ -1,5 +1,4 @@
 import nimqml, std/json, sequtils, sugar, strutils
-import dotherside_ext
 import stint, chronicles, tables
 
 import app/modules/shared_models/collectibles_entry

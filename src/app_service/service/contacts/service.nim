@@ -1,5 +1,4 @@
 import nimqml, tables, json, sequtils, std/strformat, chronicles, strutils, times, std/times
-import dotherside_ext
 
 import app/global/global_singleton
 import app/core/signals/types

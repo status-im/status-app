@@ -1,5 +1,4 @@
 import nimqml
-import dotherside_ext
 
 import local_account_settings
 import local_account_sensitive_settings

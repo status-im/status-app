@@ -1,5 +1,4 @@
 import nimqml
-import dotherside_ext
 import std/[strformat, strutils, httpclient, os, uri], regex, stint
 import ../../app_service/common/utils as common_utils
 import ./html_utils

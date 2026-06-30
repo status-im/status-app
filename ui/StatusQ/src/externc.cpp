@@ -2,6 +2,7 @@
 #include <QObject>
 #include <QString>
 #include <QByteArray>
+#include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlNetworkAccessManagerFactory>
 #include <QNetworkAccessManager>
@@ -9,6 +10,7 @@
 
 #include <StatusQ/typesregistration.h>
 #include <StatusQ/osnotification.h>
+#include <StatusQ/urlschemeevent.h>
 #include <MobileUI>
 
 #ifdef STATUSQ_HAS_QTWEBENGINE
@@ -103,6 +105,28 @@ Q_DECL_EXPORT void statusq_osnotification_delete(void* obj) {
 Q_DECL_EXPORT void statusq_invoke_method_queued(void* obj, const char* method, const char* arg) {
     QMetaObject::invokeMethod(static_cast<QObject*>(obj), method, Qt::QueuedConnection,
                               Q_ARG(QString, QString::fromUtf8(arg)));
+}
+
+Q_DECL_EXPORT void* statusq_urlscheme_create() {
+    auto* ev = new Status::UrlSchemeEvent();
+    ev->registerUrlHandler();
+    return ev;
+}
+
+Q_DECL_EXPORT void statusq_urlscheme_set_instance(void* obj) {
+    Status::UrlSchemeEvent::setInstance(static_cast<Status::UrlSchemeEvent*>(obj));
+}
+
+Q_DECL_EXPORT void statusq_urlscheme_install_event_filter(void* obj) {
+    qGuiApp->installEventFilter(static_cast<QObject*>(obj));
+}
+
+Q_DECL_EXPORT void statusq_urlscheme_emit_deeplink(void* obj, const char* url) {
+    static_cast<Status::UrlSchemeEvent*>(obj)->emitDeepLinkToQt(QString::fromUtf8(url));
+}
+
+Q_DECL_EXPORT void statusq_urlscheme_delete(void* obj) {
+    static_cast<QObject*>(obj)->deleteLater();
 }
 
 } // extern "C"

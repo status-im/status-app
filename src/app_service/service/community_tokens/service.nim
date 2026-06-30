@@ -1,5 +1,4 @@
 import nimqml, tables, chronicles, json, stint, strutils, sugar, sequtils, std/strformat, times
-import dotherside_ext
 from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop,
     setInterval, isActive
 

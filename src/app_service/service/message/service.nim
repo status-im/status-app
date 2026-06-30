@@ -1,5 +1,4 @@
 import nimqml, tables, json, regex, sequtils, std/strformat, strutils, chronicles, times, oids, uuids
-import dotherside_ext
 import ../../common/utils as common_utils
 
 import ../../../app/core/tasks/[qt, threadpool]

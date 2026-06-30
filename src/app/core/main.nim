@@ -1,5 +1,5 @@
 import nimqml
-import dotherside_ext
+import custom_urls/url_scheme_event
 import app/global/single_instance
 import
   eventemitter,
@@ -27,7 +27,7 @@ proc delete*(self: StatusFoundation) =
   self.urlsManager.delete()
   self.threadpool.teardown()
 
-proc initUrlSchemeManager*(self: StatusFoundation, urlSchemeEvent: StatusEvent,
+proc initUrlSchemeManager*(self: StatusFoundation, urlSchemeEvent: UrlSchemeEvent,
     singleInstance: SingleInstance, protocolUriOnStart: string) =
   self.urlsManager = newUrlsManager(self.events, urlSchemeEvent, singleInstance,
     protocolUriOnStart)

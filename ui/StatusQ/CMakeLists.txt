@@ -168,6 +168,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/imageencoderutils.h
         include/StatusQ/keychain.h
         include/StatusQ/osnotification.h
+        include/StatusQ/urlschemeevent.h
         include/StatusQ/NativeSwipeHandlerItem.h
         include/StatusQ/NativeIndicatorItem.h
         include/StatusQ/localnetworkpermission.h
@@ -201,6 +202,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/imageencoderutils.cpp
         src/keychain.cpp
         src/osnotification.cpp
+        src/urlschemeevent.cpp
         src/localnetworkpermission.cpp
         src/localnetworkpermission_backend.h
         src/networkchecker.cpp

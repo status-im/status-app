@@ -14,3 +14,9 @@ proc statusq_osnotification_show_badge_notification*(obj: pointer, notifications
 proc statusq_osnotification_delete*(obj: pointer) {.cdecl, importc.}
 
 proc statusq_invoke_method_queued*(obj: pointer, meth: cstring, arg: cstring) {.cdecl, importc.}
+
+proc statusq_urlscheme_create*(): pointer {.cdecl, importc.}
+proc statusq_urlscheme_set_instance*(obj: pointer) {.cdecl, importc.}
+proc statusq_urlscheme_install_event_filter*(obj: pointer) {.cdecl, importc.}
+proc statusq_urlscheme_emit_deeplink*(obj: pointer, url: cstring) {.cdecl, importc.}
+proc statusq_urlscheme_delete*(obj: pointer) {.cdecl, importc.}

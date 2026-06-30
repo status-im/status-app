@@ -1,5 +1,4 @@
 import nimqml, sets
-import dotherside_ext
 import app/global/html_utils
 import ./io_interface
 import ./preserved_properties

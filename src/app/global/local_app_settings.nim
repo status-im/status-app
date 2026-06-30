@@ -1,5 +1,4 @@
 import nimqml, strutils, os
-import dotherside_ext
 import app/global/qt_settings
 
 import constants

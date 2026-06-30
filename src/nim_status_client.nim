@@ -9,8 +9,8 @@ import status_go
 import app/core/main
 import constants as main_constants
 import statusq_bridge
-import dotherside_ext
 import app/core/signal_handler
+import app/core/custom_urls/url_scheme_event
 import app/global/single_instance
 
 import seaqt/QtGui/gen_qguiapplication
@@ -237,7 +237,7 @@ proc mainProc() =
   singletonInstance.setApplication(app)
 
   let singleInstance = newSingleInstance(($keccak256.digest(DATADIR))[0..31], openUri)
-  let urlSchemeEvent = newStatusUrlSchemeEventObject()
+  let urlSchemeEvent = newUrlSchemeEvent()
   urlSchemeEvent.setInstance()
   # init url manager before app controller
   statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri)

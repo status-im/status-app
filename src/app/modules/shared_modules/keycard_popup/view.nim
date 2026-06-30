@@ -1,5 +1,4 @@
 import nimqml
-import dotherside_ext
 import io_interface
 import internal/[state, state_wrapper]
 import ../../shared_models/[keypair_model, keypair_item]

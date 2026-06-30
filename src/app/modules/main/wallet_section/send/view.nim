@@ -1,5 +1,4 @@
 import nimqml, tables, json, sequtils, strutils, stint, chronicles
-import dotherside_ext
 import app/global/html_utils
 
 import ./io_interface, ./network_route_model, ./network_route_item, ./suggested_route_item, ./transaction_routes

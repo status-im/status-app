@@ -1,5 +1,4 @@
 import nimqml, os, json, chronicles
-import dotherside_ext
 import app/global/qt_settings
 
 import ../../constants
