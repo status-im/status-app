@@ -1,3 +1,4 @@
+import time
 from typing import Optional, List
 
 from selenium.webdriver.remote.webelement import WebElement
@@ -149,12 +150,19 @@ class WalletSettingsPage(BasePage):
             self.logger.error(f"Account '{name}' not visible in wallet settings list")
             return False
         
-        try:
-            self.safe_click(locator, timeout=timeout, max_attempts=2)
-            return True
-        except Exception as e:
-            self.logger.error(f"Failed to click account '{name}': {e}")
-            return False
+        # Account rows are StatusListItems nested in a scrollview; the first tap
+        # can drop mid-settle. Retry until we leave the list (no silent pass).
+        for attempt in range(3):
+            time.sleep(0.4)
+            try:
+                self.safe_click(locator, timeout=timeout, max_attempts=1)
+            except Exception as e:
+                self.logger.debug(f"select_account tap attempt {attempt + 1}: {e}")
+            if not self.is_loaded(timeout=3):
+                return True
+            self.logger.debug(f"Account '{name}' tap did not open details (attempt {attempt + 1})")
+        self.logger.error(f"Account '{name}' selected but details view did not open")
+        return False
 
     def select_account_by_index(self, index: int = 0, timeout: int = 10) -> bool:
         """Click on an account at the specified index.

@@ -22,15 +22,14 @@ class WalletAccountsLocators(BaseLocators):
         "//*[contains(@resource-id,'AccountMenu-CopyAddressAction')]"
     )
     KEYCARD_POPUP = BaseLocators.xpath(
-        "//*[contains(@resource-id,'KeycardPopup')]"
+        "//*[contains(@resource-id,'AuthenticationPopup') or contains(@resource-id,'KeycardPopup')]"
     )
     KEYCARD_PASSWORD_INPUT = BaseLocators.content_desc_exact("Password")
     KEYCARD_PASSWORD_INPUT_FALLBACK = BaseLocators.xpath(
         "//*[contains(@resource-id,'keycardPasswordInput')]"
     )
     KEYCARD_AUTHENTICATE_BUTTON = BaseLocators.xpath(
-        "//*[contains(@resource-id,'KeycardPopup')]"
-        "//android.widget.Button[contains(@content-desc,'Authenticate')]"
+        "//android.widget.Button[contains(@resource-id,'keycardPopupBaseSubmitButton')]"
     )
     KEYCARD_CANCEL_BUTTON = BaseLocators.content_desc_exact("Cancel")
     REMOVE_ACCOUNT_MODAL = BaseLocators.xpath(

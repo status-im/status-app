@@ -70,6 +70,7 @@ class MessageContextMenuPage(BasePage):
         locators = (
             self.chat_locators.message_text_exact(message_content),
             self.chat_locators.message_text(message_content),
+            self.chat_locators.message_content_desc_any(message_content),
         )
 
         element = None
