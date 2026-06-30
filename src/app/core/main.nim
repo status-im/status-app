@@ -1,5 +1,6 @@
 import nimqml
 import dotherside_ext
+import app/global/single_instance
 import
   eventemitter,
   ./tasks/threadpool,

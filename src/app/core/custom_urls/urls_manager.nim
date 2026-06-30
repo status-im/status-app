@@ -1,5 +1,6 @@
 import nimqml, strutils, chronicles
 import dotherside_ext
+import app/global/single_instance
 import ../eventemitter
 
 import ../../global/app_signals

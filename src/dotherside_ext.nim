@@ -32,7 +32,6 @@ type
 
   # Custom QObjects (real QObjects created by DOtherSide; adopted as nimqml-seaqt
   # QObject subtypes so `newQVariant` works on them).
-  SingleInstance* = ref object of QObject
   StatusEvent* = ref object of QObject
   StatusOSNotification* = ref object of QObject
 
@@ -60,10 +59,6 @@ proc dos_osnotification_delete(vptr: pointer) {.cdecl, dynlib: dynLibName, impor
 proc dos_event_create_urlSchemeEvent(): pointer {.cdecl, dynlib: dynLibName, importc.}
 proc dos_event_delete(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
 proc dos_event_set_urlSchemeEvent_instance(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
-
-proc dos_singleinstance_create(uniqueName: cstring, eventStr: cstring): pointer {.cdecl, dynlib: dynLibName, importc.}
-proc dos_singleinstance_isfirst(vptr: pointer): bool {.cdecl, dynlib: dynLibName, importc.}
-proc dos_singleinstance_delete(vptr: pointer) {.cdecl, dynlib: dynLibName, importc.}
 
 # --- High-level API (ported verbatim from the old nimqml fork) ---------------
 
@@ -127,20 +122,3 @@ proc setInstance*(self: StatusEvent) =
 
 proc installEventFilter*(application: QGuiApplication, event: StatusEvent) =
   dos_qguiapplication_installEventFilter(event.vptr)
-
-# SingleInstance
-proc delete*(self: SingleInstance)
-
-proc newSingleInstance*(uniqueName: string, eventStr: string): SingleInstance =
-  new(result, delete)
-  result.vptr = dos_singleinstance_create(uniqueName.cstring, eventStr.cstring)
-
-proc delete*(self: SingleInstance) =
-  if self.vptr.isNil:
-    return
-  dos_singleinstance_delete(self.vptr)
-  self.vptr = nil
-
-proc secondInstance*(self: SingleInstance): bool =
-  not dos_singleinstance_isfirst(self.vptr)
-
