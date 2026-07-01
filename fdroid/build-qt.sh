@@ -20,6 +20,8 @@ QT_VERSION="${QT_VERSION:-6.9.2}"
 QT_MODULES=qtbase,qtdeclarative,qt5compat,qtmultimedia,qtshadertools,qtimageformats,qtwebview,qtscxml,qtsvg,qtconnectivity,qtwebsockets,qtpositioning,qtlottie,qtwebchannel
 (cd "$QT_SRCDIR" && perl init-repository --module-subset="$QT_MODULES")
 
+rm -rf "${QT_SRCDIR:?}/qtcharts"
+
 # Reproducibility:
 #   add_link_options: strips .note.gnu.build-id from every .so
 #   add_compile_options: make sure that paths dont leak into final build.
