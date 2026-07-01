@@ -47,8 +47,7 @@ suite "SingleInstance":
     let name = "si_test_event_" & $getCurrentProcessId()
     let first = newSingleInstance(name, "")
     let catcher = newCatcher()
-    discard QObject.connect(first, eventReceived, catcher, onEvent,
-      ConnectionType.AutoConnection)
+    discard QObject.connect(first, eventReceived, catcher, onEvent)
 
     discard newSingleInstance(name, "status://open?x=1")
 

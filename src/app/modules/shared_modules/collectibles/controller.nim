@@ -116,7 +116,7 @@ QtObject:
 
     result.setupEventHandlers()
 
-    discard QObject.connect(result.model, loadMoreItems, result, onModelLoadMoreItems, ConnectionType.AutoConnection)
+    discard QObject.connect(result.model, loadMoreItems, result, onModelLoadMoreItems)
 
   proc getModel*(self: Controller): Model =
     return self.model

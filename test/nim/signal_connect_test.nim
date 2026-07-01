@@ -52,13 +52,13 @@ QtObject:
     result.source = source
     # Method-form connect inside a QtObject constructor — the pattern used across
     # notifications_manager, keycard_popup/view, etc. after the seaqt migration.
-    discard QObject.connect(source, ping, result, onExternalPing, ConnectionType.AutoConnection)
+    discard QObject.connect(source, ping, result, onExternalPing)
 
 suite "nimqml QObject.connect (seaqt-backed)":
   test "method-arg connect with AutoConnection delivers synchronously":
     let e = newEmitter()
     let r = newReceiver()
-    discard QObject.connect(e, ping, r, onPing, ConnectionType.AutoConnection)
+    discard QObject.connect(e, ping, r, onPing)
     e.ping("hello")
     check r.count == 1
     check r.last == "hello"
@@ -66,7 +66,7 @@ suite "nimqml QObject.connect (seaqt-backed)":
   test "QueuedConnection is honored (defers; would fire synchronously if type were dropped)":
     let e = newEmitter()
     let r = newReceiver()
-    discard QObject.connect(e, ping, r, onPing, ConnectionType.QueuedConnection)
+    discard QObject.connect(e, ping, r, onPing)
     e.ping("queued")
     check r.count == 0
 
