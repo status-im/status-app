@@ -274,6 +274,21 @@ void collectCodeSpans(const Node& node, QVariantList& out)
         collectCodeSpans(c, out);
 }
 
+// True when `position` falls inside a code span or code block. Descends only into the
+// child whose [start, end) contains the position; code nodes are opaque (once inside one
+// the answer is yes, no need to look deeper).
+bool positionInCode(const Node& node, int position)
+{
+    if ((node.kind == NodeKind::CodeSpan || node.kind == NodeKind::CodeBlock)
+            && position >= node.start && position < node.end)
+        return true;
+
+    for (const Node& c : node.children)
+        if (position >= c.start && position < c.end)
+            return positionInCode(c, position);
+    return false;
+}
+
 void collectLinkInfo(const Node& node, QVariantList& out)
 {
     if (node.kind == NodeKind::Link) {
@@ -497,6 +512,7 @@ void ChatInputHighlighter::setFormatUnclosedCodeFence(bool enabled)
     if (m_formatUnclosedCodeFence == enabled) return;
     m_formatUnclosedCodeFence = enabled;
     m_cachedText.clear();
+    m_astValid = false; // the option changes how the text parses
     rehighlight();
     emit formatUnclosedCodeFenceChanged();
 }
@@ -674,6 +690,22 @@ int ChatInputHighlighter::snapToQuoteContent(int position) const
     return position;
 }
 
+const Markdown::Node& ChatInputHighlighter::astForQuery() const
+{
+    const QString cur = document() ? document()->toPlainText() : QString();
+    if (!m_astValid || m_astText != cur) {
+        m_ast = Markdown::parse(cur, optionsFor(m_formatUnclosedCodeFence));
+        m_astText = cur;
+        m_astValid = true;
+    }
+    return m_ast;
+}
+
+bool ChatInputHighlighter::isInsideCode(int position) const
+{
+    return positionInCode(astForQuery(), position);
+}
+
 void ChatInputHighlighter::highlightBlock(const QString& text)
 {
     if (!document())
@@ -687,6 +719,10 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
 
         const Node doc = Markdown::parse(
             fullText, optionsFor(m_formatUnclosedCodeFence));
+
+        m_ast = doc;          // cache the tree for position queries (isInsideCode)
+        m_astText = fullText;
+        m_astValid = true;
 
         flatten(doc, 0u, m_flags);
         reProtectQuotePrefixes(fullText, doc, m_flags);

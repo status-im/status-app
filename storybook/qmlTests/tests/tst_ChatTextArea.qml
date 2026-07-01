@@ -401,5 +401,62 @@ Item {
 
             compare(control.text, "```\n> A\n\n```") // plain newline, no new "> "
         }
+
+        // ── mention suggestion context (enteringSuggestion / mentionsFilter) ──────
+
+        // Sets text + caret and checks the two derived properties.
+        function checkMention(text, cursor, entering, filter) {
+            control.text = text
+            control.forceActiveFocus()
+            control.cursorPosition = cursor
+
+            tryCompare(control, "enteringSuggestion", entering)
+            tryCompare(control, "mentionsFilter", filter)
+        }
+
+        // A bare "@" (at text start) starts a suggestion with an empty filter.
+        function test_mention_atStartEmptyFilter() {
+            checkMention("@", 1, true, "")
+        }
+
+        // "@ab" -> entering, filter is the partial name.
+        function test_mention_partialName() {
+            checkMention("@ab", 3, true, "ab")
+        }
+
+        // An "@" right after a space is a valid anchor.
+        function test_mention_afterSpace() {
+            checkMention("hi @ab", 6, true, "ab")
+        }
+
+        // Caret in the middle of the token: filter is up to the caret.
+        function test_mention_midToken() {
+            checkMention("@abc", 2, true, "a")
+        }
+
+        // "@" glued to a word char (a@ab) is not a mention anchor.
+        function test_mention_notAnchoredAfterWordChar() {
+            checkMention("a@ab", 4, false, "")
+        }
+
+        // Whitespace between the "@" token and the caret breaks the suggestion.
+        function test_mention_whitespaceBreaks() {
+            checkMention("@a b", 4, false, "")
+        }
+
+        // Caret before the "@" is not entering a suggestion.
+        function test_mention_caretBeforeAt() {
+            checkMention("@ab", 0, false, "")
+        }
+
+        // A space-anchored "@" that lands inside an inline code span is suppressed.
+        function test_mention_suppressedInCodeSpan() {
+            checkMention("`a @b`", 5, false, "")
+        }
+
+        // An "@" inside a fenced code block is suppressed.
+        function test_mention_suppressedInCodeBlock() {
+            checkMention("```\n@ab\n```", 7, false, "")
+        }
     }
 }

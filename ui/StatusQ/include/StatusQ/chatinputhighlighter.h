@@ -1,5 +1,7 @@
 #pragma once
 
+#include "StatusQ/markdownast.h"
+
 #include <QAbstractListModel>
 #include <QColor>
 #include <QQmlParserStatus>
@@ -118,6 +120,10 @@ public:
     Q_INVOKABLE int  endOfPreviousBlock(int position) const;    // last position of the previous block
     Q_INVOKABLE int  snapToQuoteContent(int position) const;    // move pos out of the "> " prefix
 
+    // Walks the cached AST for the node containing `position` and returns whether it falls
+    // inside a code span or code block. Reuses the parsed tree (no reparse on caret moves).
+    Q_INVOKABLE bool isInsideCode(int position) const;
+
 signals:
     void quickTextDocumentChanged();
     void codeBackgroundChanged();
@@ -142,9 +148,16 @@ private:
     // Fence-aware set of quote-line block-start positions for the current document.
     QSet<int> quoteLineStarts() const;
 
+    // Returns the cached full-document AST, reparsing if the cache is stale (text/option
+    // changed since it was last built in highlightBlock).
+    const Markdown::Node& astForQuery() const;
+
     QQuickTextDocument* m_quickTextDocument{nullptr};
     QVector<unsigned int> m_flags; // per-document-character emphasis bits
     QString m_cachedText; // last full document text parsed into m_flags
+    mutable Markdown::Node m_ast;       // cached full-document AST (for position queries)
+    mutable QString m_astText;          // document text the cached AST was parsed from
+    mutable bool m_astValid{false};     // whether m_ast/m_astText are current
     QColor m_codeBackground{Qt::transparent};
     bool m_formatUnclosedCodeFence{false};
     bool m_enlargeEmojis{true};

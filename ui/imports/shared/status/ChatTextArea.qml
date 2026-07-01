@@ -22,6 +22,15 @@ StatusTextArea {
     readonly property alias linksModel: highlighter.linksModel
     readonly property alias mentionsModel: highlighter.mentionsModel
 
+    // True when the caret is in the middle of typing a mention: an "@" at line/text start
+    // or right after whitespace, followed only by non-whitespace up to the caret, and not
+    // inside a code span/block.
+    readonly property bool enteringSuggestion: d.mentionContext.entering
+
+    // The partial name typed after that "@" (up to the caret); "" when not entering a
+    // suggestion.
+    readonly property string mentionsFilter: d.mentionContext.filter
+
     function insertMention(pos, name, pubKey) {
         highlighter.insertMention(pos, name, pubKey)
     }
@@ -54,6 +63,45 @@ StatusTextArea {
         id: highlighter
         quickTextDocument: root.textDocument
         codeBackground: "#e8e8e8"
+    }
+
+    QtObject {
+        id: d
+
+        // {entering, filter} for the mention being typed at the caret. Recomputed on text
+        // or caret changes; isInsideCode reuses the highlighter's cached AST.
+        readonly property var mentionContext: {
+            root.text
+            root.cursorPosition
+            return d.computeMentionContext()
+        }
+
+        function computeMentionContext() {
+            const text = root.text
+            const cursor = root.cursorPosition
+            const none = { entering: false, filter: "" }
+
+            // Walk back from the caret: only non-whitespace may precede it, and we must
+            // reach an "@". Whitespace before any "@" means no mention in progress.
+            let at = -1
+            for (let i = cursor; i > 0; --i) {
+                const ch = text.charAt(i - 1)
+                if (ch === "@") { at = i - 1; break }
+                if (/\s/.test(ch)) return none
+            }
+            if (at < 0)
+                return none
+
+            // The "@" must start a token: at text/line start, or right after whitespace.
+            if (at > 0 && !/\s/.test(text.charAt(at - 1)))
+                return none
+
+            // Mentions are not allowed inside code spans/blocks.
+            if (highlighter.isInsideCode(at))
+                return none
+
+            return { entering: true, filter: text.substring(at + 1, cursor) }
+        }
     }
 
     TextMetrics {

@@ -299,6 +299,8 @@ unclosed fence here (no closing triple-tick)
                 onToggled: textArea.enlargeEmojis = checked
             }
             Button {
+                focusPolicy: Qt.NoFocus
+
                 text: "Add random mention"
                 onClicked: {
                     const pos = textArea.cursorPosition
@@ -315,6 +317,12 @@ unclosed fence here (no closing triple-tick)
                         return textArea.inUnclosedCodeFence(textArea.cursorPosition) ? "true" : "false"
                     }
                 }
+            }
+
+            Row {
+                spacing: 16
+                Text { text: "entering suggestion: " + textArea.enteringSuggestion }
+                Text { text: "mentions filter: \"" + textArea.mentionsFilter + "\"" }
             }
 
             Row {
