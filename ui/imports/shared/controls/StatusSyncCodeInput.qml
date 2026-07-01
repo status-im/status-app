@@ -55,7 +55,11 @@ StatusInput {
             size: StatusBaseButton.Size.Tiny
             enabled: !root.readOnly && (Utils.isIOS || ClipboardUtils.hasText)
             text: qsTr("Paste")
-            onClicked: root.input.text = ClipboardUtils.text
+            onClicked: {
+                const pasted = ClipboardUtils.text
+                if (pasted.length > 0)
+                    root.input.text = pasted
+            }
         }
     }
 

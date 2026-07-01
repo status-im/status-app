@@ -707,7 +707,11 @@ StatusQ.StatusTextArea {
             if (!ClipboardUtils.hasText)
                 return false
 
-            const clipboardText = StatusQUtils.StringUtils.plainText(ClipboardUtils.text)
+            const rawClipboardText = ClipboardUtils.text
+            const clipboardHtml = ClipboardUtils.html
+            const nbEmojis = StatusQUtils.Emoji.nbEmojis(clipboardHtml)
+
+            const clipboardText = StatusQUtils.StringUtils.plainText(rawClipboardText)
             // prevent repetitive & huge clipboard paste, where huge is total char count > than messageLimitHard
             const selectionLength = root.selectionEnd - root.selectionStart
             if ((length + clipboardText.length - selectionLength) > root.messageLimitHard)
@@ -757,9 +761,9 @@ StatusQ.StatusTextArea {
                 d.copiedTextPlain = ""
                 d.copiedTextFormatted = ""
                 d.copiedMentionsPos = []
-                root.insert(d.copyTextStart, ((d.nbEmojisInClipboard() === 0) ?
-                ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
-                : StatusQUtils.Emoji.deparse(ClipboardUtils.html)))
+                root.insert(d.copyTextStart, ((nbEmojis === 0) ?
+                ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(rawClipboardText) + "</div>")
+                : StatusQUtils.Emoji.deparse(clipboardHtml)))
             }
 
             // Reset readOnly immediately after paste completes
@@ -767,7 +771,7 @@ StatusQ.StatusTextArea {
             if (StatusQUtils.Utils.isMobile || immediateCleanup) {
                 if (toggleReadOnly)
                     root.readOnly = false
-                root.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard())
+                root.cursorPosition = (d.copyTextStart + rawClipboardText.length + nbEmojis)
             }
 
             return true
