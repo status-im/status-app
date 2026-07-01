@@ -15,8 +15,8 @@ We do not use servers. [status-go](https://github.com/status-im/status-go) is wh
 ```mermaid
 flowchart LR
     qml["Frontend (QML)"] --> statusq(["StatusQ"])
-    qml --> dotherside{{"DOtherside"}}
-    dotherside --> nimqml{{"NimQML"}}
+    qml --> seaqt{{"nimqml-seaqt"}}
+    seaqt --> nimqml{{"NimQML"}}
     nimqml --> nim["Middleware (Nim)"]
     nim --> statusgo{{"Backend (status-go)"}}
     nim --> nimstatusgo{{"nim-status-go"}}
@@ -33,7 +33,7 @@ flowchart LR
     end
     click qml "https://github.com/status-im/status-app/tree/master/ui" "Link to the UI folder containing the QML code"
     click statusq "https://github.com/status-im/status-app/tree/master/ui/StatusQ" "Link to the StatusQ folder"
-    click dotherside "https://github.com/status-im/dotherside" "Link to the DOtherSide repo"
+    click seaqt "https://github.com/status-im/nimqml-seaqt" "Link to the nimqml-seaqt repo"
     click nimqml "https://github.com/status-im/nimqml" "Link to the NimQML repo"
     click nim "https://github.com/status-im/status-app/tree/master/src" "Link to the Nim code"
     click statusgo "https://github.com/status-im/status-go" "Link to the Status-Go repo"

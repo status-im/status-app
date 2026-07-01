@@ -11,7 +11,7 @@ iOS profiling and Android Studio "Go to source" are not implemented yet.
 
 | Layer      | Change                                                              |
 | ---------- | ------------------------------------------------------------------- |
-| DOtherSide | Engine binds + blocks on `QML_DEBUG_PORT` (default `49152`).        |
+| Qt engine  | Engine binds + blocks on `QML_DEBUG_PORT` (default `49152`).        |
 | Nim        | `-d:release -d:nimTypeNames` (so Android Studio resolves Nim frames). |
 | adb        | `adb forward tcp:$PORT tcp:$PORT` set up automatically.             |
 | Gradle     | `profile` build type: `debuggable=false`, `profileable=true`.       |
@@ -35,5 +35,4 @@ Override the port with `QML_DEBUG_PORT=NNNN make mobile-profile`.
 You can run both profilers concurrently — attach Android Studio first
 while the app is still blocked, then release with the QML side.
 
-To switch back to a normal run, just `make mobile-run`. The Makefile
-auto-rebuilds DOtherSide when the mode flips.
+To switch back to a normal run, just `make mobile-run`.

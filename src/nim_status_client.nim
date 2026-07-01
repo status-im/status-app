@@ -264,6 +264,10 @@ proc mainProc() =
     singletonInstance.engine.addImportPath("qrc:/./imports")
     singletonInstance.engine.addImportPath("qrc:/./app");
 
+  when defined(monitoring):
+    onRootContextPropertySet = proc(name: string) {.nimcall.} =
+      statusq_monitorAddContextProperty(name.cstring)
+
   statusq_setupNetworkAccessManagerFactory(singletonInstance.engine.vptr, (TMPDIR & "netcache").cstring)
   singletonInstance.engine.setRootContextProperty("uiScaleFilePath", newQVariant(uiScaleFilePath))
   singletonInstance.engine.setRootContextProperty("singleInstance", newQVariant(singleInstance))
@@ -280,6 +284,10 @@ proc mainProc() =
     singletonInstance.engine.setRootContextProperty("keycardTestController", newQVariant(keycardTestControllerInstance))
 
   statusq_registerQmlTypes()
+
+  when defined(monitoring):
+    statusq_registerMonitoringType()
+    statusq_initializeMonitoring(singletonInstance.engine.vptr)
 
   app.installEventFilter(urlSchemeEvent)
 

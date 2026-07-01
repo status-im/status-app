@@ -24,7 +24,6 @@ iosdevice: default
 
 # dependencies
 statusq: clean-statusq $(STATUS_Q_LIB)
-dotherside: clean-dotherside $(DOTHERSIDE_LIB)
 openssl: clean-openssl $(OPENSSL_LIB)
 qrcodegen: clean-qrcodegen $(QRCODEGEN_LIB)
 status-keycard-qt: clean-status-keycard-qt $(STATUS_KEYCARD_QT_LIB)
@@ -86,11 +85,6 @@ $(STATUS_Q_LIB): $(STATUS_Q_FILES) $(STATUS_Q_SCRIPT) $(STATUS_Q_UI_FILES)
 	@STATUSQ=$(STATUSQ) QT_MAJOR=$(QT_MAJOR) LIB_SUFFIX=$(LIB_SUFFIX) LIB_EXT=$(LIB_EXT) $(STATUS_Q_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "StatusQ built $(STATUS_Q_LIB)"
 
-$(DOTHERSIDE_LIB): $(DOTHERSIDE_FILES) $(DOTHERSIDE_SCRIPT)
-	@echo "Building DOtherSide"
-	@DOTHERSIDE=$(DOTHERSIDE) QT_MAJOR=$(QT_MAJOR) LIB_SUFFIX=$(LIB_SUFFIX) LIB_EXT=$(LIB_EXT) QML_DEBUG_PORT=$(QML_DEBUG_PORT) $(DOTHERSIDE_SCRIPT) $(HANDLE_OUTPUT)
-	@echo "DOtherSide built $(DOTHERSIDE_LIB)"
-
 $(OPENSSL_LIB): $(OPENSSL_FILES)
 	@echo "Building OpenSSL"
 	@LIB_PATH=$(LIB_PATH) LIB_EXT=$(LIB_EXT) OPENSSL=$(OPENSSL) BUILD_DIR=$(BUILD_PATH) $(OPENSSL_SCRIPT) $(HANDLE_OUTPUT)
@@ -115,7 +109,7 @@ ifeq ($(OS),android)
 $(NIM_STATUS_CLIENT_LIB): $(STATUS_GO_STUB_LIB) $(STATUS_GO_SERVICE_LIB)
 endif
 
-$(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT) $(STATUS_DESKTOP_RCC) $(DOTHERSIDE_LIB) $(OPENSSL_LIB) $(STATUS_Q_LIB) $(QRCODEGEN_LIB)
+$(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT) $(STATUS_DESKTOP_RCC) $(OPENSSL_LIB) $(STATUS_Q_LIB) $(QRCODEGEN_LIB)
 	@echo "Building Status Desktop Lib"
 	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
 	LIB_SUFFIX=$(LIB_SUFFIX) \
@@ -133,7 +127,7 @@ $(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT
 	@echo "Status Desktop Lib built $(NIM_STATUS_CLIENT_LIB)"
 
 # non-phony targets
-$(TARGET): $(APP_SCRIPT) $(STATUS_GO_LIB) $(STATUS_Q_LIB) $(DOTHERSIDE_LIB) $(OPENSSL_LIB) $(QRCODEGEN_LIB) $(STATUS_KEYCARD_QT_LIB) $(NIM_STATUS_CLIENT_LIB) $(STATUS_DESKTOP_RCC) $(WRAPPER_APP_FILES)
+$(TARGET): $(APP_SCRIPT) $(STATUS_GO_LIB) $(STATUS_Q_LIB) $(OPENSSL_LIB) $(QRCODEGEN_LIB) $(STATUS_KEYCARD_QT_LIB) $(NIM_STATUS_CLIENT_LIB) $(STATUS_DESKTOP_RCC) $(WRAPPER_APP_FILES)
 	@echo "Building app"
 ifeq ($(OS),android)
 	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
@@ -222,7 +216,7 @@ endif
 all: $(TARGET)
 
 .PHONY: clean
-clean: clean-statusq clean-dotherside clean-openssl clean-qrcodegen clean-status-keycard-qt clean-nim-status-client clean-status-desktop-rcc
+clean: clean-statusq clean-openssl clean-qrcodegen clean-status-keycard-qt clean-nim-status-client clean-status-desktop-rcc
 	@echo "Cleaning"
 	@rm -rf $(ROOT_DIR)/bin $(ROOT_DIR)/build $(ROOT_DIR)/lib
 
@@ -236,12 +230,6 @@ clean-statusq:
 	@rm -f $(STATUS_Q_LIB)
 	@rm -rf $(STATUSQ)/build
 	@make -C $(STATUS_DESKTOP) statusq-clean
-
-.PHONY: clean-dotherside
-clean-dotherside:
-	@rm -f $(DOTHERSIDE_LIB)
-	@rm -rf $(DOTHERSIDE)/build
-	@make -C $(STATUS_DESKTOP) dotherside-clean
 
 .PHONY: clean-openssl
 clean-openssl:

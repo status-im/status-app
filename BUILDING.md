@@ -327,7 +327,7 @@ The following environment variables can be used to customize the build:
 - NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `$(GIT_ROOT)/../nim-sds`
 - PRODUCTION_PARAMETERS (string) - Configure the production arguments for nim compilation. Defaults to `-d:production`
 - QMAKE (path to executable) - Point the build system to a different qt installation. Defaults to env configuration
-- QML_DEBUG (true,false) - Enable qml debugger and profiler. Needs DOtherSide recompilation. Defaults to `false`
+- QML_DEBUG (true,false) - Enable qml debugger and profiler. Defaults to `false`
 - QML_DEBUG_PORT (number) - Configure the qml debugger port. Defaults to `49152`
 - QT_ARCH (string) - Configure the Qt architecture for macOS cross-compilation. Can be used to compile Intel builds on ARM64 OS. Defaults to `$(shell uname -m)`
 - REBUILD_NIM (true,false) - Force nim recompilation

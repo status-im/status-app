@@ -55,7 +55,6 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	mobile-build \
 	mobile-clean \
 	mobile-profile \
-	mobile-profile-mode-check \
 	flatpak \
 	flatpak-install \
 	flatpak-run \
@@ -202,14 +201,14 @@ QML_DEBUG_PORT ?= 49152
 
 ifneq ($(QML_DEBUG), false)
  COMMON_CMAKE_BUILD_TYPE=Debug
- DOTHERSIDE_CMAKE_CONFIG_PARAMS := -DQML_DEBUG_PORT=$(QML_DEBUG_PORT)
 else
  COMMON_CMAKE_BUILD_TYPE=Release
 endif
 
 MONITORING ?= false
 ifneq ($(MONITORING), false)
- DOTHERSIDE_CMAKE_CONFIG_PARAMS += -DMONITORING:BOOL=ON -DMONITORING_QML_ENTRY_POINT:STRING="/../monitoring/Main.qml"
+ STATUSQ_CMAKE_CONFIG_PARAMS += -DMONITORING:BOOL=ON -DMONITORING_QML_ENTRY_POINT:STRING="/../monitoring/Main.qml"
+ NIM_PARAMS += -d:monitoring
 endif
 
 # where Qt is installed, depends on the `QMAKE` path
@@ -218,8 +217,6 @@ QT_INSTALL_PREFIX := $(shell $(QMAKE) -query QT_INSTALL_PREFIX 2>/dev/null)
 QT_VERSION := $(shell $(QMAKE) -query QT_VERSION 2>/dev/null)
 # referenced in android/qt6/build.gradle
 export QT_ANDROID_DIR := $(QT_INSTALL_PREFIX)/src/android/java
-# separate DOS build dir, per Qt version
-DOTHERSIDE_BUILD_PATH := vendor/DOtherSide/build/Qt$(QT_VERSION)
 # separate StatusQ/storybook/... build dirs, per Qt version
 COMMON_CMAKE_CONFIG_PARAMS := -DCMAKE_PREFIX_PATH=$(QT_INSTALL_PREFIX)
 
@@ -250,8 +247,6 @@ ifneq ($(mkspecs),win32)
  else
   NIM_PARAMS += --passL:"-L$(QT_LIBDIR)"
  endif
- DOTHERSIDE_LIBFILE := $(DOTHERSIDE_BUILD_PATH)/lib/libDOtherSideStatic.a
- NIM_PARAMS += --passL:"$(DOTHERSIDE_LIBFILE)"
  QT_SEAQT_EXTRA_LIBS = $(shell PKG_CONFIG_PATH="$(QT_PCFILEDIR)" PKG_CONFIG_PREFIX_OVERRIDE="Qt*=$(QT_PC_PREFIX)" $(QT_PC_PKGCONFIG) --libs Qt"$(QT_MAJOR_VERSION)"Core Qt"$(QT_MAJOR_VERSION)"Qml Qt"$(QT_MAJOR_VERSION)"Gui Qt"$(QT_MAJOR_VERSION)"Quick Qt"$(QT_MAJOR_VERSION)"QuickControls2 Qt"$(QT_MAJOR_VERSION)"Widgets Qt"$(QT_MAJOR_VERSION)"Svg Qt"$(QT_MAJOR_VERSION)"Multimedia Qt"$(QT_MAJOR_VERSION)"WebView Qt"$(QT_MAJOR_VERSION)"WebChannel)
 else
  WIN_SYS_LIBS := --passL:"-luser32"
@@ -303,7 +298,7 @@ INCLUDE_DEBUG_SYMBOLS ?= false
 ifeq ($(INCLUDE_DEBUG_SYMBOLS),true)
  # We need `-d:debug` to get Nim's default stack traces
  NIM_PARAMS += -d:debug
- # Enable debugging symbols in DOtherSide, in case we need GDB backtraces
+ # Enable debugging symbols, in case we need GDB backtraces
  CFLAGS += -g
  CXXFLAGS += -g
  RCC_PARAMS = --no-compress
@@ -359,6 +354,7 @@ $(STATUSQ_CMAKE_CACHE): | check-qt-dir
 		-DSTATUSQ_BUILD_SANITY_CHECKER=OFF \
 		-DSTATUSQ_BUILD_TESTS=OFF \
 		$(COMMON_CMAKE_CONFIG_PARAMS) \
+		$(STATUSQ_CMAKE_CONFIG_PARAMS) \
 		-B $(STATUSQ_BUILD_PATH) \
 		-S $(STATUSQ_SOURCE_PATH) \
 		-Wno-dev \
@@ -485,59 +481,6 @@ run-storybook-pages-validator: storybook-build
 storybook-clean:
 	echo -e "\033[92mCleaning:\033[39m Storybook"
 	rm -rf $(STORYBOOK_BUILD_PATH)
-
-##
-##	DOtherSide
-##
-
-ifneq ($(mkspecs),win32)
- DOTHERSIDE_CMAKE_CONFIG_PARAMS += -DENABLE_DYNAMIC_LIBS=OFF -DENABLE_STATIC_LIBS=ON
-#  NIM_PARAMS +=
-else
- DOTHERSIDE_LIBFILE := $(DOTHERSIDE_BUILD_PATH)/lib/$(COMMON_CMAKE_BUILD_TYPE)/DOtherSide.dll
- DOTHERSIDE_CMAKE_CONFIG_PARAMS += -DENABLE_DYNAMIC_LIBS=ON -DENABLE_STATIC_LIBS=OFF
- ifeq ($(mkspecs),win32)
-  # The MSVC linker (lld-link) links against the import library, not the .dll
-  # itself (passing the .dll gives "bad file type"). cmake emits DOtherSide.lib
-  # next to the .dll; DOTHERSIDE_LIBFILE stays the .dll for packaging/runtime.
-  NIM_PARAMS += -L:$(DOTHERSIDE_BUILD_PATH)/lib/$(COMMON_CMAKE_BUILD_TYPE)/DOtherSide.lib
- else
-  NIM_PARAMS += -L:$(DOTHERSIDE_LIBFILE)
- endif
-endif
-
-DOTHERSIDE_SOURCE_PATH := vendor/DOtherSide
-DOTHERSIDE_CMAKE_CACHE := $(DOTHERSIDE_BUILD_PATH)/CMakeCache.txt
-DOTHERSIDE_LIBDIR := $(shell pwd)/$(shell dirname "$(DOTHERSIDE_LIBFILE)")
-export DOTHERSIDE_LIBDIR
-
-$(DOTHERSIDE_CMAKE_CACHE): | deps
-	echo -e "\033[92mConfiguring:\033[39m DOtherSide"
-	cmake \
-		-DCMAKE_BUILD_TYPE=$(COMMON_CMAKE_BUILD_TYPE) \
-		-DENABLE_DOCS=OFF \
-		-DENABLE_TESTS=OFF \
-		$(COMMON_CMAKE_CONFIG_PARAMS) \
-		$(DOTHERSIDE_CMAKE_CONFIG_PARAMS) \
-		-B $(DOTHERSIDE_BUILD_PATH) \
-		-S $(DOTHERSIDE_SOURCE_PATH) \
-		-Wno-dev \
-		$(HANDLE_OUTPUT)
-
-dotherside-configure: | $(DOTHERSIDE_CMAKE_CACHE)
-
-dotherside-build: | dotherside-configure
-	echo -e "\033[92mBuilding:\033[39m DOtherSide"
-	cmake \
-		--build $(DOTHERSIDE_BUILD_PATH) \
-		--config $(COMMON_CMAKE_BUILD_TYPE) \
-		$(HANDLE_OUTPUT)
-
-dotherside-clean:
-	echo -e "\033[92mCleaning:\033[39m DOtherSide"
-	rm -rf $(DOTHERSIDE_BUILD_PATH)
-
-dotherside: | dotherside-build
 
 ##
 ##	status-go
@@ -787,7 +730,7 @@ $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
 ifneq ($(mkspecs),win32)
 $(NIM_STATUS_CLIENT): NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
-$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
+$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
 		--mm:orc \
@@ -814,7 +757,7 @@ ifeq ($(mkspecs),macx)
 		bin/nim_status_client
 endif
 
-nim_status_client: force-rebuild-status-go statusq dotherside $(NIM_STATUS_CLIENT)
+nim_status_client: force-rebuild-status-go statusq $(NIM_STATUS_CLIENT)
 
 ifdef IN_NIX_SHELL
 APPIMAGE_TOOL := appimagetool
@@ -994,7 +937,7 @@ $(STATUS_CLIENT_EXE): compile_windows_resources nim_status_client nim_windows_la
 	cp bin/nim_windows_launcher.exe $(OUTPUT)/Status.exe
 	rcedit $(OUTPUT)/bin/Status.exe --set-icon $(OUTPUT)/resources/status.ico
 	rcedit $(OUTPUT)/Status.exe --set-icon $(OUTPUT)/resources/status.ico
-	cp $(DOTHERSIDE_LIBFILE) $(STATUSGO) $(STATUSKEYCARD_QT_LIB) $(NIMSDS_LIBFILE) $(STATUSQ_LIB_PATH)/* $(STATUSQ_BUILD_PATH)/bin/$(COMMON_CMAKE_BUILD_TYPE)/* $(OUTPUT)/bin/
+	cp $(STATUSGO) $(STATUSKEYCARD_QT_LIB) $(NIMSDS_LIBFILE) $(STATUSQ_LIB_PATH)/* $(STATUSQ_BUILD_PATH)/bin/$(COMMON_CMAKE_BUILD_TYPE)/* $(OUTPUT)/bin/
 	cp "$(shell which libstdc++-6.dll)"     $(OUTPUT)/bin/
 	cp "$(shell which libgcc_s_seh-1.dll)"  $(OUTPUT)/bin/
 	cp "$(shell which libwinpthread-1.dll)" $(OUTPUT)/bin/
@@ -1002,7 +945,7 @@ $(STATUS_CLIENT_EXE): compile_windows_resources nim_status_client nim_windows_la
 	cp "$(shell which libssl-3-x64.dll)"    $(OUTPUT)/bin/
 	echo -e $(BUILD_MSG) "deployable folder"
 	VCINSTALLDIR="$(VCINSTALLDIR)" windeployqt --compiler-runtime --qmldir ui --release \
-		tmp/windows/dist/Status/bin/DOtherSide.dll
+		tmp/windows/dist/Status/bin/Status.exe
 	mv tmp/windows/dist/Status/bin/vc_redist.x64.exe tmp/windows/dist/Status/vendor/
 	cp status.iss $(OUTPUT)/status.iss
 	cp $(QT_INSTALL_PREFIX)/plugins/tls/qopensslbackend.dll $(OUTPUT)/bin/plugins/tls/
@@ -1048,7 +991,7 @@ zip-windows: check-pkg-target-windows $(STATUS_CLIENT_7Z)
 clean-destdir:
 	rm -rf bin/*
 
-clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean dotherside-clean storybook-clean clean-translations
+clean: | clean-common clean-destdir statusq-clean status-go-clean status-keycard-qt-clean storybook-clean clean-translations
 	rm -rf bottles/* pkg/* tmp/*
 	+ $(MAKE) -C vendor/QR-Code-generator/c/ --no-print-directory clean
 
@@ -1090,7 +1033,6 @@ run-windows: STATUS_RC_FILE = status-dev.rc
 run-windows: compile_windows_resources nim_status_client
 	echo -e "\033[92mCopying DLLs to bin/\033[39m"
 	cp -f -R $(STATUSQ_BUILD_PATH)/bin/$(COMMON_CMAKE_BUILD_TYPE)/* ./bin/
-	cp -f $(DOTHERSIDE_LIBFILE) ./bin/
 	cp -f $(STATUSGO_LIBDIR)/libstatus.dll ./bin/
 	cp -f $(STATUSKEYCARD_QT_LIB) ./bin/
 	cp -f $(NIMSDS_LIBDIR)/libsds.dll ./bin/
@@ -1113,7 +1055,7 @@ nim-test-run/test/nim/url_scheme_event_test.nim: | statusq
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
-nim-test-run/%: | qt-pkgconfig dotherside $(STATUSGO) $(QRCODEGEN)
+nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
 	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:refc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
 
@@ -1126,29 +1068,11 @@ endef
 export PATH := $(call qmkq,QT_INSTALL_BINS):$(call qmkq,QT_HOST_BINS):$(call qmkq,QT_HOST_LIBEXECS):$(PATH)
 export QTDIR := $(call qmkq,QT_INSTALL_PREFIX)
 
-# Mobile profile-mode tracking: QML_DEBUG_PORT is baked into libDOtherSide.so
-# at compile time, so toggling profile mode requires a DOtherSide rebuild.
-# A sentinel file records the last build's mode and forces clean-dotherside
-# whenever it disagrees with the desired mode.
-MOBILE_PROFILE_SENTINEL := mobile/build/.profile-mode
-
-mobile-run: MOBILE_PROFILE_DESIRED := 0
-mobile-profile: MOBILE_PROFILE_DESIRED := 1
-
-mobile-profile-mode-check:
-	@mkdir -p $(dir $(MOBILE_PROFILE_SENTINEL))
-	@current=$$(cat $(MOBILE_PROFILE_SENTINEL) 2>/dev/null || echo 0); \
-	if [ "$$current" != "$(MOBILE_PROFILE_DESIRED)" ]; then \
-	  echo -e "\033[92mProfile mode change\033[39m ($$current -> $(MOBILE_PROFILE_DESIRED)): cleaning DOtherSide"; \
-	  $(MAKE) -C mobile clean-dotherside; \
-	fi
-	@echo $(MOBILE_PROFILE_DESIRED) > $(MOBILE_PROFILE_SENTINEL)
-
-mobile-run: qt-pkgconfig deps-common mobile-profile-mode-check
+mobile-run: qt-pkgconfig deps-common
 	echo -e "\033[92mRunning:\033[39m mobile app"
 	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug
 
-mobile-profile: qt-pkgconfig deps-common mobile-profile-mode-check
+mobile-profile: qt-pkgconfig deps-common
 ifeq ($(mkspecs),ios)
 	@echo "TODO: iOS profiling is not implemented yet"; exit 1
 else

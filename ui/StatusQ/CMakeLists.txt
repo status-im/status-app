@@ -422,6 +422,16 @@ endif()
 
 target_include_directories(StatusQ PUBLIC include)
 
+option(MONITORING "Build the QML monitoring/introspection tools" OFF)
+set(MONITORING_QML_ENTRY_POINT "" CACHE STRING "QML file that starts the monitoring tool UI")
+if(MONITORING)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/../MonitoringSources.cmake)
+    target_sources(StatusQ PRIVATE ${MONITORING_SOURCES} ${MONITORING_HEADERS})
+    target_include_directories(StatusQ PRIVATE ${MONITORING_INCLUDE_PATH})
+    target_compile_definitions(StatusQ PRIVATE MONITORING
+        MONITORING_QML_ENTRY_POINT="${MONITORING_QML_ENTRY_POINT}")
+endif()
+
 install(TARGETS StatusQ
         RUNTIME DESTINATION StatusQ
         LIBRARY DESTINATION StatusQ

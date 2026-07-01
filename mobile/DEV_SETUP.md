@@ -165,7 +165,6 @@ The build system uses several environment variables to control the build process
 ### Key Components
 - Status Go
 - StatusQ
-- DOtherSide
 - OpenSSL
 - QRCodeGen
 - Nim Status Client

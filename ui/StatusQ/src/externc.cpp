@@ -11,6 +11,11 @@
 #include <StatusQ/typesregistration.h>
 #include <StatusQ/osnotification.h>
 #include <StatusQ/urlschemeevent.h>
+#ifdef MONITORING
+#include <QProcessEnvironment>
+#include <QtQml>
+#include "StatusDesktop/Monitoring/Monitor.h"
+#endif
 #include <MobileUI>
 
 #ifdef STATUSQ_HAS_QTWEBENGINE
@@ -128,5 +133,22 @@ Q_DECL_EXPORT void statusq_urlscheme_emit_deeplink(void* obj, const char* url) {
 Q_DECL_EXPORT void statusq_urlscheme_delete(void* obj) {
     static_cast<QObject*>(obj)->deleteLater();
 }
+
+#ifdef MONITORING
+Q_DECL_EXPORT void statusq_registerMonitoringType() {
+    qmlRegisterSingletonType<Monitor>("Monitoring", 1, 0, "Monitor", &Monitor::qmlInstance);
+}
+
+Q_DECL_EXPORT void statusq_initializeMonitoring(void* engine) {
+    auto disabled = QStringLiteral("0");
+    if (QProcessEnvironment::systemEnvironment().value(
+            QStringLiteral("DISABLE_MONITORING_WINDOW"), disabled) == disabled)
+        Monitor::instance().initialize(static_cast<QQmlApplicationEngine*>(engine));
+}
+
+Q_DECL_EXPORT void statusq_monitorAddContextProperty(const char* name) {
+    Monitor::instance().addContextPropertyName(QString::fromUtf8(name));
+}
+#endif
 
 } // extern "C"

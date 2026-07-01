@@ -18,9 +18,6 @@ OTHER_FILES += $$files("$$PWD/*.js", true)
 OTHER_FILES += $$files("$$PWD/../src/*.nim", true)
 OTHER_FILES += $$files("$$PWD/../monitoring/*.qml", true)
 
-OTHER_FILES += $$files("$$PWD/../vendor/DOtherSide/lib/*.cpp", true)
-OTHER_FILES += $$files("$$PWD/../vendor/DOtherSide/lib/*.h", true)
-
 OTHER_FILES += $$files("$$PWD/../vendor/SortFilterProxyModel/*.cpp", true)
 OTHER_FILES += $$files("$$PWD/../vendor/SortFilterProxyModel/*.h", true)
 
