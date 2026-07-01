@@ -4,9 +4,13 @@
 #include "StatusQ/mentiontextobject.h"
 
 #include <QAbstractTextDocumentLayout>
+#include <QClipboard>
 #include <QColor>
+#include <QDataStream>
 #include <QFontDatabase>
 #include <QFontMetricsF>
+#include <QGuiApplication>
+#include <QMimeData>
 #include <QTextBlock>
 #include <QTextBlockFormat>
 #include <QTextCharFormat>
@@ -28,6 +32,9 @@ constexpr unsigned int kQuote         = 1u << 7; // block-quote line: dark blue
 
 // Emphasis bits that an outer span propagates into nested code/quote content.
 constexpr unsigned int kEmphasisMask  = kBold | kItalic | kStrikeThrough;
+
+// Clipboard MIME carrying the internal, mention-preserving representation of a selection.
+constexpr char kChatInputMimeType[] = "application/x-status-chat-input";
 
 using Markdown::Node;
 using Markdown::NodeKind;
@@ -454,6 +461,107 @@ void ChatInputHighlighter::insertMention(int position, const QString& name,
     QTextCursor cursor(document());
     cursor.setPosition(qBound(0, position, document()->characterCount() - 1));
     cursor.insertText(QString(QChar::ObjectReplacementCharacter), fmt);
+}
+
+void ChatInputHighlighter::copySelectionToClipboard(int start, int end) const
+{
+    if (!document() || start >= end)
+        return;
+
+    QByteArray data;
+    QDataStream stream(&data, QIODevice::WriteOnly);
+    stream.setVersion(QDataStream::Qt_6_0);
+    QString plainText;
+    QString accum;
+
+    // Emit any pending run of plain characters (tag 0) into both representations.
+    const auto flushAccum = [&]() {
+        if (!accum.isEmpty()) {
+            stream << quint8(0) << accum;
+            plainText += accum;
+            accum.clear();
+        }
+    };
+
+    QTextCursor cursor(document());
+    for (int pos = start; pos < end; ++pos) {
+        cursor.setPosition(pos);
+        cursor.setPosition(pos + 1, QTextCursor::KeepAnchor);
+        const QString ch = cursor.selectedText();
+        const QTextCharFormat fmt = cursor.charFormat();
+
+        if (ch == QString(QChar::ParagraphSeparator)) {
+            flushAccum();
+            stream << quint8(2);
+            plainText += QLatin1Char('\n');
+        } else if (fmt.objectType() == MentionTextObject::MentionType) {
+            flushAccum();
+            const QString name   = fmt.property(MentionTextObject::NameProperty).toString();
+            const QString pubKey = fmt.property(MentionTextObject::PubKeyProperty).toString();
+            stream << quint8(1) << name << pubKey;
+            plainText += name; // mentions collapse to their name for external paste
+        } else {
+            accum += ch;
+        }
+    }
+    flushAccum();
+
+    auto* mime = new QMimeData();
+    mime->setData(QString::fromLatin1(kChatInputMimeType), data);
+    mime->setText(plainText);
+    QGuiApplication::clipboard()->setMimeData(mime);
+}
+
+void ChatInputHighlighter::pasteFromClipboard(int selectionStart, int selectionEnd,
+                                              int cursorPosition)
+{
+    if (!document())
+        return;
+
+    const QMimeData* mime = QGuiApplication::clipboard()->mimeData();
+    if (!mime)
+        return;
+
+    QTextCursor cursor(document());
+    if (selectionStart != selectionEnd) {
+        cursor.setPosition(selectionStart);
+        cursor.setPosition(selectionEnd, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+    } else {
+        cursor.setPosition(cursorPosition);
+    }
+
+    if (mime->hasFormat(QString::fromLatin1(kChatInputMimeType))) {
+        QByteArray data = mime->data(QString::fromLatin1(kChatInputMimeType));
+        QDataStream stream(&data, QIODevice::ReadOnly);
+        stream.setVersion(QDataStream::Qt_6_0);
+
+        cursor.beginEditBlock();
+        while (!stream.atEnd()) {
+            quint8 type = 0;
+            stream >> type;
+            if (type == 0) {
+                QString text;
+                stream >> text;
+                cursor.insertText(text);
+            } else if (type == 1) {
+                QString name, pubKey;
+                stream >> name >> pubKey;
+                QTextCharFormat fmt;
+                fmt.setObjectType(MentionTextObject::MentionType);
+                fmt.setProperty(MentionTextObject::NameProperty, name);
+                fmt.setProperty(MentionTextObject::PubKeyProperty, pubKey);
+                fmt.setProperty(MentionTextObject::UniqueIdProperty, ++m_mentionCounter);
+                fmt.setVerticalAlignment(QTextCharFormat::AlignBottom);
+                cursor.insertText(QString(QChar::ObjectReplacementCharacter), fmt);
+            } else if (type == 2) {
+                cursor.insertBlock();
+            }
+        }
+        cursor.endEditBlock();
+    } else if (mime->hasText()) {
+        cursor.insertText(mime->text());
+    }
 }
 
 QQuickTextDocument* ChatInputHighlighter::quickTextDocument() const

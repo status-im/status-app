@@ -208,6 +208,31 @@ StatusTextArea {
             return
         }
 
+        // Custom copy/paste so mentions survive round-trips inside the editor (via a private
+        // clipboard MIME) and collapse to their name text when pasted into other apps.
+        if (event.matches(StandardKey.Copy)
+                && root.selectionStart !== root.selectionEnd) {
+            event.accepted = true
+            highlighter.copySelectionToClipboard(root.selectionStart, root.selectionEnd)
+            return
+        }
+        if (event.matches(StandardKey.Cut)
+                && root.selectionStart !== root.selectionEnd) {
+            event.accepted = true
+            highlighter.copySelectionToClipboard(root.selectionStart, root.selectionEnd)
+            // deleteRange (not root.remove) so a reactive mention demotion folds into one
+            // undo step, matching the mention-aware deletion below.
+            TextDocumentUtils.deleteRange(root.textDocument,
+                                          root.selectionStart, root.selectionEnd)
+            return
+        }
+        if (event.matches(StandardKey.Paste)) {
+            event.accepted = true
+            highlighter.pasteFromClipboard(root.selectionStart, root.selectionEnd,
+                                           root.cursorPosition)
+            return
+        }
+
         // Quote-block continuation and atomic "> " editing. These mirror the
         // ChatInputMentions UX: Enter inside a quote starts a new "> " line (two
         // Enters on an empty quote line exit), a single Backspace at the start of

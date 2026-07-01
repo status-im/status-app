@@ -85,6 +85,16 @@ public:
     Q_INVOKABLE void insertMention(int position, const QString& name,
                                    const QString& pubKey);
 
+    // Copies `[start, end)` to the clipboard in two forms: a custom MIME that rebuilds
+    // mentions verbatim when pasted back into the editor, and plain text (each mention as
+    // its name) for pasting into other applications.
+    Q_INVOKABLE void copySelectionToClipboard(int start, int end) const;
+
+    // Pastes the clipboard at the caret (replacing `[selectionStart, selectionEnd)` first).
+    // The custom MIME restores mentions as objects; otherwise plain text is inserted.
+    Q_INVOKABLE void pasteFromClipboard(int selectionStart, int selectionEnd,
+                                        int cursorPosition);
+
     // Returns [{start, end, bold, italic, strikethrough}, ...] — for unit tests
     Q_INVOKABLE QVariantList parseFormats(const QString& text) const;
 

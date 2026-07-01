@@ -16,6 +16,13 @@ Item {
         }
     }
 
+    // A plain editor used to read back the clipboard's external (plain-text) form.
+    Component {
+        id: plainTextEditComponent
+
+        TextEdit {}
+    }
+
     // Helper views to read the (highlighter-backed) models from QML. They bind to the
     // control created per-test; `.count` / `itemAt` expose row count and roles.
     Repeater {
@@ -457,6 +464,68 @@ Item {
         // An "@" inside a fenced code block is suppressed.
         function test_mention_suppressedInCodeBlock() {
             checkMention("```\n@ab\n```", 7, false, "")
+        }
+
+        // ── copy / cut / paste with mentions ─────────────────────────────────────
+
+        // Builds "A<mention>B" and returns the object char for assertions.
+        function makeMentionDoc() {
+            const M = String.fromCharCode(0xFFFC)
+            control.text = "A"
+            control.insertMention(1, "@alice", "0xabc")
+            control.insert(control.length, "B")
+            compare(control.text, "A" + M + "B")
+            tryCompare(mentionsRepeater, "count", 1)
+            return M
+        }
+
+        // Copy a selection with a mention, clear, and paste it back: the mention object is
+        // rebuilt (roles preserved) from the private clipboard MIME.
+        function test_copyPaste_mentionRoundTrip() {
+            const M = makeMentionDoc()
+            control.forceActiveFocus()
+            control.selectAll()
+            keyClick(Qt.Key_C, Qt.ControlModifier)
+
+            control.text = ""
+            control.cursorPosition = 0
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+
+            tryCompare(control, "text", "A" + M + "B")
+            tryCompare(mentionsRepeater, "count", 1)
+            compare(mentionsRepeater.itemAt(0).name, "@alice")
+            compare(mentionsRepeater.itemAt(0).pubKey, "0xabc")
+        }
+
+        // Cut removes the selection (and its mention); a subsequent paste restores it.
+        function test_cut_removesSelectionThenPasteRestores() {
+            const M = makeMentionDoc()
+            control.forceActiveFocus()
+            control.selectAll()
+            keyClick(Qt.Key_X, Qt.ControlModifier)
+
+            tryCompare(control, "text", "")
+            tryCompare(mentionsRepeater, "count", 0)
+
+            control.cursorPosition = 0
+            keyClick(Qt.Key_V, Qt.ControlModifier)
+            tryCompare(control, "text", "A" + M + "B")
+            tryCompare(mentionsRepeater, "count", 1)
+        }
+
+        // The clipboard's plain-text form renders the mention as its name, so pasting into a
+        // plain editor yields "A@aliceB".
+        function test_copy_externalPlainText() {
+            makeMentionDoc()
+            control.forceActiveFocus()
+            control.selectAll()
+            keyClick(Qt.Key_C, Qt.ControlModifier)
+
+            const plain = createTemporaryObject(plainTextEditComponent, root)
+            verify(plain)
+            plain.forceActiveFocus()
+            plain.paste()
+            tryCompare(plain, "text", "A@aliceB")
         }
     }
 }
