@@ -430,6 +430,8 @@ if(MONITORING)
     target_include_directories(StatusQ PRIVATE ${MONITORING_INCLUDE_PATH})
     target_compile_definitions(StatusQ PRIVATE MONITORING
         MONITORING_QML_ENTRY_POINT="${MONITORING_QML_ENTRY_POINT}")
+    find_package(Qt6 COMPONENTS QmlPrivate REQUIRED)
+    target_link_libraries(StatusQ PRIVATE Qt::QmlPrivate)
 endif()
 
 install(TARGETS StatusQ

@@ -201,6 +201,7 @@ QML_DEBUG_PORT ?= 49152
 
 ifneq ($(QML_DEBUG), false)
  COMMON_CMAKE_BUILD_TYPE=Debug
+ NIM_PARAMS += -d:qmldebug -d:qmlDebugPort:$(QML_DEBUG_PORT) --passC:"-DQT_QML_DEBUG"
 else
  COMMON_CMAKE_BUILD_TYPE=Release
 endif
@@ -1022,6 +1023,10 @@ run-macos: nim_status_client
 	cp Info.dev.plist bin/StatusDev.app/Contents/Info.plist
 	cp status-dev.icns bin/StatusDev.app/Contents/Resources/
 	cp resources.rcc bin/StatusDev.app/Contents/
+	# Monitoring tool loads MONITORING_QML_ENTRY_POINT="/../monitoring/Main.qml" relative to the app
+	# binary dir (Contents/MacOS -> Contents/monitoring). Copy the QML into the bundle for MONITORING builds.
+	[ "$(MONITORING)" = "false" ] || rm -rf bin/StatusDev.app/Contents/monitoring
+	[ "$(MONITORING)" = "false" ] || cp -R monitoring bin/StatusDev.app/Contents/monitoring
 	cd bin/StatusDev.app/Contents/MacOS && \
 		ln -fs ../../../nim_status_client ./
 	fileicon set bin/nim_status_client status-dev.icns

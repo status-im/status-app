@@ -145,10 +145,6 @@ Q_DECL_EXPORT void statusq_initializeMonitoring(void* engine) {
             QStringLiteral("DISABLE_MONITORING_WINDOW"), disabled) == disabled)
         Monitor::instance().initialize(static_cast<QQmlApplicationEngine*>(engine));
 }
-
-Q_DECL_EXPORT void statusq_monitorAddContextProperty(const char* name) {
-    Monitor::instance().addContextPropertyName(QString::fromUtf8(name));
-}
 #endif
 
 } // extern "C"

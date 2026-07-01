@@ -86,7 +86,7 @@ if [ "$DEBUG" -eq 1 ]; then
     #TODO: filter nimqml logs and then set -d:debug instead of -d:release
     NIM_FLAGS+=(-d:release -d:nimTypeNames)
 elif [ "$PROFILE" -eq 1 ]; then
-    NIM_FLAGS+=(-d:release -d:nimTypeNames)
+    NIM_FLAGS+=(-d:release -d:nimTypeNames -d:qmldebug -d:qmlDebugPort:${QML_DEBUG_PORT:-49152} --passC:-DQT_QML_DEBUG)
 else
     NIM_FLAGS+=(-d:release -d:production)
 fi

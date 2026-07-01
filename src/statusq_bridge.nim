@@ -24,4 +24,3 @@ proc statusq_urlscheme_delete*(obj: pointer) {.cdecl, importc.}
 when defined(monitoring):
   proc statusq_registerMonitoringType*() {.cdecl, importc.}
   proc statusq_initializeMonitoring*(engine: pointer) {.cdecl, importc.}
-  proc statusq_monitorAddContextProperty*(name: cstring) {.cdecl, importc.}

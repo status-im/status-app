@@ -18,6 +18,9 @@ import seaqt/qsslconfiguration
 import seaqt/qsslcertificate
 import seaqt/QtCore/gen_qnamespace
 
+when defined(qmldebug):
+  import seaqt/QtQml/gen_qqmldebug
+
 import app/global/global_singleton
 import app/global/local_app_settings
 import app/global/app_lifecycle
@@ -236,6 +239,11 @@ proc mainProc() =
   let app = newQGuiApplication()
   singletonInstance.setApplication(app)
 
+  when defined(qmldebug):
+    const qmlDebugPort {.intdefine: "qmlDebugPort".} = 49152
+    discard QQmlDebuggingEnabler.startTcpDebugServer(qmlDebugPort.cint,
+      QQmlDebuggingEnablerStartModeEnum.WaitForClient)
+
   let singleInstance = newSingleInstance(($keccak256.digest(DATADIR))[0..31], openUri)
   let urlSchemeEvent = newUrlSchemeEvent()
   urlSchemeEvent.setInstance()
@@ -263,10 +271,6 @@ proc mainProc() =
     singletonInstance.engine.addImportPath("qrc:/")
     singletonInstance.engine.addImportPath("qrc:/./imports")
     singletonInstance.engine.addImportPath("qrc:/./app");
-
-  when defined(monitoring):
-    onRootContextPropertySet = proc(name: string) {.nimcall.} =
-      statusq_monitorAddContextProperty(name.cstring)
 
   statusq_setupNetworkAccessManagerFactory(singletonInstance.engine.vptr, (TMPDIR & "netcache").cstring)
   singletonInstance.engine.setRootContextProperty("uiScaleFilePath", newQVariant(uiScaleFilePath))
