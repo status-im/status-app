@@ -7,6 +7,7 @@ import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
 
 StatusInput {
     id: root
@@ -41,7 +42,9 @@ StatusInput {
             font.weight: Font.Normal
             size: StatusBaseButton.Size.Small
             text: qsTr("Paste")
-            visible: root.input.edit.length === 0 && root.input.edit.canPaste
+            // On iOS, reading canPaste triggers the system "paste from..." prompt.
+            // Show the paste button whenever the field is empty; the tap reads.
+            visible: root.input.edit.length === 0 && (Utils.isIOS || root.input.edit.canPaste)
             focusPolicy: Qt.NoFocus
             onClicked: {
                 root.input.edit.forceActiveFocus()

@@ -185,7 +185,7 @@ StatusQ.StatusTextArea {
 
         if (root.readOnly) {
             root.readOnly = false
-            root.cursorPosition = d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard
+            root.cursorPosition = d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard()
         }
 
         if (suggestedMentionPubKey) {
@@ -398,8 +398,13 @@ StatusQ.StatusTextArea {
         property int copyTextStart: 0
 
         // Emojis
-        readonly property int nbEmojisInClipboard:
-            StatusQUtils.Emoji.nbEmojis(ClipboardUtils.html)
+        // NOTE: must be a function, not a property binding. An eager binding here
+        // reads ClipboardUtils.html when the chat input is created (on chat open),
+        // which touches UIPasteboard and triggers the iOS "paste from..." prompt.
+        // As a function it only reads the clipboard during an actual paste.
+        function nbEmojisInClipboard() {
+            return StatusQUtils.Emoji.nbEmojis(ClipboardUtils.html)
+        }
 
         property string emojiFilter: ""
 
@@ -752,7 +757,7 @@ StatusQ.StatusTextArea {
                 d.copiedTextPlain = ""
                 d.copiedTextFormatted = ""
                 d.copiedMentionsPos = []
-                root.insert(d.copyTextStart, ((d.nbEmojisInClipboard === 0) ?
+                root.insert(d.copyTextStart, ((d.nbEmojisInClipboard() === 0) ?
                 ("<div style='white-space: pre-wrap'>" + StatusQUtils.StringUtils.escapeHtml(ClipboardUtils.text) + "</div>")
                 : StatusQUtils.Emoji.deparse(ClipboardUtils.html)))
             }
@@ -762,7 +767,7 @@ StatusQ.StatusTextArea {
             if (StatusQUtils.Utils.isMobile || immediateCleanup) {
                 if (toggleReadOnly)
                     root.readOnly = false
-                root.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard)
+                root.cursorPosition = (d.copyTextStart + ClipboardUtils.text.length + d.nbEmojisInClipboard())
             }
 
             return true
@@ -842,7 +847,11 @@ StatusQ.StatusTextArea {
         }
         StatusAction {
             text: qsTr("Paste")
-            enabled: ClipboardUtils.hasText || ClipboardUtils.hasImage
+            // On iOS, never read the clipboard for UI enablement: hasText/hasImage
+            // touch UIPasteboard and trigger the system "paste from..." prompt when
+            // the menu is instantiated. Keep Paste enabled and let the user-initiated
+            // d.paste() be the only clipboard read.
+            enabled: StatusQUtils.Utils.isIOS || ClipboardUtils.hasText || ClipboardUtils.hasImage
             onTriggered: d.paste(true)
         }
         StatusMenuSeparator{}

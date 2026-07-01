@@ -432,6 +432,13 @@ Window {
             SystemUtils.setAndroidStatusBarIconColor(applicationWindow.appThemeDark)
         }
 
+        // iOS: stop Qt text controls from reactively re-reading the clipboard on
+        // every change, which triggers the system "paste from..." prompt when the
+        // app returns to the foreground. See ClipboardUtils::suppressChangeNotifications().
+        if (SQUtils.Utils.isIOS) {
+            ClipboardUtils.suppressChangeNotifications()
+        }
+
         restoreAppState()
 
         d.createKeycardSimulatorController()
