@@ -167,7 +167,8 @@ class ChatLocators(BaseLocators):
         """Locator for a message that contains both the content and '(edited)' indicator."""
         escaped = content.replace('"', '\\"')
         return BaseLocators.xpath(
-            f"//android.widget.EditText[contains(@content-desc,'{escaped}') "
+            f"//*[contains(@resource-id,'chatMessageViewDelegate')]"
+            f"//*[contains(@content-desc,'{escaped}') "
             f"and contains(@content-desc,'(edited)')]"
         )
 
