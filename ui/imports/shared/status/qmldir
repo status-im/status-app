@@ -1,4 +1,5 @@
 ChatTextArea 1.0 ChatTextArea.qml
+ChatTextView 1.0 ChatTextView.qml
 StatusChatCommandPopup 1.0 StatusChatCommandPopup.qml
 StatusChatImage 1.0 StatusChatImage.qml
 StatusChatImageExtensionValidator 1.0 StatusChatImageExtensionValidator.qml
