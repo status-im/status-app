@@ -123,6 +123,19 @@ void ClipboardUtils::clear()
     QGuiApplication::clipboard()->clear();
 }
 
+void ClipboardUtils::suppressChangeNotifications()
+{
+    // iOS only. Qt's QQuickTextInput/QQuickTextEdit connect to the clipboard's
+    // change signal and, in the slot, read the clipboard to recompute canPaste.
+    // That read triggers the iOS "paste from..." system prompt on every clipboard
+    // change - e.g. when the app returns to the foreground after the clipboard was
+    // changed in another app - even with no user paste. Blocking the clipboard's
+    // signals stops those reactive reads. Explicit copy()/paste() still work: they
+    // read/write the clipboard directly rather than via the change signal.
+    if (auto* clipboard = QGuiApplication::clipboard())
+        clipboard->blockSignals(true);
+}
+
 QObject* ClipboardUtils::qmlInstance(QQmlEngine* engine, QJSEngine* scriptEngine)
 {
     Q_UNUSED(engine);

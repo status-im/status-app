@@ -81,7 +81,9 @@ ColumnLayout {
                 borderWidth: enabled ? 1 : 0
                 borderColor: textColor
 
-                enabled: input.edit.canPaste
+                // On iOS, reading canPaste touches UIPasteboard and triggers the
+                // system "paste from..." prompt. Keep enabled; the actual paste reads.
+                enabled: SQUtils.Utils.isIOS || input.edit.canPaste
 
                 onClicked: {
                     input.edit.paste()
