@@ -46,6 +46,11 @@ public:
 
     Q_INVOKABLE void clear();
 
+    // iOS workaround: stop Qt's text controls from reactively re-reading the
+    // clipboard on every change (which triggers the system "paste from..." prompt
+    // on app foreground). Call once at startup on iOS. See the .cpp for details.
+    Q_INVOKABLE void suppressChangeNotifications();
+
     static QObject* qmlInstance(QQmlEngine* engine, QJSEngine* scriptEngine);
 
 signals:
