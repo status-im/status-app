@@ -3,6 +3,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import StatusQ
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils
+
+import SortFilterProxyModel
 
 import shared.status
 
@@ -25,6 +28,133 @@ Item {
         for (let i = 0; i < 8; ++i)
             s += chars[Math.floor(Math.random() * chars.length)]
         return s
+    }
+
+    // Replaces the "@filter" being typed with a mention pill + trailing space.
+    function acceptSuggestion(name, pubKey) {
+        const cursor = textArea.cursorPosition
+        const at = cursor - textArea.mentionsFilter.length - 1 // the "@"
+        textArea.remove(at, cursor)
+        textArea.insertMention(at, "@" + name, pubKey)               // caret advances past the pill
+        textArea.insert(textArea.cursorPosition, " ")
+        d.dismissed = false
+    }
+
+    // Accepts the highlighted suggestion when the popup is open; otherwise lets the key
+    // fall through to the editor's default handling.
+    function acceptOrPassSuggestion(event) {
+        if (suggestionsPopup.visible) {
+            const item = suggestionsProxy.get(suggestionsList.currentIndex)
+            if (item)
+                acceptSuggestion(item.name, item.pubKey)
+            event.accepted = true
+        } else {
+            event.accepted = false
+        }
+    }
+
+    QtObject {
+        id: d
+
+        // True while the user has dismissed (Escape) the popup for the current @-token;
+        // reset when the token changes so typing re-shows suggestions.
+        property bool dismissed: false
+    }
+
+    // Sample users to mention (display name + pub key). Some share prefixes so filtering
+    // is visible (e.g. typing "@al").
+    ListModel {
+        id: usersModel
+
+        Component.onCompleted: {
+            const names = ["Alice", "Alicia", "Alan", "Albert", "Bob", "Bobby",
+                           "Charlie", "Dave", "Eve", "Frank", "Grace", "Heidi"]
+            for (let i = 0; i < names.length; ++i)
+                append({ name: names[i], pubKey: root.randomPubKey() })
+        }
+    }
+
+    // The filtered subset shown in the popup — filtered live by the editor's mentionsFilter.
+    SortFilterProxyModel {
+        id: suggestionsProxy
+
+        sourceModel: usersModel
+        filters: SearchFilter {
+            roleName: "name"
+            searchPhrase: textArea.mentionsFilter
+        }
+    }
+
+    Connections {
+        target: textArea
+
+        // A changed @-token (more typing, or moving away) re-arms the popup.
+        function onMentionsFilterChanged() { d.dismissed = false }
+        function onEnteringSuggestionChanged() { d.dismissed = false }
+    }
+
+    // Suggestions list shown over the caret.
+    Popup {
+        id: suggestionsPopup
+
+        parent: textArea
+        focus: false
+        closePolicy: Popup.NoAutoClose
+        padding: 1
+
+        readonly property rect caret: {
+            textArea.text; textArea.cursorPosition // reposition as the caret moves
+            return textArea.positionToRectangle(textArea.cursorPosition)
+        }
+        x: caret.x
+        y: caret.y + caret.height
+
+        visible: textArea.enteringSuggestion && suggestionsProxy.count > 0 && !d.dismissed
+
+        background: Rectangle {
+            color: "white"
+            border.color: "#cccccc"
+            radius: 4
+        }
+
+        contentItem: ListView {
+            id: suggestionsList
+
+            implicitWidth: 260
+            implicitHeight: Math.min(contentHeight, 6 * 40)
+            clip: true
+            model: suggestionsProxy
+
+            onCountChanged: currentIndex = 0
+            onVisibleChanged: currentIndex = 0
+
+            delegate: ItemDelegate {
+                width: ListView.view.width
+                highlighted: ListView.isCurrentItem
+
+                contentItem: Column {
+                    spacing: 0
+                    Text {
+                        width: parent.width
+                        font.bold: true
+                        text: model.name
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        width: parent.width
+                        font.pixelSize: 11
+                        color: "#888888"
+                        text: model.pubKey
+                        elide: Text.ElideMiddle
+                    }
+                }
+
+                HoverHandler {
+                    onHoveredChanged: if (hovered) suggestionsList.currentIndex = index
+                }
+                onClicked: root.acceptSuggestion(model.name, model.pubKey)
+            }
+        }
     }
 
     ColumnLayout {
@@ -73,6 +203,43 @@ Item {
                             font.pixelSize: 15
                             codeBackground: "#e8e8e8"
                             quoteBarVisible: quoteBarSwitch.checked
+
+                            // Mention-suggestions navigation is handled here (in the page),
+                            // not inside ChatTextArea. These attached handlers coexist with
+                            // the component's own Keys.onPressed and only act while the popup
+                            // is open; otherwise the keys pass through to the editor.
+                            Keys.onUpPressed: (event) => {
+                                if (suggestionsPopup.visible) {
+                                    // Stop at the first item (no wrap-around).
+                                    suggestionsList.currentIndex =
+                                        Math.max(suggestionsList.currentIndex - 1, 0)
+                                    event.accepted = true
+                                } else {
+                                    event.accepted = false
+                                }
+                            }
+                            Keys.onDownPressed: (event) => {
+                                if (suggestionsPopup.visible) {
+                                    // Stop at the last item (no wrap-around).
+                                    suggestionsList.currentIndex =
+                                        Math.min(suggestionsList.currentIndex + 1,
+                                                 suggestionsList.count - 1)
+                                    event.accepted = true
+                                } else {
+                                    event.accepted = false
+                                }
+                            }
+                            Keys.onReturnPressed: (event) => root.acceptOrPassSuggestion(event)
+                            Keys.onEnterPressed: (event) => root.acceptOrPassSuggestion(event)
+                            Keys.onTabPressed: (event) => root.acceptOrPassSuggestion(event)
+                            Keys.onEscapePressed: (event) => {
+                                if (suggestionsPopup.visible) {
+                                    d.dismissed = true
+                                    event.accepted = true
+                                } else {
+                                    event.accepted = false
+                                }
+                            }
 
                             text:
 `Some **bold** text there!
