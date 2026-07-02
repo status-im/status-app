@@ -66,7 +66,7 @@ suite "nimqml QObject.connect (seaqt-backed)":
   test "QueuedConnection is honored (defers; would fire synchronously if type were dropped)":
     let e = newEmitter()
     let r = newReceiver()
-    discard QObject.connect(e, ping, r, onPing)
+    discard QObject.connect(e, ping, r, onPing, ConnectionType.QueuedConnection)
     e.ping("queued")
     check r.count == 0
 
