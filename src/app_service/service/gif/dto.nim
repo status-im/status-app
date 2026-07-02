@@ -9,13 +9,14 @@ type
     height*: int
     isFavorite*: bool
 
-proc tenorToGifDto*(jsonMsg: JsonNode): GifDto =
+proc klipyToGifDto*(jsonMsg: JsonNode): GifDto =
+  # We send the `md` gif and show the lightweight `sm` gif for preview
   return GifDto(
-    id: jsonMsg{"id"}.getStr,
+    id: $jsonMsg{"id"}.getBiggestInt,
     title: jsonMsg{"title"}.getStr,
-    url: jsonMsg{"media"}[0]["gif"]["url"].getStr,
-    tinyUrl: jsonMsg{"media"}[0]["tinygif"]["url"].getStr,
-    height: jsonMsg{"media"}[0]["gif"]["dims"][1].getInt
+    url: jsonMsg{"file"}{"md"}{"gif"}{"url"}.getStr,
+    tinyUrl: jsonMsg{"file"}{"sm"}{"gif"}{"url"}.getStr,
+    height: jsonMsg{"file"}{"sm"}{"gif"}{"height"}.getInt
   )
 
 proc settingToGifDto*(jsonMsg: JsonNode): GifDto =

@@ -116,13 +116,13 @@ QtObject:
   proc search*(self: Service, query: string) =
     try:
       self.events.emit(SIGNAL_SEARCH_GIFS_STARTED, Args())
-      let arg = AsyncTenorQueryArg(
-        tptr: asyncTenorQuery,
+      let arg = AsyncKlipyQueryArg(
+        tptr: asyncKlipyQuery,
         vptr: cast[uint](self.vptr),
-        slot: "onAsyncTenorQueryDone",
+        slot: "onAsyncKlipyQueryDone",
         apiKeySet: self.apiKeySet,
-        apiKey: TENOR_API_KEY_RESOLVED,
-        query: fmt("search?q={encodeUrl(query)}"),
+        apiKey: KLIPY_API_KEY_RESOLVED,
+        query: fmt("search?q={encodeUrl(query)}&"),
         event: SIGNAL_SEARCH_GIFS_DONE,
         errorEvent: SIGNAL_SEARCH_GIFS_ERROR,
       )
@@ -136,12 +136,12 @@ QtObject:
       return
     try:
       self.events.emit(SIGNAL_LOAD_TRENDING_GIFS_STARTED, Args())
-      let arg = AsyncTenorQueryArg(
-        tptr: asyncTenorQuery,
+      let arg = AsyncKlipyQueryArg(
+        tptr: asyncKlipyQuery,
         vptr: cast[uint](self.vptr),
-        slot: "onAsyncTenorQueryDone",
+        slot: "onAsyncKlipyQueryDone",
         apiKeySet: self.apiKeySet,
-        apiKey: TENOR_API_KEY_RESOLVED,
+        apiKey: KLIPY_API_KEY_RESOLVED,
         query: "trending?",
         event: SIGNAL_LOAD_TRENDING_GIFS_DONE,
         errorEvent: SIGNAL_LOAD_TRENDING_GIFS_ERROR,
@@ -150,7 +150,7 @@ QtObject:
     except Exception as e:
       error "Error getting trending gifs", msg = e.msg
 
-  proc onAsyncTenorQueryDone*(self: Service, response: string) {.slot.} =
+  proc onAsyncKlipyQueryDone*(self: Service, response: string) {.slot.} =
     let rpcResponseObj = response.parseJson
     try:
       if (rpcResponseObj{"error"}.kind != JNull and rpcResponseObj{"error"}.getStr != ""):
@@ -171,7 +171,7 @@ QtObject:
       self.events.emit(rpcResponseObj["event"].getStr, GifsArgs(gifs: items))
     except Exception as e:
       let errMsg = e.msg
-      error "Error requesting sending query to Tenor", msg = errMsg
+      error "Error requesting sending query to KLIPY", msg = errMsg
       self.events.emit(rpcResponseObj["errorEvent"].getStr, GifsArgs(error: errMsg))
 
   proc getRecents*(self: Service): seq[GifDto] =

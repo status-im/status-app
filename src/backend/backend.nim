@@ -186,7 +186,7 @@ rpc(updateBookmark, "browsers"):
 rpc(deleteBookmark, "browsers"):
   url: string
 
-rpc(setTenorAPIKey, "gif"):
+rpc(setKlipyAPIKey, "gif"):
   key: string
 
 rpc(fetchGifs, "gif"):

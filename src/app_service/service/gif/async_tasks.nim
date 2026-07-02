@@ -28,19 +28,19 @@ proc asyncGetFavoriteGifsTask(argEncoded: string) {.gcsafe, nimcall.} =
     })
 
 type
-  AsyncTenorQueryArg = ref object of QObjectTaskArg
+  AsyncKlipyQueryArg = ref object of QObjectTaskArg
     apiKeySet: bool
     apiKey: string
     query: string
     event: string
     errorEvent: string
 
-proc asyncTenorQuery(argEncoded: string) {.gcsafe, nimcall.} =
-  let arg = decode[AsyncTenorQueryArg](argEncoded)
+proc asyncKlipyQuery(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncKlipyQueryArg](argEncoded)
   try:
 
     if not arg.apiKeySet:
-      let response = status_go.setTenorAPIKey(arg.apiKey)
+      let response = status_go.setKlipyAPIKey(arg.apiKey)
       if(not response.error.isNil):
         raise newException(RpcException, response.error.message)
 
@@ -48,8 +48,8 @@ proc asyncTenorQuery(argEncoded: string) {.gcsafe, nimcall.} =
     let doc = response.result.str.parseJson()
 
     var items: seq[GifDto] = @[]
-    for json in doc["results"]:
-      items.add(tenorToGifDto(json))
+    for json in doc{"data"}{"data"}.getElems():
+      items.add(klipyToGifDto(json))
 
     arg.finish(%* {
       "items": items,
@@ -59,7 +59,7 @@ proc asyncTenorQuery(argEncoded: string) {.gcsafe, nimcall.} =
     })
 
   except Exception as e:
-    error "error: ", procName="asyncTenorQuery", query = arg.query, errDesription = e.msg
+    error "error: ", procName="asyncKlipyQuery", query = arg.query, errDesription = e.msg
 
     arg.finish(%* {
       "error": e.msg,

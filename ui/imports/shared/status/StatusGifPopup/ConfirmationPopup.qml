@@ -53,7 +53,7 @@ Popup {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: gifImage.bottom
         anchors.topMargin: 8
-        text: qsTr("Enable Tenor GIFs?")
+        text: qsTr("Enable KLIPY GIFs?")
         font.weight: Font.Medium
         font.pixelSize: Theme.primaryTextFontSize
     }
@@ -64,7 +64,7 @@ Popup {
         anchors.top: title.bottom
         anchors.topMargin: 4
 
-        text: qsTr("Once enabled, GIFs posted in the chat may share your metadata with Tenor.")
+        text: qsTr("Once enabled, GIFs posted in the chat may share your metadata with KLIPY.")
         width: parent.width
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
