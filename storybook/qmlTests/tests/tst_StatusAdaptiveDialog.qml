@@ -433,6 +433,22 @@ Item {
             compare(controlUnderTest.modal, false);
         }
 
+        function test_destroy_on_close_destroys_dialog() {
+            const marker = createTemporaryQmlObject("import QtQuick; QtObject { property bool wasDestroyed: false }", root);
+
+            controlUnderTest.destroy();
+            controlUnderTest = createTemporaryObject(destroyOnCloseDialogComponent, root, {
+                "marker": marker
+            });
+            controlUnderTest.open();
+            tryCompare(controlUnderTest, "opened", true);
+
+            controlUnderTest.close();
+
+            tryCompare(marker, "wasDestroyed", true);
+            controlUnderTest = null;
+        }
+
         function test_regular_content_uses_internal_scroll_viewport() {
             controlUnderTest.destroy();
             controlUnderTest = createTemporaryObject(tallRegularContentDialogComponent, testWindow.contentItem);

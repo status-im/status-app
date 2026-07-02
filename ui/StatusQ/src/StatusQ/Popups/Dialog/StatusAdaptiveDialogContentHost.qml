@@ -98,8 +98,8 @@ Item {
         contentHeight: d.contentIsFlickable ? 0 : d.loadedContentNaturalHeight
         flickableDirection: Flickable.VerticalFlick
         visible: !!d.loadedContentItem && !d.contentIsFlickable
-        enabled: visible && d.contentOverflows
-        interactive: enabled
+        enabled: visible
+        interactive: visible && d.contentOverflows
     }
 
     StatusScrollBar {

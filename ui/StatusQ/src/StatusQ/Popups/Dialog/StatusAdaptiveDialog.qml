@@ -55,6 +55,8 @@ Dialog {
     property bool closeOnOverlayClick: true
     // Whether pressing Escape closes the dialog.
     property bool escapeKeyCloses: !d.bottomSheet
+    // Whether the dialog object should destroy itself after it is closed.
+    property bool destroyOnClose: false
 
     // Exceptional override. Leave 0 to let the dialog resolve its own width.
     property int maximumWidthOverride: 0
@@ -330,7 +332,11 @@ Dialog {
     }
 
     onAboutToHide: internalPopupLayer.hideDuringParentClose()
-    onClosed: closeInternalPopup()
+    onClosed: {
+        closeInternalPopup()
+        if (root.destroyOnClose)
+            root.destroy()
+    }
 
     Item {
         id: internalPopupLayer
