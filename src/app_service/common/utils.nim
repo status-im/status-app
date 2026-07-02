@@ -201,8 +201,8 @@ proc getRSVFromSignature*(signature: string): (string, string, string) =
   return (r, s, v)
 
 proc escape_html*(s: string): string =
-  ## Equivalent of Qt's QString::toHtmlEscaped. Replaces & first to avoid
-  ## double-escaping, then <, > and ".
+  ## Equivalent of Qt's QString::toHtmlEscaped. Escapes every &, <, > and ",
+  ## including & in pre-existing entities (e.g. "&amp;" becomes "&amp;amp;").
   result = newStringOfCap(s.len)
   for c in s:
     case c

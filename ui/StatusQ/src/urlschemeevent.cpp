@@ -6,6 +6,7 @@ using namespace Status;
 
 #if defined(Q_OS_ANDROID)
     #include <jni.h>
+    #include <QJniObject>
 #endif // Q_OS_ANDROID
 
 #include <QDesktopServices>

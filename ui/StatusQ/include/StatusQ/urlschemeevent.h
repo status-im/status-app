@@ -2,6 +2,7 @@
 #define STATUSQ_URL_SCHEME_EVENT_H
 
 #include <QObject>
+#include <QUrl>
 
 namespace Status
 {

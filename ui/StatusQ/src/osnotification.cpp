@@ -6,6 +6,7 @@
 #include <string.h>
 #include <winuser.h>
 #include <comdef.h>
+#include <QDebug>
 
 using namespace Status;
 
@@ -86,8 +87,8 @@ bool OSNotification::initNotificationWin()
     wc.lpszClassName = className;
 
     ATOM atom = RegisterClassExA(&wc);
-    if (!atom)
-        printf("Status::OsNotification registering window class failed.\n");
+    if (!atom && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
+        qWarning() << "Status::OsNotification registering window class failed.";
 
     m_hwnd = FindWindowExA(0, 0, className, windowName);
     if (m_hwnd) {
@@ -109,8 +110,8 @@ void OSNotification::showNotification(const QString& title,
     auto sizeRestrictMessage = message.left(255).toStdString();
 
     NOTIFYICONDATAA tnd;
-    memset(&tnd, 0, sizeof(NOTIFYICONDATA));
-    tnd.cbSize = sizeof(NOTIFYICONDATA);
+    memset(&tnd, 0, sizeof(tnd));
+    tnd.cbSize = sizeof(tnd);
     tnd.uVersion = NOTIFYICON_VERSION_4;
     strncpy_s(tnd.szInfoTitle, sizeof(tnd.szInfoTitle), sizeRestrictTitle.c_str(), sizeRestrictTitle.size());
     strncpy_s(tnd.szInfo, sizeof(tnd.szInfo), sizeRestrictMessage.c_str(), sizeRestrictMessage.size());
