@@ -21,7 +21,7 @@ type
 QtObject:
   type
     Model* = ref object of QAbstractListModel
-      items: seq[Item]
+      items*: seq[Item]
 
   proc delete*(self: Model)
   proc setup(self: Model)
@@ -29,7 +29,7 @@ QtObject:
     new(result, delete)
     result.setup
 
-  method rowCount(self: Model, index: QModelIndex = nil): int =
+  method rowCount*(self: Model, index: QModelIndex = nil): int =
     return self.items.len
 
   method roleNames(self: Model): Table[int, string] =

@@ -46,7 +46,7 @@ QtObject:
     read = getCount
     notify = countChanged
 
-  method rowCount(self: CuratedCommunityModel, index: QModelIndex = nil): int =
+  method rowCount*(self: CuratedCommunityModel, index: QModelIndex = nil): int =
     return self.items.len
 
   method roleNames(self: CuratedCommunityModel): Table[int, string] =
