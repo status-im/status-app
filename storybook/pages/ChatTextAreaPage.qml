@@ -307,7 +307,7 @@ unclosed fence here (no closing triple-tick)
                     Text {
                         Layout.fillWidth: true
                         font.bold: true
-                        text: "Static HTML render:"
+                        text: `Static HTML render (${selectableSwitch.checked ? "" : "not "}selectable):`
                     }
 
                     ScrollView {
@@ -322,10 +322,13 @@ unclosed fence here (no closing triple-tick)
 
                         // One item per block, so quote/code blocks can be decorated.
                         ChatTextView {
+                            id: chatTextView
+
                             width: htmlScroll.availableWidth
 
                             font.family: Fonts.baseFont.family
                             font.pixelSize: textArea.font.pixelSize
+                            selectable: selectableSwitch.checked
 
                             blocks: {
                                 textArea.text // re-build on every edit
@@ -464,6 +467,12 @@ unclosed fence here (no closing triple-tick)
                 text: "Enlarge emojis"
                 checked: textArea.enlargeEmojis
                 onToggled: textArea.enlargeEmojis = checked
+            }
+            Switch {
+                id: selectableSwitch
+
+                checked: true
+                text: "Selectable static text"
             }
             Button {
                 focusPolicy: Qt.NoFocus
