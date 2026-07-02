@@ -14,6 +14,7 @@ import app/core/custom_urls/url_scheme_event
 import app/global/single_instance
 
 import seaqt/QtGui/gen_qguiapplication
+import seaqt/QtCore/gen_qcoreapplication
 import seaqt/qsslconfiguration
 import seaqt/qsslcertificate
 import seaqt/QtCore/gen_qnamespace
@@ -237,6 +238,7 @@ proc mainProc() =
     QSslConfiguration.setDefaultConfiguration(defaultConfig)
 
   let app = newQGuiApplication()
+  gen_qcoreapplication.QCoreApplication.setApplicationName("Status")
   singletonInstance.setApplication(app)
 
   when defined(qmldebug):
