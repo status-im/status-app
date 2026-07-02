@@ -59,7 +59,8 @@ GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 	flatpak \
 	flatpak-install \
 	flatpak-run \
-	flatpak-clean
+	flatpak-clean \
+	platform-cleanup
 
 ifeq ($(NIM_PARAMS),)
 # "variables.mk" was not included, so we update the submodules.
@@ -278,12 +279,25 @@ ifeq ($(mkspecs),macx)
  endif
 endif
 
-NIM_SDS_SOURCE_DIR ?= $(GIT_ROOT)/../nim-sds
+NIM_SDS_SOURCE_DIR ?= $(GIT_ROOT)/vendor/nim-sds
 export NIM_SDS_SOURCE_DIR
 NIMSDS_LIBDIR := $(NIM_SDS_SOURCE_DIR)/build
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
 NIM_EXTRA_PARAMS += --passL:"-L$(NIMSDS_LIBDIR)" --passL:"-lsds"
 STATUSGO_MAKE_PARAMS += NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)"
+
+# desktop only; mobile cleanup lives in mobile/Makefile
+ifneq ($(filter $(mkspecs),macx linux),)
+PLATFORM_TARGET := $(host_os)-$(or $(QT_ARCH),$(shell uname -m))
+else ifeq ($(mkspecs),win32)
+PLATFORM_TARGET := windows-$(or $(QT_ARCH),$(shell uname -m))
+endif
+
+# Order-only prerequisite: delete shared vendor artifacts (qrcodegen, nim-sds, libstatus) when the build platform/arch changes.
+platform-cleanup:
+ifneq ($(PLATFORM_TARGET),)
+	scripts/platform_pre_build_cleanup.sh "$(PLATFORM_TARGET)"
+endif
 
 INCLUDE_DEBUG_SYMBOLS ?= false
 ifeq ($(INCLUDE_DEBUG_SYMBOLS),true)
@@ -533,7 +547,12 @@ STATUSGO := vendor/status-go/build/bin/libstatus.$(LIB_EXT)
 STATUSGO_LIBDIR := $(shell pwd)/$(shell dirname "$(STATUSGO)")
 export STATUSGO_LIBDIR
 
-$(STATUSGO): | deps status-go-deps
+# Rebuild libsds independently after platform switch cleanup deletes vendor/nim-sds/build.
+$(NIMSDS_LIBFILE): | platform-cleanup
+	echo -e $(BUILD_MSG) "nim-sds"
+	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go build-libsds SHELL=/bin/sh $(HANDLE_OUTPUT)
+
+$(STATUSGO): | deps status-go-deps $(NIMSDS_LIBFILE) platform-cleanup
 	echo -e $(BUILD_MSG) "status-go"
 	# FIXME: Nix shell usage breaks builds due to Glibc mismatch.
 	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go statusgo-shared-library SHELL=/bin/sh \
@@ -632,7 +651,7 @@ endif
 
 QRCODEGEN := vendor/QR-Code-generator/c/libqrcodegen.a
 
-$(QRCODEGEN): | deps
+$(QRCODEGEN): | deps platform-cleanup
 	echo -e $(BUILD_MSG) "QR-Code-generator"
 	+ cd vendor/QR-Code-generator/c && \
 	  $(MAKE) $(QRCODEGEN_MAKE_PARAMS) $(HANDLE_OUTPUT)
@@ -768,7 +787,11 @@ $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
 ifneq ($(mkspecs),win32)
 $(NIM_STATUS_CLIENT): NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
-$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
+# Problem: libstatus present + libsds deleted -> make never re-entered status-go,
+# so the client linked against a missing libsds and crashed in dyld at startup.
+# Solution: depend on libsds directly (order-only) so it is restored even when
+# libstatus is untouched.
+$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
 		--mm:orc \

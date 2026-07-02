@@ -1,6 +1,8 @@
 -include ./scripts/EnvVariables.mk
 -include ./scripts/Common.mk
 
+PLATFORM_TARGET := $(OS)-$(ARCH)
+
 # FLAG_KEYCARD_ENABLED: Controls NFC/Keycard support
 # - iOS: Default 1 (enabled) - Build with NFC support, works with free Apple Developer account
 # - Android: Default 1 (enabled) - NFC support doesn't require paid account on Android
@@ -29,7 +31,8 @@ status-keycard-qt: clean-status-keycard-qt $(STATUS_KEYCARD_QT_LIB)
 nim-status-client: clean-nim-status-client $(NIM_STATUS_CLIENT_LIB)
 status-desktop-rcc: clean-status-desktop-rcc $(STATUS_DESKTOP_RCC)
 
-$(STATUS_GO_LIB):
+# Always delegate to status-go's PHONY sub-make (it owns incremental rebuild, see issue #18377), then copy only on change.
+$(STATUS_GO_LIB): FORCE | platform-cleanup
 	@echo "Building status-go mobile library"
 	@mkdir -p $(LIB_PATH)
 ifeq ($(OS),android)
@@ -47,12 +50,13 @@ else ifeq ($(OS),ios)
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
+		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
 		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
 		SHELL=/bin/sh
 endif
 	@echo "Copying library to mobile lib directory"
-	@cp $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
-	@cp ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
+	@cmp -s $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT) || cp $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
+	@cmp -s ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT) || cp ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
 
 $(STATUS_GO_STUB_LIB): $(STATUS_GO_LIB)
 	@echo "Building status-go stub library (UI process)"
@@ -91,7 +95,7 @@ $(OPENSSL_LIB): $(OPENSSL_FILES)
 	@echo "Building OpenSSL"
 	@LIB_PATH=$(LIB_PATH) LIB_EXT=$(LIB_EXT) OPENSSL=$(OPENSSL) BUILD_DIR=$(BUILD_PATH) $(OPENSSL_SCRIPT) $(HANDLE_OUTPUT)
 
-$(QRCODEGEN_LIB): $(QRCODEGEN_FILES)
+$(QRCODEGEN_LIB): $(QRCODEGEN_FILES) | platform-cleanup
 	@echo "Building QRCodeGen"
 	@QRCODEGEN=$(QRCODEGEN) $(QRCODEGEN_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "QRCodeGen built $(QRCODEGEN_LIB)"
@@ -151,6 +155,15 @@ endif
 	@echo "Built $(TARGET)"
 
 # phony rules
+
+# Order-only prerequisite: delete shared vendor artifacts (qrcodegen, nim-sds, libstatus) when the build platform/arch changes.
+.PHONY: platform-cleanup FORCE
+platform-cleanup:
+	@../scripts/platform_pre_build_cleanup.sh "$(PLATFORM_TARGET)"
+
+# Empty target: anything depending on FORCE is always rebuilt.
+FORCE:
+
 .PHONY: makedir
 makedir:
 	@mkdir -p $(BIN_PATH) $(LIB_PATH) $(BUILD_PATH)

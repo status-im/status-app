@@ -17,6 +17,7 @@ vendor/.nimble
 *.AppImage
 tmp
 nimcache
+.platform-target
 .DS_Store
 nim-status-client*.tgz
 /package/
