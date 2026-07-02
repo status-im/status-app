@@ -3997,11 +3997,11 @@ You will remain logged in, and your recovery phrase will be entirely in your han
 <context>
     <name>ConfirmationPopup</name>
     <message>
-        <source>Enable Tenor GIFs?</source>
+        <source>Enable KLIPY GIFs?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with Tenor.</source>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6723,7 +6723,7 @@ key pair. Keycard will be required for signing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Error while contacting Tenor API, please retry.</source>
+        <source>Error while contacting KLIPY API, please retry.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -15825,7 +15825,7 @@ to load</source>
 <context>
     <name>StatusGifPopup</name>
     <message>
-        <source>Search</source>
+        <source>Search KLIPY</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

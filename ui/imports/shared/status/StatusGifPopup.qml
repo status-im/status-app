@@ -119,7 +119,7 @@ StatusDropdown {
                 id: searchBox
 
                 visible: root.thirdpartyServicesEnabled
-                placeholderText: qsTr("Search")
+                placeholderText: qsTr("Search KLIPY")
                 enabled: root.gifUnfurlingEnabled
 
                 Layout.fillWidth: true

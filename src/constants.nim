@@ -67,7 +67,7 @@ let
   OPENSEA_API_KEY_RESOLVED* = desktopConfig.openseaApiKey
   RARIBLE_MAINNET_API_KEY_RESOLVED* = desktopConfig.raribleMainnetApiKey
   RARIBLE_TESTNET_API_KEY_RESOLVED* = desktopConfig.raribleTestnetApiKey
-  TENOR_API_KEY_RESOLVED* = desktopConfig.tenorApiKey
+  KLIPY_API_KEY_RESOLVED* = desktopConfig.klipyApiKey
   STATUS_PROXY_STAGE_NAME_RESOLVED* = desktopConfig.statusProxyStageName
   MARKET_DATA_PROXY_URL_RESOLVED* = desktopConfig.marketDataProxyUrl
   MARKET_DATA_PROXY_USER_RESOLVED* = desktopConfig.marketDataProxyUser

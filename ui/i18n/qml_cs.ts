@@ -4015,12 +4015,12 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
 <context>
     <name>ConfirmationPopup</name>
     <message>
-        <source>Enable Tenor GIFs?</source>
-        <translation>Povolit Tenor GIFy?</translation>
+        <source>Enable KLIPY GIFs?</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with Tenor.</source>
-        <translation>Po povolení mohou GIFy zveřejněné v chatu sdílet vaše metadata s Tenorem.</translation>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Enable</source>
@@ -6757,8 +6757,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Nedávné GIFy se zobrazí zde</translation>
     </message>
     <message>
-        <source>Error while contacting Tenor API, please retry.</source>
-        <translation>Chyba při kontaktování Tenor API, zkuste to prosím znovu.</translation>
+        <source>Error while contacting KLIPY API, please retry.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Retry</source>
@@ -15912,8 +15912,8 @@ selhalo</translation>
 <context>
     <name>StatusGifPopup</name>
     <message>
-        <source>Search</source>
-        <translation>Hledat</translation>
+        <source>Search KLIPY</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>TRENDING</source>

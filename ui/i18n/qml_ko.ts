@@ -3988,12 +3988,12 @@ You will remain logged in, and your recovery phrase will be entirely in your han
 <context>
     <name>ConfirmationPopup</name>
     <message>
-        <source>Enable Tenor GIFs?</source>
-        <translation>Tenor Gifs를 활성화할까요?</translation>
+        <source>Enable KLIPY GIFs?</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with Tenor.</source>
-        <translation>활성화하면, 채팅에 게시된 Gifs가 Tenor와 메타데이터를 공유할 수 있습니다.</translation>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Enable</source>
@@ -6710,8 +6710,8 @@ key pair. Keycard will be required for signing</source>
         <translation>최근 Gifs가 여기 표시됩니다</translation>
     </message>
     <message>
-        <source>Error while contacting Tenor API, please retry.</source>
-        <translation>Tenor API에 연결하는 중 오류가 발생했습니다. 다시 시도해주세요.</translation>
+        <source>Error while contacting KLIPY API, please retry.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Retry</source>
@@ -15769,8 +15769,8 @@ to load</source>
 <context>
     <name>StatusGifPopup</name>
     <message>
-        <source>Search</source>
-        <translation>검색</translation>
+        <source>Search KLIPY</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>TRENDING</source>

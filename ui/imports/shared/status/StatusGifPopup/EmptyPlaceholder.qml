@@ -31,7 +31,7 @@ Rectangle {
                 return qsTr("Recent GIFs will appear here")
             }
 
-            return qsTr("Error while contacting Tenor API, please retry.")
+            return qsTr("Error while contacting KLIPY API, please retry.")
         }
         color: Theme.palette.secondaryText
     }

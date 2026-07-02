@@ -4002,12 +4002,12 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
 <context>
     <name>ConfirmationPopup</name>
     <message>
-        <source>Enable Tenor GIFs?</source>
-        <translation>¿Habilitar GIFs de Tenor?</translation>
+        <source>Enable KLIPY GIFs?</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Once enabled, GIFs posted in the chat may share your metadata with Tenor.</source>
-        <translation>Una vez habilitado, los GIFs publicados en el chat pueden compartir tus metadatos con Tenor.</translation>
+        <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Enable</source>
@@ -6734,8 +6734,8 @@ key pair. Keycard will be required for signing</source>
         <translation>Los GIFs recientes aparecerán aquí</translation>
     </message>
     <message>
-        <source>Error while contacting Tenor API, please retry.</source>
-        <translation>Error al contactar la API de Tenor, por favor reintenta.</translation>
+        <source>Error while contacting KLIPY API, please retry.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Retry</source>
@@ -15840,8 +15840,8 @@ al cargar</translation>
 <context>
     <name>StatusGifPopup</name>
     <message>
-        <source>Search</source>
-        <translation>Buscar</translation>
+        <source>Search KLIPY</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>TRENDING</source>

@@ -4878,14 +4878,14 @@
   <context>
     <name>ConfirmationPopup</name>
     <message>
-      <source>Enable Tenor GIFs?</source>
+      <source>Enable KLIPY GIFs?</source>
       <comment>ConfirmationPopup</comment>
-      <translation>Enable Tenor GIFs?</translation>
+      <translation>Enable KLIPY GIFs?</translation>
     </message>
     <message>
-      <source>Once enabled, GIFs posted in the chat may share your metadata with Tenor.</source>
+      <source>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</source>
       <comment>ConfirmationPopup</comment>
-      <translation>Once enabled, GIFs posted in the chat may share your metadata with Tenor.</translation>
+      <translation>Once enabled, GIFs posted in the chat may share your metadata with KLIPY.</translation>
     </message>
     <message>
       <source>Enable</source>
@@ -8217,9 +8217,9 @@
       <translation>Recent GIFs will appear here</translation>
     </message>
     <message>
-      <source>Error while contacting Tenor API, please retry.</source>
+      <source>Error while contacting KLIPY API, please retry.</source>
       <comment>EmptyPlaceholder</comment>
-      <translation>Error while contacting Tenor API, please retry.</translation>
+      <translation>Error while contacting KLIPY API, please retry.</translation>
     </message>
     <message>
       <source>Retry</source>
@@ -19285,9 +19285,9 @@
   <context>
     <name>StatusGifPopup</name>
     <message>
-      <source>Search</source>
+      <source>Search KLIPY</source>
       <comment>StatusGifPopup</comment>
-      <translation>Search</translation>
+      <translation>Search KLIPY</translation>
     </message>
     <message>
       <source>TRENDING</source>
