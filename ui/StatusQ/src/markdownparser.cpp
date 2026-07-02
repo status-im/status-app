@@ -125,15 +125,21 @@ bool isRightFlanking(const QString& text, qsizetype pos, qsizetype len)
     return isUnicodeWhitespace(charAfter) || isFlankingPunctuation(charAfter);
 }
 
-QVector<Delimiter> scanDelimiters(const QString& text, const Ranges& codeRanges = {})
+QVector<Delimiter> scanDelimiters(const QString& text, const Ranges& excludeRanges = {})
 {
+    const qsizetype n = text.length();
+
+    // Mark positions inside excluded (code / link / "> " prefix) ranges once, so the scan
+    // skips them in O(1) instead of testing every range at every position.
+    QVector<bool> excluded(n, false);
+    for (const auto& r : excludeRanges)
+        for (qsizetype k = qMax<qsizetype>(0, r.first); k < qMin(n, r.second); ++k)
+            excluded[k] = true;
+
     QVector<Delimiter> delimiters;
     qsizetype i = 0;
-    const qsizetype n = text.length();
     while (i < n) {
-        for (const auto& r : codeRanges)
-            if (i >= r.first && i < r.second) { i = r.second; break; }
-        if (i >= n) break;
+        if (excluded[i]) { ++i; continue; }
 
         QChar c = text[i];
         if (c == QLatin1Char('*')) {
@@ -457,11 +463,53 @@ void appendInline(QVector<Node>& out, const QString& full, qsizetype s, qsizetyp
     }
 }
 
-QVector<Node> buildInline(const QString& full, qsizetype rs, qsizetype re,
-                          const QVector<Container>& conts);
+// Direct-children forest over the containers. They are properly nested (emphasis nests;
+// code/link/quote ranges are mutually disjoint), so a single stack sweep gives each
+// container its direct children in O(n log n) — replacing the previous O(n²) containment
+// scans in buildInline/materialize.
+struct ContainerTree {
+    QVector<int> roots;                // top-level containers, ordered by start position
+    QVector<QVector<int>> childrenOf;  // childrenOf[i] = direct children of container i
+};
 
-Node materialize(const QString& full, const Container& c, const QVector<Container>& conts)
+ContainerTree buildContainerTree(const QVector<Container>& conts)
 {
+    ContainerTree tree;
+    tree.childrenOf.resize(conts.size());
+
+    QVector<int> order(conts.size());
+    for (int i = 0; i < conts.size(); ++i)
+        order[i] = i;
+    std::sort(order.begin(), order.end(), [&](int x, int y) {
+        const Container& a = conts[x];
+        const Container& b = conts[y];
+        return a.oS != b.oS ? a.oS < b.oS : a.oE > b.oE; // outer/earlier container first
+    });
+
+    // The stack holds the chain of open ancestors; its top is the innermost container
+    // still covering the one being visited.
+    QVector<int> stack;
+    for (int idx : std::as_const(order)) {
+        const Container& c = conts[idx];
+        while (!stack.isEmpty() && conts[stack.last()].oE <= c.oS)
+            stack.removeLast();
+        if (stack.isEmpty())
+            tree.roots.append(idx);
+        else
+            tree.childrenOf[stack.last()].append(idx);
+        stack.append(idx);
+    }
+    return tree;
+}
+
+QVector<Node> buildInlineChildren(const QString& full, qsizetype rs, qsizetype re,
+                                  const QVector<int>& childIdx,
+                                  const QVector<Container>& conts, const ContainerTree& tree);
+
+Node materialize(const QString& full, int idx,
+                 const QVector<Container>& conts, const ContainerTree& tree)
+{
+    const Container& c = conts[idx];
     Node n;
     n.kind = c.kind;
     n.start = c.oS;
@@ -484,61 +532,45 @@ Node materialize(const QString& full, const Container& c, const QVector<Containe
     }
 
     // Emphasis (Strong / Emphasis / Strikethrough) and code (CodeSpan / CodeBlock):
-    // opener/closer delimiters around content, with any contained containers nested.
-    // For code, the content is not re-parsed for emphasis (inlineContainers excludes
-    // code ranges from delimiter scanning), so `inner` holds only "> " prefixes —
-    // letting a quoted code block keep its prefixes as Delimiter children. For
-    // top-level code (empty conts) this yields a single Text child, as before.
+    // opener/closer delimiters around content, with any nested containers in between.
+    // For code the content is not re-parsed for emphasis (inlineContainers excludes code
+    // ranges from delimiter scanning), so the children hold only "> " prefixes — letting a
+    // quoted code block keep its prefixes as Delimiter children. Top-level code has none,
+    // yielding a single Text child, as before.
     if (c.cS > c.oS)
         n.children.append(leaf(NodeKind::Delimiter, full, c.oS, c.cS));
-
-    QVector<Container> inner;
-    for (const auto& d : conts) {
-        if (d.oS == c.oS && d.oE == c.oE)
-            continue; // self
-        if (d.oS >= c.cS && d.oE <= c.cE)
-            inner.append(d);
-    }
-    n.children.append(buildInline(full, c.cS, c.cE, inner));
-
+    n.children.append(buildInlineChildren(full, c.cS, c.cE, tree.childrenOf[idx], conts, tree));
     if (c.oE > c.cE)
         n.children.append(leaf(NodeKind::Delimiter, full, c.cE, c.oE));
     return n;
 }
 
-// Builds inline nodes covering [rs, re): top-level containers in order,
-// plain text for the gaps between/around them.
-QVector<Node> buildInline(const QString& full, qsizetype rs, qsizetype re,
-                          const QVector<Container>& conts)
+// Materializes `childIdx` (direct children, ordered by start) over [rs, re), filling the
+// gaps between/around them with plain inline text.
+QVector<Node> buildInlineChildren(const QString& full, qsizetype rs, qsizetype re,
+                                  const QVector<int>& childIdx,
+                                  const QVector<Container>& conts, const ContainerTree& tree)
 {
-    QVector<int> top;
-    for (int i = 0; i < conts.size(); ++i) {
-        bool contained = false;
-        for (int j = 0; j < conts.size(); ++j) {
-            if (i == j) continue;
-            const auto& a = conts[i];
-            const auto& b = conts[j];
-            const bool same = (a.oS == b.oS && a.oE == b.oE);
-            if (!same && b.oS <= a.oS && b.oE >= a.oE) { contained = true; break; }
-        }
-        if (!contained)
-            top.append(i);
-    }
-    std::sort(top.begin(), top.end(),
-              [&](int x, int y) { return conts[x].oS < conts[y].oS; });
-
     QVector<Node> out;
     qsizetype pos = rs;
-    for (int idx : top) {
+    for (int idx : childIdx) {
         const Container& c = conts[idx];
         if (c.oS > pos)
             appendInline(out, full, pos, c.oS);
-        out.append(materialize(full, c, conts));
+        out.append(materialize(full, idx, conts, tree));
         pos = c.oE;
     }
     if (pos < re)
         appendInline(out, full, pos, re);
     return out;
+}
+
+// Builds inline nodes covering [rs, re) from the flat container list.
+QVector<Node> buildInline(const QString& full, qsizetype rs, qsizetype re,
+                          const QVector<Container>& conts)
+{
+    const ContainerTree tree = buildContainerTree(conts);
+    return buildInlineChildren(full, rs, re, tree.roots, conts, tree);
 }
 
 // Computes the inline containers (emphasis, code spans/blocks, quote blocks,
