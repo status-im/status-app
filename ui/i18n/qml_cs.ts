@@ -8091,16 +8091,54 @@ Opravdu to chcete udělat?</translation>
         <translation>Ujistěte se, že jsou obě zařízení ve stejné síti</translation>
     </message>
     <message>
+        <source>Open Status App on your device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open %1</source>
+        <comment>(to) Open Settings</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Navigate to the %1</source>
+        <comment>Navigate to the Syncing tab</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Click %1</source>
+        <comment>Click Setup Syncing</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 on this device</source>
+        <comment>Scan QR on this device</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Open Status on the device you want to import from</source>
         <translation>Otevřete Status na zařízení, ze kterého chcete importovat</translation>
     </message>
     <message>
-        <source>Open Status App on your desktop device</source>
-        <translation>Otevřete aplikaci Status na svém stolním zařízení</translation>
+        <source>Open %1</source>
+        <comment>(to) Open Settings / Wallet</comment>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Open</source>
-        <translation>Otevřít</translation>
+        <source>Click %1 of key pairs on this device</source>
+        <comment>Click Show encrypted QR of key pairs on this device</comment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show encrypted QR</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copy the encrypted key pairs code</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Paste the encrypted key pairs code to this device</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Settings / Wallet</source>
@@ -8111,48 +8149,16 @@ Opravdu to chcete udělat?</translation>
         <translation>Nastavení</translation>
     </message>
     <message>
-        <source>Click</source>
-        <translation>Klikněte na</translation>
-    </message>
-    <message>
-        <source>Navigate to the</source>
-        <translation>Přejděte na</translation>
-    </message>
-    <message>
-        <source>Show encrypted QR of key pairs on this device</source>
-        <translation>Zobrazit šifrovaný QR kód párů klíčů na tomto zařízení</translation>
-    </message>
-    <message>
         <source>Syncing tab</source>
         <translation>karta Synchronizace</translation>
-    </message>
-    <message>
-        <source>Copy the</source>
-        <translation>Zkopírujte</translation>
-    </message>
-    <message>
-        <source>encrypted key pairs code</source>
-        <translation>kód šifrovaných párů klíčů</translation>
-    </message>
-    <message>
-        <source>on this device</source>
-        <translation>na tomto zařízení</translation>
     </message>
     <message>
         <source>Setup Syncing</source>
         <translation>Nastavit synchronizaci</translation>
     </message>
     <message>
-        <source>Paste the</source>
-        <translation>Vložte</translation>
-    </message>
-    <message>
         <source>Scan or enter the encrypted QR with this device</source>
         <translation>Naskenujte nebo zadejte šifrovaný QR kód tímto zařízením</translation>
-    </message>
-    <message>
-        <source>to this device</source>
-        <translation>do tohoto zařízení</translation>
     </message>
     <message>
         <source>For security, delete the code as soon as you are done</source>
@@ -8165,112 +8171,13 @@ Opravdu to chcete udělat?</translation>
     <message>
         <source>Scan QR</source>
         <translation>Skenovat QR</translation>
-    </message>
-    <message>
-        <source>%1 %2</source>
-        <translation>%1 %2</translation>
-    </message>
-    <message>
-        <source>%1 %2 %3</source>
-        <translation>%1 %2 %3</translation>
     </message>
 </context>
 <context>
     <name>GetSyncCodeInstructionsPopup</name>
     <message>
-        <source>How to get a pairing code on...</source>
-        <translation>Jak získat párovací kód na...</translation>
-    </message>
-</context>
-<context>
-    <name>GetSyncCodeMobileInstructions</name>
-    <message>
-        <source>Ensure both devices are on the same network</source>
-        <translation>Ujistěte se, že jsou obě zařízení ve stejné síti</translation>
-    </message>
-    <message>
-        <source>Open Status on the device you want to import from</source>
-        <translation>Otevřete Status na zařízení, ze kterého chcete importovat</translation>
-    </message>
-    <message>
-        <source>Open Status App on your mobile device</source>
-        <translation>Otevřete aplikaci Status na svém mobilním zařízení</translation>
-    </message>
-    <message>
-        <source>Open your</source>
-        <translation>Otevřete své</translation>
-    </message>
-    <message>
-        <source>Settings / Wallet</source>
-        <translation>Nastavení / Peněženka</translation>
-    </message>
-    <message>
-        <source>Profile</source>
-        <translation>Profil</translation>
-    </message>
-    <message>
-        <source>Tap</source>
-        <translation>Klepněte na</translation>
-    </message>
-    <message>
-        <source>Go to</source>
-        <translation>Přejděte na</translation>
-    </message>
-    <message>
-        <source>Show encrypted key pairs code</source>
-        <translation>Zobrazit kód šifrovaných párů klíčů</translation>
-    </message>
-    <message>
-        <source>Syncing</source>
-        <translation>Synchronizace</translation>
-    </message>
-    <message>
-        <source>Copy the</source>
-        <translation>Zkopírujte</translation>
-    </message>
-    <message>
-        <source>encrypted key pairs code</source>
-        <translation>kód šifrovaných párů klíčů</translation>
-    </message>
-    <message>
-        <source>on this device</source>
-        <translation>na tomto zařízení</translation>
-    </message>
-    <message>
-        <source>Sync new device</source>
-        <translation>Synchronizovat nové zařízení</translation>
-    </message>
-    <message>
-        <source>Paste the</source>
-        <translation>Vložte</translation>
-    </message>
-    <message>
-        <source>Scan or enter the encrypted QR with this device</source>
-        <translation>Naskenujte nebo zadejte šifrovaný QR kód tímto zařízením</translation>
-    </message>
-    <message>
-        <source>to this device</source>
-        <translation>do tohoto zařízení</translation>
-    </message>
-    <message>
-        <source>For security, delete the code as soon as you are done</source>
-        <translation>Z bezpečnostních důvodů kód smažte, jakmile budete hotovi</translation>
-    </message>
-    <message>
-        <source>Scan or enter the code</source>
-        <translation>Naskenujte nebo zadejte kód</translation>
-    </message>
-    <message>
-        <source>Scan QR</source>
-        <translation>Skenovat QR</translation>
-    </message>
-    <message>
-        <source>%1 %2</source>
-        <translation>%1 %2</translation>
-    </message>
-    <message>
-        <source>%1 %2 %3</source>
-        <translation>%1 %2 %3</translation>
+        <source>How to get a pairing code...</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -16713,17 +16620,6 @@ selhalo</translation>
     <message>
         <source>Log in via recovery phrase</source>
         <translation>Přihlásit se pomocí obnovovací fráze</translation>
-    </message>
-</context>
-<context>
-    <name>SyncingCodeInstructions</name>
-    <message>
-        <source>Mobile</source>
-        <translation>Mobil</translation>
-    </message>
-    <message>
-        <source>Desktop</source>
-        <translation>Desktop</translation>
     </message>
 </context>
 <context>

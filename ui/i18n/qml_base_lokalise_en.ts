@@ -9832,19 +9832,59 @@
       <translation>Ensure both devices are on the same network</translation>
     </message>
     <message>
+      <source>Open Status App on your device</source>
+      <comment>GetSyncCodeDesktopInstructions</comment>
+      <translation>Open Status App on your device</translation>
+    </message>
+    <message>
+      <source>Open %1</source>
+      <comment>(to) Open Settings</comment>
+      <translation>Open %1</translation>
+    </message>
+    <message>
+      <source>Navigate to the %1</source>
+      <comment>Navigate to the Syncing tab</comment>
+      <translation>Navigate to the %1</translation>
+    </message>
+    <message>
+      <source>Click %1</source>
+      <comment>Click Setup Syncing</comment>
+      <translation>Click %1</translation>
+    </message>
+    <message>
+      <source>%1 on this device</source>
+      <comment>Scan QR on this device</comment>
+      <translation>%1 on this device</translation>
+    </message>
+    <message>
       <source>Open Status on the device you want to import from</source>
       <comment>GetSyncCodeDesktopInstructions</comment>
       <translation>Open Status on the device you want to import from</translation>
     </message>
     <message>
-      <source>Open Status App on your desktop device</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>Open Status App on your desktop device</translation>
+      <source>Open %1</source>
+      <comment>(to) Open Settings / Wallet</comment>
+      <translation>Open %1</translation>
     </message>
     <message>
-      <source>Open</source>
+      <source>Click %1 of key pairs on this device</source>
+      <comment>Click Show encrypted QR of key pairs on this device</comment>
+      <translation>Click %1 of key pairs on this device</translation>
+    </message>
+    <message>
+      <source>Show encrypted QR</source>
       <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>Open</translation>
+      <translation>Show encrypted QR</translation>
+    </message>
+    <message>
+      <source>Copy the encrypted key pairs code</source>
+      <comment>GetSyncCodeDesktopInstructions</comment>
+      <translation>Copy the encrypted key pairs code</translation>
+    </message>
+    <message>
+      <source>Paste the encrypted key pairs code to this device</source>
+      <comment>GetSyncCodeDesktopInstructions</comment>
+      <translation>Paste the encrypted key pairs code to this device</translation>
     </message>
     <message>
       <source>Settings / Wallet</source>
@@ -9857,39 +9897,9 @@
       <translation>Settings</translation>
     </message>
     <message>
-      <source>Click</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>Click</translation>
-    </message>
-    <message>
-      <source>Navigate to the</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>Navigate to the</translation>
-    </message>
-    <message>
-      <source>Show encrypted QR of key pairs on this device</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>Show encrypted QR of key pairs on this device</translation>
-    </message>
-    <message>
       <source>Syncing tab</source>
       <comment>GetSyncCodeDesktopInstructions</comment>
       <translation>Syncing tab</translation>
-    </message>
-    <message>
-      <source>Copy the</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>Copy the</translation>
-    </message>
-    <message>
-      <source>encrypted key pairs code</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>encrypted key pairs code</translation>
-    </message>
-    <message>
-      <source>on this device</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>on this device</translation>
     </message>
     <message>
       <source>Setup Syncing</source>
@@ -9897,19 +9907,9 @@
       <translation>Setup Syncing</translation>
     </message>
     <message>
-      <source>Paste the</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>Paste the</translation>
-    </message>
-    <message>
       <source>Scan or enter the encrypted QR with this device</source>
       <comment>GetSyncCodeDesktopInstructions</comment>
       <translation>Scan or enter the encrypted QR with this device</translation>
-    </message>
-    <message>
-      <source>to this device</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>to this device</translation>
     </message>
     <message>
       <source>For security, delete the code as soon as you are done</source>
@@ -9925,137 +9925,14 @@
       <source>Scan QR</source>
       <comment>GetSyncCodeDesktopInstructions</comment>
       <translation>Scan QR</translation>
-    </message>
-    <message>
-      <source>%1 %2</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>%1 %2</translation>
-    </message>
-    <message>
-      <source>%1 %2 %3</source>
-      <comment>GetSyncCodeDesktopInstructions</comment>
-      <translation>%1 %2 %3</translation>
     </message>
   </context>
   <context>
     <name>GetSyncCodeInstructionsPopup</name>
     <message>
-      <source>How to get a pairing code on...</source>
+      <source>How to get a pairing code...</source>
       <comment>GetSyncCodeInstructionsPopup</comment>
-      <translation>How to get a pairing code on...</translation>
-    </message>
-  </context>
-  <context>
-    <name>GetSyncCodeMobileInstructions</name>
-    <message>
-      <source>Ensure both devices are on the same network</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Ensure both devices are on the same network</translation>
-    </message>
-    <message>
-      <source>Open Status on the device you want to import from</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Open Status on the device you want to import from</translation>
-    </message>
-    <message>
-      <source>Open Status App on your mobile device</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Open Status App on your mobile device</translation>
-    </message>
-    <message>
-      <source>Open your</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Open your</translation>
-    </message>
-    <message>
-      <source>Settings / Wallet</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Settings / Wallet</translation>
-    </message>
-    <message>
-      <source>Profile</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Profile</translation>
-    </message>
-    <message>
-      <source>Tap</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Tap</translation>
-    </message>
-    <message>
-      <source>Go to</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Go to</translation>
-    </message>
-    <message>
-      <source>Show encrypted key pairs code</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Show encrypted key pairs code</translation>
-    </message>
-    <message>
-      <source>Syncing</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Syncing</translation>
-    </message>
-    <message>
-      <source>Copy the</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Copy the</translation>
-    </message>
-    <message>
-      <source>encrypted key pairs code</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>encrypted key pairs code</translation>
-    </message>
-    <message>
-      <source>on this device</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>on this device</translation>
-    </message>
-    <message>
-      <source>Sync new device</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Sync new device</translation>
-    </message>
-    <message>
-      <source>Paste the</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Paste the</translation>
-    </message>
-    <message>
-      <source>Scan or enter the encrypted QR with this device</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Scan or enter the encrypted QR with this device</translation>
-    </message>
-    <message>
-      <source>to this device</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>to this device</translation>
-    </message>
-    <message>
-      <source>For security, delete the code as soon as you are done</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>For security, delete the code as soon as you are done</translation>
-    </message>
-    <message>
-      <source>Scan or enter the code</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Scan or enter the code</translation>
-    </message>
-    <message>
-      <source>Scan QR</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>Scan QR</translation>
-    </message>
-    <message>
-      <source>%1 %2</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>%1 %2</translation>
-    </message>
-    <message>
-      <source>%1 %2 %3</source>
-      <comment>GetSyncCodeMobileInstructions</comment>
-      <translation>%1 %2 %3</translation>
+      <translation>How to get a pairing code...</translation>
     </message>
   </context>
   <context>
@@ -20244,19 +20121,6 @@
       <source>Log in via recovery phrase</source>
       <comment>SyncProgressPage</comment>
       <translation>Log in via recovery phrase</translation>
-    </message>
-  </context>
-  <context>
-    <name>SyncingCodeInstructions</name>
-    <message>
-      <source>Mobile</source>
-      <comment>SyncingCodeInstructions</comment>
-      <translation>Mobile</translation>
-    </message>
-    <message>
-      <source>Desktop</source>
-      <comment>SyncingCodeInstructions</comment>
-      <translation>Desktop</translation>
     </message>
   </context>
   <context>

@@ -123,7 +123,7 @@ Dialog {
     // Binding positioning the content when there's no footer
     Binding on bottomPadding {
         when: root.bottomSheet && !enterTransition.running && (!footer || footer.height === 0 || !footer.visible)
-        value: padding + root.parent.SafeArea.margins.bottom
+        value: root.padding + root.parent.SafeArea.margins.bottom
     }
     Binding on width {
         when: root.bottomSheet
