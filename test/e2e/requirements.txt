@@ -1,4 +1,5 @@
 pytest==7.4.0
+cryptography==42.0.8
 psutil==5.9.5
 pillow==10.0.0
 opencv-python-headless==4.8.0.74

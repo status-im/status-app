@@ -1,93 +1,235 @@
-# This repository manages UI tests for desktop application
+# Desktop UI tests (e2e)
 
-## How to set up your environment
+Run automated UI tests for Status desktop on **Linux**, **Windows**, or **macOS**.
 
-1. **MacOS**: https://www.notion.so/Mac-arch-x64-and-Intel-50ea48dae1d4481b882afdbfad38e95a
-2. **Linux**: https://www.notion.so/Linux-21f7abd2bb684a0fb10057848760a889
-3. **Windows**: https://www.notion.so/Windows-fbccd2b09b784b32ba4174233d83878d
+Pick your platform below and follow the steps in order.
 
-## Local Waku fleet (Linux)
+---
 
-Use this when you want e2e to run the app against a **local nwaku** stack instead of production `status.prod`.
+## Before you begin
 
-### Prerequisites
+1. **Clone the repo** and open a terminal in `test/e2e`.
+2. **Get a Status app** — CI build or local dev build (see [Which app to use](#which-app-to-use)).
+3. **Install Squish** — required on all platforms ([Qt Squish](https://www.qt.io/squish)).
 
-- Docker Engine and Compose v2 (`docker compose`), your user in the `docker` group (or use `sudo` for Docker).
-- Tests resolve the fleet config from the **repository root** (`status-app/`), not only from `test/e2e`. Run pytest from `test/e2e` as usual so paths in [driver/aut.py](driver/aut.py) stay correct.
+---
 
-### 1. Start the local fleet
+## Linux
 
-From the **Status app repository root** (parent of `test/`):
+Details: [Notion — Linux setup](https://www.notion.so/Linux-21f7abd2bb684a0fb10057848760a889).
+
+### One-time setup
+
+```bash
+cd test/e2e
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+cp configs/_local.default.py configs/_local.py
+```
+
+Edit `configs/_local.py` — set `AUT_PATH`:
+
+```python
+AUT_PATH = "/path/to/Status.AppImage"
+# or local dev build:
+# AUT_PATH = "/path/to/status-app/bin/nim_status_client"
+```
+
+Set `SQUISH_DIR` (e.g. `/opt/squish-runner-9.2.2-qt-6.11`).
+
+### Run tests
+
+```bash
+cd test/e2e
+source .venv/bin/activate
+pytest -m critical
+```
+
+---
+
+## Windows
+
+Details: [Notion — Windows setup](https://www.notion.so/Windows-fbccd2b09b784b32ba4174233d83878d).
+
+### One-time setup
+
+```bash
+cd test\e2e
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+
+copy configs\_local.default.py configs\_local.py
+```
+
+Edit `configs/_local.py` — set `AUT_PATH`:
+
+```python
+AUT_PATH = "C:\\Users\\you\\AppData\\Local\\StatusApp\\bin\\Status.exe"
+# or local dev build:
+# AUT_PATH = "C:\\path\\to\\status-app\\bin\\Status.exe"
+```
+
+Set `SQUISH_DIR` (e.g. `C:\squish-runner-9.2.2-qt-6.11`).
+
+### Run tests
+
+```bash
+cd test\e2e
+.venv\Scripts\activate
+pytest -m critical
+```
+
+---
+
+## macOS
+
+Mac uses Squish’s own Python — not Homebrew. Run the setup script **once**; it creates `.venv` and configures Squish paths.
+
+### macOS — one-time setup
+
+1. Install **Squish 9.2.2** (`/Applications/Squish_9_2_2`).
+2. Get **Status.app** — CI build with Squish entitlements or local dev build (see [Mac CI build](#getting-a-mac-build-from-ci)).
+3. In Terminal:
+
+```bash
+cd test/e2e
+./scripts/setup_mac_squish.sh
+
+cp configs/_local.default.py configs/_local.py
+```
+
+4. Edit `configs/_local.py`:
+
+```python
+AUT_PATH = "/Users/you/Downloads/Status.app"
+# or local dev build:
+# AUT_PATH = "/Users/you/status-app/bin/nim_status_client"
+```
+
+The setup script fixes Squish library paths, creates `.venv` from Squish’s Python, adds `SQUISH_DIR` / `PYTHONPATH` to `activate`, and installs `requirements.txt`. Override Squish path if needed:
+
+```bash
+SQUISH_DIR=/Applications/Squish_9_2_2 ./scripts/setup_mac_squish.sh
+```
+
+### Run tests (Terminal)
+
+```bash
+cd test/e2e
+source .venv/bin/activate
+pytest -m critical
+```
+
+Do **not** put `SQUISH_DIR` or `PYTHONPATH` in `~/.zshrc` — they are set when you activate `.venv`.
+
+### Run tests (PyCharm)
+
+1. Complete [macOS one-time setup](#macos--one-time-setup) above.
+2. **Interpreter**: `test/e2e/.venv/bin/python` — select **existing**, do not create a new venv from Homebrew.
+3. **Working directory**: `test/e2e`
+4. Copy [`.env.example`](.env.example) → `.env` (or paste those variables into the run config).
+5. Set `AUT_PATH` in `configs/_local.py`.
+6. Run pytest, e.g. with `-m critical`.
+
+---
+
+## Which app to use
+
+| Source | Linux | Windows | macOS |
+|--------|-------|---------|-------|
+| **CI nightly** | `.AppImage` from [Jenkins nightly](https://ci.status.im/job/status-desktop/job/nightly/) | `Status.exe` from nightly | DMG with Squish entitlements ([below](#getting-a-mac-build-from-ci)) |
+| **Local dev build** | `bin/nim_status_client` or AppImage | `bin\Status.exe` | `Status.app` or `bin/nim_status_client` |
+
+CI builds are usually more stable; local dev builds work on all platforms.
+
+### Getting a Mac build from CI
+
+macOS e2e runs **locally only** (Linux and Windows run in Jenkins). You need a DMG built with Squish entitlements:
+
+1. https://ci.status.im/job/status-desktop/job/systems/job/macos/
+2. **Build with Parameters** → pick architecture
+3. **Entitlements** → `resources/Entitlements_squish.plist`
+4. Download DMG, copy `Status.app` (e.g. `~/Downloads/Status.app`)
+5. `AUT_PATH = "/Users/you/Downloads/Status.app"` in `configs/_local.py`
+
+---
+
+## Logs
+
+All platforms write to `test/e2e/local_run_results/`:
+
+- `pytest.log` — test runner
+- `aut.log` — app launch (`startaut`)
+- `squish.log` — Squish server
+
+Per-run screenshots and data: `local_run_results/run_<date>/`.
+
+---
+
+## Local Waku fleet (optional)
+
+Run against a local **nwaku** stack instead of `status.prod`. Works on **Linux, Windows, and macOS** — same env vars and compose file everywhere.
+
+**Prerequisites:** Docker installed and running (`docker ps` must work). On Mac/Windows use [Docker Desktop](https://www.docker.com/products/docker-desktop/) and wait until it is fully started before running compose.
+
+From the **repo root** (`status-app/`):
 
 ```bash
 docker compose -f ./docker-compose.waku.yml up --build --remove-orphans
 ```
 
-Leave this running. The compose file uses host networking on Linux (`network_mode: host`).
-
-### 2. Environment variables for pytest
-
-The AUT is started with local Waku flags only if **`E2E_LOCAL_WAKU_FLEET`** is set to a truthy value (`1`, `true`, or `yes`).
-
-| Variable | Role |
-|----------|------|
-| `E2E_LOCAL_WAKU_FLEET` | Must be enabled (`1` / `true` / `yes`) to pass `--enable-fleet-selection`, `--waku-fleet`, and `--waku-fleets-config` to the binary. |
-| `STATUS_FLEET` | Optional. Defaults to `status-app.test`. **Must match the top-level key** in [assets/local-waku-fleets-config.json](../../assets/local-waku-fleets-config.json). |
-| `STATUS_FLEET_CONFIG_FILE` | Set automatically by the test driver to the absolute path of `assets/local-waku-fleets-config.json` when local fleet mode is on (same information as CLI; status-go may use either). |
-
-Example before running tests:
+Leave this running. In another terminal, from `test/e2e` with your venv activated:
 
 ```bash
 export E2E_LOCAL_WAKU_FLEET=1
-# Optional if you use the default fleet name from the JSON:
-# export STATUS_FLEET=status-app.test
-```
-
-Without `E2E_LOCAL_WAKU_FLEET`, the app uses the normal built-in fleets (e.g. `status.prod`) and does **not** load `local-waku-fleets-config.json`.
-
-### 3. Logs
-
-With local fleet enabled, pytest logs the full argv via `AUT startaut argv (...)`. Check `aut.log` next to your `AUT_PATH` binary and application logs under the per-run data directory if something fails (e.g. `unknown fleet` means the saved account fleet does not match the keys in the JSON).
-
-### 4. CI
-
-The Linux e2e Jenkins job sets `E2E_LOCAL_WAKU_FLEET`, `STATUS_FLEET`, and `STATUS_FLEET_CONFIG_FILE` in [ci/Jenkinsfile.tests-e2e](../../ci/Jenkinsfile.tests-e2e).
-
-## Which build to use
-
-1. you _can_ use your local dev build but sometimes tests hag there. To use it, just place a path to the executable to AUT_PATH in your _local.py config,
-for example `AUT_PATH = "/Users/anastasiya/status-desktop/bin/nim_status_client"`
-
-2. normally, please use CI build. Grab recent one from Jenkins job https://ci.status.im/job/status-desktop/job/nightly/
-
-    **2.1** Linux and Windows could be taken from nightly job
-    ![img.png](img.png)
-
-3. **Note:** on windows you have to escape slashes and use the bin from StatusApp folder:
-for example `"C:\\Users\\anast\\AppData\\Local\\StatusApp\\bin\\Status.exe"
-
-    **2.2** Mac **requires entitlements**  for Squish which we don't add by default, so please go here https://ci.status.im/job/status-desktop/job/systems/job/macos/
-and select architecture you need (arm or intel), click Build with parameters and select Squish entitlements. Select a branch if u like (master is default)
-    ![img_1.png](img_1.png)
-
-## Pytest marks used
-
-You can run tests by mark, just use it like this in command line:
-
-```bash
-python3 -m pytest -m critical
-```
-
-or directly in pycharm terminal:
-
-```bash
+# export STATUS_FLEET=status-app.test   # optional; must match assets/local-waku-fleets-config.json
 pytest -m critical
 ```
 
-You can obtain the list of all marks we have by running this `pytest --markers`
+Without `E2E_LOCAL_WAKU_FLEET`, the app uses built-in fleets (e.g. `status.prod`). CI sets this on Linux and Windows in [ci/Jenkinsfile.tests-e2e](../../ci/Jenkinsfile.tests-e2e).
 
-- `critical`, mark used to select the most important checks we do for PRs in desktop repository 
-(the same for our repo PRs)
-- `skip`, used to just skip tests for various reasons, normally with a ticket linked
-- `timeout(timeout=180, method="thread")`, to catch excessively long test durations like deadlocked or hanging tests.
-This is done by `pytest-timeout` plugin
+---
+
+## Pytest marks
+
+```bash
+pytest -m critical      # main PR checks
+pytest --markers        # list all marks
+```
+
+- `critical` — important desktop PR checks
+- `skip` — skipped tests (usually with a ticket)
+- `timeout(...)` — hanging-test guard (`pytest-timeout`)
+
+---
+
+## Troubleshooting
+
+| Problem | What to try |
+|---------|-------------|
+| `SQUISH_DIR` error | Mac: `source .venv/bin/activate`. Linux/Windows: `export SQUISH_DIR=...`. PyCharm: use `.env`. |
+| Mac: Squish Python not found | `SQUISH_DIR=/Applications/Squish_9_2_2 ./scripts/setup_mac_squish.sh` |
+| Mac: `Python.framework` / `squishtest` | Re-run `./scripts/setup_mac_squish.sh` |
+| Mac: `EVP_DigestSqueeze` | `pip install -r requirements.txt` in activated `.venv` |
+| Mac: PyCharm wrong Python | Use existing `.venv/bin/python`, not Homebrew |
+| App won’t attach | Launch app manually first; Mac needs Squish-entitlements build |
+| Mac: Python quit during test | Retry; check `local_run_results/aut.log` |
+| Test hangs | Try a CI build instead of local dev |
+| Docker: `docker.sock` not found | Start Docker Desktop (Mac/Windows) or the Docker daemon (Linux); verify with `docker ps` |
+| `unknown fleet` with local Waku | Fleet in saved data must match `local-waku-fleets-config.json` |
+| Windows path errors | Double backslashes in `AUT_PATH`; use `Status.exe` in StatusApp folder |
+
+---
+
+## CI overview
+
+| Platform | E2e in Jenkins? | Where to get the app |
+|----------|-----------------|----------------------|
+| Linux | Yes | [Nightly](https://ci.status.im/job/status-desktop/job/nightly/) + [tests-e2e](https://ci.status.im/job/status-desktop/job/systems/job/linux/) |
+| Windows | Yes | Nightly + Windows tests-e2e |
+| macOS | No (local only) | [macOS systems job](https://ci.status.im/job/status-desktop/job/systems/job/macos/) |
+
+Jenkins agents set `SQUISH_DIR` and `PYTHONPATH` automatically on Linux/Windows.

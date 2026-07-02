@@ -3,6 +3,7 @@ configs/_local.py
 
 .idea/
 .venv/
+.env
 
 *.pyc
 
