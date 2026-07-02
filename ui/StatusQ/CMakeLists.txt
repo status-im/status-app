@@ -33,7 +33,7 @@ endif()
 find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
-        Core CorePrivate Qml Gui Quick QuickControls2 WebChannel Svg Network REQUIRED)
+        Core CorePrivate Qml Gui GuiPrivate Quick QuickControls2 WebChannel Svg Network REQUIRED)
 
 # --- QML test hooks flag and TestConfig generation ---
 option(STATUSQ_TESTMODE "Enable QML test hooks (TestConfig.testMode)" OFF)
@@ -246,6 +246,7 @@ add_library(StatusQ ${LIB_TYPE}
         )
 
 target_compile_features(StatusQ PRIVATE cxx_std_17)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::GuiPrivate)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     find_library(AppKit AppKit)

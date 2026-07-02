@@ -1882,44 +1882,8 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
 <context>
     <name>AppearanceView</name>
     <message>
-        <source>Blockchains will drop search costs, causing a kind of decomposition that allows you to have markets of entities that are horizontally segregated and vertically segregated.</source>
-        <translation>Blockchainy sníží náklady na vyhledávání, což způsobí druh rozkladu, který vám umožní mít trhy entit, které jsou horizontálně a vertikálně segregované.</translation>
-    </message>
-    <message>
-        <source>Text size</source>
-        <translation>Velikost textu</translation>
-    </message>
-    <message>
-        <source>XS</source>
-        <translation>XS</translation>
-    </message>
-    <message>
-        <source>S</source>
-        <translation>S</translation>
-    </message>
-    <message>
-        <source>M</source>
-        <translation>M</translation>
-    </message>
-    <message>
-        <source>L</source>
-        <translation>L</translation>
-    </message>
-    <message>
-        <source>XL</source>
-        <translation>XL</translation>
-    </message>
-    <message>
-        <source>XXL</source>
-        <translation>XXL</translation>
-    </message>
-    <message>
         <source>Mode</source>
         <translation>Režim</translation>
-    </message>
-    <message>
-        <source>XXS</source>
-        <translation>XXS</translation>
     </message>
     <message>
         <source>Light</source>
@@ -1930,16 +1894,36 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <translation>Tmavý</translation>
     </message>
     <message>
+        <source>Interface zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scale the app interface and text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation type="unfinished">Připojit se</translation>
+    </message>
+    <message>
+        <source>Follow display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply your system settings defaults values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart to apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply the new interface zoom level</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>System</source>
         <translation>Systém</translation>
-    </message>
-    <message>
-        <source>Layout Spacing</source>
-        <translation>Rozestupy rozložení</translation>
-    </message>
-    <message>
-        <source>Adjust how compact or spacious the layout looks</source>
-        <translation>Upravte, jak kompaktně nebo prostorně rozložení vypadá</translation>
     </message>
 </context>
 <context>

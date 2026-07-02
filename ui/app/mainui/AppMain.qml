@@ -919,24 +919,30 @@ Item {
             }
             return ThemeUtils.PaddingFactor.PaddingM
         }
+        readonly property int defaultFontSize: ThemeUtils.FontSize.FontSizeM
+        readonly property int defaultPaddingFactor: ThemeUtils.PaddingFactor.PaddingM
 
         Component.onCompleted: {
             ThemeUtils.setTheme(appMain.Window.window, appMainLocalSettings.theme)
-            ThemeUtils.setFontSize(appMain.Window.window, appMainLocalSettings.fontSize)
-            ThemeUtils.setPaddingFactor(appMain.Window.window, appMainLocalSettings.paddingFactor)
+            // NB: always returning default font/padding as part of the global scaling epic: https://github.com/status-im/status-app/issues/20169
+            // ThemeUtils.setFontSize(appMain.Window.window, appMainLocalSettings.defaultFontSize)
+            // ThemeUtils.setPaddingFactor(appMain.Window.window, appMainLocalSettings.defaultPaddingFactor)
+            ThemeUtils.setFontSize(appMain.Window.window, appMainLocalSettings.defaultFontSize)
+            ThemeUtils.setPaddingFactor(appMain.Window.window, appMainLocalSettings.defaultPaddingFactor)
 
             // Show the navigation education dialog the first time the app
             // is opened after the new menu is introduce, if the nav bar is in collapsed mode
             d.tryOpenNavigationEducationPopup()
         }
 
-        readonly property var _conn: Connections {
-            target: appMain
-            function onIsPortraitModeChanged() {
-                ThemeUtils.setFontSize(appMain.Window.window, appMainLocalSettings.fontSize)
-                ThemeUtils.setPaddingFactor(appMain.Window.window, appMainLocalSettings.paddingFactor)
-            }
-        }
+        // NB: disabled as part of the global scaling epic: https://github.com/status-im/status-app/issues/20169
+        // readonly property var _conn: Connections {
+        //     target: appMain
+        //     function onIsPortraitModeChanged() {
+        //         ThemeUtils.setFontSize(appMain.Window.window, appMainLocalSettings.fontSize)
+        //         ThemeUtils.setPaddingFactor(appMain.Window.window, appMainLocalSettings.paddingFactor)
+        //     }
+        // }
     }
 
     PopupsLoader {

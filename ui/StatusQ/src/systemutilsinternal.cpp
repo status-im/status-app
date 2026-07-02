@@ -15,6 +15,8 @@
 #include <QMetaObject>
 #include <QPointer>
 #include <mutex>
+#include <QQuickWindow>
+#include <qpa/qplatformscreen.h>
 
 #ifdef Q_OS_ANDROID
 #include <QFile>
@@ -672,7 +674,22 @@ void SystemUtilsInternal::startShakeDetection()
 #endif
 }
 
-#include "systemutilsinternal.moc"
+qreal SystemUtilsInternal::nativeDpr(QQuickWindow *window) const
+{
+    if (!window)
+        return 1.0;
+
+    auto screen = window->screen();
+    if (!screen)
+        return 1.0;
+
+    if (auto platformScreen = screen->handle()) {
+        return platformScreen->devicePixelRatio();
+    }
+
+    // Fallback to standard API if platform handle isn't available
+    return screen->devicePixelRatio();
+}
 
 #ifdef Q_OS_IOS
 static void iosShakeDetected()
@@ -713,3 +730,5 @@ static void jni_nativeShakeDetected(JNIEnv*, jclass)
     }, Qt::QueuedConnection);
 }
 #endif
+
+#include "systemutilsinternal.moc"

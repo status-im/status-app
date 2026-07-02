@@ -1,5 +1,5 @@
 import
-  std/[os, json, strformat, strutils, times],
+  std/[os, json, math, strformat, strutils, times],
   nimqml,
   chronicles,
   nimcrypto/keccak,
@@ -14,7 +14,6 @@ import app/core/custom_urls/url_scheme_event
 import app/global/single_instance
 
 import seaqt/qguiapplication
-import seaqt/qcoreapplication
 import seaqt/qsslconfiguration
 import seaqt/qsslcertificate
 import seaqt/QtCore/gen_qnamespace
@@ -178,6 +177,34 @@ proc logHandlerCallback(messageType: cint, message: cstring, category: cstring, 
     else:
       warn "qt message of unknown type", messageType = int(messageType)
 
+proc enableHDPI(uiScaleFilePath: string) =
+  const scaleEnvVar = "QT_SCALE_FACTOR"
+
+  # Equivalent to qEnvironmentVariableIsSet
+  if getEnv(scaleEnvVar) != "":
+    echo "[Warning] ", scaleEnvVar, " already set, will NOT enable custom Status scaling"
+    return
+
+  QGuiApplication.setHighDpiScaleFactorRoundingPolicy(5) # Qt.HighDpiScaleFactorRoundingPolicy.PassThrough enumerator not exported by seaqt :/
+
+  if fileExists(uiScaleFilePath):
+    # Reads the file and strips any trailing/leading whitespace (like newlines)
+    let scaleStr = readFile(uiScaleFilePath).strip()
+
+    if scaleStr.len == 0:
+      echo "[Debug] Resetting UI scale factor back to OS defaults"
+      return
+
+    try:
+      var scale = parseFloat(scaleStr)
+      scale = clamp(scale, 0.5, 2.0)
+      echo "[Debug] Setting custom UI scale to ", scale
+      putEnv(scaleEnvVar, formatFloat(scale, ffDecimal, precision = 2))
+
+    except ValueError:
+      warn "Error parsing 'ui-scale' file contents, not a float"
+      discard
+
 proc mainProc() =
 
   when defined(macosx) and defined(arm64):
@@ -212,12 +239,16 @@ proc mainProc() =
   let statusAppIconPath = determineStatusAppIconPath()
 
   let statusFoundation = newStatusFoundation()
-  let uiScaleFilePath = joinPath(DATADIR, "ui-scale")
+
   # Required by the WalletConnectSDK view right after creating the QGuiApplication instance
   statusq_initializeWebEngine()
-  # Enable HDPI PassThrough rounding policy (replaces dos_qguiapplication_enable_hdpi)
+
+  # Enable HDPI (replaces dos_qguiapplication_enable_hdpi)
+  let uiScaleFilePath = joinPath(DATADIR, "ui-scale")
   gen_qguiapplication.QGuiApplication.setHighDpiScaleFactorRoundingPolicy(
     cint(HighDpiScaleFactorRoundingPolicyEnum.PassThrough))
+  enableHDPI(uiScaleFilePath)
+
   # Enable threaded renderer (replaces dos_qguiapplication_try_enable_threaded_renderer)
   putEnv("QSG_RENDER_LOOP", "threaded")
 

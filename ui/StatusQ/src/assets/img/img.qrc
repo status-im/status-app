@@ -516,5 +516,11 @@
         <file>icons/trustedContact.svg</file>
         <file>icons/untrustworthyContact.svg</file>
         <file>icons/action-green-airplane.svg</file>
+        <file>appearance-dark.svg</file>
+        <file>appearance-light.svg</file>
+        <file>appearance-system.svg</file>
+        <file>appearance-dark-small.svg</file>
+        <file>appearance-light-small.svg</file>
+        <file>appearance-system-small.svg</file>
     </qresource>
 </RCC>

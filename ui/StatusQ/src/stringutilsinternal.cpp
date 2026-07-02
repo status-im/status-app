@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QFile>
+#include <QSaveFile>
 #include <QKeySequence>
 #include <QUrl>
 #include <QTextDocumentFragment>
@@ -34,6 +35,33 @@ QString StringUtilsInternal::readTextFile(const QString& filePath) const
     }
 
     return file.readAll();
+}
+
+bool StringUtilsInternal::writeTextFile(const QString &filePath, const QString& data) const
+{
+    qWarning() << "!!! WRITING TO FILE:" << filePath << "; data:" << data;
+
+    auto maybeFileUrl = QUrl::fromUserInput(filePath);
+    if (!maybeFileUrl.isLocalFile()) {
+        qWarning() << Q_FUNC_INFO << "Error, opening remote files is not supported" << maybeFileUrl;
+        return false;
+    }
+
+    QSaveFile file(maybeFileUrl.toLocalFile());
+
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        qWarning() << Q_FUNC_INFO << "Error opening file" << file.fileName() << "for writing";
+        return false;
+    }
+    if (file.write(data.toUtf8()) == -1) {
+        qWarning() << Q_FUNC_INFO << "Error writing to file" << file.fileName();
+        return false;
+    }
+    if (!file.commit()) {
+        qWarning() << Q_FUNC_INFO << "Error committing writing to file" << file.fileName();
+        return false;
+    }
+    return true;
 }
 
 QString StringUtilsInternal::extractDomainFromLink(const QString& link) const

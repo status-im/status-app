@@ -12,16 +12,12 @@ Slider {
     id: root
 
     property int handleSize: 28
-    property int bgHeight: 4
+    property int bgHeight: handleSize/2
     property color handleColor: StatusColors.white
     property color bgColor: Theme.palette.baseColor2
     property color fillColor: Theme.palette.primaryColor1
 
     property alias decoration: decorationContainer.sourceComponent
-
-    implicitWidth: 360
-    implicitHeight: Math.max(handle.implicitHeight,
-                             background.implicitHeight + decorationContainer.height)
 
     horizontalPadding: 0
 
@@ -36,7 +32,7 @@ Slider {
             height: root.bgHeight
 
             color: root.bgColor
-            radius: 2
+            radius: height
 
             Loader {
                 id: decorationContainer
@@ -48,7 +44,7 @@ Slider {
                 width: root.visualPosition * parent.width
                 height: parent.height
                 color: root.fillColor
-                radius: 2
+                radius: height
             }
         }
     }

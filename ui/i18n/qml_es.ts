@@ -1875,42 +1875,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
 <context>
     <name>AppearanceView</name>
     <message>
-        <source>Blockchains will drop search costs, causing a kind of decomposition that allows you to have markets of entities that are horizontally segregated and vertically segregated.</source>
-        <translation>Las blockchains reducirán los costos de búsqueda, causando una especie de descomposición que permite tener mercados de entidades que están segregadas horizontalmente y verticalmente.</translation>
-    </message>
-    <message>
-        <source>Text size</source>
-        <translation>Tamaño del texto</translation>
-    </message>
-    <message>
-        <source>XS</source>
-        <translation>XS</translation>
-    </message>
-    <message>
-        <source>S</source>
-        <translation>S</translation>
-    </message>
-    <message>
-        <source>M</source>
-        <translation>M</translation>
-    </message>
-    <message>
-        <source>L</source>
-        <translation>L</translation>
-    </message>
-    <message>
-        <source>XL</source>
-        <translation>XL</translation>
-    </message>
-    <message>
-        <source>XXL</source>
-        <translation>XXL</translation>
-    </message>
-    <message>
-        <source>XXS</source>
-        <translation>XXS</translation>
-    </message>
-    <message>
         <source>Mode</source>
         <translation>Modo</translation>
     </message>
@@ -1923,16 +1887,36 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <translation>Oscuro</translation>
     </message>
     <message>
+        <source>Interface zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scale the app interface and text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation type="unfinished">Unirse</translation>
+    </message>
+    <message>
+        <source>Follow display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply your system settings defaults values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart to apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply the new interface zoom level</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>System</source>
         <translation>Sistema</translation>
-    </message>
-    <message>
-        <source>Layout Spacing</source>
-        <translation>Factor de espaciado</translation>
-    </message>
-    <message>
-        <source>Adjust how compact or spacious the layout looks</source>
-        <translation>Ajusta qué tan compacto o espacioso se ve el diseño</translation>
     </message>
 </context>
 <context>

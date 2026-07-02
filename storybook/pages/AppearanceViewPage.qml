@@ -10,13 +10,6 @@ import StatusQ.Controls
 import StatusQ.Components
 import StatusQ.Core.Theme
 
-import Models
-import Storybook
-
-import SortFilterProxyModel
-
-import utils
-
 import AppLayouts.Profile.views
 
 Item {
@@ -25,13 +18,15 @@ Item {
     AppearanceView {
         anchors.fill: parent
         anchors.topMargin: 80
-        contentWidth: root.width
+        contentWidth: Math.min(650, root.width)
 
         theme: ThemeUtils.Style.System
-        fontSize: ThemeUtils.FontSize.FontSizeM
-        paddingFactor: ThemeUtils.PaddingFactor.PaddingM
+        onThemeChangeRequested: function(theme) {
+            console.info("AppearanceView.onThemeChangeRequested:", theme)
+            this.theme = theme
+        }
 
-        onThemeChangeRequested: theme => this.theme = theme
+        onRestartRequested: console.info("AppearanceView.onRestartRequested")
     }
 }
 

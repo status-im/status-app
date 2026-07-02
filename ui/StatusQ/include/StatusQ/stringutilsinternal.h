@@ -13,6 +13,7 @@ public:
     Q_INVOKABLE QString escapeHtml(const QString& unsafe) const;
 
     Q_INVOKABLE QString readTextFile(const QString& filePath) const;
+    Q_INVOKABLE bool writeTextFile(const QString& filePath, const QString& data) const;
 
     Q_INVOKABLE QString extractDomainFromLink(const QString& link) const;
 

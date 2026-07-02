@@ -211,6 +211,8 @@ Rectangle {
     color: "transparent"
     border.color: Theme.palette.directColor8
     layer.enabled: true
+    layer.mipmap: true
+    layer.textureSize: Qt.size(width * 2, height * 2)
     layer.effect: DropShadow {
         source: root
         horizontalOffset: 0
@@ -302,7 +304,7 @@ Rectangle {
             anchors.top: parent.top
             anchors.topMargin: 8
             anchors.right: parent.right
-            anchors.rightMargin: anchors.topMargin
+            anchors.rightMargin: Theme.smallPadding
         }
 
         // Community info

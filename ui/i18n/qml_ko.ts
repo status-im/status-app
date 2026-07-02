@@ -1867,38 +1867,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 <context>
     <name>AppearanceView</name>
     <message>
-        <source>Blockchains will drop search costs, causing a kind of decomposition that allows you to have markets of entities that are horizontally segregated and vertically segregated.</source>
-        <translation>블록체인은 탐색 비용을 낮춰, 수평적으로도 수직적으로도 분리된 엔터티들의 시장이 생겨나는 일종의 분해를 촉발합니다.</translation>
-    </message>
-    <message>
-        <source>Text size</source>
-        <translation>텍스트 크기</translation>
-    </message>
-    <message>
-        <source>XS</source>
-        <translation>XS</translation>
-    </message>
-    <message>
-        <source>S</source>
-        <translation>S</translation>
-    </message>
-    <message>
-        <source>M</source>
-        <translation>M</translation>
-    </message>
-    <message>
-        <source>L</source>
-        <translation>L</translation>
-    </message>
-    <message>
-        <source>XL</source>
-        <translation>XL</translation>
-    </message>
-    <message>
-        <source>XXL</source>
-        <translation>XXL</translation>
-    </message>
-    <message>
         <source>Mode</source>
         <translation>모드</translation>
     </message>
@@ -1911,20 +1879,36 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation>다크</translation>
     </message>
     <message>
+        <source>Interface zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scale the app interface and text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation type="unfinished">참여</translation>
+    </message>
+    <message>
+        <source>Follow display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply your system settings defaults values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart to apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply the new interface zoom level</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>System</source>
         <translation>시스템</translation>
-    </message>
-    <message>
-        <source>XXS</source>
-        <translation>XXS</translation>
-    </message>
-    <message>
-        <source>Layout Spacing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Adjust how compact or spacious the layout looks</source>
-        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

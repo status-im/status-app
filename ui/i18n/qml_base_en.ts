@@ -1874,43 +1874,7 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 <context>
     <name>AppearanceView</name>
     <message>
-        <source>Blockchains will drop search costs, causing a kind of decomposition that allows you to have markets of entities that are horizontally segregated and vertically segregated.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Text size</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>XS</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>S</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>M</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>L</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>XL</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>XXL</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>XXS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1922,15 +1886,35 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Interface zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Scale the app interface and text</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Follow display zoom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Apply your system settings defaults values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart to apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Restart Status to apply the new interface zoom level</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>System</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Layout Spacing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Adjust how compact or spacious the layout looks</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

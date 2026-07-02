@@ -372,11 +372,9 @@ StatusSectionLayout {
                 sectionTitle: settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.appearance)
                 contentWidth: d.contentWidth
                 theme: root.theme
-                fontSize: root.fontSize
-                paddingFactor: root.paddingFactor
+                uiScaleFile: uiScaleFilePath
                 onThemeChangeRequested: (theme) => root.themeChangeRequested(theme)
-                onFontSizeChangeRequested: (fontSize) => root.fontSizeChangeRequested(fontSize)
-                onPaddingFactorChangeRequested: (paddingFactor) => root.paddingFactorChangeRequested(paddingFactor)
+                onRestartRequested: Qt.callLater(() => SystemUtils.restartApplication())
             }
         }
 

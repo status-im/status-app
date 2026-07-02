@@ -2,57 +2,57 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import utils
-import shared
-import shared.panels
-
-import StatusQ.Controls as StatusQControls
 import StatusQ.Core
 import StatusQ.Core.Theme
 
-Rectangle {
+import utils
+
+RadioButton {
     id: root
 
-    property int padding: Theme.halfPadding
-    property alias control: radioControl
     property alias image: img
-    property bool isHovered: false
-    signal radioCheckedChanged(bool checked)
 
-    implicitWidth: 208
-    implicitHeight: layout.height
-    color: radioControl.checked ? Theme.palette.secondaryBackground :
-                                  (isHovered ? Theme.palette.backgroundHover : StatusColors.transparent)
+    padding: Theme.halfPadding
+    spacing: Theme.halfPadding
+    hoverEnabled: enabled
 
-    radius: Theme.radius
+    font.family: Fonts.baseFont.family
+    font.pixelSize: Theme.fontSize(13)
+    font.weight: checked ? Font.DemiBold : Font.Medium
 
-    ColumnLayout {
+    background: Rectangle {
+        radius: Theme.radius
+        color: checked ? Theme.palette.secondaryBackground :
+                         (hovered ? Theme.palette.backgroundHover : StatusColors.transparent)
+        border.width: 2
+        border.color: checked ? Theme.palette.primaryColor1 : StatusColors.transparent
+    }
+
+    contentItem: ColumnLayout {
         id: layout
-        width: parent.width
-        spacing: root.padding
+        spacing: root.spacing
 
-        SVGImage {
+        Image {
             id: img
-            Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: root.width - root.padding*2
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            fillMode: Image.PreserveAspectFit
+            mipmap: true
+            antialiasing: true
         }
 
-        StatusQControls.StatusRadioButton {
-            id: radioControl
+        StatusBaseText {
             Layout.fillWidth: true
-            Layout.leftMargin: root.padding
-            Layout.rightMargin: root.padding
+            horizontalAlignment: Qt.AlignHCenter
+            color: Theme.palette.baseColor1
+            text: root.text
+            font: root.font
         }
     }
 
-    StatusMouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        onEntered: root.isHovered = true
-        onExited: root.isHovered = false
-        onClicked: {
-            root.radioCheckedChanged(!radioControl.checked)
-        }
-        cursorShape: Qt.PointingHandCursor
+    indicator: null
+
+    HoverHandler {
+        cursorShape: root.hovered ? Qt.PointingHandCursor : undefined
     }
 }
