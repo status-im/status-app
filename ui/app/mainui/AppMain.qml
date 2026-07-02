@@ -2392,7 +2392,6 @@ Item {
                     }
                 }
             }
-
         }
     } // ColumnLayout
 
@@ -3084,8 +3083,10 @@ Item {
             return
         }
 
-        event.accepted = true
-        MobileUI.backToHomeScreen()
+         if (SQUtils.Utils.isMobile) {
+             event.accepted = true
+             MobileUI.backToHomeScreen()
+         }
     }
 
     Keys.onShortcutOverride: function (event) {

@@ -25,9 +25,7 @@ QtObject {
     readonly property bool canGoBack: d.depth > 0
 
     onMaxDepthChanged: {
-        while (d.stack.length > root.maxDepth)
-            d.stack.shift()
-        d.depth = d.stack.length
+        d.trim()
     }
 
     /*!
@@ -40,9 +38,7 @@ QtObject {
         if (d.stack.length > 0 && d.stack[d.stack.length - 1] === token)
             return
         d.stack.push(token)
-        while (d.stack.length > root.maxDepth)
-            d.stack.shift()
-        d.depth = d.stack.length
+        d.trim()
     }
 
     /*!
@@ -72,5 +68,11 @@ QtObject {
         // depth mirrors d.stack.length; updated by every mutator so canGoBack stays reactive
         property var stack: []
         property int depth: 0
+
+        function trim() {
+            while (d.stack.length > Math.max(0, root.maxDepth))
+                d.stack.shift()
+            d.depth = d.stack.length
+        }
     }
 }
