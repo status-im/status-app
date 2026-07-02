@@ -20,7 +20,10 @@ QT_VERSION="${QT_VERSION:-6.9.2}"
 QT_MODULES=qtbase,qtdeclarative,qt5compat,qtmultimedia,qtshadertools,qtimageformats,qtwebview,qtscxml,qtsvg,qtconnectivity,qtwebsockets,qtpositioning,qtlottie,qtwebchannel
 (cd "$QT_SRCDIR" && perl init-repository --module-subset="$QT_MODULES")
 
-rm -rf "${QT_SRCDIR:?}/qtcharts"
+# nuke de-registered and leftover submodules
+git -C "$QT_SRCDIR" submodule status | grep '^-' | while read -r _ path _; do
+  rm -rf "${QT_SRCDIR:?}/$path"
+done
 
 # Reproducibility:
 #   add_link_options: strips .note.gnu.build-id from every .so
