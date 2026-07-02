@@ -367,6 +367,25 @@ TestCase {
         verify(!boldB, "B must not be bold")
     }
 
+    function test_emphasis_hugsMention() {
+        // "A**<M>B**\n**C**" (<M> = mention object char): the "**" run hugs the mention
+        // (a word-like content token), so B is bold, and the next line's **C** stays bold.
+        const M = String.fromCharCode(0xFFFC)
+        const text = "A**" + M + "B**\n**C**"
+        const spans = highlighter.parseFormats(text)
+        let boldB = false
+        let boldC = false
+        for (let i = 0; i < spans.length; i++) {
+            if (!spans[i].bold) continue
+            for (let p = spans[i].start; p < spans[i].end; p++) {
+                if (text[p] === 'B') boldB = true
+                if (text[p] === 'C') boldC = true
+            }
+        }
+        verify(boldB, "B should be bold")
+        verify(boldC, "C should be bold")
+    }
+
     function test_inlineCode_basic() {
         // "`hello`": content = [1, 6)
         const spans = highlighter.parseCodeSpans("`hello`")

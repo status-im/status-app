@@ -344,6 +344,31 @@ Document [0,7)
                  QString::fromUtf8(expected).trimmed());
     }
 
+    // A "**" run abutting a mention object (U+FFFC) still opens/closes — the mention is a
+    // word-like content token for flanking — so A**<mention>B** is bold and the next line's
+    // **C** pairs independently (both stay bold; regression for the flanking fix).
+    void boldHugsMention()
+    {
+        const QString fffc(QChar(QChar::ObjectReplacementCharacter));
+        auto expected = R"(
+Document [0,13)
+  Paragraph [0,13)
+    Text [0,1) "A"
+    Strong [1,7)
+      Delimiter [1,3) "**"
+      Mention [3,4)
+      Text [4,5) "B"
+      Delimiter [5,7) "**"
+    Text [7,8) "\n"
+    Strong [8,13)
+      Delimiter [8,10) "**"
+      Text [10,11) "C"
+      Delimiter [11,13) "**"
+)";
+        QCOMPARE(d("A**" + fffc + "B**\n**C**"),
+                 QString::fromUtf8(expected).trimmed());
+    }
+
     void crossLineBold()
     {
         // Emphasis always spans lines; the newline is escaped in the dumped literal.

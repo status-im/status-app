@@ -5,9 +5,8 @@
 #include <algorithm>
 
 // ── Parsing primitives ────────────────────────────────────────────────────────
-// Low-level scanners shared by the parser. These were originally inlined in
-// ChatInputHighlighter; they are pure functions over QString and produce
-// position-based intermediate results, later assembled into the AST.
+// Low-level scanners shared by the parser. They are pure functions over QString
+// and produce position-based intermediate results, later assembled into the AST.
 namespace {
 
 using namespace Markdown;
@@ -98,10 +97,14 @@ bool isInlineMarkupChar(QChar c)
     return c == QLatin1Char('*') || c == QLatin1Char('~') || c == QLatin1Char('`');
 }
 
-// Punctuation for flanking purposes (inline-markup delimiters excluded — see above).
+// Punctuation for flanking purposes. Inline-markup delimiters (see above) and embedded
+// objects (mentions, U+FFFC) count as word-like, not punctuation, so emphasis can hug them
+// — e.g. **~~A~~**B and A**<mention>B** keep the outer bold.
 bool isFlankingPunctuation(QChar c)
 {
-    return !isInlineMarkupChar(c) && isUnicodePunctuation(c);
+    return c != QChar::ObjectReplacementCharacter
+            && !isInlineMarkupChar(c)
+            && isUnicodePunctuation(c);
 }
 
 bool isLeftFlanking(const QString& text, qsizetype pos, qsizetype len)
