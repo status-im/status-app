@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQml.Models
 
 import StatusQ.Core
 import StatusQ.Controls
@@ -15,7 +16,7 @@ import shared.panels
 
 import QtModelsToolkit
 
-StatusDialog {
+StatusAdaptiveDialog {
     id: root
 
     required property string sourceImage
@@ -29,24 +30,21 @@ StatusDialog {
     QtObject {
         id: d
 
-        readonly property int symbolColumnWidth: 90
-        readonly property int addressColumnWidth: 106
+        readonly property real symbolColumnFraction: 1 / 6
+        readonly property real addressColumnFraction: 1 / 5
         readonly property int externalLinkBtnWidth: 32
-        readonly property int maxTokenListBodyHeight: 420
     }
 
-    width: 521 // by design
-    padding: 0
-    horizontalPadding: Theme.padding
-    fillHeightOnBottomSheet: true    
+    subtitle: qsTr("%n token(s)", "", root.tokensListModel.ModelCount.count)
+    leftHeaderComponent: StatusSmartIdenticon {
+        asset.name: root.sourceImage
+        asset.isImage: !!asset.name
+    }
 
-    contentItem: StatusListView {
+    contentComponent: StatusListView {
         id: list
 
-        topMargin: Theme.padding
-        bottomMargin: Theme.padding
-        // Cap ListView implicit height so delegates recycle instead of laying out the full list
-        implicitHeight: Math.min(d.maxTokenListBodyHeight, contentHeight + topMargin + bottomMargin)
+        ScrollBar.vertical: null
 
         model: root.tokensListModel
 
@@ -64,7 +62,7 @@ StatusDialog {
             CustomHeaderDelegate {}
         }
         delegate: CustomDelegate {
-            width: contentItem.width
+            width: ListView.view.width
             height: 64
 
             name: model.name
@@ -77,18 +75,13 @@ StatusDialog {
         }
     }
 
-    header: StatusDialogHeader {
-        headline.title: root.title
-        headline.subtitle: qsTr("%n token(s)", "", root.tokensListModel.ModelCount.count)
-        actions.closeButton.onClicked: root.close()
-        leftComponent: StatusSmartIdenticon {
-            asset.name: root.sourceImage
-            asset.isImage: !!asset.name
+    footerRightButtons: ObjectModel {
+        StatusButton {
+            objectName: "tokenListPopupDoneButton"
+            text: qsTr("Done")
+            onClicked: root.close()
         }
     }
-
-    standardButtons: Dialog.Ok
-    okButtonText: qsTr("Done")
 
     component CustomTextBlock: ColumnLayout {
         id: textBlock
@@ -153,8 +146,10 @@ StatusDialog {
     }
 
     component CustomHeaderDelegate: RowLayout {
+        id: headerDelegate
+
         height: 34
-        width: contentItem.width
+        width: ListView.view ? ListView.view.width : 0
         spacing: 0
 
         StatusBaseText {
@@ -167,7 +162,7 @@ StatusDialog {
 
         StatusBaseText {
             Layout.leftMargin: Theme.padding
-            Layout.preferredWidth: d.symbolColumnWidth - Layout.leftMargin
+            Layout.preferredWidth: headerDelegate.width * d.symbolColumnFraction - Layout.leftMargin
             Layout.alignment: Qt.AlignLeft
 
             text: qsTr("Symbol")
@@ -176,7 +171,7 @@ StatusDialog {
 
         StatusBaseText {
             Layout.leftMargin: Theme.padding
-            Layout.preferredWidth: d.addressColumnWidth - Layout.leftMargin
+            Layout.preferredWidth: headerDelegate.width * d.addressColumnFraction - Layout.leftMargin
             Layout.alignment: Qt.AlignLeft
 
             text: qsTr("Address")
@@ -249,7 +244,7 @@ StatusDialog {
 
             StatusBaseText {
                 Layout.leftMargin: Theme.padding
-                Layout.preferredWidth: d.symbolColumnWidth - Layout.leftMargin
+                Layout.preferredWidth: customDelegate.width * d.symbolColumnFraction - Layout.leftMargin
                 Layout.alignment: Qt.AlignLeft
 
                 text: customDelegate.symbol
@@ -258,7 +253,7 @@ StatusDialog {
 
             StatusBaseText {
                 Layout.leftMargin: Theme.padding
-                Layout.preferredWidth: d.addressColumnWidth - Layout.leftMargin
+                Layout.preferredWidth: customDelegate.width * d.addressColumnFraction - Layout.leftMargin
                 Layout.alignment: Qt.AlignLeft
 
                 text: customDelegate.address
