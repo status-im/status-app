@@ -293,7 +293,7 @@ type StatusDesktopConfig = object
     defaultValue: ""
     desc: "Sets Waku fleets config file path"
     name: "WAKU_FLEETS_CONFIG"
-    abbr: "waku-fleets -config" .}: string
+    abbr: "waku-fleets-config" .}: string
   httpApiEnabled* {.
     defaultValue: CONNECTOR_ENABLED
     desc: "Enable HTTP RPC API"
