@@ -71,6 +71,7 @@ APP_CONFIG_DEFINES=(
 NIM_FLAGS=(
     --mm:orc
     -d:useMalloc
+    -d:lto
     --opt:size
     --cc:clang
     --cpu:"$CARCH"
