@@ -346,7 +346,6 @@ Window {
         function onClosing(close) {
             // save the geometry just before closing
             applicationWindow.storeAppState() // noop on mobile
-            // on mobile, we minimize to background (no tray icon or quitOnClose setting)
             if (SQUtils.Utils.isMobile) {
                 close.accepted = true
                 return
