@@ -42,10 +42,10 @@ Control {
     onSelectableChanged: d.clearSelection()
     onBlocksChanged: d.clearSelection()
 
-    // Renders one text or code region as a Label (not selectable) or a read-only TextEdit
-    // (selectable). Both variants are instantiated and toggled by visibility (no Loader, to
-    // keep the no-binding-loop sizing). Code regions keep their framed monospace look.
-    component BlockText: Item {
+    // Renders one text or code region, instantiating exactly one child (via Loader): a Label
+    // (not selectable) or a read-only TextEdit (selectable), plain or framed for code. Widths
+    // flow down from `width` (set by the parent); heights flow up via implicitHeight.
+    component BlockText: Loader {
         id: piece
 
         property string content
@@ -55,81 +55,101 @@ Control {
         property bool strikethrough: false
         property bool selectable: false
 
-        implicitHeight: isCode ? codeFrame.implicitHeight
-                               : (selectable ? richEdit.implicitHeight : richLabel.implicitHeight)
+        sourceComponent: isCode ? (selectable ? codeEditComp : codeLabelComp)
+                                : (selectable ? richEditComp : richLabelComp)
 
         // ── rich text (non-code) ──
-        Label {
-            id: richLabel
-            visible: !piece.isCode && !piece.selectable
-            width: parent.width
-            wrapMode: Text.Wrap
-            textFormat: Text.RichText
-            font.family: root.font.family
-            font.pixelSize: root.font.pixelSize
-            // pre-wrap so extra/leading spaces are preserved
-            text: visible ? "<span style=\"white-space:pre-wrap\">" + piece.content + "</span>" : ""
-        }
-        TextEdit {
-            id: richEdit
-            property bool selectionParticipant: true
-            visible: !piece.isCode && piece.selectable
-            width: parent.width
-            readOnly: true
-            selectByMouse: false
-            persistentSelection: true
-            wrapMode: Text.Wrap
-            textFormat: Text.RichText
-            selectionColor: root.palette.highlight
-            font.family: root.font.family
-            font.pixelSize: root.font.pixelSize
-            text: visible ? "<span style=\"white-space:pre-wrap\">" + piece.content + "</span>" : ""
-        }
-
-        // ── code (framed monospace) ──
-        Rectangle {
-            id: codeFrame
-            visible: piece.isCode
-            width: (piece.selectable ? codeEdit.width : codeLabel.width) + 16
-            implicitHeight: (piece.selectable ? codeEdit.implicitHeight
-                                              : codeLabel.implicitHeight) + 16
-            radius: 6
-            border.width: 1
-            border.color: root.codeBorderColor
-            color: root.codeBackgroundColor
-
+        Component {
+            id: richLabelComp
             Label {
-                id: codeLabel
-                x: 8; y: 8
-                visible: piece.isCode && !piece.selectable
-                width: Math.min(implicitWidth, piece.width - 16)
+                width: piece.width
                 wrapMode: Text.Wrap
-                textFormat: Text.PlainText
-                font.family: Fonts.codeFont.family
+                textFormat: Text.RichText
+                font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
-                font.bold: piece.bold
-                font.italic: piece.italic
-                font.strikeout: piece.strikethrough
-                text: piece.isCode ? piece.content : ""
+                // pre-wrap so extra/leading spaces are preserved
+                text: "<span style=\"white-space:pre-wrap\">" + piece.content + "</span>"
             }
+        }
+        Component {
+            id: richEditComp
             TextEdit {
-                id: codeEdit
                 property bool selectionParticipant: true
-                x: 8; y: 8
-                visible: piece.isCode && piece.selectable
-                width: Math.min(implicitWidth, piece.width - 16)
+                width: piece.width
                 readOnly: true
                 selectByMouse: false
                 persistentSelection: true
                 wrapMode: Text.Wrap
-                textFormat: Text.PlainText
+                textFormat: Text.RichText
                 selectionColor: root.palette.highlight
-                font.family: Fonts.codeFont.family
+                font.family: root.font.family
                 font.pixelSize: root.font.pixelSize
-                font.bold: piece.bold
-                font.italic: piece.italic
-                font.strikeout: piece.strikethrough
-                text: piece.isCode ? piece.content : ""
+                text: "<span style=\"white-space:pre-wrap\">" + piece.content + "</span>"
+            }
+        }
+
+        // ── code (framed monospace) — a full-width Item wrapping the hugging frame ──
+        Component {
+            id: codeLabelComp
+            Item {
+                implicitHeight: frame.implicitHeight
+                Rectangle {
+                    id: frame
+                    width: inner.width + 16
+                    implicitHeight: inner.implicitHeight + 16
+                    radius: 6
+                    border.width: 1
+                    border.color: root.codeBorderColor
+                    color: root.codeBackgroundColor
+
+                    Label {
+                        id: inner
+                        x: 8; y: 8
+                        width: Math.min(implicitWidth, piece.width - 16)
+                        wrapMode: Text.Wrap
+                        textFormat: Text.PlainText
+                        font.family: Fonts.codeFont.family
+                        font.pixelSize: root.font.pixelSize
+                        font.bold: piece.bold
+                        font.italic: piece.italic
+                        font.strikeout: piece.strikethrough
+                        text: piece.content
+                    }
+                }
+            }
+        }
+        Component {
+            id: codeEditComp
+            Item {
+                implicitHeight: frame.implicitHeight
+                Rectangle {
+                    id: frame
+                    width: inner.width + 16
+                    implicitHeight: inner.implicitHeight + 16
+                    radius: 6
+                    border.width: 1
+                    border.color: root.codeBorderColor
+                    color: root.codeBackgroundColor
+
+                    TextEdit {
+                        id: inner
+                        property bool selectionParticipant: true
+                        x: 8; y: 8
+                        width: Math.min(implicitWidth, piece.width - 16)
+                        readOnly: true
+                        selectByMouse: false
+                        persistentSelection: true
+                        wrapMode: Text.Wrap
+                        textFormat: Text.PlainText
+                        selectionColor: root.palette.highlight
+                        font.family: Fonts.codeFont.family
+                        font.pixelSize: root.font.pixelSize
+                        font.bold: piece.bold
+                        font.italic: piece.italic
+                        font.strikeout: piece.strikethrough
+                        text: piece.content
+                    }
+                }
             }
         }
     }
@@ -248,8 +268,7 @@ Control {
         Repeater {
             model: root.blocks
 
-            // Visibility-based (no Loader) to avoid Loader height binding loops;
-            // each delegate sizes to its visible child's content.
+            // One Loader per block builds only the matching renderer (text/code or quote).
             delegate: Item {
                 id: blk
 
@@ -257,56 +276,62 @@ Control {
                 readonly property var block: modelData
 
                 width: blocksColumn.width
-                implicitHeight: block.type === "quote" ? quoteRow.implicitHeight
-                                                       : topText.implicitHeight
+                implicitHeight: blockLoader.implicitHeight
                 height: implicitHeight
 
-                BlockText {
-                    id: topText
-                    visible: blk.block.type !== "quote"
+                Loader {
+                    id: blockLoader
                     width: parent.width
-                    selectable: root.selectable
-                    isCode: blk.block.type === "code"
-                    content: blk.block.type === "code" ? (blk.block.code || "")
-                                                       : (blk.block.html || "")
-                    bold: !!blk.block.bold
-                    italic: !!blk.block.italic
-                    strikethrough: !!blk.block.strikethrough
+                    sourceComponent: blk.block.type === "quote" ? quoteComp : textComp
                 }
 
-                Row {
-                    id: quoteRow
-                    visible: blk.block.type === "quote"
-                    width: parent.width
-                    spacing: 8
-
-                    Rectangle {
-                        width: 3
-                        height: quoteCol.height
-                        color: root.quoteBarColor
-
-                        bottomLeftRadius: 3
-                        topLeftRadius: 3
+                Component {
+                    id: textComp
+                    BlockText {
+                        width: blockLoader.width
+                        selectable: root.selectable
+                        isCode: blk.block.type === "code"
+                        content: blk.block.type === "code" ? (blk.block.code || "")
+                                                           : (blk.block.html || "")
+                        bold: !!blk.block.bold
+                        italic: !!blk.block.italic
+                        strikethrough: !!blk.block.strikethrough
                     }
-                    Column {
-                        id: quoteCol
-                        width: parent.width - 11 // bar (3) + spacing (8)
+                }
+
+                Component {
+                    id: quoteComp
+                    Row {
                         spacing: 8
 
-                        Repeater {
-                            model: quoteRow.visible ? blk.block.blocks : []
+                        Rectangle {
+                            width: 3
+                            height: quoteCol.height
+                            color: root.quoteBarColor
 
-                            delegate: BlockText {
-                                required property var modelData
+                            bottomLeftRadius: 3
+                            topLeftRadius: 3
+                        }
+                        Column {
+                            id: quoteCol
+                            width: blockLoader.width - 11 // bar (3) + spacing (8)
+                            spacing: 8
 
-                                width: quoteCol.width
-                                selectable: root.selectable
-                                isCode: modelData.type === "code"
-                                content: modelData.type === "code" ? (modelData.code || "")
-                                                                   : (modelData.html || "")
-                                bold: !!modelData.bold
-                                italic: !!modelData.italic
-                                strikethrough: !!modelData.strikethrough
+                            Repeater {
+                                model: blk.block.blocks
+
+                                delegate: BlockText {
+                                    required property var modelData
+
+                                    width: quoteCol.width
+                                    selectable: root.selectable
+                                    isCode: modelData.type === "code"
+                                    content: modelData.type === "code" ? (modelData.code || "")
+                                                                       : (modelData.html || "")
+                                    bold: !!modelData.bold
+                                    italic: !!modelData.italic
+                                    strikethrough: !!modelData.strikethrough
+                                }
                             }
                         }
                     }
