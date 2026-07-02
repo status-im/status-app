@@ -62,4 +62,10 @@ struct Node {
 //       Text [13,18) " text"
 QString dump(const Node& node, bool withRanges = true);
 
+// Quick, range-based emoji detector (not a full Unicode emoji property test). Covers the
+// common emoji blocks plus the joiners/modifiers that are part of an emoji grapheme cluster
+// (ZWJ, variation selectors, regional indicators, keycap combiners) so a whole emoji
+// sequence is treated as one unit. Shared by the live highlighter and the static renderer.
+bool isEmojiCodePoint(char32_t cp);
+
 } // namespace Markdown

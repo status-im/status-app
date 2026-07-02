@@ -331,9 +331,11 @@ unclosed fence here (no closing triple-tick)
                             selectable: selectableSwitch.checked
 
                             blocks: {
-                                textArea.text // re-build on every edit
+                                textArea.text            // re-build on every edit
+                                textArea.enlargeEmojis   // and when the emoji toggle changes
                                 return MarkdownUtils.toBlocks(textArea.textDocument,
-                                                              textArea.formatUnclosedCodeFence)
+                                                              textArea.formatUnclosedCodeFence,
+                                                              textArea.enlargeEmojis)
                             }
                         }
                     }

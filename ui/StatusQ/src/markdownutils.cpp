@@ -4,6 +4,7 @@
 #include "StatusQ/markdownparser.h"
 #include "StatusQ/mentiontextobject.h"
 
+#include <QFontMetricsF>
 #include <QQuickTextDocument>
 #include <QTextBlock>
 #include <QTextDocument>
@@ -48,7 +49,8 @@ QString MarkdownUtils::dumpAst(const QString& text, bool formatUnclosedCodeFence
 }
 
 QVariantList MarkdownUtils::toBlocks(QQuickTextDocument* quickDoc,
-                                     bool formatUnclosedCodeFence) const
+                                     bool formatUnclosedCodeFence,
+                                     bool enlargeEmojis) const
 {
     if (!quickDoc || !quickDoc->textDocument())
         return {};
@@ -58,5 +60,10 @@ QVariantList MarkdownUtils::toBlocks(QQuickTextDocument* quickDoc,
     Markdown::Options opts;
     opts.formatUnclosedCodeFence = formatUnclosedCodeFence;
 
-    return Markdown::toBlocks(Markdown::parse(doc->toPlainText(), opts), mentionsOf(doc));
+    // Size emojis to the document's line height, the same way the editor does.
+    const int emojiPx = enlargeEmojis
+            ? qRound(QFontMetricsF(doc->defaultFont()).height()) : 0;
+
+    return Markdown::toBlocks(Markdown::parse(doc->toPlainText(), opts),
+                              mentionsOf(doc), emojiPx);
 }

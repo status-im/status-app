@@ -71,4 +71,19 @@ QString dump(const Node& node, bool withRanges)
     return out;
 }
 
+bool isEmojiCodePoint(char32_t cp)
+{
+    return (cp >= 0x1F300 && cp <= 0x1FAFF)   // emoticons / pictographs / transport / supplemental / extended-A
+        || (cp >= 0x1F000 && cp <= 0x1F0FF)   // mahjong, dominoes, playing cards
+        || (cp >= 0x2600  && cp <= 0x27BF)    // misc symbols + dingbats
+        || (cp >= 0x1F1E6 && cp <= 0x1F1FF)   // regional indicator letters (flags)
+        || (cp == 0x231A) || (cp == 0x231B)   // ⌚ ⌛
+        || (cp >= 0x23E9  && cp <= 0x23FA)    // media / timer symbols
+        || (cp == 0x24C2)                     // Ⓜ
+        || (cp >= 0x2B00  && cp <= 0x2BFF)    // stars / arrows (⭐ …)
+        || (cp >= 0x20D0  && cp <= 0x20FF)    // combining enclosing marks (keycaps)
+        || (cp >= 0xFE00  && cp <= 0xFE0F)    // variation selectors
+        || (cp == 0x200D);                    // zero-width joiner
+}
+
 } // namespace Markdown

@@ -129,25 +129,6 @@ void flatten(const Node& node, unsigned int acc, QVector<unsigned int>& flags)
     }
 }
 
-// Quick, range-based emoji detector (not a full Unicode emoji property test). Covers the
-// common emoji blocks plus the joiners/modifiers that are part of an emoji grapheme
-// cluster (ZWJ, variation selectors, regional indicators, keycap combiners) so a whole
-// emoji sequence is enlarged as one unit.
-bool isEmojiCodePoint(char32_t cp)
-{
-    return (cp >= 0x1F300 && cp <= 0x1FAFF)   // emoticons / pictographs / transport / supplemental / extended-A
-        || (cp >= 0x1F000 && cp <= 0x1F0FF)   // mahjong, dominoes, playing cards
-        || (cp >= 0x2600  && cp <= 0x27BF)    // misc symbols + dingbats
-        || (cp >= 0x1F1E6 && cp <= 0x1F1FF)   // regional indicator letters (flags)
-        || (cp == 0x231A) || (cp == 0x231B)   // ⌚ ⌛
-        || (cp >= 0x23E9  && cp <= 0x23FA)    // media / timer symbols
-        || (cp == 0x24C2)                     // Ⓜ
-        || (cp >= 0x2B00  && cp <= 0x2BFF)    // stars / arrows (⭐ …)
-        || (cp >= 0x20D0  && cp <= 0x20FF)    // combining enclosing marks (keycaps)
-        || (cp >= 0xFE00  && cp <= 0xFE0F)    // variation selectors
-        || (cp == 0x200D);                    // zero-width joiner
-}
-
 // Collects document positions of mentions (Mention leaves) that fall inside a code
 // span/block; those should be demoted to plain text.
 void collectMentionsInCode(const Node& node, bool inCode, QVector<int>& out)
@@ -900,10 +881,10 @@ void ChatInputHighlighter::highlightBlock(const QString& text)
         qsizetype k = 0;
         while (k < blockLen) {
             qsizetype units = 1;
-            if (isEmojiCodePoint(codePointAt(k, units))) {
+            if (Markdown::isEmojiCodePoint(codePointAt(k, units))) {
                 const qsizetype start = k;
                 k += units;
-                while (k < blockLen && isEmojiCodePoint(codePointAt(k, units)))
+                while (k < blockLen && Markdown::isEmojiCodePoint(codePointAt(k, units)))
                     k += units;
                 setFormat(static_cast<int>(start), static_cast<int>(k - start), emojiFormat);
             } else {

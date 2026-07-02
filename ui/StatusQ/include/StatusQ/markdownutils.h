@@ -22,6 +22,9 @@ public:
 
     // Splits the document into decorated blocks (text / code / quote, with quotes
     // carrying nested blocks) for rendering one Label per block. See Markdown::toBlocks.
+    // When `enlargeEmojis` is true, emoji runs in text are enlarged to the document's line
+    // height (matching the live editor).
     Q_INVOKABLE QVariantList toBlocks(QQuickTextDocument* document,
-                                      bool formatUnclosedCodeFence = false) const;
+                                      bool formatUnclosedCodeFence = false,
+                                      bool enlargeEmojis = false) const;
 };

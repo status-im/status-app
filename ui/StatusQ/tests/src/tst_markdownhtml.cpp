@@ -352,6 +352,49 @@ private slots:
         QCOMPARE(inner[0].toMap()["type"].toString(), "code");
         QCOMPARE(inner[0].toMap()["code"].toString(), "A");
     }
+
+    // ── emoji enlargement (emojiPx) ─────────────────────────────────────────────
+
+    static QString blockHtml(const QVariantList& b, int i = 0)
+    {
+        return b[i].toMap()["html"].toString();
+    }
+
+    // With a positive emojiPx an emoji run in text is wrapped in a font-size span.
+    void blocks_emojiWrappedWhenSized()
+    {
+        const QString grin = QString::fromUcs4(U"\U0001F600");
+        const QVariantList b = toBlocks(parse("A" + grin + "B"), {}, 18);
+        QCOMPARE(blockHtml(b),
+                 "A<span style=\"font-size:18px\">" + grin + "</span>B");
+    }
+
+    // Consecutive emoji code points share a single span.
+    void blocks_emojiRunGroupedInOneSpan()
+    {
+        const QString two = QString::fromUcs4(U"\U0001F600\U0001F601");
+        const QVariantList b = toBlocks(parse(two), {}, 18);
+        QCOMPARE(blockHtml(b), "<span style=\"font-size:18px\">" + two + "</span>");
+    }
+
+    // emojiPx == 0 (default) leaves the text untouched.
+    void blocks_emojiNotWrappedWhenDisabled()
+    {
+        const QString grin = QString::fromUcs4(U"\U0001F600");
+        const QVariantList b = toBlocks(parse("A" + grin + "B"), {}, 0);
+        QCOMPARE(blockHtml(b), "A" + grin + "B");
+        QVERIFY(!blockHtml(b).contains("font-size"));
+    }
+
+    // Emojis inside code keep the code's own size (never wrapped).
+    void blocks_emojiNotWrappedInCode()
+    {
+        const QString grin = QString::fromUcs4(U"\U0001F600");
+        const QVariantList b = toBlocks(parse("`" + grin + "`"), {}, 18);
+        const QString html = blockHtml(b);
+        QVERIFY(html.contains("<code"));
+        QVERIFY2(!html.contains("font-size"), qPrintable(html));
+    }
 };
 
 QTEST_MAIN(TestMarkdownHtml)
