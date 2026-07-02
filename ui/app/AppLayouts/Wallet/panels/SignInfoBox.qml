@@ -28,6 +28,10 @@ ColumnLayout {
     }
     StatusListItem {
         id: listItem
+        objectName: root.objectName ? root.objectName + "Value" : ""
+        // StatusListItem sets Accessible.name but no role; roleless items are
+        // dropped from the Android accessibility tree, hiding the value text.
+        Accessible.role: Accessible.StaticText
         Layout.fillWidth: true
         Layout.preferredHeight: root.listItemHeight
         title: root.primaryText
