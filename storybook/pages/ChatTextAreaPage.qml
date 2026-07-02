@@ -344,6 +344,7 @@ unclosed fence here (no closing triple-tick)
                 SplitView.preferredHeight: 200
                 SplitView.minimumHeight: 80
 
+                visible: debugSwitch.checked
                 spacing: 4
 
                 Text {
@@ -374,6 +375,7 @@ unclosed fence here (no closing triple-tick)
                 SplitView.preferredHeight: 160
                 SplitView.minimumHeight: 80
 
+                visible: debugSwitch.checked
                 spacing: 4
 
                 Text {
@@ -446,16 +448,30 @@ unclosed fence here (no closing triple-tick)
             Layout.fillWidth: true
             Layout.fillHeight: false
 
+            MenuSeparator {
+                Layout.fillWidth: true
+            }
+
+            Flow {
+                Layout.fillWidth: true
+                spacing: 10
+
             Switch {
                 text: "Format unclosed code fence"
                 checked: textArea.formatUnclosedCodeFence
                 onToggled: textArea.formatUnclosedCodeFence = checked
             }
             Switch {
+                id: debugSwitch
+
+                text: "Show AST dump & detected links"
+            }
+            Switch {
                 id: rangesSwitch
 
                 text: "AST ranges"
                 checked: true
+                enabled: debugSwitch.checked
             }
             Switch {
                id: quoteBarSwitch
@@ -473,6 +489,7 @@ unclosed fence here (no closing triple-tick)
 
                 checked: true
                 text: "Selectable static text"
+            }
             }
             Button {
                 focusPolicy: Qt.NoFocus
