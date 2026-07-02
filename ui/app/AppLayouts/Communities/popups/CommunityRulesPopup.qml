@@ -8,58 +8,47 @@ import StatusQ.Controls
 import StatusQ.Popups.Dialog
 import StatusQ.Core.Theme
 
-StatusDialog {
+StatusAdaptiveDialog {
     id: root
 
     required property string name
     required property string introMessage
     required property string image
     required property string color
-    
 
-    implicitWidth: 640 // design
     title: qsTr("%1 community rules").arg(root.name)
+    destroyOnClose: true
 
-    onClosed: destroy()
+    contentComponent: ColumnLayout {
+        spacing: 24
 
-    contentItem: StatusScrollView {
-        id: scrollView
-        contentWidth: availableWidth
-        padding: 0
+        StatusSmartIdenticon {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: 1
+            Layout.bottomMargin: 1
+            name: asset.isImage ? "" : root.name
+            asset.isImage: root.image !== ""
+            asset.name: root.image
+            asset.isLetterIdenticon: !asset.isImage
+            asset.color: root.color
+            asset.charactersLen: 1
+            asset.useAcronymForLetterIdenticon: false
+            asset.width: 64
+            asset.height: 64
+        }
 
-        ColumnLayout {
-            width: scrollView.availableWidth
-            spacing: 24
-
-            StatusSmartIdenticon {
-                Layout.alignment: Qt.AlignHCenter
-                name: asset.isImage ? "" : root.name
-                asset.isImage: root.image !== ""
-                asset.name: root.image
-                asset.isLetterIdenticon: !asset.isImage
-                asset.color: root.color
-                asset.charactersLen: 1
-                asset.useAcronymForLetterIdenticon: false
-                asset.width: 64
-                asset.height: 64
-            }
-
-            StatusBaseText {
-                text: root.introMessage
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                wrapMode: Text.WordWrap
-            }
+        StatusBaseText {
+            text: root.introMessage
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
         }
     }
 
-    footer: StatusDialogFooter {
-        bottomPadding: Theme.padding + root.parent.SafeArea.margins.bottom
-        rightButtons: ObjectModel {
-            StatusButton {
-                text: qsTr("Done")
-                onClicked: root.close()
-            }
+    footerRightButtons: ObjectModel {
+        StatusButton {
+            objectName: "communityRulesPopupDoneButton"
+            text: qsTr("Done")
+            onClicked: root.close()
         }
     }
 }
