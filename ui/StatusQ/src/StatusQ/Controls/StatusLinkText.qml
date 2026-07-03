@@ -43,7 +43,7 @@ StatusBaseText {
     */
     readonly property alias containsMouse: textMouseArea.containsMouse
 
-    signal clicked()
+    signal clicked(var mouseEvent)
 
     maximumLineCount: 1
     elide: Text.ElideRight
@@ -57,6 +57,6 @@ StatusBaseText {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        onClicked: mouseEvent => root.clicked(mouseEvent)
     }
 }

@@ -149,54 +149,54 @@ Item {
             visible: !root.communitySectionModule.chatsLoaded
         }
 
-        StatusMenu {
-            id: adminPopupMenu
-            enabled: root.isSectionAdmin
-            hideDisabledItems: !showInviteButton
+        Component {
+            id: adminPopupMenuComp
+            StatusMenu {
+                hideDisabledItems: !showInviteButton
+                onClosed: destroy()
 
-            property bool showInviteButton: false
+                property bool showInviteButton
 
-            onClosed: adminPopupMenu.showInviteButton = false
+                StatusAction {
+                    objectName: "createCommunityChannelBtn"
+                    text: qsTr("Create channel")
+                    icon.name: "channel"
+                    onTriggered: Global.openPopup(createChannelPopup)
+                }
 
-            StatusAction {
-                objectName: "createCommunityChannelBtn"
-                text: qsTr("Create channel")
-                icon.name: "channel"
-                onTriggered: Global.openPopup(createChannelPopup)
-            }
+                // hidden as part of https://github.com/status-im/status-app/issues/17726
+                // StatusAction {
+                //     objectName: "importCommunityChannelBtn"
+                //     text: qsTr("Create channel via Discord import")
+                //     icon.name: "download"
+                //     enabled: !d.discordImportInProgress
+                //     onTriggered: {
+                //         Global.openPopup(createChannelPopup, {isDiscordImport: true, communityId: communityData.id})
+                //     }
+                // }
 
-            // hidden as part of https://github.com/status-im/status-app/issues/17726
-            // StatusAction {
-            //     objectName: "importCommunityChannelBtn"
-            //     text: qsTr("Create channel via Discord import")
-            //     icon.name: "download"
-            //     enabled: !d.discordImportInProgress
-            //     onTriggered: {
-            //         Global.openPopup(createChannelPopup, {isDiscordImport: true, communityId: communityData.id})
-            //     }
-            // }
+                StatusAction {
+                    objectName: "createCommunityCategoryBtn"
+                    text: qsTr("Create category")
+                    icon.name: "channel-category"
+                    onTriggered: Global.openPopup(createCategoryPopup)
+                }
 
-            StatusAction {
-                objectName: "createCommunityCategoryBtn"
-                text: qsTr("Create category")
-                icon.name: "channel-category"
-                onTriggered: Global.openPopup(createCategoryPopup)
-            }
+                StatusMenuSeparator {
+                    visible: invitePeopleBtn.enabled
+                }
 
-            StatusMenuSeparator {
-                visible: invitePeopleBtn.enabled
-            }
-
-            StatusAction {
-                id: invitePeopleBtn
-                text: qsTr("Invite people")
-                icon.name: "share-ios"
-                enabled: communityData.canManageUsers && adminPopupMenu.showInviteButton
-                objectName: "invitePeople"
-                onTriggered: {
-                    Global.openInviteFriendsToCommunityPopup(root.communityData,
-                                                             root.communitySectionModule,
-                                                             null)
+                StatusAction {
+                    id: invitePeopleBtn
+                    text: qsTr("Invite people")
+                    icon.name: "share-ios"
+                    enabled: communityData.canManageUsers && parent.showInviteButton
+                    objectName: "invitePeople"
+                    onTriggered: {
+                        Global.openInviteFriendsToCommunityPopup(root.communityData,
+                                                                 root.communitySectionModule,
+                                                                 null)
+                    }
                 }
             }
         }
@@ -258,45 +258,7 @@ Item {
 
                 onToggleCollapsedCommunityCategory: (categoryId, collapsed) => root.store.toggleCollapsedCommunityCategory(categoryId, collapsed)
 
-                popupMenu: StatusMenu {
-                    hideDisabledItems: false
-                    StatusAction {
-                        text: qsTr("Create channel")
-                        icon.name: "channel"
-                        enabled: root.isSectionAdmin
-                        onTriggered: Global.openPopup(createChannelPopup)
-                    }
-
-                    // hidden as part of https://github.com/status-im/status-app/issues/17726
-                    // StatusAction {
-                    //     objectName: "importCommunityChannelBtn"
-                    //     text: qsTr("Create channel via Discord import")
-                    //     icon.name: "download"
-                    //     enabled: !d.discordImportInProgress
-                    //     onTriggered: Global.openPopup(createChannelPopup, {isDiscordImport: true, communityId: root.communityData.id})
-                    // }
-
-                    StatusAction {
-                        text: qsTr("Create category")
-                        icon.name: "channel-category"
-                        enabled: root.isSectionAdmin
-                        onTriggered: Global.openPopup(createCategoryPopup)
-                    }
-
-                    StatusMenuSeparator {}
-
-                    StatusAction {
-                        text: qsTr("Invite people")
-                        icon.name: "share-ios"
-                        enabled: communityData.canManageUsers
-                        objectName: "invitePeople"
-                        onTriggered: {
-                            Global.openInviteFriendsToCommunityPopup(root.communityData,
-                                                                     root.communitySectionModule,
-                                                                     null)
-                        }
-                    }
-                }
+                popupMenu: adminPopupMenuComp
 
                 categoryPopupMenu: StatusMenu {
                     id: contextMenuCategory
@@ -485,38 +447,27 @@ Item {
 
             TapHandler {
                 enabled: root.isSectionAdmin
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
                 acceptedButtons: Qt.RightButton
-                onTapped: function (eventPoint, button) {
-                    adminPopupMenu.showInviteButton = true
-                    adminPopupMenu.x = eventPoint.position.x + 4
-                    adminPopupMenu.y = eventPoint.position.y + 4
-                    adminPopupMenu.popup()
-                }
+                onTapped: adminPopupMenuComp.createObject(root, {showInviteButton: true}).popup()
             }
         }
 
         Loader {
             id: createChatOrCommunity
             Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-            Layout.bottomMargin: Theme.padding
+            Layout.bottomMargin: Theme.bigPadding
             active: root.isSectionAdmin
             sourceComponent: Component {
                 StatusLinkText {
                     id: createChannelOrCategoryBtn
                     objectName: "createChannelOrCategoryBtn"
-                    height: visible ? implicitHeight : 0
+                    padding: Theme.halfPadding // enlarge the hitbox for easier touch handling
                     text: qsTr("Create channel or category")
                     font.underline: true
-
-                    StatusMouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            adminPopupMenu.showInviteButton = false
-                            adminPopupMenu.popup()
-                            adminPopupMenu.y = Qt.binding(() => root.height - adminPopupMenu.height
-                                                          - createChannelOrCategoryBtn.height - 20)
-                        }
+                    onClicked: function(event) {
+                        const menu = adminPopupMenuComp.createObject(root)
+                        menu.popup(root.width/2 - menu.width/2, root.height - menu.height - createChannelOrCategoryBtn.height - 4)
                     }
                 }
             }
