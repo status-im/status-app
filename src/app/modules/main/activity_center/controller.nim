@@ -140,9 +140,6 @@ proc acceptActivityCenterNotification*(self: Controller,notificationId: string) 
 proc dismissActivityCenterNotification*(self: Controller,notificationId: string) =
   self.activityCenterService.dismissActivityCenterNotification(notificationId)
 
-proc replacePubKeysWithDisplayNames*(self: Controller, message: string): string =
-  return self.messageService.replacePubKeysWithDisplayNames(message)
-
 proc getRenderedText*(self: Controller, parsedTextArray: seq[ParsedText], communityChats: openArray[ChatDto]): string =
   return self.messageService.getRenderedText(parsedTextArray, communityChats)
 

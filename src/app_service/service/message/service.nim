@@ -187,8 +187,6 @@ QtObject:
     pinnedMsgCursor: Table[string, MessageCursor]
     numOfPinnedMessagesPerChat: Table[string, int] # [chat_id, num_of_pinned_messages]
 
-  proc bulkReplacePubKeysWithDisplayNames(self: Service, messages: var seq[MessageDto])
-
   proc delete*(self: Service)
   proc newService*(
     events: EventEmitter,
@@ -386,7 +384,6 @@ QtObject:
     if (not chats[0].active):
       return
 
-    self.bulkReplacePubKeysWithDisplayNames(messages)
     self.checkPaymentRequestsInMessages(messages)
 
     for i in 0 ..< chats.len:
@@ -510,7 +507,6 @@ QtObject:
         var messages: seq[MessageDto]
         messages = map(args.messages.getElems(), proc(x: JsonNode): MessageDto = x.toMessageDto())
 
-        self.bulkReplacePubKeysWithDisplayNames(messages)
         self.checkPaymentRequestsInMessages(messages)
 
         self.events.emit(SIGNAL_MESSAGES_LOADED, MessagesLoadedArgs(
@@ -658,7 +654,6 @@ QtObject:
       if responseObj.getProp("messages", messagesArr):
         messages = map(messagesArr.getElems(), proc(x: JsonNode): MessageDto = x.toMessageDto())
 
-      self.bulkReplacePubKeysWithDisplayNames(messages)
       self.checkPaymentRequestsInMessages(messages)
 
       # handling reactions
@@ -700,7 +695,6 @@ QtObject:
 
       var messages = map(rpcResponseObj{"messages"}.getElems(), proc(x: JsonNode): MessageDto = x.toMessageDto())
       if messages.len > 0:
-        self.bulkReplacePubKeysWithDisplayNames(messages)
         self.checkPaymentRequestsInMessages(messages)
 
       let data = CommunityMemberMessagesArgs(communityId: communityId, messages: messages)
@@ -1338,15 +1332,6 @@ proc deleteMessage*(self: Service, messageId: string) =
   except Exception as e:
     error "error: ", procName="deleteMessage", errName = e.name, errDesription = e.msg
 
-proc replacePubKeysWithDisplayNames*(self: Service, message: string): string =
-  let allKnownContacts = self.contactService.getContactsByGroup(ContactsGroup.AllKnownContacts)
-  return message_common.replacePubKeysWithDisplayNames(allKnownContacts, message)
-
-proc bulkReplacePubKeysWithDisplayNames(self: Service, messages: var seq[MessageDto]) =
-  let allKnownContacts = self.contactService.getContactsByGroup(ContactsGroup.AllKnownContacts)
-  for i in 0..<messages.len:
-    messages[i].text = message_common.replacePubKeysWithDisplayNames(allKnownContacts, messages[i].text)
-
 proc editMessage*(self: Service, messageId: string, msg: string) =
   try:
     let allKnownContacts = self.contactService.getContactsByGroup(ContactsGroup.AllKnownContacts)
@@ -1366,8 +1351,6 @@ proc editMessage*(self: Service, messageId: string, msg: string) =
     if messages[0].editedAt <= 0:
       error "error: ", procName="editMessage", errDesription = "message is not edited"
       return
-
-    self.bulkReplacePubKeysWithDisplayNames(messages)
 
     let data = MessageEditedArgs(chatId: messages[0].chatId, message: messages[0])
     self.events.emit(SIGNAL_MESSAGE_EDITED, data)
