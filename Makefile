@@ -787,10 +787,6 @@ $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
 ifneq ($(mkspecs),win32)
 $(NIM_STATUS_CLIENT): NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
-# Problem: libstatus present + libsds deleted -> make never re-entered status-go,
-# so the client linked against a missing libsds and crashed in dyld at startup.
-# Solution: depend on libsds directly (order-only) so it is restored even when
-# libstatus is untouched.
 $(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq dotherside check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
