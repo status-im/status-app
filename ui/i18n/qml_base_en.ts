@@ -13256,6 +13256,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Copied to clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Remove trusted mark</source>
         <translation type="unfinished"></translation>
     </message>

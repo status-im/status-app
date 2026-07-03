@@ -14,7 +14,7 @@ import StatusQ.Popups
    Success state is showed by changing action type to \c{Success}.
 
    \qml
-        StatusSuccessAction.qml {
+        StatusSuccessAction {
             text: qsTr("Copy details")
             successText: qsTr("Details copied")
         }
@@ -48,7 +48,7 @@ StatusMenuItem {
     property string successIconName: "tiny/checkmark"
     /*!
        \qmlproperty bool StatusSuccessAction::autoDismissMenu
-       This property enable menu closing on click.
+       This property enable menu closing on click after the \p timeout
     */
     property bool autoDismissMenu: false
     /*!

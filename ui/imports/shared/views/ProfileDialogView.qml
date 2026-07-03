@@ -313,8 +313,10 @@ Pane {
                         enabled: !d.isCurrentUser
                         onTriggered: Global.shareProfileDialogRequested(root.publicKey)
                     }
-                    StatusAction {
+                    StatusSuccessAction {
                         text: qsTr("Copy link to profile")
+                        successText: qsTr("Copied to clipboard")
+                        autoDismissMenu: true
                         icon.name: "copy"
                         onTriggered: ClipboardUtils.setText(d.linkToProfile)
                     }

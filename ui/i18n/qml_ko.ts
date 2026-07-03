@@ -13210,6 +13210,10 @@ to load</source>
         <translation>프로필 링크 복사</translation>
     </message>
     <message>
+        <source>Copied to clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Remove trusted mark</source>
         <translation>신뢰 마크 제거</translation>
     </message>

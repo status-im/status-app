@@ -13333,6 +13333,10 @@ selhalo</translation>
         <translation>Kopírovat odkaz na profil</translation>
     </message>
     <message>
+        <source>Copied to clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Remove trusted mark</source>
         <translation>Odstranit značku důvěry</translation>
     </message>

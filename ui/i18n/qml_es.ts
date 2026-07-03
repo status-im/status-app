@@ -13271,6 +13271,10 @@ al cargar</translation>
         <translation>Copiar enlace al perfil</translation>
     </message>
     <message>
+        <source>Copied to clipboard</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Remove trusted mark</source>
         <translation>Eliminar marca de confianza</translation>
     </message>
