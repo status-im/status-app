@@ -116,7 +116,7 @@ proc createMessageItemFromDto(self: Module, message: MessageDto, communityId: st
     contactDetails,
     contactDetails.isCurrentUser,
     renderedMessageText = self.controller.getRenderedText(message.parsedText, communityChats),
-    clearText = self.controller.replacePubKeysWithDisplayNames(message.text),
+    clearText = message.text,
     albumImages,
     albumMessageIds,
     deletedByContactDetails = ContactDetails(),
