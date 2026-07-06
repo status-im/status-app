@@ -296,7 +296,7 @@ Item {
     EmptyChatPanel {
         anchors.fill: parent
         visible: root.activeChatId === "" || root.chatsCount == 0
-        onShareChatKeyClicked: Global.openProfilePopup(userProfile.pubKey);
+        onShareChatKeyClicked: Global.shareProfileDialogRequested(userProfile.pubKey)
     }
 
     // This is kind of a solution for applying backend refactored changes with the minimal qml changes.
