@@ -1,0 +1,494 @@
+=== 2026-07-03 — Issue 0001: wrapper absorption + auto-link — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0001-statusgo-wrapper-absorption-autolink.md
+(PRD: docs/superpowers/prds/2026-07-03-statusgo-nimble-package-prd.md)
+
+What was built (all pending working-tree changes, nothing committed, matching
+the branch convention):
+- vendor/status-go/status_go.nim + status_go/impl.nim: wrapper absorbed
+  byte-identical from nim-status-go 7f79f183 (the revision status-desktop
+  pins). impl.nim gained the auto-link block: explicit archive paths
+  (build/bin/libstatus.a + libsds.a — explicit, not -l, so a coexisting
+  libstatus.dylib can't be silently preferred) + per-OS Go-runtime syslibs
+  (macOS: CoreFoundation/Security/IOKit/-lresolv), gated by
+  -d:statusGoNoAutoLink.
+- vendor/status-go/statusgo.nims: new `libstatus` task — builds localized
+  static libsds via nim-sds, copies it to build/bin, delegates to
+  `make statusgo-library` (external NIM_SDS_LIB_DIR/INC_DIR/LIBSDS seam).
+- vendor/status-go/statusgo.nimble: comment updated (wrapper travels with the
+  package); manifest still fully declarative.
+- vendor/nim-sds/sds.nimble (4th local patch, upstream-bound): libsdsStaticMac
+  now uses the iOS localization pipeline (compileOnly → clang
+  -fvisibility=hidden -fno-common → ld -r -exported_symbol '_Sds*' → ar);
+  archive exports exactly the 9 _Sds* symbols.
+- vendor/status-go/AGENTS.md: new — packaging patterns (declarative manifest,
+  explicit-archive auto-link, static-Nim-lib localization, outside-consumer
+  proof harness).
+
+Verification (macOS arm64):
+- Outside consumer (scratch dir, own git repo): requires "statusgo" via
+  nimble develop --add + nimble setup -l → resolved statusgo + sds 884ce6f0 +
+  ffi fb25f069; solve ~10 min (no lock, known cost), manifest eval instant.
+- nim c -r consumer.nim → auto-linked, hashMessage + validateMnemonic returned
+  correct results (CONSUMER_OK); otool -L: no libstatus/libsds dylib deps.
+- nim c -d:statusGoNoAutoLink → link FAILS (undefined _HashMessage) — flags
+  proven to come from the wrapper.
+- Desktop unaffected: nim libsds statusgo.nims (shared flavor) re-verified;
+  no status-desktop source/makefile touched this session.
+
+Notes for next iterations:
+- Issue 0002 (installable status-backend) is next; the static auto-link layout
+  was chosen partly so the installed bin survives nimble's staging→store move.
+- Consumer-proof harness documented in vendor/status-go/AGENTS.md — reuse it.
+- Coexistence note: build/bin now holds both static (auto-link) and shared
+  (desktop) flavors; explicit archive paths keep them from interfering.
+- Carry-over from pre-PRD state (unrelated to 0001, still pending): status-go
+  nimble.lock generation (vcsRevision hand-fix), desktop launch + Android
+  re-verification of the statusgo.nims build path, user's on-device iOS test.
+
+=== 2026-07-03 — Issue 0002: installable status-backend — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0002-statusgo-installable-status-backend.md
+(PRD: docs/superpowers/prds/2026-07-03-statusgo-nimble-package-prd.md)
+
+What was built (all pending working-tree changes in vendor/status-go, nothing
+committed, matching the branch convention):
+- cmd/status-backend/server/serve.go: new Run(address) — the embeddable
+  equivalent of cmd/status-backend main (logging init, SIGINT/SIGTERM logout,
+  Listen + RegisterMobileAPI + Serve). main.go untouched.
+- tools/generate-cbindings/{const,main}.go: generator now appends a verbatim
+  StatusBackendRunServer export (like Free). It can't be parser-generated:
+  the server pkg imports mobile, so the export can't live in mobile/ (cycle).
+- status_go/impl.nim + status_go.nim: statusBackendRunServer wrapper procs.
+- status_backend.nim (+ .nim.cfg with -d:noSignalHandler): thin bin entry,
+  parses --address, calls the export through `import status_go` (the same
+  wrapper+auto-link path library consumers use).
+- statusgo.nimble: bin=@["status_backend"]; installDirs=@["build","status_go"];
+  installFiles=@["status_go.nim","statusgo.nims"]; declarative-safe
+  `before build` hook — STATUS_GO_SKIP_GO_BUILD switch, go/make prereq checks
+  with actionable messages, else `nim libstatus statusgo.nims`.
+- statusgo.nims: install-context support — depPathFlags runs a nested
+  `nimble setup` when nimble.paths is absent (outer install already populated
+  the store → seconds); sdsSourceDir honors NIM_SDS_SOURCE_DIR, falls back to
+  sibling checkout, then in-package .sds-src clone.
+- vendor/status-go/AGENTS.md: new section with the hard-won install patterns.
+
+Verification (macOS arm64; scratch at ~/.cache/sg0002, kept for inspection):
+- Clean nimble dir: nimble install completed; $NIMBLE_DIR/bin/status_backend
+  symlink on PATH; /health answered; POST /statusgo/HashMessage "hello" →
+  0x50b2c43f…b37750 (matches 0001's verified call); SIGTERM → graceful logout.
+  Re-proven end-to-end after the final manifest change.
+- Hybrid: file:// + throwaway local commit → real store copy
+  (pkgs2/statusgo-0.1.0-*) with bin + archives + wrapper sources; consumer
+  compiled against the store copy alone auto-linked and ran correctly.
+- Skip switch: artifacts present → stated reuse, no Go build, install
+  completes; no artifacts → stated skip, no Go build, binary step cancelled
+  (nimble "Pre-hook prevented further execution" — hook-false semantics).
+- go stripped from PATH → clear error naming the Go toolchain + remediation.
+- Quality: golangci-lint 0 issues; lint-panics clean; desktop shared libsds
+  flavor re-verified after the nims changes. No GH interaction (local only).
+
+Gotchas discovered (also in vendor/status-go/AGENTS.md):
+- bin packages are binary-only: nimble installs NOTHING but bin +
+  installDirs/installFiles — wrapper sources must be whitelisted or hybrid
+  consumption silently breaks.
+- bare --nimblePath:<store> does not resolve modules for the inner libsds
+  compile; only exact --path entries (nested `nimble setup`) work.
+- nimble install <local path> (and file:// of it) builds in the SOURCE dir
+  and symlinks $NIMBLE_DIR/bin to it; only URL-flavored installs create a
+  pkgs2 store copy.
+- very long NIMBLE_DIR → nimcache C-file names overflow macOS NAME_MAX (255):
+  "cannot open '….nim.c'". Keep test nimble dirs short.
+
+Notes for next iterations:
+- Issue 0003 (desktop single-graph consumption) is next; statusgo.nims now
+  works with and without nimble.paths, and NIM_SDS_SOURCE_DIR lets desktop
+  point at vendor/nim-sds explicitly.
+- Skip-switch caveat to revisit if criterion hardens: with no prebuilt
+  artifacts the install *fails with a stated reason* instead of completing
+  source-only — nimble hook semantics allow no graceful bin-skip.
+- Carry-overs unchanged from 0001: status-go nimble.lock generation
+  (vcsRevision hand-fix), desktop launch + Android re-verification of the
+  statusgo.nims build path, user's on-device iOS test, upstreaming the
+  nim-sds libsdsStaticMac localization patch.
+
+=== 2026-07-03 — Design session: sds from nimble resolution (issues 0005/0006 filed) ===
+
+User rejected the sds source improvisations left in statusgo.nims after 0002
+(NIM_SDS_SOURCE_DIR env → sibling ../nim-sds → git clone at pin): the build
+must compile the nim-sds that NIMBLE resolved, nothing else. Brainstormed and
+spiked; design written to
+docs/superpowers/specs/2026-07-03-sds-from-nimble-resolution-design.md.
+
+Spike results (all local — localhost git serving; nimble 0.22.3 AND master
+0.99.1 built from source):
+- ?subdir=<path>@#<rev> installs work (rev must come last); each subdir is
+  its own name-keyed store entry → per-target packages coexist (the
+  store-collision blocker dissolves via target-in-identity).
+- Subdir staging contains ONLY the subdir's files — parent repo sources are
+  never visible to hooks; paths=@["../.."] does not change that. A target
+  subdir package must source sds via requires (build the resolved copy).
+- Bin-less packages: only install hooks fire; before-install runs in
+  buildtemp and its outputs ARE installed via installDirs.
+- Flag-forwarded cross-install is structurally dead on both nimble versions:
+  hooks never see --os/--cpu (params/env/defines probed; source confirms
+  compilation flags forward only to custom tasks), and the store dir is
+  name-version-checksum with no target dimension. Bin compiles DO get the
+  flags. → upstream nimble ask recorded (hook flag forwarding +
+  target-aware store).
+
+Decisions:
+- Issue 0005 (open, unblocked): every statusgo.nims sds task builds the
+  nimble-resolved copy — develop-linked checkout in place, store copy via
+  .sds-build/ scratch; sibling/clone/env override deleted; patched sds via
+  nimble develop --add (wire vendor/nim-sds develop-link for the worktree).
+- Issue 0006 (open, upstream-gated): nim-sds targets/<flavor> subdir
+  artifact packages reusing the same engine = one-command cross-target
+  provisioning; plus file the upstream nimble issue.
+
+Operational gotchas (now in the spec): run `nimble install <url>` from a
+neutral dir (inside a package dir vNext also builds THAT package — it began
+building nim_status_client into the spike store); file:// URLs bypass subdir
+parsing; nimble clones to ~/.nimble/pkgcache regardless of NIMBLE_DIR.
+
+Next pickup order: 0003 (desktop single-graph) or 0005 (engine) — 0005
+partially reshapes what 0003 wires, consider doing 0005 first.
+
+Addendum (same session): 0006 gains "sds build unification" — collapse
+nim-sds's per-target tasks into ONE parametric build entry point (flags in
+nim config keyed by --os/--cpu/defines; tasks become aliases). Verified
+limits keeping a thin driver: nimble has no library-artifact concept (bin
+builds programs only); localized static flavors are a multi-command
+pipeline (no flag equivalent for post-link symbol localization); hooks
+can't see --os/--cpu and repeat same-version installs silently no-op (not
+overwrite); env-keyed dispatch (SDS_TARGET) leaks into dependency installs
+— rejected. Spec updated (design doc + issue 0006).
+
+=== 2026-07-03 — Issue 0005: sds build from nimble resolution — ENGINE DONE,
+    desktop-substitution leg BLOCKED on user decision (nimble defect) ===
+
+Picked up: docs/superpowers/issues/0005-sds-build-from-nimble-resolution.md
+(design: docs/superpowers/specs/2026-07-03-sds-from-nimble-resolution-design.md)
+
+What was built (pending working-tree changes, nothing committed):
+- vendor/status-go/statusgo.nims: full engine rewrite. One rule: every sds
+  task builds the copy resolved in nimble.paths. Non-store path → in place;
+  store copy → .sds-build/ scratch (wiped+recopied each run, chmod u+w,
+  filtered nimble.paths materialized inside, srcDir-hoisted layouts handled).
+  Deleted: NIM_SDS_SOURCE_DIR, sibling ../nim-sds, ensureSdsSource clone,
+  sdsPin(). No-sds-in-resolution → actionable quit (no clone). Per user
+  direction, NO nimble-develop-feature logic in statusgo.nims.
+  Install-context bootstrap reworked: nimble BLOCKS nested project actions
+  under buildtemp (thereIsNimbleFile guard), so the nested `nimble setup`
+  now runs on a manifest copy in a system-temp scratch dir (same NIMBLE_DIR)
+  and the generated nimble.paths is copied back with the root entry rewritten.
+- vendor/nim-sds/sds.nimble (5th local patch, upstream-bound):
+  installDirs = @["library", "sds"] — nimble's install action otherwise
+  hoists srcDir contents and DROPS library/, making installed copies unable
+  to build the C archive. (installFiles for root config files is ignored by
+  nimble — tested and removed.)
+- Desktop Makefile: NIM_SDS_SOURCE_DIR variable+export removed (NIMSDS_CHECKOUT/
+  NIMSDS_LIBDIR now local; NIMSDS_LIBDIR exported for packaging scripts;
+  init_app_dir.sh + bundle-flatpak.sh take NIMSDS_LIBDIR). nimble-setup rule
+  wires `nimble develop --add:vendor/nim-sds` before setup (kept: correct
+  intent, currently inert due to the nimble defect below). mobile/Makefile:
+  same wiring; artifact copy now via NIMSDS_LIBDIR. ADR 0003 semantics
+  (order-only platform-cleanup, FORCE delegation, cmp-before-copy) untouched;
+  make -n graphs verified for desktop + mobile-iOS.
+- vendor/status-go/.gitignore: + .sds-build. AGENTS.md: new "sds build
+  engine" + "nimble 0.22.3 resolution walls" sections.
+
+Verification (macOS arm64):
+- grep-clean: no NIM_SDS_SOURCE_DIR / sibling / clone in statusgo.nims. ✓
+- Desktop in-place flavors: `nim libsds` (dylib) and `nim libstatus`
+  (localized static, nm = exactly 9 _Sds*) rebuilt vendor/nim-sds in place —
+  verified while the engine still resolved the develop link itself (that
+  logic since reverted per user; see blocker).
+- Negative: crafted sds-less nimble.paths → actionable message, no clone. ✓
+- Install flow: clean NIMBLE_DIR (~/.cache/sg5/nd), statusgo copy with sds
+  pinned to a PATCHED snapshot (git stash-create tag sds-0005-proof served
+  via loopback dumb HTTP, http://127.0.0.1:8417/#rev — file:// requires
+  don't parse #rev). `nimble install file://<copy>` → sds store copy
+  (library/+sds/ layout via new installDirs) → .sds-build build → localized
+  archive → make statusgo-library → status_backend on PATH → /health ✓,
+  HashMessage "hello" → 0x50b2c43f…b37750 (matches 0002) ✓, SIGTERM
+  graceful ✓, store pristine ✓, installed libsds.a = 9 _Sds* only ✓.
+- Mobile spot-check: `nim libsdsIos statusgo.nims` in the install-proof
+  copy (out-of-tree, patched store sds) → resolved from the store, built in
+  .sds-build/ → arm64 libsds.a, exports = 9 _Sds* only. ✓ (In-tree mobile
+  runs share the desktop-substitution question below.)
+
+BLOCKER (user decision needed) — nimble 0.22.3 cannot substitute a
+develop-linked checkout for a URL-required dependency. Full matrix, all
+empirical (toy consumer + nimble source reading):
+  * URL#hash requires: develop ignored (special-version binding needs
+    nimblemeta specialVersions, develop copies have none) → store copy wins.
+  * URL#hash + nimble.lock + nimble sync (the documented workflow): same.
+  * URL + version range: "Dependency <url> not found in the graph" —
+    URL requires only work as #special on this nimble.
+  * bare URL (verAny): develop half-used — its DEPS resolve, but the sds
+    path itself is missing from nimble.paths (import sds fails).
+  * name-form requires (e.g. "statusgo"): develop links DO work (the 0001
+    consumer-harness precedent) but need a registry entry for non-develop
+    consumers; sds is not in the nimble registry.
+Consequence: with the engine strictly nimble.paths-driven, the desktop
+worktree currently builds the UNPATCHED store sds → fails today (in-tree
+parent-config poisoning without NIMFLAGS forwarding; static-mac archive
+unlocalized → 17 duplicate-symbol link errors — both empirically shown).
+Options for the user: (1) allow a small documented shim in statusgo.nims
+that honors nimble.develop until nimble fixes it (was built + verified,
+then reverted on request); (2) register sds in nim-lang/packages and move
+to name-form requires + lock-carried pin; (3) live without local sds
+substitution until the sds patch queue merges upstream and the pin bumps
+(post-merge the store-copy path works even in-tree); (4) pin a patched
+nimble. Upstream nimble issues to file either way: develop-vs-URL-requires
+(all flavors above), install-vs-setup store-content divergence
+(srcDir-hoisting drops non-srcDir dirs; same checksum dir, different
+contents), buildtemp guard vs legitimate hook bootstraps, hook flag
+forwarding + target-blind store (from the design spike).
+
+Harness/cleanup notes: loopback git serving of vendor/nim-sds/.git on
+:8417 may still be running (python http.server, kill freely); stray
+`git daemon` on ~/.cache/sgspike is from the earlier spike session.
+Proof tag sds-0005-proof (vendor/nim-sds) = stash-create snapshot of the
+patched working tree (recoverable state; delete after upstreaming).
+~/.cache/sg5 kept for inspection. statusgo-nimbledeps nimble.paths was
+regenerated (libp2p drifted 2.1.2→2.1.3 — the known stale-lock/no-lock
+drift; regenerate or pin as needed).
+
+=== 2026-07-04 — Issue 0005 RESOLVED (pass: true) — user decision:
+    manifest-level substitution ===
+
+User rejected develop-mode workarounds and chose: "when I develop, edit the
+nimble file and point it at my local repo". Verified and wired:
+- statusgo.nimble interim state: `requires "file:///…/vendor/nim-sds"`
+  (ABSOLUTE path; relative `file://../nim-sds` and bare-URL forms silently
+  drop the dep from nimble.paths). nimble resolves the checkout with LINK
+  semantics — nimble.paths points into vendor/nim-sds, edits propagate, the
+  0005 engine builds it in place. GitHub #pin restored when the sds patch
+  queue merges upstream (pin kept in an adjacent comment).
+- New nimble 0.22.3 defect found while wiring: a file:// dependency and a
+  sibling URL#hash requires (the ffi pin) SILENTLY DROP EACH OTHER from
+  nimble.paths. Interim state therefore also comments out the ffi pin; ffi
+  resolves via patched sds's `>= 0.1.3 & < 0.2.0` cap (currently 0.1.5).
+- ffi 0.1.5 enforces signal-ownership: libsdsIos/libsdsAndroid tasks now
+  pass -d:noSignalHandler like the host tasks (always correct — libsds is
+  embedded everywhere; 0.1.4 just didn't enforce).
+- Makefiles: the (inert) `nimble develop --add` wiring removed from desktop
+  + mobile setup rules; comments describe the manifest mechanism.
+- Re-verified after the flip: `nim libsds` (dylib), `nim libstatus`
+  (localized static, 9 _Sds*/0 others), `nim libsdsIos` (arm64, minos 16.2,
+  LC_BUILD_VERSION iOS) — all built vendor/nim-sds IN PLACE, no .sds-build;
+  desktop + mobile-iOS `make -n` graphs unchanged. Issue file, PRD table
+  (pass: true), AGENTS.md (file:// + dual-pin + ffi-0.1.5 gotchas) updated.
+
+Carry-overs: restore both GitHub pins (sds + ffi) when the 5-patch sds
+queue (ffi cap, iOS -fno-common, NIMFLAGS forwarding, libsdsStaticMac
+localization, installDirs whitelist) lands upstream; ffi floats to 0.1.5
+in the interim (certified pin was 0.1.4). nim-sds patches still
+uncommitted in vendor/nim-sds (user to decide on committing, signing).
+Upstream nimble issues to file (see 0003-session list + dual-pin drop).
+Desktop app build+launch and Android leg re-verification remain the
+standing pre-0003 carry-overs.
+
+=== 2026-07-06 — Issue 0003: desktop single-graph consumption — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0003-desktop-single-graph-consumption.md
+(PRD: docs/superpowers/prds/2026-07-03-statusgo-nimble-package-prd.md)
+
+What was built (pending working-tree changes, nothing committed):
+- nim_status_client.nimble: nim-status-go wrapper pin DROPPED; statusgo
+  required via ABSOLUTE file:// (interim — nimble 0.22.3 refuses to LOAD a
+  develop-linked package whose manifest has file:// requires, and
+  statusgo.nimble interim-carries the file:// sds pin; final name-form +
+  develop shape documented in-place). json_rpc bumped 0.6.0→0.6.1 (websock
+  <0.4.0 cap vs libp2p 2.x's websock >=0.4.0).
+- Makefile: STATUSGO_NIMBLE_DIR (~/.cache/statusgo-nimbledeps) + its
+  `nimble setup` DELETED from desktop + mobile Makefiles;
+  vendor/status-go/nimble.paths is now a cmp-gated COPY of the app's
+  nimble.paths. Setup stamp = nimble.paths itself, keyed on lock + all three
+  manifests (app, statusgo, sds). App store moved OUT of tree:
+  APP_NIMBLE_DIR ?= ~/.cache/status-desktop-nimbledeps (nimble setup builds
+  dep binaries — dnsclient via libp2p — and Nim's parent-dir config walk
+  poisons in-tree builds; in nested worktrees the ENCLOSING checkout's
+  config.nims leaks in, unfixable from inside). run-macos gained
+  NIMSDS_LIBDIR on DYLD_LIBRARY_PATH (libstatus references
+  @rpath/libsds.dylib; linux targets already had it — desktop launch was the
+  standing pre-0003 carry-over and this was its missing piece).
+- config.nims: all app-specific switches gated on NOT compiling a dependency
+  (projectPath under nimbledeps/) — converted the file to switch()-in-if
+  form; -d:statusGoNoAutoLink added (single place covers desktop, mobile,
+  tests); isaac /src hack now parses nimble.paths instead of scanning
+  nimbledeps/pkgs2.
+- vendor/nim-sds/sds.nimble (local patch queue extended): ffi requires
+  range→#fb25f069 pin (the CI-certified 0.1.4; upstream released ffi 0.2.0 on
+  Jul 4 whose cbor_serialization dep HARD-FAILS nimble's graph expansion for
+  any consumer resolving the range). libp2p floor kept at upstream >=1.15.2
+  with a comment documenting why forcing 2.1.x is impossible (see below).
+- BUILDING.md: nimble section rewritten (out-of-tree store, single graph,
+  NIMBLE_DIR for ad-hoc nimble commands, fixed the stale nimsds.mk bullet and
+  the wrong "nimble develop --add" advice). vendor/status-go/AGENTS.md: new
+  "status-desktop single-graph consumption" section + 5 new resolution walls.
+- nimble.lock regenerated for the merged graph (37 pkgs; ffi #fb25f069 in,
+  wrapper gone) + ONE hand-fix: nimble records websock at 0.3.0 while the
+  resolution picks 0.4.0 — clean-store solveLockFileDeps hard-fails on the
+  divergence (warm stores mask it). Hand-set version/vcsRevision/checksum.
+
+Verification (macOS arm64; details in the issue file):
+- Single setup materializes 41 pkgs incl. statusgo→vendor/status-go,
+  sds→vendor/nim-sds (link semantics), ffi 0.1.4, libp2p 2.0.0, websock
+  0.4.0, lsquic 0.5.4. grep-clean: no statusgo-nimbledeps anywhere.
+- Desktop REBUILD_NIM build compiled the wrapper from vendor/status-go
+  (nimcache module path proof) and `make run` launched StatusDev.app:
+  status-go up (media server, 0 errors in pre_login.log), graceful shutdown.
+  Full chain re-verified from a WIPED store (paths copy → libsds in-place
+  rebuild → app relink → launch).
+- Edit propagation: comment appended to vendor/nim-sds source → libsds
+  rebuilt in place, no reinstall (probe reverted).
+- Clean-env: store wipe → make nimble-deps = 3:56, download-bound, NO SAT
+  solve (was ~11.5 min extra).
+
+nimble 0.22.3 walls discovered (all empirical, documented in
+vendor/status-go/AGENTS.md "resolution walls"; upstream-issue fodder):
+1. file:// requires legal only top-level or from file:// packages → a
+   develop-linked package whose manifest has one refuses to load.
+2. URL+range requires evaluate EVERY tag's manifest; one candidate with an
+   unresolvable dep (ffi 0.2.0 → cbor_serialization@0.3.0) kills the WHOLE
+   solve via the reachability check. #hash pins skip enumeration.
+3. Special-version pre-binding: any ENUMERATED candidate requiring pkg#hash
+   pre-binds pkg globally (first-wins) — libp2p 1.15.x manifests pin
+   lsquic#6ae249c5 (manifest 0.0.1), so libp2p 2.1.x (lsquic >=0.5.4) is
+   UNSATISFIABLE in merged graphs; solver lands on 2.0.0. Verified failing
+   counter-measures: floor raises (enumeration unfiltered), libp2p#hash from
+   a file:// chain (doesn't resolve), top-level lsquic pin (specials don't
+   reliably carry speSemanticVersion → can't satisfy >= ranges; a pin whose
+   version must meet a floor can make the graph UNSAT while pin-less solves).
+4. Version tables are nondeterministic: (url,range)-keyed pkgcache clones
+   never refresh (Jul-2 clone hides Jul-3 tags) + anonymous GitHub API rate
+   limit (60/h) silently degrades discovery. Purge stale
+   ~/.nimble/pkgcache/<pkg>_<range> clones when a known version is missing.
+5. nimble lock ↔ setup divergence (websock 0.3.0 vs 0.4.0; file:// subtree
+   omitted): warm stores mask it, clean stores hard-fail → hand-fix pattern.
+
+Notes for next iterations:
+- 0004 (mobile matrix) is the next unblocked issue. Mobile Makefile already
+  points at the derived nimble.paths copy; ../nimble.paths existence is
+  guarded with an actionable error. -d:statusGoNoAutoLink comes from
+  config.nims which mobile compiles also read. Expect the same libp2p-2.0.0
+  matrix for libsds mobile flavors (spot-check iOS first).
+- Store sharing: ~/.cache/status-desktop-nimbledeps is shared across
+  checkouts/worktrees by design (content-addressed store).
+- libsds now builds against libp2p 2.0.0 (was 2.1.3 on Jul 3-4, upstream sds
+  CI certifies 1.15.2; the merged-graph SAT walls make 2.1.x unreachable on
+  nimble 0.22.3). Desktop-verified; keep an eye on messaging QA.
+- Carry-overs: restore GitHub pins (sds file:// → URL, app statusgo file:// →
+  name-form + nimble develop) when the sds patch queue merges upstream; the
+  ffi pin can then return to upstream's range IF nimble fixes expansion (wall
+  2). Android re-verification + user's on-device iOS test still pending.
+  Upstream nimble issues to file: walls 1-5 above + the 0005-session list.
+
+=== 2026-07-06 — Issue 0004: mobile matrix on the new package — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0004-mobile-matrix-new-package.md
+(PRD: docs/superpowers/prds/2026-07-03-statusgo-nimble-package-prd.md)
+
+What was built/verified (pending working-tree changes, nothing committed):
+- iOS device app under the single graph: Status.app built + signed (team
+  8B5X2M6H2Y, codesign --verify --deep --strict OK), Qt 6.11.0/ios kit (the
+  6.9.2 kit in older notes is gone from this machine). libsds.a symbol
+  surface: nm -gU = exactly 9 _Sds* exports, 0 leaked Nim-runtime globals —
+  both in vendor/nim-sds/build and the mobile/lib copy. libsds iOS/Android
+  cross-compiles needed NO changes for the 0003 libp2p-2.0.0 matrix.
+- Android arm64-v8a APK (assembleDebug): all native libs arm64-v8a in the
+  APK (libstatus.so, libsds.so, stub, service JNI, client). assembleRelease
+  fails only at :packageRelease signing — gradle release signingConfig
+  reads STATUS_APP_KEYSTORE_PATH (unset → /nonexistent). User-owned
+  credential, not a flow defect; debug signing satisfies the ABI criterion.
+- Sentinel matrix in one tree: darwin→ios→android→darwin, cleanup fired on
+  each flip, zero stale-artifact link failures. Return desktop build
+  correctly did not relink the client (shared-lib flavors).
+- Compare-before-copy was DEAD ON ARRIVAL and got fixed for real: the first
+  no-op iOS rebuild relinked+re-signed everything because libstatus/libsds
+  bytes churned every build. Three root causes (all pre-existing, exposed by
+  the criterion; fixes in the locally patched repos, upstream-bound):
+  (1) tools/generate-cbindings ranged over Go maps → generated
+      statusgo-lib/main.go reshuffled exports every run (~60 MB archive
+      churn). Now emits in sorted key order.
+  (2) Go link-time build ID differs run-to-run → -ldflags=-buildid= in
+      statusgo-ios-library + statusgo-android-library.
+  (3) ar header mtimes: iOS c-archive repacked with ZERO_AR_DATE=1 libtool
+      -static -no_warning_for_no_symbols (status-go Makefile); nim-sds's
+      ar rcs (iOS + static-mac tasks) prefixed ZERO_AR_DATE=1 (sds.nimble —
+      extends the local sds patch queue).
+  After: no-op rebuild leaves mobile/lib copies + client lib + Status.app
+  binary untouched ("Building app" 0 times, ~2:20 wall); Go-source probe
+  (comment in mobile/status.go) → fresh libstatus copied, app relinked and
+  re-signed; untouched libsds copy not copied. Probe reverted.
+- Criterion-5 audit: mobile recipes touch only package tasks, status-go
+  PHONY targets, artifact-dir contract, version.sh. Deleted dead
+  STATUS_GO_FILES (find over status-go sources at every make parse) and
+  STATUS_GO_SCRIPT (dangling buildStatusGo.sh) from mobile/scripts/Common.mk.
+- Docs: issue 0004 closed (verification record), PRD row updated, AGENTS.md
+  gained a "Byte-reproducible library outputs" section (audit recipe: two
+  runs + cmp; ar-mtime diff signature = char ~32/33 of an ar line).
+
+Gotchas for next sessions:
+- Determinism audit recipe: build twice, cmp; if only char ~32/33 differs
+  it's ar header mtimes; else ar x both + diff members.
+- go build always rewrites -o output (vendor lib mtimes advance every run);
+  ONLY the cmp-gated copies are meaningful freshness signals downstream.
+- Editing vendor/nim-sds/sds.nimble re-triggers `nimble setup` via the
+  root nimble.paths stamp (manifest is a stamp dependency) — warm store,
+  seconds, no solve; expected, not a hang.
+- Android EnvVariables defaults: ANDROID_API=28, IOS_TARGET=17 (device+sim).
+  Release APK/AAB legs need STATUS_APP_KEYSTORE_PATH + friends from the user.
+
+Carry-overs: user decision on committing the extended nim-sds patch queue
+(now also carries the ZERO_AR_DATE ar fix) + status-go changes (generator
+sort, -buildid=, libtool repack — all upstream-PR material). On-device
+mobile smoke (iOS + Android) still user-pending. Standing 0003 carry-overs
+(restore GitHub pins when the sds queue merges, upstream nimble issues to
+file) unchanged.
+
+=== 2026-07-06 — addendum: 0004 on-device smokes (both platforms) ===
+- iOS: Status.app installed + launched on iPhone 15 Pro Max via `make
+  mobile-run` (Qt 6.11.0/ios, DEVICE_ID C6D39D50…); app ran ~2 min with a
+  live profile session (RPC traffic), graceful shutdown. The trailing
+  devicectl "Mercury error 1001" is the console tunnel dying AFTER app exit,
+  not a failure.
+- Android: debug APK installed + launched on SM-G990B (RFCRC0FY4ZJ); main
+  process AND :statusgo service process both up, user interacted on-device.
+  Note: debug package id is app.status.mobile.debug (pidof checks must use
+  the .debug suffix).
+
+=== 2026-07-06 — grilling session: new iteration (one-command + develop mode) ===
+Interview-driven design (grill-with-docs + domain-modeling); all decisions
+recorded in PRD 2026-07-06-one-command-and-develop-mode-prd.md, ADR 0004,
+CONTEXT.md (new glossary), issues 0007-0012. Key outcomes:
+- Front door = task not install (nimble install --os/--cpu structurally dead:
+  hooks target-blind); dev-build scope; one task + --os/--cpu flags.
+- MEASURED: root-manifest nimble task does NOT hang (wall is per-candidate
+  dependency-manifest eval), but `nimble <task>` = ~46-48s warm overhead per
+  invocation (--offline errors, --legacy 1:26) => driver is status.nims via
+  `nim <task> status.nims` (~1s). Promote to nimble task only if a future
+  nimble kills the tax.
+- sds pin flips to PR#85 head alexjba/nim-sds@5c89d61 (whole 6-patch queue);
+  ffi pin drops; vendor/nim-sds leaves the default flow (0007).
+- Vendor end-state: full-pin, NO checkouts in default mode; status-go
+  submodule removed after user pushes the branch (0010). Two flavors:
+  nimble-graph (statusgo, sds, seaqt, nimqml; URL#hash + nimble.paths
+  overlay) and cmake (status-keycard-qt, keycard-qt; FetchContent GIT_TAG +
+  FETCHCONTENT_SOURCE_DIR redirect, MobileUI pattern). seaqt pair spike-gated.
+- Develop mechanism = overlay (ADR 0004): stock nimble, clean manifests, no
+  cascade; limitation (resolution reads pinned manifest) guarded by loud
+  divergence check; file:// flip demoted to escape hatch; patched nimble =
+  upstream-only track. 0005's pending mechanism pick is hereby RESOLVED.
+- Rebuild gating: pinned => stamp-skip (stamp = store path + target triple +
+  flags, nothing else); developed => ADR-0003 FORCE + cmp (scope narrowed,
+  recorded in ADR 0004).
+- make frozen (strangler ratchet): driver delegates to existing recipes, all
+  new logic in nimscript, vendor conversions delete make rules; dropping make
+  deferred to the Windows push.
+- Process: every implementation blocker gets its own grill session; all work
+  local (user pushes branches only when a pin needs reachability).
+Sequencing: 0007 -> 0008 -> 0009 -> 0010; 0011 after 0009; 0012 last.

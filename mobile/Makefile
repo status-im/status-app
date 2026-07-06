@@ -1,6 +1,8 @@
 -include ./scripts/EnvVariables.mk
 -include ./scripts/Common.mk
 
+PLATFORM_TARGET := $(OS)-$(ARCH)
+
 # FLAG_KEYCARD_ENABLED: Controls NFC/Keycard support
 # - iOS: Default 1 (enabled) - Build with NFC support, works with free Apple Developer account
 # - Android: Default 1 (enabled) - NFC support doesn't require paid account on Android
@@ -17,6 +19,25 @@ $(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
 # default rule
 default: makedir all
 
+# libsds is built by status-go's own nimble tasks (see vendor/status-go/statusgo.nimble).
+# status-go is a dependency in the app's single nimble graph; its requires
+# points at the workspace's patched vendor/nim-sds, so status-go's sds tasks
+# resolve that checkout and build it in place — artifacts in vendor/nim-sds/build.
+NIMSDS_CHECKOUT := $(abspath ../vendor/nim-sds)
+NIMSDS_LIBDIR := $(NIMSDS_CHECKOUT)/build
+NIMSDS_INCDIR := $(NIMSDS_CHECKOUT)/library
+STATUSGO_NIMBLE_PATHS := ../vendor/status-go/nimble.paths
+
+# statusgo.nims locates nim-sds via the nimble.paths beside it; under the
+# single graph that file is a copy of the app's resolution (absolute paths,
+# valid from any directory). The app-root resolution comes from
+# `make nimble-deps` at the repo root (root-Makefile mobile targets order it).
+../nimble.paths:
+	$(error ../nimble.paths missing — run 'make nimble-deps' at the repo root first)
+
+$(STATUSGO_NIMBLE_PATHS): ../nimble.paths
+	cmp -s ../nimble.paths $@ || cp ../nimble.paths $@
+
 iosdevice: IPHONE_SDK=iphoneos
 iosdevice: default
 
@@ -29,7 +50,15 @@ status-keycard-qt: clean-status-keycard-qt $(STATUS_KEYCARD_QT_LIB)
 nim-status-client: clean-nim-status-client $(NIM_STATUS_CLIENT_LIB)
 status-desktop-rcc: clean-status-desktop-rcc $(STATUS_DESKTOP_RCC)
 
-$(STATUS_GO_LIB):
+# Always delegate to status-go's PHONY sub-make (it owns incremental rebuild, see issue #18377), then copy only on change.
+# libsds is built by status-go's nimble tasks and passed back prebuilt.
+$(STATUS_GO_LIB): FORCE $(STATUSGO_NIMBLE_PATHS) | platform-cleanup
+	@echo "Building nim-sds mobile library"
+ifeq ($(OS),android)
+	cd ../vendor/status-go && ARCH=$(ARCH) ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" nim libsdsAndroid statusgo.nims
+else ifeq ($(OS),ios)
+	cd ../vendor/status-go && nim libsdsIos statusgo.nims
+endif
 	@echo "Building status-go mobile library"
 	@mkdir -p $(LIB_PATH)
 ifeq ($(OS),android)
@@ -38,8 +67,8 @@ ifeq ($(OS),android)
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
 		ANDROID_API="$(ANDROID_API)" \
 		HOST_OS="$(HOST_OS)" \
-		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
-		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
+		NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" \
+		NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)" \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
 else ifeq ($(OS),ios)
@@ -47,12 +76,13 @@ else ifeq ($(OS),ios)
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
-		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
+		NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" \
+		NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)" \
 		SHELL=/bin/sh
 endif
 	@echo "Copying library to mobile lib directory"
-	@cp $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
-	@cp ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
+	@cmp -s $(NIMSDS_LIBDIR)/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT) || cp $(NIMSDS_LIBDIR)/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
+	@cmp -s ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT) || cp ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
 
 $(STATUS_GO_STUB_LIB): $(STATUS_GO_LIB)
 	@echo "Building status-go stub library (UI process)"
@@ -91,7 +121,7 @@ $(OPENSSL_LIB): $(OPENSSL_FILES)
 	@echo "Building OpenSSL"
 	@LIB_PATH=$(LIB_PATH) LIB_EXT=$(LIB_EXT) OPENSSL=$(OPENSSL) BUILD_DIR=$(BUILD_PATH) $(OPENSSL_SCRIPT) $(HANDLE_OUTPUT)
 
-$(QRCODEGEN_LIB): $(QRCODEGEN_FILES)
+$(QRCODEGEN_LIB): $(QRCODEGEN_FILES) | platform-cleanup
 	@echo "Building QRCodeGen"
 	@QRCODEGEN=$(QRCODEGEN) $(QRCODEGEN_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "QRCodeGen built $(QRCODEGEN_LIB)"
@@ -151,6 +181,15 @@ endif
 	@echo "Built $(TARGET)"
 
 # phony rules
+
+# Order-only prerequisite: delete shared vendor artifacts (qrcodegen, nim-sds, libstatus) when the build platform/arch changes.
+.PHONY: platform-cleanup FORCE
+platform-cleanup:
+	@../scripts/platform_pre_build_cleanup.sh "$(PLATFORM_TARGET)"
+
+# Empty target: anything depending on FORCE is always rebuilt.
+FORCE:
+
 .PHONY: makedir
 makedir:
 	@mkdir -p $(BIN_PATH) $(LIB_PATH) $(BUILD_PATH)

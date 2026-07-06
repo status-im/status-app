@@ -17,6 +17,7 @@ vendor/.nimble
 *.AppImage
 tmp
 nimcache
+.platform-target
 .DS_Store
 nim-status-client*.tgz
 /package/
@@ -124,3 +125,11 @@ mobile/fastlane/Preview.html
 mobile/fastlane/screenshots/
 mobile/fastlane/test_output/
 mobile/fastlane/result
+
+nimble.develop
+/vendor/nim-sds/
+
+/nimbledeps/
+/nimble.paths
+.phase2-vendor-backup/
+/.claude/
