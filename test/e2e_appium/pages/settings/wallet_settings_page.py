@@ -242,6 +242,44 @@ class WalletSettingsPage(BasePage):
 
         return True
 
+    def open_networks(self, timeout: int = 10) -> bool:
+        """Open Settings → Wallet → Networks.
+
+        Returns True once the networks view is displayed (testnet switch
+        visible in its title row).
+        """
+        if not self._scroll_until_visible(self.locators.NETWORKS_ITEM):
+            self.logger.error("Networks item not visible in wallet settings")
+            return False
+        if not self.try_click(self.locators.NETWORKS_ITEM, timeout=timeout):
+            self.logger.error("Failed to click Networks item")
+            return False
+        return self.is_element_visible(
+            self.locators.TESTNET_MODE_SWITCH, timeout=timeout
+        )
+
+    def enable_testnet_mode(self, timeout: int = 10) -> bool:
+        """Turn on testnet mode from the Networks view (no-op if already on)."""
+        if not self.is_element_visible(self.locators.TESTNET_MODE_SWITCH, timeout=timeout):
+            self.logger.error("Testnet mode switch not visible")
+            return False
+        if self._is_element_checked(self.locators.TESTNET_MODE_SWITCH):
+            self.logger.info("Testnet mode already enabled")
+            return True
+        if not self.try_click(self.locators.TESTNET_MODE_SWITCH, timeout=timeout):
+            self.logger.error("Failed to tap testnet mode switch")
+            return False
+        if not self.try_click(
+            self.locators.TESTNET_CONFIRM_BUTTON,
+            fallback_locators=[self.locators.TESTNET_CONFIRM_BUTTON_FALLBACK],
+            timeout=timeout,
+        ):
+            self.logger.error("Failed to confirm testnet mode popup")
+            return False
+        return self.wait_for_element_checked(
+            self.locators.TESTNET_MODE_SWITCH, timeout=15
+        )
+
     def account_exists(self, name: str, timeout: int = 5) -> bool:
         """Check if an account with the given name exists.
         

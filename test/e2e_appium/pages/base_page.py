@@ -219,6 +219,25 @@ class BasePage:
         self.dump_page_source(f"click_failure_{locator_desc}")
         raise ElementInteractionError(message, str(locators[0] if locators else ""), "click")
 
+    def try_click(
+        self,
+        locator: tuple,
+        *,
+        timeout: int | None = None,
+        fallback_locators: list[tuple] | None = None,
+        max_attempts: int = 3,
+    ) -> bool:
+        """safe_click that returns False instead of raising on exhaustion."""
+        try:
+            return self.safe_click(
+                locator,
+                timeout=timeout,
+                fallback_locators=fallback_locators,
+                max_attempts=max_attempts,
+            )
+        except ElementInteractionError:
+            return False
+
     def find_element_safe(self, locator: tuple, timeout: int | None = None) -> WebElement | None:
         """Find element and return None instead of raising on failure."""
         try:
@@ -283,6 +302,28 @@ class BasePage:
             except Exception as exc:
                 self.logger.debug("scroll_to_element swipe failed: %s", exc)
         return self.is_element_visible(locator, timeout=timeout)
+
+    def wait_for_painted(
+        self, locator: tuple, timeout: int = 10
+    ) -> WebElement | None:
+        """Wait until the element exists AND reports non-zero bounds.
+
+        Qt/QML nodes can sit in the a11y tree with bounds [0,0][0,0] before
+        first paint or right after a view transition (stale tree); tapping
+        them dispatches at (0,0). Returns the painted element, or None.
+        """
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            element = self.find_element_safe(locator, timeout=1)
+            if element is not None:
+                try:
+                    rect = element.rect
+                    if rect.get("width", 0) > 0 and rect.get("height", 0) > 0:
+                        return element
+                except Exception:
+                    pass
+            time.sleep(0.3)
+        return None
 
     def qt_safe_input(
         self,
