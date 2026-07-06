@@ -594,3 +594,53 @@ Gotchas for next agents (0008+):
 
 Follow-ups recorded in the issue: drop uuids/isaac long-term; 4 upstream
 nimble issues; pin moves to logos-messaging merge SHA when PR #85 lands.
+
+=== 2026-07-06 — Issue 0008: status.nims app driver — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0008-status-nims-app-driver.md
+(PRD: docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md)
+
+Phase A (spike + driver, before the 0007 gate):
+- Flag-forwarding spike (nim 2.2.4, scratch dir): the agreed UX
+  `nim app status.nims --os:ios --cpu:arm64` works as designed — flags AFTER
+  the .nims file are neither consumed nor validated by nim and arrive
+  verbatim in argv (nimscript has no commandLineParams; use paramStr).
+  Flags BEFORE the file are consumed (flip the script's own defines) but
+  stay argv-visible → driver honors both placements. `run` task name safe
+  (builtin is `r`). Full findings in the issue file.
+- status.nims (repo root): `app` (host default; --os:ios/--os:android +
+  --cpu dispatch), `run` (host-only), develop/undevelop/vendors fail-fast
+  stubs → 0009. Delegation-only (make frozen): make nim_status_client /
+  mobile-build / run with -j<ncpu> (matches CI MAKEFLAGS). Bootstrap
+  inherited from make's nimble.paths stamp + .DEFAULT submodule init — NO
+  second stamp scheme. Fail-fast kit validation per target: QMAKE XSPEC
+  cross-check (catches ambient Android-QMAKE-on-desktop), IPHONE_SDK
+  (+QMAKE_DEVELOPMENT_TEAM for iphoneos, --cpu/SDK contradiction check),
+  ANDROID_SDK_ROOT/ANDROID_NDK_ROOT, Android --cpu vs per-ABI-kit check;
+  driver sets ARCH from --cpu and defaults GRADLE_TARGETS=assembleDebug.
+
+Phase B verification (post-0007 graph a30e7706e5; record in issue file):
+- Wiped store + stamps → `nim app status.nims` = runnable host build in
+  6:25 (setup → .sds-build libsds → client); `nim run status.nims`
+  launched StatusDev.app.
+- iOS leg 2:45: signed Status.app (codesign deep/strict OK, team
+  8B5X2M6H2Y); Android leg 3:28: debug APK, all 5 native libs arm64-v8a.
+  Platform sentinels fired on every flip (darwin→ios→android→darwin).
+- Missing-env failures all ~0.8 s (<5 s budget), naming exact variables.
+- No-op: driver 7 s vs bare make 5 s → driver overhead ≈2 s (eval 0.74 s).
+  Desktop no-op FORCE chain is already seconds; mobile no-op FORCE chain
+  70 s warm (0010 stamp-skip target).
+- make targets unchanged: direct nim_status_client / mobile-build /
+  run-macos all pass (delegation-only driver, zero make edits).
+
+Gotchas for next sessions:
+- status.nims eval walks parent configs: repo config.nims echoes "Building
+  for macOS" (twice in nested worktrees) during driver startup — cosmetic.
+- zsh: `VAR=x eval "cmd"` does not reliably export to the child — env
+  prefixes must go on the real command, not on `eval`.
+- Killing the launched app makes `make run`/`nim run` exit non-zero (exec
+  raises on make's failure) — expected; a normal user quit exits 0.
+
+Carry-overs: BUILDING.md front-door mention once 0009/0010 settle the
+vendor UX; `run` stays host-only until develop-mode iterations; standing
+0003/0004/0007 carry-overs unchanged.
