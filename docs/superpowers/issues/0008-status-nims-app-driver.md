@@ -59,6 +59,48 @@ revalidation per warm invocation on this manifest (measured 2026-07-06;
   forwarded, grill the fallback spelling (e.g. `nim app status.nims ios`)
   before deviating from the agreed UX.
 
+## Phase-A spike findings (2026-07-06, nim 2.2.4, scratch-dir toy .nims)
+
+The agreed UX works exactly as designed — no grill needed:
+
+- **Flags placed AFTER the .nims file are not consumed by nim at all**:
+  `nim app toy.nims --os:ios --cpu:arm64` evaluates the script with host
+  defines (`hostOS: macosx`, `defined(ios): false`) and the flags arrive
+  verbatim in the process argv. nim does not validate them either
+  (`--os:bogusvalue` after the file is ignored by nim) — the task must parse
+  AND validate them itself. Both `--os:ios` and `--os=ios` spellings arrive.
+- **Flags placed BEFORE the file ARE consumed by nim**: they flip the
+  script evaluation's own defines (`hostOS: ios`, `defined(ios): true`) and
+  are validated by nim (`--os:` before the file with a bad value hard-errors).
+  They still appear in argv, so an argv-wide scan handles both placements;
+  the canonical spelling (after the file) is the safe one.
+- `commandLineParams()` does not exist in nimscript ("undeclared
+  identifier") — use `paramCount()`/`paramStr(i)`; argv includes the `nim`
+  binary and nim's own options, so args-for-the-task = params after the
+  param whose basename is the script filename.
+- Extra non-flag args after the file arrive verbatim, no nim error.
+- An inner `nim` spawned by the task (`exec "nim …"`) inherits nothing from
+  the outer invocation in either placement (fresh process) — target
+  selection must travel explicitly; in this driver it travels via env
+  (QMAKE/ARCH/IPHONE_SDK…) into the make chains, so no nim-flag forwarding
+  is needed.
+- A task named `run` does not collide with nim's builtin commands (the
+  builtin is `r`; `nim r file.nims` tries to *compile* the script — avoid
+  task names that shadow real nim commands: c, cpp, js, e, r, doc…).
+- Bootstrap delegation is already fully make-side: `nim_status_client`,
+  `mobile-build`/`mobile-run`, `run-macos` and `nim-test-run/%` all depend
+  on `$(NIMBLE_SETUP_STAMP)` (= `nimble.paths`, keyed on nimble.lock + the
+  three manifests, `make nimble-deps` names it), and on a clean clone the
+  Makefile's `.DEFAULT` rule auto-runs
+  `git submodule update --init --recursive` and restarts. The driver adds
+  no second stamp scheme — delegation inherits the existing one.
+- Repo-root eval note: evaluating `status.nims` at the repo root walks the
+  parent-dir configs, so the app's `config.nims` (and, in nested worktrees,
+  the enclosing checkout's) runs as script *config*. Its switch() calls are
+  inert for a nimscript eval; visible effect is only the "Building for
+  macOS" echo noise. `include "nimble.paths"` is existence-guarded, so a
+  clean clone (no nimble.paths yet) still evaluates.
+
 ## Blocked by
 
 - 0007 (pin flip) — the driver's bootstrap must target the post-flip graph.
