@@ -42,8 +42,12 @@ iteration work.
 
 ## Acceptance criteria
 
-- [ ] Spike record written (pass or fail, with evidence) in
-  `docs/superpowers/specs/` and linked here.
+- [x] Spike record written (pass or fail, with evidence) in
+  `docs/superpowers/specs/` and linked here —
+  **PASS on all four questions** (+ merged app-graph resolution check):
+  `docs/superpowers/specs/2026-07-06-seaqt-graph-spike.md` (2026-07-06).
+  Conversion NOT started: per the blocker below, the findings go to a
+  grill session first (and the conversion itself is blocked by 0009).
 - [ ] Pass path: default-mode desktop build with NO seaqt/nimqml checkouts;
   storybook + app launch OK; `develop nimqml` → edit a Nim source in the
   compat layer → next build picks it up → `undevelop` restores the pin.
