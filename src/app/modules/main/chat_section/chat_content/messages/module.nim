@@ -305,11 +305,11 @@ method onSendingMessageSuccess*(self: Module, message: MessageDto) =
 method onSendingMessageError*(self: Module, error: string) =
   self.view.emitSendingMessageErrorSignal(error)
 
-method onEnvelopeSent*(self: Module, messagesIds: seq[string]) =
+method onMessagesSent*(self: Module, messagesIds: seq[string]) =
   for messageId in messagesIds:
     self.view.model().itemSent(messageId)
 
-method onEnvelopeExpired*(self: Module, messagesIds: seq[string]) =
+method onMessagesExpired*(self: Module, messagesIds: seq[string]) =
   for messageId in messagesIds:
     self.view.model().itemExpired(messageId)
 

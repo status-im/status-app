@@ -57,8 +57,8 @@ const SIGNAL_MESSAGE_REMOVED* = "messageRemoved"
 const SIGNAL_MESSAGES_DELETED* = "messagesDeleted"
 const SIGNAL_MESSAGE_DELIVERED* = "messageDelivered"
 const SIGNAL_MESSAGE_EDITED* = "messageEdited"
-const SIGNAL_ENVELOPE_SENT* = "envelopeSent"
-const SIGNAL_ENVELOPE_EXPIRED* = "envelopeExpired"
+const SIGNAL_MESSAGES_SENT* = "messagesSent"
+const SIGNAL_MESSAGES_EXPIRED* = "messagesExpired"
 const SIGNAL_RELOAD_MESSAGES* = "reloadMessages"
 const SIGNAL_URLS_UNFURLED* = "urlsUnfurled"
 const SIGNAL_GET_MESSAGE_FINISHED* = "getMessageFinished"
@@ -139,10 +139,10 @@ type
     chatId*: string
     messageId*: string
 
-  EnvelopeSentArgs* = ref object of Args
+  MessagesSentArgs* = ref object of Args
     messagesIds*: seq[string]
 
-  EnvelopeExpiredArgs* = ref object of Args
+  MessagesExpiredArgs* = ref object of Args
     messagesIds*: seq[string]
 
   MessageEditedArgs* = ref object of Args
@@ -493,15 +493,15 @@ QtObject:
       let data = MessageDeliveredArgs(chatId: receivedData.chatId, messageId: receivedData.messageId)
       self.events.emit(SIGNAL_MESSAGE_DELIVERED, data)
 
-    self.events.on(SignalType.EnvelopeSent.event) do(e: Args):
-      let receivedData = EnvelopeSentSignal(e)
-      let data = EnvelopeSentArgs(messagesIds: receivedData.messageIds)
-      self.events.emit(SIGNAL_ENVELOPE_SENT, data)
+    self.events.on(SignalType.MessagesSent.event) do(e: Args):
+      let receivedData = MessagesSentSignal(e)
+      let data = MessagesSentArgs(messagesIds: receivedData.messageIds)
+      self.events.emit(SIGNAL_MESSAGES_SENT, data)
 
-    self.events.on(SignalType.EnvelopeExpired.event) do(e: Args):
-      let receivedData = EnvelopeExpiredSignal(e)
-      let data = EnvelopeExpiredArgs(messagesIds: receivedData.messageIds)
-      self.events.emit(SIGNAL_ENVELOPE_EXPIRED, data)
+    self.events.on(SignalType.MessagesExpired.event) do(e: Args):
+      let receivedData = MessagesExpiredSignal(e)
+      let data = MessagesExpiredArgs(messagesIds: receivedData.messageIds)
+      self.events.emit(SIGNAL_MESSAGES_EXPIRED, data)
 
     self.events.on(SIGNAL_APPEND_CHAT_MESSAGES) do(e: Args):
       let args = AppendChatMessagesArgs(e)

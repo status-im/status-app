@@ -77,13 +77,13 @@ proc init*(self: Controller) =
       return
     self.delegate.onSendingMessageError(args.error)
 
-  self.events.on(SIGNAL_ENVELOPE_SENT) do(e:Args):
-    let args = EnvelopeSentArgs(e)
-    self.delegate.onEnvelopeSent(args.messagesIds)
+  self.events.on(SIGNAL_MESSAGES_SENT) do(e:Args):
+    let args = MessagesSentArgs(e)
+    self.delegate.onMessagesSent(args.messagesIds)
 
-  self.events.on(SIGNAL_ENVELOPE_EXPIRED) do(e:Args):
-    let args = EnvelopeExpiredArgs(e)
-    self.delegate.onEnvelopeExpired(args.messagesIds)
+  self.events.on(SIGNAL_MESSAGES_EXPIRED) do(e:Args):
+    let args = MessagesExpiredArgs(e)
+    self.delegate.onMessagesExpired(args.messagesIds)
 
   self.events.on(SIGNAL_MESSAGE_DELIVERED) do(e:Args):
     let args = MessageDeliveredArgs(e)
