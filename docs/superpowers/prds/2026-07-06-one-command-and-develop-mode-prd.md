@@ -11,8 +11,8 @@ predecessor: 2026-07-03-statusgo-nimble-package-prd.md (closed over issues 0001â
 
 | Issue | Slice | Status |
 |-------|-------|--------|
-| 0007 sds pin flip to PR #85 | statusgo.nimble `URL#hash` pin (alexjba/nim-sds#5c89d61), ffi pin dropped, local vendor/nim-sds out of the default flow | open |
-| 0008 app driver (`status.nims`) | `app` task (host + `--os/--cpu`), setup self-bootstrap, `run`, no-op timing acceptance | open (blocked by 0007) |
+| 0007 sds pin flip to PR #85 | statusgo.nimble `URL#hash` pin (alexjba/nim-sds#5c89d61), ffi pin dropped, local vendor/nim-sds out of the default flow; + uuids/isaac fork pins (INI-manifest wall, grilled) | done (2026-07-06) |
+| 0008 app driver (`status.nims`) | `app` task (host + `--os/--cpu`), setup self-bootstrap, `run`, no-op timing acceptance | open |
 | 0009 develop-mode core | overlay + `develop`/`undevelop`/`vendors` tasks for statusgo + sds, divergence guard, escape hatch | open (blocked by 0008) |
 | 0010 status-go full-pin | branch pushed, app manifest â†’ `URL#hash`, submodule removed, store-scratch Go build, stamp-skip vs FORCE arms | open (blocked by 0009) |
 | 0011 keycard pair | FetchContent pins + `FETCHCONTENT_SOURCE_DIR` develop redirect | open (blocked by 0009) |

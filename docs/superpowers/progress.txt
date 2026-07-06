@@ -535,3 +535,62 @@ Conversion residuals: lock gains 2 entries (clean-store validation +
 possible hand-fix pattern), mobile spot-check, record smo-6.4 branch in the
 vendor table, nimqml pin-bump is a separate decision. Awaiting grill session
 per the issue's blocker before any conversion work.
+
+=== 2026-07-06 — Issue 0007: sds pin flip to PR #85 — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0007-sds-pin-flip-pr85.md
+(PRD: docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md)
+
+What was built:
+- vendor/status-go/statusgo.nimble: interim file:// nim-sds requires ->
+  `requires "https://github.com/alexjba/nim-sds.git#5c89d61f…"` (PR
+  logos-messaging/nim-sds#85 head = the whole 6-patch queue); explicit ffi
+  pin DROPPED (5c89d61 pins ffi itself, #fb25f069 = 0.1.4).
+- Desktop Makefile: NIMSDS_CHECKOUT/vendor-nim-sds dirs -> NIMSDS_BUILD_ROOT
+  = vendor/status-go/.sds-build (the statusgo.nims store-scratch engine's
+  output); vendor/nim-sds/sds.nimble REMOVED from the setup-stamp deps.
+  mobile/Makefile: same var flip. platform_pre_build_cleanup.sh also wipes
+  .sds-build. vendor/status-go/Makefile: NIM_SDS_VERSION sed generalized +
+  new NIM_SDS_REPO (clone-nim-sds URL now derived from the manifest pin).
+- nim_status_client.nimble: uuids pin -> alexjba/uuids@5d79d279 fork (see
+  blocker below); stale isaac comment replaced. nimble.lock regenerated
+  (37 pkgs; uuids/isaac fork pins; websock 0.3.0 divergence left in — see
+  revised lock understanding). BUILDING.md updated.
+
+BLOCKER found + grilled (fork decision, user-approved, user said "just push"):
+clean-store `nimble setup` with a lock hard-fails — PRE-EXISTING (old config
+fails identically today; 0003's clean-store pass likely rode warm state).
+Root cause via minimal repro + instrumented nimble: vNext validation reads
+an EMPTY version from INI-format manifests on fresh clones -> uuids'
+`isaac >= 0.1.3` fails -> uuids dropped -> lock-path reachability kills the
+solve. Fix: forked+modernized manifests, alexjba/{uuids,isaac} pushed
+(uuids@5d79d279 pins isaac@5bd05be4 by revision). Two NEW walls documented
+in vendor/status-go/AGENTS.md; the old "hand-fix divergent lock entries"
+lore is RETIRED (the lock never constrains this app's solves: the coverage
+check can't match URL-form requires, so every setup re-solves and lock
+entries are not solve constraints — verified with divergent websock).
+
+Verification (all 5 criteria; record in the issue file):
+- Wiped store + vendor/nim-sds moved aside: make nimble-deps 6:17 (solve
+  included — see wall; matrix libp2p 2.0.0/websock 0.4.0/lsquic 0.5.4/
+  ffi 0.1.4, sds from store pkgs2/sds-0.3.0-89a7872a), app built (libsds in
+  vendor/status-go/.sds-build scratch, client links @rpath/libsds.dylib),
+  run-macos launch OK (pre_login.log 0 errors), SIGTERM clean exit.
+- Host static + iOS libsds: 9 _Sds* exports each, 0 leaks; iOS archive
+  otool-verified platform IOS minos 16.2 (iPhoneOS26.5.sdk).
+- Stamp: no-op rebuild 8s, nimble.paths + client mtimes unchanged, zero
+  setup re-runs; restoring vendor/nim-sds does not re-trigger setup.
+
+Gotchas for next agents (0008+):
+- ALWAYS QMAKE=~/Qt/6.11.0/macos/bin/qmake USE_SYSTEM_NIM=1 for desktop
+  makes (bare make mis-detects mkspecs -> linux paths in status-keycard-qt).
+- libsds artifacts for the default flow are at
+  vendor/status-go/.sds-build/{build,library} (NIMSDS_BUILD_ROOT); the
+  scratch is wiped+recopied per sds task run — platform flips self-heal.
+- Clean-store `nimble setup` takes ~6 min INCLUDING an unavoidable solve
+  (lock fast path unreachable on 0.22.3); a ~10 min run means real trouble.
+- The uuids/isaac fork pins are load-bearing for clean stores: repointing
+  them back upstream reintroduces the INI wall.
+
+Follow-ups recorded in the issue: drop uuids/isaac long-term; 4 upstream
+nimble issues; pin moves to logos-messaging merge SHA when PR #85 lands.

@@ -299,15 +299,18 @@ endif
 # the workspace feeds the artifacts back via NIM_SDS_LIB_DIR/NIM_SDS_INC_DIR.
 # status-go is a dependency in the app's single nimble graph (nim_status_client.nimble
 # requires it; interim via file://, final form develop-linked), and its own
-# requires points at the workspace's patched vendor/nim-sds, so status-go's
-# sds build tasks resolve that checkout and build it in place; artifacts land
-# in vendor/nim-sds/build as before.
-NIMSDS_CHECKOUT := $(CURDIR)/vendor/nim-sds
-NIMSDS_LIBDIR := $(NIMSDS_CHECKOUT)/build
+# requires pins nim-sds by URL#hash, so nimble resolves sds into the shared
+# store and status-go's sds tasks build a scratch copy of it at
+# vendor/status-go/.sds-build (the store stays pristine; no vendor/nim-sds
+# checkout is needed). Artifacts land in .sds-build/build, header contract
+# .sds-build/library. A develop-linked local checkout (resolved path outside
+# the store) is instead built in place — see statusgo.nims.
+NIMSDS_BUILD_ROOT := $(CURDIR)/vendor/status-go/.sds-build
+NIMSDS_LIBDIR := $(NIMSDS_BUILD_ROOT)/build
 # Linux packaging scripts (init_app_dir.sh, bundle-flatpak.sh) bundle
 # libsds.so from here.
 export NIMSDS_LIBDIR
-NIMSDS_INCDIR := $(NIMSDS_CHECKOUT)/library
+NIMSDS_INCDIR := $(NIMSDS_BUILD_ROOT)/library
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
 NIM_EXTRA_PARAMS += --passL:"-L$(NIMSDS_LIBDIR)" --passL:"-lsds"
 STATUSGO_MAKE_PARAMS += NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)"
@@ -341,7 +344,7 @@ endif
 # re-run the app's one resolution. There is no separate status-go solve.
 APP_NIMBLE_DIR ?= $(HOME)/.cache/status-desktop-nimbledeps
 NIMBLE_SETUP_STAMP := nimble.paths
-$(NIMBLE_SETUP_STAMP): nimble.lock nim_status_client.nimble vendor/status-go/statusgo.nimble vendor/nim-sds/sds.nimble
+$(NIMBLE_SETUP_STAMP): nimble.lock nim_status_client.nimble vendor/status-go/statusgo.nimble
 	@command -v nimble >/dev/null 2>&1 || { echo "ERROR: nimble not found on PATH (see BUILDING.md)" >&2; exit 1; }
 	nimble setup --nimbleDir:"$(APP_NIMBLE_DIR)" || { echo "ERROR: nimble setup failed. If a .nimble manifest changed, regenerate the lock with 'NIMBLE_DIR=$(APP_NIMBLE_DIR) nimble lock' (full solve, takes minutes) and retry." >&2; exit 1; }
 	touch $@

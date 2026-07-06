@@ -16,7 +16,10 @@ echo "platform changed ($PREV -> $KEY); cleaning shared artifacts" >&2
 
 # 1) qrcodegen (desktop links directly, mobile builds into the same tree)
 make -C "$GIT_ROOT/vendor/QR-Code-generator/c" clean 2>/dev/null || true
-# 2) nim-sds (shared libsds.* + nimcache)
+# 2) nim-sds (shared libsds.* + nimcache): default flow builds a store
+# scratch copy under vendor/status-go/.sds-build; a develop-linked checkout
+# builds in place under vendor/nim-sds/build.
+rm -rf "$GIT_ROOT/vendor/status-go/.sds-build" 2>/dev/null || true
 rm -rf "$GIT_ROOT/vendor/nim-sds/build" 2>/dev/null || true
 [ -n "${HOME:-}" ] && rm -rf "$HOME"/.cache/nim/libsds_* 2>/dev/null || true
 # 3) libstatus.* (shared bin between make run and mobile-run)

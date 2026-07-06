@@ -27,11 +27,13 @@ default: makedir all
 
 # libsds is built by status-go's own nimble tasks (see vendor/status-go/statusgo.nimble).
 # status-go is a dependency in the app's single nimble graph; its requires
-# points at the workspace's patched vendor/nim-sds, so status-go's sds tasks
-# resolve that checkout and build it in place — artifacts in vendor/nim-sds/build.
-NIMSDS_CHECKOUT := $(abspath ../vendor/nim-sds)
-NIMSDS_LIBDIR := $(NIMSDS_CHECKOUT)/build
-NIMSDS_INCDIR := $(NIMSDS_CHECKOUT)/library
+# pins nim-sds by URL#hash, so nimble resolves sds into the shared store and
+# status-go's sds tasks build a scratch copy at vendor/status-go/.sds-build —
+# artifacts in .sds-build/build, headers in .sds-build/library. No
+# vendor/nim-sds checkout is needed (a develop-linked one builds in place).
+NIMSDS_BUILD_ROOT := $(abspath ../vendor/status-go/.sds-build)
+NIMSDS_LIBDIR := $(NIMSDS_BUILD_ROOT)/build
+NIMSDS_INCDIR := $(NIMSDS_BUILD_ROOT)/library
 STATUSGO_NIMBLE_PATHS := ../vendor/status-go/nimble.paths
 
 # statusgo.nims locates nim-sds via the nimble.paths beside it; under the

@@ -2,25 +2,25 @@
   "version": 2,
   "packages": {
     "isaac": {
-      "version": "0.1.3",
-      "vcsRevision": "45a5cbbd54ff59ba3ed94242620c818b9aad1b5b",
-      "url": "https://github.com/pragmagic/isaac/",
+      "version": "#5bd05be4fb372188033ae07d3f5c39b92c97f1c5",
+      "vcsRevision": "5bd05be4fb372188033ae07d3f5c39b92c97f1c5",
+      "url": "https://github.com/alexjba/isaac.git",
       "downloadMethod": "git",
       "dependencies": [],
       "checksums": {
-        "sha1": "05c3583a954715d84b0bf1be97f9a503249e9cdf"
+        "sha1": "ec9a1f1935fb37e58fee31d47632fce6fbeeb763"
       }
     },
     "uuids": {
-      "version": "#42052ba362a9cd4685463edb3781beeb9b8e547e",
-      "vcsRevision": "42052ba362a9cd4685463edb3781beeb9b8e547e",
-      "url": "https://github.com/pragmagic/uuids.git",
+      "version": "#5d79d279cb4f2f6980fbb2b77eeb3b6183d80cea",
+      "vcsRevision": "5d79d279cb4f2f6980fbb2b77eeb3b6183d80cea",
+      "url": "https://github.com/alexjba/uuids.git",
       "downloadMethod": "git",
       "dependencies": [
         "isaac"
       ],
       "checksums": {
-        "sha1": "154a31d6f5428c2863c48a057b7143ff9a6e4613"
+        "sha1": "bee75b5a81d24bba6460ea79ad441730a3e1118f"
       }
     },
     "nim": {
@@ -48,7 +48,7 @@
     "unittest2": {
       "version": "0.2.5",
       "vcsRevision": "26f2ef3ae0ec72a2a75bfe557e02e88f6a31c189",
-      "url": "https://github.com/status-im/nim-unittest2.git",
+      "url": "https://github.com/status-im/nim-unittest2",
       "downloadMethod": "git",
       "dependencies": [
         "nim"
@@ -405,8 +405,8 @@
       }
     },
     "websock": {
-      "version": "0.4.0",
-      "vcsRevision": "387a8eb7e961e8fdd3b1a717d36bc53b55e4dc5d",
+      "version": "0.3.0",
+      "vcsRevision": "c105d98e6522e0e2cbe3dfa11b07a273e9fd0e7b",
       "url": "https://github.com/status-im/nim-websock",
       "downloadMethod": "git",
       "dependencies": [
@@ -421,7 +421,7 @@
         "zlib"
       ],
       "checksums": {
-        "sha1": "fd17a854686d9a19af40aba51f05d06b82fc30ec"
+        "sha1": "1294a66520fa4541e261dec8a6a84f774fb8c0ac"
       }
     },
     "json_rpc": {

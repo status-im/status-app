@@ -337,8 +337,8 @@ config walk would poison in-tree builds with the repo's own `config.nims`.
 This runs automatically for the desktop build: the `nimble.paths` Make target
 (an order-only prerequisite of `nim_status_client`) re-runs `nimble setup`
 whenever `nimble.lock` or one of the graph's manifests
-(`nim_status_client.nimble`, `vendor/status-go/statusgo.nimble`,
-`vendor/nim-sds/sds.nimble`) changes, so a plain `make run` /
+(`nim_status_client.nimble`, `vendor/status-go/statusgo.nimble`) changes, so
+a plain `make run` /
 `make nim_status_client` keeps the resolution in sync without a manual step.
 Ad-hoc nimble commands (e.g. `nimble lock` after editing a manifest) must
 target the same store: `NIMBLE_DIR=~/.cache/status-desktop-nimbledeps nimble
@@ -381,11 +381,13 @@ requires — they are silently ignored and the store copy wins. See
 `vendor/status-go/AGENTS.md`, "nimble 0.22.3 resolution walls".)
 
 - The nim-sds version pin lives in `vendor/status-go/statusgo.nimble`
-  (a `requires` entry — interim a `file://` requires pointing at the
-  workspace's patched `vendor/nim-sds` checkout until the nim-sds patch queue
-  merges upstream). status-go's sds build tasks compile whatever copy the
-  nimble resolution names, so the patched checkout is built in place with
-  whatever Nim is on `PATH`.
+  (a `requires "<git-url>#<sha>"` entry — interim the alexjba fork pin
+  carrying the nim-sds patch queue until logos-messaging/nim-sds#85 merges
+  and the pin moves to the upstream merge SHA). status-go's sds build tasks
+  compile whatever copy the nimble resolution names: the pinned store copy
+  is built in a scratch dir at `vendor/status-go/.sds-build` (the store
+  stays pristine; no `vendor/nim-sds` checkout exists in the default flow),
+  a develop-linked local checkout is built in place.
 
 These run automatically as part of `make nim_status_client` / mobile builds.
 No sibling `../nim-sds` clone is needed or used.
@@ -404,7 +406,7 @@ The following environment variables can be used to customize the build:
 - INCLUDE_DEBUG_SYMBOLS (0,1) - Configure nim to include the debug symbols for desktop platforms.
 - KDF_ITERATIONS (number) - Configure the KDF_ITERATIONS to use for the DB encryption
 - MONITORING (true,false) - Enable/disable qml monitoring tools. The monitoring tools provide a suite of qml introspection tools to debug data transformations. Defaults to `false`
-- NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `vendor/nim-sds` (materialized by the workspace toolchain; no sibling clone needed)
+- NIM_SDS_SOURCE_DIR (path) - Point status-go's standalone build to a local nim-sds folder (unused by this repo's flow: the app builds libsds from the nimble-resolved copy and passes it via NIM_SDS_LIB_DIR/NIM_SDS_INC_DIR)
 - PRODUCTION_PARAMETERS (string) - Configure the production arguments for nim compilation. Defaults to `-d:production`
 - QMAKE (path to executable) - Point the build system to a different qt installation. Defaults to env configuration
 - QML_DEBUG (true,false) - Enable qml debugger and profiler. Defaults to `false`
