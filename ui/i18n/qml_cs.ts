@@ -4221,7 +4221,7 @@ Zůstanete přihlášeni a vaše obnovovací fráze bude zcela ve vašich rukou.
         <translation type="unfinished">Hledat</translation>
     </message>
     <message>
-        <source>Search chats...</source>
+        <source>Search contacts and groups...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

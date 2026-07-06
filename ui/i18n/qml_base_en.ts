@@ -4202,7 +4202,7 @@ You will remain logged in, and your recovery phrase will be entirely in your han
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Search chats...</source>
+        <source>Search contacts and groups...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

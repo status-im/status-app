@@ -4207,7 +4207,7 @@ Permanecerás conectado y tu frase de recuperación estará completamente en tus
         <translation type="unfinished">Buscar</translation>
     </message>
     <message>
-        <source>Search chats...</source>
+        <source>Search contacts and groups...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

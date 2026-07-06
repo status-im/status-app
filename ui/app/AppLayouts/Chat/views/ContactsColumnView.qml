@@ -123,7 +123,7 @@ Item {
             Layout.preferredHeight: 40
             KeyNavigation.tab: channelList
             Keys.onEscapePressed: searchBtn.checked = false
-            placeholderText: qsTr("Search chats...")
+            placeholderText: qsTr("Search contacts and groups...")
             visible: searchBtn.checked
             onVisibleChanged: {
                 clear()
