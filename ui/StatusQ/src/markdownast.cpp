@@ -51,6 +51,10 @@ void dumpNode(const Markdown::Node& node, int depth, bool withRanges, QString& o
         out += QStringLiteral(" \"%1\"").arg(escapeLiteral(node.literal));
     else if (node.kind == K::Link)
         out += QStringLiteral(" \"%1\"").arg(escapeLiteral(node.destination));
+    // Textual mentions carry the pub key; U+FFFC pill mentions have none (metadata lives in
+    // the document char format), so only annotate when present.
+    else if (node.kind == K::Mention && !node.destination.isEmpty())
+        out += QStringLiteral(" \"%1\"").arg(escapeLiteral(node.destination));
 
     out += QLatin1Char('\n');
 

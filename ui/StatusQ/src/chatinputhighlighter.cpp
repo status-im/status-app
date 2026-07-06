@@ -18,6 +18,8 @@
 #include <QVariantMap>
 #include <QVector>
 
+#include <algorithm>
+
 namespace {
 
 // Final render bits stamped per character and consumed by buildFormat().
@@ -45,6 +47,17 @@ Markdown::Options optionsFor(bool unclosedFence)
     o.formatUnclosedCodeFence = unclosedFence;
     o.detectLinks = true;
     return o;
+}
+
+// A textual mention detected in a parsed string: [start,end) over "@0x…" and its pub key.
+struct TextMentionSpan { int start; int end; QString pubKey; };
+
+void collectMentionSpans(const Node& n, QVector<TextMentionSpan>& out)
+{
+    if (n.kind == NodeKind::Mention && !n.destination.isEmpty())
+        out.append({int(n.start), int(n.end), n.destination});
+    for (const Node& c : n.children)
+        collectMentionSpans(c, out);
 }
 
 // Content range of a container node = the span between its opener/closer
@@ -543,6 +556,82 @@ void ChatInputHighlighter::pasteFromClipboard(int selectionStart, int selectionE
     } else if (mime->hasText()) {
         cursor.insertText(mime->text());
     }
+}
+
+QString ChatInputHighlighter::textWithMentions() const
+{
+    if (!document())
+        return {};
+
+    QString out;
+    QTextCursor cursor(document());
+    // characterCount() includes the document's final block terminator; iterate the real chars.
+    const int last = document()->characterCount() - 1;
+    for (int pos = 0; pos < last; ++pos) {
+        cursor.setPosition(pos);
+        cursor.setPosition(pos + 1, QTextCursor::KeepAnchor);
+        const QString ch = cursor.selectedText();
+        const QTextCharFormat fmt = cursor.charFormat();
+
+        if (ch == QString(QChar::ParagraphSeparator))
+            out += QLatin1Char('\n');
+        else if (fmt.objectType() == MentionTextObject::MentionType)
+            out += QLatin1Char('@') + fmt.property(MentionTextObject::PubKeyProperty).toString();
+        else
+            out += ch;
+    }
+    return out;
+}
+
+void ChatInputHighlighter::setTextWithMentions(const QString& text, const QVariantMap& names)
+{
+    if (!document())
+        return;
+
+    QVector<TextMentionSpan> spans;
+    collectMentionSpans(Markdown::parse(text, optionsFor(m_formatUnclosedCodeFence)), spans);
+    std::sort(spans.begin(), spans.end(),
+              [](const TextMentionSpan& a, const TextMentionSpan& b) { return a.start < b.start; });
+
+    QTextCursor cursor(document());
+    cursor.beginEditBlock();
+    cursor.select(QTextCursor::Document);
+    cursor.removeSelectedText();
+
+    // Inserts plain text, turning '\n' into new blocks (the editor's block-per-line model).
+    const auto insertPlain = [&](const QString& s) {
+        const QStringList lines = s.split(QLatin1Char('\n'));
+        for (int i = 0; i < lines.size(); ++i) {
+            if (i > 0)
+                cursor.insertBlock();
+            if (!lines[i].isEmpty())
+                cursor.insertText(lines[i]);
+        }
+    };
+
+    int pos = 0;
+    for (const TextMentionSpan& span : std::as_const(spans)) {
+        if (span.start > pos)
+            insertPlain(text.mid(pos, span.start - pos));
+
+        QString name = names.value(span.pubKey).toString();
+        if (name.isEmpty())
+            name = span.pubKey == QStringLiteral("0x00001") ? QStringLiteral("everyone")
+                                                            : span.pubKey;
+
+        QTextCharFormat fmt;
+        fmt.setObjectType(MentionTextObject::MentionType);
+        fmt.setProperty(MentionTextObject::NameProperty, QStringLiteral("@") + name);
+        fmt.setProperty(MentionTextObject::PubKeyProperty, span.pubKey);
+        fmt.setProperty(MentionTextObject::UniqueIdProperty, ++m_mentionCounter);
+        fmt.setVerticalAlignment(QTextCharFormat::AlignBottom);
+        cursor.insertText(QString(QChar::ObjectReplacementCharacter), fmt);
+        pos = span.end;
+    }
+    if (pos < text.size())
+        insertPlain(text.mid(pos));
+
+    cursor.endEditBlock();
 }
 
 QQuickTextDocument* ChatInputHighlighter::quickTextDocument() const

@@ -12,6 +12,117 @@ import shared.status
 Item {
     id: root
 
+    // Loaded via loadText in root.Component.onCompleted (not bound to
+    // `text`) so textual mentions become pills.
+    readonly property string sampleBody:
+`Some **bold** text there!
+Some *italic* text text there!
+
+Some in-line emoji: 😎🤪🎃
+
+This is ~~strikethrough~~ text.
+
+Quote with nested code:
+
+> A quote block here
+> second quoted line
+> \`\`\`
+> code nested in the quote
+> \`\`\`
+
+Both bold and italics goes here: ***bold italic***
+And **bold** and *italic* together in a single line.
+
+**multi-
+line bold here**
+
+**Code:**
+
+Sometimes it's enough to use \`inline code\`.
+
+For bigger chunks of code it's better to use triple-ticks code block:
+
+\`\`\`
+#include <iostream>
+using namespace std;
+
+int main() {
+// This statement prints "Hello World"
+cout << "Hello World";
+
+return 0;
+}
+\`\`\`
+
+**Links:**
+
+Plain link: https://status.im
+Bold link: **https://status.im/bold**
+Star in URL (no italic): https://x.com/a*b*c
+Link in code (not highlighted): \`https://status.im\`
+
+**Unclosed code fence (toggle flag above to format):**
+
+\`\`\`
+unclosed fence here (no closing triple-tick)
+**bold suppressed when format unclosed code fence flag on**
+`
+
+    readonly property var sampleMentions: [
+        {
+            name: "Alice",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Alicia",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Alan",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Albert",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Bob",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Bobby",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Charlie",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Dave",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Eve",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Frank",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Grace",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "Heidi",
+            pubKey: root.randomPubKey()
+        },
+        {
+            name: "everyone",
+            pubKey: "0x00001"
+        }
+    ]
+
     readonly property var emph: textArea.emphasisAt(textArea.cursorPosition)
     readonly property var vemph: textArea.emphasisAtInsertion(textArea.cursorPosition)
 
@@ -22,12 +133,35 @@ Item {
             s += String.fromCharCode(65 + Math.floor(Math.random() * 26))
         return s
     }
+    // A detectable uncompressed key: "0x" + 130 hex (what the parser's mention rule requires).
     function randomPubKey() {
         const chars = "0123456789abcdef"
         let s = "0x"
-        for (let i = 0; i < 8; ++i)
+        for (let i = 0; i < 130; ++i)
             s += chars[Math.floor(Math.random() * chars.length)]
         return s
+    }
+
+    // pubKey -> display name, for resolving textual mentions when rendering / loading.
+    readonly property var mentionsMap: {
+        const m = {}
+        root.sampleMentions.forEach(u => m[u.pubKey] = u.name)
+        return m
+    }
+
+    // Load the initial sample through loadText (not the text property) so its textual mentions —
+    // a real user's "@0x…" and the "@0x00001" everyone tag — are converted into pills.
+    Component.onCompleted: {
+        usersModel.initialize()
+
+        textArea.loadText("Mentions: @" + usersModel.get(0).pubKey +
+                          " and @0x00001 (everyone).\n\n"
+                          + root.sampleBody, root.mentionsMap)
+
+        Qt.callLater(() => {
+            textArea.cursorPosition = 0
+            scrollView.contentItem.contentY = 0
+        })
     }
 
     // Replaces the "@filter" being typed with a mention pill + trailing space.
@@ -66,12 +200,14 @@ Item {
     ListModel {
         id: usersModel
 
-        Component.onCompleted: {
-            const names = ["Alice", "Alicia", "Alan", "Albert", "Bob", "Bobby",
-                           "Charlie", "Dave", "Eve", "Frank", "Grace", "Heidi"]
-            for (let i = 0; i < names.length; ++i)
-                append({ name: names[i], pubKey: root.randomPubKey() })
+        function initialize() {
+            if (count)
+                return
+
+            append(root.sampleMentions)
         }
+
+        Component.onCompleted: initialize()
     }
 
     // The filtered subset shown in the popup — filtered live by the editor's mentionsFilter.
@@ -240,59 +376,6 @@ Item {
                                     event.accepted = false
                                 }
                             }
-
-                            text:
-`Some **bold** text there!
-Some *italic* text text there!
-
-Some in-line emoji: 😎🤪🎃
-
-This is ~~strikethrough~~ text.
-
-Quote with nested code:
-> A quote block here
-> second quoted line
-> \`\`\`
-> code nested in the quote
-> \`\`\`
-
-Both bold and italics goes here: ***bold italic***
-And **bold** and *italic* together in a single line.
-
-**multi-
-line bold here**
-
-**Code:**
-
-Sometimes it's enough to use \`inline code\`.
-
-For bigger chunks of code it's better to use triple-ticks code block:
-
-\`\`\`
-#include <iostream>
-using namespace std;
-
-int main() {
-    // This statement prints "Hello World"
-    cout << "Hello World";
-
-    return 0;
-}
-\`\`\`
-
-**Links:**
-
-Plain link: https://status.im
-Bold link: **https://status.im/bold**
-Star in URL (no italic): https://x.com/a*b*c
-Link in code (not highlighted): \`https://status.im\`
-
-**Unclosed code fence (toggle flag above to format):**
-
-\`\`\`
-unclosed fence here (no closing triple-tick)
-**bold suppressed when format unclosed code fence flag on**
-`
                         }
                     }
                 }
@@ -330,10 +413,14 @@ unclosed fence here (no closing triple-tick)
                             font.pixelSize: textArea.font.pixelSize
                             selectable: selectableSwitch.checked
 
+                            // Rendered from the editor's plain text (mentions as "@0x…"), not the
+                            // text document — mentions are resolved via mentionsMap.
                             blocks: {
                                 textArea.text            // re-build on every edit
                                 textArea.enlargeEmojis   // and when the emoji toggle changes
-                                return MarkdownUtils.toBlocks(textArea.textDocument,
+                                return MarkdownUtils.toBlocks(textArea.textWithMentions(),
+                                                              root.mentionsMap,
+                                                              chatTextView.font,
                                                               textArea.formatUnclosedCodeFence,
                                                               textArea.enlargeEmojis)
                             }
@@ -458,40 +545,40 @@ unclosed fence here (no closing triple-tick)
                 Layout.fillWidth: true
                 spacing: 10
 
-            Switch {
-                text: "Format unclosed code fence"
-                checked: textArea.formatUnclosedCodeFence
-                onToggled: textArea.formatUnclosedCodeFence = checked
-            }
-            Switch {
-                id: debugSwitch
+                Switch {
+                    text: "Format unclosed code fence"
+                    checked: textArea.formatUnclosedCodeFence
+                    onToggled: textArea.formatUnclosedCodeFence = checked
+                }
+                Switch {
+                    id: debugSwitch
 
-                text: "Show AST dump & detected links"
-            }
-            Switch {
-                id: rangesSwitch
+                    text: "Show AST dump & detected links"
+                }
+                Switch {
+                    id: rangesSwitch
 
-                text: "AST ranges"
-                checked: true
-                enabled: debugSwitch.checked
-            }
-            Switch {
-               id: quoteBarSwitch
+                    text: "AST ranges"
+                    checked: true
+                    enabled: debugSwitch.checked
+                }
+                Switch {
+                   id: quoteBarSwitch
 
-               text: "Quote block vertical line"
-               checked: true
-            }
-            Switch {
-                text: "Enlarge emojis"
-                checked: textArea.enlargeEmojis
-                onToggled: textArea.enlargeEmojis = checked
-            }
-            Switch {
-                id: selectableSwitch
+                   text: "Quote block vertical line"
+                   checked: true
+                }
+                Switch {
+                    text: "Enlarge emojis"
+                    checked: textArea.enlargeEmojis
+                    onToggled: textArea.enlargeEmojis = checked
+                }
+                Switch {
+                    id: selectableSwitch
 
-                checked: true
-                text: "Selectable static text"
-            }
+                    checked: true
+                    text: "Selectable static text"
+                }
             }
             Button {
                 focusPolicy: Qt.NoFocus

@@ -120,6 +120,46 @@ Item {
             compare(item.pubKey, "0xabc")
         }
 
+        // ── textual round-trip: getText / loadText ──────────────────────────────
+
+        // getText() serializes each mention pill to its "@"+pubKey wire form.
+        function test_getText_serializesMentionToPubKey() {
+            control.text = ""
+            control.insertMention(0, "@alice", "0xabc")
+            compare(control.textWithMentions(), "@0xabc")
+        }
+
+        // loadText() detects textual mentions and rebuilds them as pills (name resolved from the
+        // supplied map); getText() then round-trips back to the same wire text.
+        function test_loadText_buildsPillsAndRoundTrips() {
+            const key = "0x" + "a".repeat(130) // a detectable uncompressed key
+            const names = {}
+            names[key] = "Alice"
+            names["0x00001"] = "everyone"
+
+            const wire = "hi @" + key + " and @0x00001 done"
+            control.loadText(wire, names)
+
+            tryCompare(mentionsRepeater, "count", 2)
+
+            const a = mentionsRepeater.itemAt(0)
+            const b = mentionsRepeater.itemAt(1)
+            compare(a.pubKey, key)
+            compare(a.name, "@Alice")
+            compare(b.pubKey, "0x00001")
+            compare(b.name, "@everyone")
+
+            compare(control.textWithMentions(), wire)
+        }
+
+        // Unknown pub keys fall back to the pub key itself; the system tag to "everyone".
+        function test_loadText_fallbackNames() {
+            control.loadText("@0x00001", ({}))
+            tryCompare(mentionsRepeater, "count", 1)
+            compare(mentionsRepeater.itemAt(0).name, "@everyone")
+            compare(control.textWithMentions(), "@0x00001")
+        }
+
         // ── mention demotion inside a (closing) code fence ──────────────────────
 
         // Initial document (formatUnclosedCodeFence stays off):

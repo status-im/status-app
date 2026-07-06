@@ -85,6 +85,102 @@ Ranges linkRangesOf(const QVector<LinkSpan>& links)
     return result;
 }
 
+// A textual mention: "@" + a public key (or system-tag id). `pubKey` is the id without the "@".
+struct MentionSpan {
+    qsizetype start;   // position of '@'
+    qsizetype end;     // exclusive end
+    QString   pubKey;  // e.g. "0x04ab…" (uncompressed) or "0x00001" (everyone)
+};
+
+// Mention grammar, ported verbatim from status-go's markdown parser (status-im/markdown).
+// Two forms are recognised (compressed @z… is intentionally out of scope):
+//  - uncompressed public key: "@0x" + exactly 130 lowercase-hex chars,
+//  - system tag:              "@0x" + exactly 5 digits, last digit != '0' (only 0x00001 =
+//     "everyone" is meaningful).
+// Either must be followed by end-of-text or a terminating char. The "@" itself may appear
+// anywhere (no left-boundary requirement), matching status-go.
+// TODO:
+//  - improve the grammar to allow compressed mentions (z-base-32) (if needed)
+//  - improve detection (e.g. when no delimiter on the right side)
+constexpr qsizetype kPubKeyLen = 132;        // "0x" + 130 hex
+constexpr qsizetype kSystemTagLen = 7;       // "0x" + 5 digits
+
+bool isMentionHexChar(QChar c) { return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'); }
+bool isMentionDigit(QChar c)   { return c >= '0' && c <= '9'; }
+
+// end-of-text or one of the status-go terminators.
+bool isTerminatingMentionChar(const QString& text, qsizetype i)
+{
+    if (i >= text.length())
+        return true;
+    const QChar c = text[i];
+    return c.isSpace() || c == QLatin1Char('.') || c == QLatin1Char(',')
+        || c == QLatin1Char(':') || c == QLatin1Char(';') || c == QLatin1Char('!')
+        || c == QLatin1Char('?');
+}
+
+// Tries to match a mention starting at the '@' at `at`. Returns the exclusive end (> at) and
+// fills `pubKey` on success; returns -1 on no match.
+qsizetype matchMention(const QString& text, qsizetype at, QString& pubKey)
+{
+    const qsizetype n = text.length() - at; // chars available from '@' inclusive
+
+    // Uncompressed public key: "@0x" + 130 hex.
+    if (n >= kPubKeyLen + 1 && text[at + 1] == QLatin1Char('0') && text[at + 2] == QLatin1Char('x')) {
+        bool ok = true;
+        for (qsizetype i = 3; i <= kPubKeyLen; ++i)
+            if (!isMentionHexChar(text[at + i])) { ok = false; break; }
+        if (ok && isTerminatingMentionChar(text, at + kPubKeyLen + 1)) {
+            pubKey = text.mid(at + 1, kPubKeyLen);
+            return at + kPubKeyLen + 1;
+        }
+    }
+
+    // System tag: "@0x" + 5 digits, last digit != '0'.
+    if (n >= kSystemTagLen + 1 && text[at + 1] == QLatin1Char('0') && text[at + 2] == QLatin1Char('x')
+            && text[at + kSystemTagLen] != QLatin1Char('0')) {
+        bool ok = true;
+        for (qsizetype i = 3; i <= kSystemTagLen; ++i)
+            if (!isMentionDigit(text[at + i])) { ok = false; break; }
+        if (ok && isTerminatingMentionChar(text, at + kSystemTagLen + 1)) {
+            pubKey = text.mid(at + 1, kSystemTagLen);
+            return at + kSystemTagLen + 1;
+        }
+    }
+
+    return -1;
+}
+
+QVector<MentionSpan> scanMentions(const QString& text, const Ranges& excludeRanges = {})
+{
+    QVector<MentionSpan> result;
+    const qsizetype n = text.length();
+    for (qsizetype i = 0; i < n; ++i) {
+        if (text[i] != QLatin1Char('@'))
+            continue;
+        QString pubKey;
+        const qsizetype end = matchMention(text, i, pubKey);
+        if (end < 0)
+            continue;
+        bool excluded = false;
+        for (const auto& r : excludeRanges)
+            if (i < r.second && end > r.first) { excluded = true; break; }
+        if (!excluded) {
+            result.append({i, end, pubKey});
+            i = end - 1; // skip past the consumed mention
+        }
+    }
+    return result;
+}
+
+Ranges mentionRangesOf(const QVector<MentionSpan>& mentions)
+{
+    Ranges result;
+    for (const auto& m : mentions)
+        result.append({m.start, m.end});
+    return result;
+}
+
 bool isUnicodeWhitespace(QChar c) { return c.isSpace(); }
 bool isUnicodePunctuation(QChar c) { return c.isPunct() || c.isSymbol(); }
 
@@ -531,6 +627,13 @@ Node materialize(const QString& full, int idx,
         return n;
     }
 
+    if (c.kind == NodeKind::Mention) {
+        // Textual mention ("@0x…"): a leaf carrying the pub key; the "@…" text is not emitted
+        // as a child (the renderer resolves a display name from the pub key).
+        n.destination = c.destination;
+        return n;
+    }
+
     // Emphasis (Strong / Emphasis / Strikethrough) and code (CodeSpan / CodeBlock):
     // opener/closer delimiters around content, with any nested containers in between.
     // For code the content is not re-parsed for emphasis (inlineContainers excludes code
@@ -612,6 +715,11 @@ QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype
                           s.openerStart + off, s.closerEnd + off,
                           s.start + off, s.end + off, {}});
     };
+    auto addMentions = [&](const QVector<MentionSpan>& mentions, qsizetype off) {
+        for (const MentionSpan& m : mentions)
+            conts.append({NodeKind::Mention, m.start + off, m.end + off,
+                          m.start + off, m.end + off, m.pubKey});
+    };
 
     // prefix excludes converted to region-relative
     Ranges prefixRegion;
@@ -663,11 +771,20 @@ QVector<Container> inlineContainers(const QString& full, qsizetype rs, qsizetype
     exclude += quoteRanges;
     const QVector<LinkSpan> links = detectLinks ? scanLinks(region, exclude)
                                                 : QVector<LinkSpan>{};
+
+    // Mentions are detected outside code/quote prefixes and outside links (a URL may contain
+    // '@'). Their ranges then exclude emphasis so "*" inside a pub key isn't paired.
+    Ranges mentionExclude = exclude;
+    mentionExclude += linkRangesOf(links);
+    const QVector<MentionSpan> mentions = scanMentions(region, mentionExclude);
+
     Ranges emphExclude = exclude;
     emphExclude += linkRangesOf(links);
+    emphExclude += mentionRangesOf(mentions);
     const QVector<EmphSpan> emph = processEmphasis(scanDelimiters(region, emphExclude));
 
     addLinks(links, rs);
+    addMentions(mentions, rs);
     addEmph(emph, rs);
 
     return conts;

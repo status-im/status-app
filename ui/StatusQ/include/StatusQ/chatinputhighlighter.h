@@ -95,6 +95,15 @@ public:
     Q_INVOKABLE void pasteFromClipboard(int selectionStart, int selectionEnd,
                                         int cursorPosition);
 
+    // Returns the whole document as plain text, each mention pill rendered as its "@"+pubKey
+    // wire form and paragraph separators as '\n'. Inverse of setTextWithMentions.
+    Q_INVOKABLE QString textWithMentions() const;
+
+    // Replaces the document with `text`, converting textual mentions ("@0x…", "@0x00001")
+    // detected by the parser into mention pills. `names` maps pubKey → display name (the
+    // system tag falls back to "everyone", unknown keys to the pub key itself).
+    Q_INVOKABLE void setTextWithMentions(const QString& text, const QVariantMap& names = {});
+
     // Returns [{start, end, bold, italic, strikethrough}, ...] — for unit tests
     Q_INVOKABLE QVariantList parseFormats(const QString& text) const;
 

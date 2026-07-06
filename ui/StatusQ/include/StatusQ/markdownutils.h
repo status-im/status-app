@@ -1,10 +1,10 @@
 #pragma once
 
+#include <QFont>
 #include <QObject>
 #include <QString>
 #include <QVariantList>
-
-class QQuickTextDocument;
+#include <QVariantMap>
 
 // Stateless QML singleton exposing the Markdown parser's debug/inspection
 // helpers (the textual AST dump) and the static AST→HTML renderer to QML.
@@ -20,11 +20,14 @@ public:
                                 bool formatUnclosedCodeFence = false,
                                 bool withRanges = true) const;
 
-    // Splits the document into decorated blocks (text / code / quote, with quotes
-    // carrying nested blocks) for rendering one Label per block. See Markdown::toBlocks.
-    // When `enlargeEmojis` is true, emoji runs in text are enlarged to the document's line
-    // height (matching the live editor).
-    Q_INVOKABLE QVariantList toBlocks(QQuickTextDocument* document,
+    // Splits `text` into decorated blocks (text / code / quote, with quotes carrying nested
+    // blocks) for rendering one Label per block. See Markdown::toBlocks. Mentions are textual
+    // ("@0x…", "@0x00001"): the parser detects them and each display name is resolved from
+    // `mentions` (pubKey → name; the system tag 0x00001 falls back to "everyone"). `font` is
+    // used only to size enlarged emojis when `enlargeEmojis` is true.
+    Q_INVOKABLE QVariantList toBlocks(const QString& text,
+                                      const QVariantMap& mentions = {},
+                                      const QFont& font = {},
                                       bool formatUnclosedCodeFence = false,
                                       bool enlargeEmojis = false) const;
 };

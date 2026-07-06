@@ -34,6 +34,16 @@ StatusTextArea {
     function insertMention(pos, name, pubKey) {
         highlighter.insertMention(pos, name, pubKey)
     }
+    // Returns the content as plain text with mention pills as their "@"+pubKey wire form.
+    // (Named to avoid shadowing TextArea's built-in getText(start, end).)
+    function textWithMentions() {
+        return highlighter.textWithMentions()
+    }
+    // Loads `text`, converting textual mentions ("@0x…", "@0x00001") into pills. `names` maps
+    // pubKey → display name.
+    function loadText(text, names) {
+        highlighter.setTextWithMentions(text, names || ({}))
+    }
     function parseQuoteBlocks(text) {
         return highlighter.parseQuoteBlocks(text)
     }

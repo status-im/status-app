@@ -2,35 +2,26 @@
 
 #include "StatusQ/markdownhtml.h"
 #include "StatusQ/markdownparser.h"
-#include "StatusQ/mentiontextobject.h"
 
 #include <QFontMetricsF>
-#include <QQuickTextDocument>
-#include <QTextBlock>
-#include <QTextDocument>
 
 namespace {
 
-// Resolve each mention object's name/pubKey from the document char formats, keyed by its
-// character position (which matches the AST Mention node's start).
-QHash<int, QPair<QString, QString>> mentionsOf(QTextDocument* doc)
+// Collects textual Mention nodes (pub key in `destination`) into a position → {displayName, href}
+// map, resolving the display name from `names` (pubKey → name). Falls back to "everyone" for the
+// system tag and to the pub key otherwise. The name is prefixed with "@" to match the pill flow.
+void collectTextMentions(const Markdown::Node& node, const QVariantMap& names,
+                         QHash<int, QPair<QString, QString>>& out)
 {
-    QHash<int, QPair<QString, QString>> mentions;
-    for (QTextBlock b = doc->begin(); b != doc->end(); b = b.next()) {
-        for (auto it = b.begin(); !it.atEnd(); ++it) {
-            const QTextFragment frag = it.fragment();
-            if (!frag.isValid())
-                continue;
-            const QTextCharFormat fmt = frag.charFormat();
-            if (fmt.objectType() != MentionTextObject::MentionType)
-                continue;
-            const QString name   = fmt.property(MentionTextObject::NameProperty).toString();
-            const QString pubKey = fmt.property(MentionTextObject::PubKeyProperty).toString();
-            for (int k = 0; k < frag.length(); ++k)
-                mentions.insert(frag.position() + k, {name, pubKey});
-        }
+    if (node.kind == Markdown::NodeKind::Mention && !node.destination.isEmpty()) {
+        const QString pubKey = node.destination;
+        QString name = names.value(pubKey).toString();
+        if (name.isEmpty())
+            name = pubKey == QStringLiteral("0x00001") ? QStringLiteral("everyone") : pubKey;
+        out.insert(static_cast<int>(node.start), {QStringLiteral("@") + name, pubKey});
     }
-    return mentions;
+    for (const Markdown::Node& c : node.children)
+        collectTextMentions(c, names, out);
 }
 
 } // namespace
@@ -48,22 +39,17 @@ QString MarkdownUtils::dumpAst(const QString& text, bool formatUnclosedCodeFence
     return Markdown::dump(Markdown::parse(text, opts), withRanges);
 }
 
-QVariantList MarkdownUtils::toBlocks(QQuickTextDocument* quickDoc,
-                                     bool formatUnclosedCodeFence,
+QVariantList MarkdownUtils::toBlocks(const QString& text, const QVariantMap& mentions,
+                                     const QFont& font, bool formatUnclosedCodeFence,
                                      bool enlargeEmojis) const
 {
-    if (!quickDoc || !quickDoc->textDocument())
-        return {};
-
-    QTextDocument* doc = quickDoc->textDocument();
-
     Markdown::Options opts;
     opts.formatUnclosedCodeFence = formatUnclosedCodeFence;
+    const Markdown::Node root = Markdown::parse(text, opts);
 
-    // Size emojis to the document's line height, the same way the editor does.
-    const int emojiPx = enlargeEmojis
-            ? qRound(QFontMetricsF(doc->defaultFont()).height()) : 0;
+    QHash<int, QPair<QString, QString>> mentionMap;
+    collectTextMentions(root, mentions, mentionMap);
 
-    return Markdown::toBlocks(Markdown::parse(doc->toPlainText(), opts),
-                              mentionsOf(doc), emojiPx);
+    const int emojiPx = enlargeEmojis ? qRound(QFontMetricsF(font).height()) : 0;
+    return Markdown::toBlocks(root, mentionMap, emojiPx);
 }

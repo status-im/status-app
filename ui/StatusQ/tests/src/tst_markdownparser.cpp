@@ -532,6 +532,59 @@ Document
         QCOMPARE(dump(parse("Some **bold** text"), false),
                  QString::fromUtf8(expected).trimmed());
     }
+
+    // ── textual mentions (status-go grammar) ────────────────────────────────────
+
+    // "@0x" + 130 hex → a Mention leaf carrying the pub key; the "@…" text is not a child.
+    void mentionUncompressed()
+    {
+        const QString key = QStringLiteral("0x") + QString(130, QLatin1Char('a'));
+        const int mEnd = 3 + 1 + int(key.size()); // "hi " + "@" + key
+        const int docEnd = mEnd + 1;              // + "!"
+        const QString expected = QStringLiteral(
+            "Document [0,%1)\n"
+            "  Paragraph [0,%1)\n"
+            "    Text [0,3) \"hi \"\n"
+            "    Mention [3,%2) \"%3\"\n"
+            "    Text [%2,%1) \"!\"").arg(docEnd).arg(mEnd).arg(key);
+        QCOMPARE(d("hi @" + key + "!"), expected);
+    }
+
+    // The only supported system tag: everyone (0x00001).
+    void mentionEveryone()
+    {
+        auto expected = R"(
+Document [0,12)
+  Paragraph [0,12)
+    Mention [0,8) "0x00001"
+    Text [8,12) " all"
+)";
+        QCOMPARE(d("@0x00001 all"), QString::fromUtf8(expected).trimmed());
+    }
+
+    // A mention may sit mid-text and be closed by end-of-text or a punctuation terminator.
+    void mentionTerminators()
+    {
+        QVERIFY(d("@0x00001").contains(QLatin1String("Mention [0,8) \"0x00001\"")));   // eol
+        QVERIFY(d("@0x00001.").contains(QLatin1String("Mention [0,8) \"0x00001\""))); // '.'
+        QVERIFY(d("say @0x00001, ok").contains(QLatin1String("Mention [4,12) \"0x00001\"")));
+    }
+
+    // Shapes that must NOT be recognised as mentions.
+    void mentionRejectsNonMentions()
+    {
+        QVERIFY(!d("@alice").contains(QLatin1String("Mention")));    // plain name
+        QVERIFY(!d("@0x1234").contains(QLatin1String("Mention")));   // too short
+        QVERIFY(!d("@0x00001x").contains(QLatin1String("Mention"))); // non-terminating char
+        QVERIFY(!d("@0x00000 ").contains(QLatin1String("Mention"))); // system tag ending in 0
+    }
+
+    // Mentions are not detected inside inline code or fenced code blocks.
+    void mentionNotInCode()
+    {
+        QVERIFY(!d("`@0x00001`").contains(QLatin1String("Mention")));
+        QVERIFY(!d("```\n@0x00001\n```").contains(QLatin1String("Mention")));
+    }
 };
 
 QTEST_GUILESS_MAIN(TestMarkdownParser)
