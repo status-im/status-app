@@ -2,10 +2,10 @@
 ## Ported from DOtherSide dos_app_is_active / dos_app_make_it_active.
 
 import nimqml
-import seaqt/QtCore/gen_qobject
-import seaqt/QtGui/gen_qwindow
-import seaqt/QtQuick/gen_qquickwindow
-from seaqt/QtQml/gen_qqmlapplicationengine import rootObjects
+import seaqt/qobject
+import seaqt/qwindow
+import seaqt/qquickwindow
+from seaqt/qqmlapplicationengine import rootObjects
 
 proc app_isActive*(engine: QQmlApplicationEngine): bool =
   ## Returns true when the main QQuickWindow is the active (focused) window.

@@ -11,7 +11,7 @@ import nimqml  # for nimqml QVariant + the .seaqt / newQVariant(seaqt) bridges
 # Import seaqt QSettings impl under a module alias so all seaqt QSettings procs
 # (create, value, setValue, remove, beginGroup, endGroup) are called via sqset.X.
 # This avoids any name clash between seaqt's QSettings type and our own wrapper below.
-import seaqt/QtCore/gen_qsettings as sqset
+import seaqt/qsettings as sqset
 
 type
   QSettingsFormat* {.pure.} = enum

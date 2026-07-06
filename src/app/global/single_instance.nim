@@ -6,13 +6,13 @@
 
 import nimqml
 import chronicles
-from seaqt/QtNetwork/gen_qlocalserver import QLocalServer,
+from seaqt/qlocalserver import QLocalServer,
   QLocalServernewConnectionSlot, create, onNewConnection, close, isListening,
   listen, nextPendingConnection, removeServer
-from seaqt/QtNetwork/gen_qlocalsocket import QLocalSocket, create,
+from seaqt/qlocalsocket import QLocalSocket, create,
   connectToServer, waitForConnected, waitForBytesWritten, waitForReadyRead,
   canReadLine, close
-from seaqt/QtCore/gen_qiodevice import write, readLine
+from seaqt/qiodevice import write, readLine
 
 const
   ReadWriteTimeoutMs = 1000      # ad-hoc value

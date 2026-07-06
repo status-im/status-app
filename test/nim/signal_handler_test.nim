@@ -6,7 +6,7 @@ import nimqml
 import app/core/signal_handler
 # Selective import: pulling all of gen_qcoreapplication would re-export the seaqt
 # gen_qobject_types.QObject and make the nimqml QtObject macro below ambiguous.
-from seaqt/QtCore/gen_qcoreapplication import QCoreApplication, create, processEvents
+from seaqt/qcoreapplication import QCoreApplication, create, processEvents
 
 QtObject:
   type Receiver = ref object of QObject

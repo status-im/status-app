@@ -7,7 +7,7 @@ import nimqml
 import app/global/single_instance
 # Selective import: pulling all of gen_qcoreapplication would re-export the seaqt
 # gen_qobject_types.QObject and make the nimqml QtObject macro below ambiguous.
-from seaqt/QtCore/gen_qcoreapplication import QCoreApplication, create,
+from seaqt/qcoreapplication import QCoreApplication, create,
   processEvents
 
 # Minimal receiver to capture the forwarded event via a method-form connect.

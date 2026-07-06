@@ -13,14 +13,14 @@ import app/core/signal_handler
 import app/core/custom_urls/url_scheme_event
 import app/global/single_instance
 
-import seaqt/QtGui/gen_qguiapplication
-import seaqt/QtCore/gen_qcoreapplication
+import seaqt/qguiapplication
+import seaqt/qcoreapplication
 import seaqt/qsslconfiguration
 import seaqt/qsslcertificate
 import seaqt/QtCore/gen_qnamespace
 
 when defined(qmldebug):
-  import seaqt/QtQml/gen_qqmldebug
+  import seaqt/qqmldebuggingenabler
 
 import app/global/global_singleton
 import app/global/local_app_settings
