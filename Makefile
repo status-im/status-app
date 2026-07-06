@@ -12,8 +12,17 @@ BUILD_SYSTEM_DIR := vendor/nimbus-build-system
 
 GIT_ROOT ?= $(shell git rev-parse --show-toplevel 2>/dev/null || echo .)
 LINK_PCRE=0 # nimbus-build-system links `pcre` by default which is not needed
+
+# The developer environment owns the Nim toolchain (see BUILDING.md).
+USE_SYSTEM_NIM ?= 1
+export USE_SYSTEM_NIM
+
 # we don't want an error here, so we can handle things later, in the ".DEFAULT" target
 -include $(BUILD_SYSTEM_DIR)/makefiles/variables.mk
+
+# variables.mk clobbers USE_SYSTEM_NIM with := 0; reassert (command line still wins).
+USE_SYSTEM_NIM := 1
+export USE_SYSTEM_NIM
 
 .PHONY: \
 	all \
@@ -286,12 +295,59 @@ ifeq ($(mkspecs),macx)
  endif
 endif
 
-NIM_SDS_SOURCE_DIR ?= $(GIT_ROOT)/vendor/nim-sds
-export NIM_SDS_SOURCE_DIR
-NIMSDS_LIBDIR := $(NIM_SDS_SOURCE_DIR)/build
+# libsds is built by status-go's own nimble tasks (see vendor/status-go/statusgo.nimble);
+# the workspace feeds the artifacts back via NIM_SDS_LIB_DIR/NIM_SDS_INC_DIR.
+# status-go is a dependency in the app's single nimble graph (nim_status_client.nimble
+# requires it; interim via file://, final form develop-linked), and its own
+# requires points at the workspace's patched vendor/nim-sds, so status-go's
+# sds build tasks resolve that checkout and build it in place; artifacts land
+# in vendor/nim-sds/build as before.
+NIMSDS_CHECKOUT := $(CURDIR)/vendor/nim-sds
+NIMSDS_LIBDIR := $(NIMSDS_CHECKOUT)/build
+# Linux packaging scripts (init_app_dir.sh, bundle-flatpak.sh) bundle
+# libsds.so from here.
+export NIMSDS_LIBDIR
+NIMSDS_INCDIR := $(NIMSDS_CHECKOUT)/library
 NIMSDS_LIBFILE := $(NIMSDS_LIBDIR)/libsds.$(LIB_EXT)
 NIM_EXTRA_PARAMS += --passL:"-L$(NIMSDS_LIBDIR)" --passL:"-lsds"
-STATUSGO_MAKE_PARAMS += NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)"
+STATUSGO_MAKE_PARAMS += NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)"
+# statusgo.nims resolves nim-sds from a nimble.paths next to itself; under the
+# single graph that file is a copy of the app's resolution (see its rule below),
+# not a second `nimble setup` — the former per-status-go dependency cache
+# (~/.cache/statusgo-nimbledeps) and its second multi-minute solve are gone.
+STATUSGO_NIMBLE_PATHS := vendor/status-go/nimble.paths
+
+# desktop only; mobile cleanup lives in mobile/Makefile
+ifneq ($(filter $(mkspecs),macx linux),)
+PLATFORM_TARGET := $(host_os)-$(or $(QT_ARCH),$(shell uname -m))
+else ifeq ($(mkspecs),win32)
+PLATFORM_TARGET := windows-$(or $(QT_ARCH),$(shell uname -m))
+endif
+
+# Order-only prerequisite: delete shared vendor artifacts (qrcodegen, nim-sds, libstatus) when the build platform/arch changes.
+platform-cleanup:
+ifneq ($(PLATFORM_TARGET),)
+	scripts/platform_pre_build_cleanup.sh "$(PLATFORM_TARGET)"
+endif
+
+# Nimble-managed Nim dependencies (nimble.lock -> $(APP_NIMBLE_DIR)).
+# The dependency store lives OUTSIDE the repo tree: `nimble setup` builds
+# dependency package binaries (e.g. dnsclient via libp2p), and Nim's
+# parent-dir config walk would poison those builds with this repo's (or, for
+# nested git worktrees, an enclosing checkout's) config.nims. nimble.paths at
+# the repo root is the setup product make tracks; it is regenerated from the
+# lock plus every manifest in the single graph — status-go participates as a
+# dependency (and carries the nim-sds pin), so editing those manifests must
+# re-run the app's one resolution. There is no separate status-go solve.
+APP_NIMBLE_DIR ?= $(HOME)/.cache/status-desktop-nimbledeps
+NIMBLE_SETUP_STAMP := nimble.paths
+$(NIMBLE_SETUP_STAMP): nimble.lock nim_status_client.nimble vendor/status-go/statusgo.nimble vendor/nim-sds/sds.nimble
+	@command -v nimble >/dev/null 2>&1 || { echo "ERROR: nimble not found on PATH (see BUILDING.md)" >&2; exit 1; }
+	nimble setup --nimbleDir:"$(APP_NIMBLE_DIR)" || { echo "ERROR: nimble setup failed. If a .nimble manifest changed, regenerate the lock with 'NIMBLE_DIR=$(APP_NIMBLE_DIR) nimble lock' (full solve, takes minutes) and retry." >&2; exit 1; }
+	touch $@
+
+nimble-deps: $(NIMBLE_SETUP_STAMP)
+.PHONY: nimble-deps
 
 # desktop only; mobile cleanup lives in mobile/Makefile
 ifneq ($(filter $(mkspecs),macx linux),)
@@ -502,10 +558,18 @@ STATUSGO := vendor/status-go/build/bin/libstatus.$(LIB_EXT)
 STATUSGO_LIBDIR := $(shell pwd)/$(shell dirname "$(STATUSGO)")
 export STATUSGO_LIBDIR
 
-# Rebuild libsds independently after platform switch cleanup deletes vendor/nim-sds/build.
-$(NIMSDS_LIBFILE): | platform-cleanup
-	echo -e $(BUILD_MSG) "nim-sds"
-	$(STATUSGO_MAKE_PARAMS) $(MAKE) -C vendor/status-go build-libsds SHELL=/bin/sh $(HANDLE_OUTPUT)
+# statusgo.nims locates nim-sds via the nimble.paths beside it; under the
+# single graph that file is a copy of the app's resolution (all entries are
+# absolute paths, so it is valid from any directory). Copy only on content
+# change so the libsds artifact isn't invalidated by no-op setups.
+$(STATUSGO_NIMBLE_PATHS): $(NIMBLE_SETUP_STAMP)
+	cmp -s nimble.paths $@ || cp nimble.paths $@
+
+# statusgo.nimble carries the nim-sds pin: a pin bump must invalidate the built lib.
+# Rebuilt independently after platform switch cleanup deletes vendor/nim-sds/build.
+$(NIMSDS_LIBFILE): vendor/status-go/statusgo.nimble $(STATUSGO_NIMBLE_PATHS) | platform-cleanup
+	echo -e $(BUILD_MSG) "libsds"
+	cd vendor/status-go && nim libsds statusgo.nims $(HANDLE_OUTPUT)
 
 $(STATUSGO): | deps $(NIMSDS_LIBFILE) platform-cleanup
 	echo -e $(BUILD_MSG) "status-go"
@@ -607,7 +671,7 @@ ifeq ($(mkspecs),win32)
 
  $(NIMSDS_IMPLIB): $(NIMSDS_LIBFILE)
 	echo -e $(BUILD_MSG) "import lib: $(notdir $(NIMSDS_IMPLIB))"
-	bash scripts/gen-import-lib.sh "$(NIM_SDS_SOURCE_DIR)/library/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
+	bash scripts/gen-import-lib.sh "$(NIMSDS_INCDIR)/libsds.h" "$(notdir $(NIMSDS_LIBFILE))" "$(NIMSDS_IMPLIB)" $(HANDLE_OUTPUT)
 
  import-libs: $(WIN_IMPORT_LIBS)
 endif
@@ -753,7 +817,9 @@ $(NIM_STATUS_CLIENT): NIM_PARAMS += $(RESOURCES_LAYOUT)
 ifneq ($(mkspecs),win32)
 $(NIM_STATUS_CLIENT): NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
-$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps
+# Depends on libsds directly: platform cleanup can delete it while libstatus
+# survives, and the client would otherwise link against a missing dylib.
+$(NIM_STATUS_CLIENT): $(NIM_SOURCES) | statusq check-qt-dir $(STATUSGO) $(NIMSDS_LIBFILE) $(STATUSKEYCARD_QT_LIB) $(QRCODEGEN) rcc deps $(NIMBLE_SETUP_STAMP)
 	echo -e $(BUILD_MSG) "$@"
 	$(ENV_SCRIPT) nim c $(NIM_PARAMS) \
 		--mm:orc \
@@ -1092,7 +1158,7 @@ run-macos: nim_status_client
 		ln -fs ../../../nim_status_client ./
 	fileicon set bin/nim_status_client status-dev.icns
 	echo -e "\033[92mRunning:\033[39m bin/StatusDev.app/Contents/MacOS/nim_status_client"
-	DYLD_LIBRARY_PATH="$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(STATUSQ_LIB_PATH)":"$(EXTRA_LIBS_PATH)":"$(DYLD_LIBRARY_PATH)" \
+	DYLD_LIBRARY_PATH="$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(STATUSQ_LIB_PATH)":"$(EXTRA_LIBS_PATH)":"$(DYLD_LIBRARY_PATH)" \
 	./bin/StatusDev.app/Contents/MacOS/nim_status_client $(ARGS)
 
 run-windows: STATUS_RC_FILE = status-dev.rc
@@ -1118,11 +1184,11 @@ endef
 export PATH := $(call qmkq,QT_INSTALL_BINS):$(call qmkq,QT_HOST_BINS):$(call qmkq,QT_HOST_LIBEXECS):$(PATH)
 export QTDIR := $(call qmkq,QT_INSTALL_PREFIX)
 
-mobile-run: qt-pkgconfig deps-common
+mobile-run: qt-pkgconfig deps-common | $(NIMBLE_SETUP_STAMP)
 	echo -e "\033[92mRunning:\033[39m mobile app"
 	$(MAKE) -C mobile run DEBUG=1 GRADLE_TARGETS=assembleDebug
 
-mobile-profile: qt-pkgconfig deps-common
+mobile-profile: qt-pkgconfig deps-common | $(NIMBLE_SETUP_STAMP)
 ifeq ($(mkspecs),ios)
 	@echo "TODO: iOS profiling is not implemented yet"; exit 1
 else
@@ -1134,7 +1200,7 @@ else
 endif
 
 mobile-build: USE_SYSTEM_NIM=1
-mobile-build: qt-pkgconfig | deps-common
+mobile-build: qt-pkgconfig | deps-common $(NIMBLE_SETUP_STAMP)
 	echo -e "\033[92mBuilding:\033[39m mobile app ($(or $(PACKAGE_TYPE),default))"
 ifeq ($(PACKAGE_TYPE),aab)
 	$(MAKE) -C mobile aab

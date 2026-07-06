@@ -33,7 +33,6 @@ STATUS_GO?=$(STATUS_DESKTOP)/vendor/status-go
 OPENSSL?=$(ROOT_DIR)/vendors/openssl
 QRCODEGEN?=$(STATUS_DESKTOP)/vendor/QR-Code-generator/c
 STATUS_KEYCARD_QT?=$(STATUS_DESKTOP)/vendor/status-keycard-qt
-NIM_SDS_SOURCE_DIR ?= $(STATUS_DESKTOP)/vendor/nim-sds
 
 # compile macros: pr -> StatusPR, release -> Status
 ifeq ($(BUILD_VARIANT),pr)
@@ -61,7 +60,9 @@ STATUS_DESKTOP_UI_FILES := $(shell find $(STATUS_DESKTOP)/ui -type f \( -iname '
 # Include CMakeLists.txt (mobilewebview pin) and prune build/ (generated sources).
 STATUS_Q_FILES := $(shell find $(STATUSQ) \( -path '$(STATUSQ)/build' \) -prune -o -type f \( -iname '*.cpp' -o -iname '*.h' -o -iname '*.mm' -o -iname 'CMakeLists.txt' \) -print)
 STATUS_Q_UI_FILES := $(shell find $(STATUSQ) -type f \( -iname '*.qml' -o -iname '*.qrc' \))
-STATUS_GO_FILES := $(shell find $(STATUS_GO) -type f \( -iname '*.go' \))
+# No STATUS_GO_FILES here: status-desktop does not track status-go sources
+# (#18377 / ADR 0003) — $(STATUS_GO_LIB) delegates freshness to status-go's
+# own PHONY sub-make via FORCE.
 OPENSSL_FILES := $(shell find $(OPENSSL) -type f \( -iname '*.c' -o -iname '*.h' \))
 QRCODEGEN_FILES := $(shell find $(QRCODEGEN) -type f \( -iname '*.c' -o -iname '*.h' \))
 STATUS_KEYCARD_QT_FILES := $(shell find $(STATUS_KEYCARD_QT) -type f \( -iname '*.cpp' -o -iname '*.h' \) 2>/dev/null || echo "")
@@ -71,7 +72,6 @@ STATUS_GO_SERVICE_GEN := $(STATUS_DESKTOP)/vendor/status-go/build/bin/statusgo_s
 
 # script files
 STATUS_Q_SCRIPT := $(SCRIPTS_PATH)/buildStatusQ.sh
-STATUS_GO_SCRIPT := $(SCRIPTS_PATH)/buildStatusGo.sh
 OPENSSL_SCRIPT := $(SCRIPTS_PATH)/buildOpenSSL.sh
 QRCODEGEN_SCRIPT := $(SCRIPTS_PATH)/buildQRCodeGen.sh
 STATUS_KEYCARD_QT_SCRIPT := $(SCRIPTS_PATH)/buildStatusKeycardQt.sh

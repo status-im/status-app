@@ -139,3 +139,10 @@ mobile/fastlane/result
 
 # Benchmark output (regenerated locally, never committed)
 test/nim/benchmarks/results/
+nimble.develop
+/vendor/nim-sds/
+
+/nimbledeps/
+/nimble.paths
+.phase2-vendor-backup/
+/.claude/

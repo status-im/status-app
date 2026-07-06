@@ -25,6 +25,25 @@ $(info Configuring build system for $(OS) $(ARCH) with QT $(QT_MAJOR))
 # default rule
 default: makedir all
 
+# libsds is built by status-go's own nimble tasks (see vendor/status-go/statusgo.nimble).
+# status-go is a dependency in the app's single nimble graph; its requires
+# points at the workspace's patched vendor/nim-sds, so status-go's sds tasks
+# resolve that checkout and build it in place — artifacts in vendor/nim-sds/build.
+NIMSDS_CHECKOUT := $(abspath ../vendor/nim-sds)
+NIMSDS_LIBDIR := $(NIMSDS_CHECKOUT)/build
+NIMSDS_INCDIR := $(NIMSDS_CHECKOUT)/library
+STATUSGO_NIMBLE_PATHS := ../vendor/status-go/nimble.paths
+
+# statusgo.nims locates nim-sds via the nimble.paths beside it; under the
+# single graph that file is a copy of the app's resolution (absolute paths,
+# valid from any directory). The app-root resolution comes from
+# `make nimble-deps` at the repo root (root-Makefile mobile targets order it).
+../nimble.paths:
+	$(error ../nimble.paths missing — run 'make nimble-deps' at the repo root first)
+
+$(STATUSGO_NIMBLE_PATHS): ../nimble.paths
+	cmp -s ../nimble.paths $@ || cp ../nimble.paths $@
+
 iosdevice: IPHONE_SDK=iphoneos
 iosdevice: default
 
@@ -37,7 +56,14 @@ nim-status-client: clean-nim-status-client $(NIM_STATUS_CLIENT_LIB)
 status-desktop-rcc: clean-status-desktop-rcc $(STATUS_DESKTOP_RCC)
 
 # Always delegate to status-go's PHONY sub-make (it owns incremental rebuild, see issue #18377), then copy only on change.
-$(STATUS_GO_LIB): FORCE | platform-cleanup
+# libsds is built by status-go's nimble tasks and passed back prebuilt.
+$(STATUS_GO_LIB): FORCE $(STATUSGO_NIMBLE_PATHS) | platform-cleanup
+	@echo "Building nim-sds mobile library"
+ifeq ($(OS),android)
+	cd ../vendor/status-go && ARCH=$(ARCH) ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" nim libsdsAndroid statusgo.nims
+else ifeq ($(OS),ios)
+	cd ../vendor/status-go && nim libsdsIos statusgo.nims
+endif
 	@echo "Building status-go mobile library"
 	@mkdir -p $(LIB_PATH)
 ifeq ($(OS),android)
@@ -53,8 +79,8 @@ ifeq ($(OS),android)
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
 		ANDROID_API="$(ANDROID_API)" \
 		HOST_OS="$(HOST_OS)" \
-		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
-		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
+		NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" \
+		NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)" \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
 	@$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(HOST_OS)-x86_64/bin/llvm-objcopy \
@@ -70,12 +96,12 @@ else ifeq ($(OS),ios)
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
-		NIM_SDS_SOURCE_DIR="$(NIM_SDS_SOURCE_DIR)" \
-		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
+		NIM_SDS_LIB_DIR="$(NIMSDS_LIBDIR)" \
+		NIM_SDS_INC_DIR="$(NIMSDS_INCDIR)" \
 		SHELL=/bin/sh
 endif
 	@echo "Copying library to mobile lib directory"
-	@cmp -s $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT) || cp $(NIM_SDS_SOURCE_DIR)/build/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
+	@cmp -s $(NIMSDS_LIBDIR)/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT) || cp $(NIMSDS_LIBDIR)/libsds$(LIB_EXT) $(LIB_PATH)/libsds$(LIB_EXT)
 	@cmp -s ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT) || cp ../vendor/status-go/build/bin/libstatus$(LIB_EXT) $(LIB_PATH)/libstatus$(LIB_EXT)
 
 $(STATUS_GO_STUB_LIB): $(STATUS_GO_LIB) $(STATUS_GO_STUB_GEN) $(STATUS_DESKTOP)/mobile/statusgo_stub/statusgo_stub.cpp

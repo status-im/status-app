@@ -9,7 +9,7 @@ copy_native_libs() {
   echo "Bundling native libraries..."
   cp -P vendor/status-go/build/bin/libstatus.so* "$dest/"
   cp -P "${STATUSKEYCARD_QT_LIBDIR:?STATUSKEYCARD_QT_LIBDIR must be set}"/libstatus-keycard-qt.so* "$dest/"
-  cp -P "${NIM_SDS_SOURCE_DIR:?NIM_SDS_SOURCE_DIR must be set}/build/libsds.so" "$dest/"
+  cp -P "${NIMSDS_LIBDIR:?NIMSDS_LIBDIR must be set}/libsds.so" "$dest/"
   if [[ "${USE_NWAKU:-}" == "true" ]]; then
     cp -P "${NWAKU_SOURCE_DIR:?NWAKU_SOURCE_DIR must be set}/build/libwaku.so" "$dest/"
   fi

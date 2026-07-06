@@ -19,7 +19,7 @@ make -C "$GIT_ROOT/vendor/QR-Code-generator/c" clean 2>/dev/null || true
 # 2) nim-sds (shared libsds.* + nimcache)
 rm -rf "$GIT_ROOT/vendor/nim-sds/build" 2>/dev/null || true
 [ -n "${HOME:-}" ] && rm -rf "$HOME"/.cache/nim/libsds_* 2>/dev/null || true
-# 3) status-go (shared build/ between make run and mobile-run)
-rm -rf "$GIT_ROOT/vendor/status-go/build" 2>/dev/null || true
+# 3) libstatus.* (shared bin between make run and mobile-run)
+rm -f "$GIT_ROOT"/vendor/status-go/build/bin/libstatus.* 2>/dev/null || true
 
 echo "$KEY" > "$STATE"

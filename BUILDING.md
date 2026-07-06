@@ -35,6 +35,7 @@ If you're looking for instructions to build Status Mobile instead, go [here](/mo
     - [Windows](#windows-1)
     - [Linux](#linux-1)
   - [4️⃣ Build the App](#4️⃣-build-the-app)
+    - [Nim toolchain and Nim C libraries (nimble)](#nim-toolchain-and-nim-c-libraries-nimble)
     - [Build Configuration Options](#build-configuration-options)
   - [Pro tips](#pro-tips)
     - [Working with VS Code](#working-with-vs-code)
@@ -308,6 +309,94 @@ make run
 ```
 🎉
 
+### Nim toolchain and Nim C libraries (nimble)
+
+The Nim side of this repo — the app's own dependency graph and the Nim C
+libraries linked by status-go (nim-sds) — is resolved and built by this
+repo's build system via [Nimble](https://github.com/nim-lang/nimble), not by
+status-go and not by a vendored compiler.
+
+**Prerequisite:** Nim and Nimble (>= 0.22) on your PATH, matching the version
+pinned in `nim_status_client.nimble` (`requires "nim == X"`), e.g. via
+[choosenim](https://github.com/nim-lang/choosenim). `USE_SYSTEM_NIM` defaults
+to `1`, so nimbus-build-system (still the top-level Make orchestrator) never
+builds or uses its own vendored compiler.
+
+**App dependencies (`nimble.lock` → `~/.cache/status-desktop-nimbledeps/`):**
+`nim_status_client.nimble` lists every Nim library the app needs as a
+`requires "<git-url>#<sha>"` entry; `nimble.lock` is the committed, resolved
+lock file (exact revision per package). The former `vendor/nim-*` submodules
+for these libraries are gone — `nimble setup` materializes them under the
+dependency store at `$APP_NIMBLE_DIR` (default
+`~/.cache/status-desktop-nimbledeps`, shared safely between checkouts — the
+store is content-addressed) and writes `nimble.paths` at the repo root, which
+`config.nims` includes (behind `--noNimblePath`) to wire them into the
+compile. The store deliberately lives *outside* the repo: `nimble setup`
+builds dependency package binaries (e.g. dnsclient), and Nim's parent-dir
+config walk would poison in-tree builds with the repo's own `config.nims`.
+This runs automatically for the desktop build: the `nimble.paths` Make target
+(an order-only prerequisite of `nim_status_client`) re-runs `nimble setup`
+whenever `nimble.lock` or one of the graph's manifests
+(`nim_status_client.nimble`, `vendor/status-go/statusgo.nimble`,
+`vendor/nim-sds/sds.nimble`) changes, so a plain `make run` /
+`make nim_status_client` keeps the resolution in sync without a manual step.
+Ad-hoc nimble commands (e.g. `nimble lock` after editing a manifest) must
+target the same store: `NIMBLE_DIR=~/.cache/status-desktop-nimbledeps nimble
+lock`. Mobile builds pick up the same `config.nims`/`nimble.paths` resolution
+but don't independently trigger the setup, so build desktop (or run
+`make nimble-deps`) at least once first if you're going mobile-only or after
+editing `nimble.lock` by hand.
+
+**status-go in the same graph:** status-go is itself a nimble package (it
+ships the `status_go` Nim wrapper next to the Go sources, and its manifest
+owns the nim-sds / nim-ffi pins), and `nim_status_client.nimble` requires it,
+so the app's one `nimble setup` resolves status-go's Nim dependencies together
+with the app's own — one resolution, one store, one lock file.
+There is no separate per-status-go dependency solve or cache. status-go's
+`statusgo.nims` build tasks (libsds) read the resolution from
+`vendor/status-go/nimble.paths`, which the Makefiles derive by copying the
+app's `nimble.paths` (all entries are absolute). The app compiles the wrapper
+with `-d:statusGoNoAutoLink` (set in `config.nims`): it links the shared
+libstatus/libsds flavors it builds itself instead of the wrapper's static
+auto-link layout.
+
+**What's still a git submodule:** only Nim packages under active local
+development, plus everything that isn't pure Nim (C/C++/Go). Kept under
+`vendor/`: the seaqt Qt bindings (`nim-seaqt`, `nimqml-seaqt`), status-go
+itself, and the C/C++ libraries (`DOtherSide`, `SortFilterProxyModel`,
+`QR-Code-generator`, `status-keycard-qt`, `fcitx5-qt`, `prl-to-pc`,
+`mobile/vendors/openssl`, `nimbus-build-system`). `config.nims` adds explicit
+`switch("path", ...)` entries for `nim-seaqt`/`nimqml-seaqt` since they're not
+in the nimble store.
+
+**Hacking on a dependency locally:** to edit one of the pinned libraries in
+place instead of at its pinned SHA, edit `nim_status_client.nimble` and point
+that library's `requires` at your checkout with an ABSOLUTE `file://` URL
+(`requires "file:///home/you/nim-chronos"`), then re-run `make nimble-deps`.
+nimble resolves the checkout with link semantics — edits are picked up by the
+next build without reinstalling anything. This is a machine-local manifest
+edit; restore the pinned URL before committing. (`nimble develop --add` does
+NOT work here: on nimble 0.22.3 develop links cannot satisfy `<url>#<sha>`
+requires — they are silently ignored and the store copy wins. See
+`vendor/status-go/AGENTS.md`, "nimble 0.22.3 resolution walls".)
+
+- The nim-sds version pin lives in `vendor/status-go/statusgo.nimble`
+  (a `requires` entry — interim a `file://` requires pointing at the
+  workspace's patched `vendor/nim-sds` checkout until the nim-sds patch queue
+  merges upstream). status-go's sds build tasks compile whatever copy the
+  nimble resolution names, so the patched checkout is built in place with
+  whatever Nim is on `PATH`.
+
+These run automatically as part of `make nim_status_client` / mobile builds.
+No sibling `../nim-sds` clone is needed or used.
+
+> **📝 Note:** if you have an old local run script that exports `CGO_LDFLAGS`
+> with `-L.../nim-sds/build -lsds` (from before this migration), you can drop
+> that — status-go now derives its own `-lsds` from `NIM_SDS_LIB_DIR`, and it's
+> injected via `override +=` so it survives even if a stray `CGO_LDFLAGS` is
+> still being passed on the command line. Passing the old flags is harmless
+> but unnecessary.
+
 ### Build Configuration Options
 
 The following environment variables can be used to customize the build:
@@ -315,7 +404,7 @@ The following environment variables can be used to customize the build:
 - INCLUDE_DEBUG_SYMBOLS (0,1) - Configure nim to include the debug symbols for desktop platforms.
 - KDF_ITERATIONS (number) - Configure the KDF_ITERATIONS to use for the DB encryption
 - MONITORING (true,false) - Enable/disable qml monitoring tools. The monitoring tools provide a suite of qml introspection tools to debug data transformations. Defaults to `false`
-- NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `$(GIT_ROOT)/../nim-sds`
+- NIM_SDS_SOURCE_DIR (path) - Point the build system to a local nim-sds folder. Defaults to `vendor/nim-sds` (materialized by the workspace toolchain; no sibling clone needed)
 - PRODUCTION_PARAMETERS (string) - Configure the production arguments for nim compilation. Defaults to `-d:production`
 - QMAKE (path to executable) - Point the build system to a different qt installation. Defaults to env configuration
 - QML_DEBUG (true,false) - Enable qml debugger and profiler. Defaults to `false`
