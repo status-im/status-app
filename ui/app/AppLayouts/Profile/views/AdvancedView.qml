@@ -494,9 +494,9 @@ SettingsContentBase {
             initialVelocity: root.advancedStore.scrollVelocity
             initialDeceleration: root.advancedStore.scrollDeceleration
             isCustomScrollingEnabled: root.advancedStore.isCustomScrollingEnabled
-            onVelocityChanged: root.advancedStore.setScrollVelocity(value)
-            onDecelerationChanged: root.advancedStore.setScrollDeceleration(value)
-            onCustomScrollingChanged: root.advancedStore.setCustomScrollingEnabled(enabled)
+            onVelocityChanged: value => root.advancedStore.setScrollVelocity(value)
+            onDecelerationChanged: value => root.advancedStore.setScrollDeceleration(value)
+            onCustomScrollingChanged: enabled => root.advancedStore.setCustomScrollingEnabled(enabled)
         }
 
         RPCStatsModal {

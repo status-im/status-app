@@ -53,10 +53,8 @@ StatusDialog {
         }
     }
 
-    ColumnLayout {
+    contentItem: ColumnLayout {
         id: contentColumn
-
-        anchors.fill: parent
 
         SearchBox {
             id: searchBox
@@ -77,6 +75,7 @@ StatusDialog {
             }
 
             header: StatusListItem {
+                width: ListView.view.width
                 title: qsTr("Total")
                 statusListItemTitle.customColor: Theme.palette.directColor1
                 statusListItemLabel.customColor: Theme.palette.directColor1
@@ -117,6 +116,7 @@ StatusDialog {
             }
 
             delegate: StatusListItem {
+                width: ListView.view.width
                 title: model.method
                 label: model.count
                 enabled: false

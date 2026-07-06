@@ -17,8 +17,6 @@ import utils
 StatusDialog {
     id: root
 
-    destroyOnClose: false
-
     property bool isCustomScrollingEnabled: false
     property real initialVelocity
     property real initialDeceleration
@@ -27,9 +25,16 @@ StatusDialog {
     signal decelerationChanged(real value)
     signal customScrollingChanged(bool enabled)
 
-    footer.visible: false
+    footer: null
 
     implicitHeight: 610 // see contentColumn.height's comment
+
+    component CustomRadioSelector: StatusRadioButton {
+        Layout.fillWidth: true
+        implicitWidth: 448
+        LayoutMirroring.enabled: true
+        LayoutMirroring.childrenInherit: true
+    }
 
     ColumnLayout {
         id: contentColumn
@@ -42,26 +47,16 @@ StatusDialog {
 
         spacing: Theme.padding
 
-        ButtonGroup { id: scrollSettingsGroup }
-
-        RadioButtonSelector {
-            Layout.fillWidth: true
-            title: qsTr("System")
-            buttonGroup: scrollSettingsGroup
+        CustomRadioSelector {
+            text: qsTr("System")
             checked: !root.isCustomScrollingEnabled
-            onClicked: {
-                root.customScrollingChanged(false)
-            }
+            onToggled: root.customScrollingChanged(!checked)
         }
 
-        RadioButtonSelector {
-            Layout.fillWidth: true
-            title: qsTr("Custom")
-            buttonGroup: scrollSettingsGroup
+        CustomRadioSelector {
+            text: qsTr("Custom")
             checked: root.isCustomScrollingEnabled
-            onClicked: {
-                root.customScrollingChanged(true)
-            }
+            onToggled: root.customScrollingChanged(checked)
         }
 
         ColumnLayout {
