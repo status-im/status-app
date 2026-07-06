@@ -37,10 +37,15 @@ requires "https://github.com/nitely/nim-regex.git#2c41f0b2fee9fe78cf22f029bc854a
 requires "https://github.com/nitely/nim-unicodedb.git#8938e71cdb3332b8a16eb27a6984c8565ea4643e"  # unicodedb
 requires "https://github.com/vacp2p/nim-intops.git#d30bd41f7492a21e4e0baeafac493978a010568f"  # intops
 requires "https://github.com/cheatfate/nimcrypto.git#423ea4fed8de6f4544b7e3b30d868f527ed3b947"  # nimcrypto
-requires "https://github.com/pragmagic/uuids.git#42052ba362a9cd4685463edb3781beeb9b8e547e"  # uuids
-# isaac is deliberately not listed: an explicit URL#SHA pin conflicts with
-# uuids' `isaac >= 0.1.3` floor in nimble's resolver; the transitive
-# resolution lands on the exact former-submodule SHA (45a5cbbd).
+# uuids: alexjba fork = upstream 0.1.12 (42052ba) with a modern-format
+# manifest + isaac pinned by revision. Upstream pragmagic/{uuids,isaac} ship
+# INI-style ([Package]) manifests, and nimble 0.22.3's dependency validation
+# extracts an EMPTY version from an INI manifest on a fresh clone — uuids'
+# former `isaac >= 0.1.3` range then fails ("wanted >= 0.1.3 got .") and
+# uuids is dropped from the graph, hard-failing every clean-store lock-mode
+# solve. isaac stays unlisted here: the fork's uuids manifest pins it
+# (#5bd05be4 = upstream v0.1.3 + modern manifest, content unchanged).
+requires "https://github.com/alexjba/uuids.git#5d79d279cb4f2f6980fbb2b77eeb3b6183d80cea"  # uuids
 # status-go is a nimble package (the status_go wrapper ships inside it, so the
 # former separate nim-status-go wrapper requirement is gone); its manifest
 # carries the nim-sds/nim-ffi pins, which land in this graph transitively.
