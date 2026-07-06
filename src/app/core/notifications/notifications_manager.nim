@@ -225,7 +225,7 @@ QtObject:
     # An exemption from the diagrams, at least for now, is that we don't need to implement the "Badge Check" block here,
     # cause that's already handled in appropriate modules.
 
-    let appIsActive = app_window.app_isActive(singletonInstance.engine)
+    let appIsActive = app_window.app_isActive()
 
     if (details.notificationType == NotificationType.NewMessage or
         details.notificationType == NotificationType.NewMessageWithPersonalMention or
