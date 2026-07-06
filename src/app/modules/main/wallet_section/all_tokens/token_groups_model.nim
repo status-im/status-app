@@ -185,10 +185,20 @@ QtObject:
       of ModelRole.Position:
         return newQVariant(self.delegate.getTokenPreferences(item.key).position)
 
+  proc priceForTokenGroup(self: TokenGroupsModel, tokens: openArray[TokenItem]): tuple[tokenKey: string, price: float64] =
+    for token in tokens:
+      let price = self.marketValuesDelegate.getPriceForToken(token.key)
+      if price > 0:
+        return (token.key, price)
+    if tokens.len > 0:
+      return (tokens[0].key, self.marketValuesDelegate.getPriceForToken(tokens[0].key))
+    return ("", 0.0)
+
   proc addMarketDetailsItem*(self: TokenGroupsModel, index: int, tokensList: var seq[TokenGroupItem], currencyFormat: var CurrencyFormatDto) =
-    # since each token gorup item has at least one token, we're safe to use the first token's key
-    let tokenKey = tokensList[index].tokens[0].key
-    let tokenPrice = self.marketValuesDelegate.getPriceForToken(tokenKey)
+    let group = tokensList[index]
+    if group.tokens.len == 0:
+      return
+    let (tokenKey, tokenPrice) = self.priceForTokenGroup(group.tokens)
     let tokenMarketValues = self.marketValuesDelegate.getMarketValuesForToken(tokenKey)
     let item = newMarketDetailsItem(tokenKey, tokenPrice, tokenMarketValues, currencyFormat)
     self.tokenMarketDetails.add(item)
