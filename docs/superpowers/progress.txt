@@ -492,3 +492,46 @@ CONTEXT.md (new glossary), issues 0007-0012. Key outcomes:
 - Process: every implementation blocker gets its own grill session; all work
   local (user pushes branches only when a pin needs reachability).
 Sequencing: 0007 -> 0008 -> 0009 -> 0010; 0011 after 0009; 0012 last.
+
+=== 2026-07-06 — Issue 0012: seaqt pair feasibility SPIKE — DONE (PASS on all four questions) ===
+
+Spike only (conversion blocked by 0009 + mandatory grill). All experiments in
+scratch with NIMBLE_DIR=~/.cache/seaqt-spike-nimbledeps; no repo-tree builds,
+app store untouched. Record: docs/superpowers/specs/2026-07-06-seaqt-graph-spike.md.
+
+- Q1 resolution PASS: requires "https://github.com/seaqt/nim-seaqt.git#2d95808"
+  + "https://github.com/seaqt/nimqml-seaqt.git#c5e5831" resolve on nimble
+  0.22.3 in 20 s from a fresh store. Hash pins skip enumeration; nimqml's
+  non-declarative manifest (tasks) evaluated once without hanging; repo-name
+  vs package-name mismatch a non-issue. nimqml srcDir contents HOISTED to the
+  store entry root, so --path roots match today's config.nims switches
+  exactly. specialVersions recorded in nimblemeta.json.
+  NOTE: submodule pin 2d95808 = tip of upstream branch smo-6.4 (also tagged
+  qt-6.4-seaqt-gen-…), NOT branch qt-6.4 (tip 21c8a80). nimqml pin is behind
+  upstream master (d699ba8).
+- Q2 store-copy PASS: shims compile via {.compile.} into the consumer's
+  nimcache — proven against a chmod -R a-w store; NimQml smoke
+  (QApplication + QQmlApplicationEngine + engine.load) builds in 11.4 s and
+  runs (SMOKE-OK). sds-style .sds-build/ scratch engine NOT needed. Nuance:
+  nimble setup rewrites store nimblemeta.json, so the store must stay
+  owner-writable for nimble itself.
+- Q3 compat include PASS: config.nims:108 -I<repo>/seaqt_compat is APP-owned
+  (QVariantConstPointer shim for Qt>6.4); global passC reaches {.compile.}'d
+  store sources. Positive + negative (fatal error without -I) proven. Only
+  config.nims:31-32 path switches get deleted by the conversion.
+- Q4 Qt flags PASS: seaqt discovers flags via gorge(pkg-config) — purely
+  PATH/PKG_CONFIG_PATH env (qt-pkgconfig.mk wrapper), zero package-location
+  dependence. Verified through the store compile; committed .pc trees exist
+  for macos/ios/android_arm64_v8a/msvc2022_64.
+- Bonus: real app manifest + lock + the two pins in scratch → full graph
+  resolves (exit 0, 44 paths); CONTROL without pins = same graph, 42 paths —
+  pins perturb nothing. Both arms resolve libp2p 1.15.3/websock 0.3.0 vs
+  lock's websock 0.4.0 (pre-existing 0003 wall #5 divergence + 0007's
+  in-flight sds flip; flagged for lock regeneration, not a 0012 finding).
+
+Verdict: recommend PASS PATH (URL#hash pins, delete both submodules +
+config.nims:31-32, nimble-graph vendor-table entries for 0009 overlay).
+Conversion residuals: lock gains 2 entries (clean-store validation +
+possible hand-fix pattern), mobile spot-check, record smo-6.4 branch in the
+vendor table, nimqml pin-bump is a separate decision. Awaiting grill session
+per the issue's blocker before any conversion work.
