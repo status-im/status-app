@@ -837,3 +837,79 @@ Gotchas for 0012:
 
 Carry-overs: mobile keycard legs unverified (above); Windows path derivations
 unchanged but unvalidated (out of scope). Remaining: 0012 seaqt conversion.
+
+=== 2026-07-07 — Issue 0012: seaqt pair conversion (URL#hash pins, submodules removed) — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0012-seaqt-pair-graph-adoption.md
+(PRD: docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md;
+spike record: specs/2026-07-06-seaqt-graph-spike.md; grilled 2026-07-07
+decision: PASS path at the current submodule SHAs, seaqt developBranch
+smo-6.4 — pin bumps are a separate later decision.)
+
+What was built:
+- nim_status_client.nimble: requires seaqt/nim-seaqt#2d95808 (branch
+  smo-6.4, tag qt-6.4-seaqt-gen-5bc1bc58 points at it) + nimqml/
+  nimqml-seaqt#c5e5831. Pure-source packages: C++ shims {.compile.} into
+  the client nimcache straight from the read-only store — no scratch
+  engine, no sub-build. Lock NOT regenerated (0010 finding: URL#hash pkgs
+  never enter it; regen is net-negative).
+- config.nims: the two hardcoded vendor path switches DELETED (nimble.paths
+  carries the roots); isaac srcDir-hoist hack generalized to nimqml
+  (declares srcDir "src", store copy hoisted — same wall class). NOTE
+  empirical nuance: warm re-setups flip isaac (transitive range pick) to
+  the dangling /src variant but seaqt/nimqml (direct root URL#hash
+  requires) KEEP root entries — the nimqml hack arm is a safety net.
+  seaqt_compat include unchanged (app-owned; global passC reaches
+  {.compile.}'d store sources, desktop AND ios kits).
+- status.nims: vfNimbleGraph rows seaqt (developBranch smo-6.4) + nimqml
+  (master), both clientRebuild=true (REBUILD_NIM is the whole FORCE arm).
+  NEW Vendor.srcDir field: the overlay rewrite remaps a hoisted store ROOT
+  entry onto <checkout>/<srcDir> (nimqml store = hoisted, checkout = src/)
+  — observed: applyOverlay emits vendor/nimqml-seaqt/src.
+- Submodules removed x2 (staged playbook): backup branches
+  backup/nimble-0012-pin; functional git dirs at
+  .phase2-vendor-backup/{nim-seaqt,nimqml-seaqt} (core.worktree
+  repointed). Playbook gotchas recorded: stage .gitmodules BEFORE git rm
+  --cached; once the dir moved, write core.worktree via git config --file
+  <gitdir>/config (git -C refuses while the worktree pointer dangles).
+- BUILDING.md: seaqt-pair section; submodule list = C/C++-only now.
+
+Verification (all criteria; full record in the issue file):
+- Wiped store + NO checkouts: nim app = 9:10 end-to-end (clean solve incl.)
+  -> launch smoke OK (QML up, keycard init, libs from pinned roots, clean
+  SIGTERM); storybook-build 1:35; no-op 6.3-7.7 s. Client compile provably
+  store-sourced (nimcache json: 142 seaqt + 2 nimqml store refs, 0 vendor).
+- develop nimqml: clone at pin (master), overlay remap to /src observed,
+  compat-layer probe compiled into the linked unit (nm: T
+  _nimqml_0012_probe; LTO internalizes it out of the exe), client
+  relinked; undevelop dirty-refusal -> revert -> clean exit -> pinned
+  rebuild; cmp NOT byte-identical (+64 B, fresh LC_UUID — Mach-O mints a
+  UUID per relink, stabs track nimcache mtimes; inputs = identical store
+  paths; desktop client was never relink-reproducible, 0009 note).
+- iOS device leg: driver build 2:33 from the store — 222 fresh @pseaqt
+  units; gen_qvariant.cpp.o bitcode embeds arm64-apple-ios17.0.0 + the
+  store source path (decisive); codesign --verify --deep --strict OK.
+- Divergence guard picks the right manifest: develop seaqt -> branch
+  smo-6.4 @ 2d95808; seaqt.nimble edit fails the build in seconds naming
+  seaqt.nimble + pin + revert cmds + file:// escape hatch.
+- vendors lists all SIX vendors with pins + state; platform sentinel fired
+  on the ios->desktop flip-back.
+
+Gotchas for next sessions:
+- Shared-nimcache archaeology: mobile compiles reuse nimcache/ at the repo
+  root; pre-conversion @m..@svendor@snim-seaqt units linger inert next to
+  the live @pseaqt (path-root-relative) units — grep for @pseaqt/@pnimqml,
+  not pkgs2, when checking mobile source origins.
+- Parent-checkout worktree nesting: the parent repo's stale nimble.paths
+  (different ~/.nimble nimqml copy) sits on nim's parent-config walk;
+  empirically the worktree resolution wins (desktop json + ios bitcode
+  both show our store) — watch shadowing if the parent grows seaqt pins.
+- Mobile nim lib rule prereqs don't include nimble.paths/config.nims — a
+  pin/config change alone doesn't rebuild libnim_status_client; drop the
+  lib (or touch a src file) to force it.
+
+Iteration status: 0007-0012 ALL DONE. Default mode has zero vendor
+checkouts (six pinned vendors, two flavors); the remaining submodules are
+C/C++-only. Carry-overs: Android seaqt leg unexercised (committed .pc tree
+exists); pin bumps (qt-6.11 line) = separate decision; standing 0003/0004/
+0007-0011 items unchanged.
