@@ -83,7 +83,7 @@ QtObject:
         SignalType.NodeStopped,
         SignalType.NodeLogin:
           NodeSignal.fromEvent(signalType, jsonSignal)
-      of SignalType.PeerStats: PeerStatsSignal.fromEvent(jsonSignal)
+      of SignalType.ConnectionStatusChange: ConnectionStatusChangeSignal.fromEvent(jsonSignal)
       of SignalType.DiscoverySummary: DiscoverySummarySignal.fromEvent(jsonSignal)
       of SignalType.MailserverRequestCompleted: MailserverRequestCompletedSignal.fromEvent(jsonSignal)
       of SignalType.MailserverRequestExpired: MailserverRequestExpiredSignal.fromEvent(jsonSignal)

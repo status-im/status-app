@@ -19,7 +19,6 @@ QtObject:
         events*: EventEmitter
         settingsService: settings_service.Service
         nodeConfigurationService: node_configuration_service.Service
-        peers*: seq[string]
         connected: bool
 
     proc delete*(self: Service)
@@ -29,27 +28,22 @@ QtObject:
         result.events = events
         result.settingsService = settingsService
         result.nodeConfigurationService = nodeConfigurationService
-        result.peers = @[]
         result.connected = false
 
-    proc peerSummaryChange(self: Service, peers: seq[string]) =
-        if peers.len == 0 and self.connected:
-            self.connected = false
+    proc setConnected(self: Service, connected: bool) =
+        if connected == self.connected:
+            return
+
+        info "waku connection status changed", connected
+        self.connected = connected
+        if self.connected:
+            self.events.emit(SIGNAL_NETWORK_CONNECTED, Args())
+        else:
             self.events.emit(SIGNAL_NETWORK_DISCONNECTED, Args())
 
-        if peers.len > 0 and not self.connected:
-            self.connected = true
-            self.events.emit(SIGNAL_NETWORK_CONNECTED, Args())
-
-        self.peers = peers
-
     proc init*(self: Service) =
-        # Track network connectivity from peer activity reported by status-go.
-        self.events.on(SignalType.DiscoverySummary.event) do(e: Args):
-            self.peerSummaryChange(DiscoverySummarySignal(e).enodes)
-
-        self.events.on(SignalType.PeerStats.event) do(e: Args):
-            self.peerSummaryChange(PeerStatsSignal(e).peers)
+        self.events.on(SignalType.ConnectionStatusChange.event) do(e: Args):
+            self.setConnected(ConnectionStatusChangeSignal(e).isOnline)
 
     proc isConnected*(self: Service): bool = self.connected
 
