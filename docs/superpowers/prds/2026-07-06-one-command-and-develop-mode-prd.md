@@ -17,6 +17,7 @@ predecessor: 2026-07-03-statusgo-nimble-package-prd.md (closed over issues 0001�
 | 0010 status-go full-pin | app manifest → `status-im/status-go#d9281bce9` (source-only manifest — new nimble bin-wall, grilled), submodule removed (backup at .phase2-vendor-backup), `.statusgo-build` scratch engine, stamp-skip live (no-op: desktop 5.9 s, mobile 15 s vs 70 s) | done (2026-07-07) |
 | 0011 keycard pair | wrapper cmake project owns the status-keycard-qt pin (a6cbdd05), keycard-qt pin audit passed (df00b931 fixed SHA), submodule removed (backup at .phase2-vendor-backup), `FETCHCONTENT_SOURCE_DIR_*` develop redirect live for both (nested-alone works), offline no-fetch proven, no-op 6 s | done (2026-07-07) |
 | 0012 seaqt pair | spike PASS (specs/2026-07-06-seaqt-graph-spike.md), then pass-path conversion: seaqt (smo-6.4 #2d95808) + nimqml (#c5e5831) as URL#hash pins, config.nims switches deleted, BOTH submodules removed (backup at .phase2-vendor-backup), vendor rows w/ srcDir overlay remap, iOS leg from store proven | done (2026-07-07) |
+| 0013 nimble-native build/run | env-independent config.nims, before-build artifact hook, run-leg spike, store unification on default ~/.nimble (grilled 2026-07-07) | open |
 
 ## Problem Statement
 
