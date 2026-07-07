@@ -913,3 +913,20 @@ checkouts (six pinned vendors, two flavors); the remaining submodules are
 C/C++-only. Carry-overs: Android seaqt leg unexercised (committed .pc tree
 exists); pin bumps (qt-6.11 line) = separate decision; standing 0003/0004/
 0007-0011 items unchanged.
+
+=== 2026-07-07 — ITERATION 2 COMPLETE ===
+All six issues done (0007-0012). End state verified: one-command build
+(`nim app status.nims [--os --cpu]`, no-op ~6s desktop / 15s mobile),
+per-vendor develop mode (overlay + FetchContent redirect), six vendors
+pinned (statusgo d9281bce9, sds 5c89d61/PR85, seaqt smo-6.4@2d95808,
+nimqml c5e5831, status-keycard-qt a6cbdd05, keycard-qt df00b931), FOUR
+submodules removed this iteration (status-go, status-keycard-qt, nim-seaqt,
+nimqml-seaqt; backups in .phase2-vendor-backup with functional git dirs).
+`nim vendors status.nims` lists all six with pin + state.
+Upstream-asks consolidated in docs/superpowers/upstream-asks.md (9 nimble
+issues to file, sds PR85 merge, status-go PR to develop, uuids/isaac fork
+retirement, seaqt tagging).
+Follow-on tracks (next grill sessions): NBS deletion (original Phase 3),
+0006 sds target-subdir artifact packages (upstream-gated), CI migration to
+the driver, BUILDING.md/onboarding polish, Windows validation, true
+`nimble install` desktop layer, seaqt qt-6.11 pin-bump evaluation.
