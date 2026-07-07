@@ -17,15 +17,22 @@ import std/strutils
 # ours, not a dependency's. (The Makefile keeps the store out of tree at
 # ~/.cache/status-desktop-nimbledeps, so this guard is normally inert.)
 if not projectPath().startsWith(thisDir() / "nimbledeps"):
-  # nimble.paths omits the /src entry for isaac (srcDir:"src", but resolved only
-  # transitively via uuids), breaking `import isaac`. Derive it from the isaac
-  # entry in nimble.paths (the store lives outside the repo; the dir's hash
-  # suffix changes with the lock, hence the scan).
+  # nimble 0.22.3 emits an unusable isaac entry in nimble.paths (srcDir:"src",
+  # resolved only transitively via uuids), breaking `import isaac`. The shape
+  # varies by run: the setup that MATERIALIZES the store copy srcDir-hoists it
+  # (isaac.nim at the entry root) and emits the root, while a warm re-setup
+  # re-derives the entry from the manifest's srcDir and emits root/src — which
+  # no longer exists in the hoisted copy (wall: vendor/status-go/AGENTS.md).
+  # Point at whichever directory actually holds the module (the store lives
+  # outside the repo; the dir's hash suffix changes with the lock, hence scan).
   when withDir(thisDir(), system.fileExists("nimble.paths")):
     for line in readFile(thisDir() & "/nimble.paths").splitLines:
       let entry = line.strip.replace("--path:", "").strip(chars = {'"'})
-      if (DirSep & "isaac-") in entry and dirExists(entry & "/src"):
-        switch("path", entry & "/src")
+      if (DirSep & "isaac-") in entry:
+        if dirExists(entry & "/src"):
+          switch("path", entry & "/src")
+        elif entry.endsWith(DirSep & "src") and not dirExists(entry):
+          switch("path", entry[0 ..< entry.len - 4])
 
   # Nim packages kept as git submodules (seaqt migration in progress):
   switch("path", thisDir() & "/vendor/nimqml-seaqt/src")
