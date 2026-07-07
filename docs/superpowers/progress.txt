@@ -930,3 +930,82 @@ Follow-on tracks (next grill sessions): NBS deletion (original Phase 3),
 0006 sds target-subdir artifact packages (upstream-gated), CI migration to
 the driver, BUILDING.md/onboarding polish, Windows validation, true
 `nimble install` desktop layer, seaqt qt-6.11 pin-bump evaluation.
+
+=== 2026-07-08 — Issue 0013: nimble-native build/run OOTB — DONE (pass: true) ===
+
+Picked up: docs/superpowers/issues/0013-nimble-native-build-run.md
+(PRD: docs/superpowers/prds/2026-07-06-one-command-and-develop-mode-prd.md;
+decisions grilled 2026-07-07: one store = default ~/.nimble)
+
+What was built:
+- status_env.nims (new shared include): qmake discovery (single -query
+  dump), kit hint, overlay parsing, statusgo build root — one source for
+  the driver AND config.nims.
+- config.nims now owns the desktop client's FULL flag set (phase A):
+  mm/malloc/outdir/flavor/version defines/all link inputs/rpaths (now incl.
+  libsds + StatusQ cmake libdir → DYLD-free bare exec), env-or-derived
+  (make env wins; STATUS_BUILD_ENV_ASSERT=1 = bring-up parity assert,
+  passed on full make builds). seaqt's pkg-config env self-served via
+  putEnv when make didn't export it. Make client recipe thinned to a bare
+  `nim c src/nim_status_client.nim` (mac/linux; Windows keeps legacy flags)
+  — every front door shares one flag set by construction.
+- nim_status_client.nimble: binDir="bin", `before build` hook → `nim
+  buildArtifacts status.nims` → make client-deps (everything except the
+  client compile), skip switch STATUS_SKIP_BUILD_ARTIFACTS=1 as successful
+  no-op, exec-failure → explicit return false (execHook swallows hook
+  script failures otherwise — verified in nimble source); `after build`
+  hook mirrors make's install_name fixups.
+- Phase D: APP_NIMBLE_DIR retired; `nimble setup` runs against ~/.nimble
+  (NIMBLE_DIR env = CI/clean-room override); BUILDING.md migration note.
+
+Empirics that shaped it (issue file, "Pre-work empirics"): nimble vNext bin
+compile contract captured (store nim, --noNimblePath, -d:release forced,
+--path per solution pkg, cwd=pkgdir, env inherited); config-path BEATS
+nimble CLI path (overlay composes); CLI define beats config define;
+putEnv-in-config reaches module gorge; binDir lands make's exact path.
+
+Incidents found + fixed during verification (all recorded in the issue):
+1. Default-store pkgcache (polluted 2026-07-07) solved a DIFFERENT graph
+   (libp2p 1.15.3/websock 0.3.0/lsquic 0.0.1) — carried the retired
+   store's known-good pkgcache over + purged 3 same-version/different-rev
+   entries; resolution now matches the verified graph exactly.
+2. Nimble's CLI --path:<src> is processed BEFORE configs → an ENCLOSING
+   checkout's nim.cfg outranks it and the compile silently builds the
+   PARENT's sources (the motivating "parent source leakage", mechanically
+   understood) — config.nims now excludePath's every ancestor checkout src.
+3. Release-define ordering: -d:release set AFTER debugger:native silently
+   stripped make's debug map (133k vs 415k syms) — flavor now set first.
+4. Missing MACOSX_DEPLOYMENT_TARGET at nimble link flipped ObjC section
+   placement — env fallback added.
+
+Verification (all 7 criteria; record in the issue): clean-room fresh clone
++ EMPTY store (NIMBLE_DIR=~/.nb0013) + kit env only → nimble build 9:54 →
+launch; byte-parity make↔nimble = identical __text/__const/__cstring/
+symbols, residue only LC_UUID + 839 OSO stab mtimes + signature (make↔make
+relink with unchanged .o = 0 bytes); hook no-op 6.55 s vs dispatch tax
+~78 s (upstream ask #4); fail-fast kit error ~1–2 s past dispatch with
+exact-variable message; develop compose proven with an sds probe through
+nimble build (overlay applied in-hook, probe in artifact, clean return to
+pin); stale-store immunity: 21/21 compile store entries ∈ nimble.paths
+with a whole divergent graph deliberately present in pkgs2; iOS leg 139 s
+signed + codesign strict OK.
+
+Gotchas for next sessions:
+- Nested worktrees: in-tree nimble build/run needs QT_LIBDIR/STATUSGO_
+  LIBDIR/STATUSKEYCARD(GO)_LIBDIR/STATUSQ_INSTALL_PATH exported (the
+  PARENT checkout's old config emits bare -rpath without them). Normal
+  clones need nothing (clean-room proof). Out of scope per decisions.
+- Clean-room second-invocation hiccup (one-time, self-healing): bootstrap
+  pass left a drifted .statusgo-origin → next build's prepareStatusgo
+  refreshed the scratch mid-run while make's stat cache skipped the
+  status-go rebuild → one link failure; third build green + stable.
+  Follow-up: bootstrap-ordering look at prepareStatusgo origin writing.
+- nimble always re-runs the client compile (needsRebuild=true for
+  build/run) — no-op nimble build ≈ 89 s total; `nim app` stays the fast
+  daily path (5.9–7 s no-op).
+- Standing risk (pre-existing): fresh machines can solve a different graph
+  (lock gates nothing, URL#hash roots force full solves, pkgcache tables
+  drift) — upstream asks #4/#6/#8.
+
+Carry-overs: file the bootstrap-ordering follow-up; standing 0003–0012
+items unchanged; upstream asks doc already current.
