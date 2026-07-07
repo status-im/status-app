@@ -21,7 +21,7 @@
 # bootstrap is inherited from the delegation, not reimplemented: every make
 # target used below depends on make's `nimble.paths` setup stamp (see
 # `nimble-deps` in the Makefile — nimble.lock + the graph's manifests →
-# `nimble setup` into APP_NIMBLE_DIR only when stale), and on a clean clone
+# `nimble setup` into the default store only when stale), and on a clean clone
 # the Makefile's .DEFAULT rule auto-runs `git submodule update --init
 # --recursive` first. This file is a nimscript driver, NOT a nimble task:
 # `nimble <task>` re-pays ~46–48 s of graph revalidation per warm invocation

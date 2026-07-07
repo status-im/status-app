@@ -9,9 +9,9 @@ bin           = @["nim_status_client"]
 binDir        = "bin"  # nimble's bin compile lands exactly where make's does
 skipExt       = @["nim"]
 
-# Nim version pin + app dependencies, resolved by `nimble setup` into the
-# out-of-tree store at ~/.cache/status-desktop-nimbledeps (APP_NIMBLE_DIR;
-# run automatically by the Makefile). Frozen in nimble.lock.
+# Nim version pin + app dependencies, resolved by `nimble setup` into
+# nimble's default store (~/.nimble; run automatically by the Makefile and
+# by nimble build/run themselves). Frozen in nimble.lock.
 requires "nim == 2.2.4"
 
 requires "https://github.com/status-im/nim-chronicles.git#e7f87336d2fa47b7752b42f0be4cabd5663a5e5c"  # chronicles

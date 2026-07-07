@@ -165,3 +165,51 @@ config.nims path override, and a probe module present in both path sets:
   session, 2026-07-07 19:30–19:31) are pkgcache-shaped clones written by a
   nimble invocation whose `pkgCachePath` was empty (`"" / <name>` = cwd);
   our target flows write to `<nimbleDir>/pkgcache` — watch for recurrence.
+
+### Phase D migration incident (2026-07-07): the default store's pkgcache
+### solved a DIFFERENT graph — carried the known-good table over
+
+First `nimble setup` against the default store resolved **libp2p 1.15.3 /
+websock 0.3.0 / lsquic 0.0.1(special)** — dropping boringssl, npeg and
+protobuf_serialization, and flipping jwt/snappy/bearssl_pkey_decoder to
+other revisions — instead of the documented-correct **libp2p 2.0.0 /
+websock 0.4.0 / lsquic 0.5.4** graph. Cause: the version-table wall
+(status-go AGENTS.md, "version tables are nondeterministic across days") —
+`~/.nimble/pkgcache` held listing clones from the 2026-07-07 failed-`nimble
+run` session (libp2p 2.1.x listings, a websock 0.3.0 key, an lsquic-0.0.1
+special clone) whose candidate tables steer the pre-binding walls
+differently than the retired store's pkgcache, and the lock never
+constrains solves (wall #6). Fix: `mv ~/.nimble/pkgcache
+~/.nimble/pkgcache.bak-0013` + copy the retired store's pkgcache in, re-run
+`make nimble-deps`, assert the entry set matches the pre-migration
+resolution exactly (modulo store root; the isaac root-vs-/src warm-setup
+wobble is expected).
+
+Standing risk (pre-existing, NOT introduced by the store move): any truly
+fresh machine can land on a different graph than the one this repo was
+verified against, because URL#hash roots force full re-solves and the lock
+gates nothing (upstream asks #4/#6/#8). The divergent store entries the bad
+solve installed stay in `~/.nimble/pkgs2` as inert content-addressed junk —
+they double as a natural stale-store-immunity probe (criterion 7: not in
+nimble.paths ⇒ must never enter a compile).
+
+### Phase C spike record (2026-07-07): bare exec WORKS — no launcher needed
+
+Post-A binary (`bin/nim_status_client`, built by make with the parity assert
+on), executed BARE from the repo root — no `DYLD_LIBRARY_PATH`, no bundle:
+
+- All four `@rpath` dylib references resolve from the six baked absolute
+  rpaths (`lsof`: libstatus, libsds, libStatusQ from their build dirs;
+  status-keycard-qt confirmed by its PC/SC init logs). 39 Qt frameworks
+  loaded from the kit's lib dir rpath.
+- `resources.rcc` found via `applicationDirPath/../resources.rcc` (absolute,
+  cwd-independent); QML engine rendered the Onboarding UI (same dev-noise
+  warnings as `make run` smokes); keycard detection thread up; clean SIGTERM.
+
+Outcome per the issue's decision fork: `nimble run` executes the binary
+directly (`binDir = "bin"` → `bin/nim_status_client`) — the launcher/bundle
+alternative is NOT built, so there is nothing reshaping the future install
+layer (the grill gate applied only to building the launcher). The
+StatusDev.app bundle remains `make run` / `nim run status.nims` polish
+(dock icon/name); the two rpaths added in phase A (libsds, StatusQ cmake
+libdir) are what closed the gap to DYLD-free execution.
