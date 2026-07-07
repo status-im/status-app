@@ -247,6 +247,10 @@ ifneq ($(mkspecs),win32)
 
  else
   NIM_PARAMS += --passL:"-L$(QT_LIBDIR)"
+  # GNU ld resolves transitive shared-lib deps (libStatusQ.so -> libQt6WebEngineQuick.so.6)
+  # through -rpath-link, not -L; without it linking fails when Qt lives outside the
+  # system library paths
+  NIM_PARAMS += --passL:"-Wl,-rpath-link,$(QT_LIBDIR)"
  endif
  QT_SEAQT_EXTRA_LIBS = $(shell PKG_CONFIG_PATH="$(QT_PCFILEDIR)" PKG_CONFIG_PREFIX_OVERRIDE="Qt*=$(QT_PC_PREFIX)" $(QT_PC_PKGCONFIG) --libs Qt"$(QT_MAJOR_VERSION)"Core Qt"$(QT_MAJOR_VERSION)"Qml Qt"$(QT_MAJOR_VERSION)"Gui Qt"$(QT_MAJOR_VERSION)"Quick Qt"$(QT_MAJOR_VERSION)"QuickControls2 Qt"$(QT_MAJOR_VERSION)"Widgets Qt"$(QT_MAJOR_VERSION)"Svg Qt"$(QT_MAJOR_VERSION)"Multimedia Qt"$(QT_MAJOR_VERSION)"WebView Qt"$(QT_MAJOR_VERSION)"WebChannel)
 else
