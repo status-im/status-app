@@ -11,12 +11,19 @@ runs survey-only in parallel and must not build or edit `status.nims` until
 your completion commit (containing `0010`) lands — you own those files until
 then.
 
-## The pin (user pushed 2026-07-07; verified reachable)
+## The pin
 
-`https://github.com/status-im/status-go.git#14b605b814c14ed4d37c2207ca3798074bf93482`
-(branch `nimble-phase1-pin`; equals the submodule's current HEAD, so the
-conversion changes WHERE status-go comes from, never WHAT is built —
-byte-identical artifacts are your strongest acceptance signal.)
+`https://github.com/status-im/status-go.git#<current submodule HEAD>`
+(branch `nimble-phase1-pin`). Issue 0009 added commits in the submodule
+(cmp-mirror engine), so the pin SHA = `git -C vendor/status-go rev-parse
+HEAD` (f46571f3b… at brief-writing time). FIRST STEP: verify reachability —
+`git -C vendor/status-go ls-remote origin nimble-phase1-pin` must equal the
+local HEAD. If it doesn't, the user hasn't pushed yet: `cmux notify --title
+"0010: push needed" --body "push vendor/status-go nimble-phase1-pin to
+origin"` and do submodule-independent prep (read the store-copy contents,
+version.sh, go.mod replaces) until it lands. The pin equals the submodule's
+HEAD, so the conversion changes WHERE status-go comes from, never WHAT is
+built — byte-identical artifacts are your strongest acceptance signal.
 
 ## Key state and constraints
 
