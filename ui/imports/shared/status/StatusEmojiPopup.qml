@@ -97,6 +97,7 @@ StatusDropdown {
     onOpened: {
         if (!StatusQUtils.Utils.isMobile)
             searchBox.forceActiveFocus()
+        emojiGrid.currentIndex = 0
         emojiGrid.positionViewAtBeginning()
     }
 
@@ -135,6 +136,8 @@ StatusDropdown {
                 anchors.left: parent.left
                 anchors.leftMargin: d.headerMargin
                 height: 36
+                KeyNavigation.tab: emojiGrid
+                KeyNavigation.down: emojiGrid
             }
 
             Row {
@@ -224,26 +227,36 @@ StatusDropdown {
                 policy: ScrollBar.AsNeeded
             }
 
-            delegate: Item {
+            delegate: ItemDelegate {
                 readonly property string category: model.category
+
+                required property int index
+                required property var model
 
                 width: emojiGrid.cellWidth
                 height: emojiGrid.cellHeight
-
-                StatusEmoji {
+                padding: d.imageMargin
+                highlighted: emojiGrid.activeFocus && index === emojiGrid.currentIndex
+                background: Rectangle {
+                    radius: Theme.radius
+                    color: hovered ? Theme.palette.backgroundHover : StatusColors.transparent
+                    border.width: 1
+                    border.color: visualFocus || highlighted ? Theme.palette.primaryColor1 : StatusColors.transparent
+                }
+                contentItem: StatusEmoji {
                     objectName: "statusEmoji_" + model.shortname.replace(/:/g, "")
                     Accessible.role: Accessible.StaticText
                     Accessible.name: model.emoji
-                    anchors.centerIn: parent
-                    width: d.imageWidth
-                    height: d.imageWidth
                     emojiId: model.unicode
-
-                    StatusMouseArea {
-                        cursorShape: Qt.PointingHandCursor
-                        anchors.fill: parent
-                        onClicked: root.addEmoji(model.unicode)
-                    }
+                }
+                onClicked: root.addEmoji(model.unicode)
+                HoverHandler {
+                    cursorShape: hovered ? Qt.PointingHandCursor : undefined
+                }
+                StatusToolTip {
+                    text: model.shortname
+                    visible: hovered && !!text
+                    y: -height
                 }
             }
         }

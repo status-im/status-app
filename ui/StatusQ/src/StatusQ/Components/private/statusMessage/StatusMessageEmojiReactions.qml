@@ -41,8 +41,8 @@ Flow {
                 listOfUsers.push(qsTr("%1 more").arg(extraCount)) // "a, b, ... and N more"
             }
 
-            // Create a simple comma-separated list without using QLocale.createSeparatedList (not available in QML)
-            return qsTr("%1 reacted with %2").arg(listOfUsers.join(", ")).arg(StatusQUtils.Emoji.fromCodePoint(emoji))
+            const authors = Qt.locale(Qt.uiLanguage).createSeparatedList(listOfUsers) // "a, b, c and d"
+            return qsTr("%1 reacted with %2").arg(authors).arg(StatusQUtils.Emoji.fromCodePoint(emoji))
         }
 
         // design values

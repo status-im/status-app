@@ -66,6 +66,10 @@ SplitView {
                 d.lastSelectedEmoji = emoji
                 d.lastSelectedEmojiHexcode = hexcode
             }
+            onSetSkinColorRequested: function(skinColor) {
+                logs.logEvent("onSetSkinColorRequested", ["skinColor"], arguments)
+                settings.skinColor = skinColor
+            }
         }
     }
 

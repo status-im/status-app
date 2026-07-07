@@ -21,10 +21,10 @@ ToolTip {
     property alias arrow: arrow
     property color color: StatusColors.black
 
-    implicitWidth: Math.min(maxWidth,
-                            Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                                     implicitContentWidth + leftPadding + rightPadding)
-                            )
+    implicitWidth: Math.ceil(Math.min(maxWidth,
+                                      Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                                               implicitContentWidth + leftPadding + rightPadding)
+                                      ))
     horizontalPadding: Theme.padding
     verticalPadding: Theme.halfPadding
     margins: Theme.halfPadding
