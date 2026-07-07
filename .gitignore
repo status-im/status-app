@@ -153,5 +153,8 @@ nimble.develop
 /build/status-keycard-qt/
 /vendor/status-keycard-qt/
 /vendor/keycard-qt/
+# seaqt pair (issue 0012): develop-mode checkouts (`nim develop status.nims seaqt|nimqml`)
+/vendor/nim-seaqt/
+/vendor/nimqml-seaqt/
 .phase2-vendor-backup/
 /.claude/
