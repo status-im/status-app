@@ -4,7 +4,7 @@ title: Keycard pair — FetchContent pins + FETCHCONTENT_SOURCE_DIR develop redi
 date: 2026-07-06
 tracker: local (GH publication deferred by user)
 triage-label: ready-for-agent
-status: open
+status: done (2026-07-07)
 ---
 
 ## Parent
@@ -35,16 +35,16 @@ FetchContent dependency `keycard-qt`:
 
 ## Acceptance criteria
 
-- [ ] Default mode, no `vendor/status-keycard-qt` checkout: full desktop
+- [x] Default mode, no `vendor/status-keycard-qt` checkout: full desktop
   build passes with both keycard libs fetched at their pins; second build
   performs no network access and no keycard recompilation.
-- [ ] `develop status-keycard-qt` → edit a C++ source → next `nim app` build
+- [x] `develop status-keycard-qt` → edit a C++ source → next `nim app` build
   recompiles and relinks the dependent → `undevelop` returns to the pin.
-- [ ] `develop keycard-qt` alone (parent stays pinned) → C++ edit picked up
+- [x] `develop keycard-qt` alone (parent stays pinned) → C++ edit picked up
   through status-keycard-qt's build.
-- [ ] Keycard functionality smoke on desktop build (app launches; keycard
+- [x] Keycard functionality smoke on desktop build (app launches; keycard
   service initializes — no deeper hardware test required).
-- [ ] `nim vendors status.nims` reports both, with pin + state.
+- [x] `nim vendors status.nims` reports both, with pin + state.
 
 ## Blockers — grill before implementing
 
@@ -193,6 +193,120 @@ FetchContent dependency `keycard-qt`:
   buildStatusKeycardQt.sh `-S` unchanged semantics + always-pass redirect
   pair. Mobile keycard develop-verification is NOT in this issue's
   acceptance (desktop-only checkboxes); noted as residual.
+
+## What was built (2026-07-07)
+
+- `cmake/status-keycard-qt/CMakeLists.txt` (new): app-owned FetchContent
+  wrapper carrying the status-keycard-qt pin (GIT_TAG `a6cbdd05…` = the
+  removed submodule's SHA); forces `CMAKE_{LIBRARY,ARCHIVE,RUNTIME}_OUTPUT_
+  DIRECTORY` to the build root so the lib keeps landing where every path
+  contract reads it (as a subproject it would land in
+  `_deps/status-keycard-qt-build/` — found and fixed during verification).
+  keycard-qt's pin (`df00b931…`, already a fixed SHA) stays owned by
+  status-keycard-qt's own CMakeLists (audit passed, no cascade).
+- Makefile: `-S` flips to the wrapper; build dir moves out of the checkout to
+  `build/status-keycard-qt/<platform>`; develop state derived from
+  `nimble.overlay` (0010's STATUSGO_ROOT pattern); the
+  `FETCHCONTENT_SOURCE_DIR_{STATUS-KEYCARD-QT,KEYCARD-QT}` pair is ALWAYS
+  passed — empty = pinned (empirically: empty cache value == unset; omitted
+  -D == sticky cache) so mode flips can never leave a stale redirect.
+- mobile: Common.mk points `STATUS_KEYCARD_QT` at the wrapper + derives the
+  redirect pair from the overlay + file-tracks developed checkouts;
+  buildStatusKeycardQt.sh passes the redirect pair always; the cmake tree
+  moves to `BUILD_PATH/status-keycard-qt` (its own cache — the old root
+  cache would refuse the `-S` source flip).
+- status.nims: two vfCmake vendor rows; cmake pin parser
+  (GIT_REPOSITORY/GIT_TAG; `@keycard-parent` sentinel resolves checkout →
+  `_deps`, degrades gracefully in `vendors` when neither exists);
+  develop/undevelop legs (clone at pin on branch `develop`, refusal
+  semantics inherited); `invalidateOnModeFlip` drops the cmake artifacts on
+  BOTH flips (undevelop especially — nothing else re-runs the recipe);
+  per-build FORCE arm = rm the lib (recipe reconfigures + cmake incremental);
+  divergence guard skipped for cmake flavor (the redirect makes cmake read
+  the checkout's own CMakeLists — edits take effect, no silent-drift mode);
+  applyOverlay/overlayApplied skip cmake rows (not in the nimble graph).
+- Submodule removed per the Phase 2 staged playbook: backup ref
+  `backup/nimble-0011-pin` (in the module gitdir), functional git dir
+  preserved at `.phase2-vendor-backup/status-keycard-qt` (core.worktree
+  repointed); `.gitignore` gains the two checkout dirs + the build tree.
+  BUILDING.md knob docs updated (both `*_SOURCE_DIR` default to empty now).
+
+## Verification record (2026-07-07, macOS arm64 host; Qt 6.11.0 macos kit)
+
+Env: `PATH=$PWD/vendor/nimbus-build-system/vendor/Nim/bin:$PATH`,
+`QMAKE=~/Qt/6.11.0/macos/bin/qmake USE_SYSTEM_NIM=1`. All builds via
+`nim app status.nims` unless noted. Baseline keycard lib (default mode)
+sha256 `8b40474c…`; client `bin/nim_status_client` relinked once
+post-conversion (rpath now `build/status-keycard-qt/macos`; one-off, 1:54).
+
+- **Criterion 1 (default mode, pins, no-op, no network)**: with NO
+  vendor/status-keycard-qt checkout, full build passed; `_deps` sources at
+  the exact pins (`git rev-parse HEAD` in
+  `build/status-keycard-qt/macos/_deps/{status-keycard-qt,keycard-qt}-src` =
+  `a6cbdd05…` / `df00b931…`). Second build: **6.4 s**, keycard recipe not
+  invoked (no "Building: status-keycard-qt" line; lib + client mtimes
+  byte-for-byte unchanged) — no network trivially. Explicit offline proof:
+  `rm` the lib, then configure+build the wrapper directly under a dead proxy
+  (`ALL_PROXY=socks5://127.0.0.1:1` etc.) → rc=0 both steps with populated
+  `_deps` — a fixed-SHA GIT_TAG performs no per-build fetch;
+  `FETCHCONTENT_UPDATES_DISCONNECTED` not needed. (A same-env
+  `make status-keycard-qt` offline run fails in the unrelated order-only
+  `deps` chain — go install/submodule sync — not keycard.)
+- **Criterion 2 (develop parent cycle)**: `develop status-keycard-qt` cloned
+  the pin URL → `vendor/status-keycard-qt` @ a6cbdd0 on branch `develop`,
+  wrote the overlay, dropped the lib. Build: CMakeCache
+  `FETCHCONTENT_SOURCE_DIR_STATUS-KEYCARD-QT=<checkout>` (KEYCARD-QT empty),
+  compile lines reference `vendor/status-keycard-qt/src`, lib relinked
+  (mtime advanced; a comment-only probe compiled byte-identically —
+  deterministic). Symbol probe (`extern "C" keycard_0011_probe` appended to
+  signal_manager.cpp) → **6.9 s** incremental develop build →
+  `nm -gU` shows `_keycard_0011_probe`, hash changed. `undevelop` REFUSED on
+  the uncommitted edit (listed it), then on the unpushed scratch commit
+  (listed it), `--force` exited + dropped the artifacts (mode-flip
+  invalidation observed: no lib until the next build). Next default build:
+  probe symbol gone, redirect cache emptied, lib **byte-identical to
+  baseline** (`8b40474c…`).
+- **Criterion 3 (develop keycard-qt alone)**: `develop keycard-qt` cloned
+  `df00b931…` → `vendor/keycard-qt` @ develop. Build: parent redirect stayed
+  EMPTY (parent from pin) while `FETCHCONTENT_SOURCE_DIR_KEYCARD-QT=
+  <checkout>`; string probe in command_set.cpp surfaced in the PARENT's
+  dylib (`strings | grep KEYCARD-QT-0011-PROBE`) — nested pickup through
+  status-keycard-qt's build, no parent cascade. `undevelop --force` + build:
+  probe gone, lib byte-identical to baseline again.
+- **Criterion 4 (smoke)**: `nim run status.nims` launched StatusDev; log
+  shows `StatusKeycardQt::C API: KeycardSetSignalEventCallback() called`,
+  `StatusKeycardContextImpl: Constructor called`, `KeycardChannel: Creating
+  PC/SC backend (Desktop)`, `KeycardChannelPcsc: Initialized with
+  event-driven detection` — service initialized through the pinned lib.
+- **Criterion 5 (vendors)**: lists all four vendors with pin/flavor/state;
+  on a simulated clean clone (checkouts + build tree moved aside) keycard-qt
+  degrades to "pin owned by status-keycard-qt's CMakeLists — visible after
+  the first build" instead of failing.
+- **Hygiene**: `git status --porcelain` clean of tracked files after the
+  full double cycle (checkouts + build tree gitignored); final default
+  no-op **6.1 s**.
+
+### Notes / residuals (not in scope)
+
+- Mobile legs converted (wrapper -S, own cmake subtree
+  `BUILD_PATH/status-keycard-qt`, overlay-derived redirects, checkout
+  file-tracking) but NOT build-verified — desktop-only acceptance; flag for
+  the next mobile matrix run. `bash -n` passes. The old pre-0011 cmake cache
+  at the mobile BUILD_PATH root is orphaned (harmless); the new clean rule
+  cleans the subtree.
+- develop/undevelop of a cmake vendor rewrites `nimble.overlay`, which joins
+  make's setup-stamp key → the next build pays one ~50 s `nimble setup`
+  although cmake vendors aren't in the nimble graph. Uniform machinery;
+  accepted.
+- Windows path derivations unchanged (build dir now
+  `build/status-keycard-qt/windows`; multi-config output dirs append
+  `$<CONFIG>` matching `STATUSKEYCARD_QT_LIB_SUBDIR`) — unvalidated, out of
+  scope per PRD.
+- The client's keycard rpath is relative (`build/status-keycard-qt/macos`),
+  matching the pre-0011 relative style; `make run` / packaging set loader
+  paths explicitly as before.
+
+## Survey appendix — phase A checklist (as planned)
 
 ### Phase B checklist (maps to acceptance)
 

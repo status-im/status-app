@@ -20,6 +20,16 @@ project(status-keycard-qt-vendor LANGUAGES NONE)
 
 include(FetchContent)
 
+# Keep the built library at the build-dir root, where it landed when the
+# vendor was the top-level project: the Makefiles' STATUSKEYCARD_QT_LIBDIR
+# contract, the run targets' loader paths and the packaging copies all read
+# it there (as a subproject it would otherwise land in
+# _deps/status-keycard-qt-build/). Multi-config generators (MSVC) append
+# $<CONFIG>, matching the Makefile's win32 STATUSKEYCARD_QT_LIB_SUBDIR.
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 FetchContent_Declare(
   status-keycard-qt
   GIT_REPOSITORY https://github.com/status-im/status-keycard-qt

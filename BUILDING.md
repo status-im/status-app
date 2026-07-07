@@ -376,7 +376,7 @@ pin (refusing while the checkout has uncommitted or unpushed work).
 development, plus everything that isn't pure Nim (C/C++/Go). Kept under
 `vendor/`: the seaqt Qt bindings (`nim-seaqt`, `nimqml-seaqt`)
 and the C/C++ libraries (`DOtherSide`, `SortFilterProxyModel`,
-`QR-Code-generator`, `status-keycard-qt`, `fcitx5-qt`, `prl-to-pc`,
+`QR-Code-generator`, `fcitx5-qt`, `prl-to-pc`,
 `mobile/vendors/openssl`, `nimbus-build-system`). `config.nims` adds explicit
 `switch("path", ...)` entries for `nim-seaqt`/`nimqml-seaqt` since they're not
 in the nimble store.
@@ -418,6 +418,7 @@ The following environment variables can be used to customize the build:
 
 - INCLUDE_DEBUG_SYMBOLS (0,1) - Configure nim to include the debug symbols for desktop platforms.
 - KDF_ITERATIONS (number) - Configure the KDF_ITERATIONS to use for the DB encryption
+- KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local keycard-qt folder. Defaults to empty (the pinned revision is fetched by CMake FetchContent); `nim develop status.nims keycard-qt` sets it to `vendor/keycard-qt`.
 - MONITORING (true,false) - Enable/disable qml monitoring tools. The monitoring tools provide a suite of qml introspection tools to debug data transformations. Defaults to `false`
 - NIM_SDS_SOURCE_DIR (path) - Point status-go's standalone build to a local nim-sds folder (unused by this repo's flow: the app builds libsds from the nimble-resolved copy and passes it via NIM_SDS_LIB_DIR/NIM_SDS_INC_DIR)
 - PRODUCTION_PARAMETERS (string) - Configure the production arguments for nim compilation. Defaults to `-d:production`
@@ -427,7 +428,7 @@ The following environment variables can be used to customize the build:
 - QT_ARCH (string) - Configure the Qt architecture for macOS cross-compilation. Can be used to compile Intel builds on ARM64 OS. Defaults to `$(shell uname -m)`
 - REBUILD_NIM (true,false) - Force nim recompilation
 - REBUILD_UI (true,false) - Force qrc recompilation
-- STATUS_KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local status-keycard-qt folder. Defaults to `vendor/status-keycard-qt`
+- STATUS_KEYCARD_QT_SOURCE_DIR (path) - Point the build system to a local status-keycard-qt folder. Defaults to empty (the pin in `cmake/status-keycard-qt/CMakeLists.txt` is fetched by CMake FetchContent); `nim develop status.nims status-keycard-qt` sets it to `vendor/status-keycard-qt`
 - VCINSTALLDIR (path) - Visual Studio compiler installation path. Defaults to `C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\`
 
 

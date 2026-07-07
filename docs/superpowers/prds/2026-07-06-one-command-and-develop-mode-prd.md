@@ -15,7 +15,7 @@ predecessor: 2026-07-03-statusgo-nimble-package-prd.md (closed over issues 0001�
 | 0008 app driver (`status.nims`) | `app` task (host + `--os/--cpu`), setup self-bootstrap, `run`, no-op timing acceptance; develop/undevelop/vendors stubs → 0009 | done (2026-07-06) |
 | 0009 develop-mode core | overlay + `develop`/`undevelop`/`vendors` tasks for statusgo + sds, divergence guard, escape hatch; vendor table shaped for 0011/0012; + isaac warm-setup wall fix, parent-worktree rpath alias | done (2026-07-07) |
 | 0010 status-go full-pin | app manifest → `status-im/status-go#d9281bce9` (source-only manifest — new nimble bin-wall, grilled), submodule removed (backup at .phase2-vendor-backup), `.statusgo-build` scratch engine, stamp-skip live (no-op: desktop 5.9 s, mobile 15 s vs 70 s) | done (2026-07-07) |
-| 0011 keycard pair | FetchContent pins + `FETCHCONTENT_SOURCE_DIR` develop redirect | open (unblocked) |
+| 0011 keycard pair | wrapper cmake project owns the status-keycard-qt pin (a6cbdd05), keycard-qt pin audit passed (df00b931 fixed SHA), submodule removed (backup at .phase2-vendor-backup), `FETCHCONTENT_SOURCE_DIR_*` develop redirect live for both (nested-alone works), offline no-fetch proven, no-op 6 s | done (2026-07-07) |
 | 0012 seaqt pair | feasibility spike, then graph adoption (spike-gated fallback: stay submodules, UX-wrapped) | spike DONE — PASS, pass path recommended (specs/2026-07-06-seaqt-graph-spike.md); conversion pending grill + 0009 |
 
 ## Problem Statement
