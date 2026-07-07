@@ -344,9 +344,17 @@ endif
 # re-run the app's one resolution. There is no separate status-go solve.
 APP_NIMBLE_DIR ?= $(HOME)/.cache/status-desktop-nimbledeps
 NIMBLE_SETUP_STAMP := nimble.paths
-$(NIMBLE_SETUP_STAMP): nimble.lock nim_status_client.nimble vendor/status-go/statusgo.nimble
+# The develop-mode overlay (issue 0009, ADR 0004) joins the stamp key: a
+# develop/undevelop flip rewrites the gitignored nimble.overlay, which
+# schedules regeneration; after every `nimble setup` the driver rewrites the
+# developed vendors' entries in the fresh nimble.paths to their checkouts
+# (logic lives in status.nims — make only delegates). Derived copies
+# (vendor/status-go/nimble.paths below) inherit through their cmp-gated rules.
+NIMBLE_OVERLAY := nimble.overlay
+$(NIMBLE_SETUP_STAMP): nimble.lock nim_status_client.nimble vendor/status-go/statusgo.nimble $(wildcard $(NIMBLE_OVERLAY))
 	@command -v nimble >/dev/null 2>&1 || { echo "ERROR: nimble not found on PATH (see BUILDING.md)" >&2; exit 1; }
 	nimble setup --nimbleDir:"$(APP_NIMBLE_DIR)" || { echo "ERROR: nimble setup failed. If a .nimble manifest changed, regenerate the lock with 'NIMBLE_DIR=$(APP_NIMBLE_DIR) nimble lock' (full solve, takes minutes) and retry." >&2; exit 1; }
+	nim applyOverlay status.nims
 	touch $@
 
 nimble-deps: $(NIMBLE_SETUP_STAMP)
@@ -622,6 +630,12 @@ STATUSKEYCARD_QT_LIB_PREFIX :=
 STATUSKEYCARD_QT_LIB_SUBDIR := /$(COMMON_CMAKE_BUILD_TYPE)
 endif
 export STATUSKEYCARD_QT_LIBDIR := $(abspath $(STATUS_KEYCARD_QT_BUILD_DIR)$(STATUSKEYCARD_QT_LIB_SUBDIR))
+# Alias under the variable's pre-rename spelling: in a nested git worktree
+# Nim's parent-dir config walk also evaluates the ENCLOSING checkout's
+# config.nims, and on branches still using STATUSKEYCARDGO_LIBDIR an empty
+# value emits a bare `-rpath` — ld then eats the next linker arg and fails
+# with "file cannot be mmap()ed" on bin/StatusQ.
+export STATUSKEYCARDGO_LIBDIR := $(STATUSKEYCARD_QT_LIBDIR)
 export STATUSKEYCARD_QT_LIB := $(STATUSKEYCARD_QT_LIBDIR)/$(STATUSKEYCARD_QT_LIB_PREFIX)status-keycard-qt.$(LIB_EXT)
 STATUSKEYCARD_QT_DYLIB_NAME := $(notdir $(STATUSKEYCARD_QT_LIB))
 STATUSKEYCARD_QT_LINKNAME := $(patsubst lib%,%,$(basename $(STATUSKEYCARD_QT_DYLIB_NAME)))
