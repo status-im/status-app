@@ -73,3 +73,5 @@ requires "https://github.com/status-im/nim-keycard-go.git#c8a39e8d4a8abd1bba2fb3
 # materializes editable checkouts (ADR 0004 overlay).
 requires "https://github.com/seaqt/nim-seaqt.git#2d95808bdd9f6dd2c212b69a57af4618da241d37"  # seaqt (branch smo-6.4)
 requires "https://github.com/seaqt/nimqml-seaqt.git#c5e5831ae7d71e09f7061bc7735a8f3e1adc8fb3"  # nimqml
+
+include "status.nims"
