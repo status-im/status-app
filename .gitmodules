@@ -8,9 +8,6 @@
 [submodule "vendor/fcitx5-qt"]
 	path = vendor/fcitx5-qt
 	url = https://github.com/fcitx/fcitx5-qt
-[submodule "vendor/status-go"]
-	path = vendor/status-go
-	url = https://github.com/status-im/status-go
 [submodule "vendor/SortFilterProxyModel"]
 	path = vendor/SortFilterProxyModel
 	url = https://github.com/status-im/SortFilterProxyModel.git
