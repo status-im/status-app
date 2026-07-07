@@ -11,7 +11,6 @@ StatusQUtils.QObject {
     // **
 
     readonly property var mailservers: d.syncModule.model
-    readonly property string activeMailserverId: d.wakuModule.activeMailserver
     readonly property bool useMailservers: d.syncModule.useMailservers
 
     // Privacy module related
@@ -44,6 +43,5 @@ StatusQUtils.QObject {
         readonly property var profileSectionModuleInst: profileSectionModule
         readonly property var privacyModule: d.profileSectionModuleInst.privacyModule
         readonly property var syncModule: d.profileSectionModuleInst.syncModule
-        readonly property var wakuModule: d.profileSectionModuleInst.wakuModule
     }
 }

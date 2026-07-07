@@ -12,10 +12,6 @@ logScope:
   topics = "mailservers-service"
 
 type
-  ActiveMailserverChangedArgs* = ref object of Args
-    nodeAddress*: string
-    nodeId*: string
-
   MailserverSyncedArgs* = ref object of Args
     chatId*: string
     syncedFrom*: int64
@@ -25,7 +21,6 @@ type
     messageIds*: seq[string]
 
 # Signals which may be emitted by this service:
-const SIGNAL_ACTIVE_MAILSERVER_CHANGED* = "activeMailserverChanged"
 const SIGNAL_MAILSERVER_NOT_WORKING* = "mailserverNotWorking"
 const SIGNAL_MAILSERVER_SYNCED* = "mailserverSynced"
 const SIGNAL_MAILSERVER_HISTORY_REQUEST_STARTED* = "historyRequestStarted"
@@ -74,15 +69,6 @@ QtObject:
     self.threadpool.start(arg)
 
   proc doConnect(self: Service) =
-    self.events.on(SignalType.MailserverChanged.event) do(e: Args):
-      let receivedData = MailserverChangedSignal(e)
-      let address = receivedData.address
-      let id = receivedData.id
-
-      info "active mailserver changed", node=address, id = id
-      let activeMailserverData = ActiveMailserverChangedArgs(nodeAddress: address, nodeId: id)
-      self.events.emit(SIGNAL_ACTIVE_MAILSERVER_CHANGED, activeMailserverData)
-
     self.events.on(SignalType.MailserverNotWorking.event) do(e: Args):
       info "mailserver not working"
       self.events.emit(SIGNAL_MAILSERVER_NOT_WORKING, Args())

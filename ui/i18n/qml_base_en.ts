@@ -1091,10 +1091,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>History nodes</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Developer features</source>
         <translation type="unfinished"></translation>
     </message>

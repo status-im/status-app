@@ -21,10 +21,6 @@ type HistoryRequestCompletedSignal* = ref object of Signal
 type MailserverAvailableSignal* = ref object of Signal
   address*: string
 
-type MailserverChangedSignal* = ref object of Signal
-  address*: string
-  id*: string
-
 type MailserverNotWorkingSignal* = ref object of Signal
 
 proc fromEvent*(T: type MailserverRequestCompletedSignal, jsonSignal: JsonNode): MailserverRequestCompletedSignal =
@@ -55,12 +51,6 @@ proc fromEvent*(T: type MailserverAvailableSignal, jsonSignal: JsonNode): Mailse
   result = MailserverAvailableSignal()
   result.signalType = SignalType.MailserverAvailable
   result.address = jsonSignal["event"]{"address"}.getStr()
-
-proc fromEvent*(T: type MailserverChangedSignal, jsonSignal: JsonNode): MailserverChangedSignal =
-  result = MailserverChangedSignal()
-  result.signalType = SignalType.MailserverChanged
-  result.address = jsonSignal["event"]{"address"}.getStr()
-  result.id = jsonSignal["event"]{"id"}.getStr()
 
 proc fromEvent*(T: type MailserverNotWorkingSignal, jsonSignal: JsonNode): MailserverNotWorkingSignal =
   result = MailserverNotWorkingSignal()

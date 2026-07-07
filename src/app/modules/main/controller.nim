@@ -155,17 +155,6 @@ proc init*(self: Controller) =
       self.networksService,
     )
 
-  self.events.on(SIGNAL_ACTIVE_MAILSERVER_CHANGED) do(e:Args):
-    let args = ActiveMailserverChangedArgs(e)
-    if args.nodeAddress == "":
-      return
-    self.delegate.emitMailserverWorking()
-    echo "ACTIVE MAILSERVER CHANGED: ", repr(e)
-    # We need to take some actions here. This is the only place where "activeMailserverChanged" signal should be handled.
-    # Do the following, if we really need that.
-    # requestAllHistoricMessagesResult
-    # requestMissingCommunityInfos
-
   self.events.on(SIGNAL_MAILSERVER_NOT_WORKING) do(e: Args):
     self.delegate.emitMailserverNotWorking()
 

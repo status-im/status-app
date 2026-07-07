@@ -1088,10 +1088,6 @@
         <translation>릴레이 모드</translation>
     </message>
     <message>
-        <source>History nodes</source>
-        <translation>히스토리 노드</translation>
-    </message>
-    <message>
         <source>Developer features</source>
         <translation>개발자 기능</translation>
     </message>

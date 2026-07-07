@@ -1094,10 +1094,6 @@
         <translation>Režim Relay</translation>
     </message>
     <message>
-        <source>History nodes</source>
-        <translation>Historické uzly</translation>
-    </message>
-    <message>
         <source>Developer features</source>
         <translation>Vývojářské funkce</translation>
     </message>

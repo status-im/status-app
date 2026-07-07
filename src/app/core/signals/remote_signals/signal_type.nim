@@ -34,7 +34,6 @@ type SignalType* {.pure.} = enum
   HistoryRequestStarted = "history.request.started"
   HistoryRequestCompleted = "history.request.completed"
   MailserverAvailable = "mailserver.available"
-  MailserverChanged = "mailserver.changed"
   MailserverNotWorking = "mailserver.not.working"
   HistoryArchivesProtocolEnabled = "community.historyArchivesProtocolEnabled"
   HistoryArchivesProtocolDisabled = "community.historyArchivesProtocolDisabled"

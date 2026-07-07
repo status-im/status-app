@@ -277,24 +277,6 @@ SettingsContentBase {
                     }
                 }
             }
-
-            // SYNC WAKU SECTION
-
-            StatusListItem {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.leftMargin: Theme.padding
-                anchors.rightMargin: Theme.padding
-                title: qsTr("History nodes")
-                label: root.messagingSettingsStore.activeMailserverId || "---"
-                components: [
-                    StatusIcon {
-                        icon: "next"
-                        color: Theme.palette.baseColor1
-                    }
-                ]
-            }
-
             StatusSectionHeadline {
                 anchors.left: parent.left
                 anchors.right: parent.right

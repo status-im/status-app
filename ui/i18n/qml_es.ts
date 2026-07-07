@@ -1091,10 +1091,6 @@
         <translation>Modo de retransmisión</translation>
     </message>
     <message>
-        <source>History nodes</source>
-        <translation>Nodos de historial</translation>
-    </message>
-    <message>
         <source>Developer features</source>
         <translation>Funciones para desarrolladores</translation>
     </message>

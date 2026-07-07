@@ -92,7 +92,6 @@ QtObject:
       of SignalType.HistoryRequestCompleted: HistoryRequestCompletedSignal.fromEvent(jsonSignal)
       of SignalType.HistoryRequestStarted: HistoryRequestStartedSignal.fromEvent(jsonSignal)
       of SignalType.MailserverAvailable: MailserverAvailableSignal.fromEvent(jsonSignal)
-      of SignalType.MailserverChanged: MailserverChangedSignal.fromEvent(jsonSignal)
       of SignalType.MailserverNotWorking: MailserverNotWorkingSignal.fromEvent(jsonSignal)
       of SignalType.HistoryArchivesProtocolEnabled: HistoryArchivesSignal.historyArchivesProtocolEnabledFromEvent(jsonSignal)
       of SignalType.HistoryArchivesProtocolDisabled: HistoryArchivesSignal.historyArchivesProtocolDisabledFromEvent(jsonSignal)
